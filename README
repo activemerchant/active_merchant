@@ -1,0 +1,87 @@
+= Active Merchant
+
+This library is supposed to aid in creating e-commerce software in Ruby. 
+In the future we want to support all "good" payment gateways. 
+
+This library is the foundation of commerce for http://www.shopify.com. 
+
+== Supported Direct Payment Gateways
+ 
+* Bogus -- your trusty test gateway which does nothing. Great for testing your app!
+
+==== Australia
+
+* eWay[http://www.eway.com.au] 
+
+==== Canada
+
+* Moneris[http://www.moneris.com]
+* Psigate[http://www.psigate.com]
+
+==== United Kingdom
+
+* {PayPal Website Payments Pro UK}[https://www.paypal.com/uk/cgi-bin/webscr?cmd=_wp-pro-overview-outside]
+
+==== USA
+
+* Authorize.net[http://www.authorize.net]
+* LinkPoint[http://www.linkpoint.com]
+* {PayPal Payflow Pro}[https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-gateway-overview-outside]
+* {PayPal Website Payments Pro US}[https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside]
+* TrustCommerce[http://www.trustcommerce.com] - Requires the tclink ruby library from http://www.trustcommerce.com/tclink.html. Otherwise it will not be loaded.
+* {USA ePay}[www.usaepay.com/]
+
+== Supported Offsite Payment Gateways
+ 
+* {PayPal Website Payments Standard}[https://www.paypal.com/cgi-bin/webscr?cmd=_wp-standard-overview-outside]
+* Chronopay[http://www.chronopay.com]
+* Nochex[http://www.nochex.com]
+* {Banca Sella GestPay}[https://www.sella.it/banca/ecommerce/gestpay/gestpay.jsp]
+ 
+== Download
+
+Currently this library is available with svn from:
+
+	https://activemerchant.googlecode.com/svn/trunk
+	
+== Installation
+
+=== From Subversion
+
+You can check out the latest source from svn:
+
+  > svn co https://activemerchant.googlecode.com/svn/trunk active_merchant
+
+ActiveMerchant includes an init.rb file. This means you can place the active_merchant folder in the vendor/plugins folder of your Rails project and Rails will automatically load it at startup.
+
+=== From Ruby Gems
+
+Installation from RubyGems
+
+  > gem install activemerchant -y
+
+== Sample Usage
+
+  ten_dollars = Money.new(1000, 'USD')
+
+  credit_card = CreditCard.new(
+    :number => '4242424242424242',
+    :month => 8,
+    :year => 2006,
+    :name => 'Tobias Luetke',
+    :type => 'visa'
+  )
+
+  if creditcard.valid?
+    gateway = ActiveMerchant::Billing::AuthorizeNetGateway.new(
+      :login    => 'LOGIN_ID',
+      :password => 'TRANSACTION_KEY'
+    )
+    response = gateway.purchase(ten_dollars, credit_card)
+    
+    if response.success?
+      ...
+    else
+      raise StandardError.new( response.message )
+    end
+  end

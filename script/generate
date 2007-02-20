@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+
+begin
+  require 'active_support'
+rescue LoadError
+  require 'rubygems'
+  require 'active_support'
+end
+
+require 'erb'
+require 'script/generator/generator'
+
+ActiveMerchant::Generator::Generator.run(ARGV)
+

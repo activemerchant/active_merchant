@@ -1,0 +1,40 @@
+# CHANGELOG
+# ---
+# * Add discover to list of supported card types for Authorize.net
+#
+# * Fix Psigate crediting [sean.alien8@gmail.com]
+# 
+# * Fix dependency loading of tests
+# 
+# * Add methods for storing credit cards to the Bogus gateway [Jim Kane]
+# 
+# * Fix bugs in expiration dates. [Jim Kane]
+# 
+# * Fixed bugs related to authorized.net [Rick Olson]
+# 
+# * Linkpoint is now a full featured backend for active merchant [Ryan Heneise]
+# 
+# * Added linkpoint support [Ryan Heneise]
+# 
+# * Added trust commerce gateway [Hans Friedrich]
+# 
+# * Removed shipping stuff until there is time to implement it properly
+# 
+# * The library now rejects money amounts which are not either cents as integer or a Money object
+# 
+# * Moneris now uses the same layout as the authorized.net plugin
+# 
+# * Added authorized.net
+# 
+# * Changed default to :test mode. Set to production with ActiveMerchant::Billing::Base.gateway_mode = :production
+# 
+# * More refactoring 
+# 
+# * Refactored a bit so that there is space for billing and shipping area. None of the shipping aids are fleshed out yet. Needs more work.
+# 
+# * Added Moneris support
+# 
+# * Credit card in memory object resembling a AR object
+# 
+# * Credit card validation methods as static methods of the credit card object
+# 
