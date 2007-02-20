@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
-      class Helper
+      class Helper #:nodoc:
         attr_reader :fields
         class_inheritable_accessor :service_url
         class_inheritable_hash :mappings
