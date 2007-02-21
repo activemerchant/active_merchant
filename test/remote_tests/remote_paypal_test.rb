@@ -87,6 +87,23 @@ class PaypalTest < Test::Unit::TestCase
     assert response.success?
   end
   
+  def test_purchase_and_full_credit
+    amount = Money.new(300)
+    
+    purchase = @gateway.purchase(amount, @creditcard, @params)
+    assert purchase.success?
+    
+    credit = @gateway.credit(amount, purchase.authorization, :note => 'Sorry')
+    assert credit.success?
+    assert credit.test?
+    assert_equal 'USD',  credit.params['net_refund_amount_currency_id']
+    assert_equal '2.61', credit.params['net_refund_amount']
+    assert_equal 'USD',  credit.params['gross_refund_amount_currency_id']
+    assert_equal '3.00', credit.params['gross_refund_amount']
+    assert_equal 'USD',  credit.params['fee_refund_amount_currency_id']
+    assert_equal '0.39', credit.params['fee_refund_amount']
+  end
+  
   def test_failed_voiding
     response = @gateway.void('foo')
     assert !response.success?

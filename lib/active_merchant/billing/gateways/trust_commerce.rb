@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
       def credit(money, identification, options = {})  
         parameters = {
           :amount => amount(money),
-          :transid => identification,
+          :transid => identification
         }
                                                   
         commit('credit', parameters)

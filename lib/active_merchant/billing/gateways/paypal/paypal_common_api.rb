@@ -10,12 +10,15 @@ module ActiveMerchant #:nodoc:
       TEST_URL = 'https://api.sandbox.paypal.com/2.0/'
       LIVE_URL = 'https://api-aa.paypal.com/2.0/'
       
+      PAYPAL_NAMESPACE = 'urn:ebay:api:PayPalAPI'
+      EBAY_NAMESPACE = 'urn:ebay:apis:eBLBaseComponents'
+      
       ENVELOPE_NAMESPACES = { 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
-                     'xmlns:env' => 'http://schemas.xmlsoap.org/soap/envelope/',
-                     'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance'
-                   }
-      CREDENTIALS_NAMESPACES = { 'xmlns' => 'urn:ebay:api:PayPalAPI',
-                                 'xmlns:n1' => 'urn:ebay:apis:eBLBaseComponents',
+                              'xmlns:env' => 'http://schemas.xmlsoap.org/soap/envelope/',
+                              'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance'
+                            }
+      CREDENTIALS_NAMESPACES = { 'xmlns' => PAYPAL_NAMESPACE,
+                                 'xmlns:n1' => EBAY_NAMESPACE,
                                  'env:mustUnderstand' => '0'
                                }
     
@@ -46,14 +49,18 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         commit 'DoVoid', build_void_request(authorization, options)
       end
+      
+      def credit(money, identification, options = {})
+        commit 'RefundTransaction', build_credit_request(money, identification, options)
+      end
 
       private
           
       def build_capture_request(money, authorization, options)
         xml = Builder::XmlMarkup.new :indent => 2
         
-        xml.tag! 'DoCaptureReq', 'xmlns' => 'urn:ebay:api:PayPalAPI' do
-          xml.tag! 'DoCaptureRequest', 'xmlns:n2' => 'urn:ebay:apis:eBLBaseComponents' do
+        xml.tag! 'DoCaptureReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'DoCaptureRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', '2.0'
             xml.tag! 'AuthorizationID', authorization
             xml.tag! 'Amount', amount(money), 'currencyID' => currency(money)
@@ -65,11 +72,27 @@ module ActiveMerchant #:nodoc:
         xml.target!        
       end
       
+      def build_credit_request(money, identification, options)
+        xml = Builder::XmlMarkup.new :indent => 2
+            
+        xml.tag! 'RefundTransactionReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'RefundTransactionRequest', 'xmlns:n2' => EBAY_NAMESPACE do
+            xml.tag! 'n2:Version', '2.0'
+            xml.tag! 'TransactionID', identification
+            xml.tag! 'Amount', amount(money), 'currencyID' => currency(money)
+            xml.tag! 'RefundType', 'Partial'
+            xml.tag! 'Memo', options[:note] unless options[:note].blank?
+          end
+        end
+      
+        xml.target!        
+      end
+      
       def build_void_request(authorization, options)
         xml = Builder::XmlMarkup.new :indent => 2
         
-        xml.tag! 'DoVoidReq', 'xmlns' => 'urn:ebay:api:PayPalAPI' do
-          xml.tag! 'DoVoidRequest', 'xmlns:n2' => 'urn:ebay:apis:eBLBaseComponents' do
+        xml.tag! 'DoVoidReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'DoVoidRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', '2.0'
             xml.tag! 'AuthorizationID', authorization
             xml.tag! 'Note', options[:description]

@@ -48,8 +48,8 @@ module ActiveMerchant #:nodoc:
       private
       def build_get_details_request(token)
         xml = Builder::XmlMarkup.new :indent => 2
-        xml.tag! 'GetExpressCheckoutDetailsReq', 'xmlns' => 'urn:ebay:api:PayPalAPI' do
-          xml.tag! 'GetExpressCheckoutDetailsRequest', 'xmlns:n2' => 'urn:ebay:apis:eBLBaseComponents' do
+        xml.tag! 'GetExpressCheckoutDetailsReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'GetExpressCheckoutDetailsRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', '2.0'
             xml.tag! 'Token', token
           end
@@ -60,8 +60,8 @@ module ActiveMerchant #:nodoc:
       
       def build_sale_or_authorization_request(action, money, options)
         xml = Builder::XmlMarkup.new :indent => 2
-        xml.tag! 'DoExpressCheckoutPaymentReq', 'xmlns' => 'urn:ebay:api:PayPalAPI' do
-          xml.tag! 'DoExpressCheckoutPaymentRequest', 'xmlns:n2' => 'urn:ebay:apis:eBLBaseComponents' do
+        xml.tag! 'DoExpressCheckoutPaymentReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'DoExpressCheckoutPaymentRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', '2.0'
             xml.tag! 'n2:DoExpressCheckoutPaymentRequestDetails' do
               xml.tag! 'n2:PaymentAction', action
@@ -80,8 +80,8 @@ module ActiveMerchant #:nodoc:
 
       def build_setup_request(action, money, options)
         xml = Builder::XmlMarkup.new :indent => 2
-        xml.tag! 'SetExpressCheckoutReq', 'xmlns' => 'urn:ebay:api:PayPalAPI' do
-          xml.tag! 'SetExpressCheckoutRequest', 'xmlns:n2' => 'urn:ebay:apis:eBLBaseComponents' do
+        xml.tag! 'SetExpressCheckoutReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'SetExpressCheckoutRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', '2.0'
             xml.tag! 'n2:SetExpressCheckoutRequestDetails' do
               xml.tag! 'n2:PaymentAction', action

@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add support for crediting to PayPal [cody, Haig]
+#
 # * Add discover to list of supported card types for Authorize.net
 #
 # * Fix Psigate crediting [sean.alien8@gmail.com]
