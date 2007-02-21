@@ -98,8 +98,11 @@ task :watch do
   system("stakeout \"rake\" `find . -name '*.rb'`")
 end
 
+desc "Release the gems and docs to RubyForge"
+task :release => [ :publish, :upload_rdoc ]
+
 desc "Publish the release files to RubyForge."
-task :publish => [ :gem, :upload ] do
+task :publish => [ :package ] do
   `rubyforge login`
 
   for ext in %w( gem tgz zip )
@@ -110,7 +113,7 @@ task :publish => [ :gem, :upload ] do
 end
 
 desc 'Upload RDoc to RubyForge'
-task :upload => :rdoc do
+task :upload_rdoc => :rdoc do
   user = "cfauser@rubyforge.org" 
   project = "/var/www/gforge-projects/#{PKG_NAME}"
   local_dir = 'doc'
