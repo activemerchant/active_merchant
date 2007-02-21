@@ -7,7 +7,7 @@ require 'rake/contrib/rubyforgepublisher'
 require File.dirname(__FILE__) + '/lib/tasks/cia'
 
 
-PKG_VERSION = "1.0.0"
+PKG_VERSION = "1.0.1"
 PKG_NAME = "activemerchant"
 PKG_FILE_NAME = "#{PKG_NAME}-#{PKG_VERSION}"
 
@@ -103,13 +103,13 @@ task :release => [ :publish, :upload_rdoc ]
 
 desc "Publish the release files to RubyForge."
 task :publish => [ :package ] do
-  `rubyforge login`
-
-  for ext in %w( gem tgz zip )
-    release_command = "rubyforge add_release #{PKG_NAME} #{PKG_NAME} 'REL #{PKG_VERSION}' pkg/#{PKG_NAME}-#{PKG_VERSION}.#{ext}"
-    puts release_command
-    system(release_command)
-  end
+  require 'rubyforge'
+  
+  packages = %w( gem tgz zip ).collect{ |ext| "pkg/#{PKG_NAME}-#{PKG_VERSION}.#{ext}" }
+  
+  rubyforge = RubyForge.new
+  rubyforge.login
+  rubyforge.add_release(PKG_NAME, PKG_NAME, "REL #{PKG_VERSION}", *packages)
 end
 
 desc 'Upload RDoc to RubyForge'
