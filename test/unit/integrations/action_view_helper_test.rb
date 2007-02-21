@@ -1,5 +1,13 @@
 require File.dirname(__FILE__) + '/../../test_helper'
-require_gem 'actionpack' rescue LoadError raise(StandardErrror.new("This test needs ActionPack installed as gem to run"))
+begin
+  if respond_to? :gem
+    gem 'actionpack'
+  else
+    require_gem 'actionpack'
+  end
+rescue LoadError
+  raise StandardError, "This test needs ActionPack installed as gem to run"
+end
 
 require 'action_controller'
 require 'action_controller/test_process'
