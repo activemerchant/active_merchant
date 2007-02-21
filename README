@@ -5,6 +5,8 @@ In the future we want to support all "good" payment gateways.
 
 This library is the foundation of commerce for http://www.shopify.com. 
 
+Please visit the {ActiveMerchant homepage}[http://activemerchant.org] for more resources, tutorials and other information about this project. 
+
 == Supported Direct Payment Gateways
  
 * Bogus -- your trusty test gateway which does nothing. Great for testing your app!

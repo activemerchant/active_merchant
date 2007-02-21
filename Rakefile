@@ -101,7 +101,12 @@ end
 desc "Publish the release files to RubyForge."
 task :publish => [ :gem, :upload ] do
   `rubyforge login`
-  system("rubyforge add_release #{PKG_NAME} #{PKG_NAME} 'REL #{PKG_VERSION}' pkg/#{PKG_NAME}-#{PKG_VERSION}.gem")
+
+  for ext in %w( gem tgz zip )
+    release_command = "rubyforge add_release #{PKG_NAME} #{PKG_NAME} 'REL #{PKG_VERSION}' pkg/#{PKG_NAME}-#{PKG_VERSION}.#{ext}"
+    puts release_command
+    system(release_command)
+  end
 end
 
 desc 'Upload RDoc to RubyForge'
