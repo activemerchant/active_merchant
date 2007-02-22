@@ -184,9 +184,9 @@ module ActiveMerchant #:nodoc:
         end
       end
       
-      def add_address(xml, address)
+      def add_address(xml, element, address)
         return if address.nil?
-        xml.tag! 'n2:Address' do
+        xml.tag! element do
           xml.tag! 'n2:Name', address[:name]
           xml.tag! 'n2:Street1', address[:address1]
           xml.tag! 'n2:Street2', address[:address2]

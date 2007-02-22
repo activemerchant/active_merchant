@@ -35,8 +35,9 @@ module ActiveMerchant #:nodoc:
       
       private
       def build_sale_or_authorization_request(action, money, credit_card, options)
+        shipping_address = options[:shipping_address] || options[:address]
+       
         xml = Builder::XmlMarkup.new :indent => 2
-        
         xml.tag! 'DoDirectPaymentReq', 'xmlns' => 'urn:ebay:api:PayPalAPI' do
           xml.tag! 'DoDirectPaymentRequest', 'xmlns:n2' => 'urn:ebay:apis:eBLBaseComponents' do
             xml.tag! 'n2:Version', '2.0'
@@ -45,8 +46,10 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:PaymentDetails' do
                 xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => currency(money)
                 xml.tag! 'n2:NotifyURL', options[:notify_url]
+                
+                add_address(xml, 'n2:ShipToAddress', shipping_address)
               end
-              add_credit_card(xml, credit_card, options[:billing_address] || options[:address])
+              add_credit_card(xml, credit_card, options[:billing_address] || shipping_address)
               xml.tag! 'n2:IPAddress', options[:ip]
             end
           end
@@ -68,7 +71,8 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:FirstName', credit_card.first_name
               xml.tag! 'n2:LastName', credit_card.last_name
             end
-            add_address(xml, address)
+            
+            add_address(xml, 'n2:Address', address)
           end
         end
       end
