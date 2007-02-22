@@ -26,7 +26,7 @@ class PaypalTest < Test::Unit::TestCase
       )
        
       @params = {
-        :order_id => '1230123',
+        :order_id => generate_order_id,
         :email => 'buyer@jadedpallet.com',
         :address => { :name => 'Fred Brooks',
                       :address1 => '1234 Penny Lane',
@@ -107,5 +107,10 @@ class PaypalTest < Test::Unit::TestCase
   def test_failed_voiding
     response = @gateway.void('foo')
     assert !response.success?
+  end
+  
+  private
+  def generate_order_id
+    rand(1000000).to_s
   end
 end 

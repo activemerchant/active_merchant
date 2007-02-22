@@ -47,6 +47,7 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => currency(money)
                 xml.tag! 'n2:NotifyURL', options[:notify_url]
                 xml.tag! 'n2:OrderDescription', options[:description]
+                xml.tag! 'n2:InvoiceID', options[:order_id]
                 
                 add_address(xml, 'n2:ShipToAddress', shipping_address)
               end
