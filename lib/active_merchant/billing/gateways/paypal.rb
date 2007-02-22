@@ -46,10 +46,11 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:PaymentDetails' do
                 xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => currency(money)
                 xml.tag! 'n2:NotifyURL', options[:notify_url]
+                xml.tag! 'n2:OrderDescription', options[:description]
                 
                 add_address(xml, 'n2:ShipToAddress', shipping_address)
               end
-              add_credit_card(xml, credit_card, options[:billing_address] || shipping_address)
+              add_credit_card(xml, credit_card, options[:billing_address] || shipping_address, options)
               xml.tag! 'n2:IPAddress', options[:ip]
             end
           end
@@ -58,7 +59,7 @@ module ActiveMerchant #:nodoc:
         xml.target!        
       end
       
-      def add_credit_card(xml, credit_card, address)
+      def add_credit_card(xml, credit_card, address, options)
         xml.tag! 'n2:CreditCard' do
           xml.tag! 'n2:CreditCardType', credit_card_type(credit_card.type)
           xml.tag! 'n2:CreditCardNumber', credit_card.number
@@ -72,6 +73,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:LastName', credit_card.last_name
             end
             
+            xml.tag! 'n2:Payer', options[:email]
             add_address(xml, 'n2:Address', address)
           end
         end
