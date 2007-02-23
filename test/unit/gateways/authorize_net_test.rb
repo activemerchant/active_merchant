@@ -21,7 +21,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_purchase_success    
     @creditcard.number = 1
 
-    assert response = @gateway.purchase(Money.ca_dollar(100), @creditcard)
+    assert response = @gateway.purchase(Money.new(100), @creditcard)
     assert_equal Response, response.class
     assert_equal '#0001', response.params['receiptid']
     assert_equal true, response.success?
@@ -30,7 +30,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_purchase_error
     @creditcard.number = 2
 
-    assert response = @gateway.purchase(Money.ca_dollar(100), @creditcard, :order_id => 1)
+    assert response = @gateway.purchase(Money.new(100), @creditcard, :order_id => 1)
     assert_equal Response, response.class
     assert_equal '#0001', response.params['receiptid']
     assert_equal false, response.success?
@@ -41,7 +41,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @creditcard.number = 3 
     
     assert_raise(Error) do
-      assert response = @gateway.purchase(Money.ca_dollar(100), @creditcard, :order_id => 1)    
+      assert response = @gateway.purchase(Money.new(100), @creditcard, :order_id => 1)    
     end
   end
   
@@ -113,6 +113,16 @@ class AuthorizeNetTest < Test::Unit::TestCase
     minimum_requirements.each do |key|
       assert_not_nil(data =~ /x_#{key}=/)
     end
+  end
+  
+  def test_credit_success
+    assert response = @gateway.credit(Money.new(100), '123456789', :card_number => '1')
+    assert response.success?
+  end
+  
+  def test_credit_failure
+    assert response = @gateway.credit(Money.new(100), '123456789', :card_number => '2')
+    assert !response.success?
   end
 
   private

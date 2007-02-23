@@ -80,6 +80,16 @@ module ActiveMerchant #:nodoc:
         post = {:trans_id => authorization}
         commit('VOID', nil, post)
       end
+      
+      def credit(money, identification, options = {})
+        requires!(options, :card_number)
+        
+        post = { :trans_id => identification,
+                 :card_num => options[:card_number]
+               }
+
+        commit('CREDIT', money, post)
+      end
     
       # We support visa and master card
       def self.supported_cardtypes
