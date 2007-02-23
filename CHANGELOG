@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add a credit method to Authorize.net [cody]
+#
 # * Add support for OrderDescription, Payer, and InvoiceID fields in PaypalGateway [cody]
 #
 # * Add support for crediting to PayPal [cody, Haig]
