@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add support for PayPal mass payments to the PaypalGateway and the PaypalExpressGateway [Brandon Keepers]
+#
 # * Add a credit method to Authorize.net [cody]
 #
 # * Add support for OrderDescription, Payer, and InvoiceID fields in PaypalGateway [cody]

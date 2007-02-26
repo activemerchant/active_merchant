@@ -109,8 +109,44 @@ class PaypalTest < Test::Unit::TestCase
     assert !response.success?
   end
   
+  def test_successful_transfer
+    response = @gateway.purchase(Money.new(300), @creditcard, @params)
+    assert response.success?, response.message
+    
+    response = @gateway.transfer(Money.new(300), 'joe@example.com', :subject => 'Your money', :note => 'Thanks for taking care of that')
+    assert response.success?, response.message
+  end
+
+  def test_failed_transfer
+     # paypal allows a max transfer of $10,000
+    response = @gateway.transfer(Money.new(1000001), 'joe@example.com')
+    assert !response.success?, response.message
+  end
+  
+  def test_successful_multiple_transfer
+    response = @gateway.purchase(Money.new(900), @creditcard, @params)
+    assert response.success?, response.message
+    
+    response = @gateway.transfer([Money.new(300), 'joe@example.com'],
+      [Money.new(600), 'jane@example.com', {:note => 'Thanks for taking care of that'}],
+      :subject => 'Your money')
+    assert response.success?, response.message
+  end
+  
+  def test_failed_multiple_transfer
+    response = @gateway.purchase(Money.new(25100), @creditcard, @params)
+    assert response.success?, response.message
+
+    # You can only include up to 250 recipients
+    recipients = (1..251).collect {|i| [Money.new(100), "person#{i}@example.com"]}
+    response = @gateway.transfer(*recipients)
+    assert !response.success?, response.message
+  end
+  
   private
   def generate_order_id
     rand(1000000).to_s
   end
-end 
+  
+
+end

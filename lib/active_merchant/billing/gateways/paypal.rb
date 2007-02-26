@@ -38,8 +38,8 @@ module ActiveMerchant #:nodoc:
         shipping_address = options[:shipping_address] || options[:address]
        
         xml = Builder::XmlMarkup.new :indent => 2
-        xml.tag! 'DoDirectPaymentReq', 'xmlns' => 'urn:ebay:api:PayPalAPI' do
-          xml.tag! 'DoDirectPaymentRequest', 'xmlns:n2' => 'urn:ebay:apis:eBLBaseComponents' do
+        xml.tag! 'DoDirectPaymentReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'DoDirectPaymentRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', '2.0'
             xml.tag! 'n2:DoDirectPaymentRequestDetails' do
               xml.tag! 'n2:PaymentAction', action

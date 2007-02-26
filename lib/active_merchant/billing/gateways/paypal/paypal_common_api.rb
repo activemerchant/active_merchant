@@ -45,6 +45,20 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         commit 'DoCapture', build_capture_request(money, authorization, options)
       end
+      
+      # Transfer money to one or more recipients.
+      #
+      #   gateway.transfer 1000, 'bob@example.com',
+      #     :subject => "The money I owe you", :note => "Sorry it's so late"
+      #
+      #   gateway.transfer [1000, 'fred@example.com'],
+      #     [2450, 'wilma@example.com', :note => 'You will receive another payment on 3/24'],
+      #     [2000, 'barney@example.com'],
+      #     :subject => "Your Earnings", :note => "Thanks for your business."
+      #
+      def transfer(*args)
+        commit 'MassPay', build_mass_pay_request(*args)
+      end
 
       def void(authorization, options = {})
         commit 'DoVoid', build_void_request(authorization, options)
@@ -102,6 +116,30 @@ module ActiveMerchant #:nodoc:
         xml.target!        
       end
       
+      def build_mass_pay_request(*args)
+        default_options = args.last.is_a?(Hash) ? args.pop : {}
+        recipients = args.first.is_a?(Array) ? args : [args]
+        
+        xml = Builder::XmlMarkup.new :indent => 2
+        
+        xml.tag! 'MassPayReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'MassPayRequest', 'xmlns:n2' => EBAY_NAMESPACE do
+            xml.tag! 'n2:Version', '2.0'
+            xml.tag! 'EmailSubject', default_options[:subject] if default_options[:subject]
+            recipients.each do |money, recipient, options|
+              options ||= default_options
+              xml.tag! 'MassPayItem' do
+                xml.tag! 'ReceiverEmail', recipient
+                xml.tag! 'Amount', amount(money), 'currencyID' => currency(money)
+                xml.tag! 'Note', options[:note] if options[:note]
+              end
+            end
+          end
+        end
+        
+        xml.target!
+      end
+
       def ssl_post(data)
         uri = URI.parse(test? ? TEST_URL : LIVE_URL)
 
