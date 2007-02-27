@@ -9,8 +9,7 @@ module ActiveMerchant #:nodoc:
         self.country_format = :alpha2
 
         def initialize(order, account, options = {})
-          valid_keys = [:amount, :currency]
-          options.assert_valid_keys(valid_keys)
+          options.assert_valid_keys([:amount, :currency, :test])
           @fields = {}
           self.order = order
           self.account = account
@@ -36,9 +35,11 @@ module ActiveMerchant #:nodoc:
         end
 
         def billing_address(params = {})
-          code = lookup_country_code(params.delete(:country))
-          add_field(mappings[:billing_address][:country], code) if mappings[:billing_address] 
-          add_fields(:billing_address, params)
+          add_address(:billing_address, params)
+        end
+        
+        def shipping_address(params = {})
+          add_address(:shipping_address, params)
         end
         
         def form_fields
@@ -46,7 +47,13 @@ module ActiveMerchant #:nodoc:
         end
 
         private
-
+        
+        def add_address(key, params)
+          code = lookup_country_code(params.delete(:country))
+          add_field(mappings[key][:country], code) if mappings[key] 
+          add_fields(key, params)
+        end
+        
         def lookup_country_code(name_or_code)
           country = Country.find(name_or_code)
           country.code(country_format).to_s

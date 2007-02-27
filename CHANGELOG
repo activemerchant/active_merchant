@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add support for 2Checkout [cody] 
+#
 # * Add support for PayPal mass payments to the PaypalGateway and the PaypalExpressGateway [Brandon Keepers]
 #
 # * Add a credit method to Authorize.net [cody]

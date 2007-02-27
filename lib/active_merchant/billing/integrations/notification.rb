@@ -5,7 +5,8 @@ module ActiveMerchant #:nodoc:
         attr_accessor :params
         attr_accessor :raw
 
-        def initialize(post)
+        def initialize(post, options = {})
+          @options = options
           empty!
           parse(post)
         end
