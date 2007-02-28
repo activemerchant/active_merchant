@@ -2,8 +2,6 @@ require File.dirname(__FILE__) + '/../test_helper'
 
 class CreditCardTest < Test::Unit::TestCase
   include ActiveMerchant::Billing
-  include ActiveMerchant::Billing::CreditCardMethods
-  include ActiveMerchant::Billing::CreditCardFormatting
 
   def setup
     CreditCard.require_verification_value = false
@@ -166,30 +164,6 @@ class CreditCardTest < Test::Unit::TestCase
     assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new('number' => '01234').display_number
   end
 
-  def test_format_expiry_year
-    year = 2005
-    
-    assert_equal '2005', format_year(year)
-    assert_equal '05', format_year(year, :two_digit)
-    assert_equal '2005', format_year(year, :four_digit)
-    assert_equal '5', format_year(05)
-    assert_equal '05', format_year(05, :two_digit)
-    assert_equal '0005', format_year(05, :four_digit)
-    
-  end
-
-  def test_format_expiry_month
-    month = 8
-    assert_equal '8', format_month(month)
-    assert_equal '08', format_month(month, :two_digit)
-  end
-
-  def test_valid_expiry_months
-    assert !valid_month?(-1)
-    1.upto(12){ |m| assert valid_month?(m) }
-    assert !valid_month?(13)
-  end
-
   def test_expired_date
     last_month = Time.now - 2.months
     date = CreditCard::ExpiryDate.new(last_month.month, last_month.year)
@@ -206,15 +180,6 @@ class CreditCardTest < Test::Unit::TestCase
     next_month = Time.now + 1.month
     date = CreditCard::ExpiryDate.new(next_month.month, next_month.year)
     assert !date.expired?
-  end
-
-  def test_valid_expiry_year
-    0.upto(20){ |n| assert valid_expiry_year?(Time.now.year + n) }
-  end
-
-  def test_invalid_expiry_year
-    assert !valid_expiry_year?(-1)
-    assert !valid_expiry_year?(Time.now.year + 21)
   end
 
   def test_type
@@ -245,23 +210,6 @@ class CreditCardTest < Test::Unit::TestCase
     assert !card.valid?
     card.verification_value = '123'
     assert card.valid?
-  end
-  
-  def test_valid_start_year
-    assert !valid_start_year?(1987)
-    assert valid_start_year?(1988)
-    assert valid_start_year?(2007)
-    assert valid_start_year?(3000)
-  end
-  
-  def test_valid_issue_number
-    assert valid_issue_number?(1)
-    assert !valid_issue_number?(-1)
-    assert valid_issue_number?(10)
-    assert valid_issue_number?('12')
-    assert valid_issue_number?(0)
-    assert !valid_issue_number?(123)
-    assert !valid_issue_number?('CAT')
   end
   
   def test_solo_is_valid_with_start_date

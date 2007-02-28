@@ -17,6 +17,7 @@ module ActiveMerchant #:nodoc:
     class Gateway
       include PostsData
       include RequiresParameters
+      include CreditCardFormatting
       
       # The format of the amounts used by the gateway
       # :dollars => '12.50'

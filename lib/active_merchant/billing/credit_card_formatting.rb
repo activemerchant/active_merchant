@@ -1,23 +1,16 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module CreditCardFormatting
-      def format_month(month, format = nil)
+      def format(number, format)
+        return '' if number.blank?
+        
         case format
-        when :two_digit
-          sprintf("%.2i", month)[-2..-1]
+        when :two_digits
+          sprintf("%.2i", number)[-2..-1]
+        when :four_digits
+          sprintf("%.4i", number)[-4..-1]
         else
-          month.to_s
-        end
-      end
-    
-      def format_year(year, format = nil)
-        case format
-        when :two_digit
-          sprintf("%.2i", year)[-2..-1]
-        when :four_digit
-          sprintf("%.4i", year)
-        else
-          year.to_s
+          number
         end
       end
     end
