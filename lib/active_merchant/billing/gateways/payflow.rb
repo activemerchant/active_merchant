@@ -50,8 +50,10 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'TotalAmt', amount(money), 'Currency' => currency(money)
               
               xml.tag! 'Level3Invoice' do
-                xml.tag! 'CardStart', startdate(credit_card) unless credit_card.start_month.blank? || credit_card.start_year.blank?
-                xml.tag! 'CardIssue', credit_card.issue_number unless credit_card.issue_number.blank?
+                if [ 'switch', 'solo' ].include?(credit_card.type.to_s)
+                  xml.tag! 'CardStart', startdate(credit_card) unless credit_card.start_month.blank? || credit_card.start_year.blank?
+                  xml.tag! 'CardIssue', credit_card.issue_number unless credit_card.issue_number.blank?
+                end
               end
             end
             

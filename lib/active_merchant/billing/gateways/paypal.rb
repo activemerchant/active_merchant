@@ -67,9 +67,12 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:ExpMonth', format(credit_card.month, :two_digits)
           xml.tag! 'n2:ExpYear', format(credit_card.year, :four_digits)
           xml.tag! 'n2:CVV2', credit_card.verification_value
-          xml.tag! 'n2:StartMonth', format(credit_card.start_month, :two_digits) unless credit_card.start_month.blank?
-          xml.tag! 'n2:StartYear', format(credit_card.start_year, :four_digits) unless credit_card.start_year.blank?
-          xml.tag! 'n2:IssueNumber', format(credit_card.issue_number, :two_digits) unless credit_card.issue_number.blank?
+          
+          if [ 'switch', 'solo' ].include?(credit_card.type.to_s)
+            xml.tag! 'n2:StartMonth', format(credit_card.start_month, :two_digits) unless credit_card.start_month.blank?
+            xml.tag! 'n2:StartYear', format(credit_card.start_year, :four_digits) unless credit_card.start_year.blank?
+            xml.tag! 'n2:IssueNumber', format(credit_card.issue_number, :two_digits) unless credit_card.issue_number.blank?
+          end
           
           xml.tag! 'n2:CardOwner' do
             xml.tag! 'n2:PayerName' do
