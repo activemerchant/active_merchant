@@ -48,6 +48,11 @@ module ActiveMerchant #:nodoc:
               add_address(xml, 'ShipTo', shipping_address, options)
               
               xml.tag! 'TotalAmt', amount(money), 'Currency' => currency(money)
+              
+              xml.tag! 'Level3Invoice' do
+                xml.tag! 'CardStart', startdate(credit_card) unless credit_card.start_month.blank? || credit_card.start_year.blank?
+                xml.tag! 'CardIssue', credit_card.issue_number unless credit_card.issue_number.blank?
+              end
             end
             
             xml.tag! 'Tender' do
@@ -71,6 +76,13 @@ module ActiveMerchant #:nodoc:
       def expdate(creditcard)
         year  = sprintf("%.4i", creditcard.year)
         month = sprintf("%.2i", creditcard.month)
+
+        "#{year}#{month}"
+      end
+      
+      def startdate(creditcard)
+        year  = sprintf("%.4i", creditcard.start_year)
+        month = sprintf("%.2i", creditcard.start_month)
 
         "#{year}#{month}"
       end
