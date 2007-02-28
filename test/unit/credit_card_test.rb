@@ -2,17 +2,30 @@ require File.dirname(__FILE__) + '/../test_helper'
 
 class CreditCardTest < Test::Unit::TestCase
   include ActiveMerchant::Billing
+  include ActiveMerchant::Billing::CreditCardMethods
+  include ActiveMerchant::Billing::CreditCardFormatting
 
   def setup
     CreditCard.require_verification_value = false
     
-    @card = CreditCard.new
-    @card.type   = "visa"
-    @card.number = "4779139500118580"
-    @card.month  = Time.now.month
-    @card.year   = Time.now.year + 1
-    @card.first_name   = "Test"
-    @card.last_name   = "Mensch"
+    @visa = CreditCard.new(
+      :type => "visa",
+      :number => "4779139500118580",
+      :month => Time.now.month,
+      :year => Time.now.year + 1,
+      :first_name => "Test",
+      :last_name => "Mensch"
+    )
+    
+    @solo = CreditCard.new(
+      :type   => "solo",
+      :number => "6334900000000005",
+      :month  => Time.now.month,
+      :year   => Time.now.year + 1,
+      :first_name  => "Test",
+      :last_name   => "Mensch",
+      :issue_number => '01'
+    )
   end
   
   def teardown
@@ -27,16 +40,20 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_valid
-    assert @card.valid?
-    assert @card.errors.empty?
+    assert @visa.valid?
+    assert @visa.errors.empty?
+  end
+  
+  def test_valid_solo_card
+    assert @solo.valid?
   end
   
   def test_empty_names
-    @card.first_name = ''
-    @card.last_name = '' 
+    @visa.first_name = ''
+    @visa.last_name = '' 
     
-    assert !@card.valid?
-    assert !@card.errors.empty?
+    assert !@visa.valid?
+    assert !@visa.errors.empty?
   end
   
   def test_liberate_bogus_card
@@ -53,51 +70,51 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_invalid_card_numbers
-    @card.number = nil
-    assert !@card.valid?
+    @visa.number = nil
+    assert !@visa.valid?
     
-    @card.number = "11112222333344ff"
-    assert !@card.valid?
+    @visa.number = "11112222333344ff"
+    assert !@visa.valid?
 
-    @card.number = "111122223333444"
-    assert !@card.valid?
+    @visa.number = "111122223333444"
+    assert !@visa.valid?
 
-    @card.number = "11112222333344444"
-    assert !@card.valid?
+    @visa.number = "11112222333344444"
+    assert !@visa.valid?
   end
   
   def test_valid_card_number
-    @card.number = "4242424242424242"
-    assert @card.valid?
+    @visa.number = "4242424242424242"
+    assert @visa.valid?
   end
 
   def test_valid_card_month
-    @card.month  = Time.now.month
-    @card.year   = Time.now.year
-    assert @card.valid?
+    @visa.month  = Time.now.month
+    @visa.year   = Time.now.year
+    assert @visa.valid?
   end
  
   def test_edge_cases_for_valid_months
-    @card.month = 13
-    @card.year = Time.now.year
-    assert !@card.valid?
+    @visa.month = 13
+    @visa.year = Time.now.year
+    assert !@visa.valid?
 
-    @card.month = 0
-    @card.year = Time.now.year
-    assert !@card.valid?
+    @visa.month = 0
+    @visa.year = Time.now.year
+    assert !@visa.valid?
   end 
 
   def test_edge_cases_for_valid_years
-    @card.year  = Time.now.year - 1
-    assert !@card.valid?
+    @visa.year  = Time.now.year - 1
+    assert !@visa.valid?
 
-    @card.year  = Time.now.year + 21
-    assert !@card.valid?
+    @visa.year  = Time.now.year + 21
+    assert !@visa.valid?
   end
 
   def test_valid_year
-    @card.year = Time.now.year + 1
-    assert @card.valid?
+    @visa.year = Time.now.year + 1
+    assert @visa.valid?
   end
 
   def test_wrong_cardtype
@@ -150,24 +167,27 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_format_expiry_year
-    year = CreditCard::ExpiryYear.new(2005)
-    assert_equal '2005', year.to_s
-    assert_equal '2005', year.to_s(:default)
-    assert_equal '05', year.to_s(:two_digit)
-    assert_equal '2005', year.to_s(:four_digit)
+    year = 2005
+    
+    assert_equal '2005', format_year(year)
+    assert_equal '05', format_year(year, :two_digit)
+    assert_equal '2005', format_year(year, :four_digit)
+    assert_equal '5', format_year(05)
+    assert_equal '05', format_year(05, :two_digit)
+    assert_equal '0005', format_year(05, :four_digit)
+    
   end
 
   def test_format_expiry_month
-    month = CreditCard::ExpiryMonth.new(8) 
-    assert_equal '8', month.to_s
-    assert_equal '8', month.to_s(:default)
-    assert_equal '08', month.to_s(:two_digit)
+    month = 8
+    assert_equal '8', format_month(month)
+    assert_equal '08', format_month(month, :two_digit)
   end
 
   def test_valid_expiry_months
-    assert !CreditCard::ExpiryMonth.new(-1).valid?
-    1.upto(12){ |m| assert CreditCard::ExpiryMonth.new(m).valid? }
-    assert !CreditCard::ExpiryMonth.new(13).valid?
+    assert !valid_month?(-1)
+    1.upto(12){ |m| assert valid_month?(m) }
+    assert !valid_month?(13)
   end
 
   def test_expired_date
@@ -189,12 +209,12 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_valid_expiry_year
-    0.upto(20){ |n| assert CreditCard::ExpiryYear.new(Time.now.year + n).valid? }
+    0.upto(20){ |n| assert valid_expiry_year?(Time.now.year + n) }
   end
 
   def test_invalid_expiry_year
-    assert !CreditCard::ExpiryYear.new(-1).valid?
-    assert !CreditCard::ExpiryYear.new(Time.now.year + 21).valid?
+    assert !valid_expiry_year?(-1)
+    assert !valid_expiry_year?(Time.now.year + 21)
   end
 
   def test_type
@@ -205,7 +225,7 @@ class CreditCardTest < Test::Unit::TestCase
   
   def test_does_not_require_verification_value
     assert !CreditCard.requires_verification_value?
-    assert @card.valid?
+    assert @visa.valid?
   end
   
   def test_requires_verification_value
@@ -225,5 +245,51 @@ class CreditCardTest < Test::Unit::TestCase
     assert !card.valid?
     card.verification_value = '123'
     assert card.valid?
+  end
+  
+  def test_valid_start_year
+    assert !valid_start_year?(1987)
+    assert valid_start_year?(1988)
+    assert valid_start_year?(2007)
+    assert valid_start_year?(3000)
+  end
+  
+  def test_valid_issue_number
+    assert valid_issue_number?(1)
+    assert !valid_issue_number?(-1)
+    assert valid_issue_number?(10)
+    assert valid_issue_number?('12')
+    assert valid_issue_number?(0)
+    assert !valid_issue_number?(123)
+    assert !valid_issue_number?('CAT')
+  end
+  
+  def test_solo_is_valid_with_start_date
+    @solo.start_month = nil
+    @solo.start_year = nil
+    @solo.issue_number = nil
+    
+    assert !@solo.valid?
+    assert @solo.errors.on('start_month')
+    assert @solo.errors.on('start_year')
+    assert @solo.errors.on('issue_number')
+    
+    @solo.start_month = 2
+    @solo.start_year = 2007
+    assert @solo.valid?
+  end
+  
+  def test_solo_is_valid_with_issue_number
+    @solo.start_month = nil
+    @solo.start_year = 2005
+    @solo.issue_number = nil
+    
+    assert !@solo.valid?
+    assert @solo.errors.on('start_month')
+    assert !@solo.errors.on('start_year')
+    assert @solo.errors.on('issue_number')
+    
+    @solo.issue_number = 3
+    assert @solo.valid?
   end
 end

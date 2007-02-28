@@ -48,6 +48,8 @@ require 'active_merchant/lib/requires_parameters'
 require 'active_merchant/lib/country'
 
 # CreditCard Utility class. 
+require 'active_merchant/billing/credit_card_methods'
+require 'active_merchant/billing/credit_card_formatting'
 require 'active_merchant/billing/credit_card'
 
 require 'active_merchant/billing/base'
