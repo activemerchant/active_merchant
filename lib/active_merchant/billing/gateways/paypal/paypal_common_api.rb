@@ -21,6 +21,17 @@ module ActiveMerchant #:nodoc:
                                  'xmlns:n1' => EBAY_NAMESPACE,
                                  'env:mustUnderstand' => '0'
                                }
+      
+      AUSTRALIAN_STATES = {
+        'ACT' => 'Australian Capital Territory',
+        'NSW' => 'New South Wales',
+        'NT'  => 'Northern Territory',
+        'QLD' => 'Queensland',
+        'SA'  => 'South Australia',
+        'TAS' => 'Tasmania',
+        'VIC' => 'Victoria',
+        'WA'  => 'Western Australia'
+      }
     
       # <tt>:pem</tt>         The text of your PayPal PEM file. Note
       #                       this is not the path to file, but its
@@ -229,10 +240,18 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:Street1', address[:address1]
           xml.tag! 'n2:Street2', address[:address2]
           xml.tag! 'n2:CityName', address[:city]
-          xml.tag! 'n2:StateOrProvince', address[:state]
+          xml.tag! 'n2:StateOrProvince', lookup_state(address)
           xml.tag! 'n2:Country', address[:country]
           xml.tag! 'n2:PostalCode', address[:zip]
           xml.tag! 'n2:Phone', address[:phone]
+        end
+      end
+      
+      def lookup_state(address)
+        state = if address[:country].to_s.upcase == 'AU' || address[:country] == 'Australia'
+          AUSTRALIAN_STATES[address[:state]] || address[:state] 
+        else
+          address[:state]
         end
       end
 
