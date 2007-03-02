@@ -288,6 +288,22 @@ module ActiveMerchant #:nodoc:
         return xml.to_s
       end
       
+      def ssl_post(url, data, headers = {})
+        uri   = URI.parse(url)
+
+        http = Net::HTTP.new(uri.host, uri.port) 
+
+        http.verify_mode    = OpenSSL::SSL::VERIFY_NONE
+        http.use_ssl        = true
+
+        unless @options[:pem].blank?
+          http.cert           = OpenSSL::X509::Certificate.new(@options[:pem])
+          http.key            = OpenSSL::PKey::RSA.new(@options[:pem])
+        end
+
+        http.post(uri.path, data, headers).body      
+      end
+      
       # Set up the parameters hash just once so we don't have to do it
       # for every action. 
       def parameters(money, creditcard, options = {})
