@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       http.ca_file        = File.dirname(__FILE__) + '/../../certs/cacert.pem'
       http.use_ssl        = true
       
-      if @options[:pem]
+      unless @options[:pem].blank?
         http.cert           = OpenSSL::X509::Certificate.new(@options[:pem])
         http.key            = OpenSSL::PKey::RSA.new(@options[:pem])
       end
