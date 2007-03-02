@@ -15,7 +15,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     @certification_id = ""
     
     # The default partner is PayPalUk
-    @gateway = PaypalPayflowUkGateway.new(
+    @gateway = PayflowUkGateway.new(
       :login => @login,
       :password => @password,
       :certification_id => @certification_id

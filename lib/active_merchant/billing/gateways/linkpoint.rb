@@ -136,12 +136,11 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login)
         
         @options = {
-          :result => 'LIVE'
+          :result => 'LIVE',
+          :pem => LinkpointGateway.pem_file
         }.update(options)
         
-        @pem = @options[:pem] || LinkpointGateway.pem_file
-        
-        raise ArgumentError, "You need to pass in your pem file using the :pem parameter or set it globally using ActiveMerchant::Billing::LinkpointGateway.pem_file = File.read( File.dirname(__FILE__) + '/../mycert.pem' ) or similar" if @pem.nil?
+        raise ArgumentError, "You need to pass in your pem file using the :pem parameter or set it globally using ActiveMerchant::Billing::LinkpointGateway.pem_file = File.read( File.dirname(__FILE__) + '/../mycert.pem' ) or similar" if @options[:pem].blank?
       end
       
       # Send a purchase request with periodic options
@@ -245,16 +244,16 @@ module ActiveMerchant #:nodoc:
       end
       
       private
-      
       # Commit the transaction by posting the XML file to the LinkPoint server
       def commit(money, creditcard, options = {})
         parameters = parameters(money, creditcard, options)
+        url = test? ? TEST_URL : LIVE_URL
         
         if creditcard and result = test_result_from_cc_number(parameters[:creditcard][:cardnumber])
           return result
         end
         
-        data = ssl_post post_data(parameters)
+        data = ssl_post(url, post_data(parameters))
                 
         @response = parse(data)
         
@@ -407,23 +406,6 @@ module ActiveMerchant #:nodoc:
         end unless xml.root.nil?
         
         response
-      end
-      
-      # Redefine ssl_post to use our PEM file
-      def ssl_post(data)
-        
-        raise "PEM file invalid or missing!" unless @pem =~ %r{RSA.*CERTIFICATE}m
-        
-        uri = URI.parse(test? ? TEST_URL : LIVE_URL)
-        
-        http = Net::HTTP.new(uri.host, uri.port) 
-        
-        http.verify_mode    = OpenSSL::SSL::VERIFY_NONE unless @ssl_strict
-        http.use_ssl        = true
-        http.cert           = OpenSSL::X509::Certificate.new(@pem)
-        http.key            = OpenSSL::PKey::RSA.new(@pem)
-        
-        http.post(uri.path, data).body      
       end
     
       # Make a ruby type out of the response string

@@ -111,20 +111,7 @@ module ActiveMerchant #:nodoc:
           end
         end
       end
-    
-      def ssl_post(url, data, headers)
-        uri = URI.parse(url)
-
-        http = Net::HTTP.new(uri.host, uri.port)
-
-        http.verify_mode    = OpenSSL::SSL::VERIFY_PEER
-        http.verify_depth   = 5
-        http.use_ssl        = true
-        http.ca_file        = File.dirname(__FILE__) + '/f73e89fd.0'
-
-        http.post(uri.path, data, headers).body
-      end
-            
+          
       def parse(data)
         response = {}
         xml = REXML::Document.new(data)

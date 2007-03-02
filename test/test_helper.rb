@@ -29,6 +29,10 @@ module Test
       end
 
       private
+      def generate_order_id
+        rand(1000000).to_s
+      end
+      
       def clean_backtrace(&block)
         yield
       rescue AssertionFailedError => e

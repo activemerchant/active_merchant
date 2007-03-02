@@ -142,11 +142,4 @@ class PaypalTest < Test::Unit::TestCase
     response = @gateway.transfer(*recipients)
     assert !response.success?, response.message
   end
-  
-  private
-  def generate_order_id
-    rand(1000000).to_s
-  end
-  
-
 end

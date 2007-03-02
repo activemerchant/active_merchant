@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
      
       # Moneris requires both the order_id and the transaction number of
       # the original authorization.  To maintain the same interface as the other
-      # gateways the two numbers are concatenated together with an _ separator as
+      # gateways the two numbers are concatenated together with a ; separator as
       # the authorization number returned by authorization
       def capture(money, authorization, options = {})
         txn_number, order_id = authorization.split(';')

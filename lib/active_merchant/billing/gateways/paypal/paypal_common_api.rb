@@ -150,21 +150,7 @@ module ActiveMerchant #:nodoc:
         
         xml.target!
       end
-
-      def ssl_post(data)
-        uri = URI.parse(test? ? TEST_URL : LIVE_URL)
-
-        http = Net::HTTP.new(uri.host, uri.port)
-
-        http.verify_mode    = OpenSSL::SSL::VERIFY_PEER
-        http.use_ssl        = true
-        http.cert           = OpenSSL::X509::Certificate.new(@options[:pem])
-        http.key            = OpenSSL::PKey::RSA.new(@options[:pem])
-        http.ca_file        = File.dirname(__FILE__) + '/api_cert_chain.crt'
-
-        http.post(uri.path, data).body
-      end
-
+      
       def parse(action, xml)
         response = {}
         xml = REXML::Document.new(xml)
@@ -260,7 +246,8 @@ module ActiveMerchant #:nodoc:
       end
       
       def commit(action, request)
-        data = ssl_post build_request(request)
+        url = test? ? TEST_URL : LIVE_URL
+        data = ssl_post(url, build_request(request))
         
         @response = parse(action, data)
        

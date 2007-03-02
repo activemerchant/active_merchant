@@ -91,9 +91,4 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_equal true, response.params['complete']
     assert_equal false, response.success?
   end
-
-  private
-  def generate_order_id
-    "moneris_test_case" + rand(1000000).to_s
-  end
 end

@@ -100,7 +100,9 @@ module ActiveMerchant #:nodoc:
           return result
         end
         
-        data = ssl_post post_data(parameters)
+        url = test? ? TEST_URL : LIVE_URL
+        
+        data = ssl_post(url, post_data(parameters))
         @response = parse(data)
         success = (@response[:approved] == "APPROVED")
         message = message_form(@response)
@@ -159,12 +161,9 @@ module ActiveMerchant #:nodoc:
         xml.to_s
       end
       
-      
       # Set up the parameters hash just once so we don't have to do it
       # for every action. 
-      def parameters(money, creditcard, options = {})
-        
-        
+      def parameters(money, creditcard, options = {})  
         params = {
           # General order paramters
           :StoreID => @options[:store_id],
@@ -226,20 +225,6 @@ module ActiveMerchant #:nodoc:
        	 	
         return params
       end
-      
-      # Redefine ssl_post to use correct url depending on test mode
-      def ssl_post(data)
-        # In my case I only want the LIVE_URL to be used when in prodcution mode 
-        # because Psigate charges for all transactions
-        uri = URI.parse(test? ? TEST_URL : LIVE_URL )
-        http = Net::HTTP.new(uri.host, uri.port) 
-
-        http.verify_mode    = OpenSSL::SSL::VERIFY_NONE unless @ssl_strict
-        http.use_ssl        = true
-
-        http.post(uri.path, data).body 
-      end
-      
       
       def message_form(response)
         if response[:approved] == "APPROVED"
