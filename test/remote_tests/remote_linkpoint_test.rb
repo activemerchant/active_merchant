@@ -67,7 +67,7 @@ class LinkpointTest < Test::Unit::TestCase
       :order_id => order_id, 
       :address => @address
     )
-    
+  
     assert_equal Response, response.class
     assert_equal true, response.success?
     assert_equal "APPROVED", response.params["approved"]

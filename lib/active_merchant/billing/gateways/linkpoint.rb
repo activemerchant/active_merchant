@@ -127,6 +127,9 @@ module ActiveMerchant #:nodoc:
       
       TEST_URL  = 'https://staging.linkpt.net:1129/'
       LIVE_URL  = 'https://secure.linkpt.net:1129/'
+      
+      # We don't have the certificate to verify LinkPoint
+      self.ssl_strict = false
            
       # @options = {
       #  :store_number => options[:login],
@@ -287,23 +290,7 @@ module ActiveMerchant #:nodoc:
         
         return xml.to_s
       end
-      
-      def ssl_post(url, data, headers = {})
-        uri   = URI.parse(url)
-
-        http = Net::HTTP.new(uri.host, uri.port) 
-
-        http.verify_mode    = OpenSSL::SSL::VERIFY_NONE
-        http.use_ssl        = true
-
-        unless @options[:pem].blank?
-          http.cert           = OpenSSL::X509::Certificate.new(@options[:pem])
-          http.key            = OpenSSL::PKey::RSA.new(@options[:pem])
-        end
-
-        http.post(uri.path, data, headers).body      
-      end
-      
+            
       # Set up the parameters hash just once so we don't have to do it
       # for every action. 
       def parameters(money, creditcard, options = {})
