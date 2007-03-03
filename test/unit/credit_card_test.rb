@@ -240,4 +240,12 @@ class CreditCardTest < Test::Unit::TestCase
     @solo.issue_number = 3
     assert @solo.valid?
   end
+  
+  def test_validate_new_card
+    credit_card = CreditCard.new
+    
+    assert_nothing_raised do
+      credit_card.validate
+    end
+  end
 end

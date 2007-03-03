@@ -60,30 +60,30 @@ module ActiveMerchant #:nodoc:
       end
 
       def validate
-        @errors.add "year", "expired"                             if expired?
-             
-        @errors.add "first_name", "cannot be empty"               if @first_name.blank?
-        @errors.add "last_name", "cannot be empty"                if @last_name.blank?
-        @errors.add "month", "cannot be empty"                    unless valid_month?(@month)
-        @errors.add "year", "cannot be empty"                     unless valid_expiry_year?(@year)
+        errors.add "year", "expired"                             if expired?
+            
+        errors.add "first_name", "cannot be empty"               if @first_name.blank?
+        errors.add "last_name", "cannot be empty"                if @last_name.blank?
+        errors.add "month", "cannot be empty"                    unless valid_month?(@month)
+        errors.add "year", "cannot be empty"                     unless valid_expiry_year?(@year)
 
         # Bogus card is pretty much for testing purposes. Lets just skip these extra tests if its used
         
         return if type == 'bogus'
 
-        @errors.add "number", "is not a valid credit card number" unless CreditCard.valid_number?(number)                     
-        @errors.add "type", "is invalid"                          unless CreditCard.card_companies.keys.include?(type)
-        @errors.add "type", "is not the correct card type"        unless CreditCard.type?(number) == type
+        errors.add "number", "is not a valid credit card number" unless CreditCard.valid_number?(number)                     
+        errors.add "type", "is invalid"                          unless CreditCard.card_companies.keys.include?(type)
+        errors.add "type", "is not the correct card type"        unless CreditCard.type?(number) == type
         
         if CreditCard.requires_verification_value?
-          @errors.add "verification_value", "is required" unless verification_value?
+          errors.add "verification_value", "is required" unless verification_value?
         end
         
         if [ 'switch', 'solo' ].include?(type)
           unless valid_month?(@start_month) && valid_start_year?(@start_year) || valid_issue_number?(@issue_number)
-            @errors.add "start_month", "is invalid"                    unless valid_month?(@start_month)
-            @errors.add "start_year", "is invalid"                     unless valid_start_year?(@start_year)
-            @errors.add "issue_number", "cannot be empty"              unless valid_issue_number?(@issue_number)
+            errors.add "start_month", "is invalid"                    unless valid_month?(@start_month)
+            errors.add "start_year", "is invalid"                     unless valid_start_year?(@start_year)
+            errors.add "issue_number", "cannot be empty"              unless valid_issue_number?(@issue_number)
           end
         end
       end  

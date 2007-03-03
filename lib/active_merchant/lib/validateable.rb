@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
     end
 
     def errors    
-      @errors ||= Error.new(self)
+      @errors ||= Errors.new(self)
     end
 
     private
@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
     end  
 
     # This hash keeps the errors of the object
-    class Error < Hash
+    class Errors < Hash
 
       def initialize(base)
         @base = base
