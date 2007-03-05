@@ -5,13 +5,13 @@ require File.dirname(__FILE__) + '/../test_helper'
 class RemoteDataCashTest < Test::Unit::TestCase
   include ActiveMerchant::Billing
 
-  LOGIN = ''      #Datacash supplied login
-  PASSWORD = ''   #Datacash supplied password
-  
+  CLIENT = ''      
+  PASSWORD = ''
+    
   def setup
     #gateway to connect to Datacash
     @gateway = DataCashGateway.new(
-      :login => LOGIN,
+      :login => CLIENT,
       :password => PASSWORD,
       :test => true
     )
@@ -29,7 +29,9 @@ class RemoteDataCashTest < Test::Unit::TestCase
     @solo = CreditCard.new(
       :first_name => 'Cody',
       :last_name => 'Fauser',
-      :number => 633499100000000004,
+      :number => '633499100000000004',
+      :month => 3,
+      :year => 2010,
       :type => :solo,
       :issue_number => 5,
       :start_month => 12,
@@ -81,9 +83,9 @@ class RemoteDataCashTest < Test::Unit::TestCase
   # this card number won't check the address details - testing extended
   # policy
   def test_successful_purchase_without_address_check2
-    @mastercard.number = 633499110000000003
+    @solo.number = '633499110000000003'
     
-    response = @gateway.purchase(Money.new(198, 'GBP'), @mastercard, @params)
+    response = @gateway.purchase(Money.new(198, 'GBP'), @solo, @params)
     assert response.success?
     assert response.test?
   end
@@ -144,8 +146,27 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert purchase.success?
     assert purchase.test?
     
-    void = @gateway.void(authorization.authorization, @params)
+    void = @gateway.void(purchase.authorization, @params)
     assert void.success?
     assert void.test?
+  end
+  
+  def test_merchant_reference_that_is_too_short
+    @params[:order_id] = rand(10000)
+    response = @gateway.purchase(Money.new(198, 'GBP'), @mastercard, @params)
+    assert response.success?
+    assert response.test?
+  end
+  
+  def test_merchant_reference_containing_invalid_characters
+    @params[:order_id] = "##{rand(1000) + 1000}.1"
+    response = @gateway.purchase(Money.new(198, 'GBP'), @mastercard, @params)
+    assert response.success?
+    assert response.test?
+  end
+  
+  private
+  def generate_order_id
+    Time.now().to_i.to_s + (rand * 10000).to_i.to_s
   end
 end

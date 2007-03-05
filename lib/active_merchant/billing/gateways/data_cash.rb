@@ -38,7 +38,7 @@ module ActiveMerchant
       # The gateway requires that a valid :login and :password be passed
       # in the options hash
       # 
-      # Paramters:
+      # Parameters:
       #   -options:
       #     :login - the Datacash account login
       #     :password - the Datacash account password
@@ -147,8 +147,8 @@ module ActiveMerchant
       #   -the list of all supported cards
       #   
       def self.supported_cardtypes
-        [ :american_express, :diners_club, :discover, :jcb, :master, 
-          :switch, :solo, :visa ]
+        [ :visa, :master, :american_express, :discover, :diners_club, :jcb, 
+          :switch, :solo ]
       end
       
       # Return whether or not the gateway is in test mode
@@ -196,7 +196,7 @@ module ActiveMerchant
       #   -Builder xml document
       #
       def build_void_or_capture_request(type, money, authorization, options)
-        reference, auth_code = authorization.split(';')
+        reference, auth_code = authorization.to_s.split(';')
         
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
@@ -211,8 +211,8 @@ module ActiveMerchant
             end
             
             if money
-              xml.tag! :TxnDetails do 
-                xml.tag! :merchantreference, options[:order_id]
+              xml.tag! :TxnDetails do
+                xml.tag! :merchantreference, format_reference_number(options[:order_id])
                 xml.tag! :amount, amount(money), :currency => currency(money)
               end
             end
@@ -295,7 +295,7 @@ module ActiveMerchant
               add_credit_card(xml, credit_card, options[:billing_address] || options[:address])
             end
             xml.tag! :TxnDetails do
-              xml.tag! :merchantreference, options[:order_id]
+              xml.tag! :merchantreference, format_reference_number(options[:order_id])
               xml.tag! :amount, amount(money), :currency => currency(money)
             end
           end
@@ -393,10 +393,8 @@ module ActiveMerchant
       #   
       def commit(request)
         url = test? ? TEST_URL : LIVE_URL
-        
-        #parse the response and send back the Response object
-        @response = parse(ssl_post(url, request))
-        
+  
+        @response = parse(ssl_post(url, request))      
         success = @response[:status] == DATACASH_SUCCESS
         message = @response[:reason]
         
@@ -416,9 +414,18 @@ module ActiveMerchant
       #            ISO 4217 codes)
       #            
       def currency(money)
-        money.respond_to?(:currency) ? money.currency : self.default_currency
+        money.respond_to?(:currency) ? money.currency : 'GBP'
       end
       
+      # Returns a date string in the format Datacash expects
+      # 
+      # Parameters:
+      #   -month: integer, the month
+      #   -year: integer, the year
+      # 
+      # Returns:
+      #   -String: date in MM/YY format
+      #
       def format_date(month, year)
         "#{format(month,:two_digits)}/#{format(year, :two_digits)}"
       end
@@ -458,6 +465,10 @@ module ActiveMerchant
         else
           response[node.name.underscore.to_sym] = node.text
         end
+      end
+      
+      def format_reference_number(number)
+        number.to_s.gsub(/[^A-Za-z0-9]/, '').rjust(6, "0")
       end
     end
   end
