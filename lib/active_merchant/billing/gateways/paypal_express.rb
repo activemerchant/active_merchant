@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'GetExpressCheckoutDetailsReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'GetExpressCheckoutDetailsRequest', 'xmlns:n2' => EBAY_NAMESPACE do
-            xml.tag! 'n2:Version', '2.0'
+            xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'Token', token
           end
         end
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'DoExpressCheckoutPaymentReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'DoExpressCheckoutPaymentRequest', 'xmlns:n2' => EBAY_NAMESPACE do
-            xml.tag! 'n2:Version', '2.0'
+            xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'n2:DoExpressCheckoutPaymentRequestDetails' do
               xml.tag! 'n2:PaymentAction', action
               xml.tag! 'n2:Token', options[:token]
@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'SetExpressCheckoutReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'SetExpressCheckoutRequest', 'xmlns:n2' => EBAY_NAMESPACE do
-            xml.tag! 'n2:Version', '2.0'
+            xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'n2:SetExpressCheckoutRequestDetails' do
               xml.tag! 'n2:PaymentAction', action
               xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => currency(money)

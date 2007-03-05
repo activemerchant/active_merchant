@@ -7,6 +7,7 @@ module ActiveMerchant #:nodoc:
         base.cattr_accessor :pem_file
       end
       
+      API_VERSION = '2.0'
       TEST_URL = 'https://api.sandbox.paypal.com/2.0/'
       LIVE_URL = 'https://api-aa.paypal.com/2.0/'
       
@@ -53,6 +54,10 @@ module ActiveMerchant #:nodoc:
         @options[:test] || Base.gateway_mode == :test
       end
 
+      def reauthorize(money, authorization, options = {})
+        commit 'DoReauthorization', build_reauthorize_request(money, authorization, options)
+      end
+      
       def capture(money, authorization, options = {})
         commit 'DoCapture', build_capture_request(money, authorization, options)
       end
@@ -80,13 +85,26 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+      def build_reauthorize_request(money, authorization, options)
+        xml = Builder::XmlMarkup.new :indent => 2
+        
+        xml.tag! 'DoReauthorizationReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'DoReauthorizationRequest', 'xmlns:n2' => EBAY_NAMESPACE do
+            xml.tag! 'n2:Version', API_VERSION
+            xml.tag! 'AuthorizationID', authorization
+            xml.tag! 'Amount', amount(money), 'currencyID' => currency(money)
+          end
+        end
+
+        xml.target!        
+      end
           
       def build_capture_request(money, authorization, options)
         xml = Builder::XmlMarkup.new :indent => 2
         
         xml.tag! 'DoCaptureReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'DoCaptureRequest', 'xmlns:n2' => EBAY_NAMESPACE do
-            xml.tag! 'n2:Version', '2.0'
+            xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'AuthorizationID', authorization
             xml.tag! 'Amount', amount(money), 'currencyID' => currency(money)
             xml.tag! 'CompleteType', 'Complete'
@@ -102,7 +120,7 @@ module ActiveMerchant #:nodoc:
             
         xml.tag! 'RefundTransactionReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'RefundTransactionRequest', 'xmlns:n2' => EBAY_NAMESPACE do
-            xml.tag! 'n2:Version', '2.0'
+            xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'TransactionID', identification
             xml.tag! 'Amount', amount(money), 'currencyID' => currency(money)
             xml.tag! 'RefundType', 'Partial'
@@ -118,7 +136,7 @@ module ActiveMerchant #:nodoc:
         
         xml.tag! 'DoVoidReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'DoVoidRequest', 'xmlns:n2' => EBAY_NAMESPACE do
-            xml.tag! 'n2:Version', '2.0'
+            xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'AuthorizationID', authorization
             xml.tag! 'Note', options[:description]
           end
@@ -135,7 +153,7 @@ module ActiveMerchant #:nodoc:
         
         xml.tag! 'MassPayReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'MassPayRequest', 'xmlns:n2' => EBAY_NAMESPACE do
-            xml.tag! 'n2:Version', '2.0'
+            xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'EmailSubject', default_options[:subject] if default_options[:subject]
             recipients.each do |money, recipient, options|
               options ||= default_options
@@ -256,7 +274,7 @@ module ActiveMerchant #:nodoc:
 
         build_response(success, message, @response,
     	    :test => test?,
-    	    :authorization => @response[:transaction_id]
+    	    :authorization => @response[:transaction_id] || @response[:authorization_id] # latter one is from reauthorization
         )
       end
     end

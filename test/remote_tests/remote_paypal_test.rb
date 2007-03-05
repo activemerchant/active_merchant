@@ -40,6 +40,13 @@ class PaypalTest < Test::Unit::TestCase
         :return_url => 'http://example.com/return',
         :cancel_return_url => 'http://example.com/cancel'
       }
+      
+      # test re-authorization, auth-id must be more than 3 days old.
+      # each auth-id can only be reauthorized and tested once.
+      # leave it commented if you don't want to test reauthorization.
+      # 
+      #@three_days_old_auth_id  = "9J780651TU4465545" 
+      #@three_days_old_auth_id2 = "62503445A3738160X" 
   end
 
   def test_successful_purchase
@@ -69,7 +76,27 @@ class PaypalTest < Test::Unit::TestCase
     assert !response.success?
     assert_nil response.params['transaction_id']
   end
+
+  def test_successful_reauthorization
+    return if not @three_days_old_auth_id
+    auth = @gateway.reauthorize(Money.new(1000), @three_days_old_auth_id)
+    assert auth.success?
+    assert auth.authorization
+    
+    response = @gateway.capture(Money.new(1000), auth.authorization)
+    assert response.success?
+    assert response.params['transaction_id']
+    assert_equal '10.00', response.params['gross_amount']
+    assert_equal 'USD', response.params['gross_amount_currency_id']
+  end
   
+  def test_failed_reauthorization
+    return if not @three_days_old_auth_id2  # was authed for $10, attempt $20
+    auth = @gateway.reauthorize(Money.new(2000), @three_days_old_auth_id2)
+    assert !auth.success?
+    assert !auth.authorization
+  end
+      
   def test_successful_capture
     auth = @gateway.authorize(Money.new(300), @creditcard, @params)
     assert auth.success?

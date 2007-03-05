@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add reauthorization to PaypalGateway and PaypalExpressGateway [dorrenchen]
+#
 # * Update DataCash tests and format merchant reference number to meet DataCash's requirements [MoneySpyder, cody]
 #
 # * Add Datacash gateway [MoneySpyder, cody]

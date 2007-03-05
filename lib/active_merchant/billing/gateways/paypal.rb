@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'DoDirectPaymentReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'DoDirectPaymentRequest', 'xmlns:n2' => EBAY_NAMESPACE do
-            xml.tag! 'n2:Version', '2.0'
+            xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'n2:DoDirectPaymentRequestDetails' do
               xml.tag! 'n2:PaymentAction', action
               xml.tag! 'n2:PaymentDetails' do

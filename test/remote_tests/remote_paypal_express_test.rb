@@ -6,15 +6,15 @@ class PaypalExpressTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
     
-    cert = File.read(File.join(File.dirname(__FILE__), 'certificate.pem'))
+    #cert = File.read(File.join(File.dirname(__FILE__), 'certificate.pem'))
     
-    @gateway = PaypalGateway.new(
+    @gateway = PaypalExpressGateway.new(
       :login     => 'login',
       :password  => 'password',
       :subject => 'third_party_account',
       :pem => '' #cert
      )
-
+  
      @options = {
        :order_id => '230000',
        :email => 'buyer@jadedpallet.com',
