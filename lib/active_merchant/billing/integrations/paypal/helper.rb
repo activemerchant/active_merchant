@@ -29,6 +29,7 @@ module ActiveMerchant #:nodoc:
             add_field('no_shipping', '1')
             add_field('no_note', '1')
             add_field('charset', 'utf-8')
+            add_field('address_override', '1')
           end
 
           mapping :amount, 'amount'
@@ -42,6 +43,7 @@ module ActiveMerchant #:nodoc:
           mapping :quantity, 'quantity'
           mapping :no_shipping, 'no_shipping'
           mapping :no_note, 'no_note'
+          mapping :address_override, 'address_override'
 
           mapping :customer, :first_name => 'first_name',
                              :last_name  => 'last_name',
