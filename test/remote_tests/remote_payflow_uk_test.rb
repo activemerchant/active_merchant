@@ -103,7 +103,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   end
   
   def test_duplicate_request_id
-    gateway = PaypalPayflowUkGateway.new(
+    gateway = PayflowUkGateway.new(
       :login => @login,
       :password => @password,
       :certification_id => @certification_id
