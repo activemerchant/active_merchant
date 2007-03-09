@@ -49,12 +49,7 @@ module ActiveMerchant #:nodoc:
               
               xml.tag! 'TotalAmt', amount(money), 'Currency' => currency(money)
               
-              xml.tag! 'Level3Invoice' do
-                if [ 'switch', 'solo' ].include?(credit_card.type.to_s)
-                  xml.tag! 'CardStart', startdate(credit_card) unless credit_card.start_month.blank? || credit_card.start_year.blank?
-                  xml.tag! 'CardIssue', credit_card.issue_number unless credit_card.issue_number.blank?
-                end
-              end
+             
             end
             
             xml.tag! 'Tender' do
@@ -72,6 +67,11 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'ExpDate', expdate(credit_card)
           xml.tag! 'NameOnCard', credit_card.name
           xml.tag! 'CVNum', credit_card.verification_value if credit_card.verification_value?
+          
+          if [ 'switch', 'solo' ].include?(credit_card.type.to_s)
+            xml.tag!('ExtData', 'Name' => 'CardStart', 'Value' => startdate(credit_card)) unless credit_card.start_month.blank? || credit_card.start_year.blank?
+            xml.tag!('ExtData', 'Name' => 'CardIssue', 'Value' => credit_card.issue_number) unless credit_card.issue_number.blank?
+          end
         end
       end
       
@@ -83,10 +83,10 @@ module ActiveMerchant #:nodoc:
       end
       
       def startdate(creditcard)
-        year  = sprintf("%.4i", creditcard.start_year)
-        month = sprintf("%.2i", creditcard.start_month)
+        year  = format(creditcard.start_year, :two_digits)
+        month = format(creditcard.start_month, :two_digits)
 
-        "#{year}#{month}"
+        "#{month}#{year}"
       end
       
       def build_response(success, message, response, options = {})

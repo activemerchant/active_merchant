@@ -30,6 +30,26 @@ class RemotePayflowUkTest < Test::Unit::TestCase
       :verification_value => '000',
       :type => 'master'
     )
+    
+    @solo = CreditCard.new(
+      :type   => "solo",
+      :number => "6334900000000005",
+      :month  => Time.now.month,
+      :year   => Time.now.year + 1,
+      :first_name  => "Test",
+      :last_name   => "Mensch",
+      :issue_number => '01'
+    )
+    
+    @switch = CreditCard.new(
+       :type                => "switch",
+       :number              => "5641820000000005",
+       :verification_value => "000",
+       :month               => 1,
+       :year                => 2008,
+       :first_name          => 'Fred',
+       :last_name           => 'Brooks'
+      )
 
     @options = { :address => { 
                                 :name => 'Cody Fauser',
@@ -54,9 +74,56 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   
   def test_declined_purchase
     assert response = @gateway.purchase(Money.new(210000), @creditcard, @options)
-    assert_equal 'Declined', response.message
+    assert_equal 'Failed merchant rule check', response.message
     assert !response.success?
     assert response.test?
+  end
+  
+  def test_successful_purchase_solo
+     assert response = @gateway.purchase(Money.new(100000, 'GBP'), @solo, @options)
+     assert_equal "Approved", response.message
+     assert response.success?
+     assert response.test?
+     assert_not_nil response.authorization
+   end
+  
+  def test_no_card_issue_or_card_start_with_switch
+    assert response = @gateway.purchase(Money.new(100000, 'GBP'), @switch, @options)
+    assert !response.success?
+    
+    assert_equal "Field format error: CARDSTART or CARDISSUE must be present", response.message
+    assert !response.success?
+    assert response.test?
+  end
+  
+  def test_successful_purchase_switch_with_issue_number
+    @switch.issue_number = '01'
+    assert response = @gateway.purchase(Money.new(100000, 'GBP'), @switch, @options)
+    assert_equal "Approved", response.message
+    assert response.success?
+    assert response.test?
+    assert_not_nil response.authorization
+  end
+  
+  def test_successful_purchase_switch_with_start_date
+    @switch.start_month = 12
+    @switch.start_year = 1999
+    assert response = @gateway.purchase(Money.new(100000, 'GBP'), @switch, @options)
+    assert_equal "Approved", response.message
+    assert response.success?
+    assert response.test?
+    assert_not_nil response.authorization
+  end
+  
+  def test_successful_purchase_switch_with_start_date_and_issue_number
+    @switch.issue_number = '05'
+    @switch.start_month = 12
+    @switch.start_year = 1999
+    assert response = @gateway.purchase(Money.new(100000, 'GBP'), @switch, @options)
+    assert_equal "Approved", response.message
+    assert response.success?
+    assert response.test?
+    assert_not_nil response.authorization
   end
   
   def test_successful_authorization
