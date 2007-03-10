@@ -3,6 +3,7 @@ module ActiveMerchant #:nodoc:
         
     class UsaEpayGateway < Gateway
     	GATEWAY_URL = 'https://www.usaepay.com/gate.php'
+      POST_HEADERS = { 'Content-Type' => 'application/x-www-form-urlencoded' }
       
       attr_reader :url 
       attr_reader :response
@@ -46,10 +47,10 @@ module ActiveMerchant #:nodoc:
       private                       
     
       def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
+        year  = format(creditcard.year, :two_digits)
+        month = format(creditcard.month, :two_digits)
 
-        "#{year[-2..-1]}#{month}"
+        "#{month}#{year}"
       end
       
       def add_customer_data(post, options)
@@ -151,9 +152,7 @@ module ActiveMerchant #:nodoc:
           return result
         end
                    
-        data = ssl_post GATEWAY_URL, 
-                        post_data(action, parameters),
-                        { 'Content-Type' => 'application/x-www-form-urlencoded' }
+        data = ssl_post(GATEWAY_URL, post_data(action, parameters), POST_HEADERS)
         
         @response = parse(data)
         success = @response[:status] == 'Approved'

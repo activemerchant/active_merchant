@@ -9,28 +9,28 @@ class RemoveUsaEpayTest < Test::Unit::TestCase
   def setup
     ActiveMerchant::Billing::Base.gateway_mode = :production
 
-    @gateway = UsaEpayGateway.new({
-        :login => 'yCaWGYQsSVR0S48B6AKMK07RQhaxHvGu'
-      })
+    @gateway = UsaEpayGateway.new(
+      :login => 'yCaWGYQsSVR0S48B6AKMK07RQhaxHvGu'
+    )
 
-    @creditcard = CreditCard.new({
+    @creditcard = CreditCard.new(
       :number => '4000100011112224',
       :month => 9,
       :year => 2009,
       :first_name => 'Longbob',
       :last_name => 'Longsen'
-    })
+    )
 
-    @declined_card = CreditCard.new({
+    @declined_card = CreditCard.new(
       :number => '4000300011112220',
       :month => 9,
       :year => 2009,
       :first_name => 'Longbob',
       :last_name => 'Longsen'
-    })
+    )
 
     @options = { :address => { :address1 => '1234 Shady Brook Lane',
-                              :zip => '90210'
+                               :zip => '90210'
                              }
                }
   end

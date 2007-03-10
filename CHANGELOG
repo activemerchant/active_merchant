@@ -1,5 +1,9 @@
 # CHANGELOG
 # ---
+# * Fix expiry date in USA ePay [cody]
+#
+# * Fix PayPal Payments Pro UK with Switch & Solo cards [cody]
+#
 # * Add reauthorization to PaypalGateway and PaypalExpressGateway [dorrenchen]
 #
 # * Update DataCash tests and format merchant reference number to meet DataCash's requirements [MoneySpyder, cody]
