@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add unique_id option to PayPal mass payments [Haig]
+#
 # * Fix expiry date in USA ePay [cody]
 #
 # * Fix PayPal Payments Pro UK with Switch & Solo cards [cody]

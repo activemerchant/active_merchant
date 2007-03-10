@@ -161,6 +161,7 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'ReceiverEmail', recipient
                 xml.tag! 'Amount', amount(money), 'currencyID' => currency(money)
                 xml.tag! 'Note', options[:note] if options[:note]
+                xml.tag! 'UniqueId', options[:unique_id] if options[:unique_id]
               end
             end
           end
