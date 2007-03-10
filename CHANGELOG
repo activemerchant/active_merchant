@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Mark 1.1.0 release 
+#
 # * Add unique_id option to PayPal mass payments [Haig]
 #
 # * Fix expiry date in USA ePay [cody]

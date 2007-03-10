@@ -7,7 +7,7 @@ require 'rake/contrib/rubyforgepublisher'
 require File.dirname(__FILE__) + '/lib/tasks/cia'
 
 
-PKG_VERSION = "1.0.3"
+PKG_VERSION = "1.1.0"
 PKG_NAME = "activemerchant"
 PKG_FILE_NAME = "#{PKG_NAME}-#{PKG_VERSION}"
 
