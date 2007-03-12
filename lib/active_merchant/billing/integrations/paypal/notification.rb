@@ -42,36 +42,8 @@ module ActiveMerchant #:nodoc:
         #     end
         #   end
         class Notification < ActiveMerchant::Billing::Integrations::Notification
-          # Overwrite this certificate. It contains the Paypal sandbox certificate by default.
-          #
-          # Example:
-          #   Paypal::Notification.paypal_cert = File::read("paypal_cert.pem")
-          cattr_accessor :paypal_cert
-          @@paypal_cert = """
------BEGIN CERTIFICATE-----
-MIIDoTCCAwqgAwIBAgIBADANBgkqhkiG9w0BAQUFADCBmDELMAkGA1UEBhMCVVMx
-EzARBgNVBAgTCkNhbGlmb3JuaWExETAPBgNVBAcTCFNhbiBKb3NlMRUwEwYDVQQK
-EwxQYXlQYWwsIEluYy4xFjAUBgNVBAsUDXNhbmRib3hfY2VydHMxFDASBgNVBAMU
-C3NhbmRib3hfYXBpMRwwGgYJKoZIhvcNAQkBFg1yZUBwYXlwYWwuY29tMB4XDTA0
-MDQxOTA3MDI1NFoXDTM1MDQxOTA3MDI1NFowgZgxCzAJBgNVBAYTAlVTMRMwEQYD
-VQQIEwpDYWxpZm9ybmlhMREwDwYDVQQHEwhTYW4gSm9zZTEVMBMGA1UEChMMUGF5
-UGFsLCBJbmMuMRYwFAYDVQQLFA1zYW5kYm94X2NlcnRzMRQwEgYDVQQDFAtzYW5k
-Ym94X2FwaTEcMBoGCSqGSIb3DQEJARYNcmVAcGF5cGFsLmNvbTCBnzANBgkqhkiG
-9w0BAQEFAAOBjQAwgYkCgYEAt5bjv/0N0qN3TiBL+1+L/EjpO1jeqPaJC1fDi+cC
-6t6tTbQ55Od4poT8xjSzNH5S48iHdZh0C7EqfE1MPCc2coJqCSpDqxmOrO+9QXsj
-HWAnx6sb6foHHpsPm7WgQyUmDsNwTWT3OGR398ERmBzzcoL5owf3zBSpRP0NlTWo
-nPMCAwEAAaOB+DCB9TAdBgNVHQ4EFgQUgy4i2asqiC1rp5Ms81Dx8nfVqdIwgcUG
-A1UdIwSBvTCBuoAUgy4i2asqiC1rp5Ms81Dx8nfVqdKhgZ6kgZswgZgxCzAJBgNV
-BAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlhMREwDwYDVQQHEwhTYW4gSm9zZTEV
-MBMGA1UEChMMUGF5UGFsLCBJbmMuMRYwFAYDVQQLFA1zYW5kYm94X2NlcnRzMRQw
-EgYDVQQDFAtzYW5kYm94X2FwaTEcMBoGCSqGSIb3DQEJARYNcmVAcGF5cGFsLmNv
-bYIBADAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEBBQUAA4GBAFc288DYGX+GX2+W
-P/dwdXwficf+rlG+0V9GBPJZYKZJQ069W/ZRkUuWFQ+Opd2yhPpneGezmw3aU222
-CGrdKhOrBJRRcpoO3FjHHmXWkqgbQqDWdG7S+/l8n1QfDPp+jpULOrcnGEUY41Im
-jZJTylbJQ1b5PBBjGiP0PpK48cdF
------END CERTIFICATE-----
-"""
-
+          include PostsData
+          
           # Was the transaction complete?
           def complete?
             status == "Completed"
@@ -144,6 +116,10 @@ jZJTylbJQ1b5PBBjGiP0PpK48cdF
           def test?
             params['test_ipn'] == '1'
           end
+          
+          def account
+            params['business']
+          end
 
           # Acknowledge the transaction to paypal. This method has to be called after a new 
           # ipn arrives. Paypal will verify that all the information we received are correct and will return a 
@@ -159,26 +135,17 @@ jZJTylbJQ1b5PBBjGiP0PpK48cdF
           #     else
           #       ... log possible hacking attempt ...
           #     end
-          def acknowledge      
+          def acknowledge
             payload =  raw
 
-            uri = URI.parse(Paypal.service_url)
-            request_path = "#{uri.path}?cmd=_notify-validate"
+            response = ssl_post(Paypal.service_url + '?cmd=_notify-validate', payload, 
+              'Content-Length' => "#{payload.size}",
+              'User-Agent'     => "Active Merchant -- http://home.leetsoft.com/am"
+            )
+            
+            raise StandardError.new("Faulty paypal result: #{response}") unless ["VERIFIED", "INVALID"].include?(response)
 
-            request = Net::HTTP::Post.new(request_path)
-            request['Content-Length'] = "#{payload.size}"
-            request['User-Agent']     = "Active Merchant -- http://home.leetsoft.com/am"
-
-            http = Net::HTTP.new(uri.host, uri.port)
-
-            http.verify_mode    = OpenSSL::SSL::VERIFY_NONE unless @ssl_strict
-            http.use_ssl        = true
-
-            request = http.request(request, payload)
-
-            raise StandardError.new("Faulty paypal result: #{request.body}") unless ["VERIFIED", "INVALID"].include?(request.body)
-
-            request.body == "VERIFIED"
+            response == "VERIFIED"
           end
         end
       end

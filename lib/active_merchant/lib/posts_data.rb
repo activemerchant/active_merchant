@@ -19,12 +19,12 @@ module ActiveMerchant #:nodoc:
         http.verify_mode    = OpenSSL::SSL::VERIFY_NONE
       end
       
-      unless @options[:pem].blank?
+      if @options && !@options[:pem].blank?
         http.cert           = OpenSSL::X509::Certificate.new(@options[:pem])
         http.key            = OpenSSL::PKey::RSA.new(@options[:pem])
       end
       
-      http.post(uri.path, data, headers).body
+      http.post(uri.request_uri, data, headers).body
     end    
   end
 end

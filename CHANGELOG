@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Verify Peer in PayPal notifications and add account method [cody]
+# 
 # * Mark 1.1.0 release 
 #
 # * Add unique_id option to PayPal mass payments [Haig]

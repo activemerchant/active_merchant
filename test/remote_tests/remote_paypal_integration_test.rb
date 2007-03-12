@@ -8,7 +8,7 @@ class RemotePaypalIntegrationTest < Test::Unit::TestCase
     @paypal = Paypal::Notification.new('')
     
     assert_nothing_raised do
-      assert_equal false, @paypal.acknowledge    
+      assert_equal false, @paypal.acknowledge  
     end
   end
 end

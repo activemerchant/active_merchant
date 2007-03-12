@@ -1,14 +1,5 @@
 require File.dirname(__FILE__) + '/../../../test_helper'
 
-$paypal_success = Class.new do
-  def body; "VERIFIED"; end
-end
-
-$paypal_failure = Class.new do
-  def body; "INVALID"; end
-end
-
-
 class PaypalNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
@@ -24,6 +15,7 @@ class PaypalNotificationTest < Test::Unit::TestCase
     assert_equal "500.00", @paypal.gross
     assert_equal "15.05", @paypal.fee
     assert_equal "CAD", @paypal.currency
+    assert_equal 'tobi@leetsoft.com' , @paypal.account
     assert @paypal.test?
   end
 
@@ -32,27 +24,21 @@ class PaypalNotificationTest < Test::Unit::TestCase
   end
 
   def test_acknowledgement    
-        
+    Paypal::Notification.any_instance.stubs(:ssl_post).returns('VERIFIED')
+    assert @paypal.acknowledge
     
-    Net::HTTP.mock_methods( :request => Proc.new { |r, b| $paypal_success.new } ) do     
-      assert @paypal.acknowledge        
-    end
-
-    Net::HTTP.mock_methods( :request => Proc.new { |r, b| $paypal_failure.new } ) do 
-      assert !@paypal.acknowledge
-    end
-
+    Paypal::Notification.any_instance.stubs(:ssl_post).returns('INVALID')
+    assert !@paypal.acknowledge
   end
 
   def test_send_acknowledgement
-    request, body = nil
+    Paypal::Notification.any_instance.expects(:ssl_post).with(
+      "#{Paypal.service_url}?cmd=_notify-validate",
+      http_raw_data,
+      { 'Content-Length' => "#{http_raw_data.size}", 'User-Agent' => "Active Merchant -- http://home.leetsoft.com/am" }
+    ).returns('VERIFIED')
     
-    Net::HTTP.mock_methods( :request => Proc.new { |r, b| request = r; body = b; $paypal_success.new } ) do     
-      assert @paypal.acknowledge        
-    end
-
-    assert_equal '/cgi-bin/webscr?cmd=_notify-validate', request.path
-    assert_equal http_raw_data, body
+    assert @paypal.acknowledge
   end
 
   def test_payment_successful_status
@@ -87,11 +73,10 @@ class PaypalNotificationTest < Test::Unit::TestCase
   def test_nil_notification
     notification = Paypal::Notification.new(nil)
     
-    Net::HTTP.mock_methods( :request => Proc.new { |r, b| request = r; body = b; $paypal_failure.new } ) do     
-      assert !notification.acknowledge    
-    end
-  end 
-
+    Paypal::Notification.any_instance.stubs(:ssl_post).returns('INVALID')
+    assert !@paypal.acknowledge
+  end
+  
   private
 
   def http_raw_data
