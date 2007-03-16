@@ -248,4 +248,12 @@ class CreditCardTest < Test::Unit::TestCase
       credit_card.validate
     end
   end
+  
+  def test_create_and_validate_credit_card_from_type
+    credit_card = CreditCard.new(:type => CreditCard.type?('4242424242424242'))
+    
+    assert_nothing_raised do
+      credit_card.valid?
+    end
+  end
 end

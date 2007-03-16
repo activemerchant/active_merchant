@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Don't return a frozen string from CreditCard.type? [cody]
+#
 # * Update remote Psigate test to ensure using a verification value doesn't break anything [cody]
 #
 # * Update remote Moneris test to ensure using a verification value doesn't break anything [cody]

@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
           return 'visa' if ActiveMerchant::Billing::Base.gateway_mode == :test and ['1','2','3','success','failure','error'].include?(number.to_s)
 
           card_companies.each do |company, patterns|
-            return company if [patterns].flatten.any? { |pattern| number =~ pattern  } 
+            return company.dup if [patterns].flatten.any? { |pattern| number =~ pattern  } 
           end
 
           return nil

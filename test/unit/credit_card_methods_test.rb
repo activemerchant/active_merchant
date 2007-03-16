@@ -34,4 +34,9 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert !valid_issue_number?(123)
     assert !valid_issue_number?('CAT')
   end
+  
+  def test_ensure_type_from_credit_card_class_is_not_frozen
+    type = ActiveMerchant::Billing::CreditCard.type?('4242424242424242')
+    assert !type.frozen?
+  end
 end
