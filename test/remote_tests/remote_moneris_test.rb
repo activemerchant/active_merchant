@@ -6,18 +6,19 @@ class MonerisRemoteTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
 
-    @gateway = MonerisGateway.new({
-        :login => 'store1',
-        :password => 'yesguy',
-      })
+    @gateway = MonerisGateway.new(
+      :login => 'store1',
+      :password => 'yesguy'
+    )
 
-    @creditcard = CreditCard.new({
+    @creditcard = CreditCard.new(
       :number => '4242424242424242',
       :month => 8,
       :year => 2006,
       :first_name => 'Longbob',
-      :last_name => 'Longsen'
-    })
+      :last_name => 'Longsen',
+      :verification_value => '123'
+    )
   end
   
   def test_remote_purchase
