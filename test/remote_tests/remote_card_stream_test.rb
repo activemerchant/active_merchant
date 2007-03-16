@@ -13,6 +13,16 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       :login => LOGIN,
       :password => PASSWORD
     )
+    
+    @amex = CreditCard.new(
+      :number => '374245455400001',
+      :month => 12,
+      :year => 2009,
+      :verification_value => 4887,
+      :first_name => 'Longbob',
+      :last_name => 'Longsen',
+      :type => :american_express
+    )
 
     @maestro = CreditCard.new(
       :number => '6759016800000120097',
@@ -23,6 +33,17 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       :first_name => 'Longbob',
       :last_name => 'Longsen',
       :type => :maestro
+    )
+    
+    @solo = CreditCard.new(
+      :number => '6334960300099354',
+      :month => 6,
+      :year => 2008,
+      :issue_number => 1,
+      :verification_value => 227,
+      :first_name => 'Longbob',
+      :last_name => 'Longsen',
+      :type => :solo
     )
 
     @mastercard = CreditCard.new(
@@ -63,6 +84,17 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       :order_id => order_id,
       :description => 'Store purchase'
     }
+    
+    @solo_options = {
+      :address => {
+        :address1 => '5 Zigzag Road',
+        :city => 'Isleworth',
+        :state => 'Middlesex',
+        :zip => 'TW7 8FF'
+      },
+      :order_id => order_id,
+      :description => 'Store purchase'
+    }
   end
 
   def test_successful_mastercard_purchase
@@ -71,6 +103,13 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert response.success?
     assert response.test?
     assert !response.authorization.blank?
+  end
+  
+  def test_declined_mastercard_purchase
+    assert response = @gateway.purchase(Money.new(10000, "GBP"), @mastercard, @mastercard_options)
+    assert_equal 'CARD DECLINED', response.message
+    assert !response.success?
+    assert response.test?
   end
   
   def test_expired_mastercard
@@ -85,6 +124,22 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert response = @gateway.purchase(Money.new(100, "GBP"), @maestro, @maestro_options)
     assert_equal 'APPROVED', response.message
     assert response.success?
+  end
+  
+  def test_successful_solo_purchase
+    assert response = @gateway.purchase(Money.new(100, "GBP"), @solo, @solo_options)
+    assert_equal 'APPROVED', response.message
+    assert response.success?
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+  
+  def test_successful_amex_purchase
+    assert response = @gateway.purchase(Money.new(100, "GBP"), @amex, :order_id => order_id)
+    assert_equal 'APPROVED', response.message
+    assert response.success?
+    assert response.test?
+    assert !response.authorization.blank?
   end
   
   def test_maestro_missing_start_date_and_issue_date

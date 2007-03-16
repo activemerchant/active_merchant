@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Fix Solo issue number with CardStream gateway and improve test coverage [code]
+#
 # * Add CardStream gateway [Jonah Fox, Thomas Nichols, cody]
 #
 # * Verify Peer in PayPal notifications and add account method [cody]

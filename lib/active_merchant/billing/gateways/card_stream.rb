@@ -125,10 +125,15 @@ module ActiveMerchant #:nodoc:
         if requires_start_date_or_issue_number?(credit_card)
           add_pair(post, :StartDateMM, format(credit_card.start_month, :two_digits))
           add_pair(post, :StartDateYY, format(credit_card.start_year, :two_digits))
-          add_pair(post, :IssueNumber, credit_card.issue_number)
+          
+          add_pair(post, :IssueNumber, format_issue_number(credit_card))
         end
         
         add_pair(post, :CV2, credit_card.verification_value)
+      end
+      
+      def format_issue_number(credit_card)
+        credit_card.type.to_s == 'solo' ? format(credit_card.issue_number, :two_digits) : credit_card.issue_number
       end
 
       def commit(action, parameters)
