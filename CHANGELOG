@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add CardStream gateway [Jonah Fox, Thomas Nichols, cody]
+#
 # * Verify Peer in PayPal notifications and add account method [cody]
 # 
 # * Mark 1.1.0 release 

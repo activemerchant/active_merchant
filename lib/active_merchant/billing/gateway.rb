@@ -19,6 +19,8 @@ module ActiveMerchant #:nodoc:
       include RequiresParameters
       include CreditCardFormatting
       
+      DEBIT_CARDS = [ :switch, :solo, :maestro ]
+      
       # The format of the amounts used by the gateway
       # :dollars => '12.50'
       # :cents => '1250'
@@ -95,7 +97,11 @@ module ActiveMerchant #:nodoc:
         else
           sprintf("%.2f", cents.to_f/100)
         end
-      end      
+      end
+      
+      def requires_start_date_or_issue_number?(credit_card)
+        DEBIT_CARDS.include?(credit_card.type.to_sym)
+      end    
     end
   end
 end

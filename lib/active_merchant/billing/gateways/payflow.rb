@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'NameOnCard', credit_card.name
           xml.tag! 'CVNum', credit_card.verification_value if credit_card.verification_value?
           
-          if [ 'switch', 'solo' ].include?(credit_card.type.to_s)
+          if requires_start_date_or_issue_number?(credit_card)
             xml.tag!('ExtData', 'Name' => 'CardStart', 'Value' => startdate(credit_card)) unless credit_card.start_month.blank? || credit_card.start_year.blank?
             xml.tag!('ExtData', 'Name' => 'CardIssue', 'Value' => credit_card.issue_number) unless credit_card.issue_number.blank?
           end
