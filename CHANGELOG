@@ -1,8 +1,10 @@
 # CHANGELOG
 # ---
+# * Update remote Psigate test to ensure using a verification value doesn't break anything [cody]
+#
 # * Update remote Moneris test to ensure using a verification value doesn't break anything [cody]
 #
-# * Fix Solo issue number with CardStream gateway and improve test coverage [code]
+# * Fix Solo issue number with CardStream gateway and improve test coverage [cody]
 #
 # * Add CardStream gateway [Jonah Fox, Thomas Nichols, cody]
 #

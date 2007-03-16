@@ -12,18 +12,19 @@ class PsigateRemoteTest < Test::Unit::TestCase
   
   def setup
     ActiveMerchant::Billing::Base.gateway_mode = :test
-    @gateway = PsigateGateway.new({
+    @gateway = PsigateGateway.new(
       :login => 'teststore',
-      :password => 'psigate1234',
-    })
+      :password => 'psigate1234'
+    )
 
-    @creditcard = CreditCard.new({
+    @creditcard = CreditCard.new(
       :number => '4242424242424242',
       :month => 8,
       :year => 2006,
       :first_name => 'Longbob',
-      :last_name => 'Longsen'
-    })
+      :last_name => 'Longsen',
+      :verification_value => '222'
+    )
   end
   
   def test_remote_authorize
