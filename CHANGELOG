@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Allow authorization and purchase using a billing_id retrieved from TrustCommerce citadel [jesse.c.scott]
+#
 # * Don't return a frozen string from CreditCard.type? [cody]
 #
 # * Update remote Psigate test to ensure using a verification value doesn't break anything [cody]

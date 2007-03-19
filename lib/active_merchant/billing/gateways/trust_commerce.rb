@@ -120,25 +120,25 @@ module ActiveMerchant #:nodoc:
       # method simply checks to make sure funds are available for a transaction, and returns a transid that can be used later to
       # postauthorize (capture) the funds.
       
-      def authorize(money, creditcard, options = {})
+      def authorize(money, creditcard_or_billing_id, options = {})
         parameters = {
           :amount => amount(money),
         }                                                             
         
-        add_creditcard(parameters, creditcard)
+        add_payment_source(parameters, creditcard_or_billing_id)
         add_address(parameters, options)
         commit('preauth', parameters)
       end
       
       # purchase() is a simple sale. This is one of the most common types of transactions, and is extremely simple. All that you need
-      # to process a purchase are an amount in cents or a money object and a creditcard object.
+      # to process a purchase are an amount in cents or a money object and a creditcard object or billingid string.
       
-      def purchase(money, creditcard, options = {})        
+      def purchase(money, creditcard_or_billing_id, options = {})        
         parameters = {
           :amount => amount(money),
         }                                                             
         
-        add_creditcard(parameters, creditcard)
+        add_payment_source(parameters, creditcard_or_billing_id)
         add_address(parameters, options)
         commit('sale', parameters)
       end
@@ -241,6 +241,14 @@ module ActiveMerchant #:nodoc:
       end
       
       private
+      def add_payment_source(params, source)
+        if source.is_a?(String)
+          add_billing_id(params, source)
+        else
+          add_creditcard(params, source)
+        end
+      end
+      
       def expdate(creditcard)
         year  = sprintf("%.4i", creditcard.year)
         month = sprintf("%.2i", creditcard.month)
@@ -254,6 +262,10 @@ module ActiveMerchant #:nodoc:
         params[:cc]        = creditcard.number      
         params[:exp]       = expdate(creditcard)
         params[:cvv]       = creditcard.verification_value if creditcard.verification_value?
+      end
+      
+      def add_billing_id(params, billingid)
+        params[:billingid] = billingid
       end
       
       def add_address(params, options)

@@ -5,18 +5,18 @@ class TrustCommerceTest < Test::Unit::TestCase
   include ActiveMerchant::Billing
   
   def setup
-    @gateway = TrustCommerceGateway.new({
+    @gateway = TrustCommerceGateway.new(
       :login => 'TestMerchant',
-      :password => 'password',
-    })
+      :password => 'password'
+    )
 
-    @creditcard = CreditCard.new({
+    @creditcard = CreditCard.new(
       :number => '4111111111111111',
       :month => 8,
       :year => 2010,
       :first_name => 'Longbob',
       :last_name => 'Longsen'
-    })
+    )
     
     @valid_verification_value = '123'
     @invalid_verification_value = '1234'
