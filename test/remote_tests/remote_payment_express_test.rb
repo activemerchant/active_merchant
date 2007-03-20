@@ -46,7 +46,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
   
   def test_declined_purchase
     assert response = @gateway.purchase(Money.new(100, 'NZD'), @creditcard, @options)
-    assert_equal '', response.message
+    assert_equal 'DECLINED', response.message
     assert !response.success?
     assert response.test?
   end
@@ -72,7 +72,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(Money.new(100, 'NZD'), '999')
     assert !response.success?
-    assert_equal '', response.message
+    assert_equal 'DECLINED', response.message
   end
   
   def test_invalid_login
