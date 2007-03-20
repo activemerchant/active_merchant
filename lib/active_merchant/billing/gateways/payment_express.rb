@@ -41,7 +41,7 @@ module ActiveMerchant
       #
       # However, regular accounts with DPS only support VISA and Mastercard
       def self.supported_cardtypes
-        [ :visa, :master, :american_express, :diners_club ]
+        [ :visa, :master, :american_express, :diners_club, :jcb ]
       end
       
       # Funds are transferred immediately.

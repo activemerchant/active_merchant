@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add JCB as a supported card type for the PaymentExpressGateway [cody]
+#
 # * Rename DpsGateway to PaymentExpressGateway [cody]
 #
 # * Add DPS Payment Express gateway (NZ) [dgjones, cody]
