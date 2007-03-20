@@ -97,14 +97,6 @@ module ActiveMerchant #:nodoc:
       end
          
       private                       
-    
-      def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
-
-        "#{year[-2..-1]}#{month}"
-      end
-  
       def commit(action, money, parameters)
         parameters[:amount]       = amount(money) unless action == 'VOID'
         
