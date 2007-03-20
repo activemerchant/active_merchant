@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add DPS Payment Express gateway (NZ) [dgjones, cody]
+#
 # * Remove duplicate and incorrect expdate method from Authorize.net [cody]
 #
 # * Allow authorization and purchase using a billing_id retrieved from TrustCommerce citadel [jesse.c.scott]
