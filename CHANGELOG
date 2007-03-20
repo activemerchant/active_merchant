@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Rename DpsGateway to PaymentExpressGateway [cody]
+#
 # * Add DPS Payment Express gateway (NZ) [dgjones, cody]
 #
 # * Remove duplicate and incorrect expdate method from Authorize.net [cody]

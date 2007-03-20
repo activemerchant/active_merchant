@@ -1,6 +1,6 @@
 require 'active_merchant/billing/gateway'
 require 'active_merchant/billing/gateways/bogus'
-require 'active_merchant/billing/gateways/dps'
+require 'active_merchant/billing/gateways/payment_express'
 require 'active_merchant/billing/gateways/psigate'
 require 'active_merchant/billing/gateways/authorize_net'
 require 'active_merchant/billing/gateways/moneris'

@@ -1,13 +1,13 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
-class RemoteDpsTest < Test::Unit::TestCase
+class RemotePaymentExpressTest < Test::Unit::TestCase
   include ActiveMerchant::Billing
 
   LOGIN = 'LOGIN'
   PASSWORD = 'PASSWORD'
 
   def setup
-    @gateway = DpsGateway.new(
+    @gateway = PaymentExpressGateway.new(
       :login => LOGIN,
       :password => PASSWORD
     )
@@ -76,7 +76,7 @@ class RemoteDpsTest < Test::Unit::TestCase
   end
   
   def test_invalid_login
-    gateway = DpsGateway.new(
+    gateway = PaymentExpressGateway.new(
       :login => '',
       :password => ''
     )

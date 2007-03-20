@@ -6,7 +6,7 @@ module ActiveMerchant
     # In NZ DPS supports ANZ, Westpac, National Bank, ASB and BNZ. 
     # In Australia DPS supports ANZ, NAB, Westpac, CBA, St George and Bank of South Australia. 
     # The Maybank in Malaysia is supported and the Citibank for Singapore.
-    class DpsGateway < Gateway
+    class PaymentExpressGateway < Gateway
       attr_reader :url 
       attr_reader :response
       attr_reader :options

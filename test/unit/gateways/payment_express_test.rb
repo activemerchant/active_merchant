@@ -1,11 +1,11 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
-class DpsTest < Test::Unit::TestCase
+class PaymentExpressTest < Test::Unit::TestCase
   include ActiveMerchant::Billing
 
   def setup
         
-    @gateway = DpsGateway.new(
+    @gateway = PaymentExpressGateway.new(
       :login => 'LOGIN',
       :password => 'PASSWORD'
     )
@@ -61,7 +61,7 @@ class DpsTest < Test::Unit::TestCase
   end
   
   def test_default_currency
-    assert_equal 'NZD', DpsGateway.default_currency
+    assert_equal 'NZD', PaymentExpressGateway.default_currency
   end
   
   def test_invalid_credentials
