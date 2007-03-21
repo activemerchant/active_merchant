@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Update remote tests for PaymentExpress [cody]
+#
 # * Add Content-Type header to PaymentExpress post [cody]
 #
 # * Use DECLINED as the message for declined transactions in the PaymentExpress remote tests [cody]

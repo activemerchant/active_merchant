@@ -188,7 +188,7 @@ module ActiveMerchant
 
         # Gather all root elements such as HelpText
         xml.elements.each('Txn/*') do |element|
-          response[element.name.underscore.to_sym] = element.text
+          response[element.name.underscore.to_sym] = element.text unless element.name == 'Transaction'
         end
 
         # Gather all transaction elements and prefix with "account_"

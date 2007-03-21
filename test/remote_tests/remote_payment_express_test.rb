@@ -5,7 +5,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
 
   LOGIN = 'LOGIN'
   PASSWORD = 'PASSWORD'
-
+  
   def setup
     @gateway = PaymentExpressGateway.new(
       :login => LOGIN,
@@ -32,7 +32,8 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
         :zip => '90210',
         :phone => '555-555-5555'
       },
-     :email => 'cody@example.com'
+     :email => 'cody@example.com',
+     :description => 'Store purchase'
     }
   end
   
@@ -44,8 +45,17 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert_not_nil response.authorization
   end
   
-  def test_declined_purchase
+  def test_successful_purchase_with_reference_id
+    @options[:order_id] = rand(100000)
     assert response = @gateway.purchase(Money.new(100, 'NZD'), @creditcard, @options)
+    assert_equal "APPROVED", response.message
+    assert response.success?
+    assert response.test?
+    assert_not_nil response.authorization
+  end
+  
+  def test_declined_purchase
+    assert response = @gateway.purchase(Money.new(176, 'NZD'), @creditcard, @options)
     assert_equal 'DECLINED', response.message
     assert !response.success?
     assert response.test?
@@ -69,10 +79,20 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert capture.success?
   end
   
+  def test_purchase_and_credit
+    amount = Money.new(10000, 'NZD')
+    assert purchase = @gateway.purchase(amount, @creditcard, @options)
+    assert purchase.success?
+    assert_equal 'APPROVED', purchase.message
+    assert !purchase.authorization.blank?
+    assert credit = @gateway.credit(amount, purchase.authorization, :description => "Giving a refund")
+    assert credit.success?
+  end
+  
   def test_failed_capture
     assert response = @gateway.capture(Money.new(100, 'NZD'), '999')
     assert !response.success?
-    assert_equal 'DECLINED', response.message
+    assert_equal 'IVL DPSTXNREF', response.message
   end
   
   def test_invalid_login
