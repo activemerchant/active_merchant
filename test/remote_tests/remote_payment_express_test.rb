@@ -13,13 +13,13 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     )
     
     @creditcard = CreditCard.new(
-      :number => '5105105105105100',
+      :number => '4111111111111111',
       :month => 11,
-      :year => 2009,
+      :year => Time.now.year + 1,
       :first_name => 'Cody',
       :last_name => 'Fauser',
       :verification_value => '000',
-      :type => 'master'
+      :type => 'visa'
     )
 
     @options = { 

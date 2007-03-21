@@ -24,6 +24,8 @@ module ActiveMerchant
         :authorization => 'Auth',
         :capture => 'Complete'
       }
+      
+      POST_HEADERS = { "Content-Type" => "application/x-www-form-urlencoded" }
 
       # We require the DPS gateway username and password when the object is created.
       def initialize(options = {})
@@ -163,8 +165,8 @@ module ActiveMerchant
         add_transaction_type(request, action)
         
         # Next, post it to the server
-        response = ssl_post(PAYMENT_URL, request.to_s)
-
+        response = ssl_post(PAYMENT_URL, request.to_s, POST_HEADERS)
+        
         # Parse the XML response
         @response = parse_response(response)
         

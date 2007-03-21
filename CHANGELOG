@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add Content-Type header to PaymentExpress post [cody]
+#
 # * Use DECLINED as the message for declined transactions in the PaymentExpress remote tests [cody]
 #
 # * Add JCB as a supported card type for the PaymentExpressGateway [cody]
