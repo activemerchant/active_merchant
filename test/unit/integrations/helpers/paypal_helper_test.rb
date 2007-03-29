@@ -49,24 +49,26 @@ class PaypalHelperTest < Test::Unit::TestCase
   def test_customer_fields 
     @helper.customer :first_name => 'Cody', 
                      :last_name => 'Fauser',
-                     :email => 'cody@example.com',
-                     :phone => '(555)555-5555'
+                     :email => 'cody@example.com'
 
     assert_field 'first_name', 'Cody'
     assert_field 'last_name', 'Fauser'
     assert_field 'email', 'cody@example.com'
-    assert_field 'night_phone_a', '(555)555-5555'
   end
 
   def test_billing_address
     @helper.billing_address :country => 'CA',
                             :address1 => '1 My Street',
                             :city => 'Ottawa',
-                            :zip => '90210'
+                            :zip => '90210',
+                            :phone => '(555)123-4567'
 
     assert_field 'country', 'CA'
     assert_field 'address1', '1 My Street'
     assert_field 'zip', '90210' 
+    assert_field 'night_phone_a', '555'
+    assert_field 'night_phone_b', '123'
+    assert_field 'night_phone_c', '4567'
   end
 
   def test_phone_parsing

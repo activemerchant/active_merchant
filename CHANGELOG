@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Fix partially broken method of dealing with phone numbers in the PayPal Helper [cody]
+#
 # * Update remote tests for PaymentExpress [cody]
 #
 # * Add Content-Type header to PaymentExpress post [cody]

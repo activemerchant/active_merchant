@@ -47,18 +47,14 @@ module ActiveMerchant #:nodoc:
 
           mapping :customer, :first_name => 'first_name',
                              :last_name  => 'last_name',
-                             :email      => 'email',
-                             :phone      => 'night_phone_a'
+                             :email      => 'email'
 
           mapping :billing_address, :city    => 'city',
                                     :address1  => 'address1',
                                     :address2  => 'address2',
                                     :state   => 'state',
                                     :zip     => 'zip',
-                                    :country => 'country',
-                                    :phone_a  => "night_phone_a",
-                                    :phone_b  => "night_phone_b",
-                                    :phone_c  => "night_phone_c"
+                                    :country => 'country'
           
            def billing_address(params = {})
              
@@ -70,9 +66,9 @@ module ActiveMerchant #:nodoc:
 
                # Parse in the us style (555 555 5555) which seems to be the only format paypal supports. Ignore anything before this. 
                if phone =~ /(\d{3})(\d{3})(\d{4})$/
-                 add_field(mappings[:billing_address][:phone_a], $1) 
-                 add_field(mappings[:billing_address][:phone_b], $2) 
-                 add_field(mappings[:billing_address][:phone_c], $3) 
+                 add_field('night_phone_a', $1) 
+                 add_field('night_phone_b', $2) 
+                 add_field('night_phone_c', $3) 
                end
              end
              
