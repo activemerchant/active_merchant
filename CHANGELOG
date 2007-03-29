@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Scrub the card number, expiry, and CVV code from the response [cody]
+#
 # * Use test? query for checking test mode [cody]
 #
 # * Add support for the E-xact Payment Gateway [James Edward Gray II, cody]

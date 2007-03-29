@@ -33,6 +33,8 @@ module ActiveMerchant #:nodoc:
                      
       SUCCESS = "true"
       
+      SENSITIVE_FIELDS = [ :verification_str2, :expiry_date, :card_number ]
+      
       attr_reader :url
       attr_reader :response
       attr_reader :options
@@ -213,7 +215,7 @@ module ActiveMerchant #:nodoc:
           parse_elements(response, root)
         end
 
-        response
+        response.delete_if{ |k,v| SENSITIVE_FIELDS.include?(k) }
       end
 
       def parse_elements(response, root)
