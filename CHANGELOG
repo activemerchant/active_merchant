@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Fix Money dependency with PslCard gateway [cody]
+#
 # * Add PslCard payment gateway [MoneySpyder http://moneyspyder.co.uk]
 #
 # * Scrub the card number, expiry, and CVV code from the response [cody]

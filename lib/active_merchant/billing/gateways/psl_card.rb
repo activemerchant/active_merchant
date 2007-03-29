@@ -17,6 +17,10 @@ module ActiveMerchant
     #   
     #
     class PslCardGateway < Gateway
+      self.money_format = :cents
+      
+      class_inheritable_accessor :default_currency
+      default_currency = 'GBP'
       
       # PslCard server URL - The url is the same whether testing or live - use
       # the test account when testing...
@@ -56,7 +60,7 @@ module ActiveMerchant
       #The nominal amount is held straight away, when the goods are ready
       #to be dispatched, PSL is informed and the full amount is the
       #taken.
-      NOMINAL_AMOUNT = Money.new(101, 'GBP')
+      NOMINAL_AMOUNT = 101
       
       # Create a new PslCardGateway
       # 
@@ -141,23 +145,6 @@ module ActiveMerchant
         commit(request)
       end
 
-      # Void a previous transaction
-      # 
-      # Parameters:
-      #   -authorization: the PSL cross reference from the previous authorization
-      #   -options:
-      #
-      # Returns:
-      #   -ActiveRecord::Billing::Response object
-      #   
-      def void(authorization, options = {})
-        
-        # Applogies. Do not have the documentation to implement this at
-        # the current time.
-        
-        raise 'Method Not Yet Implemented'
-      end
-      
       # Visa Credit, Visa Debit, Mastercard, Maestro, Solo, Electron,
       # American Express, Diners Club, JCB, International Maestro,
       # Style, Clydesdale Financial Services, Other
@@ -276,13 +263,13 @@ module ActiveMerchant
       def add_required_fields(post, money, dispatch_type)
       
         post[:CountryCode] = @options[:country]
-        post[:CurrencyCode] = currency_code(money)
+        post[:CurrencyCode] = currency(money)
         
         if dispatch_type == DISPATCH_LATER
-          post[:amount] = NOMINAL_AMOUNT.cents
-          post[:DispatchLaterAmount] = money.cents
+          post[:amount] = amount(NOMINAL_AMOUNT)
+          post[:DispatchLaterAmount] = amount(money)
         else
-          post[:amount] = money.cents
+          post[:amount] = amount(money)
         end
         
         post[:Dispatch] = dispatch_type
@@ -302,12 +289,12 @@ module ActiveMerchant
       # Returns:
       #   -the ISO 4217:2001 Numberic currency code
       #   
-      def currency_code(money)
+      def currency(money)
         #get the stored currency from the money object
-        currency = currency(money)
+        iso_currency = money.respond_to?(:currency) ? money.currency : self.default_currency
 
         #find the code value
-        CURRENCY_CODES[currency].to_s
+        CURRENCY_CODES[iso_currency].to_s
       end
       
       # Returns a date string in the format PSL expects
@@ -321,20 +308,6 @@ module ActiveMerchant
       #   
       def format_date(month, year)
         "#{format(year, :two_digits)}#{format(month,:two_digits)}"
-      end
-
-      
-      # Find the currency of the Money object passed
-      # 
-      # Parameters:
-      #   -money: The money object that we are looking at
-      #
-      # Returns:
-      #   -string: The three digit currency code (These are
-      #            ISO 4217:2001 codes)
-      #
-      def currency(money)
-        money.respond_to?(:currency) ? money.currency : self.default_currency
       end
       
       # Parse the PSL response and create a Response object
