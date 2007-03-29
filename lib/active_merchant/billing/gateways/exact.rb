@@ -46,7 +46,11 @@ module ActiveMerchant #:nodoc:
         end
       
         super
-      end  
+      end
+      
+      def test?
+        @test_mode
+      end
       
       def authorize(money, credit_card, options = {})
         if result = test_result_from_cc_number(credit_card.number)
@@ -182,7 +186,7 @@ module ActiveMerchant #:nodoc:
          end
          
          Response.new(success, message_from(@response), @response,
-           :test => @test_mode,
+           :test => test?,
            :authorization => authorization
          )
       end
