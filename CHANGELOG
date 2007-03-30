@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Small changes to PslCard gateway [cody]
+#
 # * Fix Money dependency with PslCard gateway [cody]
 #
 # * Add PslCard payment gateway [MoneySpyder http://moneyspyder.co.uk]

@@ -20,7 +20,7 @@ module ActiveMerchant
       self.money_format = :cents
       
       class_inheritable_accessor :default_currency
-      default_currency = 'GBP'
+      self.default_currency = 'GBP'
       
       # PslCard server URL - The url is the same whether testing or live - use
       # the test account when testing...
@@ -71,8 +71,7 @@ module ActiveMerchant
       #     :login -    the PslCard account login (required)
       #     :country -  The three digit ISO 3166 country code 
       #                 where the application is located - defaults to GB (826) (optional)
-      #     :test -     boolean, - not really needed as the it is determined by the passed account number
-      #
+     
       def initialize(options = {})
         requires!(options, :login)
         
@@ -158,22 +157,7 @@ module ActiveMerchant
       def self.supported_cardtypes
         [:visa, :master, :american_express, :diners_club, :jcb, :solo]
       end
-      
-      # Return whether or not the gateway is in test mode
-      # 
-      # Parameters:
-      #   -none
-      # 
-      # Returns:
-      #   -boolean
-      def test?
-        @options[:test] || Base.gateway_mode == :test
-      end
-      
-      ###############################
-      #       Private Methods       #
-      ###############################
-      
+     
       private
       
       # Create a PSL request for authorization or purcharse
@@ -186,6 +170,11 @@ module ActiveMerchant
       #
       # Returns:
       #   -a hash with all the values to be sent to PSL
+      #
+      # 
+      # Not used
+      # post[:RetOKAddress] = 'SUCCESS'       #Arbitrary string - not used
+      # post[:RetNotOKAddress] = 'FAIL'       #as above
       #
       def build_purchase_or_authorization_request(money, creditcard, billing_address, dispatch_type, options = {})
         post = {}
@@ -201,15 +190,14 @@ module ActiveMerchant
         post[:StartYear] = creditcard.start_year unless creditcard.start_year.blank?
         
         # CV2 check
-        post[:AVSCV2Check] = creditcard.verification_value.blank? ? 'NO' : 'YES'
-        post[:CV2] = creditcard.verification_value unless creditcard.verification_value.blank?
+        post[:AVSCV2Check] = creditcard.verification_value? ? 'YES' : 'NO'
+        post[:CV2] = creditcard.verification_value if creditcard.verification_value?
         
         post[:EchoAmount] = 'YES'
         
-        post[:MerchantName] = 'Merchant Name' #May use this as the order_id field
-        post[:SCBI] = 'YES'                   #Return information about the transaction
-        
-        
+        post[:MerchantName] = 'Merchant Name' # May use this as the order_id field
+        post[:SCBI] = 'YES'                   # Return information about the transaction
+           
         address = ''
         address << billing_address[:address1] + ' ' unless billing_address[:address1].blank?
         address << billing_address[:address2] + ' ' unless billing_address[:address2].blank?
@@ -217,18 +205,13 @@ module ActiveMerchant
         address << billing_address[:address4] unless billing_address[:address4].blank?
         post[:QAAddress] = address
         post[:QAPostcode] = billing_address[:zip]
-        post[:QAName] = creditcard.first_name + ' ' + creditcard.last_name
+        post[:QAName] = creditcard.name
         
         post[:MessageType] = MESSAGE_TYPE
         
         # Additional fields
         post[:OrderID] = options[:order_id] unless options[:order_id].blank?
         post
-        
-        
-        # Not used
-        #post[:RetOKAddress] = 'SUCCESS'       #Arbitrary string - not used
-        #post[:RetNotOKAddress] = 'FAIL'       #as above
       end
       
       # Create a request for a capture transaction
