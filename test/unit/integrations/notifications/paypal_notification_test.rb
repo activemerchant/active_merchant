@@ -35,7 +35,7 @@ class PaypalNotificationTest < Test::Unit::TestCase
     Paypal::Notification.any_instance.expects(:ssl_post).with(
       "#{Paypal.service_url}?cmd=_notify-validate",
       http_raw_data,
-      { 'Content-Length' => "#{http_raw_data.size}", 'User-Agent' => "Active Merchant -- http://home.leetsoft.com/am" }
+      { 'Content-Length' => "#{http_raw_data.size}", 'User-Agent' => "Active Merchant -- http://activemerchant.org" }
     ).returns('VERIFIED')
     
     assert @paypal.acknowledge
