@@ -1,14 +1,5 @@
 require File.dirname(__FILE__) + '/../../../test_helper'
 
-$nochex_success = Class.new do
-  def body; "AUTHORISED"; end
-end
-
-$nochex_failure = Class.new do
-  def body; "DECLINED"; end
-end
-
-
 class NochexNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
@@ -31,25 +22,16 @@ class NochexNotificationTest < Test::Unit::TestCase
     assert_equal Money.new(3166, 'GBP'), @nochex.amount
   end
 
-  def test_acknowledgement    
-    Net::HTTP.mock_methods( :request => Proc.new { |r, b| $nochex_success.new } ) do     
-      assert @nochex.acknowledge        
-    end
-
-    Net::HTTP.mock_methods( :request => Proc.new { |r, b| $nochex_failure.new } ) do 
-      assert !@nochex.acknowledge
-    end
-  end
-
-  def test_send_acknowledgement
-    request, body = nil
+  def test_successful_acknowledgement    
+    Nochex::Notification.any_instance.expects(:ssl_post).returns('AUTHORISED')
     
-    Net::HTTP.mock_methods( :request => Proc.new { |r, b| request = r; body = b; $nochex_success.new } ) do     
-      assert @nochex.acknowledge        
-    end
-
-    assert_equal '/nochex.dll/apc/apc', request.path
-    assert_equal http_raw_data, body
+    assert @nochex.acknowledge
+  end
+  
+  def test_failed_acknowledgement
+    Nochex::Notification.any_instance.expects(:ssl_post).returns('DECLINED')
+    
+    assert !@nochex.acknowledge
   end
 
   def test_respond_to_acknowledge
@@ -57,11 +39,9 @@ class NochexNotificationTest < Test::Unit::TestCase
   end
   
   def test_nil_notification
+    Nochex::Notification.any_instance.expects(:ssl_post).returns('DECLINED')
     notification = Nochex::Notification.new(nil)
-    
-    Net::HTTP.mock_methods( :request => Proc.new { |r, b| request = r; body = b; $nochex_failure.new } ) do     
-      assert !notification.acknowledge    
-    end
+    assert !notification.acknowledge
   end
 
   private

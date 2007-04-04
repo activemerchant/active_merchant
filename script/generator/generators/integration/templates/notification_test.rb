@@ -1,15 +1,5 @@
 require File.dirname(__FILE__) + '/../../../test_helper'
 
-# Replace with the correct codes
-$<%= file_name %>_success = Class.new do
-  def body; "SUCCESS"; end
-end
-
-$<%= file_name %>_failure = Class.new do
-  def body; "FAIL"; end
-end
-
-
 class <%= class_name %>NotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
@@ -32,25 +22,12 @@ class <%= class_name %>NotificationTest < Test::Unit::TestCase
     assert_equal Money.new(3166, 'USD'), @<%= file_name %>.amount
   end
 
+  # Replace with real successful acknowledgement code
   def test_acknowledgement    
-    Net::HTTP.mock_methods( :request => Proc.new { |r, b| $<%= file_name %>_success.new } ) do     
-      assert @<%= file_name %>.acknowledge        
-    end
 
-    Net::HTTP.mock_methods( :request => Proc.new { |r, b| $<%= file_name %>_failure.new } ) do 
-      assert !@<%= file_name %>.acknowledge
-    end
   end
 
   def test_send_acknowledgement
-    request, body = nil
-    
-    Net::HTTP.mock_methods( :request => Proc.new { |r, b| request = r; body = b; $<%= file_name %>_success.new } ) do     
-      assert @<%= file_name %>.acknowledge        
-    end
-
-    assert_equal '', request.path
-    assert_equal http_raw_data, body
   end
 
   def test_respond_to_acknowledge

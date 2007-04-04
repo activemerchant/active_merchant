@@ -74,25 +74,18 @@ module ActiveMerchant #:nodoc:
           #     else
           #       ... log possible hacking attempt ...
           #     end
-          def acknowledge      
-            payload = raw
+          def acknowledge
+             payload =  raw
 
-            uri = URI.parse(Nochex.notification_confirmation_url)
+             response = ssl_post(Nochex.notification_confirmation_url, payload, 
+               'Content-Length' => "#{payload.size}",
+               'User-Agent'     => "Active Merchant -- http://activemerchant.org",
+               'Content-Type'   => "application/x-www-form-urlencoded"
+             )
 
-            request = Net::HTTP::Post.new(uri.path)
+             raise StandardError.new("Faulty Nochex result: #{response}") unless ["AUTHORISED", "DECLINED"].include?(response)
 
-            request['Content-Length'] = "#{payload.size}"
-            request['User-Agent'] = "Active Merchant -- http://home.leetsoft.com/am"
-            request['Content-Type'] = "application/x-www-form-urlencoded" 
-
-            http = Net::HTTP.new(uri.host, uri.port)
-            http.verify_mode    = OpenSSL::SSL::VERIFY_NONE unless @ssl_strict
-            http.use_ssl        = true
-
-            response = http.request(request, payload)
-
-            raise StandardError.new("Faulty Nochex result: #{response.body}") unless ["AUTHORISED", "DECLINED"].include?(response.body)
-            response.body == "AUTHORISED"
+             response == "AUTHORISED"
           end
         end
       end

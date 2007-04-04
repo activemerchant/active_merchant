@@ -13,7 +13,6 @@ require 'test/unit'
 require 'binding_of_caller'
 require 'breakpoint'
 require 'active_merchant'
-require 'method_mock'
 require 'openssl'
 require 'mocha'
 

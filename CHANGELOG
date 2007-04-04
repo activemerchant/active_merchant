@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Remove mock_methods and http mock from the library [cody]
+#
 # * PaypalExpress cannot setup a payment for 0 dollars.  If the amount is zero then setup a payment for $1. [cody]
 #
 # * Small changes to PslCard gateway [cody]
