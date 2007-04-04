@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * PaypalExpress cannot setup a payment for 0 dollars.  If the amount is zero then setup a payment for $1. [cody]
+#
 # * Small changes to PslCard gateway [cody]
 #
 # * Fix Money dependency with PslCard gateway [cody]

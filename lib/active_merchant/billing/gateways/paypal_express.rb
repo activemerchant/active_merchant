@@ -85,7 +85,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'n2:SetExpressCheckoutRequestDetails' do
               xml.tag! 'n2:PaymentAction', action
-              xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => currency(money)
+              xml.tag! 'n2:OrderTotal', amount(money).to_f.zero? ? amount(100) : amount(money), 'currencyID' => currency(money)
               xml.tag! 'n2:MaxAmount', amount(options[:max_amount]), 'currencyID' => currency(options[:max_amount]) if options[:max_amount]
               add_address(xml, 'n2:Address', options[:billing_address] || options[:address])
               #xml.tag! 'n2:AddressOverride', 1

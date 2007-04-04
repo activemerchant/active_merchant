@@ -80,6 +80,18 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'PayPalUk', PayflowExpressUkGateway.partner
   end
   
+  def test_handle_non_zero_amount
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', Money.new(50), {}))
+    
+    assert_equal '0.50', REXML::XPath.first(xml, '//n2:OrderTotal').text
+  end
+  
+  def test_handles_zero_amount
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', Money.empty, {}))
+    
+    assert_equal '1.00', REXML::XPath.first(xml, '//n2:OrderTotal').text
+  end
+  
   def successful_details_response
     <<-RESPONSE
 <?xml version='1.0' encoding='UTF-8'?>
