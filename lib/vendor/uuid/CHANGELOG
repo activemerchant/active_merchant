@@ -1,0 +1,20 @@
+Release 1.0.3 (Nov 8, 2006)
+
+* Fixed:    Work around YAML bug in serializing that occurs when MAC address
+            consists only of decimal digits. Credit: ebuprofen"
+
+Release 1.0.2 (Jul 28, 2006)
+
+* Changed:  Constants are not conditionally defined (removes warnings when
+            using in Rails.
+
+Release 1.0.1 (Jul 26, 2006)
+
+* Added:    Regular expressions to test if a string is a UUID.
+* Changed:  When used in ActiveRecord, adds as callback instead of overriding
+            save.
+
+Release 1.0.0 (Nov 20, 2005)
+
+* Changed:  Separated form reliable-msg into its own package.
+

@@ -22,6 +22,7 @@
 #++
                     
 $:.unshift(File.dirname(__FILE__))      
+$:.unshift(File.dirname(__FILE__) + '/vendor/uuid/lib')
 
 # Include rails' active support for all the core extensions we love
 begin

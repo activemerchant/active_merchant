@@ -1,0 +1,148 @@
+# Adapted from the rake Rakefile.
+
+require "rubygems"
+Gem::manage_gems
+require "rake/testtask"
+require "rake/rdoctask"
+require "rake/gempackagetask"
+
+
+desc "Default Task"
+task :default => [:test, :rdoc]
+
+
+desc "Run all test cases"
+Rake::TestTask.new do |test|
+    test.verbose = true
+    test.test_files = ["test/test-uuid.rb"]
+    #test.warning = true
+end
+
+
+# Create the documentation.
+Rake::RDocTask.new do |rdoc|
+    rdoc.main = "README"
+    rdoc.rdoc_files.include("README", "lib/**/*.rb")
+    rdoc.title = "UUID generator"
+end
+
+# Handle version number.
+class Version
+
+  PATTERN = /(\s*)VERSION.*(\d+\.\d+\.\d+)/
+
+  def initialize file, new_version
+    @file = file
+    @version = File.open @file, "r" do |file|
+      version = nil
+      file.each_line do |line|
+        match = line.match PATTERN
+        if match
+          version = match[2]
+          break
+        end
+      end
+      version
+    end
+    fail "Can't determine version number" unless @version
+    @new_version = new_version || @version
+  end
+
+  def changed?
+    @version != @new_version
+  end
+
+  def number
+    @version
+  end
+
+  def next
+    @new_version
+  end
+
+  def update
+    puts "Updating to version #{@new_version}"
+    copy = "#{@file}.new"
+    open @file, "r" do |input|
+      open copy, "w" do |output|
+        input.each_line do |line|
+          match = line.match PATTERN
+          if match
+            output.puts "#{match[1]}VERSION = '#{@new_version}'"
+          else
+            output.puts line
+          end
+        end
+      end
+    end
+    mv copy, @file
+    @version = @new_version
+  end
+
+end
+version = Version.new "lib/uuid.rb", ENV["version"]
+
+
+# Create the GEM package.
+gem_spec = Gem::Specification.new do |spec|
+  spec.name = "uuid"
+  spec.version = version.next
+  spec.summary = "UUID generator"
+  spec.description = <<-EOF
+        UUID generator for producing universally unique identifiers based
+        on RFC 4122 (http://www.ietf.org/rfc/rfc4122.txt).
+EOF
+  spec.author = "Assaf Arkin"
+  spec.email = "assaf@labnotes.org"
+  spec.homepage = "http://trac.labnotes.org/cgi-bin/trac.cgi/wiki/Ruby/UuidGenerator"
+  spec.files = FileList["{bin,test,lib,docs}/**/*", "README", "MIT-LICENSE", "Rakefile", "CHANGELOG"].to_a
+  spec.require_path = "lib"
+  spec.autorequire = "uuid.rb"
+  spec.bindir = "bin"
+  spec.executables = ["uuid-setup"]
+  spec.default_executable = "uuid-setup"
+  spec.has_rdoc = true
+  spec.rdoc_options << "--main" << "README" << "--title" <<  "UUID generator" << "--line-numbers"
+  spec.extra_rdoc_files = ["README"]
+  spec.rubyforge_project = "reliable-msg"
+end
+
+gem = Rake::GemPackageTask.new(gem_spec) do |pkg|
+  pkg.need_tar = true
+  pkg.need_zip = true
+end
+
+
+desc "Look for TODO and FIXME tags in the code"
+task :todo do
+  FileList["**/*.rb"].egrep /#.*(FIXME|TODO|TBD)/
+end
+
+
+# --------------------------------------------------------------------
+# Creating a release
+
+desc "Make a new release"
+task :release => [:test, :prerelease, :clobber, :update_version, :package] do
+  puts
+  puts "**************************************************************"
+  puts "* Release #{version.number} Complete."
+  puts "* Packages ready to upload."
+  puts "**************************************************************"
+  puts
+end
+
+task :prerelease do
+  if !version.changed? && ENV["reuse"] != version.number
+    fail "Current version is #{version.number}, must specify reuse=ver to reuse existing version"
+  end
+end
+
+task :update_version => [:prerelease] do
+  if !version.changed?
+    puts "No version change ... skipping version update"
+  else
+    version.update
+  end
+end
+

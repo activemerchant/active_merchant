@@ -1,0 +1,81 @@
+= UUID Generator
+
+Generates universally unique identifiers (UUIDs) for use in distributed
+applications. Based on {RFC 4122}[http://www.ietf.org/rfc/rfc4122.txt].
+
+
+== Download
+
+The latest version of the UUID generator can be found in the Reliable
+Messaging project
+
+* http://rubyforge.org/projects/reliable-msg/
+
+For more information
+
+* http://trac.labnotes.org/cgi-bin/trac.cgi/wiki/Ruby/UuidGenerator
+
+
+== Installation
+
+You can download the sources directly, or install the GEM package
+(recommended) with
+
+  gem install uuid
+
+Once installed, create a <tt>uuid.state</tt> file by running
+
+  uuid-setup
+
+
+== Example
+
+  require_gem 'uuid'
+
+  10.times do
+    p UUID.new
+  end
+
+
+== UUID state file
+
+The UUID generator uses a state file (<tt>uuid.state</tt>) to hold the
+MAC address and sequence number.
+
+The MAC address is used to generate identifiers that are unique to your
+machine, preventing conflicts in distributed applications. The MAC
+address is six bytes (48 bit) long. It is automatically extracted from
+one of the network cards on your machine by running +ipconfig+
+(Windows) or +ifconfig+ (Linux, UNIX, et al). You can override the MAC
+address by editing the <tt>uuid.state</tt> file yourself.
+
+The sequence number is incremented each time the UUID generator is
+first used by the application, to prevent multiple processes from
+generating the same set of identifiers, and deal with changes to the
+system clock.
+
+The UUID state file is created with
+
+  uuid-setup
+
+It is created in the installation directory. If you installed the UUID
+generator as a Gem, it will be created in the Gem's directory. However,
+the UUID generator will look for the <tt>uuid.state</tt> first in the
+local directory, and then in the installation directory. You can use
+that to maintain separate state files for different applications.
+However, make sure they generate unique identifiers by using different
+MAC addresses in each state file.
+
+
+== Change log
+
+:include: CHANGELOG
+
+
+== License
+
+This package is licensed under the MIT license and/or the {Creative
+Commons Attribution-ShareAlike}[http://creativecommons.org/licenses/by-sa/2.5/legalcode].
+
+:include: MIT-LICENSE
+

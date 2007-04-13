@@ -1,4 +1,7 @@
-require 'digest/sha1'
+require 'uuid'
+
+# Disable the UUID logger.
+UUID.config(:logger => Logger.new(nil))
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -137,7 +140,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def generate_request_token
-        Digest::SHA1.hexdigest(rand.to_s).slice(0,32)
+        UUID.new(:compact)
       end
       
       def currency(money)
