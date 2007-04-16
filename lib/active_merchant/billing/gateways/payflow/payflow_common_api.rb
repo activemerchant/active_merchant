@@ -1,7 +1,4 @@
-require 'uuid'
-
-# Disable the UUID logger.
-UUID.config(:logger => Logger.new(nil))
+require 'digest/md5'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -140,7 +137,14 @@ module ActiveMerchant #:nodoc:
       end
       
       def generate_request_token
-        UUID.new(:compact)
+         md5 = Digest::MD5.new
+         now = Time.now
+         md5 << now.to_s
+         md5 << String(now.usec)
+         md5 << String(rand(0))
+         md5 << String($$)
+         md5 << self.class.name
+         md5.hexdigest
       end
       
       def currency(money)

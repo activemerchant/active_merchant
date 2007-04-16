@@ -1,7 +1,0 @@
-begin
-  require 'uuid'
-rescue LoadError
-  require 'rubygems'
-  require_gem 'uuid'
-end
-UUID::setup
