@@ -177,7 +177,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     )
     
     request_id = Digest::SHA1.hexdigest(rand.to_s).slice(0,32)
-    gateway.expects(:generate_request_token).times(2).returns(request_id)
+    gateway.expects(:generate_unique_id).times(2).returns(request_id)
     
     response1 = gateway.purchase(Money.new(100), @creditcard, @options)
     assert_nil response1.params['duplicate']

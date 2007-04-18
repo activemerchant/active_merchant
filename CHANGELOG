@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Move generate_unique_id method to Gateway class so other gateways can also use it [cody]
+#
 # * Allow notification name / value pairs to have a . in the name like checkout.x = 400 [cody]
 #
 # * Fix PaypalExpressGateway#purchase to have the same method signature as other gateways [cody]

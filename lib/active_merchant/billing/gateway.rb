@@ -1,5 +1,6 @@
 require 'net/http'
 require 'net/https'
+require 'digest/md5'
 require 'active_merchant/billing/response'
 
 module ActiveMerchant #:nodoc:
@@ -101,7 +102,18 @@ module ActiveMerchant #:nodoc:
       
       def requires_start_date_or_issue_number?(credit_card)
         DEBIT_CARDS.include?(credit_card.type.to_sym)
-      end    
+      end
+      
+      def generate_unique_id
+         md5 = Digest::MD5.new
+         now = Time.now
+         md5 << now.to_s
+         md5 << String(now.usec)
+         md5 << String(rand(0))
+         md5 << String($$)
+         md5 << self.class.name
+         md5.hexdigest
+      end
     end
   end
 end
