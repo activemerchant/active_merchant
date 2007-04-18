@@ -1,5 +1,3 @@
-require 'digest/md5'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module PayflowCommonAPI
@@ -136,17 +134,6 @@ module ActiveMerchant #:nodoc:
         end
       end
       
-      def generate_request_token
-         md5 = Digest::MD5.new
-         now = Time.now
-         md5 << now.to_s
-         md5 << String(now.usec)
-         md5 << String(rand(0))
-         md5 << String($$)
-         md5 << self.class.name
-         md5.hexdigest
-      end
-      
       def currency(money)
         money.respond_to?(:currency) ? money.currency : self.default_currency
       end
@@ -159,7 +146,7 @@ module ActiveMerchant #:nodoc:
       	  "X-VPS-VIT-Client-Certification-Id" => @options[:certification_id].to_s,
       	  "X-VPS-VIT-Integration-Product" => "ActiveMerchant",
       	  "X-VPS-VIT-Runtime-Version" => RUBY_VERSION,
-      	  "X-VPS-Request-ID" => generate_request_token
+      	  "X-VPS-Request-ID" => generate_unique_id
     	  }
     	end
     	
