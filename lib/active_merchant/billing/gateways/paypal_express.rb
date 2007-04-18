@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
         commit 'DoExpressCheckoutPayment', build_sale_or_authorization_request('Authorization', money, options)
       end
 
-      def purchase(money, token, payer_id, options = {})
+      def purchase(money, options = {})
         requires!(options, :token, :payer_id)
         
         commit 'DoExpressCheckoutPayment', build_sale_or_authorization_request('Sale', money, options)

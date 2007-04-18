@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Fix PaypalExpressGateway#purchase to have the same method signature as other gateways [cody]
+#
 # * Cargo cult off the rails unique id generator instead of UUID library [cody]
 #
 # * Add uuid-1.0.3 for generating random request UUIDs [cody]
