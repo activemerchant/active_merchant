@@ -92,6 +92,15 @@ module ActiveMerchant #:nodoc:
 
           mapping :tax, 'tax'
           mapping :shipping, 'shipping'
+          mapping :cmd, 'cmd'
+          mapping :custom, 'custom'
+          mapping :src, 'src'
+          mapping :sra, 'sra'
+          %w(a p t).each do |l|
+            (1..3).each do |i|
+              mapping "#{l}#{i}".to_sym, "#{l}#{i}"
+            end
+          end
         end
       end
     end
