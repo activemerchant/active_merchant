@@ -6,26 +6,26 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
   def setup
     ActiveMerchant::Billing::Base.gateway_mode = :production
 
-    @gateway = <%= class_name %>Gateway.new({
+    @gateway = <%= class_name %>Gateway.new(
         :login => 'LOGIN',
         :password => 'PASSWORD'
-      })
+    )
 
-    @creditcard = CreditCard.new({
+    @creditcard = CreditCard.new(
       :number => '4000100011112224',
       :month => 9,
       :year => 2009,
       :first_name => 'Longbob',
       :last_name => 'Longsen'
-    })
+    )
 
-    @declined_card = CreditCard.new({
+    @declined_card = CreditCard.new(
       :number => '4000300011112220',
       :month => 9,
       :year => 2009,
       :first_name => 'Longbob',
       :last_name => 'Longsen'
-    })
+    )
 
     @options = { :address => { :address1 => '1234 Shady Brook Lane',
                               :zip => '90210'
