@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add Danish gateway Quickpay [cody]
+#
 # * Remove redundant hash brackets from generator template [cody]
 #
 # * Add additional options to the PayPal Website Payments Standard Helper [Rick Olson]
