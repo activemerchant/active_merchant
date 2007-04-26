@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Clean unsupported characters from the Quickpay ordernum [cody]
+#
 # * Call the :sale and :authorization in QuickpayGateway [cody]
 # 
 # * Add Danish gateway Quickpay [cody]

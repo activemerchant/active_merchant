@@ -114,7 +114,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_invoice(post, options)
-        post[:ordernum] = options[:order_id]
+        post[:ordernum] = format_order_number(options[:order_id])
         post[:posc]   = POS_CODES[:internet_secure]
       end
       
@@ -199,6 +199,10 @@ module ActiveMerchant #:nodoc:
         month = format(credit_card.month, :two_digits)
 
         "#{year}#{month}"
+      end
+      
+      def format_order_number(number)
+        number.to_s.gsub(/[^0-9]/, '').rjust(4, "0")
       end
     end
   end
