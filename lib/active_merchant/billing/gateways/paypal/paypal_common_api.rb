@@ -4,6 +4,8 @@ module ActiveMerchant #:nodoc:
     # PaypalExpressGateway
     module PaypalCommonAPI
       def self.included(base)
+        
+        base.default_currency = 'USD'
         base.cattr_accessor :pem_file
       end
       
@@ -260,10 +262,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def currency(money)
-        money.respond_to?(:currency) ? money.currency : 'USD'
-      end
-      
       def commit(action, request)
         url = test? ? TEST_URL : LIVE_URL
         data = ssl_post(url, build_request(request))

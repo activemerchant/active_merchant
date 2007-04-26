@@ -18,8 +18,6 @@ module ActiveMerchant
     #
     class PslCardGateway < Gateway
       self.money_format = :cents
-      
-      class_inheritable_accessor :default_currency
       self.default_currency = 'GBP'
       
       # PslCard server URL - The url is the same whether testing or live - use
@@ -273,11 +271,7 @@ module ActiveMerchant
       #   -the ISO 4217:2001 Numberic currency code
       #   
       def currency(money)
-        #get the stored currency from the money object
-        iso_currency = money.respond_to?(:currency) ? money.currency : self.default_currency
-
-        #find the code value
-        CURRENCY_CODES[iso_currency].to_s
+        CURRENCY_CODES[money.respond_to?(:currency) ? money.currency : self.default_currency].to_s
       end
       
       # Returns a date string in the format PSL expects

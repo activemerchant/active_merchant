@@ -9,10 +9,8 @@ module ActiveMerchant #:nodoc:
       attr_reader :url 
       attr_reader :response
       attr_reader :options
-      
-      class_inheritable_accessor :default_currency
-      self.default_currency = 'DKK'
-      
+    
+      self.default_currency = 'DKK'  
       self.money_format = :cents
       
       TRANSACTIONS = {
@@ -188,10 +186,6 @@ module ActiveMerchant #:nodoc:
         string << @options[:password].to_s
         
         Digest::MD5.hexdigest(string)
-      end
-      
-      def currency(money)
-        money.respond_to?(:currency) ? money.currency : self.default_currency
       end
       
       def expdate(credit_card)

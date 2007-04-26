@@ -11,7 +11,6 @@ module ActiveMerchant
       attr_reader :response
       attr_reader :options
       
-      class_inheritable_accessor :default_currency
       self.default_currency = 'NZD'
 
       PAYMENT_URL = 'https://www.paymentexpress.com/pxpost.aspx'
@@ -203,10 +202,6 @@ module ActiveMerchant
       
       def format_date(month, year)
         "#{format(month, :two_digits)}#{format(year, :two_digits)}"
-      end
-      
-      def currency(money)
-        money.respond_to?(:currency) ? money.currency : self.default_currency
       end
     end
   end

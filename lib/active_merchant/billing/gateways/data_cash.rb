@@ -9,6 +9,7 @@ module ActiveMerchant
     # add_credit_card method.
     # 
     class DataCashGateway < Gateway
+      self.default_currency = 'GBP'
       
       # Datacash server URLs
       TEST_URL = 'https://testserver.datacash.com/Transaction'
@@ -402,19 +403,6 @@ module ActiveMerchant
                      :test => test?,
                      :authorization => "#{@response[:datacash_reference]};#{@response[:authcode]}"
         )
-      end
-      
-      # Find the currency of the Money object passed
-      # 
-      # Parameters:
-      #   -money: The money object that we are looking at
-      #   
-      # Returns:
-      #   -string: The three digit currency code (These are
-      #            ISO 4217 codes)
-      #            
-      def currency(money)
-        money.respond_to?(:currency) ? money.currency : 'GBP'
       end
       
       # Returns a date string in the format Datacash expects

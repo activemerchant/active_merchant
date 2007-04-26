@@ -28,6 +28,9 @@ module ActiveMerchant #:nodoc:
       class_inheritable_accessor :money_format
       self.money_format = :dollars
       
+      # The default currency for the transactions if no currency is provided
+      class_inheritable_accessor :default_currency
+      
       # Return the matching gateway for the provider
       # * <tt>bogus</tt>: BogusGateway - Does nothing ( for testing)
       # * <tt>moneris</tt>: MonerisGateway
@@ -98,6 +101,10 @@ module ActiveMerchant #:nodoc:
         else
           sprintf("%.2f", cents.to_f/100)
         end
+      end
+      
+      def currency(money)
+        money.respond_to?(:currency) ? money.currency : self.default_currency
       end
       
       def requires_start_date_or_issue_number?(credit_card)

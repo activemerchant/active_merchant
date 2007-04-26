@@ -2,7 +2,6 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module PayflowCommonAPI
       def self.included(base)
-        base.class_inheritable_accessor :default_currency
         base.default_currency = 'USD'
           
         # The certification_id is required by PayPal to make direct HTTPS posts to their servers.
@@ -132,10 +131,6 @@ module ActiveMerchant #:nodoc:
         else
           response[node.name.underscore.to_sym] = node.text
         end
-      end
-      
-      def currency(money)
-        money.respond_to?(:currency) ? money.currency : self.default_currency
       end
       
       def build_headers(content_length)

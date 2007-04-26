@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Refactor default_currency to the base gateway class [cody]
+#
 # * Clean unsupported characters from the Quickpay ordernum [cody]
 #
 # * Call the :sale and :authorization in QuickpayGateway [cody]
