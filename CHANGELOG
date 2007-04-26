@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Call the :sale and :authorization in QuickpayGateway [cody]
+# 
 # * Add Danish gateway Quickpay [cody]
 #
 # * Remove redundant hash brackets from generator template [cody]

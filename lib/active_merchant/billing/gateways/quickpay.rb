@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       
       TRANSACTIONS = {
-        :sale          => '1100',
+        :authorization          => '1100',
         :capture       => '1220',
         :void          => '1420',
         :credit        => 'credit'
@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
       }
       
       MD5_CHECK_FIELDS = {
-        :sale    => [:msgtype, :cardnumber, :amount, :expirationdate, :posc, :ordernum, :currency, :cvd, :merchant, :authtype, :reference, :transaction],
+        :authorization    => [:msgtype, :cardnumber, :amount, :expirationdate, :posc, :ordernum, :currency, :cvd, :merchant, :authtype, :reference, :transaction],
         :capture => [:msgtype, :amount, :merchant, :transaction],
         :void    => [:msgtype, :merchant, :transaction],
         :credit  => [:msgtype, :amount, :merchant, :transaction]
@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard)        
         add_invoice(post, options)
 
-        commit(:sale, post)
+        commit(:authorization, post)
       end
       
       def purchase(money, creditcard, options = {})
@@ -172,7 +172,7 @@ module ActiveMerchant #:nodoc:
         params[:merchant]   = @options[:login]
         params[:msgtype]    = TRANSACTIONS[action]
         
-        check_field = (action == :sale) ? :md5checkV2 : :md5check
+        check_field = (action == :authorization) ? :md5checkV2 : :md5check
         params[check_field] = generate_check_hash(action, params)
         
         request = params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
