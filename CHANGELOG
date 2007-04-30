@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add support for token based payments to PaymentExpress [Nik Wakelin]
+#
 # * Refactor default_currency to the base gateway class [cody]
 #
 # * Clean unsupported characters from the Quickpay ordernum [cody]

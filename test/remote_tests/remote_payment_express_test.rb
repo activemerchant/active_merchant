@@ -104,4 +104,46 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert_equal 'Invalid Credentials', response.message
     assert !response.success?
   end
+  
+  def test_store_credit_card
+    assert response = @gateway.store(@creditcard)
+    assert response.success?
+    assert_equal "APPROVED", response.message
+    assert !response.token.blank?
+    assert_not_nil response.token
+  end
+  
+  def test_store_with_custom_token
+    token = Time.now.to_i.to_s #hehe
+    assert response = @gateway.store(@creditcard, :billing_id => token)
+    assert response.success?
+    assert_equal "APPROVED", response.message
+    assert !response.token.blank?
+    assert_not_nil response.token
+    assert_equal token, response.token
+  end
+  
+  def test_store_invalid_credit_card
+    original_number = @creditcard.number
+    @creditcard.number = 2
+  
+    assert response = @gateway.store(@creditcard)
+    assert !response.success?
+  ensure
+    @creditcard.number = original_number
+  end
+  
+  def test_store_and_charge
+    assert response = @gateway.store(@creditcard)
+    assert response.success?
+    assert_equal "APPROVED", response.message
+    assert (token = response.token)
+    
+    assert purchase = @gateway.purchase( Money.new(100), token)
+    assert_equal "APPROVED", purchase.message
+    assert purchase.success?
+    assert_not_nil purchase.authorization
+  end  
+  
+  
 end

@@ -13,15 +13,17 @@ module ActiveMerchant
       
       self.default_currency = 'NZD'
 
+
       PAYMENT_URL = 'https://www.paymentexpress.com/pxpost.aspx'
       
       APPROVED = '1'
       
       TRANSACTIONS = {
-        :purchase => 'Purchase',
-        :credit => 'Refund',
-        :authorization => 'Auth',
-        :capture => 'Complete'
+        :purchase       => 'Purchase',
+        :credit         => 'Refund',
+        :authorization  => 'Auth',
+        :capture        => 'Complete',
+        :validate       => 'Validate'
       }
       
       POST_HEADERS = { "Content-Type" => "application/x-www-form-urlencoded" }
@@ -46,12 +48,20 @@ module ActiveMerchant
       end
       
       # Funds are transferred immediately.
-      def purchase(money, credit_card, options = {})
-        if result = test_result_from_cc_number(credit_card.number)
-          return result
+      def purchase(money, credit_card_or_billing_token, options = {})
+        
+        credit_card = credit_card_or_billing_token if credit_card_or_billing_token.respond_to?(:number)
+        
+        if credit_card        
+          if result = test_result_from_cc_number(credit_card.number)
+            return result
+          end
+          options[:credit_card] = credit_card
+        else
+          options[:token]       = credit_card_or_billing_token
         end
         
-        request = build_purchase_or_authorization_request(money, credit_card, options)
+        request = build_purchase_or_authorization_request(money, options)
         commit(:purchase, request)      
       end
       
@@ -63,7 +73,9 @@ module ActiveMerchant
           return result
         end
         
-        request = build_purchase_or_authorization_request(money, credit_card, options)
+        options[:credit_card] = credit_card
+
+        request = build_purchase_or_authorization_request(money, options)
         commit(:authorization, request)
       end
       
@@ -81,18 +93,31 @@ module ActiveMerchant
         request = build_capture_or_credit_request(money, identification, options)                                            
         commit(:credit, request)
       end
-
+      
+      # token based billing
+      
+      # initiates a "Validate" transcation to store card data on payment express servers
+      # returns a "token" that can be used to rebill this card
+      # see: http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#Tokenbilling
+      # PaymentExpress does not support unstoring a stored card.
+      def store(credit_card, options = {})
+        request  = build_token_request(credit_card, options)
+        commit(:validate, request)
+      end
+      
       private
       
-      def build_purchase_or_authorization_request(money, credit_card, options)
-        result = new_transaction
-      
-        add_credit_card(result, credit_card)
-        add_amount(result, money)
-        add_invoice(result, options)
-        add_address_verification_data(result, options)
+      def build_purchase_or_authorization_request(money, options)
+        result = new_transaction      
         
-        result
+        returning result do |r|
+          add_credit_card(r, options[:credit_card]) if options[:credit_card]
+          add_billing_token(r, options[:token])     if options[:token]
+        
+          add_amount(r, money)
+          add_invoice(r, options)
+          add_address_verification_data(r, options)
+        end
       end
       
       def build_capture_or_credit_request(money, identification, options)
@@ -103,6 +128,16 @@ module ActiveMerchant
         add_reference(result, identification)
         
         result
+      end
+      
+      def build_token_request(credit_card, options)
+        result = new_transaction
+          
+        returning result do |r|
+          add_credit_card(r, credit_card)
+          add_amount(r, 100) #need to make an auth request for $1
+          add_token_request(r, options)
+        end
       end
       
       def add_credentials(xml)
@@ -127,6 +162,15 @@ module ActiveMerchant
           xml.add_element("DateStart").text = format_date(credit_card.start_month, credit_card.start_year) unless credit_card.start_month.blank? || credit_card.start_year.blank?
           xml.add_element("IssueNumber").text = credit_card.issue_number unless credit_card.issue_number.blank?
         end
+      end
+      
+      def add_billing_token(xml, token) 
+        xml.add_element("DpsBillingId").text = token
+      end
+      
+      def add_token_request(xml, options)
+        xml.add_element("BillingId").text = options[:billing_id] if options[:billing_id]
+        xml.add_element("EnableAddBillCard").text = 1
       end
       
       def add_amount(xml, money)
@@ -173,7 +217,7 @@ module ActiveMerchant
         test = @response[:test_mode] == '1'
         
         # Return a response
-        Response.new(success, @response[:response_text], @response,
+        PaymentExpressResponse.new(success, @response[:response_text], @response,
           :test => test,
           :authorization => @response[:dps_txn_ref]
         )
@@ -196,12 +240,20 @@ module ActiveMerchant
         xml.elements.each('Txn/Transaction/*') do |element|
           response[element.name.underscore.to_sym] = element.text
         end
-
+        
         response
       end
       
       def format_date(month, year)
         "#{format(month, :two_digits)}#{format(year, :two_digits)}"
+      end
+    end
+    
+    class PaymentExpressResponse < Response
+      # add a method to response so we can easily get the token
+      # for Validate transactions
+      def token
+        @params["billing_id"] || @params["dps_billing_id"]
       end
     end
   end
