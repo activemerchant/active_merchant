@@ -42,38 +42,35 @@ module ActiveMerchant #:nodoc:
         end
         
         # Regular expressions for the known card companies
-        # == Known card types
-        #	 Card Type                         Prefix                           Length
-        #  --------------------------------------------------------------------------
-        #	 master                            51-55                            16
-        #	 visa                              4                                13, 16
-        #	 american_express                  34, 37                           15
-        #	 diners_club                       300-305, 36, 38                  14
-        #	 discover                          6011                             16
-        #	 jcb                               3                                16
-        #	 jcb                               2131, 1800                       15
-        #	 switch                            various                          16,18,19
-        #	 solo                              63, 6767                         16,18,19
+        # http://en.wikipedia.org/wiki/Credit_card_number
+        # http://www.barclaycardbusiness.co.uk/information_zone/processing/bin_rules.html
         def card_companies
           { 
             'visa' =>  /^4\d{12}(\d{3})?$/,
-            'master' =>  /^5[1-5]\d{14}$/,
+            'master' =>  /^(5[1-5]\d{4}|677189)\d{10}$/,
             'discover' =>  /^6011\d{12}$/,
             'american_express' =>  /^3[47]\d{13}$/,
             'diners_club' =>  /^3(0[0-5]|[68]\d)\d{11}$/,
-            'jcb' =>  /^(3\d{4}|2131|1800)\d{11}$/,
-            'switch' =>  [/^49(03(0[2-9]|3[5-9])|11(0[1-2]|7[4-9]|8[1-2])|36[0-9]{2})\d{10}(\d{2,3})?$/, /^564182\d{10}(\d{2,3})?$/, /^6(3(33[0-4][0-9])|759[0-9]{2})\d{10}(\d{2,3})?$/],
-            'solo' =>  /^6(3(34[5-9][0-9])|767[0-9]{2})\d{10}(\d{2,3})?$/ 
+            'jcb' =>  /^3528\d{12}$/,
+            'switch' =>  /^(493698|633311|6759\d{2})\d{10}(\d{2,3})?$/,  
+            'solo' =>  /^6767\d{12}(\d{2,3})?$/,
+            'dankort' => /^5019\d{12}$/,
+            'maestro' => /^(5[06-8]|6\d)\d{14}$/,
+            'forbrugsforeningen' => /^600722\d{10}$/
           }
         end
-
+        
         # Returns a string containing the type of card from the list of known information below.
+        # Need to check the cards in a particular order, as there is some overlap of the allowable ranges
+        # 
         def type?(number)
           return 'visa' if ActiveMerchant::Billing::Base.gateway_mode == :test and ['1','2','3','success','failure','error'].include?(number.to_s)
 
-          card_companies.each do |company, patterns|
-            return company.dup if [patterns].flatten.any? { |pattern| number =~ pattern  } 
+          card_companies.reject{ |c,p| c == 'maestro' }.each do |company, pattern|
+            return company.dup if number =~ pattern 
           end
+          
+          return 'maestro' if number =~ card_companies['maestro']
 
           return nil
         end

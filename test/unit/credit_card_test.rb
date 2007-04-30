@@ -2,7 +2,13 @@ require File.dirname(__FILE__) + '/../test_helper'
 
 class CreditCardTest < Test::Unit::TestCase
   include ActiveMerchant::Billing
-
+  
+  MAESTRO_CARDS = [ '5000000000000000', '5099999999999999', '5600000000000000',
+    '5899999999999999', '6000000000000000', '6999999999999999']
+  
+  NON_MAESTRO_CARDS = [ '4999999999999999', '5100000000000000', '5599999999999999',
+    '5900000000000000', '5999999999999999', '7000000000000000' ]
+    
   def setup
     CreditCard.require_verification_value = false
     
@@ -17,7 +23,7 @@ class CreditCardTest < Test::Unit::TestCase
     
     @solo = CreditCard.new(
       :type   => "solo",
-      :number => "6334900000000005",
+      :number => "676700000000000000",
       :month  => Time.now.month,
       :year   => Time.now.year + 1,
       :first_name  => "Test",
@@ -255,5 +261,53 @@ class CreditCardTest < Test::Unit::TestCase
     assert_nothing_raised do
       credit_card.valid?
     end
+  end
+  
+  def test_ensure_type_from_credit_card_class_is_not_frozen
+    type = CreditCard.type?('4242424242424242')
+    assert !type.frozen?
+  end
+  
+  def test_dankort_card_type
+    assert_equal 'dankort', CreditCard.type?('5019717010103742')
+  end
+  
+  def test_visa_dankort_detected_as_visa
+    assert_equal 'visa', CreditCard.type?('4571100000000000')
+  end
+  
+  def test_electron_dk_detected_as_visa
+    assert_equal 'visa', CreditCard.type?('4175001000000000')
+  end
+  
+  def test_detect_diners_club
+    assert_equal 'diners_club', CreditCard.type?('36148010000000')
+  end
+  
+  def test_detect_diners_club_dk
+    assert_equal 'diners_club', CreditCard.type?('30401000000000')
+  end
+  
+  def test_detect_maestro
+    assert_equal 'maestro', CreditCard.type?('5020100000000000')
+  end
+    
+  def test_maestro_dk_detects_as_maestro
+    assert_equal 'maestro', CreditCard.type?('6769271000000000')
+  end
+  
+  def test_maestro_range
+    MAESTRO_CARDS.each{ |number| assert_equal 'maestro', CreditCard.type?(number) }
+    
+    NON_MAESTRO_CARDS.each{ |number| assert_not_equal 'maestro', CreditCard.type?(number) }
+  end
+  
+  def test_mastercard_range
+    assert_equal 'master', CreditCard.type?('6771890000000000')
+    assert_equal 'master', CreditCard.type?('5413031000000000')
+  end
+  
+  def test_forbrugsforeningen
+    assert_equal 'forbrugsforeningen', CreditCard.type?('6007221000000000')
   end
 end

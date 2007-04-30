@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         post = {}
         
-        add_amount(post, money)
+        add_amount(post, money, options)
         add_creditcard(post, creditcard)        
         add_invoice(post, options)
 
@@ -93,22 +93,15 @@ module ActiveMerchant #:nodoc:
         commit(:credit, post)
       end
     
-      # Supported Credit Cards
-      # MasterCard, herunder Eurocard
-      # Maestro
-      # Visa
-      # Visa Electron
-      # JCB
-      # American Express
       def self.supported_cardtypes
-        [ :visa, :master, :american_express, :jcb ]
+        [ :dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro ]
       end
          
       private                       
   
-      def add_amount(post, money)
+      def add_amount(post, money, options = {})
         post[:amount]   = amount(money)
-        post[:currency] = currency(money)
+        post[:currency] = options[:currency] || currency(money)
       end
       
       def add_invoice(post, options)
@@ -117,7 +110,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_creditcard(post, credit_card)
-        post[:cardnumber]     = credit_card.number
+        post[:cardnumber]     = credit_card.number   
         post[:cvd]            = credit_card.verification_value
         post[:expirationdate] = expdate(credit_card) 
       end

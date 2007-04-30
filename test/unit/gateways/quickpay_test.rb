@@ -3,6 +3,9 @@ require File.dirname(__FILE__) + '/../../test_helper'
 class QuickpayTest < Test::Unit::TestCase
   include ActiveMerchant::Billing
 
+  # 100 Cents
+  AMOUNT = 100
+
   def setup
     @gateway = QuickpayGateway.new(
       :login => 'LOGIN',
@@ -20,7 +23,7 @@ class QuickpayTest < Test::Unit::TestCase
   
   def test_successful_purchase
     @creditcard.number = 1
-    assert response = @gateway.purchase(Money.new(100), @creditcard, {})
+    assert response = @gateway.purchase(AMOUNT, @creditcard, {})
     assert response.success?
     assert_equal '5555', response.authorization
     assert response.test?
@@ -28,7 +31,7 @@ class QuickpayTest < Test::Unit::TestCase
   
   def test_successful_authorization
     @creditcard.number = 1
-    assert response = @gateway.authorize(Money.new(100), @creditcard, {})
+    assert response = @gateway.authorize(AMOUNT, @creditcard, {})
     assert response.success?
     assert_equal '5555', response.authorization
     assert response.test?
@@ -36,20 +39,20 @@ class QuickpayTest < Test::Unit::TestCase
 
   def test_unsuccessful_request
     @creditcard.number = 2
-    assert response = @gateway.purchase(Money.new(100), @creditcard, {})
+    assert response = @gateway.purchase(AMOUNT, @creditcard, {})
     assert !response.success?
     assert response.test?
   end
 
   def test_request_error
     @creditcard.number = 3
-    assert_raise(Error){ @gateway.purchase(Money.new(100), @creditcard, {}) }
+    assert_raise(Error){ @gateway.purchase(AMOUNT, @creditcard, {}) }
   end
   
   def test_parsing_response_with_errors
     @gateway.expects(:ssl_post).returns(error_response)
     
-    response = @gateway.purchase(Money.new(100), @creditcard, :order_id => '1000')
+    response = @gateway.purchase(AMOUNT, @creditcard, :order_id => '1000')
     assert !response.success?
     assert_equal '008', response.params['qpstat']
     assert_equal 'Missing/error in cardnumberMissing/error in expirationdateMissing/error in card verification dataMissing/error in amountMissing/error in ordernumMissing/error in currency', response.params['qpstatmsg']
@@ -59,7 +62,7 @@ class QuickpayTest < Test::Unit::TestCase
   def test_merchant_error
     @gateway.expects(:ssl_post).returns(merchant_error)
     
-    response = @gateway.purchase(Money.new(100), @creditcard, :order_id => '1000')
+    response = @gateway.purchase(AMOUNT, @creditcard, :order_id => '1000')
     assert !response.success?
     assert_equal response.message, 'Missing/error in merchant'
   end
@@ -67,7 +70,7 @@ class QuickpayTest < Test::Unit::TestCase
   def test_parsing_successful_response
     @gateway.expects(:ssl_post).returns(successful_response)
     
-    response = @gateway.authorize(Money.new(100), @creditcard, :order_id => '1000')
+    response = @gateway.authorize(AMOUNT, @creditcard, :order_id => '1000')
 
     assert response.success?
     assert_equal 'OK', response.message
@@ -80,7 +83,7 @@ class QuickpayTest < Test::Unit::TestCase
     assert_equal '104680', response.params['ordernum']
     assert_equal 'cody@example.com', response.params['merchantemail']
     assert_equal 'Visa', response.params['cardtype']
-    assert_equal '100', response.params['amount']
+    assert_equal AMOUNT.to_s, response.params['amount']
     assert_equal 'OK', response.params['qpstatmsg']
     assert_equal 'Shopify', response.params['merchant']
     assert_equal '1110', response.params['msgtype']
