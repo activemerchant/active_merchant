@@ -48,7 +48,12 @@ module ActiveMerchant #:nodoc:
       def cancel_recurring(profile_id)
         request = build_recurring_request(:cancel, 0, :profile_id => profile_id)
         commit(request, :recurring)
-      end                    
+      end
+      
+      def recurring_inquiry(profile_id)
+        request = build_recurring_request(:inquiry, nil, :profile_id => profile_id)
+        commit(request, :recurring)
+      end   
       
       def express
         @express ||= PayflowExpressGateway.new(@options)

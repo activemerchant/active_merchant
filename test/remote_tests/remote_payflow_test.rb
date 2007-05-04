@@ -147,4 +147,47 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert response.success?
     assert response.test?
   end
+  
+  def test_full_feature_set_for_recurring_profiles
+    # Test add
+    @options.update(
+      :periodicity => :weekly,
+      :payments => '12',
+      :starting_at => Time.now + 1.day,
+      :comment => "Test Profile"
+    )
+    response = @gateway.recurring(Money.new(100), @creditcard, @options)
+    assert_equal "Approved", response.params['message']
+    assert_equal "0", response.params['result']
+    assert response.success?
+    assert response.test?
+    assert !response.params['profile_id'].blank?
+    @recurring_profile_id = response.params['profile_id']
+  
+    # Test modify
+    @options.update(
+      :periodicity => :monthly,
+      :starting_at => Time.now + 1.day,
+      :payments => '4',
+      :profile_id => @recurring_profile_id
+    )
+    response = @gateway.recurring(Money.new(400), @creditcard, @options)
+    assert_equal "Approved", response.params['message']
+    assert_equal "0", response.params['result']
+    assert response.success?
+    assert response.test?
+    
+    # Test inquiry
+    response = @gateway.recurring_inquiry(@recurring_profile_id) 
+    assert_equal "0", response.params['result']
+    assert response.success?
+    assert response.test?
+    
+    # Test cancel
+    response = @gateway.cancel_recurring(@recurring_profile_id)
+    assert_equal "Approved", response.params['message']
+    assert_equal "0", response.params['result']
+    assert response.success?
+    assert response.test?
+  end
 end
