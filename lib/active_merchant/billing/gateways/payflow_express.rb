@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
         request = build_sale_or_authorization_request('Sale', money, options)
         commit(request)
       end                       
-    
+
       def setup_authorization(money, options = {})
         requires!(options, :return_url, :cancel_return_url)
         
@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
       def details_for(token)
         request = build_get_express_details_request(token)
         commit(request)
-      end         
+      end
       
       private
       def build_get_express_details_request(token)
@@ -102,16 +102,23 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'TotalAmt', amount(money), 'Currency' => currency(money)
               end
               xml.tag! 'Tender' do
-                xml.tag! 'PayPal' do
-                  xml.tag! 'Token', options[:token]
-                  xml.tag! 'PayerID', options[:payer_id]
-                  xml.tag! 'NotifyURL', options[:notify_url]
-                end
+                add_paypal_details xml, options
               end
             end
           end
         end
         xml.target!
+      end
+      
+      def add_paypal_details(xml, options)
+        xml.tag! 'PayPal' do
+          xml.tag! 'EMail', options[:email] unless options[:email].blank?
+          xml.tag! 'ReturnURL', options[:return_url] unless options[:return_url].blank?
+          xml.tag! 'CancelURL', options[:cancel_return_url] unless options[:cancel_return_url].blank?
+          xml.tag! 'NotifyURL', options[:notify_url] unless options[:notify_url].blank?
+          xml.tag! 'PayerID', options[:payer_id] unless options[:payer_id].blank?
+          xml.tag! 'Token', options[:token] unless options[:token].blank?
+        end
       end
       
       def build_response(success, message, response, options = {})

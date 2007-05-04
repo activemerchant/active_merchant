@@ -51,19 +51,23 @@ module ActiveMerchant #:nodoc:
         request = build_void_or_capture_request('Void', authorization)
         commit(request)
       end
-         
+
       private      
-      def build_request(body)
+      def build_request(body, request_type = nil)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
         xml.tag! 'XMLPayRequest', 'Timeout' => 30, 'version' => "2.1", "xmlns" => XMLNS do
           xml.tag! 'RequestData' do
             xml.tag! 'Vendor', @options[:login]
             xml.tag! 'Partner', @options[:partner]
-            xml.tag! 'Transactions' do
-              xml.tag! 'Transaction' do
-                xml.tag! 'Verbosity', 'MEDIUM'
-                xml << body
+            if request_type == :recurring
+              xml << body
+            else
+              xml.tag! 'Transactions' do
+                xml.tag! 'Transaction' do
+                  xml.tag! 'Verbosity', 'MEDIUM'
+                  xml << body
+                end
               end
             end
           end
@@ -83,14 +87,6 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'PNRef', authorization
         end
         xml.target!
-      end
-            
-      def add_paypal_details(xml, options)
-        xml.tag! 'PayPal' do
-          xml.tag! 'EMail', options[:email]
-          xml.tag! 'ReturnURL', options[:return_url]
-          xml.tag! 'CancelURL', options[:cancel_return_url]
-        end
       end
 
       def add_address(xml, tag, address, options)  
@@ -145,9 +141,9 @@ module ActiveMerchant #:nodoc:
     	  }
     	end
     	
-    	def commit(request_body)
-        request = build_request(request_body)
-        headers = build_headers(request_body.size)
+    	def commit(request_body, request_type = nil)
+        request = build_request(request_body, request_type)
+        headers = build_headers(request.size)
     	  
     	  url = test? ? TEST_URL : LIVE_URL
     	  data = ssl_post(url, request, headers)

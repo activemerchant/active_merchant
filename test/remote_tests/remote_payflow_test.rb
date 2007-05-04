@@ -121,4 +121,30 @@ class RemotePayflowTest < Test::Unit::TestCase
     response2 = gateway.purchase(Money.new(100), @creditcard, @options)
     assert response2.params['duplicate']
   end
+  
+  def test_create_recurring_profile
+    response = @gateway.recurring(1000, @creditcard, :periodicity => :monthly)
+    assert response.success?
+    assert !response.params['profile_id'].blank?
+    assert response.test?
+  end
+  
+  def test_create_recurring_profile_with_invalid_date
+    response = @gateway.recurring(1000, @creditcard, :periodicity => :monthly, :starting_at => Time.now)
+    assert !response.success?
+    assert_equal 'Field format error: Start or next payment date must be a valid future date', response.message
+    assert response.params['profile_id'].blank?
+    assert response.test?
+  end
+  
+  def test_create_and_cancel_recurring_profile
+    response = @gateway.recurring(1000, @creditcard, :periodicity => :monthly)
+    assert response.success?
+    assert !response.params['profile_id'].blank?
+    assert response.test?
+    
+    response = @gateway.cancel_recurring(response.params['profile_id'])
+    assert response.success?
+    assert response.test?
+  end
 end

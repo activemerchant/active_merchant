@@ -5,6 +5,8 @@ module ActiveMerchant #:nodoc:
     class PayflowGateway < Gateway
       include PayflowCommonAPI
       
+      RECURRING_ACTIONS = Set.new([:add, :modify, :cancel, :inquiry, :reactivate, :payment])
+      
       def authorize(money, credit_card, options = {})
         if result = test_result_from_cc_number(credit_card.number)
           return result
@@ -21,7 +23,32 @@ module ActiveMerchant #:nodoc:
         
         request = build_sale_or_authorization_request('Sale', money, credit_card, options)
         commit(request)
-      end                       
+      end
+      
+      # Adds or modifies a recurring Payflow profile.  See the Payflow Pro Recurring Billing Guide for more details:
+      # https://www.paypal.com/en_US/pdf/PayflowPro_RecurringBilling_Guide.pdf
+      #    
+      # Several options are available to customize the recurring profile:
+      #
+      # * <tt>profile_id</tt> - is only required for editing a recurring profile
+      # * <tt>starting_at</tt> - takes a Date, Time, or string in mmddyyyy format. The date must be in the future.
+      # * <tt>name</tt> - The name of the customer to be billed.  If not specified, the name from the credit card is used.
+      # * <tt>periodicity</tt> - The frequency that the recurring payments will occur at.  Can be one of
+      # :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily, :semimonthly, :quadweekly, :quarterly, :semiyearly
+      # * <tt>payments</tt> - The term, or number of payments that will be made
+      # * <tt>comment</tt> - A comment associated with the profile            
+      def recurring(money, credit_card, options = {})
+        options[:name] = credit_card.name if options[:name].blank? && credit_card
+        request = build_recurring_request(options[:profile_id] ? :modify : :add, money, options) do |xml|
+          add_credit_card(xml, credit_card) if credit_card
+        end
+        commit(request, :recurring)
+      end
+      
+      def cancel_recurring(profile_id)
+        request = build_recurring_request(:cancel, 0, :profile_id => profile_id)
+        commit(request, :recurring)
+      end                    
       
       def express
         @express ||= PayflowExpressGateway.new(@options)
@@ -48,8 +75,6 @@ module ActiveMerchant #:nodoc:
               add_address(xml, 'ShipTo', shipping_address, options)
               
               xml.tag! 'TotalAmt', amount(money), 'Currency' => currency(money)
-              
-             
             end
             
             xml.tag! 'Tender' do
@@ -87,6 +112,64 @@ module ActiveMerchant #:nodoc:
         month = format(creditcard.start_month, :two_digits)
 
         "#{month}#{year}"
+      end
+      
+      def build_recurring_request(action, money, options)
+        unless RECURRING_ACTIONS.include?(action)
+          raise StandardError, "Invalid Recurring Profile Action: #{action}"
+        end
+
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.tag! 'RecurringProfiles' do
+          xml.tag! 'RecurringProfile' do
+            xml.tag! action.to_s.capitalize do
+              unless [:cancel, :inquiry].include?(action)
+                xml.tag! 'RPData' do
+                  xml.tag! 'Name', options[:name] unless options[:name].nil?
+                  xml.tag! 'TotalAmt', amount(money), 'Currency' => currency(money)
+                  xml.tag! 'PayPeriod', get_pay_period(options)
+                  xml.tag! 'Term', options[:payments] unless options[:payments].nil?
+                  xml.tag! 'Comment', options[:comment] unless options[:comment].nil?
+                  xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1 )
+                  
+                  billing_address = options[:billing_address] || options[:address]
+                  shipping_address = options[:shipping_address] || billing_address
+                  
+                  add_address(xml, 'BillTo', billing_address, options)
+                  add_address(xml, 'ShipTo', shipping_address, options)
+                end
+                xml.tag! 'Tender' do
+                  yield xml
+                end
+              end
+              if action != :add
+                xml.tag! "ProfileID", options[:profile_id]
+              end
+            end
+          end
+        end
+      end
+
+      def get_pay_period(options)
+        requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily, :semimonthly, :quadweekly, :quarterly, :semiyearly])
+        case options[:periodicity]
+          when :weekly then 'Weekly'
+          when :biweekly then 'Bi-weekly'
+          when :semimonthly then 'Semi-monthly'
+          when :quadweekly then 'Every four weeks'
+          when :monthly then 'Monthly'
+          when :quarterly then 'Quarterly'
+          when :semiyearly then 'Semi-yearly'
+          when :yearly then 'Yearly'
+        end
+      end
+
+      def format_rp_date(time)
+        case time
+          when Time, Date then time.strftime("%m%d%Y")
+        else
+          time.to_s
+        end
       end
       
       def build_response(success, message, response, options = {})
