@@ -40,6 +40,22 @@ class CountryTest < Test::Unit::TestCase
     end
   end
   
+  def test_find_australia
+    country = Country.find('AU')
+    assert_equal 'AU', country.code(:alpha2).to_s
+    
+    country = Country.find('Australia')
+    assert_equal 'AU', country.code(:alpha2).to_s
+  end
+  
+  def test_find_united_kingdom
+    country = Country.find('GB')
+    assert_equal 'GB', country.code(:alpha2).to_s
+    
+    country = Country.find('United Kingdom')
+    assert_equal 'GB', country.code(:alpha2).to_s
+  end
+  
   def test_raise_on_nil_name
     assert_raise(InvalidCountryCodeError) do
       Country.find(nil)

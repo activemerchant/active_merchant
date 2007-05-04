@@ -255,8 +255,14 @@ module ActiveMerchant #:nodoc:
       end
       
       def lookup_state(address)
-        state = if address[:country].to_s.upcase == 'AU' || address[:country] == 'Australia'
+        country = Country.find(address[:country]) rescue nil
+        return '' if country.nil?
+        
+        case country.code(:alpha2).to_s
+        when 'AU'
           AUSTRALIAN_STATES[address[:state]] || address[:state] 
+        when 'GB'
+          address[:state].blank? ? 'N/A' : address[:state] 
         else
           address[:state]
         end
@@ -264,8 +270,8 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, request)
         url = test? ? TEST_URL : LIVE_URL
+
         data = ssl_post(url, build_request(request))
-        
         @response = parse(action, data)
        
         success = @response[:ack] == "Success"
