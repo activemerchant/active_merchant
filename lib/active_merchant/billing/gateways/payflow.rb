@@ -7,21 +7,15 @@ module ActiveMerchant #:nodoc:
       
       RECURRING_ACTIONS = Set.new([:add, :modify, :cancel, :inquiry, :reactivate, :payment])
       
-      def authorize(money, credit_card, options = {})
-        if result = test_result_from_cc_number(credit_card.number)
-          return result
-        end
-  
-        request = build_sale_or_authorization_request('Authorization', money, credit_card, options)
+      def authorize(money, credit_card_or_reference, options = {})
+        request = build_sale_or_authorization_request('Authorization', money, credit_card_or_reference, options)
+      
         commit(request)
       end
       
-      def purchase(money, credit_card, options = {})
-        if result = test_result_from_cc_number(credit_card.number)
-          return result
-        end
-        
-        request = build_sale_or_authorization_request('Sale', money, credit_card, options)
+      def purchase(money, credit_card_or_reference, options = {})
+        request = build_sale_or_authorization_request('Sale', money, credit_card_or_reference, options)
+
         commit(request)
       end
       
@@ -63,8 +57,33 @@ module ActiveMerchant #:nodoc:
         [:visa, :master, :american_express, :jcb, :discover, :diners_club]
       end
       
-      private      
-      def build_sale_or_authorization_request(action, money, credit_card, options)
+      private
+      def build_sale_or_authorization_request(action, money, credit_card_or_reference, options)
+        if credit_card_or_reference.is_a?(String)
+          build_reference_sale_or_authorization_request(action, money, credit_card_or_reference)
+        else  
+          build_regular_sale_or_authorization_request(action, money, credit_card_or_reference, options)
+        end  
+      end
+      
+      def build_reference_sale_or_authorization_request(action, money, reference)
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.tag! action do
+          xml.tag! 'PayData' do
+            xml.tag! 'Invoice' do
+              xml.tag! 'TotalAmt', amount(money), 'Currency' => currency(money)
+            end
+            xml.tag! 'Tender' do
+              xml.tag! 'Card' do
+                xml.tag! 'ExtData', 'Name' => 'ORIGID', 'Value' =>  reference
+              end
+            end
+          end
+        end
+        xml.target!
+      end
+      
+      def build_regular_sale_or_authorization_request(action, money, credit_card, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! action do
           xml.tag! 'PayData' do
@@ -89,10 +108,10 @@ module ActiveMerchant #:nodoc:
         end
         xml.target!
       end
-      
+    
       def add_credit_card(xml, credit_card)
         xml.tag! 'Card' do
-          xml.tag! 'CardType', CARD_MAPPING[credit_card.type.to_sym]
+          xml.tag! 'CardType', credit_card_type(credit_card)
           xml.tag! 'CardNum', credit_card.number
           xml.tag! 'ExpDate', expdate(credit_card)
           xml.tag! 'NameOnCard', credit_card.name
@@ -103,6 +122,12 @@ module ActiveMerchant #:nodoc:
             xml.tag!('ExtData', 'Name' => 'CardIssue', 'Value' => credit_card.issue_number) unless credit_card.issue_number.blank?
           end
         end
+      end
+      
+      def credit_card_type(credit_card)
+        return '' if credit_card.type.blank?
+        
+        CARD_MAPPING[credit_card.type.to_sym]
       end
       
       def expdate(creditcard)

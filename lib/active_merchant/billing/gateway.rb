@@ -108,6 +108,8 @@ module ActiveMerchant #:nodoc:
       end
       
       def requires_start_date_or_issue_number?(credit_card)
+        return false if credit_card.type.blank?
+        
         DEBIT_CARDS.include?(credit_card.type.to_sym)
       end
       

@@ -1,6 +1,8 @@
 # CHANGELOG
 # ---
-# * Enhance recurring Payflow tests and recurring_inquiry [an...@alevans.com]
+# * Add ability to perform reference transactions with Payflow [Al Evans, cody]
+#
+# * Enhance recurring Payflow tests and recurring_inquiry [Al Evans]
 #
 # * Add recurring payments to Payflow [Rick Olson]
 #

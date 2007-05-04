@@ -144,7 +144,11 @@ module ActiveMerchant #:nodoc:
     	def commit(request_body, request_type = nil)
         request = build_request(request_body, request_type)
         headers = build_headers(request.size)
-    	  
+        
+        if result = test_result_from_cc_number(parse_credit_card_number(request))
+          return result
+        end
+      
     	  url = test? ? TEST_URL : LIVE_URL
     	  data = ssl_post(url, request, headers)
     	  @response = parse(data)
@@ -156,6 +160,12 @@ module ActiveMerchant #:nodoc:
     	    :test => test?,
     	    :authorization => @response[:pn_ref]
         )
+      end
+      
+      def parse_credit_card_number(request)
+        xml = REXML::Document.new(request)
+        card_number = REXML::XPath.first(xml, '//Tender/Card/CardNum')
+        card_number && card_number.text
       end
     end
   end

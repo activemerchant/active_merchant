@@ -190,4 +190,19 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert response.success?
     assert response.test?
   end
+  
+  # Note that this test will only work if you enable reference transactions!!
+  def test_reference_purchase
+    assert response = @gateway.purchase(Money.new(10000), @creditcard, @options)
+    assert_equal "Approved", response.message
+    assert response.success?
+    assert response.test?
+    assert_not_nil pn_ref = response.authorization
+    
+    # now another purchase, by reference
+    assert response = @gateway.purchase(Money.new(10000), pn_ref)
+    assert_equal "Approved", response.message
+    assert response.success?
+    assert response.test?
+  end
 end
