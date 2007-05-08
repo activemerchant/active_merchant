@@ -5,12 +5,20 @@ module ActiveMerchant #:nodoc:
         @params['payer']
       end
       
+      def full_name
+        [@params['first_name'], @params['middle_name'], @params['last_name']].compact.join(' ')
+      end
+      
       def token
         @params['token']
       end
       
       def payer_id
         @params['payer_id']
+      end
+      
+      def payer_country
+        @params['payer_country']
       end
       
       def address
