@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
           end
           xml.tag! 'RequestAuth' do
             xml.tag! 'UserPass' do
-              xml.tag! 'User', @options[:login]
+              xml.tag! 'User', !@options[:user].blank? ? @options[:user] : @options[:login]
               xml.tag! 'Password', @options[:password]
             end
           end

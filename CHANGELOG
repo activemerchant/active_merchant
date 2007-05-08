@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Allow overriding the user with Payflow so that a vendor and user can be provided when making requests [cody]
+#
 # * PayPal DirectPayment API requires a UK County to be sent as the state or province.  Return N/A as the state when one isn't provided to ensure that PayPal doesn't reject the payment [cody]
 #
 # * Add ability to perform reference transactions with Payflow [Al Evans, cody]
