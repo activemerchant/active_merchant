@@ -60,18 +60,18 @@ module ActiveMerchant #:nodoc:
       private
       def build_sale_or_authorization_request(action, money, credit_card_or_reference, options)
         if credit_card_or_reference.is_a?(String)
-          build_reference_sale_or_authorization_request(action, money, credit_card_or_reference)
+          build_reference_sale_or_authorization_request(action, money, credit_card_or_reference, options)
         else  
           build_regular_sale_or_authorization_request(action, money, credit_card_or_reference, options)
         end  
       end
       
-      def build_reference_sale_or_authorization_request(action, money, reference)
+      def build_reference_sale_or_authorization_request(action, money, reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! action do
           xml.tag! 'PayData' do
             xml.tag! 'Invoice' do
-              xml.tag! 'TotalAmt', amount(money), 'Currency' => currency(money)
+              xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
             end
             xml.tag! 'Tender' do
               xml.tag! 'Card' do
@@ -98,7 +98,7 @@ module ActiveMerchant #:nodoc:
               add_address(xml, 'BillTo', billing_address, options)
               add_address(xml, 'ShipTo', shipping_address, options)
               
-              xml.tag! 'TotalAmt', amount(money), 'Currency' => currency(money)
+              xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
             end
             
             xml.tag! 'Tender' do
@@ -156,7 +156,7 @@ module ActiveMerchant #:nodoc:
               unless [:cancel, :inquiry].include?(action)
                 xml.tag! 'RPData' do
                   xml.tag! 'Name', options[:name] unless options[:name].nil?
-                  xml.tag! 'TotalAmt', amount(money), 'Currency' => currency(money)
+                  xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
                   xml.tag! 'PayPeriod', get_pay_period(options)
                   xml.tag! 'Term', options[:payments] unless options[:payments].nil?
                   xml.tag! 'Comment', options[:comment] unless options[:comment].nil?

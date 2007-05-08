@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
                 add_address(xml, 'BillTo', billing_address, options)
                 add_address(xml, 'ShipTo', shipping_address, options)
                 
-                xml.tag! 'TotalAmt', amount(money), 'Currency' => currency(money)
+                xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
               end
               
               xml.tag! 'Tender' do
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! action do
             xml.tag! 'PayData' do
               xml.tag! 'Invoice' do 
-                xml.tag! 'TotalAmt', amount(money), 'Currency' => currency(money)
+                xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
               end
               xml.tag! 'Tender' do
                 add_paypal_details xml, options

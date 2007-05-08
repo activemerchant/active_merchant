@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'DoReauthorizationRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'AuthorizationID', authorization
-            xml.tag! 'Amount', amount(money), 'currencyID' => currency(money)
+            xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
           end
         end
 
@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'DoCaptureRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'AuthorizationID', authorization
-            xml.tag! 'Amount', amount(money), 'currencyID' => currency(money)
+            xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
             xml.tag! 'CompleteType', 'Complete'
             xml.tag! 'Note', options[:description]
           end
@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'RefundTransactionRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'TransactionID', identification
-            xml.tag! 'Amount', amount(money), 'currencyID' => currency(money)
+            xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
             xml.tag! 'RefundType', 'Partial'
             xml.tag! 'Memo', options[:note] unless options[:note].blank?
           end
@@ -161,7 +161,7 @@ module ActiveMerchant #:nodoc:
               options ||= default_options
               xml.tag! 'MassPayItem' do
                 xml.tag! 'ReceiverEmail', recipient
-                xml.tag! 'Amount', amount(money), 'currencyID' => currency(money)
+                xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
                 xml.tag! 'Note', options[:note] if options[:note]
                 xml.tag! 'UniqueId', options[:unique_id] if options[:unique_id]
               end
