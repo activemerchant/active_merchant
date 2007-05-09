@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add support for Irish Realex payment gateway [John Ward, cody]
+#
 # * Move credit_card helper method to the test_helper [cody]
 #
 # * Update PayflowExpressResponse to match the interface of the PayflowExpressResponse.  Add :no_shipping and :address_override options to PayflowExpress [cody]
