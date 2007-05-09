@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
         @params['payer']
       end
       
-      def full_name
+      def name
         [@params['first_name'], @params['middle_name'], @params['last_name']].compact.join(' ')
       end
       
