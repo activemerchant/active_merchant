@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Update PayflowExpressResponse to match the interface of the PayflowExpressResponse.  Add :no_shipping and :address_override options to PayflowExpress [cody]
+#
 # * Add a currency option to the Payflow and Paypal gateways [cody]
 #
 # * PaypalExpress should use the shipping address, not the billing address [cody]

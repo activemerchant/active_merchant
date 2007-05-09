@@ -118,6 +118,8 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'NotifyURL', options[:notify_url] unless options[:notify_url].blank?
           xml.tag! 'PayerID', options[:payer_id] unless options[:payer_id].blank?
           xml.tag! 'Token', options[:token] unless options[:token].blank?
+          xml.tag! 'NoShipping', options[:no_shipping] ? '1' : '0'
+          xml.tag! 'AddressOverride', options[:address_override] ? '1' : '0'
         end
       end
       

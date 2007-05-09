@@ -90,8 +90,8 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'n2:MaxAmount', amount(options[:max_amount]), 'currencyID' => options[:currency] || currency(options[:max_amount])
               end
               add_address(xml, 'n2:Address', options[:shipping_address] || options[:address])
-              xml.tag! 'n2:AddressOverride', 1 if !options[:address_override].blank?
-              xml.tag! 'n2:NoShipping', 1 if !options[:no_shipping].blank?
+              xml.tag! 'n2:AddressOverride', options[:address_override] ? '1' : '0'
+              xml.tag! 'n2:NoShipping', options[:no_shipping] ? '1' : '0'
               xml.tag! 'n2:PageStyle', options[:page_style] unless options[:page_style].blank?
               xml.tag! 'n2:ReturnURL', options[:return_url]
               xml.tag! 'n2:CancelURL', options[:cancel_return_url]

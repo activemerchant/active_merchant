@@ -5,6 +5,10 @@ module ActiveMerchant #:nodoc:
         @params['e_mail']
       end
       
+      def full_name
+        "#{@params['name']} #{@params['lastname']}"
+      end
+      
       def token
         @params['token']
       end
@@ -13,8 +17,13 @@ module ActiveMerchant #:nodoc:
         @params['payer_id']
       end
       
+      # Really the shipping country, but it is all the information provided
+      def payer_country
+        address['country']
+      end
+      
       def address
-        {  'name'       => @params['name'],
+        {  'name'       => full_name,
            'company'    => nil,
            'address1'   => @params['street'],
            'address2'   => nil,

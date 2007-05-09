@@ -124,6 +124,8 @@ module ActiveMerchant #:nodoc:
       def parse_element(response, node)
         if node.has_elements?
           node.elements.each{|e| parse_element(response, e) }
+        elsif node.name == 'ExtData'
+          response[node.attributes['Name'].underscore.to_sym] = node.attributes['Value']
         else
           response[node.name.underscore.to_sym] = node.text
         end
@@ -151,6 +153,7 @@ module ActiveMerchant #:nodoc:
       
     	  url = test? ? TEST_URL : LIVE_URL
     	  data = ssl_post(url, request, headers)
+    	  
     	  @response = parse(data)
     	  
     	  success = @response[:result] == "0"

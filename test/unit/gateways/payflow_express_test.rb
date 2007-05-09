@@ -88,9 +88,11 @@ class PayflowExpressTest < Test::Unit::TestCase
     assert_equal 'EC-2OPN7UJGFWK9OYFV', response.token
     assert_equal '12345678901234567', response.payer_id
     assert_equal 'Buyer1@paypal.com', response.email
+    assert_equal 'Joe Smith', response.full_name
+    assert_equal 'US', response.payer_country
     
     assert address = response.address
-    assert_equal 'Joe', address['name']
+    assert_equal 'Joe Smith', address['name']
     assert_nil address['company']
     assert_equal '111 Main St.', address['address1']
     assert_nil address['address2']
