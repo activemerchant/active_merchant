@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Sanitize the Realex order_id [cody] 
+#
 # * Add support for Irish Realex payment gateway [John Ward, cody]
 #
 # * Move credit_card helper method to the test_helper [cody]

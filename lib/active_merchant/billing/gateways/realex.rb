@@ -115,7 +115,7 @@ module ActiveMerchant
           xml.tag! 'merchantid', @options[:login] 
           xml.tag! 'account', @options[:account]
       
-          xml.tag! 'orderid', options[:order_id]
+          xml.tag! 'orderid', sanitize_order_id(options[:order_id])
           xml.tag! 'amount', amount(money), 'currency' => options[:currency] || currency(money)
 
           xml.tag! 'card' do
@@ -132,7 +132,7 @@ module ActiveMerchant
           end
           
           xml.tag! 'autosettle', 'flag' => auto_settle_flag(action)
-          xml.tag! 'sha1hash', sha1from("#{timestamp}.#{@options[:login]}.#{options[:order_id]}.#{amount(money)}.#{currency(money)}.#{credit_card.number}")
+          xml.tag! 'sha1hash', sha1from("#{timestamp}.#{@options[:login]}.#{sanitize_order_id(options[:order_id])}.#{amount(money)}.#{options[:currency] || currency(money)}.#{credit_card.number}")
           xml.tag! 'comments' do
             xml.tag! 'comment', options[:description], 'id' => 1 
             xml.tag! 'comment', 'id' => 2
@@ -204,6 +204,10 @@ module ActiveMerchant
         else
           message = DECLINED
         end  
+      end
+      
+      def sanitize_order_id(order_id)
+        order_id.to_s.gsub(/[^a-zA-Z0-9-_]/, '')
       end
     end
   end
