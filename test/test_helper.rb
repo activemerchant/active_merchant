@@ -15,6 +15,7 @@ require 'breakpoint'
 require 'active_merchant'
 require 'openssl'
 require 'mocha'
+require 'digest/md5'
 
 ActiveMerchant::Billing::Base.mode = :test
 
@@ -29,7 +30,14 @@ module Test
 
       private
       def generate_order_id
-        rand(1000000).to_s
+        md5 = Digest::MD5.new
+        now = Time.now
+        md5 << now.to_s
+        md5 << String(now.usec)
+        md5 << String(rand(0))
+        md5 << String($$)
+        md5 << self.class.name
+        md5.hexdigest
       end
       
       def clean_backtrace(&block)
@@ -37,6 +45,19 @@ module Test
       rescue AssertionFailedError => e
         path = File.expand_path(__FILE__)
         raise AssertionFailedError, e.message, e.backtrace.reject { |line| File.expand_path(line) =~ /#{path}/ }
+      end
+      
+      def credit_card(number, options = {})
+        defaults = {
+          :number => number,
+          :month => 9,
+          :year => Time.now.year + 1,
+          :first_name => 'Longbob',
+          :last_name => 'Longsen',
+          :verification_value => '123'
+        }.update(options)
+
+        ActiveMerchant::Billing::CreditCard.new(defaults)
       end
     end
   end

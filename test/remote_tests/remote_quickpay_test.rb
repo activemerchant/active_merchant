@@ -204,19 +204,4 @@ class RemoteQuickpayTest < Test::Unit::TestCase
     assert_equal 'Missing/error in merchant', response.message
     assert !response.success?
   end
-  
-  private
-  
-  def credit_card(number, options = {})
-    defaults = {
-      :number => number,
-      :month => 9,
-      :year => Time.now.year + 1,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen',
-      :verification_value => '123'
-    }.update(options)
-    
-    CreditCard.new(defaults)
-  end
 end
