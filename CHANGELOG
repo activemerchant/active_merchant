@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Update Nochex documentation [cody]
+#
 # * Sanitize the Realex order_id [cody] 
 #
 # * Add support for Irish Realex payment gateway [John Ward, cody]
