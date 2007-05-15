@@ -20,6 +20,10 @@ module ActiveMerchant
       self.money_format = :cents
       self.default_currency = 'GBP'
       
+      # Default ISO 3166 country code (GB)
+      cattr_accessor :location
+      self.location = 826
+      
       # PslCard server URL - The url is the same whether testing or live - use
       # the test account when testing...
       URL = 'https://pslcard3.paymentsolutionsltd.com/secure/transact.asp?'
@@ -43,9 +47,6 @@ module ActiveMerchant
       
       #The terminal used - only for swipe transactions, so hard coded to 32 for online
       EMV_TERMINAL_TYPE = 32
-
-      # Default ISO 3166 country code (GB)
-      DEFAULT_COUNTRY_CODE = 826
       
       #Different Dispatch types
       DISPATCH_LATER  = 'LATER'
@@ -67,19 +68,33 @@ module ActiveMerchant
       # Paramaters:
       #   -options:
       #     :login -    the PslCard account login (required)
-      #     :country -  The three digit ISO 3166 country code 
-      #                 where the application is located - defaults to GB (826) (optional)
-     
       def initialize(options = {})
         requires!(options, :login)
-        
-        #check the country is provided, if not, set to default
-        if options[:country].nil?
-          options.update(:country => DEFAULT_COUNTRY_CODE)
-        end
-        
+              
         @options = options
         super
+      end
+
+      # Purchase the item straight away
+      # 
+      # Parameters:
+      #   -money: Money object for the total to be charged
+      #   -authorization: the PSL cross reference from the previous authorization
+      #   -options:
+      #
+      # Returns:
+      #   -ActiveRecord::Billing::Response object
+      #   
+      def purchase(money, credit_card, options = {})
+        post = {}
+        
+        add_amount(post, money, DISPATCH_NOW, options)
+        add_credit_card(post, credit_card)
+        add_address(post, options)
+        add_invoice(post, options)
+        add_purchase_details(post)
+        
+        commit(post)
       end
       
       # Authorize the transaction
@@ -98,13 +113,16 @@ module ActiveMerchant
       # Returns:
       #   -ActiveRecord::Billing::Response object
       #   
-      def authorize(money, creditcard, options = {})
+      def authorize(money, credit_card, options = {})
+        post = {}
       
-        billing_address = options[:billing_address] || options[:address]
-        
-        request = build_purchase_or_authorization_request(money, creditcard, billing_address, DISPATCH_LATER, options)
-        
-        commit(request)
+        add_amount(post, money, DISPATCH_LATER, options)
+        add_credit_card(post, credit_card)
+        add_address(post, options)
+        add_invoice(post, options)
+        add_purchase_details(post)
+              
+        commit(post)
       end
       
       # Post an authorization. 
@@ -120,26 +138,12 @@ module ActiveMerchant
       #   -ActiveRecord::Billing::Response object
       #
       def capture(money, authorization, options = {})
+        post = {}
+      
+        add_amount(post, money, DISPATCH_NOW, options)
+        add_reference(post, authorization)
 
-        request = build_capture_request(money, authorization, options)
-
-        commit(request)
-      end
-
-      # Purchase the item straight away
-      # 
-      # Parameters:
-      #   -money: Money object for the total to be charged
-      #   -authorization: the PSL cross reference from the previous authorization
-      #   -options:
-      #
-      # Returns:
-      #   -ActiveRecord::Billing::Response object
-      #   
-      def purchase(money, creditcard, options = {})
-        billing_address = options[:billing_address] || options[:address]
-        request = build_purchase_or_authorization_request(money, creditcard, billing_address, DISPATCH_NOW, options)
-        commit(request)
+        commit(post)
       end
 
       # Visa Credit, Visa Debit, Mastercard, Maestro, Solo, Electron,
@@ -153,98 +157,45 @@ module ActiveMerchant
       #   -the list of all supported cards
       #   
       def self.supported_cardtypes
-        [:visa, :master, :american_express, :diners_club, :jcb, :solo]
+        [ :visa, :master, :american_express, :diners_club, :jcb, :switch, :solo, :maestro ]
       end
      
       private
-      
-      # Create a PSL request for authorization or purcharse
-      #
-      # Paramaters:
-      #   -money: Money object with the full amount to be charged
-      #   -creditcard: ActiveMerchant::Billing::CreditCard object
-      #   -billing_address: hash with all billing address information
-      #   -dispatch_type: What type of transaction is being created
-      #
-      # Returns:
-      #   -a hash with all the values to be sent to PSL
-      #
-      # 
-      # Not used
-      # post[:RetOKAddress] = 'SUCCESS'       #Arbitrary string - not used
-      # post[:RetNotOKAddress] = 'FAIL'       #as above
-      #
-      def build_purchase_or_authorization_request(money, creditcard, billing_address, dispatch_type, options = {})
-        post = {}
-        add_required_fields(post, money, dispatch_type)
-        
-        # Credit Card details
-        post[:CardNumber] = creditcard.number
+    
+      def add_credit_card(post, credit_card)
+        post[:QAName] = credit_card.name
+        post[:CardNumber] = credit_card.number
         post[:EMVTerminalType] = EMV_TERMINAL_TYPE
-        post[:ExpMonth] = creditcard.month
-        post[:ExpYear] = creditcard.year
-        post[:IssueNumber] = creditcard.issue_number unless creditcard.issue_number.blank?
-        post[:StartMonth] = creditcard.start_month unless creditcard.start_month.blank?
-        post[:StartYear] = creditcard.start_year unless creditcard.start_year.blank?
+        post[:ExpMonth] = credit_card.month
+        post[:ExpYear] = credit_card.year
+        post[:IssueNumber] = credit_card.issue_number unless credit_card.issue_number.blank?
+        post[:StartMonth] = credit_card.start_month unless credit_card.start_month.blank?
+        post[:StartYear] = credit_card.start_year unless credit_card.start_year.blank?
         
         # CV2 check
-        post[:AVSCV2Check] = creditcard.verification_value? ? 'YES' : 'NO'
-        post[:CV2] = creditcard.verification_value if creditcard.verification_value?
+        post[:AVSCV2Check] = credit_card.verification_value? ? 'YES' : 'NO'
+        post[:CV2] = credit_card.verification_value if credit_card.verification_value?
+      end
+      
+      def add_address(post, options)
+        address = options[:billing_address] || options[:address]
+        return if address.nil?
+      
+        post[:QAAddress] = [:address1, :address2, :city, :state].collect{|a| address[a]}.reject{|a| a.blank?}.join(' ')
+        post[:QAPostcode] = address[:zip]
+      end
         
-        post[:EchoAmount] = 'YES'
-        
-        post[:MerchantName] = 'Merchant Name' # May use this as the order_id field
-        post[:SCBI] = 'YES'                   # Return information about the transaction
-           
-        address = ''
-        address << billing_address[:address1] + ' ' unless billing_address[:address1].blank?
-        address << billing_address[:address2] + ' ' unless billing_address[:address2].blank?
-        address << billing_address[:address3] + ' ' unless billing_address[:address3].blank?
-        address << billing_address[:address4] unless billing_address[:address4].blank?
-        post[:QAAddress] = address
-        post[:QAPostcode] = billing_address[:zip]
-        post[:QAName] = creditcard.name
-        
-        post[:MessageType] = MESSAGE_TYPE
-        
-        # Additional fields
+      def add_invoice(post, options)
+        post[:MerchantName] = options[:merchant] || 'Merchant Name' # May use this as the order_id field
         post[:OrderID] = options[:order_id] unless options[:order_id].blank?
-        post
       end
-      
-      # Create a request for a capture transaction
-      # 
-      # Paramaters:
-      #   -money The money object with the total to be charged
-      #   -authorization: the PSL reference number
-      #   -options:
-      #
-      # Returns:
-      #   -hash with all data set for PSL
-      #
-      def build_capture_request(money, authorization, options)
-        post = {}
-        add_required_fields(post, money, DISPATCH_NOW)
-        
-        # If type is capture
+    
+      def add_reference(post, authorization)
         post[:CrossReference] = authorization
-        
-        post
       end
       
-      # Add the required fields for all transactions
-      # 
-      # Paramaters:
-      #   -post The hash to add the values to
-      #   -money The money object with the total to be charged
-      #   -dispatch_type: The type of message being sent
-      # Returns:
-      #   -none - all data stored in the passed hash
-      #
-      def add_required_fields(post, money, dispatch_type)
-      
-        post[:CountryCode] = @options[:country]
-        post[:CurrencyCode] = currency(money)
+      def add_amount(post, money, dispatch_type, options)
+        post[:CurrencyCode] = currency_code(options[:currency] || currency(money))
         
         if dispatch_type == DISPATCH_LATER
           post[:amount] = amount(NOMINAL_AMOUNT)
@@ -254,11 +205,14 @@ module ActiveMerchant
         end
         
         post[:Dispatch] = dispatch_type
-        post[:MerchantID] = @options[:login]
-        post[:ValidityID] = @options[:password]
-        post[:ResponseAction] = RESPONSE_ACTION
       end
       
+      def add_purchase_details(post)
+        post[:EchoAmount] = 'YES'
+        post[:SCBI] = 'YES'                   # Return information about the transaction
+        post[:MessageType] = MESSAGE_TYPE
+      end
+    
       # Get the currency code for the passed money object
       # 
       # The money class stores the currency as an ISO 4217:2001 Alphanumeric,
@@ -270,8 +224,8 @@ module ActiveMerchant
       # Returns:
       #   -the ISO 4217:2001 Numberic currency code
       #   
-      def currency(money)
-        CURRENCY_CODES[money.respond_to?(:currency) ? money.currency : self.default_currency].to_s
+      def currency_code(currency)
+        CURRENCY_CODES[currency]
       end
       
       # Returns a date string in the format PSL expects
@@ -315,7 +269,10 @@ module ActiveMerchant
       #   - ActiveMerchant::Billing::Response object
       #
       def commit(request)
-
+        if result = test_result_from_cc_number(request[:CardNumber])
+          return result
+        end
+        
         result = ssl_post(URL, post_data(request))
         
         @response = parse(result)
@@ -344,6 +301,11 @@ module ActiveMerchant
       #   -String: the data to be sent
       #
       def post_data(post)
+        post[:CountryCode] = self.location
+        post[:MerchantID] = @options[:login]
+        post[:ValidityID] = @options[:password]
+        post[:ResponseAction] = RESPONSE_ACTION
+        
         post.collect { |key, value|
           "#{key}=#{CGI.escape(value.to_s.tr('&=', ' '))}"
         }.join("&")
