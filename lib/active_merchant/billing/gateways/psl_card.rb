@@ -228,19 +228,6 @@ module ActiveMerchant
         CURRENCY_CODES[currency]
       end
       
-      # Returns a date string in the format PSL expects
-      # 
-      # Parameters:
-      #   -month: integer, the month
-      #   -year: integer, the year
-      # 
-      # Returns:
-      #   -String: date in YYMM format
-      #   
-      def format_date(month, year)
-        "#{format(year, :two_digits)}#{format(month,:two_digits)}"
-      end
-      
       # Parse the PSL response and create a Response object
       #
       # Parameters:

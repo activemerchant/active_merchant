@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Remove unused method in PslCardGateway [cody]
+#
 # * Add updated credit card tests [cody]
 #
 # * Update and test PslCardGateway [cody]
