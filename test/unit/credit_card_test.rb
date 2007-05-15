@@ -310,4 +310,24 @@ class CreditCardTest < Test::Unit::TestCase
   def test_forbrugsforeningen
     assert_equal 'forbrugsforeningen', CreditCard.type?('6007221000000000')
   end
+  
+  def test_laser_card
+    # 16 digits
+    assert_equal 'laser', CreditCard.type?('6304985028090561')
+    
+    # 18 digits
+    assert_equal 'laser', CreditCard.type?('630498502809056151')
+    
+    # 19 digits
+    assert_equal 'laser', CreditCard.type?('6304985028090561515')
+    
+    # 17 digits
+    assert_not_equal 'laser', CreditCard.type?('63049850280905615')
+    
+    # 15 digits
+    assert_not_equal 'laser', CreditCard.type?('630498502809056')
+    
+    # Alternate format
+    assert_equal 'laser', CreditCard.type?('670695000000000000')
+  end
 end

@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add updated credit card tests [cody]
+#
 # * Update and test PslCardGateway [cody]
 #
 # * Add Laser card type [cody]
