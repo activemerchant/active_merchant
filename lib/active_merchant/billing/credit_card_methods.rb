@@ -56,7 +56,8 @@ module ActiveMerchant #:nodoc:
             'solo' =>  /^6767\d{12}(\d{2,3})?$/,
             'dankort' => /^5019\d{12}$/,
             'maestro' => /^(5[06-8]|6\d)\d{14}$/,
-            'forbrugsforeningen' => /^600722\d{10}$/
+            'forbrugsforeningen' => /^600722\d{10}$/,
+            'laser' => /^(6304[89]\d{11}(\d{2,3})?|670695\d{12})$/
           }
         end
         
