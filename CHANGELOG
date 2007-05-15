@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add Laser card type [cody]
+#
 # * Update Nochex documentation [cody]
 #
 # * Sanitize the Realex order_id [cody] 
