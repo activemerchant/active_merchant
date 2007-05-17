@@ -4,17 +4,13 @@ class RemoteExactTest < Test::Unit::TestCase
   include ActiveMerchant::Billing
 
   def setup
-    ActiveMerchant::Billing::Base.gateway_mode = :production
+    
     
     @gateway = ExactGateway.new( :login    => "A00427-01",
                                  :password => "testus" )
 
-    @credit_card = CreditCard.new( :number     => "4111111111111111",
-                                   :month      => 9,
-                                   :year       => Time.now.year + 2,
-                                   :first_name => "Active",
-                                   :last_name  => "Merchant" )
-
+    @credit_card = credit_card("4111111111111111")
+    
     @options = { :address => { :address1 => "1234 Testing Ave.",
                                :zip      => "55555" } }
   end

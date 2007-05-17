@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def test?
-        @test_mode
+        @test_mode || Base.gateway_mode == :test
       end
       
       def authorize(money, credit_card, options = {})

@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Update ExactGateway test and test mode [cody]
+#
 # * Remove unused method in PslCardGateway [cody]
 #
 # * Add updated credit card tests [cody]
