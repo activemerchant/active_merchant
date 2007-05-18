@@ -24,13 +24,7 @@ class RemotePayflowTest < Test::Unit::TestCase
         :partner => @partner
     )
     
-    @creditcard = CreditCard.new(
-      :number => '5105105105105100',
-      :month => 11,
-      :year => 2009,
-      :first_name => 'Cody',
-      :last_name => 'Fauser',
-      :verification_value => '000',
+    @creditcard = credit_card('5105105105105100',
       :type => 'master'
     )
 
@@ -48,7 +42,7 @@ class RemotePayflowTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase
-    assert response = @gateway.purchase(Money.new(100000), @creditcard, @options)
+    assert response = @gateway.purchase(100000, @creditcard, @options)
     assert_equal "Approved", response.message
     assert response.success?
     assert response.test?
@@ -56,14 +50,14 @@ class RemotePayflowTest < Test::Unit::TestCase
   end
   
   def test_declined_purchase
-    assert response = @gateway.purchase(Money.new(210000), @creditcard, @options)
+    assert response = @gateway.purchase(210000, @creditcard, @options)
     assert_equal 'Declined', response.message
     assert !response.success?
     assert response.test?
   end
   
   def test_successful_authorization
-    assert response = @gateway.authorize(Money.new(100), @creditcard, @options)
+    assert response = @gateway.authorize(100, @creditcard, @options)
     assert_equal "Approved", response.message
     assert response.success?
     assert response.test?
@@ -71,23 +65,32 @@ class RemotePayflowTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_capture
-    amount = Money.new(100)
-    assert auth = @gateway.authorize(amount, @creditcard, @options)
+    assert auth = @gateway.authorize(100, @creditcard, @options)
     assert auth.success?
     assert_equal 'Approved', auth.message
     assert auth.authorization
-    assert capture = @gateway.capture(amount, auth.authorization)
+    assert capture = @gateway.capture(100, auth.authorization)
+    assert capture.success?
+  end
+  
+  def test_authorize_and_partial_capture
+    assert auth = @gateway.authorize(100 * 2, @creditcard, @options)
+    assert auth.success?
+    assert_equal 'Approved', auth.message
+    assert auth.authorization
+    
+    assert capture = @gateway.capture(100, auth.authorization)
     assert capture.success?
   end
   
   def test_failed_capture
-    assert response = @gateway.capture(Money.new(100), '999')
+    assert response = @gateway.capture(100, '999')
     assert !response.success?
     assert_equal 'Invalid tender', response.message
   end
   
   def test_authorize_and_void
-    assert auth = @gateway.authorize(Money.new(100), @creditcard, @options)
+    assert auth = @gateway.authorize(100, @creditcard, @options)
     assert auth.success?
     assert_equal 'Approved', auth.message
     assert auth.authorization
@@ -100,7 +103,7 @@ class RemotePayflowTest < Test::Unit::TestCase
       :login => '',
       :password => ''
     )
-    assert response = gateway.purchase(Money.new(100), @creditcard, @options)
+    assert response = gateway.purchase(100, @creditcard, @options)
     assert_equal 'Invalid vendor account', response.message
     assert !response.success?
   end
@@ -116,9 +119,9 @@ class RemotePayflowTest < Test::Unit::TestCase
     request_id = Digest::MD5.hexdigest(rand.to_s)
     gateway.expects(:generate_unique_id).times(2).returns(request_id)
     
-    response1 = gateway.purchase(Money.new(100), @creditcard, @options)
+    response1 = gateway.purchase(100, @creditcard, @options)
     assert_nil response1.params['duplicate']
-    response2 = gateway.purchase(Money.new(100), @creditcard, @options)
+    response2 = gateway.purchase(100, @creditcard, @options)
     assert response2.params['duplicate']
   end
   
@@ -156,7 +159,7 @@ class RemotePayflowTest < Test::Unit::TestCase
       :starting_at => Time.now + 1.day,
       :comment => "Test Profile"
     )
-    response = @gateway.recurring(Money.new(100), @creditcard, @options)
+    response = @gateway.recurring(100, @creditcard, @options)
     assert_equal "Approved", response.params['message']
     assert_equal "0", response.params['result']
     assert response.success?
@@ -171,7 +174,7 @@ class RemotePayflowTest < Test::Unit::TestCase
       :payments => '4',
       :profile_id => @recurring_profile_id
     )
-    response = @gateway.recurring(Money.new(400), @creditcard, @options)
+    response = @gateway.recurring(400, @creditcard, @options)
     assert_equal "Approved", response.params['message']
     assert_equal "0", response.params['result']
     assert response.success?
@@ -193,14 +196,14 @@ class RemotePayflowTest < Test::Unit::TestCase
   
   # Note that this test will only work if you enable reference transactions!!
   def test_reference_purchase
-    assert response = @gateway.purchase(Money.new(10000), @creditcard, @options)
+    assert response = @gateway.purchase(10000, @creditcard, @options)
     assert_equal "Approved", response.message
     assert response.success?
     assert response.test?
     assert_not_nil pn_ref = response.authorization
     
     # now another purchase, by reference
-    assert response = @gateway.purchase(Money.new(10000), pn_ref)
+    assert response = @gateway.purchase(10000, pn_ref)
     assert_equal "Approved", response.message
     assert response.success?
     assert response.test?

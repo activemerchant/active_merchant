@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Actually pass the amount of the capture through to Payflow [cody]
+#
 # * Update ExactGateway test and test mode [cody]
 #
 # * Remove unused method in PslCardGateway [cody]

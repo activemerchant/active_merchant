@@ -8,13 +8,13 @@ module ActiveMerchant #:nodoc:
       RECURRING_ACTIONS = Set.new([:add, :modify, :cancel, :inquiry, :reactivate, :payment])
       
       def authorize(money, credit_card_or_reference, options = {})
-        request = build_sale_or_authorization_request('Authorization', money, credit_card_or_reference, options)
+        request = build_sale_or_authorization_request(:authorization, money, credit_card_or_reference, options)
       
         commit(request)
       end
       
       def purchase(money, credit_card_or_reference, options = {})
-        request = build_sale_or_authorization_request('Sale', money, credit_card_or_reference, options)
+        request = build_sale_or_authorization_request(:purchase, money, credit_card_or_reference, options)
 
         commit(request)
       end
@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
       
       def build_reference_sale_or_authorization_request(action, money, reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
-        xml.tag! action do
+        xml.tag! TRANSACTIONS[action] do
           xml.tag! 'PayData' do
             xml.tag! 'Invoice' do
               xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
@@ -85,7 +85,7 @@ module ActiveMerchant #:nodoc:
       
       def build_regular_sale_or_authorization_request(action, money, credit_card, options)
         xml = Builder::XmlMarkup.new :indent => 2
-        xml.tag! action do
+        xml.tag! TRANSACTIONS[action] do
           xml.tag! 'PayData' do
             xml.tag! 'Invoice' do
               xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
