@@ -1,23 +1,23 @@
 require 'rexml/document'
 require 'digest/sha1'
 
-# Realex us the leading CC gateway in Ireland
-# see http://www.realexpayments.com
-# Contributed by John Ward (john@ward.name)
-# see http://thinedgeofthewedge.blogspot.com
-# 
-# Realex works using the following
-# login - The unique id of the merchant
-# password - The secret is used to digitally sign the request
-# account - This is an optional third part of the authentication process
-# and is used if the merchant wishes do distuinguish cc traffic from the different sources
-# by using a different account. This must be created in advance
 module ActiveMerchant
   module Billing
-    # the realex team decided to make the orderid unique per request, 
+    # Realex us the leading CC gateway in Ireland
+    # see http://www.realexpayments.com
+    # Contributed by John Ward (john@ward.name)
+    # see http://thinedgeofthewedge.blogspot.com
+    # 
+    # Realex works using the following
+    # login - The unique id of the merchant
+    # password - The secret is used to digitally sign the request
+    # account - This is an optional third part of the authentication process
+    # and is used if the merchant wishes do distuinguish cc traffic from the different sources
+    # by using a different account. This must be created in advance
+    #
+    # the Realex team decided to make the orderid unique per request, 
     # so if validation fails you can not correct and resend using the 
     # same order id
-  
     class RealexGateway < Gateway
       URL = 'https://epage.payandshop.com/epage-remote.cgi'
                   
@@ -27,12 +27,11 @@ module ActiveMerchant
         'american_express'  => 'AMEX',
         'diners_club'       => 'DINERS',
         'switch'            => 'SWITCH',
-        'solo'              => 'SWITCH'
+        'solo'              => 'SWITCH',
+        'laser'             => 'LASER'
       }
       
       self.money_format = :cents
-      
-      class_inheritable_accessor :default_currency
       self.default_currency = 'EUR'
            
       SUCCESS, DECLINED          = "Successful", "Declined"
@@ -57,7 +56,7 @@ module ActiveMerchant
       end     
         
       def self.supported_cardtypes
-        [ :visa, :master, :american_express, :diners_club, :switch, :solo ]
+        [ :visa, :master, :american_express, :diners_club, :switch, :solo, :laser ]
       end
       
       private           
@@ -78,8 +77,7 @@ module ActiveMerchant
           :authorization => @response[:authcode]
         )      
       end
-                                             
-      # Parse eway response xml into a convinient hash
+
       def parse(xml)
         response = {}
         
