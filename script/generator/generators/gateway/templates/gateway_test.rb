@@ -3,6 +3,8 @@ require File.dirname(__FILE__) + '/../../test_helper'
 class <%= class_name %>Test < Test::Unit::TestCase
   include ActiveMerchant::Billing
 
+  AMOUNT = 100
+
   def setup
     @gateway = <%= class_name %>Gateway.new(
       :login => 'LOGIN',
@@ -24,7 +26,7 @@ class <%= class_name %>Test < Test::Unit::TestCase
   
   def test_successful_request
     @creditcard.number = 1
-    assert response = @gateway.purchase(Money.new(100), @creditcard, {})
+    assert response = @gateway.purchase(AMOUNT, @creditcard, {})
     assert response.success?
     assert_equal '5555', response.authorization
     assert response.test?
@@ -32,13 +34,13 @@ class <%= class_name %>Test < Test::Unit::TestCase
 
   def test_unsuccessful_request
     @creditcard.number = 2
-    assert response = @gateway.purchase(Money.new(100), @creditcard, {})
+    assert response = @gateway.purchase(AMOUNT, @creditcard, {})
     assert !response.success?
     assert response.test?
   end
 
   def test_request_error
     @creditcard.number = 3
-    assert_raise(Error){ @gateway.purchase(Money.new(100), @creditcard, {}) }
+    assert_raise(Error){ @gateway.purchase(AMOUNT, @creditcard, {}) }
   end
 end

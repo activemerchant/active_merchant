@@ -3,6 +3,8 @@ require File.dirname(__FILE__) + '/../test_helper'
 class Remote<%= class_name %>Test < Test::Unit::TestCase
   include ActiveMerchant::Billing
 
+  AMOUNT = 100
+
   def setup
     ActiveMerchant::Billing::Base.gateway_mode = :production
 
@@ -22,19 +24,19 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
   end
   
   def test_successful_purchase
-    assert response = @gateway.purchase(Money.new(100), @creditcard, @options)
+    assert response = @gateway.purchase(AMOUNT, @creditcard, @options)
     assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
     assert response.success?
   end
 
   def test_unsuccessful_purchase
-    assert response = @gateway.purchase(Money.new(100), @declined_card, @options)
+    assert response = @gateway.purchase(AMOUNT, @declined_card, @options)
     assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
     assert !response.success?
   end
 
   def test_authorize_and_capture
-    amount = Money.new(100)
+    amount = AMOUNT
     assert auth = @gateway.authorize(amount, @creditcard, @options)
     assert auth.success?
     assert_equal 'Success', auth.message
@@ -44,7 +46,7 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    assert response = @gateway.capture(Money.new(100), '')
+    assert response = @gateway.capture(AMOUNT, '')
     assert !response.success?
     assert_equal 'REPLACE WITH GATEWAY FAILURE MESSAGE', response.message
   end
@@ -54,7 +56,7 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
         :login => '',
         :password => ''
       })
-    assert response = gateway.purchase(Money.new(100), @creditcard, @options)
+    assert response = gateway.purchase(AMOUNT, @creditcard, @options)
     assert_equal 'REPLACE WITH FAILURE MESSAGE', response.message
     assert !response.success?
   end
