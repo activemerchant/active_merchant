@@ -207,7 +207,7 @@ module ActiveMerchant
       end
       
       def sanitize_order_id(order_id)
-        order_id.to_s.gsub(/[^a-zA-Z0-9-_]/, '')
+        order_id.to_s.gsub(/[^a-zA-Z0-9\-_]/, '')
       end
     end
   end
