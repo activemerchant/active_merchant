@@ -54,15 +54,6 @@ class ExactTest < Test::Unit::TestCase
     ExactGateway::SENSITIVE_FIELDS.each{ |f| assert !response.params.has_key?(f.to_s) }
   end
   
-  def test_live_mode
-    gateway = ExactGateway.new( :login    => "live",
-                                :password => "secret" )
-    
-    gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert response = gateway.purchase(Money.new(100), @credit_card, {})
-    assert !response.test?
-  end
-  
   def test_soap_fault
     @gateway.expects(:ssl_post).returns(soap_fault_response)
     assert response = @gateway.purchase(Money.new(100), @credit_card, {})
