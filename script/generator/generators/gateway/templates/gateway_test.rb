@@ -9,13 +9,7 @@ class <%= class_name %>Test < Test::Unit::TestCase
       :password => 'PASSWORD'
     )
 
-    @creditcard = CreditCard.new(
-      :number => '4242424242424242',
-      :month => 8,
-      :year => 2008,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen'
-    )
+    @creditcard = credit_card('4242424242424242')
 
     @address = { :address1 => '1234 My Street',
                  :address2 => 'Apt 1',

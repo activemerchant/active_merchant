@@ -11,21 +11,9 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
         :password => 'PASSWORD'
     )
 
-    @creditcard = CreditCard.new(
-      :number => '4000100011112224',
-      :month => 9,
-      :year => 2009,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen'
-    )
+    @creditcard = credit_card('4000100011112224')
 
-    @declined_card = CreditCard.new(
-      :number => '4000300011112220',
-      :month => 9,
-      :year => 2009,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen'
-    )
+    @declined_card = credit_card('4000300011112220')
 
     @options = { :address => { :address1 => '1234 Shady Brook Lane',
                               :zip => '90210'
