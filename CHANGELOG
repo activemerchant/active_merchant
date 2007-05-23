@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Send N/A to PayPal in the PayPal Helper when we don't know the UK county [cody]
+#
 # * Actually pass the amount of the capture through to Payflow [cody]
 #
 # * Update ExactGateway test and test mode [cody]

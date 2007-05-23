@@ -136,4 +136,12 @@ class PaypalHelperTest < Test::Unit::TestCase
     @helper.no_note = '0'
     assert_field 'no_note', '0'
   end
+  
+  def test_uk_billing_address_with_no_state
+    @helper.billing_address :country => 'GB',
+                            :state => ''
+
+    assert_field 'state', 'N/A'
+  end
+  
 end
