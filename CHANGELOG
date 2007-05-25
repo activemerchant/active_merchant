@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add American Express card to Psigate [cody]
+#
 # * Send N/A to PayPal in the PayPal Helper when we don't know the UK county [cody]
 #
 # * Actually pass the amount of the capture through to Payflow [cody]

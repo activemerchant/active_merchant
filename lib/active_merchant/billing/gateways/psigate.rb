@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
  
       # We support visa and master card
       def self.supported_cardtypes
-        [:visa, :master]
+        [:visa, :master, :american_express]
       end
          
       private                       
