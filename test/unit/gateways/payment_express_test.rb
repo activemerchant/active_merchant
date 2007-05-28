@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class PaymentExpressTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   def setup
         
     @gateway = PaymentExpressGateway.new(
@@ -43,7 +41,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_successful_request
     @visa.number = 1
     
-    assert response = @gateway.purchase(Money.new(100), @visa)
+    assert response = @gateway.purchase(100, @visa)
     assert response.success?
     assert_equal '5555', response.authorization
     assert response.test?
@@ -51,14 +49,14 @@ class PaymentExpressTest < Test::Unit::TestCase
 
   def test_unsuccessful_request
     @visa.number = 2
-    assert response = @gateway.purchase(Money.new(100), @visa)
+    assert response = @gateway.purchase(100, @visa)
     assert !response.success?
     assert response.test?
   end
 
   def test_request_error
     @visa.number = 3
-    assert_raise(Error){ @gateway.purchase(Money.new(100), @visa) }
+    assert_raise(Error){ @gateway.purchase(100, @visa) }
   end
   
   def test_default_currency
@@ -68,7 +66,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_invalid_credentials
     @gateway.expects(:ssl_post).returns(invalid_credentials_response)
     
-    assert response = @gateway.purchase(Money.new(100, 'NZD'), @visa)
+    assert response = @gateway.purchase(100, @visa)
     assert_equal 'Invalid Credentials', response.message
     assert !response.success?
   end
@@ -76,7 +74,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_successful_authorization
      @gateway.expects(:ssl_post).returns(successful_authorization_response)
 
-     assert response = @gateway.purchase(Money.new(100, 'NZD'), @visa)
+     assert response = @gateway.purchase(100, @visa)
      assert response.success?
      assert response.test?
      assert_equal 'APPROVED', response.message
@@ -86,7 +84,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_successful_solo_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
 
-     assert response = @gateway.purchase(Money.new(100, 'NZD'), @solo)
+     assert response = @gateway.purchase(100, @solo)
      assert response.success?
      assert response.test?
      assert_equal 'APPROVED', response.message
@@ -128,10 +126,18 @@ class PaymentExpressTest < Test::Unit::TestCase
     
     @gateway.expects(:ssl_post).returns( successful_token_purchase_response )
     
-    assert response = @gateway.purchase(Money.new(100), token)
+    assert response = @gateway.purchase(100, token)
     assert response.success?
     assert_equal 'APPROVED', response.message
     assert_equal '0000000303ace8db', response.authorization
+  end
+  
+  def test_supported_countries
+     assert_equal ['AU','MY','NZ','SG','ZA','GB','US'], PaymentExpressGateway.supported_countries
+   end
+
+  def test_supported_card_types
+   assert_equal [ :visa, :master, :american_express, :diners_club, :jcb ], PaymentExpressGateway.supported_cardtypes
   end
   
   private

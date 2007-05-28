@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class PaypalExpressTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
- 
   def setup
     @gateway = PaypalExpressGateway.new(
                 :login => 'cody', 
@@ -62,7 +60,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   
   def test_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    response = @gateway.authorize(Money.new(300), :token => 'EC-6WS104951Y388951L', :payer_id => 'FWRVKNRRZ3WUC')
+    response = @gateway.authorize(300, :token => 'EC-6WS104951Y388951L', :payer_id => 'FWRVKNRRZ3WUC')
     assert response.success?
     assert_not_nil response.authorization
     assert response.test?
@@ -81,15 +79,19 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
   
   def test_handle_non_zero_amount
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', Money.new(50), {}))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 50, {}))
     
     assert_equal '0.50', REXML::XPath.first(xml, '//n2:OrderTotal').text
   end
   
   def test_handles_zero_amount
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', Money.empty, {}))
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
     
     assert_equal '1.00', REXML::XPath.first(xml, '//n2:OrderTotal').text
+  end
+  
+  def test_supported_countries
+    assert_equal ['US'], PaypalExpressGateway.supported_countries
   end
   
   def successful_details_response

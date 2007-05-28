@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class RemotePayflowTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   def setup
     ActiveMerchant::Billing::Base.gateway_mode = :test
 

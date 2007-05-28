@@ -35,6 +35,9 @@ module ActiveMerchant #:nodoc:
       
       SENSITIVE_FIELDS = [ :verification_str2, :expiry_date, :card_number ]
       
+      self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :discover]
+      self.supported_countries = ['CA', 'US']
+      
       attr_reader :url
       attr_reader :response
       attr_reader :options
@@ -76,10 +79,6 @@ module ActiveMerchant #:nodoc:
 
       def credit(money, authorization, options = {})
         commit(:credit, build_capture_or_credit_request(money, authorization, options))
-      end
-    
-      def self.supported_cardtypes
-        [:visa, :master, :american_express, :jcb, :discover]
       end
          
       private                       

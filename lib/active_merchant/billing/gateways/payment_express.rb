@@ -12,8 +12,16 @@ module ActiveMerchant
       attr_reader :options
       
       self.default_currency = 'NZD'
-
-
+      # PS supports all major credit cards; Visa, Mastercard, Amex, Diners, BankCard & JCB. 
+      # Various white label cards can be accepted as well; Farmers, AirNZCard and Elders etc. 
+      # Please note that not all acquirers and Eftpos networks can support some of these card types.
+      # VISA, Mastercard, Diners Club and Farmers cards are supported
+      #
+      # However, regular accounts with DPS only support VISA and Mastercard
+      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb ]
+      
+      self.supported_countries = [ 'AU', 'MY', 'NZ', 'SG', 'ZA', 'GB', 'US' ]
+      
       PAYMENT_URL = 'https://www.paymentexpress.com/pxpost.aspx'
       
       APPROVED = '1'
@@ -35,16 +43,6 @@ module ActiveMerchant
         # Make the options an instance variable
         @options = options
         super
-      end
-
-      # PS supports all major credit cards; Visa, Mastercard, Amex, Diners, BankCard & JCB. 
-      # Various white label cards can be accepted as well; Farmers, AirNZCard and Elders etc. 
-      # Please note that not all acquirers and Eftpos networks can support some of these card types.
-      # VISA, Mastercard, Diners Club and Farmers cards are supported
-      #
-      # However, regular accounts with DPS only support VISA and Mastercard
-      def self.supported_cardtypes
-        [ :visa, :master, :american_express, :diners_club, :jcb ]
       end
       
       # Funds are transferred immediately.
@@ -114,7 +112,7 @@ module ActiveMerchant
           add_credit_card(r, options[:credit_card]) if options[:credit_card]
           add_billing_token(r, options[:token])     if options[:token]
         
-          add_amount(r, money)
+          add_amount(r, money, options)
           add_invoice(r, options)
           add_address_verification_data(r, options)
         end
@@ -123,7 +121,7 @@ module ActiveMerchant
       def build_capture_or_credit_request(money, identification, options)
         result = new_transaction
       
-        add_amount(result, money)
+        add_amount(result, money, options)
         add_invoice(result, options)
         add_reference(result, identification)
         
@@ -135,7 +133,7 @@ module ActiveMerchant
           
         returning result do |r|
           add_credit_card(r, credit_card)
-          add_amount(r, 100) #need to make an auth request for $1
+          add_amount(r, 100, options) #need to make an auth request for $1
           add_token_request(r, options)
         end
       end
@@ -173,9 +171,9 @@ module ActiveMerchant
         xml.add_element("EnableAddBillCard").text = 1
       end
       
-      def add_amount(xml, money)
+      def add_amount(xml, money, options)
         xml.add_element("Amount").text = amount(money)
-        xml.add_element("InputCurrency").text = currency(money)
+        xml.add_element("InputCurrency").text = options[:currency] || currency(money)
       end
       
       def add_transaction_type(xml, action)

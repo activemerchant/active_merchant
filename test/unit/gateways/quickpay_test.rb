@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class QuickpayTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   # 100 Cents
   AMOUNT = 100
 
@@ -89,6 +87,15 @@ class QuickpayTest < Test::Unit::TestCase
     assert_equal '1110', response.params['msgtype']
     assert_equal 'USD', response.params['currency']
   end
+  
+  def test_supported_countries
+    assert_equal ['DK'], QuickpayGateway.supported_countries
+  end
+  
+  def test_supported_card_types
+    assert_equal  [ :dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro ], QuickpayGateway.supported_cardtypes
+  end
+  
   
   private
   

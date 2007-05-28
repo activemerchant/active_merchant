@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class CreditCardTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-  
   MAESTRO_CARDS = [ '5000000000000000', '5099999999999999', '5600000000000000',
     '5899999999999999', '6000000000000000', '6999999999999999']
   

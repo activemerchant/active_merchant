@@ -1,9 +1,6 @@
-require 'test/unit'
 require File.dirname(__FILE__) + '/../test_helper'
 
 class PsigateRemoteTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-  
   # set up order numbers as contants because even a test credit must match an 
   # existing purchase in psigate's test system
   ORDER_NUM1 = Time.now.to_i.to_s
@@ -28,7 +25,7 @@ class PsigateRemoteTest < Test::Unit::TestCase
   end
   
   def test_remote_authorize
-    assert response = @gateway.authorize(Money.ca_dollar(2400), @creditcard, {:order_id => ORDER_NUM1,
+    assert response = @gateway.authorize(2400, @creditcard, {:order_id => ORDER_NUM1,
        :billing_address => {
           :address1 => '123 fairweather Lane',
           :address2 => 'Apt B',
@@ -45,7 +42,7 @@ class PsigateRemoteTest < Test::Unit::TestCase
   end
   
   def test_remote_capture
-    assert response = @gateway.capture(Money.ca_dollar(2400), ORDER_NUM1 )
+    assert response = @gateway.capture(2400, ORDER_NUM1 )
     assert_equal Response, response.class
     assert_equal true, response.success?
     assert_equal "APPROVED", response.params["approved"]
@@ -57,7 +54,7 @@ class PsigateRemoteTest < Test::Unit::TestCase
   # test_remote_credit method. Otherwise the credit won't reference an existing
   # purchase and the test will fail
   def test_remote_apurchase
-    assert response = @gateway.purchase(Money.ca_dollar(2400), @creditcard, {:order_id =>  ORDER_NUM2,
+    assert response = @gateway.purchase(2400, @creditcard, {:order_id =>  ORDER_NUM2,
        :billing_address => {
           :address1 => '123 fairweather Lane',
           :address2 => 'Apt B',
@@ -73,14 +70,14 @@ class PsigateRemoteTest < Test::Unit::TestCase
   end
   
   def test_remote_credit
-    assert response = @gateway.credit(Money.ca_dollar(2400), ORDER_NUM2)
+    assert response = @gateway.credit(2400, ORDER_NUM2)
     assert_equal Response, response.class
     assert_equal true, response.success?
     assert_equal "APPROVED", response.params["approved"]
   end
   
   def test_remote_decline
-    assert response = @gateway.purchase(Money.ca_dollar(2400), @creditcard, {:order_id =>  ORDER_NUM3,
+    assert response = @gateway.purchase(2400, @creditcard, {:order_id =>  ORDER_NUM3,
        :billing_address => {
           :address1 => '123 fairweather Lane',
           :address2 => 'Apt B',

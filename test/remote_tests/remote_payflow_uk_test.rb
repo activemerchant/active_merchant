@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class RemotePayflowUkTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   def setup
     ActiveMerchant::Billing::Base.gateway_mode = :test
 
@@ -65,7 +63,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase
-    assert response = @gateway.purchase(Money.new(100000), @creditcard, @options)
+    assert response = @gateway.purchase(100000, @creditcard, @options)
     assert_equal "Approved", response.message
     assert response.success?
     assert response.test?
@@ -73,14 +71,14 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   end
   
   def test_declined_purchase
-    assert response = @gateway.purchase(Money.new(210000), @creditcard, @options)
+    assert response = @gateway.purchase(210000, @creditcard, @options)
     assert_equal 'Failed merchant rule check', response.message
     assert !response.success?
     assert response.test?
   end
   
   def test_successful_purchase_solo
-     assert response = @gateway.purchase(Money.new(100000, 'GBP'), @solo, @options)
+     assert response = @gateway.purchase(100000, @solo, @options)
      assert_equal "Approved", response.message
      assert response.success?
      assert response.test?
@@ -88,7 +86,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
    end
   
   def test_no_card_issue_or_card_start_with_switch
-    assert response = @gateway.purchase(Money.new(100000, 'GBP'), @switch, @options)
+    assert response = @gateway.purchase(100000, @switch, @options)
     assert !response.success?
     
     assert_equal "Field format error: CARDSTART or CARDISSUE must be present", response.message
@@ -98,7 +96,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   
   def test_successful_purchase_switch_with_issue_number
     @switch.issue_number = '01'
-    assert response = @gateway.purchase(Money.new(100000, 'GBP'), @switch, @options)
+    assert response = @gateway.purchase(100000, @switch, @options)
     assert_equal "Approved", response.message
     assert response.success?
     assert response.test?
@@ -108,7 +106,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   def test_successful_purchase_switch_with_start_date
     @switch.start_month = 12
     @switch.start_year = 1999
-    assert response = @gateway.purchase(Money.new(100000, 'GBP'), @switch, @options)
+    assert response = @gateway.purchase(100000, @switch, @options)
     assert_equal "Approved", response.message
     assert response.success?
     assert response.test?
@@ -119,7 +117,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     @switch.issue_number = '05'
     @switch.start_month = 12
     @switch.start_year = 1999
-    assert response = @gateway.purchase(Money.new(100000, 'GBP'), @switch, @options)
+    assert response = @gateway.purchase(100000, @switch, @options)
     assert_equal "Approved", response.message
     assert response.success?
     assert response.test?
@@ -127,7 +125,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   end
   
   def test_successful_authorization
-    assert response = @gateway.authorize(Money.new(100), @creditcard, @options)
+    assert response = @gateway.authorize(100, @creditcard, @options)
     assert_equal "Approved", response.message
     assert response.success?
     assert response.test?
@@ -135,7 +133,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_capture
-    amount = Money.new(100)
+    amount = 100
     assert auth = @gateway.authorize(amount, @creditcard, @options)
     assert auth.success?
     assert_equal 'Approved', auth.message
@@ -145,13 +143,13 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   end
   
   def test_failed_capture
-    assert response = @gateway.capture(Money.new(100), '999')
+    assert response = @gateway.capture(100, '999')
     assert !response.success?
     assert_equal 'Invalid tender', response.message
   end
   
   def test_authorize_and_void
-    assert auth = @gateway.authorize(Money.new(100), @creditcard, @options)
+    assert auth = @gateway.authorize(100, @creditcard, @options)
     assert auth.success?
     assert_equal 'Approved', auth.message
     assert auth.authorization
@@ -164,7 +162,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
       :login => '',
       :password => ''
     )
-    assert response = gateway.purchase(Money.new(100), @creditcard, @options)
+    assert response = gateway.purchase(100, @creditcard, @options)
     assert_equal 'Invalid vendor account', response.message
     assert !response.success?
   end
@@ -179,9 +177,9 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     request_id = Digest::SHA1.hexdigest(rand.to_s).slice(0,32)
     gateway.expects(:generate_unique_id).times(2).returns(request_id)
     
-    response1 = gateway.purchase(Money.new(100), @creditcard, @options)
+    response1 = gateway.purchase(100, @creditcard, @options)
     assert_nil response1.params['duplicate']
-    response2 = gateway.purchase(Money.new(100), @creditcard, @options)
+    response2 = gateway.purchase(100, @creditcard, @options)
     assert response2.params['duplicate']
   end
 end

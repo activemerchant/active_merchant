@@ -11,6 +11,8 @@ module ActiveMerchant #:nodoc:
         
         # Set the default partner to PayPal
         base.partner = 'PayPal'
+        
+        base.supported_countries = ['US', 'CA', 'SG', 'AU']
       end
       
       XMLNS = 'http://www.paypal.com/XMLPay'

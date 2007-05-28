@@ -8,9 +8,8 @@ module ActiveMerchant #:nodoc:
         @express ||= PayflowExpressUkGateway.new(@options)
       end
       
-      def self.supported_cardtypes
-        [:visa, :master, :american_express, :discover, :solo, :switch]
-      end
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :solo, :switch]
+      self.supported_countries = ['GB']
     end
   end
 end

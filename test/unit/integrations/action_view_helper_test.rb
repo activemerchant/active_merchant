@@ -14,7 +14,6 @@ require 'action_controller/test_process'
 require 'active_merchant/billing/integrations/action_view_helper'
 
 class ActionViewHelperTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
   include ActiveMerchant::Billing::Integrations::ActionViewHelper
   include ActionView::Helpers::FormHelper
   include ActionView::Helpers::FormTagHelper

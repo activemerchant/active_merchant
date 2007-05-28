@@ -71,7 +71,7 @@ task :cia do
   
   if build.has_changes? and not build.tests_ok? 
 
-    require_gem 'actionmailer'
+    require 'actionmailer'
 
     ActionMailer::Base.delivery_method = :sendmail
 

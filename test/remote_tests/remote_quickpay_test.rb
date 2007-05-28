@@ -1,8 +1,7 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class RemoteQuickpayTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-  
+
   # Quickpay MerchantId
   LOGIN = 'MERCHANTID'
   
@@ -53,14 +52,6 @@ class RemoteQuickpayTest < Test::Unit::TestCase
   
   def test_successful_usd_purchase
     assert response = @gateway.purchase(AMOUNT, @visa, :order_id => generate_order_id, :currency => 'USD')
-    assert_equal 'OK', response.message
-    assert_equal 'USD', response.params['currency']
-    assert response.success?
-    assert !response.authorization.blank?
-  end
-  
-  def test_successful_usd_purchase_with_money_object
-    assert response = @gateway.purchase(Money.new(AMOUNT, 'USD'), @visa, :order_id => generate_order_id)
     assert_equal 'OK', response.message
     assert_equal 'USD', response.params['currency']
     assert response.success?

@@ -12,6 +12,8 @@ module ActiveMerchant #:nodoc:
     
       self.default_currency = 'DKK'  
       self.money_format = :cents
+      self.supported_cardtypes = [ :dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro ]
+      self.supported_countries = ['DK']
       
       TRANSACTIONS = {
         :authorization          => '1100',
@@ -93,10 +95,6 @@ module ActiveMerchant #:nodoc:
         commit(:credit, post)
       end
     
-      def self.supported_cardtypes
-        [ :dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro ]
-      end
-         
       private                       
   
       def add_amount(post, money, options = {})

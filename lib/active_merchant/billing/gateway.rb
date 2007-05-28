@@ -31,6 +31,14 @@ module ActiveMerchant #:nodoc:
       # The default currency for the transactions if no currency is provided
       class_inheritable_accessor :default_currency
       
+      # The countries of merchants the gateway supports
+      class_inheritable_accessor :supported_countries
+      self.supported_countries = []
+      
+      # The supported card types for the gateway
+      class_inheritable_accessor :supported_cardtypes
+      self.supported_cardtypes = []
+      
       # Return the matching gateway for the provider
       # * <tt>bogus</tt>: BogusGateway - Does nothing ( for testing)
       # * <tt>moneris</tt>: MonerisGateway
@@ -45,12 +53,7 @@ module ActiveMerchant #:nodoc:
       # Does this gateway support credit cards of the passed type?
       def self.supports?(type)
         supported_cardtypes.include?(type.intern)
-      end
-                                                                  
-      # Get a list of supported credit card types for this gateway
-      def self.supported_cardtypes
-        []
-      end                                 
+      end       
     
       attr_reader :options
       # Initialize a new gateway 

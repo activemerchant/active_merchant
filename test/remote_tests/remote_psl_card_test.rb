@@ -3,8 +3,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class RemotePslCardTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-  
   # The test results are determined by the amount of the transaction
   ACCEPT_AMOUNT = 1000
   REFERRED_AMOUNT = 6000

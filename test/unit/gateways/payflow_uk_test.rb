@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class PayflowUkTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   def setup
     @gateway = PayflowUkGateway.new(
       :login => 'LOGIN',
@@ -30,7 +28,7 @@ class PayflowUkTest < Test::Unit::TestCase
   
   def test_successful_request
     @creditcard.number = 1
-    assert response = @gateway.purchase(Money.new(100), @creditcard, {})
+    assert response = @gateway.purchase(100, @creditcard, {})
     assert response.success?
     assert_equal '5555', response.authorization
     assert response.test?
@@ -38,14 +36,14 @@ class PayflowUkTest < Test::Unit::TestCase
 
   def test_unsuccessful_request
     @creditcard.number = 2
-    assert response = @gateway.purchase(Money.new(100), @creditcard, {})
+    assert response = @gateway.purchase(100, @creditcard, {})
     assert !response.success?
     assert response.test?
   end
 
   def test_request_error
     @creditcard.number = 3
-    assert_raise(Error){ @gateway.purchase(Money.new(100), @creditcard, {}) }
+    assert_raise(Error){ @gateway.purchase(100, @creditcard, {}) }
   end
   
   def test_default_currency
@@ -58,5 +56,13 @@ class PayflowUkTest < Test::Unit::TestCase
   
   def test_default_partner
     assert_equal 'PayPalUk', PayflowUkGateway.partner
+  end
+  
+  def test_supported_countries
+    assert_equal ['GB'], PayflowUkGateway.supported_countries
+  end
+  
+  def test_supported_card_types
+    assert_equal [:visa, :master, :american_express, :discover, :solo, :switch], PayflowUkGateway.supported_cardtypes
   end
 end

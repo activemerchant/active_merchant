@@ -20,6 +20,13 @@ module ActiveMerchant
       self.money_format = :cents
       self.default_currency = 'GBP'
       
+      self.supported_countries = ['GB']
+      # Visa Credit, Visa Debit, Mastercard, Maestro, Solo, Electron,
+      # American Express, Diners Club, JCB, International Maestro,
+      # Style, Clydesdale Financial Services, Other
+         
+      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb, :switch, :solo, :maestro ]
+      
       # Default ISO 3166 country code (GB)
       cattr_accessor :location
       self.location = 826
@@ -146,20 +153,6 @@ module ActiveMerchant
         commit(post)
       end
 
-      # Visa Credit, Visa Debit, Mastercard, Maestro, Solo, Electron,
-      # American Express, Diners Club, JCB, International Maestro,
-      # Style, Clydesdale Financial Services, Other
-      # 
-      # Parameters:
-      #   -none
-      # 
-      # Returns:
-      #   -the list of all supported cards
-      #   
-      def self.supported_cardtypes
-        [ :visa, :master, :american_express, :diners_club, :jcb, :switch, :solo, :maestro ]
-      end
-     
       private
     
       def add_credit_card(post, credit_card)

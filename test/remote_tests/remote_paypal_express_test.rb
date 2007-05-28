@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class PaypalExpressTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-  
   def setup
     Base.gateway_mode = :test
     
@@ -38,7 +36,7 @@ class PaypalExpressTest < Test::Unit::TestCase
       :cancel_return_url => 'http://example.com',
       :email => 'Buyer1@paypal.com'
     )
-    response = @gateway.setup_authorization(Money.new(500), @options)
+    response = @gateway.setup_authorization(500, @options)
     assert response.success?
     assert response.test?
     assert !response.params['token'].blank?
@@ -50,7 +48,7 @@ class PaypalExpressTest < Test::Unit::TestCase
       :cancel_return_url => 'http://example.com',
       :email => 'Buyer1@paypal.com'
     )
-    response = @gateway.setup_purchase(Money.new(500), @options)
+    response = @gateway.setup_purchase(500, @options)
     assert response.success?
     assert response.test?
     assert !response.params['token'].blank?

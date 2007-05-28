@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class BaseTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-  
   def setup
     ActiveMerchant::Billing::Base.mode = :test
   end

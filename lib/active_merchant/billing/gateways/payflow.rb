@@ -7,6 +7,8 @@ module ActiveMerchant #:nodoc:
       
       RECURRING_ACTIONS = Set.new([:add, :modify, :cancel, :inquiry, :reactivate, :payment])
       
+      self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :discover, :diners_club]
+    
       def authorize(money, credit_card_or_reference, options = {})
         request = build_sale_or_authorization_request(:authorization, money, credit_card_or_reference, options)
       
@@ -51,10 +53,6 @@ module ActiveMerchant #:nodoc:
       
       def express
         @express ||= PayflowExpressGateway.new(@options)
-      end
-      
-      def self.supported_cardtypes
-        [:visa, :master, :american_express, :jcb, :discover, :diners_club]
       end
       
       private

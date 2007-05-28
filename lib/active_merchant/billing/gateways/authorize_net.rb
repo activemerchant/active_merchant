@@ -43,6 +43,9 @@ module ActiveMerchant #:nodoc:
       attr_reader :url 
       attr_reader :response
       attr_reader :options
+      
+      self.supported_countries = ['US']
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -90,12 +93,7 @@ module ActiveMerchant #:nodoc:
 
         commit('CREDIT', money, post)
       end
-    
-      # We support visa and master card
-      def self.supported_cardtypes
-        [:visa, :master, :american_express, :discover]
-      end
-         
+       
       private                       
       def commit(action, money, parameters)
         parameters[:amount]       = amount(money) unless action == 'VOID'

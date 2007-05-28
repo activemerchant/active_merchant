@@ -7,6 +7,9 @@ module ActiveMerchant #:nodoc:
       attr_reader :url 
       attr_reader :response
       attr_reader :options
+      
+      self.supported_countries = ['CA']
+      self.supported_cardtypes = [:visa, :master]
 
       TEST_URL = 'https://esqa.moneris.com/gateway2/servlet/MpgRequest'
       LIVE_URL = 'https://www3.moneris.com/gateway2/servlet/MpgRequest'
@@ -85,12 +88,7 @@ module ActiveMerchant #:nodoc:
 
         commit('purchasecorrection', parameters)      
       end
-    
-      # We support visa and master card
-      def self.supported_cardtypes
-        [:visa, :master]
-      end
-         
+   
       private                       
     
       def expdate(creditcard)

@@ -1,25 +1,19 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class ExactTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   def setup
     @gateway = ExactGateway.new( :login    => "A00427-01",
                                  :password => "testus" )
 
-    @credit_card = CreditCard.new( :number     => "4111111111111111",
-                                   :month      => 9,
-                                   :year       => Time.now.year + 2,
-                                   :first_name => "Active",
-                                   :last_name  => "Merchant" )
-
+    @credit_card = credit_card("4111111111111111")
+    
     @options = { :address => { :address1 => "1234 Testing Ave.",
                                :zip      => "55555" } }
   end
   
   def test_successful_request
     @credit_card.number = "1"
-    assert response = @gateway.purchase(Money.new(100), @credit_card, {})
+    assert response = @gateway.purchase(100, @credit_card, {})
     assert response.success?
     assert_equal '5555', response.authorization
     assert response.test?
@@ -27,14 +21,14 @@ class ExactTest < Test::Unit::TestCase
 
   def test_unsuccessful_request
     @credit_card.number = "2"
-    assert response = @gateway.purchase(Money.new(100), @credit_card, {})
+    assert response = @gateway.purchase(100, @credit_card, {})
     assert !response.success?
     assert response.test?
   end
 
   def test_request_error
     @credit_card.number = "3"
-    assert_raise(Error){ @gateway.purchase(Money.new(100), @credit_card, {}) }
+    assert_raise(Error){ @gateway.purchase(100, @credit_card, {}) }
   end
   
   def test_expdate
@@ -45,7 +39,7 @@ class ExactTest < Test::Unit::TestCase
   
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert response = @gateway.purchase(Money.new(100), @credit_card, {})
+    assert response = @gateway.purchase(100, @credit_card, {})
     assert response.success?
     assert_equal 'ET0426;80928103', response.authorization
     assert response.test?
@@ -56,10 +50,18 @@ class ExactTest < Test::Unit::TestCase
   
   def test_soap_fault
     @gateway.expects(:ssl_post).returns(soap_fault_response)
-    assert response = @gateway.purchase(Money.new(100), @credit_card, {})
+    assert response = @gateway.purchase(100, @credit_card, {})
     assert !response.success?
     assert response.test?
     assert_equal 'Unable to handle request without a valid action parameter. Please supply a valid soap action.', response.message
+  end
+  
+  def test_supported_countries
+    assert_equal ['CA', 'US'], ExactGateway.supported_countries
+  end
+  
+  def test_supported_card_types
+    assert_equal [:visa, :master, :american_express, :jcb, :discover], ExactGateway.supported_cardtypes
   end
   
   private

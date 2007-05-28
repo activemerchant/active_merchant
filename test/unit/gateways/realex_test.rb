@@ -2,8 +2,6 @@ require File.dirname(__FILE__) + '/../../test_helper'
 require 'digest/sha1'
 
 class RealexTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-  
   AMOUNT = 100
 
   def setup
@@ -80,6 +78,15 @@ class RealexTest < Test::Unit::TestCase
     response = @gateway.purchase(AMOUNT, @creditcard, :order_id => 1)
     assert !response.success?
   end
+  
+  def test_supported_countries
+    assert_equal ['IE', 'GB'], RealexGateway.supported_countries
+  end
+  
+  def test_supported_card_types
+    assert_equal [ :visa, :master, :american_express, :diners_club, :switch, :solo, :laser ], RealexGateway.supported_cardtypes
+  end
+  
   
   private
   

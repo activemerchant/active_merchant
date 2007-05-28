@@ -10,6 +10,15 @@ module ActiveMerchant
     # 
     class DataCashGateway < Gateway
       self.default_currency = 'GBP'
+      self.supported_countries = ['GB']
+      
+      # From the DataCash docs; Page 13, the following cards are
+      # usable:
+      # American Express, ATM, Carte Blanche, Diners Club, Discover,
+      # EnRoute, GE Capital, JCB, Laser, Maestro, Mastercard, Solo,
+      # Switch, Visa, Visa Delta, VISA Electron, Visa Purchasing  
+      self.supported_cardtypes = [ :visa, :master, :american_express, :discover, :diners_club, :jcb, 
+          :maestro, :switch, :solo, :laser ]
       
       # Datacash server URLs
       TEST_URL = 'https://testserver.datacash.com/Transaction'
@@ -134,24 +143,6 @@ module ActiveMerchant
         commit(request)
       end
       
-      # From the DataCash docs; Page 13, the following cards are
-      # usable
-      # 
-      # American Express, ATM, Carte Blanche, Diners Club, Discover,
-      # EnRoute, GE Capital, JCB, Laser, Maestro, Mastercard, Solo,
-      # Switch, Unknown, Visa, Visa Delta, VISA Electron, Visa Purchasing
-      # 
-      # Parameters:
-      #   -none
-      # 
-      # Returns:
-      #   -the list of all supported cards
-      #   
-      def self.supported_cardtypes
-        [ :visa, :master, :american_express, :discover, :diners_club, :jcb, 
-          :switch, :solo ]
-      end
-      
       # Return whether or not the gateway is in test mode
       # 
       # Parameters:
@@ -214,7 +205,7 @@ module ActiveMerchant
             if money
               xml.tag! :TxnDetails do
                 xml.tag! :merchantreference, format_reference_number(options[:order_id])
-                xml.tag! :amount, amount(money), :currency => currency(money)
+                xml.tag! :amount, amount(money), :currency => options[:currency] || currency(money)
               end
             end
           end
@@ -297,7 +288,7 @@ module ActiveMerchant
             end
             xml.tag! :TxnDetails do
               xml.tag! :merchantreference, format_reference_number(options[:order_id])
-              xml.tag! :amount, amount(money), :currency => currency(money)
+              xml.tag! :amount, amount(money), :currency => options[:currency] || currency(money)
             end
           end
         end

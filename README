@@ -68,7 +68,8 @@ Installation from RubyGems
 
 == Sample Usage
 
-  ten_dollars = Money.new(1000, 'USD')
+	# 10 dollars in cents
+  ten_dollars = 1000
 
   credit_card = CreditCard.new(
     :number => '4242424242424242',

@@ -130,6 +130,9 @@ module ActiveMerchant #:nodoc:
       
       # We don't have the certificate to verify LinkPoint
       self.ssl_strict = false
+      
+      self.supported_countries = ['US']
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
            
       # @options = {
       #  :store_number => options[:login],
@@ -237,11 +240,7 @@ module ActiveMerchant #:nodoc:
         )
         commit(money, nil, options)
       end
-      
-      def self.supported_cardtypes
-        [:visa, :master, :discover, :american_express]
-      end
-      
+    
       def test?
         @options[:test] || Base.gateway_mode == :test
       end

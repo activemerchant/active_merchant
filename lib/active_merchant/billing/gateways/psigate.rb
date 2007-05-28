@@ -7,19 +7,19 @@
 #  
 #  Usage for a PreAuth (authorize) is as follows:
 #  
-#  twenty = Money.ca_dollar(2000)
-#  gateway = PsigateGateway.new({
+#  twenty = 2000
+#  gateway = PsigateGateway.new(
 #    :store_id => 'teststore',
-#    :password => 'psigate1234',
-#  })
+#    :password => 'psigate1234'
+#  )
 #  
-#  creditcard = CreditCard.new({
+#  creditcard = CreditCard.new(
 #    :number => '4242424242424242',
 #    :month => 8,
 #    :year => 2006,
 #    :first_name => 'Longbob',
 #    :last_name => 'Longsen'
-#  })
+#  )
 #  response = @gateway.authorize(twenty, creditcard, {:order_id =>  1234,
 #     :billing_address => {
 #  	  :address1 => '123 fairweather Lane',
@@ -45,6 +45,10 @@ module ActiveMerchant #:nodoc:
 
       TEST_URL  = 'https://dev.psigate.com:7989/Messenger/XMLMessenger'
       LIVE_URL  = 'https://secure.psigate.com:7934/Messenger/XMLMessenger'
+      
+      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_countries = ['CA']
+      
       
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -85,12 +89,7 @@ module ActiveMerchant #:nodoc:
         options.update({ :CardAction => "3", :order_id => authorization })
         commit(money, nil, options)
       end
- 
-      # We support visa and master card
-      def self.supported_cardtypes
-        [:visa, :master, :american_express]
-      end
-         
+
       private                       
     
       def commit(money, creditcard, options = {}) 

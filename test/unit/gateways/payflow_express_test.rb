@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class PayflowExpressTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   def setup
     Base.gateway_mode = :test
     

@@ -8,6 +8,9 @@ module ActiveMerchant #:nodoc:
       attr_reader :url 
       attr_reader :response
       attr_reader :options
+      
+      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_countries = ['US']
 
       def initialize(options = {})
         requires!(options, :login)
@@ -39,11 +42,7 @@ module ActiveMerchant #:nodoc:
         post = {:refNum => authorization}
         commit('capture', money, post)
       end
-    
-      def self.supported_cardtypes
-        [:visa, :master, :american_express]
-      end
-         
+       
       private                       
     
       def expdate(creditcard)

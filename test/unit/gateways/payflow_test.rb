@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class PayflowTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   def setup
     Base.gateway_mode = :test
     
@@ -11,13 +9,7 @@ class PayflowTest < Test::Unit::TestCase
       :password => 'PASSWORD'
     )
 
-    @creditcard = CreditCard.new(
-      :number => '4242424242424242',
-      :month => 8,
-      :year => 2008,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen'
-    )
+    @creditcard = credit_card('4242424242424242')
 
     @address = { :address1 => '1234 My Street',
                  :address2 => 'Apt 1',
@@ -37,7 +29,7 @@ class PayflowTest < Test::Unit::TestCase
   
   def test_successful_request
     @creditcard.number = 1
-    assert response = @gateway.purchase(Money.new(100), @creditcard, {})
+    assert response = @gateway.purchase(100, @creditcard, {})
     assert response.success?
     assert_equal '5555', response.authorization
     assert response.test?
@@ -45,14 +37,14 @@ class PayflowTest < Test::Unit::TestCase
 
   def test_unsuccessful_request
     @creditcard.number = 2
-    assert response = @gateway.purchase(Money.new(100), @creditcard, {})
+    assert response = @gateway.purchase(100, @creditcard, {})
     assert !response.success?
     assert response.test?
   end
 
   def test_request_error
     @creditcard.number = 3
-    assert_raise(Error){ @gateway.purchase(Money.new(100), @creditcard, {}) }
+    assert_raise(Error){ @gateway.purchase(100, @creditcard, {}) }
   end
   
   def test_using_test_mode
@@ -124,5 +116,13 @@ class PayflowTest < Test::Unit::TestCase
 
   def test_default_currency
     assert_equal 'USD', PayflowGateway.default_currency
+  end
+  
+  def test_supported_countries
+    assert_equal ['US', 'CA', 'SG', 'AU'], PayflowGateway.supported_countries
+  end
+  
+  def test_supported_card_types
+    assert_equal [:visa, :master, :american_express, :jcb, :discover, :diners_club], PayflowGateway.supported_cardtypes
   end
 end

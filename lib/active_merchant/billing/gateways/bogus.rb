@@ -3,6 +3,9 @@ module ActiveMerchant #:nodoc:
     # Bogus Gateway
     class BogusGateway < Gateway
       
+      self.supported_countries = ['US']
+      self.supported_cardtypes = [:bogus]
+      
       def authorize(money, creditcard, options = {})
         case creditcard.number
         when '1'
@@ -68,12 +71,7 @@ module ActiveMerchant #:nodoc:
           raise Error, 'Bogus Gateway: Use trans_id 1 for success, 2 for exception and anything else for error'
         end
       end
- 
-      # We support visa and master card
-      def self.supported_cardtypes
-        [:bogus]
-      end
-    
+
       private 
     
       def deal_with_cc(creditcard)

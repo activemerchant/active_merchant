@@ -15,14 +15,11 @@ module ActiveMerchant #:nodoc:
     # First, make sure you have everything setup correctly and all of your dependencies in place with:
     # 
     #   require 'rubygems'
-    #   require 'money'
     #   require 'active_merchant'
     #
-    # The second line is a require for the 'money' library. Make sure you have it installed with 'gem install money'
+    # ActiveMerchant expects amounts to be Integer values in cents
     #
-    # Using the money library, create a money object. Pass the dollar value in cents. In this case, $10 US becomes 1000.
-    #
-    #   tendollar = Money.us_dollar(1000)
+    #   tendollar = 1000
     #
     # Next, create a credit card object using a TC approved test card.
     #
@@ -103,6 +100,8 @@ module ActiveMerchant #:nodoc:
       attr_reader :options
 
       self.money_format = :cents
+      self.supported_cardtypes = [:visa, :master, :discover, :american_express, :diners_club, :jcb]
+      self.supported_countries = ['US']
       
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -235,11 +234,7 @@ module ActiveMerchant #:nodoc:
                                                   
         commit('unstore', parameters)
       end      
-            
-      def self.supported_cardtypes
-        [:visa, :master, :discover, :american_express, :diners_club, :jcb]
-      end
-      
+          
       private
       def add_payment_source(params, source)
         if source.is_a?(String)

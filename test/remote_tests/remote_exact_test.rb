@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class RemoteExactTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   def setup
     
     
@@ -16,20 +14,20 @@ class RemoteExactTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase
-    assert response = @gateway.purchase(Money.new(100), @credit_card, @options)
+    assert response = @gateway.purchase(100, @credit_card, @options)
     assert_equal "Transaction Normal - VER UNAVAILABLE", response.message
     assert response.success?
   end
 
   def test_unsuccessful_purchase
     # ask for error 13 response (Amount Error) via dollar amount 5,000 + error
-    assert response = @gateway.purchase( Money.new(501300), @credit_card, @options )
+    assert response = @gateway.purchase(501300, @credit_card, @options )
     assert_equal "Transaction Normal - AMOUNT ERR", response.message
     assert !response.success?
   end
 
   def test_purchase_and_credit
-    amount = Money.new(100)
+    amount = 100
     assert purchase = @gateway.purchase(amount, @credit_card, @options)
     assert purchase.success?
     assert purchase.authorization
@@ -38,7 +36,7 @@ class RemoteExactTest < Test::Unit::TestCase
   end
   
   def test_authorize_and_capture
-    amount = Money.new(100)
+    amount = 100
     assert auth = @gateway.authorize(amount, @credit_card, @options)
     assert auth.success?
     assert auth.authorization
@@ -47,7 +45,7 @@ class RemoteExactTest < Test::Unit::TestCase
   end
   
   def test_failed_capture
-    assert response = @gateway.capture(Money.new(100), String.new)
+    assert response = @gateway.capture(100, String.new)
     assert !response.success?
     assert_match /Precondition Failed/i, response.message
   end
@@ -55,7 +53,7 @@ class RemoteExactTest < Test::Unit::TestCase
   def test_invalid_login
     gateway = ExactGateway.new( :login    => "NotARealUser",
                                 :password => "NotARealPassword" )
-    assert response = gateway.purchase(Money.new(100), @credit_card, @options)
+    assert response = gateway.purchase(100, @credit_card, @options)
     assert_equal "Invalid Logon", response.message
     assert !response.success?
   end

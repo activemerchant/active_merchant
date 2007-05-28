@@ -1,3 +1,5 @@
+require 'money'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:

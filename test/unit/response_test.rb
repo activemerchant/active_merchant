@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class ResponseTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   def test_response_success
     assert Response.new(true, 'message', :param => 'value').success?
     assert !Response.new(false, 'message', :param => 'value').success?

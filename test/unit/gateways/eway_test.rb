@@ -1,27 +1,24 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class EwayTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   def setup
-    @gateway = EwayGateway.new({
+    @gateway = EwayGateway.new(
       :login => '87654321'
-    })
+    )
 
-    @creditcard = CreditCard.new({
-      :number => '4646464646464646',
-      :month => (Time.now.month + 1),
-      :year => (Time.now.year + 1),
-      :first_name => 'Longbob',
-      :last_name => 'Longsen'
-    })
+    @creditcard = credit_card('4646464646464646')
     
     @test_params_success = {
       :order_id => '1230123',
       :email => 'bob@testbob.com',
-      :address => { :address1 => '47 Bobway, Bobville, WA, Australia',
-                    :zip => '2000'
-                  },
+      :address => {
+        :address1 => '1234 First St.',
+        :address2 => 'Apt. 1',
+        :city     => 'Melbourne',
+        :state    => 'ACT',
+        :country  => 'AU',
+        :zip      => '12345'
+      },
       :description => 'purchased items'
     }
    
@@ -50,12 +47,11 @@ class EwayTest < Test::Unit::TestCase
     @creditcard.number = 3 
     
     assert_raise(Error) do
-      assert response = @gateway.purchase(Money.new(100), @creditcard, @test_params_success)    
+      assert response = @gateway.purchase(100, @creditcard, @test_params_success)    
     end
   end
        
   def test_amount_style
-   assert_equal '1034', @gateway.send(:amount, Money.new(1034))
    assert_equal '1034', @gateway.send(:amount, 1034)
                                                       
    assert_raise(ArgumentError) do
@@ -66,7 +62,6 @@ class EwayTest < Test::Unit::TestCase
   def test_purchase_is_valid_xml
    assert data = @gateway.send(:post_data, @xml_test_parameters)
    assert REXML::Document.new(data)
-   assert_equal xml_purchase_fixture.size, data.size
   end  
 
   def test_ensure_does_not_respond_to_authorize
@@ -91,6 +86,13 @@ class EwayTest < Test::Unit::TestCase
   
   def test_live_url_with_cvn
     assert_equal EwayGateway::LIVE_CVN_URL, @gateway.send(:gateway_url, true, false)
+  end
+  
+  def test_add_address
+    post = {}
+    @gateway.send(:add_address, post, @test_params_success)
+    assert_equal '1234 First St., Apt. 1, Melbourne, ACT, AU', post[:CustomerAddress]
+    assert_equal @test_params_success[:address][:zip], post[:CustomerPostcode]
   end
 
   private

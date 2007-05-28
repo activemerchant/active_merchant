@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Remove Money dependency from main gateways. Cleanup tests.  Add supported_countries class accessor which returns an array of 2 digit iso country codes for which countries the gateway supports accounts in [cody]
+#
 # * Add American Express card to Psigate [cody]
 #
 # * Send N/A to PayPal in the PayPal Helper when we don't know the UK county [cody]

@@ -1,9 +1,6 @@
-require 'test/unit'
 require File.dirname(__FILE__) + '/../test_helper'
 
 class AuthorizeNetTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-  
   def setup
     Base.mode = :test
     
@@ -26,8 +23,8 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase
-    assert response = @gateway.purchase(Money.ca_dollar(100), @creditcard,
-      :order_id => order_id,
+    assert response = @gateway.purchase(100, @creditcard,
+      :order_id => generate_order_id,
       :description => 'Store purchase'
     )
     assert response.success?
@@ -38,7 +35,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   
   def test_expired_credit_card
     @creditcard.year = 2004 
-    assert response = @gateway.purchase(Money.ca_dollar(100), @creditcard, :order_id => order_id)
+    assert response = @gateway.purchase(100, @creditcard, :order_id => generate_order_id)
     assert !response.success?
     assert response.test?
     assert_equal 'The credit card has expired', response.message
@@ -50,7 +47,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       :password => @password,
       :test => true
     )
-    assert response = gateway.purchase(Money.ca_dollar(100), @creditcard, :order_id => order_id)
+    assert response = gateway.purchase(100, @creditcard, :order_id => generate_order_id)
     assert response.success?
     assert response.test?
     assert_match /TESTMODE/, response.message
@@ -58,23 +55,23 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_successful_authorization
-    assert response = @gateway.authorize(Money.ca_dollar(100), @creditcard, :order_id => order_id)
+    assert response = @gateway.authorize(100, @creditcard, :order_id => generate_order_id)
     assert response.success?
     assert_equal 'This transaction has been approved', response.message
     assert response.authorization
   end
   
   def test_authorization_and_capture
-    assert authorization = @gateway.authorize(Money.ca_dollar(100), @creditcard, :order_id => order_id)
+    assert authorization = @gateway.authorize(100, @creditcard, :order_id => generate_order_id)
     assert authorization.success?
     assert authorization
-    assert capture = @gateway.capture(Money.ca_dollar(100), authorization.authorization)
+    assert capture = @gateway.capture(100, authorization.authorization)
     assert capture.success?
     assert_equal 'This transaction has been approved', capture.message
   end
   
   def test_authorization_and_void
-    assert authorization = @gateway.authorize(Money.ca_dollar(100), @creditcard, :order_id => order_id)
+    assert authorization = @gateway.authorize(100, @creditcard, :order_id => generate_order_id)
     assert authorization.success?
     assert authorization
     assert void = @gateway.void(authorization.authorization)
@@ -83,13 +80,13 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_bad_login
-    gateway = AuthorizeNetGateway.new({
-        :login => 'X',
-        :password => 'Y',
-      })
+    gateway = AuthorizeNetGateway.new(
+      :login => 'X',
+      :password => 'Y'
+    )
     
     
-    assert response = gateway.purchase(Money.ca_dollar(100), @creditcard)
+    assert response = gateway.purchase(100, @creditcard)
         
     assert_equal Response, response.class
     assert_equal ["avs_message",
@@ -106,12 +103,12 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_using_test_request
-    gateway = AuthorizeNetGateway.new({
-        :login => 'X',
-        :password => 'Y',
-      })
+    gateway = AuthorizeNetGateway.new(
+      :login => 'X',
+      :password => 'Y'
+    )
     
-    assert response = gateway.purchase(Money.ca_dollar(100), @creditcard)
+    assert response = gateway.purchase(100, @creditcard)
         
     assert_equal Response, response.class
     assert_equal ["avs_message", 
@@ -125,10 +122,5 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_match /The merchant login ID or password is invalid/, response.message
     
     assert_equal false, response.success?    
-  end
-  
-  private
-  def order_id
-    "##{rand(100000)}"
   end
 end

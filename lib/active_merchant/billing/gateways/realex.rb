@@ -33,6 +33,8 @@ module ActiveMerchant
       
       self.money_format = :cents
       self.default_currency = 'EUR'
+      self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :switch, :solo, :laser ]
+      self.supported_countries = [ 'IE', 'GB' ]
            
       SUCCESS, DECLINED          = "Successful", "Declined"
       BANK_ERROR = REALEX_ERROR  = "Gateway is in maintenance. Please try again later."
@@ -54,10 +56,6 @@ module ActiveMerchant
         request = build_purchase_or_authorization_request(:purchase, money, credit_card, options) 
         commit(request)
       end     
-        
-      def self.supported_cardtypes
-        [ :visa, :master, :american_express, :diners_club, :switch, :solo, :laser ]
-      end
       
       private           
       def commit(request)

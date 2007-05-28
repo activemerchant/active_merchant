@@ -1,21 +1,13 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class MonerisResponseTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   def setup
-    @gateway = MonerisGateway.new({
+    @gateway = MonerisGateway.new(
       :login => 'store1',
-      :password => 'yesguy',
-    })
+      :password => 'yesguy'
+    )
 
-    @creditcard = CreditCard.new({
-      :number => '4242424242424242',
-      :month => 8,
-      :year => 2006,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen'
-    })
+    @creditcard = credit_card('4242424242424242')
   end
 
   def teardown
@@ -25,7 +17,7 @@ class MonerisResponseTest < Test::Unit::TestCase
   def test_purchase_success    
     @creditcard.number = 1
 
-    assert response = @gateway.purchase(Money.ca_dollar(100), @creditcard, :order_id => 1)
+    assert response = @gateway.purchase(100, @creditcard, :order_id => 1)
     assert_equal Response, response.class
     assert_equal '#0001', response.params['receiptid']
     assert_equal true, response.success?
@@ -34,7 +26,7 @@ class MonerisResponseTest < Test::Unit::TestCase
   def test_purchase_error
     @creditcard.number = 2
 
-    assert response = @gateway.purchase(Money.ca_dollar(100), @creditcard, :order_id => 1)
+    assert response = @gateway.purchase(100, @creditcard, :order_id => 1)
     assert_equal Response, response.class
     assert_equal '#0001', response.params['receiptid']
     assert_equal false, response.success?
@@ -45,12 +37,11 @@ class MonerisResponseTest < Test::Unit::TestCase
     @creditcard.number = 3 
     
     assert_raise(Error) do
-      assert response = @gateway.purchase(Money.ca_dollar(100), @creditcard, :order_id => 1)    
+      assert response = @gateway.purchase(100, @creditcard, :order_id => 1)    
     end
   end
        
-  def test_amount_style   
-   assert_equal '10.34', @gateway.send(:amount, Money.us_dollar(1034))
+  def test_amount_style
    assert_equal '10.34', @gateway.send(:amount, 1034)
                                                       
    assert_raise(ArgumentError) do
@@ -87,13 +78,11 @@ end
 
 
 class MonerisRequestTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   def setup
-    @gateway = MonerisGateway.new({
+    @gateway = MonerisGateway.new(
       :login => 'store1',
-      :password => 'yesguy',
-    })
+      :password => 'yesguy'
+    )
   end
 
 
@@ -129,22 +118,30 @@ class MonerisRequestTest < Test::Unit::TestCase
 
   def test_access_url_for_test_environment
     Base.mode = :test
-    gateway = MonerisGateway.new({
+    gateway = MonerisGateway.new(
       :login => 'store1',
-      :password => 'yesguy',
-    })
+      :password => 'yesguy'
+    )
 
     assert_equal 'https://esqa.moneris.com/gateway2/servlet/MpgRequest', gateway.url
   end
   
   def test_access_url_for_production_environment
     Base.mode = :production
-    gateway = MonerisGateway.new({
+    gateway = MonerisGateway.new(
       :login => 'store1',
-      :password => 'yesguy',
-    })
+      :password => 'yesguy'
+    )
 
     assert_equal 'https://www3.moneris.com/gateway2/servlet/MpgRequest', gateway.url
+  end
+  
+  def test_supported_countries
+    assert_equal ['CA'], MonerisGateway.supported_countries
+  end
+  
+  def test_supported_card_types
+    assert_equal [:visa, :master], MonerisGateway.supported_cardtypes
   end
 
   private

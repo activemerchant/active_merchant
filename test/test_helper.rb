@@ -5,7 +5,6 @@ $:.unshift(File.dirname(__FILE__) + '/../lib/active_merchant/billing')
 $:.unshift(File.dirname(__FILE__)+ '/extra')
 
 require 'rubygems'
-require 'money'
 require 'yaml'
 require 'net/http'
 require 'net/https'
@@ -21,6 +20,10 @@ ActiveMerchant::Billing::Base.mode = :test
 
 module Test
   module Unit
+    class TestCase
+      include ActiveMerchant::Billing
+    end
+
     module Assertions
       def assert_field(field, value)
         clean_backtrace do 

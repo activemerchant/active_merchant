@@ -5,9 +5,8 @@ module ActiveMerchant #:nodoc:
     class PaypalGateway < Gateway
       include PaypalCommonAPI
       
-      def self.supported_cardtypes
-        [:visa, :master, :american_express, :discover]
-      end
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_countries = ['US']
       
       def authorize(money, credit_card, options = {})
         requires!(options, :ip)

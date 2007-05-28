@@ -1,10 +1,7 @@
 # Author::    MoneySpyder, www.moneyspyder.co.uk
-
 require File.dirname(__FILE__) + '/../test_helper'
 
 class RemoteDataCashTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   CLIENT = ''      
   PASSWORD = ''
     
@@ -43,8 +40,6 @@ class RemoteDataCashTest < Test::Unit::TestCase
       :name     => 'Mark McBride',
       :address1 => 'Flat 12/3',
       :address2 => '45 Main Road',
-      :address3 => 'Sometown',
-      :address4 => 'Somecounty',
       :city     => 'London',
       :state    => 'None',
       :country  => 'GBR',
@@ -61,7 +56,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
   # Testing that we can successfully make a purchase in a one step
   # operation
   def test_successful_purchase
-    response = @gateway.purchase(Money.new(198, 'GBP'), @mastercard, @params)
+    response = @gateway.purchase(198, @mastercard, @params)
     assert response.success?
     assert response.test?
   end
@@ -69,13 +64,13 @@ class RemoteDataCashTest < Test::Unit::TestCase
   #the amount is changed to £1.99 - the DC test server won't check the
   #address details - this is more a check on the passed ExtendedPolicy
   def test_successful_purchase_without_address_check
-    response = @gateway.purchase(Money.new(199, 'GBP'), @mastercard, @params)
+    response = @gateway.purchase(199, @mastercard, @params)
     assert response.success?
     assert response.test?
   end
   
   def test_successful_purchase_with_solo_card
-    response = @gateway.purchase(Money.new(198, 'GBP'), @solo, @params)
+    response = @gateway.purchase(198, @solo, @params)
     assert response.success?
     assert response.test?
   end
@@ -85,34 +80,34 @@ class RemoteDataCashTest < Test::Unit::TestCase
   def test_successful_purchase_without_address_check2
     @solo.number = '633499110000000003'
     
-    response = @gateway.purchase(Money.new(198, 'GBP'), @solo, @params)
+    response = @gateway.purchase(198, @solo, @params)
     assert response.success?
     assert response.test?
   end
   
   def test_invalid_verification_number
     @mastercard.verification_value = 123
-    response = @gateway.purchase(Money.new(198, 'GBP'), @mastercard, @params)
+    response = @gateway.purchase(198, @mastercard, @params)
     assert !response.success?
     assert response.test?
   end
   
   def test_invalid_expiry_month
     @mastercard.month = 13
-    response = @gateway.purchase(Money.new(198, 'GBP'), @mastercard, @params)
+    response = @gateway.purchase(198, @mastercard, @params)
     assert !response.success?
     assert response.test?
   end
   
   def test_invalid_expiry_year
     @mastercard.year = 1999
-    response = @gateway.purchase(Money.new(198, 'GBP'), @mastercard, @params)
+    response = @gateway.purchase(198, @mastercard, @params)
     assert !response.success?
     assert response.test?
   end
   
   def test_successful_authorization_and_capture
-    amount = Money.new(198, 'GBP')
+    amount = 198
     
     authorization = @gateway.authorize(amount, @mastercard, @params)
     assert authorization.success?
@@ -124,13 +119,13 @@ class RemoteDataCashTest < Test::Unit::TestCase
   end
   
   def test_unsuccessful_capture
-    response = @gateway.capture(Money.new(198, 'GBP'), '1234', @params)
+    response = @gateway.capture(198, '1234', @params)
     assert !response.success?
     assert response.test?
   end
   
   def test_successful_authorization_and_void
-    amount = Money.new(198, 'GBP')
+    amount = 198
     
     authorization = @gateway.authorize(amount, @mastercard, @params)
     assert authorization.success?
@@ -142,7 +137,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
   end
   
   def test_successfuly_purchase_and_void
-    purchase = @gateway.purchase(Money.new(198, 'GBP'), @mastercard, @params)
+    purchase = @gateway.purchase(198, @mastercard, @params)
     assert purchase.success?
     assert purchase.test?
     
@@ -153,20 +148,15 @@ class RemoteDataCashTest < Test::Unit::TestCase
   
   def test_merchant_reference_that_is_too_short
     @params[:order_id] = rand(10000)
-    response = @gateway.purchase(Money.new(198, 'GBP'), @mastercard, @params)
+    response = @gateway.purchase(198, @mastercard, @params)
     assert response.success?
     assert response.test?
   end
   
   def test_merchant_reference_containing_invalid_characters
     @params[:order_id] = "##{rand(1000) + 1000}.1"
-    response = @gateway.purchase(Money.new(198, 'GBP'), @mastercard, @params)
+    response = @gateway.purchase(198, @mastercard, @params)
     assert response.success?
     assert response.test?
-  end
-  
-  private
-  def generate_order_id
-    Time.now().to_i.to_s + (rand * 10000).to_i.to_s
   end
 end

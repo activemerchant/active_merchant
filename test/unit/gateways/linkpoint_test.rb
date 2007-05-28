@@ -3,20 +3,12 @@ require File.dirname(__FILE__) + '/../../test_helper'
 ActiveMerchant::Billing::LinkpointGateway.pem_file = File.read( File.dirname(__FILE__) + '/../../mycert.pem'  ) 
 
 class LinkpointResponseTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-  
   def setup
     Base.gateway_mode = :test
     
     @gateway = LinkpointGateway.new(:login => 123123, :result => "GOOD")
 
-    @creditcard = CreditCard.new(
-      :number => '4111111111111111',
-      :month => Time.now.month.to_s,
-      :year => (Time.now + 1.year).year,
-      :first_name => 'Captain',
-      :last_name => 'Jack'
-    )
+    @creditcard = credit_card('4111111111111111')
   end
   
   def teardown
@@ -33,7 +25,7 @@ class LinkpointResponseTest < Test::Unit::TestCase
   def test_authorize
     @creditcard.number = '1'
     
-    assert response = @gateway.authorize(Money.us_dollar(2400), @creditcard, :order_id => 1000, 
+    assert response = @gateway.authorize(2400, @creditcard, :order_id => 1000, 
       :address1 => '1313 lucky lane',
       :city => 'Lost Angeles',
       :state => 'CA',
@@ -46,7 +38,7 @@ class LinkpointResponseTest < Test::Unit::TestCase
   def test_purchase_success
     @creditcard.number = '1'
     
-    assert response = @gateway.purchase(Money.us_dollar(2400), @creditcard, :order_id => 1001,
+    assert response = @gateway.purchase(2400, @creditcard, :order_id => 1001,
       :address1 => '1313 lucky lane',
       :city => 'Lost Angeles',
       :state => 'CA',
@@ -67,7 +59,7 @@ class LinkpointResponseTest < Test::Unit::TestCase
       :zip => '90210'
     )
 
-    assert response = @gateway.purchase(Money.us_dollar(100), @creditcard, :order_id => 1002)
+    assert response = @gateway.purchase(100, @creditcard, :order_id => 1002)
     assert_equal Response, response.class
     assert_equal false, response.success?
   end
@@ -75,13 +67,12 @@ class LinkpointResponseTest < Test::Unit::TestCase
   def test_recurring
     @creditcard.number = '1'
     
-    assert response = @gateway.recurring(Money.us_dollar(2400), @creditcard, :order_id => 1003, :installments => 12, :startdate => "immediate", :periodicity => :monthly)
+    assert response = @gateway.recurring(2400, @creditcard, :order_id => 1003, :installments => 12, :startdate => "immediate", :periodicity => :monthly)
     assert_equal Response, response.class
     assert_equal true, response.success?
   end
   
   def test_amount_style
-   assert_equal '10.34', @gateway.send(:amount, Money.new(1034))
    assert_equal '10.34', @gateway.send(:amount, 1034)
                                                       
    assert_raise(ArgumentError) do
@@ -92,8 +83,6 @@ end
 
 
 class LinkpointRequestTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   def setup
     @gateway = LinkpointGateway.new(:login => 123123, :result => "GOOD")
 
@@ -108,7 +97,7 @@ class LinkpointRequestTest < Test::Unit::TestCase
 
 
   def test_purchase_is_valid_xml
-    parameters = @gateway.send(:parameters, Money.us_dollar(1000), @creditcard, :ordertype => "SALE", :order_id => 1004,
+    parameters = @gateway.send(:parameters, 1000, @creditcard, :ordertype => "SALE", :order_id => 1004,
       :billing_address => {
         :address1 => '1313 lucky lane',
         :city => 'Lost Angeles',
@@ -123,7 +112,7 @@ class LinkpointRequestTest < Test::Unit::TestCase
 
   
   def test_recurring_is_valid_xml
-    parameters = @gateway.send(:parameters, Money.us_dollar(1000), @creditcard, :ordertype => "SALE", :action => "SUBMIT", :installments => 12, :startdate => "immediate", :periodicity => "monthly", :order_id => 1006,
+    parameters = @gateway.send(:parameters, 1000, @creditcard, :ordertype => "SALE", :action => "SUBMIT", :installments => 12, :startdate => "immediate", :periodicity => "monthly", :order_id => 1006,
       :billing_address => {
         :address1 => '1313 lucky lane',
         :city => 'Lost Angeles',
@@ -138,7 +127,7 @@ class LinkpointRequestTest < Test::Unit::TestCase
   def test_declined_purchase_is_valid_xml
     @gateway = LinkpointGateway.new(:login => 123123, :result => "DECLINE")
     
-    parameters = @gateway.send(:parameters, Money.us_dollar(1000), @creditcard, :ordertype => "SALE", :order_id => 1005,
+    parameters = @gateway.send(:parameters, 1000, @creditcard, :ordertype => "SALE", :order_id => 1005,
       :billing_address => {
         :address1 => '1313 lucky lane',
         :city => 'Lost Angeles',
@@ -172,5 +161,13 @@ class LinkpointRequestTest < Test::Unit::TestCase
     )
     
     assert !gateway.test?
+  end
+  
+  def test_supported_countries
+    assert_equal ['US'], LinkpointGateway.supported_countries
+  end
+  
+  def test_supported_card_types
+    assert_equal [:visa, :master, :american_express, :discover], LinkpointGateway.supported_cardtypes
   end
 end

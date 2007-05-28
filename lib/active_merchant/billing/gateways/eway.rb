@@ -1,38 +1,33 @@
-# Author::    Lucas Carlson  (mailto:lucas@rufy.com)
-# Copyright:: Copyright (c) 2005 Lucas Carlson
-# License::   Distributes under the same terms as Ruby
-
+# Originally contributed by Lucas Carlson  (mailto:lucas@rufy.com)
 require 'rexml/document'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    # TO USE:
     # First, make sure you have everything setup correctly and all of your dependencies in place with:
     # 
     #   require 'rubygems'
-    #   require 'money'
     #   require 'active_merchant'
     #
-    # The second line is a require for the 'money' library. Make sure you have it installed with 'gem install money'
+    # ActiveMerchant expects the amounts to be given as an Integer in cents. In this case, $10 US becomes 1000.
     #
-    # Using the money library, create a money object. Pass the dollar value in cents. In this case, $10 US becomes 1000.
-    #
-    #   tendollar = Money.us_dollar(1000)
+    #   tendollar = 1000
     #
     # Next, create a credit card object using a TC approved test card.
     #
-    #   creditcard = ActiveMerchant::Billing::CreditCard.new({
+    #   creditcard = ActiveMerchant::Billing::CreditCard.new(
     #	    :number => '4111111111111111',
     #	    :month => 8,
     #	    :year => 2006,
     #	    :first_name => 'Longbob',
     #     :last_name => 'Longsen'
-    #   })
+    #   )
     #   options = {
-    #     :login => '87654321',
     #     :order_id => '1230123',
     #     :email => 'bob@testbob.com',
-    #     :address => { :address1 => '47 Bobway, Bobville, WA, Australia',
+    #     :address => { :address1 => '47 Bobway',
+    #                   :city => 'Bobville', 
+    #                   :state => 'WA',
+    #                   :country => 'Australia',
     #                   :zip => '2000'
     #                 }
     #     :description => 'purchased items'
@@ -41,7 +36,7 @@ module ActiveMerchant #:nodoc:
     # To finish setting up, create the active_merchant object you will be using, with the eWay gateway. If you have a
     # functional eWay account, replace :login with your account info. 
     #
-    #   gateway = ActiveMerchant::Billing::Base.gateway(:eway).new()
+    #   gateway = ActiveMerchant::Billing::Base.gateway(:eway).new(:login => '87654321')
     #
     # Now we are ready to process our transaction
     #
@@ -87,6 +82,8 @@ module ActiveMerchant #:nodoc:
       attr_reader :options
 	
 	    self.money_format = :cents
+      self.supported_countries = ['AU']
+      self.supported_cardtypes = [:visa, :master]
 	    
     	def initialize(options = {})
         requires!(options, :login)
@@ -109,10 +106,6 @@ module ActiveMerchant #:nodoc:
         commit(money, post)
       end
     
-      def self.supported_cardtypes
-        [:visa, :master]
-      end
-    
       private                       
       def add_creditcard(post, creditcard)
         post[:CardNumber]  = creditcard.number
@@ -127,7 +120,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         if address = options[:billing_address] || options[:address]
-          post[:CustomerAddress]    = address[:address1]
+          post[:CustomerAddress]    = [ address[:address1], address[:address2], address[:city], address[:state], address[:country] ].compact.join(', ')
           post[:CustomerPostcode]   = address[:zip]
         end
       end

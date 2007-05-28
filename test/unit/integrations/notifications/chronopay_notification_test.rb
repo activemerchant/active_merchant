@@ -41,7 +41,7 @@ class ChronopayNotificationTest < Test::Unit::TestCase
   end
 
   def test_compositions
-    assert_equal Money.ca_dollar(50000), @notification.amount
+    assert_equal Money.new(50000, 'CAD'), @notification.amount
   end
 
   def test_payment_successful_status

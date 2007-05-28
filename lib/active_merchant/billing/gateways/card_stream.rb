@@ -24,6 +24,9 @@ module ActiveMerchant #:nodoc:
       LIVE_URL = 'https://www.cardstream.com/merchantsecure/Cardstream/VPDirect.cfm'
       
       self.money_format = :cents
+      self.default_currency = 'GBP'
+      self.supported_countries = ['GB']
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :solo, :switch]
 
       APPROVED = '00'
 
@@ -67,7 +70,7 @@ module ActiveMerchant #:nodoc:
         
         post = {}
         
-        add_amount(post, money)
+        add_amount(post, money, options)
         add_invoice(post, money, credit_card, options)
         add_credit_card(post, credit_card)
         add_address(post, options)
@@ -75,16 +78,12 @@ module ActiveMerchant #:nodoc:
 
         commit(:purchase, post)
       end
-      
-      def self.supported_cardtypes
-        [:visa, :master, :american_express, :discover, :jcb, :solo, :switch]
-      end
-
+  
       private
       
-      def add_amount(post, money)
+      def add_amount(post, money, options)
         add_pair(post, :Amount, amount(money), :required => true)
-        add_pair(post, :CurrencyCode, currency(money), :required => true)
+        add_pair(post, :CurrencyCode, currency_code(options[:currency] || currency(money)), :required => true)
       end
 
       def add_customer_data(post, options)
@@ -195,8 +194,8 @@ module ActiveMerchant #:nodoc:
         @options[:test] || Base.gateway_mode == :test
       end
       
-      def currency(money)
-        CURRENCY_CODES[ money.respond_to?(:currency) ? money.currency : 'GBP' ]
+      def currency_code(currency)
+        CURRENCY_CODES[currency]
       end
 
       def add_pair(post, key, value, options = {})

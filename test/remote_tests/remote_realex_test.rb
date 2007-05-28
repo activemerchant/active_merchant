@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class RemoteRealexTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   AMOUNT = 10000
 
   def setup

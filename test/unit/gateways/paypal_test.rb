@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class PaypalTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
- 
   def setup
     @gateway = PaypalGateway.new(
                 :login => 'cody', 
@@ -20,14 +18,8 @@ class PaypalTest < Test::Unit::TestCase
                  :phone => '(555)555-5555'
                }
 
-    @creditcard = CreditCard.new(
-      :number => '4242424242424242',
-      :month => 8,
-      :year => 2006,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen'
-    )
-
+    @creditcard = credit_card('4242424242424242')
+    
     Base.gateway_mode = :test
   end 
   
@@ -37,13 +29,13 @@ class PaypalTest < Test::Unit::TestCase
   end 
 
   def test_no_ip_address
-    assert_raise(ArgumentError){ @gateway.purchase(Money.ca_dollar(100), @creditcard, :address => @address)}
+    assert_raise(ArgumentError){ @gateway.purchase(100, @creditcard, :address => @address)}
   end
 
   def test_purchase_success    
     @creditcard.number = 1
 
-    assert response = @gateway.purchase(Money.ca_dollar(100), @creditcard, :address => @address, :ip => '127.0.0.1')
+    assert response = @gateway.purchase(100, @creditcard, :address => @address, :ip => '127.0.0.1')
     assert_equal Response, response.class
     assert_equal '#0001', response.params['receiptid']
     assert_equal true, response.success?
@@ -52,7 +44,7 @@ class PaypalTest < Test::Unit::TestCase
   def test_purchase_error
     @creditcard.number = 2
 
-    assert response = @gateway.purchase(Money.ca_dollar(100), @creditcard, :order_id => 1, :address => @address, :ip => '127.0.0.1')
+    assert response = @gateway.purchase(100, @creditcard, :order_id => 1, :address => @address, :ip => '127.0.0.1')
     assert_equal Response, response.class
     assert_equal '#0001', response.params['receiptid']
     assert_equal false, response.success?
@@ -61,7 +53,7 @@ class PaypalTest < Test::Unit::TestCase
   
   def test_reauthorization
     @gateway.expects(:ssl_post).returns(successful_reauthorization_response)
-    response = @gateway.reauthorize(Money.new(1000), '32J876265E528623B')
+    response = @gateway.reauthorize(1000, '32J876265E528623B')
     assert response.success?
     assert_equal('1TX27389GX108740X', response.authorization)
     assert response.test?
@@ -71,12 +63,11 @@ class PaypalTest < Test::Unit::TestCase
     @creditcard.number = 3 
     
     assert_raise(Error) do
-      assert response = @gateway.purchase(Money.ca_dollar(100), @creditcard, :order_id => 1, :address => @address, :ip => '127.0.0.1')   
+      assert response = @gateway.purchase(100, @creditcard, :order_id => 1, :address => @address, :ip => '127.0.0.1')   
     end
   end
   
   def test_amount_style
-   assert_equal '10.34', @gateway.send(:amount, Money.new(1034))
    assert_equal '10.34', @gateway.send(:amount, 1034)
                                                       
    assert_raise(ArgumentError) do
@@ -86,7 +77,7 @@ class PaypalTest < Test::Unit::TestCase
   
   def test_paypal_timeout_error
     @gateway.stubs(:ssl_post).returns(paypal_timeout_error_response)
-    response = @gateway.purchase(Money.ca_dollar(100), @creditcard, :order_id => 1, :address => @address, :ip => '127.0.0.1')
+    response = @gateway.purchase(100, @creditcard, :order_id => 1, :address => @address, :ip => '127.0.0.1')
     assert_equal "SOAP-ENV:Server", response.params['faultcode']
     assert_equal "Internal error", response.params['faultstring']
     assert_equal "Timeout processing request", response.params['detail']
@@ -133,6 +124,14 @@ class PaypalTest < Test::Unit::TestCase
   
   def test_lookup_australian_state
     assert_equal 'Australian Capital Territory', @gateway.send(:lookup_state, { :country => 'AU', :state => 'ACT'} )
+  end
+  
+  def test_supported_countries
+    assert_equal ['US'], PaypalGateway.supported_countries
+  end
+
+  def test_supported_card_types
+    assert_equal [:visa, :master, :american_express, :discover], PaypalGateway.supported_cardtypes
   end
   
   private

@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class PslCardTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   # 100 Cents
   AMOUNT = 100
 
@@ -41,5 +39,13 @@ class PslCardTest < Test::Unit::TestCase
   def test_request_error
     @creditcard.number = 3
     assert_raise(Error){ @gateway.purchase(AMOUNT, @creditcard, {}) }
+  end
+  
+  def test_supported_countries
+    assert_equal ['GB'], PslCardGateway.supported_countries
+  end
+  
+  def test_supported_card_types
+    assert_equal [ :visa, :master, :american_express, :diners_club, :jcb, :switch, :solo, :maestro ], PslCardGateway.supported_cardtypes
   end
 end

@@ -15,14 +15,11 @@
 # You will want to set Duplicate lockout time to 0 so that you can run
 # the tests more than once without triggering this fraud detection.
 
-require 'test/unit'
 require File.dirname(__FILE__) + '/../test_helper'
 
 ActiveMerchant::Billing::LinkpointGateway.pem_file = File.read( File.dirname(__FILE__) + '/../mycert.pem'  )
 
 class LinkpointTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   def setup
     ActiveMerchant::Billing::Base.gateway_mode = :test
     
@@ -63,8 +60,8 @@ class LinkpointTest < Test::Unit::TestCase
   end
   
   def test_successful_authorization
-    assert response = @gateway.authorize(Money.new(1000), @creditcard, 
-      :order_id => order_id, 
+    assert response = @gateway.authorize(1000, @creditcard, 
+      :order_id => generate_order_id, 
       :address => @address
     )
   
@@ -74,14 +71,14 @@ class LinkpointTest < Test::Unit::TestCase
   end
   
   def test_successful_authorization_and_capture
-    assert authorization = @gateway.authorize(Money.new(100), @creditcard,
-      :order_id => order_id,
+    assert authorization = @gateway.authorize(100, @creditcard,
+      :order_id => generate_order_id,
       :address => @address
     )
     
     assert authorization.success?
     assert authorization.test?
-    assert capture = @gateway.capture(Money.new(100), authorization.authorization)
+    assert capture = @gateway.capture(100, authorization.authorization)
     assert capture.success?
     assert_equal 'ACCEPTED', capture.message
   end
@@ -89,8 +86,8 @@ class LinkpointTest < Test::Unit::TestCase
   def test_successful_purchase_without_cvv2_code
     @creditcard.verification_value = nil
     
-    assert response = @gateway.purchase(Money.new(2400), @creditcard, 
-      :order_id => order_id,
+    assert response = @gateway.purchase(2400, @creditcard, 
+      :order_id => generate_order_id,
       :address => @address
     )
     assert_equal Response, response.class
@@ -100,8 +97,8 @@ class LinkpointTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase_with_cvv2_code
-    assert response = @gateway.purchase(Money.new(2400), @creditcard, 
-      :order_id => order_id,
+    assert response = @gateway.purchase(2400, @creditcard, 
+      :order_id => generate_order_id,
       :address => @address
     )
     assert_equal Response, response.class
@@ -111,8 +108,8 @@ class LinkpointTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase_and_void
-    purchase = @gateway.purchase(Money.new(100), @creditcard,
-      :order_id => order_id,
+    purchase = @gateway.purchase(100, @creditcard,
+      :order_id => generate_order_id,
       :address => @address
     )
     assert purchase.success?
@@ -122,20 +119,20 @@ class LinkpointTest < Test::Unit::TestCase
   end
   
   def test_successfull_purchase_and_credit
-    assert purchase = @gateway.purchase(Money.new(2400), @creditcard, 
-      :order_id => order_id,
+    assert purchase = @gateway.purchase(2400, @creditcard, 
+      :order_id => generate_order_id,
       :address => @address
     )
     assert_equal true, purchase.success?
     
-    assert credit = @gateway.credit(Money.new(2400), purchase.authorization)
+    assert credit = @gateway.credit(2400, purchase.authorization)
     assert credit.success?
   end
 
   
   def test_successful_recurring_payment
-    assert response = @gateway.recurring(Money.new(2400), @creditcard, 
-      :order_id => order_id, 
+    assert response = @gateway.recurring(2400, @creditcard, 
+      :order_id => generate_order_id, 
       :installments => 12,
       :startdate => "immediate",
       :periodicity => :monthly,
@@ -150,18 +147,13 @@ class LinkpointTest < Test::Unit::TestCase
   
   def test_declined_purchase_with_invalid_credit_card
     @creditcard.number = '1111111111111111'
-    assert response = @gateway.purchase(Money.new(100), @creditcard, 
-      :order_id => order_id,
+    assert response = @gateway.purchase(100, @creditcard, 
+      :order_id => generate_order_id,
       :address => @address
     )
     
     assert_equal Response, response.class
     assert_equal false, response.success?
     assert_equal "DECLINED", response.params["approved"]
-  end
-  
-  private
-  def order_id
-    "##{rand(100000)}"
   end
 end
