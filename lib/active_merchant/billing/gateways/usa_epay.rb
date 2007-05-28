@@ -11,6 +11,8 @@ module ActiveMerchant #:nodoc:
       
       self.supported_cardtypes = [:visa, :master, :american_express]
       self.supported_countries = ['US']
+      self.homepage_url = 'http://www.usa_epay.com/'
+      self.display_name = 'USA ePay'
 
       def initialize(options = {})
         requires!(options, :login)

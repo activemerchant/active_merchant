@@ -14,6 +14,8 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.supported_cardtypes = [ :dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro ]
       self.supported_countries = ['DK']
+      self.homepage_url = 'http://quickpay.dk/'
+      self.display_name = 'Quickpay'
       
       TRANSACTIONS = {
         :authorization          => '1100',

@@ -10,6 +10,9 @@ module ActiveMerchant #:nodoc:
       
       LIVE_REDIRECT_URL = 'https://www.paypal.com/cgibin/webscr?cmd=_express-checkout&token='
       TEST_REDIRECT_URL = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token='
+      
+      self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside'
+      self.display_name = 'PayPal Express Checkout'
 
       def redirect_url
         test? ? TEST_REDIRECT_URL : LIVE_REDIRECT_URL 

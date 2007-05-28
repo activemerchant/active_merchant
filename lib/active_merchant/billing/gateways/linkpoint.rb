@@ -133,6 +133,8 @@ module ActiveMerchant #:nodoc:
       
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.homepage_url = 'http://www.linkpoint.com/'
+      self.display_name = 'LinkPoint'
            
       # @options = {
       #  :store_number => options[:login],

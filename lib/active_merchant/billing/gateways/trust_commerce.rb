@@ -102,6 +102,8 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :discover, :american_express, :diners_club, :jcb]
       self.supported_countries = ['US']
+      self.homepage_url = 'http://www.trustcommerce.com/'
+      self.display_name = 'TrustCommerce'
       
       def initialize(options = {})
         requires!(options, :login, :password)

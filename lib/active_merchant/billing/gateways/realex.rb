@@ -35,6 +35,8 @@ module ActiveMerchant
       self.default_currency = 'EUR'
       self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :switch, :solo, :laser ]
       self.supported_countries = [ 'IE', 'GB' ]
+      self.homepage_url = 'http://www.realexpayments.com/'
+      self.display_name = 'Realex'
            
       SUCCESS, DECLINED          = "Successful", "Declined"
       BANK_ERROR = REALEX_ERROR  = "Gateway is in maintenance. Please try again later."

@@ -19,6 +19,9 @@ module ActiveMerchant
       # Switch, Visa, Visa Delta, VISA Electron, Visa Purchasing  
       self.supported_cardtypes = [ :visa, :master, :american_express, :discover, :diners_club, :jcb, 
           :maestro, :switch, :solo, :laser ]
+          
+      self.homepage_url = 'http://www.datacash.com/'
+      self.display_name = 'DataCash'
       
       # Datacash server URLs
       TEST_URL = 'https://testserver.datacash.com/Transaction'

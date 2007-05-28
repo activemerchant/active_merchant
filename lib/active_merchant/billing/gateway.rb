@@ -39,6 +39,9 @@ module ActiveMerchant #:nodoc:
       class_inheritable_accessor :supported_cardtypes
       self.supported_cardtypes = []
       
+      class_inheritable_accessor :homepage_url
+      class_inheritable_accessor :display_name
+      
       # Return the matching gateway for the provider
       # * <tt>bogus</tt>: BogusGateway - Does nothing ( for testing)
       # * <tt>moneris</tt>: MonerisGateway

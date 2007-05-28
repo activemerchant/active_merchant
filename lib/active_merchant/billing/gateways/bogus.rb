@@ -5,6 +5,8 @@ module ActiveMerchant #:nodoc:
       
       self.supported_countries = ['US']
       self.supported_cardtypes = [:bogus]
+      self.homepage_url = 'http://example.com'
+      self.display_name = 'Bogus'
       
       def authorize(money, creditcard, options = {})
         case creditcard.number

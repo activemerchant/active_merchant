@@ -8,6 +8,9 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.supported_countries = ['US']
       
+      self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside'
+      self.display_name = 'PayPal Website Payments Pro (US)'
+      
       def authorize(money, credit_card, options = {})
         requires!(options, :ip)
         

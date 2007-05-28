@@ -5,6 +5,8 @@ module ActiveMerchant #:nodoc:
       self.partner = 'PayPalUk'
       
       self.supported_countries = ['GB']
+      self.homepage_url = 'https://www.paypal.com/uk/cgi-bin/webscr?cmd=_additional-payment-overview-outside'
+      self.display_name = 'PayPal Express Checkout (UK)'
     end
   end
 end

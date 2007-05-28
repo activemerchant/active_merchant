@@ -27,6 +27,8 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'GBP'
       self.supported_countries = ['GB']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :solo, :switch]
+      self.homepage_url = 'http://www.cardstream.com/'
+      self.display_name = 'CardStream'
 
       APPROVED = '00'
 

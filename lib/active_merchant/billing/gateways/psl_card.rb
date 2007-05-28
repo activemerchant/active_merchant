@@ -26,6 +26,8 @@ module ActiveMerchant
       # Style, Clydesdale Financial Services, Other
          
       self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb, :switch, :solo, :maestro ]
+      self.homepage_url = 'http://www.paymentsolutionsltd.com/'
+      self.display_name = 'PSL Payment Solutions'
       
       # Default ISO 3166 country code (GB)
       cattr_accessor :location

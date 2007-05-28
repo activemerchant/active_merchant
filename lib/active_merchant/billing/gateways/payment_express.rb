@@ -22,6 +22,9 @@ module ActiveMerchant
       
       self.supported_countries = [ 'AU', 'MY', 'NZ', 'SG', 'ZA', 'GB', 'US' ]
       
+      self.homepage_url = 'http://www.paymentexpress.com/'
+      self.display_name = 'PaymentExpress'
+      
       PAYMENT_URL = 'https://www.paymentexpress.com/pxpost.aspx'
       
       APPROVED = '1'

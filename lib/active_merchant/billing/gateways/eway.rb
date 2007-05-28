@@ -84,6 +84,8 @@ module ActiveMerchant #:nodoc:
 	    self.money_format = :cents
       self.supported_countries = ['AU']
       self.supported_cardtypes = [:visa, :master]
+      self.homepage_url = 'http://www.eway.com.au/'
+      self.display_name = 'eWAY'
 	    
     	def initialize(options = {})
         requires!(options, :login)

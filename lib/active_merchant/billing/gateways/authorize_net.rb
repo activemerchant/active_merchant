@@ -46,6 +46,8 @@ module ActiveMerchant #:nodoc:
       
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.homepage_url = 'http://www.authorize.net/'
+      self.display_name = 'Authorize.net'
 
       def initialize(options = {})
         requires!(options, :login, :password)

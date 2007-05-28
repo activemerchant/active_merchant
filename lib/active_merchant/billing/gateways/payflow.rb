@@ -8,6 +8,8 @@ module ActiveMerchant #:nodoc:
       RECURRING_ACTIONS = Set.new([:add, :modify, :cancel, :inquiry, :reactivate, :payment])
       
       self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :discover, :diners_club]
+      self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-pro-overview-outside'
+      self.display_name = 'PayPal Payflow Pro'
     
       def authorize(money, credit_card_or_reference, options = {})
         request = build_sale_or_authorization_request(:authorization, money, credit_card_or_reference, options)

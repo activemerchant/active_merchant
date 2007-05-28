@@ -48,6 +48,8 @@ module ActiveMerchant #:nodoc:
       
       self.supported_cardtypes = [:visa, :master, :american_express]
       self.supported_countries = ['CA']
+      self.homepage_url = 'http://www.psigate.com/'
+      self.display_name = 'Psigate'
       
       
       def initialize(options = {})
