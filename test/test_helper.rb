@@ -5,6 +5,7 @@ $:.unshift(File.dirname(__FILE__) + '/../lib/active_merchant/billing')
 $:.unshift(File.dirname(__FILE__)+ '/extra')
 
 require 'rubygems'
+require 'money'
 require 'yaml'
 require 'net/http'
 require 'net/https'
