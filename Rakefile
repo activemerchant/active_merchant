@@ -5,6 +5,7 @@ require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'rake/contrib/rubyforgepublisher'
 require File.dirname(__FILE__) + '/lib/tasks/cia'
+require File.dirname(__FILE__) + '/lib/support/gateway_support'
 
 
 PKG_VERSION = "1.1.0"
@@ -123,3 +124,17 @@ task :upload_rdoc => :rdoc do
   pub = Rake::SshDirPublisher.new user, project, local_dir
   pub.upload
 end
+
+desc 'Print the currently supported gateways in RDoc format'
+task :print_gateway_support_rdoc do
+  support = GatewaySupport.new
+  support.to_rdoc
+end
+
+desc 'Print the currently supported gateways'
+task :print_gateway_support do
+  support = GatewaySupport.new
+  support.to_s
+end
+
+
