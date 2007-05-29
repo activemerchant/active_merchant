@@ -2,12 +2,6 @@
 
 module ActiveMerchant
   module Billing
-    # ActiveMerchant Datacash Gateway
-    # 
-    # Datacash allows a policy for CV2 checks. There is currently no way
-    # to modify this programatically. The policy may be changed in the
-    # add_credit_card method.
-    # 
     class DataCashGateway < Gateway
       self.default_currency = 'GBP'
       self.supported_countries = ['GB']
@@ -38,7 +32,7 @@ module ActiveMerchant
       POLICY_ACCEPT = 'accept'
       POLICY_REJECT = 'reject'
       
-      #Datacash success code
+      # Datacash success code
       DATACASH_SUCCESS = '1'
       
       # Class attributes
@@ -46,16 +40,16 @@ module ActiveMerchant
       attr_reader :response
       attr_reader :options
       
-      # Create a new DataCashGateway
+      # Creates a new DataCashGateway
       # 
-      # The gateway requires that a valid :login and :password be passed
-      # in the options hash
+      # The gateway requires that a valid login and password be passed
+      # in the +options+ hash.
       # 
-      # Parameters:
-      #   -options:
-      #     :login - the Datacash account login
-      #     :password - the Datacash account password
-      #     :test - boolean, use the test or live Datacash url
+      # ==== Options
+      #
+      # * <tt>:login</tt> -- The Datacash account login.
+      # * <tt>:password</tt> -- The Datacash account password.
+      # * <tt>:test => +true+ or +false+</tt> -- Use the test or live Datacash url.
       #     
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -63,16 +57,13 @@ module ActiveMerchant
         super
       end
       
-      # Purchase the item straight away
+      # Perform a purchase, which is essentially an authorization and capture in a single operation.
       # 
-      # Parameters:
-      #   -money: Money object for the total to be charged
-      #   -credit_card: ActiveMerchant::Billing::CreditCard details for the transaction
-      #   -options:
+      # ==== Parameters
       #
-      # Returns:
-      #   -ActiveRecord::Billing::Response object
-      #   
+      # * <tt>money</tt> -- The amount to be purchased.  Either an Integer value in cents or a Money object.
+      # * <tt>credit_card</tt> -- The CreditCard details for the transaction.
+      # * <tt>options</tt> -- A hash of optional parameters.
       def purchase(money, credit_card, options = {})
         if result = test_result_from_cc_number(credit_card.number)
           return result
@@ -83,19 +74,14 @@ module ActiveMerchant
         commit(request)
       end
       
-      # Authorize the transaction
-      # 
-      # Reserves the funds on the customer's credit card, but does not 
+      # Performs an authorization, which reserves the funds on the customer's credit card, but does not 
       # charge the card.
       # 
-      # Parameters:
-      #   -money: Money object for the total to be charged
-      #   -credit_card: ActiveMerchant::Billing::CreditCard details for the transaction
-      #   -options:
+      # ==== Parameters
       #
-      # Returns:
-      #   -ActiveRecord::Billing::Response object
-      #   
+      # * <tt>money</tt> -- The amount to be authorized.  Either an Integer value in cents or a Money object.
+      # * <tt>credit_card</tt> -- The CreditCard details for the transaction.
+      # * <tt>options</tt> -- A hash of optional parameters.   
       def authorize(money, credit_card, options = {})
         if result = test_result_from_cc_number(credit_card.number)
           return result
@@ -106,24 +92,12 @@ module ActiveMerchant
         commit(request)
       end
       
-      # Datacash requires both the reference and the authcode of the original
-      # authorization.  To maintain the same interface as the other
-      # gateways the two numbers are concatenated together with an ; separator as
-      # the authorization number returned by authorization
-      
-      # Captures the funds from an authorized transaction. 
-      # authorization must be a valid Datacash reference and :authcode must be
-      # a valid Datacash authcode from a prior authorized transaction.
+      # Captures the funds from an authorized transaction.
       # 
-      # This needs to create a 'historic txn' to fulfill
-      # 
-      # Parameters:
-      #   -money: Money object for the total to be charged
-      #   -authorization: the Datacash reference and authcode from the previous authorization
+      # ==== Parameters
       #
-      # Returns:
-      #   -ActiveRecord::Billing::Response object
-      #   
+      # * <tt>money</tt> -- The amount to be captured.  Either an Integer value in cents or a Money object.
+      # * <tt>authorization</tt> -- The authorization returned from the previous authorize request.   
       def capture(money, authorization, options = {})
         request = build_void_or_capture_request(FULFILL_TYPE, money, authorization, options)
 
@@ -132,28 +106,16 @@ module ActiveMerchant
       
       # Void a previous transaction
       # 
-      # This needs to create a 'historic txn' to fulfil
-      # 
-      # Parameters:
-      #   -authorization: the Datacash reference from the previous authorization
+      # ==== Parameters
       #
-      # Returns:
-      #   -ActiveRecord::Billing::Response object
-      #   
+      # * <tt>authorization</tt> - The authorization returned from the previous authorize request.   
       def void(authorization, options = {})
         request = build_void_or_capture_request(CANCEL_TYPE, nil, authorization, options)
         
         commit(request)
       end
       
-      # Return whether or not the gateway is in test mode
-      # 
-      # Parameters:
-      #   -none
-      # 
-      # Returns:
-      #   -boolean
-      #   
+      # Is the gateway running in test mode?
       def test?
         @options[:test] || Base.gateway_mode == :test
       end

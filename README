@@ -8,30 +8,27 @@ This library is the foundation of commerce for http://www.shopify.com.
 Please visit the {ActiveMerchant homepage}[http://activemerchant.org] for more resources, tutorials and other information about this project. 
 
 == Supported Direct Payment Gateways
- 
-* Bogus -- your trusty test gateway which does nothing. Great for testing your app!
 
-==== Australia
-
-* eWay[http://www.eway.com.au] 
-
-==== Canada
-
-* Moneris[http://www.moneris.com]
-* Psigate[http://www.psigate.com]
-
-==== United Kingdom
-
-* {PayPal Website Payments Pro UK}[https://www.paypal.com/uk/cgi-bin/webscr?cmd=_wp-pro-overview-outside]
-
-==== USA
-
-* Authorize.net[http://www.authorize.net]
-* LinkPoint[http://www.linkpoint.com]
-* {PayPal Payflow Pro}[https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-gateway-overview-outside]
-* {PayPal Website Payments Pro US}[https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside]
-* TrustCommerce[http://www.trustcommerce.com] - Requires the tclink ruby library from http://www.trustcommerce.com/tclink.html. Otherwise it will not be loaded.
-* {USA ePay}[www.usaepay.com/]
+* {Authorize.net}[http://www.authorize.net/] - US
+* {CardStream}[http://www.cardstream.com/] - GB
+* {DataCash}[http://www.datacash.com/] - GB
+* {eWAY}[http://www.eway.com.au/] - AU
+* {E-xact}[http://www.e-xact.com] - CA, US
+* {LinkPoint}[http://www.linkpoint.com/] - US
+* {Moneris}[http://www.moneris.com/] - CA
+* {PayPal Express Checkout}[https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside] - US, CA, SG, AU
+* {PayPal Express Checkout (UK)}[https://www.paypal.com/uk/cgi-bin/webscr?cmd=_additional-payment-overview-outside] - GB
+* {PayPal Payflow Pro}[https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-pro-overview-outside] - US, CA, SG, AU
+* {PayPal Website Payments Pro (UK)}[https://www.paypal.com/uk/cgi-bin/webscr?cmd=_wp-pro-overview-outside] - GB
+* {PaymentExpress}[http://www.paymentexpress.com/] - AU, MY, NZ, SG, ZA, GB, US
+* {PayPal Express Checkout}[https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside] - US
+* {PayPal Website Payments Pro (US)}[https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside] - US
+* {Psigate}[http://www.psigate.com/] - CA
+* {PSL Payment Solutions}[http://www.paymentsolutionsltd.com/] - GB
+* {Quickpay}[http://quickpay.dk/] - DK
+* {Realex}[http://www.realexpayments.com/] - IE, GB
+* {TrustCommerce}[http://www.trustcommerce.com/] - US
+* {USA ePay}[http://www.usa_epay.com/] - US
 
 == Supported Offsite Payment Gateways
  
@@ -68,7 +65,7 @@ Installation from RubyGems
 
 == Sample Usage
 
-	# 10 dollars in cents
+  # 10 dollars in cents
   ten_dollars = 1000
 
   credit_card = CreditCard.new(
