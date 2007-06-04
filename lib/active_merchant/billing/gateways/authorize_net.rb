@@ -3,9 +3,12 @@ module ActiveMerchant #:nodoc:
         
     class AuthorizeNetGateway < Gateway
       API_VERSION = '3.1'
-      LIVE_URL = "https://secure.authorize.net/gateway/transact.dll"
-      TEST_URL = "https://test.authorize.net/gateway/transact.dll"
-
+      
+      class_inheritable_accessor :test_url, :live_url
+    
+      self.test_url = "https://test.authorize.net/gateway/transact.dll"
+      self.live_url = "https://secure.authorize.net/gateway/transact.dll"
+    
       APPROVED, DECLINED, ERROR = 1, 2, 3
 
       RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT = 0, 2, 3
@@ -107,10 +110,11 @@ module ActiveMerchant #:nodoc:
           return result
         end
         
-        url = test? ? TEST_URL : LIVE_URL
+        url = test? ? self.test_url : self.live_url
         data = ssl_post url, post_data(action, parameters)
 
         @response = parse(data)
+
         success = @response[:response_code] == APPROVED
         message = message_from(@response)
 
@@ -130,8 +134,8 @@ module ActiveMerchant #:nodoc:
       end
                                                
       def parse(body)
-        fields = body[1..-2].split(/\$,\$/)
-               
+        fields = split(body)
+                
         results = {         
           :response_code => fields[RESPONSE_CODE].to_i,
           :response_reason_code => fields[RESPONSE_REASON_CODE], 
@@ -230,6 +234,10 @@ module ActiveMerchant #:nodoc:
         month = sprintf("%.2i", creditcard.month)
 
         "#{month}#{year[-2..-1]}"
+      end
+      
+      def split(response)
+        response[1..-2].split(/\$,\$/)
       end
     end
     
