@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add metadata to SecurePay gateway [cody]
+#
 # * Add initial support for the SecurePay gateway using the Authorize.net translator [cody]
 #
 # * Add the homepage_url and display_name accessors to each gateway [cody]
