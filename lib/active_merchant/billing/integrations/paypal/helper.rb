@@ -76,14 +76,15 @@ module ActiveMerchant #:nodoc:
              # Use what we were given if we can't find anything
              country_code = lookup_country_code(params.delete(:country))
              add_field(mappings[:billing_address][:country], country_code)
-             # Fix Canadian province if required
-             
+               
+             province_code = params.delete(:state)
+                        
              case country_code
              when 'CA'
-               province_code = params.delete(:state)
                add_field(mappings[:billing_address][:state], CANADIAN_PROVINCES[province_code.upcase]) unless province_code.nil?
-             when 'GB'
-               province_code = params.delete(:state)
+             when 'US'
+               add_field(mappings[:billing_address][:state], province_code)
+             else
                add_field(mappings[:billing_address][:state], province_code.blank? ? 'N/A' : province_code)
              end
                

@@ -113,6 +113,8 @@ class PaypalHelperTest < Test::Unit::TestCase
 
   def test_setting_invalid_address_field
     fields = @helper.fields.dup
+    fields["state"] = 'N/A'
+    
     @helper.billing_address :street => 'My Street'
     assert_equal fields, @helper.fields
   end
