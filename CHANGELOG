@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Deprecate certification_id in Payflow gateways [cody]
+#
 # * Work around required PayPal state fields for countries that don't require states [cody]
 #
 # * Add metadata to SecurePay gateway [cody]

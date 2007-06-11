@@ -8,17 +8,12 @@ class RemotePayflowTest < Test::Unit::TestCase
     @login = 'LOGIN'
     @password = 'PASSWORD'
     
-    # The certification_id is required by PayPal to make direct HTTPS posts to their servers.
-    # You can obtain a certification id by emailing: payflowintegrator@paypal.com
-    @certification_id = "YOUR_CLIENT_CERTIFICATION"
-    
     # Change to the partner you have your account with
     @partner = 'PayPal'
     
     @gateway = PayflowGateway.new(
         :login => @login,
         :password => @password,
-        :certification_id => @certification_id,
         :partner => @partner
     )
     
@@ -110,7 +105,6 @@ class RemotePayflowTest < Test::Unit::TestCase
     gateway = PayflowGateway.new(
       :login => @login,
       :password => @password,
-      :certification_id => @certification_id,
       :partner => @partner
     )
     

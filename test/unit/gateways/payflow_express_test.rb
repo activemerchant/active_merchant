@@ -52,7 +52,7 @@ class PayflowExpressTest < Test::Unit::TestCase
   end
   
   def test_class_certification_id
-    assert_nil PayflowExpressGateway.certification_id
+    assert_equal '55d64dfec398cbbe66c1bf843cbad9', PayflowExpressGateway.certification_id
     PayflowExpressGateway.certification_id = 'test'
     assert_equal 'test', PayflowExpressGateway.certification_id
     gateway = PayflowExpressGateway.new(:login => 'test', :password => 'test')

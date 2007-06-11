@@ -7,16 +7,11 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     # Your Payflow username and password
     @login = 'login'
     @password = 'password'
-    	   
-    # The certification_id is required by PayPal to make direct HTTPS posts to their servers.
-    # You can obtain a certification id by emailing: payflowintegrator@paypal.com
-    @certification_id = ""
     
     # The default partner is PayPalUk
     @gateway = PayflowUkGateway.new(
       :login => @login,
-      :password => @password,
-      :certification_id => @certification_id
+      :password => @password
     )
     
     @creditcard = CreditCard.new(
@@ -170,8 +165,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   def test_duplicate_request_id
     gateway = PayflowUkGateway.new(
       :login => @login,
-      :password => @password,
-      :certification_id => @certification_id
+      :password => @password
     )
     
     request_id = Digest::SHA1.hexdigest(rand.to_s).slice(0,32)

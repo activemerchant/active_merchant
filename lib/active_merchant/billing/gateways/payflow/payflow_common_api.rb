@@ -5,8 +5,11 @@ module ActiveMerchant #:nodoc:
         base.default_currency = 'USD'
           
         # The certification_id is required by PayPal to make direct HTTPS posts to their servers.
-        # You can obtain a certification id by emailing: payflowintegrator@paypal.com
+        # The certification_id has been deprecated by PayPal.  It will soon be removed and you can simply
+        # use the certification_id that has been configured here, or generate your own
         base.class_inheritable_accessor :certification_id
+        base.certification_id = '55d64dfec398cbbe66c1bf843cbad9'
+        
         base.class_inheritable_accessor :partner
         
         # Set the default partner to PayPal
