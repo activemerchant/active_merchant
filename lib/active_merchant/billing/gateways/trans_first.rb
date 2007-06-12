@@ -14,6 +14,8 @@ module ActiveMerchant #:nodoc:
       
       UNUSED_FIELDS = %w(ECIValue UserId CAVVData TrackData POSInd EComInd MerchZIP MerchCustPNum MCC InstallmentNum InstallmentOf POSEntryMode POSConditionCode AuthCharInd CardCertData)
 
+      DECLINED = 'The transaction was declined'
+
       def initialize(options = {})
         requires!(options, :login, :password)
         @options = options
@@ -101,10 +103,19 @@ module ActiveMerchant #:nodoc:
         @response = parse(data)  
         success = @response[:status] == "Authorized"
 
-        Response.new(success, @response[:message], @response, 
+        Response.new(success, message_from(@response), @response, 
           :test => test?, 
           :authorization => @response[:trans_id]
         )
+      end
+      
+      def message_from(response)
+        case response[:message]
+        when 'Call Voice Center'
+          DECLINED
+        else
+          response[:message]
+        end
       end
       
       def post_data(params = {})

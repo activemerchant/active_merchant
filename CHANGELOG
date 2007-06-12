@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Enhance the TransFirst error message for declined transactions [cody]
+#
 # * Add initial support for TransFirst gateway [cody]
 #
 # * Deprecate certification_id in Payflow gateways [cody]
