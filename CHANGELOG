@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add initial support for TransFirst gateway [cody]
+#
 # * Deprecate certification_id in Payflow gateways [cody]
 #
 # * Work around required PayPal state fields for countries that don't require states [cody]
