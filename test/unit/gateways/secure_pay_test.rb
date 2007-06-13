@@ -54,14 +54,12 @@ class SecurePayTest < Test::Unit::TestCase
     assert response.authorization
   end
   
-  def test_capture_failure
-    @gateway.stubs(:ssl_post).returns(failed_capture_response)
+  def test_undefine_unsupported_methods
+    assert @gateway.respond_to?(:purchase)
     
-    assert response = @gateway.capture(100, '1234')
-    assert !response.success?
-    assert response.test?
-    assert_equal 'The credit card number is invalid', response.message
-    assert response.authorization.blank?
+    [ :authorize, :capture, :void, :credit ].each do |m|
+      assert !@gateway.respond_to?(m)
+    end
   end
   
   private

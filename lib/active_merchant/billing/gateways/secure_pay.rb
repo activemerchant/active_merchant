@@ -6,6 +6,9 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.securepay.com/'
       self.display_name = 'SecurePay'
       
+      # Limit support to purchase() for the time being
+      undef_method :authorize, :capture, :void, :credit
+      
       private
       def split(response)
         response.split('%')

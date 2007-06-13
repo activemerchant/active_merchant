@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Undefine unsupported methods from SecurePay [cody]
+#
 # * Enhance the TransFirst error message for declined transactions [cody]
 #
 # * Add initial support for TransFirst gateway [cody]
