@@ -9,6 +9,10 @@ module ActiveMerchant #:nodoc:
       # Limit support to purchase() for the time being
       undef_method :authorize, :capture, :void, :credit
       
+      def test?
+        Base.gateway_mode == :test
+      end
+      
       private
       def split(response)
         response.split('%')

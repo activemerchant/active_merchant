@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add remote secure pay test and correctly define test? [cody]
+#
 # * Undefine unsupported methods from SecurePay [cody]
 #
 # * Enhance the TransFirst error message for declined transactions [cody]
