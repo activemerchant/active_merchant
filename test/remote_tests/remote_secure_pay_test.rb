@@ -1,4 +1,3 @@
-require 'test/unit'
 require File.dirname(__FILE__) + '/../test_helper'
 
 class RemoteSecurePayTest < Test::Unit::TestCase
