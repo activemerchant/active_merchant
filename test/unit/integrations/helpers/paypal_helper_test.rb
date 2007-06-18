@@ -146,4 +146,11 @@ class PaypalHelperTest < Test::Unit::TestCase
     assert_field 'state', 'N/A'
   end
   
+  def test_bn
+    identifier = 'CodeGenies_ShoppingCart_SuperShopCart_CA'
+    
+    @helper.application identifier
+    assert_field 'bn', identifier 
+  end
+  
 end

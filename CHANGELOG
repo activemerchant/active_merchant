@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add a field for the bn to the PayPal helper [cody]
+#
 # * Add remote secure pay test and correctly define test? [cody]
 #
 # * Undefine unsupported methods from SecurePay [cody]

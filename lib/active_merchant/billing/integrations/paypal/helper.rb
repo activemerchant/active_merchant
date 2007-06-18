@@ -45,6 +45,8 @@ module ActiveMerchant #:nodoc:
           mapping :no_note, 'no_note'
           mapping :address_override, 'address_override'
 
+          mapping :application, 'bn'
+
           mapping :customer, :first_name => 'first_name',
                              :last_name  => 'last_name',
                              :email      => 'email'
