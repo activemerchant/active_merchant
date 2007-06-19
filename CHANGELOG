@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Rename application to application_id and place it on Base, so it can be set once and forgotten about [cody]
+#
 # * Add ButtonSource field to PayflowExpress gateway [cody]
 #
 # * Add a field for the bn to the PayPal helper [cody]

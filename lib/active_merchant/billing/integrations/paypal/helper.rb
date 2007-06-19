@@ -30,6 +30,7 @@ module ActiveMerchant #:nodoc:
             add_field('no_note', '1')
             add_field('charset', 'utf-8')
             add_field('address_override', '1')
+            add_field('bn', ActiveMerchant::Billing::Base.application_id) unless ActiveMerchant::Billing::Base.application_id.blank?
           end
 
           mapping :amount, 'amount'
@@ -45,7 +46,7 @@ module ActiveMerchant #:nodoc:
           mapping :no_note, 'no_note'
           mapping :address_override, 'address_override'
 
-          mapping :application, 'bn'
+          mapping :application_id, 'bn'
 
           mapping :customer, :first_name => 'first_name',
                              :last_name  => 'last_name',

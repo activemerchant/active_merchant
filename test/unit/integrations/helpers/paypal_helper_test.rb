@@ -146,10 +146,14 @@ class PaypalHelperTest < Test::Unit::TestCase
     assert_field 'state', 'N/A'
   end
   
-  def test_bn
+  def test_default_bn
+    assert_field 'bn', ActiveMerchant::Billing::Base.application_id 
+  end
+  
+  def test_override_bn
     identifier = 'CodeGenies_ShoppingCart_SuperShopCart_CA'
     
-    @helper.application identifier
+    @helper.application_id identifier
     assert_field 'bn', identifier 
   end
   
