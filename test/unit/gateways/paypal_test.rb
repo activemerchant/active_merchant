@@ -134,6 +134,11 @@ class PaypalTest < Test::Unit::TestCase
     assert_equal [:visa, :master, :american_express, :discover], PaypalGateway.supported_cardtypes
   end
   
+  def test_button_source
+    xml = REXML::Document.new(@gateway.send(:build_sale_or_authorization_request, 'Test', 100, @creditcard, {}))
+    assert_equal 'ActiveMerchant - activemerchant.org', REXML::XPath.first(xml, '//n2:ButtonSource').text
+  end
+  
   private
   def paypal_timeout_error_response
     <<-RESPONSE

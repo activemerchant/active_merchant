@@ -75,6 +75,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:PaymentDetails' do
                 xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => options[:currency] || currency(money)
                 xml.tag! 'n2:NotifyURL', options[:notify_url]
+                xml.tag! 'n2:ButtonSource', Base.application_id unless Base.application_id.blank?
               end
             end
           end

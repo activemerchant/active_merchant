@@ -94,6 +94,11 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal ['US'], PaypalExpressGateway.supported_countries
   end
   
+  def test_button_source
+    xml = REXML::Document.new(@gateway.send(:build_sale_or_authorization_request, 'Test', 100, {}))
+    assert_equal 'ActiveMerchant - activemerchant.org', REXML::XPath.first(xml, '//n2:ButtonSource').text
+  end
+  
   def successful_details_response
     <<-RESPONSE
 <?xml version='1.0' encoding='UTF-8'?>
