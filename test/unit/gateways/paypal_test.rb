@@ -136,7 +136,7 @@ class PaypalTest < Test::Unit::TestCase
   
   def test_button_source
     xml = REXML::Document.new(@gateway.send(:build_sale_or_authorization_request, 'Test', 100, @creditcard, {}))
-    assert_equal 'ActiveMerchant - activemerchant.org', REXML::XPath.first(xml, '//n2:ButtonSource').text
+    assert_equal 'ActiveMerchant', REXML::XPath.first(xml, '//n2:ButtonSource').text
   end
   
   private

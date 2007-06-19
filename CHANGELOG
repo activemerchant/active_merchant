@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Ensure the ButtonSource isn't too long [cody]
+#
 # * Add ButtonSource to Paypal and PaypalExpress gateways [cody]
 #
 # * Rename application to application_id and place it on Base, so it can be set once and forgotten about [cody]
