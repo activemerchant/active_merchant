@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + '/../../test_helper'
 class PayflowExpressTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
-    
+  
     @gateway = PayflowExpressGateway.new(
       :login => 'LOGIN',
       :password => 'PASSWORD'
@@ -99,6 +99,13 @@ class PayflowExpressTest < Test::Unit::TestCase
     assert_equal '95100', address['zip']
     assert_equal 'US', address['country']
     assert_nil address['phone']
+  end
+  
+  def test_button_source
+    xml = Builder::XmlMarkup.new
+    @gateway.send(:add_paypal_details, xml, {})
+    xml_doc = REXML::Document.new(xml.target!)
+    assert_equal 'ActiveMerchant - activemerchant.org', REXML::XPath.first(xml_doc, '/PayPal/ButtonSource').text
   end
   
   private

@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add ButtonSource field to PayflowExpress gateway [cody]
+#
 # * Add a field for the bn to the PayPal helper [cody]
 #
 # * Add remote secure pay test and correctly define test? [cody]

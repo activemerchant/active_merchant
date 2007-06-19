@@ -1,8 +1,7 @@
 #!/usr/bin/env ruby
 $:.unshift(File.dirname(__FILE__) + '/../lib')
 $:.unshift(File.dirname(__FILE__) + '/mocks')
-$:.unshift(File.dirname(__FILE__) + '/../lib/active_merchant/billing')
-$:.unshift(File.dirname(__FILE__)+ '/extra')
+$:.unshift(File.dirname(__FILE__) + '/extra')
 
 require 'rubygems'
 require 'money'
@@ -12,10 +11,11 @@ require 'net/https'
 require 'test/unit'
 require 'binding_of_caller'
 require 'breakpoint'
-require 'active_merchant'
 require 'openssl'
 require 'mocha'
 require 'digest/md5'
+
+require File.dirname(__FILE__) + '/../lib/active_merchant'
 
 ActiveMerchant::Billing::Base.mode = :test
 

@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
-class PayflowExpressTest < Test::Unit::TestCase
+class PayflowExpressUkTest < Test::Unit::TestCase
   def setup
     @gateway = PayflowExpressUkGateway.new(
       :login => 'LOGIN',

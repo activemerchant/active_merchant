@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + '/payflow/payflow_express_response'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class PayflowExpressGateway < Gateway
+    class PayflowExpressGateway < Gateway 
       include PayflowCommonAPI
       
       LIVE_REDIRECT_URL = 'https://www.paypal.com/cgibin/webscr?cmd=_express-checkout&token='
@@ -114,7 +114,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_paypal_details(xml, options)
-        xml.tag! 'PayPal' do
+         xml.tag! 'PayPal' do
           xml.tag! 'EMail', options[:email] unless options[:email].blank?
           xml.tag! 'ReturnURL', options[:return_url] unless options[:return_url].blank?
           xml.tag! 'CancelURL', options[:cancel_return_url] unless options[:cancel_return_url].blank?
@@ -123,6 +123,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'Token', options[:token] unless options[:token].blank?
           xml.tag! 'NoShipping', options[:no_shipping] ? '1' : '0'
           xml.tag! 'AddressOverride', options[:address_override] ? '1' : '0'
+          xml.tag! 'ButtonSource', self.application unless self.application.blank? 
         end
       end
       
