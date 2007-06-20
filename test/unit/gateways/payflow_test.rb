@@ -143,4 +143,60 @@ class PayflowTest < Test::Unit::TestCase
       )
     end
   end
+  
+  def test_successful_recurring_action
+    @gateway.stubs(:ssl_post).returns(successful_recurring_response)
+    
+    response = @gateway.recurring(1000, @creditcard, :periodicity => :monthly)
+    
+    assert_instance_of PayflowResponse, response
+    assert response.success?
+    assert_equal 'RT0000000009', response.profile_id
+    assert response.test?
+    assert_equal "R7960E739F80", response.authorization
+  end
+  
+  def test_successful_authorization
+    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+    
+    assert response = @gateway.authorize(100, @creditcard, { :address => @address })
+    assert_equal "Approved", response.message
+    assert response.success?
+    assert response.test?
+    assert_equal "VUJN1A6E11D9", response.authorization
+  end
+  
+  private
+  def successful_recurring_response
+    <<-XML
+<ResponseData>
+  <Result>0</Result>
+  <Message>Approved</Message>
+  <Partner>paypal</Partner>
+  <RpRef>R7960E739F80</RpRef>
+  <Vendor>ActiveMerchant</Vendor>
+  <ProfileId>RT0000000009</ProfileId>
+</ResponseData>
+  XML
+  end
+  
+  def successful_authorization_response
+    <<-XML
+<ResponseData>
+    <Result>0</Result>
+    <Message>Approved</Message>
+    <Partner>verisign</Partner>
+    <HostCode>000</HostCode>
+    <ResponseText>AP</ResponseText>
+    <PnRef>VUJN1A6E11D9</PnRef>
+    <IavsResult>N</IavsResult>
+    <ZipMatch>Match</ZipMatch>
+    <AuthCode>094016</AuthCode>
+    <Vendor>ActiveMerchant</Vendor>
+    <AvsResult>Y</AvsResult>
+    <StreetMatch>Match</StreetMatch>
+    <CvResult>Match</CvResult>
+</ResponseData>
+    XML
+  end
 end

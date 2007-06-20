@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
     	  
     	  build_response(success, message, @response,
     	    :test => test?,
-    	    :authorization => @response[:pn_ref]
+    	    :authorization => @response[:pn_ref] || @response[:rp_ref]
         )
       end
       

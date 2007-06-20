@@ -1,4 +1,5 @@
 require File.dirname(__FILE__) + '/payflow/payflow_common_api'
+require File.dirname(__FILE__) + '/payflow/payflow_response'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -213,8 +214,8 @@ module ActiveMerchant #:nodoc:
         end
       end
       
-      def build_response(success, message, response, options = {})
-        Response.new(success, message, response, options)
+      def build_response(success, message, response, options = {}) 
+        PayflowResponse.new(success, message, response, options)
       end
     end
   end
