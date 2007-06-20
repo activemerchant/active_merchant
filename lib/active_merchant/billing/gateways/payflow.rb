@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       include PayflowCommonAPI
       
       RECURRING_ACTIONS = Set.new([:add, :modify, :cancel, :inquiry, :reactivate, :payment])
-      
+       
       self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :discover, :diners_club]
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-pro-overview-outside'
       self.display_name = 'PayPal Payflow Pro'
@@ -160,6 +160,16 @@ module ActiveMerchant #:nodoc:
                   xml.tag! 'PayPeriod', get_pay_period(options)
                   xml.tag! 'Term', options[:payments] unless options[:payments].nil?
                   xml.tag! 'Comment', options[:comment] unless options[:comment].nil?
+                
+                
+                  if initial_tx = options[:initial_transaction]
+                    requires!(initial_tx, [:type, :authorization, :purchase])
+                    requires!(initial_tx, :amount) if initial_tx[:type] == :purchase
+                      
+                    xml.tag! 'OptionalTrans', TRANSACTIONS[initial_tx[:type]]
+                    xml.tag! 'OptionalTransAmt', amount(initial_tx[:amount]) unless initial_tx[:amount].blank?
+                  end
+                
                   xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1 )
                   xml.tag! 'EMail', options[:email] unless options[:email].nil?
                   

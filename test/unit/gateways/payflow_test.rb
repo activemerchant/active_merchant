@@ -125,4 +125,22 @@ class PayflowTest < Test::Unit::TestCase
   def test_supported_card_types
     assert_equal [:visa, :master, :american_express, :jcb, :discover, :diners_club], PayflowGateway.supported_cardtypes
   end
+  
+  def test_initial_recurring_transaction_missing_parameters
+    assert_raises ArgumentError do
+      response = @gateway.recurring(1000, @creditcard, 
+        :periodicity => :monthly,
+        :initial_transaction => { }
+      )
+    end
+  end
+  
+  def test_initial_purchase_missing_amount
+    assert_raises ArgumentError do
+      response = @gateway.recurring(1000, @creditcard, 
+        :periodicity => :monthly,
+        :initial_transaction => { :amount => :purchase }
+      )
+    end
+  end
 end

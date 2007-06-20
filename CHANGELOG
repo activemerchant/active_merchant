@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add support for an initial transaction with recurring payments [findchris, cody]
+#
 # * Add support for email receipts to recurring Payflow Payments [Rick Olson]
 #
 # * Ensure the ButtonSource isn't too long [cody]

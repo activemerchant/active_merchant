@@ -200,4 +200,31 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert response.success?
     assert response.test?
   end
+  
+  def test_recurring_with_initial_authorization
+    response = @gateway.recurring(1000, @creditcard, 
+      :periodicity => :monthly,
+      :initial_transaction => {
+        :type => :authorization
+      }
+    )
+    
+    assert response.success?
+    assert !response.params['profile_id'].blank?
+    assert response.test?
+  end
+  
+  def test_recurring_with_initial_authorization
+    response = @gateway.recurring(1000, @creditcard, 
+      :periodicity => :monthly,
+      :initial_transaction => {
+        :type => :purchase,
+        :amount => 500
+      }
+    )
+    
+    assert response.success?
+    assert !response.params['profile_id'].blank?
+    assert response.test?
+  end
 end
