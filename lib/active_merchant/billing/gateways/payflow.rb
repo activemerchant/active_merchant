@@ -161,6 +161,7 @@ module ActiveMerchant #:nodoc:
                   xml.tag! 'Term', options[:payments] unless options[:payments].nil?
                   xml.tag! 'Comment', options[:comment] unless options[:comment].nil?
                   xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1 )
+                  xml.tag! 'EMail', options[:email] unless options[:email].nil?
                   
                   billing_address = options[:billing_address] || options[:address]
                   shipping_address = options[:shipping_address] || billing_address
