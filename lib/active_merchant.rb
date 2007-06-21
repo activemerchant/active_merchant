@@ -42,6 +42,7 @@ require 'cgi'
 
 require 'active_merchant/lib/validateable'
 require 'active_merchant/lib/posts_data'
+require 'active_merchant/lib/post_data'
 require 'active_merchant/lib/requires_parameters'
 
 # Require the country class

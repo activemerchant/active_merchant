@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add Verifi gateway [Paul Hepworth]
+#
 # * Add a PayflowResponse object with a profile_id accessor method.  Return the correct authorization number on recurring actions [cody]
 #
 # * Add support for an initial transaction with recurring payments [findchris, cody]
