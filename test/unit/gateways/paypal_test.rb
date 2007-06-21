@@ -139,6 +139,29 @@ class PaypalTest < Test::Unit::TestCase
     assert_equal 'ActiveMerchant', REXML::XPath.first(xml, '//n2:ButtonSource').text
   end
   
+  def test_item_total_shipping_handling_and_tax_not_included_unless_all_are_present
+    xml = @gateway.send(:build_sale_or_authorization_request, 'Authorization', 100, @creditcard,
+      :tax => 100,
+      :shipping => 100,
+      :handling => 100
+    )
+    
+    doc = REXML::Document.new(xml)
+    assert_nil REXML::XPath.first(doc, '//n2:PaymentDetails/n2:TaxTotal')
+  end
+  
+  def test_item_total_shipping_handling_and_tax
+    xml = @gateway.send(:build_sale_or_authorization_request, 'Authorization', 100, @creditcard,
+      :tax => 100,
+      :shipping => 100,
+      :handling => 100,
+      :subtotal => 200
+    )
+    
+    doc = REXML::Document.new(xml)
+    assert_equal '1.00', REXML::XPath.first(doc, '//n2:PaymentDetails/n2:TaxTotal').text
+  end
+  
   private
   def paypal_timeout_error_response
     <<-RESPONSE

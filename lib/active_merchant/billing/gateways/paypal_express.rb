@@ -64,6 +64,8 @@ module ActiveMerchant #:nodoc:
       end
       
       def build_sale_or_authorization_request(action, money, options)
+        currency_code = options[:currency] || currency(money)
+        
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'DoExpressCheckoutPaymentReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'DoExpressCheckoutPaymentRequest', 'xmlns:n2' => EBAY_NAMESPACE do
@@ -73,7 +75,16 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:Token', options[:token]
               xml.tag! 'n2:PayerID', options[:payer_id]
               xml.tag! 'n2:PaymentDetails' do
-                xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => options[:currency] || currency(money)
+                xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => currency_code
+                
+                # All of the values must be included together and add up to the order total
+                if [:subtotal, :shipping, :handling, :tax].all?{ |o| options.has_key?(o) }
+                  xml.tag! 'n2:ItemTotal', amount(options[:subtotal]), 'currencyID' => currency_code
+                  xml.tag! 'n2:ShippingTotal', amount(options[:shipping]),'currencyID' => currency_code
+                  xml.tag! 'n2:HandlingTotal', amount(options[:handling]),'currencyID' => currency_code
+                  xml.tag! 'n2:TaxTotal', amount(options[:tax]), 'currencyID' => currency_code
+                end
+                
                 xml.tag! 'n2:NotifyURL', options[:notify_url]
                 xml.tag! 'n2:ButtonSource', Base.application_id.to_s.slice(0,32) unless Base.application_id.blank?
               end

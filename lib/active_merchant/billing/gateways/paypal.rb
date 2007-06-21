@@ -38,6 +38,7 @@ module ActiveMerchant #:nodoc:
       private
       def build_sale_or_authorization_request(action, money, credit_card, options)
         shipping_address = options[:shipping_address] || options[:address]
+        currency_code = options[:currency] || currency(money)
        
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'DoDirectPaymentReq', 'xmlns' => PAYPAL_NAMESPACE do
@@ -46,7 +47,16 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:DoDirectPaymentRequestDetails' do
               xml.tag! 'n2:PaymentAction', action
               xml.tag! 'n2:PaymentDetails' do
-                xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => options[:currency] || currency(money)
+                xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => currency_code
+                
+                # All of the values must be included together and add up to the order total
+                if [:subtotal, :shipping, :handling, :tax].all?{ |o| options.has_key?(o) }
+                  xml.tag! 'n2:ItemTotal', amount(options[:subtotal]), 'currencyID' => currency_code
+                  xml.tag! 'n2:ShippingTotal', amount(options[:shipping]),'currencyID' => currency_code
+                  xml.tag! 'n2:HandlingTotal', amount(options[:handling]),'currencyID' => currency_code
+                  xml.tag! 'n2:TaxTotal', amount(options[:tax]), 'currencyID' => currency_code
+                end
+                
                 xml.tag! 'n2:NotifyURL', options[:notify_url]
                 xml.tag! 'n2:OrderDescription', options[:description]
                 xml.tag! 'n2:InvoiceID', options[:order_id]
