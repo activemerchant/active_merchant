@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add page customization options to the PaypalExpress, and PayflowExpress gateways [ cpjolicoeur, cody]
+#
 # * Add Verifi gateway [Paul Hepworth]
 #
 # * Add a PayflowResponse object with a profile_id accessor method.  Return the correct authorization number on recurring actions [cody]

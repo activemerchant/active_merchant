@@ -98,7 +98,6 @@ module ActiveMerchant #:nodoc:
               add_address(xml, 'n2:Address', options[:shipping_address] || options[:address])
               xml.tag! 'n2:AddressOverride', options[:address_override] ? '1' : '0'
               xml.tag! 'n2:NoShipping', options[:no_shipping] ? '1' : '0'
-              xml.tag! 'n2:PageStyle', options[:page_style] unless options[:page_style].blank?
               xml.tag! 'n2:ReturnURL', options[:return_url]
               xml.tag! 'n2:CancelURL', options[:cancel_return_url]
               xml.tag! 'n2:IPAddress', options[:ip]
@@ -106,6 +105,13 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:BuyerEmail', options[:email] unless options[:email].blank?
               xml.tag! 'n2:InvoiceID', options[:order_id]
         
+              # Customization of the payment page
+              xml.tag! 'n2:PageStyle', options[:page_style] unless options[:page_style].blank?
+              xml.tag! 'n2:cpp-image-header', options[:header_image] unless options[:header_image].blank?
+              xml.tag! 'n2:cpp-header-back-color', options[:header_background_color] unless options[:header_background_color].blank?
+              xml.tag! 'n2:cpp-header-border-color', options[:header_border_color] unless options[:header_border_color].blank?
+              xml.tag! 'n2:cpp-payflow-color', options[:background_color] unless options[:background_color].blank?
+              
               # This should be set to the same locale as the shop
               # localeCode          - String
             end

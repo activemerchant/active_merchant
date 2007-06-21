@@ -124,6 +124,13 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'NoShipping', options[:no_shipping] ? '1' : '0'
           xml.tag! 'AddressOverride', options[:address_override] ? '1' : '0'
           xml.tag! 'ButtonSource', Base.application_id.to_s.slice(0,32) unless Base.application_id.blank? 
+          
+          # Customization of the payment page
+          xml.tag! 'PageStyle', options[:page_style] unless options[:page_style].blank?
+          xml.tag! 'HeaderImage', options[:header_image] unless options[:header_image].blank?
+          xml.tag! 'HeaderBackColor', options[:header_background_color] unless options[:header_background_color].blank?
+          xml.tag! 'HeaderBorderColor', options[:header_border_color] unless options[:header_border_color].blank?
+          xml.tag! 'PayflowColor', options[:background_color] unless options[:background_color].blank?
         end
       end
       
