@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add support for the Plug 'N Pay gateway [ryan.norbauer, cody]
+#
 # * Add support for ItemTotal, Shipping, Handling, and Tax amounts in the PayPal Express and PayPal gateways [baldwindavid, cody]
 #
 # * Add page customization options to the PaypalExpress, and PayflowExpress gateways [ cpjolicoeur, cody]
