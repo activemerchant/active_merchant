@@ -42,6 +42,11 @@ module ActiveMerchant #:nodoc:
       class_inheritable_accessor :homepage_url
       class_inheritable_accessor :display_name
       
+      # The application making the calls to the gateway
+      # Useful for things like the PayPal build notation (BN) id fields
+      class_inheritable_accessor :application_id
+      self.application_id = 'ActiveMerchant'
+      
       # Return the matching gateway for the provider
       # * <tt>bogus</tt>: BogusGateway - Does nothing ( for testing)
       # * <tt>moneris</tt>: MonerisGateway

@@ -147,13 +147,15 @@ class PaypalHelperTest < Test::Unit::TestCase
   end
   
   def test_default_bn
-    assert_field 'bn', ActiveMerchant::Billing::Base.application_id 
+    assert_field 'bn', ActiveMerchant::Billing::Integrations::Helper.application_id 
   end
   
   def test_override_bn
-    identifier = 'CodeGenies_ShoppingCart_SuperShopCart_CA'
+    identifier = 'CodeGenies_ShoppingCart_IC_CA'
     
-    @helper.application_id identifier
+    Paypal::Helper.application_id = identifier
+    
+    @helper = Paypal::Helper.new(1,'cody@example.com', :amount => 500, :currency => 'CAD')
     assert_field 'bn', identifier 
   end
   

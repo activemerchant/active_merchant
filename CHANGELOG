@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Move application_id to Gateway and Helper class respectively [cody]
+#
 # * Improve TrustCommerce documentation [cody]
 #
 # * Add credit to Payflow [cody]

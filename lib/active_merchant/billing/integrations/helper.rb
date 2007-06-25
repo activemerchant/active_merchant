@@ -7,6 +7,11 @@ module ActiveMerchant #:nodoc:
         class_inheritable_hash :mappings
         class_inheritable_accessor :country_format
         self.country_format = :alpha2
+        
+        # The application making the calls to the gateway
+        # Useful for things like the PayPal build notation (BN) id fields
+        class_inheritable_accessor :application_id
+        self.application_id = 'ActiveMerchant'
 
         def initialize(order, account, options = {})
           options.assert_valid_keys([:amount, :currency, :test])

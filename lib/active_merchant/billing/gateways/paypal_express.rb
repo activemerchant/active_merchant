@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
                 end
                 
                 xml.tag! 'n2:NotifyURL', options[:notify_url]
-                xml.tag! 'n2:ButtonSource', Base.application_id.to_s.slice(0,32) unless Base.application_id.blank?
+                xml.tag! 'n2:ButtonSource', application_id.to_s.slice(0,32) unless application_id.blank?
               end
             end
           end

@@ -11,11 +11,6 @@ module ActiveMerchant #:nodoc:
       #   ActiveMerchant::Billing::Base.gateway_mode = :test
       mattr_accessor :integration_mode
       
-      # The application making the calls to the gateway
-      # Useful for things like the PayPal build notation id fields
-      mattr_accessor :application_id
-      self.application_id = 'ActiveMerchant'
-      
       # Set both the mode of both the gateways and integrations
       # at once
       mattr_reader :mode
