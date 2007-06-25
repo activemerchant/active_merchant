@@ -95,8 +95,10 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
   
   def test_button_source
+    PaypalExpressGateway.application_id = 'ActiveMerchant_EC'
+    
     xml = REXML::Document.new(@gateway.send(:build_sale_or_authorization_request, 'Test', 100, {}))
-    assert_equal 'ActiveMerchant', REXML::XPath.first(xml, '//n2:ButtonSource').text
+    assert_equal 'ActiveMerchant_EC', REXML::XPath.first(xml, '//n2:ButtonSource').text
   end
   
   def successful_details_response

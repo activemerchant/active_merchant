@@ -135,8 +135,10 @@ class PaypalTest < Test::Unit::TestCase
   end
   
   def test_button_source
+    PaypalGateway.application_id = 'ActiveMerchant_DC'
+    
     xml = REXML::Document.new(@gateway.send(:build_sale_or_authorization_request, 'Test', 100, @creditcard, {}))
-    assert_equal 'ActiveMerchant', REXML::XPath.first(xml, '//n2:ButtonSource').text
+    assert_equal 'ActiveMerchant_DC', REXML::XPath.first(xml, '//n2:ButtonSource').text
   end
   
   def test_item_total_shipping_handling_and_tax_not_included_unless_all_are_present
