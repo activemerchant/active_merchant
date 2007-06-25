@@ -24,6 +24,18 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
       
+      def credit(money, identification_or_credit_card, options = {})
+        if identification_or_credit_card.is_a?(String)
+          # Perform referenced credit
+          request = build_reference_request(:credit, money, identification_or_credit_card, options)
+        else
+          # Perform non-referenced credit
+          request = build_credit_card_request(:credit, money, identification_or_credit_card, options)
+        end
+        
+        commit(request)
+      end
+      
       # Adds or modifies a recurring Payflow profile.  See the Payflow Pro Recurring Billing Guide for more details:
       # https://www.paypal.com/en_US/pdf/PayflowPro_RecurringBilling_Guide.pdf
       #    
@@ -63,7 +75,7 @@ module ActiveMerchant #:nodoc:
         if credit_card_or_reference.is_a?(String)
           build_reference_sale_or_authorization_request(action, money, credit_card_or_reference, options)
         else  
-          build_regular_sale_or_authorization_request(action, money, credit_card_or_reference, options)
+          build_credit_card_request(action, money, credit_card_or_reference, options)
         end  
       end
       
@@ -84,7 +96,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
       
-      def build_regular_sale_or_authorization_request(action, money, credit_card, options)
+      def build_credit_card_request(action, money, credit_card, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! TRANSACTIONS[action] do
           xml.tag! 'PayData' do

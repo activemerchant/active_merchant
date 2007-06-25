@@ -37,7 +37,8 @@ module ActiveMerchant #:nodoc:
         :purchase       => "Sale",
         :authorization  => "Authorization",
         :capture        => "Capture",
-        :void           => "Void" 
+        :void           => "Void",
+        :credit         => "Credit" 
       }
           
       def initialize(options = {})
@@ -55,15 +56,15 @@ module ActiveMerchant #:nodoc:
       end
       
       def capture(money, authorization, options = {})
-        request = build_void_or_capture_request(:capture, money, authorization, options)
+        request = build_reference_request(:capture, money, authorization, options)
         commit(request)
       end
       
       def void(authorization, options = {})
-        request = build_void_or_capture_request(:void, nil, authorization, options)
+        request = build_reference_request(:void, nil, authorization, options)
         commit(request)
       end
-
+  
       private      
       def build_request(body, request_type = nil)
         xml = Builder::XmlMarkup.new :indent => 2
@@ -93,12 +94,12 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
       
-      def build_void_or_capture_request(action, money, authorization, options)
+      def build_reference_request(action, money, authorization, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! TRANSACTIONS[action] do
           xml.tag! 'PNRef', authorization
         
-          if action == :capture
+          unless money.nil?
             xml.tag! 'Invoice' do
               xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
             end

@@ -30,7 +30,12 @@ module ActiveMerchant #:nodoc:
         requires!(options, :token, :payer_id)
         request = build_sale_or_authorization_request('Sale', money, options)
         commit(request)
-      end                       
+      end
+      
+      def credit(money, identification, options = {})
+        request = build_reference_request(:credit, money, identification, options)
+        commit(request)
+      end        
 
       def setup_authorization(money, options = {})
         requires!(options, :return_url, :cancel_return_url)

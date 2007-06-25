@@ -105,15 +105,29 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.trustcommerce.com/'
       self.display_name = 'TrustCommerce'
       
+      # Creates a new TrustCommerceGateway
+      # 
+      # The gateway requires that a valid login and password be passed
+      # in the +options+ hash.
+      # 
+      # ==== Options
+      #
+      # * <tt>:login</tt> -- The TrustCommerce account login.
+      # * <tt>:password</tt> -- The TrustCommerce account password.
+      # * <tt>:test => +true+ or +false+</tt> -- Perform test transactions
+      #
+      # ==== Test Account Credentials
+      # * <tt>:login</tt> -- TestMerchant
+      # * <tt>:password</tt> -- password
       def initialize(options = {})
         requires!(options, :login, :password)
-        # these are the defaults for trustcommerce
-        @options = {
-          :login      => "TestMerchant",
-          :password   => "password"
-        }.update(options)
-
+      
+        @options = options
         super
+      end
+      
+      def test?
+        @options[:test] || Base.gateway_mode == :test
       end
       
       # authorize() is the first half of the preauth(authorize)/postauth(capture) model. The TC API docs call this

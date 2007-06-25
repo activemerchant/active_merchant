@@ -227,4 +227,26 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert !response.params['profile_id'].blank?
     assert response.test?
   end
+  
+  def test_purchase_and_referenced_credit
+    amount = 100
+    
+    assert purchase = @gateway.purchase(amount, @creditcard, @options)
+    assert purchase.success?
+    assert_equal 'Approved', purchase.message
+    assert !purchase.authorization.blank?
+    
+    assert credit = @gateway.credit(amount, purchase.authorization)
+    assert credit.success?
+  end
+  
+  # The default security setting for Payflow Pro accounts is Allow 
+  # non-referenced credits = No.
+  #
+  # Non-referenced credits will fail with Result code 117 (failed the security 
+  # check) unless Allow non-referenced credits = Yes in PayPal manager
+  def test_purchase_and_non_referenced_credit
+    assert credit = @gateway.credit(100, @creditcard, @options)
+    assert credit.success?
+  end
 end
