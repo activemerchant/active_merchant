@@ -166,6 +166,19 @@ class PayflowTest < Test::Unit::TestCase
     assert_equal "VUJN1A6E11D9", response.authorization
   end
   
+  def test_format_issue_number
+    xml = Builder::XmlMarkup.new
+    credit_card = credit_card("5641820000000005",
+      :type         => "switch",
+      :issue_number => 1
+    )
+    
+    @gateway.send(:add_credit_card, xml, credit_card)
+    doc = REXML::Document.new(xml.target!)
+    node = REXML::XPath.first(doc, '/Card/ExtData')
+    assert_equal '01', node.attributes['Value']
+  end
+  
   private
   def successful_recurring_response
     <<-XML
