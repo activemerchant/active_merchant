@@ -75,7 +75,6 @@ class PayflowTest < Test::Unit::TestCase
   end
   
   def test_certification_id_class_accessor
-    assert_equal '55d64dfec398cbbe66c1bf843cbad9', PayflowGateway.certification_id
     PayflowGateway.certification_id = 'test'
     assert_equal 'test', PayflowGateway.certification_id
     gateway = PayflowGateway.new(:login => 'test', :password => 'test')
@@ -177,6 +176,22 @@ class PayflowTest < Test::Unit::TestCase
     doc = REXML::Document.new(xml.target!)
     node = REXML::XPath.first(doc, '/Card/ExtData')
     assert_equal '01', node.attributes['Value']
+  end
+  
+  def test_eof_received_on_timeout
+    Net::HTTP.any_instance.stubs(:post).raises(EOFError, "end of file reached")
+    
+    assert_raises(ActiveMerchant::ConnectionError) do
+      @gateway.purchase(100, @creditcard, {})
+    end
+  end
+  
+  def test__received_on_timeout
+    Net::HTTP.any_instance.stubs(:post).raises(Errno::ECONNREFUSED, "Connection refused - connect(2)")
+    
+    assert_raises(ActiveMerchant::ConnectionError) do
+      @gateway.purchase(100, @creditcard, {})
+    end
   end
   
   private

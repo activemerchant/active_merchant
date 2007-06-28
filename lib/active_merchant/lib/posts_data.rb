@@ -1,4 +1,7 @@
 module ActiveMerchant #:nodoc:
+  class ConnectionError < ActiveMerchantError
+  end
+  
   module PostsData  #:nodoc:
     
     def self.included(base)
@@ -23,8 +26,14 @@ module ActiveMerchant #:nodoc:
         http.cert           = OpenSSL::X509::Certificate.new(@options[:pem])
         http.key            = OpenSSL::PKey::RSA.new(@options[:pem])
       end
-      
-      http.post(uri.request_uri, data, headers).body
+
+      begin
+        http.post(uri.request_uri, data, headers).body
+      rescue EOFError => e
+        raise ConnectionError, "The remote server dropped the connection"
+      rescue Errno::ECONNREFUSED => e
+        raise ConnectionError, "The remote server refused the connection"
+      end
     end    
   end
 end
