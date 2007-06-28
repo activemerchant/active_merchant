@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
           end
           
           def account
-            params['business']
+            params['business'] || params['receiver_email']
           end
 
           # Acknowledge the transaction to paypal. This method has to be called after a new 
