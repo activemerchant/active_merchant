@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Remove switch patterns from card detection that were eliminated on July 1, 2007 [cody]
+#
 # * Format the issue number in Payflow requests to always be 2 digits [cody]
 #
 # * Move application_id to Gateway and Helper class respectively [cody]
