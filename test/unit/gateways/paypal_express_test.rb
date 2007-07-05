@@ -1,12 +1,15 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class PaypalExpressTest < Test::Unit::TestCase
+  TEST_REDIRECT_URL = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token=1234567890'
+  LIVE_REDIRECT_URL = 'https://www.paypal.com/cgibin/webscr?cmd=_express-checkout&token=1234567890'
+  
   def setup
     @gateway = PaypalExpressGateway.new(
-                :login => 'cody', 
-                :password => 'test',
-                :pem => ''
-               )
+      :login => 'cody', 
+      :password => 'test',
+      :pem => ''
+    )
 
     @address = { :address1 => '1234 My Street',
                  :address2 => 'Apt 1',
@@ -27,11 +30,26 @@ class PaypalExpressTest < Test::Unit::TestCase
 
   def test_live_redirect_url
     Base.gateway_mode = :production
-    assert_equal 'https://www.paypal.com/cgibin/webscr?cmd=_express-checkout&token=1234567890', @gateway.redirect_url_for('1234567890')
+    assert_equal LIVE_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
+  end
+  
+  def test_force_sandbox_redirect_url
+    Base.gateway_mode = :production
+    
+    gateway = PaypalExpressGateway.new(
+      :login => 'cody', 
+      :password => 'test',
+      :pem => '',
+      :test => true
+    )
+    
+    assert gateway.test?
+    assert_equal TEST_REDIRECT_URL, gateway.redirect_url_for('1234567890')
   end
   
   def test_test_redirect_url
-    assert_equal 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token=1234567890', @gateway.redirect_url_for('1234567890')
+    assert_equal :test, Base.gateway_mode
+    assert_equal TEST_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
   end
   
   def test_get_express_details
