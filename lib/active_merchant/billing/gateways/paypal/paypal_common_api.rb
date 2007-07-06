@@ -1,7 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    # This class is an abstract base class for both PaypalGateway and
-    # PaypalExpressGateway
+    # This class is included in both PaypalGateway and PaypalExpressGateway
     module PaypalCommonAPI
       def self.included(base)
         
