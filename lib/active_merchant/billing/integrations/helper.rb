@@ -54,8 +54,10 @@ module ActiveMerchant #:nodoc:
         private
         
         def add_address(key, params)
+          return if mappings[key].nil?
+          
           code = lookup_country_code(params.delete(:country))
-          add_field(mappings[key][:country], code) if mappings[key] 
+          add_field(mappings[key][:country], code) 
           add_fields(key, params)
         end
         

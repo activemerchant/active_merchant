@@ -52,53 +52,52 @@ module ActiveMerchant #:nodoc:
                              :last_name  => 'last_name',
                              :email      => 'email'
 
-          mapping :billing_address, :city    => 'city',
-                                    :address1  => 'address1',
-                                    :address2  => 'address2',
-                                    :state   => 'state',
-                                    :zip     => 'zip',
-                                    :country => 'country'
+          mapping :shipping_address,  :city    => 'city',
+                                      :address1 => 'address1',
+                                      :address2 => 'address2',
+                                      :state   => 'state',
+                                      :zip     => 'zip',
+                                      :country => 'country'
           
-           def billing_address(params = {})
-             
-             if params.has_key?(:phone)
-               phone = params.delete(:phone).to_s
-
-               # Whipe all non digits
-               phone.gsub!(/\D+/, '')
-
-               # Parse in the us style (555 555 5555) which seems to be the only format paypal supports. Ignore anything before this. 
-               if phone =~ /(\d{3})(\d{3})(\d{4})$/
-                 add_field('night_phone_a', $1) 
-                 add_field('night_phone_b', $2) 
-                 add_field('night_phone_c', $3) 
-               end
-             end
-             
-             # Get the country code in the correct format
-             # Use what we were given if we can't find anything
-             country_code = lookup_country_code(params.delete(:country))
-             add_field(mappings[:billing_address][:country], country_code)
-               
-             province_code = params.delete(:state)
-                        
-             case country_code
-             when 'CA'
-               add_field(mappings[:billing_address][:state], CANADIAN_PROVINCES[province_code.upcase]) unless province_code.nil?
-             when 'US'
-               add_field(mappings[:billing_address][:state], province_code)
-             else
-               add_field(mappings[:billing_address][:state], province_code.blank? ? 'N/A' : province_code)
-             end
-               
-             # Everything else 
-             params.each do |k, v|
-               field = mappings[:billing_address][k]
-               add_field(field, v) unless field.nil?
-             end
-           end
-
-
+          def shipping_address(params = {})
+            
+            if params.has_key?(:phone)
+              phone = params.delete(:phone).to_s
+          
+              # Whipe all non digits
+              phone.gsub!(/\D+/, '')
+          
+              # Parse in the us style (555 555 5555) which seems to be the only format paypal supports. Ignore anything before this. 
+              if phone =~ /(\d{3})(\d{3})(\d{4})$/
+                add_field('night_phone_a', $1) 
+                add_field('night_phone_b', $2) 
+                add_field('night_phone_c', $3) 
+              end
+            end
+            
+            # Get the country code in the correct format
+            # Use what we were given if we can't find anything
+            country_code = lookup_country_code(params.delete(:country))
+            add_field(mappings[:shipping_address][:country], country_code)
+              
+            province_code = params.delete(:state)
+                       
+            case country_code
+            when 'CA'
+              add_field(mappings[:shipping_address][:state], CANADIAN_PROVINCES[province_code.upcase]) unless province_code.nil?
+            when 'US'
+              add_field(mappings[:shipping_address][:state], province_code)
+            else
+              add_field(mappings[:shipping_address][:state], province_code.blank? ? 'N/A' : province_code)
+            end
+              
+            # Everything else 
+            params.each do |k, v|
+              field = mappings[:shipping_address][k]
+              add_field(field, v) unless field.nil?
+            end
+          end
+          
           mapping :tax, 'tax'
           mapping :shipping, 'shipping'
           mapping :cmd, 'cmd'

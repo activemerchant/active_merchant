@@ -30,8 +30,6 @@ module ActiveMerchant #:nodoc:
                                 :expiry_year  => 'PAY1_EXPYEAR',
                                 :verification_value => 'PAY1_CVV'
           
-          mapping :billing_address, {}
-          
           def customer(params = {})
             add_field(mappings[:customer][:email], params[:email])
             add_field('PAY1_CHNAME', "#{params[:first_name]} #{params[:last_name]}")

@@ -56,8 +56,8 @@ class PaypalHelperTest < Test::Unit::TestCase
     assert_field 'email', 'cody@example.com'
   end
 
-  def test_billing_address
-    @helper.billing_address :country => 'CA',
+  def test_shipping_address
+    @helper.shipping_address :country => 'CA',
                             :address1 => '1 My Street',
                             :city => 'Ottawa',
                             :zip => '90210',
@@ -72,7 +72,7 @@ class PaypalHelperTest < Test::Unit::TestCase
   end
 
   def test_phone_parsing
-    @helper.billing_address :phone => '111-222-3333'
+    @helper.shipping_address :phone => '111-222-3333'
 
     assert_field 'night_phone_a', '111'
     assert_field 'night_phone_b', '222'
@@ -81,7 +81,7 @@ class PaypalHelperTest < Test::Unit::TestCase
   
   
   def test_province
-    @helper.billing_address :country => 'CA',
+    @helper.shipping_address :country => 'CA',
                             :state => 'On'
 
     assert_field 'country', 'CA'
@@ -89,7 +89,7 @@ class PaypalHelperTest < Test::Unit::TestCase
   end
 
   def test_state
-    @helper.billing_address :country => 'US',
+    @helper.shipping_address :country => 'US',
                             :state => 'TX'
 
     assert_field 'country', 'US'
@@ -107,7 +107,7 @@ class PaypalHelperTest < Test::Unit::TestCase
   end
 
   def test_country_code
-    @helper.billing_address :country => 'CAN'
+    @helper.shipping_address :country => 'CAN'
     assert_field 'country', 'CA'
   end
 
@@ -115,7 +115,7 @@ class PaypalHelperTest < Test::Unit::TestCase
     fields = @helper.fields.dup
     fields["state"] = 'N/A'
     
-    @helper.billing_address :street => 'My Street'
+    @helper.shipping_address :street => 'My Street'
     assert_equal fields, @helper.fields
   end
   
@@ -139,8 +139,8 @@ class PaypalHelperTest < Test::Unit::TestCase
     assert_field 'no_note', '0'
   end
   
-  def test_uk_billing_address_with_no_state
-    @helper.billing_address :country => 'GB',
+  def test_uk_shipping_address_with_no_state
+    @helper.shipping_address :country => 'GB',
                             :state => ''
 
     assert_field 'state', 'N/A'
