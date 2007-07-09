@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add support for PayJunction [Matt Sanders] 
+#
 # * Change billing_address to shipping_address in PayPal Integration helper, as billing_address was incorrect.  Addresses passed to billing_address for the PayPal helper will no longer be added to the form. This will break existing code, as the address will not be passed.
 #
 # * Remove switch patterns from card detection that were eliminated on July 1, 2007 [cody]
