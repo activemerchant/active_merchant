@@ -1,4 +1,3 @@
-# Originally contributed by Lucas Carlson  (mailto:lucas@rufy.com)
 require 'rexml/document'
 
 module ActiveMerchant #:nodoc:
