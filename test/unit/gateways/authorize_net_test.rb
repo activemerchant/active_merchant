@@ -120,6 +120,12 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_supported_card_types
     assert_equal [:visa, :master, :american_express, :discover], AuthorizeNetGateway.supported_cardtypes
   end
+  
+  def test_failure_without_response_reason_text
+    assert_nothing_raised do
+      assert_equal '', @gateway.send(:message_from, {})
+    end
+  end
 
   private
 
