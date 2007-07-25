@@ -58,6 +58,14 @@ class CreditCardTest < Test::Unit::TestCase
     assert !@visa.errors.empty?
   end
   
+  def test_indifferent_error_access
+    @visa.first_name = ''
+    
+    assert !@visa.valid?
+    assert @visa.errors.on(:first_name)
+    assert @visa.errors.on("first_name")
+  end
+  
   def test_liberate_bogus_card
     c = CreditCard.new
     c.type = 'bogus'

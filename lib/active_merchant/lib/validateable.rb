@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
     end  
 
     # This hash keeps the errors of the object
-    class Errors < Hash
+    class Errors < HashWithIndifferentAccess
 
       def initialize(base)
         @base = base
