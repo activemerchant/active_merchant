@@ -103,23 +103,39 @@ class CreditCardTest < Test::Unit::TestCase
     @visa.year   = Time.now.year
     assert @visa.valid?
   end
- 
+
+  def test_empty_month_should_be_invalid
+    @visa.month = ''
+    assert !@visa.valid?
+    assert @visa.errors.on('month')
+  end
+
   def test_edge_cases_for_valid_months
     @visa.month = 13
     @visa.year = Time.now.year
     assert !@visa.valid?
+    assert @visa.errors.on('month')
 
     @visa.month = 0
     @visa.year = Time.now.year
     assert !@visa.valid?
+    assert @visa.errors.on('month')
   end 
+
+  def test_empty_year_should_be_invalid
+    @visa.year = ''
+    assert !@visa.valid?
+    assert @visa.errors.on('year')
+  end
 
   def test_edge_cases_for_valid_years
     @visa.year  = Time.now.year - 1
     assert !@visa.valid?
+    assert @visa.errors.on('year')
 
     @visa.year  = Time.now.year + 21
     assert !@visa.valid?
+    assert @visa.errors.on('year')
   end
 
   def test_valid_year
