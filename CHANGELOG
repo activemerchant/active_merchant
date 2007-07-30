@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Default address_override to 0 for PayPal Website Payments Standard payments. [cody]
+#
 # * Enhance credit card error messages [manfred]
 #
 # * Use HashWithIndifferentAccess for CreditCard for compatibility with Rails applications [michael.j.mangino]

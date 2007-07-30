@@ -28,6 +28,12 @@ class GatewaySupport
     end
   end
   
+  def to_textile
+    each_gateway do |g|
+      puts %/ * "#{g.display_name}":#{g.homepage_url} [#{g.supported_countries.join(', ')}]/
+    end
+  end
+  
   def to_s
     each_gateway do |g|
       puts "#{g.display_name} - #{g.homepage_url} [#{g.supported_countries.join(', ')}]"

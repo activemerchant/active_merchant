@@ -125,16 +125,25 @@ task :upload_rdoc => :rdoc do
   pub.upload
 end
 
-desc 'Print the currently supported gateways in RDoc format'
-task :print_gateway_support_rdoc do
-  support = GatewaySupport.new
-  support.to_rdoc
+namespace :gateways do
+  desc 'Print the currently supported gateways in RDoc format'
+  task :print_support_rdoc do
+    support = GatewaySupport.new
+    support.to_rdoc
+  end
+  
+  desc 'Print the currently supported gateways'
+  task :print_support do
+    support = GatewaySupport.new
+    support.to_s
+  end
+  
+  desc 'Print the currently supported gateways'
+  task :print_support_textile do
+    support = GatewaySupport.new
+    support.to_textile
+  end
 end
-
-desc 'Print the currently supported gateways'
-task :print_gateway_support do
-  support = GatewaySupport.new
-  support.to_s
-end
-
-
+  
+  
+  
