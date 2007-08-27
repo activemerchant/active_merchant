@@ -7,7 +7,13 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'SecurePay'
       
       # Limit support to purchase() for the time being
-      undef_method :authorize, :capture, :void, :credit
+      # JRuby chokes here
+      # undef_method :authorize, :capture, :void, :credit
+      
+      undef_method :authorize
+      undef_method :capture
+      undef_method :void
+      undef_method :credit
       
       def test?
         Base.gateway_mode == :test
