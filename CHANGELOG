@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add support for Protx [shiftx, cody]
+#
 # * Use undef_method with a single argument in SecurePay to prevent JRuby from choking on it. [jonathan.l.bartlett]
 #
 # * Default address_override to 0 for PayPal Website Payments Standard payments. [cody]
