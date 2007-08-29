@@ -67,6 +67,11 @@ class RemoteProtxTest < Test::Unit::TestCase
       :first_name => 'Longbob',
       :last_name => 'Longsen'
     )
+    
+    @electron = credit_card('4917300000000008',
+      :type => 'electron',
+      :verification_value => '123'
+    )
 
     @mastercard_options = { 
       :address => { :address1 => '25 The Larches',
@@ -158,6 +163,13 @@ class RemoteProtxTest < Test::Unit::TestCase
   
   def test_successful_amex_purchase
     assert response = @gateway.purchase(AMOUNT, @amex, :order_id => generate_order_id)   
+    assert response.success?
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+  
+  def test_successful_electron_purchase
+    assert response = @gateway.purchase(AMOUNT, @electron, :order_id => generate_order_id)   
     assert response.success?
     assert response.test?
     assert !response.authorization.blank?

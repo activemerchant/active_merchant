@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       include RequiresParameters
       include CreditCardFormatting
       
-      DEBIT_CARDS = [ :switch, :solo, :maestro ]
+      DEBIT_CARDS = [ :switch, :solo ]
       
       # The format of the amounts used by the gateway
       # :dollars => '12.50'

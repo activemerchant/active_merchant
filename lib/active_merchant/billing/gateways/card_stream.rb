@@ -1,5 +1,3 @@
-# Portions of the Cardstream gateway by Jonah Fox and Thomas Nichols
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     #

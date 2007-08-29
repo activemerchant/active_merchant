@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Fix support for electron in Protx [cody]
+#
 # * Add support for Protx [shiftx, cody]
 #
 # * Use undef_method with a single argument in SecurePay to prevent JRuby from choking on it. [jonathan.l.bartlett]

@@ -30,13 +30,15 @@ module ActiveMerchant #:nodoc:
         :jcb => "JCB"
       }
       
+      ELECTRON = /^(424519|42496[23]|450875|48440[6-8]|4844[1-5][1-5]|4917[3-5][0-9]|491880)\d{10}(\d{3})?$/
+      
       POST_HEADERS = { 'Content-Type' => 'application/x-www-form-urlencoded' }
 
       attr_reader :url
       attr_reader :response
       attr_reader :options
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :solo, :maestro, :electron, :diners_club]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :solo, :maestro, :diners_club]
       self.supported_countries = ['GB']
       self.default_currency = 'GBP'
       
@@ -171,9 +173,22 @@ module ActiveMerchant #:nodoc:
           
           add_pair(post, :IssueNumber, format_issue_number(credit_card))
         end
-        add_pair(post, :CardType, CREDIT_CARDS[credit_card.type])  
+        add_pair(post, :CardType, map_card_type(credit_card))
         
         add_pair(post, :CV2, credit_card.verification_value)
+      end
+      
+      def map_card_type(credit_card)
+        raise ArgumentError, "The credit card type must be provided" if credit_card.type.blank?
+        
+        card_type = credit_card.type.to_sym
+        
+        # Check if it is an electron card
+        if card_type == :visa && credit_card.number =~ ELECTRON 
+          CREDIT_CARDS[:electron]
+        else  
+          CREDIT_CARDS[card_type]
+        end
       end
       
       # MMYY format
