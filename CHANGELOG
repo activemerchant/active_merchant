@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Sanitize Protx order id [cody]
+#
 # * Fix support for electron in Protx [cody]
 #
 # * Add support for Protx [shiftx, cody]

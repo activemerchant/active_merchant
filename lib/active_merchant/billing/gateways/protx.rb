@@ -158,7 +158,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        add_pair(post, :VendorTxCode, options[:order_id], :required => true)
+        add_pair(post, :VendorTxCode, sanitize_order_id(options[:order_id]), :required => true)
         add_pair(post, :Description, options[:description] || options[:order_id])
       end
 
@@ -176,6 +176,10 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :CardType, map_card_type(credit_card))
         
         add_pair(post, :CV2, credit_card.verification_value)
+      end
+      
+      def sanitize_order_id(order_id)
+        order_id.to_s.gsub(/[^-a-zA-Z0-9._]/, '')
       end
       
       def map_card_type(credit_card)
