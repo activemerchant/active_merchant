@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['GB']
       self.default_currency = 'GBP'
       
-      self.homepage_url = 'http://protx.com'
+      self.homepage_url = 'http://www.protx.com'
       self.display_name = 'Protx'
 
       def initialize(options = {})
