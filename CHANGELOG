@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Use an array for LineItems when calculating tax in CyberSource gateway [cody]
+#
 # * Add CyberSource gateway [Matt Margolis]
 #
 # * Sanitize Protx order id [cody]

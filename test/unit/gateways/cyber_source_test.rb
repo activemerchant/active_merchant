@@ -28,22 +28,21 @@ class CyberSourceTest < Test::Unit::TestCase
                },
 
                :order_id => 'test1111111111111111',
-               :line_items => {
-                    :line_item_1 => {
-                     :unitPrice => '1',
-                     :quantity => '2',
-                     :productCode => 'default',
-                     :productName => 'Giant Walrus',
-                     :productSKU => 'WA323232323232323'
+               :line_items => [
+                   {
+                      :declared_value => 100,
+                      :quantity => 2,
+                      :code => 'default',
+                      :description => 'Giant Walrus',
+                      :sku => 'WA323232323232323'
                    },
-                    :line_item_2 => {
-                     :unitPrice => '6',
-                     :quantity => '1',
-                     :productCode => 'default',
-                     :productName => 'Marble Snowcone',
-                     :productSKU => 'FAKE1232132113123'
+                   {
+                      :declared_value => 100,
+                      :quantity => 2,
+                      :description => 'Marble Snowcone',
+                      :sku => 'FAKE1232132113123'
                    }
-          },
+                 ],
           :currency => 'USD'
     }
   end

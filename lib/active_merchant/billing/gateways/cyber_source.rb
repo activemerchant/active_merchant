@@ -1,16 +1,3 @@
-#Extended hash class to have a proper each_with_index
-#The standard hash.each_with_index converts hash to an Array 
-#Hash monkey patch provided by Jonathan Broad 
-class Hash #:nodoc:
-  def each_item_with_index
-    i = 0
-    self.each do |key, value|
-      yield key, value, i
-      i += 1
-    end
-  end
-end  
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # See the remote and mocked unit test files for example usage.  Pay special attention to the contents of the options hash.
@@ -151,21 +138,25 @@ module ActiveMerchant #:nodoc:
       #
       # The line_item hash goes in the options hash and should look like 
       # 
-      #         :line_items => {
-      #              :line_item_1 => {
-      #               :unitPrice => '1',
-      #               :quantity => '2',
-      #               :productCode => 'default',
-      #               :productName => 'Giant Walrus',
-      #               :productSKU => 'WA323232323232323'
-      #             },
-      #              :line_item_2 => {
-      #               :unitPrice => '6',
-      #               :quantity => '1',
-      #               :productCode => 'default',
-      #               :productName => 'Marble Snowcone',
-      #               :productSKU => 'FAKE1232132113123'
-      #             }
+      #         :line_items => [
+      #           {
+      #             :declared_value => '1',
+      #             :quantity => '2',
+      #             :code => 'default',
+      #             :description => 'Giant Walrus',
+      #             :sku => 'WA323232323232323'
+      #           },
+      #           {
+      #             :declared_value => '6',
+      #             :quantity => '1',
+      #             :code => 'default',
+      #             :description => 'Marble Snowcone',
+      #             :sku => 'FAKE1232132113123'
+      #           }
+      #         ]
+      #
+      # This functionality is only supported by this particular gateway may
+      # be changed at any time
       def calculate_tax(creditcard, options)
         requires!(options,  :line_items)
         setup_address_hash(options)
@@ -238,13 +229,13 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_line_item_data(xml, options)
-        options[:line_items].each_item_with_index do |key, value, index|
+        options[:line_items].each_with_index do |value, index|
           xml.tag! 'item', {'id' => index} do
-            xml.tag! 'unitPrice', value[:unitPrice]  
+            xml.tag! 'unitPrice', amount(value[:declared_value])  
             xml.tag! 'quantity', value[:quantity]
-            xml.tag! 'productCode', value[:productCode]
-            xml.tag! 'productName', value[:productName]
-            xml.tag! 'productSKU', value[:productSKU]
+            xml.tag! 'productCode', value[:code] || 'shipping_only'
+            xml.tag! 'productName', value[:description]
+            xml.tag! 'productSKU', value[:sku]
           end
         end
       end
