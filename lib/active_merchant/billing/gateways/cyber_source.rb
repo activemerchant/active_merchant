@@ -166,13 +166,13 @@ module ActiveMerchant #:nodoc:
       private                       
       # Create all address hash key value pairs so that we still function if we were only provided with one or two of them 
       def setup_address_hash(options)
-        options[:billing_address] = options[:billing_address] || options[:address] || options[:shipping_address] || {}
+        options[:billing_address] = options[:billing_address] || options[:address] || {}
         options[:shipping_address] = options[:shipping_address] || options[:billing_address]
       end
       
       def build_auth_request(money, creditcard, options)
         xml = Builder::XmlMarkup.new :indent => 2
-        add_address(xml, creditcard, options[:billing_address])
+        add_address(xml, creditcard, options[:billing_address], options)
         add_purchase_data(xml, money, true, options)
         add_creditcard(xml, creditcard)
         add_auth_service(xml)
@@ -182,8 +182,8 @@ module ActiveMerchant #:nodoc:
 
       def build_tax_calculation_request(creditcard, options)
         xml = Builder::XmlMarkup.new :indent => 2
-        add_address(xml, creditcard, options[:billing_address], false)
-        add_address(xml, creditcard, options[:shipping_address], true)
+        add_address(xml, creditcard, options[:billing_address], options, false)
+        add_address(xml, creditcard, options[:shipping_address], options, true)
         add_line_item_data(xml, options)
         add_purchase_data(xml, 0, false, options)
         add_tax_service(xml)
@@ -204,7 +204,7 @@ module ActiveMerchant #:nodoc:
 
       def build_purchase_request(money, creditcard, options)
         xml = Builder::XmlMarkup.new :indent => 2
-        add_address(xml, creditcard, options[:billing_address])
+        add_address(xml, creditcard, options[:billing_address], options)
         add_purchase_data(xml, money, true, options)
         add_creditcard(xml, creditcard)
         add_purchase_service(xml, options)
@@ -255,7 +255,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_address(xml, creditcard, address, shipTo = false)      
+      def add_address(xml, creditcard, address, options, shipTo = false)      
         xml.tag! shipTo ? 'shipTo' : 'billTo' do
           xml.tag! 'firstName', creditcard.first_name
           xml.tag! 'lastName', creditcard.last_name 
@@ -265,7 +265,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'state', address[:state]
           xml.tag! 'postalCode', address[:zip]
           xml.tag! 'country', address[:country]
-          xml.tag! 'email', address[:email]
+          xml.tag! 'email', options[:email]
         end 
       end
 
