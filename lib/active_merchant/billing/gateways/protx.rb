@@ -51,6 +51,10 @@ module ActiveMerchant #:nodoc:
         super
       end
       
+      def test?
+        @options[:test] || Base.gateway_mode == :test
+      end
+      
       def purchase(money, credit_card, options = {})
         requires!(options, :order_id)
         
