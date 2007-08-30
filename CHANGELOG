@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add CyberSource gateway [Matt Margolis]
+#
 # * Sanitize Protx order id [cody]
 #
 # * Fix support for electron in Protx [cody]
