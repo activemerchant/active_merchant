@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       
       self.supported_cardtypes = [:visa, :master, :american_express]
       self.supported_countries = ['US']
-      self.display_name = 'ViaKlix'
+      self.display_name = 'ViaKLIX'
       self.homepage_url = 'http://viaklix.com'
       
       # Initialize the Gateway
@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
       private
       def add_customer_data(form, options)
         form[:email] = options[:email] unless options[:email].blank?
-        form[:customer_code] = options[:customer] unless options[:customer].blank?
+        form[:customer_code] = options[:customer].to_s.slice(0, 17) unless options[:customer].blank?
       end
       
       def add_invoice(form,options)
