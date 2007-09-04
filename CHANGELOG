@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add payment gateway Viaklix [Sal Scotto, cody]
+#
 # * Add Australian payment gateway NetRegistry [George Ogata]
 #
 # * Take order email from the options hash instead of the address for CyberSource [cody]

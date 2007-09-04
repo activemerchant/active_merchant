@@ -28,3 +28,5 @@ require 'active_merchant/billing/gateways/plugnpay'
 require 'active_merchant/billing/gateways/protx'
 require 'active_merchant/billing/gateways/cyber_source'
 require 'active_merchant/billing/gateways/net_registry'
+require 'active_merchant/billing/gateways/viaklix'
+
