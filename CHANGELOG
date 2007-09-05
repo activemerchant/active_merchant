@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add support for PayPal API signatures [Benjamin Curtis, cody]
+#
 # * Add payment gateway Viaklix [Sal Scotto, cody]
 #
 # * Add Australian payment gateway NetRegistry [George Ogata]

@@ -6,6 +6,7 @@ module ActiveMerchant #:nodoc:
         
         base.default_currency = 'USD'
         base.cattr_accessor :pem_file
+        base.cattr_accessor :signature
       end
       
       API_VERSION = '2.0'
@@ -34,18 +35,29 @@ module ActiveMerchant #:nodoc:
         'VIC' => 'Victoria',
         'WA'  => 'Western Australia'
       }
-    
+      
+      # The gateway must be configured with either your PayPal PEM file
+      # or your PayPal API Signature.  Only one is required.
+      #
       # <tt>:pem</tt>         The text of your PayPal PEM file. Note
       #                       this is not the path to file, but its
       #                       contents. If you are only using one PEM
       #                       file on your site you can declare it
       #                       globally and then you won't need to
       #                       include this option
+      #
+      # <tt>:signature</tt>   The text of your PayPal signature. 
+      #                       If you are only using one API Signature
+      #                       on your site you can declare it
+      #                       globally and then you won't need to
+      #                       include this option
+      
       def initialize(options = {})
         requires!(options, :login, :password)
         
         @options = {
-          :pem => self.class.pem_file
+          :pem => pem_file,
+          :signature => signature
         }.update(options)
         
         super
@@ -235,6 +247,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'Username', @options[:login]
             xml.tag! 'Password', @options[:password]
             xml.tag! 'Subject', @options[:subject]
+            xml.tag! 'Signature', @options[:signature] unless @options[:signature].blank?
           end
         end
       end
