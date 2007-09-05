@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add Braintree payment gateway [Michael J. Mangino]
+#
 # * Add support for PayPal API signatures [Benjamin Curtis, cody]
 #
 # * Add payment gateway Viaklix [Sal Scotto, cody]
