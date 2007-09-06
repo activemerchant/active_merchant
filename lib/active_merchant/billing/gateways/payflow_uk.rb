@@ -1,3 +1,6 @@
+require File.dirname(__FILE__) + '/payflow'
+require File.dirname(__FILE__) + '/payflow_express_uk' 
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PayflowUkGateway < PayflowGateway

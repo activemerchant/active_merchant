@@ -29,7 +29,7 @@ module ActiveMerchant
     class NetRegistryGateway < Gateway
       LIVE_URL = 'https://4tknox.au.com/cgi-bin/themerchant.au.com/ecom/external2.pl'
       
-      self.supported_countries = ['US']
+      self.supported_countries = ['AU']
       
       # Note that support for Diners, Amex, and JCB require extra
       # steps in setting up your account, as detailed in

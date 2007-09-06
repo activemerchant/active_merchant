@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Fix dependency loading for gateways that are subclasses [cody]
+#
 # * Add Braintree payment gateway [Michael J. Mangino]
 #
 # * Add support for PayPal API signatures [Benjamin Curtis, cody]
