@@ -7,6 +7,9 @@ module ActiveMerchant #:nodoc:
     def self.included(base)
       base.class_inheritable_accessor :ssl_strict
       base.ssl_strict = true
+      
+      base.class_inheritable_accessor :pem_password
+      base.pem_password = false
     end
     
     def ssl_post(url, data, headers = {})
@@ -15,7 +18,7 @@ module ActiveMerchant #:nodoc:
       http = Net::HTTP.new(uri.host, uri.port) 
       http.use_ssl        = true
       
-      if self.class.ssl_strict
+      if ssl_strict
         http.verify_mode    = OpenSSL::SSL::VERIFY_PEER
         http.ca_file        = File.dirname(__FILE__) + '/../../certs/cacert.pem'
       else
@@ -24,7 +27,13 @@ module ActiveMerchant #:nodoc:
       
       if @options && !@options[:pem].blank?
         http.cert           = OpenSSL::X509::Certificate.new(@options[:pem])
-        http.key            = OpenSSL::PKey::RSA.new(@options[:pem])
+        
+        if pem_password
+          raise ArgumentError, "The private key requires a password" if @options[:pem_password].blank?
+          http.key            = OpenSSL::PKey::RSA.new(@options[:pem], @options[:pem_password])
+        else
+          http.key            = OpenSSL::PKey::RSA.new(@options[:pem])
+        end
       end
 
       begin

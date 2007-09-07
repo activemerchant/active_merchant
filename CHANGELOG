@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add support for password protected pem files [cody]
+#
 # * Add support for Concord Efsnet payment gateway [snacktime]
 #
 # * Fix dependency loading for gateways that are subclasses [cody]
