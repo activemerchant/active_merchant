@@ -4,30 +4,23 @@ class PaypalExpressTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
     
-    #cert = File.read(File.join(File.dirname(__FILE__), 'certificate.pem'))
-    
-    @gateway = PaypalExpressGateway.new(
-      :login     => 'login',
-      :password  => 'password',
-      :subject => 'third_party_account',
-      :pem => '' #cert
-     )
+    @gateway = PaypalExpressGateway.new(fixtures(:paypal))
   
-     @options = {
-       :order_id => '230000',
-       :email => 'buyer@jadedpallet.com',
-       :address => { :name => 'Fred Brooks',
-                     :address1 => '1234 Penny Lane',
-                     :city => 'Jonsetown',
-                     :state => 'NC',
-                     :country => 'US',
-                     :zip => '23456'
-                   } ,
-       :description => 'Stuff that you purchased, yo!',
-       :ip => '10.0.0.1',
-       :return_url => 'http://example.com/return',
-       :cancel_return_url => 'http://example.com/cancel'
-     }
+    @options = {
+      :order_id => '230000',
+      :email => 'buyer@jadedpallet.com',
+      :address => { :name => 'Fred Brooks',
+                    :address1 => '1234 Penny Lane',
+                    :city => 'Jonsetown',
+                    :state => 'NC',
+                    :country => 'US',
+                    :zip => '23456'
+                  } ,
+      :description => 'Stuff that you purchased, yo!',
+      :ip => '10.0.0.1',
+      :return_url => 'http://example.com/return',
+      :cancel_return_url => 'http://example.com/cancel'
+    }
   end
   
   def test_set_express_authorization

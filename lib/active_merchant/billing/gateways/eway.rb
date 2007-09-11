@@ -67,13 +67,66 @@ module ActiveMerchant #:nodoc:
       LIVE_CVN_URL = 'https://www.eway.com.au/gateway_cvn/xmlpayment.asp'
       
       MESSAGES = {
-        "00" => "Transaction was successfully processed",
-        "A8" => "Amount is invalid",
-        "A9" => "Card number is invalid",
-        "AA" => "Account is invalid",
-        "AB" => "Card expiry date is invalid",
-        "01" => "Card verification number didn't match",
-        "05" => "Card verification number didn't match"
+        "00" => "Transaction Approved",
+        "01" => "Refer to Issuer",
+        "02" => "Refer to Issuer, special",	
+        "03" => "No Merchant",
+        "04" => "Pick Up Card",	
+        "05" => "Do Not Honour",	
+        "06" => "Error",
+        "07" => "Pick Up Card, Special",	
+        "08" => "Honour With Identification",	
+        "09" => "Request In Progress",
+        "10" => "Approved For Partial Amount",	
+        "11" => "Approved, VIP",	
+        "12" => "Invalid Transaction",	
+        "13" => "Invalid Amount",
+        "14" => "Invalid Card Number",	
+        "15" => "No Issuer",	
+        "16" => "Approved, Update Track 3",	
+        "19" => "Re-enter Last Transaction",	
+        "21" => "No Action Taken",	
+        "22" => "Suspected Malfunction",	
+        "23" => "Unacceptable Transaction Fee",	
+        "25" => "Unable to Locate Record On File",	
+        "30" => "Format Error",	
+        "31" => "Bank Not Supported By Switch",	
+        "33" => "Expired Card, Capture",	
+        "34" => "Suspected Fraud, Retain Card",	
+        "35" => "Card Acceptor, Contact Acquirer, Retain Card",	
+        "36" => "Restricted Card, Retain Card",	
+        "37" => "Contact Acquirer Security Department, Retain Card",	
+        "38" => "PIN Tries Exceeded, Capture",	
+        "39" => "No Credit Account",	
+        "40" => "Function Not Supported",	
+        "41" => "Lost Card",	
+        "42" => "No Universal Account",	
+        "43" => "Stolen Card",	
+        "44" => "No Investment Account",	
+        "51" => "Insufficient Funds",	
+        "52" => "No Cheque Account",	
+        "53" => "No Savings Account",	
+        "54" => "Expired Card",	
+        "55" => "Incorrect PIN",	
+        "56" => "No Card Record",	
+        "57" => "Function Not Permitted to Cardholder",	
+        "58" => "Function Not Permitted to Terminal",	
+        "59" => "Suspected Fraud",	
+        "60" => "Acceptor Contact Acquirer",	
+        "61" => "Exceeds Withdrawal Limit",	
+        "62" => "Restricted Card",	
+        "63" => "Security Violation",	
+        "64" => "Original Amount Incorrect",	
+        "66" => "Acceptor Contact Acquirer, Security",	
+        "67" => "Capture Card",	
+        "75" => "PIN Tries Exceeded",	
+        "82" => "CVV Validation Error",	
+        "90" => "Cutoff In Progress",	
+        "91" => "Card Issuer Unavailable",	
+        "92" => "Unable To Route Transaction",	
+        "93" => "Cannot Complete, Violation Of The Law",	
+        "94" => "Duplicate Transaction",	
+        "96" => "System Error"
       }
       
       attr_reader :url 
@@ -156,9 +209,11 @@ module ActiveMerchant #:nodoc:
 
         success = (response[:ewaytrxnstatus] == "True")
         message = message_from(response[:ewaytrxnerror])
+        test = /\(Test( CVN)? Gateway\)/ === response[:ewaytrxnerror]
     
         Response.new(success, message, @response,
-          :authorization => response[:ewayauthcode]
+          :authorization => response[:ewayauthcode],
+          :test => test
         )      
       end
                                              
@@ -178,7 +233,6 @@ module ActiveMerchant #:nodoc:
         #  </ewayResponse>     
 
         response = {}
-
         xml = REXML::Document.new(xml)          
         xml.elements.each('//ewayResponse/*') do |node|
 

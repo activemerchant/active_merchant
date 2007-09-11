@@ -1,52 +1,47 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class RemoteCyberSourceTest < Test::Unit::TestCase
-  LOGIN = 'YourLogin'
-  TRANSACTION_KEY = 'GenerateThisInTheBusinessCenter'
-  
   # Amount in cents
   AMOUNT = 100
 
   def setup
-    ActiveMerchant::Billing::Base.gateway_mode = :test
+    Base.gateway_mode = :test
 
-    @gateway = CyberSourceGateway.new(
-      :login => LOGIN,
-      :password => TRANSACTION_KEY
-    )
+    @gateway = CyberSourceGateway.new(fixtures(:cyber_source))
 
     @creditcard = credit_card('4111111111111111', :type => 'visa')
     @declined_card = credit_card('801111111111111', :type => 'visa')
     
-    @options = {  :address => { 
-                  :address1 => '1234 My Street',
-                  :address2 => 'Apt 1',
-                  :company => 'Widgets Inc',
-                  :city => 'Ottawa',
-                  :state => 'ON',
-                  :zip => 'K1C2N6',
-                  :country => 'Canada',
-                  :phone => '(555)555-5555',
-                  :email => 'someguy1232@fakeemail.net'
-               },
+    @options = {
+      :address => { 
+        :address1 => '1234 My Street',
+        :address2 => 'Apt 1',
+        :company => 'Widgets Inc',
+        :city => 'Ottawa',
+        :state => 'ON',
+        :zip => 'K1C2N6',
+        :country => 'Canada',
+        :phone => '(555)555-5555'
+      },
 
-               :order_id => generate_order_id,
-               :line_items => [
-                  {
-                     :declared_value => 100,
-                     :quantity => 2,
-                     :code => 'default',
-                     :description => 'Giant Walrus',
-                     :sku => 'WA323232323232323'
-                  },
-                  {
-                     :declared_value => 100,
-                     :quantity => 2,
-                     :description => 'Marble Snowcone',
-                     :sku => 'FAKE1232132113123'
-                   }
-                ],
+      :order_id => generate_order_id,
+      :line_items => [
+        {
+          :declared_value => 100,
+          :quantity => 2,
+          :code => 'default',
+          :description => 'Giant Walrus',
+          :sku => 'WA323232323232323'
+        },
+        {
+          :declared_value => 100,
+          :quantity => 2,
+          :description => 'Marble Snowcone',
+          :sku => 'FAKE1232132113123'
+        }
+      ],  
       :currency => 'USD',
+      :email => 'someguy1232@fakeemail.net',
       :ignore_avs => 'true',
       :ignore_cvv => 'true'
     }

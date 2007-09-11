@@ -4,8 +4,7 @@ class RemoteExactTest < Test::Unit::TestCase
   def setup
     
     
-    @gateway = ExactGateway.new( :login    => "A00427-01",
-                                 :password => "testus" )
+    @gateway = ExactGateway.new(fixtures(:exact))
 
     @credit_card = credit_card("4111111111111111")
     

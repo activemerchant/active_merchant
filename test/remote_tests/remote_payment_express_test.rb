@@ -5,10 +5,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
   PASSWORD = 'PASSWORD'
   
   def setup
-    @gateway = PaymentExpressGateway.new(
-      :login => LOGIN,
-      :password => PASSWORD
-    )
+    @gateway = PaymentExpressGateway.new(fixtures(:payment_express))
     
     @creditcard = credit_card('4111111111111111')
 

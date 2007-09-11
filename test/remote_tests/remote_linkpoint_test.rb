@@ -17,20 +17,12 @@
 
 require File.dirname(__FILE__) + '/../test_helper'
 
-ActiveMerchant::Billing::LinkpointGateway.pem_file = File.read( File.dirname(__FILE__) + '/../mycert.pem'  )
-
 class LinkpointTest < Test::Unit::TestCase
   def setup
-    ActiveMerchant::Billing::Base.gateway_mode = :test
+    Base.gateway_mode = :test
     
-    # You can also pass in the complete certificate as a string
-    # with the :pem option
-    # Signup for a test LinkPoint account and use the Store Number
-    # as the login argument.
-    @gateway = LinkpointGateway.new(
-      :login => '1909597035'
-    )
-      
+    @gateway = LinkpointGateway.new(fixtures(:linkpoint))
+        
     # Test credit card numbers
     # American Express: 371111111111111
     # Discover: 6011-1111-1111-1111
@@ -39,24 +31,17 @@ class LinkpointTest < Test::Unit::TestCase
     # MasterCard: 5419-8400-0000-0003
     # Visa: 4111-1111-1111-1111
 
-    @creditcard = CreditCard.new(
-      :number => '4111111111111111',
-      :month => Time.now.month.to_s,
-      :year => (Time.now + 1.year).year,
-      :first_name => 'Captain',
-      :last_name => 'Jack',
-      :verification_value => '123'
-    )
+    @creditcard = credit_card('4111111111111111')
     
-     @address = {
-        :address1 => '1313 lucky lane',
-        :city => 'Lost Angeles',
-        :state => 'ON',
-        :zip => 'K2P2A6',
-        :country => 'CA',
-        :address2 => 'Apartment 1',
-        :phone => '(555)555-5555'
-      }
+    @address = {
+      :address1 => '1313 lucky lane',
+      :city => 'Lost Angeles',
+      :state => 'ON',
+      :zip => 'K2P2A6',
+      :country => 'CA',
+      :address2 => 'Apartment 1',
+      :phone => '(555)555-5555'
+     }
   end
   
   def test_successful_authorization

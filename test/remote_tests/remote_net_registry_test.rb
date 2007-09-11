@@ -22,8 +22,6 @@ class NetRegistryTest < Test::Unit::TestCase
   # and received from the gateway
   #
 
-  LOGIN         = 'X'
-  PASSWORD      = 'Y'
   LOG_FILE_NAME = nil
   VALID_CARD_DETAILS = {
     :number => '4111111111111111',
@@ -40,11 +38,7 @@ class NetRegistryTest < Test::Unit::TestCase
       @logger = Logger.new(@log_file)
     end
 
-    @gateway = NetRegistryGateway.new(
-      :login    => LOGIN,
-      :password => PASSWORD,
-      :logger => @logger
-    )
+    @gateway = NetRegistryGateway.new(fixtures(:net_registry))
 
     @valid_creditcard = CreditCard.new(VALID_CARD_DETAILS)
     @invalid_creditcard = CreditCard.new(
@@ -66,7 +60,7 @@ class NetRegistryTest < Test::Unit::TestCase
     response = @gateway.purchase(100, @valid_creditcard)
     assert_equal 'approved', response.params['status']
     assert response.success?
-    assert_match /\A\d{16}\z/, response.authorization
+    assert_match(/\A\d{16}\z/, response.authorization)
 
     response = @gateway.credit(100, response.authorization)
     assert_equal 'approved', response.params['status']
@@ -74,7 +68,7 @@ class NetRegistryTest < Test::Unit::TestCase
   end
 
   #
-  # #authorize and #capture haven't been tested because the author's
+  # # authorize and #capture haven't been tested because the author's
   # account hasn't been setup to support these methods (see the
   # documentation for the NetRegistry gateway class).  There is no
   # mention of a #void transaction in NetRegistry's documentation,
@@ -85,7 +79,7 @@ class NetRegistryTest < Test::Unit::TestCase
       response = @gateway.authorize(100, @valid_creditcard)
       assert response.success?
       assert_equal 'approved', response.params['status']
-      assert_match /\A\d{6}\z/, response.authorization
+      assert_match(/\A\d{6}\z/, response.authorization)
 
       response = @gateway.capture(100,
                                   response.authorization,

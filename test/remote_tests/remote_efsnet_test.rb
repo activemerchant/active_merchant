@@ -1,21 +1,14 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class RemoteEfsnetTest < Test::Unit::TestCase
-  
-  LOGIN    = 'LOGIN'
-  PASSWORD = 'PASSWORD'
-  
   AMOUNT = 100
   DECLINED_AMOUNT = 156
 
   def setup
-    ActiveMerchant::Billing::Base.gateway_mode = :test
+    Base.gateway_mode = :test
 
-    @gateway = EfsnetGateway.new(
-      :login => LOGIN,
-      :password => PASSWORD
-    )
-
+    @gateway = EfsnetGateway.new(fixtures(:efsnet))
+    
     @creditcard = credit_card('4000100011112224')
 
     @options = { :order_id => 0, 

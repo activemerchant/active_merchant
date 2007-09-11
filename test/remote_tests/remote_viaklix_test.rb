@@ -3,16 +3,9 @@ require File.dirname(__FILE__) + '/../test_helper'
 class RemoteViaklixTest < Test::Unit::TestCase
   include ActiveMerchant::Billing
   
-  LOGIN = 'YOUR MERCHANT ID'
-  USER = 'YOUR USER ID'
-  PIN = 'YOUR PIN'
-
+  
   def setup
-    @gateway = ViaklixGateway.new(
-      :login => LOGIN,
-      :password => PIN,
-      :user => USER
-    )
+    @gateway = ViaklixGateway.new(fixtures(:viaklix))
     
     @credit_card = credit_card('4242424242424242')
     

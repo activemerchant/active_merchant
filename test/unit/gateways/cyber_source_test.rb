@@ -23,10 +23,10 @@ class CyberSourceTest < Test::Unit::TestCase
                   :state => 'ON',
                   :zip => 'K1C2N6',
                   :country => 'Canada',
-                  :phone => '(555)555-5555',
-                  :email => 'someguy1232@fakeemail.net'
+                  :phone => '(555)555-5555'
                },
 
+               :email => 'someguy1232@fakeemail.net',
                :order_id => 'test1111111111111111',
                :line_items => [
                    {
@@ -50,7 +50,7 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_purchase_success    
     @creditcard.number = 1
 
-    assert response = @gateway.purchase(100, @creditcard, :order_id => 1)
+    assert response = @gateway.purchase(100, @creditcard, @options)
     assert_equal Response, response.class
     assert_equal '#0001', response.params['receiptid']
     assert_equal true, response.success?
@@ -59,7 +59,7 @@ class CyberSourceTest < Test::Unit::TestCase
   def test_purchase_error
     @creditcard.number = 2
 
-    assert response = @gateway.purchase(100, @creditcard, :order_id => 1)
+    assert response = @gateway.purchase(100, @creditcard, @options)
     assert_equal Response, response.class
     assert_equal '#0001', response.params['receiptid']
     assert_equal false, response.success?
@@ -69,7 +69,7 @@ class CyberSourceTest < Test::Unit::TestCase
     @creditcard.number = 3 
     
     assert_raise(Error) do
-      assert response = @gateway.purchase(100, @creditcard, :order_id => 1)    
+      assert response = @gateway.purchase(100, @creditcard, @options)
     end
   end
   

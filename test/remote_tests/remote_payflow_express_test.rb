@@ -2,20 +2,9 @@ require File.dirname(__FILE__) + '/../test_helper'
 
 class RemotePayflowTest < Test::Unit::TestCase
   def setup
-    ActiveMerchant::Billing::Base.gateway_mode = :test
-
-    # Your Payflow username and password
-    @login = 'LOGIN'
-    @password = 'PASSWORD'
-  
-    # Change to the partner you have your account with
-    @partner = 'PayPal'
+    Base.gateway_mode = :test
     
-    @gateway = PayflowExpressGateway.new(
-        :login => @login,
-        :password => @password,
-        :partner => @partner
-    )
+    @gateway = PayflowExpressGateway.new(fixtures(:payflow))
 
     @options = { :address => { 
                                 :name => 'Cody Fauser',

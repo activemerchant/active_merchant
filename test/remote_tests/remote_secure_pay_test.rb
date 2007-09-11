@@ -6,13 +6,7 @@ class RemoteSecurePayTest < Test::Unit::TestCase
   AMOUNT = 100
   
   def setup
-    @login = 'LOGIN'
-    @password = 'PASSWORD'
-    
-    @gateway = SecurePayGateway.new(
-      :login => @login,
-      :password => @password
-    )
+    @gateway = SecurePayGateway.new(fixtures(:secure_pay))
 
     @creditcard = credit_card('4111111111111111',
       :month => 7,

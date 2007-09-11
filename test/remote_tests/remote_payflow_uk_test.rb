@@ -4,15 +4,8 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   def setup
     ActiveMerchant::Billing::Base.gateway_mode = :test
 
-    # Your Payflow username and password
-    @login = 'login'
-    @password = 'password'
-    
     # The default partner is PayPalUk
-    @gateway = PayflowUkGateway.new(
-      :login => @login,
-      :password => @password
-    )
+    @gateway = PayflowUkGateway.new(fixtures(:payflow_uk))
     
     @creditcard = CreditCard.new(
       :number => '5105105105105100',

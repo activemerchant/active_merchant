@@ -4,10 +4,7 @@ class RemoteTransFirstTest < Test::Unit::TestCase
   AMOUNT = 100
 
   def setup
-    @gateway = TransFirstGateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD'
-    )
+    @gateway = TransFirstGateway.new(fixtures(:trans_first))
 
     @creditcard = credit_card('4111111111111111')
 

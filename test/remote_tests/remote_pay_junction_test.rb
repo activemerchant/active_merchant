@@ -8,10 +8,7 @@ class PayJunctionTest < Test::Unit::TestCase
   AMOUNT = 250
   
   def setup
-    @gateway = PayJunctionGateway.new(
-      :login => 'pj-ql-01',
-      :password => 'pj-ql-01p'
-    )
+    @gateway = PayJunctionGateway.new(fixtures(:pay_junction))
 
     @creditcard = credit_card('4433221111223344')
     

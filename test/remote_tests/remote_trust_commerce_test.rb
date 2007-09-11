@@ -2,11 +2,8 @@ require File.dirname(__FILE__) + '/../test_helper'
 
 class TrustCommerceTest < Test::Unit::TestCase
   def setup
-    @gateway = TrustCommerceGateway.new(
-      :login => 'TestMerchant',
-      :password => 'password'
-    )
-
+    @gateway = TrustCommerceGateway.new(fixtures(:trust_commerce))
+    
     @creditcard = credit_card('4111111111111111')
     
     @valid_verification_value = '123'

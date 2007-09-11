@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Load remote test credentials from a fixtures file.  ActiveMerchant will look for a custom file ~/.active_merchant/fixtures.yml.  If the file exists it will be loaded instead of the default fixtures provided by ActiveMerchant.  This makes development easier, and removes the risk of committing non-public test account credentials to subversion. [cody]
+#
 # * Add support for password protected pem files [cody]
 #
 # * Add support for Concord Efsnet payment gateway [snacktime]

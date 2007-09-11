@@ -6,9 +6,7 @@ class RemoveUsaEpayTest < Test::Unit::TestCase
   def setup
     ActiveMerchant::Billing::Base.gateway_mode = :production
 
-    @gateway = UsaEpayGateway.new(
-      :login => 'yCaWGYQsSVR0S48B6AKMK07RQhaxHvGu'
-    )
+    @gateway = UsaEpayGateway.new(fixtures(:usa_epay))
 
     @creditcard = credit_card('4000100011112224')
 

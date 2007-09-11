@@ -2,16 +2,9 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class RemoteDataCashTest < Test::Unit::TestCase
-  CLIENT = ''      
-  PASSWORD = ''
-    
   def setup
-    #gateway to connect to Datacash
-    @gateway = DataCashGateway.new(
-      :login => CLIENT,
-      :password => PASSWORD,
-      :test => true
-    )
+    # gateway to connect to Datacash
+    @gateway = DataCashGateway.new(fixtures(:data_cash))
   
     @mastercard = CreditCard.new(
       :number => '5473000000000007',

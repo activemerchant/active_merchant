@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
       #
       # You must supply an :order_id in the options hash 
       def authorize(money, creditcard, options = {})
-        requires!(options,  :order_id)
+        requires!(options,  :order_id, :email)
         setup_address_hash(options)
         commit(build_auth_request(money, creditcard, options), options )
       end
@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
       # Purchase is an auth followed by a capture
       # You must supply an order_id in the options hash  
       def purchase(money, creditcard, options = {})
-        requires!(options, :order_id)
+        requires!(options, :order_id, :email)
         setup_address_hash(options)
         commit(build_purchase_request(money, creditcard, options), options)
       end

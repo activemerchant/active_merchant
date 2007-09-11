@@ -4,37 +4,26 @@ class RemoteRealexTest < Test::Unit::TestCase
   AMOUNT = 10000
 
   def setup
-    @merchant_id = 'your_merchant_id'
-    @secret = 'your_secret'
-    
-    @gateway = RealexGateway.new(
-      :login => @merchant_id,
-      :password => @secret
-    )
+    @gateway = RealexGateway.new(fixtures(:realex))
 
-    @gateway_with_account = RealexGateway.new(
-      :login => @merchant_id,
-      :password => @secret,
-      :account => 'testaccount'
-    )
-    
+    @gateway_with_account = RealexGateway.new(fixtures(:realex_with_account))
+  
     # Replace the card numbers with the test account numbers from Realex
+    @visa            = fixtures(:realex_visa)
+    @visa_declined   = fixtures(:realex_visa_declined)
+    @visa_referral_b = fixtures(:realex_visa_referral_b)
+    @visa_referral_a = fixtures(:realex_visa_referral_a)
+    @visa_coms_error = fixtures(:realex_visa_coms_error)
     
-    with_options(:type => 'visa') do |o|
-      @visa            = o.credit_card('XXXXXXXXXXXXXXXX')
-      @visa_declined   = o.credit_card('XXXXXXXXXXXXXXXX')
-      @visa_referral_b = o.credit_card('XXXXXXXXXXXXXXXX')
-      @visa_referral_a = o.credit_card('XXXXXXXXXXXXXXXX')
-      @visa_coms_error = o.credit_card('XXXXXXXXXXXXXXXX')
-    end
-
-    with_options(:type => 'master') do |o|
-      @mastercard            = o.credit_card('XXXXXXXXXXXXXXXX')
-      @mastercard_declined   = o.credit_card('XXXXXXXXXXXXXXXX')
-      @mastercard_referral_b = o.credit_card('XXXXXXXXXXXXXXXX')
-      @mastercard_referral_a = o.credit_card('XXXXXXXXXXXXXXXX')
-      @mastercard_coms_error = o.credit_card('XXXXXXXXXXXXXXXX')
-    end 
+    @mastercard            = fixtures(:realex_mastercard)
+    @mastercard_declined   = fixtures(:realex_mastercard_declined)
+    @mastercard_referral_b = fixtures(:realex_mastercard_referral_b)
+    @mastercard_referral_a = fixtures(:realex_mastercard_referral_a)
+    @mastercard_coms_error = fixtures(:realex_mastercard_coms_error)
+  end
+  
+  def test_nothing
+    assert true
   end
   
   def test_realex_purchase

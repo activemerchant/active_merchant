@@ -2,30 +2,14 @@ require File.dirname(__FILE__) + '/../test_helper'
 
 class RemoteQuickpayTest < Test::Unit::TestCase
 
-  # Quickpay MerchantId
-  LOGIN = 'MERCHANTID'
-  
-  # Quickpay md5checkword
-  PASSWORD = 'CHECKWORD'
-  
   # 100 cents
   AMOUNT = 100
   
   def setup
   
-    @gateway = QuickpayGateway.new(
-      :login => LOGIN,
-      :password => PASSWORD
-    )
+    @gateway = QuickpayGateway.new(fixtures(:quickpay))
     
-    @declined_visa = CreditCard.new(
-      :number => '4000300011112220',
-      :month => 9,
-      :year => Time.now.year + 1,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen'
-    )
-    
+    @declined_visa  = credit_card('4000300011112220')
     @visa           = credit_card('4000100011112224')
     @dankort        = credit_card('5019717010103742')
     @visa_dankort   = credit_card('4571100000000000')

@@ -10,53 +10,16 @@ class RemotePslCardTest < Test::Unit::TestCase
   KEEP_CARD_AMOUNT = 15000
 
   def setup
-    @gateway = PslCardGateway.new(
-      :login => '' # The test account number
-    )
+    @gateway = PslCardGateway.new(fixtures(:psl_card))
     
-    # Replace with PSLCard Test Credit information
-    @uk_maestro = credit_card('',
-      :month => 6,
-      :year => 2009,
-      :verification_value => '',
-      :issue_number => '1'
-    )
+    @uk_maestro = CreditCard.new(fixtures(:psl_maestro))
+    @uk_maestro_address = fixtures(:psl_maestro_address)
     
-    @uk_maestro_address = { 
-      :address1 => '',
-      :address2 => '',
-      :city     => '',
-      :state    => '',
-      :zip      => ''
-    }
+    @solo = CreditCard.new(fixtures(:psl_solo))
+    @solo_address = fixtures(:psl_solo_address)
     
-    @solo = credit_card('',
-      :month => 06,
-      :year => 2008,
-      :verification_value => '',
-      :issue_number => '01'
-    )
-    
-    @solo_address = {
-      :address1 => '',
-      :city     => '',
-      :state    => '',
-      :zip      => ''
-    }
-    
-    @visa = credit_card('',
-      :month => 12,
-      :year => 2009,
-      :verification_value => ''
-    )
-    
-    @visa_address = {
-      :address1 => '',
-      :address2 => '',
-      :city     => '',
-      :state => '',
-      :zip      => '' 
-    }
+    @visa = CreditCard.new(fixtures(:psl_visa))
+    @visa_address = fixtures(:psl_visa_address)
   end
   
   def test_successful_visa_purchase
@@ -135,6 +98,7 @@ class RemotePslCardTest < Test::Unit::TestCase
     assert authorization.test?
     
     capture = @gateway.capture(ACCEPT_AMOUNT, authorization.authorization)
+    
     assert capture.success?
     assert capture.test?
   end

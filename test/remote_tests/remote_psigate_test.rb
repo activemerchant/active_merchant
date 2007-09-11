@@ -8,25 +8,16 @@ class PsigateRemoteTest < Test::Unit::TestCase
   ORDER_NUM3 = (Time.now.to_i + 2).to_s
   
   def setup
-    ActiveMerchant::Billing::Base.gateway_mode = :test
-    @gateway = PsigateGateway.new(
-      :login => 'teststore',
-      :password => 'psigate1234'
-    )
+    Base.gateway_mode = :test
+    @gateway = PsigateGateway.new(fixtures(:psigate))
 
-    @creditcard = CreditCard.new(
-      :number => '4242424242424242',
-      :month => 8,
-      :year => 2006,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen',
-      :verification_value => '222'
-    )
+    @creditcard = credit_card('4242424242424242')
   end
   
   def test_remote_authorize
-    assert response = @gateway.authorize(2400, @creditcard, {:order_id => ORDER_NUM1,
-       :billing_address => {
+    assert response = @gateway.authorize(2400, @creditcard,
+      :order_id => ORDER_NUM1,
+      :billing_address => {
           :address1 => '123 fairweather Lane',
           :address2 => 'Apt B',
           :city => 'New York',
@@ -34,7 +25,7 @@ class PsigateRemoteTest < Test::Unit::TestCase
           :country => 'U.S.A.',
           :zip => '10010'},
       :email => 'jack@yahoo.com'
-      })
+    )
     assert_equal Response, response.class
     assert_equal true, response.success?
     assert_equal "APPROVED", response.params["approved"]

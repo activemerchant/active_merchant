@@ -4,13 +4,7 @@ class RemoteBrainTreeTest < Test::Unit::TestCase
   AMOUNT = 10000
 
   def setup
-    
-    ActiveMerchant::Billing::Base.gateway_mode = :production
-
-    @gateway = BrainTreeGateway.new(
-      :login => 'demo',
-      :password => 'password'
-    )
+    @gateway = BrainTreeGateway.new(fixtures(:brain_tree))
 
     @creditcard = credit_card('4111111111111111')
 
@@ -19,8 +13,8 @@ class RemoteBrainTreeTest < Test::Unit::TestCase
 
     @options = {  :order_id => generate_order_id,
                   :address => { :address1 => '1234 Shady Brook Lane',
-                               :zip => '90210'
-                             }
+                                :zip => '90210'
+                              }
                }
   end
   

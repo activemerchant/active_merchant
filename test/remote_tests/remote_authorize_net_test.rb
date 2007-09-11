@@ -4,22 +4,9 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
     
-    #  Replace with your login and password for the Authorize.net test environment
-    @login = 'X'
-    @password = 'Y'
-    
-    @gateway = AuthorizeNetGateway.new(
-      :login => @login,
-      :password => @password
-    )
+    @gateway = AuthorizeNetGateway.new(fixtures(:authorize_net))
 
-    @creditcard = CreditCard.new(
-      :number => '4242424242424242',
-      :month => 8,
-      :year => Time.now.year + 1,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen'
-    )
+    @creditcard = credit_card('4242424242424242')
   end
   
   def test_successful_purchase

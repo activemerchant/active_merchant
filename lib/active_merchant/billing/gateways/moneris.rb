@@ -22,7 +22,6 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login, :password)
       
         @options = {
-          :strict_ssl => true,
           :crypt_type => 7
         }.update(options)
       

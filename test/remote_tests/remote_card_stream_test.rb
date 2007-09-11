@@ -2,14 +2,8 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class RemoteCardStreamTest < Test::Unit::TestCase
-  LOGIN = 'X'
-  PASSWORD = 'Y'
-
   def setup
-    @gateway = CardStreamGateway.new(
-      :login => LOGIN,
-      :password => PASSWORD
-    )
+    @gateway = CardStreamGateway.new(fixtures(:card_stream))
     
     @amex = CreditCard.new(
       :number => '374245455400001',
@@ -149,8 +143,8 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   
   def test_invalid_login
     gateway = CardStreamGateway.new(
-        :login => '',
-        :password => ''
+      :login => '',
+      :password => ''
     )
     assert response = gateway.purchase(100, @mastercard, @mastercard_options)
     assert_equal 'Merchant ID or Password Error', response.message

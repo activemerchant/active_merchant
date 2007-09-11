@@ -4,32 +4,21 @@ class RemotePayflowTest < Test::Unit::TestCase
   def setup
     ActiveMerchant::Billing::Base.gateway_mode = :test
 
-    # Your Payflow username and password
-    @login = 'LOGIN'
-    @password = 'PASSWORD'
-    
-    # Change to the partner you have your account with
-    @partner = 'PayPal'
-    
-    @gateway = PayflowGateway.new(
-        :login => @login,
-        :password => @password,
-        :partner => @partner
-    )
+    @gateway = PayflowGateway.new(fixtures(:payflow))
     
     @creditcard = credit_card('5105105105105100',
       :type => 'master'
     )
 
     @options = { :address => { 
-                                :name => 'Cody Fauser',
-                                :address1 => '1234 Shady Brook Lane',
-                                :city => 'Ottawa',
-                                :state => 'ON',
-                                :country => 'CA',
-                                :zip => '90210',
-                                :phone => '555-555-5555'
-                             },
+                    :name => 'Cody Fauser',
+                    :address1 => '1234 Shady Brook Lane',
+                    :city => 'Ottawa',
+                    :state => 'ON',
+                    :country => 'CA',
+                    :zip => '90210',
+                    :phone => '555-555-5555'
+               },
                  :email => 'cody@example.com'
                }
   end

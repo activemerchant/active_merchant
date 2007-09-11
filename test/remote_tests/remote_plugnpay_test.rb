@@ -4,17 +4,7 @@ class PlugnpayTest < Test::Unit::TestCase
   include ActiveMerchant::Billing
   
   def setup
-    
-    # To run these tests, you must obtain a gateway test account from plugnpay.com and enter the login/passwd below.
-    @login = 'login'
-    @password = 'password'
-   
-    
-    @gateway = PlugnpayGateway.new(
-      :login => @login,
-      :password => @password
-    )
-
+    @gateway = PlugnpayGateway.new(fixtures(:plugnpay))
     @good_creditcard = credit_card('4242424242424242')
     @bad_creditcard = credit_card('1234123412341234')
   end

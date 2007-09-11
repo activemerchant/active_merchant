@@ -2,15 +2,9 @@ require File.dirname(__FILE__) + '/../test_helper'
 
 class VerifiTest < Test::Unit::TestCase
   include ActiveMerchant::Billing
-  
-  LOGIN  = 'demo'
-  PASSWORD = 'password'
-  
+
   def setup
-    @gateway = VerifiGateway.new(
-      :login => LOGIN,
-      :password => PASSWORD
-    )
+    @gateway = VerifiGateway.new(fixtures(:verify))
     
     @creditcard = credit_card('4111111111111111')
     

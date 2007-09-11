@@ -4,47 +4,40 @@ class PaypalTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
     
-    #cert = File.read(File.join(File.dirname(__FILE__), 'certificate.pem'))
-    
-     @gateway = PaypalGateway.new(
-        :login     => 'login',
-        :password  => 'password',
-        :subject => 'third_party_account',
-        :pem => '' #cert
-     )
+    @gateway = PaypalGateway.new(fixtures(:paypal))
 
-     @creditcard = CreditCard.new(
-       :type                => "Visa",
-       :number              => "4381258770269608", # Use a generated CC from the paypal Sandbox
-       :verification_value => "000",
-       :month               => 1,
-       :year                => 2008,
-       :first_name          => 'Fred',
-       :last_name           => 'Brooks'
-      )
+    @creditcard = CreditCard.new(
+      :type                => "Visa",
+      :number              => "4381258770269608", # Use a generated CC from the paypal Sandbox
+      :verification_value => "000",
+      :month               => 1,
+      :year                => 2008,
+      :first_name          => 'Fred',
+      :last_name           => 'Brooks'
+    )
        
-      @params = {
-        :order_id => generate_order_id,
-        :email => 'buyer@jadedpallet.com',
-        :address => { :name => 'Fred Brooks',
-                      :address1 => '1234 Penny Lane',
-                      :city => 'Jonsetown',
-                      :state => 'NC',
-                      :country => 'US',
-                      :zip => '23456'
-                    } ,
-        :description => 'Stuff that you purchased, yo!',
-        :ip => '10.0.0.1',
-        :return_url => 'http://example.com/return',
-        :cancel_return_url => 'http://example.com/cancel'
-      }
+    @params = {
+      :order_id => generate_order_id,
+      :email => 'buyer@jadedpallet.com',
+      :address => { :name => 'Fred Brooks',
+                    :address1 => '1234 Penny Lane',
+                    :city => 'Jonsetown',
+                    :state => 'NC',
+                    :country => 'US',
+                    :zip => '23456'
+                  } ,
+      :description => 'Stuff that you purchased, yo!',
+      :ip => '10.0.0.1',
+      :return_url => 'http://example.com/return',
+      :cancel_return_url => 'http://example.com/cancel'
+    }
       
-      # test re-authorization, auth-id must be more than 3 days old.
-      # each auth-id can only be reauthorized and tested once.
-      # leave it commented if you don't want to test reauthorization.
-      # 
-      #@three_days_old_auth_id  = "9J780651TU4465545" 
-      #@three_days_old_auth_id2 = "62503445A3738160X" 
+    # test re-authorization, auth-id must be more than 3 days old.
+    # each auth-id can only be reauthorized and tested once.
+    # leave it commented if you don't want to test reauthorization.
+    # 
+    #@three_days_old_auth_id  = "9J780651TU4465545" 
+    #@three_days_old_auth_id2 = "62503445A3738160X" 
   end
 
   def test_successful_purchase

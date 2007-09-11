@@ -9,14 +9,10 @@ class RemoteProtxTest < Test::Unit::TestCase
   # set to false to run the tests in the test environment
   ProtxGateway.simulate = true
   
-  LOGIN = 'X'
-  
   AMOUNT = 100
 
   def setup
-    @gateway = ProtxGateway.new(
-      :login => LOGIN
-    )
+    @gateway = ProtxGateway.new(fixtures(:protx))
     
     @amex = CreditCard.new(
       :number => '374245455400001',
