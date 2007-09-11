@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'Address' do
             xml.tag! 'Street', address[:address1] unless address[:address1].blank?
             xml.tag! 'City', address[:city] unless address[:city].blank?
-            xml.tag! 'State', address[:state] unless address[:state].blank?
+            xml.tag! 'State', address[:state].blank? ? "N/A" : address[:state]
             xml.tag! 'Country', address[:country] unless address[:country].blank?
             xml.tag! 'Zip', address[:zip] unless address[:zip].blank?
           end
