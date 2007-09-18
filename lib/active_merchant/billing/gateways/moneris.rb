@@ -78,6 +78,9 @@ module ActiveMerchant #:nodoc:
         commit('completion', parameters)      
       end
 
+      # Note: remotely testing voiding is not possible at this time. The 
+      # Moneris test environment immediately closes all purchases. Since one 
+      # can only void an open order, it is not possible to test voiding.
       def void(authorization, options = {})
         txn_number, order_id = authorization.split(';')
 
@@ -89,8 +92,26 @@ module ActiveMerchant #:nodoc:
 
         commit('purchasecorrection', parameters)      
       end
+      
+      # Performs a refund. 
+      # 
+      # Concatenate your transaction number and order_id by using a semicolon 
+      # (';'). This is to keep the Moneris interface consistent with other 
+      # gateways. (See +capture+ for details.)
+      def credit(money, authorization, options = {})
+        txn_number, order_id = authorization.split(';')
+        
+          parameters = {
+            :txn_number => txn_number,
+            :order_id   => order_id,
+            :amount     => amount(money), 
+            :crypt_type => options[:crypt_type] || @options[:crypt_type]
+          }
+        
+        commit('refund', parameters)
+      end
    
-      private                       
+      private
     
       def expdate(creditcard)
         year  = sprintf("%.4i", creditcard.year)

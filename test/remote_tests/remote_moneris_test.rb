@@ -45,13 +45,24 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert response.success?
   end
  
-  # Void is currently not working 
-  def test_authorization_and_void
+  # Void is currently not working -- see note in gateway code
+#  def test_authorization_and_void
+#    order_id = generate_order_id
+#    response = @gateway.authorize(100, @creditcard, :order_id => order_id)
+#    assert response.success?
+#    response = @gateway.void(response.authorization)
+#    assert response.success?
+#  end
+  
+  def test_should_be_a_successful_purchase_and_refund
+    @credit_card = credit_card('4242424242424242')
     order_id = generate_order_id
-    response = @gateway.authorize(100, @creditcard, :order_id => order_id)
-    assert response.success?
-    response = @gateway.void(response.authorization)
-    assert response.success?
+    
+    purchase = @gateway.purchase(100, @credit_card, :order_id => order_id)
+    assert purchase.success?
+    
+    credit = @gateway.credit(100, purchase.authorization)
+    assert credit.success?
   end
 
   def test_remote_error
