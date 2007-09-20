@@ -13,7 +13,7 @@ PKG_NAME = "activemerchant"
 PKG_FILE_NAME = "#{PKG_NAME}-#{PKG_VERSION}"
 
 PKG_FILES = FileList[
-    "lib/**/*", "test/**/*", "script/**/*", "[a-zA-Z]*" #, "gem-public_cert.pem"
+    "lib/**/*", "test/**/*", "script/**/*", "[a-zA-Z]*"
 ].exclude(/\.svn$/)
 
 
