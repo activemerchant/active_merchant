@@ -13,7 +13,7 @@ PKG_NAME = "activemerchant"
 PKG_FILE_NAME = "#{PKG_NAME}-#{PKG_VERSION}"
 
 PKG_FILES = FileList[
-    "lib/**/*", "examples/**/*", "[A-Z]*", "Rakefile"
+    "lib/**/*", "test/**/*", "script/**/*", "[a-zA-Z]*" #, "gem-public_cert.pem"
 ].exclude(/\.svn$/)
 
 
@@ -78,7 +78,7 @@ spec = Gem::Specification.new do |s|
   s.summary = "Framework and tools for dealing with credit card transactions."
   s.has_rdoc = true
 
-  s.files = %w(README MIT-LICENSE CHANGELOG) + Dir['lib/**/*']  
+  s.files = PKG_FILES
 
   s.require_path = 'lib'
   s.autorequire  = 'active_merchant'
