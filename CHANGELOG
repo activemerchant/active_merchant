@@ -1,6 +1,8 @@
 # CHANGELOG
 # ---
-# * Add support for crediting to Moneris [james.herdman@gmail.com]
+# * Refactor MonerisGateway, improve test coverage and documentation [James Herdman]
+#
+# * Add support for crediting to Moneris [James Herdman]
 #
 # * Send state N/A in Payflow when the state is blank.  Fixes UK PayPal Express payments when not providing a state [cody]
 #

@@ -27,6 +27,41 @@ module Test
       
       include ActiveMerchant::Billing
     
+      # Allows the testing of you to check for negative assertions: 
+      # 
+      #   # Instead of
+      #   assert !something_that_is_false
+      # 
+      #   # Do this
+      #   deny something_that_should_be_false
+      # 
+      # An optional +msg+ parameter is available to help you debug.
+      def deny(boolean, message = nil)
+        message = build_message message, '<?> is not false or nil.', boolean
+        assert_block message do
+          not boolean
+        end
+      end
+          
+      # A handy little assertion to check for a successful response: 
+      # 
+      #   # Instead of
+      #   assert response.success?
+      # 
+      #   # DRY that up with
+      #   assert_success response
+      # 
+      # A message will automatically show the inspection of the response 
+      # object if things go afoul.
+      def assert_success(response)
+        assert response.success?, "Response failed: #{response.inspect}"
+      end
+      
+      # The negative of +assert_success+
+      def deny_success(response)
+        deny response.success?, "Response expected to fail: #{response.inspect}"
+      end
+    
       private
       def generate_order_id
         md5 = Digest::MD5.new

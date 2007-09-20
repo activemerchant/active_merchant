@@ -144,6 +144,16 @@ class MonerisRequestTest < Test::Unit::TestCase
     assert_equal [:visa, :master], MonerisGateway.supported_cardtypes
   end
 
+  def test_should_raise_error_if_transaction_param_empty_on_credit_request
+    [nil, '', '1234'].each do |invalid_transaction_param|
+      assert_raise(ArgumentError) { @gateway.void(invalid_transaction_param) }
+    end
+  end
+  
+  def test_should_not_raise_error_if_transaction_param_is_not_empty_on_credit_request
+    assert_nothing_raised(ArgumentError) { @gateway.void('1234;456') }
+  end
+
   private
 
   def xml_purchase_fixture
