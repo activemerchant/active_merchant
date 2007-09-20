@@ -10,12 +10,16 @@ Please visit the {ActiveMerchant homepage}[http://activemerchant.org] for more r
 == Supported Direct Payment Gateways
 
 * {Authorize.net}[http://www.authorize.net/] - US
+* {Braintree}[http://www.braintreepaymentsolutions.com] - US
 * {CardStream}[http://www.cardstream.com/] - GB
+* {CyberSource}[http://www.cybersource.com] - US
 * {DataCash}[http://www.datacash.com/] - GB
+* {Efsnet}[http://www.concordefsnet.com/] - US
 * {eWAY}[http://www.eway.com.au/] - AU
 * {E-xact}[http://www.e-xact.com] - CA, US
 * {LinkPoint}[http://www.linkpoint.com/] - US
 * {Moneris}[http://www.moneris.com/] - CA
+* {NetRegistry}[http://www.netregistry.com.au] - AU
 * {PayJunction}[http://www.payjunction.com/] - US
 * {PayPal Express Checkout}[https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside] - US, CA, SG, AU
 * {PayPal Express Checkout (UK)}[https://www.paypal.com/uk/cgi-bin/webscr?cmd=_additional-payment-overview-outside] - GB
@@ -24,12 +28,18 @@ Please visit the {ActiveMerchant homepage}[http://activemerchant.org] for more r
 * {PaymentExpress}[http://www.paymentexpress.com/] - AU, MY, NZ, SG, ZA, GB, US
 * {PayPal Express Checkout}[https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside] - US
 * {PayPal Website Payments Pro (US)}[https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside] - US
+* {Plug'n Pay}[http://www.plugnpay.com/] - US
+* {Protx}[http://www.protx.com] - GB
 * {Psigate}[http://www.psigate.com/] - CA
 * {PSL Payment Solutions}[http://www.paymentsolutionsltd.com/] - GB
 * {Quickpay}[http://quickpay.dk/] - DK
 * {Realex}[http://www.realexpayments.com/] - IE, GB
+* {SecurePay}[http://www.securepay.com/] - US
+* {TransFirst}[http://www.transfirst.com/] - US
 * {TrustCommerce}[http://www.trustcommerce.com/] - US
 * {USA ePay}[http://www.usa_epay.com/] - US
+* {Verifi}[http://www.verifi.com/] - US
+* {ViaKLIX}[http://viaklix.com] - US
 
 == Supported Offsite Payment Gateways
  
@@ -37,6 +47,7 @@ Please visit the {ActiveMerchant homepage}[http://activemerchant.org] for more r
 * Chronopay[http://www.chronopay.com]
 * Nochex[http://www.nochex.com]
 * {Banca Sella GestPay}[https://www.sella.it/banca/ecommerce/gestpay/gestpay.jsp]
+* {2 Checkout}[http://www.2checkout.com]
  
 == Download
 
