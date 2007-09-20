@@ -1,12 +1,13 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
-ActiveMerchant::Billing::LinkpointGateway.pem_file = File.read( File.dirname(__FILE__) + '/../../mycert.pem'  ) 
-
 class LinkpointResponseTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
     
-    @gateway = LinkpointGateway.new(:login => 123123, :result => "GOOD")
+    @gateway = LinkpointGateway.new(
+      :login => 123123,
+      :pem => 'PEM'
+    )
 
     @creditcard = credit_card('4111111111111111')
   end
@@ -51,12 +52,9 @@ class LinkpointResponseTest < Test::Unit::TestCase
   def test_purchase_decline
     @creditcard.number = '2'
     
-    @gateway = LinkpointGateway.new(:login => 123123, 
-      :result => "DECLINE",
-      :address1 => '1313 lucky lane',
-      :city => 'Lost Angeles',
-      :state => 'CA',
-      :zip => '90210'
+    @gateway = LinkpointGateway.new(
+      :login => 123123,
+      :pem   => 'PEM'
     )
 
     assert response = @gateway.purchase(100, @creditcard, :order_id => 1002)
@@ -84,15 +82,9 @@ end
 
 class LinkpointRequestTest < Test::Unit::TestCase
   def setup
-    @gateway = LinkpointGateway.new(:login => 123123, :result => "GOOD")
+    @gateway = LinkpointGateway.new(:login => 123123, :pem => 'PEM')
 
-    @creditcard = CreditCard.new(
-      :number => '4111111111111111',
-      :month => Time.now.month.to_s,
-      :year => (Time.now + 1.year).year,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen'
-    )
+    @creditcard = credit_card('4111111111111111')
   end
 
 
@@ -125,7 +117,7 @@ class LinkpointRequestTest < Test::Unit::TestCase
   end
 
   def test_declined_purchase_is_valid_xml
-    @gateway = LinkpointGateway.new(:login => 123123, :result => "DECLINE")
+    @gateway = LinkpointGateway.new(:login => 123123, :pem => 'PEM')
     
     parameters = @gateway.send(:parameters, 1000, @creditcard, :ordertype => "SALE", :order_id => 1005,
       :billing_address => {
@@ -145,7 +137,7 @@ class LinkpointRequestTest < Test::Unit::TestCase
     
     gateway = LinkpointGateway.new(
       :login => 'LOGIN',
-      :password => 'PASSWORD',
+      :pem => 'PEM',
       :test => true
     )
     
@@ -157,7 +149,7 @@ class LinkpointRequestTest < Test::Unit::TestCase
     
     gateway = LinkpointGateway.new(
       :login => 'LOGIN',
-      :password => 'PASSWORD'
+      :pem => 'PEM'
     )
     
     assert !gateway.test?

@@ -13,7 +13,7 @@ PKG_NAME = "activemerchant"
 PKG_FILE_NAME = "#{PKG_NAME}-#{PKG_VERSION}"
 
 PKG_FILES = FileList[
-    "lib/**/*", "examples/**/*", "[A-Z]*", "rakefile"
+    "lib/**/*", "examples/**/*", "[A-Z]*", "Rakefile"
 ].exclude(/\.svn$/)
 
 

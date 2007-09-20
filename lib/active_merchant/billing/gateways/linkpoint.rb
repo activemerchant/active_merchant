@@ -112,10 +112,6 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.linkpoint.com/'
       self.display_name = 'LinkPoint'
            
-      # @options = {
-      #  :store_number => options[:login],
-      #  :result => test? ? "GOOD" : "LIVE"
-      # }.update(options)
       def initialize(options = {})
         requires!(options, :login)
         
