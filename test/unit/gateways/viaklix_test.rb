@@ -58,7 +58,7 @@ class ViaklixTest < Test::Unit::TestCase
     
     assert_equal '7000', response.params['result']
     assert_equal 'The viaKLIX ID and/or User ID supplied in the authorization request is invalid.', response.params['result_message']
-    assert !response.success?
+    assert_failure response
   end
   
   private

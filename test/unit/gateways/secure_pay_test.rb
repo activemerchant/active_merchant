@@ -34,7 +34,7 @@ class SecurePayTest < Test::Unit::TestCase
         :zip => 'K2P7G2'
       }
     )
-    assert !response.success?
+    assert_failure response
     assert response.test?
     assert_equal 'This transaction has been declined', response.message
     assert_equal '3377475', response.authorization
@@ -48,7 +48,7 @@ class SecurePayTest < Test::Unit::TestCase
       :description => 'Store purchase'
     )
     
-    assert response.success?
+    assert_success response
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
     assert response.authorization

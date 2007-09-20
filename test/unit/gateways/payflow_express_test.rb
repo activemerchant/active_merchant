@@ -71,7 +71,7 @@ class PayflowExpressTest < Test::Unit::TestCase
   def test_invalid_get_express_details_request
     @gateway.expects(:ssl_post).returns(invalid_get_express_details_response)
     response = @gateway.details_for('EC-2OPN7UJGFWK9OYFV')
-    assert !response.success?
+    assert_failure response
     assert response.test?
     assert_equal 'Field format error: Invalid Token', response.message
   end
@@ -80,7 +80,7 @@ class PayflowExpressTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_get_express_details_response)
     response = @gateway.details_for('EC-2OPN7UJGFWK9OYFV')
     assert_instance_of PayflowExpressResponse, response
-    assert response.success?
+    assert_success response
     assert response.test?
     
     assert_equal 'EC-2OPN7UJGFWK9OYFV', response.token

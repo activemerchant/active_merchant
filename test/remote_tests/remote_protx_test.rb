@@ -104,69 +104,69 @@ class RemoteProtxTest < Test::Unit::TestCase
 
   def test_successful_mastercard_purchase
     assert response = @gateway.purchase(AMOUNT, @mastercard, @mastercard_options)
-    assert response.success?
+    assert_success response
     assert response.test?
     assert !response.authorization.blank?
   end
   
   def test_successful_authorization_and_capture
     assert auth = @gateway.authorize(AMOUNT, @mastercard, @mastercard_options)
-    assert auth.success?
+    assert_success auth
     
     assert capture = @gateway.capture(AMOUNT, auth.authorization)
-    assert capture.success?
+    assert_success capture
   end
   
   def test_successful_authorization_and_void
     assert auth = @gateway.authorize(AMOUNT, @mastercard, @mastercard_options)
-    assert auth.success?    
+    assert_success auth    
      
     assert void = @gateway.void(auth.authorization)
-    assert void.success?
+    assert_success void
   end
   
   def test_successful_purchase_and_void
     assert purchase = @gateway.purchase(AMOUNT, @mastercard, @mastercard_options)
-    assert purchase.success?    
+    assert_success purchase    
      
     assert void = @gateway.void(purchase.authorization)
-    assert void.success?
+    assert_success void
   end
   
   def test_successful_purchase_and_credit
     assert purchase = @gateway.purchase(AMOUNT, @mastercard, @mastercard_options)
-    assert purchase.success?    
+    assert_success purchase    
     
     assert credit = @gateway.credit(AMOUNT, purchase.authorization,
       :description => 'Crediting trx', 
       :order_id => generate_order_id
     )
     
-    assert credit.success?
+    assert_success credit
   end
   
   def test_successful_maestro_purchase
     assert response = @gateway.purchase(AMOUNT, @maestro, @maestro_options)
-    assert response.success?
+    assert_success response
   end
   
   def test_successful_solo_purchase
     assert response = @gateway.purchase(AMOUNT, @solo, @solo_options)
-    assert response.success?
+    assert_success response
     assert response.test?
     assert !response.authorization.blank?
   end
   
   def test_successful_amex_purchase
     assert response = @gateway.purchase(AMOUNT, @amex, :order_id => generate_order_id)   
-    assert response.success?
+    assert_success response
     assert response.test?
     assert !response.authorization.blank?
   end
   
   def test_successful_electron_purchase
     assert response = @gateway.purchase(AMOUNT, @electron, :order_id => generate_order_id)   
-    assert response.success?
+    assert_success response
     assert response.test?
     assert !response.authorization.blank?
   end
@@ -179,6 +179,6 @@ class RemoteProtxTest < Test::Unit::TestCase
     )
     assert response = gateway.purchase(AMOUNT, @mastercard, @mastercard_options)
     assert_equal message, response.message
-    assert !response.success?
+    assert_failure response
   end
 end

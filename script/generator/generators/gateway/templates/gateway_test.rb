@@ -4,10 +4,7 @@ class <%= class_name %>Test < Test::Unit::TestCase
   AMOUNT = 100
 
   def setup
-    @gateway = <%= class_name %>Gateway.new(
-      :login => 'LOGIN',
-      :password => 'PASSWORD'
-    )
+    @gateway = <%= class_name %>Gateway.new(fixtures(:<%= class_name.underscore %>))
 
     @creditcard = credit_card('4242424242424242')
 
@@ -25,7 +22,7 @@ class <%= class_name %>Test < Test::Unit::TestCase
   def test_successful_request
     @creditcard.number = 1
     assert response = @gateway.purchase(AMOUNT, @creditcard, {})
-    assert response.success?
+    assert_success response
     assert_equal '5555', response.authorization
     assert response.test?
   end
@@ -33,7 +30,7 @@ class <%= class_name %>Test < Test::Unit::TestCase
   def test_unsuccessful_request
     @creditcard.number = 2
     assert response = @gateway.purchase(AMOUNT, @creditcard, {})
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
 

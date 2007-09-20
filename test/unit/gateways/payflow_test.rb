@@ -30,7 +30,7 @@ class PayflowTest < Test::Unit::TestCase
   def test_successful_request
     @creditcard.number = 1
     assert response = @gateway.purchase(100, @creditcard, {})
-    assert response.success?
+    assert_success response
     assert_equal '5555', response.authorization
     assert response.test?
   end
@@ -38,7 +38,7 @@ class PayflowTest < Test::Unit::TestCase
   def test_unsuccessful_request
     @creditcard.number = 2
     assert response = @gateway.purchase(100, @creditcard, {})
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
 
@@ -149,7 +149,7 @@ class PayflowTest < Test::Unit::TestCase
     response = @gateway.recurring(1000, @creditcard, :periodicity => :monthly)
     
     assert_instance_of PayflowResponse, response
-    assert response.success?
+    assert_success response
     assert_equal 'RT0000000009', response.profile_id
     assert response.test?
     assert_equal "R7960E739F80", response.authorization
@@ -160,7 +160,7 @@ class PayflowTest < Test::Unit::TestCase
     
     assert response = @gateway.authorize(100, @creditcard, { :address => @address })
     assert_equal "Approved", response.message
-    assert response.success?
+    assert_success response
     assert response.test?
     assert_equal "VUJN1A6E11D9", response.authorization
   end

@@ -14,7 +14,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       :order_id => generate_order_id,
       :description => 'Store purchase'
     )
-    assert response.success?
+    assert_success response
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
     assert response.authorization
@@ -23,7 +23,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_expired_credit_card
     @creditcard.year = 2004 
     assert response = @gateway.purchase(100, @creditcard, :order_id => generate_order_id)
-    assert !response.success?
+    assert_failure response
     assert response.test?
     assert_equal 'The credit card has expired', response.message
   end
@@ -35,7 +35,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       :test => true
     )
     assert response = gateway.purchase(100, @creditcard, :order_id => generate_order_id)
-    assert response.success?
+    assert_success response
     assert response.test?
     assert_match /TESTMODE/, response.message
     assert response.authorization
@@ -43,26 +43,26 @@ class AuthorizeNetTest < Test::Unit::TestCase
   
   def test_successful_authorization
     assert response = @gateway.authorize(100, @creditcard, :order_id => generate_order_id)
-    assert response.success?
+    assert_success response
     assert_equal 'This transaction has been approved', response.message
     assert response.authorization
   end
   
   def test_authorization_and_capture
     assert authorization = @gateway.authorize(100, @creditcard, :order_id => generate_order_id)
-    assert authorization.success?
+    assert_success authorization
     assert authorization
     assert capture = @gateway.capture(100, authorization.authorization)
-    assert capture.success?
+    assert_success capture
     assert_equal 'This transaction has been approved', capture.message
   end
   
   def test_authorization_and_void
     assert authorization = @gateway.authorize(100, @creditcard, :order_id => generate_order_id)
-    assert authorization.success?
+    assert_success authorization
     assert authorization
     assert void = @gateway.void(authorization.authorization)
-    assert void.success?
+    assert_success void
     assert_equal 'This transaction has been approved', void.message
   end
   

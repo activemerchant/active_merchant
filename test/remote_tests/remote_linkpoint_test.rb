@@ -61,10 +61,10 @@ class LinkpointTest < Test::Unit::TestCase
       :address => @address
     )
     
-    assert authorization.success?
+    assert_success authorization
     assert authorization.test?
     assert capture = @gateway.capture(100, authorization.authorization)
-    assert capture.success?
+    assert_success capture
     assert_equal 'ACCEPTED', capture.message
   end
   
@@ -97,10 +97,10 @@ class LinkpointTest < Test::Unit::TestCase
       :order_id => generate_order_id,
       :address => @address
     )
-    assert purchase.success?
+    assert_success purchase
     
     assert void = @gateway.void(purchase.authorization)
-    assert void.success?
+    assert_success void
   end
   
   def test_successfull_purchase_and_credit
@@ -111,7 +111,7 @@ class LinkpointTest < Test::Unit::TestCase
     assert_equal true, purchase.success?
     
     assert credit = @gateway.credit(2400, purchase.authorization)
-    assert credit.success?
+    assert_success credit
   end
 
   

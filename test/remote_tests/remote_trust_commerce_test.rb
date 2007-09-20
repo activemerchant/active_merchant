@@ -59,7 +59,7 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert response = @gateway.purchase(100, @creditcard, :address => @invalid_address)
     assert_equal "N", response.params["avs"]
     assert_match /The transaction was successful/, response.message
-    assert response.success?
+    assert_success response
   end
   
   def test_successful_authorize
@@ -91,15 +91,15 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert response = @gateway.authorize(100, @creditcard, {:address => @invalid_address})
     assert_equal "N", response.params["avs"]
     assert_match /The transaction was successful/, response.message
-    assert response.success?
+    assert_success response
   end
   
   def test_successful_capture
     auth = @gateway.authorize(300, @creditcard)
-    assert auth.success?
+    assert_success auth
     response = @gateway.capture(300, auth.authorization)
     
-    assert response.success?
+    assert_success response
     assert_equal 'The transaction was successful', response.message 
     assert_equal 'accepted', response.params['status']
     assert response.params['transid']
@@ -109,7 +109,7 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert response = @gateway.credit(100, '011-0022698151')
     
     assert_match /The transaction was successful/, response.message
-    assert response.success?    
+    assert_success response    
   end
   
   def test_store_failure
@@ -117,7 +117,7 @@ class TrustCommerceTest < Test::Unit::TestCase
         
     assert_equal Response, response.class
     assert_match /The merchant can't accept data passed in this field/, response.message    
-    assert !response.success?   
+    assert_failure response   
   end
   
   def test_unstore_failure

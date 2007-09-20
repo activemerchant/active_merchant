@@ -24,7 +24,7 @@ class EwayTest < Test::Unit::TestCase
   
   def test_invalid_amount
     assert response = @gateway.purchase(101, @creditcard_success, @params)
-    assert !response.success?
+    assert_failure response
     assert response.test?
     assert_equal EwayGateway::MESSAGES["01"], response.message
   end
@@ -32,7 +32,7 @@ class EwayTest < Test::Unit::TestCase
   def test_purchase_success_with_verification_value 
     assert response = @gateway.purchase(100, @creditcard_success, @params)
     assert_equal '123456', response.authorization
-    assert response.success?
+    assert_success response
     assert response.test?
     assert_equal EwayGateway::MESSAGES["00"], response.message
   end
@@ -40,7 +40,7 @@ class EwayTest < Test::Unit::TestCase
   def test_invalid_expiration_date
     @creditcard_success.year = 2005 
     assert response = @gateway.purchase(100, @creditcard_success, @params)
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
   
@@ -48,7 +48,7 @@ class EwayTest < Test::Unit::TestCase
     @creditcard_success.verification_value = 'AAA' 
     assert response = @gateway.purchase(100, @creditcard_success, @params)
     assert_nil response.authorization
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
 
@@ -57,7 +57,7 @@ class EwayTest < Test::Unit::TestCase
     
     assert response = @gateway.purchase(100, @creditcard_success, @params)
     assert_equal '123456', response.authorization
-    assert response.success?
+    assert_success response
     assert response.test?
     assert_equal EwayGateway::MESSAGES["00"], response.message
   end

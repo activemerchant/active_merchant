@@ -42,7 +42,7 @@ class PaymentExpressTest < Test::Unit::TestCase
     @visa.number = 1
     
     assert response = @gateway.purchase(100, @visa)
-    assert response.success?
+    assert_success response
     assert_equal '5555', response.authorization
     assert response.test?
   end
@@ -50,7 +50,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_unsuccessful_request
     @visa.number = 2
     assert response = @gateway.purchase(100, @visa)
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
 
@@ -68,14 +68,14 @@ class PaymentExpressTest < Test::Unit::TestCase
     
     assert response = @gateway.purchase(100, @visa)
     assert_equal 'Invalid Credentials', response.message
-    assert !response.success?
+    assert_failure response
   end
   
   def test_successful_authorization
      @gateway.expects(:ssl_post).returns(successful_authorization_response)
 
      assert response = @gateway.purchase(100, @visa)
-     assert response.success?
+     assert_success response
      assert response.test?
      assert_equal 'APPROVED', response.message
      assert_equal '00000004011a2478', response.authorization
@@ -85,7 +85,7 @@ class PaymentExpressTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
 
      assert response = @gateway.purchase(100, @solo)
-     assert response.success?
+     assert_success response
      assert response.test?
      assert_equal 'APPROVED', response.message
      assert_equal '00000004011a2478', response.authorization
@@ -95,7 +95,7 @@ class PaymentExpressTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns( successful_store_response )
     
     assert response = @gateway.store(@visa)
-    assert response.success?
+    assert_success response
     assert response.test?
     assert_equal '0000030000141581', response.token        
   end
@@ -104,7 +104,7 @@ class PaymentExpressTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns( successful_store_response(:billing_id => "my-custom-id") )
     
     assert response = @gateway.store(@visa, :billing_id => "my-custom-id")
-    assert response.success?
+    assert_success response
     assert response.test?
     assert_equal 'my-custom-id', response.token
   end
@@ -115,7 +115,7 @@ class PaymentExpressTest < Test::Unit::TestCase
     @visa.number = 2
     
     assert response = @gateway.store(@visa)
-    assert !response.success?
+    assert_failure response
   end
   
   def test_purchase_using_token
@@ -127,7 +127,7 @@ class PaymentExpressTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns( successful_token_purchase_response )
     
     assert response = @gateway.purchase(100, token)
-    assert response.success?
+    assert_success response
     assert_equal 'APPROVED', response.message
     assert_equal '0000000303ace8db', response.authorization
   end

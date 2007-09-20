@@ -47,7 +47,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
 
   def test_should_not_be_a_successful_authorization
     response = @gateway.authorize(105, @creditcard, :order_id => generate_order_id)
-    deny_success response
+    assert_failure response
   end
 
   def test_should_be_a_successful_authorization_and_capture
@@ -84,10 +84,10 @@ class MonerisRemoteTest < Test::Unit::TestCase
   
   def test_should_not_be_a_successful_purchase_and_void
     purchase = @gateway.purchase(101, @creditcard, :order_id => generate_order_id)
-    deny_success purchase
+    assert_failure purchase
     
     void = @gateway.void(purchase.authorization)
-    deny_success void
+    assert_failure void
   end
   
   def test_should_be_a_successful_purchase_and_refund

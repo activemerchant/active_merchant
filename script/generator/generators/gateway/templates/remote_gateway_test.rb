@@ -4,12 +4,7 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
   AMOUNT = 100
 
   def setup
-    ActiveMerchant::Billing::Base.gateway_mode = :production
-
-    @gateway = <%= class_name %>Gateway.new(
-        :login => 'LOGIN',
-        :password => 'PASSWORD'
-    )
+    @gateway = <%= class_name %>Gateway.new(fixtures(:<%= class_name.underscore %>))
 
     @creditcard = credit_card('4000100011112224')
 
@@ -24,28 +19,28 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(AMOUNT, @creditcard, @options)
     assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
-    assert response.success?
+    assert_success response
   end
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(AMOUNT, @declined_card, @options)
     assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
-    assert !response.success?
+    assert_failure response
   end
 
   def test_authorize_and_capture
     amount = AMOUNT
     assert auth = @gateway.authorize(amount, @creditcard, @options)
-    assert auth.success?
+    assert_success auth
     assert_equal 'Success', auth.message
     assert auth.authorization
     assert capture = @gateway.capture(amount, auth.authorization)
-    assert capture.success?
+    assert_success capture
   end
 
   def test_failed_capture
     assert response = @gateway.capture(AMOUNT, '')
-    assert !response.success?
+    assert_failure response
     assert_equal 'REPLACE WITH GATEWAY FAILURE MESSAGE', response.message
   end
 
@@ -56,6 +51,6 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
       })
     assert response = gateway.purchase(AMOUNT, @creditcard, @options)
     assert_equal 'REPLACE WITH FAILURE MESSAGE', response.message
-    assert !response.success?
+    assert_failure response
   end
 end

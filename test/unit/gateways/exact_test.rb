@@ -14,7 +14,7 @@ class ExactTest < Test::Unit::TestCase
   def test_successful_request
     @credit_card.number = "1"
     assert response = @gateway.purchase(100, @credit_card, {})
-    assert response.success?
+    assert_success response
     assert_equal '5555', response.authorization
     assert response.test?
   end
@@ -22,7 +22,7 @@ class ExactTest < Test::Unit::TestCase
   def test_unsuccessful_request
     @credit_card.number = "2"
     assert response = @gateway.purchase(100, @credit_card, {})
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
 
@@ -40,7 +40,7 @@ class ExactTest < Test::Unit::TestCase
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(100, @credit_card, {})
-    assert response.success?
+    assert_success response
     assert_equal 'ET0426;80928103', response.authorization
     assert response.test?
     assert_equal 'Transaction Normal - VER UNAVAILABLE', response.message
@@ -51,7 +51,7 @@ class ExactTest < Test::Unit::TestCase
   def test_soap_fault
     @gateway.expects(:ssl_post).returns(soap_fault_response)
     assert response = @gateway.purchase(100, @credit_card, {})
-    assert !response.success?
+    assert_failure response
     assert response.test?
     assert_equal 'Unable to handle request without a valid action parameter. Please supply a valid soap action.', response.message
   end

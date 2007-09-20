@@ -91,7 +91,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   def test_successful_mastercard_purchase
     assert response = @gateway.purchase(100, @mastercard, @mastercard_options)
     assert_equal 'APPROVED', response.message
-    assert response.success?
+    assert_success response
     assert response.test?
     assert !response.authorization.blank?
   end
@@ -99,7 +99,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   def test_declined_mastercard_purchase
     assert response = @gateway.purchase(10000, @mastercard, @mastercard_options)
     assert_equal 'CARD DECLINED', response.message
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
   
@@ -107,20 +107,20 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     @mastercard.year = 2005
     assert response = @gateway.purchase(100, @mastercard, @mastercard_options)
     assert_equal 'CARD EXPIRED', response.message
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
 
   def test_successful_maestro_purchase
     assert response = @gateway.purchase(100, @maestro, @maestro_options)
     assert_equal 'APPROVED', response.message
-    assert response.success?
+    assert_success response
   end
   
   def test_successful_solo_purchase
     assert response = @gateway.purchase(100, @solo, @solo_options)
     assert_equal 'APPROVED', response.message
-    assert response.success?
+    assert_success response
     assert response.test?
     assert !response.authorization.blank?
   end
@@ -128,7 +128,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   def test_successful_amex_purchase
     assert response = @gateway.purchase(100, @amex, :order_id => generate_order_id)
     assert_equal 'APPROVED', response.message
-    assert response.success?
+    assert_success response
     assert response.test?
     assert !response.authorization.blank?
   end
@@ -137,7 +137,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     @maestro.issue_number = nil
     assert response = @gateway.purchase(100, @maestro, @maestro_options)
     assert_equal 'ISSUE NUMBER MISSING', response.message
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
   
@@ -148,13 +148,13 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     )
     assert response = gateway.purchase(100, @mastercard, @mastercard_options)
     assert_equal 'Merchant ID or Password Error', response.message
-    assert !response.success?
+    assert_failure response
   end
   
   def test_unsupported_merchant_currency
     assert response = @gateway.purchase(100, @mastercard, @mastercard_options)
     assert_equal "ERROR 5456:CURRENCY NOT SUPPORTED FOR THIS MERCHANT ACCOUNT", response.message
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
 end

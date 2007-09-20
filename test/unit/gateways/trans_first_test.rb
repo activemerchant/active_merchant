@@ -25,7 +25,7 @@ class TransFirstTest < Test::Unit::TestCase
   def test_successful_request
     @creditcard.number = 1
     assert response = @gateway.purchase(AMOUNT, @creditcard, {})
-    assert response.success?
+    assert_success response
     assert_equal '5555', response.authorization
     assert response.test?
   end
@@ -33,7 +33,7 @@ class TransFirstTest < Test::Unit::TestCase
   def test_unsuccessful_request
     @creditcard.number = 2
     assert response = @gateway.purchase(AMOUNT, @creditcard, {})
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
 
@@ -47,7 +47,7 @@ class TransFirstTest < Test::Unit::TestCase
     
     response = @gateway.purchase(AMOUNT, @creditcard)
     
-    assert !response.success?
+    assert_failure response
     assert response.test?
     assert_equal 'Missing parameter: UserId.', response.message
   end
@@ -57,7 +57,7 @@ class TransFirstTest < Test::Unit::TestCase
     
     response = @gateway.purchase(AMOUNT, @creditcard)
     
-    assert response.success?
+    assert_success response
     assert response.test?
     assert_equal 'test transaction', response.message
     assert_equal '355', response.authorization
@@ -68,7 +68,7 @@ class TransFirstTest < Test::Unit::TestCase
     
     response = @gateway.purchase(AMOUNT, @creditcard)
     
-    assert !response.success?
+    assert_failure response
     assert response.test?
     assert_equal '29005716', response.authorization
     assert_equal 'Invalid cardholder number', response.message

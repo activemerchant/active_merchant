@@ -29,7 +29,7 @@ class RemoteViaklixTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(100, @credit_card, @options)
     
-    assert response.success?
+    assert_success response
     assert response.test?
     assert_equal 'APPROVED', response.message
     assert response.authorization
@@ -38,16 +38,16 @@ class RemoteViaklixTest < Test::Unit::TestCase
   def test_failed_purchase
     assert response = @gateway.purchase(100, @bad_credit_card, @options)
   
-    assert !response.success?
+    assert_failure response
     assert response.test?
     assert_equal 'The Credit Card Number supplied in the authorization request appears invalid.', response.message
   end
   
   def test_credit
     assert purchase = @gateway.purchase(100, @credit_card, @options)
-    assert purchase.success?
+    assert_success purchase
     
     assert credit = @gateway.credit(100, @credit_card)
-    assert credit.success?
+    assert_success credit
   end
 end

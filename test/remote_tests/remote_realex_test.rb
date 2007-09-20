@@ -38,7 +38,7 @@ class RemoteRealexTest < Test::Unit::TestCase
         }
       )
       assert_not_nil response
-      assert response.success?
+      assert_success response
       assert response.test?
       assert response.authorization.length > 0
       assert_equal 'Successful', response.message
@@ -56,7 +56,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     )
       
     assert_not_nil response
-    assert !response.success?
+    assert_failure response
     
     assert_equal '504', response.params['result']
     assert_equal "There is no such merchant id. Please contact realex payments if you continue to experience this problem.", response.params['message']
@@ -71,7 +71,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     )
   
     assert_not_nil response
-    assert !response.success?
+    assert_failure response
       
     assert_equal '506', response.params['result']
     assert_equal "There is no such merchant account. Please contact realex payments if you continue to experience this problem.", response.params['message']
@@ -87,7 +87,7 @@ class RemoteRealexTest < Test::Unit::TestCase
         :description => 'Test Realex purchase declined'
       )
       assert_not_nil response
-      assert !response.success?
+      assert_failure response
       
       assert_equal '101', response.params['result']
       assert_equal response.params['message'], response.message
@@ -103,7 +103,7 @@ class RemoteRealexTest < Test::Unit::TestCase
         :description => 'Test Realex Referral B'
       )
       assert_not_nil response
-      assert !response.success?
+      assert_failure response
       assert response.test?
       assert_equal '102', response.params['result']
       assert_equal RealexGateway::DECLINED, response.message
@@ -118,7 +118,7 @@ class RemoteRealexTest < Test::Unit::TestCase
         :description => 'Test Realex Rqeferral A'
       )
       assert_not_nil response
-      assert !response.success?
+      assert_failure response
       assert_equal '103', response.params['result']
       assert_equal RealexGateway::DECLINED, response.message
     end      
@@ -135,7 +135,7 @@ class RemoteRealexTest < Test::Unit::TestCase
       )
       
       assert_not_nil response
-      assert !response.success?
+      assert_failure response
       
       assert_equal '205', response.params['result']
       assert_equal RealexGateway::BANK_ERROR, response.message
@@ -151,7 +151,7 @@ class RemoteRealexTest < Test::Unit::TestCase
       :description => 'Test Realex ccn error'
     )
     assert_not_nil response
-    assert !response.success?
+    assert_failure response
     
     assert_equal '509', response.params['result']
     assert_equal "Invalid credit card length", response.params['message']
@@ -166,7 +166,7 @@ class RemoteRealexTest < Test::Unit::TestCase
       :description => 'Test Realex expiry month error'
     )
     assert_not_nil response
-    assert !response.success?
+    assert_failure response
     
     assert_equal '509', response.params['result']
     assert_equal RealexGateway::ERROR, response.message
@@ -181,7 +181,7 @@ class RemoteRealexTest < Test::Unit::TestCase
       :description => 'Test Realex expiry year error'
     )
     assert_not_nil response
-    assert !response.success?
+    assert_failure response
     
     assert_equal '509', response.params['result']
     assert_equal RealexGateway::ERROR, response.message
@@ -196,7 +196,7 @@ class RemoteRealexTest < Test::Unit::TestCase
       :description => 'test_chname_error'
     )
     assert_not_nil response
-    assert !response.success?
+    assert_failure response
 
     assert_equal '502', response.params['result']
     assert_equal RealexGateway::ERROR, response.message
@@ -210,7 +210,7 @@ class RemoteRealexTest < Test::Unit::TestCase
       :description => 'test_cvn'
     )
     assert_not_nil response
-    assert response.success?
+    assert_success response
     assert response.authorization.length > 0
   end
   
@@ -221,7 +221,7 @@ class RemoteRealexTest < Test::Unit::TestCase
       :customer => 'my customer id'
     )
     assert_not_nil response
-    assert response.success?
+    assert_success response
     assert response.authorization.length > 0
   end
 end

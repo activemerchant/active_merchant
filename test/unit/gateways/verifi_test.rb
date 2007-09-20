@@ -32,14 +32,14 @@ class VerifiTest < Test::Unit::TestCase
     @creditcard.number = 1
     
     assert response = @gateway.purchase(100, @creditcard, @options)
-    assert response.success?     
+    assert_success response     
   end
 
   def test_purchase_error
     @creditcard.number = 2
     
     assert response = @gateway.purchase(10, @creditcard, @options)
-    assert !response.success?
+    assert_failure response
   end
   
   def test_purchase_exceptions

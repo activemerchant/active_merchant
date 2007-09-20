@@ -16,7 +16,7 @@ class PslCardTest < Test::Unit::TestCase
   def test_successful_purchase
     @creditcard.number = 1
     assert response = @gateway.purchase(AMOUNT, @creditcard, {})
-    assert response.success?
+    assert_success response
     assert_equal '5555', response.authorization
     assert response.test?
   end
@@ -24,7 +24,7 @@ class PslCardTest < Test::Unit::TestCase
   def test_successful_authorization
     @creditcard.number = 1
     assert response = @gateway.authorize(AMOUNT, @creditcard, {})
-    assert response.success?
+    assert_success response
     assert_equal '5555', response.authorization
     assert response.test?
   end
@@ -32,7 +32,7 @@ class PslCardTest < Test::Unit::TestCase
   def test_unsuccessful_request
     @creditcard.number = 2
     assert response = @gateway.purchase(AMOUNT, @creditcard, {})
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
 

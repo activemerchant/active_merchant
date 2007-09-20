@@ -21,28 +21,28 @@ class RemoveUsaEpayTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(100, @creditcard, @options)
     assert_equal 'Success', response.message
-    assert response.success?
+    assert_success response
   end
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(100, @declined_card, @options)
     assert_equal 'Card Declined', response.message
-    assert !response.success?
+    assert_failure response
   end
 
   def test_authorize_and_capture
     amount = 100
     assert auth = @gateway.authorize(amount, @creditcard, @options)
-    assert auth.success?
+    assert_success auth
     assert_equal 'Success', auth.message
     assert auth.authorization
     assert capture = @gateway.capture(amount, auth.authorization)
-    assert capture.success?
+    assert_success capture
   end
 
   def test_failed_capture
     assert response = @gateway.capture(100, '')
-    assert !response.success?
+    assert_failure response
     assert_equal 'Unable to find original transaciton.', response.message
   end
 
@@ -52,6 +52,6 @@ class RemoveUsaEpayTest < Test::Unit::TestCase
       })
     assert response = gateway.purchase(100, @creditcard, @options)
     assert_equal 'Specified source key not found.', response.message
-    assert !response.success?
+    assert_failure response
   end
 end

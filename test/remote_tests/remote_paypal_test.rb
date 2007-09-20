@@ -42,20 +42,20 @@ class PaypalTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(300, @creditcard, @params)
-    assert response.success?
+    assert_success response
     assert response.params['transaction_id']
   end
   
   def test_failed_purchase
     @creditcard.number = '234234234234'
     response = @gateway.purchase(300, @creditcard, @params)
-    assert !response.success?
+    assert_failure response
     assert_nil response.params['transaction_id']
   end
 
   def test_successful_authorization
     response = @gateway.authorize(300, @creditcard, @params)
-    assert response.success?
+    assert_success response
     assert response.params['transaction_id']
     assert_equal '3.00', response.params['amount']
     assert_equal 'USD', response.params['amount_currency_id']
@@ -64,18 +64,18 @@ class PaypalTest < Test::Unit::TestCase
   def test_failed_authorization
     @creditcard.number = '234234234234'
     response = @gateway.authorize(300, @creditcard, @params)
-    assert !response.success?
+    assert_failure response
     assert_nil response.params['transaction_id']
   end
 
   def test_successful_reauthorization
     return if not @three_days_old_auth_id
     auth = @gateway.reauthorize(1000, @three_days_old_auth_id)
-    assert auth.success?
+    assert_success auth
     assert auth.authorization
     
     response = @gateway.capture(1000, auth.authorization)
-    assert response.success?
+    assert_success response
     assert response.params['transaction_id']
     assert_equal '10.00', response.params['gross_amount']
     assert_equal 'USD', response.params['gross_amount_currency_id']
@@ -84,15 +84,15 @@ class PaypalTest < Test::Unit::TestCase
   def test_failed_reauthorization
     return if not @three_days_old_auth_id2  # was authed for $10, attempt $20
     auth = @gateway.reauthorize(2000, @three_days_old_auth_id2)
-    assert !auth.success?
+    assert_false auth?
     assert !auth.authorization
   end
       
   def test_successful_capture
     auth = @gateway.authorize(300, @creditcard, @params)
-    assert auth.success?
+    assert_success auth
     response = @gateway.capture(300, auth.authorization)
-    assert response.success?
+    assert_success response
     assert response.params['transaction_id']
     assert_equal '3.00', response.params['gross_amount']
     assert_equal 'USD', response.params['gross_amount_currency_id']
@@ -100,19 +100,19 @@ class PaypalTest < Test::Unit::TestCase
   
   def test_successful_voiding
     auth = @gateway.authorize(300, @creditcard, @params)
-    assert auth.success?
+    assert_success auth
     response = @gateway.void(auth.authorization)
-    assert response.success?
+    assert_success response
   end
   
   def test_purchase_and_full_credit
     amount = 300
     
     purchase = @gateway.purchase(amount, @creditcard, @params)
-    assert purchase.success?
+    assert_success purchase
     
     credit = @gateway.credit(amount, purchase.authorization, :note => 'Sorry')
-    assert credit.success?
+    assert_success credit
     assert credit.test?
     assert_equal 'USD',  credit.params['net_refund_amount_currency_id']
     assert_equal '2.61', credit.params['net_refund_amount']
@@ -124,40 +124,40 @@ class PaypalTest < Test::Unit::TestCase
   
   def test_failed_voiding
     response = @gateway.void('foo')
-    assert !response.success?
+    assert_failure response
   end
   
   def test_successful_transfer
     response = @gateway.purchase(300, @creditcard, @params)
-    assert response.success?, response.message
+    assert_success response, response.message
     
     response = @gateway.transfer(300, 'joe@example.com', :subject => 'Your money', :note => 'Thanks for taking care of that')
-    assert response.success?, response.message
+    assert_success response, response.message
   end
 
   def test_failed_transfer
      # paypal allows a max transfer of $10,000
     response = @gateway.transfer(1000001, 'joe@example.com')
-    assert !response.success?, response.message
+    assert_failure response, response.message
   end
   
   def test_successful_multiple_transfer
     response = @gateway.purchase(900, @creditcard, @params)
-    assert response.success?, response.message
+    assert_success response, response.message
     
     response = @gateway.transfer([300, 'joe@example.com'],
       [600, 'jane@example.com', {:note => 'Thanks for taking care of that'}],
       :subject => 'Your money')
-    assert response.success?, response.message
+    assert_success response, response.message
   end
   
   def test_failed_multiple_transfer
     response = @gateway.purchase(25100, @creditcard, @params)
-    assert response.success?, response.message
+    assert_success response, response.message
 
     # You can only include up to 250 recipients
     recipients = (1..251).collect {|i| [100, "person#{i}@example.com"]}
     response = @gateway.transfer(*recipients)
-    assert !response.success?, response.message
+    assert_failure response, response.message
   end
 end

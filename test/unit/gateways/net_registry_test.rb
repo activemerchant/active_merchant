@@ -53,59 +53,59 @@ class NetRegistryTest < Test::Unit::TestCase
   def test_successful_purchase
     stub_gateway_response 'successful_purchase'
     response = @gateway.purchase(100, @creditcard)
-    assert response.success?
+    assert_success response
     assert_match /\A\d{16}\z/, response.authorization
   end
 
   def test_successful_credit
     stub_gateway_response 'successful_credit'
     response = @gateway.credit(100, '0707161858000000')
-    assert response.success?
+    assert_success response
   end
 
   def test_successful_authorization
     stub_gateway_response 'successful_authorization'
     response = @gateway.authorize(100, @creditcard)
-    assert response.success?
+    assert_success response
     assert_match /\A\d{6}\z/, response.authorization
   end
 
   def test_successful_authorization_and_capture
     stub_gateway_response 'successful_authorization'
     response = @gateway.authorize(100, @creditcard)
-    assert response.success?
+    assert_success response
     assert_match /\A\d{6}\z/, response.authorization
 
     stub_gateway_response 'successful_capture'
     response = @gateway.capture(100, response.authorization, :credit_card => @creditcard)
-    assert response.success?
+    assert_success response
   end
 
   def test_purchase_with_invalid_credit_card
     stub_gateway_response 'purchase_with_invalid_credit_card'
     response = @gateway.purchase(100, @creditcard)
-    assert !response.success?
+    assert_failure response
     assert_equal 'INVALID CARD', response.message
   end
 
   def test_purchase_with_expired_credit_card
     stub_gateway_response 'purchase_with_expired_credit_card'
     response = @gateway.purchase(100, @creditcard)
-    assert !response.success?
+    assert_failure response
     assert_equal 'CARD EXPIRED', response.message
   end
 
   def test_purchase_with_invalid_month
     stub_gateway_response 'purchase_with_invalid_month'
     response = @gateway.purchase(100, @creditcard)
-    assert !response.success?
+    assert_failure response
     assert_equal 'Invalid month', response.message
   end
 
   def test_transaction_with_logging
     stub_gateway_response 'successful_purchase'
     response = @gateway.purchase(100, @creditcard)
-    assert response.success?
+    assert_success response
 
     # check send line
     sent_line = log_text.grep(/sending/).first
@@ -140,7 +140,7 @@ class NetRegistryTest < Test::Unit::TestCase
     stub_gateway_response 'successful_purchase'
     @gateway.logger = nil
     response = @gateway.purchase(100, @creditcard)
-    assert response.success?
+    assert_success response
     assert log_text.empty?
   end
 
@@ -148,7 +148,7 @@ class NetRegistryTest < Test::Unit::TestCase
     @gateway = NetRegistryGateway.new(:login => 'bad-login', :password => 'bad-login')
     stub_gateway_response 'bad_login'
     response = @gateway.purchase(100, @creditcard)
-    assert !response.success?
+    assert_failure response
     assert_equal 'failed', response.params['status']
   end
 

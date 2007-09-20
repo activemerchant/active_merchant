@@ -1,5 +1,9 @@
 # CHANGELOG
 # ---
+# * Change deny to assert_false, and deny_success to assert_failure.  Remove Gateway.gateway, as it is available from Base [cody]
+#
+# * Improve documentation, and test coverage [James Herdman]
+#
 # * Refactor MonerisGateway, improve test coverage and documentation [James Herdman]
 #
 # * Add support for crediting to Moneris [James Herdman]

@@ -53,7 +53,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(100000, @creditcard, @options)
     assert_equal "Approved", response.message
-    assert response.success?
+    assert_success response
     assert response.test?
     assert_not_nil response.authorization
   end
@@ -61,24 +61,24 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   def test_declined_purchase
     assert response = @gateway.purchase(210000, @creditcard, @options)
     assert_equal 'Failed merchant rule check', response.message
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
   
   def test_successful_purchase_solo
      assert response = @gateway.purchase(100000, @solo, @options)
      assert_equal "Approved", response.message
-     assert response.success?
+     assert_success response
      assert response.test?
      assert_not_nil response.authorization
    end
   
   def test_no_card_issue_or_card_start_with_switch
     assert response = @gateway.purchase(100000, @switch, @options)
-    assert !response.success?
+    assert_failure response
     
     assert_equal "Field format error: CARDSTART or CARDISSUE must be present", response.message
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
   
@@ -86,7 +86,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     @switch.issue_number = '01'
     assert response = @gateway.purchase(100000, @switch, @options)
     assert_equal "Approved", response.message
-    assert response.success?
+    assert_success response
     assert response.test?
     assert_not_nil response.authorization
   end
@@ -96,7 +96,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     @switch.start_year = 1999
     assert response = @gateway.purchase(100000, @switch, @options)
     assert_equal "Approved", response.message
-    assert response.success?
+    assert_success response
     assert response.test?
     assert_not_nil response.authorization
   end
@@ -107,7 +107,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     @switch.start_year = 1999
     assert response = @gateway.purchase(100000, @switch, @options)
     assert_equal "Approved", response.message
-    assert response.success?
+    assert_success response
     assert response.test?
     assert_not_nil response.authorization
   end
@@ -115,7 +115,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   def test_successful_authorization
     assert response = @gateway.authorize(100, @creditcard, @options)
     assert_equal "Approved", response.message
-    assert response.success?
+    assert_success response
     assert response.test?
     assert_not_nil response.authorization
   end
@@ -123,26 +123,26 @@ class RemotePayflowUkTest < Test::Unit::TestCase
   def test_authorize_and_capture
     amount = 100
     assert auth = @gateway.authorize(amount, @creditcard, @options)
-    assert auth.success?
+    assert_success auth
     assert_equal 'Approved', auth.message
     assert auth.authorization
     assert capture = @gateway.capture(amount, auth.authorization)
-    assert capture.success?
+    assert_success capture
   end
   
   def test_failed_capture
     assert response = @gateway.capture(100, '999')
-    assert !response.success?
+    assert_failure response
     assert_equal 'Invalid tender', response.message
   end
   
   def test_authorize_and_void
     assert auth = @gateway.authorize(100, @creditcard, @options)
-    assert auth.success?
+    assert_success auth
     assert_equal 'Approved', auth.message
     assert auth.authorization
     assert void = @gateway.void(auth.authorization)
-    assert void.success?
+    assert_success void
   end
   
   def test_invalid_login
@@ -152,7 +152,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     )
     assert response = gateway.purchase(100, @creditcard, @options)
     assert_equal 'Invalid vendor account', response.message
-    assert !response.success?
+    assert_failure response
   end
   
   def test_duplicate_request_id

@@ -22,7 +22,7 @@ class QuickpayTest < Test::Unit::TestCase
   def test_successful_purchase
     @creditcard.number = 1
     assert response = @gateway.purchase(AMOUNT, @creditcard, {})
-    assert response.success?
+    assert_success response
     assert_equal '5555', response.authorization
     assert response.test?
   end
@@ -30,7 +30,7 @@ class QuickpayTest < Test::Unit::TestCase
   def test_successful_authorization
     @creditcard.number = 1
     assert response = @gateway.authorize(AMOUNT, @creditcard, {})
-    assert response.success?
+    assert_success response
     assert_equal '5555', response.authorization
     assert response.test?
   end
@@ -38,7 +38,7 @@ class QuickpayTest < Test::Unit::TestCase
   def test_unsuccessful_request
     @creditcard.number = 2
     assert response = @gateway.purchase(AMOUNT, @creditcard, {})
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
 
@@ -51,7 +51,7 @@ class QuickpayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(error_response)
     
     response = @gateway.purchase(AMOUNT, @creditcard, :order_id => '1000')
-    assert !response.success?
+    assert_failure response
     assert_equal '008', response.params['qpstat']
     assert_equal 'Missing/error in cardnumberMissing/error in expirationdateMissing/error in card verification dataMissing/error in amountMissing/error in ordernumMissing/error in currency', response.params['qpstatmsg']
     assert_equal 'Missing/error in cardnumber, Missing/error in expirationdate, Missing/error in card verification data, Missing/error in amount, Missing/error in ordernum, and Missing/error in currency', response.message
@@ -61,7 +61,7 @@ class QuickpayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(merchant_error)
     
     response = @gateway.purchase(AMOUNT, @creditcard, :order_id => '1000')
-    assert !response.success?
+    assert_failure response
     assert_equal response.message, 'Missing/error in merchant'
   end
   
@@ -70,7 +70,7 @@ class QuickpayTest < Test::Unit::TestCase
     
     response = @gateway.authorize(AMOUNT, @creditcard, :order_id => '1000')
 
-    assert response.success?
+    assert_success response
     assert_equal 'OK', response.message
     
     assert_equal '2865261', response.authorization

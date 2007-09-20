@@ -51,7 +51,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   def test_successful_authorization
     assert response = @gateway.authorize(AMOUNT, @creditcard, @options)
     assert_equal 'Successful transaction', response.message
-    assert response.success?
+    assert_success response
     assert response.test?
     assert !response.authorization.blank?
   end
@@ -68,7 +68,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal 'Successful transaction', response.message
     assert response.params['totalTaxAmount']
     assert_not_equal "0", response.params['totalTaxAmount']
-    assert response.success?
+    assert_success response
     assert response.test?
   end
 
@@ -78,53 +78,53 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal 'Successful transaction', response.message
     assert response.params['totalTaxAmount']
     assert_equal "0", response.params['totalTaxAmount']
-    assert response.success?
+    assert_success response
     assert response.test?
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(AMOUNT, @creditcard, @options)
     assert_equal 'Successful transaction', response.message
-    assert response.success?
+    assert_success response
     assert response.test?
   end
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(AMOUNT, @declined_card, @options)
     assert_equal 'Invalid account number', response.message
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
 
   def test_authorize_and_capture
     assert auth = @gateway.authorize(AMOUNT, @creditcard, @options)
-    assert auth.success?
+    assert_success auth
     assert_equal 'Successful transaction', auth.message
   
     assert capture = @gateway.capture(AMOUNT, auth.authorization)
-    assert capture.success?
+    assert_success capture
   end
   
   def test_good_authorize_and_bad_capture
     assert auth = @gateway.authorize(AMOUNT, @creditcard, @options)
-    assert auth.success?
+    assert_success auth
     assert_equal 'Successful transaction', auth.message
 
     assert capture = @gateway.capture(AMOUNT + 10, auth.authorization, @options)
-    assert !capture.success?
+    assert_failure capture
     assert_equal "One or more fields contains invalid data",  capture.message
   end
 
   def test_failed_capture_bad_auth_info
     assert auth = @gateway.authorize(AMOUNT, @creditcard, @options)
     assert capture = @gateway.capture(AMOUNT, "a;b;c", @options)
-    assert !capture.success?
+    assert_failure capture
   end
 
   def test_invalid_login
     gateway = CyberSourceGateway.new( :login => '', :password => '' )
     assert response = gateway.purchase(AMOUNT, @creditcard, @options)
     assert_equal "wsse:InvalidSecurity: \nSecurity Data : illegal null input\n", response.message
-    assert !response.success?
+    assert_failure response
   end
 end

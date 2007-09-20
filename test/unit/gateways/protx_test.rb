@@ -15,7 +15,7 @@ class ProtxTest < Test::Unit::TestCase
     assert response = @gateway.purchase(100, @creditcard, :order_id => 1)
     assert_equal Response, response.class
     assert_equal '#0001', response.params['receiptid']
-    assert response.success?
+    assert_success response
   end
 
   def test_purchase_error
@@ -24,7 +24,7 @@ class ProtxTest < Test::Unit::TestCase
     assert response = @gateway.purchase(100, @creditcard, :order_id => 1)
     assert_equal Response, response.class
     assert_equal '#0001', response.params['receiptid']
-    assert !response.success?
+    assert_failure response
   end
   
   def test_purchase_exceptions
@@ -39,7 +39,7 @@ class ProtxTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_response)
     
     assert response = @gateway.purchase(100, @creditcard, :order_id => 1)
-    assert response.success?
+    assert_success response
     
     assert_equal "1;{7307C8A9-766E-4BD1-AC41-3C34BB83F7E5};5559;WIUMDJS607", response.authorization
   end

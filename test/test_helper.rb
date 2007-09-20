@@ -33,10 +33,10 @@ module Test
       #   assert !something_that_is_false
       # 
       #   # Do this
-      #   deny something_that_should_be_false
+      #   assert_false something_that_should_be_false
       # 
       # An optional +msg+ parameter is available to help you debug.
-      def deny(boolean, message = nil)
+      def assert_false(boolean, message = nil)
         message = build_message message, '<?> is not false or nil.', boolean
         assert_block message do
           not boolean
@@ -46,7 +46,7 @@ module Test
       # A handy little assertion to check for a successful response: 
       # 
       #   # Instead of
-      #   assert response.success?
+      #   assert_success response
       # 
       #   # DRY that up with
       #   assert_success response
@@ -58,8 +58,8 @@ module Test
       end
       
       # The negative of +assert_success+
-      def deny_success(response)
-        deny response.success?, "Response expected to fail: #{response.inspect}"
+      def assert_failure(response)
+        assert_false response.success?, "Response expected to fail: #{response.inspect}"
       end
     
       private

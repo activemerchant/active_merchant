@@ -11,20 +11,20 @@ class PlugnpayTest < Test::Unit::TestCase
   
   def test_bad_credit_card
     assert response = @gateway.authorize(1000, @bad_creditcard)
-    assert !response.success?
+    assert_failure response
     assert_equal 'Invalid Credit Card No.', response.message
   end
   
   def test_good_credit_card
     assert response = @gateway.authorize(1000, @good_creditcard)
-    assert response.success?
+    assert_success response
     assert !response.authorization.blank?
     assert_equal 'Success', response.message
   end
   
   def test_purchase_transaction
     assert response = @gateway.purchase(1000, @good_creditcard)        
-    assert response.success? 
+    assert_success response 
     assert !response.authorization.blank?
     assert_equal 'Success', response.message
   end
@@ -34,19 +34,19 @@ class PlugnpayTest < Test::Unit::TestCase
   # "Auth Transactions" section of the "Security Requirements" area in the test account Security Administration Area.
   def test_authorization_and_capture
     assert authorization = @gateway.authorize(100, @good_creditcard)
-    assert authorization.success?
+    assert_success authorization
     
     assert capture = @gateway.capture(100, authorization.authorization)
-    assert capture.success?
+    assert_success capture
     assert_equal 'Success', capture.message
   end
   
   def test_authorization_and_void
     assert authorization = @gateway.authorize(100, @good_creditcard)
-    assert authorization.success?
+    assert_success authorization
     
     assert void = @gateway.void(authorization.authorization)
-    assert void.success?
+    assert_success void
     assert_equal 'Success', void.message
   end
   
@@ -54,17 +54,17 @@ class PlugnpayTest < Test::Unit::TestCase
     amount = 100
     
     assert purchase = @gateway.purchase(amount, @good_creditcard)
-    assert purchase.success?
+    assert_success purchase
     
     assert credit = @gateway.credit(amount, purchase.authorization)
-    assert credit.success?
+    assert_success credit
     assert_equal 'Success', credit.message
   end
   
   def test_credit_with_no_previous_transaction
     assert credit = @gateway.credit(100, @good_creditcard)
     
-    assert credit.success?
+    assert_success credit
     assert_equal 'Success', credit.message
   end
 end

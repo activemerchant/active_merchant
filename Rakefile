@@ -18,20 +18,23 @@ PKG_FILES = FileList[
 
 
 desc "Default Task"
-task :default => [ :test_units ]
+task :default => 'test:units'
 
 # Run the unit tests
+namespace :test do
 
-Rake::TestTask.new(:test_units) do |t|
-  t.pattern = 'test/unit/**/*_test.rb'
-  t.ruby_opts << '-rubygems'
-  t.verbose = true
-end
+  Rake::TestTask.new(:units) do |t|
+    t.pattern = 'test/unit/**/*_test.rb'
+    t.ruby_opts << '-rubygems'
+    t.verbose = true
+  end
 
-Rake::TestTask.new(:test_remote) do |t|
-  t.pattern = 'test/remote_tests/*_test.rb'
-  t.ruby_opts << '-rubygems'
-  t.verbose = true
+  Rake::TestTask.new(:remote) do |t|
+    t.pattern = 'test/remote_tests/*_test.rb'
+    t.ruby_opts << '-rubygems'
+    t.verbose = true
+  end
+
 end
 
 # Genereate the RDoc documentation

@@ -21,7 +21,7 @@ class RemoteTransFirstTest < Test::Unit::TestCase
     assert response = @gateway.purchase(AMOUNT, @creditcard, @options)
     assert_equal 'test transaction', response.message
     assert response.test?
-    assert response.success?
+    assert_success response
     assert !response.authorization.blank?
   end
 
@@ -32,6 +32,6 @@ class RemoteTransFirstTest < Test::Unit::TestCase
     )
     assert response = gateway.purchase(AMOUNT, @creditcard, @options)
     assert_equal 'invalid account', response.message
-    assert !response.success?
+    assert_failure response
   end
 end

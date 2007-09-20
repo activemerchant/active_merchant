@@ -22,7 +22,7 @@ class UsaEpayTest < Test::Unit::TestCase
   def test_successful_request
     @creditcard.number = 1
     assert response = @gateway.purchase(100, @creditcard, {})
-    assert response.success?
+    assert_success response
     assert_equal '5555', response.authorization
     assert response.test?
   end
@@ -30,7 +30,7 @@ class UsaEpayTest < Test::Unit::TestCase
   def test_unsuccessful_request
     @creditcard.number = 2
     assert response = @gateway.purchase(100, @creditcard, {})
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
 

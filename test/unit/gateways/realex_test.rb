@@ -48,7 +48,7 @@ class RealexTest < Test::Unit::TestCase
   def test_successful_request
     @creditcard.number = 1
     assert response = @gateway.purchase(AMOUNT, @creditcard, :order_id => 1)
-    assert response.success?
+    assert_success response
     assert_equal '5555', response.authorization
     assert response.test?
   end
@@ -56,7 +56,7 @@ class RealexTest < Test::Unit::TestCase
   def test_unsuccessful_request
     @creditcard.number = 2
     assert response = @gateway.purchase(AMOUNT, @creditcard, :order_id => 1)
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
 
@@ -69,14 +69,14 @@ class RealexTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_response)
     
     response = @gateway.purchase(AMOUNT, @creditcard, :order_id => 1)
-    assert response.success?
+    assert_success response
   end
   
   def test_unsuccessful_purchase
     @gateway.expects(:ssl_post).returns(unsuccessful_response)
     
     response = @gateway.purchase(AMOUNT, @creditcard, :order_id => 1)
-    assert !response.success?
+    assert_failure response
   end
   
   def test_supported_countries

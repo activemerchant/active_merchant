@@ -105,12 +105,12 @@ class AuthorizeNetTest < Test::Unit::TestCase
   
   def test_credit_success
     assert response = @gateway.credit(100, '123456789', :card_number => '1')
-    assert response.success?
+    assert_success response
   end
   
   def test_credit_failure
     assert response = @gateway.credit(100, '123456789', :card_number => '2')
-    assert !response.success?
+    assert_failure response
   end
   
   def test_supported_countries

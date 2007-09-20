@@ -25,7 +25,7 @@ class VerifiTest < Test::Unit::TestCase
   
   def test_successful_purchase
     assert response = @gateway.purchase(100, @creditcard, @options)
-    assert response.success?
+    assert_success response
     assert_equal 'Transaction was Approved', response.message
     assert !response.authorization.blank?
   end
@@ -35,13 +35,13 @@ class VerifiTest < Test::Unit::TestCase
   def test_expired_credit_card
     @creditcard.year = (Time.now.year - 3) 
     assert response = @gateway.purchase(100, @creditcard, @options)
-    assert response.success?
+    assert_success response
     assert_equal 'Transaction was Approved', response.message   
   end
     
   def test_successful_authorization
     assert response = @gateway.authorize(100, @creditcard, @options)
-    assert response.success?
+    assert_success response
     assert_equal 'Transaction was Approved', response.message
     assert response.authorization
   end
@@ -49,19 +49,19 @@ class VerifiTest < Test::Unit::TestCase
   def test_authorization_and_capture
     amount = 100
     assert authorization = @gateway.authorize(amount, @creditcard, @options)
-    assert authorization.success?
+    assert_success authorization
     assert authorization
     assert capture = @gateway.capture(amount, authorization.authorization, @options)  
-    assert capture.success?
+    assert_success capture
     assert_equal 'Transaction was Approved', capture.message
   end
   
   def test_authorization_and_void
     assert authorization = @gateway.authorize(100, @creditcard, @options)
-    assert authorization.success?
+    assert_success authorization
     assert authorization
     assert void = @gateway.void(authorization.authorization, @options)
-    assert void.success?
+    assert_success void
     assert_equal 'Transaction was Approved', void.message
   end
   
@@ -69,15 +69,15 @@ class VerifiTest < Test::Unit::TestCase
   def test_credit
     assert response = @gateway.credit(100, @creditcard, @options)
     assert_match /Credits are not enabled/, response.params['responsetext']
-    assert !response.success?  
+    assert_failure response  
   end
   
   def test_authorization_and_void
     amount = 100
     assert authorization = @gateway.authorize(amount, @creditcard, @options)
-    assert authorization.success?
+    assert_success authorization
     assert void = @gateway.void(authorization.authorization, @options)
-    assert void.success?
+    assert_success void
     assert_equal 'Transaction was Approved', void.message
     assert_match /Transaction Void Successful/, void.params['responsetext']
   end
@@ -85,10 +85,10 @@ class VerifiTest < Test::Unit::TestCase
   def test_purchase_and_credit
     amount = 100
     assert purchase = @gateway.purchase(amount, @creditcard, @options)
-    assert purchase.success?
+    assert_success purchase
     
     assert credit = @gateway.credit(amount, purchase.authorization, @options)
-    assert credit.success?
+    assert_success credit
     assert_equal 'Transaction was Approved', credit.message
   end
   
@@ -102,6 +102,6 @@ class VerifiTest < Test::Unit::TestCase
     assert_equal 'Transaction was Rejected by Gateway', response.message
     assert_equal 'Authentication Failed', response.params['responsetext']
     
-    assert !response.success?
+    assert_failure response
   end
 end

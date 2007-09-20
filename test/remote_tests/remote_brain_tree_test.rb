@@ -21,14 +21,14 @@ class RemoteBrainTreeTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @creditcard, @options)
     assert_equal 'This transaction has been approved', response.message
-    assert response.success?
+    assert_success response
   end
   
   def test_successful_add_to_vault
     @options[:store] = true
     assert response = @gateway.purchase(@amount, @creditcard, @options)
     assert_equal 'This transaction has been approved', response.message
-    assert response.success?
+    assert_success response
     assert_not_nil response.params["customer_vault_id"]
   end
 
@@ -36,7 +36,7 @@ class RemoteBrainTreeTest < Test::Unit::TestCase
     @options[:store] = true
     assert response = @gateway.purchase(@amount, @creditcard, @options)
     assert_equal 'This transaction has been approved', response.message
-    assert response.success?
+    assert_success response
     assert_not_nil customer_id = response.params["customer_vault_id"]
     
     assert second_response = @gateway.purchase(@amount*2, customer_id, @options)
@@ -47,22 +47,22 @@ class RemoteBrainTreeTest < Test::Unit::TestCase
   def test_declined_purchase
     assert response = @gateway.purchase(@declined_amount, @creditcard, @options)
     assert_equal 'This transaction has been declined', response.message
-    assert !response.success?
+    assert_failure response
   end
 
   def test_authorize_and_capture
     assert auth = @gateway.authorize(@amount, @creditcard, @options)
-    assert auth.success?
+    assert_success auth
     assert_equal 'This transaction has been approved', auth.message
     assert auth.authorization
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_equal 'This transaction has been approved', capture.message
-    assert capture.success?
+    assert_success capture
   end
 
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
-    assert !response.success?
+    assert_failure response
     assert  response.message.match(/Invalid Transaction ID \/ Object ID specified:/)
   end
 
@@ -73,6 +73,6 @@ class RemoteBrainTreeTest < Test::Unit::TestCase
     )
     assert response = gateway.purchase(@amount, @creditcard, @options)
     assert_equal 'Invalid Username', response.message
-    assert !response.success?
+    assert_failure response
   end
 end

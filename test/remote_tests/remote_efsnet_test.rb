@@ -22,7 +22,7 @@ class RemoteEfsnetTest < Test::Unit::TestCase
     @options[:order_id] += 1
     assert response = @gateway.purchase(AMOUNT, @creditcard, @options)
     assert_equal 'Approved', response.message
-    assert response.success?
+    assert_success response
     assert response.test?
   end
 
@@ -30,21 +30,21 @@ class RemoteEfsnetTest < Test::Unit::TestCase
     @options[:order_id] += 1
     assert response = @gateway.force(AMOUNT, '123456', @creditcard, @options)
     assert_equal 'Approved', response.message
-    assert response.success?
+    assert_success response
   end
 
   def test_successful_voice_authorize
     @options[:order_id] += 1
     assert response = @gateway.voice_authorize(AMOUNT, '123456', @creditcard, @options)
     assert_equal 'Accepted', response.message
-    assert response.success?
+    assert_success response
   end
 
   def test_unsuccessful_purchase
     @options[:order_id] += 1
     assert response = @gateway.purchase(DECLINED_AMOUNT, @creditcard, @options)
     assert_equal 'Declined', response.message
-    assert !response.success?
+    assert_failure response
   end
 
   def test_authorize_and_capture
@@ -52,31 +52,31 @@ class RemoteEfsnetTest < Test::Unit::TestCase
     
     amount = AMOUNT
     assert auth = @gateway.authorize(amount, @creditcard, @options)
-    assert auth.success?    
+    assert_success auth    
     assert_equal 'Approved', auth.message
     assert auth.authorization
     
     @options[:order_id] += 1
     assert capture = @gateway.capture(amount, auth.authorization, @options)
-    assert capture.success?
+    assert_success capture
   end
 
   def test_purchase_and_void
     @options[:order_id] += 1
     amount = AMOUNT
     assert purchase = @gateway.purchase(amount, @creditcard, @options)
-    assert purchase.success?
+    assert_success purchase
     assert_equal 'Approved', purchase.message
     assert purchase.authorization
     @options[:order_id] += 1
     assert void = @gateway.void(purchase.authorization, @options)
-    assert void.success?
+    assert_success void
   end
 
   def test_failed_capture
     @options[:order_id] += 1
     assert response = @gateway.capture(AMOUNT, '1;1', @options)
-    assert !response.success?
+    assert_failure response
     assert_equal 'Bad original transaction', response.message
   end
 
@@ -88,6 +88,6 @@ class RemoteEfsnetTest < Test::Unit::TestCase
     )
     assert response = gateway.purchase(AMOUNT, @creditcard, @options)
     assert_equal 'Invalid credentials', response.message
-    assert !response.success?
+    assert_failure response
   end
 end

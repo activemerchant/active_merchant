@@ -24,14 +24,14 @@ class BrainTreeTest < Test::Unit::TestCase
   def test_successful_request
     @creditcard.number = 1
     assert response = @gateway.purchase(@amount, @creditcard, {})
-    assert response.success?
+    assert_success response
     assert_equal '5555', response.authorization
   end
 
   def test_unsuccessful_request
     @creditcard.number = 2
     assert response = @gateway.purchase(@amount, @creditcard, {})
-    assert !response.success?
+    assert_failure response
   end
 
   def test_request_error

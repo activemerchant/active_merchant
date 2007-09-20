@@ -50,7 +50,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
   # operation
   def test_successful_purchase
     response = @gateway.purchase(198, @mastercard, @params)
-    assert response.success?
+    assert_success response
     assert response.test?
   end
   
@@ -58,13 +58,13 @@ class RemoteDataCashTest < Test::Unit::TestCase
   #address details - this is more a check on the passed ExtendedPolicy
   def test_successful_purchase_without_address_check
     response = @gateway.purchase(199, @mastercard, @params)
-    assert response.success?
+    assert_success response
     assert response.test?
   end
   
   def test_successful_purchase_with_solo_card
     response = @gateway.purchase(198, @solo, @params)
-    assert response.success?
+    assert_success response
     assert response.test?
   end
   
@@ -74,28 +74,28 @@ class RemoteDataCashTest < Test::Unit::TestCase
     @solo.number = '633499110000000003'
     
     response = @gateway.purchase(198, @solo, @params)
-    assert response.success?
+    assert_success response
     assert response.test?
   end
   
   def test_invalid_verification_number
     @mastercard.verification_value = 123
     response = @gateway.purchase(198, @mastercard, @params)
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
   
   def test_invalid_expiry_month
     @mastercard.month = 13
     response = @gateway.purchase(198, @mastercard, @params)
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
   
   def test_invalid_expiry_year
     @mastercard.year = 1999
     response = @gateway.purchase(198, @mastercard, @params)
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
   
@@ -103,17 +103,17 @@ class RemoteDataCashTest < Test::Unit::TestCase
     amount = 198
     
     authorization = @gateway.authorize(amount, @mastercard, @params)
-    assert authorization.success?
+    assert_success authorization
     assert authorization.test?
     
     capture = @gateway.capture(amount, authorization.authorization, @params)
-    assert capture.success?
+    assert_success capture
     assert capture.test?
   end
   
   def test_unsuccessful_capture
     response = @gateway.capture(198, '1234', @params)
-    assert !response.success?
+    assert_failure response
     assert response.test?
   end
   
@@ -121,35 +121,35 @@ class RemoteDataCashTest < Test::Unit::TestCase
     amount = 198
     
     authorization = @gateway.authorize(amount, @mastercard, @params)
-    assert authorization.success?
+    assert_success authorization
     assert authorization.test?
     
     void = @gateway.void(authorization.authorization, @params)
-    assert void.success?
+    assert_success void
     assert void.test?
   end
   
   def test_successfuly_purchase_and_void
     purchase = @gateway.purchase(198, @mastercard, @params)
-    assert purchase.success?
+    assert_success purchase
     assert purchase.test?
     
     void = @gateway.void(purchase.authorization, @params)
-    assert void.success?
+    assert_success void
     assert void.test?
   end
   
   def test_merchant_reference_that_is_too_short
     @params[:order_id] = rand(10000)
     response = @gateway.purchase(198, @mastercard, @params)
-    assert response.success?
+    assert_success response
     assert response.test?
   end
   
   def test_merchant_reference_containing_invalid_characters
     @params[:order_id] = "##{rand(1000) + 1000}.1"
     response = @gateway.purchase(198, @mastercard, @params)
-    assert response.success?
+    assert_success response
     assert response.test?
   end
 end

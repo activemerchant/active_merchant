@@ -59,12 +59,12 @@ class NetRegistryTest < Test::Unit::TestCase
   def test_successful_purchase_and_credit
     response = @gateway.purchase(100, @valid_creditcard)
     assert_equal 'approved', response.params['status']
-    assert response.success?
+    assert_success response
     assert_match(/\A\d{16}\z/, response.authorization)
 
     response = @gateway.credit(100, response.authorization)
     assert_equal 'approved', response.params['status']
-    assert response.success?
+    assert_success response
   end
 
   #
@@ -77,14 +77,14 @@ class NetRegistryTest < Test::Unit::TestCase
   if ENV['TEST_AUTHORIZE_AND_CAPTURE']
     def test_successful_authorization_and_capture
       response = @gateway.authorize(100, @valid_creditcard)
-      assert response.success?
+      assert_success response
       assert_equal 'approved', response.params['status']
       assert_match(/\A\d{6}\z/, response.authorization)
 
       response = @gateway.capture(100,
                                   response.authorization,
                                   :credit_card => @valid_creditcard)
-      assert response.success?
+      assert_success response
       assert_equal 'approved', response.params['status']
     end
   end
@@ -93,21 +93,21 @@ class NetRegistryTest < Test::Unit::TestCase
     response = @gateway.purchase(100, @invalid_creditcard)
     assert_equal 'declined', response.params['status']
     assert_equal 'INVALID CARD', response.message
-    assert !response.success?
+    assert_failure response
   end
 
   def test_purchase_with_expired_credit_card
     response = @gateway.purchase(100, @expired_creditcard)
     assert_equal 'failed', response.params['status']
     assert_equal 'CARD EXPIRED', response.message
-    assert !response.success?
+    assert_failure response
   end
 
   def test_purchase_with_invalid_month
     response = @gateway.purchase(100, @invalid_month_creditcard)
     assert_equal 'failed', response.params['status']
     assert_equal 'Invalid month', response.message
-    assert !response.success?
+    assert_failure response
   end
 
   def test_bad_login
@@ -115,6 +115,6 @@ class NetRegistryTest < Test::Unit::TestCase
                                       :password => 'bad-login')
     response = @gateway.purchase(100, @valid_creditcard)
     assert_equal 'failed', response.params['status']
-    assert !response.success?
+    assert_failure response
   end
 end
