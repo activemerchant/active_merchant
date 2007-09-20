@@ -1,5 +1,9 @@
 # CHANGELOG
 # ---
+# * Use symbols for CreditCard error messages, since errors have indifferent access [cody]
+#
+# * Improve CreditCard error messages [George Ogata]
+#
 # * Change deny to assert_false, and deny_success to assert_failure.  Remove Gateway.gateway, as it is available from Base [cody]
 #
 # * Improve documentation, and test coverage [James Herdman]

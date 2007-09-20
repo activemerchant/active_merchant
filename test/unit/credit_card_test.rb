@@ -10,22 +10,12 @@ class CreditCardTest < Test::Unit::TestCase
   def setup
     CreditCard.require_verification_value = false
     
-    @visa = CreditCard.new(
-      :type => "visa",
-      :number => "4779139500118580",
-      :month => Time.now.month,
-      :year => Time.now.year + 1,
-      :first_name => "Test",
-      :last_name => "Mensch"
+    @visa = credit_card("4779139500118580", 
+      :type => "visa"
     )
     
-    @solo = CreditCard.new(
+    @solo = credit_card("676700000000000000",
       :type   => "solo",
-      :number => "676700000000000000",
-      :month  => Time.now.month,
-      :year   => Time.now.year + 1,
-      :first_name  => "Test",
-      :last_name   => "Mensch",
       :issue_number => '01'
     )
   end
@@ -85,14 +75,34 @@ class CreditCardTest < Test::Unit::TestCase
     
     @visa.number = "11112222333344ff"
     assert !@visa.valid?
+    assert  @visa.errors.on(:number)
+    assert !@visa.errors.on(:type)
 
     @visa.number = "111122223333444"
     assert !@visa.valid?
+    assert  @visa.errors.on(:number)
+    assert !@visa.errors.on(:type)
 
     @visa.number = "11112222333344444"
     assert !@visa.valid?
+    assert  @visa.errors.on(:number)
+    assert !@visa.errors.on(:type)
   end
-  
+
+  def test_invalid_card_type_does_not_match_number
+    @visa.type = 'master'
+    assert !@visa.valid?
+    assert @visa.errors.on(:number) ^ @visa.errors.on(:type)
+  end
+
+  def test_empty_type_should_be_invalid
+    @visa.type = ''
+    assert !@visa.valid?
+    assert  @visa.errors.on(:type)
+    assert !@visa.errors.on(:number)
+    assert_match /is required/, @visa.errors.on(:type)
+  end
+
   def test_valid_card_number
     @visa.number = "4242424242424242"
     assert @visa.valid?
