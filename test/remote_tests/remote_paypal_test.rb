@@ -27,7 +27,9 @@ class PaypalTest < Test::Unit::TestCase
                     :zip => '23456'
                   } ,
       :description => 'Stuff that you purchased, yo!',
-      :ip => '10.0.0.1'
+      :ip => '10.0.0.1',
+      :return_url => 'http://example.com/return',
+      :cancel_return_url => 'http://example.com/cancel'
     }
       
     # test re-authorization, auth-id must be more than 3 days old.
@@ -127,35 +129,35 @@ class PaypalTest < Test::Unit::TestCase
   
   def test_successful_transfer
     response = @gateway.purchase(300, @creditcard, @params)
-    assert_success response, response.message
+    assert_success response
     
     response = @gateway.transfer(300, 'joe@example.com', :subject => 'Your money', :note => 'Thanks for taking care of that')
-    assert_success response, response.message
+    assert_success response
   end
 
   def test_failed_transfer
      # paypal allows a max transfer of $10,000
     response = @gateway.transfer(1000001, 'joe@example.com')
-    assert_failure response, response.message
+    assert_failure response
   end
   
   def test_successful_multiple_transfer
     response = @gateway.purchase(900, @creditcard, @params)
-    assert_success response, response.message
+    assert_success response
     
     response = @gateway.transfer([300, 'joe@example.com'],
       [600, 'jane@example.com', {:note => 'Thanks for taking care of that'}],
       :subject => 'Your money')
-    assert_success response, response.message
+    assert_success response
   end
   
   def test_failed_multiple_transfer
     response = @gateway.purchase(25100, @creditcard, @params)
-    assert_success response, response.message
+    assert_success response
 
     # You can only include up to 250 recipients
     recipients = (1..251).collect {|i| [100, "person#{i}@example.com"]}
     response = @gateway.transfer(*recipients)
-    assert_failure response, response.message
+    assert_failure response
   end
 end
