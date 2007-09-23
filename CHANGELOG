@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Fix remote PayPal tests [cody]
+#
 # * Update Linkpoint tests to remove useless pem file [cody]
 #
 # * Use symbols for CreditCard error messages, since errors have indifferent access [cody]

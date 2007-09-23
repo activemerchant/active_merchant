@@ -8,7 +8,7 @@ require File.dirname(__FILE__) + '/lib/tasks/cia'
 require File.dirname(__FILE__) + '/lib/support/gateway_support'
 
 
-PKG_VERSION = "1.2.0"
+PKG_VERSION = "1.2.1"
 PKG_NAME = "activemerchant"
 PKG_FILE_NAME = "#{PKG_NAME}-#{PKG_VERSION}"
 
