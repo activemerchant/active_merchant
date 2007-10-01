@@ -77,27 +77,28 @@ Installation from RubyGems
 
 == Sample Usage
 
-  # 10 dollars in cents
-  ten_dollars = 1000
-
   credit_card = CreditCard.new(
-    :number => '4242424242424242',
-    :month => 8,
-    :year => 2006,
-    :name => 'Tobias Luetke',
-    :type => 'visa'
+    :type => 'visa',       :number => '4242424242424242',
+    :month => 8,           :year => 2012,
+    :first_name => 'Bob',  :last_name => 'Bobsen'
   )
-
+  
   if creditcard.valid?
-    gateway = ActiveMerchant::Billing::AuthorizeNetGateway.new(
-      :login    => 'LOGIN_ID',
-      :password => 'TRANSACTION_KEY'
-    )
-    response = gateway.purchase(ten_dollars, credit_card)
+  
+    # Create a gateway object for the Authorize.net service
+    gateway = ActiveMerchant::Billing::AuthorizeNetGateway.new
+    
+    # Authorize for 10 dollars ( 1000 cents )
+    response = gateway.purchase(1000, credit_card)
     
     if response.success?
-      ...
+  
+      # Capture the money right away
+      gateway.capture(1000, response.authorization)
+  
     else
-      raise StandardError.new( response.message )
+      raise StandardError, response.message 
     end
   end
+    
+  
