@@ -95,6 +95,7 @@ module ActiveMerchant #:nodoc:
         post = { :trans_id => identification,
                  :card_num => options[:card_number]
                }
+        add_invoice(post, options)
 
         commit('CREDIT', money, post)
       end

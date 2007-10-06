@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add support for descriptions in Authorize.net credits [shiva.kaul]
+#
 # * Great cleanup and improvement of CreditCard code, tests, and docs [James Herdman]
 #
 # * Fix remote PayPal tests [cody]
