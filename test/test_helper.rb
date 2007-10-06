@@ -61,6 +61,14 @@ module Test
       def assert_failure(response)
         assert_false response.success?, "Response expected to fail: #{response.inspect}"
       end
+      
+      def assert_valid(validateable)
+        assert validateable.valid?, "Expected to be valid"
+      end
+      
+      def assert_not_valid(validateable)
+        assert_false validateable.valid?, "Expected to not be valid"
+      end
     
       private
       def generate_order_id

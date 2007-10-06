@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Great cleanup and improvement of CreditCard code, tests, and docs [James Herdman]
+#
 # * Fix remote PayPal tests [cody]
 #
 # * Update Linkpoint tests to remove useless pem file [cody]

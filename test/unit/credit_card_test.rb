@@ -1,365 +1,277 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class CreditCardTest < Test::Unit::TestCase
-  MAESTRO_CARDS = [ '5000000000000000', '5099999999999999', '5600000000000000',
-    '5899999999999999', '6000000000000000', '6999999999999999']
-  
-  NON_MAESTRO_CARDS = [ '4999999999999999', '5100000000000000', '5599999999999999',
-    '5900000000000000', '5999999999999999', '7000000000000000' ]
-    
   def setup
     CreditCard.require_verification_value = false
-    
-    @visa = credit_card("4779139500118580", 
-      :type => "visa"
-    )
-    
-    @solo = credit_card("676700000000000000",
-      :type   => "solo",
-      :issue_number => '01'
-    )
+    @visa = credit_card("4779139500118580",   :type => "visa")
+    @solo = credit_card("676700000000000000", :type => "solo", :issue_number => '01')
   end
   
   def teardown
     CreditCard.require_verification_value = false
   end
   
-  def test_validation
+  def generate_valid_test_card(options={})
+    CreditCard.new({
+      :type       => "visa",
+      :number     => "4779139500118580",
+      :month      => Time.now.month,
+      :year       => Time.now.year,
+      :first_name => "Tobias",
+      :last_name  => "Luetke"      
+    }.merge(options))
+  end
+  
+  def test_constructor_should_properly_assign_values
+    c = generate_valid_test_card
+
+    assert_equal "4779139500118580", c.number
+    assert_equal Time.now.month, c.month
+    assert_equal Time.now.year, c.year
+    assert_equal "Tobias Luetke", c.name
+    assert_equal "visa", c.type
+    assert_valid c
+  end
+  
+  def test_new_credit_card_should_not_be_valid
     c = CreditCard.new
 
-    assert !c.valid?
-    assert !c.errors.empty?
+    assert_not_valid c
+    assert_false     c.errors.empty?
   end
 
-  def test_valid
-    assert @visa.valid?
-    assert @visa.errors.empty?
+  def test_should_be_a_valid_visa_card
+    assert_valid @visa
+    assert       @visa.errors.empty?
   end
   
-  def test_valid_solo_card
-    assert @solo.valid?
+  def test_should_be_a_valid_solo_card
+    assert_valid @solo
+    assert       @solo.errors.empty?
   end
   
-  def test_empty_names
+  def test_cards_with_empty_names_should_not_be_valid
     @visa.first_name = ''
-    @visa.last_name = '' 
+    @visa.last_name  = '' 
     
-    assert !@visa.valid?
-    assert !@visa.errors.empty?
+    assert_not_valid @visa
+    assert_false     @visa.errors.empty?
   end
   
-  def test_indifferent_error_access
+  def test_should_be_able_to_access_errors_indifferently
     @visa.first_name = ''
     
-    assert !@visa.valid?
+    assert_not_valid @visa
     assert @visa.errors.on(:first_name)
     assert @visa.errors.on("first_name")
   end
   
-  def test_liberate_bogus_card
-    c = CreditCard.new
-    c.type = 'bogus'
-    c.first_name = "Name"
-    c.last_name = "Last"
-    c.month  = 7
-    c.year   = 2008
-    c.valid?
-    assert c.valid?
-    c.type   = 'visa'
-    assert !c.valid?
+  def test_should_be_able_to_liberate_a_bogus_card
+    c = generate_valid_test_card(:type => 'bogus', :number => '')
+    assert_valid c
+    
+    c.type = 'visa'
+    assert_not_valid c
   end
 
-  def test_invalid_card_numbers
+  def test_should_be_able_to_identify_invalid_card_numbers
     @visa.number = nil
-    assert !@visa.valid?
+    assert_not_valid @visa
     
     @visa.number = "11112222333344ff"
-    assert !@visa.valid?
-    assert  @visa.errors.on(:number)
-    assert !@visa.errors.on(:type)
+    assert_not_valid @visa
+    assert_false @visa.errors.on(:type)
+    assert       @visa.errors.on(:number)
 
     @visa.number = "111122223333444"
-    assert !@visa.valid?
-    assert  @visa.errors.on(:number)
-    assert !@visa.errors.on(:type)
+    assert_not_valid @visa
+    assert_false @visa.errors.on(:type)
+    assert       @visa.errors.on(:number)
 
     @visa.number = "11112222333344444"
-    assert !@visa.valid?
-    assert  @visa.errors.on(:number)
-    assert !@visa.errors.on(:type)
+    assert_not_valid @visa
+    assert_false @visa.errors.on(:type)
+    assert       @visa.errors.on(:number)
   end
 
-  def test_invalid_card_type_does_not_match_number
+  def test_should_have_errors_with_invalid_card_type_for_otherwise_correct_number
     @visa.type = 'master'
-    assert !@visa.valid?
-    assert @visa.errors.on(:number) ^ @visa.errors.on(:type)
+    
+    assert_not_valid @visa
+    assert_not_equal @visa.errors.on(:number), @visa.errors.on(:type)
   end
 
-  def test_empty_type_should_be_invalid
+  def test_should_be_invalid_with_empty_type
     @visa.type = ''
-    assert !@visa.valid?
-    assert  @visa.errors.on(:type)
-    assert !@visa.errors.on(:number)
+    
+    assert_not_valid @visa
+    assert_false @visa.errors.on(:number)
     assert_match /is required/, @visa.errors.on(:type)
+    assert  @visa.errors.on(:type)
   end
 
-  def test_valid_card_number
+  def test_should_be_a_valid_card_number
     @visa.number = "4242424242424242"
-    assert @visa.valid?
+    
+    assert_valid @visa
   end
 
-  def test_valid_card_month
+  def test_should_require_a_valid_card_month
     @visa.month  = Time.now.month
     @visa.year   = Time.now.year
-    assert @visa.valid?
+    
+    assert_valid @visa
   end
 
-  def test_empty_month_should_be_invalid
+  def test_should_not_be_valid_with_empty_month
     @visa.month = ''
-    assert !@visa.valid?
+    
+    assert_not_valid @visa
     assert @visa.errors.on('month')
   end
 
-  def test_edge_cases_for_valid_months
+  def test_should_not_be_valid_for_edge_month_cases
     @visa.month = 13
     @visa.year = Time.now.year
-    assert !@visa.valid?
+    assert_not_valid @visa
     assert @visa.errors.on('month')
 
     @visa.month = 0
     @visa.year = Time.now.year
-    assert !@visa.valid?
+    assert_not_valid @visa
     assert @visa.errors.on('month')
   end 
 
-  def test_empty_year_should_be_invalid
+  def test_should_be_invalid_with_empty_year
     @visa.year = ''
-    assert !@visa.valid?
+    assert_not_valid @visa
     assert @visa.errors.on('year')
   end
 
-  def test_edge_cases_for_valid_years
+  def test_should_not_be_valid_for_edge_year_cases
     @visa.year  = Time.now.year - 1
-    assert !@visa.valid?
+    assert_not_valid @visa
     assert @visa.errors.on('year')
 
     @visa.year  = Time.now.year + 21
-    assert !@visa.valid?
+    assert_not_valid @visa
     assert @visa.errors.on('year')
   end
 
-  def test_valid_year
+  def test_should_be_a_valid_future_year
     @visa.year = Time.now.year + 1
-    assert @visa.valid?
+    assert_valid @visa
   end
 
-  def test_wrong_cardtype
-
-    c = CreditCard.new(
-      "type"    => "visa",
-      "number"  => "4779139500118580",
-      "month"   => 10,
-      "year"    => 2007,
-      "first_name"    => "Tobias",
-      "last_name"    => "Luetke"
-    )
-
-    assert c.valid?
-
-    c.type = "master"
-    assert !c.valid?
-
+  def test_should_identify_wrong_cardtype
+    c = generate_valid_test_card(:type => 'master')
+    assert_not_valid c
   end
 
-  def test_constructor
+  def test_should_display_number
+    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '1111222233331234').display_number
+    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '111222233331234').display_number
+    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '1112223331234').display_number
 
-    c = CreditCard.new(  
-      "type"    => "visa",
-      "number"  => "4779139500118580",
-      "month"   => "10",
-      "year"    => "2007",
-      "first_name"    => "Tobias",
-      "last_name"    => "Luetke"
-    )
-
-    assert_equal "4779139500118580", c.number
-    assert_equal "10", c.month
-    assert_equal "2007", c.year
-    assert_equal "Tobias Luetke", c.name
-    assert_equal "visa", c.type        
-    c.valid?
+    assert_equal 'XXXX-XXXX-XXXX-',     CreditCard.new(:number => nil).display_number
+    assert_equal 'XXXX-XXXX-XXXX-',     CreditCard.new(:number => '').display_number
+    assert_equal 'XXXX-XXXX-XXXX-123',  CreditCard.new(:number => '123').display_number
+    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '1234').display_number
+    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '01234').display_number
   end
 
-  def test_display_number
-    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new('number' => '1111222233331234').display_number
-    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new('number' => '111222233331234').display_number
-    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new('number' => '1112223331234').display_number
-
-     assert_equal 'XXXX-XXXX-XXXX-', CreditCard.new('number' => nil).display_number
-    assert_equal 'XXXX-XXXX-XXXX-', CreditCard.new('number' => '').display_number
-    assert_equal 'XXXX-XXXX-XXXX-123', CreditCard.new('number' => '123').display_number
-    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new('number' => '1234').display_number
-    assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new('number' => '01234').display_number
-  end
-
-  def test_expired_date
-    last_month = Time.now - 2.months
-    date = CreditCard::ExpiryDate.new(last_month.month, last_month.year)
-    assert date.expired?
-  end
-
-  def test_today_is_not_expired
-    today = Time.now
-    date = CreditCard::ExpiryDate.new(today.month, today.year)
-    assert !date.expired?
-  end
-
-  def test_not_expired
-    next_month = Time.now + 1.month
-    date = CreditCard::ExpiryDate.new(next_month.month, next_month.year)
-    assert !date.expired?
-  end
-
-  def test_type
-    assert_equal 'visa', CreditCard.type?('4242424242424242')
+  def test_should_correctly_identify_card_type
+    assert_equal 'visa',             CreditCard.type?('4242424242424242')
     assert_equal 'american_express', CreditCard.type?('341111111111111')
     assert_nil CreditCard.type?('')
   end
   
-  def test_does_not_require_verification_value
-    assert !CreditCard.requires_verification_value?
-    assert @visa.valid?
-  end
-  
-  def test_requires_verification_value
+  def test_should_be_able_to_require_a_verification_value
     CreditCard.require_verification_value = true
-
     assert CreditCard.requires_verification_value?
-    
-    card = CreditCard.new(
-      :type   => "visa",
-      :number => "4779139500118580",
-      :month  => Time.now.month,
-      :year   => Time.now.year + 1,
-      :first_name  => "Test",
-      :last_name   => "Mensch"
-    )
-    
-    assert !card.valid?
-    card.verification_value = '123'
-    assert card.valid?
   end
   
-  def test_solo_is_valid_with_start_date
-    @solo.start_month = nil
-    @solo.start_year = nil
+  def test_should_not_be_valid_when_requiring_a_verification_value
+    CreditCard.require_verification_value = true
+    card = generate_valid_test_card
+    assert_not_valid card
+    
+    card.verification_value = '123'
+    assert_valid card
+  end
+  
+  def test_should_require_valid_start_date_for_solo_or_switch
+    @solo.start_month  = nil
+    @solo.start_year   = nil
     @solo.issue_number = nil
     
-    assert !@solo.valid?
+    assert_not_valid @solo
     assert @solo.errors.on('start_month')
     assert @solo.errors.on('start_year')
     assert @solo.errors.on('issue_number')
     
     @solo.start_month = 2
-    @solo.start_year = 2007
-    assert @solo.valid?
+    @solo.start_year  = 2007
+    assert_valid @solo
   end
   
-  def test_solo_is_valid_with_issue_number
-    @solo.start_month = nil
-    @solo.start_year = 2005
+  def test_should_require_a_valid_issue_number_for_solo_or_switch
+    @solo.start_month  = nil
+    @solo.start_year   = 2005
     @solo.issue_number = nil
     
-    assert !@solo.valid?
+    assert_not_valid @solo
     assert @solo.errors.on('start_month')
-    assert !@solo.errors.on('start_year')
     assert @solo.errors.on('issue_number')
     
     @solo.issue_number = 3
-    assert @solo.valid?
+    assert_valid @solo
   end
   
-  def test_validate_new_card
-    credit_card = CreditCard.new
+  def test_should_return_last_four_digits_of_card_number
+    ccn = CreditCard.new(:number => "4779139500118580")
+    assert_equal "8580", ccn.last_digits
+  end
+  
+  def test_should_be_true_when_credit_card_has_a_first_name
+    c = CreditCard.new
+    assert_false c.first_name?
     
-    assert_nothing_raised do
-      credit_card.validate
-    end
+    c = CreditCard.new(:first_name => 'James')
+    assert c.first_name?
   end
   
-  def test_create_and_validate_credit_card_from_type
-    credit_card = CreditCard.new(:type => CreditCard.type?('4242424242424242'))
+  def test_should_be_true_when_credit_card_has_a_last_name
+    c = CreditCard.new
+    assert_false c.last_name?
     
-    assert_nothing_raised do
-      credit_card.valid?
-    end
+    c = CreditCard.new(:last_name => 'Herdman')
+    assert c.last_name?
   end
   
-  def test_ensure_type_from_credit_card_class_is_not_frozen
-    type = CreditCard.type?('4242424242424242')
-    assert !type.frozen?
+  def test_should_test_for_a_full_name
+    c = CreditCard.new
+    assert_false c.name?
+
+    c = CreditCard.new(:first_name => 'James', :last_name => 'Herdman')
+    assert c.name?
   end
   
-  def test_dankort_card_type
-    assert_equal 'dankort', CreditCard.type?('5019717010103742')
-  end
+  # Huh?
+#  def test_validate_new_card
+#    credit_card = CreditCard.new
+#    
+#    assert_nothing_raised do
+#      credit_card.validate
+#    end
+#  end
   
-  def test_visa_dankort_detected_as_visa
-    assert_equal 'visa', CreditCard.type?('4571100000000000')
-  end
-  
-  def test_electron_dk_detected_as_visa
-    assert_equal 'visa', CreditCard.type?('4175001000000000')
-  end
-  
-  def test_detect_diners_club
-    assert_equal 'diners_club', CreditCard.type?('36148010000000')
-  end
-  
-  def test_detect_diners_club_dk
-    assert_equal 'diners_club', CreditCard.type?('30401000000000')
-  end
-  
-  def test_detect_maestro
-    assert_equal 'maestro', CreditCard.type?('5020100000000000')
-  end
-    
-  def test_maestro_dk_detects_as_maestro
-    assert_equal 'maestro', CreditCard.type?('6769271000000000')
-  end
-  
-  def test_maestro_range
-    MAESTRO_CARDS.each{ |number| assert_equal 'maestro', CreditCard.type?(number) }
-    
-    NON_MAESTRO_CARDS.each{ |number| assert_not_equal 'maestro', CreditCard.type?(number) }
-  end
-  
-  def test_mastercard_range
-    assert_equal 'master', CreditCard.type?('6771890000000000')
-    assert_equal 'master', CreditCard.type?('5413031000000000')
-  end
-  
-  def test_forbrugsforeningen
-    assert_equal 'forbrugsforeningen', CreditCard.type?('6007221000000000')
-  end
-  
-  def test_laser_card
-    # 16 digits
-    assert_equal 'laser', CreditCard.type?('6304985028090561')
-    
-    # 18 digits
-    assert_equal 'laser', CreditCard.type?('630498502809056151')
-    
-    # 19 digits
-    assert_equal 'laser', CreditCard.type?('6304985028090561515')
-    
-    # 17 digits
-    assert_not_equal 'laser', CreditCard.type?('63049850280905615')
-    
-    # 15 digits
-    assert_not_equal 'laser', CreditCard.type?('630498502809056')
-    
-    # Alternate format
-    assert_equal 'laser', CreditCard.type?('670695000000000000')
-  end
+  # Huh?
+#  def test_create_and_validate_credit_card_from_type
+#    credit_card = CreditCard.new(:type => CreditCard.type?('4242424242424242'))
+#    
+#    assert_nothing_raised do
+#      credit_card.valid?
+#    end
+#  end
 end

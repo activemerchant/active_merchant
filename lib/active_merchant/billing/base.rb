@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
       # 
       #   ActiveMerchant::Billing::Base.gateway('moneris').new
       def self.gateway(name)
-        ActiveMerchant::Billing.const_get("#{name.to_s.downcase}_gateway".camelize)
+        Billing.const_get("#{name.to_s.downcase}_gateway".camelize)
       end
       
 
@@ -45,8 +45,13 @@ module ActiveMerchant #:nodoc:
       #   notification = chronopay.notification(raw_post)
       #
       def self.integration(name)
-        ActiveMerchant::Billing::Integrations.const_get("#{name.to_s.downcase}".camelize)
-      end 
+        Billing::Integrations.const_get("#{name.to_s.downcase}".camelize)
+      end
+      
+      # A check to see if we're in test mode
+      def self.test?
+        self.gateway_mode == :test
+      end
     end             
   end
 end
