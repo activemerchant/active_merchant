@@ -27,9 +27,7 @@ class PaypalTest < Test::Unit::TestCase
                     :zip => '23456'
                   } ,
       :description => 'Stuff that you purchased, yo!',
-      :ip => '10.0.0.1',
-      :return_url => 'http://example.com/return',
-      :cancel_return_url => 'http://example.com/cancel'
+      :ip => '10.0.0.1'
     }
       
     # test re-authorization, auth-id must be more than 3 days old.

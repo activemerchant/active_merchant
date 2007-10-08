@@ -20,6 +20,11 @@ module ActiveMerchant #:nodoc:
       
       SUCCESS = 'Accepted'
       SUCCESS_MESSAGE = 'The transaction was approved'
+      
+      self.supported_countries = ['AU']
+      self.homepage_url = 'http://www.commsecure.com.au/paysecure.shtml'
+      self.display_name = 'PaySecure'
+      self.supported_cardtypes = [:visa, :master, :american_express]
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -37,10 +42,6 @@ module ActiveMerchant #:nodoc:
              
         commit(:purchase, money, post)
       end                       
-    
-      def self.supported_cardtypes
-        [:visa, :master, :american_express]
-      end
          
       private
       # Used for capturing, which is currently not supported.
