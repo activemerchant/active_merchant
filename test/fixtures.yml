@@ -91,6 +91,10 @@ paypal:
   pem: |--
     PASTE YOUR PEM FILE HERE
     
+pay_secure:
+  login: LOGIN
+  password: PASSWORD
+    
 plugnpay:
   login: LOGIN
   password: PASSWORD
