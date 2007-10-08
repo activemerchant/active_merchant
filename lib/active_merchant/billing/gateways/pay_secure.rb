@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_invoice(post, options)
-        post[:merchant_transid] = options[:order_id].to_s.slice(21)
+        post[:merchant_transid] = options[:order_id].to_s.slice(0,21)
         post[:memnum]           = options[:invoice]
         post[:custnum]          = options[:customer]
         post[:clientdata]       = options[:description]
