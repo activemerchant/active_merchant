@@ -1,5 +1,5 @@
-require 'script/generator/manifest'
-require 'script/generator/base'
+require File.dirname(__FILE__) + '/manifest'
+require File.dirname(__FILE__) + '/base'
 
 module ActiveMerchant #:nodoc:
   module Generator
@@ -16,7 +16,7 @@ Where <generator> is one of:
         end
   
         generator, class_name = ARGV  
-        require "script/generator/generators/#{generator}/#{generator}_generator"
+        require File.dirname(__FILE__) + "/generators/#{generator}/#{generator}_generator"
         "#{generator.classify}Generator".constantize.new(generator, class_name).run
       end
     end
