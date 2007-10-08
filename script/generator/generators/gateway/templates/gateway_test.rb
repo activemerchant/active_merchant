@@ -4,7 +4,10 @@ class <%= class_name %>Test < Test::Unit::TestCase
   AMOUNT = 100
 
   def setup
-    @gateway = <%= class_name %>Gateway.new(fixtures(:<%= class_name.underscore %>))
+    @gateway = <%= class_name %>Gateway.new(
+                 :login => 'login',
+                 :password => 'password'
+               )
 
     @creditcard = credit_card('4242424242424242')
 
