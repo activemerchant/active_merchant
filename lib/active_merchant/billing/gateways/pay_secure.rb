@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AU']
       self.homepage_url = 'http://www.commsecure.com.au/paysecure.shtml'
       self.display_name = 'PaySecure'
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
 
       def initialize(options = {})
         requires!(options, :login, :password)
