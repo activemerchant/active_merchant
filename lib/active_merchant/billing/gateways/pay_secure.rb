@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def test_response?(response)
-        response[:transid] =~ /SimProxy/
+        !!(response[:transid] =~ /SimProxy/)
       end
       
       def message_from(response)
@@ -109,8 +109,8 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         response = {}
         body.collect do |l| 
-          tokens = l.split(":")
-          response[tokens.first.to_s.downcase.to_sym] = tokens[1..-1].join(":").strip
+          key, value = l.split(":", 2)
+          response[key.to_s.downcase.to_sym] = value.strip
         end
         response
       end 
