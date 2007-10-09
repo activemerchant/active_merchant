@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Strip non alpha chars from order_id in Payflow gateway, as Paymentech Tampa can't handle them [cody]
+#
 # * Add support for the PaySecure payment gateway [cody]
 #
 # * Add support for descriptions in Authorize.net credits [shiva.kaul]
