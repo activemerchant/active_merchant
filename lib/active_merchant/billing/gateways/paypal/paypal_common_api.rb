@@ -273,10 +273,8 @@ module ActiveMerchant #:nodoc:
         case country.code(:alpha2).to_s
         when 'AU'
           AUSTRALIAN_STATES[address[:state]] || address[:state] 
-        when 'GB'
-          address[:state].blank? ? 'N/A' : address[:state] 
         else
-          address[:state]
+          address[:state].blank? ? 'N/A' : address[:state]
         end
       end
 
