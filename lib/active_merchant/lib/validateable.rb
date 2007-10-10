@@ -3,8 +3,8 @@ module ActiveMerchant #:nodoc:
     def valid?
       errors.clear
 
-      before_validate if respond_to?(:before_validate)
-      validate if respond_to?(:validate)
+      before_validate if respond_to?(:before_validate, true)
+      validate if respond_to?(:validate, true)
 
       errors.empty?
     end  
