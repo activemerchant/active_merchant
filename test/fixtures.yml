@@ -59,6 +59,9 @@ moneris:
   login: store1
   password: yesguy
   
+netbilling:
+  login: '104901072025'
+  
 net_registry:
   login: X
   password: Y

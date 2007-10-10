@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add support for Netbilling payment gateway [cody]
+#
 # * Pass in N/A for unknown states when a country is present in PaypalGateway [cody]
 #
 # * Strip non alpha chars from order_id in Payflow gateway, as Paymentech Tampa can't handle them [cody]
