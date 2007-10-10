@@ -58,7 +58,9 @@ linkpoint:
 moneris:
   login: store1
   password: yesguy
-  
+
+# Working credentials, no need to replace
+# Contact Netbilling for login info to the admin area  
 netbilling:
   login: '104901072025'
   
