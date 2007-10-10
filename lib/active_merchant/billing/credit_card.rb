@@ -109,8 +109,6 @@ module ActiveMerchant #:nodoc:
       
       private
       
-      #--
-      # TODO This isn't currently being recognized by RCov as being called. Institute a test for it.
       def before_validate #:nodoc: 
         self.type.downcase! if type.respond_to?(:downcase)
         self.month = month.to_i
