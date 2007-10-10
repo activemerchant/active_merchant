@@ -1,3 +1,5 @@
+require File.join(File.dirname(__FILE__), '..', 'check.rb')
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BrainTreeGateway < Gateway
@@ -59,11 +61,11 @@ module ActiveMerchant #:nodoc:
         commit('auth', money, post)
       end
       
-      def purchase(money, creditcard, options = {})
+      def purchase(money, payment_source, options = {})
         post = {}
         add_invoice(post, options)
-        add_payment_source(post, creditcard,options)        
-        add_address(post, creditcard, options)   
+        add_payment_source(post, payment_source, options)        
+        add_address(post, payment_source, options)   
         add_customer_data(post, options)
              
         commit('sale', money, post)
@@ -103,11 +105,11 @@ module ActiveMerchant #:nodoc:
         post[:orderid] = options[:order_id].to_s.gsub(/[^\w.]/, '')
       end
       
-      def add_payment_source(params, source,options)
-        if source.is_a?(String)
-          add_customer_vault_id(params, source)
-        else
-          add_creditcard(params, source,options)
+      def add_payment_source(params, source, options={})
+        case determine_funding_source(source)
+        when :vault       then add_customer_vault_id(params, source)
+        when :credit_card then add_creditcard(params, source, options)
+        when :check       then add_check(params, source)
         end
       end
       
@@ -123,6 +125,15 @@ module ActiveMerchant #:nodoc:
         post[:ccexp]  = expdate(creditcard)
         post[:firstname] = creditcard.first_name
         post[:lastname]  = creditcard.last_name   
+      end
+      
+      def add_check(post, check)
+        post[:payment] = 'check' # Set transaction to ACH
+        post[:checkname] = check.name # The name on the customer's Checking Account
+        post[:checkaba] = check.routing_number # The customer's bank routing number
+        post[:checkaccount] = check.account_number # The customer's account number
+        post[:account_holder_type] = check.account_holder_type # The customer's type of ACH account
+        post[:account_type] = check.account_type # The customer's type of ACH account
       end
       
       def parse(body)
@@ -185,6 +196,14 @@ module ActiveMerchant #:nodoc:
         request        
       end
       
+      def determine_funding_source(source)
+        case 
+        when source.is_a?(String) then :vault
+        when CreditCard.card_companies.keys.include?(source.type) then :credit_card
+        when source.type == 'check' then :check
+        else raise ArgumentError, "Unsupported funding source provided"
+        end
+      end
     end
   end
 end

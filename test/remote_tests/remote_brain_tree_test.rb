@@ -6,7 +6,9 @@ class RemoteBrainTreeTest < Test::Unit::TestCase
   def setup
     @gateway = BrainTreeGateway.new(fixtures(:brain_tree))
 
-    @creditcard = credit_card('4111111111111111')
+    @creditcard = credit_card('4111111111111111',
+                   :type => 'visa'
+                  )
 
     @declined_amount = rand(99)
     @amount = rand(10000)+1001
@@ -20,6 +22,17 @@ class RemoteBrainTreeTest < Test::Unit::TestCase
   
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @creditcard, @options)
+    assert_equal 'This transaction has been approved', response.message
+    assert_success response
+  end
+  
+  def test_successful_purchase_with_echeck
+    check = ActiveMerchant::Billing::Check.new(:name => 'Fredd Bloggs',
+                                               :routing_number => '111000025', # Valid ABA # - Bank of America, TX
+                                               :account_number => '999999999999',
+                                               :account_holder_type => 'personal',
+                                               :account_type => 'checking')
+    assert response = @gateway.purchase(@amount, check, @options)
     assert_equal 'This transaction has been approved', response.message
     assert_success response
   end
