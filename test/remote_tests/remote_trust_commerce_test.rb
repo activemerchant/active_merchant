@@ -105,6 +105,17 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert response.params['transid']
   end
   
+  def test_authorization_and_void
+    auth = @gateway.authorize(300, @creditcard)
+    assert_success auth
+    
+    void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal 'The transaction was successful', void.message 
+    assert_equal 'accepted', void.params['status']
+    assert void.params['transid']
+  end
+  
   def test_successful_credit
     assert response = @gateway.credit(100, '011-0022698151')
     

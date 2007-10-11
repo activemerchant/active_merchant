@@ -147,7 +147,6 @@ module ActiveMerchant #:nodoc:
       
       # purchase() is a simple sale. This is one of the most common types of transactions, and is extremely simple. All that you need
       # to process a purchase are an amount in cents or a money object and a creditcard object or billingid string.
-      
       def purchase(money, creditcard_or_billing_id, options = {})        
         parameters = {
           :amount => amount(money),
@@ -161,7 +160,6 @@ module ActiveMerchant #:nodoc:
       # capture() is the second half of the preauth(authorize)/postauth(capture) model. The TC API docs call this
       # postauth, we preserve active_merchant's nomenclature of capture() for consistency with the rest of the library. To process
       # a postauthorization with TC, you need an amount in cents or a money object, and a TC transid.
-      
       def capture(money, authorization, options = {})
         parameters = {
           :amount => amount(money),
@@ -173,7 +171,6 @@ module ActiveMerchant #:nodoc:
       
       # credit() allows you to return money to a card that was previously billed. You need to supply the amount, in cents or a money object,
       # that you want to refund, and a TC transid for the transaction that you are refunding.
-      
       def credit(money, identification, options = {})  
         parameters = {
           :amount => amount(money),
@@ -181,6 +178,19 @@ module ActiveMerchant #:nodoc:
         }
                                                   
         commit('credit', parameters)
+      end
+      
+      # void() clears an existing authorization and releases the reserved funds back to the cardholder.
+      # The TC API refers to this transaction as a reversal. After voiding, you will no longer be able to capture
+      # funds from this authorization. TrustCommerce seems to always return a status of "accepted" even if the
+      # transid you are trying to deauthorize has already been captured. Note: Your account needs to be configured by 
+      # TrustCommerce to allow for reversal transactions before you can use this method. 
+      def void(authorization, options = {})
+        parameters = {
+          :transid => authorization,
+        }
+        
+        commit('reversal', parameters)
       end
       
       # recurring() a TrustCommerce account that is activated for Citatdel, TrustCommerce's
@@ -194,7 +204,6 @@ module ActiveMerchant #:nodoc:
       #   gateway.recurring(tendollar, creditcard, :periodicity => :weekly)
       #
       # You can optionally specify how long you want payments to continue using 'payments'
-            
       def recurring(money, creditcard, options = {})        
         requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily] )
       

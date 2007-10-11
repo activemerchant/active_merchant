@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add void to TrustCommerce [jesse.c.scott]
+#
 # * Add support for echecks to the BrainTree gateway [Jeremy Voorhis]
 #
 # * Fix before_validate and validate methods in CreditCard [rick.denatale]
