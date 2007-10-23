@@ -180,11 +180,20 @@ module ActiveMerchant #:nodoc:
         commit('credit', parameters)
       end
       
-      # void() clears an existing authorization and releases the reserved funds back to the cardholder.
-      # The TC API refers to this transaction as a reversal. After voiding, you will no longer be able to capture
-      # funds from this authorization. TrustCommerce seems to always return a status of "accepted" even if the
-      # transid you are trying to deauthorize has already been captured. Note: Your account needs to be configured by 
-      # TrustCommerce to allow for reversal transactions before you can use this method. 
+      # void() clears an existing authorization and releases the reserved fund
+      # s back to the cardholder. The TC API refers to this transaction as a 
+      # reversal. After voiding, you will no longer be able to capture funds 
+      # from this authorization. TrustCommerce seems to always return a status 
+      # of "accepted" even if the transid you are trying to deauthorize has 
+      # already been captured. Note: Your account needs to be configured by 
+      # TrustCommerce to allow for reversal transactions before you can use this 
+      # method. 
+      # 
+      # NOTE: AMEX preauth's cannot be reversed. If you want to clear it more 
+      # quickly than the automatic expiration (7-10 days), you will have to 
+      # capture it and then immediately issue a credit for the same amount 
+      # which should clear the customers credit card with 48 hours according to
+      # TC.
       def void(authorization, options = {})
         parameters = {
           :transid => authorization,

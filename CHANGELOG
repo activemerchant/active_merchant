@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Update documentation about TrustCommerce void [cody]
+#
 # * Add void to TrustCommerce [jesse.c.scott]
 #
 # * Add support for echecks to the BrainTree gateway [Jeremy Voorhis]
