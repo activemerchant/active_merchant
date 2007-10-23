@@ -235,7 +235,11 @@ realex_mastercard_coms_error:
 secure_pay:
   login: LOGIN
   password: PASSWORD
-  
+
+secure_pay_tech:
+  login: TESTDIGISPL1
+  password: d557591484cb2cd12bba445aba420d2c69cd6a88
+
 trans_first:
   login: LOGIN
   password: PASSWORD
