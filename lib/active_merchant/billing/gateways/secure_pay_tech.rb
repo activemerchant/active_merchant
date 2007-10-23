@@ -56,6 +56,11 @@ module ActiveMerchant #:nodoc:
         post[:CardNumber] = creditcard.number
         post[:CardExpiry] = expdate(creditcard)
         post[:CardHolderName] = creditcard.name
+        
+        if creditcard.verification_value?
+          post[:EnableCSC] = 1
+          post[:CSC] = creditcard.verification_value
+        end
 
         # SPT will autodetect this
         post[:CardType] = 0
