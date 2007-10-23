@@ -36,13 +36,13 @@ class PayJunctionTest < Test::Unit::TestCase
                                         @creditcard, 
                                         :order_id => generate_order_id)
     
-    #p response
     assert_equal Response, response.class
     assert_match /APPROVAL/, response.message
     assert_equal 'capture', response.params["posture"], 'Should be captured funds'
     assert_equal 'charge', response.params["transaction_action"]
     
-    assert_equal true, response.success?    
+    assert_success response
+    assert response.test?
   end
 
   def test_successful_purchase_with_cvv
@@ -56,7 +56,7 @@ class PayJunctionTest < Test::Unit::TestCase
     assert_equal 'capture', response.params["posture"], 'Should be captured funds'
     assert_equal 'charge', response.params["transaction_action"]
     
-    assert_equal true, response.success?
+    assert_success response
   end
 
   def test_successful_authorize
@@ -69,7 +69,7 @@ class PayJunctionTest < Test::Unit::TestCase
     assert_equal 'hold', response.params["posture"], 'Should be a held charge'
     assert_equal 'charge', response.params["transaction_action"]
     
-    assert_equal true, response.success?    
+    assert_success response    
   end
 
   def test_successful_capture
@@ -93,7 +93,7 @@ class PayJunctionTest < Test::Unit::TestCase
     assert_equal Response, response.class
     assert_equal 'refund', response.params["transaction_action"]
     
-    assert_equal true, response.success?    
+    assert_success response    
   end
 
   def test_successful_void
@@ -104,7 +104,7 @@ class PayJunctionTest < Test::Unit::TestCase
     assert response = @gateway.void(AMOUNT, purchase.authorization, :order_id => order_id)
     assert_equal Response, response.class
     
-    assert_equal true, response.success?
+    assert_success response
     assert_equal 'void', response.params["posture"], 'Should be a capture'
     assert_equal purchase.authorization, response.authorization,
         "Should maintain transaction ID across request"
@@ -131,7 +131,7 @@ class PayJunctionTest < Test::Unit::TestCase
     assert_not_equal purchase.authorization, response.authorization,
         'Should have recieved new transaction ID'
     
-    assert_equal true, response.success?
+    assert_success response
   end
 
   def test_successful_recurring
@@ -143,7 +143,7 @@ class PayJunctionTest < Test::Unit::TestCase
     assert_match /APPROVAL/, response.message
     assert_equal 'charge', response.params["transaction_action"]
     
-    assert_equal true, response.success?
+    assert_success response
   end
 
   def test_should_send_invoice

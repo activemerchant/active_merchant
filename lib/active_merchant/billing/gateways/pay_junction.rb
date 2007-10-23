@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
     #
     #   # optionally specify address if using AVS
     #   address = { :address1 => '101 Test Ave', :city => 'Test', :state => 'TS',
-    #               :zipcode  => '10101', :country => 'US' }
+    #               :zip  => '10101', :country => 'US' }
     #
     #   # run request
     #   response = gateway.purchase(1000, creditcard, :address => address) # charge 10 dollars
@@ -97,12 +97,12 @@ module ActiveMerchant #:nodoc:
     #
     # See example use above for address AVS fields
     # See #recurring for periodic transaction fields
-    #
-    
-    
     class PayJunctionGateway < Gateway
       API_VERSION   = '1.2'
       LIVE_URL      = 'https://payjunction.com/quick_link' # also handles test requests 
+      
+      TEST_LOGIN = 'pj-ql-01'
+      TEST_PASSWORD = 'pj-ql-01p'
       
       SUCCESS_CODES = ["00", "85"]
       
@@ -275,10 +275,14 @@ module ActiveMerchant #:nodoc:
       end
       
       def test?
-        @options[:test] || super
+        test_login? || @options[:test] || super
       end
 
       private
+      
+      def test_login?
+        @options[:login] == TEST_LOGIN && @options[:password] == TEST_PASSWORD
+      end
       
       # add fields depending on payment source selected (cc or transaction id)
       def add_payment_source(params, source)
@@ -337,8 +341,8 @@ module ActiveMerchant #:nodoc:
       def commit(action, parameters)
         if test?
           # test requests must use global test account
-          parameters[:logon]      = 'pj-ql-01'
-          parameters[:password]   = 'pj-ql-01p'
+          parameters[:logon]      = TEST_LOGIN
+          parameters[:password]   = TEST_PASSWORD
         else
           parameters[:logon]      = @options[:login]
           parameters[:password]   = @options[:password]

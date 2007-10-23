@@ -2,25 +2,15 @@ require 'test/unit'
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class PayJunctionTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-
   def setup
-    
-    ActiveMerchant::Billing::Base.gateway_mode = :test
+    Base.gateway_mode = :test
 
-    @gateway = PayJunctionGateway.new({
+    @gateway = PayJunctionGateway.new(
       :login      => "pj-ql-01",
       :password   => "pj-ql-01p"
-    })
+    )
 
-    @creditcard = CreditCard.new({
-      :number => '4111111111111111',
-      :month => 8,
-      :year => 2006,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen'
-    })
-    
+    @creditcard = credit_card('4111111111111111')
   end
 
   def test_purchase_success    
@@ -51,11 +41,27 @@ class PayJunctionTest < Test::Unit::TestCase
   end
    
   def test_amount_style   
-   assert_equal '10.34', @gateway.send(:amount, Money.us_dollar(1034))
+   assert_equal '10.34', @gateway.send(:amount, Money.new(1034))
    assert_equal '10.34', @gateway.send(:amount, 1034)
                                                   
    assert_raise(ArgumentError) do
      @gateway.send(:amount, '10.34')
    end
+  end
+  
+  def test_detect_test_credentials_when_in_production  
+    Base.mode = :production
+    
+    live_gw  = PayJunctionGateway.new(
+                 :login      => "l",
+                 :password   => "p"
+               )
+    assert_false live_gw.test?
+    
+    test_gw = PayJunctionGateway.new(
+                :login      => "pj-ql-01",
+                :password   => "pj-ql-01p"
+              ) 
+    assert test_gw.test?
   end
 end

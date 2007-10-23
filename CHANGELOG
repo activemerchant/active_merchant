@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Detect when test credentials are being used with PayJunction [cody]
+#
 # * Update documentation about TrustCommerce void [cody]
 #
 # * Add void to TrustCommerce [jesse.c.scott]
