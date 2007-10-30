@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Update RequiresParameters to support HashWithIndifferentAccess [cody]
+#
 # * Add support for SecurePayTech payment gateway [Jasper Bryant-Greene]
 #
 # * Detect when test credentials are being used with PayJunction [cody]
