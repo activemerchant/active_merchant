@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Fix broken USA ePay URL [cody]
+#
 # * Update RequiresParameters to support HashWithIndifferentAccess [cody]
 #
 # * Add support for SecurePayTech payment gateway [Jasper Bryant-Greene]
