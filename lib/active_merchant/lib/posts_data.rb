@@ -40,6 +40,8 @@ module ActiveMerchant #:nodoc:
         http.post(uri.request_uri, data, headers).body
       rescue EOFError => e
         raise ConnectionError, "The remote server dropped the connection"
+      rescue Errno::ECONNRESET => e
+        raise ConnectionError, "The remote server reset the connection"
       rescue Errno::ECONNREFUSED => e
         raise ConnectionError, "The remote server refused the connection"
       end

@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Handle Errno::ECONNRESET when posting data [cody]
+#
 # * Fix broken USA ePay URL [cody]
 #
 # * Update RequiresParameters to support HashWithIndifferentAccess [cody]
