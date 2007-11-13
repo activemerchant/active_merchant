@@ -126,6 +126,15 @@ class AuthorizeNetTest < Test::Unit::TestCase
       assert_equal '', @gateway.send(:message_from, {})
     end
   end
+  
+  def test_response_under_review_by_fraud_service
+    @gateway.stubs(:ssl_post).returns(fraud_review_response)
+    
+    response = @gateway.purchase(100, @creditcard)
+    assert_failure response
+    assert response.fraud_review?
+    assert_equal "Thank you! For security reasons your order is currently being reviewed", response.message
+  end
 
   private
 
@@ -133,8 +142,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
     'x_encap_char=%24&x_card_num=4242424242424242&x_exp_date=0806&x_card_code=123&x_type=AUTH_ONLY&x_first_name=Longbob&x_version=3.1&x_login=X&x_last_name=Longsen&x_tran_key=Y&x_relay_response=FALSE&x_delim_data=TRUE&x_delim_char=%2C&x_amount=1.01'
   end
   
- def minimum_requirements
+  def minimum_requirements
     %w(version delim_data relay_response login tran_key amount card_num exp_date type)
   end
-
+ 
+  def fraud_review_response
+    "$4$,$$,$253$,$Thank you! For security reasons your order is currently being reviewed.$,$$,$X$,$0$,$$,$$,$1.00$,$$,$auth_capture$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$207BCBBF78E85CF174C87AE286B472D2$,$M$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$"
+  end
 end

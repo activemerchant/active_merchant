@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = "https://test.authorize.net/gateway/transact.dll"
       self.live_url = "https://secure.authorize.net/gateway/transact.dll"
     
-      APPROVED, DECLINED, ERROR = 1, 2, 3
+      APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
 
       RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT = 0, 2, 3
       AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE  = 5, 6, 38
@@ -102,7 +102,7 @@ module ActiveMerchant #:nodoc:
        
       private                       
       def commit(action, money, parameters)
-        parameters[:amount]       = amount(money) unless action == 'VOID'
+        parameters[:amount] = amount(money) unless action == 'VOID'
         
         # Only activate the test_request when the :test option is passed in
         parameters[:test_request] = @options[:test] ? 'TRUE' : 'FALSE'                                  
@@ -115,8 +115,7 @@ module ActiveMerchant #:nodoc:
         data = ssl_post url, post_data(action, parameters)
 
         @response = parse(data)
-
-        success = @response[:response_code] == APPROVED
+  
         message = message_from(@response)
 
         # Return the response. The authorization can be taken out of the transaction_id 
@@ -124,14 +123,21 @@ module ActiveMerchant #:nodoc:
         # It usually looks something like this
         #
         #   (TESTMODE) Successful Sale
-        #
-        
         test_mode = test? || message =~ /TESTMODE/
         
-        Response.new(success, message, @response, 
-            :test => test_mode, 
-            :authorization => @response[:transaction_id]
+        Response.new(success?(@response), message, @response, 
+          :test => test_mode, 
+          :authorization => @response[:transaction_id],
+          :fraud_review => fraud_review?(@response)
         )        
+      end
+      
+      def success?(response)
+        response[:response_code] == APPROVED
+      end
+      
+      def fraud_review?(response)
+        response[:response_code] == FRAUD_REVIEW
       end
                                                
       def parse(body)
@@ -221,7 +227,7 @@ module ActiveMerchant #:nodoc:
         end        
       end          
       
-      def message_from(results)        
+      def message_from(results)  
         if results[:response_code] == DECLINED
           return CARD_CODE_MESSAGES[results[:card_code]] if CARD_CODE_ERRORS.include?(results[:card_code])
           return AVS_MESSAGES[results[:avs_result_code]] if AVS_ERRORS.include?(results[:avs_result_code])
