@@ -1,9 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class RemoteViaklixTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-  
-  
   def setup
     @gateway = ViaklixGateway.new(fixtures(:viaklix))
     
