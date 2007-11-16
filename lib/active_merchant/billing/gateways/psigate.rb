@@ -52,7 +52,9 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['CA']
       self.homepage_url = 'http://www.psigate.com/'
       self.display_name = 'Psigate'
-      
+   
+      SUCCESS_MESSAGE = 'Success'
+      FAILURE_MESSAGE = 'The transaction was declined'
       
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -108,7 +110,7 @@ module ActiveMerchant #:nodoc:
         data = ssl_post(url, post_data(parameters))
         @response = parse(data)
         success = (@response[:approved] == "APPROVED")
-        message = message_form(@response)
+        message = message_from(@response)
         Response.new(success, message, @response, :test => test?, :authorization => response[:orderid])
       end
                                                
@@ -229,11 +231,11 @@ module ActiveMerchant #:nodoc:
         return params
       end
       
-      def message_form(response)
+      def message_from(response)
         if response[:approved] == "APPROVED"
-          return 'Success'
+          return SUCCESS_MESSAGE
         else
-          return 'Unspecified error' if response[:errmsg].blank?
+          return FAILURE_MESSAGE if response[:errmsg].blank?
           return response[:errmsg].gsub(/[^\w]/, ' ').split.join(" ").capitalize
         end
       end
