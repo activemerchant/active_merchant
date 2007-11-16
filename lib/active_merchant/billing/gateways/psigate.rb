@@ -9,7 +9,7 @@
 #  
 #  twenty = 2000
 #  gateway = PsigateGateway.new(
-#    :store_id => 'teststore',
+#    :login => 'teststore',
 #    :password => 'psigate1234'
 #  )
 #  
@@ -20,16 +20,18 @@
 #    :first_name => 'Longbob',
 #    :last_name => 'Longsen'
 #  )
-#  response = @gateway.authorize(twenty, creditcard, {:order_id =>  1234,
+#  response = @gateway.authorize(twenty, creditcard,
+#     :order_id =>  1234,
 #     :billing_address => {
-#  	  :address1 => '123 fairweather Lane',
-#  	  :address2 => 'Apt B',
-#  	  :city => 'New York',
-#  	  :state => 'NY',
-#  	  :country => 'U.S.A.',
-#  	  :zip => '10010'},
+#  	    :address1 => '123 fairweather Lane',
+#  	    :address2 => 'Apt B',
+#  	    :city => 'New York',
+#  	    :state => 'NY',
+#  	    :country => 'U.S.A.',
+#  	    :zip => '10010'
+#    },
 #    :email => 'jack@yahoo.com'
-#    })
+#  )
 
 require 'rexml/document'
 

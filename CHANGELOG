@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Fix small errors in Psigate documentation [cody]
+#
 # * Add Response#fraud_review? query method to the response. Allows gateways to indicate that a payment is pending review by the fraud service [cody]
 #
 # * Handle Errno::ECONNRESET when posting data [cody]
