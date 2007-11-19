@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add address2 to the billing address of Viaklix transactions [cody]
+#
 # * Improve Psigate generic error message [cody]
 #
 # * Fix small errors in Psigate documentation [cody]

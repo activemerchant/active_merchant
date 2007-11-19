@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
       # Viaklix does not support credits by reference. You must pass in the credit card
       def credit(money, creditcard, options = {})
         if creditcard.is_a?(String)
-          raise ArgumentError, "Reference credits are not supported.  Please supply the original credit card"
+          raise ArgumentError, "Reference credits are not supported. Please supply the original credit card"
         end
         
         form = {}
@@ -68,6 +68,7 @@ module ActiveMerchant #:nodoc:
         
         if billing_address
           form[:avs_address]    = billing_address[:address1]
+          form[:address2]       = billing_address[:address2]
           form[:avs_zip]        = billing_address[:zip]
           form[:city]           = billing_address[:city]
           form[:state]          = billing_address[:state]
