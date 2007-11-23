@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Catch Errno::ETIMEDOUT and extend open and read timeouts to 60 seconds [cody]
+#
 # * Add address2 to the billing address of Viaklix transactions [cody]
 #
 # * Improve Psigate generic error message [cody]

@@ -3,6 +3,8 @@ module ActiveMerchant #:nodoc:
   end
   
   module PostsData  #:nodoc:
+    OPEN_TIMEOUT = 60
+    READ_TIMEOUT = 60
     
     def self.included(base)
       base.class_inheritable_accessor :ssl_strict
@@ -16,7 +18,9 @@ module ActiveMerchant #:nodoc:
       uri   = URI.parse(url)
 
       http = Net::HTTP.new(uri.host, uri.port) 
-      http.use_ssl        = true
+      http.open_timeout = OPEN_TIMEOUT
+      http.read_timeout = READ_TIMEOUT
+      http.use_ssl      = true
       
       if ssl_strict
         http.verify_mode    = OpenSSL::SSL::VERIFY_PEER
@@ -44,6 +48,8 @@ module ActiveMerchant #:nodoc:
         raise ConnectionError, "The remote server reset the connection"
       rescue Errno::ECONNREFUSED => e
         raise ConnectionError, "The remote server refused the connection"
+      rescue Errno::ETIMEDOUT => e
+        raise ConnectionError, "The connection to the remote server timed out"
       end
     end    
   end
