@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
         raise ConnectionError, "The remote server reset the connection"
       rescue Errno::ECONNREFUSED => e
         raise ConnectionError, "The remote server refused the connection"
-      rescue Errno::ETIMEDOUT => e
+      rescue Timeout::Error, Errno::ETIMEDOUT => e
         raise ConnectionError, "The connection to the remote server timed out"
       end
     end    
