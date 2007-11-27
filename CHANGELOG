@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Change order of loading ActionPack for tests since assert_success defined in ActionController::Assertions::DeprecatedAssertions inteferes with ActiveMerchant's definition [cody]
+#
 # * Catch Errno::ETIMEDOUT and extend open and read timeouts to 60 seconds [cody]
 #
 # * Add address2 to the billing address of Viaklix transactions [cody]

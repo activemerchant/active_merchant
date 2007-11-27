@@ -1,17 +1,4 @@
 require File.dirname(__FILE__) + '/../../test_helper'
-begin
-  if respond_to? :gem
-    gem 'actionpack'
-  else
-    require_gem 'actionpack'
-  end
-rescue LoadError
-  raise StandardError, "This test needs ActionPack installed as gem to run"
-end
-
-require 'action_controller'
-require 'action_controller/test_process'
-require 'active_merchant/billing/integrations/action_view_helper'
 
 class ActionViewHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations::ActionViewHelper
