@@ -13,10 +13,11 @@ class ActionViewHelperTest < Test::Unit::TestCase
       attr_reader :url_for_options
       def url_for(options, *parameters_for_method_reference)
         @url_for_options = options
-      end
+      end      
     end
     @controller = @controller.new
   end
+
   
   def test_basic_payment_service
     _erbout = ''
@@ -37,5 +38,10 @@ class ActionViewHelperTest < Test::Unit::TestCase
   
   def test_payment_service_no_block_given
     assert_raise(ArgumentError){ payment_service_for }
+  end
+  
+  protected
+  def protect_against_forgery?
+    false
   end
 end

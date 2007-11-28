@@ -91,18 +91,15 @@ class RemotePayflowTest < Test::Unit::TestCase
   end
   
   def test_duplicate_request_id
-    gateway = PayflowGateway.new(
-      :login => @login,
-      :password => @password,
-      :partner => @partner
-    )
-    
     request_id = Digest::MD5.hexdigest(rand.to_s)
-    gateway.expects(:generate_unique_id).times(2).returns(request_id)
+    @gateway.expects(:generate_unique_id).times(2).returns(request_id)
     
-    response1 = gateway.purchase(100, @creditcard, @options)
+    response1 = @gateway.purchase(100, @creditcard, @options)
+    assert  response1.success?
     assert_nil response1.params['duplicate']
-    response2 = gateway.purchase(100, @creditcard, @options)
+    
+    response2 = @gateway.purchase(100, @creditcard, @options)
+    assert response2.success?
     assert response2.params['duplicate']
   end
   

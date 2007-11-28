@@ -98,9 +98,9 @@ module ActiveMerchant
     private
     def clean_backtrace(&block)
       yield
-    rescue AssertionFailedError => e
+    rescue Test::Unit::AssertionFailedError => e
       path = File.expand_path(__FILE__)
-      raise AssertionFailedError, e.message, e.backtrace.reject { |line| File.expand_path(line) =~ /#{path}/ }
+      raise Test::Unit::AssertionFailedError, e.message, e.backtrace.reject { |line| File.expand_path(line) =~ /#{path}/ }
     end
   end
 end

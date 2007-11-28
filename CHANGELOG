@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add retry logic when connection has been refused for all gateways. Enable safe retries of all connection failures with the PayflowGateway, as it has a unique request header. [cody]
+#
 # * Catch Timeout::Error when posting data [cody]
 #
 # * Change order of loading ActionPack for tests since assert_success defined in ActionController::Assertions::DeprecatedAssertions inteferes with ActiveMerchant's definition [cody]

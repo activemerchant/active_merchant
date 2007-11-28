@@ -51,14 +51,6 @@ class PayflowExpressTest < Test::Unit::TestCase
     assert !gateway.test?
   end
   
-  def test_class_certification_id
-    assert_equal '55d64dfec398cbbe66c1bf843cbad9', PayflowExpressGateway.certification_id
-    PayflowExpressGateway.certification_id = 'test'
-    assert_equal 'test', PayflowExpressGateway.certification_id
-    gateway = PayflowExpressGateway.new(:login => 'test', :password => 'test')
-    assert_equal 'test', gateway.certification_id
-  end
-  
   def test_live_redirect_url
     Base.gateway_mode = :production
     assert_equal 'https://www.paypal.com/cgibin/webscr?cmd=_express-checkout&token=1234567890', @gateway.redirect_url_for('1234567890')

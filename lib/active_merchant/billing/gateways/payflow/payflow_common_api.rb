@@ -4,23 +4,32 @@ module ActiveMerchant #:nodoc:
       def self.included(base)
         base.default_currency = 'USD'
           
-        # The certification_id is required by PayPal to make direct HTTPS posts to their servers.
-        # The certification_id has been deprecated by PayPal.  It will soon be removed and you can simply
-        # use the certification_id that has been configured here, or generate your own
+        # The certification id requirement has been removed by Payflow
+        # This is no longer being sent in the requests to the gateway
         base.class_inheritable_accessor :certification_id
-        base.certification_id = '55d64dfec398cbbe66c1bf843cbad9'
-        
+
         base.class_inheritable_accessor :partner
         
         # Set the default partner to PayPal
         base.partner = 'PayPal'
         
         base.supported_countries = ['US', 'CA', 'SG', 'AU']
+        
+        base.class_inheritable_accessor :timeout
+        base.timeout = 60
+        
+        # Enable safe retry of failed connections
+        # Payflow is safe to retry because retried transactions use the same
+        # X-VPS-Request-ID header. If a transaction is detected as a duplicate
+        # only the original transaction data will be used by Payflow, and the
+        # subsequent Responses will have a :duplicate parameter set in the params
+        # hash.
+        base.retry_safe = true
       end
       
       XMLNS = 'http://www.paypal.com/XMLPay'
-      TEST_URL = 'https://pilot-payflowpro.verisign.com/transaction'
-      LIVE_URL = 'https://payflowpro.verisign.com/transaction'
+      TEST_URL = 'https://pilot-payflowpro.verisign.com'
+      LIVE_URL = 'https://payflowpro.verisign.com'
       
       CARD_MAPPING = {
         :visa => 'Visa',
@@ -130,7 +139,10 @@ module ActiveMerchant #:nodoc:
         xml = REXML::Document.new(data)
         root = REXML::XPath.first(xml, "//ResponseData")
         
-        if REXML::XPath.first(root, "//TransactionResult/attribute::Duplicate")
+        # REXML::XPath in Ruby 1.8.6 is now unable to match nodes based on their attributes
+        tx_result = REXML::XPath.first(root, "//TransactionResult")
+        
+        if tx_result && tx_result.attributes['Duplicate'] == "true"
           response[:duplicate] = true 
         end
         
@@ -155,8 +167,7 @@ module ActiveMerchant #:nodoc:
         {
           "Content-Type" => "text/xml",
           "Content-Length" => content_length.to_s,
-      	  "X-VPS-Timeout" => "30",
-      	  "X-VPS-VIT-Client-Certification-Id" => @options[:certification_id].to_s,
+      	  "X-VPS-Timeout" => timeout.to_s,
       	  "X-VPS-VIT-Integration-Product" => "ActiveMerchant",
       	  "X-VPS-VIT-Runtime-Version" => RUBY_VERSION,
       	  "X-VPS-Request-ID" => generate_unique_id

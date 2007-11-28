@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
       def fraud_review?
         @fraud_review
       end
-        
+      
       def initialize(success, message, params = {}, options = {})
         @success, @message, @params = success, message, params.stringify_keys
         @test = options[:test] || false        

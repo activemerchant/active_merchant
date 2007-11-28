@@ -2,7 +2,11 @@ module ActiveMerchant #:nodoc:
   class ConnectionError < ActiveMerchantError
   end
   
+  class RetriableConnectionError < ConnectionError
+  end
+  
   module PostsData  #:nodoc:
+    MAX_RETRIES = 3
     OPEN_TIMEOUT = 60
     READ_TIMEOUT = 60
     
@@ -12,6 +16,9 @@ module ActiveMerchant #:nodoc:
       
       base.class_inheritable_accessor :pem_password
       base.pem_password = false
+      
+      base.class_inheritable_accessor :retry_safe
+      base.retry_safe = false
     end
     
     def ssl_post(url, data, headers = {})
@@ -40,17 +47,34 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      begin
-        http.post(uri.request_uri, data, headers).body
-      rescue EOFError => e
-        raise ConnectionError, "The remote server dropped the connection"
-      rescue Errno::ECONNRESET => e
-        raise ConnectionError, "The remote server reset the connection"
-      rescue Errno::ECONNREFUSED => e
-        raise ConnectionError, "The remote server refused the connection"
-      rescue Timeout::Error, Errno::ETIMEDOUT => e
-        raise ConnectionError, "The connection to the remote server timed out"
+      retry_exceptions do 
+        begin
+          http.post(uri.request_uri, data, headers).body
+        rescue EOFError => e
+          raise ConnectionError, "The remote server dropped the connection"
+        rescue Errno::ECONNRESET => e
+          raise ConnectionError, "The remote server reset the connection"
+        rescue Errno::ECONNREFUSED => e
+          raise RetriableConnectionError, "The remote server refused the connection"
+        rescue Timeout::Error, Errno::ETIMEDOUT => e
+          raise ConnectionError, "The connection to the remote server timed out"
+        end
       end
     end    
+    
+    def retry_exceptions
+      retries = MAX_RETRIES
+      begin
+        yield
+      rescue RetriableConnectionError => e
+        retries -= 1
+        retry unless retries.zero?
+        raise ConnectionError, e.message
+      rescue ConnectionError
+        retries -= 1
+        retry if retry_safe && !retries.zero?
+        raise
+      end
+    end
   end
 end

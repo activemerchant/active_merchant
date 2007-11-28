@@ -9,7 +9,7 @@ class PayflowTest < Test::Unit::TestCase
       :password => 'PASSWORD'
     )
 
-    @creditcard = credit_card('4242424242424242')
+    @credit_card = credit_card('4242424242424242')
 
     @address = { :address1 => '1234 My Street',
                  :address2 => 'Apt 1',
@@ -24,27 +24,26 @@ class PayflowTest < Test::Unit::TestCase
   
   def teardown
     Base.gateway_mode = :test
-    PayflowGateway.certification_id = nil
   end
   
   def test_successful_request
-    @creditcard.number = 1
-    assert response = @gateway.purchase(100, @creditcard, {})
+    @credit_card.number = 1
+    assert response = @gateway.purchase(100, @credit_card, {})
     assert_success response
     assert_equal '5555', response.authorization
     assert response.test?
   end
 
   def test_unsuccessful_request
-    @creditcard.number = 2
-    assert response = @gateway.purchase(100, @creditcard, {})
+    @credit_card.number = 2
+    assert response = @gateway.purchase(100, @credit_card, {})
     assert_failure response
     assert response.test?
   end
 
   def test_request_error
-    @creditcard.number = 3
-    assert_raise(Error){ @gateway.purchase(100, @creditcard, {}) }
+    @credit_card.number = 3
+    assert_raise(Error){ @gateway.purchase(100, @credit_card, {}) }
   end
   
   def test_using_test_mode
@@ -72,19 +71,6 @@ class PayflowTest < Test::Unit::TestCase
     )
     
     assert !gateway.test?
-  end
-  
-  def test_certification_id_class_accessor
-    PayflowGateway.certification_id = 'test'
-    assert_equal 'test', PayflowGateway.certification_id
-    gateway = PayflowGateway.new(:login => 'test', :password => 'test')
-    assert_equal 'test', gateway.options[:certification_id]
-  end
-  
-  def test_passed_in_certificate_overrides_class_accessor
-    PayflowGateway.certification_id = 'test'
-    gateway = PayflowGateway.new(:login => 'test', :password => 'test', :certification_id => 'Clobber')
-    assert_equal 'Clobber', gateway.options[:certification_id]
   end
   
   def test_partner_class_accessor
@@ -127,7 +113,7 @@ class PayflowTest < Test::Unit::TestCase
   
   def test_initial_recurring_transaction_missing_parameters
     assert_raises ArgumentError do
-      response = @gateway.recurring(1000, @creditcard, 
+      response = @gateway.recurring(1000, @credit_card, 
         :periodicity => :monthly,
         :initial_transaction => { }
       )
@@ -136,7 +122,7 @@ class PayflowTest < Test::Unit::TestCase
   
   def test_initial_purchase_missing_amount
     assert_raises ArgumentError do
-      response = @gateway.recurring(1000, @creditcard, 
+      response = @gateway.recurring(1000, @credit_card, 
         :periodicity => :monthly,
         :initial_transaction => { :amount => :purchase }
       )
@@ -146,7 +132,7 @@ class PayflowTest < Test::Unit::TestCase
   def test_successful_recurring_action
     @gateway.stubs(:ssl_post).returns(successful_recurring_response)
     
-    response = @gateway.recurring(1000, @creditcard, :periodicity => :monthly)
+    response = @gateway.recurring(1000, @credit_card, :periodicity => :monthly)
     
     assert_instance_of PayflowResponse, response
     assert_success response
@@ -158,7 +144,7 @@ class PayflowTest < Test::Unit::TestCase
   def test_successful_authorization
     @gateway.stubs(:ssl_post).returns(successful_authorization_response)
     
-    assert response = @gateway.authorize(100, @creditcard, { :address => @address })
+    assert response = @gateway.authorize(100, @credit_card)
     assert_equal "Approved", response.message
     assert_success response
     assert response.test?
@@ -178,20 +164,16 @@ class PayflowTest < Test::Unit::TestCase
     assert_equal '01', node.attributes['Value']
   end
   
-  def test_eof_received_on_timeout
-    Net::HTTP.any_instance.stubs(:post).raises(EOFError, "end of file reached")
+  def test_duplicate_response_flag
+    @gateway.expects(:ssl_post).returns(successful_duplicate_response)
     
-    assert_raises(ActiveMerchant::ConnectionError) do
-      @gateway.purchase(100, @creditcard, {})
-    end
+    response = @gateway.authorize(100, @credit_card)
+    assert_success response
+    assert response.params['duplicate']
   end
   
-  def test__received_on_timeout
-    Net::HTTP.any_instance.stubs(:post).raises(Errno::ECONNREFUSED, "Connection refused - connect(2)")
-    
-    assert_raises(ActiveMerchant::ConnectionError) do
-      @gateway.purchase(100, @creditcard, {})
-    end
+  def test_ensure_gateway_uses_safe_retry
+    assert @gateway.retry_safe
   end
   
   private
@@ -225,6 +207,38 @@ class PayflowTest < Test::Unit::TestCase
     <StreetMatch>Match</StreetMatch>
     <CvResult>Match</CvResult>
 </ResponseData>
+    XML
+  end
+  
+  def successful_duplicate_response
+    <<-XML
+<?xml version="1.0"?>
+<XMLPayResponse xmlns="http://www.verisign.com/XMLPay">
+	<ResponseData>
+		<Vendor>ActiveMerchant</Vendor>
+		<Partner>paypal</Partner>
+		<TransactionResults>
+			<TransactionResult Duplicate="true">
+				<Result>0</Result>
+				<ProcessorResult>
+					<AVSResult>A</AVSResult>
+					<CVResult>M</CVResult>
+					<HostCode>A</HostCode>
+				</ProcessorResult>
+				<IAVSResult>N</IAVSResult>
+				<AVSResult>
+					<StreetMatch>Match</StreetMatch>
+					<ZipMatch>No Match</ZipMatch>
+				</AVSResult>
+				<CVResult>Match</CVResult>
+				<Message>Approved</Message>
+				<PNRef>V18A0CBB04CF</PNRef>
+				<AuthCode>692PNI</AuthCode>
+				<ExtData Name="DATE_TO_SETTLE" Value="2007-11-28 10:53:50"/>
+			</TransactionResult>
+		</TransactionResults>
+	</ResponseData>
+</XMLPayResponse>
     XML
   end
 end
