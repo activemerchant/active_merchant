@@ -1,6 +1,8 @@
 # CHANGELOG
 # ---
-# * Add support for the SkipJack gateawy [b...@atomicobject.com, cody]
+# * Update format of line items given to the gateway. Cleanup and uncomment unit tests [cody]
+#
+# * Add support for the SkipJack gateway [b...@atomicobject.com, cody]
 #
 # * Make the bogus gateway easier to test by moving messages into constants [cody]
 #
