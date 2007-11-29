@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Make the bogus gateway easier to test by moving messages into constants [cody]
+#
 # * Add retry logic when connection has been refused for all gateways. Enable safe retries of all connection failures with the PayflowGateway, as it has a unique request header. [cody]
 #
 # * Catch Timeout::Error when posting data [cody]

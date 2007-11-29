@@ -2,6 +2,14 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # Bogus Gateway
     class BogusGateway < Gateway
+      AUTHORIZATION = '53433'
+      
+      SUCCESS_MESSAGE = "Bogus Gateway: Forced success"
+      FAILURE_MESSAGE = "Bogus Gateway: Forced failure"
+      ERROR_MESSAGE = "Bogus Gateway: Use CreditCard number 1 for success, 2 for exception and anything else for error"
+      CREDIT_ERROR_MESSAGE = "Bogus Gateway: Use trans_id 1 for success, 2 for exception and anything else for error"
+      UNSTORE_ERROR_MESSAGE = "Bogus Gateway: Use trans_id 1 for success, 2 for exception and anything else for error"
+      CAPTURE_ERROR_MESSAGE = "Bogus Gateway: Use authorization number 1 for exception, 2 for error and anything else for success"
       
       self.supported_countries = ['US']
       self.supported_cardtypes = [:bogus]
@@ -11,66 +19,66 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         case creditcard.number
         when '1'
-          Response.new(true, "Bogus Gateway: Forced success", {:authorized_amount => money.to_s}, :test => true, :authorization => '53433' )
+          Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money.to_s}, :test => true, :authorization => AUTHORIZATION )
         when '2'
-          Response.new(false, "Bogus Gateway: Forced failure", {:authorized_amount => money.to_s, :error => 'Bogus Gateway: Forced failure' }, :test => true)
+          Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money.to_s, :error => FAILURE_MESSAGE }, :test => true)
         else
-          raise Error, 'Bogus Gateway: Use CreditCard number 1 for success, 2 for exception and anything else for error'
+          raise Error, ERROR_MESSAGE
         end      
       end
   
       def purchase(money, creditcard, options = {})
         case creditcard.number
         when '1'
-          Response.new(true, "Bogus Gateway: Forced success", {:paid_amount => money.to_s}, :test => true)
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money.to_s}, :test => true)
         when '2'
-          Response.new(false, "Bogus Gateway: Forced failure", {:paid_amount => money.to_s, :error => 'Bogus Gateway: Forced failure' },:test => true)
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money.to_s, :error => FAILURE_MESSAGE },:test => true)
         else
-          raise Error, 'Bogus Gateway: Use CreditCard number 1 for success, 2 for exception and anything else for error'
+          raise Error, ERROR_MESSAGE
         end
       end
  
       def credit(money, ident, options = {})
         case ident
         when '1'
-          Response.new(true, "Bogus Gateway: Forced success", {:paid_amount => money.to_s}, :test => true)
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money.to_s}, :test => true)
         when '2'
-          Response.new(false, "Bogus Gateway: Forced failure", {:paid_amount => money.to_s, :error => 'Bogus Gateway: Forced failure' },:test => true)
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money.to_s, :error => FAILURE_MESSAGE },:test => true)
         else
-          raise Error, 'Bogus Gateway: Use trans_id 1 for success, 2 for exception and anything else for error'
+          raise Error, CREDIT_ERROR_MESSAGE
         end
       end
  
       def capture(money, ident, options = {})
         case ident
         when '1'
-          raise Error, 'Bogus Gateway: Use authorization number 1 for exception, 2 for error and anything else for success'
+          raise Error, CAPTURE_ERROR_MESSAGE
         when '2'
-          Response.new(false, "Bogus Gateway: Forced failure", {:paid_amount => money.to_s, :error => 'Bogus Gateway: Forced failure' }, :test => true)
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money.to_s, :error => FAILURE_MESSAGE }, :test => true)
         else
-          Response.new(true, "Bogus Gateway: Forced success", {:paid_amount => money.to_s}, :test => true)
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money.to_s}, :test => true)
         end
       end
       
       def store(creditcard, options = {})
         case creditcard.number
         when '1'
-          Response.new(true, "Bogus Gateway: Forced success", {:billingid => '1'}, :test => true, :authorization => '53433' )
+          Response.new(true, SUCCESS_MESSAGE, {:billingid => '1'}, :test => true, :authorization => AUTHORIZATION )
         when '2'
-          Response.new(false, "Bogus Gateway: Forced failure", {:billingid => nil, :error => 'Bogus Gateway: Forced failure' }, :test => true)
+          Response.new(false, FAILURE_MESSAGE, {:billingid => nil, :error => FAILURE_MESSAGE }, :test => true)
         else
-          raise Error, 'Bogus Gateway: Use CreditCard number 1 for success, 2 for exception and anything else for error'
+          raise Error, ERROR_MESSAGE
         end              
       end
       
       def unstore(identification, options = {})
         case identification
         when '1'
-          Response.new(true, "Bogus Gateway: Forced success", {}, :test => true)
+          Response.new(true, SUCCESS_MESSAGE, {}, :test => true)
         when '2'
-          Response.new(false, "Bogus Gateway: Forced failure", {:error => 'Bogus Gateway: Forced failure' },:test => true)
+          Response.new(false, FAILURE_MESSAGE, {:error => FAILURE_MESSAGE },:test => true)
         else
-          raise Error, 'Bogus Gateway: Use trans_id 1 for success, 2 for exception and anything else for error'
+          raise Error, UNSTORE_ERROR_MESSAGE
         end
       end
 
@@ -79,11 +87,11 @@ module ActiveMerchant #:nodoc:
       def deal_with_cc(creditcard)
         case creditcard.number
           when '1'
-            Response.new(true, "Bogus Gateway: Forced success", {}, :test => true)
+            Response.new(true, SUCCESS_MESSAGE, {}, :test => true)
           when '2'
-            Response.new(false, "Bogus Gateway: Forced failure", @response, :test => true)
+            Response.new(false, FAILURE_MESSAGE, @response, :test => true)
           else
-            raise Error, 'Bogus Gateway: Use CreditCard number 1 for success, 2 for exception and anything else for error'
+            raise Error, ERROR_MESSAGE
         end      
       end
  
