@@ -265,4 +265,4 @@ class CreditCardTest < Test::Unit::TestCase
       credit_card.valid?
     end
   end
-nd
+end
