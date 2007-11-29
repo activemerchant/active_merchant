@@ -40,7 +40,7 @@ class SkipJackTest < Test::Unit::TestCase
     Base.gateway_mode = :test
   end
   
-  def test_purchase_success    
+  def test_authorization_success    
     @creditcard.number = 1
 
     assert response = @gateway.authorize(100, @creditcard, @options)
@@ -49,7 +49,7 @@ class SkipJackTest < Test::Unit::TestCase
     assert_equal true, response.success?
   end
 
-  def test_purchase_error
+  def test_authorization_error
     @creditcard.number = 2
 
     assert response = @gateway.authorize(100, @creditcard, @options)
@@ -59,12 +59,20 @@ class SkipJackTest < Test::Unit::TestCase
 
   end
   
-  def test_purchase_exceptions
+  def test_authorization_exceptions
     @creditcard.number = 3 
     
     assert_raise(Error) do
       assert response = @gateway.authorize(100, @creditcard, @options)    
     end
+  end
+  
+  def test_purchase_success
+    @gateway.expects(:ssl_post).times(2).returns(successful_authorization_response, successful_capture_response)
+
+    assert response = @gateway.purchase(100, @creditcard, @options)
+    assert_success response
+    assert_equal "9802853155172.022", response.authorization
   end
 
   def test_split_line
@@ -97,6 +105,13 @@ class SkipJackTest < Test::Unit::TestCase
     <<-CSV
 "AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"
 "TAS204","000386891209","100","","Y","Card authorized, exact address match with 5 digit zip code.","107a0fdb21ba42cf04f60274908085ea","TAS204","1","M","Match","1","9802853155172.022",""
+    CSV
+  end
+  
+  def successful_capture_response
+    <<-CSV
+"000386891209","0","1","","","","","","","","","" 
+"000386891209","1.0000","SETTLE","SUCCESSFUL","Valid","618844630c5fad658e95abfd5e1d4e22","9802853156029.022"
     CSV
   end
 end

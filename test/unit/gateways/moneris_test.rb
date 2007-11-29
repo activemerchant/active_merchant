@@ -149,10 +149,6 @@ class MonerisRequestTest < Test::Unit::TestCase
       assert_raise(ArgumentError) { @gateway.void(invalid_transaction_param) }
     end
   end
-  
-  def test_should_not_raise_error_if_transaction_param_is_not_empty_on_credit_request
-    assert_nothing_raised(ArgumentError) { @gateway.void('1234;456') }
-  end
 
   private
 

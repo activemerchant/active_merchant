@@ -264,10 +264,13 @@ module ActiveMerchant #:nodoc:
         
         success = @response[:success]
         message = message_from(@response, action)
-
+    
+        # Pass along the original transaction id in the case an update transaction
+        authorization = @response[:szTransactionFileName] || parameters[:szTransactionId]
         Response.new(success, message, @response,
-                     :test => test?,
-                     :authorization => @response[:szTransactionFileName])
+          :test => test?,
+          :authorization => authorization
+        )
       end
       
       def url_for(action)
@@ -321,7 +324,6 @@ module ActiveMerchant #:nodoc:
       def parse_authorization_response(body)
         result = authorize_response_map(body)
         result[:success] = (result[:szIsApproved] == '1')
-        result[:authorization] = result[:szTransactionFileName]
         result
       end
 
@@ -346,9 +348,6 @@ module ActiveMerchant #:nodoc:
         else
           result[:szErrorMessage] = lines[1]
         end
-
-        result[:authorization] = result[:TransactionID]
-
         result
       end
 
