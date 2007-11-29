@@ -245,22 +245,24 @@ class CreditCardTest < Test::Unit::TestCase
     c = CreditCard.new(:first_name => 'James', :last_name => 'Herdman')
     assert c.name?
   end
-  
-  # Huh?
-#  def test_validate_new_card
-#    credit_card = CreditCard.new
-#    
-#    assert_nothing_raised do
-#      credit_card.validate
-#    end
-#  end
-  
-  # Huh?
-#  def test_create_and_validate_credit_card_from_type
-#    credit_card = CreditCard.new(:type => CreditCard.type?('4242424242424242'))
-#    
-#    assert_nothing_raised do
-#      credit_card.valid?
-#    end
-#  end
-end
+
+  # The following is a regression for a bug that raised an exception when
+  # a new credit card was validated
+  def test_validate_new_card
+    credit_card = CreditCard.new
+    
+    assert_nothing_raised do
+      credit_card.validate
+    end
+  end
+ 
+  # The following is a regression for a bug where the keys of the
+  # credit card card_companies hash were not duped when detecting the type
+  def test_create_and_validate_credit_card_from_type
+    credit_card = CreditCard.new(:type => CreditCard.type?('4242424242424242'))
+    
+    assert_nothing_raised do
+      credit_card.valid?
+    end
+  end
+nd
