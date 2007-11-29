@@ -11,24 +11,13 @@ class CreditCardTest < Test::Unit::TestCase
     CreditCard.require_verification_value = false
   end
   
-  def generate_valid_test_card(options={})
-    CreditCard.new({
-      :type       => "visa",
-      :number     => "4779139500118580",
-      :month      => Time.now.month,
-      :year       => Time.now.year,
-      :first_name => "Tobias",
-      :last_name  => "Luetke"      
-    }.merge(options))
-  end
-  
   def test_constructor_should_properly_assign_values
-    c = generate_valid_test_card
+    c = credit_card
 
-    assert_equal "4779139500118580", c.number
-    assert_equal Time.now.month, c.month
-    assert_equal Time.now.year, c.year
-    assert_equal "Tobias Luetke", c.name
+    assert_equal "4242424242424242", c.number
+    assert_equal 9, c.month
+    assert_equal Time.now.year + 1, c.year
+    assert_equal "Longbob Longsen", c.name
     assert_equal "visa", c.type
     assert_valid c
   end
@@ -67,7 +56,7 @@ class CreditCardTest < Test::Unit::TestCase
   end
   
   def test_should_be_able_to_liberate_a_bogus_card
-    c = generate_valid_test_card(:type => 'bogus', :number => '')
+    c = credit_card('', :type => 'bogus')
     assert_valid c
     
     c.type = 'visa'
@@ -164,7 +153,7 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_identify_wrong_cardtype
-    c = generate_valid_test_card(:type => 'master')
+    c = credit_card(:type => 'master')
     assert_not_valid c
   end
 
@@ -193,7 +182,7 @@ class CreditCardTest < Test::Unit::TestCase
   
   def test_should_not_be_valid_when_requiring_a_verification_value
     CreditCard.require_verification_value = true
-    card = generate_valid_test_card
+    card = credit_card('4242424242424242', :verification_value => nil)
     assert_not_valid card
     
     card.verification_value = '123'

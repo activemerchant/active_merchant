@@ -126,14 +126,15 @@ module Test
         md5.hexdigest
       end
       
-      def credit_card(number, options = {})
+      def credit_card(number = nil, options = {})
         defaults = {
-          :number => number,
+          :number => (number || '4242424242424242'),
           :month => 9,
           :year => Time.now.year + 1,
           :first_name => 'Longbob',
           :last_name => 'Longsen',
-          :verification_value => '123'
+          :verification_value => '123',
+          :type => 'visa'
         }.update(options)
 
         ActiveMerchant::Billing::CreditCard.new(defaults)
