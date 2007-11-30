@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Mimic directory structure of unit tests in remote tests [cody]
+# 
 # * Restructure the location of the remote tests [cody] 
 #
 # * Ensure DataCash order_id is limited to 30 characters [cody]
