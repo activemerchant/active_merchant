@@ -412,7 +412,7 @@ module ActiveMerchant
       end
       
       def format_reference_number(number)
-        number.to_s.gsub(/[^A-Za-z0-9]/, '').rjust(6, "0")
+        number.to_s.gsub(/[^A-Za-z0-9]/, '').rjust(6, "0").first(30)
       end
     end
   end

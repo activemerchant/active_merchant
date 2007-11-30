@@ -1,6 +1,8 @@
 # CHANGELOG
 # ---
-# * Return the pretty messages from PayJunction based on the return code [code]
+# * Ensure DataCash order_id is limited to 30 characters [cody]
+#
+# * Return the pretty messages from PayJunction based on the return code [cody]
 #
 # * make CreditCard.require_verification_value = true the default [cody]
 #
