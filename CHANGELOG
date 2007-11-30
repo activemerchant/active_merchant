@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Return the pretty messages from PayJunction based on the return code [code]
+#
 # * make CreditCard.require_verification_value = true the default [cody]
 #
 # * Use existing credit_card helper in credit card tests [cody]

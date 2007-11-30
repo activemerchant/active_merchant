@@ -11,7 +11,8 @@ module ActiveMerchant #:nodoc:
     #
     #   gateway = ActiveMerchant::Billing::Base.gateway(:pay_junction).new(
     #               :login => "my_account", 
-    #               :password => "my_pass" )
+    #               :password => "my_pass"
+    #            )
     #
     #   # set up credit card obj as in main ActiveMerchant example
     #   creditcard = ActiveMerchant::Billing::CreditCard.new(
@@ -93,7 +94,7 @@ module ActiveMerchant #:nodoc:
     #                         "instant" transactions.
     #
     # dc_invoice              :order_id in options for transaction method
-    # dc_notes                :notes in options for transaction method
+    # dc_notes                :description in options for transaction method
     #
     # See example use above for address AVS fields
     # See #recurring for periodic transaction fields
@@ -105,6 +106,9 @@ module ActiveMerchant #:nodoc:
       TEST_PASSWORD = 'pj-ql-01p'
       
       SUCCESS_CODES = ["00", "85"]
+      SUCCESS_MESSAGE = 'The transaction was approved.'
+      
+      FAILURE_MESSAGE = 'The transaction was declined.'
       
       DECLINE_CODES = {
         "AE"  => 'Address verification failed because address did not match.',
@@ -137,15 +141,8 @@ module ActiveMerchant #:nodoc:
         '15'  => 'Declined because there is no such issuer.',
         '96'  => 'Declined because of a system error.',
         'N7'  => 'Declined because of a CVV2/CVC2 mismatch.',
-        'M4'  => 'Declined.' 
-        
-      }
-      
-      BADDATA_CODES = {
-        "FE"  => "There was a format error with your Trinity Gateway Service (API) request."
-      }
-      
-      ERROR_CODES = {
+        'M4'  => 'Declined.', 
+        "FE"  => "There was a format error with your Trinity Gateway Service (API) request.",
         "LE"  => "Could not log you in (problem with dc_logon and/or dc_password).",
         'NL'  => 'Aborted because of a system error, please try again later. ',
         'AB'  => 'Aborted because of an upstream system error, please try again later.'
@@ -325,57 +322,45 @@ module ActiveMerchant #:nodoc:
         params[:invoice] = options[:order_id].to_s.gsub(/[^-\/\w.,']/, '') unless options[:order_id].blank?
       end
       
-      def clean_and_stringify_params(parameters)
-        # PayJunction uses an HTTPS POST request to submit key-pairs. Here we're going
-        # to convert all symbols in the params to strings and remove any pairs that 
-        # have a nil value to keep the gateway happy.
-        to_submit = {}
-        parameters.keys.reverse.each do |key|
-          if parameters[key]
-            to_submit[key.to_s] = parameters[key] 
-          end
-        end
-        to_submit
-      end
-  
       def commit(action, parameters)
-        if test?
-          # test requests must use global test account
-          parameters[:logon]      = TEST_LOGIN
-          parameters[:password]   = TEST_PASSWORD
-        else
-          parameters[:logon]      = @options[:login]
-          parameters[:password]   = @options[:password]
-        end
-        parameters[:version] = API_VERSION
-        parameters[:transaction_type] = action
-        
-        submission = clean_and_stringify_params(parameters)
-                
         if result = test_result_from_cc_number(parameters[:number])
           return result
         end
         
-        post_args = submission.collect { |key, value| "dc_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
-        headers = {'Content-type' => 'application/x-www-form-urlencoded '}
-
-        data = ssl_post(LIVE_URL, post_args, headers) # execute transaction
+        data = ssl_post(LIVE_URL, post_data(action, parameters), 'Content-type' => 'application/x-www-form-urlencoded')
         @response = parse(data)
-
-        unless action == 'update'
-          success = SUCCESS_CODES.include?(@response[:response_code])
-          message = @response[:response_message]
-          authorization = @response[:transaction_id]
-        else
-          success = @response[:query_status] == true
-          message = 'Transaction update request.'     # no message returned with this trans. type
-          authorization = parameters[:transaction_id] # maintain trans ID since it isn't returned
-        end
-
-        Response.new(success, message, @response, 
+        
+        Response.new(successful?(@response), message_from(@response), @response, 
             :test => test?, 
-            :authorization => authorization
+            :authorization => @response[:transaction_id] || parameters[:transaction_id]
         )
+      end
+      
+      def successful?(response)
+        SUCCESS_CODES.include?(response[:response_code]) || response[:query_status] == true
+      end
+      
+      def message_from(response)
+        if successful?(response)
+          SUCCESS_MESSAGE
+        else
+          DECLINE_CODES[response[:response_code]] || FAILURE_MESSAGE
+        end
+      end
+      
+      def post_data(action, params)
+        if test?
+          # test requests must use global test account
+          params[:logon]      = TEST_LOGIN
+          params[:password]   = TEST_PASSWORD
+        else
+          params[:logon]      = @options[:login]
+          params[:password]   = @options[:password]
+        end
+        params[:version] = API_VERSION
+        params[:transaction_type] = action
+        
+        params.reject{|k,v| v.blank?}.collect{ |k, v| "dc_#{k.to_s}=#{CGI.escape(v.to_s)}" }.join("&")
       end
       
       def parse(body)
