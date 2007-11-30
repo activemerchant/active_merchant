@@ -30,7 +30,7 @@ namespace :test do
   end
 
   Rake::TestTask.new(:remote) do |t|
-    t.pattern = 'test/remote_tests/*_test.rb'
+    t.pattern = 'test/remote/**/*_test.rb'
     t.ruby_opts << '-rubygems'
     t.verbose = true
   end

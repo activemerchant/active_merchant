@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Restructure the location of the remote tests [cody] 
+#
 # * Ensure DataCash order_id is limited to 30 characters [cody]
 #
 # * Return the pretty messages from PayJunction based on the return code [cody]
