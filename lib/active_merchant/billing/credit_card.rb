@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
       ## Attributes
       
       cattr_accessor :require_verification_value
-      self.require_verification_value = false
+      self.require_verification_value = true
       
       # Essential attributes for a valid, non-bogus creditcards
       attr_accessor :number, :month, :year, :type, :first_name, :last_name

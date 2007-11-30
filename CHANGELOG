@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * make CreditCard.require_verification_value = true the default [cody]
+#
 # * Use existing credit_card helper in credit card tests [cody]
 #
 # * Return the authrorization number of the original transaction in the SkipJack gateway [cody]
