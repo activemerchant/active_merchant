@@ -1,9 +1,0 @@
-#!/usr/bin/env ruby
-
-require 'rubygems'
-require File.dirname(__FILE__) + '/../lib/active_merchant'
-require 'erb'
-require File.dirname(__FILE__) + '/generator/generator'
-
-ActiveMerchant::Generator::Generator.run(ARGV)
-
