@@ -125,4 +125,20 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_false CreditCard.matching_type?('4175001000000000', 'master')
   end
   
+  def test_detecting_full_range_of_maestro_card_numbers
+    maestro = '50000000000'
+    
+    assert_equal 11, maestro.length
+    assert_not_equal 'maestro', CreditCard.type?(maestro)
+    
+    while maestro.length < 19
+      maestro << '0'
+      assert_equal 'maestro', CreditCard.type?(maestro)
+    end
+    
+    assert_equal 19, maestro.length
+    
+    maestro << '0'
+    assert_not_equal 'maestro', CreditCard.type?(maestro)
+  end
 end

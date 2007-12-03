@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
         'switch'             => /^6759\d{12}(\d{2,3})?$/,  
         'solo'               => /^6767\d{12}(\d{2,3})?$/,
         'dankort'            => /^5019\d{12}$/,
-        'maestro'            => /^(5[06-8]|6\d)\d{14}$/,
+        'maestro'            => /^(5[06-8]|6\d)\d{10,17}$/,
         'forbrugsforeningen' => /^600722\d{10}$/,
         'laser'              => /^(6304[89]\d{11}(\d{2,3})?|670695\d{12})$/
       }

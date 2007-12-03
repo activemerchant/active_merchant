@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Match full pan range of Maestro cards from 12 - 19 digits in length [cody]
+#
 # * Fix errors on base of CreditCard [josh.bassett]
 #
 # * Update product to use Rubigen instead of stolen Rails generator [cody]
