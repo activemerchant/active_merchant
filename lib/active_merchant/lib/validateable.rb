@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         result = []
 
         self.each do |key, messages| 
-          if key == :base
+          if key == 'base'
             result << "#{messages.first}"
           else
             result << "#{key.to_s.humanize} #{messages.first}"

@@ -3,11 +3,12 @@ require File.dirname(__FILE__) + '/../test_helper'
 class Dood
   include ActiveMerchant::Validateable
 
-  attr_accessor :name, :email
+  attr_accessor :name, :email, :country
 
   def validate
     errors.add "name", "cannot be empty" if name.blank?
     errors.add "email", "cannot be empty" if email.blank?
+    errors.add_to_base "The country cannot be blank" if country.blank?
   end
 
 end
@@ -24,8 +25,8 @@ class ValidateableTest < Test::Unit::TestCase
     assert ! @dood.errors.empty?
   end
 
-  def test_assings 
-    @dood = Dood.new(:name => "tobi", :email => "tobi@neech.de")
+  def test_assigns 
+    @dood = Dood.new(:name => "tobi", :email => "tobi@neech.de", :country => 'DE')
 
     assert_equal "tobi", @dood.name 
     assert_equal "tobi@neech.de", @dood.email
@@ -34,10 +35,13 @@ class ValidateableTest < Test::Unit::TestCase
 
   def test_multiple_calls
     @dood.name = "tobi"        
-    assert ! @dood.valid?    
+    assert !@dood.valid?    
+    
     @dood.email = "tobi@neech.de"    
+    assert !@dood.valid?
+    
+    @dood.country = 'DE'
     assert @dood.valid?
-
   end
 
   def test_messages
@@ -50,7 +54,7 @@ class ValidateableTest < Test::Unit::TestCase
 
   def test_full_messages
     @dood.valid?
-    assert_equal ["Email cannot be empty", "Name cannot be empty"], @dood.errors.full_messages.sort
+    assert_equal ["Email cannot be empty", "Name cannot be empty", "The country cannot be blank"], @dood.errors.full_messages.sort
   end
 
 end
