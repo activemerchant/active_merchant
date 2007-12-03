@@ -141,4 +141,12 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     maestro << '0'
     assert_not_equal 'maestro', CreditCard.type?(maestro)
   end
+  
+  def test_matching_discover_card
+    assert CreditCard.matching_type?('6011000000000000', 'discover')
+    assert CreditCard.matching_type?('6500000000000000', 'discover')
+    
+    assert_false CreditCard.matching_type?('6010000000000000', 'discover')
+    assert_false CreditCard.matching_type?('6600000000000000', 'discover')
+  end
 end
