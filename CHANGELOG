@@ -20,7 +20,7 @@
 #
 # * Update format of line items given to the gateway. Cleanup and uncomment unit tests [cody]
 #
-# * Add support for the SkipJack gateway [b...@atomicobject.com, cody]
+# * Add support for the SkipJack gateway [Bill Bereza, cody]
 #
 # * Make the bogus gateway easier to test by moving messages into constants [cody]
 #
