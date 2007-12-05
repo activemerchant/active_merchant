@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add a link to the LinkPoint staging server docs in remote_linkpoint_test.rb [cody]
+#
 # * Update Discover regex [cody]
 #
 # * Match full pan range of Maestro cards from 12 - 19 digits in length [cody]

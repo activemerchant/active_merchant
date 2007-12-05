@@ -14,8 +14,12 @@
 # LinkPoint Central.  Then click "set lockout times" under Fraud Settings
 # You will want to set Duplicate lockout time to 0 so that you can run
 # the tests more than once without triggering this fraud detection.
+#
+# The LinkPoint staging server will also return different responses based
+# on the cent amount of the purhcase. Complete details can be found at
+# http://sgserror.com/staging.php
 
-require File.dirname(__FILE__) + '/../test_helper'
+require File.dirname(__FILE__) + '/../../test_helper'
 
 class LinkpointTest < Test::Unit::TestCase
   def setup
