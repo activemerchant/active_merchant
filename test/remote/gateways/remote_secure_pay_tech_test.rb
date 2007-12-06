@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../test_helper'
+require File.dirname(__FILE__) + '/../../test_helper'
 
 class RemoteSecurePayTechTest < Test::Unit::TestCase
   ACCEPTED_AMOUNT = 10000

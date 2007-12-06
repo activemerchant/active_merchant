@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../test_helper'
+require File.dirname(__FILE__) + '/../../test_helper'
 
 class RemoveUsaEpayTest < Test::Unit::TestCase
   # This key does not work in test mode.  I believe test mode is designed

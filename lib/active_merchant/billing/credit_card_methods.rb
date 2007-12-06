@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
         private
         
         def valid_card_number_length?(number) #:nodoc:
-          number.to_s.length >= 13
+          number.to_s.length >= 12
         end
         
         def valid_test_mode_card_number?(number) #:nodoc:

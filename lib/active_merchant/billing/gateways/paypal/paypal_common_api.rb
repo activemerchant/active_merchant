@@ -36,6 +36,8 @@ module ActiveMerchant #:nodoc:
         'WA'  => 'Western Australia'
       }
       
+      SUCCESS_CODES = [ 'Success', 'SuccessWithWarning' ]
+      
       # The gateway must be configured with either your PayPal PEM file
       # or your PayPal API Signature.  Only one is required.
       #
@@ -284,7 +286,7 @@ module ActiveMerchant #:nodoc:
         data = ssl_post(url, build_request(request))
         @response = parse(action, data)
        
-        success = @response[:ack] == "Success"
+        success = SUCCESS_CODES.include?(@response[:ack])
         message = @response[:message] || @response[:ack]
 
         build_response(success, message, @response,

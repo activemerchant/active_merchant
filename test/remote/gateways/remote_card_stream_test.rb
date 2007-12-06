@@ -1,5 +1,5 @@
 # Portions of the Cardstream gateway by Jonah Fox and Thomas Nichols
-require File.dirname(__FILE__) + '/../test_helper'
+require File.dirname(__FILE__) + '/../../test_helper'
 
 class RemoteCardStreamTest < Test::Unit::TestCase
   def setup

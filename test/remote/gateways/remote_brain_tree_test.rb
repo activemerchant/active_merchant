@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../test_helper'
+require File.dirname(__FILE__) + '/../../test_helper'
 
 class RemoteBrainTreeTest < Test::Unit::TestCase
   AMOUNT = 10000

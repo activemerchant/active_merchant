@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Accept SuccessWithWarning as success [cody]
+#
 # * Add a link to the LinkPoint staging server docs in remote_linkpoint_test.rb [cody]
 #
 # * Update Discover regex [cody]

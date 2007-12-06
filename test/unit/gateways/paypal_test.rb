@@ -59,6 +59,14 @@ class PaypalTest < Test::Unit::TestCase
     assert response.test?
   end
   
+  def test_reauthorization_with_warning
+    @gateway.expects(:ssl_post).returns(successful_with_warning_reauthorization_response)
+    response = @gateway.reauthorize(1000, '32J876265E528623B')
+    assert response.success?
+    assert_equal('1TX27389GX108740X', response.authorization)
+    assert response.test?
+  end
+  
   def test_purchase_exceptions
     @creditcard.number = 3 
     
@@ -238,4 +246,55 @@ class PaypalTest < Test::Unit::TestCase
 </SOAP-ENV:Envelope>  
     RESPONSE
   end
+  
+  def successful_with_warning_reauthorization_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope 
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
+  xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+  xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+  xmlns:cc="urn:ebay:apis:CoreComponentTypes" 
+  xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" 
+  xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" 
+  xmlns:ds="http://www.w3.org/2000/09/xmldsig#" 
+  xmlns:market="urn:ebay:apis:Market" 
+  xmlns:auction="urn:ebay:apis:Auction" 
+  xmlns:sizeship="urn:ebay:api:PayPalAPI/sizeship.xsd" 
+  xmlns:ship="urn:ebay:apis:ship" 
+  xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" 
+  xmlns:ebl="urn:ebay:apis:eBLBaseComponents" 
+  xmlns:ns="urn:ebay:api:PayPalAPI">
+  <SOAP-ENV:Header>
+    <Security 
+       xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext" 
+       xsi:type="wsse:SecurityType">
+    </Security>
+    <RequesterCredentials xmlns="urn:ebay:api:PayPalAPI" 
+       xsi:type="ebl:CustomSecurityHeaderType">
+       <Credentials xmlns="urn:ebay:apis:eBLBaseComponents" 
+                    xsi:type="ebl:UserIdPasswordType">
+          <Username xsi:type="xs:string"></Username>
+          <Password xsi:type="xs:string"></Password>
+          <Subject xsi:type="xs:string"></Subject>
+       </Credentials>
+    </RequesterCredentials>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body id="_0">
+    <DoReauthorizationResponse xmlns="urn:ebay:api:PayPalAPI">
+      <Timestamp xmlns="urn:ebay:apis:eBLBaseComponents">2007-03-04T23:34:42Z</Timestamp>
+      <Ack xmlns="urn:ebay:apis:eBLBaseComponents">SuccessWithWarning</Ack>
+      <CorrelationID xmlns="urn:ebay:apis:eBLBaseComponents">e444ddb7b3ed9</CorrelationID>
+      <Version xmlns="urn:ebay:apis:eBLBaseComponents">2.000000</Version>
+      <Build xmlns="urn:ebay:apis:eBLBaseComponents">1.0006</Build>
+      <AuthorizationID xsi:type="ebl:AuthorizationId">1TX27389GX108740X</AuthorizationID>
+    </DoReauthorizationResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>  
+    RESPONSE
+  end
+  
+  
 end

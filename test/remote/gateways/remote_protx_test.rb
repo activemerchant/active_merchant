@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../test_helper'
+require File.dirname(__FILE__) + '/../../test_helper'
 
 # Some of the standard tests have been removed at Protx test
 # server is pants and accepts anything and says Status=OK. (shift)

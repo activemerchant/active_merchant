@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../test_helper'
+require File.dirname(__FILE__) + '/../../test_helper'
 
 class PsigateRemoteTest < Test::Unit::TestCase
   # set up order numbers as contants because even a test credit must match an 

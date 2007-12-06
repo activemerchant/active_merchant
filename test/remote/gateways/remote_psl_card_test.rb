@@ -1,6 +1,6 @@
 # Author::    MoneySpyder, http://moneyspyder.co.uk
 
-require File.dirname(__FILE__) + '/../test_helper'
+require File.dirname(__FILE__) + '/../../test_helper'
 
 class RemotePslCardTest < Test::Unit::TestCase
   # The test results are determined by the amount of the transaction
