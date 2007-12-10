@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add support for the Offsite payment gateway HiTRUST [cody]
+#
 # * Accept SuccessWithWarning as success [cody]
 #
 # * Add a link to the LinkPoint staging server docs in remote_linkpoint_test.rb [cody]
