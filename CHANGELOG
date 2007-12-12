@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add support for passing in the locale code [georg.fr...@meandevel.com]
+#
 # * Add support for the Offsite payment gateway HiTRUST [cody]
 #
 # * Accept SuccessWithWarning as success [cody]

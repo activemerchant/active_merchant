@@ -123,8 +123,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:cpp-header-border-color', options[:header_border_color] unless options[:header_border_color].blank?
               xml.tag! 'n2:cpp-payflow-color', options[:background_color] unless options[:background_color].blank?
               
-              # This should be set to the same locale as the shop
-              # localeCode          - String
+              xml.tag! 'n2:LocaleCode', options[:locale] unless options[:locale].blank?
             end
           end
         end

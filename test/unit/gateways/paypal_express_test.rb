@@ -108,6 +108,12 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal '1.00', REXML::XPath.first(xml, '//n2:OrderTotal').text
   end
   
+  def test_handle_locale_code
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :locale => 'GB' }))
+    
+    assert_equal 'GB', REXML::XPath.first(xml, '//n2:LocaleCode').text
+  end
+  
   def test_supported_countries
     assert_equal ['US'], PaypalExpressGateway.supported_countries
   end
