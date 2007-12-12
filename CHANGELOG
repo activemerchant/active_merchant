@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Default HiTRUST order description to "Store purchase" [cody]
+#
 # * Fix HiTRUST field names [cody]
 #
 # * Add support for passing in the locale code [georg.fr...@meandevel.com]

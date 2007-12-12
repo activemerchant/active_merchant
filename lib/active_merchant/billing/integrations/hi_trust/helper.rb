@@ -22,6 +22,8 @@ module ActiveMerchant #:nodoc:
             
             # Disable auto query - who knows what it does?
             add_field('queryflag', '1')
+            
+            add_field('orderdesc', 'Store purchase')
           end
           
           mapping :account, 'storeid'
