@@ -18,10 +18,10 @@ module ActiveMerchant #:nodoc:
             add_field('Type', 'Auth')
             
             # Capture the payment right away
-            add_field('depositFlag', '1')
+            add_field('depositflag', '1')
             
             # Disable auto query - who knows what it does?
-            add_field('queryFlag', '1')
+            add_field('queryflag', '1')
           end
           
           mapping :account, 'storeid'
