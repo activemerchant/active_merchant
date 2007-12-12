@@ -1,5 +1,6 @@
 require 'active_merchant/billing/integrations/notification'
 require 'active_merchant/billing/integrations/helper'
+require 'active_merchant/billing/integrations/return'
 require 'active_merchant/billing/integrations/bogus'
 require 'active_merchant/billing/integrations/chronopay'
 require 'active_merchant/billing/integrations/paypal'

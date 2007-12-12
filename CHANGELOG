@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Handle the return from the offsite payment gateways [cody]
+#
 # * Default HiTRUST order description to "Store purchase" [cody]
 #
 # * Fix HiTRUST field names [cody]

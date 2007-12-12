@@ -1,5 +1,6 @@
 require 'active_merchant/billing/integrations/paypal/helper.rb'
 require 'active_merchant/billing/integrations/paypal/notification.rb'
+require 'active_merchant/billing/integrations/paypal/return.rb'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -28,6 +29,10 @@ module ActiveMerchant #:nodoc:
             
         def self.notification(post)
           Notification.new(post)
+        end
+        
+        def self.return(query_string)
+          Return.new(query_string)
         end
       end
     end

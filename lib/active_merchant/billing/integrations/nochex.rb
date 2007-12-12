@@ -1,5 +1,6 @@
 require File.dirname(__FILE__) + '/nochex/helper.rb'
 require File.dirname(__FILE__) + '/nochex/notification.rb'
+require File.dirname(__FILE__) + '/nochex/return.rb'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -76,6 +77,10 @@ module ActiveMerchant #:nodoc:
         def self.notification(post)
           Notification.new(post)
         end  
+        
+        def self.return(query_string)
+          Return.new(query_string)
+        end
       end
     end
   end

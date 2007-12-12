@@ -21,4 +21,8 @@ class PaypalModuleTest < Test::Unit::TestCase
     ActiveMerchant::Billing::Base.integration_mode = :zoomin
     assert_raise(StandardError){ Paypal.service_url }
   end
+  
+  def test_return_method
+    assert_instance_of Paypal::Return, Paypal.return('name=cody')
+  end
 end 

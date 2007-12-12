@@ -13,4 +13,8 @@ class BogusModuleTest < Test::Unit::TestCase
     Bogus.service_url = new
     assert_equal new, Bogus.service_url
   end
+  
+  def test_return_method
+    assert_instance_of Bogus::Return, Bogus.return('name=cody')
+  end
 end 

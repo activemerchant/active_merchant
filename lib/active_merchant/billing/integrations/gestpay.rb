@@ -3,6 +3,7 @@
 require File.dirname(__FILE__) + '/gestpay/common.rb'
 require File.dirname(__FILE__) + '/gestpay/helper.rb'
 require File.dirname(__FILE__) + '/gestpay/notification.rb'
+require File.dirname(__FILE__) + '/gestpay/return.rb'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -15,6 +16,10 @@ module ActiveMerchant #:nodoc:
         def self.notification(post)
           Notification.new(post)
         end  
+        
+        def self.return(query_string)
+          Return.new(query_string)
+        end
       end
     end
   end
