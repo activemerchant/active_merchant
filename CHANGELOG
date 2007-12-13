@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Make ActiveMerchant::Billing::Error a subclass of ActiveMerchant::ActiveMerchantError [cody]
+#
 # * Handle the return from the offsite payment gateways [cody]
 #
 # * Default HiTRUST order description to "Store purchase" [cody]

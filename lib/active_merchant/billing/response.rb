@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
   
-    class Error < StandardError #:nodoc:
+    class Error < ActiveMerchantError #:nodoc:
     end
   
     class Response
