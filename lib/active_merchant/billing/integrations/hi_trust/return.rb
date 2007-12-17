@@ -3,8 +3,8 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module HiTrust
         class Return < ActiveMerchant::Billing::Integrations::Return
-          SUCCESS = "0"
-          CODES = { "0"   => "Operation completed successfully",
+          SUCCESS = "00"
+          CODES = { "00"   => "Operation completed successfully",
                     "-1"  => "Unable to initialize winsock dll.",
                     "-2"  => "Can't create stream socket.",
                     "-3"  => "No Request Message.", 

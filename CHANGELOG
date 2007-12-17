@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Successful return code for HiTRUST is actually 00 [cody]
+#
 # * Make ActiveMerchant::Billing::Error a subclass of ActiveMerchant::ActiveMerchantError [cody]
 #
 # * Handle the return from the offsite payment gateways [cody]
