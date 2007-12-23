@@ -10,8 +10,13 @@ module ActiveMerchant #:nodoc:
       end
       
       API_VERSION = '2.0'
-      TEST_URL = 'https://api.sandbox.paypal.com/2.0/'
-      LIVE_URL = 'https://api-aa.paypal.com/2.0/'
+      
+      URLS = {
+        :test => { :certificate => 'https://api.sandbox.paypal.com/2.0/',
+                   :signature   => 'https://api-3t.sandbox.paypal.com/2.0/' },
+        :live => { :certificate => 'https://api-aa.paypal.com/2.0/',
+                   :signature   => 'https://api-3t.paypal.com/2.0/' }
+      }
       
       PAYPAL_NAMESPACE = 'urn:ebay:api:PayPalAPI'
       EBAY_NAMESPACE = 'urn:ebay:apis:eBLBaseComponents'
@@ -61,6 +66,10 @@ module ActiveMerchant #:nodoc:
           :pem => pem_file,
           :signature => signature
         }.update(options)
+        
+        if @options[:pem].blank? && @options[:signature].blank?
+          raise ArgumentError, "An API Certificate or API Signature is required to make requests to PayPal" 
+        end
         
         super
       end
@@ -279,11 +288,13 @@ module ActiveMerchant #:nodoc:
           address[:state].blank? ? 'N/A' : address[:state]
         end
       end
+      
+      def endpoint_url
+        URLS[test? ? :test : :live][@options[:signature].blank? ? :certificate : :signature]
+      end
 
       def commit(action, request)
-        url = test? ? TEST_URL : LIVE_URL
-
-        data = ssl_post(url, build_request(request))
+        data = ssl_post(endpoint_url, build_request(request))
         @response = parse(action, data)
        
         success = SUCCESS_CODES.include?(@response[:ack])

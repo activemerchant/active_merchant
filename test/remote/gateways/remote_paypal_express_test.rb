@@ -4,7 +4,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
     
-    @gateway = PaypalExpressGateway.new(fixtures(:paypal))
+    @gateway = PaypalExpressGateway.new(fixtures(:paypal_certificate))
   
     @options = {
       :order_id => '230000',

@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Update PaypalGateway, and PaypalExpressGateway to send requests to the correct endpoints when using API signatures [cody]
+#
 # * Successful return code for HiTRUST is actually 00 [cody]
 #
 # * Make ActiveMerchant::Billing::Error a subclass of ActiveMerchant::ActiveMerchantError [cody]

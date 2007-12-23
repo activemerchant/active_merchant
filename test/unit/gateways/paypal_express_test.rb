@@ -8,7 +8,7 @@ class PaypalExpressTest < Test::Unit::TestCase
     @gateway = PaypalExpressGateway.new(
       :login => 'cody', 
       :password => 'test',
-      :pem => ''
+      :pem => 'PEM'
     )
 
     @address = { :address1 => '1234 My Street',
@@ -39,7 +39,7 @@ class PaypalExpressTest < Test::Unit::TestCase
     gateway = PaypalExpressGateway.new(
       :login => 'cody', 
       :password => 'test',
-      :pem => '',
+      :pem => 'PEM',
       :test => true
     )
     

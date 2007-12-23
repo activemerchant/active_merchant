@@ -4,7 +4,7 @@ class PaypalTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
     
-    @gateway = PaypalGateway.new(fixtures(:paypal))
+    @gateway = PaypalGateway.new(fixtures(:paypal_certificate))
 
     @creditcard = CreditCard.new(
       :type                => "Visa",
@@ -40,6 +40,13 @@ class PaypalTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(300, @creditcard, @params)
+    assert_success response
+    assert response.params['transaction_id']
+  end
+  
+  def test_successful_purchase_with_api_signature
+    gateway = PaypalGateway.new(fixtures(:paypal_signature))
+    response = gateway.purchase(300, @creditcard, @params)
     assert_success response
     assert response.params['transaction_id']
   end

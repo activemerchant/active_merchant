@@ -88,14 +88,18 @@ payment_express:
   password: PASSWORD
 
 # You can use either your API PEM file or API signature with PayPal.
-paypal:
+paypal_certificate:
   login: LOGIN
   password: PASSWORD
   subject:
-  signature:
   pem: |--
     PASTE YOUR PEM FILE HERE
-    
+
+paypal_signature:
+  login: LOGIN
+  password: PASSWORD
+  signature: SIGNATURE
+
 pay_secure:
   login: LOGIN
   password: PASSWORD

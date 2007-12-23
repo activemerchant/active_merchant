@@ -5,7 +5,7 @@ class PaypalTest < Test::Unit::TestCase
     @gateway = PaypalGateway.new(
                 :login => 'cody', 
                 :password => 'test',
-                :pem => ''
+                :pem => 'PEM'
                )
 
     @address = { :address1 => '1234 My Street',
@@ -170,6 +170,53 @@ class PaypalTest < Test::Unit::TestCase
     
     doc = REXML::Document.new(xml)
     assert_equal '1.00', REXML::XPath.first(doc, '//n2:PaymentDetails/n2:TaxTotal').text
+  end
+  
+  def test_should_use_test_certificate_endpoint
+    gateway = PaypalGateway.new(
+                :login => 'cody', 
+                :password => 'test',
+                :pem => 'PEM'
+              )
+    assert_equal PaypalGateway::URLS[:test][:certificate], gateway.send(:endpoint_url)
+  end
+  
+  def test_should_use_live_certificate_endpoint
+    gateway = PaypalGateway.new(
+                :login => 'cody', 
+                :password => 'test',
+                :pem => 'PEM'
+              )
+    gateway.expects(:test?).returns(false)
+      
+    assert_equal PaypalGateway::URLS[:live][:certificate], gateway.send(:endpoint_url)
+  end
+  
+  def test_should_use_test_signature_endpoint
+    gateway = PaypalGateway.new(
+                :login => 'cody', 
+                :password => 'test',
+                :signature => 'SIG'
+              )
+      
+    assert_equal PaypalGateway::URLS[:test][:signature], gateway.send(:endpoint_url)
+  end
+  
+  def test_should_use_live_signature_endpoint
+    gateway = PaypalGateway.new(
+                :login => 'cody', 
+                :password => 'test',
+                :signature => 'SIG'
+              )
+    gateway.expects(:test?).returns(false)
+      
+    assert_equal PaypalGateway::URLS[:live][:signature], gateway.send(:endpoint_url)
+  end
+  
+  def test_should_raise_argument_when_credentials_not_present
+    assert_raises(ArgumentError) do
+      PaypalGateway.new(:login => 'cody', :password => 'test')
+    end
   end
   
   private
