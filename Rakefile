@@ -129,22 +129,30 @@ task :upload_rdoc => :rdoc do
 end
 
 namespace :gateways do
-  desc 'Print the currently supported gateways in RDoc format'
-  task :print_support_rdoc do
-    support = GatewaySupport.new
-    support.to_rdoc
-  end
-  
   desc 'Print the currently supported gateways'
-  task :print_support do
+  task :print do
     support = GatewaySupport.new
     support.to_s
   end
   
-  desc 'Print the currently supported gateways'
-  task :print_support_textile do
-    support = GatewaySupport.new
-    support.to_textile
+  namespace :print do
+    desc 'Print the currently supported gateways in RDoc format'
+    task :rdoc do
+      support = GatewaySupport.new
+      support.to_rdoc
+    end
+  
+    desc 'Print the currently supported gateways in Textile format'
+    task :textile do
+      support = GatewaySupport.new
+      support.to_textile
+    end
+    
+    desc 'Print the gateway functionality supported by each gateway'
+    task :features do
+      support = GatewaySupport.new
+      support.features
+    end
   end
 end
   

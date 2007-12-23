@@ -62,6 +62,14 @@ class SecurePayTest < Test::Unit::TestCase
     end
   end
   
+  def test_supported_countries_are_inherited
+    assert_equal AuthorizeNetGateway.supported_countries, SecurePayGateway.supported_countries
+  end
+  
+  def test_supported_card_types_are_inherited
+    assert_equal AuthorizeNetGateway.supported_cardtypes, SecurePayGateway.supported_cardtypes
+  end
+  
   private
   
   def successful_purchase_response

@@ -90,12 +90,16 @@ module ActiveMerchant #:nodoc:
       include RequiresParameters
       include CreditCardFormatting
       
-      ## Constants
-      
       DEBIT_CARDS = [ :switch, :solo ]
       
-      ## Attributes
+      cattr_reader :implementations
+      @@implementations = []
       
+      def self.inherited(subclass)
+        super
+        @@implementations << subclass
+      end
+    
       # The format of the amounts used by the gateway
       # :dollars => '12.50'
       # :cents => '1250'
@@ -127,8 +131,6 @@ module ActiveMerchant #:nodoc:
       def self.supports?(card_type)
         supported_cardtypes.include?(card_type.to_sym)
       end       
-    
-      ## Instance Methods
     
       # Initialize a new gateway.
       # 

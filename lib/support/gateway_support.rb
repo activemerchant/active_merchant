@@ -4,22 +4,35 @@ require 'lib/active_merchant'
 
 
 class GatewaySupport
+  ACTIONS = [:purchase, :authorize, :capture, :void, :credit, :recurring]
+  
+  include ActiveMerchant::Billing
+
   attr_reader :gateways
   
   def initialize
-    @gateways = []
-    ObjectSpace.each_object(Class) do |c|  
-      if c.name =~ /Gateway/ && c.ancestors.reject{|a| a == c}.include?(ActiveMerchant::Billing::Gateway)
-        gateways << c
-      end
-    end
-    
+    @gateways = Gateway.implementations.sort_by(&:name)
     @gateways.delete(ActiveMerchant::Billing::BogusGateway)
-    @gateways = @gateways.sort_by(&:name)
   end
   
   def each_gateway
     @gateways.each{|g| yield g }
+  end
+  
+  def features
+    width = 15
+    
+    print "Name".center(width + 20)
+    ACTIONS.each{|f| print "#{f.to_s.capitalize.center(width)}" }
+    puts
+    
+    each_gateway do |g|
+      print "#{g.display_name.ljust(width + 20)}"
+      ACTIONS.each do |f|
+        print "#{(g.instance_methods.include?(f.to_s) ? "Y" : "N").center(width)}"
+      end
+      puts
+    end
   end
   
   def to_rdoc
