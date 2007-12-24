@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Remove unused api_cert_chain.crt file [cody]
+#
 # * Update PaypalGateway, and PaypalExpressGateway to send requests to the correct endpoints when using API signatures [cody]
 #
 # * Successful return code for HiTRUST is actually 00 [cody]
