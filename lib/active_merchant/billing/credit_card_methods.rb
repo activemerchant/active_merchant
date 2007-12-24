@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
         def valid_number?(number)
           valid_test_mode_card_number?(number) || 
             valid_card_number_length?(number) && 
-            valid_card_number_digits?(number)
+            valid_checksum?(number)
         end
         
         # Regular expressions for the known card companies.
@@ -102,30 +102,14 @@ module ActiveMerchant #:nodoc:
         
         # Checks the validity of a card number by use of the the Luhn Algorithm. 
         # Please see http://en.wikipedia.org/wiki/Luhn_algorithm for details.
-        def valid_card_number_digits?(number) #:nodoc:
-          number[-1, 1].to_i == (10 - sum_and_weigh_digits(number) % 10) % 10
-        end
-        
-        # This is an implementation of the Luhn algorithm, refactored for readability.
-        def sum_and_weigh_digits(number) #:nodoc:
+        def valid_checksum?(number) #:nodoc:
           sum = 0
-          number = number.to_s
-          for position in 0..number.length
-            weight = calculate_weight(number, position)
+          for i in 0..number.length
+            weight = number[-1 * (i + 2), 1].to_i * (2 - (i % 2))
             sum += (weight < 10) ? weight : weight - 9
           end
-          return sum
-        end
-        
-        # To save time on the Luhn algorithm, we caculate the weight of a digit in the series by 
-        # multiplying by 2 if it's position is even, and 1 if it's index is odd.
-        def calculate_weight(number, position) #:nodoc:
-          select_digit(number, position) * (2 - (position % 2))
-        end
-        
-        # Plucks a digit from the card number to perform operations on
-        def select_digit(number, position) #:nodoc:
-          number[-1 * (position + 2), 1].to_i
+          
+          (number[-1,1].to_i == (10 - sum % 10) % 10)
         end
       end
     end

@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Revert to initial implementation of LUHN algorithm because it all fits in one simple method [cody]
+#
 # * Remove unused api_cert_chain.crt file [cody]
 #
 # * Update PaypalGateway, and PaypalExpressGateway to send requests to the correct endpoints when using API signatures [cody]
