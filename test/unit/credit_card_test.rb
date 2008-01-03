@@ -90,11 +90,11 @@ class CreditCardTest < Test::Unit::TestCase
     assert_not_equal @visa.errors.on(:number), @visa.errors.on(:type)
   end
 
-  def test_should_be_invalid_with_empty_type
-    @visa.type = ''
+  def test_should_be_invalid_when_type_cannot_be_detected
+    @visa.number = nil
+    @visa.type = nil
     
     assert_not_valid @visa
-    assert_false @visa.errors.on(:number)
     assert_match /is required/, @visa.errors.on(:type)
     assert  @visa.errors.on(:type)
   end
@@ -260,9 +260,31 @@ class CreditCardTest < Test::Unit::TestCase
   # credit card card_companies hash were not duped when detecting the type
   def test_create_and_validate_credit_card_from_type
     credit_card = CreditCard.new(:type => CreditCard.type?('4242424242424242'))
-    
     assert_nothing_raised do
       credit_card.valid?
     end
+  end
+  
+  def test_autodetection_of_credit_card_type
+    credit_card = CreditCard.new(:number => '4242424242424242')
+    credit_card.valid?
+    assert_equal 'visa', credit_card.type
+  end
+  
+  def test_card_type_should_not_be_autodetected_when_provided
+    credit_card = CreditCard.new(:number => '4242424242424242', :type => 'master')
+    credit_card.valid?
+    assert_equal 'master', credit_card.type
+  end
+  
+  def test_detecting_bogus_card
+    credit_card = CreditCard.new(:number => '1')
+    credit_card.valid?
+    assert_equal 'bogus', credit_card.type
+  end
+  
+  def test_validating_bogus_card
+    credit_card = credit_card('1', :type => nil)
+    assert credit_card.valid?
   end
 end

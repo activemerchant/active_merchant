@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
         #   end
         # 
         def type?(number)
-          return 'visa' if valid_test_mode_card_number?(number)
+          return 'bogus' if valid_test_mode_card_number?(number)
 
           card_companies.reject { |c,p| c == 'maestro' }.each do |company, pattern|
             return company.dup if number =~ pattern 

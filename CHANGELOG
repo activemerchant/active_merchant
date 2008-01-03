@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Automatically determine the credit card type when a type is not provided [cody]
+#
 # * Revert to initial implementation of LUHN algorithm because it all fits in one simple method [cody]
 #
 # * Remove unused api_cert_chain.crt file [cody]
