@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Update base gateway class RDOC [cody]
+#
 # * Update the README with the latest list of supported gateways. Update the example in the README to include the verification value, which is now required by the credit card object by default. [cody]
 #
 # * Handle the return from 2Checkout [cody]

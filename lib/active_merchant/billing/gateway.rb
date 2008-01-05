@@ -9,82 +9,53 @@ module ActiveMerchant #:nodoc:
     # == Description
     # The Gateway class is the base class for all ActiveMerchant gateway implementations. 
     # 
-    # The list of gateway functions that concrete gateway classes can and should implement include 
-    # the following:
+    # The standard list of gateway functions that most concrete gateway subclasses implement is:
     # 
     # * <tt>purchase(money, creditcard, options = {})</tt>
     # * <tt>authorize(money, creditcard, options = {})</tt>
     # * <tt>capture(money, authorization, options = {})</tt>
     # * <tt>void(identification, options = {})</tt>
     # * <tt>credit(money, identification, options = {})</tt>
-    # 
-    # == Setting Up Your Gateway
-    # Aside from the obvious authorization parameters (login and password), you can set up your 
-    # gateway using numerous options. Be sure to reference your gateway of choice's documentation 
-    # before overriding it's default values that may be defined.
-    # 
-    # * <tt>Gateway.default_currency</tt>: sets the default currency if none is provided. See 
-    #   http://en.wikipedia.org/wiki/ISO_4217#Active_codes for active currency codes.
-    # 
-    # * <tt>Gateway.supported_countries</tt>: sets the countries of _merchants_ the gateway supports.
-    # 
-    # * <tt>Gateway.supported_cardtypes</tt>: sets the card types supported by the gateway.
-    # 
-    # * <tt>Gateway.homepage_url</tt>: sets the URL at which the gateway may be found.
-    # 
-    # * <tt>Gateway.display_name</tt>: sets the name of the gateway for display purposes, such as generating documentation.
-    # 
-    # * <tt>Gateway.application_id</tt>: This is the application making calls to the gateway. This 
-    #   is useful for things like the Paypal build notation (BN) id fields.
-    # 
-    # * <tt>Gateway.money_format</tt>: this attribute may be set to <tt>:dollars</tt> or 
-    #   <tt>:cents</tt>. Use this to set the expected money format you'll be inputting.
     #
+    # Some gateways include features for recurring billing
+    #
+    # * <tt>recurring(money, creditcard, options = {})</tt>
+    #
+    # Some gateways also support features for storing credit cards:
+    #
+    # * <tt>store(creditcard, options = {})</tt>
+    # * <tt>unstore(identification, options = {})</tt>
     # 
-    #     Gateway.money_format = :dollars # => 12.50
-    #     Gateway.money_format = :cents   # => 1250
+    # === Gateway Options
+    # The options hash consists of the following options:
+    #
+    # * <tt>:order_id</tt> - The order number
+    # * <tt>:ip</tt> - The IP address of the customer making the purchase
+    # * <tt>:customer</tt> - The name, customer number, or other information that identifies the customer
+    # * <tt>:invoice</tt> - The invoice number
+    # * <tt>:merchant</tt> - The name or description of the merchant offering the product
+    # * <tt>:description</tt> - A description of the transaction
+    # * <tt>:email</tt> - The email address of the customer
+    # * <tt>:currency</tt> - The currency of the transaction.  Only important when you are using a currency that is not the default with a gateway that supports multiple currencies.
+    # * <tt>:billing_address</tt> - A hash containing the billing address of the customer.
+    # * <tt>:shipping_address</tt> - A hash containing the shipping address of the customer.
     # 
+    # The <tt>:billing_address</tt>, and <tt>:shipping_address</tt> hashes can have the following keys:
     # 
-    # == Testing Your Code
-    # There are two kinds of tests performed with your code: local and remote.
-    # 
-    # === Local Tests
-    # Before running any remote tests, it's best to ensure that your code covers the basics 
-    # locally. Local tests run on your own machine and will run faster than remote tests.
-    # 
-    # To run a local test, first ensure that your gateway is in test mode: 
-    # 
-    #   ActiveMerchant::Base.mode = :test
-    # 
-    # (See ActiveMerchant::Base for more details.) This is often best set in your test's +setup+ 
-    # or +teardown+ methods, if you are using Test::Unit.
-    # 
-    # The next step is to use one of three test credit card numbers: 
-    # 
-    # <tt>1</tt>:: Result will be successful
-    # <tt>2</tt>:: Result will be a failure
-    # <tt>3</tt>:: Result will raise a miscellaneous error
-    # 
-    # For examples of test requests, please see your gateway of interest's unit test code.
-    # 
-    # === Remote Tests
-    # Remote tests aren't mandatory, but it's not a bad idea to write them to ensure everything 
-    # works as expected. You'll first need authorization parameters from the gateway you'll be 
-    # working with. Once you have these values you'll be able to use ActiveMerchant to run test 
-    # requests.
-    # 
-    # As with local tests, first ensure that you are in test mode: 
-    # 
-    #   ActiveMerchant::Base.mode = :test
-    # 
-    # (See ActiveMerchant::Base for more details.) 
-    # 
-    # Test requests may then be made using appropriate parameters provided by your gateway of 
-    # choice. For instance, the Moneris gateway provides a test MasterCard and Visa number that 
-    # one may use to process test purchases and authorization requests.
-    # 
-    # Given that these remote tests will take longer to run than local tests, it is recommended 
-    # that you comment them out, or disable them when not required.
+    # * <tt>:name</tt> - The full name of the customer.
+    # * <tt>:company</tt> - The company name of the customer.
+    # * <tt>:address1</tt> - The primary street address of the customer.
+    # * <tt>:address2</tt> - Additional line of address information.
+    # * <tt>:city</tt> - The city of the customer.
+    # * <tt>:state</tt> - The state of the customer.  The 2 digit code for US and Canadian addresses. The full name of the state or province for foreign addresses.
+    # * <tt>:country</tt> - The [ISO 3166-1-alpha-2 code](http://www.iso.org/iso/country_codes/iso_3166_code_lists/english_country_names_and_code_elements.htm) for the customer.
+    # * <tt>:zip</tt> - The zip or postal code of the customer.
+    # * <tt>:phone</tt> - The phone number of the customer.
+    #
+    # == Implmenting new gateways
+    #
+    # See the {ActiveMerchant Guide to Contributing}[http://code.google.com/p/activemerchant/wiki/Contributing]
+    #
     class Gateway
       include PostsData
       include RequiresParameters

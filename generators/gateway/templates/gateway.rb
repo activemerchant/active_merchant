@@ -4,6 +4,18 @@ module ActiveMerchant #:nodoc:
       TEST_URL = 'https://example.com/test'
       LIVE_URL = 'https://example.com/live'
       
+      # The countries the gateway supports merchants from as 2 digit ISO country codes
+      self.supported_countries = ['US']
+      
+      # The card types supported by the payment gateway
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      
+      # The homepage URL of the gateway
+      self.homepage_url = 'http://www.example.net/'
+      
+      # The name of the gateway
+      self.display_name = 'New Gateway'
+      
       attr_reader :url 
       attr_reader :response
       attr_reader :options
