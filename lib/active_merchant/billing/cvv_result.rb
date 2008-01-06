@@ -1,8 +1,8 @@
 module ActiveMerchant
   module Billing
-    # Result of the Card Code Verification
+    # Result of the Card Verification Value check
     # http://www.bbbonline.org/eExport/doc/MerchantGuide_cvv2.pdf
-    class CCVResult
+    class CVVResult
       
       CODES = {
         'M'  =>  'Match',

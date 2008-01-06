@@ -53,7 +53,7 @@ require 'active_merchant/lib/country'
 require 'active_merchant/billing/avs_result'
 
 # Card Verfication Code
-require 'active_merchant/billing/ccv_result'
+require 'active_merchant/billing/cvv_result'
 
 # CreditCard Utility class. 
 require 'active_merchant/billing/credit_card_methods'

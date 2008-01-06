@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Rename CCVResult to CVVResult to be more aligned with ActiveMerchant's usage of the term verification value [cody]
+#
 # * Remove test_result_from_cc_number from Authorize.net in favour of mocking [cody]
 #
 # * Add merchant_data hash, which contains all of the card_data, avs_result, and ccv_result. [cody]

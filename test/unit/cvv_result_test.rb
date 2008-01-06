@@ -1,8 +1,8 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
-class CCVResultTest < Test::Unit::TestCase
+class CVVResultTest < Test::Unit::TestCase
   def test_nil_data
-    result = CCVResult.new(nil)
+    result = CVVResult.new(nil)
     assert_nil result.code
     assert_nil result.message
     assert_nil result.match
@@ -10,7 +10,7 @@ class CCVResultTest < Test::Unit::TestCase
   end
   
   def test_blank_data
-    result = CCVResult.new('')
+    result = CVVResult.new('')
     assert_nil result.code
     assert_nil result.message
     assert_nil result.match
@@ -18,25 +18,25 @@ class CCVResultTest < Test::Unit::TestCase
   end
   
   def test_successful_match
-    result = CCVResult.new('M')
+    result = CVVResult.new('M')
     assert_equal 'M', result.code
-    assert_equal CCVResult::CODES['M'], result.message
+    assert_equal CVVResult::CODES['M'], result.message
     assert_equal :match, result.match
     assert_false result.failure?
   end
   
   def test_failed_match
-    result = CCVResult.new('N')
+    result = CVVResult.new('N')
     assert_equal 'N', result.code
-    assert_equal CCVResult::CODES['N'], result.message
+    assert_equal CVVResult::CODES['N'], result.message
     assert_equal :no_match, result.match
     assert result.failure?
   end
   
   def test_to_hash
-    result = CCVResult.new('M').to_hash
+    result = CVVResult.new('M').to_hash
     assert_equal 'M', result['code']
-    assert_equal CCVResult::CODES['M'], result['message']
+    assert_equal CVVResult::CODES['M'], result['message']
     assert_equal 'match', result['match']
   end
 end
