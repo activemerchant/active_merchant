@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add AVS data to the Response object [cody]
+#
 # * Fix credentials for remote Authorize.net TEST MODE test [cody]
 #
 # * Add AVS module and AVS::Result class [cody]
