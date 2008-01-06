@@ -165,7 +165,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     response = @gateway.purchase(100, @credit_card)
     ccv_result = response.ccv_result
     assert_equal 'M', ccv_result['code']
-    assert_equal CCVResult::CODES['M'], ccv_result['message']
+    assert_equal CVVResult::CODES['M'], ccv_result['message']
     assert_equal 'match', ccv_result['match']
   end
   

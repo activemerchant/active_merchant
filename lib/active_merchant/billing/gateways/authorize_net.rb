@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
           :card_code => fields[CARD_CODE_RESPONSE_CODE]          
         }      
         
-        ccv_result = CCVResult.new(results[:card_code])
+        ccv_result = CVVResult.new(results[:card_code])
         results[:card_code_message] = ccv_result.message unless ccv_result.code.nil?
   
         avs_result = AVSResult.new(results[:avs_result_code])
@@ -202,7 +202,7 @@ module ActiveMerchant #:nodoc:
       
       def message_from(results)  
         if results[:response_code] == DECLINED
-          ccv_result = CCVResult.new(results[:card_code])
+          ccv_result = CVVResult.new(results[:card_code])
           return ccv_result.message if ccv_result.failure?
           
           avs_result = AVSResult.new(results[:avs_result_code])
