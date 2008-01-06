@@ -62,7 +62,7 @@ module ActiveMerchant
       def to_hash
         { 'code' => code,
           'message' => message,
-          'match' => match.to_s
+          'match' => (match && match.to_s)
         }
       end
     end

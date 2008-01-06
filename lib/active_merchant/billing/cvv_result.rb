@@ -38,7 +38,7 @@ module ActiveMerchant
         {
           'code' => code,
           'message' => message,
-          'match' => match.to_s
+          'match' => (match && match.to_s)
         }
       end
     end
