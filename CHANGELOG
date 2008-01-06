@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Convert Authorize.net gateway to use the new AVS module [cody]
+#
 # * Add AVS data to the Response object [cody]
 #
 # * Fix credentials for remote Authorize.net TEST MODE test [cody]

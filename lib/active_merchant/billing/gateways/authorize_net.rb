@@ -24,24 +24,6 @@ module ActiveMerchant #:nodoc:
         "U" => "Issuer was not certified for card verification"
       }
 
-      AVS_ERRORS = %w( A E N R W Z )
-
-      AVS_MESSAGES = {
-        "A" => "Street address matches billing information, zip/postal code does not",
-        "B" => "Address information not provided for address verification check",
-        "E" => "Address verification service error",
-        "G" => "Non-U.S. card-issuing bank",
-        "N" => "Neither street address nor zip/postal match billing information",
-        "P" => "Address verification not applicable for this transaction",
-        "R" => "Payment gateway was unavailable or timed out",
-        "S" => "Address verification service not supported by issuer",
-        "U" => "Address information is unavailable",
-        "W" => "9-digit zip/postal code matches billing information, street address does not",
-        "X" => "Street address and 9-digit zip/postal code matches billing information",
-        "Y" => "Street address and 5-digit zip/postal code matches billing information",
-        "Z" => "5-digit zip/postal code matches billing information, street address does not",
-      }
-     
       # URL
       attr_reader :url 
       attr_reader :response
@@ -128,7 +110,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success?(@response), message, @response, 
           :test => test_mode, 
           :authorization => @response[:transaction_id],
-          :fraud_review => fraud_review?(@response)
+          :fraud_review => fraud_review?(@response),
+          :avs_code => @response[:avs_result_code]
         )        
       end
       
@@ -152,10 +135,11 @@ module ActiveMerchant #:nodoc:
           :card_code => fields[CARD_CODE_RESPONSE_CODE]          
         }      
         
-        
         results[:card_code_message] = CARD_CODE_MESSAGES[results[:card_code]] if results[:card_code]
-        results[:avs_message]       = AVS_MESSAGES[results[:avs_result_code]] if results[:avs_result_code]
-        
+  
+        avs_result = AVS::Result.new(results[:avs_result_code])
+        results[:avs_message]       = avs_result.message unless avs_result.match_type.nil?
+      
         results
       end     
 
@@ -230,7 +214,9 @@ module ActiveMerchant #:nodoc:
       def message_from(results)  
         if results[:response_code] == DECLINED
           return CARD_CODE_MESSAGES[results[:card_code]] if CARD_CODE_ERRORS.include?(results[:card_code])
-          return AVS_MESSAGES[results[:avs_result_code]] if AVS_ERRORS.include?(results[:avs_result_code])
+          
+          avs_result = AVS::Result.new(results[:avs_result_code])
+          return avs_result.message if avs_result.failure?
         end
         
         return results[:response_reason_text].nil? ? '' : results[:response_reason_text][0..-2]

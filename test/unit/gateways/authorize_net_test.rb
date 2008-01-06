@@ -135,6 +135,16 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response.fraud_review?
     assert_equal "Thank you! For security reasons your order is currently being reviewed", response.message
   end
+  
+  def test_avs_result
+    @gateway.stubs(:ssl_post).returns(fraud_review_response)
+    
+    response = @gateway.purchase(100, @creditcard)
+    avs_result = response.avs_result
+    assert_equal 'X', avs_result['code']
+    assert_equal AVS::CODES['X'], avs_result['message']
+    assert_equal 'full', avs_result['match_type']
+  end
 
   private
 
