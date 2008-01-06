@@ -323,16 +323,13 @@ module ActiveMerchant #:nodoc:
       end
       
       def commit(action, parameters)
-        if result = test_result_from_cc_number(parameters[:number])
-          return result
-        end
-        
-        data = ssl_post(LIVE_URL, post_data(action, parameters), 'Content-type' => 'application/x-www-form-urlencoded')
+        data = ssl_post(LIVE_URL, post_data(action, parameters))
         @response = parse(data)
         
         Response.new(successful?(@response), message_from(@response), @response, 
             :test => test?, 
-            :authorization => @response[:transaction_id] || parameters[:transaction_id]
+            :authorization => @response[:transaction_id] || parameters[:transaction_id],
+            :card_number => parameters[:number]
         )
       end
       

@@ -12,34 +12,7 @@ class PayJunctionTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4111111111111111')
   end
-
-  def test_purchase_success    
-    @credit_card.number = '1'
-    
-    assert response = @gateway.purchase(100, @credit_card)
-    assert_equal Response, response.class
-    assert_equal '#0001', response.params['receiptid']
-    assert_equal true, response.success?
-  end
-
-  def test_purchase_error
-    @credit_card.number = '2'
-
-    assert response = @gateway.purchase(100, @credit_card)
-    assert_equal Response, response.class
-    assert_equal '#0001', response.params['receiptid']
-    assert_equal false, response.success?
-
-  end
-
-  def test_purchase_exceptions
-    @credit_card.number = '3' 
-
-    assert_raise(Error) do
-      assert response = @gateway.purchase(100, @credit_card)  
-    end
-  end
-   
+ 
   def test_amount_style   
    assert_equal '10.34', @gateway.send(:amount, 1034)
    assert_equal '10.34', @gateway.send(:amount, 1034)
@@ -77,6 +50,22 @@ class PayJunctionTest < Test::Unit::TestCase
     response = @gateway.authorize(100, @credit_card)
     assert_failure response
     assert_equal PayJunctionGateway::DECLINE_CODES['FE'], response.message
+  end
+  
+  def test_purchase_exception
+    @gateway.expects(:ssl_post).raises(Error)
+    
+    assert_raise(Error) do
+      assert response = @gateway.purchase(100, @credit_card)
+    end
+  end
+  
+  def test_card_data
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    
+    response = @gateway.purchase(100, @credit_card)
+    assert_equal @credit_card.type, response.card_data['type']
+    assert_equal CreditCard.mask(@credit_card.number), response.card_data['number']
   end
   
   private

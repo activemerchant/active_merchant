@@ -10,7 +10,7 @@ class PayJunctionTest < Test::Unit::TestCase
   def setup
     @gateway = PayJunctionGateway.new(fixtures(:pay_junction))
 
-    @creditcard = credit_card('4433221111223344')
+    @credit_card = credit_card('4444333322221111', :verification_value => '123')
     
     @valid_verification_value = '123'
     @invalid_verification_value = '1234'
@@ -22,6 +22,7 @@ class PayJunctionTest < Test::Unit::TestCase
       :state => 'CA',
       :zip => '90001'
     }
+    
     @invalid_address = {
       :address1 => '187 Apple Tree Lane.',
       :address2 => nil,
@@ -29,26 +30,22 @@ class PayJunctionTest < Test::Unit::TestCase
       :state => 'CA', 
       :zip => '94062'
     }
+    
+    @options = { :billing_address => @valid_address, :order_id => generate_order_id }
   end
   
   def test_successful_purchase
-    assert response = @gateway.purchase(AMOUNT, 
-                                        @creditcard, 
-                                        :order_id => generate_order_id)
-    
+    assert response = @gateway.purchase(AMOUNT, @credit_card, @options)
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
     assert_equal 'capture', response.params["posture"], 'Should be captured funds'
-    assert_equal 'charge', response.params["transaction_action"]
-    
+    assert_equal 'charge', response.params["transaction_action"]  
     assert_success response
     assert response.test?
   end
 
   def test_successful_purchase_with_cvv
-    @creditcard.verification_value = @valid_verification_value
-    assert response = @gateway.purchase(AMOUNT, 
-                                        @creditcard, 
-                                        :order_id => generate_order_id)
+    @credit_card.verification_value = @valid_verification_value
+    assert response = @gateway.purchase(AMOUNT, @credit_card, @options)
         
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
     assert_equal 'capture', response.params["posture"], 'Should be captured funds'
@@ -58,9 +55,7 @@ class PayJunctionTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
-    assert response = @gateway.authorize( AMOUNT, 
-                                          @creditcard, 
-                                          :order_id => generate_order_id)
+    assert response = @gateway.authorize( AMOUNT, @credit_card, @options)
     
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
     assert_equal 'hold', response.params["posture"], 'Should be a held charge'
@@ -70,11 +65,10 @@ class PayJunctionTest < Test::Unit::TestCase
   end
 
   def test_successful_capture
-    order_id = generate_order_id
-    auth = @gateway.authorize(AMOUNT, @creditcard, :order_id => order_id)
+    auth = @gateway.authorize(AMOUNT, @credit_card, @options)
     assert_success auth
 
-    response = @gateway.capture(AMOUNT, auth.authorization, :order_id => order_id)    
+    response = @gateway.capture(AMOUNT, auth.authorization, @options)
     assert_success response
     assert_equal 'capture', response.params["posture"], 'Should be a capture'
     assert_equal auth.authorization, response.authorization,
@@ -82,7 +76,7 @@ class PayJunctionTest < Test::Unit::TestCase
   end
 
   def test_successful_credit
-    purchase = @gateway.purchase(AMOUNT, @creditcard, :order_id => generate_order_id)
+    purchase = @gateway.purchase(AMOUNT, @credit_card, @options)
     assert_success purchase
     
     assert response = @gateway.credit(success_price, purchase.authorization)
@@ -93,7 +87,7 @@ class PayJunctionTest < Test::Unit::TestCase
 
   def test_successful_void
     order_id = generate_order_id
-    purchase = @gateway.purchase(AMOUNT, @creditcard, :order_id => order_id)
+    purchase = @gateway.purchase(AMOUNT, @credit_card, @options)
     assert_success purchase
     
     assert response = @gateway.void(AMOUNT, purchase.authorization, :order_id => order_id)    
@@ -108,14 +102,10 @@ class PayJunctionTest < Test::Unit::TestCase
     # transaction can be executed if you have the transaction ID of a
     # previous successful transaction.
     
-    purchase = @gateway.purchase( AMOUNT, 
-                                  @creditcard, 
-                                  :order_id => generate_order_id)
+    purchase = @gateway.purchase( AMOUNT, @credit_card, @options)
     assert_success purchase
     
-    assert response = @gateway.purchase(AMOUNT, 
-                                        purchase.authorization, 
-                                        :order_id => generate_order_id)
+    assert response = @gateway.purchase(AMOUNT, purchase.authorization, :order_id => generate_order_id)
                                         
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
     assert_equal 'capture', response.params["posture"], 'Should be captured funds'
@@ -127,10 +117,11 @@ class PayJunctionTest < Test::Unit::TestCase
   end
 
   def test_successful_recurring
-    assert response = @gateway.recurring(AMOUNT, @creditcard, 
-                                            :periodicity  => :monthly,
-                                            :payments     => 12,
-                                            :order_id => generate_order_id)
+    assert response = @gateway.recurring(AMOUNT, @credit_card, 
+                        :periodicity  => :monthly,
+                        :payments     => 12,
+                        :order_id => generate_order_id
+                      )
     
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message                                        
     assert_equal 'charge', response.params["transaction_action"]
@@ -139,12 +130,10 @@ class PayJunctionTest < Test::Unit::TestCase
   end
 
   def test_should_send_invoice
-    order_id = generate_order_id
-    
-    response = @gateway.purchase(AMOUNT, @creditcard, :order_id => order_id)
+    response = @gateway.purchase(AMOUNT, @credit_card, @options)
     assert_success response
     
-    assert_equal order_id, response.params["invoice_number"], 'Should have set invoice'
+    assert_equal @options[:order_id], response.params["invoice_number"], 'Should have set invoice'
   end
 
   private

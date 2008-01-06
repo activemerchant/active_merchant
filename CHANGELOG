@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add card data to PayJunction response. PayJunction does not return the CVV or AVS result codes. Remote test_result_from_cc_number from PayJunction. [cody]
+#
 # * Rename CCVResult to CVVResult to be more aligned with ActiveMerchant's usage of the term verification value [cody]
 #
 # * Remove test_result_from_cc_number from Authorize.net in favour of mocking [cody]
