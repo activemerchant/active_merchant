@@ -162,9 +162,9 @@ class CreditCardTest < Test::Unit::TestCase
     assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '111222233331234').display_number
     assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '1112223331234').display_number
 
-    assert_equal 'XXXX-XXXX-XXXX-',     CreditCard.new(:number => nil).display_number
-    assert_equal 'XXXX-XXXX-XXXX-',     CreditCard.new(:number => '').display_number
-    assert_equal 'XXXX-XXXX-XXXX-123',  CreditCard.new(:number => '123').display_number
+    assert_nil CreditCard.new(:number => nil).display_number
+    assert_nil CreditCard.new(:number => '').display_number
+    assert_nil CreditCard.new(:number => '123').display_number
     assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '1234').display_number
     assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '01234').display_number
   end
@@ -286,5 +286,9 @@ class CreditCardTest < Test::Unit::TestCase
   def test_validating_bogus_card
     credit_card = credit_card('1', :type => nil)
     assert credit_card.valid?
+  end
+  
+  def test_mask_number
+    assert_equal 'XXXX-XXXX-XXXX-5100', CreditCard.mask('5105105105105100')
   end
 end

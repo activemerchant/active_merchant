@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
 
       # Show the card number, with all but last 4 numbers replace with "X". (XXXX-XXXX-XXXX-4338)
       def display_number
-        "XXXX-XXXX-XXXX-#{last_digits}"
+        self.class.mask(number)
       end
       
       def last_digits

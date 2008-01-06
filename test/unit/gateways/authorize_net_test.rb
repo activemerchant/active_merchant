@@ -155,6 +155,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal CCVResult::CODES['M'], ccv_result['message']
     assert_equal 'match', ccv_result['match']
   end
+  
+  def test_card_data
+    @gateway.stubs(:ssl_post).returns(fraud_review_response)
+    
+    response = @gateway.purchase(100, @creditcard)
+    assert_equal 'visa', response.card_data['type']
+    assert_equal 'XXXX-XXXX-XXXX-4242', response.card_data['number']
+  end
 
   private
 

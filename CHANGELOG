@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Add merchant_data hash, which contains all of the card_data, avs_result, and ccv_result. [cody]
+#
 # * Add CCVResult for the Card Code Verification Result. Update Authorize.net to use the new class [cody]
 #
 # * Rename AVSResult#match_type AVSResult#match [cody]

@@ -84,6 +84,10 @@ module ActiveMerchant #:nodoc:
           return nil
         end
         
+        def mask(number)
+          "XXXX-XXXX-XXXX-#{number.to_s.slice(-4..-1)}" if number.to_s.length >= 4
+        end
+        
         # Checks to see if the calculated type matches the specified type
         def matching_type?(number, type)
           type?(number) == type
