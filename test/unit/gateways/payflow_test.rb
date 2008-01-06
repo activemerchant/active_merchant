@@ -2,48 +2,72 @@ require File.dirname(__FILE__) + '/../../test_helper'
 
 class PayflowTest < Test::Unit::TestCase
   def setup
-    Base.gateway_mode = :test
+    Base.mode = :test
     
     @gateway = PayflowGateway.new(
       :login => 'LOGIN',
       :password => 'PASSWORD'
     )
-
+    
+    @amount = 100
     @credit_card = credit_card('4242424242424242')
-
-    @address = { :address1 => '1234 My Street',
-                 :address2 => 'Apt 1',
-                 :company => 'Widgets Inc',
-                 :city => 'Ottawa',
-                 :state => 'ON',
-                 :zip => 'K1C2N6',
-                 :country => 'Canada',
-                 :phone => '(555)555-5555'
-               }
+    @options = { :billing_address => address }
   end
   
-  def teardown
-    Base.gateway_mode = :test
-  end
-  
-  def test_successful_request
-    @credit_card.number = 1
-    assert response = @gateway.purchase(100, @credit_card, {})
+  def test_successful_authorization
+    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+    
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal "Approved", response.message
     assert_success response
-    assert_equal '5555', response.authorization
     assert response.test?
+    assert_equal "VUJN1A6E11D9", response.authorization
   end
-
-  def test_unsuccessful_request
-    @credit_card.number = 2
-    assert response = @gateway.purchase(100, @credit_card, {})
+  
+  def test_failed_authorization
+    @gateway.stubs(:ssl_post).returns(failed_authorization_response)
+    
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal "Declined", response.message
     assert_failure response
     assert response.test?
   end
-
-  def test_request_error
-    @credit_card.number = 3
-    assert_raise(Error){ @gateway.purchase(100, @credit_card, {}) }
+  
+  def test_purchase_exception
+    @gateway.expects(:ssl_post).raises(Error)
+    
+    assert_raise(Error) do
+      assert response = @gateway.purchase(@amount, @credit_card, @options)
+    end
+  end
+  
+  def test_avs_result
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    avs_result = response.avs_result
+    assert_equal 'Y', avs_result['code']
+    assert_equal AVSResult::CODES['Y'], avs_result['message']
+    assert_equal 'full', avs_result['match']
+  end
+  
+  def test_cvv_result
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    cvv_result = response.cvv_result
+    assert_equal 'M', cvv_result['code']
+    assert_equal CVVResult::CODES['M'], cvv_result['message']
+    assert_equal 'match', cvv_result['match']
+  end
+  
+  
+  def test_card_data
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'visa', response.card_data['type']
+    assert_equal 'XXXX-XXXX-XXXX-4242', response.card_data['number']
   end
   
   def test_using_test_mode
@@ -113,7 +137,7 @@ class PayflowTest < Test::Unit::TestCase
   
   def test_initial_recurring_transaction_missing_parameters
     assert_raises ArgumentError do
-      response = @gateway.recurring(1000, @credit_card, 
+      response = @gateway.recurring(@amount, @credit_card, 
         :periodicity => :monthly,
         :initial_transaction => { }
       )
@@ -122,7 +146,7 @@ class PayflowTest < Test::Unit::TestCase
   
   def test_initial_purchase_missing_amount
     assert_raises ArgumentError do
-      response = @gateway.recurring(1000, @credit_card, 
+      response = @gateway.recurring(@amount, @credit_card, 
         :periodicity => :monthly,
         :initial_transaction => { :amount => :purchase }
       )
@@ -132,23 +156,13 @@ class PayflowTest < Test::Unit::TestCase
   def test_successful_recurring_action
     @gateway.stubs(:ssl_post).returns(successful_recurring_response)
     
-    response = @gateway.recurring(1000, @credit_card, :periodicity => :monthly)
+    response = @gateway.recurring(@amount, @credit_card, :periodicity => :monthly)
     
     assert_instance_of PayflowResponse, response
     assert_success response
     assert_equal 'RT0000000009', response.profile_id
     assert response.test?
     assert_equal "R7960E739F80", response.authorization
-  end
-  
-  def test_successful_authorization
-    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
-    
-    assert response = @gateway.authorize(100, @credit_card)
-    assert_equal "Approved", response.message
-    assert_success response
-    assert response.test?
-    assert_equal "VUJN1A6E11D9", response.authorization
   end
   
   def test_format_issue_number
@@ -167,7 +181,7 @@ class PayflowTest < Test::Unit::TestCase
   def test_duplicate_response_flag
     @gateway.expects(:ssl_post).returns(successful_duplicate_response)
     
-    response = @gateway.authorize(100, @credit_card)
+    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert response.params['duplicate']
   end
@@ -195,6 +209,26 @@ class PayflowTest < Test::Unit::TestCase
 <ResponseData>
     <Result>0</Result>
     <Message>Approved</Message>
+    <Partner>verisign</Partner>
+    <HostCode>000</HostCode>
+    <ResponseText>AP</ResponseText>
+    <PnRef>VUJN1A6E11D9</PnRef>
+    <IavsResult>N</IavsResult>
+    <ZipMatch>Match</ZipMatch>
+    <AuthCode>094016</AuthCode>
+    <Vendor>ActiveMerchant</Vendor>
+    <AvsResult>Y</AvsResult>
+    <StreetMatch>Match</StreetMatch>
+    <CvResult>Match</CvResult>
+</ResponseData>
+    XML
+  end
+  
+  def failed_authorization_response
+    <<-XML
+<ResponseData>
+    <Result>12</Result>
+    <Message>Declined</Message>
     <Partner>verisign</Partner>
     <HostCode>000</HostCode>
     <ResponseText>AP</ResponseText>

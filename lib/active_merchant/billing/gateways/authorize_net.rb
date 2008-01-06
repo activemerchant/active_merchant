@@ -98,7 +98,7 @@ module ActiveMerchant #:nodoc:
           :authorization => @response[:transaction_id],
           :fraud_review => fraud_review?(@response),
           :avs_code => @response[:avs_result_code],
-          :ccv_code => @response[:card_code],
+          :cvv_code => @response[:card_code],
           :card_number => parameters[:card_num]
         )        
       end
@@ -123,8 +123,8 @@ module ActiveMerchant #:nodoc:
           :card_code => fields[CARD_CODE_RESPONSE_CODE]          
         }      
         
-        ccv_result = CVVResult.new(results[:card_code])
-        results[:card_code_message] = ccv_result.message unless ccv_result.code.nil?
+        cvv_result = CVVResult.new(results[:card_code])
+        results[:card_code_message] = cvv_result.message unless cvv_result.code.nil?
   
         avs_result = AVSResult.new(results[:avs_result_code])
         results[:avs_message]       = avs_result.message unless avs_result.match.nil?
@@ -202,8 +202,8 @@ module ActiveMerchant #:nodoc:
       
       def message_from(results)  
         if results[:response_code] == DECLINED
-          ccv_result = CVVResult.new(results[:card_code])
-          return ccv_result.message if ccv_result.failure?
+          cvv_result = CVVResult.new(results[:card_code])
+          return cvv_result.message if cvv_result.failure?
           
           avs_result = AVSResult.new(results[:avs_result_code])
           return avs_result.message if avs_result.failure?

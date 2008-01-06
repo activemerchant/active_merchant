@@ -159,14 +159,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'full', avs_result['match']
   end
   
-  def test_ccv_result
+  def test_cvv_result
     @gateway.expects(:ssl_post).returns(fraud_review_response)
     
     response = @gateway.purchase(100, @credit_card)
-    ccv_result = response.ccv_result
-    assert_equal 'M', ccv_result['code']
-    assert_equal CVVResult::CODES['M'], ccv_result['message']
-    assert_equal 'match', ccv_result['match']
+    cvv_result = response.cvv_result
+    assert_equal 'M', cvv_result['code']
+    assert_equal CVVResult::CODES['M'], cvv_result['message']
+    assert_equal 'match', cvv_result['match']
   end
   
   def test_card_data

@@ -140,6 +140,20 @@ module Test
         ActiveMerchant::Billing::CreditCard.new(defaults)
       end
       
+      def address(options = {})
+        { 
+          :name => 'Jim Smith',
+          :address1 => '1234 My Street',
+          :address2 => 'Apt 1',
+          :company => 'Widgets Inc',
+          :city => 'Ottawa',
+          :state => 'ON',
+          :zip => 'K1C2N6',
+          :country => 'CA',
+          :phone => '(555)555-5555'
+        }.update(options)
+      end
+      
       def all_fixtures
         @@fixtures ||= load_fixtures
       end

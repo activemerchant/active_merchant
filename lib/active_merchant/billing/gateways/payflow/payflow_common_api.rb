@@ -49,6 +49,13 @@ module ActiveMerchant #:nodoc:
         :void           => "Void",
         :credit         => "Credit" 
       }
+      
+      CVV_CODE = {
+        'Match' => 'M',
+        'No Match' => 'N',
+        'Service Not Available' => 'U', 
+        'Service not Requested' => 'P'
+      }
           
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -61,7 +68,7 @@ module ActiveMerchant #:nodoc:
       end  
       
       def test?
-        @options[:test] || Base.gateway_mode == :test
+        @options[:test] || super
       end
       
       def capture(money, authorization, options = {})
@@ -178,10 +185,6 @@ module ActiveMerchant #:nodoc:
         request = build_request(request_body, request_type)
         headers = build_headers(request.size)
         
-        if result = test_result_from_cc_number(parse_credit_card_number(request))
-          return result
-        end
-      
     	  url = test? ? TEST_URL : LIVE_URL
     	  data = ssl_post(url, request, headers)
     	  
@@ -192,7 +195,10 @@ module ActiveMerchant #:nodoc:
     	  
     	  build_response(success, message, @response,
     	    :test => test?,
-    	    :authorization => @response[:pn_ref] || @response[:rp_ref]
+    	    :authorization => @response[:pn_ref] || @response[:rp_ref],
+    	    :cvv_code => CVV_CODE[@response[:cv_result]],
+    	    :avs_code => @response[:avs_result],
+    	    :card_number => parse_credit_card_number(request)
         )
       end
       

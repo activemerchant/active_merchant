@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
     end
   
     class Response
-      attr_reader :params, :message, :test, :authorization, :avs_result, :ccv_result, :card_data
+      attr_reader :params, :message, :test, :authorization, :avs_result, :cvv_result, :card_data
       
       def success?
         @success
@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
       def merchant_data
         {
           'avs_result' => avs_result,
-          'ccv_result' => ccv_result,
+          'cvv_result' => cvv_result,
           'card_data' => card_data
         }
       end
@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
         @authorization = options[:authorization]
         @fraud_review = options[:fraud_review]
         @avs_result = AVSResult.new(options[:avs_code]).to_hash
-        @ccv_result = CVVResult.new(options[:ccv_code]).to_hash
+        @cvv_result = CVVResult.new(options[:cvv_code]).to_hash
         @card_data = format_card_data(options[:card_number])
       end
       

@@ -17,9 +17,9 @@ class ResponseTest < Test::Unit::TestCase
     assert_equal 'A', response.avs_result['code']
   end
   
-  def test_ccv_result
-    response = Response.new(true, 'message', {}, :ccv_code => 'M')
-    assert_equal 'M', response.ccv_result['code']
+  def test_cvv_result
+    response = Response.new(true, 'message', {}, :cvv_code => 'M')
+    assert_equal 'M', response.cvv_result['code']
   end
   
   def test_card_data
