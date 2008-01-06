@@ -79,10 +79,6 @@ module ActiveMerchant #:nodoc:
         # Only activate the test_request when the :test option is passed in
         parameters[:test_request] = @options[:test] ? 'TRUE' : 'FALSE'                                  
         
-        if result = test_result_from_cc_number(parameters[:card_num])
-          return result
-        end
-        
         url = test? ? self.test_url : self.live_url
         data = ssl_post url, post_data(action, parameters)
 

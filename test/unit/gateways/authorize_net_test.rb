@@ -7,33 +7,41 @@ class AuthorizeNetTest < Test::Unit::TestCase
       :password => 'Y'
     )
 
-    @creditcard = credit_card('4242424242424242')
+    @credit_card = credit_card('4242424242424242')
   end
 
-  def test_purchase_success    
-    @creditcard.number = 1
-
-    assert response = @gateway.purchase(100, @creditcard)
-    assert_equal Response, response.class
-    assert_equal '#0001', response.params['receiptid']
-    assert_equal true, response.success?
-  end
-
-  def test_purchase_error
-    @creditcard.number = 2
-
-    assert response = @gateway.purchase(100, @creditcard, :order_id => 1)
-    assert_equal Response, response.class
-    assert_equal '#0001', response.params['receiptid']
-    assert_equal false, response.success?
-
+  def test_successful_authorization
+    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+  
+    assert response = @gateway.authorize(100, @credit_card)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141794', response.authorization
   end
   
-  def test_purchase_exceptions
-    @creditcard.number = 3 
+  def test_successful_purchase
+    @gateway.stubs(:ssl_post).returns(successful_purchase_response)
+  
+    assert response = @gateway.authorize(100, @credit_card)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141795', response.authorization
+  end
+  
+  def test_failed_authorization
+    @gateway.stubs(:ssl_post).returns(failed_authorization_response)
+  
+    assert response = @gateway.authorize(100, @credit_card)
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal '508141794', response.authorization
+  end
+  
+  def test_purchase_exception
+    @gateway.stubs(:ssl_post).raises(Error)
     
     assert_raise(Error) do
-      assert response = @gateway.purchase(100, @creditcard, :order_id => 1)    
+      assert response = @gateway.purchase(100, @credit_card, :order_id => 1)    
     end
   end
   
@@ -84,7 +92,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_purchase_is_valid_csv
    params = { :amount => '1.01' }
    
-   @gateway.send(:add_creditcard, params, @creditcard)
+   @gateway.send(:add_creditcard, params, @credit_card)
 
    assert data = @gateway.send(:post_data, 'AUTH_ONLY', params)
    assert_equal post_data_fixture.size, data.size
@@ -95,7 +103,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       :amount => "1.01",
     }                                                         
 
-    @gateway.send(:add_creditcard, params, @creditcard)
+    @gateway.send(:add_creditcard, params, @credit_card)
 
     assert data = @gateway.send(:post_data, 'AUTH_ONLY', params)
     minimum_requirements.each do |key|
@@ -103,14 +111,19 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end
   end
   
-  def test_credit_success
-    assert response = @gateway.credit(100, '123456789', :card_number => '1')
+  def test_successful_credit
+    @gateway.stubs(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.credit(100, '123456789', :card_number => @credit_card.number)
     assert_success response
+    assert_equal 'This transaction has been approved', response.message
   end
   
-  def test_credit_failure
-    assert response = @gateway.credit(100, '123456789', :card_number => '2')
+  def test_failed_credit
+    @gateway.stubs(:ssl_post).returns(failed_credit_response)
+    
+    assert response = @gateway.credit(100, '123456789', :card_number => @credit_card.number)
     assert_failure response
+    assert_equal 'The referenced transaction does not meet the criteria for issuing a credit', response.message
   end
   
   def test_supported_countries
@@ -130,7 +143,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_response_under_review_by_fraud_service
     @gateway.stubs(:ssl_post).returns(fraud_review_response)
     
-    response = @gateway.purchase(100, @creditcard)
+    response = @gateway.purchase(100, @credit_card)
     assert_failure response
     assert response.fraud_review?
     assert_equal "Thank you! For security reasons your order is currently being reviewed", response.message
@@ -139,7 +152,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_avs_result
     @gateway.stubs(:ssl_post).returns(fraud_review_response)
     
-    response = @gateway.purchase(100, @creditcard)
+    response = @gateway.purchase(100, @credit_card)
     avs_result = response.avs_result
     assert_equal 'X', avs_result['code']
     assert_equal AVSResult::CODES['X'], avs_result['message']
@@ -149,7 +162,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_ccv_result
     @gateway.stubs(:ssl_post).returns(fraud_review_response)
     
-    response = @gateway.purchase(100, @creditcard)
+    response = @gateway.purchase(100, @credit_card)
     ccv_result = response.ccv_result
     assert_equal 'M', ccv_result['code']
     assert_equal CCVResult::CODES['M'], ccv_result['message']
@@ -159,7 +172,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_card_data
     @gateway.stubs(:ssl_post).returns(fraud_review_response)
     
-    response = @gateway.purchase(100, @creditcard)
+    response = @gateway.purchase(100, @credit_card)
     assert_equal 'visa', response.card_data['type']
     assert_equal 'XXXX-XXXX-XXXX-4242', response.card_data['number']
   end
@@ -172,6 +185,22 @@ class AuthorizeNetTest < Test::Unit::TestCase
   
   def minimum_requirements
     %w(version delim_data relay_response login tran_key amount card_num exp_date type)
+  end
+  
+  def failed_credit_response
+    '$3$,$2$,$54$,$The referenced transaction does not meet the criteria for issuing a credit.$,$$,$P$,$0$,$$,$$,$1.00$,$CC$,$credit$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$39265D8BA0CDD4F045B5F4129B2AAA01$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
+  end
+  
+  def successful_authorization_response
+    '$1$,$1$,$1$,$This transaction has been approved.$,$advE7f$,$Y$,$508141794$,$5b3fe66005f3da0ebe51$,$$,$1.00$,$CC$,$auth_only$,$$,$Longbob$,$Longsen$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$2860A297E0FE804BCB9EF8738599645C$,$P$,$2$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
+  end
+  
+  def successful_purchase_response
+    '$1$,$1$,$1$,$This transaction has been approved.$,$d1GENk$,$Y$,$508141795$,$32968c18334f16525227$,$Store purchase$,$1.00$,$CC$,$auth_capture$,$$,$Longbob$,$Longsen$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$269862C030129C1173727CC10B1935ED$,$P$,$2$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
+  end
+  
+  def failed_authorization_response
+    '$2$,$1$,$1$,$This transaction was declined.$,$advE7f$,$Y$,$508141794$,$5b3fe66005f3da0ebe51$,$$,$1.00$,$CC$,$auth_only$,$$,$Longbob$,$Longsen$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$2860A297E0FE804BCB9EF8738599645C$,$P$,$2$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
   end
  
   def fraud_review_response

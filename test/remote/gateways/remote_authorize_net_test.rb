@@ -47,7 +47,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_authorization_and_capture
     assert authorization = @gateway.authorize(100, @creditcard, :order_id => generate_order_id)
     assert_success authorization
-    assert authorization
+  
     assert capture = @gateway.capture(100, authorization.authorization)
     assert_success capture
     assert_equal 'This transaction has been approved', capture.message
@@ -56,7 +56,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_authorization_and_void
     assert authorization = @gateway.authorize(100, @creditcard, :order_id => generate_order_id)
     assert_success authorization
-    assert authorization
+  
     assert void = @gateway.void(authorization.authorization)
     assert_success void
     assert_equal 'This transaction has been approved', void.message
@@ -67,7 +67,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
       :login => 'X',
       :password => 'Y'
     )
-    
     
     assert response = gateway.purchase(100, @creditcard)
         
