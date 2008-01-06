@@ -1,5 +1,9 @@
 # CHANGELOG
 # ---
+# * Add CCVResult for the Card Code Verification Result. Update Authorize.net to use the new class [cody]
+#
+# * Rename AVSResult#match_type AVSResult#match [cody]
+#
 # * Rename AVS::Result class to AVSResult [cody]
 #
 # * Convert Authorize.net gateway to use the new AVS module [cody]

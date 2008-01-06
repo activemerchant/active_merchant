@@ -14,16 +14,6 @@ module ActiveMerchant #:nodoc:
       RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT = 0, 2, 3
       AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE  = 5, 6, 38
 
-      CARD_CODE_ERRORS = %w( N S )
-
-      CARD_CODE_MESSAGES = {
-        "M" => "Card verification number matched",
-        "N" => "Card verification number didn't match",
-        "P" => "Card verification number was not processed",
-        "S" => "Card verification number should be on card but was not indicated",
-        "U" => "Issuer was not certified for card verification"
-      }
-
       # URL
       attr_reader :url 
       attr_reader :response
@@ -111,7 +101,8 @@ module ActiveMerchant #:nodoc:
           :test => test_mode, 
           :authorization => @response[:transaction_id],
           :fraud_review => fraud_review?(@response),
-          :avs_code => @response[:avs_result_code]
+          :avs_code => @response[:avs_result_code],
+          :ccv_code => @response[:card_code]
         )        
       end
       
@@ -135,10 +126,11 @@ module ActiveMerchant #:nodoc:
           :card_code => fields[CARD_CODE_RESPONSE_CODE]          
         }      
         
-        results[:card_code_message] = CARD_CODE_MESSAGES[results[:card_code]] if results[:card_code]
+        ccv_result = CCVResult.new(results[:card_code])
+        results[:card_code_message] = ccv_result.message unless ccv_result.code.nil?
   
         avs_result = AVSResult.new(results[:avs_result_code])
-        results[:avs_message]       = avs_result.message unless avs_result.match_type.nil?
+        results[:avs_message]       = avs_result.message unless avs_result.match.nil?
       
         results
       end     
@@ -213,7 +205,8 @@ module ActiveMerchant #:nodoc:
       
       def message_from(results)  
         if results[:response_code] == DECLINED
-          return CARD_CODE_MESSAGES[results[:card_code]] if CARD_CODE_ERRORS.include?(results[:card_code])
+          ccv_result = CCVResult.new(results[:card_code])
+          return ccv_result.message if ccv_result.failure?
           
           avs_result = AVSResult.new(results[:avs_result_code])
           return avs_result.message if avs_result.failure?

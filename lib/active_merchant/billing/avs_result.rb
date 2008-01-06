@@ -6,7 +6,7 @@ module ActiveMerchant
     # http://apps.cybersource.com/library/documentation/dev_guides/CC_Svcs_IG/html/app_avs_cvn_codes.htm#app_AVS_CVN_codes_7891_48375
     # http://imgserver.skipjack.com/imgServer/5293710/AVS%20and%20CVV2.pdf
     class AVSResult
-      MATCH_TYPE = {
+      MATCH = {
         :full        => %w( D J M Q V X Y ),
         :partial     => %w( A B F H K L P O T W Z ),
         :none        => %w( N ),
@@ -45,24 +45,24 @@ module ActiveMerchant
         'Z' => 'Street address does not match, but 5-digit postal code matches.'
       }
       
-      attr_reader :code, :message, :match_type
+      attr_reader :code, :message, :match
       
       def initialize(code)
         if !code.blank?
           @code = code.upcase
           @message = CODES[@code]
-          @match_type = MATCH_TYPE[@code]
+          @match = MATCH[@code]
         end
       end
     
       def failure?
-        [ :partial, :none ].include?(match_type)
+        [ :partial, :none ].include?(match)
       end
       
       def to_hash
         { 'code' => code,
           'message' => message,
-          'match_type' => match_type.to_s
+          'match' => match.to_s
         }
       end
     end
