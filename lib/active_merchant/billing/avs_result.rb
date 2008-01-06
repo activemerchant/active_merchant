@@ -5,8 +5,7 @@ module ActiveMerchant
     # http://en.wikipedia.org/wiki/Address_Verification_System
     # http://apps.cybersource.com/library/documentation/dev_guides/CC_Svcs_IG/html/app_avs_cvn_codes.htm#app_AVS_CVN_codes_7891_48375
     # http://imgserver.skipjack.com/imgServer/5293710/AVS%20and%20CVV2.pdf
-    module AVS
-      
+    class AVSResult
       MATCH_TYPE = {
         :full        => %w( D J M Q V X Y ),
         :partial     => %w( A B F H K L P O T W Z ),
@@ -46,27 +45,25 @@ module ActiveMerchant
         'Z' => 'Street address does not match, but 5-digit postal code matches.'
       }
       
-      class Result
-        attr_reader :code, :message, :match_type
-        
-        def initialize(code)
-          if !code.blank?
-            @code = code.upcase
-            @message = CODES[@code]
-            @match_type = MATCH_TYPE[@code]
-          end
-        end
+      attr_reader :code, :message, :match_type
       
-        def failure?
-          [ :partial, :none ].include?(match_type)
+      def initialize(code)
+        if !code.blank?
+          @code = code.upcase
+          @message = CODES[@code]
+          @match_type = MATCH_TYPE[@code]
         end
-        
-        def to_hash
-          { 'code' => code,
-            'message' => message,
-            'match_type' => match_type.to_s
-          }
-        end
+      end
+    
+      def failure?
+        [ :partial, :none ].include?(match_type)
+      end
+      
+      def to_hash
+        { 'code' => code,
+          'message' => message,
+          'match_type' => match_type.to_s
+        }
       end
     end
   end

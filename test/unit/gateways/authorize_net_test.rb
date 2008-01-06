@@ -142,7 +142,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     response = @gateway.purchase(100, @creditcard)
     avs_result = response.avs_result
     assert_equal 'X', avs_result['code']
-    assert_equal AVS::CODES['X'], avs_result['message']
+    assert_equal AVSResult::CODES['X'], avs_result['message']
     assert_equal 'full', avs_result['match_type']
   end
 

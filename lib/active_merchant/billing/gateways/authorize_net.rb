@@ -137,7 +137,7 @@ module ActiveMerchant #:nodoc:
         
         results[:card_code_message] = CARD_CODE_MESSAGES[results[:card_code]] if results[:card_code]
   
-        avs_result = AVS::Result.new(results[:avs_result_code])
+        avs_result = AVSResult.new(results[:avs_result_code])
         results[:avs_message]       = avs_result.message unless avs_result.match_type.nil?
       
         results
@@ -215,7 +215,7 @@ module ActiveMerchant #:nodoc:
         if results[:response_code] == DECLINED
           return CARD_CODE_MESSAGES[results[:card_code]] if CARD_CODE_ERRORS.include?(results[:card_code])
           
-          avs_result = AVS::Result.new(results[:avs_result_code])
+          avs_result = AVSResult.new(results[:avs_result_code])
           return avs_result.message if avs_result.failure?
         end
         

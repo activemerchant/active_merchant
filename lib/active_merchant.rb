@@ -50,7 +50,7 @@ require 'active_merchant/lib/requires_parameters'
 require 'active_merchant/lib/country'
 
 # Address Verification
-require 'active_merchant/billing/avs'
+require 'active_merchant/billing/avs_result'
 
 # CreditCard Utility class. 
 require 'active_merchant/billing/credit_card_methods'

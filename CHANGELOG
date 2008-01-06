@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Rename AVS::Result class to AVSResult [cody]
+#
 # * Convert Authorize.net gateway to use the new AVS module [cody]
 #
 # * Add AVS data to the Response object [cody]
