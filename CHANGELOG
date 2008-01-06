@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Fix credentials for remote Authorize.net TEST MODE test [cody]
+#
 # * Add AVS module and AVS::Result class [cody]
 #
 # * Update base gateway class RDOC [cody]

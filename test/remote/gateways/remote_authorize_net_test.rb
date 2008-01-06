@@ -29,11 +29,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_forced_test_mode_purchase
-    gateway = AuthorizeNetGateway.new(
-      :login => @login,
-      :password => @password,
-      :test => true
-    )
+    gateway = AuthorizeNetGateway.new(fixtures(:authorize_net).update(:test => true))
     assert response = gateway.purchase(100, @creditcard, :order_id => generate_order_id)
     assert_success response
     assert response.test?
