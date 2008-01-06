@@ -11,7 +11,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_successful_authorization
-    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
   
     assert response = @gateway.authorize(100, @credit_card)
     assert_instance_of Response, response
@@ -20,7 +20,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase
-    @gateway.stubs(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
   
     assert response = @gateway.authorize(100, @credit_card)
     assert_instance_of Response, response
@@ -29,7 +29,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_failed_authorization
-    @gateway.stubs(:ssl_post).returns(failed_authorization_response)
+    @gateway.expects(:ssl_post).returns(failed_authorization_response)
   
     assert response = @gateway.authorize(100, @credit_card)
     assert_instance_of Response, response
@@ -38,7 +38,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_purchase_exception
-    @gateway.stubs(:ssl_post).raises(Error)
+    @gateway.expects(:ssl_post).raises(Error)
     
     assert_raise(Error) do
       assert response = @gateway.purchase(100, @credit_card, :order_id => 1)    
@@ -112,14 +112,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_successful_credit
-    @gateway.stubs(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.credit(100, '123456789', :card_number => @credit_card.number)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
   end
   
   def test_failed_credit
-    @gateway.stubs(:ssl_post).returns(failed_credit_response)
+    @gateway.expects(:ssl_post).returns(failed_credit_response)
     
     assert response = @gateway.credit(100, '123456789', :card_number => @credit_card.number)
     assert_failure response
@@ -141,7 +141,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_response_under_review_by_fraud_service
-    @gateway.stubs(:ssl_post).returns(fraud_review_response)
+    @gateway.expects(:ssl_post).returns(fraud_review_response)
     
     response = @gateway.purchase(100, @credit_card)
     assert_failure response
@@ -150,7 +150,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_avs_result
-    @gateway.stubs(:ssl_post).returns(fraud_review_response)
+    @gateway.expects(:ssl_post).returns(fraud_review_response)
     
     response = @gateway.purchase(100, @credit_card)
     avs_result = response.avs_result
@@ -160,7 +160,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_ccv_result
-    @gateway.stubs(:ssl_post).returns(fraud_review_response)
+    @gateway.expects(:ssl_post).returns(fraud_review_response)
     
     response = @gateway.purchase(100, @credit_card)
     ccv_result = response.ccv_result
@@ -170,7 +170,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_card_data
-    @gateway.stubs(:ssl_post).returns(fraud_review_response)
+    @gateway.expects(:ssl_post).returns(fraud_review_response)
     
     response = @gateway.purchase(100, @credit_card)
     assert_equal 'visa', response.card_data['type']
