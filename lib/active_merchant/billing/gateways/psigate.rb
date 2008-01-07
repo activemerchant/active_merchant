@@ -39,12 +39,6 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
 
     class PsigateGateway < Gateway
-     
-      # URL
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
-
       TEST_URL  = 'https://dev.psigate.com:7989/Messenger/XMLMessenger'
       LIVE_URL  = 'https://secure.psigate.com:7934/Messenger/XMLMessenger'
       
@@ -58,14 +52,7 @@ module ActiveMerchant #:nodoc:
       
       def initialize(options = {})
         requires!(options, :login, :password)
-      
-        options[:store_id] ||= options[:login]
-      
-        # these are the defaults for the psigate test server
-        @options = {
-          :store_id   => "teststore",
-          :password   => "testpass",          
-        }.update(options)                           
+        @options = options                          
         super      
       end      
     
@@ -101,47 +88,22 @@ module ActiveMerchant #:nodoc:
       def commit(money, creditcard, options = {}) 
         parameters = parameters(money, creditcard, options)                                
         
-        if result = test_result_from_cc_number(parameters[:CardNumber])
-          return result
-        end
-        
-        url = test? ? TEST_URL : LIVE_URL
-        
+        url = test? ? TEST_URL : LIVE_URL        
         data = ssl_post(url, post_data(parameters))
+      
         @response = parse(data)
         success = (@response[:approved] == "APPROVED")
-        message = message_from(@response)
-        Response.new(success, message, @response, :test => test?, :authorization => response[:orderid])
+      
+        Response.new(success, message_from(@response), @response, 
+          :test => test?, 
+          :authorization => @response[:orderid],
+          :avs_code => @response[:avsresult],
+          :cvv_code => @response[:cardidresult],
+          :card_number => parameters[:CardNumber]
+        )
       end
                                                
-      # Parse psigate response xml into a convinient hash
       def parse(xml)
-        #  <?xml version="1.0" encoding="UTF-8"?>
-        #  <Result>
-        #  <TransTime>Tue Jun 27 22:19:58 EDT 2006</TransTime>
-        #  <OrderID>1004</OrderID>
-        #  <TransactionType>POSTAUTH</TransactionType>
-        #  <Approved>APPROVED</Approved>
-        #  <ReturnCode>Y:123456:0abcdef:M:X:NNN</ReturnCode>
-        #  <ErrMsg></ErrMsg>
-        #  <TaxTotal>0.00</TaxTotal>
-        #  <ShipTotal>0.00</ShipTotal>
-        #  <SubTotal>20.00</SubTotal>
-        #  <FullTotal>20.00</FullTotal>
-        #  <PaymentType>CC</PaymentType>
-        #  <CardNumber>......1111</CardNumber>
-        #  <TransRefNumber>1bd6f76ad1a25804</TransRefNumber>
-        #  <CardIDResult>M</CardIDResult>
-        #  <AVSResult>X</AVSResult>
-        #  <CardAuthNumber>123456</CardAuthNumber>
-        #  <CardRefNumber>0abcdef</CardRefNumber>
-        #  <CardType>VISA</CardType>
-        #  <IPResult>NNN</IPResult>
-        #  <IPCountry>UN</IPCountry>
-        #  <IPRegion>UNKNOWN</IPRegion>
-        #  <IPCity>UNKNOWN</IPCity>
-        #  </Result>   
-
         response = {:message => "Global Error Receipt", :complete => false}
 
         xml = REXML::Document.new(xml)          
@@ -171,7 +133,7 @@ module ActiveMerchant #:nodoc:
       def parameters(money, creditcard, options = {})  
         params = {
           # General order paramters
-          :StoreID => @options[:store_id],
+          :StoreID => @options[:login],
           :Passphrase => @options[:password],
           :TestResult => options[:test_result],
           :OrderID => options[:order_id],
