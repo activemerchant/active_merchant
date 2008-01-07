@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Remove AVS Message and CVV2 Message from params hash in Authorize.net [cody]
+#
 # * Update BrainTreeGateway to support merchant_data hash [cody]
 #
 # * Update PaypalGateway to support merchant_data hash [cody]

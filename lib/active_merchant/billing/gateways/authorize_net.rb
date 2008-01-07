@@ -122,13 +122,6 @@ module ActiveMerchant #:nodoc:
           :transaction_id => fields[TRANSACTION_ID],
           :card_code => fields[CARD_CODE_RESPONSE_CODE]          
         }      
-        
-        cvv_result = CVVResult.new(results[:card_code])
-        results[:card_code_message] = cvv_result.message unless cvv_result.code.nil?
-  
-        avs_result = AVSResult.new(results[:avs_result_code])
-        results[:avs_message]       = avs_result.message unless avs_result.match.nil?
-      
         results
       end     
 

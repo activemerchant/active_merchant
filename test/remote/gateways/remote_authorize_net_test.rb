@@ -5,15 +5,16 @@ class AuthorizeNetTest < Test::Unit::TestCase
     Base.mode = :test
     
     @gateway = AuthorizeNetGateway.new(fixtures(:authorize_net))
-
+    @amount = 100
     @creditcard = credit_card('4242424242424242')
+    @options = { :order_id => generate_order_id, 
+                 :billing_address => address,
+                 :description => 'Store purchase'
+               }
   end
   
   def test_successful_purchase
-    assert response = @gateway.purchase(100, @creditcard,
-      :order_id => generate_order_id,
-      :description => 'Store purchase'
-    )
+    assert response = @gateway.purchase(@amount, @creditcard, @options)
     assert_success response
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
@@ -22,7 +23,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   
   def test_expired_credit_card
     @creditcard.year = 2004 
-    assert response = @gateway.purchase(100, @creditcard, :order_id => generate_order_id)
+    assert response = @gateway.purchase(@amount, @creditcard, @options)
     assert_failure response
     assert response.test?
     assert_equal 'The credit card has expired', response.message
@@ -30,7 +31,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   
   def test_forced_test_mode_purchase
     gateway = AuthorizeNetGateway.new(fixtures(:authorize_net).update(:test => true))
-    assert response = gateway.purchase(100, @creditcard, :order_id => generate_order_id)
+    assert response = gateway.purchase(@amount, @creditcard, @options)
     assert_success response
     assert response.test?
     assert_match /TESTMODE/, response.message
@@ -38,23 +39,23 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_successful_authorization
-    assert response = @gateway.authorize(100, @creditcard, :order_id => generate_order_id)
+    assert response = @gateway.authorize(@amount, @creditcard, @options)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
     assert response.authorization
   end
   
   def test_authorization_and_capture
-    assert authorization = @gateway.authorize(100, @creditcard, :order_id => generate_order_id)
+    assert authorization = @gateway.authorize(@amount, @creditcard, @options)
     assert_success authorization
   
-    assert capture = @gateway.capture(100, authorization.authorization)
+    assert capture = @gateway.capture(@amount, authorization.authorization)
     assert_success capture
     assert_equal 'This transaction has been approved', capture.message
   end
   
   def test_authorization_and_void
-    assert authorization = @gateway.authorize(100, @creditcard, :order_id => generate_order_id)
+    assert authorization = @gateway.authorize(@amount, @creditcard, @options)
     assert_success authorization
   
     assert void = @gateway.void(authorization.authorization)
@@ -68,11 +69,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
       :password => 'Y'
     )
     
-    assert response = gateway.purchase(100, @creditcard)
+    assert response = gateway.purchase(@amount, @creditcard)
         
     assert_equal Response, response.class
-    assert_equal ["avs_message",
-                  "avs_result_code",
+    assert_equal ["avs_result_code",
                   "card_code",
                   "response_code",
                   "response_reason_code",
@@ -90,11 +90,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
       :password => 'Y'
     )
     
-    assert response = gateway.purchase(100, @creditcard)
+    assert response = gateway.purchase(@amount, @creditcard)
         
     assert_equal Response, response.class
-    assert_equal ["avs_message", 
-                  "avs_result_code",
+    assert_equal ["avs_result_code",
                   "card_code",
                   "response_code",
                   "response_reason_code",
