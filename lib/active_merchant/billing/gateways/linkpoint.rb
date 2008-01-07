@@ -225,20 +225,18 @@ module ActiveMerchant #:nodoc:
         parameters = parameters(money, creditcard, options)
         url = test? ? TEST_URL : LIVE_URL
         
-        if creditcard and result = test_result_from_cc_number(parameters[:creditcard][:cardnumber])
-          return result
-        end
-        
         data = ssl_post(url, post_data(parameters))
-                
         @response = parse(data)
         
         success = (@response[:approved] == "APPROVED")
-        message = response[:message]
+        message = @response[:message]
         
         Response.new(success, message, @response, 
           :test => test?,
-          :authorization => response[:ordernum]
+          :authorization => @response[:ordernum],
+          :avs_code => @response[:avs].to_s[2,1],
+          :cvv_code => @response[:avs].to_s[3,1],
+          :card_number => creditcard && parameters[:creditcard][:cardnumber]
         )
       end
       

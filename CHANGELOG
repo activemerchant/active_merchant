@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Update LinkpointGateway to support merchant_data hash. Remove test_result_from_cc_number. [cody]
+#
 # * Update PsigateGateway to support merchant_data hash. Remove test_result_from_cc_number. [cody]
 #
 # * Update MonerisGateway to support merchant_data hash. Remove test_result_from_cc_number. [cody]
