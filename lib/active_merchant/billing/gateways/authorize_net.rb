@@ -14,11 +14,6 @@ module ActiveMerchant #:nodoc:
       RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT = 0, 2, 3
       AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE  = 5, 6, 38
 
-      # URL
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
-      
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.authorize.net/'

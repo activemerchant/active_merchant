@@ -10,18 +10,14 @@ module ActiveMerchant #:nodoc:
     # Response Values", available at Moneris' {eSelect Plus Documentation 
     # Centre}[https://www3.moneris.com/connect/en/documents/index.html].
     class MonerisGateway < Gateway
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
+      TEST_URL = 'https://esqa.moneris.com/gateway2/servlet/MpgRequest'
+      LIVE_URL = 'https://www3.moneris.com/gateway2/servlet/MpgRequest'
       
       self.supported_countries = ['CA']
       self.supported_cardtypes = [:visa, :master]
       self.homepage_url = 'http://www.moneris.com/'
       self.display_name = 'Moneris'
-
-      TEST_URL = 'https://esqa.moneris.com/gateway2/servlet/MpgRequest'
-      LIVE_URL = 'https://www3.moneris.com/gateway2/servlet/MpgRequest'
-        
+  
       # login is your Store ID
       # password is your API Token
       def initialize(options = {})

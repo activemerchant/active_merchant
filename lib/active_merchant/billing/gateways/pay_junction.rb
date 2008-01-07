@@ -150,11 +150,8 @@ module ActiveMerchant #:nodoc:
       
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.supported_countries = ['US']
-      
       self.homepage_url = 'http://www.payjunction.com/'
       self.display_name = 'PayJunction'
-      
-      attr_reader :url, :response, :options
 
       def initialize(options = {})
         requires!(options, :login, :password)
