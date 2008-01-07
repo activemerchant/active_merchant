@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
-class MonerisResponseTest < Test::Unit::TestCase
+class MonerisTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
     
