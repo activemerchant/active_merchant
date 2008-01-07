@@ -16,10 +16,6 @@ module ActiveMerchant #:nodoc:
       # The name of the gateway
       self.display_name = 'New Gateway'
       
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
-
       def initialize(options = {})
         #requires!(options, :login, :password)
         @options = options
