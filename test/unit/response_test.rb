@@ -14,12 +14,18 @@ class ResponseTest < Test::Unit::TestCase
   
   def test_avs_result
     response = Response.new(true, 'message', {}, :avs_code => 'A')
-    assert_equal 'A', response.avs_result['code']
+    avs_result = response.avs_result
+    assert_equal 'A', avs_result['code']
+    assert_equal AVSResult::CODES['A'], avs_result['message']
+    assert_equal 'partial', avs_result['match']
   end
   
   def test_cvv_result
     response = Response.new(true, 'message', {}, :cvv_code => 'M')
-    assert_equal 'M', response.cvv_result['code']
+    cvv_result = response.cvv_result
+    assert_equal 'M', cvv_result['code']
+    assert_equal CVVResult::CODES['M'], cvv_result['message']
+    assert_equal 'match', cvv_result['match']
   end
   
   def test_card_data

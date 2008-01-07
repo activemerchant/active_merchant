@@ -4,46 +4,11 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BrainTreeGateway < Gateway
       URL = 'https://secure.braintreepaymentgateway.com/api/transact.php'
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
-
+    
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express]
       self.homepage_url = 'http://www.braintreepaymentsolutions.com'
       self.display_name = 'Braintree'
-
-      AVS_MESSAGES = {
-        "X" => "Exact match, 9-character numeric ZIP",
-        "Y" => "Exact match, 5-character numeric ZIP",
-        "D" => "Exact match, 5-character numeric ZIP",
-        "M" => "Exact match, 5-character numeric ZIP",
-        "A" => "Address match only",
-        "B" => "Address match only",
-        "W" => "9-character numeric ZIP match only",
-        "Z" => "5-character Zip match only",
-        "P" => "5-character Zip match only",        
-        "L" => "5-character Zip match only",
-        "N" => "No address or ZIP match",
-        "C" => "No address or ZIP match",
-        "U" => "Address unavailable",
-        "G" => "Non-U.S. Issuer does not participate",
-        "I" => "Non-U.S. Issuer does not participate",
-        "R" => "Issuer system unavailable",
-        "E" => "Not a mail/phone order",
-        "S" => "Service not supported",
-        "0" => "AVS Not Available",
-        "O" => "AVS Not Available",
-        "B" => "AVS Not Available"
-      }
-      
-      CARD_CODE_MESSAGES = {
-        "M" => "CVV2/CVC2 Match",
-        "N" => "CVV2/CVC2 No Match",
-        "P" => "Not Processed",
-        "S" => "Merchant has indicated that CVV2/CVC2 is not present on card",
-        "U" => "Issuer is not certified and/or has not provided Visa encryption keys"
-      }
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -142,26 +107,22 @@ module ActiveMerchant #:nodoc:
           key,val = pair.split(/=/)
           results[key] = val
         end
-        results[:card_code_message] = CARD_CODE_MESSAGES[results[:cvvresponse]] if results[:cvvresponse]
-        results[:avs_message]       = AVS_MESSAGES[results["avsresponse"]] if results["avsresponse"]
-        results
         
+        results
       end     
       
       def commit(action, money, parameters)
         parameters[:amount]  = amount(money) if money
         
-        if result = test_result_from_cc_number(parameters[:ccnumber])
-          return result
-        end
-        
         data = ssl_post URL, post_data(action,parameters)
-
         @response = parse(data)
 
-        Response.new(@response["response"]=="1", message_from(@response), @response, 
-            :authorization => @response["transactionid"],
-            :test => test?
+        Response.new(@response["response"] == "1", message_from(@response), @response, 
+          :authorization => @response["transactionid"],
+          :test => test?,
+          :cvv_code => @response["cvvresponse"],
+          :avs_code => @response["avsresponse"],
+          :card_number => parameters[:ccnumber]
         )
         
       end
@@ -175,15 +136,14 @@ module ActiveMerchant #:nodoc:
       
 
       def message_from(response)
-         r=response["responsetext"]
-         case r
-         when "SUCCESS","Approved"
-           "This transaction has been approved"
-         when "DECLINE"
-           "This transaction has been declined"
-          else
-            r
-          end
+        case response["responsetext"]
+        when "SUCCESS","Approved"
+          "This transaction has been approved"
+        when "DECLINE"
+          "This transaction has been declined"
+        else
+          response["responsetext"]
+        end
       end
       
       def post_data(action, parameters = {})

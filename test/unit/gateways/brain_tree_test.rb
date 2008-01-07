@@ -8,43 +8,44 @@ class BrainTreeTest < Test::Unit::TestCase
       :password => 'PASSWORD'
     )
 
-    @creditcard = credit_card('4242424242424242',
+    @credit_card = credit_card('4242424242424242',
                     :type => 'visa'
                   )
-    @amount = rand(9999)+1001
-    @address = { :address1 => '1234 My Street',
-                 :address2 => 'Apt 1',
-                 :company => 'Widgets Inc',
-                 :city => 'Ottawa',
-                 :state => 'ON',
-                 :zip => 'K1C2N6',
-                 :country => 'Canada',
-                 :phone => '(555)555-5555'
-               }
+    
+    @amount = 100
+    
+    @options = { :billing_address => address }
   end
   
-  def test_successful_request
-    @creditcard.number = 1
-    assert response = @gateway.purchase(@amount, @creditcard, {})
+  def test_successful_purchase
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+  
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of Response, response
     assert_success response
-    assert_equal '5555', response.authorization
+    assert_equal '510695343', response.authorization
   end
 
-  def test_unsuccessful_request
-    @creditcard.number = 2
-    assert response = @gateway.purchase(@amount, @creditcard, {})
+  def test_failed_purchase
+    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+  
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of Response, response
     assert_failure response
   end
 
-  def test_request_error
-    @creditcard.number = 3
-    assert_raise(Error){ @gateway.purchase(@amount, @creditcard, {}) }
+  def test_purchase_exception
+    @gateway.expects(:ssl_post).raises(Error)
+    
+    assert_raise(Error) do
+      assert response = @gateway.purchase(@amount, @credit_card, @options)    
+    end
   end
   
   def test_add_address
     result = {}
     
-    @gateway.send(:add_address, result,nil, :billing_address => {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'} )
+    @gateway.send(:add_address, result, nil, :billing_address => {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'} )
     assert_equal ["address1", "city", "company", "country", "phone", "state", "zip"], result.stringify_keys.keys.sort
     assert_equal 'CO', result[:state]
     assert_equal '164 Waverley Street', result[:address1]
@@ -63,7 +64,7 @@ class BrainTreeTest < Test::Unit::TestCase
   def test_adding_store_adds_vault_id_flag
     result = {}
     
-    @gateway.send(:add_creditcard, result,@creditcard, :store=>true )
+    @gateway.send(:add_creditcard, result, @credit_card, :store => true)
     assert_equal ["ccexp", "ccnumber", "customer_vault", "cvv", "firstname", "lastname"], result.stringify_keys.keys.sort
     assert_equal 'add_customer', result[:customer_vault]
   end
@@ -71,7 +72,7 @@ class BrainTreeTest < Test::Unit::TestCase
   def test_blank_store_doesnt_add_vault_flag
     result = {}
     
-    @gateway.send(:add_creditcard, result,@creditcard, {} )
+    @gateway.send(:add_creditcard, result, @credit_card, {} )
     assert_equal ["ccexp", "ccnumber", "cvv", "firstname", "lastname"], result.stringify_keys.keys.sort
     assert_nil result[:customer_vault]
   end
@@ -89,7 +90,37 @@ class BrainTreeTest < Test::Unit::TestCase
   
   def test_funding_source
     assert_equal :check, @gateway.send(:determine_funding_source, Check.new)
-    assert_equal :credit_card, @gateway.send(:determine_funding_source, @creditcard)
+    assert_equal :credit_card, @gateway.send(:determine_funding_source, @credit_card)
     assert_equal :vault, @gateway.send(:determine_funding_source, '12345')
+  end
+  
+  def test_avs_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_equal 'N', response.avs_result['code']
+  end
+  
+  def test_cvv_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_equal 'N', response.cvv_result['code']
+  end
+  
+  def test_card_data
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_equal CreditCard.mask(@credit_card.number), response.card_data['number']
+  end
+  
+  private
+  def successful_purchase_response
+    'response=1&responsetext=SUCCESS&authcode=123456&transactionid=510695343&avsresponse=N&cvvresponse=N&orderid=ea1e0d50dcc8cfc6e4b55650c592097e&type=sale&response_code=100'
+  end
+  
+  def failed_purchase_response
+    'response=2&responsetext=DECLINE&authcode=&transactionid=510695919&avsresponse=N&cvvresponse=N&orderid=50357660b0b3ef16f72a3d3b83c46983&type=sale&response_code=200'
   end
 end

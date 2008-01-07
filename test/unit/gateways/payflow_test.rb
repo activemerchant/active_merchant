@@ -45,20 +45,14 @@ class PayflowTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
     
     response = @gateway.purchase(@amount, @credit_card, @options)
-    avs_result = response.avs_result
-    assert_equal 'Y', avs_result['code']
-    assert_equal AVSResult::CODES['Y'], avs_result['message']
-    assert_equal 'full', avs_result['match']
+    assert_equal 'Y', response.avs_result['code']
   end
   
   def test_cvv_result
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
     
     response = @gateway.purchase(@amount, @credit_card, @options)
-    cvv_result = response.cvv_result
-    assert_equal 'M', cvv_result['code']
-    assert_equal CVVResult::CODES['M'], cvv_result['message']
-    assert_equal 'match', cvv_result['match']
+    assert_equal 'M', response.cvv_result['code']
   end
   
   
@@ -66,8 +60,7 @@ class PayflowTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
     
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal 'visa', response.card_data['type']
-    assert_equal 'XXXX-XXXX-XXXX-4242', response.card_data['number']
+    assert_equal CreditCard.mask(@credit_card.number), response.card_data['number']
   end
   
   def test_using_test_mode

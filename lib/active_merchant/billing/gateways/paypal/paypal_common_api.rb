@@ -1,9 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    # This class is included in both PaypalGateway and PaypalExpressGateway
+    # This module is included in both PaypalGateway and PaypalExpressGateway
     module PaypalCommonAPI
       def self.included(base)
-        
         base.default_currency = 'USD'
         base.cattr_accessor :pem_file
         base.cattr_accessor :signature
@@ -302,8 +301,17 @@ module ActiveMerchant #:nodoc:
 
         build_response(success, message, @response,
     	    :test => test?,
-    	    :authorization => @response[:transaction_id] || @response[:authorization_id] # latter one is from reauthorization
+    	    :authorization => @response[:transaction_id] || @response[:authorization_id], # latter one is from reauthorization
+    	    :avs_code => @response[:avs_code],
+    	    :cvv_code => @response[:cvv2_code],
+    	    :card_number => parse_credit_card_number(request)
         )
+      end
+
+      def parse_credit_card_number(request)
+        xml = REXML::Document.new(request)
+        card_number = REXML::XPath.first(xml, '//n2:CreditCard/n2:CreditCardNumber')
+        card_number && card_number.text
       end
     end
   end

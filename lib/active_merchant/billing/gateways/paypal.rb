@@ -8,27 +8,16 @@ module ActiveMerchant #:nodoc:
       
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.supported_countries = ['US']
-      
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside'
       self.display_name = 'PayPal Website Payments Pro (US)'
       
       def authorize(money, credit_card, options = {})
         requires!(options, :ip)
-        
-        if result = test_result_from_cc_number(credit_card.number)
-          return result
-        end
-
         commit 'DoDirectPayment', build_sale_or_authorization_request('Authorization', money, credit_card, options)
       end
 
       def purchase(money, credit_card, options = {})
         requires!(options, :ip)
-        
-        if result = test_result_from_cc_number(credit_card.number)
-          return result
-        end
-        
         commit 'DoDirectPayment', build_sale_or_authorization_request('Sale', money, credit_card, options)
       end
       

@@ -1,5 +1,9 @@
 # CHANGELOG
 # ---
+# * Update BrainTreeGateway to support merchant_data hash [cody]
+#
+# * Update PaypalGateway to support merchant_data hash [cody]
+#
 # * Update Payflow to support merchant_data hash [cody]
 #
 # * Add card data to PayJunction response. PayJunction does not return the CVV or AVS result codes. Remote test_result_from_cc_number from PayJunction. [cody]
