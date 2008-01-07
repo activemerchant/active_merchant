@@ -5,11 +5,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class QuickpayGateway < Gateway
       URL = 'https://secure.quickpay.dk/transaction.php'
-      
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
-    
+
       self.default_currency = 'DKK'  
       self.money_format = :cents
       self.supported_cardtypes = [ :dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro ]
@@ -18,7 +14,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Quickpay'
       
       TRANSACTIONS = {
-        :authorization          => '1100',
+        :authorization => '1100',
         :capture       => '1220',
         :void          => '1420',
         :credit        => 'credit'
@@ -63,10 +59,6 @@ module ActiveMerchant #:nodoc:
       end
       
       def purchase(money, creditcard, options = {})
-        if result = test_result_from_cc_number(creditcard.number)
-          return result
-        end
-        
         auth = authorize(money, creditcard, options)
         auth.success? ? capture(money, auth.authorization) : auth
       end                       
@@ -120,21 +112,16 @@ module ActiveMerchant #:nodoc:
       end
       
       def commit(action, params)
-        
-        if result = test_result_from_cc_number(params[:cardnumber])
-          return result
-        end
-        
         data = ssl_post URL, post_data(action, params)
-
         @response = parse(data)
         
         success = @response[:qpstat] == APPROVED
         message = message_from(@response)
         
         Response.new(success, message, @response, 
-            :test => test?, 
-            :authorization => @response[:transaction]
+          :test => test?, 
+          :authorization => @response[:transaction],
+          :card_number => params[:cardnumber]
         )
       end
 

@@ -1,15 +1,16 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class RemoteQuickpayTest < Test::Unit::TestCase
-
-  # 100 cents
-  AMOUNT = 100
-  
-  def setup
-  
+  def setup  
     @gateway = QuickpayGateway.new(fixtures(:quickpay))
+
+    @amount = 100
+    @options = { 
+      :order_id => generate_order_id, 
+      :billing_address => address
+    }
     
-    @declined_visa  = credit_card('4000300011112220')
+    @visa_no_cvv2   = credit_card('4000300011112220', :verification_value => nil)
     @visa           = credit_card('4000100011112224')
     @dankort        = credit_card('5019717010103742')
     @visa_dankort   = credit_card('4571100000000000')
@@ -27,7 +28,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase
-    assert response = @gateway.purchase(AMOUNT, @visa, :order_id => generate_order_id)
+    assert response = @gateway.purchase(@amount, @visa, @options)
     assert_equal 'OK', response.message
     assert_equal 'DKK', response.params['currency']
     assert_success response
@@ -35,116 +36,115 @@ class RemoteQuickpayTest < Test::Unit::TestCase
   end
   
   def test_successful_usd_purchase
-    assert response = @gateway.purchase(AMOUNT, @visa, :order_id => generate_order_id, :currency => 'USD')
+    assert response = @gateway.purchase(@amount, @visa, @options.update(:currency => 'USD'))
     assert_equal 'OK', response.message
     assert_equal 'USD', response.params['currency']
     assert_success response
     assert !response.authorization.blank?
   end
   
-  def test_dankort_authorization
-    assert response = @gateway.authorize(AMOUNT, @dankort, :order_id => generate_order_id)
+  def test_successful_dankort_authorization
+    assert response = @gateway.authorize(@amount, @dankort, @options)
     assert_success response
     assert !response.authorization.blank?
     assert_equal 'Dankort', response.params['cardtype']
   end
   
-  def test_visa_dankort_authorization
-    assert response = @gateway.authorize(AMOUNT, @visa_dankort, :order_id => generate_order_id)
+  def test_successful_visa_dankort_authorization
+    assert response = @gateway.authorize(@amount, @visa_dankort, @options)
     assert_success response
     assert !response.authorization.blank?
     assert_equal 'Visa-Dankort', response.params['cardtype']
   end
   
-  def test_visa_electron_authorization
-    assert response = @gateway.authorize(AMOUNT, @electron_dk, :order_id => generate_order_id)
+  def test_successful_visa_electron_authorization
+    assert response = @gateway.authorize(@amount, @electron_dk, @options)
     assert_success response
     assert !response.authorization.blank?
     assert_equal 'Visa-Electron-DK', response.params['cardtype']
   end
   
-  def test_diners_club_authorization
-    assert response = @gateway.authorize(AMOUNT, @diners_club, :order_id => generate_order_id)
+  def test_successful_diners_club_authorization
+    assert response = @gateway.authorize(@amount, @diners_club, @options)
     assert_success response
     assert !response.authorization.blank?
     assert_equal 'Diners', response.params['cardtype']
   end
   
-  def test_diners_club_dk_authorization
-    assert response = @gateway.authorize(AMOUNT, @diners_club_dk, :order_id => generate_order_id)
+  def test_successful_diners_club_dk_authorization
+    assert response = @gateway.authorize(@amount, @diners_club_dk, @options)
     assert_success response
     assert !response.authorization.blank?
     assert_equal 'Diners', response.params['cardtype']
   end
   
-  def test_maestro_authorization
-    assert response = @gateway.authorize(AMOUNT, @maestro, :order_id => generate_order_id)
+  def test_successful_maestro_authorization
+    assert response = @gateway.authorize(@amount, @maestro, @options)
     assert_success response
     assert !response.authorization.blank?
     assert_equal 'Maestro', response.params['cardtype']
   end
   
-  def test_maestro_dk_authorization
-    assert response = @gateway.authorize(AMOUNT, @maestro_dk, :order_id => generate_order_id)
+  def test_successful_maestro_dk_authorization
+    assert response = @gateway.authorize(@amount, @maestro_dk, @options)
     assert_success response
     assert !response.authorization.blank?
     assert_equal 'Maestro', response.params['cardtype']
   end
   
-  def test_mastercard_dk_authorization
-    assert response = @gateway.authorize(AMOUNT, @mastercard_dk, :order_id => generate_order_id)
+  def test_successful_mastercard_dk_authorization
+    assert response = @gateway.authorize(@amount, @mastercard_dk, @options)
     assert_success response
     assert !response.authorization.blank?
     assert_equal 'MasterCard-DK', response.params['cardtype']
   end
   
-  def test_american_express_dk_authorization
-    assert response = @gateway.authorize(AMOUNT, @amex_dk, :order_id => generate_order_id)
+  def test_successful_american_express_dk_authorization
+    assert response = @gateway.authorize(@amount, @amex_dk, @options)
     assert_success response
     assert !response.authorization.blank?
     assert_equal 'AmericanExpress-DK', response.params['cardtype']
   end
 
-  def test_american_express_authorization
-    assert response = @gateway.authorize(AMOUNT, @amex, :order_id => generate_order_id)
+  def test_successful_american_express_authorization
+    assert response = @gateway.authorize(@amount, @amex, @options)
     assert_success response
     assert !response.authorization.blank?
     assert_equal 'AmericanExpress', response.params['cardtype']
   end
   
-  def test_forbrugsforeningen_authorization
-    assert response = @gateway.authorize(AMOUNT, @forbrugsforeningen, :order_id => generate_order_id)
+  def test_successful_forbrugsforeningen_authorization
+    assert response = @gateway.authorize(@amount, @forbrugsforeningen, @options)
     assert_success response
     assert !response.authorization.blank?
     assert_equal 'FBG-1886', response.params['cardtype']
   end
   
   def test_unsuccessful_purchase_with_missing_cvv2
-    assert response = @gateway.purchase(AMOUNT, @declined_visa, :order_id => generate_order_id)
+    assert response = @gateway.purchase(@amount, @visa_no_cvv2, @options)
     assert_equal 'Missing/error in card verification data', response.message
     assert_failure response
     assert response.authorization.blank?
   end
 
-  def test_authorize_and_capture
-    amount = AMOUNT
-    assert auth = @gateway.authorize(amount, @visa, :order_id => generate_order_id)
+  def test_successful_authorize_and_capture
+    assert auth = @gateway.authorize(@amount, @visa, @options)
     assert_success auth
     assert_equal 'OK', auth.message
     assert auth.authorization
-    assert capture = @gateway.capture(amount, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
     assert_equal 'OK', capture.message
   end
 
   def test_failed_capture
-    assert response = @gateway.capture(AMOUNT, '')
+    assert response = @gateway.capture(@amount, '')
     assert_failure response
     assert_equal 'Missing/error in transaction number', response.message
   end
   
-  def test_purchase_and_void
-    assert auth = @gateway.authorize(AMOUNT, @visa, :order_id => generate_order_id)
+  def test_successful_purchase_and_void
+    assert auth = @gateway.authorize(@amount, @visa, @options)
     assert_success auth
     assert_equal 'OK', auth.message
     assert auth.authorization
@@ -153,20 +153,20 @@ class RemoteQuickpayTest < Test::Unit::TestCase
     assert_equal 'OK', void.message
   end
   
-  def test_authorization_capture_and_credit
-    assert auth = @gateway.authorize(AMOUNT, @visa, :order_id => generate_order_id)
+  def test_successful_authorization_capture_and_credit
+    assert auth = @gateway.authorize(@amount, @visa, @options)
     assert_success auth
-    assert capture = @gateway.capture(AMOUNT, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert credit = @gateway.credit(AMOUNT, auth.authorization)
+    assert credit = @gateway.credit(@amount, auth.authorization)
     assert_success credit
     assert_equal 'OK', credit.message
   end
   
-  def test_purchase_and_credit
-    assert purchase = @gateway.purchase(AMOUNT, @visa, :order_id => generate_order_id)
+  def test_successful_purchase_and_credit
+    assert purchase = @gateway.purchase(@amount, @visa, @options)
     assert_success purchase
-    assert credit = @gateway.credit(AMOUNT, purchase.authorization)
+    assert credit = @gateway.credit(@amount, purchase.authorization)
     assert_success credit
   end
 
@@ -175,7 +175,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
         :login => '',
         :password => ''
     )
-    assert response = gateway.purchase(AMOUNT, @visa, :order_id => generate_order_id)
+    assert response = gateway.purchase(@amount, @visa, @options)
     assert_equal 'Missing/error in merchant', response.message
     assert_failure response
   end
