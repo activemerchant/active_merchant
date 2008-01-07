@@ -122,16 +122,12 @@ module ActiveMerchant #:nodoc:
       end
   
       def commit(action, parameters = {})
-        # TODO This part still needs to be refactored
-        if result = test_result_from_cc_number(parameters[:pan])
-          return result
-        end
-        
         @response = parse(ssl_post(@url, post_data(action, parameters)))
 
-        Response.new(successful_response?(response), message_form(response[:message]), @response,
+        Response.new(successful_response?(response), message_from(response[:message]), @response,
           :test          => test?,
-          :authorization => authorization_string(response)
+          :authorization => authorization_string(response),
+          :card_number   => parameters[:pan]
         )
       end
       
@@ -149,26 +145,6 @@ module ActiveMerchant #:nodoc:
         (0..49).include?(response[:response_code].to_i)
       end
                                                
-      # Parse Moneris' response XML into a convinient Hash.
-      # 
-      # Expected XML format:
-      # 
-      #   "<?xml version=\"1.0\"?><response><receipt>".
-      #   "<ReceiptId>Global Error Receipt</ReceiptId>".
-      #   "<ReferenceNum>null</ReferenceNum>
-      #   <ResponseCode>null</ResponseCode>".
-      #   "<ISO>null</ISO> 
-      #   <AuthCode>null</AuthCode>
-      #   <TransTime>null</TransTime>".
-      #   "<TransDate>null</TransDate>
-      #   <TransType>null</TransType>
-      #   <Complete>false</Complete>".
-      #   "<Message>null</Message>
-      #   <TransAmount>null</TransAmount>".
-      #   "<CardType>null</CardType>".
-      #   "<TransID>null</TransID>
-      #   <TimedOut>null</TimedOut>".
-      #   "</receipt></response>
       def parse(xml)
         response = { :message => "Global Error Receipt", :complete => false }
         hashify_xml!(xml, response)
@@ -198,7 +174,7 @@ module ActiveMerchant #:nodoc:
         xml.to_s
       end
     
-      def message_form(message)
+      def message_from(message)
         return 'Unspecified error' if message.blank?
         message.gsub(/[^\w]/, ' ').split.join(" ").capitalize
       end

@@ -2,42 +2,38 @@ require File.dirname(__FILE__) + '/../../test_helper'
 
 class MonerisResponseTest < Test::Unit::TestCase
   def setup
+    Base.mode = :test
+    
     @gateway = MonerisGateway.new(
       :login => 'store1',
       :password => 'yesguy'
     )
 
-    @creditcard = credit_card('4242424242424242')
+    @amount = 100
+    @credit_card = credit_card('4242424242424242')
+    @options = { :order_id => '1', :billing_address => address }
   end
 
-  def teardown
-    Base.mode = :test
+  def test_successful_purchase
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+  
+    assert response = @gateway.authorize(100, @credit_card, @options)
+    assert_success response
+    assert_equal '58-0_3;1026.1', response.authorization
+  end
+
+  def test_failed_purchase
+    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+  
+    assert response = @gateway.authorize(100, @credit_card, @options)
+    assert_failure response
   end
   
-  def test_purchase_success    
-    @creditcard.number = 1
-
-    assert response = @gateway.purchase(100, @creditcard, :order_id => 1)
-    assert_equal Response, response.class
-    assert_equal '#0001', response.params['receiptid']
-    assert_equal true, response.success?
-  end
-
-  def test_purchase_error
-    @creditcard.number = 2
-
-    assert response = @gateway.purchase(100, @creditcard, :order_id => 1)
-    assert_equal Response, response.class
-    assert_equal '#0001', response.params['receiptid']
-    assert_equal false, response.success?
-
-  end
-  
-  def test_purchase_exceptions
-    @creditcard.number = 3 
+  def test_purchase_exception
+    @gateway.expects(:ssl_post).raises(Error)
     
     assert_raise(Error) do
-      assert response = @gateway.purchase(100, @creditcard, :order_id => 1)    
+      assert response = @gateway.purchase(@amount, @credit_card, @options)    
     end
   end
        
@@ -63,28 +59,6 @@ class MonerisResponseTest < Test::Unit::TestCase
    assert REXML::Document.new(data)
    assert_equal xml_capture_fixture.size, data.size
   end  
-
-  private
-
-  def xml_purchase_fixture
-   %q{<request><store_id>store1</store_id><api_token>yesguy</api_token><purchase><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></purchase></request>}
-  end
-
-  def xml_capture_fixture
-   %q{<request><store_id>store1</store_id><api_token>yesguy</api_token><preauth><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></preauth></request>}
-  end
-
-end
-
-
-class MonerisRequestTest < Test::Unit::TestCase
-  def setup
-    @gateway = MonerisGateway.new(
-      :login => 'store1',
-      :password => 'yesguy'
-    )
-  end
-
 
   def test_purchase_is_valid_xml
 
@@ -117,13 +91,7 @@ class MonerisRequestTest < Test::Unit::TestCase
   end  
 
   def test_access_url_for_test_environment
-    Base.mode = :test
-    gateway = MonerisGateway.new(
-      :login => 'store1',
-      :password => 'yesguy'
-    )
-
-    assert_equal 'https://esqa.moneris.com/gateway2/servlet/MpgRequest', gateway.url
+    assert_equal 'https://esqa.moneris.com/gateway2/servlet/MpgRequest', @gateway.url
   end
   
   def test_access_url_for_production_environment
@@ -149,15 +117,72 @@ class MonerisRequestTest < Test::Unit::TestCase
       assert_raise(ArgumentError) { @gateway.void(invalid_transaction_param) }
     end
   end
+  
+  def test_card_data
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal CreditCard.mask(@credit_card.number), response.card_data['number']
+  end
 
   private
+  
+  def successful_purchase_response
+    <<-RESPONSE
+<?xml version="1.0"?>
+<response>
+  <receipt>
+    <ReceiptId>1026.1</ReceiptId>
+    <ReferenceNum>661221050010170010</ReferenceNum>
+    <ResponseCode>027</ResponseCode>
+    <ISO>01</ISO>
+    <AuthCode>013511</AuthCode>
+    <TransTime>18:41:13</TransTime>
+    <TransDate>2008-01-05</TransDate>
+    <TransType>00</TransType>
+    <Complete>true</Complete>
+    <Message>APPROVED * =</Message>
+    <TransAmount>1.00</TransAmount>
+    <CardType>V</CardType>
+    <TransID>58-0_3</TransID>
+    <TimedOut>false</TimedOut>
+  </receipt>
+</response>
+    
+    RESPONSE
+  end
+  
+  def failed_purchase_response
+    <<-RESPONSE
+<?xml version="1.0"?>
+<response>
+  <receipt>
+    <ReceiptId>1026.1</ReceiptId>
+    <ReferenceNum>661221050010170010</ReferenceNum>
+    <ResponseCode>481</ResponseCode>
+    <ISO>01</ISO>
+    <AuthCode>013511</AuthCode>
+    <TransTime>18:41:13</TransTime>
+    <TransDate>2008-01-05</TransDate>
+    <TransType>00</TransType>
+    <Complete>true</Complete>
+    <Message>DECLINED * =</Message>
+    <TransAmount>1.00</TransAmount>
+    <CardType>V</CardType>
+    <TransID>97-2-0</TransID>
+    <TimedOut>false</TimedOut>
+  </receipt>
+</response>
+    
+    RESPONSE
+  end  
 
   def xml_purchase_fixture
-   %q{<request><store_id>store1</store_id><api_token>yesguy</api_token><purchase><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></purchase></request>}
+   '<request><store_id>store1</store_id><api_token>yesguy</api_token><purchase><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></purchase></request>'
   end
 
   def xml_capture_fixture
-   %q{<request><store_id>store1</store_id><api_token>yesguy</api_token><preauth><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></preauth></request>}
+   '<request><store_id>store1</store_id><api_token>yesguy</api_token><preauth><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></preauth></request>'
   end
 
 end
