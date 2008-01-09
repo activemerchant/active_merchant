@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Remove merchant_data hash. Add additional CVV codes [cody]
+#
 # * Update QuickpayGateway to support merchant_data hash. Remove test_result_from_cc_number. [cody]
 #
 # * Update LinkpointGateway to support merchant_data hash. Remove test_result_from_cc_number. [cody]
