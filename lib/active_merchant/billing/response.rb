@@ -19,14 +19,6 @@ module ActiveMerchant #:nodoc:
         @fraud_review
       end
       
-      def merchant_data
-        {
-          'avs_result' => avs_result,
-          'cvv_result' => cvv_result,
-          'card_data' => card_data
-        }
-      end
-      
       def initialize(success, message, params = {}, options = {})
         @success, @message, @params = success, message, params.stringify_keys
         @test = options[:test] || false        
