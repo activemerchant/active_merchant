@@ -1,30 +1,21 @@
-# Portions of the Cardstream gateway by Jonah Fox and Thomas Nichols
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class RemoteCardStreamTest < Test::Unit::TestCase
   def setup
+    Base.mode = :test
+    
     @gateway = CardStreamGateway.new(fixtures(:card_stream))
     
-    @amex = CreditCard.new(
-      :number => '374245455400001',
-      :month => 12,
-      :year => 2009,
-      :verification_value => 4887,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen',
-      :type => :american_express
-    )
+    @amex = credit_card('374245455400001',
+              :verification_value => '4887',
+              :type => 'american_express'
+            )
 
-    @maestro = CreditCard.new(
-      :number => '6759016800000120097',
-      :month => 6,
-      :year => 2009,
-      :issue_number => 1,
-      :verification_value => 701,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen',
-      :type => :maestro
-    )
+    @maestro = credit_card('6759016800000120097',
+                 :issue_number => '1',
+                 :verification_value => '701',
+                 :type => 'maestro'
+               )
     
     @solo = CreditCard.new(
       :number => '6334960300099354',

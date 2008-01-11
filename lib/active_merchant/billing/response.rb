@@ -24,8 +24,8 @@ module ActiveMerchant #:nodoc:
         @test = options[:test] || false        
         @authorization = options[:authorization]
         @fraud_review = options[:fraud_review]
-        @avs_result = AVSResult.new(options[:avs_code]).to_hash
-        @cvv_result = CVVResult.new(options[:cvv_code]).to_hash
+        @avs_result = AVSResult.new(options[:avs_result]).to_hash
+        @cvv_result = CVVResult.new(options[:cvv_result]).to_hash
         @card_data = format_card_data(options[:card_number])
       end
       

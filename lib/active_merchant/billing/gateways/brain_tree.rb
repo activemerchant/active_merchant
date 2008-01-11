@@ -120,8 +120,8 @@ module ActiveMerchant #:nodoc:
         Response.new(@response["response"] == "1", message_from(@response), @response, 
           :authorization => @response["transactionid"],
           :test => test?,
-          :cvv_code => @response["cvvresponse"],
-          :avs_code => @response["avsresponse"],
+          :cvv_result => @response["cvvresponse"],
+          :avs_result => { :code => @response["avsresponse"] },
           :card_number => parameters[:ccnumber]
         )
         

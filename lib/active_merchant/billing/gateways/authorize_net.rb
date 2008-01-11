@@ -19,6 +19,9 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.net'
 
+      CARD_CODE_ERRORS = %w( N S )
+      AVS_ERRORS = %w( A E N R W Z )
+
       def initialize(options = {})
         requires!(options, :login, :password)
         @options = options
@@ -92,8 +95,8 @@ module ActiveMerchant #:nodoc:
           :test => test_mode, 
           :authorization => @response[:transaction_id],
           :fraud_review => fraud_review?(@response),
-          :avs_code => @response[:avs_result_code],
-          :cvv_code => @response[:card_code],
+          :avs_result => { :code => @response[:avs_result_code] },
+          :cvv_result => @response[:card_code],
           :card_number => parameters[:card_num]
         )        
       end
@@ -190,11 +193,8 @@ module ActiveMerchant #:nodoc:
       
       def message_from(results)  
         if results[:response_code] == DECLINED
-          cvv_result = CVVResult.new(results[:card_code])
-          return cvv_result.message if cvv_result.failure?
-          
-          avs_result = AVSResult.new(results[:avs_result_code])
-          return avs_result.message if avs_result.failure?
+          return CVVResult.messages[ results[:card_code] ] if CARD_CODE_ERRORS.include?(results[:card_code])
+          return AVSResult.messages[ results[:avs_result_code] ] if AVS_ERRORS.include?(results[:avs_result_code])
         end
         
         return results[:response_reason_text].nil? ? '' : results[:response_reason_text][0..-2]

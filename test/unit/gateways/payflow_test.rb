@@ -46,6 +46,17 @@ class PayflowTest < Test::Unit::TestCase
     
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Y', response.avs_result['code']
+    assert_equal 'Y', response.avs_result['street_match']
+    assert_equal 'Y', response.avs_result['postal_match']
+  end
+  
+  def test_partial_avs_match
+    @gateway.expects(:ssl_post).returns(successful_duplicate_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'A', response.avs_result['code']
+    assert_equal 'Y', response.avs_result['street_match']
+    assert_equal 'N', response.avs_result['postal_match']
   end
   
   def test_cvv_result

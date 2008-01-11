@@ -234,8 +234,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success, message, @response, 
           :test => test?,
           :authorization => @response[:ordernum],
-          :avs_code => @response[:avs].to_s[2,1],
-          :cvv_code => @response[:avs].to_s[3,1],
+          :avs_result => { :code => @response[:avs].to_s[2,1] },
+          :cvv_result => @response[:avs].to_s[3,1],
           :card_number => creditcard && parameters[:creditcard][:cardnumber]
         )
       end

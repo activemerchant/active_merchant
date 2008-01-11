@@ -302,8 +302,8 @@ module ActiveMerchant #:nodoc:
         build_response(success, message, @response,
     	    :test => test?,
     	    :authorization => @response[:transaction_id] || @response[:authorization_id], # latter one is from reauthorization
-    	    :avs_code => @response[:avs_code],
-    	    :cvv_code => @response[:cvv2_code],
+    	    :avs_result => { :code => @response[:avs_code] },
+    	    :cvv_result => @response[:cvv2_code],
     	    :card_number => parse_credit_card_number(request)
         )
       end

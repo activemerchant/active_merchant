@@ -5,18 +5,9 @@ module ActiveMerchant
     # http://en.wikipedia.org/wiki/Address_Verification_System
     # http://apps.cybersource.com/library/documentation/dev_guides/CC_Svcs_IG/html/app_avs_cvn_codes.htm#app_AVS_CVN_codes_7891_48375
     # http://imgserver.skipjack.com/imgServer/5293710/AVS%20and%20CVV2.pdf
+    # http://www.emsecommerce.net/avs_cvv2_response_codes.htm
     class AVSResult
-      MATCH = {
-        :full        => %w( D J M Q V X Y ),
-        :partial     => %w( A B F H K L P O T W Z ),
-        :none        => %w( N ),
-        :unavailable => %w( C E G I R S U )
-      }.inject({}) do |map, (type, codes)|
-        codes.each { |code| map[code] = type }
-        map
-      end
-      
-      CODES = {
+      MESSAGES = {
         'A' => 'Street address matches, but 5-digit and 9-digit postal code do not match.',
         'B' => 'Street address matches, but postal code not verified.',
         'C' => 'Street address and postal code do not match.',
@@ -45,24 +36,58 @@ module ActiveMerchant
         'Z' => 'Street address does not match, but 5-digit postal code matches.'
       }
       
-      attr_reader :code, :message, :match
+      # Map vendor's AVS result code to a postal match code
+      POSTAL_MATCH_CODE = {
+        'Y' => %w( D H F H J L M P Q V W X Y Z ),
+        'N' => %w( A C K N O ),
+        'X' => %w( G S ),
+        nil => %w( B E I R T U )
+      }.inject({}) do |map, (type, codes)|
+        codes.each { |code| map[code] = type }
+        map
+      end
       
-      def initialize(code)
-        if !code.blank?
-          @code = code.upcase
-          @message = CODES[@code]
-          @match = MATCH[@code]
+      # Map vendor's AVS result code to a street match code
+      STREET_MATCH_CODE = {
+        'Y' => %w( A B D H J M O Q T V X Y ),
+        'N' => %w( C K L N P W Z ),
+        'X' => %w( G S ),
+        nil => %w( E F I R U )
+      }.inject({}) do |map, (type, codes)|
+        codes.each { |code| map[code] = type }
+        map
+      end
+      
+      attr_reader :code, :message, :street_match, :postal_match
+      
+      def self.messages
+        MESSAGES
+      end
+      
+      def initialize(attrs)
+        attrs ||= {}
+        
+        @code = attrs[:code].upcase unless attrs[:code].blank?
+        @message = self.class.messages[code]
+        
+        if attrs[:street_match].blank?
+          @street_match = STREET_MATCH_CODE[code]
+        else  
+          @street_match = attrs[:street_match].upcase
+        end
+          
+        if attrs[:postal_match].blank?
+          @postal_match = POSTAL_MATCH_CODE[code]
+        else  
+          @postal_match = attrs[:postal_match].upcase
         end
       end
     
-      def failure?
-        [ :partial, :none ].include?(match)
-      end
-      
       def to_hash
         { 'code' => code,
           'message' => message,
-          'match' => (match && match.to_s)
+          'street_match' => street_match,
+          'postal_match' => postal_match
         }
       end
     end

@@ -5,7 +5,7 @@ module ActiveMerchant
     # Check additional codes from cybersource website
     class CVVResult
       
-      CODES = {
+      MESSAGES = {
         'D'  =>  'Suspicious transaction',
         'I'  =>  'Failed data validation check',
         'M'  =>  'Match',
@@ -27,25 +27,21 @@ module ActiveMerchant
         'X' => :unavailable
       }
       
-      attr_reader :code, :message, :match
-      
-      def initialize(code)
-        if !code.blank?
-          @code = code.upcase
-          @message = CODES[@code]
-          @match = MATCH[@code]
-        end
+      def self.messages
+        MESSAGES
       end
       
-      def failure?
-        match == :no_match
+      attr_reader :code, :message
+      
+      def initialize(code)
+        @code = code.upcase unless code.blank?
+        @message = MESSAGES[@code]
       end
       
       def to_hash
         {
           'code' => code,
-          'message' => message,
-          'match' => (match && match.to_s)
+          'message' => message
         }
       end
     end

@@ -196,8 +196,8 @@ module ActiveMerchant #:nodoc:
     	  build_response(success, message, @response,
     	    :test => test?,
     	    :authorization => @response[:pn_ref] || @response[:rp_ref],
-    	    :cvv_code => CVV_CODE[@response[:cv_result]],
-    	    :avs_code => @response[:avs_result],
+    	    :cvv_result => CVV_CODE[@response[:cv_result]],
+    	    :avs_result => { :code => @response[:avs_result] },
     	    :card_number => parse_credit_card_number(request)
         )
       end

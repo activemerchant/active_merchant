@@ -1,5 +1,9 @@
 # CHANGELOG
 # ---
+# * Map merchant AVS codes to street and postal match codes [cody]
+#
+# * Update CardStreamGateway to support avs and cvv data [cody]
+#
 # * Remove merchant_data hash. Add additional CVV codes [cody]
 #
 # * Update QuickpayGateway to support merchant_data hash. Remove test_result_from_cc_number. [cody]
