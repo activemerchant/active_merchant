@@ -1,5 +1,7 @@
 # CHANGELOG
 # ---
+# * Fix remote CardStreamGateway tests [cody]
+#
 # * Map merchant AVS codes to street and postal match codes [cody]
 #
 # * Update CardStreamGateway to support avs and cvv data [cody]

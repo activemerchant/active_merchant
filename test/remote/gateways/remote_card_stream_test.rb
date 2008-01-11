@@ -7,44 +7,39 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     @gateway = CardStreamGateway.new(fixtures(:card_stream))
     
     @amex = credit_card('374245455400001',
-              :verification_value => '4887',
-              :type => 'american_express'
+              :month => 12,
+              :year => 2009,
+              :verification_value => 4887,
+              :type => :american_express
             )
 
-    @maestro = credit_card('6759016800000120097',
-                 :issue_number => '1',
-                 :verification_value => '701',
-                 :type => 'maestro'
-               )
+    @uk_maestro = credit_card('6759016800000120097',
+                    :month => 6,
+                    :year => 2009,
+                    :issue_number => 1,
+                    :verification_value => 701,
+                    :type => :switch
+                  )
     
-    @solo = CreditCard.new(
-      :number => '6334960300099354',
-      :month => 6,
-      :year => 2008,
-      :issue_number => 1,
-      :verification_value => 227,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen',
-      :type => :solo
-    )
+    @solo = credit_card('6334960300099354',
+              :month => 6,
+              :year => 2008,
+              :issue_number => 1,
+              :verification_value => 227,
+              :type => :solo
+            )
 
-    @mastercard = CreditCard.new(
-      :number => '5301250070000191',
-      :month => 12,
-      :year => 2009,
-      :verification_value => 419,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen',
-      :type => :master
-    )
+    @mastercard = credit_card('5301250070000191',
+                    :month => 12,
+                    :year => 2009,
+                    :verification_value => 419,
+                    :type => :master
+                  )
 
-    @declined_card = CreditCard.new(
-      :number => '4000300011112220',
-      :month => 9,
-      :year => 2009,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen'
-    )
+    @declined_card = credit_card('4000300011112220',
+                      :month => 9,
+                      :year => 2009
+                    )
 
     @mastercard_options = { 
       :address => { :address1 => '25 The Larches',
@@ -56,7 +51,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       :description => 'Store purchase'
     }
    
-    @maestro_options = {
+    @uk_maestro_options = {
       :address => { :address1 => 'The Parkway',
                     :address2 => "Larches Approach",
                     :city => "Hull",
@@ -103,7 +98,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   end
 
   def test_successful_maestro_purchase
-    assert response = @gateway.purchase(100, @maestro, @maestro_options)
+    assert response = @gateway.purchase(100, @uk_maestro, @uk_maestro_options)
     assert_equal 'APPROVED', response.message
     assert_success response
   end
@@ -125,8 +120,8 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   end
   
   def test_maestro_missing_start_date_and_issue_date
-    @maestro.issue_number = nil
-    assert response = @gateway.purchase(100, @maestro, @maestro_options)
+    @uk_maestro.issue_number = nil
+    assert response = @gateway.purchase(100, @uk_maestro, @uk_maestro_options)
     assert_equal 'ISSUE NUMBER MISSING', response.message
     assert_failure response
     assert response.test?
@@ -143,7 +138,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   end
   
   def test_unsupported_merchant_currency
-    assert response = @gateway.purchase(100, @mastercard, @mastercard_options)
+    assert response = @gateway.purchase(100, @mastercard, @mastercard_options.update(:currency => 'USD'))
     assert_equal "ERROR 5456:CURRENCY NOT SUPPORTED FOR THIS MERCHANT ACCOUNT", response.message
     assert_failure response
     assert response.test?
