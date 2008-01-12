@@ -329,13 +329,13 @@ module ActiveMerchant #:nodoc:
         end
         
         if shipping_address = options[:shipping_address]
-          params[:shipto_name]     = address[:name]     unless address[:name].blank?
-          params[:shipto_address1] = address[:address1] unless address[:address1].blank?
-          params[:shipto_address2] = address[:address2] unless address[:address2].blank?
-          params[:shipto_city]     = address[:city]     unless address[:city].blank?
-          params[:shipto_state]    = address[:state]    unless address[:state].blank?
-          params[:shipto_zip]	     = address[:zip]      unless address[:zip].blank?
-          params[:shipto_country]  = address[:country]  unless address[:country].blank?
+          params[:shipto_name]     = shipping_address[:name]     unless shipping_address[:name].blank?
+          params[:shipto_address1] = shipping_address[:address1] unless shipping_address[:address1].blank?
+          params[:shipto_address2] = shipping_address[:address2] unless shipping_address[:address2].blank?
+          params[:shipto_city]     = shipping_address[:city]     unless shipping_address[:city].blank?
+          params[:shipto_state]    = shipping_address[:state]    unless shipping_address[:state].blank?
+          params[:shipto_zip]	     = shipping_address[:zip]      unless shipping_address[:zip].blank?
+          params[:shipto_country]  = shipping_address[:country]  unless shipping_address[:country].blank?
         end
       end
       

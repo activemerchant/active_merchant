@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Actually use the shipping address in TrustCommerce [cody]
 * Update TrustCommerceGateway to support avs and cvv results. Remove test_result_from_cc_number. Automatically fallback to SSL POST if the TCLink library is not available. Add additional customer information to the requests. [cody]
 * Fix remote CardStreamGateway tests [cody]
 * Map merchant AVS codes to street and postal match codes [cody]
