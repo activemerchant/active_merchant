@@ -93,13 +93,6 @@ class QuickpayTest < Test::Unit::TestCase
     assert_equal  [ :dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro ], QuickpayGateway.supported_cardtypes
   end
   
-  def test_card_data
-    @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    
-    response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_equal CreditCard.last_digits(@credit_card.number), response.card_data['number']
-  end
-  
   private
   
   def error_response

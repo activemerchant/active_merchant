@@ -122,8 +122,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful_response?(response), message_from(response[:message]), @response,
           :test          => test?,
-          :authorization => authorization_string(response),
-          :card_number   => parameters[:pan]
+          :authorization => authorization_string(response)
         )
       end
       

@@ -60,13 +60,6 @@ class PayJunctionTest < Test::Unit::TestCase
     end
   end
   
-  def test_card_data
-    @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    
-    response = @gateway.purchase(100, @credit_card)
-    assert_equal CreditCard.last_digits(@credit_card.number), response.card_data['number']
-  end
-  
   private
   def successful_authorization_response
     <<-RESPONSE

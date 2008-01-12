@@ -220,13 +220,6 @@ class PaypalTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'M', response.cvv_result['code']
   end
-     
-  def test_card_data
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal CreditCard.last_digits(@credit_card.number), response.card_data['number']
-  end
   
   private
   def successful_purchase_response

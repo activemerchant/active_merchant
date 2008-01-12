@@ -163,13 +163,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
   
-  def test_card_data
-    @gateway.expects(:ssl_post).returns(fraud_review_response)
-    
-    response = @gateway.purchase(100, @credit_card)
-    assert_equal CreditCard.last_digits(@credit_card.number), response.card_data['number']
-  end
-
   private
 
   def post_data_fixture

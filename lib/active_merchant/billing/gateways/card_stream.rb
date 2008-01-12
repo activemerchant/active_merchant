@@ -172,7 +172,6 @@ module ActiveMerchant #:nodoc:
         Response.new(success, message, @response,
           :test => test?,
           :authorization => @response[:cross_reference],
-          :card_number => parameters[:CardNumber],
           :cvv_result => CVV_CODE[ @response[:avscv2_response_code].to_s[0, 1] ],
           :avs_result => {
             :street_match => AVS_STREET_MATCH[ @response[:avscv2_response_code].to_s[2, 1] ],

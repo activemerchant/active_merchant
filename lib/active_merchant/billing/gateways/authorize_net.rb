@@ -96,8 +96,7 @@ module ActiveMerchant #:nodoc:
           :authorization => @response[:transaction_id],
           :fraud_review => fraud_review?(@response),
           :avs_result => { :code => @response[:avs_result_code] },
-          :cvv_result => @response[:card_code],
-          :card_number => parameters[:card_num]
+          :cvv_result => @response[:card_code]
         )        
       end
       

@@ -25,22 +25,4 @@ class ResponseTest < Test::Unit::TestCase
     assert_equal 'M', cvv_result['code']
     assert_equal CVVResult.messages['M'], cvv_result['message']
   end
-  
-  def test_card_data
-    response = Response.new(true, 'message', {}, :card_number => '5105105105105100')
-    assert_equal 'master', response.card_data['type']
-    assert_equal CreditCard.last_digits('5105105105105100'), response.card_data['number']
-  end
-  
-  def test_empty_card_data
-    response = Response.new(true, 'message', {}, :card_number => nil)
-    assert_nil response.card_data['type']
-    assert_nil response.card_data['number']
-  end
-  
-  def test_blank_card_data
-    response = Response.new(true, 'message', {}, :card_number => '')
-    assert_nil response.card_data['type']
-    assert_nil response.card_data['number']
-  end
 end

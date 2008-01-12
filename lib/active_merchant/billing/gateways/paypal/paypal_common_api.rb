@@ -303,15 +303,8 @@ module ActiveMerchant #:nodoc:
     	    :test => test?,
     	    :authorization => @response[:transaction_id] || @response[:authorization_id], # latter one is from reauthorization
     	    :avs_result => { :code => @response[:avs_code] },
-    	    :cvv_result => @response[:cvv2_code],
-    	    :card_number => parse_credit_card_number(request)
+    	    :cvv_result => @response[:cvv2_code]
         )
-      end
-
-      def parse_credit_card_number(request)
-        xml = REXML::Document.new(request)
-        card_number = REXML::XPath.first(xml, '//n2:CreditCard/n2:CreditCardNumber')
-        card_number && card_number.text
       end
     end
   end

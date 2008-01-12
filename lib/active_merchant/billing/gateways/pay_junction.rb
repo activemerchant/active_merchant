@@ -324,9 +324,8 @@ module ActiveMerchant #:nodoc:
         @response = parse(data)
         
         Response.new(successful?(@response), message_from(@response), @response, 
-            :test => test?, 
-            :authorization => @response[:transaction_id] || parameters[:transaction_id],
-            :card_number => parameters[:number]
+          :test => test?, 
+          :authorization => @response[:transaction_id] || parameters[:transaction_id]
         )
       end
       

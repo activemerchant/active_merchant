@@ -120,8 +120,7 @@ module ActiveMerchant #:nodoc:
         
         Response.new(success, message, @response, 
           :test => test?, 
-          :authorization => @response[:transaction],
-          :card_number => params[:cardnumber]
+          :authorization => @response[:transaction]
         )
       end
 

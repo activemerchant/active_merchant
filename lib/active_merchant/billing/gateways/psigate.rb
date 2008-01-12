@@ -98,8 +98,7 @@ module ActiveMerchant #:nodoc:
           :test => test?, 
           :authorization => @response[:orderid],
           :avs_result => { :code => @response[:avsresult] },
-          :cvv_result => @response[:cardidresult],
-          :card_number => parameters[:CardNumber]
+          :cvv_result => @response[:cardidresult]
         )
       end
                                                

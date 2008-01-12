@@ -376,8 +376,7 @@ module ActiveMerchant #:nodoc:
           :test => test?, 
           :authorization => data["transid"],
           :cvv_result => data["cvv"],
-          :avs_result => { :code => data["avs"] },
-          :card_number => parameters['cc']
+          :avs_result => { :code => data["avs"] }
         )
       end
       

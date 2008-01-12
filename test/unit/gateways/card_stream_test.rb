@@ -61,13 +61,6 @@ class CardStreamTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
   
-  def test_card_data
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal CreditCard.last_digits(@credit_card.number), response.card_data['number']
-  end
-  
   def test_supported_countries
     assert_equal ['GB'], CardStreamGateway.supported_countries
   end

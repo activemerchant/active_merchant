@@ -156,13 +156,6 @@ class LinkpointTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
   
-  def test_card_data
-    @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal CreditCard.last_digits(@credit_card.number), response.card_data['number']
-  end
-  
   private
   def successful_authorization_response
     '<r_csp>CSI</r_csp><r_time>Sun Jan 6 21:41:31 2008</r_time><r_ref>0004486182</r_ref><r_error/><r_ordernum>1000</r_ordernum><r_message>APPROVED</r_message><r_code>1234560004486182:NNNM:100018312899:</r_code><r_tdate>1199680890</r_tdate><r_score/><r_authresponse/><r_approved>APPROVED</r_approved><r_avs>NNNM</r_avs>'

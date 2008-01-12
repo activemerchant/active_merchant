@@ -118,15 +118,7 @@ class MonerisTest < Test::Unit::TestCase
     end
   end
   
-  def test_card_data
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal CreditCard.last_digits(@credit_card.number), response.card_data['number']
-  end
-
-  private
-  
+  private  
   def successful_purchase_response
     <<-RESPONSE
 <?xml version="1.0"?>
