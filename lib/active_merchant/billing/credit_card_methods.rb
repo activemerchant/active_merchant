@@ -84,8 +84,12 @@ module ActiveMerchant #:nodoc:
           return nil
         end
         
+        def last_digits(number)          
+          number.to_s.slice(-4..-1) if number.to_s.length >= 4
+        end
+        
         def mask(number)
-          "XXXX-XXXX-XXXX-#{number.to_s.slice(-4..-1)}" if number.to_s.length >= 4
+          "XXXX-XXXX-XXXX-#{last_digits(number)}" if number.to_s.length >= 4
         end
         
         # Checks to see if the calculated type matches the specified type

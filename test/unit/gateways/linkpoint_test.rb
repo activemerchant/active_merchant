@@ -160,7 +160,7 @@ class LinkpointTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
     
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal CreditCard.mask(@credit_card.number), response.card_data['number']
+    assert_equal CreditCard.last_digits(@credit_card.number), response.card_data['number']
   end
   
   private

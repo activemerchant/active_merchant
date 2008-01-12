@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
       def format_card_data(number)
         {
           'type' => CreditCard.type?(number),
-          'number' => CreditCard.mask(number)
+          'number' => CreditCard.last_digits(number)
         }
       end
     end

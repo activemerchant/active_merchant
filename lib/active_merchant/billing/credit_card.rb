@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def last_digits
-        number.to_s.last(4)
+        self.class.last_digits(number)
       end
       
       def validate
