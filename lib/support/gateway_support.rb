@@ -3,7 +3,7 @@ require 'active_support'
 require 'lib/active_merchant'
 
 
-class GatewaySupport
+class GatewaySupport #:nodoc:
   ACTIONS = [:purchase, :authorize, :capture, :void, :credit, :recurring]
   
   include ActiveMerchant::Billing
