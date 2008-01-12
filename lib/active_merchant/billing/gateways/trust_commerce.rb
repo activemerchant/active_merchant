@@ -1,7 +1,7 @@
 begin
   require 'tclink'
 rescue LoadError
-  # Ignore, but we will fail hard if someone actually tries to use this gateway 
+  # Falls back to an SSL post to TrustCommerce
 end
 
 module ActiveMerchant #:nodoc:
@@ -60,6 +60,8 @@ module ActiveMerchant #:nodoc:
     # below and the rest of active_merchant's documentation, as well as Trust Commerce's user and developer documentation.
     
     class TrustCommerceGateway < Gateway
+      URL = 'https://vault.trustcommerce.com/trans/'
+      
       SUCCESS_TYPES = ["approved", "accepted"]
       
       DECLINE_CODES = {
@@ -94,16 +96,15 @@ module ActiveMerchant #:nodoc:
         "failtoprocess" => "The bank servers are offline and unable to authorize transactions"
       }
       
-      # URL
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
-
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :discover, :american_express, :diners_club, :jcb]
       self.supported_countries = ['US']
       self.homepage_url = 'http://www.trustcommerce.com/'
       self.display_name = 'TrustCommerce'
+      
+      def self.tclink?
+        defined?(TCLink)
+      end
       
       # Creates a new TrustCommerceGateway
       # 
@@ -126,8 +127,12 @@ module ActiveMerchant #:nodoc:
         super
       end
       
+      def tclink?
+        self.class.tclink?
+      end
+      
       def test?
-        @options[:test] || Base.gateway_mode == :test
+        @options[:test] || super
       end
       
       # authorize() is the first half of the preauth(authorize)/postauth(capture) model. The TC API docs call this
@@ -140,8 +145,10 @@ module ActiveMerchant #:nodoc:
           :amount => amount(money),
         }                                                             
         
+        add_order_id(parameters, options)
+        add_customer_data(parameters, options)
         add_payment_source(parameters, creditcard_or_billing_id)
-        add_address(parameters, options)
+        add_addresses(parameters, options)
         commit('preauth', parameters)
       end
       
@@ -152,8 +159,10 @@ module ActiveMerchant #:nodoc:
           :amount => amount(money),
         }                                                             
         
+        add_order_id(parameters, options)
+        add_customer_data(parameters, options)
         add_payment_source(parameters, creditcard_or_billing_id)
-        add_address(parameters, options)
+        add_addresses(parameters, options)
         commit('sale', parameters)
       end
 
@@ -255,7 +264,7 @@ module ActiveMerchant #:nodoc:
         }
         
         add_creditcard(parameters, creditcard)
-        add_address(parameters, options)                              
+        add_addresses(parameters, options)                              
         commit('store', parameters)
       end
       
@@ -293,11 +302,20 @@ module ActiveMerchant #:nodoc:
         params[:cvv]       = creditcard.verification_value if creditcard.verification_value?
       end
       
+      def add_order_id(params, options)
+        params[:ticket] = options[:order_id] unless options[:order_id].blank?
+      end
+      
       def add_billing_id(params, billingid)
         params[:billingid] = billingid
       end
       
-      def add_address(params, options)
+      def add_customer_data(params, options)
+        params[:email] = options[:email] unless options[:email].blank?
+        params[:ip] = options[:ip] unless options[:ip].blank?
+      end
+      
+      def add_addresses(params, options)
         address = options[:billing_address] || options[:address]
         
         if address          
@@ -308,7 +326,17 @@ module ActiveMerchant #:nodoc:
           params[:zip]       = address[:zip]      unless address[:zip].blank?
           params[:country]   = address[:country]  unless address[:country].blank?
           params[:avs]       = 'n'
-        end        
+        end
+        
+        if shipping_address = options[:shipping_address]
+          params[:shipto_name]     = address[:name]     unless address[:name].blank?
+          params[:shipto_address1] = address[:address1] unless address[:address1].blank?
+          params[:shipto_address2] = address[:address2] unless address[:address2].blank?
+          params[:shipto_city]     = address[:city]     unless address[:city].blank?
+          params[:shipto_state]    = address[:state]    unless address[:state].blank?
+          params[:shipto_zip]	     = address[:zip]      unless address[:zip].blank?
+          params[:shipto_country]  = address[:country]  unless address[:country].blank?
+        end
       end
       
       def clean_and_stringify_params(parameters)
@@ -322,35 +350,46 @@ module ActiveMerchant #:nodoc:
           parameters.delete(key)
         end
       end
+      
+      def post_data(parameters)
+        parameters.collect { |key, value| "#{key}=#{ CGI.escape(value.to_s)}" }.join("&")
+      end
   
       def commit(action, parameters)
-        test = test? || parameters[:test_request]
         parameters[:custid]      = @options[:login]
         parameters[:password]    = @options[:password]
-        parameters[:demo]        = test ? 'y' : 'n'
+        parameters[:demo]        = test? ? 'y' : 'n'
         parameters[:action]      = action
                 
-        if result = test_result_from_cc_number(parameters[:cc])
-          return result
+        clean_and_stringify_params(parameters)
+        
+        data = if tclink?
+          TCLink.send(parameters)
+        else
+          parse( ssl_post(URL, post_data(parameters)) )
         end
         
-        begin        
-          clean_and_stringify_params(parameters)
+        # to be considered successful, transaction status must be either "approved" or "accepted"
+        success = SUCCESS_TYPES.include?(data["status"])
+        message = message_from(data)
+        Response.new(success, message, data, 
+          :test => test?, 
+          :authorization => data["transid"],
+          :cvv_result => data["cvv"],
+          :avs_result => { :code => data["avs"] },
+          :card_number => parameters['cc']
+        )
+      end
+      
+      def parse(body)
+        results = {}
         
-          data = TCLink.send(parameters)
-          # to be considered successful, transaction status must be either "approved" or "accepted"
-          success = SUCCESS_TYPES.include?(data["status"])
-          message = message_from(data)
-       
-          Response.new(success, message, data, :test => test, :authorization => data["transid"] )
-        rescue NameError => e 
-          if e.message =~ /constant TCLink/
-            raise 'Trust Commerce requires "tclink" library from http://www.trustcommerce.com/tclink.html'        
-          else
-            raise
-          end
+        body.split(/\n/).each do |pair|
+          key,val = pair.split(/=/)
+          results[key] = val
         end
         
+        results
       end
       
       def message_from(data)        

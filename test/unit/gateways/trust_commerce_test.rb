@@ -2,40 +2,37 @@ require File.dirname(__FILE__) + '/../../test_helper'
 
 class TrustCommerceTest < Test::Unit::TestCase
   def setup
-    #TCLink rescue NameError assert false, 'Trust Commerce test cases require "tclink" library from http://www.trustcommerce.com/tclink.html'
-
     @gateway = TrustCommerceGateway.new(
       :login => 'TestMerchant',
       :password => 'password'
     )
+    # Force SSL post
+    @gateway.stubs(:tclink?).returns(false)
 
-    @creditcard = credit_card('4111111111111111')
+    @amount = 100
+    @credit_card = credit_card('4111111111111111')
   end
 
-  def test_purchase_success    
-    @creditcard.number = '1'
-
-    assert response = @gateway.purchase(100, @creditcard, :demo => 'y')
-    assert_equal Response, response.class
-    assert_equal '#0001', response.params['receiptid']
-    assert_equal true, response.success?
+  def test_successful_purchase
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '025-0007423614', response.authorization
   end
 
-  def test_purchase_error
-    @creditcard.number = '2'
-
-    assert response = @gateway.purchase(100, @creditcard, :demo => 'y')
-    assert_equal Response, response.class
-    assert_equal '#0001', response.params['receiptid']
-    assert_equal false, response.success?
-
+  def test_unsuccessful_purchase
+    @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card)
+    assert_instance_of Response, response
+    assert_failure response
   end
 
   def test_purchase_exceptions
-    @creditcard.number = '3' 
+    @gateway.expects(:ssl_post).raises(Error)
 
     assert_raise(Error) do
-      assert response = @gateway.purchase(100, @creditcard, :demo => 'y')  
+      assert response = @gateway.purchase(@amount, @credit_card)  
     end
   end
    
@@ -47,11 +44,50 @@ class TrustCommerceTest < Test::Unit::TestCase
    end
   end
   
+  def test_avs_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_equal 'Y', response.avs_result['code']
+  end
+  
+  def test_cvv_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_equal 'P', response.cvv_result['code']
+  end
+  
+  def test_card_data
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_equal CreditCard.mask(@credit_card.number), response.card_data['number']
+  end
+  
   def test_supported_countries
     assert_equal ['US'], TrustCommerceGateway.supported_countries
   end
 
   def test_supported_card_types
     assert_equal [:visa, :master, :discover, :american_express, :diners_club, :jcb], TrustCommerceGateway.supported_cardtypes
+  end
+  
+  def successful_purchase_response
+    <<-RESPONSE
+transid=025-0007423614
+status=approved
+avs=Y
+cvv=P
+    RESPONSE
+  end
+  
+  def unsuccessful_purchase_response
+    <<-RESPONSE
+transid=025-0007423827
+declinetype=cvv
+status=decline
+cvv=N
+    RESPONSE
   end
 end
