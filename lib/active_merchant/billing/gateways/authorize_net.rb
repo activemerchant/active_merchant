@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.net'
-
+      
       CARD_CODE_ERRORS = %w( N S )
       AVS_ERRORS = %w( A E N R W Z )
 
