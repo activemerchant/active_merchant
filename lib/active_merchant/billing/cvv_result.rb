@@ -16,17 +16,6 @@ module ActiveMerchant
         'X'  =>  'Card does not support verification'
       }
       
-      MATCH = {
-        'D' => :no_match,
-        'I' => :no_match,
-        'M' => :match,
-        'N' => :no_match,
-        'P' => :unavailable,
-        'S' => :no_match,
-        'U' => :unavailable,
-        'X' => :unavailable
-      }
-      
       def self.messages
         MESSAGES
       end
