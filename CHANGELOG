@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Update CyberSourceGateway to support avs and cvv results. Remove test_result_from_cc_number. [cody]
 * Remove match information from CVVResult [cody]
 * Remove Response#card_data. The application has access to the information anyway [cody]
 * Return the last 4 digits of the card number from the Response instead of the masked number [cody]

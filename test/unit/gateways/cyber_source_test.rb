@@ -1,18 +1,16 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class CyberSourceTest < Test::Unit::TestCase
-  LOGIN = 'YourLogin'
-  TRANSACTION_KEY = 'GenerateThisInTheBusinessCenter'
-  AMOUNT = 100 
-
   def setup
     Base.gateway_mode = :test
+
     @gateway = CyberSourceGateway.new(
-      :login => LOGIN,
-      :password => TRANSACTION_KEY , :test => true
+      :login => 'l',
+      :password => 'p'
     )
 
-    @creditcard = credit_card('4111111111111111', :type => 'visa')
+    @amount = 100
+    @credit_card = credit_card('4111111111111111', :type => 'visa')
     @declined_card = credit_card('801111111111111', :type => 'visa')
     
     @options = { :address => { 
@@ -27,17 +25,17 @@ class CyberSourceTest < Test::Unit::TestCase
                },
 
                :email => 'someguy1232@fakeemail.net',
-               :order_id => 'test1111111111111111',
+               :order_id => '1000',
                :line_items => [
                    {
-                      :declared_value => 100,
+                      :declared_value => @amount,
                       :quantity => 2,
                       :code => 'default',
                       :description => 'Giant Walrus',
                       :sku => 'WA323232323232323'
                    },
                    {
-                      :declared_value => 100,
+                      :declared_value => @amount,
                       :quantity => 2,
                       :description => 'Marble Snowcone',
                       :sku => 'FAKE1232132113123'
@@ -47,35 +45,35 @@ class CyberSourceTest < Test::Unit::TestCase
     }
   end
   
-  def test_purchase_success    
-    @creditcard.number = 1
+  def test_successful_purchase
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    assert response = @gateway.purchase(100, @creditcard, @options)
-    assert_equal Response, response.class
-    assert_equal '#0001', response.params['receiptid']
-    assert_equal true, response.success?
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']}", response.authorization
+    assert response.test?
   end
 
-  def test_purchase_error
-    @creditcard.number = 2
+  def test_unsuccessful_authorization
+    @gateway.expects(:ssl_post).returns(unsuccessful_authorization_response)
 
-    assert response = @gateway.purchase(100, @creditcard, @options)
-    assert_equal Response, response.class
-    assert_equal '#0001', response.params['receiptid']
-    assert_equal false, response.success?
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
   end
   
   def test_purchase_exceptions
-    @creditcard.number = 3 
+    @gateway.expects(:ssl_post).raises(Error)
     
     assert_raise(Error) do
-      assert response = @gateway.purchase(100, @creditcard, @options)
+      assert response = @gateway.purchase(@amount, @credit_card, @options)
     end
   end
   
   def test_successful_auth_request
     @gateway.stubs(:ssl_post).returns(successful_authorization_response)
-    assert response = @gateway.authorize(AMOUNT, @creditcard, @options)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal Response, response.class
     assert response.success?
     assert response.test?
@@ -83,7 +81,7 @@ class CyberSourceTest < Test::Unit::TestCase
   
   def test_successful_tax_request
     @gateway.stubs(:ssl_post).returns(successful_tax_response)
-    assert response = @gateway.calculate_tax(@creditcard, @options)
+    assert response = @gateway.calculate_tax(@credit_card, @options)
     assert_equal Response, response.class
     assert response.success?
     assert response.test?
@@ -91,38 +89,60 @@ class CyberSourceTest < Test::Unit::TestCase
 
   def test_successful_capture_request
     @gateway.stubs(:ssl_post).returns(successful_authorization_response, successful_capture_response)
-    assert response = @gateway.authorize(AMOUNT, @creditcard, @options)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert response.success?
     assert response.test?
-    assert response_capture = @gateway.capture(AMOUNT, response.authorization)
+    assert response_capture = @gateway.capture(@amount, response.authorization)
     assert response_capture.success?
     assert response_capture.test?
   end
 
   def test_successful_purchase_request
     @gateway.stubs(:ssl_post).returns(successful_capture_response)
-    assert response = @gateway.purchase(AMOUNT, @creditcard, @options)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert response.success?
     assert response.test?
   end
 
   def test_requires_error_on_purchase_without_order_id  
-    assert_raise(ArgumentError){ @gateway.purchase(AMOUNT, @creditcard, @options.delete_if{|key, val| key == :order_id}) }
+    assert_raise(ArgumentError){ @gateway.purchase(@amount, @credit_card, @options.delete_if{|key, val| key == :order_id}) }
   end
 
   def test_requires_error_on_authorization_without_order_id
-    assert_raise(ArgumentError){ @gateway.purchase(AMOUNT, @creditcard, @options.delete_if{|key, val| key == :order_id}) }
+    assert_raise(ArgumentError){ @gateway.purchase(@amount, @credit_card, @options.delete_if{|key, val| key == :order_id}) }
   end
 
   def test_requires_error_on_tax_calculation_without_line_items
-    assert_raise(ArgumentError){ @gateway.calculate_tax(@creditcard, @options.delete_if{|key, val| key == :line_items})}
+    assert_raise(ArgumentError){ @gateway.calculate_tax(@credit_card, @options.delete_if{|key, val| key == :line_items})}
   end
 
   def test_default_currency
     assert_equal 'USD', CyberSourceGateway.default_currency
   end
+  
+  def test_avs_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Y', response.avs_result['code']
+  end
+  
+  def test_cvv_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'M', response.cvv_result['code']
+  end
 
   private
+  
+  def successful_purchase_response
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+<soap:Header>
+<wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-2636690"><wsu:Created>2008-01-15T21:42:03.343Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.26"><c:merchantReferenceCode>b0a6cf9aa07f1a8495f89c364bbd6a9a</c:merchantReferenceCode><c:requestID>2004333231260008401927</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>Afvvj7Ke2Fmsbq0wHFE2sM6R4GAptYZ0jwPSA+R9PhkyhFTb0KRjoE4+ynthZrG6tMBwjAtT</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccAuthReply><c:reasonCode>100</c:reasonCode><c:amount>1.00</c:amount><c:authorizationCode>123456</c:authorizationCode><c:avsCode>Y</c:avsCode><c:avsCodeRaw>Y</c:avsCodeRaw><c:cvCode>M</c:cvCode><c:cvCodeRaw>M</c:cvCodeRaw><c:authorizedDateTime>2008-01-15T21:42:03Z</c:authorizedDateTime><c:processorResponse>00</c:processorResponse><c:authFactorCode>U</c:authFactorCode></c:ccAuthReply></c:replyMessage></soap:Body></soap:Envelope>
+    XML
+  end
 
   def successful_authorization_response
     <<-XML
@@ -130,7 +150,14 @@ class CyberSourceTest < Test::Unit::TestCase
 <soap:Header>
 <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-32551101"><wsu:Created>2007-07-12T18:31:53.838Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.26"><c:merchantReferenceCode>TEST11111111111</c:merchantReferenceCode><c:requestID>1842651133440156177166</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>AP4JY+Or4xRonEAOERAyMzQzOTEzMEM0MFZaNUZCBgDH3fgJ8AEGAMfd+AnwAwzRpAAA7RT/</c:requestToken><c:purchaseTotals><c:currency>USD</c:currency></c:purchaseTotals><c:ccAuthReply><c:reasonCode>100</c:reasonCode><c:amount>1.00</c:amount><c:authorizationCode>004542</c:authorizationCode><c:avsCode>A</c:avsCode><c:avsCodeRaw>I7</c:avsCodeRaw><c:authorizedDateTime>2007-07-12T18:31:53Z</c:authorizedDateTime><c:processorResponse>100</c:processorResponse><c:reconciliationID>23439130C40VZ2FB</c:reconciliationID></c:ccAuthReply></c:replyMessage></soap:Body></soap:Envelope>
     XML
-    
+  end
+  
+  def unsuccessful_authorization_response
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+<soap:Header>
+<wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-28121162"><wsu:Created>2008-01-15T21:50:41.580Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.26"><c:merchantReferenceCode>a1efca956703a2a5037178a8a28f7357</c:merchantReferenceCode><c:requestID>2004338415330008402434</c:requestID><c:decision>REJECT</c:decision><c:reasonCode>231</c:reasonCode><c:requestToken>Afvvj7KfIgU12gooCFE2/DanQIApt+G1OgTSA+R9PTnyhFTb0KRjgFY+ynyIFNdoKKAghwgx</c:requestToken><c:ccAuthReply><c:reasonCode>231</c:reasonCode></c:ccAuthReply></c:replyMessage></soap:Body></soap:Envelope>    
+    XML
   end
    
   def successful_tax_response

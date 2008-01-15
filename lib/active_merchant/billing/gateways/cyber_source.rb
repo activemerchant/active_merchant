@@ -336,33 +336,22 @@ module ActiveMerchant #:nodoc:
       def commit(request, options)
         request_body = build_request(request, options)
         
-        if test?
-          card_number = parse_credit_card_number(request_body)
-          if result = test? && test_result_from_cc_number(card_number)
-            return result
-          end
-        end
-        
 	      url = test? ? TEST_URL : LIVE_URL
 	      data = ssl_post(url, request_body)
-	      reply = parse(data)
+	      response = parse(data)
         
-	      success = reply[:decision] == "ACCEPT"
-	      message = @@response_codes[('r' + reply[:reasonCode]).to_sym] rescue reply[:message] 
-        authorization = success ? [ options[:order_id], reply[:requestID], reply[:requestToken] ].compact.join(";") : nil
+	      success = response[:decision] == "ACCEPT"
+	      message = @@response_codes[('r' + response[:reasonCode]).to_sym] rescue response[:message] 
+        authorization = success ? [ options[:order_id], response[:requestID], response[:requestToken] ].compact.join(";") : nil
         
-        Response.new(success, message, reply, 
+        Response.new(success, message, response, 
           :test => test?, 
-          :authorization => authorization
+          :authorization => authorization,
+          :avs_result => { :code => response[:avsCode] },
+          :cvv_result => response[:cvCode]
         )
       end
       
-      def parse_credit_card_number(xml)
-        doc = REXML::Document.new(xml)
-        node = REXML::XPath.first(doc, '//card/accountNumber')
-        node && node.text
-      end
-
       # Parse the SOAP response
       # Technique inspired by the Paypal Gateway
       def parse(xml)
