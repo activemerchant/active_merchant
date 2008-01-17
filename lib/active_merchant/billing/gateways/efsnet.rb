@@ -4,10 +4,6 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
 
     class EfsnetGateway < Gateway
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
- 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.concordefsnet.com/'
@@ -28,7 +24,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def test?
-        @options[:test] || Base.gateway_mode == :test
+        @options[:test] || super
       end
       
       def authorize(money, creditcard, options = {})
@@ -61,7 +57,7 @@ module ActiveMerchant #:nodoc:
       def void(identification, options = {})
         requires!(options, :order_id)
         original_transaction_id, original_transaction_amount = identification.split(";")
-        commit(:void_transaction, {:reference_number => options[:order_id], :transaction_ID => original_transaction_id})
+        commit(:void_transaction, {:reference_number => format_reference_number(options[:order_id]), :transaction_ID => original_transaction_id})
       end
       
       def voice_authorize(money, authorization_code, creditcard, options = {})
@@ -88,7 +84,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
 
         post = {
-          :reference_number => options[:order_id],
+          :reference_number => format_reference_number(options[:order_id]),
           :transaction_amount => amount(money),
           :original_transaction_amount => original_transaction_amount,
           :original_transaction_ID => original_transaction_id,
@@ -100,7 +96,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
 
         post = {
-          :reference_number => options[:order_id],
+          :reference_number => format_reference_number(options[:order_id]),
           :authorization_number => options[:authorization_number],
           :transaction_amount => amount(money),
           :client_ip_address => options[:ip]
@@ -109,6 +105,10 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post,creditcard)
         add_address(post,options)
         post
+      end
+      
+      def format_reference_number(number)
+        number.to_s.slice(0,12)
       end
     
       def add_address(post,options)
@@ -147,48 +147,23 @@ module ActiveMerchant #:nodoc:
 
   
       def commit(action, parameters)                                 
-        if result = test_result_from_cc_number(parameters[:account_number])
-          return result
-        end
-
-        parameters.delete_if {|key,value| value.blank?}       
-
-        headers = { 'Content-Type' => 'text/xml' }
-        data = ssl_post @url, post_data(action, parameters), headers
-
+        data = ssl_post(@url, post_data(action, parameters), 'Content-Type' => 'text/xml')
         @response = parse(data)
 
-        success = (response[:response_code] and response[:response_code] == '0')
-        message = message_form(response[:result_message])
+        success = response[:response_code] == '0'
+        message = message_from(response[:result_message])
         
         authorization = [ response[:transaction_id], parameters[:transaction_amount] ].compact.join(';')
         
         Response.new(success, message, @response,
           :test => test?,
-          :authorization => authorization
+          :authorization => authorization,
+          :avs_result => { :code => @response[:avs_response_code] },
+          :cvv_result => @response[:cvv_response_code]
         )
       end
                                                
-      # Parse response xml into a convinient hash
       def parse(xml)
-        #<Reply>
-        #<TransactionReply>
-        #<ResponseCode>0</ResponseCode>
-        #<ResultCode>00</ResultCode>
-        #<ResultMessage>APPROVED</ResultMessage>
-        #<TransactionID>200011125443</TransactionID>
-        #<AVSResponseCode>N</AVSResponseCode>
-        #<CVVResponseCode></CVVResponseCode>
-        #<ApprovalNumber>123456</ApprovalNumber>
-        #<AuthorizationNumber>123456</AuthorizationNumber>
-        #<TransactionDate>070728</TransactionDate>
-        #<TransactionTime>024734</TransactionTime>
-        #<ReferenceNumber>19786</ReferenceNumber>
-        #<AccountNumber>XXXXXXXXXXXX5454</AccountNumber>
-        #<TransactionAmount>1.00</TransactionAmount>
-        #</TransactionReply>
-        #</Reply>
-
         response = {}
 
         xml = REXML::Document.new(xml)          
@@ -217,7 +192,7 @@ module ActiveMerchant #:nodoc:
         xml.to_s
       end
     
-      def message_form(message)
+      def message_from(message)
         return 'Unspecified error' if message.blank?
         message.gsub(/[^\w]/, ' ').split.join(" ").capitalize
       end
@@ -236,7 +211,6 @@ module ActiveMerchant #:nodoc:
       def actions
         ACTIONS
       end
-
 
       CREDIT_CARD_FIELDS =  [:authorization_number, :client_ip_address, :billing_address, :billing_city, :billing_state, :billing_postal_code, :billing_country, :billing_name, :card_verification_value, :expiration_month, :expiration_year, :reference_number, :transaction_amount, :account_number ]
 

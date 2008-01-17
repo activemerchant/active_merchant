@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Update EfsnetGateway to support avs and cvv data. Remove test_result_from_cc_number. [cody]
 * Remove test_result_from_cc_number from DataCash. Improve unit test coverage [cody]
 * Update CyberSourceGateway to support avs and cvv results. Remove test_result_from_cc_number. [cody]
 * Remove match information from CVVResult [cody]
