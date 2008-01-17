@@ -35,11 +35,6 @@ module ActiveMerchant
       # Datacash success code
       DATACASH_SUCCESS = '1'
       
-      # Class attributes
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
-      
       # Creates a new DataCashGateway
       # 
       # The gateway requires that a valid login and password be passed
@@ -65,13 +60,7 @@ module ActiveMerchant
       # * <tt>credit_card</tt> -- The CreditCard details for the transaction.
       # * <tt>options</tt> -- A hash of optional parameters.
       def purchase(money, credit_card, options = {})
-        if result = test_result_from_cc_number(credit_card.number)
-          return result
-        end
-      
-        request = build_purchase_or_authorization_request(AUTH_TYPE, money, credit_card, options)
-      
-        commit(request)
+        commit(build_purchase_or_authorization_request(AUTH_TYPE, money, credit_card, options))
       end
       
       # Performs an authorization, which reserves the funds on the customer's credit card, but does not 
@@ -83,13 +72,7 @@ module ActiveMerchant
       # * <tt>credit_card</tt> -- The CreditCard details for the transaction.
       # * <tt>options</tt> -- A hash of optional parameters.   
       def authorize(money, credit_card, options = {})
-        if result = test_result_from_cc_number(credit_card.number)
-          return result
-        end
-        
-        request = build_purchase_or_authorization_request(PRE_TYPE, money, credit_card, options)
-        
-        commit(request)
+        commit(build_purchase_or_authorization_request(PRE_TYPE, money, credit_card, options))
       end
       
       # Captures the funds from an authorized transaction.
@@ -99,9 +82,7 @@ module ActiveMerchant
       # * <tt>money</tt> -- The amount to be captured.  Either an Integer value in cents or a Money object.
       # * <tt>authorization</tt> -- The authorization returned from the previous authorize request.   
       def capture(money, authorization, options = {})
-        request = build_void_or_capture_request(FULFILL_TYPE, money, authorization, options)
-
-        commit(request)
+        commit(build_void_or_capture_request(FULFILL_TYPE, money, authorization, options))
       end                    
       
       # Void a previous transaction
@@ -117,7 +98,7 @@ module ActiveMerchant
       
       # Is the gateway running in test mode?
       def test?
-        @options[:test] || Base.gateway_mode == :test
+        @options[:test] || super
       end
     
       private                         
@@ -286,6 +267,7 @@ module ActiveMerchant
       #   -none: The results is stored in the passed xml document
       #   
       def add_credit_card(xml, credit_card, address)
+        
         xml.tag! :Card do
           
           # DataCash calls the CC number 'pan'
@@ -304,11 +286,13 @@ module ActiveMerchant
             
           xml.tag! :Cv2Avs do
             xml.tag! :cv2, credit_card.verification_value if credit_card.verification_value?
-            xml.tag! :street_address1, address[:address1] unless address[:address1].blank?
-            xml.tag! :street_address2, address[:address2] unless address[:address2].blank?
-            xml.tag! :street_address3, address[:address3] unless address[:address3].blank?
-            xml.tag! :street_address4, address[:address4] unless address[:address4].blank?
-            xml.tag! :postcode, address[:zip] unless address[:zip].blank?
+            if address
+              xml.tag! :street_address1, address[:address1] unless address[:address1].blank?
+              xml.tag! :street_address2, address[:address2] unless address[:address2].blank?
+              xml.tag! :street_address3, address[:address3] unless address[:address3].blank?
+              xml.tag! :street_address4, address[:address4] unless address[:address4].blank?
+              xml.tag! :postcode, address[:zip] unless address[:zip].blank?
+            end
             
             # The ExtendedPolicy defines what to do when the passed data 
             # matches, or not...
