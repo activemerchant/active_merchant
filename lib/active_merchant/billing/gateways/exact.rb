@@ -39,11 +39,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['CA', 'US']
       self.homepage_url = 'http://www.e-xact.com'
       self.display_name = 'E-xact'
-      
-      attr_reader :url
-      attr_reader :response
-      attr_reader :options
-
+  
       def initialize(options = {})
         requires!(options, :login, :password)
         @options = options

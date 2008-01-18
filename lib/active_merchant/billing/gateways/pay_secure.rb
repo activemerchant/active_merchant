@@ -3,10 +3,6 @@ module ActiveMerchant #:nodoc:
     class PaySecureGateway < Gateway
       URL = 'https://clearance.commsecure.com.au/cgi-bin/PSDirect'
       
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
-      
       self.money_format = :cents
 
       # Currently Authorization and Capture is not implemented because

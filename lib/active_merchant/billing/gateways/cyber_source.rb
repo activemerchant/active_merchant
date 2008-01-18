@@ -15,11 +15,6 @@ module ActiveMerchant #:nodoc:
     # * productCode is a value in the line_items hash that is used to tell CyberSource what kind of item you are selling.  It is used when calculating tax/VAT.
     # * All transactions use dollar values.
     class CyberSourceGateway < Gateway
-
-      attr_reader :url 
-      attr_reader :response
-      attr_accessor :options
-
       TEST_URL = 'https://ics2wstest.ic3.com/commerce/1.x/transactionProcessor'
       LIVE_URL = 'https://ics2ws.ic3.com/commerce/1.x/transactionProcessor'
           

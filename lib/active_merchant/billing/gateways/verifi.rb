@@ -62,11 +62,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.verifi.com/'
       self.display_name = 'Verifi'
-                               
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
-	                               
+
     	def initialize(options = {})
         requires!(options, :login, :password)
         @options = options

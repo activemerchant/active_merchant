@@ -18,10 +18,7 @@ module ActiveMerchant #:nodoc:
         8 => "Bad or malformed request",
         9 => "Invalid card number"
       }
-      
-      attr_reader :response
-      attr_reader :options
-
+  
       self.default_currency = 'NZD'
       self.supported_countries = ['NZ']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]

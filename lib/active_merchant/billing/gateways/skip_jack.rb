@@ -154,10 +154,6 @@ module ActiveMerchant #:nodoc:
         '-116' => 'POS Check Invalid Lane Number POS Check lane or cash register number is invalid. Use a valid lane or cash register number that has been configured in the Skipjack Merchant Account.',
         '-117' => 'POS Check Invalid Cashier Number'
       }
-         
-      attr_reader :url
-      attr_reader :response
-      attr_reader :options
       
       self.supported_countries = ['US', 'CA']
       self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :discover, :diners_club]

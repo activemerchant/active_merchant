@@ -42,10 +42,6 @@ module ActiveMerchant
       BANK_ERROR = REALEX_ERROR  = "Gateway is in maintenance. Please try again later."
       ERROR = CLIENT_DEACTIVATED = "Gateway Error"
       
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
-
       def initialize(options = {})
         requires!(options, :login, :password)
         @options = options

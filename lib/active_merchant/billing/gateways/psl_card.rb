@@ -37,10 +37,6 @@ module ActiveMerchant
       # the test account when testing...
       URL = 'https://pslcard3.paymentsolutionsltd.com/secure/transact.asp?'
       
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
-      
       # eCommerce sale transaction, details keyed by merchant or cardholder
       MESSAGE_TYPE = 'ESALE_KEYED' 
       

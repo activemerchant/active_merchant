@@ -5,10 +5,6 @@ module ActiveMerchant #:nodoc:
     	GATEWAY_URL = 'https://www.usaepay.com/gate.php'
       POST_HEADERS = { 'Content-Type' => 'application/x-www-form-urlencoded' }
       
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
-      
       self.supported_cardtypes = [:visa, :master, :american_express]
       self.supported_countries = ['US']
       self.homepage_url = 'http://www.usaepay.com/'

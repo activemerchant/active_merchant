@@ -2,10 +2,6 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class TransFirstGateway < Gateway
       URL = 'https://webservices.primerchants.com/creditcard.asmx/CCSale'
-      
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]

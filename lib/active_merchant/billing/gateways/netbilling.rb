@@ -3,10 +3,6 @@ module ActiveMerchant #:nodoc:
     class NetbillingGateway < Gateway
       URL = 'https://secure.netbilling.com:1402/gw/sas/direct3.1'
       
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
-
       TRANSACTIONS = {
         :authorization       => 'A',
         :purchase            => 'S',

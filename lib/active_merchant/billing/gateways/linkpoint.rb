@@ -90,9 +90,6 @@ module ActiveMerchant #:nodoc:
     # LinkPoint's Items entity is not yet supported in this module.
     # 
     class LinkpointGateway < Gateway     
-      attr_reader :response
-      attr_reader :options
-      
       # Your global PEM file. This will be assigned to you by linkpoint
       # 
       # Example: 

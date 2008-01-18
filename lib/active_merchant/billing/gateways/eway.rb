@@ -129,10 +129,6 @@ module ActiveMerchant #:nodoc:
         "96" => "System Error"
       }
       
-      attr_reader :url 
-      attr_reader :response
-      attr_reader :options
-	
 	    self.money_format = :cents
       self.supported_countries = ['AU']
       self.supported_cardtypes = [:visa, :master]

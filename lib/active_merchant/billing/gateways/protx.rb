@@ -34,10 +34,6 @@ module ActiveMerchant #:nodoc:
       
       POST_HEADERS = { 'Content-Type' => 'application/x-www-form-urlencoded' }
 
-      attr_reader :url
-      attr_reader :response
-      attr_reader :options
-
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :solo, :maestro, :diners_club]
       self.supported_countries = ['GB']
       self.default_currency = 'GBP'

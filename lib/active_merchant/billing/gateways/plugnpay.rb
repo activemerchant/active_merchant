@@ -93,10 +93,6 @@ module ActiveMerchant
       SUCCESS_CODES = [ 'pending', 'success' ]
       FAILURE_CODES = [ 'badcard', 'fraud' ]
      
-      # URL
-      attr_reader :response
-      attr_reader :options
-      
       self.default_currency = 'USD'
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
