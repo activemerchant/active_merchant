@@ -6,9 +6,9 @@ class EwayTest < Test::Unit::TestCase
       :login => '87654321'
     )
 
-    @creditcard = credit_card('4646464646464646')
+    @credit_card = credit_card('4646464646464646')
     
-    @test_params_success = {
+    @options = {
       :order_id => '1230123',
       :email => 'bob@testbob.com',
       :address => {
@@ -20,28 +20,26 @@ class EwayTest < Test::Unit::TestCase
         :zip      => '12345'
       },
       :description => 'purchased items'
-    }
-   
-    @xml_test_parameters = {
-      :CustomerID => @test_params_success[:login],
-      :CustomerInvoiceRef => @test_params_success[:order_id],
-      :TotalAmount => 100,
-      :CardNumber => @creditcard.number,
-      :CardExpiryMonth => sprintf("%.2i", @creditcard.month),
-      :CardExpiryYear => sprintf("%.4i", @creditcard.year)[-2..-1],
-      :CustomerFirstName => @creditcard.first_name,
-      :CustomerLastName => @creditcard.last_name,
-      :CustomerEmail => @test_params_success[:email],
-      :CustomerAddress => @test_params_success[:address][:address1],
-      :CustomerPostcode => @test_params_success[:address][:zip],
-      :CustomerInvoiceDescription => @test_params_success[:description],
-      :CardHoldersName => @creditcard.name,
-      :TrxnNumber => @test_params_success[:order_id],
-      :Option1 => '',
-      :Option2 => '',
-      :Option3 => ''        
-    }
+    } 
   end
+  
+  def test_successful_purchase
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+  
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '123456', response.authorization
+  end
+  
+  def test_failed_purchase
+    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+  
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+  
        
   def test_amount_style
    assert_equal '1034', @gateway.send(:amount, 1034)
@@ -51,11 +49,6 @@ class EwayTest < Test::Unit::TestCase
    end
   end
   
-  def test_purchase_is_valid_xml
-   assert data = @gateway.send(:post_data, @xml_test_parameters)
-   assert REXML::Document.new(data)
-  end  
-
   def test_ensure_does_not_respond_to_authorize
     assert !@gateway.respond_to?(:authorize)
   end
@@ -82,15 +75,44 @@ class EwayTest < Test::Unit::TestCase
   
   def test_add_address
     post = {}
-    @gateway.send(:add_address, post, @test_params_success)
+    @gateway.send(:add_address, post, @options)
     assert_equal '1234 First St., Apt. 1, Melbourne, ACT, AU', post[:CustomerAddress]
-    assert_equal @test_params_success[:address][:zip], post[:CustomerPostcode]
+    assert_equal @options[:address][:zip], post[:CustomerPostcode]
   end
 
   private
-
-  def xml_purchase_fixture
-    %q{<ewaygateway><ewayCustomerID>87654321</ewayCustomerID><ewayOption3></ewayOption3><ewayCustomerFirstName>Longbob</ewayCustomerFirstName><ewayCustomerAddress>47 Bobway, Bobville, WA, Australia</ewayCustomerAddress><ewayCustomerInvoiceRef>1230123</ewayCustomerInvoiceRef><ewayCardHoldersName>Longbob Longsen</ewayCardHoldersName><ewayTotalAmount>100</ewayTotalAmount><ewayTrxnNumber>1230123</ewayTrxnNumber><ewayCustomerLastName>Longsen</ewayCustomerLastName><ewayCustomerPostcode>2000</ewayCustomerPostcode><ewayCardNumber>4646464646464646</ewayCardNumber><ewayOption1></ewayOption1><ewayCardExpiryMonth>08</ewayCardExpiryMonth><ewayOption2></ewayOption2><ewayCustomerEmail>bob@testbob.com</ewayCustomerEmail><ewayCustomerInvoiceDescription>purchased items</ewayCustomerInvoiceDescription><ewayCardExpiryYear>07</ewayCardExpiryYear></ewaygateway>}
+  def successful_purchase_response
+    <<-XML
+<?xml version="1.0"?>
+<ewayResponse>
+  <ewayTrxnStatus>True</ewayTrxnStatus>
+  <ewayTrxnNumber>11292</ewayTrxnNumber>
+  <ewayTrxnReference/>
+  <ewayTrxnOption1/>
+  <ewayTrxnOption2/>
+  <ewayTrxnOption3/>
+  <ewayAuthCode>123456</ewayAuthCode>
+  <ewayReturnAmount>100</ewayReturnAmount>
+  <ewayTrxnError>00,Transaction Approved(Test CVN Gateway)</ewayTrxnError>
+</ewayResponse>
+    XML
+  end
+  
+  def failed_purchase_response
+    <<-XML
+<?xml version="1.0"?>
+<ewayResponse>
+  <ewayTrxnStatus>False</ewayTrxnStatus>
+  <ewayTrxnNumber>11290</ewayTrxnNumber>
+  <ewayTrxnReference/>
+  <ewayTrxnOption1/>
+  <ewayTrxnOption2/>
+  <ewayTrxnOption3/>
+  <ewayAuthCode/>
+  <ewayReturnAmount>100</ewayReturnAmount>
+  <ewayTrxnError>eWAY Error: Invalid Expiry Date. Your credit card has not been billed for this transaction.(Test CVN Gateway)</ewayTrxnError>
+</ewayResponse>
+    XML
   end
 end
 

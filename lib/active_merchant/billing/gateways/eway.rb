@@ -191,16 +191,10 @@ module ActiveMerchant #:nodoc:
         post[:Option3] = nil     
       end
 
-      def commit(money, parameters)
-          
+      def commit(money, parameters)       
         parameters[:TotalAmount] = amount(money)
-        
-        if result = test_result_from_cc_number(parameters[:CardNumber])
-          return result
-        end
-
         data = ssl_post gateway_url(parameters[:CVN], test?), post_data(parameters)
-        
+
         @response = parse(data)
 
         success = (response[:ewaytrxnstatus] == "True")
