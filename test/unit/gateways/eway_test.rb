@@ -39,8 +39,7 @@ class EwayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
   end
-  
-       
+         
   def test_amount_style
    assert_equal '1034', @gateway.send(:amount, 1034)
                                                       
