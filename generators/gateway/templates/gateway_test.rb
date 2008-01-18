@@ -1,44 +1,49 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class <%= class_name %>Test < Test::Unit::TestCase
-  AMOUNT = 100
-
   def setup
     @gateway = <%= class_name %>Gateway.new(
                  :login => 'login',
                  :password => 'password'
                )
 
-    @creditcard = credit_card('4242424242424242')
-
-    @address = { :address1 => '1234 My Street',
-                 :address2 => 'Apt 1',
-                 :company => 'Widgets Inc',
-                 :city => 'Ottawa',
-                 :state => 'ON',
-                 :zip => 'K1C2N6',
-                 :country => 'Canada',
-                 :phone => '(555)555-5555'
-               }
+    @credit_card = credit_card
+    @amount = 100
+    
+    @options = { 
+      :order_id => '1',
+      :billing_address => address,
+      :description => 'Store Purchase'
+    }
   end
   
-  def test_successful_request
-    @creditcard.number = 1
-    assert response = @gateway.purchase(AMOUNT, @creditcard, {})
+  def test_successful_purchase
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of 
     assert_success response
-    assert_equal '5555', response.authorization
+    
+    # Replace with authorization number from the successful response
+    assert_equal '', response.authorization
     assert response.test?
   end
 
   def test_unsuccessful_request
-    @creditcard.number = 2
-    assert response = @gateway.purchase(AMOUNT, @creditcard, {})
+    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
   end
 
-  def test_request_error
-    @creditcard.number = 3
-    assert_raise(Error){ @gateway.purchase(AMOUNT, @creditcard, {}) }
+  private
+  
+  # Place raw successful response from gateway here
+  def successful_purchase_response
+  end
+  
+  # Place raw failed response from gateway here
+  def failed_purcahse_response
   end
 end

@@ -126,9 +126,9 @@ module Test
         md5.hexdigest
       end
       
-      def credit_card(number = nil, options = {})
+      def credit_card(number = '4242424242424242', options = {})
         defaults = {
-          :number => (number || '4242424242424242'),
+          :number => number,
           :month => 9,
           :year => Time.now.year + 1,
           :first_name => 'Longbob',

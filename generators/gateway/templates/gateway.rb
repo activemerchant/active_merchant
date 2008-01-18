@@ -46,10 +46,6 @@ module ActiveMerchant #:nodoc:
         commit('capture', money, post)
       end
     
-      def self.supported_cardtypes
-        [:visa, :master, :american_express]
-      end
-         
       private                       
       
       def add_customer_data(post, options)
