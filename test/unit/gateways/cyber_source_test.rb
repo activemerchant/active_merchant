@@ -63,14 +63,6 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_failure response
   end
   
-  def test_purchase_exceptions
-    @gateway.expects(:ssl_post).raises(Error)
-    
-    assert_raise(Error) do
-      assert response = @gateway.purchase(@amount, @credit_card, @options)
-    end
-  end
-  
   def test_successful_auth_request
     @gateway.stubs(:ssl_post).returns(successful_authorization_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options)

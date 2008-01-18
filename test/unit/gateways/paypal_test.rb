@@ -39,14 +39,6 @@ class PaypalTest < Test::Unit::TestCase
     assert response.test?
   end
   
-  def test_purchase_exception
-    @gateway.expects(:ssl_post).raises(Error)
-    
-    assert_raise(Error) do
-      assert response = @gateway.purchase(@amount, @credit_card, @options)    
-    end
-  end
-  
   def test_reauthorization
     @gateway.expects(:ssl_post).returns(successful_reauthorization_response)
     response = @gateway.reauthorize(@amount, '32J876265E528623B')

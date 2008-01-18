@@ -52,14 +52,6 @@ class PayJunctionTest < Test::Unit::TestCase
     assert_equal PayJunctionGateway::DECLINE_CODES['FE'], response.message
   end
   
-  def test_purchase_exception
-    @gateway.expects(:ssl_post).raises(Error)
-    
-    assert_raise(Error) do
-      assert response = @gateway.purchase(100, @credit_card)
-    end
-  end
-  
   private
   def successful_authorization_response
     <<-RESPONSE

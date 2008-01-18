@@ -34,11 +34,6 @@ class UsaEpayTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_request_error
-    @creditcard.number = 3
-    assert_raise(Error){ @gateway.purchase(100, @creditcard, {}) }
-  end
-
   def test_address_key_prefix
     assert_equal 'bill', @gateway.send(:address_key_prefix, :billing)
     assert_equal 'ship', @gateway.send(:address_key_prefix, :shipping)

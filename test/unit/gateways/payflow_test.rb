@@ -33,14 +33,6 @@ class PayflowTest < Test::Unit::TestCase
     assert response.test?
   end
   
-  def test_purchase_exception
-    @gateway.expects(:ssl_post).raises(Error)
-    
-    assert_raise(Error) do
-      assert response = @gateway.purchase(@amount, @credit_card, @options)
-    end
-  end
-  
   def test_avs_result
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
     

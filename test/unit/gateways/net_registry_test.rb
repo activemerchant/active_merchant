@@ -39,15 +39,6 @@ class NetRegistryTest < Test::Unit::TestCase
     assert_equal Response, response.class
     assert_equal '#0001', response.params['receiptid']
     assert_equal false, response.success?
-
-  end
-  
-  def test_purchase_exceptions
-    @creditcard.number = 3 
-    
-    assert_raise(Error) do
-      assert response = @gateway.purchase(100, @creditcard, :order_id => 1)    
-    end
   end
 
   def test_successful_purchase

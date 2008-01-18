@@ -59,14 +59,6 @@ class SkipJackTest < Test::Unit::TestCase
 
   end
   
-  def test_authorization_exceptions
-    @creditcard.number = 3 
-    
-    assert_raise(Error) do
-      assert response = @gateway.authorize(100, @creditcard, @options)    
-    end
-  end
-  
   def test_purchase_success
     @gateway.expects(:ssl_post).times(2).returns(successful_authorization_response, successful_capture_response)
 

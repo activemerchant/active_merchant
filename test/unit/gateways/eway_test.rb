@@ -42,14 +42,6 @@ class EwayTest < Test::Unit::TestCase
       :Option3 => ''        
     }
   end
-
-  def test_purchase_exceptions
-    @creditcard.number = 3 
-    
-    assert_raise(Error) do
-      assert response = @gateway.purchase(100, @creditcard, @test_params_success)    
-    end
-  end
        
   def test_amount_style
    assert_equal '1034', @gateway.send(:amount, 1034)

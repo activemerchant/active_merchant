@@ -36,11 +36,6 @@ class PslCardTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_request_error
-    @creditcard.number = 3
-    assert_raise(Error){ @gateway.purchase(AMOUNT, @creditcard, {}) }
-  end
-  
   def test_supported_countries
     assert_equal ['GB'], PslCardGateway.supported_countries
   end

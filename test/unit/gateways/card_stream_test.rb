@@ -29,14 +29,6 @@ class CardStreamTest < Test::Unit::TestCase
     assert_failure response
   end
   
-  def test_purchase_exception
-    @gateway.expects(:ssl_post).raises(Error)
-    
-    assert_raise(Error) do
-      assert response = @gateway.purchase(@amount, @credit_card, @options)    
-    end
-  end
-  
   def test_successful_avs_result
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     

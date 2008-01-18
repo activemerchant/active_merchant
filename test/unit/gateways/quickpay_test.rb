@@ -39,11 +39,6 @@ class QuickpayTest < Test::Unit::TestCase
     assert response.test?
   end
   
-  def test_request_error
-    @gateway.expects(:ssl_post).raises(Error)
-    assert_raise(Error){ @gateway.purchase(@amount, @credit_card, @options) }
-  end
-  
   def test_parsing_response_with_errors
     @gateway.expects(:ssl_post).returns(error_response)
     

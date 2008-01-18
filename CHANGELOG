@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Remove useless tests raising Error [cody]
 * Update gateway templates [cody]
 * Fix Authorize.net test where authorize() was being called instead of purchase(). Perform some cleanup of the tests [ianlotin...@hotmail.com, cody]
 * Improve Authorize.net documentation based on the DataCashGateway docs [patrick.t.joyce]

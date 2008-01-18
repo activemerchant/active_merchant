@@ -26,11 +26,6 @@ class ExactTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_request_error
-    @credit_card.number = "3"
-    assert_raise(Error){ @gateway.purchase(100, @credit_card, {}) }
-  end
-  
   def test_expdate
     assert_equal( "%02d%s" % [ @credit_card.month,
                                @credit_card.year.to_s[-2..-1] ],

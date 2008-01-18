@@ -42,14 +42,6 @@ class VerifiTest < Test::Unit::TestCase
     assert_failure response
   end
   
-  def test_purchase_exceptions
-    @creditcard.number = 3 
-    
-    assert_raise(Error) do
-      assert response = @gateway.purchase(Money.new(100), @creditcard, { :order_id => 1 } )    
-    end  
-  end
-  
   def test_amount_style
     assert_equal '10.34', @gateway.send(:amount, Money.new(1034))
     assert_equal '10.34', @gateway.send(:amount, 1034)

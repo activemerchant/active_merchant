@@ -37,11 +37,6 @@ class TransFirstTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_request_error
-    @creditcard.number = 3
-    assert_raise(Error){ @gateway.purchase(AMOUNT, @creditcard, {}) }
-  end
-  
   def test_missing_field_response
     @gateway.stubs(:ssl_post).returns(missing_field_response)
     

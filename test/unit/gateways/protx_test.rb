@@ -27,14 +27,6 @@ class ProtxTest < Test::Unit::TestCase
     assert_failure response
   end
   
-  def test_purchase_exceptions
-    @creditcard.number = 3 
-    
-    assert_raise(Error) do
-      assert response = @gateway.purchase(100, @creditcard, :order_id => 1)    
-    end
-  end
-  
   def test_authorization_format
     @gateway.expects(:ssl_post).returns(successful_response)
     

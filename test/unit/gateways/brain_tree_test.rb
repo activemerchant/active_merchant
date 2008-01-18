@@ -33,14 +33,6 @@ class BrainTreeTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
   end
-
-  def test_purchase_exception
-    @gateway.expects(:ssl_post).raises(Error)
-    
-    assert_raise(Error) do
-      assert response = @gateway.purchase(@amount, @credit_card, @options)    
-    end
-  end
   
   def test_add_address
     result = {}

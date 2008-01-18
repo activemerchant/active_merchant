@@ -27,14 +27,6 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
   end
-
-  def test_purchase_exceptions
-    @gateway.expects(:ssl_post).raises(Error)
-
-    assert_raise(Error) do
-      assert response = @gateway.purchase(@amount, @credit_card)  
-    end
-  end
    
   def test_amount_style   
    assert_equal '1034', @gateway.send(:amount, 1034)

@@ -36,9 +36,4 @@ class SecurePayTechTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
   end
-
-  def test_request_error
-    @creditcard.number = 3
-    assert_raise(Error){ @gateway.purchase(AMOUNT, @creditcard, {}) }
-  end
 end

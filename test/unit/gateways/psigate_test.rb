@@ -37,14 +37,6 @@ class PsigateTest < Test::Unit::TestCase
     assert_failure response
   end
    
-  def test_purchase_exception
-    @gateway.expects(:ssl_post).raises(Error)
-    
-    assert_raise(Error) do
-      assert response = @gateway.purchase(@amount, @credit_card, @options)    
-    end
-  end
-    
   def test_amount_style
     assert_equal '10.34', @gateway.send(:amount, 1034)
   

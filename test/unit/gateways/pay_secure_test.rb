@@ -37,11 +37,6 @@ class PaySecureTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_request_error
-    @creditcard.number = 3
-    assert_raise(Error){ @gateway.purchase(AMOUNT, @creditcard, :order_id => 1) }
-  end
-  
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_response)
     assert response = @gateway.purchase(AMOUNT, @creditcard, :order_id => 1)

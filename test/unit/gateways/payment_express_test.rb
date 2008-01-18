@@ -54,11 +54,6 @@ class PaymentExpressTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_request_error
-    @visa.number = 3
-    assert_raise(Error){ @gateway.purchase(100, @visa) }
-  end
-  
   def test_default_currency
     assert_equal 'NZD', PaymentExpressGateway.default_currency
   end
