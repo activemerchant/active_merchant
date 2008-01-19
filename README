@@ -83,6 +83,15 @@ Installation from RubyGems
   > gem install activemerchant
 
 == Sample Usage
+	require 'rubygems'
+	require 'active_merchant'
+
+  # Use the TrustCommerce test servers
+  ActiveMerchant::Billing::Base.mode = :test
+
+  # ActiveMerchant accepts all amounts as Integer values in cents
+  # $10.00
+  amount = 1000
 
   # The card verification value is also known as CVV2, CVC2, or CID 
   credit_card = ActiveMerchant::Billing::CreditCard.new(
@@ -95,19 +104,19 @@ Installation from RubyGems
   							)
   
   # Validating the card automatically detects the card type
-  if creditcard.valid?
+  if credit_card.valid?
   
-    # Create a gateway object for the Authorize.net service
-    gateway = ActiveMerchant::Billing::AuthorizeNetGateway.new
+    # Create a gateway object for the TrustCommerce service
+    gateway = ActiveMerchant::Billing::TrustCommerceGateway.new(
+								:login => 'TestMerchant',
+								:password => 'password'
+							)
     
-    # Authorize for 10 dollars ( 1000 cents )
-    response = gateway.purchase(1000, credit_card)
+    # Authorize for the amount
+    response = gateway.purchase(amount, credit_card)
     
     if response.success?
-  
-      # Capture the money right away
-      gateway.capture(1000, response.authorization)
-  
+  		puts "Successfully charged $#{sprintf("%.2f", amount / 100)} to the credit card #{credit_card.display_number}"
     else
       raise StandardError, response.message 
     end
