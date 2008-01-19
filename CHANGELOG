@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Cleanup whitepace in README [patrick.t.joyce]
 * Update ExactGateway to support avs and cvv data. Remove test_result_from_cc_number. [cody]
 * Remove test_result_from_cc_number from eWay gateway. [cody]
 * Remove duplicate attr_reader definitions from all gateways [cody]
