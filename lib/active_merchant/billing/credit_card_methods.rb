@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
         'dankort'            => /^5019\d{12}$/,
         'maestro'            => /^(5[06-8]|6\d)\d{10,17}$/,
         'forbrugsforeningen' => /^600722\d{10}$/,
-        'laser'              => /^(6304[89]\d{11}(\d{2,3})?|670695\d{12})$/
+        'laser'              => /^(6304[89]\d{11}(\d{2,3})?|670695\d{13})$/
       }
     
       def self.included(base)
