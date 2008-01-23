@@ -156,6 +156,12 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
     
+    # Test payment history inquiry
+    response = @gateway.recurring_inquiry(@recurring_profile_id, :history => true)
+    assert_equal '0', response.params['result']
+    assert_success response
+    assert response.test?
+    
     # Test cancel
     response = @gateway.cancel_recurring(@recurring_profile_id)
     assert_equal "Approved", response.params['message']

@@ -62,8 +62,8 @@ module ActiveMerchant #:nodoc:
         commit(request, :recurring)
       end
       
-      def recurring_inquiry(profile_id)
-        request = build_recurring_request(:inquiry, nil, :profile_id => profile_id)
+      def recurring_inquiry(profile_id, options = {})
+        request = build_recurring_request(:inquiry, nil, options.update( :profile_id => profile_id ))
         commit(request, :recurring)
       end   
       
@@ -199,6 +199,9 @@ module ActiveMerchant #:nodoc:
               end
               if action != :add
                 xml.tag! "ProfileID", options[:profile_id]
+              end
+              if action == :inquiry
+                xml.tag! "PaymentHistory", ( options[:history] ? 'Y' : 'N' )
               end
             end
           end

@@ -161,12 +161,24 @@ module ActiveMerchant #:nodoc:
       end
       
       def parse_element(response, node)
-        if node.has_elements?
+        node_name = node.name.underscore.to_sym
+        case
+        when node_name == :rp_payment_result
+          # Since we'll have multiple history items, we can't just flatten everything
+          # down as we do everywhere else. RPPaymentResult elements are not contained
+          # in an RPPaymentResults element so we'll come here multiple times
+          response[node_name] ||= []
+          response[node_name] << ( payment_result_response = {} )
+          node.elements.each{ |e| parse_element(payment_result_response, e) }
+        when node.has_elements?
           node.elements.each{|e| parse_element(response, e) }
-        elsif node.name == 'ExtData'
+        when node_name.to_s =~ /amt$/
+          # *Amt elements don't put the value in the #text - instead they use a Currency attribute
+          response[node_name] = node.attributes['Currency']
+        when node_name == :ext_data
           response[node.attributes['Name'].underscore.to_sym] = node.attributes['Value']
         else
-          response[node.name.underscore.to_sym] = node.text
+          response[node_name] = node.text
         end
       end
       

@@ -153,6 +153,20 @@ class PayflowTest < Test::Unit::TestCase
     assert_equal "R7960E739F80", response.authorization
   end
   
+  def test_recurring_profile_payment_history_inquiry
+    @gateway.stubs(:ssl_post).returns(successful_payment_history_recurring_response)
+    
+    response = @gateway.recurring_inquiry('RT0000000009', :history => true)
+    assert_equal 1, response.payment_history.size
+    assert_equal '1', response.payment_history.first['payment_num']
+    assert_equal '7.25', response.payment_history.first['amt']
+  end
+  
+  def test_recurring_profile_payment_history_inquiry_contains_the_proper_xml
+    request = @gateway.send( :build_recurring_request, :inquiry, nil, :profile_id => 'RT0000000009', :history => true)
+    assert_match %r(<PaymentHistory>Y</PaymentHistory), request
+  end
+  
   def test_format_issue_number
     xml = Builder::XmlMarkup.new
     credit_card = credit_card("5641820000000005",
@@ -185,9 +199,30 @@ class PayflowTest < Test::Unit::TestCase
   <Result>0</Result>
   <Message>Approved</Message>
   <Partner>paypal</Partner>
-  <RpRef>R7960E739F80</RpRef>
+  <RPRef>R7960E739F80</RPRef>
   <Vendor>ActiveMerchant</Vendor>
   <ProfileId>RT0000000009</ProfileId>
+</ResponseData>
+  XML
+  end
+  
+  def successful_payment_history_recurring_response
+    <<-XML
+<ResponseData>
+  <Result>0</Result>
+  <Partner>paypal</Partner>
+  <RPRef>R7960E739F80</RPRef>
+  <Vendor>ActiveMerchant</Vendor>
+  <ProfileId>RT0000000009</ProfileId>
+  <RPPaymentResult>
+    <PaymentNum>1</PaymentNum>
+    <PNRef>V18A0D3048AF</PNRef>
+    <TransTime>12-Jan-08 04:30 AM</TransTime>
+    <Result>0</Result>
+    <Tender>C</Tender>
+    <Amt Currency="7.25"></Amt>
+    <TransState>6</TransState>
+  </RPPaymentResult>
 </ResponseData>
   XML
   end

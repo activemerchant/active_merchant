@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for recurring_inquiry() to the PayflowGateway [dave.my...@contentfree.com]
 * Add support for Authorize.net Automated Recurring Billing (ARB) [vkurnavenkov, forestcarlisle, ianlotin...@hotmail.com, patrick.t.joyce]
 * Fix laser card regex [ladislav.martincik]
 * Cleanup whitepace in README [patrick.t.joyce]
