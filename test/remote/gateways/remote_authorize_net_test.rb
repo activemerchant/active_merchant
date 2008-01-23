@@ -7,10 +7,26 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @gateway = AuthorizeNetGateway.new(fixtures(:authorize_net))
     @amount = 100
     @credit_card = credit_card('4242424242424242')
-    @options = { :order_id => generate_order_id, 
-                 :billing_address => address,
-                 :description => 'Store purchase'
-               }
+    @options = {
+      :order_id => generate_order_id,
+      :billing_address => address,
+      :description => 'Store purchase'
+    }
+
+    @recurring_options = {
+      :amount => 100,
+      :subscription_name => 'Test Subscription 1',
+      :credit_card => @credit_card,
+      :billing_address => address.merge(:first_name => 'Jim', :last_name => 'Smith'),
+      :interval => {
+        :length => 1,
+        :unit => :months
+      },
+      :duration => {
+        :start_date => Date.today,
+        :occurrences => 1
+      }
+    }
   end
   
   def test_successful_purchase
@@ -103,5 +119,27 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_match /The merchant login ID or password is invalid/, response.message
     
     assert_equal false, response.success?    
+  end
+
+  def test_successful_recurring
+    assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
+    assert response.success?, response.message
+    assert response.test?
+
+    subscription_id = response.authorization
+
+    assert response = @gateway.update_recurring(:subscription_id => subscription_id, :amount => @amount*2)
+    assert response.success?, response.message
+
+    assert response = @gateway.cancel_recurring(subscription_id)
+    assert response.success?, response.message
+  end
+
+  def test_recurring_should_fail_expired_credit_card
+    @credit_card.year = 2004
+    assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
+    assert !response.success?
+    assert response.test?
+    assert_equal 'E00018', response.response_code
   end
 end

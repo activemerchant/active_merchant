@@ -6,9 +6,9 @@ class AuthorizeNetTest < Test::Unit::TestCase
       :login => 'X',
       :password => 'Y'
     )
-
-    @credit_card = credit_card('4242424242424242')
     @amount = 100
+    @credit_card = credit_card('4242424242424242')
+    @subscription_id = '100748'
   end
 
   def test_successful_authorization
@@ -38,14 +38,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal '508141794', response.authorization
   end
   
-  def test_amount_style
-   assert_equal '10.34', @gateway.send(:amount, 1034)
-                                                      
-   assert_raise(ArgumentError) do
-     @gateway.send(:amount, '10.34')
-   end
-  end
-  
   def test_add_address_outsite_north_america
     result = {}
     
@@ -54,8 +46,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal ["address", "city", "company", "country", "phone", "state", "zip"], result.stringify_keys.keys.sort
     assert_equal 'n/a', result[:state]
     assert_equal '164 Waverley Street', result[:address] 
-    assert_equal 'DE', result[:country] 
-    
+    assert_equal 'DE', result[:country]     
   end
                                                              
   def test_add_address
@@ -156,6 +147,59 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
   
+  # ARB Unit Tests
+
+  def test_successful_recurring
+    @gateway.expects(:ssl_post).returns(successful_recurring_response)
+
+    response = @gateway.recurring(@amount, @credit_card,
+      :billing_address => address.merge(:first_name => 'Jim', :last_name => 'Smith'),
+      :interval => { 
+        :length => 10, 
+        :unit => :days
+      },
+      :duration => { 
+        :start_date => Time.now.strftime("%Y-%m-%d"),
+        :occurrences => 30
+      }
+   )
+
+    assert_instance_of AuthorizeNetRecurringResponse, response
+    assert response.success?
+    assert response.test?
+    assert_equal @subscription_id, response.authorization
+  end
+
+  def test_successful_update_recurring
+    @gateway.expects(:ssl_post).returns(successful_update_recurring_response)
+
+    response = @gateway.update_recurring(:subscription_id => @subscription_id, :amount => @amount*2)
+
+    assert_instance_of AuthorizeNetRecurringResponse, response
+    assert response.success?
+    assert response.test?
+    assert_equal @subscription_id, response.authorization
+  end
+
+  def test_successful_cancel_recurring
+    @gateway.expects(:ssl_post).returns(successful_cancel_recurring_response)
+
+    response = @gateway.cancel_recurring(@subscription_id)
+
+    assert_instance_of AuthorizeNetRecurringResponse, response
+    assert response.success?
+    assert response.test?
+    assert_equal @subscription_id, response.authorization
+  end
+
+  def test_expdate_formatting
+    assert_equal '2009-09', @gateway.send(:arb_expdate, @credit_card)
+
+    assert_equal '2013-11', @gateway.send(:arb_expdate, credit_card('4111111111111111',
+                                          :month => 11,
+                                          :year => 2013))
+  end
+
   private
 
   def post_data_fixture
@@ -184,5 +228,53 @@ class AuthorizeNetTest < Test::Unit::TestCase
  
   def fraud_review_response
     "$4$,$$,$253$,$Thank you! For security reasons your order is currently being reviewed.$,$$,$X$,$0$,$$,$$,$1.00$,$$,$auth_capture$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$207BCBBF78E85CF174C87AE286B472D2$,$M$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$"
+  end
+
+  def successful_recurring_response
+    <<-XML
+<ARBCreateSubscriptionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+  <refId>Sample</refId>
+  <messages>
+    <resultCode>Ok</resultCode>
+    <message>
+      <code>I00001</code>
+      <text>Successful.</text>
+    </message>
+  </messages>
+  <subscriptionId>#{@subscription_id}</subscriptionId>
+</ARBCreateSubscriptionResponse>
+    XML
+  end
+
+  def successful_update_recurring_response
+    <<-XML
+<ARBUpdateSubscriptionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+  <refId>Sample</refId>
+  <messages>
+    <resultCode>Ok</resultCode>
+    <message>
+      <code>I00001</code>
+      <text>Successful.</text>
+    </message>
+  </messages>
+  <subscriptionId>#{@subscription_id}</subscriptionId>
+</ARBUpdateSubscriptionResponse>
+    XML
+  end
+
+  def successful_cancel_recurring_response
+    <<-XML
+<ARBCancelSubscriptionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+  <refId>Sample</refId>
+  <messages>
+    <resultCode>Ok</resultCode>
+    <message>
+      <code>I00001</code>
+      <text>Successful.</text>
+    </message>
+  </messages>
+  <subscriptionId>#{@subscription_id}</subscriptionId>
+</ARBCancelSubscriptionResponse>
+    XML
   end
 end

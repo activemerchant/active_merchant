@@ -21,4 +21,11 @@ class Gateway < Test::Unit::TestCase
     assert_false Gateway.new.test?
   end
   
+  def test_amount_style
+   assert_equal '10.34', Gateway.new.send(:amount, 1034)
+
+   assert_raise(ArgumentError) do
+     Gateway.new.send(:amount, '10.34')
+   end
+  end
 end

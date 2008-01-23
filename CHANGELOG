@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for Authorize.net Automated Recurring Billing (ARB) [vkurnavenkov, forestcarlisle, ianlotin...@hotmail.com, patrick.t.joyce]
 * Fix laser card regex [ladislav.martincik]
 * Cleanup whitepace in README [patrick.t.joyce]
 * Update ExactGateway to support avs and cvv data. Remove test_result_from_cc_number. [cody]
