@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add update and delete methods to update and delete records stored in the vault. [benjamin.curtis]
 * Add support for recurring_inquiry() to the PayflowGateway [dave.my...@contentfree.com]
 * Add support for Authorize.net Automated Recurring Billing (ARB) [vkurnavenkov, forestcarlisle, ianlotin...@hotmail.com, patrick.t.joyce]
 * Fix laser card regex [ladislav.martincik]

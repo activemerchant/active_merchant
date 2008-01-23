@@ -50,6 +50,29 @@ class RemoteBrainTreeTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved', second_response.message
     assert second_response.success?  
   end
+  
+  def test_add_to_vault_with_custom_vault_id
+    @options[:store] = rand(100000)+10001
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'This transaction has been approved', response.message
+    assert_success response
+    assert_equal @options[:store], response.params["customer_vault_id"].to_i
+  end
+  
+  def test_update_vault
+    test_add_to_vault_with_custom_vault_id
+    @credit_card = credit_card('4111111111111111', :month => 10)
+    assert response = @gateway.update(@options[:store], @credit_card)
+    assert_success response
+    assert_equal 'Customer Update Successful', response.message
+  end
+  
+  def test_delete_from_vault
+    test_add_to_vault_with_custom_vault_id
+    assert response = @gateway.delete(@options[:store])
+    assert_success response
+    assert_equal 'Customer Deleted', response.message
+  end
 
   def test_declined_purchase
     assert response = @gateway.purchase(@declined_amount, @credit_card, @options)
@@ -65,6 +88,16 @@ class RemoteBrainTreeTest < Test::Unit::TestCase
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_equal 'This transaction has been approved', capture.message
     assert_success capture
+  end
+  
+  def test_authorize_and_void
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'This transaction has been approved', auth.message
+    assert auth.authorization
+    assert void = @gateway.void(auth.authorization)
+    assert_equal 'Transaction Void Successful', void.message
+    assert_success void
   end
 
   def test_failed_capture

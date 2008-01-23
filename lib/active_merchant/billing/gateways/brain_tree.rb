@@ -16,6 +16,12 @@ module ActiveMerchant #:nodoc:
         super
       end  
       
+      # Pass :store => true in the options to store the 
+      # payment info at BrainTree and get a generated 
+      # customer_vault_id in the response.  
+      # Pass :store => some_number_or_string to specify the
+      # customer_vault_id BrainTree should use (make sure it's
+      # unique).
       def authorize(money, creditcard, options = {})
         post = {}
         add_invoice(post, options)
@@ -40,6 +46,33 @@ module ActiveMerchant #:nodoc:
         post ={}
         post[:transactionid] = authorization
         commit('capture', money, post)
+      end
+      
+      def void(authorization, options = {})
+        post ={}
+        post[:transactionid] = authorization
+        commit('void', nil, post)
+      end
+      
+      # Update the values (such as CC expiration) stored at
+      # BrainTree.  The CC number must be supplied in the
+      # CreditCard object.
+      def update(vault_id, creditcard, options = {})
+        post = {}
+        post[:customer_vault] = "update_customer"
+        add_customer_vault_id(post, vault_id)
+        add_creditcard(post, creditcard, options)        
+        add_address(post, creditcard, options)   
+        add_customer_data(post, options)
+             
+        commit(nil, nil, post)
+      end
+    
+      def delete(vault_id)
+        post = {}
+        post[:customer_vault] = "delete_customer"
+        add_customer_vault_id(post, vault_id)         
+        commit(nil, nil, post)
       end
     
       private                             
@@ -82,9 +115,11 @@ module ActiveMerchant #:nodoc:
         params[:customer_vault_id] = vault_id
       end
       
-      def add_creditcard(post, creditcard,options)   
-        post[:customer_vault] = "add_customer" if options[:store]
-        
+      def add_creditcard(post, creditcard,options)
+        if options[:store]  
+          post[:customer_vault] = "add_customer"
+          post[:customer_vault_id] = options[:store] unless options[:store] == true
+        end
         post[:ccnumber]  = creditcard.number
         post[:cvv] = creditcard.verification_value if creditcard.verification_value?
         post[:ccexp]  = expdate(creditcard)
@@ -149,7 +184,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:username]      = @options[:login]
         post[:password]   = @options[:password]
-        post[:type]       = action
+        post[:type]       = action if action
 
         request = post.merge(parameters).map {|key,value| "#{key}=#{CGI.escape(value.to_s)}"}.join("&")
         request        
