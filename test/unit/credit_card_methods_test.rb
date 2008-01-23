@@ -117,7 +117,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_not_equal 'laser', CreditCard.type?('630498502809056')
     
     # Alternate format
-    assert_equal 'laser', CreditCard.type?('670695000000000000')
+    assert_equal 'laser', CreditCard.type?('6706950000000000000')
   end
   
   def test_should_detect_when_an_argument_type_does_not_match_calculated_type
