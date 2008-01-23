@@ -41,11 +41,11 @@ module ActiveMerchant #:nodoc:
       def credit(money, ident, options = {})
         case ident
         when '1'
-          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money.to_s}, :test => true)
-        when '2'
-          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money.to_s, :error => FAILURE_MESSAGE },:test => true)
-        else
           raise Error, CREDIT_ERROR_MESSAGE
+        when '2'
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money.to_s, :error => FAILURE_MESSAGE }, :test => true)
+        else
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money.to_s}, :test => true)
         end
       end
  
