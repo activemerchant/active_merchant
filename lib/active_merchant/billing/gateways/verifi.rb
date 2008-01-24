@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class VerifiGateway < Gateway 
       class VerifiPostData < PostData
-        # Fields that will be send even if they are blank
+        # Fields that will be sent even if they are blank
         self.required_fields = [ :amount, :type, :ccnumber, :ccexp, :firstname, :lastname,
           :company, :address1, :address2, :city, :state, :zip, :country, :phone ]   
       end
@@ -69,12 +69,12 @@ module ActiveMerchant #:nodoc:
         super
     	end
 
-      def purchase(money, creditcard, options = {})
-        sale_authorization_or_credit_template(:purchase, money, creditcard, options)
+      def purchase(money, credit_card, options = {})
+        sale_authorization_or_credit_template(:purchase, money, credit_card, options)
       end
 
-      def authorize(money, creditcard, options = {})
-        sale_authorization_or_credit_template(:authorization, money, creditcard, options)
+      def authorize(money, credit_card, options = {})
+        sale_authorization_or_credit_template(:authorization, money, credit_card, options)
       end
                        
       def capture(money, authorization, options = {})
@@ -85,20 +85,20 @@ module ActiveMerchant #:nodoc:
         capture_void_or_refund_template(:void, 0, authorization, options)
       end
       
-      def credit(money, creditcard_or_authorization, options = {})
-        if creditcard_or_authorization.is_a?(String)
-          capture_void_or_refund_template(:refund, money, creditcard_or_authorization, options)
+      def credit(money, credit_card_or_authorization, options = {})
+        if credit_card_or_authorization.is_a?(String)
+          capture_void_or_refund_template(:refund, money, credit_card_or_authorization, options)
         else
-          sale_authorization_or_credit_template(:credit, money, creditcard_or_authorization, options)
+          sale_authorization_or_credit_template(:credit, money, credit_card_or_authorization, options)
         end
       end
 
       private  
              
-      def sale_authorization_or_credit_template(trx_type, money, creditcard, options = {})
+      def sale_authorization_or_credit_template(trx_type, money, credit_card, options = {})
         post = VerifiPostData.new
         add_security_key_data(post, options, money)
-        add_creditcard(post, creditcard)
+        add_credit_card(post, credit_card)
         add_addresses(post, options)
         add_customer_data(post, options)
         add_invoice_data(post, options)
@@ -113,17 +113,17 @@ module ActiveMerchant #:nodoc:
         commit(trx_type, money, post)
       end
                     
-      def add_creditcard(post, creditcard)
-        post[:ccnumber]  = creditcard.number
-        post[:ccexp]     = expdate(creditcard)
-        post[:firstname] = creditcard.first_name
-        post[:lastname]  = creditcard.last_name      
-        post[:cvv]       = creditcard.verification_value
+      def add_credit_card(post, credit_card)
+        post[:ccnumber]  = credit_card.number
+        post[:ccexp]     = expdate(credit_card)
+        post[:firstname] = credit_card.first_name
+        post[:lastname]  = credit_card.last_name      
+        post[:cvv]       = credit_card.verification_value
       end      
                  
-      def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
+      def expdate(credit_card)
+        year  = sprintf("%.4i", credit_card.year)
+        month = sprintf("%.2i", credit_card.month)
 
         "#{month}#{year[-2..-1]}"
       end
@@ -141,7 +141,7 @@ module ActiveMerchant #:nodoc:
           post[:fax]        = billing_address[:fax]             
         end
         
-        if shipping_address = options[:shipping_address] || billing_address
+        if shipping_address = options[:shipping_address]
           post[:shipping_firstname] = shipping_address[:first_name]
           post[:shipping_lastname]  = shipping_address[:last_name]  
           post[:shipping_company]   = shipping_address[:company]    
@@ -193,23 +193,20 @@ module ActiveMerchant #:nodoc:
       end                  
                                                     
       def commit(trx_type, money, post)
-          
         post[:amount] = amount(money)
         
-        if result = test_result_from_cc_number(post[:ccnumber])
-          return result
-        end
-                                                                            
-        data = ssl_post(URL, post_data(trx_type, post), 'Content-type' => "application/x-www-form-urlencoded")
-        @response = parse(data)
-                          
-        success = @response[:response].to_i == SUCCESS
-        message = @response[:response_code_message] ? @response[:response_code_message] : "" 
-    
-        Response.new(success, message, @response,
+        response = parse( ssl_post(URL, post_data(trx_type, post)) )
+                         
+        Response.new(response[:response].to_i == SUCCESS, message_from(response), response,
           :test => test?,
-          :authorization => @response[:transactionid]
+          :authorization => response[:transactionid],
+          :avs_result => { :code => response[:avsresponse] },
+          :cvv_result => response[:cvvresponse]
         )
+      end
+      
+      def message_from(response)
+        response[:response_code_message] ? response[:response_code_message] : ""
       end
                                                       
       def parse(body)

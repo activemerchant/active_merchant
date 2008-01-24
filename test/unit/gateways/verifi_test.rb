@@ -3,43 +3,38 @@ require File.dirname(__FILE__) + '/../../test_helper'
 class VerifiTest < Test::Unit::TestCase
   include ActiveMerchant::Billing
 
-  LOGIN = 'demo'
-  PASSWORD = 'password'
-
   def setup
     @gateway = VerifiGateway.new(
-      :login => LOGIN,
-      :password => PASSWORD
+      :login => 'l',
+      :password => 'p'
     )
     
-    @creditcard = credit_card('4111111111111111')
+    @credit_card = credit_card('4111111111111111')
     
     @options = {
-      :order_id => 37,
-      :email => "paul@domain.com",   
-      :address => { 
-         :address1 => '164 Waverley Street', 
-         :address2 => 'APT #7', 
-         :country => 'US', 
-         :city => 'Boulder', 
-         :state => 'CO', 
-         :zip => 12345 
-         }     
+      :order_id => '37',
+      :email => "paul@example.com",   
+      :billing_address => address     
     }
+    
+    @amount = 100
   end
 
-  def test_purchase_success    
-    @creditcard.number = 1
-    
-    assert response = @gateway.purchase(100, @creditcard, @options)
-    assert_success response     
+  def test_successful_request
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal '546061538', response.authorization
+    assert response.test?
   end
 
-  def test_purchase_error
-    @creditcard.number = 2
-    
-    assert response = @gateway.purchase(10, @creditcard, @options)
+  def test_unsuccessful_request
+    @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+    assert response.test?
   end
   
   def test_amount_style
@@ -62,7 +57,7 @@ class VerifiTest < Test::Unit::TestCase
     post = VerifiGateway::VerifiPostData.new
     post[:amount] = "1.01"                                          
   
-    @gateway.send(:add_creditcard, post, @creditcard)
+    @gateway.send(:add_credit_card, post, @credit_card)
                                                        
     assert data = @gateway.send(:post_data, :authorization, post)
     
@@ -71,6 +66,20 @@ class VerifiTest < Test::Unit::TestCase
     end
     
   end
+  
+  def test_avs_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'N', response.avs_result['code']
+  end
+  
+  def test_cvv_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'N', response.cvv_result['code']
+  end
 
   private
   
@@ -78,6 +87,11 @@ class VerifiTest < Test::Unit::TestCase
     %w(type username password ccnumber ccexp amount)
   end
   
-  #EXAMPLE RESPONSE: response=3&responsetext=Invalid+Card&authcode=&transactionid=12345&avsresponse=&cvvresponse=
+  def successful_purchase_response
+    "response=1&responsetext=SUCCESS&authcode=123456&transactionid=546061538&avsresponse=N&cvvresponse=N&orderid=37&type=sale&response_code=100"
+  end
 
+  def unsuccessful_purchase_response
+    "response=3&responsetext=Field required: ccnumber REFID:12109909&authcode=&transactionid=0&avsresponse=&cvvresponse=&orderid=37&type=sale&response_code=300"
+  end
 end

@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Update VerifiGateway to support avs and cvv data. Remove test_result_from_cc_number. [cody]
 * Small refactoring of UsaEpayGateway [cody]
 * Update UsaEpayGateway to support avs and cvv data. Remove test_result_from_cc_number. [cody]
 * Replace all usage of :address with :billing_address in test cases [cody]
