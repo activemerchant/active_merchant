@@ -1,7 +1,6 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class TransFirstTest < Test::Unit::TestCase
-  AMOUNT = 100
 
   def setup
     @gateway = TransFirstGateway.new(
@@ -9,38 +8,17 @@ class TransFirstTest < Test::Unit::TestCase
       :password => 'PASSWORD'
     )
 
-    @creditcard = credit_card('4242424242424242')
-
-    @address = { :address1 => '1234 My Street',
-                 :address2 => 'Apt 1',
-                 :company => 'Widgets Inc',
-                 :city => 'Ottawa',
-                 :state => 'ON',
-                 :zip => 'K1C2N6',
-                 :country => 'Canada',
-                 :phone => '(555)555-5555'
-               }
+    @credit_card = credit_card('4242424242424242')
+    @options = {
+      :billing_address => address
+    }
+    @amount = 100
   end
   
-  def test_successful_request
-    @creditcard.number = 1
-    assert response = @gateway.purchase(AMOUNT, @creditcard, {})
-    assert_success response
-    assert_equal '5555', response.authorization
-    assert response.test?
-  end
-
-  def test_unsuccessful_request
-    @creditcard.number = 2
-    assert response = @gateway.purchase(AMOUNT, @creditcard, {})
-    assert_failure response
-    assert response.test?
-  end
-
   def test_missing_field_response
     @gateway.stubs(:ssl_post).returns(missing_field_response)
     
-    response = @gateway.purchase(AMOUNT, @creditcard)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     
     assert_failure response
     assert response.test?
@@ -50,7 +28,7 @@ class TransFirstTest < Test::Unit::TestCase
   def test_successful_purchase
     @gateway.stubs(:ssl_post).returns(successful_purchase_response)
     
-    response = @gateway.purchase(AMOUNT, @creditcard)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     
     assert_success response
     assert response.test?
@@ -61,12 +39,26 @@ class TransFirstTest < Test::Unit::TestCase
   def test_failed_purchase
     @gateway.stubs(:ssl_post).returns(failed_purchase_response)
     
-    response = @gateway.purchase(AMOUNT, @creditcard)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     
     assert_failure response
     assert response.test?
     assert_equal '29005716', response.authorization
     assert_equal 'Invalid cardholder number', response.message
+  end
+  
+  def test_avs_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'X', response.avs_result['code']
+  end
+  
+  def test_cvv_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'M', response.cvv_result['code']
   end
   
   private
@@ -83,9 +75,9 @@ class TransFirstTest < Test::Unit::TestCase
   <Amount>1.00</Amount> 
   <AuthCode>Test00</AuthCode> 
   <Status>Authorized</Status> 
-  <AVSCode /> 
+  <AVSCode>X</AVSCode> 
   <Message>test transaction</Message> 
-  <CVV2Code /> 
+  <CVV2Code>M</CVV2Code> 
   <ACI /> 
   <AuthSource /> 
   <TransactionIdentifier /> 

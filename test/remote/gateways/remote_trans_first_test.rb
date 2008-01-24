@@ -1,24 +1,21 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class RemoteTransFirstTest < Test::Unit::TestCase
-  AMOUNT = 100
 
   def setup
     @gateway = TransFirstGateway.new(fixtures(:trans_first))
 
-    @creditcard = credit_card('4111111111111111')
-
+    @credit_card = credit_card('4111111111111111')
+    @amount = 100
     @options = { 
       :order_id => generate_order_id,
       :invoice => 'ActiveMerchant Sale',
-      :address => { :address1 => '1234 Shady Brook Lane',
-                    :zip => '90210'
-                  }
+      :billing_address => address
     }
   end
   
   def test_successful_purchase
-    assert response = @gateway.purchase(AMOUNT, @creditcard, @options)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'test transaction', response.message
     assert response.test?
     assert_success response
@@ -30,7 +27,7 @@ class RemoteTransFirstTest < Test::Unit::TestCase
       :login => '',
       :password => ''
     )
-    assert response = gateway.purchase(AMOUNT, @creditcard, @options)
+    assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'invalid account', response.message
     assert_failure response
   end

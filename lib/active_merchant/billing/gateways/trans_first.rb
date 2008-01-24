@@ -96,12 +96,14 @@ module ActiveMerchant #:nodoc:
   
         data = ssl_post URL, post_data(params)
         
-        @response = parse(data)  
-        success = @response[:status] == "Authorized"
+        response = parse(data)  
+        success = response[:status] == "Authorized"
 
-        Response.new(success, message_from(@response), @response, 
+        Response.new(success, message_from(response), response, 
           :test => test?, 
-          :authorization => @response[:trans_id]
+          :authorization => response[:trans_id],
+          :avs_result => { :code => response[:avs_code] },
+          :cvv_result => response[:cvv2_code]
         )
       end
       
