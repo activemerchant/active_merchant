@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
   
       private      
       def build_request(body, request_type = nil)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new
         xml.instruct!
         xml.tag! 'XMLPayRequest', 'Timeout' => 30, 'version' => "2.1", "xmlns" => XMLNS do
           xml.tag! 'RequestData' do
@@ -111,7 +111,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def build_reference_request(action, money, authorization, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new
         xml.tag! TRANSACTIONS[action] do
           xml.tag! 'PNRef', authorization
         
@@ -129,8 +129,10 @@ module ActiveMerchant #:nodoc:
         return if address.nil?
         xml.tag! tag do
           xml.tag! 'Name', address[:name] unless options[:name].blank?
-          xml.tag! 'Email', options[:email] unless options[:email].blank?
+          xml.tag! 'EMail', options[:email] unless options[:email].blank?
           xml.tag! 'Phone', address[:phone] unless address[:phone].blank?
+          xml.tag! 'CustCode', options[:customer] if !options[:customer].blank? && tag == 'BillTo'
+          
           xml.tag! 'Address' do
             xml.tag! 'Street', address[:address1] unless address[:address1].blank?
             xml.tag! 'City', address[:city] unless address[:city].blank?

@@ -11,7 +11,8 @@ class RemotePayflowTest < Test::Unit::TestCase
     )
 
     @options = { :billing_address => address,
-                 :email => 'cody@example.com'
+                 :email => 'cody@example.com',
+                 :customer => 'codyexample'
                }
   end
   

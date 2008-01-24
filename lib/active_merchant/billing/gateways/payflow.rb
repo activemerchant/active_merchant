@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def build_reference_sale_or_authorization_request(action, money, reference, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new 
         xml.tag! TRANSACTIONS[action] do
           xml.tag! 'PayData' do
             xml.tag! 'Invoice' do
@@ -98,7 +98,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def build_credit_card_request(action, money, credit_card, options)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new 
         xml.tag! TRANSACTIONS[action] do
           xml.tag! 'PayData' do
             xml.tag! 'Invoice' do
@@ -106,11 +106,8 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
 
-              billing_address = options[:billing_address] || options[:address]
-              shipping_address = options[:shipping_address] || billing_address
-
-              add_address(xml, 'BillTo', billing_address, options)
-              add_address(xml, 'ShipTo', shipping_address, options)
+              add_address(xml, 'BillTo', options[:billing_address], options) if options[:billing_address]
+              add_address(xml, 'ShipTo', options[:shipping_address], options) if options[:shipping_address]
               
               xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
             end
@@ -163,7 +160,7 @@ module ActiveMerchant #:nodoc:
           raise StandardError, "Invalid Recurring Profile Action: #{action}"
         end
 
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new 
         xml.tag! 'RecurringProfiles' do
           xml.tag! 'RecurringProfile' do
             xml.tag! action.to_s.capitalize do
@@ -187,11 +184,8 @@ module ActiveMerchant #:nodoc:
                   xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1 )
                   xml.tag! 'EMail', options[:email] unless options[:email].nil?
                   
-                  billing_address = options[:billing_address] || options[:address]
-                  shipping_address = options[:shipping_address] || billing_address
-                  
-                  add_address(xml, 'BillTo', billing_address, options)
-                  add_address(xml, 'ShipTo', shipping_address, options)
+                  add_address(xml, 'BillTo', options[:billing_address], options) if options[:billing_address]
+                  add_address(xml, 'ShipTo', options[:shipping_address], options) if options[:shipping_address]
                 end
                 xml.tag! 'Tender' do
                   yield xml

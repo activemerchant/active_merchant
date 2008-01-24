@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix email option in PayflowGateway. Remove support for :address option. :billing_address and :shipping_address must now be passed in separately. [cody]
 * Make Bogus gateway's credit() method behave like capture [cody]
 * Add update and delete methods to update and delete records stored in the vault. [benjamin.curtis]
 * Add support for recurring_inquiry() to the PayflowGateway [dave.my...@contentfree.com]
