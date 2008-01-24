@@ -83,7 +83,8 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'InvNum', options[:order_id] unless options[:order_id].blank?
                 xml.tag! 'Description', options[:description] unless options[:description].blank?
             
-                add_address(xml, 'BillTo', options[:billing_address], options) if options[:billing_address]
+                billing_address = options[:billing_address] || options[:address]
+                add_address(xml, 'BillTo', billing_address, options) if billing_address
                 add_address(xml, 'ShipTo', options[:shipping_address], options) if options[:shipping_address]
                 
                 xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
