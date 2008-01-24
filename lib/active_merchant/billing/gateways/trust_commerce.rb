@@ -6,11 +6,6 @@ end
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    
-    # To get started using TrustCommerce with active_merchant, download the tclink library from http://www.trustcommerce.com/tclink.html,
-    # following the instructions available there to get it working on your system. Once it is installed, you should be able to make sure
-    # that it is visible to your ruby install by opening irb and typing "require 'tclink'", which should return "true".
-    #
     # TO USE:
     # First, make sure you have everything setup correctly and all of your dependencies in place with:
     # 
@@ -55,6 +50,16 @@ module ActiveMerchant #:nodoc:
     # 3) Retrieve and store the unique transaction ID returned by Trust Commerece, for use in referencing the transaction in the future.
     #
     #   response.params["transid"]
+    #
+    # For higher performance and failover with the TrustCommerceGateway you can install the TCLink library from http://www.trustcommerce.com/tclink.html.
+    # Follow the instructions available there to get it working on your system. ActiveMerchant will automatically use tclink if available.
+    #
+    # The TCLink library has the following added benefits:
+    #  * Good transaction times. Transaction duration under 1.2 seconds are common.
+    #  * Fail-over to geographically distributed servers for extreme reliability
+    #
+    # Once it is installed, you should be able to make sure
+    # that it is visible to your ruby install by opening irb and typing "require 'tclink'", which should return "true".
     #
     # This should be enough to get you started with Trust Commerce and active_merchant. For further information, review the methods
     # below and the rest of active_merchant's documentation, as well as Trust Commerce's user and developer documentation.
