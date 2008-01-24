@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Remove sensitive data from NetRegistryGateway responses. Refactor gateway and tests. Remove test_result_from_cc_number. [cody]
 * Update VerifiGateway to support avs and cvv data. Remove test_result_from_cc_number. [cody]
 * Small refactoring of UsaEpayGateway [cody]
 * Update UsaEpayGateway to support avs and cvv data. Remove test_result_from_cc_number. [cody]
