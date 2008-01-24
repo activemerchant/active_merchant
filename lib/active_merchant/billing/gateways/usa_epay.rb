@@ -2,8 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
         
     class UsaEpayGateway < Gateway
-    	GATEWAY_URL = 'https://www.usaepay.com/gate.php'
-      POST_HEADERS = { 'Content-Type' => 'application/x-www-form-urlencoded' }
+    	URL = 'https://www.usaepay.com/gate.php'
       
       self.supported_cardtypes = [:visa, :master, :american_express]
       self.supported_countries = ['US']
@@ -71,10 +70,9 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, creditcard, options)
         billing_address = options[:billing_address] || options[:address]
-        shipping_address = options[:shipping_address] || billing_address
         
-        add_address_for_type(:billing, post, creditcard, billing_address) unless billing_address.nil?
-        add_address_for_type(:shipping, post, creditcard, shipping_address) unless shipping_address.nil?
+        add_address_for_type(:billing, post, creditcard, billing_address) if billing_address
+        add_address_for_type(:shipping, post, creditcard, options[:shipping_address]) if options[:shipping_address]
       end
 
       def add_address_for_type(type, post, creditcard, address)
@@ -142,22 +140,24 @@ module ActiveMerchant #:nodoc:
       
       def commit(action, money, parameters)
         parameters[:software] = 'Active Merchant'
-        parameters[:amount]       = amount(money)
-        parameters[:testmode] = test? ? 1 : 0
+        parameters[:amount]   = amount(money)
+        parameters[:testmode] = @options[:test] ? 1 : 0
         
-        if result = test_result_from_cc_number(parameters[:card])
-          return result
-        end
-                   
-        data = ssl_post(GATEWAY_URL, post_data(action, parameters), POST_HEADERS)
+        data = ssl_post(URL, post_data(action, parameters))
         
-        @response = parse(data)
-        success = @response[:status] == 'Approved'
-        message = message_from(@response)
+        response = parse(data)
+        success = response[:status] == 'Approved'
+        message = message_from(response)
 
-        Response.new(success, message, @response, 
-            :test => test?,
-            :authorization => @response[:ref_num]
+        Response.new(success, message, response, 
+          :test => @options[:test] || test?,
+          :authorization => response[:ref_num],
+          :cvv_result => response[:cvv2_result_code],
+          :avs_result => { 
+            :street_match => response[:avs_result_code].to_s[0,1],
+            :postal_match => response[:avs_result_code].to_s[1,1],
+            :code => response[:avs_result_code].to_s[2,1]
+          }
         )        
       end
 

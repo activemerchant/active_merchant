@@ -3,33 +3,30 @@ require File.dirname(__FILE__) + '/../../test_helper'
 class UsaEpayTest < Test::Unit::TestCase
   def setup
     @gateway = UsaEpayGateway.new(
-      :login => 'LOGIN'
-    )
+                :login => 'LOGIN'
+               )
 
-    @creditcard = credit_card('4242424242424242')
-    
-    @address = { :address1 => '1234 My Street',
-                 :address2 => 'Apt 1',
-                 :company => 'Widgets Inc',
-                 :city => 'Ottawa',
-                 :state => 'ON',
-                 :zip => 'K1C2N6',
-                 :country => 'Canada',
-                 :phone => '(555)555-5555'
-               }
+    @credit_card = credit_card('4242424242424242')
+    @options = {
+      :billing_address => address,
+      :shipping_address => address
+    }
+    @amount = 100
   end
   
   def test_successful_request
-    @creditcard.number = 1
-    assert response = @gateway.purchase(100, @creditcard, {})
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal '5555', response.authorization
+    assert_equal '55074409', response.authorization
     assert response.test?
   end
 
   def test_unsuccessful_request
-    @creditcard.number = 2
-    assert response = @gateway.purchase(100, @creditcard, {})
+    @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
   end
@@ -46,26 +43,21 @@ class UsaEpayTest < Test::Unit::TestCase
 
   def test_add_address
     post = {}
-    options = { :address => @address }
-    @gateway.send(:add_address, post, @creditcard, options)
+    @gateway.send(:add_address, post, @credit_card, @options)
     assert_address(:shipping, post)
     assert_equal 20, post.keys.size
   end
   
   def test_add_billing_address
     post = {}
-    options = { :billing_address => @address }
-    @gateway.send(:add_address, post, @creditcard, options)
+    @gateway.send(:add_address, post, @credit_card, @options)
     assert_address(:billing, post)
     assert_equal 20, post.keys.size
   end
   
   def test_add_billing_and_shipping_addresses
     post = {}
-    options = { :address => @address,
-                :billing_address => @address
-              }
-    @gateway.send(:add_address, post, @creditcard, options)
+    @gateway.send(:add_address, post, @credit_card, @options)
     assert_address(:shipping, post)
     assert_address(:billing, post)
     assert_equal 20, post.keys.size
@@ -86,20 +78,36 @@ class UsaEpayTest < Test::Unit::TestCase
   def test_supported_card_types
     assert_equal [:visa, :master, :american_express], UsaEpayGateway.supported_cardtypes
   end
+  
+  def test_avs_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Y', response.avs_result['code']
+    assert_equal 'Y', response.avs_result['street_match']
+    assert_equal 'Y', response.avs_result['postal_match']
+  end
+  
+  def test_cvv_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'M', response.cvv_result['code']
+  end
 
   private
   def assert_address(type, post) 
     prefix = key_prefix(type)
-    assert_equal @creditcard.first_name, post[key(prefix, 'fname')]
-    assert_equal @creditcard.last_name, post[key(prefix, 'lname')]
-    assert_equal @address[:company], post[key(prefix, 'company')]
-    assert_equal @address[:address1], post[key(prefix, 'street')]
-    assert_equal @address[:address2], post[key(prefix, 'street2')]
-    assert_equal @address[:city], post[key(prefix, 'city')]
-    assert_equal @address[:state], post[key(prefix, 'state')]
-    assert_equal @address[:zip], post[key(prefix, 'zip')]
-    assert_equal @address[:country], post[key(prefix, 'country')]
-    assert_equal @address[:phone], post[key(prefix, 'phone')]
+    assert_equal @credit_card.first_name, post[key(prefix, 'fname')]
+    assert_equal @credit_card.last_name, post[key(prefix, 'lname')]
+    assert_equal @options[:billing_address][:company], post[key(prefix, 'company')]
+    assert_equal @options[:billing_address][:address1], post[key(prefix, 'street')]
+    assert_equal @options[:billing_address][:address2], post[key(prefix, 'street2')]
+    assert_equal @options[:billing_address][:city], post[key(prefix, 'city')]
+    assert_equal @options[:billing_address][:state], post[key(prefix, 'state')]
+    assert_equal @options[:billing_address][:zip], post[key(prefix, 'zip')]
+    assert_equal @options[:billing_address][:country], post[key(prefix, 'country')]
+    assert_equal @options[:billing_address][:phone], post[key(prefix, 'phone')]
   end
   
   def key_prefix(type)
@@ -108,5 +116,13 @@ class UsaEpayTest < Test::Unit::TestCase
 
   def key(prefix, key)
     @gateway.send(:address_key, prefix, key)
+  end
+  
+  def successful_purchase_response
+    "UMversion=2.9&UMstatus=Approved&UMauthCode=001716&UMrefNum=55074409&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=YYY&UMcvv2Result=Match&UMcvv2ResultCode=M&UMresult=A&UMvpasResultCode=&UMerror=Approved&UMerrorcode=00000&UMcustnum=&UMbatch=596&UMisDuplicate=N&UMconvertedAmount=&UMconvertedAmountCurrency=840&UMconversionRate=&UMcustReceiptResult=No%20Receipt%20Sent&UMfiller=filled"
+  end
+  
+  def unsuccessful_purchase_response
+    "UMversion=2.9&UMstatus=Declined&UMauthCode=000000&UMrefNum=55076060&UMavsResult=Address%3A%20Match%20%26%205%20Digit%20Zip%3A%20Match&UMavsResultCode=YYY&UMcvv2Result=Not%20Processed&UMcvv2ResultCode=P&UMvpasResultCode=&UMresult=D&UMerror=Card%20Declined&UMerrorcode=10127&UMbatch=596&UMfiller=filled"
   end
 end

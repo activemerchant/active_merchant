@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Update UsaEpayGateway to support avs and cvv data. Remove test_result_from_cc_number. [cody]
+* Replace all usage of :address with :billing_address in test cases [cody]
 * Update TrustCommerce docs now that the gateway falls back to SSL post when tclink isn't available [cody]
 * Change ARB to use correct :address1 key for addresses [cody]
 * No need for specialized recurring response for Authorize.net recurring billing [cody]
