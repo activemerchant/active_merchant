@@ -1,24 +1,5 @@
 module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-
-    # Response for an Authorize.Net ARB request. This is the response object returned by the ActiveMerchant::Billing::AuthorizeNetGateway.recurring, 
-    # ActiveMerchant::Billing::AuthorizeNetGateway.update_recurring, and ActiveMerchant::Billing::AuthorizeNetGateway.cancel_recurring methods.
-    # 
-    # In addition to the properties in the base Response class, AuthorizeNetRecurringResponse contains two additional properties: +reference+ and +response_code+
-    class AuthorizeNetRecurringResponse < Response
-      # Contains the merchant assigned +reference_id+ for this transaction. If included in the request, this value will be 
-      # included in the response. This feature might be useful for multi-threaded applications.
-      attr_reader :reference
-      # The numerical code for the response. If the request was successful will be <tt>I00001</tt>. If an error occurs, it will be an error code.
-      attr_reader :response_code
-
-      def initialize(success, message, params = {}, options = {})
-        super(success, message, params, options)
-        @reference = options[:reference]
-        @response_code = options[:response_code]
-      end
-    end
-
+  module Billing #:nodoc
     # For more information on the Authorize.Net Gateway please visit their {Integration Center}[http://developer.authorize.net/]
     #
     # The login and password are not the username and password you use to 
@@ -243,6 +224,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+      
       def commit(action, money, parameters)
         parameters[:amount] = amount(money) unless action == 'VOID'
 
@@ -252,9 +234,9 @@ module ActiveMerchant #:nodoc:
         url = test? ? self.test_url : self.live_url
         data = ssl_post url, post_data(action, parameters)
 
-        @response = parse(data)
+        response = parse(data)
 
-        message = message_from(@response)
+        message = message_from(response)
 
         # Return the response. The authorization can be taken out of the transaction_id
         # Test Mode on/off is something we have to parse from the response text.
@@ -263,12 +245,12 @@ module ActiveMerchant #:nodoc:
         #   (TESTMODE) Successful Sale
         test_mode = test? || message =~ /TESTMODE/
 
-        Response.new(success?(@response), message, @response, 
+        Response.new(success?(response), message, response, 
           :test => test_mode, 
-          :authorization => @response[:transaction_id],
-          :fraud_review => fraud_review?(@response),
-          :avs_result => { :code => @response[:avs_result_code] },
-          :cvv_result => @response[:card_code]
+          :authorization => response[:transaction_id],
+          :fraud_review => fraud_review?(response),
+          :avs_result => { :code => response[:avs_result_code] },
+          :cvv_result => response[:card_code]
         )
       end
 
@@ -609,27 +591,18 @@ module ActiveMerchant #:nodoc:
 
       def recurring_commit(action, request)
         url = test? ? arb_test_url : arb_live_url
-        xml = ssl_post url, request, build_arb_headers(request.size)
+        xml = ssl_post(url, request, "Content-Type" => "text/xml")
+        
+        response = recurring_parse(action, xml)
 
-        @response = recurring_parse(action, xml)
-
-        message = @response[:message] || @response[:text]
+        message = response[:message] || response[:text]
         test_mode = test? || message =~ /Test Mode/
-        success = @response[:result_code] == 'Ok'
+        success = response[:result_code] == 'Ok'
 
-        AuthorizeNetRecurringResponse.new(success, message, @response,
+        Response.new(success, message, response,
           :test => test_mode,
-          :authorization => @response[:subscription_id],
-          :reference => @response[:ref_id],
-          :response_code => @response[:code]
+          :authorization => response[:subscription_id]
         )
-      end
-
-      def build_arb_headers(content_length)
-        {
-          "Content-Type" => "text/xml",
-          "Content-Length" => content_length.to_s
-        }
       end
 
      def recurring_parse(action, xml)

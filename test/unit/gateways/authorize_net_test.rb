@@ -164,7 +164,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       }
    )
 
-    assert_instance_of AuthorizeNetRecurringResponse, response
+    assert_instance_of Response, response
     assert response.success?
     assert response.test?
     assert_equal @subscription_id, response.authorization
@@ -173,9 +173,9 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_successful_update_recurring
     @gateway.expects(:ssl_post).returns(successful_update_recurring_response)
 
-    response = @gateway.update_recurring(:subscription_id => @subscription_id, :amount => @amount*2)
+    response = @gateway.update_recurring(:subscription_id => @subscription_id, :amount => @amount * 2)
 
-    assert_instance_of AuthorizeNetRecurringResponse, response
+    assert_instance_of Response, response
     assert response.success?
     assert response.test?
     assert_equal @subscription_id, response.authorization
@@ -186,7 +186,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
     response = @gateway.cancel_recurring(@subscription_id)
 
-    assert_instance_of AuthorizeNetRecurringResponse, response
+    assert_instance_of Response, response
     assert response.success?
     assert response.test?
     assert_equal @subscription_id, response.authorization

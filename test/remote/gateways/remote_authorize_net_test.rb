@@ -50,7 +50,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.test?
-    assert_match /TESTMODE/, response.message
+    assert_match(/TESTMODE/, response.message)
     assert response.authorization
   end
   
@@ -95,7 +95,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
                   "response_reason_text",
                   "transaction_id"], response.params.keys.sort
 
-    assert_match /The merchant login ID or password is invalid/, response.message
+    assert_match(/The merchant login ID or password is invalid/, response.message)
     
     assert_equal false, response.success?
   end
@@ -116,30 +116,30 @@ class AuthorizeNetTest < Test::Unit::TestCase
                   "response_reason_text",
                   "transaction_id"], response.params.keys.sort
   
-    assert_match /The merchant login ID or password is invalid/, response.message
+    assert_match(/The merchant login ID or password is invalid/, response.message)
     
     assert_equal false, response.success?    
   end
 
   def test_successful_recurring
     assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
-    assert response.success?, response.message
+    assert_success response
     assert response.test?
 
     subscription_id = response.authorization
 
-    assert response = @gateway.update_recurring(:subscription_id => subscription_id, :amount => @amount*2)
-    assert response.success?, response.message
+    assert response = @gateway.update_recurring(:subscription_id => subscription_id, :amount => @amount * 2)
+    assert_success response.success?
 
     assert response = @gateway.cancel_recurring(subscription_id)
-    assert response.success?, response.message
+    assert_success response
   end
 
   def test_recurring_should_fail_expired_credit_card
     @credit_card.year = 2004
     assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
-    assert !response.success?
+    assert_failure response
     assert response.test?
-    assert_equal 'E00018', response.response_code
+    assert_equal 'E00018', response.params['code']
   end
 end

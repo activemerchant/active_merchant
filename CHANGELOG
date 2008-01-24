@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* No need for specialized recurring response for Authorize.net recurring billing [cody]
 * Update TransFirst to support avs and cvv data. Remove test_result_from_cc_number. [cody]
 * Maintain backwards compatibility with :address option for now in the Payflow gateways [cody]
 * Remove test_result_from_cc_number from SecurePayTech. Improve unit test coverage [cody]
