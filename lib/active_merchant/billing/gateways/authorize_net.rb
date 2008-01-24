@@ -577,7 +577,7 @@ module ActiveMerchant #:nodoc:
           xml.tag!('firstName', address[:first_name])
           xml.tag!('lastName', address[:last_name])
           xml.tag!('company', address[:company])
-          xml.tag!('address', address[:address])
+          xml.tag!('address', address[:address1])
           xml.tag!('city', address[:city])
           xml.tag!('state', address[:state])
           xml.tag!('zip', address[:zip])
