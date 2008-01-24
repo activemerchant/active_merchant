@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Small refactoring of UsaEpayGateway [cody]
 * Update UsaEpayGateway to support avs and cvv data. Remove test_result_from_cc_number. [cody]
 * Replace all usage of :address with :billing_address in test cases [cody]
 * Update TrustCommerce docs now that the gateway falls back to SSL post when tclink isn't available [cody]

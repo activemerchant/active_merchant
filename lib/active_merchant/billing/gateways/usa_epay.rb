@@ -9,42 +9,60 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.usaepay.com/'
       self.display_name = 'USA ePay'
 
+      TRANSACTIONS = {
+        :authorization => 'authonly',
+        :purchase => 'sale',
+        :capture => 'capture'
+      }
+
       def initialize(options = {})
         requires!(options, :login)
         @options = options
         super
       end  
       
-      def authorize(money, creditcard, options = {})
+      def authorize(money, credit_card, options = {})
         post = {}
+        
+        add_amount(post, money)
         add_invoice(post, options)
-        add_creditcard(post, creditcard)        
-        add_address(post, creditcard, options)        
+        add_credit_card(post, credit_card)        
+        add_address(post, credit_card, options)        
         add_customer_data(post, options)
         
-        commit('authonly', money, post)
+        commit(:authorization, post)
       end
       
-      def purchase(money, creditcard, options = {})
+      def purchase(money, credit_card, options = {})
         post = {}
+        
+        add_amount(post, money)
         add_invoice(post, options)
-        add_creditcard(post, creditcard)        
-        add_address(post, creditcard, options)   
+        add_credit_card(post, credit_card)        
+        add_address(post, credit_card, options)   
         add_customer_data(post, options)
              
-        commit('sale', money, post)
+        commit(:purchase, post)
       end                       
     
       def capture(money, authorization, options = {})
-        post = {:refNum => authorization}
-        commit('capture', money, post)
+        post = {
+          :refNum => authorization
+        }
+        
+        add_amount(post, money)
+        commit(:capture, post)
       end
        
       private                       
     
-      def expdate(creditcard)
-        year  = format(creditcard.year, :two_digits)
-        month = format(creditcard.month, :two_digits)
+      def add_amount(post, money)
+        post[:amount] = amount(money)
+      end
+      
+      def expdate(credit_card)
+        year  = format(credit_card.year, :two_digits)
+        month = format(credit_card.month, :two_digits)
 
         "#{month}#{year}"
       end
@@ -68,18 +86,18 @@ module ActiveMerchant #:nodoc:
         end        
       end
 
-      def add_address(post, creditcard, options)
+      def add_address(post, credit_card, options)
         billing_address = options[:billing_address] || options[:address]
         
-        add_address_for_type(:billing, post, creditcard, billing_address) if billing_address
-        add_address_for_type(:shipping, post, creditcard, options[:shipping_address]) if options[:shipping_address]
+        add_address_for_type(:billing, post, credit_card, billing_address) if billing_address
+        add_address_for_type(:shipping, post, credit_card, options[:shipping_address]) if options[:shipping_address]
       end
 
-      def add_address_for_type(type, post, creditcard, address)
+      def add_address_for_type(type, post, credit_card, address)
         prefix = address_key_prefix(type)
 
-        post[address_key(prefix, 'fname')] = creditcard.first_name
-        post[address_key(prefix, 'lname')] = creditcard.last_name
+        post[address_key(prefix, 'fname')] = credit_card.first_name
+        post[address_key(prefix, 'lname')] = credit_card.last_name
         post[address_key(prefix, 'company')] = address[:company] unless address[:company].blank?
         post[address_key(prefix, 'street')] = address[:address1] unless address[:address1].blank?
         post[address_key(prefix, 'street2')] = address[:address2] unless address[:address2].blank?
@@ -105,11 +123,11 @@ module ActiveMerchant #:nodoc:
         post[:invoice] = options[:order_id]
       end
       
-      def add_creditcard(post, creditcard)      
-        post[:card]  = creditcard.number
-        post[:cvv2] = creditcard.verification_value if creditcard.verification_value?
-        post[:expir]  = expdate(creditcard)
-        post[:name] = creditcard.name
+      def add_credit_card(post, credit_card)      
+        post[:card]  = credit_card.number
+        post[:cvv2] = credit_card.verification_value if credit_card.verification_value?
+        post[:expir]  = expdate(credit_card)
+        post[:name] = credit_card.name
       end
       
       def parse(body)
@@ -138,18 +156,10 @@ module ActiveMerchant #:nodoc:
       end     
 
       
-      def commit(action, money, parameters)
-        parameters[:software] = 'Active Merchant'
-        parameters[:amount]   = amount(money)
-        parameters[:testmode] = @options[:test] ? 1 : 0
+      def commit(action, parameters)
+        response = parse( ssl_post(URL, post_data(action, parameters)) )
         
-        data = ssl_post(URL, post_data(action, parameters))
-        
-        response = parse(data)
-        success = response[:status] == 'Approved'
-        message = message_from(response)
-
-        Response.new(success, message, response, 
+        Response.new(response[:status] == 'Approved', message_from(response), response, 
           :test => @options[:test] || test?,
           :authorization => response[:ref_num],
           :cvv_result => response[:cvv2_result_code],
@@ -171,13 +181,12 @@ module ActiveMerchant #:nodoc:
       end
       
       def post_data(action, parameters = {})
-        post = {}
-  
-        post[:command]  = action
-        post[:key] = @options[:login]
+        parameters[:command]  = TRANSACTIONS[action]
+        parameters[:key] = @options[:login]
+        parameters[:software] = 'Active Merchant'
+        parameters[:testmode] = @options[:test] ? 1 : 0
 
-        request = post.merge(parameters).collect { |key, value| "UM#{key}=#{CGI.escape(value.to_s)}" }.join("&")
-        request
+        parameters.collect { |key, value| "UM#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
     end
   end
