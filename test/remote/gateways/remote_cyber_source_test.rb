@@ -12,7 +12,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     @amount = 100
     
     @options = {
-      :address => { 
+      :billing_address => { 
         :address1 => '1234 My Street',
         :address2 => 'Apt 1',
         :company => 'Widgets Inc',

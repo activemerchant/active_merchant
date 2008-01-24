@@ -6,7 +6,7 @@ class RemotePayflowTest < Test::Unit::TestCase
     
     @gateway = PayflowExpressGateway.new(fixtures(:payflow))
 
-    @options = { :address => { 
+    @options = { :billing_address => { 
                                 :name => 'Cody Fauser',
                                 :address1 => '1234 Shady Brook Lane',
                                 :city => 'Ottawa',

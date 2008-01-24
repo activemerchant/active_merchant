@@ -76,7 +76,7 @@ class TrustCommerceTest < Test::Unit::TestCase
   end
   
   def test_successful_authorize_with_avs
-    assert response = @gateway.authorize(@amount, @credit_card, {:address => @valid_address})
+    assert response = @gateway.authorize(@amount, @credit_card, :billing_address => @valid_address)
     
     assert_equal "Y", response.avs_result["code"]
     assert_match /The transaction was successful/, response.message

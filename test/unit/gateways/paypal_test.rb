@@ -17,7 +17,7 @@ class PaypalTest < Test::Unit::TestCase
   end 
 
   def test_no_ip_address
-    assert_raise(ArgumentError){ @gateway.purchase(@amount, @credit_card, :address => address)}
+    assert_raise(ArgumentError){ @gateway.purchase(@amount, @credit_card, :billing_address => address)}
   end
   
   def test_successful_purchase

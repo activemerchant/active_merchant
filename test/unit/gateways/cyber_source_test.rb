@@ -13,7 +13,7 @@ class CyberSourceTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111', :type => 'visa')
     @declined_card = credit_card('801111111111111', :type => 'visa')
     
-    @options = { :address => { 
+    @options = { :billing_address => { 
                   :address1 => '1234 My Street',
                   :address2 => 'Apt 1',
                   :company => 'Widgets Inc',

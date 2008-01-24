@@ -11,7 +11,7 @@ class EwayTest < Test::Unit::TestCase
     @options = {
       :order_id => '1230123',
       :email => 'bob@testbob.com',
-      :address => {
+      :billing_address => {
         :address1 => '1234 First St.',
         :address2 => 'Apt. 1',
         :city     => 'Melbourne',
@@ -76,7 +76,7 @@ class EwayTest < Test::Unit::TestCase
     post = {}
     @gateway.send(:add_address, post, @options)
     assert_equal '1234 First St., Apt. 1, Melbourne, ACT, AU', post[:CustomerAddress]
-    assert_equal @options[:address][:zip], post[:CustomerPostcode]
+    assert_equal @options[:billing_address][:zip], post[:CustomerPostcode]
   end
 
   private

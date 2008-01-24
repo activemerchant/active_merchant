@@ -10,7 +10,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     @creditcard = credit_card('4111111111111111')
 
     @options = { 
-      :address => { 
+      :billing_address => { 
         :name => 'Cody Fauser',
         :address1 => '1234 Shady Brook Lane',
         :city => 'Ottawa',

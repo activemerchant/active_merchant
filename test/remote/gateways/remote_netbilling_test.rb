@@ -20,7 +20,7 @@ class RemoteNetbillingTest < Test::Unit::TestCase
                   :phone => '650-253-0001'
                 }
   
-    @options = {  :address => @address,
+    @options = {  :billing_address => @address,
                   :description => 'Internet purchase'
                }
   end

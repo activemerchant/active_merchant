@@ -13,7 +13,7 @@ class ViaklixTest < Test::Unit::TestCase
       :order_id => '37',
       :email => "paul@domain.com",
       :description => 'Test Transaction',
-      :address => { 
+      :billing_address => { 
          :address1 => '164 Waverley Street', 
          :address2 => 'APT #7', 
          :country => 'US', 

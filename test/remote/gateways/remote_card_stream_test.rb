@@ -42,28 +42,30 @@ class RemoteCardStreamTest < Test::Unit::TestCase
                     )
 
     @mastercard_options = { 
-      :address => { :address1 => '25 The Larches',
-                    :city => "Narborough",
-                    :state => "Leicester",
-                    :zip => 'LE10 2RT'
-                  },
+      :billing_address => { 
+        :address1 => '25 The Larches',
+        :city => "Narborough",
+        :state => "Leicester",
+        :zip => 'LE10 2RT'
+      },
       :order_id => generate_order_id,
       :description => 'Store purchase'
     }
    
     @uk_maestro_options = {
-      :address => { :address1 => 'The Parkway',
-                    :address2 => "Larches Approach",
-                    :city => "Hull",
-                    :state => "North Humberside",
-                    :zip => 'HU7 9OP'
-                  },
+      :billing_address => { 
+        :address1 => 'The Parkway',
+        :address2 => "Larches Approach",
+        :city => "Hull",
+        :state => "North Humberside",
+        :zip => 'HU7 9OP'
+      },
       :order_id => generate_order_id,
       :description => 'Store purchase'
     }
     
     @solo_options = {
-      :address => {
+      :billing_address => {
         :address1 => '5 Zigzag Road',
         :city => 'Isleworth',
         :state => 'Middlesex',

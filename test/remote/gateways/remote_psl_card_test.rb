@@ -24,7 +24,7 @@ class RemotePslCardTest < Test::Unit::TestCase
   
   def test_successful_visa_purchase
     response = @gateway.purchase(ACCEPT_AMOUNT, @visa,
-      :address => @visa_address
+      :billing_address => @visa_address
     )
     assert_success response
     assert response.test?
@@ -32,7 +32,7 @@ class RemotePslCardTest < Test::Unit::TestCase
   
   def test_successful_visa_purchase_specifying_currency
     response = @gateway.purchase(ACCEPT_AMOUNT, @visa,
-      :address => @visa_address,
+      :billing_address => @visa_address,
       :currency => 'GBP'
     )
     assert_success response
@@ -41,7 +41,7 @@ class RemotePslCardTest < Test::Unit::TestCase
   
   def test_successful_solo_purchase
     response = @gateway.purchase(ACCEPT_AMOUNT, @solo, 
-      :address => @solo_address
+      :billing_address => @solo_address
     )
     assert_success response
     assert response.test?
@@ -49,7 +49,7 @@ class RemotePslCardTest < Test::Unit::TestCase
   
   def test_referred_purchase
     response = @gateway.purchase(REFERRED_AMOUNT, @uk_maestro, 
-      :address => @uk_maestro_address
+      :billing_address => @uk_maestro_address
     )
     assert_failure response
     assert response.test?
@@ -57,7 +57,7 @@ class RemotePslCardTest < Test::Unit::TestCase
   
   def test_declined_purchase
     response = @gateway.purchase(DECLINED_AMOUNT, @uk_maestro, 
-      :address => @uk_maestro_address
+      :billing_address => @uk_maestro_address
     )
     assert_failure response
     assert response.test?
@@ -65,7 +65,7 @@ class RemotePslCardTest < Test::Unit::TestCase
   
   def test_declined_keep_card_purchase
     response = @gateway.purchase(KEEP_CARD_AMOUNT, @uk_maestro, 
-      :address => @uk_maestro_address
+      :billing_address => @uk_maestro_address
     )
     assert_failure response
     assert response.test?
@@ -73,7 +73,7 @@ class RemotePslCardTest < Test::Unit::TestCase
   
   def test_successful_authorization
     response = @gateway.authorize(ACCEPT_AMOUNT, @uk_maestro, 
-      :address => @uk_maestro_address
+      :billing_address => @uk_maestro_address
     )
     assert_success response
     assert response.test?
@@ -84,7 +84,7 @@ class RemotePslCardTest < Test::Unit::TestCase
       :login => ''
     )
     response = @gateway.authorize(ACCEPT_AMOUNT, @uk_maestro, 
-      :address => @uk_maestro_address
+      :billing_address => @uk_maestro_address
     )
     assert_failure response
     assert response.test?
@@ -92,7 +92,7 @@ class RemotePslCardTest < Test::Unit::TestCase
   
   def test_successful_authorization_and_capture
     authorization = @gateway.authorize(ACCEPT_AMOUNT, @uk_maestro,
-      :address => @uk_maestro_address
+      :billing_address => @uk_maestro_address
     )
     assert_success authorization
     assert authorization.test?

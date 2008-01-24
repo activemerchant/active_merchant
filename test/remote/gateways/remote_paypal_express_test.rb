@@ -9,7 +9,7 @@ class PaypalExpressTest < Test::Unit::TestCase
     @options = {
       :order_id => '230000',
       :email => 'buyer@jadedpallet.com',
-      :address => { :name => 'Fred Brooks',
+      :billing_address => { :name => 'Fred Brooks',
                     :address1 => '1234 Penny Lane',
                     :city => 'Jonsetown',
                     :state => 'NC',

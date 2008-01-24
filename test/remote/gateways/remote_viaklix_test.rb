@@ -12,7 +12,7 @@ class RemoteViaklixTest < Test::Unit::TestCase
       :order_id => '#1000.1',
       :email => "paul@domain.com",   
       :description => 'Test Transaction',
-      :address => { 
+      :billing_address => { 
          :address1 => '164 Waverley Street', 
          :address2 => 'APT #7', 
          :country => 'US', 

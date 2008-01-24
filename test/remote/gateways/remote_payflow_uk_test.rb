@@ -37,17 +37,18 @@ class RemotePayflowUkTest < Test::Unit::TestCase
        :last_name           => 'Brooks'
       )
 
-    @options = { :address => { 
-                                :name => 'Cody Fauser',
-                                :address1 => '1234 Shady Brook Lane',
-                                :city => 'Ottawa',
-                                :state => 'ON',
-                                :country => 'CA',
-                                :zip => '90210',
-                                :phone => '555-555-5555'
-                             },
-                 :email => 'cody@example.com'
-               }
+    @options = { 
+      :billing_address => {
+         :name => 'Cody Fauser',
+         :address1 => '1234 Shady Brook Lane',
+         :city => 'Ottawa',
+         :state => 'ON',
+         :country => 'CA',
+         :zip => '90210',
+         :phone => '555-555-5555'
+      },
+      :email => 'cody@example.com'
+    }
   end
   
   def test_successful_purchase
