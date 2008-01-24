@@ -193,9 +193,8 @@ module ActiveMerchant #:nodoc:
 
       def commit(money, parameters)       
         parameters[:TotalAmount] = amount(money)
-        data = ssl_post gateway_url(parameters[:CVN], test?), post_data(parameters)
 
-        @response = parse(data)
+        @response = parse( ssl_post(gateway_url(parameters[:CVN], test?), post_data(parameters)) )
 
         success = (response[:ewaytrxnstatus] == "True")
         message = message_from(response[:ewaytrxnerror])
