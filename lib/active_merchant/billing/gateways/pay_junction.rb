@@ -160,12 +160,12 @@ module ActiveMerchant #:nodoc:
       # The first half of the preauth(authorize)/postauth(capture) model.
       # Checks to make sure funds are available for a transaction, and returns a
       # transaction_id that can be used later to postauthorize (capture) the funds.
-      def authorize(money, creditcard_or_billing_id, options = {})
+      def authorize(money, payment_source, options = {})
         parameters = {
           :transaction_amount => amount(money),
         }                                                             
         
-        add_payment_source(parameters, creditcard_or_billing_id)
+        add_payment_source(parameters, payment_source)
         add_address(parameters, options)
         add_optional_fields(parameters, options)
         commit('AUTHORIZATION', parameters)
@@ -173,12 +173,12 @@ module ActiveMerchant #:nodoc:
       
       # A simple sale, capturing funds immediately.
       # Execute authorization and capture in a single step.
-      def purchase(money, creditcard_or_billing_id, options = {})        
+      def purchase(money, payment_source, options = {})        
         parameters = {
           :transaction_amount => amount(money),
         }                                                             
         
-        add_payment_source(parameters, creditcard_or_billing_id)
+        add_payment_source(parameters, payment_source)
         add_address(parameters, options)
         add_optional_fields(parameters, options)
         commit('AUTHORIZATION_CAPTURE', parameters)
@@ -230,7 +230,7 @@ module ActiveMerchant #:nodoc:
       # The optional parameter :starting_at takes a date or time argument or a string in 
       # YYYYMMDD format and can be used to specify when the first charge will be made. 
       # If omitted the first charge will be immediate.      
-      def recurring(money, creditcard_or_billing_id, options = {})        
+      def recurring(money, payment_source, options = {})        
         requires!(options, [:periodicity, :monthly, :weekly, :daily], :payments)
       
         periodic_type = case options[:periodicity]
@@ -260,7 +260,7 @@ module ActiveMerchant #:nodoc:
           :schedule_start => start_date
         }
         
-        add_payment_source(parameters, creditcard_or_billing_id)
+        add_payment_source(parameters, payment_source)
         add_optional_fields(parameters, options)
         add_address(parameters, options)                                   
         commit('AUTHORIZATION_CAPTURE', parameters)
