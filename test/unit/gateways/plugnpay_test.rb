@@ -1,45 +1,38 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class PlugnpayTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
 
   def setup
-    ActiveMerchant::Billing::Base.mode = :test
-    
-    @login = 'X'
-    @password = 'Y'
+    Base.gateway_mode = :test
     
     @gateway = PlugnpayGateway.new(
-      :login => @login,
-      :password => @password, 
-      :debug => true )
+      :login => 'X',
+      :password => 'Y'
+    )
       
-    @creditcard = credit_card('4242424242424242')
+    @credit_card = credit_card
+    @options = {
+      :billing_address => address,
+      :description => 'Store purchase'
+    }
+    @amount = 100
   end
 
   def test_purchase_success
-    @creditcard.number = 1
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
     
-    assert response = @gateway.purchase(1000, @creditcard)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal Response, response.class
-    assert_equal true, response.success?
+    assert_success response
+    assert_equal '2008012522252119738', response.authorization
   end
 
   def test_purchase_error
-    @creditcard.number = 2
+    @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
 
-    assert response = @gateway.purchase(1000, @creditcard)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal Response, response.class
-    assert_equal false, response.success?
-  end
-  
-  def test_amount_style
-   assert_equal '10.34', @gateway.send(:amount, Money.new(1034))
-   assert_equal '10.34', @gateway.send(:amount, 1034)
-                                                      
-   assert_raise(ArgumentError) do
-     @gateway.send(:amount, '10.34')
-   end
+    assert_failure response
   end
   
   def test_add_address_outsite_north_america
@@ -66,6 +59,28 @@ class PlugnpayTest < Test::Unit::TestCase
     assert_equal result[:card_state], 'CO'
     assert_equal result[:card_address1], '164 Waverley Street'
     assert_equal result[:card_country], 'US'
+  end
+  
+  def test_avs_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
     
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'X', response.avs_result['code']
+  end
+  
+  def test_cvv_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'M', response.cvv_result['code']
+  end
+  
+  private
+  def successful_purchase_response
+    "FinalStatus=success&IPaddress=72%2e138%2e32%2e216&MStatus=success&User_Agent=&acct_code3=newcard&address1=1234%20My%20Street&address2=Apt%201&app_level=5&auth_code=TSTAUT&auth_date=20080125&auth_msg=%20&authtype=authpostauth&avs_code=X&card_address1=1234%20My%20Street&card_amount=1%2e00&card_city=Ottawa&card_country=CA&card_name=Longbob%20Longsen&card_state=ON&card_type=VISA&card_zip=K1C2N6&city=Ottawa&convert=underscores&country=CA&currency=usd&cvvresp=M&dontsndmail=yes&easycart=0&merchant=pnpdemo2&merchfraudlev=&mode=auth&orderID=2008012522252119738&phone=555%2d555%2d5555&publisher_email=trash%40plugnpay%2ecom&publisher_name=pnpdemo2&publisher_password=pnpdemo222&resp_code=00&shipinfo=0&shipname=Jim%20Smith&sresp=A&state=ON&success=yes&zip=K1C2N6&a=b\n"
+  end
+  
+  def unsuccessful_purchase_response
+    "FinalStatus=fraud&IPaddress=72%2e138%2e32%2e216&MStatus=badcard&User_Agent=&address1=1234%20My%20Street&address2=Apt%201&app_level=5&auth_code=&auth_date=20080125&auth_msg=%20Invalid%20Credit%20Card%20Number%2e%7c&authtype=authonly&card_address1=1234%20My%20Street&card_amount=1%2e00&card_city=Ottawa&card_country=CA&card_name=Longbob%20Longsen&card_state=ON&card_type=failure&card_zip=K1C2N6&city=Ottawa&convert=underscores&country=CA&currency=usd&dontsndmail=yes&easycart=0&errdetails=card%2dnumber%7cCard%20Number%20fails%20LUHN%20%2d%2010%20check%2e%7c&errlevel=1&merchant=pnpdemo2&mode=auth&orderID=2008012522275901541&phone=555%2d555%2d5555&publisher_email=trash%40plugnpay%2ecom&publisher_name=pnpdemo2&publisher_password=pnpdemo222&resp_code=P55&shipinfo=0&shipname=Jim%20Smith&sresp=E&state=ON&success=no&zip=K1C2N6&MErrMsg=Invalid%20Credit%20Card%20Number%2e%7c&a=b\n"
   end
 end

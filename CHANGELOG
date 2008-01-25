@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Update PlugNPayGateway to support avs and cvv data. Remove test_result_from_cc_number. [cody]
 * Update PaymentExpressGateway to remove test_result_from_cc_number. [cody]
 * Update PaySecure to remove test_result_from_cc_number. [cody]
 * Update NetbillingGateway to support avs and cvv data. Remove test_result_from_cc_number. [cody]
