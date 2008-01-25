@@ -14,8 +14,6 @@ module ActiveMerchant
     #    directly to the gateway then the appropriate cardholder present or not present message 
     #    type should be used rather than the ‘E’ equivalent.
     #   -The CV2 / AVS policies are set up with the account settings when signing up for an account
-    #   
-    #
     class PslCardGateway < Gateway
       self.money_format = :cents
       self.default_currency = 'GBP'
@@ -65,6 +63,24 @@ module ActiveMerchant
       #to be dispatched, PSL is informed and the full amount is the
       #taken.
       NOMINAL_AMOUNT = 101
+      
+      AVS_CODE = {
+        "ALL MATCH"	=> 'Y',
+        "SECURITY CODE MATCH ONLY" => 'N',
+        "ADDRESS MATCH ONLY" => 'Y',
+        "NO DATA MATCHES"	=> 'N',
+        "DATA NOT CHECKED"	=> 'R',
+        "SECURITY CHECKS NOT SUPPORTED"	=> 'X'
+      }
+      
+      CVV_CODE = {
+        "ALL MATCH"	=> 'M',
+        "SECURITY CODE MATCH ONLY" => 'M',
+        "ADDRESS MATCH ONLY" => 'N',
+        "NO DATA MATCHES"	=> 'N',
+        "DATA NOT CHECKED"	=> 'P',
+        "SECURITY CHECKS NOT SUPPORTED"	=> 'X'
+      }
       
       # Create a new PslCardGateway
       # 
@@ -247,20 +263,13 @@ module ActiveMerchant
       #   - ActiveMerchant::Billing::Response object
       #
       def commit(request)
-        if result = test_result_from_cc_number(request[:CardNumber])
-          return result
-        end
+        response = parse( ssl_post(URL, post_data(request)) )
         
-        result = ssl_post(URL, post_data(request))
-        
-        @response = parse(result)
-        
-        success = @response[:ResponseCode] == APPROVED
-        message = @response[:Message]
-        
-        Response.new(success, message, @response, 
-            :test => test?, 
-            :authorization => @response[:CrossReference]
+        Response.new(response[:ResponseCode] == APPROVED, response[:Message], response, 
+          :test => test?, 
+          :authorization => response[:CrossReference],
+          :cvv_result => CVV_CODE[response[:AVSCV2Check]],
+          :avs_result => { :code => AVS_CODE[response[:AVSCV2Check]] }
         )
       end
       
