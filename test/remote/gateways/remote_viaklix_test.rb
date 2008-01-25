@@ -4,27 +4,20 @@ class RemoteViaklixTest < Test::Unit::TestCase
   def setup
     @gateway = ViaklixGateway.new(fixtures(:viaklix))
     
-    @credit_card = credit_card('4242424242424242')
-    
+    @credit_card = credit_card    
     @bad_credit_card = credit_card('invalid')
     
     @options = {
       :order_id => '#1000.1',
       :email => "paul@domain.com",   
       :description => 'Test Transaction',
-      :billing_address => { 
-         :address1 => '164 Waverley Street', 
-         :address2 => 'APT #7', 
-         :country => 'US', 
-         :city => 'Boulder', 
-         :state => 'CO', 
-         :zip => '12345'
-      }     
+      :billing_address => address
     }
+    @amount = 100
   end
   
   def test_successful_purchase
-    assert response = @gateway.purchase(100, @credit_card, @options)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     
     assert_success response
     assert response.test?
@@ -33,7 +26,7 @@ class RemoteViaklixTest < Test::Unit::TestCase
   end
   
   def test_failed_purchase
-    assert response = @gateway.purchase(100, @bad_credit_card, @options)
+    assert response = @gateway.purchase(@amount, @bad_credit_card, @options)
   
     assert_failure response
     assert response.test?
@@ -41,10 +34,10 @@ class RemoteViaklixTest < Test::Unit::TestCase
   end
   
   def test_credit
-    assert purchase = @gateway.purchase(100, @credit_card, @options)
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
     
-    assert credit = @gateway.credit(100, @credit_card)
+    assert credit = @gateway.credit(@amount, @credit_card)
     assert_success credit
   end
 end

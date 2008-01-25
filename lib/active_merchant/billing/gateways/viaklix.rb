@@ -55,40 +55,39 @@ module ActiveMerchant #:nodoc:
       
       private
       def add_customer_data(form, options)
-        form[:email] = options[:email] unless options[:email].blank?
+        form[:email] = options[:email].to_s.slice(0, 100) unless options[:email].blank?
         form[:customer_code] = options[:customer].to_s.slice(0, 17) unless options[:customer].blank?
       end
       
       def add_invoice(form,options)
-        form[:invoice_number] = options[:order_id] || options[:invoice]
+        form[:invoice_number] = (options[:order_id] || options[:invoice]).to_s.slice(0, 10)
+        form[:description] = options[:description].to_s.slice(0, 255)
       end
       
       def add_address(form,options)
         billing_address = options[:billing_address] || options[:address] 
         
         if billing_address
-          form[:avs_address]    = billing_address[:address1]
-          form[:address2]       = billing_address[:address2]
-          form[:avs_zip]        = billing_address[:zip]
-          form[:city]           = billing_address[:city]
-          form[:state]          = billing_address[:state]
-          form[:company]        = billing_address[:company]
-          form[:phone]          = billing_address[:phone]
-          form[:country]        = billing_address[:country]
+          form[:avs_address]    = billing_address[:address1].to_s.slice(0, 30)
+          form[:address2]       = billing_address[:address2].to_s.slice(0, 30)
+          form[:avs_zip]        = billing_address[:zip].to_s.slice(0, 10)
+          form[:city]           = billing_address[:city].to_s.slice(0, 30)
+          form[:state]          = billing_address[:state].to_s.slice(0, 10)
+          form[:company]        = billing_address[:company].to_s.slice(0, 50)
+          form[:phone]          = billing_address[:phone].to_s.slice(0, 20)
+          form[:country]        = billing_address[:country].to_s.slice(0, 50)
         end
-        
-        shipping_address = options[:shipping_address] || billing_address
-        
-        if shipping_address
+                
+        if shipping_address = options[:shipping_address]
           first_name, last_name = parse_first_and_last_name(shipping_address[:name])
-          form[:ship_to_first_name]     = first_name
-          form[:ship_to_last_name]      = last_name
-          form[:ship_to_address]        = shipping_address[:address1]
-          form[:ship_to_city]           = shipping_address[:city]
-          form[:ship_to_state]          = shipping_address[:state]
-          form[:ship_to_company]        = shipping_address[:company]
-          form[:ship_to_country]        = shipping_address[:country]
-          form[:ship_to_zip]            = shipping_address[:zip]
+          form[:ship_to_first_name]     = first_name.to_s.slice(0, 20)
+          form[:ship_to_last_name]      = last_name.to_s.slice(0, 30)
+          form[:ship_to_address]        = shipping_address[:address1].to_s.slice(0, 30)
+          form[:ship_to_city]           = shipping_address[:city].to_s.slice(0, 30)
+          form[:ship_to_state]          = shipping_address[:state].to_s.slice(0, 10)
+          form[:ship_to_company]        = shipping_address[:company].to_s.slice(0, 50)
+          form[:ship_to_country]        = shipping_address[:country].to_s.slice(0, 50)
+          form[:ship_to_zip]            = shipping_address[:zip].to_s.slice(0, 10)
         end
       end
       
@@ -109,8 +108,8 @@ module ActiveMerchant #:nodoc:
           form[:cvv2] = 'present'
         end
         
-        form[:first_name] = creditcard.first_name
-        form[:last_name] = creditcard.last_name        
+        form[:first_name] = creditcard.first_name.to_s.slice(0, 20)
+        form[:last_name] = creditcard.last_name.to_s.slice(0, 30)
       end
       
       def preamble
@@ -127,22 +126,16 @@ module ActiveMerchant #:nodoc:
       end
       
       def commit(action, money, parameters)
-        if result = test_result_from_cc_number(parameters[:card_number])
-          return result
-        end
-        
         parameters[:amount] = amount(money)
         parameters[:transaction_type] = action
             
-        msg = ssl_post(test? ? TEST_URL : LIVE_URL, post_data(parameters))
-        
-        @response = parse(msg)
-        success = @response['result'] == APPROVED
-        message = @response['result_message']
-        
-        Response.new(success, message, @response, 
+        response = parse( ssl_post(test? ? TEST_URL : LIVE_URL, post_data(parameters)) )
+
+        Response.new(response['result'] == APPROVED, response['result_message'], response, 
           :test => @options[:test] || test?, 
-          :authorization => @response['txn_id']
+          :authorization => response['txn_id'],
+          :avs_result => { :code => response['avs_response'] },
+          :cvv_result => response['cvv2_response']
         )
       end
       
@@ -160,7 +153,7 @@ module ActiveMerchant #:nodoc:
       
       # Parse the response message
       def parse(msg)
-        resp = Hash.new;
+        resp = {}
         msg.split("\r\n").collect{|li|
             key, value = li.split("=")
             resp[key.gsub(/^ssl_/, '')] = value.to_s.strip
