@@ -6,21 +6,18 @@ class PayJunctionTest < Test::Unit::TestCase
     Base.gateway_mode = :test
 
     @gateway = PayJunctionGateway.new(
-      :login      => "pj-ql-01",
-      :password   => "pj-ql-01p"
-    )
+                 :login      => "pj-ql-01",
+                 :password   => "pj-ql-01p"
+               )
 
-    @credit_card = credit_card('4111111111111111')
+    @credit_card = credit_card
+    @options = {
+      :billing_address => address,
+      :description => 'Test purchase'
+    }
+    @amount = 100
   end
  
-  def test_amount_style   
-   assert_equal '10.34', @gateway.send(:amount, 1034)
-   assert_equal '10.34', @gateway.send(:amount, 1034)
-                                                  
-   assert_raise(ArgumentError) do
-     @gateway.send(:amount, '10.34')
-   end
-  end
   
   def test_detect_test_credentials_when_in_production  
     Base.mode = :production
@@ -40,16 +37,30 @@ class PayJunctionTest < Test::Unit::TestCase
   
   def test_successful_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    response = @gateway.authorize(100, @credit_card)
+    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
   end
   
   def test_failed_authorization
     @gateway.expects(:ssl_post).returns(failed_authorization_response)
-    response = @gateway.authorize(100, @credit_card)
+    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal PayJunctionGateway::DECLINE_CODES['FE'], response.message
+  end
+  
+  def test_avs_result_not_supported
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)    
+    assert_nil response.avs_result['code']
+  end
+  
+  def test_cvv_result_not_supported
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_nil response.cvv_result['code']
   end
   
   private

@@ -1,6 +1,5 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    
     # PayJunction Gateway
     #
     # This gateway accepts the following arguments:
@@ -53,8 +52,7 @@ module ActiveMerchant #:nodoc:
     #
     # See the source for initialize() for test account information. Note that
     # PayJunction does not allow test transactions on your account, so if the 
-    # gateway is running in :test mode or the :test_request option has been
-    # been specified and is true, your transaction will be run against
+    # gateway is running in :test mode your transaction will be run against
     # PayJunction's global test account and will not show up in your account.
     #
     # Transactions ran on this account go through a test processor, so there is no 
@@ -100,7 +98,7 @@ module ActiveMerchant #:nodoc:
     # See #recurring for periodic transaction fields
     class PayJunctionGateway < Gateway
       API_VERSION   = '1.2'
-      LIVE_URL      = 'https://payjunction.com/quick_link' # also handles test requests 
+      URL      = 'https://payjunction.com/quick_link' # also handles test requests 
       
       TEST_LOGIN = 'pj-ql-01'
       TEST_PASSWORD = 'pj-ql-01p'
@@ -320,12 +318,11 @@ module ActiveMerchant #:nodoc:
       end
       
       def commit(action, parameters)
-        data = ssl_post(LIVE_URL, post_data(action, parameters))
-        @response = parse(data)
+        response = parse( ssl_post(URL, post_data(action, parameters)) )
         
-        Response.new(successful?(@response), message_from(@response), @response, 
+        Response.new(successful?(response), message_from(response), response, 
           :test => test?, 
-          :authorization => @response[:transaction_id] || parameters[:transaction_id]
+          :authorization => response[:transaction_id] || parameters[:transaction_id]
         )
       end
       
