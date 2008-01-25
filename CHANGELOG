@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Update PaySecure to remove test_result_from_cc_number. [cody]
 * Update NetbillingGateway to support avs and cvv data. Remove test_result_from_cc_number. [cody]
 * Replace all usage of :address with :billing_address in test cases [cody]
 * Remove sensitive data from NetRegistryGateway responses. Refactor gateway and tests. Remove test_result_from_cc_number. [cody]
