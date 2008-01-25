@@ -1,7 +1,7 @@
 require 'rexml/document'
 
-module ActiveMerchant
-  module Billing
+module ActiveMerchant #:nodoc:
+  module Billing #:nodoc:
     
     # In NZ DPS supports ANZ, Westpac, National Bank, ASB and BNZ. 
     # In Australia DPS supports ANZ, NAB, Westpac, CBA, St George and Bank of South Australia. 
@@ -33,8 +33,6 @@ module ActiveMerchant
         :validate       => 'Validate'
       }
       
-      POST_HEADERS = { "Content-Type" => "application/x-www-form-urlencoded" }
-
       # We require the DPS gateway username and password when the object is created.
       def initialize(options = {})
         # A DPS username and password must exist 
@@ -180,7 +178,7 @@ module ActiveMerchant
       end
       
       def add_invoice(xml, options)
-        xml.add_element("TxnId").text = options[:order_id] unless options[:order_id].blank?
+        xml.add_element("TxnId").text = options[:order_id].to_s.slice(0, 16) unless options[:order_id].blank?
         xml.add_element("MerchantReference").text = options[:description] unless options[:description].blank?
       end
       
@@ -204,24 +202,18 @@ module ActiveMerchant
         add_credentials(request)
         add_transaction_type(request, action)
         
-        # Next, post it to the server
-        response = ssl_post(PAYMENT_URL, request.to_s, POST_HEADERS)
-        
         # Parse the XML response
-        @response = parse_response(response)
-        
-        success = @response[:success] == APPROVED
-        test = @response[:test_mode] == '1'
+        response = parse( ssl_post(PAYMENT_URL, request.to_s) )
         
         # Return a response
-        PaymentExpressResponse.new(success, @response[:response_text], @response,
-          :test => test,
-          :authorization => @response[:dps_txn_ref]
+        PaymentExpressResponse.new(response[:success] == APPROVED, response[:response_text], response,
+          :test => response[:test_mode] == '1',
+          :authorization => response[:dps_txn_ref]
         )
       end
 
       # Response XML documentation: http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#XMLTxnOutput
-      def parse_response(xml_string)
+      def parse(xml_string)
         response = {}
 
         xml = REXML::Document.new(xml_string)          

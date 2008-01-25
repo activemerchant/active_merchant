@@ -8,52 +8,23 @@ class PaymentExpressTest < Test::Unit::TestCase
       :password => 'PASSWORD'
     )
 
-    @visa = CreditCard.new(
-      :number => '4242424242424242',
-      :month => 8,
-      :year => 2008,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen',
-      :type => 'visa'
-    )
+    @visa = credit_card
     
-    @solo = CreditCard.new(
-      :type   => "solo",
-      :number => "6334900000000005",
-      :month  => 11,
-      :year   => 2012,
-      :first_name  => "Test",
-      :last_name   => "Mensch",
-      :issue_number => '01'
-    )
+    @solo = credit_card("6334900000000005",
+              :type   => "solo",
+              :issue_number => '01'
+            )
 
-    @address = { :address1 => '1234 My Street',
-                 :address2 => 'Apt 1',
-                 :company => 'Widgets Inc',
-                 :city => 'Ottawa',
-                 :state => 'ON',
-                 :zip => 'K1C2N6',
-                 :country => 'Canada',
-                 :phone => '(555)555-5555'
-               }
+    @options = { 
+      :order_id => generate_order_id,
+      :billing_address => address,
+      :email => 'cody@example.com',
+      :description => 'Store purchase'
+    }
+    
+    @amount = 100
   end
   
-  def test_successful_request
-    @visa.number = 1
-    
-    assert response = @gateway.purchase(100, @visa)
-    assert_success response
-    assert_equal '5555', response.authorization
-    assert response.test?
-  end
-
-  def test_unsuccessful_request
-    @visa.number = 2
-    assert response = @gateway.purchase(100, @visa)
-    assert_failure response
-    assert response.test?
-  end
-
   def test_default_currency
     assert_equal 'NZD', PaymentExpressGateway.default_currency
   end
@@ -61,7 +32,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_invalid_credentials
     @gateway.expects(:ssl_post).returns(invalid_credentials_response)
     
-    assert response = @gateway.purchase(100, @visa)
+    assert response = @gateway.purchase(@amount, @visa, @options)
     assert_equal 'Invalid Credentials', response.message
     assert_failure response
   end
@@ -69,7 +40,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_successful_authorization
      @gateway.expects(:ssl_post).returns(successful_authorization_response)
 
-     assert response = @gateway.purchase(100, @visa)
+     assert response = @gateway.purchase(@amount, @visa, @options)
      assert_success response
      assert response.test?
      assert_equal 'APPROVED', response.message
@@ -79,7 +50,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_successful_solo_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
 
-     assert response = @gateway.purchase(100, @solo)
+     assert response = @gateway.purchase(@amount, @solo, @options)
      assert_success response
      assert response.test?
      assert_equal 'APPROVED', response.message
@@ -121,7 +92,7 @@ class PaymentExpressTest < Test::Unit::TestCase
     
     @gateway.expects(:ssl_post).returns( successful_token_purchase_response )
     
-    assert response = @gateway.purchase(100, token)
+    assert response = @gateway.purchase(@amount, token, @options)
     assert_success response
     assert_equal 'APPROVED', response.message
     assert_equal '0000000303ace8db', response.authorization
@@ -135,6 +106,20 @@ class PaymentExpressTest < Test::Unit::TestCase
    assert_equal [ :visa, :master, :american_express, :diners_club, :jcb ], PaymentExpressGateway.supported_cardtypes
   end
   
+  def test_avs_result_not_supported
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_nil response.avs_result['code']
+  end
+  
+  def test_cvv_result_not_supported
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_nil response.cvv_result['code']
+  end
+  
   private
   def invalid_credentials_response
     '<Txn><ReCo>0</ReCo><ResponseText>Invalid Credentials</ResponseText></Txn>'
@@ -146,7 +131,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   <Transaction success="1" reco="00" responsetext="APPROVED">
     <Authorized>1</Authorized>
     <MerchantReference>Test Transaction</MerchantReference>
-    <Cvc2></Cvc2>
+    <Cvc2>M</Cvc2>
     <CardName>Visa</CardName>
     <Retry>0</Retry>
     <StatusRequired>0</StatusRequired>
