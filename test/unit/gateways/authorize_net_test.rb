@@ -7,7 +7,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       :password => 'Y'
     )
     @amount = 100
-    @credit_card = credit_card('4242424242424242')
+    @credit_card = credit_card
     @subscription_id = '100748'
   end
 
