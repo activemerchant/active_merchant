@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
           post[:bill_state]      = billing_address[:state]
         end
         
-       if shipping_address = options[:shipping_address] || billing_address
+       if shipping_address = options[:shipping_address]
          first_name, last_name = parse_first_and_last_name(shipping_address[:name])
         
          post[:ship_name1]      = first_name
@@ -118,24 +118,22 @@ module ActiveMerchant #:nodoc:
       end     
       
       def commit(action, money, parameters)
-        if result = test_result_from_cc_number(parameters[:card_number])
-          return result
-        end
+        response = parse(ssl_post(URL, post_data(action, parameters)))
         
-        @response = parse(ssl_post(URL, post_data(action, parameters)))
-        
-        Response.new(success?(@response), message_from(@response), @response, 
-          :test => test_response?(@response), 
-          :authorization => @response[:trans_id]
+        Response.new(success?(response), message_from(response), response, 
+          :test => test_response?(response), 
+          :authorization => response[:trans_id],
+          :avs_result => { :code => response[:avs_code]},
+          :cvv_result => response[:cvv2_code]
         )
       end
       
       def test_response?(response)
-        !!(test? || @response[:auth_msg] =~ /TEST/)
+        !!(test? || response[:auth_msg] =~ /TEST/)
       end
       
       def success?(response)
-        SUCCESS_CODES.include?(@response[:status_code])
+        SUCCESS_CODES.include?(response[:status_code])
       end
 
       def message_from(response)
@@ -156,7 +154,6 @@ module ActiveMerchant #:nodoc:
         
         parameters.reject{|k,v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
-      
       
       def parse_first_and_last_name(value)
         name = value.to_s.split(' ')

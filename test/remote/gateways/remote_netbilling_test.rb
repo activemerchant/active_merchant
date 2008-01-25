@@ -1,8 +1,7 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class RemoteNetbillingTest < Test::Unit::TestCase
-  AMOUNT = 100
-
+ 
   def setup
     @gateway = NetbillingGateway.new(fixtures(:netbilling))
 
@@ -20,13 +19,16 @@ class RemoteNetbillingTest < Test::Unit::TestCase
                   :phone => '650-253-0001'
                 }
   
-    @options = {  :billing_address => @address,
-                  :description => 'Internet purchase'
-               }
+    @options = {  
+      :billing_address => @address,
+      :description => 'Internet purchase'
+    }
+               
+    @amount = 100
   end
   
   def test_successful_purchase
-    assert response = @gateway.purchase(AMOUNT, @credit_card, @options)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_false response.authorization.blank?
     assert_equal NetbillingGateway::SUCCESS_MESSAGE, response.message
@@ -35,13 +37,13 @@ class RemoteNetbillingTest < Test::Unit::TestCase
 
   def test_unsuccessful_purchase
     @credit_card.year = '2006'
-    assert response = @gateway.purchase(AMOUNT, @credit_card, @options)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'CARD EXPIRED', response.message
     assert_failure response
   end
 
   def test_authorize_and_capture
-    amount = AMOUNT
+    amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
     assert_success auth
     assert_equal NetbillingGateway::SUCCESS_MESSAGE, auth.message
@@ -51,7 +53,7 @@ class RemoteNetbillingTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    assert response = @gateway.capture(AMOUNT, '1111')
+    assert response = @gateway.capture(@amount, '1111')
     assert_failure response
     assert_equal NetbillingGateway::FAILURE_MESSAGE, response.message
   end
@@ -61,7 +63,7 @@ class RemoteNetbillingTest < Test::Unit::TestCase
                 :login => '',
                 :password => ''
               )
-    assert response = gateway.purchase(AMOUNT, @credit_card, @options)
+    assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_equal NetbillingGateway::FAILURE_MESSAGE, response.message
     assert_failure response
   end
