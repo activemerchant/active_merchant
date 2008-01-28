@@ -81,20 +81,6 @@ module ActiveMerchant #:nodoc:
           raise Error, UNSTORE_ERROR_MESSAGE
         end
       end
-
-      private 
-    
-      def deal_with_cc(creditcard)
-        case creditcard.number
-          when '1'
-            Response.new(true, SUCCESS_MESSAGE, {}, :test => true)
-          when '2'
-            Response.new(false, FAILURE_MESSAGE, @response, :test => true)
-          else
-            raise Error, ERROR_MESSAGE
-        end      
-      end
- 
     end
   end
 end
