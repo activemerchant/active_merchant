@@ -23,7 +23,6 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login, :password)
         @options = { :crypt_type => 7 }.update(options)
-        @url = test? ? TEST_URL : LIVE_URL      
         super      
       end      
     
@@ -118,23 +117,23 @@ module ActiveMerchant #:nodoc:
       end
   
       def commit(action, parameters = {})
-        @response = parse(ssl_post(@url, post_data(action, parameters)))
+        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, post_data(action, parameters)))
 
-        Response.new(successful_response?(response), message_from(response[:message]), @response,
+        Response.new(successful?(response), message_from(response[:message]), response,
           :test          => test?,
-          :authorization => authorization_string(response)
+          :authorization => authorization_from(response)
         )
       end
       
       # Generates a Moneris authorization string of the form 'trans_id;receipt_id'.
-      def authorization_string(response = {})
+      def authorization_from(response = {})
         if response[:trans_id] && response[:receipt_id]
           "#{response[:trans_id]};#{response[:receipt_id]}"
         end
       end
       
       # Tests for a successful response from Moneris' servers
-      def successful_response?(response = {})
+      def successful?(response)
         response[:response_code] && 
         response[:complete] && 
         (0..49).include?(response[:response_code].to_i)

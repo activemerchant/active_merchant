@@ -81,20 +81,6 @@ class MonerisTest < Test::Unit::TestCase
    assert REXML::Document.new(data)
    assert_equal xml_capture_fixture.size, data.size
   end  
-
-  def test_access_url_for_test_environment
-    assert_equal 'https://esqa.moneris.com/gateway2/servlet/MpgRequest', @gateway.url
-  end
-  
-  def test_access_url_for_production_environment
-    Base.mode = :production
-    gateway = MonerisGateway.new(
-      :login => 'store1',
-      :password => 'yesguy'
-    )
-
-    assert_equal 'https://www3.moneris.com/gateway2/servlet/MpgRequest', gateway.url
-  end
   
   def test_supported_countries
     assert_equal ['CA'], MonerisGateway.supported_countries
