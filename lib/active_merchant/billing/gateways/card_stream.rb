@@ -163,19 +163,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        data = ssl_post(test? ? TEST_URL : LIVE_URL, post_data(action, parameters))
-        @response = parse(data)
+        response = parse( ssl_post(test? ? TEST_URL : LIVE_URL, post_data(action, parameters)) )
 
-        success = @response[:response_code] == APPROVED
-        message = message_from(@response)
-
-        Response.new(success, message, @response,
+        Response.new(response[:response_code] == APPROVED, message_from(response), response,
           :test => test?,
-          :authorization => @response[:cross_reference],
-          :cvv_result => CVV_CODE[ @response[:avscv2_response_code].to_s[0, 1] ],
+          :authorization => response[:cross_reference],
+          :cvv_result => CVV_CODE[ response[:avscv2_response_code].to_s[0, 1] ],
           :avs_result => {
-            :street_match => AVS_STREET_MATCH[ @response[:avscv2_response_code].to_s[2, 1] ],
-            :postal_match => AVS_POSTAL_MATCH[ @response[:avscv2_response_code].to_s[1, 1] ]
+            :street_match => AVS_STREET_MATCH[ response[:avscv2_response_code].to_s[2, 1] ],
+            :postal_match => AVS_POSTAL_MATCH[ response[:avscv2_response_code].to_s[1, 1] ]
           }
         )
       end
