@@ -219,25 +219,24 @@ module ActiveMerchant #:nodoc:
       private
       # Commit the transaction by posting the XML file to the LinkPoint server
       def commit(money, creditcard, options = {})
-        parameters = parameters(money, creditcard, options)
-        url = test? ? TEST_URL : LIVE_URL
+        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, post_data(money, creditcard, options)))
         
-        data = ssl_post(url, post_data(parameters))
-        @response = parse(data)
-        
-        success = (@response[:approved] == "APPROVED")
-        message = @response[:message]
-        
-        Response.new(success, message, @response, 
+        Response.new(successful?(response), response[:message], response, 
           :test => test?,
-          :authorization => @response[:ordernum],
-          :avs_result => { :code => @response[:avs].to_s[2,1] },
-          :cvv_result => @response[:avs].to_s[3,1]
+          :authorization => response[:ordernum],
+          :avs_result => { :code => response[:avs].to_s[2,1] },
+          :cvv_result => response[:avs].to_s[3,1]
         )
       end
       
+      def successful?(response)
+        response[:approved] == "APPROVED"
+      end
+      
       # Build the XML file
-      def post_data(parameters = {})
+      def post_data(money, creditcard, options)
+        params = parameters(money, creditcard, options)
+        
         xml = REXML::Document.new
         order = xml.add_element("order")
         
@@ -245,11 +244,11 @@ module ActiveMerchant #:nodoc:
         merchantinfo = order.add_element("merchantinfo")
         merchantinfo.add_element("configfile").text = @options[:login]
         
-        # Loop over the parameters hash to construct the XML string
-        for key, value in parameters
+        # Loop over the params hash to construct the XML string
+        for key, value in params
           elem = order.add_element(key.to_s)
-          for k, v in parameters[key]
-            elem.add_element(k.to_s).text = parameters[key][k].to_s if parameters[key][k]
+          for k, v in params[key]
+            elem.add_element(k.to_s).text = params[key][k].to_s if params[key][k]
           end
           # Linkpoint doesn't understand empty elements: 
           order.delete(elem) if elem.size == 0
@@ -337,7 +336,7 @@ module ActiveMerchant #:nodoc:
           params[:billing][:email]     = options[:email] unless options[:email].blank?
         end                
 
-        if shipping_address = options[:shipping_address] || billing_address  
+        if shipping_address = options[:shipping_address] 
 
           params[:shipping] = {}
           params[:shipping][:name]      = shipping_address[:name] || creditcard ? creditcard.name : nil

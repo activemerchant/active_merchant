@@ -70,7 +70,7 @@ class LinkpointTest < Test::Unit::TestCase
       }
     )
   
-    assert data = @gateway.send(:post_data, parameters)
+    assert data = @gateway.send(:post_data, @amount, @credit_card, @options)
     assert REXML::Document.new(data)
   end
   
@@ -83,7 +83,7 @@ class LinkpointTest < Test::Unit::TestCase
         :zip => '90210'
       }
     )
-    assert data = @gateway.send(:post_data, parameters)
+    assert data = @gateway.send(:post_data, @amount, @credit_card, @options)
     assert REXML::Document.new(data)
   end
 
@@ -99,7 +99,7 @@ class LinkpointTest < Test::Unit::TestCase
       }
     )
   
-    assert data = @gateway.send(:post_data, parameters)
+    assert data = @gateway.send(:post_data, @amount, @credit_card, @options)
     assert REXML::Document.new(data)
   end
   
