@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
       # Create all address hash key value pairs so that we still function if we were only provided with one or two of them 
       def setup_address_hash(options)
         options[:billing_address] = options[:billing_address] || options[:address] || {}
-        options[:shipping_address] = options[:shipping_address] || options[:billing_address]
+        options[:shipping_address] = options[:shipping_address] || {}
       end
       
       def build_auth_request(money, creditcard, options)
@@ -329,11 +329,7 @@ module ActiveMerchant #:nodoc:
       
       # Contact CyberSource, make the SOAP request, and parse the reply into a Response object
       def commit(request, options)
-        request_body = build_request(request, options)
-        
-	      url = test? ? TEST_URL : LIVE_URL
-	      data = ssl_post(url, request_body)
-	      response = parse(data)
+	      response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, build_request(request, options)))
         
 	      success = response[:decision] == "ACCEPT"
 	      message = @@response_codes[('r' + response[:reasonCode]).to_sym] rescue response[:message] 

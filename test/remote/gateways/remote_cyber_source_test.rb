@@ -12,16 +12,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     @amount = 100
     
     @options = {
-      :billing_address => { 
-        :address1 => '1234 My Street',
-        :address2 => 'Apt 1',
-        :company => 'Widgets Inc',
-        :city => 'Ottawa',
-        :state => 'ON',
-        :zip => 'K1C2N6',
-        :country => 'Canada',
-        :phone => '(555)555-5555'
-      },
+      :billing_address => address,
 
       :order_id => generate_unique_id,
       :line_items => [

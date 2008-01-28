@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Don't use billing_address for shipping_address in CyberSourceGateway [cody]
 * Remove @response instance variable from CardStreamGateway [cody]
 * Remove @response instance variable from BrainTreeGateway [cody]
 * Remove unused deal_with_cc method from BogusGateway [cody]
