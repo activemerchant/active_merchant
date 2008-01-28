@@ -112,16 +112,16 @@ module ActiveMerchant #:nodoc:
       end
       
       def commit(action, params)
-        data = ssl_post URL, post_data(action, params)
-        @response = parse(data)
+        response = parse(ssl_post(URL, post_data(action, params)))
         
-        success = @response[:qpstat] == APPROVED
-        message = message_from(@response)
-        
-        Response.new(success, message, @response, 
+        Response.new(successful?(response), message_from(response), response, 
           :test => test?, 
-          :authorization => @response[:transaction]
+          :authorization => response[:transaction]
         )
+      end
+      
+      def successful?(response)
+        response[:qpstat] == APPROVED
       end
 
       def parse(data)
