@@ -1,5 +1,5 @@
 module ActiveMerchant #:nodoc:
-  module Billing #:nodoc
+  module Billing #:nodoc:
     # For more information on the Authorize.Net Gateway please visit their {Integration Center}[http://developer.authorize.net/]
     #
     # The login and password are not the username and password you use to 
