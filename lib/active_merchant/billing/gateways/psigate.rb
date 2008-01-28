@@ -86,20 +86,18 @@ module ActiveMerchant #:nodoc:
       private                       
     
       def commit(money, creditcard, options = {}) 
-        parameters = parameters(money, creditcard, options)                                
-        
-        url = test? ? TEST_URL : LIVE_URL        
-        data = ssl_post(url, post_data(parameters))
-      
-        @response = parse(data)
-        success = (@response[:approved] == "APPROVED")
-      
-        Response.new(success, message_from(@response), @response, 
+        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, post_data(money, creditcard, options)))
+
+        Response.new(successful?(response), message_from(response), response, 
           :test => test?, 
-          :authorization => @response[:orderid],
-          :avs_result => { :code => @response[:avsresult] },
-          :cvv_result => @response[:cardidresult]
+          :authorization => response[:orderid],
+          :avs_result => { :code => response[:avsresult] },
+          :cvv_result => response[:cardidresult]
         )
+      end
+      
+      def successful?(response)
+        response[:approved] == "APPROVED"
       end
                                                
       def parse(xml)
@@ -115,12 +113,12 @@ module ActiveMerchant #:nodoc:
         response
       end     
 
-      def post_data(parameters = {})
+      def post_data(money, creditcard, options)
         xml = REXML::Document.new
         xml << REXML::XMLDecl.new
         root  = xml.add_element("Order")
         
-        for key, value in parameters
+        for key, value in parameters(money, creditcard, options)
           root.add_element(key.to_s).text = value if value
         end    
 
@@ -178,7 +176,7 @@ module ActiveMerchant #:nodoc:
           params[:Bcompany]     = address[:company]  unless address[:company].blank?
         end
         
-        if address = options[:shipping_address] || options[:address]                   
+        if address = options[:shipping_address]
           params[:Sname]        = address[:name] || creditcard.name 
           params[:Saddress1]    = address[:address1] unless address[:address1].blank?
           params[:Saddress2]    = address[:address2] unless address[:address2].blank?

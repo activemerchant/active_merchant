@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Remove @response instance variable in PsigateGateway. Don't use billing address for shipping [cody]
 * Remove @response instance variable in PaypalGateway. Don't use billing address for shipping. [cody]
 * Remove @response instance variable in PayflowGateway [cody]
 * Remove @response instance variable in MonerisGateway [cody]

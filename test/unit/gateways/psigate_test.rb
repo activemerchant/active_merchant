@@ -45,24 +45,6 @@ class PsigateTest < Test::Unit::TestCase
     end
   end
     
-  def test_purchase_is_valid_xml
-    parameters = @gateway.send(:parameters, 2000, @credit_card, {:order_id => 1004, 
-      :billing_address => address,
-      :email => 'jack@yahoo.com',
-      :CardAction => 0 } )
-    assert data = @gateway.send(:post_data,  parameters)
-    assert_nothing_raised{ REXML::Document.new(data) }
-  end
-
-  def test_capture_is_valid_xml
-    parameters = @gateway.send(:parameters, 2000, CreditCard.new({}), {:order_id => 1004, 
-      :CardAction => 2 } )
-  
-    assert data = @gateway.send(:post_data, parameters)
-    assert REXML::Document.new(data)  
-    assert_equal xml_capture_fixture.size, data.size
-  end
-  
   def test_supported_countries
     assert_equal ['CA'], PsigateGateway.supported_countries
   end
