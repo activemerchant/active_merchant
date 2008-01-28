@@ -31,7 +31,7 @@ class PayJunctionTest < Test::Unit::TestCase
       :zip => '94062'
     }
     
-    @options = { :billing_address => @valid_address, :order_id => generate_order_id }
+    @options = { :billing_address => @valid_address, :order_id => generate_unique_id }
   end
   
   def test_successful_purchase
@@ -86,7 +86,7 @@ class PayJunctionTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    order_id = generate_order_id
+    order_id = generate_unique_id
     purchase = @gateway.purchase(AMOUNT, @credit_card, @options)
     assert_success purchase
     
@@ -105,7 +105,7 @@ class PayJunctionTest < Test::Unit::TestCase
     purchase = @gateway.purchase( AMOUNT, @credit_card, @options)
     assert_success purchase
     
-    assert response = @gateway.purchase(AMOUNT, purchase.authorization, :order_id => generate_order_id)
+    assert response = @gateway.purchase(AMOUNT, purchase.authorization, :order_id => generate_unique_id)
                                         
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
     assert_equal 'capture', response.params["posture"], 'Should be captured funds'
@@ -120,7 +120,7 @@ class PayJunctionTest < Test::Unit::TestCase
     assert response = @gateway.recurring(AMOUNT, @credit_card, 
                         :periodicity  => :monthly,
                         :payments     => 12,
-                        :order_id => generate_order_id
+                        :order_id => generate_unique_id
                       )
     
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message                                        

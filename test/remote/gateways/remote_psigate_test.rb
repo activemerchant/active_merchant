@@ -9,7 +9,7 @@ class PsigateRemoteTest < Test::Unit::TestCase
     @amount = 2400
     @creditcard = credit_card('4242424242424242')
     @options = { 
-      :order_id => generate_order_id, 
+      :order_id => generate_unique_id, 
       :billing_address => address,
       :email => 'jack@example.com' 
     }

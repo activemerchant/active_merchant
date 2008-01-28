@@ -10,7 +10,7 @@ class RemoteSecurePayTest < Test::Unit::TestCase
       :year  => '2007'
     )
     
-    @options = { :order_id => generate_order_id,
+    @options = { :order_id => generate_unique_id,
       :description => 'Store purchase',
       :billing_address => address
     }

@@ -8,7 +8,7 @@ class RemoteTransFirstTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111')
     @amount = 100
     @options = { 
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :invoice => 'ActiveMerchant Sale',
       :billing_address => address
     }

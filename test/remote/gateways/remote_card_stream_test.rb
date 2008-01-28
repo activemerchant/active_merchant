@@ -48,7 +48,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
         :state => "Leicester",
         :zip => 'LE10 2RT'
       },
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :description => 'Store purchase'
     }
    
@@ -60,7 +60,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
         :state => "North Humberside",
         :zip => 'HU7 9OP'
       },
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :description => 'Store purchase'
     }
     
@@ -71,7 +71,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
         :state => 'Middlesex',
         :zip => 'TW7 8FF'
       },
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :description => 'Store purchase'
     }
   end
@@ -114,7 +114,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
   end
   
   def test_successful_amex_purchase
-    assert response = @gateway.purchase(100, @amex, :order_id => generate_order_id)
+    assert response = @gateway.purchase(100, @amex, :order_id => generate_unique_id)
     assert_equal 'APPROVED', response.message
     assert_success response
     assert response.test?

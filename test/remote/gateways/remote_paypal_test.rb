@@ -17,7 +17,7 @@ class PaypalTest < Test::Unit::TestCase
     )
        
     @params = {
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :email => 'buyer@jadedpallet.com',
       :billing_address => { :name => 'Fred Brooks',
                     :address1 => '1234 Penny Lane',

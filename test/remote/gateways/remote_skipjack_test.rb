@@ -13,7 +13,7 @@ class RemoteSkipJackTest < Test::Unit::TestCase
     @amount = 100
     
     @options = {
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :email => 'email@foo.com',
       :billing_address => address
     }
@@ -87,7 +87,7 @@ class RemoteSkipJackTest < Test::Unit::TestCase
   end
 
   def test_status_unkown_order
-    status = @gateway.status(generate_order_id)
+    status = @gateway.status(generate_unique_id)
     assert_failure status
     assert_match /No Records Found/, status.message
   end

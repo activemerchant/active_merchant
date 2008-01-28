@@ -30,7 +30,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     [ @visa, @mastercard ].each do |card|
 
       response = @gateway.purchase(AMOUNT, card, 
-        :order_id => generate_order_id,
+        :order_id => generate_unique_id,
         :description => 'Test Realex Purchase',
         :billing_address => {
           :zip => '90210',
@@ -51,7 +51,7 @@ class RemoteRealexTest < Test::Unit::TestCase
       :password => 'invalid'
     )
     response = gateway.purchase(AMOUNT, @visa, 
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :description => 'Invalid login test'
     )
       
@@ -66,7 +66,7 @@ class RemoteRealexTest < Test::Unit::TestCase
   def test_realex_purchase_with_invalid_account
 
     response = @gateway_with_account.purchase(AMOUNT, @visa, 
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :description => 'Test Realex purchase with invalid acocunt'
     )
   
@@ -83,7 +83,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     [ @visa_declined, @mastercard_declined ].each do |card|
 
       response = @gateway.purchase(AMOUNT, card,
-        :order_id => generate_order_id,
+        :order_id => generate_unique_id,
         :description => 'Test Realex purchase declined'
       )
       assert_not_nil response
@@ -99,7 +99,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     [ @visa_referral_b, @mastercard_referral_b ].each do |card|
   
       response = @gateway.purchase(AMOUNT, card,
-        :order_id => generate_order_id,
+        :order_id => generate_unique_id,
         :description => 'Test Realex Referral B'
       )
       assert_not_nil response
@@ -114,7 +114,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     [ @visa_referral_a, @mastercard_referral_a ].each do |card|
       
       response = @gateway.purchase(AMOUNT, card,
-        :order_id => generate_order_id,
+        :order_id => generate_unique_id,
         :description => 'Test Realex Rqeferral A'
       )
       assert_not_nil response
@@ -130,7 +130,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     [ @visa_coms_error, @mastercard_coms_error ].each do |card|
 
       response = @gateway.purchase(AMOUNT, card,
-        :order_id => generate_order_id,
+        :order_id => generate_unique_id,
         :description => 'Test Realex coms error'
       )
       
@@ -147,7 +147,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     @visa.number = 5
     
     response = @gateway.purchase(AMOUNT, @visa, 
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :description => 'Test Realex ccn error'
     )
     assert_not_nil response
@@ -162,7 +162,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     @visa.month = 13
     
     response = @gateway.purchase(AMOUNT, @visa, 
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :description => 'Test Realex expiry month error'
     )
     assert_not_nil response
@@ -177,7 +177,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     @visa.year = 2005
     
     response = @gateway.purchase(AMOUNT, @visa,
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :description => 'Test Realex expiry year error'
     )
     assert_not_nil response
@@ -192,7 +192,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     @visa.last_name = ""
     
     response = @gateway.purchase(AMOUNT, @visa, 
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :description => 'test_chname_error'
     )
     assert_not_nil response
@@ -206,7 +206,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     @visa_cvn = @visa.clone
     @visa_cvn.verification_value = "111"
     response = @gateway.purchase(AMOUNT, @visa_cvn, 
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :description => 'test_cvn'
     )
     assert_not_nil response
@@ -216,7 +216,7 @@ class RemoteRealexTest < Test::Unit::TestCase
   
   def test_customer_number
     response = @gateway.purchase(AMOUNT, @visa, 
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :description => 'test_cust_num',
       :customer => 'my customer id'
     )

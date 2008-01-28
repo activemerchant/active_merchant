@@ -8,7 +8,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4242424242424242')
     @options = {
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :billing_address => address,
       :description => 'Store purchase'
     }

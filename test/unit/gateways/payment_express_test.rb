@@ -16,7 +16,7 @@ class PaymentExpressTest < Test::Unit::TestCase
             )
 
     @options = { 
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :billing_address => address,
       :email => 'cody@example.com',
       :description => 'Store purchase'

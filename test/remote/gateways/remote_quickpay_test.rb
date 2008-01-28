@@ -6,7 +6,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
 
     @amount = 100
     @options = { 
-      :order_id => generate_order_id, 
+      :order_id => generate_unique_id, 
       :billing_address => address
     }
     

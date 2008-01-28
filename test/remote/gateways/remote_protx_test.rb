@@ -76,7 +76,7 @@ class RemoteProtxTest < Test::Unit::TestCase
         :state => "Leicester",
         :zip => 'LE10 2RT'
       },
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :description => 'Store purchase'
     }
    
@@ -88,7 +88,7 @@ class RemoteProtxTest < Test::Unit::TestCase
         :state => "North Humberside",
         :zip => 'HU7 9OP'
       },
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :description => 'Store purchase'
     }
     
@@ -99,7 +99,7 @@ class RemoteProtxTest < Test::Unit::TestCase
         :state => 'Middlesex',
         :zip => 'TW7 8FF'
       },
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :description => 'Store purchase'
     }
   end
@@ -141,7 +141,7 @@ class RemoteProtxTest < Test::Unit::TestCase
     
     assert credit = @gateway.credit(AMOUNT, purchase.authorization,
       :description => 'Crediting trx', 
-      :order_id => generate_order_id
+      :order_id => generate_unique_id
     )
     
     assert_success credit
@@ -160,14 +160,14 @@ class RemoteProtxTest < Test::Unit::TestCase
   end
   
   def test_successful_amex_purchase
-    assert response = @gateway.purchase(AMOUNT, @amex, :order_id => generate_order_id)   
+    assert response = @gateway.purchase(AMOUNT, @amex, :order_id => generate_unique_id)   
     assert_success response
     assert response.test?
     assert !response.authorization.blank?
   end
   
   def test_successful_electron_purchase
-    assert response = @gateway.purchase(AMOUNT, @electron, :order_id => generate_order_id)   
+    assert response = @gateway.purchase(AMOUNT, @electron, :order_id => generate_unique_id)   
     assert_success response
     assert response.test?
     assert !response.authorization.blank?

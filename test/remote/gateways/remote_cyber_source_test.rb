@@ -23,7 +23,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
         :phone => '(555)555-5555'
       },
 
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :line_items => [
         {
           :declared_value => 100,

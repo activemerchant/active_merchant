@@ -41,7 +41,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
     }
     
     @params = {
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :billing_address => @address
     }
   end

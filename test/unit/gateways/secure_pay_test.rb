@@ -11,7 +11,7 @@ class SecurePayTest < Test::Unit::TestCase
     @credit_card = credit_card
     
     @options = {
-      :order_id => generate_order_id,
+      :order_id => generate_unique_id,
       :description => 'Store purchase',
       :billing_address => address
     }

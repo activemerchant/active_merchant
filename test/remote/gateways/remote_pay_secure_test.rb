@@ -8,7 +8,7 @@ class RemotePaySecureTest < Test::Unit::TestCase
     @credit_card = credit_card('4000100011112224')
     @options = { 
       :billing_address => address,
-      :order_id => generate_order_id
+      :order_id => generate_unique_id
     }
     @amount = 100
   end

@@ -36,7 +36,7 @@ class LinkpointTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
-    @options = { :order_id => generate_order_id, :billing_address => address }
+    @options = { :order_id => generate_unique_id, :billing_address => address }
   end
   
   def test_successful_authorization
@@ -92,7 +92,7 @@ class LinkpointTest < Test::Unit::TestCase
   
   def test_successful_recurring_payment
     assert response = @gateway.recurring(2400, @credit_card, 
-      :order_id => generate_order_id, 
+      :order_id => generate_unique_id, 
       :installments => 12,
       :startdate => "immediate",
       :periodicity => :monthly,

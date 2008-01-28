@@ -113,12 +113,9 @@ module Test
       
       include ActiveMerchant::Billing
       include ActiveMerchant::Assertions
+      include ActiveMerchant::Utils
 
       private
-      def generate_order_id
-        ActiveMerchant::Utils::generate_unique_id
-      end
-      
       def credit_card(number = '4242424242424242', options = {})
         defaults = {
           :number => number,
