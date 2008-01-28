@@ -199,19 +199,13 @@ module ActiveMerchant #:nodoc:
         request = build_request(request_body, request_type)
         headers = build_headers(request.size)
         
-    	  url = test? ? TEST_URL : LIVE_URL
-    	  data = ssl_post(url, request, headers)
+    	  response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request, headers))
     	  
-    	  @response = parse(data)
-    	  
-    	  success = @response[:result] == "0"
-    	  message = @response[:message]
-    	  
-    	  build_response(success, message, @response,
+    	  build_response(response[:result] == "0", response[:message], response,
     	    :test => test?,
-    	    :authorization => @response[:pn_ref] || @response[:rp_ref],
-    	    :cvv_result => CVV_CODE[@response[:cv_result]],
-    	    :avs_result => { :code => @response[:avs_result] }
+    	    :authorization => response[:pn_ref] || response[:rp_ref],
+    	    :cvv_result => CVV_CODE[response[:cv_result]],
+    	    :avs_result => { :code => response[:avs_result] }
         )
       end
     end
