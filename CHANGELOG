@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Move generate_unique_id to its own module [cody]
 * Update Viaklix to add support for avs and cvv data. remove test_result_from_cc_number. Truncate fields to avoid failure [cody]
 * Update PSL Card Gateway to add support for avs and cvv data. remove test_result_from_cc_number. [cody]
 * Update PlugNPayGateway to support avs and cvv data. Remove test_result_from_cc_number. [cody]
