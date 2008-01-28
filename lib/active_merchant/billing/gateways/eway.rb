@@ -194,16 +194,16 @@ module ActiveMerchant #:nodoc:
       def commit(money, parameters)       
         parameters[:TotalAmount] = amount(money)
 
-        @response = parse( ssl_post(gateway_url(parameters[:CVN], test?), post_data(parameters)) )
+        response = parse( ssl_post(gateway_url(parameters[:CVN], test?), post_data(parameters)) )
 
-        success = (response[:ewaytrxnstatus] == "True")
-        message = message_from(response[:ewaytrxnerror])
-        test = /\(Test( CVN)? Gateway\)/ === response[:ewaytrxnerror]
-    
-        Response.new(success, message, @response,
+        Response.new(success?(response), message_from(response[:ewaytrxnerror]), response,
           :authorization => response[:ewayauthcode],
-          :test => test
+          :test => /\(Test( CVN)? Gateway\)/ === response[:ewaytrxnerror]
         )      
+      end
+      
+      def success?(response)
+        response[:ewaytrxnstatus] == "True"
       end
                                              
       # Parse eway response xml into a convinient hash
