@@ -121,32 +121,6 @@ module ActiveMerchant #:nodoc:
         self.class.name.scan(/\:\:(\w+)Gateway/).flatten.first
       end
       
-      # This is used to check if our credit card number implies that we are seeking a test 
-      # Response. Of course, this returns false if we are not in test mode.
-      # 
-      # Recognized values: 
-      # <tt>1</tt>:: Result will be successful
-      # <tt>2</tt>:: Result will be a failure
-      # <tt>3</tt>:: Result will raise a miscellaneous error
-      # 
-      # All other values will not be recognized.
-      #--
-      # TODO Refactor this method. It's kind of on the ugly side of things.
-      def test_result_from_cc_number(card_number)
-        return false unless test?
-        
-        case card_number.to_s
-        when '1', 'success' 
-          Response.new(true, 'Successful test mode response', {:receiptid => '#0001'}, :test => true, :authorization => '5555')
-        when '2', 'failure' 
-          Response.new(false, 'Failed test mode response', {:receiptid => '#0001'}, :test => true)
-        when '3', 'error' 
-          raise Error, 'big bad exception'
-        else 
-          false
-        end
-      end
-      
       # Return a String with the amount in the appropriate format
       #--
       # TODO Refactor this method. It's a tad on the ugly side.

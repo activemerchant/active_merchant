@@ -90,16 +90,9 @@ module ActiveMerchant #:nodoc:
       end
       
       def commit(params) 
-        if result = test_result_from_cc_number(params[:CardNumber])
-          return result
-        end
-  
-        data = ssl_post URL, post_data(params)
-        
-        response = parse(data)  
-        success = response[:status] == "Authorized"
+        response = parse( ssl_post(URL, post_data(params)) )
 
-        Response.new(success, message_from(response), response, 
+        Response.new(response[:status] == "Authorized", message_from(response), response, 
           :test => test?, 
           :authorization => response[:trans_id],
           :avs_result => { :code => response[:avs_code] },

@@ -43,17 +43,14 @@ module ActiveMerchant #:nodoc:
       end
       
       # Funds are transferred immediately.
-      def purchase(money, credit_card_or_billing_token, options = {})
+      def purchase(money, payment_source, options = {})
         
-        credit_card = credit_card_or_billing_token if credit_card_or_billing_token.respond_to?(:number)
+        credit_card = payment_source if payment_source.respond_to?(:number)
         
         if credit_card        
-          if result = test_result_from_cc_number(credit_card.number)
-            return result
-          end
           options[:credit_card] = credit_card
         else
-          options[:token]       = credit_card_or_billing_token
+          options[:token]       = payment_source
         end
         
         request = build_purchase_or_authorization_request(money, options)
@@ -64,10 +61,6 @@ module ActiveMerchant #:nodoc:
       # Verifies that funds are available for the requested card and amount and reserves the specified amount.
       # See: http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#Authcomplete
       def authorize(money, credit_card, options = {})
-        if result = test_result_from_cc_number(credit_card.number)
-          return result
-        end
-        
         options[:credit_card] = credit_card
 
         request = build_purchase_or_authorization_request(money, options)
