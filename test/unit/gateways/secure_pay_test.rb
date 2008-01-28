@@ -1,7 +1,6 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class SecurePayTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
 
   def setup
     @gateway = SecurePayGateway.new(
@@ -9,31 +8,21 @@ class SecurePayTest < Test::Unit::TestCase
       :password => 'Y'
     )
 
-    @creditcard = CreditCard.new(
-      :number => '4242424242424242',
-      :month => 8,
-      :year => 2006,
-      :first_name => 'Longbob',
-      :last_name => 'Longsen'
-    )
+    @credit_card = credit_card
+    
+    @options = {
+      :order_id => generate_order_id,
+      :description => 'Store purchase',
+      :billing_address => address
+    }
+    
+    @amount = 100
   end
 
   def test_failed_purchase
     @gateway.stubs(:ssl_post).returns(failure_response)
     
-    assert response = @gateway.purchase(100, @creditcard,
-      :order_id => generate_order_id,
-      :description => 'Store purchase',
-      :billing_address => {
-        :first_name => 'Cody',
-        :last_name => 'Fauser',
-        :address1 => '1234 Test St.',
-        :city => 'Ottawa',
-        :state => 'ON',
-        :country => 'Canada',
-        :zip => 'K2P7G2'
-      }
-    )
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
     assert_equal 'This transaction has been declined', response.message
@@ -43,16 +32,28 @@ class SecurePayTest < Test::Unit::TestCase
   def test_successful_purchase
     @gateway.stubs(:ssl_post).returns(successful_purchase_response)
     
-    assert response = @gateway.purchase(100, @creditcard,
-      :order_id => generate_order_id,
-      :description => 'Store purchase'
-    )
-    
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
     assert response.authorization
   end
+  
+  
+  def test_avs_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_equal 'X', response.avs_result['code']
+  end
+  
+  def test_cvv_result_not_supported
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_nil response.cvv_result['code']
+  end
+  
   
   def test_undefine_unsupported_methods
     assert @gateway.respond_to?(:purchase)

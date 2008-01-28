@@ -1,33 +1,25 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
-class RemoteSecurePayTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-  
-  AMOUNT = 100
+class RemoteSecurePayTest < Test::Unit::TestCase  
   
   def setup
     @gateway = SecurePayGateway.new(fixtures(:secure_pay))
 
-    @creditcard = credit_card('4111111111111111',
-      :month => 7,
-      :year  => 2007
+    @credit_card = credit_card('4111111111111111',
+      :month => '7',
+      :year  => '2007'
     )
     
     @options = { :order_id => generate_order_id,
       :description => 'Store purchase',
-      :billing_address => {
-        :address1 => '1234 My Street',
-        :address2 => 'Apartment 204',
-        :city => 'Beverly Hills',
-        :state => 'CA',
-        :country => 'US',
-        :zip => '90210'
-      }
+      :billing_address => address
     }
+    
+    @amount = 100
   end
   
   def test_successful_purchase
-    assert response = @gateway.purchase(AMOUNT, @creditcard, @options)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert response.success?
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
