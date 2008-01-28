@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Update Realex to add support for cvv data. remove test_result_from_cc_number. [cody]
 * Update Protx to add support for avs and cvv data. remove test_result_from_cc_number. [cody]
 * Include ActiveMerchant::Utils module in test_helper and use generate_unique_id from the module instead of generate_order_id. [cody]
 * Update SecurePay tests to check for avs and cvv data. [cody]

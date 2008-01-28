@@ -56,21 +56,13 @@ module ActiveMerchant
       end     
       
       private           
-      def commit(request)
-        if result = test_result_from_cc_number(parse_credit_card_number(request))
-          return result
-        end
-        
-        data = ssl_post(URL, request)
-        
-        @response = parse(data)
+      def commit(request)        
+        response = parse(ssl_post(URL, request))
 
-        success = @response[:result] == "00"
-        test = response[:message] =~ /\[ test system \]/
-        
-        Response.new(success, message_from(@response), @response,
-          :test => test,
-          :authorization => @response[:authcode]
+        Response.new(response[:result] == "00", message_from(response), response,
+          :test => response[:message] =~ /\[ test system \]/,
+          :authorization => response[:authcode],
+          :cvv_result => response[:cvnresult]
         )      
       end
 
