@@ -333,15 +333,11 @@ module ActiveMerchant
       #   - ActiveMerchant::Billing::Response object
       #   
       def commit(request)
-        url = test? ? TEST_URL : LIVE_URL
-  
-        @response = parse(ssl_post(url, request))      
-        success = @response[:status] == DATACASH_SUCCESS
-        message = @response[:reason]
-        
-        Response.new(success, message, @response,
-                     :test => test?,
-                     :authorization => "#{@response[:datacash_reference]};#{@response[:authcode]}"
+        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request))      
+
+        Response.new(response[:status] == DATACASH_SUCCESS, response[:reason], response,
+          :test => test?,
+          :authorization => "#{response[:datacash_reference]};#{response[:authcode]}"
         )
       end
       
