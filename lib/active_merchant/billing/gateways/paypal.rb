@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
       
       private
       def build_sale_or_authorization_request(action, money, credit_card, options)
-        shipping_address = options[:shipping_address] || options[:address]
+        billing_address = options[:billing_address] || options[:address]
         currency_code = options[:currency] || currency(money)
        
         xml = Builder::XmlMarkup.new :indent => 2
@@ -52,9 +52,9 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'n2:InvoiceID', options[:order_id]
                 xml.tag! 'n2:ButtonSource', application_id.to_s.slice(0,32) unless application_id.blank? 
                 
-                add_address(xml, 'n2:ShipToAddress', shipping_address)
+                add_address(xml, 'n2:ShipToAddress', options[:shipping_address]) if options[:shipping_address]
               end
-              add_credit_card(xml, credit_card, options[:billing_address] || shipping_address, options)
+              add_credit_card(xml, credit_card, billing_address, options)
               xml.tag! 'n2:IPAddress', options[:ip]
             end
           end

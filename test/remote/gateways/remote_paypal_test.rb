@@ -30,6 +30,7 @@ class PaypalTest < Test::Unit::TestCase
       :ip => '10.0.0.1'
     }
       
+    @amount = 100
     # test re-authorization, auth-id must be more than 3 days old.
     # each auth-id can only be reauthorized and tested once.
     # leave it commented if you don't want to test reauthorization.
@@ -39,27 +40,27 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    response = @gateway.purchase(300, @creditcard, @params)
+    response = @gateway.purchase(@amount, @creditcard, @params)
     assert_success response
     assert response.params['transaction_id']
   end
   
   def test_successful_purchase_with_api_signature
     gateway = PaypalGateway.new(fixtures(:paypal_signature))
-    response = gateway.purchase(300, @creditcard, @params)
+    response = gateway.purchase(@amount, @creditcard, @params)
     assert_success response
     assert response.params['transaction_id']
   end
   
   def test_failed_purchase
     @creditcard.number = '234234234234'
-    response = @gateway.purchase(300, @creditcard, @params)
+    response = @gateway.purchase(@amount, @creditcard, @params)
     assert_failure response
     assert_nil response.params['transaction_id']
   end
 
   def test_successful_authorization
-    response = @gateway.authorize(300, @creditcard, @params)
+    response = @gateway.authorize(@amount, @creditcard, @params)
     assert_success response
     assert response.params['transaction_id']
     assert_equal '3.00', response.params['amount']
@@ -68,7 +69,7 @@ class PaypalTest < Test::Unit::TestCase
   
   def test_failed_authorization
     @creditcard.number = '234234234234'
-    response = @gateway.authorize(300, @creditcard, @params)
+    response = @gateway.authorize(@amount, @creditcard, @params)
     assert_failure response
     assert_nil response.params['transaction_id']
   end
@@ -94,9 +95,9 @@ class PaypalTest < Test::Unit::TestCase
   end
       
   def test_successful_capture
-    auth = @gateway.authorize(300, @creditcard, @params)
+    auth = @gateway.authorize(@amount, @creditcard, @params)
     assert_success auth
-    response = @gateway.capture(300, auth.authorization)
+    response = @gateway.capture(@amount, auth.authorization)
     assert_success response
     assert response.params['transaction_id']
     assert_equal '3.00', response.params['gross_amount']
@@ -104,19 +105,17 @@ class PaypalTest < Test::Unit::TestCase
   end
   
   def test_successful_voiding
-    auth = @gateway.authorize(300, @creditcard, @params)
+    auth = @gateway.authorize(@amount, @creditcard, @params)
     assert_success auth
     response = @gateway.void(auth.authorization)
     assert_success response
   end
   
   def test_purchase_and_full_credit
-    amount = 300
-    
-    purchase = @gateway.purchase(amount, @creditcard, @params)
+    purchase = @gateway.purchase(@amount, @creditcard, @params)
     assert_success purchase
     
-    credit = @gateway.credit(amount, purchase.authorization, :note => 'Sorry')
+    credit = @gateway.credit(@amount, purchase.authorization, :note => 'Sorry')
     assert_success credit
     assert credit.test?
     assert_equal 'USD',  credit.params['net_refund_amount_currency_id']
@@ -133,10 +132,10 @@ class PaypalTest < Test::Unit::TestCase
   end
   
   def test_successful_transfer
-    response = @gateway.purchase(300, @creditcard, @params)
+    response = @gateway.purchase(@amount, @creditcard, @params)
     assert_success response
     
-    response = @gateway.transfer(300, 'joe@example.com', :subject => 'Your money', :note => 'Thanks for taking care of that')
+    response = @gateway.transfer(@amount, 'joe@example.com', :subject => 'Your money', :note => 'Thanks for taking care of that')
     assert_success response
   end
 
@@ -150,7 +149,7 @@ class PaypalTest < Test::Unit::TestCase
     response = @gateway.purchase(900, @creditcard, @params)
     assert_success response
     
-    response = @gateway.transfer([300, 'joe@example.com'],
+    response = @gateway.transfer([@amount, 'joe@example.com'],
       [600, 'jane@example.com', {:note => 'Thanks for taking care of that'}],
       :subject => 'Your money')
     assert_success response
