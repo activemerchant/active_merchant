@@ -3,14 +3,10 @@ require File.dirname(__FILE__) + '/../../test_helper'
 # Some of the standard tests have been removed at Protx test
 # server is pants and accepts anything and says Status=OK. (shift)
 class RemoteProtxTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-  
   # Run the tests in the simulated environment
   # set to false to run the tests in the test environment
   ProtxGateway.simulate = true
   
-  AMOUNT = 100
-
   def setup
     @gateway = ProtxGateway.new(fixtures(:protx))
     
@@ -102,25 +98,27 @@ class RemoteProtxTest < Test::Unit::TestCase
       :order_id => generate_unique_id,
       :description => 'Store purchase'
     }
+    
+    @amount = 100
   end
 
   def test_successful_mastercard_purchase
-    assert response = @gateway.purchase(AMOUNT, @mastercard, @mastercard_options)
+    assert response = @gateway.purchase(@amount, @mastercard, @mastercard_options)
     assert_success response
     assert response.test?
     assert !response.authorization.blank?
   end
   
   def test_successful_authorization_and_capture
-    assert auth = @gateway.authorize(AMOUNT, @mastercard, @mastercard_options)
+    assert auth = @gateway.authorize(@amount, @mastercard, @mastercard_options)
     assert_success auth
     
-    assert capture = @gateway.capture(AMOUNT, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
   end
   
   def test_successful_authorization_and_void
-    assert auth = @gateway.authorize(AMOUNT, @mastercard, @mastercard_options)
+    assert auth = @gateway.authorize(@amount, @mastercard, @mastercard_options)
     assert_success auth    
      
     assert void = @gateway.void(auth.authorization)
@@ -128,7 +126,7 @@ class RemoteProtxTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase_and_void
-    assert purchase = @gateway.purchase(AMOUNT, @mastercard, @mastercard_options)
+    assert purchase = @gateway.purchase(@amount, @mastercard, @mastercard_options)
     assert_success purchase    
      
     assert void = @gateway.void(purchase.authorization)
@@ -136,10 +134,10 @@ class RemoteProtxTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase_and_credit
-    assert purchase = @gateway.purchase(AMOUNT, @mastercard, @mastercard_options)
+    assert purchase = @gateway.purchase(@amount, @mastercard, @mastercard_options)
     assert_success purchase    
     
-    assert credit = @gateway.credit(AMOUNT, purchase.authorization,
+    assert credit = @gateway.credit(@amount, purchase.authorization,
       :description => 'Crediting trx', 
       :order_id => generate_unique_id
     )
@@ -148,26 +146,26 @@ class RemoteProtxTest < Test::Unit::TestCase
   end
   
   def test_successful_maestro_purchase
-    assert response = @gateway.purchase(AMOUNT, @maestro, @maestro_options)
+    assert response = @gateway.purchase(@amount, @maestro, @maestro_options)
     assert_success response
   end
   
   def test_successful_solo_purchase
-    assert response = @gateway.purchase(AMOUNT, @solo, @solo_options)
+    assert response = @gateway.purchase(@amount, @solo, @solo_options)
     assert_success response
     assert response.test?
     assert !response.authorization.blank?
   end
   
   def test_successful_amex_purchase
-    assert response = @gateway.purchase(AMOUNT, @amex, :order_id => generate_unique_id)   
+    assert response = @gateway.purchase(@amount, @amex, :order_id => generate_unique_id)   
     assert_success response
     assert response.test?
     assert !response.authorization.blank?
   end
   
   def test_successful_electron_purchase
-    assert response = @gateway.purchase(AMOUNT, @electron, :order_id => generate_unique_id)   
+    assert response = @gateway.purchase(@amount, @electron, :order_id => generate_unique_id)   
     assert_success response
     assert response.test?
     assert !response.authorization.blank?
@@ -179,7 +177,7 @@ class RemoteProtxTest < Test::Unit::TestCase
     gateway = ProtxGateway.new(
         :login => ''
     )
-    assert response = gateway.purchase(AMOUNT, @mastercard, @mastercard_options)
+    assert response = gateway.purchase(@amount, @mastercard, @mastercard_options)
     assert_equal message, response.message
     assert_failure response
   end

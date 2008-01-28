@@ -6,42 +6,43 @@ class ProtxTest < Test::Unit::TestCase
       :login => 'X'
     )
 
-    @creditcard = credit_card('4242424242424242', :type => 'visa')
+    @credit_card = credit_card('4242424242424242', :type => 'visa')
+    @options = { 
+      :billing_address => { 
+        :address1 => '25 The Larches',
+        :city => "Narborough",
+        :state => "Leicester",
+        :zip => 'LE10 2RT'
+      },
+      :order_id => '1',
+      :description => 'Store purchase'
+    }
+    @amount = 100
   end
 
-  def test_purchase_success    
-    @creditcard.number = 1
-
-    assert response = @gateway.purchase(100, @creditcard, :order_id => 1)
-    assert_equal Response, response.class
-    assert_equal '#0001', response.params['receiptid']
+  def test_successful_purchase
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_equal "1;{7307C8A9-766E-4BD1-AC41-3C34BB83F7E5};5559;WIUMDJS607", response.authorization
     assert_success response
   end
 
-  def test_purchase_error
-    @creditcard.number = 2
-
-    assert response = @gateway.purchase(100, @creditcard, :order_id => 1)
-    assert_equal Response, response.class
-    assert_equal '#0001', response.params['receiptid']
+  def test_unsuccessful_purchase
+    @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
+    
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
     assert_failure response
   end
   
-  def test_authorization_format
-    @gateway.expects(:ssl_post).returns(successful_response)
-    
-    assert response = @gateway.purchase(100, @creditcard, :order_id => 1)
-    assert_success response
-    
-    assert_equal "1;{7307C8A9-766E-4BD1-AC41-3C34BB83F7E5};5559;WIUMDJS607", response.authorization
-  end
-  
   def test_purchase_url
-    assert_equal 'https://ukvpstest.protx.com/vspgateway/service/vspdirect-register.vsp', @gateway.send(:build_endpoint_url, :purchase)
+    assert_equal 'https://ukvpstest.protx.com/vspgateway/service/vspdirect-register.vsp', @gateway.send(:url_for, :purchase)
   end
   
   def test_capture_url
-    assert_equal 'https://ukvpstest.protx.com/vspgateway/service/release.vsp', @gateway.send(:build_endpoint_url, :capture)
+    assert_equal 'https://ukvpstest.protx.com/vspgateway/service/release.vsp', @gateway.send(:url_for, :capture)
   end
   
   def test_electron_cards
@@ -82,10 +83,25 @@ class ProtxTest < Test::Unit::TestCase
     # 20 PAN length
     assert_no_match ProtxGateway::ELECTRON, '42496200000000000'
   end
+  
+  def test_avs_result
+     @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+     response = @gateway.purchase(@amount, @credit_card, @options)
+     assert_equal 'Y', response.avs_result['postal_match']
+     assert_equal 'N', response.avs_result['street_match']
+   end
+
+   def test_cvv_result
+     @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+     response = @gateway.purchase(@amount, @credit_card, @options)
+     assert_equal 'N', response.cvv_result['code']
+   end
 
   private
 
-  def successful_response
+  def successful_purchase_response
     <<-RESP
 VPSProtocol=2.22 
 Status=OK
@@ -98,5 +114,9 @@ AddressResult=NOTMATCHED
 PostCodeResult=MATCHED
 CV2Result=NOTMATCHED
     RESP
+  end
+  
+  def unsuccessful_purchase_response
+    "VPSProtocol=2.22\r\nStatus=NOTAUTHED\r\nStatusDetail=VSP Direct transaction from VSP Simulator.\r\nVPSTxId={7BBA9078-8489-48CD-BF0D-10B0E6B0EF30}\r\nSecurityKey=DKDYLDYLXV\r\nAVSCV2=ALL MATCH\r\nAddressResult=MATCHED\r\nPostCodeResult=MATCHED\r\nCV2Result=MATCHED\r\n"
   end
 end

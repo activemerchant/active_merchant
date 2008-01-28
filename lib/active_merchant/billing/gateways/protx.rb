@@ -32,8 +32,13 @@ module ActiveMerchant #:nodoc:
       
       ELECTRON = /^(424519|42496[23]|450875|48440[6-8]|4844[1-5][1-5]|4917[3-5][0-9]|491880)\d{10}(\d{3})?$/
       
-      POST_HEADERS = { 'Content-Type' => 'application/x-www-form-urlencoded' }
-
+      AVS_CVV_CODE = {
+        "NOTPROVIDED" => nil, 
+        "NOTCHECKED" => 'X',
+        "MATCHED" => 'Y',
+        "NOTMATCHED" => 'N'
+      }
+    
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :solo, :maestro, :diners_club]
       self.supported_countries = ['GB']
       self.default_currency = 'GBP'
@@ -208,29 +213,27 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        if result = test_result_from_cc_number(parameters[:CardNumber])
-          return result
-        end
-        
-        data = ssl_post(build_endpoint_url(action), post_data(action, parameters), POST_HEADERS)
-         
-        @response = parse(data)
+        response = parse( ssl_post(url_for(action), post_data(action, parameters)) )
           
-        success = @response["Status"] == APPROVED
-        message = message_from(@response)
-        
-        authorization = [ parameters[:VendorTxCode],
-                          @response["VPSTxId"],
-                          @response["TxAuthNo"],
-                          @response["SecurityKey"] ].compact.join(";")
-
-        Response.new(success, message, @response,
+        Response.new(response["Status"] == APPROVED, message_from(response), response,
           :test => test?,
-          :authorization => authorization
+          :authorization => authorization_from(response, parameters),
+          :avs_result => { 
+            :street_match => AVS_CVV_CODE[ response["AddressResult"] ],
+            :postal_match => AVS_CVV_CODE[ response["PostCodeResult"] ],
+          },
+          :cvv_result => AVS_CVV_CODE[ response["CV2Result"] ]
         )
       end
       
-      def build_endpoint_url(action)
+      def authorization_from(response, params)
+         [ params[:VendorTxCode],
+           response["VPSTxId"],
+           response["TxAuthNo"],
+           response["SecurityKey"] ].compact.join(";")
+      end
+      
+      def url_for(action)
         simulate ? build_simulator_url(action) : build_url(action)
       end
       
@@ -244,7 +247,7 @@ module ActiveMerchant #:nodoc:
         "#{SIMULATOR_URL}/#{endpoint}"
       end
 
-      def message_from(results)
+      def message_from(response)
         if response["Status"] == APPROVED
           return 'Success'
         else
