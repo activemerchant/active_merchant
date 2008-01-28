@@ -40,6 +40,7 @@ end
 
 require 'cgi'
 
+require 'active_merchant/lib/utils'
 require 'active_merchant/lib/error'
 require 'active_merchant/lib/validateable'
 require 'active_merchant/lib/posts_data'
