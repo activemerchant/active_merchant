@@ -213,7 +213,7 @@ module ActiveMerchant #:nodoc:
       end
     
       def test?
-        @options[:test] || Base.gateway_mode == :test
+        @options[:test] || super
       end
       
       private
