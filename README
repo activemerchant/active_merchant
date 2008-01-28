@@ -122,3 +122,6 @@ Installation from RubyGems
     end
   end
 
+== Contributing
+
+Please see the {ActiveMerchant Guide to Contributing}[http://code.google.com/p/activemerchant/wiki/Contributing] for information on adding a new gateway to ActiveMerchant.
