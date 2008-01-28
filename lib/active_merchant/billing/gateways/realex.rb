@@ -125,7 +125,7 @@ module ActiveMerchant
           end
           
           billing_address = options[:billing_address] || options[:address] || {}
-          shipping_address = options[:shipping_address] || billing_address
+          shipping_address = options[:shipping_address] || {}
           
           xml.tag! 'tssinfo' do
             xml.tag! 'address', 'type' => 'billing' do
