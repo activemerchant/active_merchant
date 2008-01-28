@@ -147,20 +147,22 @@ module ActiveMerchant #:nodoc:
 
   
       def commit(action, parameters)                                 
-        data = ssl_post(@url, post_data(action, parameters), 'Content-Type' => 'text/xml')
-        @response = parse(data)
+        response = parse(ssl_post(@url, post_data(action, parameters), 'Content-Type' => 'text/xml'))
 
-        success = response[:response_code] == '0'
-        message = message_from(response[:result_message])
-        
-        authorization = [ response[:transaction_id], parameters[:transaction_amount] ].compact.join(';')
-        
-        Response.new(success, message, @response,
+        Response.new(success?(response), message_from(response[:result_message]), response,
           :test => test?,
-          :authorization => authorization,
-          :avs_result => { :code => @response[:avs_response_code] },
-          :cvv_result => @response[:cvv_response_code]
+          :authorization => authorization_from(response, parameters),
+          :avs_result => { :code => response[:avs_response_code] },
+          :cvv_result => response[:cvv_response_code]
         )
+      end
+      
+      def success?(response)
+        response[:response_code] == '0'
+      end
+      
+      def authorization_from(response, params)
+        [ response[:transaction_id], params[:transaction_amount] ].compact.join(';')
       end
                                                
       def parse(xml)
