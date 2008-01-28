@@ -149,14 +149,13 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters)
         parameters[:amount]  = amount(money) if money
         
-        data = ssl_post URL, post_data(action,parameters)
-        @response = parse(data)
+        response = parse( ssl_post(URL, post_data(action,parameters)) )
 
-        Response.new(@response["response"] == "1", message_from(@response), @response, 
-          :authorization => @response["transactionid"],
+        Response.new(response["response"] == "1", message_from(response), response, 
+          :authorization => response["transactionid"],
           :test => test?,
-          :cvv_result => @response["cvvresponse"],
-          :avs_result => { :code => @response["avsresponse"] }
+          :cvv_result => response["cvvresponse"],
+          :avs_result => { :code => response["avsresponse"] }
         )
         
       end
