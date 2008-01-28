@@ -16,10 +16,7 @@ module ActiveMerchant #:nodoc:
       # password is your Store Key
       def initialize(options = {})
         requires!(options, :login, :password)
-      
         @options = options
-        @url = test? ? TEST_URL : LIVE_URL      
-        
         super      
       end
       
@@ -146,8 +143,8 @@ module ActiveMerchant #:nodoc:
       end
 
   
-      def commit(action, parameters)                                 
-        response = parse(ssl_post(@url, post_data(action, parameters), 'Content-Type' => 'text/xml'))
+      def commit(action, parameters)  
+        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, post_data(action, parameters), 'Content-Type' => 'text/xml'))
 
         Response.new(success?(response), message_from(response[:result_message]), response,
           :test => test?,
