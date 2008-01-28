@@ -3,11 +3,11 @@ require File.dirname(__FILE__) + '/../../test_helper'
 class SkipJackTest < Test::Unit::TestCase
 
   def setup
-    Base.mode = :test
+    Base.gateway_mode = :test
 
     @gateway = SkipJackGateway.new(:login => 'X', :password => 'Y')
 
-    @creditcard = credit_card('4242424242424242')
+    @credit_card = credit_card('4242424242424242')
 
     @billing_address = { 
       :address1 => '123 Any St.',
@@ -34,35 +34,31 @@ class SkipJackTest < Test::Unit::TestCase
       :order_id => 1,
       :email => 'cody@example.com'
     }
+    
+    @amount = 100
   end
 
-  def teardown
-    Base.gateway_mode = :test
-  end
-  
   def test_authorization_success    
-    @creditcard.number = 1
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
 
-    assert response = @gateway.authorize(100, @creditcard, @options)
-    assert_equal Response, response.class
-    assert_equal '#0001', response.params['receiptid']
-    assert_equal true, response.success?
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '9802853155172.022', response.authorization
   end
 
-  def test_authorization_error
-    @creditcard.number = 2
+  def test_authorization_failure
+    @gateway.expects(:ssl_post).returns(unsuccessful_authorization_response)
 
-    assert response = @gateway.authorize(100, @creditcard, @options)
-    assert_equal Response, response.class
-    assert_equal '#0001', response.params['receiptid']
-    assert_equal false, response.success?
-
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
   end
   
   def test_purchase_success
     @gateway.expects(:ssl_post).times(2).returns(successful_authorization_response, successful_capture_response)
 
-    assert response = @gateway.purchase(100, @creditcard, @options)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal "9802853155172.022", response.authorization
   end
@@ -92,6 +88,20 @@ class SkipJackTest < Test::Unit::TestCase
     assert_equal '10138083786558.009', map[:szTransactionFileName]
   end
   
+  def test_avs_result
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal 'Y', response.avs_result['code']
+  end
+  
+  def test_cvv_result
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal 'M', response.cvv_result['code']
+  end
+  
   private
   def successful_authorization_response
     <<-CSV
@@ -104,6 +114,12 @@ class SkipJackTest < Test::Unit::TestCase
     <<-CSV
 "000386891209","0","1","","","","","","","","","" 
 "000386891209","1.0000","SETTLE","SUCCESSFUL","Valid","618844630c5fad658e95abfd5e1d4e22","9802853156029.022"
+    CSV
+  end
+  
+  def unsuccessful_authorization_response
+    <<-CSV
+"AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"\r\n"EMPTY","000386891209","100","","","","b1eec256d0182f29375e0cbae685092d","","0","","","-35","",""
     CSV
   end
 end

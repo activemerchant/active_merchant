@@ -249,23 +249,14 @@ module ActiveMerchant #:nodoc:
       end
       
       def commit(action, money, parameters)
-        post_params = post_data(action, money, parameters)
+        response = parse( ssl_post( url_for(action), post_data(action, money, parameters) ), action )
         
-        if result = test_result_from_cc_number(parameters[:AccountNumber])
-          return result
-        end
-  
-        data = ssl_post(url_for(action), post_params)
-        @response = parse(data, action)
-        
-        success = @response[:success]
-        message = message_from(@response, action)
-    
         # Pass along the original transaction id in the case an update transaction
-        authorization = @response[:szTransactionFileName] || parameters[:szTransactionId]
-        Response.new(success, message, @response,
+        Response.new(response[:success], message_from(response, action), response,
           :test => test?,
-          :authorization => authorization
+          :authorization => response[:szTransactionFileName] || parameters[:szTransactionId],
+          :avs_result => { :code => response[:szAVSResponseCode] },
+          :cvv_result => response[:szCVV2ResponseCode]
         )
       end
       
@@ -393,7 +384,8 @@ module ActiveMerchant #:nodoc:
           post[:Phone]          = address[:phone]
           post[:Fax]            = address[:fax]
         end
-        if address = options[:shipping_address] || address
+        
+        if address = options[:shipping_address]
           post[:ShipToName]           = address[:name]
           post[:ShipToStreetAddress]  = address[:address1]
           post[:ShipToStreetAddress2] = address[:address2]
@@ -404,6 +396,11 @@ module ActiveMerchant #:nodoc:
           post[:ShipToPhone]          = address[:phone]
           post[:ShipToFax]            = address[:fax]
         end
+        
+        # The phone number for the shipping address is required
+        # Use the billing address phone number if a shipping address
+        # phone number wasn't provided
+        post[:ShipToPhone] = post[:Phone] if post[:ShipToPhone].blank?
       end
 
       def message_from(response, action)
@@ -422,7 +419,7 @@ module ActiveMerchant #:nodoc:
           return SUCCESS_MESSAGE
         else
           return CARD_CODE_MESSAGES[response[:szCVV2ResponseCode]] if CARD_CODE_ERRORS.include?(response[:szCVV2ResponseCode])
-          return AVS_MESSAGES[response[:szAVSResponseCode]] if AVS_ERRORS.include?(response[:szAVSResponseCode])
+          return AVS_MESSAGES[response[:szAVSResponseMessage]] if AVS_ERRORS.include?(response[:szAVSResponseCode])
           return RETURN_CODE_MESSAGES[response[:szReturnCode]] if response[:szReturnCode] != '1'
           return response[:szAuthorizationDeclinedMessage]
         end
@@ -436,6 +433,5 @@ module ActiveMerchant #:nodoc:
         value.to_s.gsub(/[^\w.]/, '')
       end
     end
-
   end
 end
