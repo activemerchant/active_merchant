@@ -16,7 +16,7 @@ class RemoteExactTest < Test::Unit::TestCase
   
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_equal "Transaction Normal - VER UNAVAILABLE", response.message
+    assert_match /Transaction Normal/, response.message
     assert_success response
   end
 
@@ -24,7 +24,7 @@ class RemoteExactTest < Test::Unit::TestCase
     # ask for error 13 response (Amount Error) via dollar amount 5,000 + error
     @amount = 501300
     assert response = @gateway.purchase(@amount, @credit_card, @options )
-    assert_equal "Transaction Normal - AMOUNT ERR", response.message
+    assert_match /Transaction Normal/, response.message
     assert_failure response
   end
 

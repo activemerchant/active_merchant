@@ -164,16 +164,18 @@ module ActiveMerchant #:nodoc:
       end
       
       def commit(action, request)
-         data = ssl_post(URL, build_request(action, request), POST_HEADERS)
-   
-         @response = parse(data)
+         response = parse(ssl_post(URL, build_request(action, request), POST_HEADERS))
       
-         Response.new(@response[:transaction_approved] == SUCCESS, message_from(@response), @response,
+         Response.new(successful?(response), message_from(response), response,
            :test => test?,
-           :authorization => authorization_from(@response),
-           :avs_result => { :code => @response[:avs] },
-           :cvv_result => @response[:cvv2]
+           :authorization => authorization_from(response),
+           :avs_result => { :code => response[:avs] },
+           :cvv_result => response[:cvv2]
          )
+      end
+      
+      def successful?(response)
+        response[:transaction_approved] == SUCCESS
       end
       
       def authorization_from(response)
