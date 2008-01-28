@@ -1,6 +1,6 @@
 = ActiveMerchant CHANGELOG
 
-* Remote test_result_from_cc_number completely from ActiveMerchant [cody]
+* Remove test_result_from_cc_number completely from ActiveMerchant [cody]
 * Don't use billing_address for shipping_address in Realex [cody]
 * Update Realex to add support for cvv data. remove test_result_from_cc_number. [cody]
 * Update Protx to add support for avs and cvv data. remove test_result_from_cc_number. [cody]
