@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
       class_inheritable_accessor :application_id
       self.application_id = 'ActiveMerchant'
       
-      attr_reader :url, :response, :options
+      attr_reader :options
       
       # Use this method to check if your gateway of interest supports a credit card of some type
       def self.supports?(card_type)

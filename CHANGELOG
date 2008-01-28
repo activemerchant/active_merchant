@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Remove attr_readers for url and response from Gateway [cody]
 * Remove @url from EfsnetGateway [cody]
 * Remove @response instance variable in QuickpayGateway. [cody]
 * Remove @response instance variable in PsigateGateway. Don't use billing address for shipping [cody]
