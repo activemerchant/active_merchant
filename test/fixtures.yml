@@ -14,7 +14,7 @@ authorize_net:
   login: X
   password: Y
 
-brain_tree:
+braintree:
   login: demo
   password: password
   

@@ -1,9 +1,9 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
-class BrainTreeTest < Test::Unit::TestCase
+class BraintreeTest < Test::Unit::TestCase
   
   def setup
-    @gateway = BrainTreeGateway.new(
+    @gateway = BraintreeGateway.new(
       :login => 'LOGIN',
       :password => 'PASSWORD'
     )
@@ -46,11 +46,11 @@ class BrainTreeTest < Test::Unit::TestCase
   end
   
   def test_supported_countries
-    assert_equal ['US'], BrainTreeGateway.supported_countries
+    assert_equal ['US'], BraintreeGateway.supported_countries
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express], BrainTreeGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express], BraintreeGateway.supported_cardtypes
   end
   
   def test_adding_store_adds_vault_id_flag
@@ -98,6 +98,14 @@ class BrainTreeTest < Test::Unit::TestCase
     
     response = @gateway.purchase(@amount, @credit_card)
     assert_equal 'N', response.cvv_result['code']
+  end
+  
+  def test_gateway_should_be_available_as_brain_tree
+    gateway = BrainTreeGateway.new(:login => 'l', :password => 'p')
+    gateway.expects(:ssl_post).returns(successful_purchase_response)
+    response = gateway.purchase(@amount, @credit_card)
+    assert_success response
+
   end
 
   private

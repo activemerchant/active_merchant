@@ -2,7 +2,7 @@ require File.join(File.dirname(__FILE__), '..', 'check.rb')
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class BrainTreeGateway < Gateway
+    class BraintreeGateway < Gateway
       URL = 'https://secure.braintreepaymentgateway.com/api/transact.php'
     
       self.supported_countries = ['US']
@@ -198,6 +198,8 @@ module ActiveMerchant #:nodoc:
         end
       end
     end
+    
+    BrainTreeGateway = BraintreeGateway
   end
 end
 

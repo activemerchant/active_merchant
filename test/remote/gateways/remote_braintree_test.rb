@@ -1,8 +1,8 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
-class RemoteBrainTreeTest < Test::Unit::TestCase
+class RemoteBraintreeTest < Test::Unit::TestCase
   def setup
-    @gateway = BrainTreeGateway.new(fixtures(:brain_tree))
+    @gateway = BraintreeGateway.new(fixtures(:braintree))
 
     @amount = rand(10000) + 1001
     @credit_card = credit_card('4111111111111111', :type => 'visa')
@@ -14,6 +14,13 @@ class RemoteBrainTreeTest < Test::Unit::TestCase
   
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'This transaction has been approved', response.message
+    assert_success response
+  end
+  
+  def test_successful_purchase_with_old_naming
+    gateway = BrainTreeGateway.new(fixtures(:braintree))
+    assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'This transaction has been approved', response.message
     assert_success response
   end
@@ -107,7 +114,7 @@ class RemoteBrainTreeTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = BrainTreeGateway.new(
+    gateway = BraintreeGateway.new(
                 :login => '',
                 :password => ''
               )
