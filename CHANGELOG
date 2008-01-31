@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for Åland Islands to the country list [cody]
+
 == Version 1.3.1 (January 28, 2008)
 
 * Rename BrainTreeGateway to BraintreeGateway, but keep alias to old naming for backwards compatibility [cody]
