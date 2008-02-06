@@ -144,7 +144,7 @@ module ActiveMerchant #:nodoc:
         
         options.update(
           :ordertype => "SALE",
-          :action => "SUBMIT",
+          :action => options[:action] || "SUBMIT",
           :installments => options[:installments] || 12,
           :startdate => options[:startdate] || "immediate",
           :periodicity => options[:periodicity].to_s || "monthly",

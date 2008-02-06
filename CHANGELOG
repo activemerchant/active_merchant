@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Allow LinkPoint cancellations for recurring billing. [yanagimoto.shin]
 * Add support for Åland Islands to the country list [cody]
 
 == Version 1.3.1 (January 28, 2008)
