@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for the Australian Secure Pay payment gateway [cody]
 * Allow LinkPoint cancellations for recurring billing. [yanagimoto.shin]
 * Add support for Åland Islands to the country list [cody]
 
