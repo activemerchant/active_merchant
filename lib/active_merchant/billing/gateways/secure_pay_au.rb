@@ -69,8 +69,8 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
         xml.tag! 'SecurePayMessage' do
           xml.tag! 'MessageInfo' do
-            xml.tag! 'messageID', Utils.generate_unique_id
-            xml.tag! 'messageTimestamp', ''
+            xml.tag! 'messageID', Utils.generate_unique_id.slice(0, 30)
+            xml.tag! 'messageTimestamp', generate_timestamp
             xml.tag! 'timeoutValue', request_timeout
             xml.tag! 'apiVersion', API_VERSION
           end
@@ -138,7 +138,13 @@ module ActiveMerchant #:nodoc:
         else
           response[node.name.underscore.to_sym] = node.text
         end
-      end     
+      end
+      
+      # YYYYDDMMHHNNSSKKK000sOOO
+      def generate_timestamp
+        time = Time.now.utc
+        time.strftime("%Y%d%m%H%M%S#{time.usec}+000")
+      end  
     end
   end
 end
