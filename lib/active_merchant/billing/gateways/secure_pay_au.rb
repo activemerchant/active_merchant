@@ -40,7 +40,11 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login, :password)
         @options = options
         super
-      end  
+      end
+      
+      def test?
+        @options[:test] || super
+      end
       
       def purchase(money, credit_card, options = {})
         commit :purchase, build_purchase_request(money, credit_card, options)
