@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Return last_digits that are less than 4 characters long [cody]
 * Fix Bug with Authorize.Net ARB Remote Test [patrick.t.joyce]
 * Add support for forcing test mode on Secure Pay AU gateway [cody]
 * Update Secure Pay Au to meet specs for MessageInfo elements [cody]

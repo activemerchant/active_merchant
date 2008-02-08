@@ -162,9 +162,9 @@ class CreditCardTest < Test::Unit::TestCase
     assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '111222233331234').display_number
     assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '1112223331234').display_number
 
-    assert_nil CreditCard.new(:number => nil).display_number
-    assert_nil CreditCard.new(:number => '').display_number
-    assert_nil CreditCard.new(:number => '123').display_number
+    assert_equal 'XXXX-XXXX-XXXX-', CreditCard.new(:number => nil).display_number
+    assert_equal 'XXXX-XXXX-XXXX-', CreditCard.new(:number => '').display_number
+    assert_equal 'XXXX-XXXX-XXXX-123', CreditCard.new(:number => '123').display_number
     assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '1234').display_number
     assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '01234').display_number
   end
@@ -220,6 +220,11 @@ class CreditCardTest < Test::Unit::TestCase
   def test_should_return_last_four_digits_of_card_number
     ccn = CreditCard.new(:number => "4779139500118580")
     assert_equal "8580", ccn.last_digits
+  end
+  
+  def test_bogus_last_digits
+    ccn = CreditCard.new(:number => "1")
+    assert_equal "1", ccn.last_digits
   end
   
   def test_should_be_true_when_credit_card_has_a_first_name
