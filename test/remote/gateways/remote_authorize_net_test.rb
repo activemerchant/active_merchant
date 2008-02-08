@@ -129,7 +129,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     subscription_id = response.authorization
 
     assert response = @gateway.update_recurring(:subscription_id => subscription_id, :amount => @amount * 2)
-    assert_success response.success?
+    assert_success response
 
     assert response = @gateway.cancel_recurring(subscription_id)
     assert_success response
