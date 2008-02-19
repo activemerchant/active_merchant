@@ -122,7 +122,7 @@ module ActiveMerchant #:nodoc:
         xml.target!        
       end
           
-      def build_capture_request(money, authorization, options)
+      def build_capture_request(money, authorization, options)   
         xml = Builder::XmlMarkup.new :indent => 2
         
         xml.tag! 'DoCaptureReq', 'xmlns' => PAYPAL_NAMESPACE do
@@ -168,7 +168,7 @@ module ActiveMerchant #:nodoc:
         xml.target!        
       end
       
-      def build_mass_pay_request(*args)
+      def build_mass_pay_request(*args)   
         default_options = args.last.is_a?(Hash) ? args.pop : {}
         recipients = args.first.is_a?(Array) ? args : [args]
         
@@ -269,22 +269,10 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:Street1', address[:address1]
           xml.tag! 'n2:Street2', address[:address2]
           xml.tag! 'n2:CityName', address[:city]
-          xml.tag! 'n2:StateOrProvince', lookup_state(address)
+          xml.tag! 'n2:StateOrProvince', address[:state].blank? ? 'N/A' : address[:state]
           xml.tag! 'n2:Country', address[:country]
           xml.tag! 'n2:PostalCode', address[:zip]
           xml.tag! 'n2:Phone', address[:phone]
-        end
-      end
-      
-      def lookup_state(address)
-        country = Country.find(address[:country]) rescue nil
-        return '' if country.nil?
-        
-        case country.code(:alpha2).to_s
-        when 'AU'
-          AUSTRALIAN_STATES[address[:state]] || address[:state] 
-        else
-          address[:state].blank? ? 'N/A' : address[:state]
         end
       end
       

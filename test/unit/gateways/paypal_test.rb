@@ -94,26 +94,6 @@ class PaypalTest < Test::Unit::TestCase
     assert_equal '123456', express.options[:pem]
   end
   
-  def test_successful_state_lookup
-    assert_equal 'AB', @gateway.send(:lookup_state, { :country => 'CA', :state => 'AB'})
-  end
-  
-  def test_lookup_unknown_state
-    assert_equal '', @gateway.send(:lookup_state, { :country => 'XX', :state => 'NA'})
-  end
-  
-  def test_lookup_uk_with_state
-    assert_equal 'Avon', @gateway.send(:lookup_state, { :country => 'United Kingdom', :state => 'Avon'})
-  end
-  
-  def test_lookup_uk_with_no_state
-    assert_equal 'N/A', @gateway.send(:lookup_state, { :country => 'GB', :state => '' })
-  end
-  
-  def test_lookup_australian_state
-    assert_equal 'Australian Capital Territory', @gateway.send(:lookup_state, { :country => 'AU', :state => 'ACT'} )
-  end
-  
   def test_supported_countries
     assert_equal ['US'], PaypalGateway.supported_countries
   end
