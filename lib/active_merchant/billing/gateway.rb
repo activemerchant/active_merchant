@@ -101,7 +101,16 @@ module ActiveMerchant #:nodoc:
       # Use this method to check if your gateway of interest supports a credit card of some type
       def self.supports?(card_type)
         supported_cardtypes.include?(card_type.to_sym)
-      end       
+      end
+      
+      def self.card_brand(source)
+        result = source.respond_to?(:brand) ? source.brand : source.type
+        result.to_s.downcase
+      end
+    
+      def card_brand(source)
+        self.class.card_brand(source)
+      end
     
       # Initialize a new gateway.
       # 
@@ -145,8 +154,8 @@ module ActiveMerchant #:nodoc:
       end
       
       def requires_start_date_or_issue_number?(credit_card)
-        return false if credit_card.type.blank?
-        DEBIT_CARDS.include?(credit_card.type.to_sym)
+        return false if card_brand(credit_card).blank?
+        DEBIT_CARDS.include?(card_brand(credit_card).to_sym)
       end
     end
   end

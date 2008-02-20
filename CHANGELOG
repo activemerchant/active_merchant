@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Gateways will now look for CreditCard#brand before looking for CreditCard#type [cody]
 * Make before_validate in CreditCard more clear [keith_du...@mac.com, cody]
 * Don't send full Australian state names to PayPal [cody]
 * Return last_digits that are less than 4 characters long [cody]

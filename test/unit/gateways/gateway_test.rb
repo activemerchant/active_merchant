@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class Gateway < Test::Unit::TestCase
- def test_should_detect_if_a_card_is_supported
+  def test_should_detect_if_a_card_is_supported
     Gateway.supported_cardtypes = [:visa, :bogus]
     assert [:visa, :bogus].all? { |supported_cardtype| Gateway.supports?(supported_cardtype) }
     
@@ -27,5 +27,15 @@ class Gateway < Test::Unit::TestCase
    assert_raise(ArgumentError) do
      Gateway.new.send(:amount, '10.34')
    end
+  end
+  
+  def test_invalid_type
+    credit_card = stub(:type => "visa")    
+    assert_equal "visa", Gateway.card_brand(credit_card)
+  end
+  
+  def test_invalid_type  
+    credit_card = stub(:type => "String", :brand => "visa")
+    assert_equal "visa", Gateway.card_brand(credit_card)
   end
 end

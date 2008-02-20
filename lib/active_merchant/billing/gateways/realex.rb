@@ -107,7 +107,7 @@ module ActiveMerchant
           xml.tag! 'card' do
             xml.tag! 'number', credit_card.number
             xml.tag! 'expdate', expiry_date(credit_card)
-            xml.tag! 'type', CARD_MAPPING[credit_card.type.to_s]
+            xml.tag! 'type', CARD_MAPPING[card_brand(credit_card).to_s]
             xml.tag! 'chname', credit_card.name
             xml.tag! 'issueno', credit_card.issue_number
             

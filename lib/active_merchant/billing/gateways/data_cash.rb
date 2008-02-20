@@ -275,7 +275,7 @@ module ActiveMerchant
           xml.tag! :expirydate, format_date(credit_card.month, credit_card.year)
           
           # optional values - for Solo etc
-          if [ 'switch', 'solo' ].include?(credit_card.type.to_s)
+          if [ 'switch', 'solo' ].include?(card_brand(credit_card).to_s)
             
             xml.tag! :issuenumber, credit_card.issue_number unless credit_card.issue_number.blank?
             

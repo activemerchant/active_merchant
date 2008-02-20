@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :TransactionUnique, options[:order_id], :required => true)
         add_pair(post, :OrderDesc, options[:description] || options[:order_id], :required => true)
         
-        if [ 'american_express', 'diners_club' ].include?(credit_card.type.to_s)
+        if [ 'american_express', 'diners_club' ].include?(card_brand(credit_card).to_s)
           add_pair(post, :AEIT1Quantity,  1) 
           add_pair(post, :AEIT1Description,  (options[:description] || options[:order_id]).slice(0, 15)) 
           add_pair(post, :AEIT1GrossValue, amount(money))
@@ -159,7 +159,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def format_issue_number(credit_card)
-        credit_card.type.to_s == 'solo' ? format(credit_card.issue_number, :two_digits) : credit_card.issue_number
+        card_brand(credit_card).to_s == 'solo' ? format(credit_card.issue_number, :two_digits) : credit_card.issue_number
       end
 
       def commit(action, parameters)

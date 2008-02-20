@@ -137,9 +137,9 @@ module ActiveMerchant #:nodoc:
       end
       
       def credit_card_type(credit_card)
-        return '' if credit_card.type.blank?
+        return '' if card_brand(credit_card).blank?
         
-        CARD_MAPPING[credit_card.type.to_sym]
+        CARD_MAPPING[card_brand(credit_card).to_sym]
       end
       
       def expdate(creditcard)

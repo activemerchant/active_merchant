@@ -188,9 +188,9 @@ module ActiveMerchant #:nodoc:
       end
       
       def map_card_type(credit_card)
-        raise ArgumentError, "The credit card type must be provided" if credit_card.type.blank?
+        raise ArgumentError, "The credit card type must be provided" if card_brand(credit_card).blank?
         
-        card_type = credit_card.type.to_sym
+        card_type = card_brand(credit_card).to_sym
         
         # Check if it is an electron card
         if card_type == :visa && credit_card.number =~ ELECTRON 
@@ -209,7 +209,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def format_issue_number(credit_card)
-        credit_card.type.to_s == 'solo' ? format(credit_card.issue_number, :two_digits) : credit_card.issue_number
+        card_brand(credit_card).to_s == 'solo' ? format(credit_card.issue_number, :two_digits) : credit_card.issue_number
       end
 
       def commit(action, parameters)
