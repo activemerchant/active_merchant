@@ -112,7 +112,7 @@ module ActiveMerchant #:nodoc:
       def before_validate #:nodoc: 
         self.month = month.to_i
         self.year  = year.to_i
-        self.number.to_s.gsub!(/[^\d]/, "")
+        self.number = number.to_s.gsub(/[^\d]/, "")
         self.type.downcase! if type.respond_to?(:downcase)
         self.type = self.class.type?(number) if type.blank?
       end

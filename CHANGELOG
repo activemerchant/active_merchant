@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Make before_validate in CreditCard more clear [keith_du...@mac.com, cody]
 * Don't send full Australian state names to PayPal [cody]
 * Return last_digits that are less than 4 characters long [cody]
 * Fix Bug with Authorize.Net ARB Remote Test [patrick.t.joyce]

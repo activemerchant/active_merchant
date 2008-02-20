@@ -296,4 +296,16 @@ class CreditCardTest < Test::Unit::TestCase
   def test_mask_number
     assert_equal 'XXXX-XXXX-XXXX-5100', CreditCard.mask('5105105105105100')
   end
+  
+  def test_strip_non_digit_characters
+    card = credit_card('4242-4242      %%%%%%4242......4242')
+    assert card.valid?
+    assert_equal "4242424242424242", card.number
+  end
+  
+  def test_before_validate_handles_blank_number
+    card = credit_card(nil)
+    assert !card.valid?
+    assert_equal "", card.number
+  end
 end
