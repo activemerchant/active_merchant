@@ -192,6 +192,17 @@ class PayflowTest < Test::Unit::TestCase
     assert @gateway.retry_safe
   end
   
+  def test_ensure_name_is_added_to_address
+    xml_doc = Builder::XmlMarkup.new
+    
+    @gateway.send(:add_address, xml_doc, 'Address', @options[:billing_address], {})
+    
+    result = REXML::Document.new(xml_doc.target!)
+    assert result.root.elements['//Name']
+    assert_equal 'Jim Smith', result.root.elements['//Name'].text.to_s
+    
+  end
+  
   private
   def successful_recurring_response
     <<-XML

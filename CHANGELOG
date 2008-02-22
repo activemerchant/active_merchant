@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix bug with adding name to Payflow requests [cody]
 * Gateways will now look for CreditCard#brand before looking for CreditCard#type [cody]
 * Make before_validate in CreditCard more clear [keith_du...@mac.com, cody]
 * Don't send full Australian state names to PayPal [cody]
