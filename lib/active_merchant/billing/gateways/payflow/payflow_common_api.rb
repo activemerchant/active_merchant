@@ -128,7 +128,7 @@ module ActiveMerchant #:nodoc:
       def add_address(xml, tag, address, options)  
         return if address.nil?
         xml.tag! tag do
-          xml.tag! 'Name', address[:name]
+          xml.tag! 'Name', address[:name] unless address[:name].blank?
           xml.tag! 'EMail', options[:email] unless options[:email].blank?
           xml.tag! 'Phone', address[:phone] unless address[:phone].blank?
           xml.tag! 'CustCode', options[:customer] if !options[:customer].blank? && tag == 'BillTo'
@@ -200,7 +200,7 @@ module ActiveMerchant #:nodoc:
         headers = build_headers(request.size)
         
     	  response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request, headers))
-    	  
+
     	  build_response(response[:result] == "0", response[:message], response,
     	    :test => test?,
     	    :authorization => response[:pn_ref] || response[:rp_ref],
