@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.3.2 (February 24, 2008)
+
 * Actually fix the bug by adding extdata element to Payflow Requests [cody]
 * Fix bug with adding name to Payflow requests [cody]
 * Gateways will now look for CreditCard#brand before looking for CreditCard#type [cody]
