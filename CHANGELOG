@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for CyberSource credits [mjuneja]
+
 == Version 1.3.2 (February 24, 2008)
 
 * Actually fix the bug by adding extdata element to Payflow Requests [cody]

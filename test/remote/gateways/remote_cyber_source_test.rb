@@ -63,11 +63,24 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_tax_calculation_with_nexus
-    @gateway.options = @gateway.options.merge(:nexus => 'WI')
-    assert response = @gateway.calculate_tax(@credit_card, @options)
+    total_line_items_value = @options[:line_items].inject(0) do |sum, item| 
+                               sum += item[:declared_value] * item[:quantity]
+                             end
+    
+    canada_gst_rate = 0.05
+    ontario_pst_rate = 0.08
+    
+    
+    total_pst = total_line_items_value.to_f * ontario_pst_rate / 100
+    total_gst = total_line_items_value.to_f * canada_gst_rate / 100
+    total_tax = total_pst + total_gst
+    
+    assert response = @gateway.calculate_tax(@credit_card, @options.merge(:nexus => 'ON'))
     assert_equal 'Successful transaction', response.message
     assert response.params['totalTaxAmount']
-    assert_equal "0", response.params['totalTaxAmount']
+    assert_equal total_pst, response.params['totalCountyTaxAmount'].to_f
+    assert_equal total_gst, response.params['totalStateTaxAmount'].to_f
+    assert_equal total_tax, response.params['totalTaxAmount'].to_f
     assert_success response
     assert response.test?
   end
@@ -102,6 +115,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount + 10, auth.authorization, @options)
     assert_failure capture
+    assert_equal "The requested amount exceeds the originally authorized amount",  capture.message
   end
 
   def test_failed_capture_bad_auth_info
@@ -115,5 +129,16 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_match /wsse:InvalidSecurity/, response.message
     assert_failure response
+  end
+  
+  def test_successful_credit
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    assert response = @gateway.credit(@amount, response.authorization)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?       
   end
 end
