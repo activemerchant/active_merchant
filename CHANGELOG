@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Initial implementation of Payflow Name-Value API [Greg Furmanek]
 * Add support for CyberSource credits [mjuneja]
 
 == Version 1.3.2 (February 24, 2008)
