@@ -28,11 +28,11 @@ module ActiveMerchant #:nodoc:
           end
 
           def gross
-            params['approveamount']
+            sprintf("%.2f", gross_cents.to_f / 100)
           end
           
           def gross_cents
-            gross.to_i
+            params['approveamount'].to_i
           end
           
           def account

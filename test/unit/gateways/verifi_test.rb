@@ -38,7 +38,6 @@ class VerifiTest < Test::Unit::TestCase
   end
   
   def test_amount_style
-    assert_equal '10.34', @gateway.send(:amount, Money.new(1034))
     assert_equal '10.34', @gateway.send(:amount, 1034)
                                                       
     assert_raise(ArgumentError) do

@@ -13,7 +13,7 @@ class HiTrustNotificationTest < Test::Unit::TestCase
     assert_equal "012345678901", @notification.transaction_id
     assert_equal "1000", @notification.item_id
     assert_equal "101010", @notification.account
-    assert_equal "500", @notification.gross
+    assert_equal "5.00", @notification.gross
     assert_equal "USD", @notification.currency
     assert_equal Time.parse("2007-12-01.12.35.40.123456"), @notification.received_at
     assert @notification.test?
