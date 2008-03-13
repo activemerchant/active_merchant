@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def test?
-        @options[:test] || Base.gateway_mode == :test
+        @options[:test] || super
       end
       
       def purchase(money, credit_card, options = {})
@@ -171,11 +171,10 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :CardHolder, credit_card.name, :required => true)
         add_pair(post, :CardNumber, credit_card.number, :required => true)
          
-        add_pair(post, :ExpiryDate, format_expiry_date(credit_card), :required => true)
+        add_pair(post, :ExpiryDate, format_date(credit_card.month, credit_card.year), :required => true)
          
         if requires_start_date_or_issue_number?(credit_card)
-          add_pair(post, :StartDate, format(credit_card.start_year, :four_digits))
-          
+          add_pair(post, :StartDate, format_date(credit_card.start_month, credit_card.start_year))
           add_pair(post, :IssueNumber, format_issue_number(credit_card))
         end
         add_pair(post, :CardType, map_card_type(credit_card))
@@ -201,9 +200,9 @@ module ActiveMerchant #:nodoc:
       end
       
       # MMYY format
-      def format_expiry_date(credit_card)
-        year  = sprintf("%.4i", credit_card.year)
-        month = sprintf("%.2i", credit_card.month)
+      def format_date(month, year)
+        year  = sprintf("%.4i", year)
+        month = sprintf("%.2i", month)
 
         "#{month}#{year[-2..-1]}"
       end
