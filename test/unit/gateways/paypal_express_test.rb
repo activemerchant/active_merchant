@@ -4,6 +4,9 @@ class PaypalExpressTest < Test::Unit::TestCase
   TEST_REDIRECT_URL = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token=1234567890'
   LIVE_REDIRECT_URL = 'https://www.paypal.com/cgibin/webscr?cmd=_express-checkout&token=1234567890'
   
+  TEST_REDIRECT_URL_WITHOUT_REVIEW = "#{TEST_REDIRECT_URL}&useraction=commit"
+  LIVE_REDIRECT_URL_WITHOUT_REVIEW = "#{LIVE_REDIRECT_URL}&useraction=commit"
+  
   def setup
     @gateway = PaypalExpressGateway.new(
       :login => 'cody', 
@@ -33,6 +36,11 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal LIVE_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
   end
   
+  def test_live_redirect_url_without_review
+    Base.gateway_mode = :production
+    assert_equal LIVE_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false)
+  end
+  
   def test_force_sandbox_redirect_url
     Base.gateway_mode = :production
     
@@ -50,6 +58,11 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_test_redirect_url
     assert_equal :test, Base.gateway_mode
     assert_equal TEST_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
+  end
+  
+  def test_test_redirect_url_without_review
+    assert_equal :test, Base.gateway_mode
+    assert_equal TEST_REDIRECT_URL_WITHOUT_REVIEW, @gateway.redirect_url_for('1234567890', :review => false)
   end
   
   def test_get_express_details

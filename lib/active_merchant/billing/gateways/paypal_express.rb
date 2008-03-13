@@ -1,26 +1,17 @@
 require File.dirname(__FILE__) + '/paypal/paypal_common_api'
 require File.dirname(__FILE__) + '/paypal/paypal_express_response'
+require File.dirname(__FILE__) + '/paypal_express_common'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaypalExpressGateway < Gateway
       include PaypalCommonAPI
+      include PaypalExpressCommon
       
+      self.test_redirect_url = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token='
       self.supported_countries = ['US']
-      
-      LIVE_REDIRECT_URL = 'https://www.paypal.com/cgibin/webscr?cmd=_express-checkout&token='
-      TEST_REDIRECT_URL = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token='
-      
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside'
       self.display_name = 'PayPal Express Checkout'
-
-      def redirect_url
-        test? ? TEST_REDIRECT_URL : LIVE_REDIRECT_URL 
-      end
-      
-      def redirect_url_for(token)
-        "#{redirect_url}#{token}"
-      end
       
       def setup_authorization(money, options = {})
         requires!(options, :return_url, :cancel_return_url)

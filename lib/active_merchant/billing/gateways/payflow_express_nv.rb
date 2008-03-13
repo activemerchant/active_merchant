@@ -1,14 +1,14 @@
 require File.dirname(__FILE__) + '/payflow_nv/payflow_nv_common_api'
 require File.dirname(__FILE__) + '/payflow_nv/payflow_express_nv_response'
+require File.dirname(__FILE__) + '/paypal_express_common'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PayflowExpressNvGateway < Gateway
       include PayflowNvCommonAPI
+      include PaypalExpressCommon
 
-      LIVE_REDIRECT_URL = 'https://www.paypal.com/cgibin/webscr?cmd=_express-checkout&token='
-      TEST_REDIRECT_URL = 'https://test-expresscheckout.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token='
-
+      self.test_redirect_url = 'https://test-expresscheckout.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token='
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside'
       self.display_name = 'PayPal Express Checkout'
 
@@ -17,15 +17,7 @@ module ActiveMerchant #:nodoc:
         :get_express_checkout => 'G',
         :do_express_checkout => 'D'
       }
-
-      def redirect_url
-        test? ? TEST_REDIRECT_URL : LIVE_REDIRECT_URL
-      end
-
-      def redirect_url_for(token)
-        "#{redirect_url}#{token}"
-      end
-
+      
       def authorize(money, options = {})
         requires!(options, :token, :payer_id)
 
