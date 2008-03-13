@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add capturing partial amounts, fix issue number formatting, fix authorization string when nil values returned, fix parsing of multiple '=' characters, simplify message_from [Simon Russell]
 * Fix StartDate in ProtxGatewy [cody]
 * Add support for refunds and continuous authority references to DataCashGateway [joel.chippindale]
 * Fix gross in HiTrust notification. Don't use Money object in Verifi gateway [cody]

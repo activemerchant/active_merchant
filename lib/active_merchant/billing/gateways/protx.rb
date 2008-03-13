@@ -84,11 +84,13 @@ module ActiveMerchant #:nodoc:
         commit(:authorization, post)
       end
       
-      # Only supports capturing the original amount of the transaction
+      # You can only capture a transaction once, even if you didn't capture the full amount the first time.
       def capture(money, identification, options = {})
         post = {}
         
         add_reference(post, identification)
+        add_release_amount(post, money, options)
+        
         commit(:capture, post)
       end
       
@@ -136,6 +138,11 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :Currency, options[:currency] || currency(money), :required => true)
       end
 
+      # doesn't actually use the currency -- dodgy!
+      def add_release_amount(post, money, options)
+        add_pair(post, :ReleaseAmount, amount(money), :required => true)
+      end
+
       def add_customer_data(post, options)
         add_pair(post, :BillingEmail, options[:email])
         add_pair(post, :ContactNumber, options[:phone])
@@ -175,7 +182,7 @@ module ActiveMerchant #:nodoc:
          
         if requires_start_date_or_issue_number?(credit_card)
           add_pair(post, :StartDate, format_date(credit_card.start_month, credit_card.start_year))
-          add_pair(post, :IssueNumber, format_issue_number(credit_card))
+          add_pair(post, :IssueNumber, credit_card.issue_number)
         end
         add_pair(post, :CardType, map_card_type(credit_card))
         
@@ -207,10 +214,6 @@ module ActiveMerchant #:nodoc:
         "#{month}#{year[-2..-1]}"
       end
       
-      def format_issue_number(credit_card)
-        card_brand(credit_card).to_s == 'solo' ? format(credit_card.issue_number, :two_digits) : credit_card.issue_number
-      end
-
       def commit(action, parameters)
         response = parse( ssl_post(url_for(action), post_data(action, parameters)) )
           
@@ -229,7 +232,7 @@ module ActiveMerchant #:nodoc:
          [ params[:VendorTxCode],
            response["VPSTxId"],
            response["TxAuthNo"],
-           response["SecurityKey"] ].compact.join(";")
+           response["SecurityKey"] ].join(";")
       end
       
       def url_for(action)
@@ -247,12 +250,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if response["Status"] == APPROVED
-          return 'Success'
-        else
-          return 'Unspecified error' if response["StatusDetail"].blank?
-          return response["StatusDetail"]
-        end
+        response['Status'] == APPROVED ? 'Success' : (response['StatusDetail'] || 'Unspecified error')    # simonr 20080207 can't actually get non-nil blanks, so this is shorter
       end
 
       def post_data(action, parameters = {})
@@ -270,7 +268,7 @@ module ActiveMerchant #:nodoc:
       # Key2=value2
       def parse(body)
         result = {}
-        body.to_a.collect {|v| c=v.split('='); result[c[0]] = c[1].chomp if !c[1].blank? }
+        body.to_a.each { |pair| result[$1] = $2 if pair.strip =~ /\A([^=]+)=(.+)\Z/im }
         result
       end
 
