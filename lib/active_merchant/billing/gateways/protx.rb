@@ -144,9 +144,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        add_pair(post, :BillingEmail, options[:email])
-        add_pair(post, :ContactNumber, options[:phone])
-        add_pair(post, :ContactFax, options[:fax])
+        add_pair(post, :BillingEmail, options[:email][0,255]) unless options[:email].blank?
+        add_pair(post, :ContactNumber, options[:phone].gsub(/[^0-9+]/, '')[0,20]) unless options[:phone].blank?
+        add_pair(post, :ContactFax, options[:fax].gsub(/[^0-9+]/, '')[0,20]) unless options[:fax].blank?
         add_pair(post, :ClientIPAddress, options[:ip])
       end
 

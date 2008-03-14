@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Strip invalid characters and limit lengths of Protx customer data [Simon Russell]
 * Fix empty start or end dates in Protx [Simon Russell]
 * Add support for Authorize.net CIM [Patrick T. Joyce, Ian Lotinsky]
 * Add option to skip order review to all PayPal Express gateways [garret.alfert, cody]
