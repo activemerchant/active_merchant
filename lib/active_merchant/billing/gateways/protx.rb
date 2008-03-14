@@ -208,6 +208,8 @@ module ActiveMerchant #:nodoc:
       
       # MMYY format
       def format_date(month, year)
+        return nil if year.blank? || month.blank?
+        
         year  = sprintf("%.4i", year)
         month = sprintf("%.2i", month)
 

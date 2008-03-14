@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix empty start or end dates in Protx [Simon Russell]
 * Add support for Authorize.net CIM [Patrick T. Joyce, Ian Lotinsky]
 * Add option to skip order review to all PayPal Express gateways [garret.alfert, cody]
 * Add capturing partial amounts, fix issue number formatting, fix authorization string when nil values returned, fix parsing of multiple '=' characters, simplify message_from [Simon Russell]
