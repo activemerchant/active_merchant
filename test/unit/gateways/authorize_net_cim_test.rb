@@ -139,7 +139,19 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   def test_should_create_customer_profile_transaction_auth_capture_request
     @gateway.expects(:ssl_post).returns(successful_create_customer_profile_transaction_response(:auth_capture))
 
-    assert response = @gateway.create_customer_profile_transaction(:transaction => {:customer_profile_id => @customer_profile_id, :customer_payment_profile_id => @customer_payment_profile_id, :type => :auth_capture, :amount => @amount})
+    assert response = @gateway.create_customer_profile_transaction(
+      :transaction => {
+        :customer_profile_id => @customer_profile_id,
+        :customer_payment_profile_id => @customer_payment_profile_id,
+        :type => :auth_capture,
+        :order => {
+          :invoice_number => '1234',
+          :description => 'Test Order Description',
+          :purchase_order_number => '4321'
+        },
+        :amount => @amount
+      }
+    )
     assert_instance_of Response, response
     assert_success response
     assert_nil response.authorization

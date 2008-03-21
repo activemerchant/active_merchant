@@ -500,7 +500,16 @@ module ActiveMerchant #:nodoc:
             xml.tag!('customerProfileId', transaction[:customer_profile_id])
             xml.tag!('customerPaymentProfileId', transaction[:customer_payment_profile_id])
             xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
+            add_order(xml, transaction[:order]) if transaction[:order]
           end
+        end
+      end
+      
+      def add_order(xml, order)
+        xml.tag!('order') do
+          xml.tag!('invoiceNumber', order[:invoice_number]) if order[:invoice_number]
+          xml.tag!('description', order[:description]) if order[:description]
+          xml.tag!('purchaseOrderNumber', order[:purchase_order_number]) if order[:purchase_order_number]
         end
       end
       
@@ -641,7 +650,10 @@ module ActiveMerchant #:nodoc:
             'approval_code' => direct_response_fields[4],
             'message' => direct_response_fields[3],
             'transaction_type' => direct_response_fields[11],
-            'amount' => direct_response_fields[9]
+            'amount' => direct_response_fields[9],
+            'invoice_number' => direct_response_fields[7],
+            'order_description' => direct_response_fields[8],
+            'purchase_order_number' => direct_response_fields[36]
             # TODO fill in other fields
           }
         )

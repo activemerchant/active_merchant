@@ -136,6 +136,11 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
         :customer_profile_id => @customer_profile_id,
         :customer_payment_profile_id => @customer_payment_profile_id,
         :type => :auth_capture,
+        :order => {
+          :invoice_number => '1234',
+          :description => 'Test Order Description',
+          :purchase_order_number => '4321'
+        },
         :amount => @amount
       }
     )
@@ -147,6 +152,9 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response.params['direct_response']['approval_code'] =~ /\w{6}/
     assert_equal "auth_capture", response.params['direct_response']['transaction_type']
     assert_equal "100.00", response.params['direct_response']['amount']
+    assert_equal response.params['direct_response']['invoice_number'], '1234'
+    assert_equal response.params['direct_response']['order_description'], 'Test Order Description'
+    assert_equal response.params['direct_response']['purchase_order_number'], '4321'
   end
   
   def test_successful_create_customer_payment_profile_request

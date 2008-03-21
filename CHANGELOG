@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for the order fields to the create_customer_profile_transaction in Authorize.net CIM. [Patrick T. Joyce]
 * Strip invalid characters and limit lengths of Protx customer data [Simon Russell]
 * Fix empty start or end dates in Protx [Simon Russell]
 * Add support for Authorize.net CIM [Patrick T. Joyce, Ian Lotinsky]
