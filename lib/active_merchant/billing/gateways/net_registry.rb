@@ -72,6 +72,7 @@ module ActiveMerchant
       # described in "Programming for NetRegistry's E-commerce
       # Gateway." [http://rubyurl.com/hNG]
       def capture(money, authorization, options = {})
+        requires!(options, :credit_card)
         credit_card = options[:credit_card]
 
         params = {

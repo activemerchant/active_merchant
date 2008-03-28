@@ -37,6 +37,12 @@ class NetRegistryTest < Test::Unit::TestCase
     response = @gateway.credit(@amount, '0707161858000000', @options)
     assert_success response
   end
+  
+  def test_capture_without_credit_card_provided
+    assert_raise(ArgumentError) do
+      response = @gateway.capture(@amount, '0707161858000000', @options)
+    end
+  end
 
   def test_successful_authorization
     @gateway.stubs(:ssl_post).returns(successful_authorization_response)
