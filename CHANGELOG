@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Return all the error messages and codes from paypal responses [cody]
 * Fail hard when attempting to capture without a credit card with NetRegistry [cody]
 * Add support for the order fields to the create_customer_profile_transaction in Authorize.net CIM. [Patrick T. Joyce]
 * Strip invalid characters and limit lengths of Protx customer data [Simon Russell]

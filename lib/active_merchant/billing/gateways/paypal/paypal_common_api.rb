@@ -192,19 +192,26 @@ module ActiveMerchant #:nodoc:
         
         xml.target!
       end
-      
+
       def parse(action, xml)
         response = {}
+        
+        error_messages = []
+        error_codes = []
+        
         xml = REXML::Document.new(xml)
         if root = REXML::XPath.first(xml, "//#{action}Response")
           root.elements.to_a.each do |node|
             case node.name
             when 'Errors'
-              response[:message] = node.elements.to_a('//LongMessage').collect{|error| error.text}.join('.')
+              error_messages << node.elements['//LongMessage'].text if node.elements['//LongMessage']
+              error_codes << node.elements['//ErrorCode'].text if node.elements['//ErrorCode']
             else
               parse_element(response, node)
             end
           end
+          response[:message] = error_messages.join(". ") unless error_messages.empty?
+          response[:error_codes] = error_codes.join(",") unless error_codes.empty?
         elsif root = REXML::XPath.first(xml, "//SOAP-ENV:Fault")
           parse_element(response, root)
           response[:message] = "#{response[:faultcode]}: #{response[:faultstring]} - #{response[:detail]}"

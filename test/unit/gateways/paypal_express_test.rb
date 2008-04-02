@@ -138,6 +138,26 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'ActiveMerchant_EC', REXML::XPath.first(xml, '//n2:ButtonSource').text
   end
   
+  def test_error_code_for_single_error 
+    @gateway.expects(:ssl_post).returns(response_with_error)
+    response = @gateway.setup_authorization(100, 
+                 :return_url => 'http://example.com',
+                 :cancel_return_url => 'http://example.com'
+               )
+    assert_equal "10736", response.params['error_codes']
+  end
+  
+  def test_error_codes_for_multiple_errors 
+    @gateway.expects(:ssl_post).returns(response_with_errors)
+    response = @gateway.setup_authorization(100, 
+                 :return_url => 'http://example.com',
+                 :cancel_return_url => 'http://example.com'
+               )
+               
+    assert_equal ["10736", "10736"] , response.params['error_codes'].split(',')
+  end
+
+  private
   def successful_details_response
     <<-RESPONSE
 <?xml version='1.0' encoding='UTF-8'?>
@@ -238,4 +258,76 @@ class PaypalExpressTest < Test::Unit::TestCase
 </SOAP-ENV:Envelope>
     RESPONSE
   end
+  
+  def response_with_error
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:market="urn:ebay:apis:Market" xmlns:auction="urn:ebay:apis:Auction" xmlns:sizeship="urn:ebay:api:PayPalAPI/sizeship.xsd" xmlns:ship="urn:ebay:apis:ship" xmlns:skype="urn:ebay:apis:skype" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ns="urn:ebay:api:PayPalAPI">
+  <SOAP-ENV:Header>
+    <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext" xsi:type="wsse:SecurityType"/>
+    <RequesterCredentials xmlns="urn:ebay:api:PayPalAPI" xsi:type="ebl:CustomSecurityHeaderType">
+      <Credentials xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:UserIdPasswordType">
+        <Username xsi:type="xs:string"/>
+        <Password xsi:type="xs:string"/>
+        <Subject xsi:type="xs:string"/>
+      </Credentials>
+    </RequesterCredentials>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body id="_0">
+    <SetExpressCheckoutResponse xmlns="urn:ebay:api:PayPalAPI">
+      <Timestamp xmlns="urn:ebay:apis:eBLBaseComponents">2008-04-02T17:38:02Z</Timestamp>
+      <Ack xmlns="urn:ebay:apis:eBLBaseComponents">Failure</Ack>
+      <CorrelationID xmlns="urn:ebay:apis:eBLBaseComponents">cdb720feada30</CorrelationID>
+      <Errors xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:ErrorType">
+        <ShortMessage xsi:type="xs:string">Shipping Address Invalid City State Postal Code</ShortMessage>
+        <LongMessage xsi:type="xs:string">A match of the Shipping Address City, State, and Postal Code failed.</LongMessage>
+        <ErrorCode xsi:type="xs:token">10736</ErrorCode>
+        <SeverityCode xmlns="urn:ebay:apis:eBLBaseComponents">Error</SeverityCode>
+      </Errors>
+      <Version xmlns="urn:ebay:apis:eBLBaseComponents">2.000000</Version>
+      <Build xmlns="urn:ebay:apis:eBLBaseComponents">543066</Build>
+    </SetExpressCheckoutResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+    RESPONSE
+  end
+  
+    def response_with_errors
+      <<-RESPONSE
+  <?xml version="1.0" encoding="UTF-8"?>
+  <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:market="urn:ebay:apis:Market" xmlns:auction="urn:ebay:apis:Auction" xmlns:sizeship="urn:ebay:api:PayPalAPI/sizeship.xsd" xmlns:ship="urn:ebay:apis:ship" xmlns:skype="urn:ebay:apis:skype" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ns="urn:ebay:api:PayPalAPI">
+    <SOAP-ENV:Header>
+      <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext" xsi:type="wsse:SecurityType"/>
+      <RequesterCredentials xmlns="urn:ebay:api:PayPalAPI" xsi:type="ebl:CustomSecurityHeaderType">
+        <Credentials xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:UserIdPasswordType">
+          <Username xsi:type="xs:string"/>
+          <Password xsi:type="xs:string"/>
+          <Subject xsi:type="xs:string"/>
+        </Credentials>
+      </RequesterCredentials>
+    </SOAP-ENV:Header>
+    <SOAP-ENV:Body id="_0">
+      <SetExpressCheckoutResponse xmlns="urn:ebay:api:PayPalAPI">
+        <Timestamp xmlns="urn:ebay:apis:eBLBaseComponents">2008-04-02T17:38:02Z</Timestamp>
+        <Ack xmlns="urn:ebay:apis:eBLBaseComponents">Failure</Ack>
+        <CorrelationID xmlns="urn:ebay:apis:eBLBaseComponents">cdb720feada30</CorrelationID>
+        <Errors xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:ErrorType">
+          <ShortMessage xsi:type="xs:string">Shipping Address Invalid City State Postal Code</ShortMessage>
+          <LongMessage xsi:type="xs:string">A match of the Shipping Address City, State, and Postal Code failed.</LongMessage>
+          <ErrorCode xsi:type="xs:token">10736</ErrorCode>
+          <SeverityCode xmlns="urn:ebay:apis:eBLBaseComponents">Error</SeverityCode>
+        </Errors>
+        <Errors xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:ErrorType">
+          <ShortMessage xsi:type="xs:string">Shipping Address Invalid City State Postal Code</ShortMessage>
+          <LongMessage xsi:type="xs:string">A match of the Shipping Address City, State, and Postal Code failed.</LongMessage>
+          <ErrorCode xsi:type="xs:token">10736</ErrorCode>
+          <SeverityCode xmlns="urn:ebay:apis:eBLBaseComponents">Error</SeverityCode>
+        </Errors>
+        <Version xmlns="urn:ebay:apis:eBLBaseComponents">2.000000</Version>
+        <Build xmlns="urn:ebay:apis:eBLBaseComponents">543066</Build>
+      </SetExpressCheckoutResponse>
+    </SOAP-ENV:Body>
+  </SOAP-ENV:Envelope>
+      RESPONSE
+    end
 end
