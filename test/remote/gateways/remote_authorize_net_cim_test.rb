@@ -59,7 +59,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_success response
     assert_equal @customer_profile_id, response.authorization
     assert response.params['profile']['payment_profiles']['customer_payment_profile_id'] =~ /\d+/, 'The customer_payment_profile_id should be a number'
-    assert_equal "XXXX#{@credit_card.number[-4..-1]}", response.params['profile']['payment_profiles']['payment']['credit_card']['card_number'], "The card number should contain the last 4 digits of the card we passed in #{@credit_card.number[-4..-1]}"
+    assert_equal "XXXX#{@credit_card.last_digits}", response.params['profile']['payment_profiles']['payment']['credit_card']['card_number'], "The card number should contain the last 4 digits of the card we passed in #{@credit_card.last_digits}"
     assert_equal @profile[:merchant_customer_id], response.params['profile']['merchant_customer_id']
     assert_equal @profile[:description], response.params['profile']['description']
     assert_equal @profile[:email], response.params['profile']['email']
@@ -322,7 +322,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_success response
     assert_nil response.authorization
     assert response.params['payment_profile']['customer_payment_profile_id'] =~ /\d+/, 'The customer_payment_profile_id should be a number'
-    assert_equal "XXXX#{@credit_card.number[-4..-1]}", response.params['payment_profile']['payment']['credit_card']['card_number'], "The card number should contain the last 4 digits of the card we passed in #{@credit_card.number[-4..-1]}"
+    assert_equal "XXXX#{@credit_card.last_digits}", response.params['payment_profile']['payment']['credit_card']['card_number'], "The card number should contain the last 4 digits of the card we passed in #{@credit_card.last_digits}"
     assert_equal @profile[:payment_profiles][:customer_type], response.params['payment_profile']['customer_type']
   end
 
