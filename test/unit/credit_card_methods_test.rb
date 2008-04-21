@@ -149,4 +149,22 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_false CreditCard.matching_type?('6010000000000000', 'discover')
     assert_false CreditCard.matching_type?('6600000000000000', 'discover')
   end
+  
+  def test_16_digit_maestro_uk
+    number = '6759000000000000'
+    assert_equal 16, number.length
+    assert_equal 'switch', CreditCard.type?(number)
+  end
+  
+  def test_18_digit_maestro_uk
+    number = '675900000000000000'
+    assert_equal 18, number.length
+    assert_equal 'switch', CreditCard.type?(number)
+  end
+  
+  def test_19_digit_maestro_uk
+    number = '6759000000000000000'
+    assert_equal 19, number.length
+    assert_equal 'switch', CreditCard.type?(number)
+  end
 end
