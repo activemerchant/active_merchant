@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Protx does support UK Maestro [cody]
 * Add tests for length of UK Maestro cards [cody]
 * Return all the error messages and codes from paypal responses [cody]
 * Fail hard when attempting to capture without a credit card with NetRegistry [cody]

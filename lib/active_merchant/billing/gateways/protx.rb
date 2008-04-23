@@ -23,6 +23,7 @@ module ActiveMerchant #:nodoc:
         :master => "MC",
         :delta => "DELTA",
         :solo => "SOLO",
+        :switch => "MAESTRO",
         :maestro => "MAESTRO",
         :american_express => "AMEX",
         :electron => "UKE",
@@ -39,7 +40,7 @@ module ActiveMerchant #:nodoc:
         "NOTMATCHED" => 'N'
       }
     
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :solo, :maestro, :diners_club]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :switch, :solo, :maestro, :diners_club]
       self.supported_countries = ['GB']
       self.default_currency = 'GBP'
       
