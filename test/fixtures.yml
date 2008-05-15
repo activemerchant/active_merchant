@@ -14,6 +14,11 @@ authorize_net:
   login: X
   password: Y
 
+beanstream:
+  login: merchant id
+  user: username
+  password: password
+
 braintree:
   login: demo
   password: password
