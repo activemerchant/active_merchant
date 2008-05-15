@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add test mode detection to Beanstream [cody]
 * Add support for Beanstream payment gateway [xiaobozz]
 * Add support for PayPal NV Pair API. Will be used to replace the usage of the PayPal SOAP API in ActiveMerchant in the future [Greg Furmanek, cody]
 * Protx does support UK Maestro [cody]

@@ -209,7 +209,8 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters)
         response = parse(ssl_post(URL, post_data(action, parameters)))
         
-        Response.new(success?(response), message_from(response), response, 
+        Response.new(success?(response), message_from(response), response,
+          :test => test? || response[:authCode] == "TEST",
           :authorization => response[:trnId],
           :cvv_result => CVD_CODES[response[:cvdId]],
           :avs_result => { :code => (AVS_CODES.include? response[:avsId]) ? AVS_CODES[response[:avsId]] : response[:avsId] }
