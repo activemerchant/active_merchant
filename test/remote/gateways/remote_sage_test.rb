@@ -1,0 +1,54 @@
+require File.dirname(__FILE__) + '/../../test_helper'
+
+class RemoteSageTest < Test::Unit::TestCase
+
+  def setup
+    @gateway = SageGateway.new(fixtures(:sage))
+    
+    @amount = 100
+    @credit_card = credit_card('4000100011112224')
+    @declined_card = credit_card('4000300011112220')
+    
+    @options = { 
+      :order_id => generate_unique_id,
+      :billing_address => address,
+      :description => 'Store Purchase'
+    }
+  end
+  
+  def test_successful_purchase
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal '', response.message
+  end
+  
+  def test_unsuccessful_purchase
+    assert response = @gateway.purchase(@amount, @declined_card, @options)
+    assert_failure response
+    assert_equal '', response.message
+  end
+  
+  def test_authorize_and_capture
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
+  
+  def test_failed_capture
+    assert response = @gateway.capture(@amount, '')
+    assert_failure response
+    assert_equal '', response.message
+  end
+  
+  def test_invalid_login
+    gateway = SageGateway.new(
+                :login => '',
+                :password => ''
+              )
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'SECURITY VIOLATION', response.message
+  end
+end

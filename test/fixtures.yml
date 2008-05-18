@@ -241,6 +241,10 @@ realex_mastercard_coms_error:
   year: '2020'
   verification_value: '123'
 
+sage:
+  login: login
+  password: password
+
 secure_pay:
   login: LOGIN
   password: PASSWORD
