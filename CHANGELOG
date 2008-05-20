@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add JCB and Diners Club as supported cards to SageGateway [cody]
 * Add CA country code to Sage gateway's supported countries [cody]
 * Add support for Sage Payment Solutions gateway [cody]
 * Add test mode detection to Beanstream [cody]

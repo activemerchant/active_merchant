@@ -4,7 +4,17 @@ module ActiveMerchant #:nodoc:
       URL = "https://www.sagepayments.net/cgi-bin/eftBankcard.dll?transaction"
       
       self.supported_countries = ['US', 'CA']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      
+      # Credit cards supported by Sage
+      # * VISA
+      # * MasterCard
+      # * AMEX
+      # * Diners
+      # * Carte Blanche
+      # * Discover
+      # * JCB
+      # * Sears
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
       self.homepage_url = 'http://www.sagepayments.com'
       self.display_name = 'Sage Payment Solutions'
       
