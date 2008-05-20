@@ -3,7 +3,7 @@ module ActiveMerchant #:nodoc:
     class SageGateway < Gateway
       URL = "https://www.sagepayments.net/cgi-bin/eftBankcard.dll?transaction"
       
-      self.supported_countries = ['US']
+      self.supported_countries = ['US', 'CA']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.sagepayments.com'
       self.display_name = 'Sage Payment Solutions'
