@@ -22,6 +22,9 @@ module ActiveMerchant #:nodoc:
     end
     
     def ssl_post(url, data, headers = {})
+      # Ruby 1.8.4 doesn't automatically set this header
+      headers['Content-Type'] ||= "application/x-www-form-urlencoded"
+      
       uri   = URI.parse(url)
 
       http = Net::HTTP.new(uri.host, uri.port) 

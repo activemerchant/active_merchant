@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix missing Content-Type header for Ruby 1.8.4 [cody]
 * Fix Authorize.Net CIM response.message [patrick.t.joyce]
 * Add JCB and Diners Club as supported cards to SageGateway [cody]
 * Add CA country code to Sage gateway's supported countries [cody]
