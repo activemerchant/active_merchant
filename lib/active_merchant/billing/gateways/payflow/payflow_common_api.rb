@@ -28,8 +28,8 @@ module ActiveMerchant #:nodoc:
       end
       
       XMLNS = 'http://www.paypal.com/XMLPay'
-      TEST_URL = 'https://pilot-payflowpro.verisign.com'
-      LIVE_URL = 'https://payflowpro.verisign.com'
+      TEST_URL = 'https://pilot-payflowpro.paypal.com'
+      LIVE_URL = 'https://payflowpro.paypal.com'
       
       CARD_MAPPING = {
         :visa => 'Visa',
