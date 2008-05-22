@@ -46,6 +46,13 @@ class RemoteBraintreeTest < Test::Unit::TestCase
     assert_not_nil response.params["customer_vault_id"]
   end
 
+  def test_successful_add_to_vault_with_store_method
+    assert response = @gateway.store(@credit_card)
+    assert_equal 'This transaction has been approved', response.message
+    assert_success response
+    assert_not_nil response.params["customer_vault_id"]
+  end
+
   def test_successful_add_to_vault_and_use
     @options[:store] = true
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -66,6 +73,14 @@ class RemoteBraintreeTest < Test::Unit::TestCase
     assert_equal @options[:store], response.params["customer_vault_id"].to_i
   end
   
+  def test_add_to_vault_with_custom_vault_id_with_store_method
+    @options[:billing_id] = rand(100000)+10001
+    assert response = @gateway.store(@credit_card, @options.dup)
+    assert_equal 'This transaction has been approved', response.message
+    assert_success response
+    assert_equal @options[:billing_id], response.params["customer_vault_id"].to_i
+  end
+  
   def test_update_vault
     test_add_to_vault_with_custom_vault_id
     @credit_card = credit_card('4111111111111111', :month => 10)
@@ -77,6 +92,13 @@ class RemoteBraintreeTest < Test::Unit::TestCase
   def test_delete_from_vault
     test_add_to_vault_with_custom_vault_id
     assert response = @gateway.delete(@options[:store])
+    assert_success response
+    assert_equal 'Customer Deleted', response.message
+  end
+
+  def test_delete_from_vault_with_unstore_method
+    test_add_to_vault_with_custom_vault_id
+    assert response = @gateway.unstore(@options[:store])
     assert_success response
     assert_equal 'Customer Deleted', response.message
   end

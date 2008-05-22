@@ -265,7 +265,7 @@ module ActiveMerchant #:nodoc:
       def store(creditcard, options = {})   
         parameters = {
           :verify => options[:verify] || 'y',
-          :billingid => options[:billingid] || nil,
+          :billingid => options[:billingid] || options[:billing_id] || nil,
         }
         
         add_creditcard(parameters, creditcard)
