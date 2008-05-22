@@ -58,6 +58,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal @customer_profile_id, response.authorization
+    assert_equal "Successful.", response.message
   end
 
   def test_should_create_customer_payment_profile_request

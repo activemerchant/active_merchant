@@ -628,7 +628,7 @@ module ActiveMerchant #:nodoc:
         
         response_params = parse(action, xml)
 
-        message = response_params['messages']['message'] || response_params['messages']['message']['text']
+        message = response_params['messages']['message']['text']
         test_mode = test? || message =~ /Test Mode/
         success = response_params['messages']['result_code'] == 'Ok'
 
