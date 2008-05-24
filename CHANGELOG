@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Get SageGateway working with real test account. Improve test suite. [cody]
 * Unify TrustCommerce, Payment Express, and Braintree CC storage [benjamin.curtis]
 * Update to use new Payflow Pro URLs [cody]
 * Fix missing Content-Type header for Ruby 1.8.4 [cody]

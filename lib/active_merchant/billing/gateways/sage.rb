@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SageGateway < Gateway
-      URL = "https://www.sagepayments.net/cgi-bin/eftBankcard.dll?transaction"
-      
+      URL = 'https://www.sagepayments.net/cgi-bin/eftBankcard.dll?transaction'
+          
       self.supported_countries = ['US', 'CA']
       
       # Credit cards supported by Sage
@@ -28,10 +28,9 @@ module ActiveMerchant #:nodoc:
       TRANSACTIONS = {
         :purchase           => '01',
         :authorization      => '02',
-        :capture            => '03',
+        :capture            => '11',
         :void               => '04',
-        :credit             => '06',
-        :reference_purchase => '11'
+        :credit             => '06'
       }
       
       def initialize(options = {})
@@ -42,19 +41,20 @@ module ActiveMerchant #:nodoc:
       
       def authorize(money, credit_card, options = {})
         post = {}
-        add_sale_data(post, money, credit_card, options)
+        add_transaction_data(post, money, credit_card, options)
         commit(:authorization, post)
       end
       
       def purchase(money, credit_card, options = {})
         post = {}
-        add_sale_data(post, money, credit_card, options)
+        add_transaction_data(post, money, credit_card, options)
         commit(:purchase, post)
       end                       
     
+      # The +money+ amount is not used. The entire amount of the 
+      # initial authorization will be captured.
       def capture(money, reference, options = {})
         post = {}
-        add_amount(post, money)
         add_reference(post, reference)
         commit(:capture, post)
       end
@@ -65,13 +65,12 @@ module ActiveMerchant #:nodoc:
         commit(:void, post)
       end
       
-      def credit(money, reference, options = {})
+      def credit(money, credit_card, options = {})
         post = {}
-        add_amount(post, money)
-        add_reference(post, reference)
+        add_transaction_data(post, money, credit_card, options)
         commit(:credit, post)
       end
-    
+          
       private
       def exp_date(credit_card)
         year  = sprintf("%.4i", credit_card.year)
@@ -101,12 +100,14 @@ module ActiveMerchant #:nodoc:
       def add_addresses(post, options)
         billing_address   = options[:billing_address] || options[:address] || {}
         
-        post[:C_address]  = billing_address[:address1]
-        post[:C_city]     = billing_address[:city]
-        post[:C_state]    = billing_address[:state]
-        post[:C_zip]      = billing_address[:zip]
-        post[:C_country]  = billing_address[:country] 
-        post[:C_email]    = options[:email]
+        post[:C_address]    = billing_address[:address1]
+        post[:C_city]       = billing_address[:city]
+        post[:C_state]      = billing_address[:state]
+        post[:C_zip]        = billing_address[:zip]
+        post[:C_country]    = billing_address[:country] 
+        post[:C_telephone]  = billing_address[:phone]
+        post[:C_fax]        = billing_address[:fax]
+        post[:C_email]      = options[:email]
         
         if shipping_address = options[:shipping_address]
           post[:C_ship_name]    = shipping_address[:name]
@@ -115,8 +116,6 @@ module ActiveMerchant #:nodoc:
           post[:C_ship_state]   = shipping_address[:state]
           post[:C_ship_zip]     = shipping_address[:zip] 
           post[:C_ship_country] = shipping_address[:country]
-          post[:C_telephone]    = shipping_address[:phone]
-          post[:C_fax]          = shipping_address[:fax]
         end
       end
 
@@ -127,7 +126,7 @@ module ActiveMerchant #:nodoc:
         post[:C_cvv]        = credit_card.verification_value if credit_card.verification_value?
       end
       
-      def add_sale_data(post, money, credit_card, options)
+      def add_transaction_data(post, money, credit_card, options)
         add_amount(post, money)
         add_invoice(post, options)
         add_credit_card(post, credit_card)        
@@ -168,7 +167,7 @@ module ActiveMerchant #:nodoc:
       def post_data(action, params = {})
         params[:M_id]  = @options[:login]
         params[:M_key] = @options[:password]
-        params[:T_code] = TRANSACTIONS[:action]
+        params[:T_code] = TRANSACTIONS[action]
         
         params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
