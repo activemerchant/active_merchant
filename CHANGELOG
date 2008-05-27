@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Handle all successful SecurePay AU response codes [cody]
 * Get SageGateway working with real test account. Improve test suite. [cody]
 * Unify TrustCommerce, Payment Express, and Braintree CC storage [benjamin.curtis]
 * Update to use new Payflow Pro URLs [cody]

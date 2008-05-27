@@ -17,6 +17,17 @@ class SecurePayAuTest < Test::Unit::TestCase
     }
   end
   
+  def test_successful_purchase_with_live_data
+    @gateway.expects(:ssl_post).returns(successful_live_purchase_response)
+    
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+    
+    assert_equal '000000', response.authorization
+    assert response.test?
+  end
+  
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     
@@ -97,7 +108,6 @@ class SecurePayAuTest < Test::Unit::TestCase
     </TxnList>
   </Payment>
 </SecurePayMessage>
-    
     XML
   end
   
@@ -145,6 +155,53 @@ class SecurePayAuTest < Test::Unit::TestCase
     </TxnList>
   </Payment>
 </SecurePayMessage>
+    XML
+  end
+  
+  def successful_live_purchase_response
+    <<-XML
+    <?xml version="1.0" encoding="UTF-8"?>
+    <SecurePayMessage>
+      <MessageInfo>
+        <messageID>8af793f9af34bea0cf40f5fb5c630c</messageID>
+        <messageTimestamp>20080802041625665000+660</messageTimestamp>
+        <apiVersion>xml-4.2</apiVersion>
+      </MessageInfo>
+      <RequestType>Payment</RequestType>
+      <MerchantInfo>
+        <merchantID>XYZ0001</merchantID>
+      </MerchantInfo>
+      <Status>
+        <statusCode>000</statusCode>
+        <statusDescription>Normal</statusDescription>
+      </Status>
+      <Payment>
+        <TxnList count="1">
+          <Txn ID="1">
+            <txnType>0</txnType>
+            <txnSource>23</txnSource>
+            <amount>211700</amount>
+            <currency>AUD</currency>
+            <purchaseOrderNo>#1047.5</purchaseOrderNo>
+            <approved>Yes</approved>
+            <responseCode>77</responseCode>
+            <responseText>Approved</responseText>
+            <thinlinkResponseCode>100</thinlinkResponseCode>
+            <thinlinkResponseText>000</thinlinkResponseText>
+            <thinlinkEventStatusCode>000</thinlinkEventStatusCode>
+            <thinlinkEventStatusText>Normal</thinlinkEventStatusText>
+            <settlementDate>20080525</settlementDate>
+            <txnID>000000</txnID>
+            <CreditCardInfo>
+              <pan>424242...242</pan>
+              <expiryDate>07/11</expiryDate>
+              <cardType>6</cardType>
+              <cardDescription>Visa</cardDescription>
+            </CreditCardInfo>
+          </Txn>
+        </TxnList>
+      </Payment>
+    </SecurePayMessage>
     XML
   end
 end
