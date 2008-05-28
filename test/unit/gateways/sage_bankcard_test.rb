@@ -1,8 +1,8 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
-class SageTest < Test::Unit::TestCase
+class SageBankcardGatewayTest < Test::Unit::TestCase
   def setup
-    @gateway = SageGateway.new(
+    @gateway = SageBankcardGateway.new(
                  :login => 'login',
                  :password => 'password'
                )
@@ -25,7 +25,7 @@ class SageTest < Test::Unit::TestCase
     assert_success response
     
     assert_equal "APPROVED", response.message
-    assert_equal "1234567890", response.authorization
+    assert_equal "1234567890;bankcard", response.authorization
 
     assert_equal "A",                  response.params["success"]
     assert_equal "911911",             response.params["code"]
@@ -47,7 +47,7 @@ class SageTest < Test::Unit::TestCase
     assert_success response
     
     assert_equal "APPROVED 000001", response.message
-    assert_equal "B5O89VPdf0", response.authorization
+    assert_equal "B5O89VPdf0;bankcard", response.authorization
                                          
     assert_equal "A",                    response.params["success"]
     assert_equal "000001",               response.params["code"]
@@ -68,7 +68,7 @@ class SageTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
     assert_equal "DECLINED", response.message
-    assert_equal "A5O89kkix0", response.authorization
+    assert_equal "A5O89kkix0;bankcard", response.authorization
 
     assert_equal "E",                    response.params["success"]
     assert_equal "000002",               response.params["code"]
@@ -90,7 +90,7 @@ class SageTest < Test::Unit::TestCase
     assert_success response
     
     assert_equal "APPROVED 000001", response.message
-    assert_equal "B5O8AdFhu0", response.authorization
+    assert_equal "B5O8AdFhu0;bankcard", response.authorization
                                          
     assert_equal "A",                    response.params["success"]
     assert_equal "000001",               response.params["code"]
@@ -111,7 +111,7 @@ class SageTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
     assert_equal "SECURITY VIOLATION", response.message
-    assert_equal "0000000000", response.authorization
+    assert_equal "0000000000;bankcard", response.authorization
 
     assert_equal "X",                  response.params["success"]
     assert_equal "911911",             response.params["code"]

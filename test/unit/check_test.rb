@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class CheckTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing
-  
   VALID_ABA     = '111000025'
   INVALID_ABA   = '999999999'
   MALFORMED_ABA = 'I like fish'
@@ -13,6 +11,20 @@ class CheckTest < Test::Unit::TestCase
     c = Check.new
     assert !c.valid?
     assert !c.errors.empty?
+  end
+  
+  def test_first_name_last_name
+    check = Check.new(:name => 'Fred Bloggs')
+    assert_equal 'Fred', check.first_name
+    assert_equal 'Bloggs', check.last_name
+    assert_equal 'Fred Bloggs', check.name
+  end
+  
+  def test_nil_name
+    check = Check.new(:name => nil)
+    assert_nil check.first_name
+    assert_nil check.last_name
+    assert_equal "", check.name
   end
   
   def test_valid

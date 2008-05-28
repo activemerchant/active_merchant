@@ -9,19 +9,23 @@ module ActiveMerchant #:nodoc:
     class Check
       include Validateable
       
-      attr_accessor :name, :routing_number, :account_number, :account_holder_type, :account_type
+      attr_accessor :first_name, :last_name, :routing_number, :account_number, :account_holder_type, :account_type, :number
       
-      def initialize(args={})
-        args = args.with_indifferent_access
-        self.name           = args[:name]
-        self.routing_number = args[:routing_number]
-        self.account_number = args[:account_number]
-        self.account_holder_type = args[:account_holder_type]
-        self.account_type   = args[:account_type]
+      def name
+        @name ||= "#{@first_name} #{@last_name}".strip
+      end
+      
+      def name=(value)
+        return if value.blank?
+
+        @name = value
+        segments = value.split(' ')
+        @last_name = segments.pop
+        @first_name = segments.join(' ')
       end
       
       def validate
-        for attr in [:name, :routing_number, :account_number]
+        [:name, :routing_number, :account_number].each do |attr|
           errors.add(attr, "cannot be empty") if self.send(attr).blank?
         end
         

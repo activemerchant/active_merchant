@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for echecks with SageGateway. [cody]
 * Handle all successful SecurePay AU response codes [cody]
 * Get SageGateway working with real test account. Improve test suite. [cody]
 * Unify TrustCommerce, Payment Express, and Braintree CC storage [benjamin.curtis]
