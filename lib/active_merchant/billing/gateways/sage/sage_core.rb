@@ -1,6 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    module SageCore
+    module SageCore #:nodoc:
       def self.included(base)
         base.cattr_accessor :url
         base.cattr_accessor :source
