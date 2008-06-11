@@ -17,6 +17,12 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     @amex                = credit_card('371100001000131')
     @declined_amex       = credit_card('342400001000180')
     
+    # Canadian EFT
+    @check               = check(
+                             :institution_number => '001',
+                             :transit_number     => '26729'
+                           )
+    
     @amount = 1500
     
     @options = { 
@@ -96,7 +102,41 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_no_match %r{You are not authorized}, response.message, "You need to enable username/password validation"
     assert_match %r{Missing or invalid adjustment id.}, response.message
   end
-
+  
+  def test_successful_purchase_and_void
+    assert purchase = @gateway.purchase(@amount, @visa, @options)
+    assert_success purchase
+    
+    assert void = @gateway.void(purchase.authorization)
+    assert_success void
+  end
+  
+  def test_successful_purchase_and_credit_and_void_credit
+    assert purchase = @gateway.purchase(@amount, @visa, @options)
+    assert_success purchase
+    
+    assert credit = @gateway.credit(@amount, purchase.authorization)
+    assert_success purchase
+    
+    assert void = @gateway.void(credit.authorization)
+    assert_success void
+  end
+  
+  def test_successful_check_purchase
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+    assert response.test?
+    assert_false response.authorization.blank?
+  end
+  
+  def test_successful_check_purchase_and_credit
+    assert purchase = @gateway.purchase(@amount, @check, @options)
+    assert_success purchase
+    
+    assert credit = @gateway.credit(@amount, purchase.authorization)
+    assert_success credit
+  end
+  
   def test_invalid_login
     gateway = BeanstreamGateway.new(
                 :merchant_id => '',

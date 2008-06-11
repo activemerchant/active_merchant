@@ -11,6 +11,9 @@ module ActiveMerchant #:nodoc:
       
       attr_accessor :first_name, :last_name, :routing_number, :account_number, :account_holder_type, :account_type, :number
       
+      # Used for Canadian bank accounts
+      attr_accessor :institution_number, :transit_number
+      
       def name
         @name ||= "#{@first_name} #{@last_name}".strip
       end

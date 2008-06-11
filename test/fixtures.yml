@@ -18,6 +18,11 @@ beanstream:
   login: merchant id
   user: username
   password: password
+  
+beanstream_interac:
+  login: merchant id
+  user: username
+  password: password
 
 braintree:
   login: demo
