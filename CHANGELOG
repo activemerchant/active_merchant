@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for Modern Payments gateway [Jeremy Nicoll, cody]
 * Add support for EFT/ACH and Interac Online to the BeanstreamGateway [cody]
 * Document the SageGateway [cody]
 * Add support for echecks with SageGateway. [cody]

@@ -64,6 +64,10 @@ linkpoint:
   pem: |--
     PASTE YOUR PEM FILE HERE
 
+modern_payments:
+  login: login
+  password: password
+  
 # Working credentials, no need to replace
 moneris:
   login: store1
