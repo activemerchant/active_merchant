@@ -6,6 +6,9 @@ class RemoteBraintreeTest < Test::Unit::TestCase
 
     @amount = rand(10000) + 1001
     @credit_card = credit_card('4111111111111111', :type => 'visa')
+    @check = ActiveMerchant::Billing::Check.new(:name => 'John Q. Public', 
+               :account_number => '123123123',
+               :routing_number => '123123123')
     @declined_amount = rand(99)
     @options = {  :order_id => generate_unique_id,
                   :billing_address => address
@@ -48,7 +51,7 @@ class RemoteBraintreeTest < Test::Unit::TestCase
 
   def test_successful_add_to_vault_with_store_method
     assert response = @gateway.store(@credit_card)
-    assert_equal 'This transaction has been approved', response.message
+    assert_equal 'Customer Added', response.message
     assert_success response
     assert_not_nil response.params["customer_vault_id"]
   end
@@ -76,9 +79,15 @@ class RemoteBraintreeTest < Test::Unit::TestCase
   def test_add_to_vault_with_custom_vault_id_with_store_method
     @options[:billing_id] = rand(100000)+10001
     assert response = @gateway.store(@credit_card, @options.dup)
-    assert_equal 'This transaction has been approved', response.message
+    assert_equal 'Customer Added', response.message
     assert_success response
     assert_equal @options[:billing_id], response.params["customer_vault_id"].to_i
+  end
+  
+  def test_add_to_vault_with_store_and_check
+    assert response = @gateway.store(@check, @options)
+    assert_equal 'Customer Added', response.message
+    assert_success response
   end
   
   def test_update_vault

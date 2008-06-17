@@ -77,9 +77,17 @@ module ActiveMerchant #:nodoc:
     
       # To match the other stored-value gateways, like TrustCommerce,
       # store and unstore need to be defined
-      def store(creditcard, options = {})
+      def store(payment_source, options = {})
         billing_id = options.delete(:billing_id).to_s || true
-        authorize(100, creditcard, options.merge(:store => billing_id))
+        post = {}
+        post[:customer_vault] = 'add_customer'
+        if billing_id
+          post[:customer_vault_id] = billing_id
+        end
+        add_payment_source(post, payment_source, options)
+        add_address(post, payment_source, options)
+        add_customer_data(post, options)
+        commit(nil,nil, post)
       end
       
       alias_method :unstore, :delete
