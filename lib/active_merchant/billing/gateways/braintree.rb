@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       URL = 'https://secure.braintreepaymentgateway.com/api/transact.php'
     
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.braintreepaymentsolutions.com'
       self.display_name = 'Braintree'
 

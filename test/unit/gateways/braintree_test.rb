@@ -8,10 +8,7 @@ class BraintreeTest < Test::Unit::TestCase
       :password => 'PASSWORD'
     )
 
-    @credit_card = credit_card('4242424242424242',
-                    :type => 'visa'
-                  )
-    
+    @credit_card = credit_card
     @amount = 100
     
     @options = { :billing_address => address }
@@ -50,7 +47,7 @@ class BraintreeTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express], BraintreeGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :discover], BraintreeGateway.supported_cardtypes
   end
   
   def test_adding_store_adds_vault_id_flag
