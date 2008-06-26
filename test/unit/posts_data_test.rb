@@ -4,6 +4,9 @@ class SimpleGateway
   include ActiveMerchant::PostsData
 end
 
+class SubclassGateway < SimpleGateway
+end
+
 class MockResponse
   def body
   end
@@ -82,5 +85,11 @@ class PostsDataTests < Test::Unit::TestCase
     assert_raises(ActiveMerchant::ConnectionError) do  
       @gateway.ssl_post(URL, '')
     end
+  end
+  
+  def test_setting_ssl_strict_outside_class_definition
+    assert_equal SimpleGateway.ssl_strict, SubclassGateway.ssl_strict
+    SimpleGateway.ssl_strict = !SimpleGateway.ssl_strict
+    assert_equal SimpleGateway.ssl_strict, SubclassGateway.ssl_strict
   end
 end

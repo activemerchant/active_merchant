@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
     READ_TIMEOUT = 60
     
     def self.included(base)
-      base.class_inheritable_accessor :ssl_strict
+      base.superclass_delegating_accessor :ssl_strict
       base.ssl_strict = true
       
       base.class_inheritable_accessor :pem_password
