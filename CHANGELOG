@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Specify required version of ActiveSupport [cody]
 * Make ssl_strict a superclass_delegating_accessor so the entire application's validation of SSL certs can be disabled in the event of certificate problem. [cody]
 * Make Gateway.application_id a superclass_delegating_accessor so it can be set from outside the subclass definition [cody]
 * Add Discover to the list of supported card types for Braintree [cody]

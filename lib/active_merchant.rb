@@ -28,7 +28,13 @@ begin
   require 'active_support'
 rescue LoadError
   require 'rubygems'
-  require 'activesupport'
+  
+  if respond_to? :gem
+    gem 'activesupport', ">=2.0.0"
+    require 'active_support'
+  else
+    require_gem 'activesupport'
+  end
 end
 
 begin
