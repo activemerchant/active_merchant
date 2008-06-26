@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Make Gateway.application_id a superclass_delegating_accessor so it can be set from outside the subclass definition [cody]
 * Add Discover to the list of supported card types for Braintree [cody]
 * Add support for Modern Payments gateway [Jeremy Nicoll, cody]
 * Add support for EFT/ACH and Interac Online to the BeanstreamGateway [cody]
