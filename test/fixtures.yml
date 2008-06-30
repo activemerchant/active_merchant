@@ -293,3 +293,9 @@ viaklix:
   login: LOGIN
   password: PASSWORD
   user: USER
+  
+# Working test credentials, no need to replace
+wirecard:
+  login: 56500
+  password: TestXAPTER
+  
