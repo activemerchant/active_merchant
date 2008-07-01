@@ -275,6 +275,10 @@ trans_first:
   login: LOGIN
   password: PASSWORD
 
+transax:
+  login: demo
+  password: password
+
 # Working credentials, no need to replace
 trust_commerce: 
   login: 'TestMerchant'
