@@ -14,10 +14,10 @@ module ActiveMerchant #:nodoc:
       end  
       
       # Pass :store => true in the options to store the 
-      # payment info at BrainTree and get a generated 
+      # payment info at the gateway and get a generated 
       # customer_vault_id in the response.  
       # Pass :store => some_number_or_string to specify the
-      # customer_vault_id BrainTree should use (make sure it's
+      # customer_vault_id the gateway should use (make sure it's
       # unique).
       def authorize(money, creditcard, options = {})
         post = {}
@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
       
       
       # Update the values (such as CC expiration) stored at
-      # BrainTree.  The CC number must be supplied in the
+      # the gateway.  The CC number must be supplied in the
       # CreditCard object.
       def update(vault_id, creditcard, options = {})
         post = {}
@@ -85,8 +85,8 @@ module ActiveMerchant #:nodoc:
         commit(nil, nil, post)
       end
       
-      # Ammend an existing transaction
-      def ammend(auth, options = {})
+      # Amend an existing transaction
+      def amend(auth, options = {})
         post = {}
         add_invoice(post, options)
         add_transaction(post, auth)
@@ -210,8 +210,8 @@ module ActiveMerchant #:nodoc:
       end
       
       def expdate(creditcard)
-        year  = sprintf("%.04i", creditcard.year)
-        month = sprintf("%.02i", creditcard.month)
+        year  = sprintf("%.04i", creditcard.year.to_i)
+        month = sprintf("%.02i", creditcard.month.to_i)
 
         "#{month}#{year[-2..-1]}"
       end
