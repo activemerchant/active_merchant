@@ -193,6 +193,16 @@ class PaypalTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
   
+  def test_fraud_review
+    @gateway.expects(:ssl_post).returns(fraud_review_response)
+    
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "SuccessWithWarning", response.params["ack"]
+    assert_equal "Payment Pending your review in Fraud Management Filters", response.message
+    assert response.fraud_review?
+  end
+  
   private
   def successful_purchase_response
     <<-RESPONSE
@@ -375,6 +385,44 @@ class PaypalTest < Test::Unit::TestCase
     </DoReauthorizationResponse>
   </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>  
+    RESPONSE
+  end
+  
+  def fraud_review_response
+    <<-RESPONSE
+    <?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ns="urn:ebay:api:PayPalAPI">
+  <SOAP-ENV:Header>
+    <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext" xsi:type="wsse:SecurityType"/>
+    <RequesterCredentials xmlns="urn:ebay:api:PayPalAPI" xsi:type="ebl:CustomSecurityHeaderType">
+      <Credentials xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:UserIdPasswordType">
+        <Username xsi:type="xs:string"/>
+        <Password xsi:type="xs:string"/>
+        <Signature xsi:type="xs:string">An5ns1Kso7MWUdW4ErQKJJJ4qi4-Azffuo82oMt-Cv9I8QTOs-lG5sAv</Signature>
+        <Subject xsi:type="xs:string"/>
+      </Credentials>
+    </RequesterCredentials>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body id="_0">
+    <DoDirectPaymentResponse xmlns="urn:ebay:api:PayPalAPI">
+      <Timestamp xmlns="urn:ebay:apis:eBLBaseComponents">2008-07-04T19:27:39Z</Timestamp>
+      <Ack xmlns="urn:ebay:apis:eBLBaseComponents">SuccessWithWarning</Ack>
+      <CorrelationID xmlns="urn:ebay:apis:eBLBaseComponents">205d8397e7ed</CorrelationID>
+      <Errors xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:ErrorType">
+        <ShortMessage xsi:type="xs:string">Payment Pending your review in Fraud Management Filters</ShortMessage>
+        <LongMessage xsi:type="xs:string">Payment Pending your review in Fraud Management Filters</LongMessage>
+        <ErrorCode xsi:type="xs:token">11610</ErrorCode>
+        <SeverityCode xmlns="urn:ebay:apis:eBLBaseComponents">Warning</SeverityCode>
+      </Errors>
+      <Version xmlns="urn:ebay:apis:eBLBaseComponents">50.0</Version>
+      <Build xmlns="urn:ebay:apis:eBLBaseComponents">623197</Build>
+      <Amount xsi:type="cc:BasicAmountType" currencyID="USD">1500.00</Amount>
+      <AVSCode xsi:type="xs:string">X</AVSCode>
+      <CVV2Code xsi:type="xs:string">M</CVV2Code>
+      <TransactionID>5V117995ER6796022</TransactionID>
+    </DoDirectPaymentResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
     RESPONSE
   end
 end
