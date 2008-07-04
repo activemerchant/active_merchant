@@ -1,11 +1,5 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
-class SimpleGateway < ActiveMerchant::Billing::Gateway
-end
-
-class SubclassGateway < SimpleGateway
-end
-
 class GatewayTest < Test::Unit::TestCase
   def test_should_detect_if_a_card_is_supported
     Gateway.supported_cardtypes = [:visa, :bogus]
@@ -46,9 +40,9 @@ class GatewayTest < Test::Unit::TestCase
   end
   
   def test_setting_application_id_outside_the_class_definition
-    assert_equal SimpleGateway.application_id, SubclassGateway.application_id
-    SimpleGateway.application_id = "New Application ID"
+    assert_equal SimpleTestGateway.application_id, SubclassGateway.application_id
+    SimpleTestGateway.application_id = "New Application ID"
     
-    assert_equal SimpleGateway.application_id, SubclassGateway.application_id
+    assert_equal SimpleTestGateway.application_id, SubclassGateway.application_id
   end
 end

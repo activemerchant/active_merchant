@@ -33,6 +33,14 @@ require 'active_merchant/billing/integrations/action_view_helper'
 
 ActiveMerchant::Billing::Base.mode = :test
 
+# Test gateways
+class SimpleTestGateway < ActiveMerchant::Billing::Gateway
+end
+
+class SubclassGateway < SimpleTestGateway
+end
+
+
 module ActiveMerchant
   module Assertions
     def assert_field(field, value)

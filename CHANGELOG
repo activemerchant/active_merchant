@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix unit tests when being run by Cruise Control [cody]
 * Add support for PayPal Fraud Review Response [cody]
 * Add testing support for German Wirecard Gateway [Soleone]
 * Specify required version of ActiveSupport [cody]
