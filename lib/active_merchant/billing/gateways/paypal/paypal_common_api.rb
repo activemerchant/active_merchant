@@ -206,7 +206,13 @@ module ActiveMerchant #:nodoc:
           root.elements.to_a.each do |node|
             case node.name
             when 'Errors'
-              error_messages << node.elements['//LongMessage'].text if node.elements['//LongMessage']
+              short_message = node.elements['//LongMessage'].text unless node.elements['//LongMessage'].blank?
+              long_message = node.elements['//ShortMessage'].text unless node.elements['//ShortMessage'].blank?
+              
+              if message = long_message || short_message
+                error_messages << message
+              end
+              
               error_codes << node.elements['//ErrorCode'].text if node.elements['//ErrorCode']
             else
               parse_element(response, node)
