@@ -40,15 +40,6 @@ class WirecardTest < Test::Unit::TestCase
     assert response.message[/credit card number not allowed in demo mode/i]  
   end
 
-  # This should propably raise an exception if the credit card is not supported
-  def test_unsupported_creditcard_authorization
-    assert response = @gateway.authorize(@amount, @unsupported_card, @options)
-    assert_success response
-    assert response.test?
-    assert response.message[/THIS IS A DEMO/]
-    assert response.authorization
-  end
-  
   def test_successful_authorization_and_capture
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options)
