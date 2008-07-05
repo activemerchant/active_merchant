@@ -239,17 +239,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def response_type_for(action)
-        case action
-        when 'Authorization', 'Purchase'
-          'DoDirectPaymentResponse'
-        when 'Void'
-          'DoVoidResponse'
-        when 'Capture'
-          'DoCaptureResponse'
-        end
-      end
-
       def build_request(body)
         xml = Builder::XmlMarkup.new
         

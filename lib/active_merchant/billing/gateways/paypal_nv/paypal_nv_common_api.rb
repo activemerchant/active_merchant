@@ -169,17 +169,6 @@ module ActiveMerchant #:nodoc:
         fields
       end
 
-      def response_type_for(action)
-        case action
-        when 'Authorization', 'Purchase'
-          'DoDirectPaymentResponse'
-        when 'Void'
-          'DoVoidResponse'
-        when 'Capture'
-          'DoCaptureResponse'
-        end
-      end
-
       def post_data(action, post)
         post[:method]     = action
         post[:user]       = @options[:login]

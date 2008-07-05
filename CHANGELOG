@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Remove dead code in PayPal Common API files [cody]
 * Use the PayPal short error message if the long message is empty [cody]
 * Fix unit tests when being run by Cruise Control [cody]
 * Add support for PayPal Fraud Review Response [cody]
