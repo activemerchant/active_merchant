@@ -3,12 +3,14 @@ require 'base64'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WirecardGateway < Gateway
-      # Test Server location
+      # Test server location
       TEST_URL = 'https://c3-test.wirecard.com/secure/ssl-gateway'
      
-      # TODO: Insert live url
-      LIVE_URL = 'https://example.com/live'
+      # Live server location
+      LIVE_URL = 'https://c3.wirecard.com/secure/ssl-gateway'
 
+      # The Namespaces are not really needed, because it just tells the System, that there's actually no namespace used.
+      # It's just specified here for completeness.
       ENVELOPE_NAMESPACES = {
         'xmlns:xsi' => 'http://www.w3.org/1999/XMLSchema-instance',
 				'xsi:noNamespaceSchemaLocation' => 'wirecard.xsd'
@@ -45,6 +47,8 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         # verify that username and password are supplied
         requires!(options, :login, :password)
+        # unfortunately Wirecard also requires a BusinessCaseSignature in the XML request
+        requires!(options, :signature)
         @options = options
         super
       end
@@ -103,8 +107,8 @@ module ActiveMerchant #:nodoc:
 	                  'Authorization' => encoded_credentials }
 
 	      response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request, headers))
-
-	      success = response[:FunctionResult] == "ACK"
+        # Pending Status also means Acknowledged (as stated in their specification)
+	      success = response[:FunctionResult] == "ACK" || response[:FunctionResult] == "PENDING"
 	      message = response[:Message]
         authorization = (success && @options[:action] == :authorization) ? response[:GuWID] : nil
 
@@ -120,13 +124,13 @@ module ActiveMerchant #:nodoc:
       def build_request(action, money, options = {})
 				xml = Builder::XmlMarkup.new :indent => 2
 				xml.instruct!
-				xml.tag! 'WIRECARD_BXML', ENVELOPE_NAMESPACES do
+				xml.tag! 'WIRECARD_BXML' do
 				  xml.tag! 'W_REQUEST' do
           xml.tag! 'W_JOB' do
               # TODO: OPTIONAL, check what value needs to be insert here
               xml.tag! 'JobID', 'test dummy data'
               # UserID for this transaction
-              xml.tag! 'BusinessCaseSignature', options[:login]
+              xml.tag! 'BusinessCaseSignature', options[:signature] || options[:login]
               # Create the whole rest of the message
               add_transaction_data(xml, action, money, options)
 				    end
@@ -164,6 +168,9 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'Amount', amount(money)
         xml.tag! 'Currency', options[:currency] || currency(money)
         xml.tag! 'CountryCode', options[:billing_address][:country]
+        xml.tag! 'RECURRING_TRANSACTION' do
+          xml.tag! 'Type', options[:recurring] || 'Single'
+        end
       end
 
 			# Includes the credit-card data to the transaction-xml
@@ -285,7 +292,7 @@ module ActiveMerchant #:nodoc:
         credentials = [@options[:login], @options[:password]].join(':')
         "Basic " << Base64.encode64(credentials).strip
       end
-
+      
     end
   end
 end

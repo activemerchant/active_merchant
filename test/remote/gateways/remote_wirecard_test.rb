@@ -4,7 +4,9 @@ class RemoteWirecardTest < Test::Unit::TestCase
 
 
   def setup
-    @gateway = WirecardGateway.new(fixtures(:wirecard))
+    test_account = fixtures(:wirecard)
+    test_account[:signature] = test_account[:login]
+    @gateway = WirecardGateway.new(test_account)
 
     @amount = 100
     @credit_card = credit_card('4200000000000000')
@@ -65,9 +67,10 @@ class RemoteWirecardTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = WirecardGateway.new(:login => '', :password => '')
+    gateway = WirecardGateway.new(:login => '', :password => '', :signature => '')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.message[ /wrong credentials/ ]
   end
+  
 end

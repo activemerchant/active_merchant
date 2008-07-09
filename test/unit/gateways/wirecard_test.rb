@@ -4,7 +4,7 @@ class WirecardTest < Test::Unit::TestCase
   TEST_AUTHORIZATION_GUWID = 'C822580121385121429927'
   
   def setup
-    @gateway = WirecardGateway.new(:login => '', :password => '')
+    @gateway = WirecardGateway.new(:login => '', :password => '', :signature => '')
     @credit_card = credit_card('4200000000000000')
     @declined_card = credit_card('4000300011112220')
     @unsupported_card = credit_card('4200000000000000', :type => :maestro)
