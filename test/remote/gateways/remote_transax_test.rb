@@ -8,6 +8,8 @@ class RemoteTransaxTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111', :year => 10, :month => 10)
     @declined_card = credit_card(0xDEADBEEF_0000.to_s)
     
+    @check = check()
+    
     @options = { 
       :order_id => '1',
       :billing_address => address,
@@ -74,7 +76,7 @@ class RemoteTransaxTest < Test::Unit::TestCase
     assert_success response
     assert_equal "This transaction has been approved", response.message
     assert response.authorization
-    assert update = @gateway.ammend(response.authorization, :shipping_carrier => 'usps')
+    assert update = @gateway.amend(response.authorization, :shipping_carrier => 'usps')
     assert_equal "This transaction has been approved", update.message
     assert_success update
   end
@@ -86,6 +88,17 @@ class RemoteTransaxTest < Test::Unit::TestCase
     assert_equal "This transaction has been approved", response.message
   end
   
+  def test_store_credit_card
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert !response.params['customer_vault_id'].blank?
+  end
+  
+  def test_store_check
+    assert response = @gateway.store(@check)
+    assert_success response
+    assert !response.params['customer_vault_id'].blank?
+  end
   
   def test_invalid_login
     gateway = TransaxGateway.new(
