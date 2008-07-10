@@ -240,13 +240,18 @@ module ActiveMerchant #:nodoc:
           end
         end
         # Get message
-        response[:Message] = \
-          if info = status.elements['Info']
-            info.text
-          else
-            errors_to_string(status)
+        message = ''
+        if info = status.elements['Info']
+          message << info.text
         end
-
+        # Get errors if available and append them to the message
+        errors = errors_to_string(status)
+        unless errors.strip.blank?
+          message << ' - ' unless message.strip.blank?
+          message << errors
+        end
+        response[:Message] = message
+     
         # Get basic response information
         status.elements.to_a.each do |node|
           response[node.name.to_sym] = (node.text || '').strip

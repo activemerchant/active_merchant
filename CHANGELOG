@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Improved message and error message handling [Soleone]
 * Get Wirecard working in the Live environment [Soleone]
 * Remove dead code in PayPal Common API files [cody]
 * Use the PayPal short error message if the long message is empty [cody]
