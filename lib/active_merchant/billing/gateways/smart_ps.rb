@@ -23,8 +23,8 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_payment_source(post, creditcard,options)        
-        add_address(post, options[:billing_address]||options[:address])        
-        add_address(post, options[:shipping_address],"shipping")        
+        add_address(post, options[:billing_address]||options[:address])
+        add_address(post, options[:shipping_address],"shipping")
         add_customer_data(post, options)
         
         commit('auth', money, post)
@@ -103,9 +103,13 @@ module ActiveMerchant #:nodoc:
     
       # To match the other stored-value gateways, like TrustCommerce,
       # store and unstore need to be defined
-      def store(creditcard, options = {})
+      def store(payment_source, options = {})
+        post = {}
         billing_id = options.delete(:billing_id).to_s || true
-        authorize(100, creditcard, options.merge(:store => billing_id))
+        add_payment_source(post, payment_source, :store => billing_id)
+        add_address(post, options[:billing_address] || options[:address])
+        add_customer_data(post, options)
+        commit(nil, nil, post)
       end
       
       alias_method :unstore, :delete
@@ -143,15 +147,15 @@ module ActiveMerchant #:nodoc:
         case determine_funding_source(source)
         when :vault       then add_customer_vault_id(params, source)
         when :credit_card then add_creditcard(params, source, options)
-        when :check       then add_check(params, source)
+        when :check       then add_check(params, source, options)
         end
       end
       
-      def add_customer_vault_id(params,vault_id)
+      def add_customer_vault_id(params, vault_id)
         params[:customer_vault_id] = vault_id
       end
       
-      def add_creditcard(post, creditcard,options)
+      def add_creditcard(post, creditcard, options)
         if options[:store]  
           post[:customer_vault] = "add_customer"
           post[:customer_vault_id] = options[:store] unless options[:store] == true
@@ -163,7 +167,7 @@ module ActiveMerchant #:nodoc:
         post[:lastname]  = creditcard.last_name   
       end
       
-      def add_check(post, check)
+      def add_check(post, check, options)
         if options[:store]  
           post[:customer_vault] = "add_customer"
           post[:customer_vault_id] = options[:store] unless options[:store] == true
@@ -197,9 +201,7 @@ module ActiveMerchant #:nodoc:
       
       def commit(action, money, parameters)
         parameters[:amount]  = amount(money) if money
-        
         response = parse( ssl_post(api_url, post_data(action,parameters)) )
-
         Response.new(response["response"] == "1", message_from(response), response, 
           :authorization => response["transactionid"],
           :test => test?,
