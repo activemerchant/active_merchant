@@ -58,23 +58,23 @@ The {ActiveMerchant Wiki}[http://code.google.com/p/activemerchant/wiki] contains
 
 == Download
 
-Currently this library is available with svn from:
+Currently this library is available with git from:
 
-  http://activemerchant.googlecode.com/svn/trunk/active_merchant
+  git://github.com/Shopify/active_merchant.git
 
 == Installation
 
-=== From Subversion
+=== From Git
 
-You can check out the latest source from svn:
+You can check out the latest source from git:
 
-  > svn co http://activemerchant.googlecode.com/svn/trunk/active_merchant
+  > git pull git://github.com/Shopify/active_merchant.git
 
 === As a Rails plugin
 
 ActiveMerchant includes an init.rb file. This means that Rails will automatically load ActiveMerchant on startup. Run the following command from the root directory of your Rails project to install ActiveMerchant as a Rails plugin:
 
-  > ./script/plugin install http://activemerchant.googlecode.com/svn/trunk/active_merchant
+  > ./script/plugin install git://github.com/Shopify/active_merchant.git
 
 === From Ruby Gems
 
