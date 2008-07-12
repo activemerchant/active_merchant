@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix shipping amount option in Sage gateway [Darrick Wiebe]
 * Improved message and error message handling [Soleone]
 * Get Wirecard working in the Live environment [Soleone]
 * Remove dead code in PayPal Common API files [cody]

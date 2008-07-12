@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, options)
         post[:T_ordernum] = options[:order_id].slice(0, 20)
         post[:T_tax] = amount(options[:tax]) unless options[:tax].blank?
-        post[:T_shipping] = amount(options[:tax]) unless options[:tax].blank?
+        post[:T_shipping] = amount(options[:shipping]) unless options[:shipping].blank?
       end
       
       def add_reference(post, reference)
