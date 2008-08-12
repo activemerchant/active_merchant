@@ -211,6 +211,15 @@ class PaypalTest < Test::Unit::TestCase
     assert_equal "Transaction must be accepted in Fraud Management Filters before capture.", response.message
   end
   
+  # This occurs when sufficient 3rd party API permissions are not present to make the call for the user
+  def test_authentication_failed_response
+    @gateway.expects(:ssl_post).returns(authentication_failed_response)
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal "10002", response.params["error_codes"]
+    assert_equal "You do not have permissions to make this API call", response.message
+  end
+  
   private
   def successful_purchase_response
     <<-RESPONSE
@@ -471,6 +480,39 @@ class PaypalTest < Test::Unit::TestCase
         </PaymentInfo>
       </DoCaptureResponseDetails>
     </DoCaptureResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+    RESPONSE
+  end
+  
+  def authentication_failed_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:market="urn:ebay:apis:Market" xmlns:auction="urn:ebay:apis:Auction" xmlns:sizeship="urn:ebay:api:PayPalAPI/sizeship.xsd" xmlns:ship="urn:ebay:apis:ship" xmlns:skype="urn:ebay:apis:skype" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ns="urn:ebay:api:PayPalAPI">
+  <SOAP-ENV:Header>
+    <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext" xsi:type="wsse:SecurityType"/>
+    <RequesterCredentials xmlns="urn:ebay:api:PayPalAPI" xsi:type="ebl:CustomSecurityHeaderType">
+      <Credentials xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:UserIdPasswordType">
+        <Username xsi:type="xs:string"/>
+        <Password xsi:type="xs:string"/>
+        <Subject xsi:type="xs:string"/>
+      </Credentials>
+    </RequesterCredentials>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body id="_0">
+    <DoDirectPaymentResponse xmlns="urn:ebay:api:PayPalAPI">
+      <Timestamp xmlns="urn:ebay:apis:eBLBaseComponents">2008-08-12T19:40:59Z</Timestamp>
+      <Ack xmlns="urn:ebay:apis:eBLBaseComponents">Failure</Ack>
+      <CorrelationID xmlns="urn:ebay:apis:eBLBaseComponents">b874109bfd11</CorrelationID>
+      <Errors xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:ErrorType">
+        <ShortMessage xsi:type="xs:string">Authentication/Authorization Failed</ShortMessage>
+        <LongMessage xsi:type="xs:string">You do not have permissions to make this API call</LongMessage>
+        <ErrorCode xsi:type="xs:token">10002</ErrorCode>
+        <SeverityCode xmlns="urn:ebay:apis:eBLBaseComponents">Error</SeverityCode>
+      </Errors>
+      <Version xmlns="urn:ebay:apis:eBLBaseComponents">52.000000</Version>
+      <Build xmlns="urn:ebay:apis:eBLBaseComponents">628921</Build>
+    </DoDirectPaymentResponse>
   </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
     RESPONSE

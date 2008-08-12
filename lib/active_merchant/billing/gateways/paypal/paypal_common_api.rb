@@ -203,23 +203,32 @@ module ActiveMerchant #:nodoc:
         
         xml = REXML::Document.new(xml)
         if root = REXML::XPath.first(xml, "//#{action}Response")
-          root.elements.to_a.each do |node|
+          root.elements.each do |node|            
             case node.name
             when 'Errors'
-              short_message = node.elements['//LongMessage'].text unless node.elements['//LongMessage'].blank?
-              long_message = node.elements['//ShortMessage'].text unless node.elements['//ShortMessage'].blank?
+              short_message = nil
+              long_message = nil
               
+              node.elements.each do |child|
+                case child.name
+                when "LongMessage"
+                  long_message = child.text unless child.text.blank?
+                when "ShortMessage"
+                  short_message = child.text unless child.text.blank?
+                when "ErrorCode"
+                  error_codes << child.text unless child.text.blank?
+                end
+              end
+
               if message = long_message || short_message
                 error_messages << message
               end
-              
-              error_codes << node.elements['//ErrorCode'].text if node.elements['//ErrorCode']
             else
               parse_element(response, node)
             end
           end
-          response[:message] = error_messages.join(". ") unless error_messages.empty?
-          response[:error_codes] = error_codes.join(",") unless error_codes.empty?
+          response[:message] = error_messages.uniq.join(". ") unless error_messages.empty?
+          response[:error_codes] = error_codes.uniq.join(",") unless error_codes.empty?
         elsif root = REXML::XPath.first(xml, "//SOAP-ENV:Fault")
           parse_element(response, root)
           response[:message] = "#{response[:faultcode]}: #{response[:faultstring]} - #{response[:detail]}"

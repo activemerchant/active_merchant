@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix PayPal error parsing [cody]
 * Fix MIT-LICENSE [cody]
 * Add a payment gateway for Website Payments Pro Canada [cody]
 * Fix shipping amount option in Sage gateway [Darrick Wiebe]
