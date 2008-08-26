@@ -7,6 +7,8 @@ module ActiveMerchant #:nodoc:
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           SUCCESS = '00'
           
+          self.production_ips = [ '203.75.242.8' ]
+          
           def complete?
             status == 'Completed'
           end 

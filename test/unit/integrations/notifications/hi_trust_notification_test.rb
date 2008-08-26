@@ -6,7 +6,11 @@ class HiTrustNotificationTest < Test::Unit::TestCase
   def setup
     @notification = HiTrust::Notification.new(successful_response)
   end
-
+  
+  def teardown
+    ActiveMerchant::Billing::Base.integration_mode = :test
+  end
+  
   def test_accessors
     assert @notification.complete?
     assert_equal "Completed", @notification.status
@@ -29,6 +33,23 @@ class HiTrustNotificationTest < Test::Unit::TestCase
 
   def test_respond_to_acknowledge
     assert @notification.respond_to?(:acknowledge)
+  end
+
+  def test_valid_sender_in_testmode_always_true
+    assert @notification.test?
+    assert @notification.valid_sender?('127.0.0.1')
+    assert @notification.valid_sender?(nil)
+  end
+
+  def test_valid_sender
+    ActiveMerchant::Billing::Base.integration_mode = :production
+    assert @notification.valid_sender?('203.75.242.8')
+  end
+
+  def test_invalid_sender
+    ActiveMerchant::Billing::Base.integration_mode = :production
+    assert_false @notification.valid_sender?('127.0.0.1')
+    assert_false @notification.valid_sender?(nil)
   end
 
   private
