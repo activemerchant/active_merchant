@@ -19,6 +19,12 @@ module ActiveMerchant #:nodoc:
       
       base.class_inheritable_accessor :retry_safe
       base.retry_safe = false
+
+      base.superclass_delegating_accessor :open_timeout
+      base.open_timeout = OPEN_TIMEOUT
+
+      base.superclass_delegating_accessor :read_timeout
+      base.read_timeout = READ_TIMEOUT
     end
     
     def ssl_post(url, data, headers = {})
@@ -28,8 +34,8 @@ module ActiveMerchant #:nodoc:
       uri   = URI.parse(url)
 
       http = Net::HTTP.new(uri.host, uri.port) 
-      http.open_timeout = OPEN_TIMEOUT
-      http.read_timeout = READ_TIMEOUT
+      http.open_timeout = self.class.open_timeout
+      http.read_timeout = self.class.read_timeout
       http.use_ssl      = true
       
       if ssl_strict

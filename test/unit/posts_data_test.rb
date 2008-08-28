@@ -85,4 +85,16 @@ class PostsDataTests < Test::Unit::TestCase
     SimpleTestGateway.ssl_strict = !SimpleTestGateway.ssl_strict
     assert_equal SimpleTestGateway.ssl_strict, SubclassGateway.ssl_strict
   end
+
+  def test_setting_timeouts
+    @gateway.class.open_timeout=50
+    @gateway.class.read_timeout=37
+    Net::HTTP.any_instance.expects(:post).once.returns(MockResponse.new)
+    Net::HTTP.any_instance.expects(:open_timeout=).with(50)
+    Net::HTTP.any_instance.expects(:read_timeout=).with(37)
+
+    assert_nothing_raised do
+      @gateway.ssl_post(URL, '')
+    end
+  end
 end
