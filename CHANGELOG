@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add configurable timeouts to PostsData [Michael Koziarski]
 * Add valid_sender? method to gateway integrations [Soleone]
 * Fix PayPal error parsing [cody]
 * Fix MIT-LICENSE [cody]
