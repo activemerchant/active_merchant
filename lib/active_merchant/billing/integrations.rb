@@ -10,12 +10,12 @@ require 'active_merchant/billing/integrations/two_checkout'
 require 'active_merchant/billing/integrations/hi_trust'
 
 # make the bogus gateway be classified correctly by the inflector
-if defined?(Inflector)
-  Inflector.inflections do |inflect|
+if defined?(ActiveSupport::Inflector)
+  ActiveSupport::Inflector.inflections do |inflect|
     inflect.uncountable 'bogus'
   end
 else
-  ActiveSupport::Inflector.inflections do |inflect|
+  Inflector.inflections do |inflect|
     inflect.uncountable 'bogus'
   end
 end
