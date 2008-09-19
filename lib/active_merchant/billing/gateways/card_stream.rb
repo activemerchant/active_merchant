@@ -151,16 +151,12 @@ module ActiveMerchant #:nodoc:
           add_pair(post, :StartDateMM, format(credit_card.start_month, :two_digits))
           add_pair(post, :StartDateYY, format(credit_card.start_year, :two_digits))
           
-          add_pair(post, :IssueNumber, format_issue_number(credit_card))
+          add_pair(post, :IssueNumber, credit_card.issue_number)
         end
         
         add_pair(post, :CV2, credit_card.verification_value)
       end
       
-      def format_issue_number(credit_card)
-        card_brand(credit_card).to_s == 'solo' ? format(credit_card.issue_number, :two_digits) : credit_card.issue_number
-      end
-
       def commit(action, parameters)
         response = parse( ssl_post(URL, post_data(action, parameters)) )
 
