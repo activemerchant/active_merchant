@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Don't directly use the inflector in the action view helper [cody]
 * Work around Rails Inflector change [cody]
 * Add configurable timeouts to PostsData [Michael Koziarski]
 * Add valid_sender? method to gateway integrations [Soleone]
