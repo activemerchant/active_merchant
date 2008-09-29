@@ -427,3 +427,5 @@
 * Credit card in memory object resembling a AR object
 * Credit card validation methods as static methods of the credit card object
 
+== PlanetArgon fork for integrating Merchant eSolutions gateway
+
