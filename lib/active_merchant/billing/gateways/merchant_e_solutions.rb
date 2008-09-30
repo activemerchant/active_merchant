@@ -57,11 +57,11 @@ module ActiveMerchant #:nodoc:
 				commit('X', nil, post)
 			end
 	
-#			def credit(money, creditcard_or_card_id, options = {})
-#				post ={}
-#				add_payment_source(post, creditcard_or_card_id, options)   
-#				commit('C', money, post)
-#			end
+			def credit(money, creditcard_or_card_id, options = {})
+				post ={}
+				add_payment_source(post, creditcard_or_card_id, options)
+				commit('C', money, post)
+			end
 
 #			def void			
 #			end
