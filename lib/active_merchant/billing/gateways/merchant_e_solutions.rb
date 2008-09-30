@@ -39,9 +39,9 @@ module ActiveMerchant #:nodoc:
 				commit('D', money, post)
 			end                       
     
-			def capture(money, authorization, options = {})
+			def capture(money, transaction_id, options = {})
 				post ={}
-				post[:transaction_id] = authorization
+				post[:transaction_id] = transact
 				commit('S', money, post)
 			end
 	  
@@ -63,8 +63,11 @@ module ActiveMerchant #:nodoc:
 				commit('C', money, post)
 			end
 
-#			def void			
-#			end
+			def void(transaction_id)
+				post = {}
+				post[:transaction_id] = transaction_id
+				commit('V', nil, post)
+			end
     
 			private                       
 
