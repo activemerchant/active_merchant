@@ -51,11 +51,11 @@ module ActiveMerchant #:nodoc:
 				commit('T', nil, post)
 			end
 
-#			def unstore(card_id)
-#				post = {}
-#				post[:card_id] = card_id
-#				commit('X', nil, post)
-#			end
+			def unstore(card_id)
+				post = {}
+				post[:card_id] = card_id
+				commit('X', nil, post)
+			end
 	
 #			def credit(money, creditcard_or_card_id, options = {})
 #				post ={}
@@ -114,7 +114,7 @@ module ActiveMerchant #:nodoc:
 				response = parse( ssl_post(url, post_data(action,parameters)) )
 
 				Response.new(response["error_code"] == "000", message_from(response), response, 
-					:authorization => response["auth_code"],
+					:authorization => response["transaction_id"],
 					:test => test?,
 					:cvv_result => response["cvv2_result"],
 					:avs_result => { :code => response["avs_result"] }
