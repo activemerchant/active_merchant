@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
     
 			def capture(money, transaction_id, options = {})
 				post ={}
-				post[:transaction_id] = transact
+				post[:transaction_id] = transaction_id
 				commit('S', money, post)
 			end
 	  
@@ -122,6 +122,7 @@ module ActiveMerchant #:nodoc:
 					:cvv_result => response["cvv2_result"],
 					:avs_result => { :code => response["avs_result"] }
 				)
+
 			end
 	  
 			def expdate(creditcard)
