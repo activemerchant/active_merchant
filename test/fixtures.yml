@@ -318,4 +318,9 @@ viaklix:
 wirecard:
   login: 56500
   password: TestXAPTER
+
+# replace with your Merchant eSolutions developer profile credentials
+merchant_esolutions:
+  login: "profile_id"
+  password: "profile_key"
   
