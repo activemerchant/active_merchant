@@ -2,6 +2,8 @@ require File.dirname(__FILE__) + '/../../test_helper'
 
 class MerchantESolutionsTest < Test::Unit::TestCase
   def setup
+    Base.gateway_mode = :test
+    
     @gateway = MerchantESolutionsGateway.new(
                  :login => 'login',
                  :password => 'password'

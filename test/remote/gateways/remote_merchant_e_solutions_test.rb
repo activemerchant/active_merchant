@@ -4,6 +4,8 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
   
 
 	def setup
+	  Base.gateway_mode = :test
+	  
 		@gateway = MerchantESolutionsGateway.new(fixtures(:merchant_esolutions))
 
 		@amount = 100
