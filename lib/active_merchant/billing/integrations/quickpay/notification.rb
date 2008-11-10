@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def received_at
-            DateTime.strptime(params['time'] + Time.now.zone, "%y%m%d%H%M%S%z").to_time
+            Time.local(*params['time'].scan(/../))
           end
 
           def gross
@@ -41,7 +41,8 @@ module ActiveMerchant #:nodoc:
             params['currency']
           end
           
-          %w(msgtype ordernumber amount state chstat chstatmsg qpstat qpstatmsg merchant merchantemail cardtype).each do |attr|
+          # Provide access to raw fields from quickpay
+          %w(msgtype ordernumber state chstat chstatmsg qpstat qpstatmsg merchant merchantemail cardtype).each do |attr|
             define_method(attr) do
               params[attr]
             end
