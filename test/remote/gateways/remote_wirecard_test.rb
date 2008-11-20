@@ -56,14 +56,15 @@ class RemoteWirecardTest < Test::Unit::TestCase
 
   def test_wrong_creditcard_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
+    assert response.test?
     assert_failure response
-    assert response.message[ /Credit card number not allowed in demo mode/ ]
+    assert response.message[ /Credit card number not allowed in demo mode/ ], "Got wrong response message"
   end
   
   def test_unauthorized_capture
     assert response = @gateway.capture(@amount, "1234567890123456789012")
     assert_failure response
-    assert response.message == "Could not find referenced transaction for GuWID 1234567890123456789012."
+    assert_equal "Could not find referenced transaction for GuWID 1234567890123456789012.", response.message
   end
 
   def test_invalid_login

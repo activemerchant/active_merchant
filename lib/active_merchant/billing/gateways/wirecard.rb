@@ -220,7 +220,7 @@ module ActiveMerchant #:nodoc:
         xml = REXML::Document.new(xml)
         if root = REXML::XPath.first(xml, "#{basepath}/W_JOB")
           parse_response(response, root)
-        elsif root = REXML::XPath.first(xml, "/#{basepath}/ERROR")
+        elsif root = REXML::XPath.first(xml, "//ERROR")
           parse_error(response, root)
         else
           response[:Message] = "No valid XML response message received. \
@@ -239,36 +239,37 @@ module ActiveMerchant #:nodoc:
             status = REXML::XPath.first(node, "CC_TRANSACTION/PROCESSING_STATUS")
           end
         end
-        # Get message
-        message = ''
-        if info = status.elements['Info']
-          message << info.text
+        message = ""
+        if status
+          if info = status.elements['Info']
+            message << info.text
+          end
+          # Get basic response information
+          status.elements.to_a.each do |node|
+            response[node.name.to_sym] = (node.text || '').strip
+          end
         end
+        parse_error(root, message)
+        response[:Message] = message
+      end
+
+      # Parse a generic error response from the gateway
+      def parse_error(root, message = "")
         # Get errors if available and append them to the message
-        errors = errors_to_string(status)
+        errors = errors_to_string(root)
         unless errors.strip.blank?
           message << ' - ' unless message.strip.blank?
           message << errors
         end
-        response[:Message] = message
-     
-        # Get basic response information
-        status.elements.to_a.each do |node|
-          response[node.name.to_sym] = (node.text || '').strip
-        end
-      end
-
-      # Parse a generic error response from the gateway
-      def parse_error(response, root)
-        # TODO: Implement parsing of more generic error messages
+        message
       end
 
       # Parses all <ERROR> elements in the response and converts the information
       # to a single string
-      def errors_to_string(status)
+      def errors_to_string(root)
         # Get context error messages (can be 0..*)
         errors = []
-        REXML::XPath.each(status, "ERROR") do |error_elem|
+        REXML::XPath.each(root, "//ERROR") do |error_elem|
           error = {}
           error[:Advice] = []
           error[:Message] = error_elem.elements['Message'].text
