@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Remove PayPal and Payflow Name-Value gateways. PayPal is no longer terminating the Payflow XML API. [cody]
 * Don't directly use the inflector in the action view helper [cody]
 * Work around Rails Inflector change [cody]
 * Add configurable timeouts to PostsData [Michael Koziarski]
