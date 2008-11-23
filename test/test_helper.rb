@@ -18,11 +18,7 @@ require 'digest/md5'
 require File.dirname(__FILE__) + '/../lib/active_merchant'
 
 begin
-  if respond_to? :gem
-    gem 'actionpack'
-  else
-    require_gem 'actionpack'
-  end
+  gem 'actionpack'
 rescue LoadError
   raise StandardError, "The view tests need ActionPack installed as gem to run"
 end
