@@ -73,6 +73,11 @@ module ActiveMerchant #:nodoc:
         :ccd => 'CCD',
         :ppd => 'PPD'
       }
+      
+      self.homepage_url = 'http://www.authorize.net/'
+      self.display_name = 'Authorize.Net CIM'
+      self.supported_countries = ['US']
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
     
       # Creates a new AuthorizeNetCimGateway
       #
