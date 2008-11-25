@@ -9,9 +9,11 @@ Please visit the {ActiveMerchant homepage}[http://activemerchant.org] for more r
 
 == Supported Direct Payment Gateways
 
-The {ActiveMerchant Wiki}[http://code.google.com/p/activemerchant/wiki] contains a {table of features supported by each gateway}[http://code.google.com/p/activemerchant/wiki/SupportedGatewayPaymentOperations].
+The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] contains a {table of features supported by each gateway}[http://github.com/Shopify/active_merchant/wikis/gatewayfeaturematrix].
 
-* {Authorize.net}[http://www.authorize.net/] - US
+* {Authorize.Net CIM}[http://www.authorize.net/] - US
+* {Authorize.Net}[http://www.authorize.net/] - US
+* {Beanstream.com}[http://www.beanstream.com/] - CA
 * {Braintree}[http://www.braintreepaymentsolutions.com] - US
 * {CardStream}[http://www.cardstream.com/] - GB
 * {CyberSource}[http://www.cybersource.com] - US
@@ -20,16 +22,17 @@ The {ActiveMerchant Wiki}[http://code.google.com/p/activemerchant/wiki] contains
 * {eWAY}[http://www.eway.com.au/] - AU
 * {E-xact}[http://www.e-xact.com] - CA, US
 * {LinkPoint}[http://www.linkpoint.com/] - US
+* {Modern Payments}[http://www.modpay.com] - US
 * {Moneris}[http://www.moneris.com/] - CA
 * {NetRegistry}[http://www.netregistry.com.au] - AU
 * {NETbilling}[http://www.netbilling.com] - US
 * {PayJunction}[http://www.payjunction.com/] - US
 * {PaySecure}[http://www.commsecure.com.au/paysecure.shtml] - AU
 * {PayPal Express Checkout}[https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside] - US, CA, SG, AU
-* {PayPal Express Checkout (UK)}[https://www.paypal.com/uk/cgi-bin/webscr?cmd=_additional-payment-overview-outside] - GB
 * {PayPal Payflow Pro}[https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-pro-overview-outside] - US, CA, SG, AU
 * {PayPal Website Payments Pro (UK)}[https://www.paypal.com/uk/cgi-bin/webscr?cmd=_wp-pro-overview-outside] - GB
 * {PaymentExpress}[http://www.paymentexpress.com/] - AU, MY, NZ, SG, ZA, GB, US
+* {PayPal Website Payments Pro (CA)}[https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside] - CA
 * {PayPal Express Checkout}[https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside] - US
 * {PayPal Website Payments Pro (US)}[https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside] - US
 * {Plug'n Pay}[http://www.plugnpay.com/] - US
@@ -38,6 +41,8 @@ The {ActiveMerchant Wiki}[http://code.google.com/p/activemerchant/wiki] contains
 * {PSL Payment Solutions}[http://www.paymentsolutionsltd.com/] - GB
 * {Quickpay}[http://quickpay.dk/] - DK
 * {Realex}[http://www.realexpayments.com/] - IE, GB
+* {Sage Payment Solutions}[http://www.sagepayments.com] - US, CA
+* {SecurePay}[http://securepay.com.au] - AU
 * {SecurePay}[http://www.securepay.com/] - US
 * {SecurePayTech}[http://www.securepaytech.com/] - NZ
 * {SkipJack}[http://www.skipjack.com/] - US, CA
@@ -46,6 +51,7 @@ The {ActiveMerchant Wiki}[http://code.google.com/p/activemerchant/wiki] contains
 * {USA ePay}[http://www.usaepay.com/] - US
 * {Verifi}[http://www.verifi.com/] - US
 * {ViaKLIX}[http://viaklix.com] - US
+* {Wirecard}[http://www.wirecard.com] - DE
 
 == Supported Offsite Payment Gateways
 
@@ -124,4 +130,4 @@ Installation from RubyGems
 
 == Contributing
 
-Please see the {ActiveMerchant Guide to Contributing}[http://code.google.com/p/activemerchant/wiki/Contributing] for information on adding a new gateway to ActiveMerchant.
+Please see the {ActiveMerchant Guide to Contributing}[http://github.com/Shopify/active_merchant/wikis/contributing] for information on adding a new gateway to ActiveMerchant.
