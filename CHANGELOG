@@ -1,7 +1,8 @@
 = ActiveMerchant CHANGELOG
 
-== Version 1.4.0 (November 25, 2008)
+== Version 1.4.0 (November 27, 2008)
 
+* Return failed authorization when SkipJack purchase fails [Tron, cody]
 * Update README [cody]
 * Add metadata to Authorize.net CIM gateway [cody]
 * Make ActionViewHelper compatible with changes to concat method in ActionPack [cody]
