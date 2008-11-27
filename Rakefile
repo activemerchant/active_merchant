@@ -80,8 +80,8 @@ spec = Gem::Specification.new do |s|
 
   s.files = PKG_FILES
 
+  s.rubyforge_project = "activemerchant"
   s.require_path = 'lib'
-  s.autorequire  = 'active_merchant'
   s.author = "Tobias Luetke"
   s.email = "tobi@leetsoft.com"
   s.homepage = "http://activemerchant.org/"
