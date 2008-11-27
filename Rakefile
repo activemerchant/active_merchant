@@ -115,6 +115,7 @@ task :publish => [ :package ] do
   packages = %w( gem tgz zip ).collect{ |ext| "pkg/#{PKG_NAME}-#{PKG_VERSION}.#{ext}" }
   
   rubyforge = RubyForge.new
+  rubyforge.configure
   rubyforge.login
   rubyforge.add_release(PKG_NAME, PKG_NAME, "REL #{PKG_VERSION}", *packages)
 end
