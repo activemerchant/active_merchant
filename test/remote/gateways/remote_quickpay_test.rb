@@ -6,7 +6,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
 
     @amount = 100
     @options = { 
-      :order_id => generate_unique_id, 
+      :order_id => generate_unique_id[0...10], 
       :billing_address => address
     }
     
@@ -65,7 +65,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
   end
   
   def test_successful_diners_club_authorization
-    assert response = @gateway.authorize(@amount, @diners_club, @options)
+    assert response = @gateway.authorize(@amount, @diners_club, @options)    
     assert_success response
     assert !response.authorization.blank?
     assert_equal 'Diners', response.params['cardtype']
@@ -75,7 +75,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @diners_club_dk, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'Diners', response.params['cardtype']
+    assert_equal 'Diners-DK', response.params['cardtype']
   end
   
   def test_successful_maestro_authorization
@@ -89,7 +89,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @maestro_dk, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'Maestro', response.params['cardtype']
+    assert_equal 'Maestro-DK', response.params['cardtype']
   end
   
   def test_successful_mastercard_dk_authorization
@@ -122,7 +122,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
   
   def test_unsuccessful_purchase_with_missing_cvv2
     assert response = @gateway.purchase(@amount, @visa_no_cvv2, @options)
-    assert_equal 'Missing/error in card verification data', response.message
+    assert_equal 'Missing field: cvd', response.message
     assert_failure response
     assert response.authorization.blank?
   end
@@ -140,7 +140,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'Missing/error in transaction number', response.message
+    assert_equal 'Missing field: transaction', response.message
   end
   
   def test_successful_purchase_and_void
@@ -176,7 +176,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
         :password => ''
     )
     assert response = gateway.purchase(@amount, @visa, @options)
-    assert_equal 'Missing/error in merchant', response.message
+    assert_equal 'Invalid merchant id', response.message
     assert_failure response
   end
 end

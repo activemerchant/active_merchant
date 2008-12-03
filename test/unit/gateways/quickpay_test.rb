@@ -13,7 +13,7 @@ class QuickpayTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorization_response, successful_capture_response)
+    @gateway.expects(:ssl_post).returns(successful_authorization_response, successful_capture_response)
     
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
