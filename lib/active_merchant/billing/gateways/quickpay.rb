@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
         commit(:authorize, post)
       end
       
-      def subscribe(money, creditcard, options = {})                       
+      def subscribe(creditcard, options = {})                       
         post = {}
         
         add_creditcard(post, creditcard, options)
@@ -57,13 +57,13 @@ module ActiveMerchant #:nodoc:
         commit(:subscribe, post)
       end
       
-      def recurring(money, options = {})
+      def recurring(money, identification, options = {})
         post = {}
         
         add_invoice(post, options)
         add_amount(post, money, options)
         add_autocapture(post, options)
-        add_reference(post, options)
+        add_reference(post, identification)
         
         commit(:recurring, post)
       end
@@ -102,10 +102,10 @@ module ActiveMerchant #:nodoc:
         commit(:status, post)
       end
       
-      def chstatus(identification, options = {})
+      def chstatus(options = {})
         post = {}
         
-        commit(:status, post)
+        commit(:chstatus, post)
       end
     
       # Alternative names for messages
@@ -160,14 +160,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def commit(action, params)
-        post_data = post_data(action, params)
-        response_data = ssl_post(URL, post_data)
-
-        puts URL
-        puts post_data
-        puts response_data
-
-        response = parse(response_data)
+        response = parse(ssl_post(URL, post_data(action, params)))
         
         Response.new(successful?(response), message_from(response), response, 
           :test => test?, 
@@ -212,7 +205,6 @@ module ActiveMerchant #:nodoc:
       end
   
       def generate_check_hash(action, params)
-        puts action
         string = MD5_CHECK_FIELDS[action].collect do |key|
           params[key]
         end.join('')
@@ -220,8 +212,6 @@ module ActiveMerchant #:nodoc:
         # Add the md5checkword
         string << @options[:password].to_s
 
-        puts string
-        
         Digest::MD5.hexdigest(string)
       end
       
