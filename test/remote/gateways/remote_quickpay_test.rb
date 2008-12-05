@@ -122,9 +122,10 @@ class RemoteQuickpayTest < Test::Unit::TestCase
   
   def test_unsuccessful_purchase_with_missing_cvv2
     assert response = @gateway.purchase(@amount, @visa_no_cvv2, @options)
-    assert_equal 'Missing field: cvd', response.message
-    assert_failure response
-    assert response.authorization.blank?
+    # Quickpay has made the cvd field optional in order to support forbrugsforeningen cards which don't have them
+    assert_equal 'OK', response.message
+    assert_success response
+    assert !response.authorization.blank?
   end
 
   def test_successful_authorize_and_capture
