@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* More robust parsing for Wirecard gateway [Soleone]
 * Pass the issue number to CardStream verbatim and update test card numbers [Soleone]
 
 == Version 1.4.1 (December 9, 2008)
