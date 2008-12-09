@@ -1,5 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.4.1 (December 9, 2008)
+
+* Update CardStream URL. Note that you will also need to update your login id. [cody]
+
 == Version 1.4.0 (November 27, 2008)
 
 * Return failed authorization when SkipJack purchase fails [Tron, cody]

@@ -18,8 +18,7 @@ module ActiveMerchant #:nodoc:
     # * Visa Purchasing 
     #
     class CardStreamGateway < Gateway
-      TEST_URL = 'https://www.cardstream.com/merchantsecure/Cardstream/VPDirect.cfm'
-      LIVE_URL = 'https://www.cardstream.com/merchantsecure/Cardstream/VPDirect.cfm'
+      URL = 'https://gateway.cardstream.com/process.ashx'
       
       self.money_format = :cents
       self.default_currency = 'GBP'
@@ -163,7 +162,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        response = parse( ssl_post(test? ? TEST_URL : LIVE_URL, post_data(action, parameters)) )
+        response = parse( ssl_post(URL, post_data(action, parameters)) )
 
         Response.new(response[:response_code] == APPROVED, message_from(response), response,
           :test => test?,

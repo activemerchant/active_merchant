@@ -75,7 +75,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       :description => 'Store purchase'
     }
   end
-
+  
   def test_successful_mastercard_purchase
     assert response = @gateway.purchase(100, @mastercard, @mastercard_options)
     assert_equal 'APPROVED', response.message
