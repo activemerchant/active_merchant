@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Pass the issue number to CardStream verbatim and update test card numbers [Soleone]
+
 == Version 1.4.1 (December 9, 2008)
 
 * Update CardStream URL. Note that you will also need to update your login id. [cody]
