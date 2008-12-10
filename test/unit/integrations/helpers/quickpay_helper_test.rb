@@ -26,32 +26,6 @@ class QuickpayHelperTest < Test::Unit::TestCase
     assert_equal 'd8f46a7bba02766986f679edfd8465e0', @helper.generate_md5check
   end
   
-  def test_customer_fields
-    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com'
-    assert_field '', 'Cody'
-    assert_field '', 'Fauser'
-    assert_field '', 'cody@example.com'
-  end
-
-  def test_address_mapping
-    @helper.billing_address :address1 => '1 My Street',
-                            :address2 => '',
-                            :city => 'Leeds',
-                            :state => 'Yorkshire',
-                            :zip => 'LS2 7EE',
-                            :country  => 'CA'
-   
-    assert_field '', '1 My Street'
-    assert_field '', 'Leeds'
-    assert_field '', 'Yorkshire'
-    assert_field '', 'LS2 7EE'
-  end
-  
-  def test_unknown_address_mapping
-    @helper.billing_address :farm => 'CA'
-    assert_equal 3, @helper.fields.size
-  end
-
   def test_unknown_mapping
     assert_nothing_raised do
       @helper.company_address :address => '500 Dwemthy Fox Road'

@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
           end
           
           def form_fields
-            @fields.merge('md5check' => generate_md5check, 'md5string' => generate_md5string)
+            @fields.merge('md5check' => generate_md5check)
           end
             
           def generate_md5string
