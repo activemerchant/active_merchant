@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
           MD5_CHECK_FIELDS = [
             :msgtype, :ordernumber, :amount, :currency, :time, :state,
             :chstat, :chstatmsg, :qpstat, :qpstatmsg, :merchant, :merchantemail,
-            :transaction, :cardtype, :testmode
+            :transaction, :cardtype, :cardnumber, :testmode
           ]
 
           def generate_md5string

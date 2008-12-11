@@ -30,6 +30,11 @@ class QuickpayNotificationTest < Test::Unit::TestCase
     @quickpay = Quickpay::Notification.new(http_raw_data, :md5secret => "badmd5string")
     assert !@quickpay.acknowledge
   end
+
+  def test_acknowledgement_with_cardnumber
+    @quickpay = Quickpay::Notification.new(http_raw_data_with_cardnumber, :md5secret => "mysecretmd5string")
+    assert @quickpay.acknowledge
+  end
   
   def test_quickpay_attributes
     assert_equal "Authorized", @quickpay.state
@@ -54,5 +59,11 @@ class QuickpayNotificationTest < Test::Unit::TestCase
     "msgtype=authorize&ordernumber=order-4232&amount=8950&currency=DKK&time=081105215737&state=Authorized&" + 
     "chstat=000&chstatmsg=Ok&qpstat=000&qpstatmsg=OK&merchant=89898989&merchantemail=info@pinds.com&transaction=88&" + 
     "cardtype=visa-dk&testmode=Yes&md5check=e70bd0e528dc335ac74d5f1c348fe2f4"
+  end  
+
+  def http_raw_data_with_cardnumber
+    "msgtype=authorize&ordernumber=order-4232&amount=8950&currency=DKK&time=081105215737&state=Authorized&" + 
+    "chstat=000&chstatmsg=Ok&qpstat=000&qpstatmsg=OK&merchant=89898989&merchantemail=info@pinds.com&transaction=88&" + 
+    "cardtype=visa-dk&testmode=Yes&cardnumber=XXXXXXXXXXXX4092&md5check=bded8685e10790a9351a9d51285cec9d"
   end  
 end
