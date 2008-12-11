@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
             add_field('language', 'da')
             add_field('autocapture', 0)
             add_field('testmode', 0)
-            add_field('ordernumber', order.is_a?(Integer) && order < 1000 ? "%04d" % order : order)
+            add_field('ordernumber', format_order_number(order))
           end
               
           def md5secret(value)
@@ -28,6 +28,11 @@ module ActiveMerchant #:nodoc:
           
           def generate_md5check
             Digest::MD5.hexdigest(generate_md5string)
+          end
+
+          # Limited to 20 digits max
+          def format_order_number(number)
+            number.to_s.gsub(/[^\w_]/, '').rjust(4, "0")[0...20]
           end
           
           MD5_CHECK_FIELDS = [
