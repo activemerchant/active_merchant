@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
           end
           
           # Provide access to raw fields from quickpay
-          %w(msgtype ordernumber state chstat chstatmsg qpstat qpstatmsg merchant merchantemail cardtype).each do |attr|
+          %w(msgtype ordernumber state chstat chstatmsg qpstat qpstatmsg merchant merchantemail cardtype cardnumber).each do |attr|
             define_method(attr) do
               params[attr]
             end
