@@ -5,10 +5,8 @@ class RemoteBraintreeTest < Test::Unit::TestCase
     @gateway = BraintreeGateway.new(fixtures(:braintree))
 
     @amount = rand(10000) + 1001
-    @credit_card = credit_card('4111111111111111', :type => 'visa')
-    @check = ActiveMerchant::Billing::Check.new(:name => 'John Q. Public', 
-               :account_number => '123123123',
-               :routing_number => '123123123')
+    @credit_card = credit_card('4111111111111111')
+    @check = check()
     @declined_amount = rand(99)
     @options = {  :order_id => generate_unique_id,
                   :billing_address => address
@@ -36,7 +34,7 @@ class RemoteBraintreeTest < Test::Unit::TestCase
               :account_holder_type => 'personal',
               :account_type => 'checking'
             )
-    assert response = @gateway.purchase(@amount, check, @options)
+    assert response = @gateway.purchase(@amount, @check, @options)
     assert_equal 'This transaction has been approved', response.message
     assert_success response
   end

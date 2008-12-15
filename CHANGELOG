@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Allow storage of e-checks with BraintreeGateway [jimiray]
 * Add test URL to PayJunction gateway [boomtowndesigngroup]
 * More robust parsing for Wirecard gateway [Soleone]
 * Pass the issue number to CardStream verbatim and update test card numbers [Soleone]
