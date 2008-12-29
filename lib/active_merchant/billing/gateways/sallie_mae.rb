@@ -1,8 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SallieMaeGateway < Gateway
-      TEST_URL = 'https://trans.salliemae.com/cgi-bin/process.cgi'
-      LIVE_URL = 'https://example.com/live'
+      URL = 'https://trans.salliemae.com/cgi-bin/process.cgi'
       
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']
@@ -17,7 +16,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'New Gateway'
       
       def initialize(options = {})
-        #requires!(options, :login, :password)
+        requires!(options, :account_id)
         @options = options
         super
       end  
@@ -43,11 +42,11 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         post = {}
         add_invoice(post, options)
-        add_creditcard(post, creditcard)        
-        add_address(post, creditcard, options)        
+        add_creditcard(post, creditcard)
+        add_address(post, creditcard, options)
         add_customer_data(post, options)
-        
-        commit('authonly', money, post)
+
+        commit(:authonly, money, post)
       end
       
       def purchase(money, creditcard, options = {})
@@ -56,17 +55,23 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard)        
         add_address(post, creditcard, options)   
         add_customer_data(post, options)
-             
-        commit('sale', money, post)
+
+        commit(:sale, money, post)
       end                       
     
       def capture(money, authorization, options = {})
-        commit('capture', money, post)
+        commit(:capture, money, post)
       end
     
       private                       
       
       def add_customer_data(post, options)
+        if address = options[:billing_address] || options[:shipping_address] || options[:address] 
+          post[:ci_phone] = address[:phone].to_s
+        end
+
+        post[:ci_email] = options[:email].to_s unless options[:email].blank?
+        post[:ci_IP]    = options[:ip].to_s unless options[:ip].blank?
       end
 
       def add_address(post, creditcard, options)
@@ -88,26 +93,41 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
+        post[:ci_memo] = options[:description].to_s unless options[:description].blank?
       end
       
       def add_creditcard(post, creditcard)
         post[:ccnum]   = creditcard.number.to_s
         post[:ccname]  = creditcard.name.to_s
-        post[:cvv2]    = creditcard.verificationvalue.to_s if creditcard.verificationvalue?
+        post[:cvv2]    = creditcard.verification_value.to_s if creditcard.verification_value?
         post[:expmon]  = creditcard.month.to_s
         post[:expyear] = creditcard.year.to_s
       end
       
       def parse(body)
+        p body
+        {}
       end     
       
       def commit(action, money, parameters)
+        parameters[:acctid] = @options[:account_id].to_s
+        parameters[:subid]  = @options[:sub_id].to_s if @options[:sub_id].blank?
+        parameters[:amount] = "%.2f" % (money / 100.0)
+
+        case action
+        when :sale
+          parameters[:action] = "ns_quicksale_cc"
+        end
+
+        response = parse(ssl_post(URL, parameters.map {|k,v| [k,v].join("=") }.join("&")))
+        Response.new(successful?(response), message_from(response))
+      end
+
+      def successful?(response)
+        response[:transaction_approved] == "hey"
       end
 
       def message_from(response)
-      end
-      
-      def post_data(action, parameters = {})
       end
     end
   end

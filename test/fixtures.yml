@@ -296,6 +296,9 @@ sage:
   login: login
   password: password
 
+sallie_mae:
+  account_id: TEST0
+
 secure_pay:
   login: LOGIN
   password: PASSWORD
