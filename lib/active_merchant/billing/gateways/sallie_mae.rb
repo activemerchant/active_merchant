@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
       
       
       def authorize(money, creditcard, options = {})
-        post = {}
+        post = PostData.new
         add_invoice(post, options)
         add_creditcard(post, creditcard)
         add_address(post, creditcard, options)
@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def purchase(money, creditcard, options = {})
-        post = {}
+        post = PostData.new
         add_invoice(post, options)
         add_creditcard(post, creditcard)        
         add_address(post, creditcard, options)   
@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, options)
         post[:ci_memo] = options[:description].to_s unless options[:description].blank?
       end
-      
+
       def add_creditcard(post, creditcard)
         post[:ccnum]   = creditcard.number.to_s
         post[:ccname]  = creditcard.name.to_s
@@ -103,12 +103,19 @@ module ActiveMerchant #:nodoc:
         post[:expmon]  = creditcard.month.to_s
         post[:expyear] = creditcard.year.to_s
       end
-      
+
       def parse(body)
-        p body
-        {}
-      end     
-      
+        h = {}
+        body.gsub!("<html><body><plaintext>", "")
+        body.
+          split("\r\n").
+          map do |i|
+            a = i.split("=")
+            h[a.first] = a.last
+          end
+        h
+      end
+
       def commit(action, money, parameters)
         parameters[:acctid] = @options[:account_id].to_s
         parameters[:subid]  = @options[:sub_id].to_s if @options[:sub_id].blank?
@@ -119,15 +126,16 @@ module ActiveMerchant #:nodoc:
           parameters[:action] = "ns_quicksale_cc"
         end
 
-        response = parse(ssl_post(URL, parameters.map {|k,v| [k,v].join("=") }.join("&")))
+        response = parse(ssl_post(URL, parameters.to_post_data))
         Response.new(successful?(response), message_from(response))
       end
 
       def successful?(response)
-        response[:transaction_approved] == "hey"
+        response["Status"] == "Accepted"
       end
 
       def message_from(response)
+        response["Reason"].split(":").last
       end
     end
   end
