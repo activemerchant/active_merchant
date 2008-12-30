@@ -18,6 +18,7 @@ class RemoteSallieMaeTest < Test::Unit::TestCase
 
   def test_a
     response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @declined_card, @options)
   end
   
   # def test_successful_purchase
