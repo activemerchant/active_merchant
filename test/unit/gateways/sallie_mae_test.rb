@@ -3,8 +3,7 @@ require File.dirname(__FILE__) + '/../../test_helper'
 class SallieMaeTest < Test::Unit::TestCase
   def setup
     @gateway = SallieMaeGateway.new(
-                 :login => 'login',
-                 :password => 'password'
+                 :account_id => 'FAKEACCOUNT'
                )
 
     @credit_card = credit_card
@@ -21,29 +20,25 @@ class SallieMaeTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of 
     assert_success response
-    
-    # Replace with authorization number from the successful response
-    assert_equal '', response.authorization
-    assert response.test?
   end
 
   def test_unsuccessful_request
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    @gateway.expects(:ssl_post).returns(failed_purcahse_response)
     
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert response.test?
   end
 
   private
   
   # Place raw successful response from gateway here
   def successful_purchase_response
+    "Status=Accepted"
   end
   
   # Place raw failed response from gateway here
   def failed_purcahse_response
+    "Status=Declined"
   end
 end

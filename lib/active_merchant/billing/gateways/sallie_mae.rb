@@ -78,7 +78,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        post[:ci_memo] = options[:description].to_s unless options[:description].blank?
+        memo = "OrderID: #{options[:order_id]}\nDescription: #{options[:description]}"
+        post[:ci_memo] = memo
       end
 
       def add_creditcard(post, creditcard)
@@ -104,21 +105,19 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters)
         parameters[:acctid] = @options[:account_id].to_s
         parameters[:subid]  = @options[:sub_id].to_s if @options[:sub_id].blank?
+        parameters[:amount] = "%.2f" % (money / 100.0)
 
         case action
         when :sale
           parameters[:action] = "ns_quicksale_cc"
-        parameters[:amount] = "%.2f" % (money / 100.0)
         when :authonly
           parameters[:action] = "ns_quicksale_cc"
           parameters[:authonly] = 1
-        parameters[:amount] = "%.2f" % (money / 100.0)
         when :capture
           parameters[:action] = "ns_quicksale_cc"
-          parameters[:amount] = "%.2f" % (money / 100.0)
         end
 
-        response = parse(ssl_post(URL, parameters.to_post_data))
+        response = parse(ssl_post(URL, parameters.to_post_data) || "")
         Response.new(successful?(response), message_from(response), {}, :authorization => response["refcode"])
       end
 
