@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Return transaction id for PayPal refunds [jxtps435]
 * Allow storage of e-checks with BraintreeGateway [jimiray]
 * Add test URL to PayJunction gateway [boomtowndesigngroup]
 * More robust parsing for Wirecard gateway [Soleone]

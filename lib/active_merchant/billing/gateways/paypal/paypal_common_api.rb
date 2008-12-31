@@ -310,7 +310,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def authorization_from(response)
-        response[:transaction_id] || response[:authorization_id] # latter one is from reauthorization
+        response[:transaction_id] || response[:authorization_id] || response[:refund_transaction_id] # middle one is from reauthorization
       end
       
       def successful?(response)
