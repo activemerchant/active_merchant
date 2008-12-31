@@ -1,8 +1,6 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class RemoteSallieMaeTest < Test::Unit::TestCase
-  
-
   def setup
     @gateway = SallieMaeGateway.new(fixtures(:sallie_mae))
     
@@ -15,14 +13,6 @@ class RemoteSallieMaeTest < Test::Unit::TestCase
       :description => 'Store Purchase'
     }
   end
-
-  # def test_a
-  #   response = @gateway.authorize(@amount, @credit_card, @options)
-  #   p response
-  #   response = @gateway.capture(@amount, @credit_card, response.authorization, @options)
-  #   p response
-  #   #response = @gateway.purchase(@amount, @credit_card, @options)
-  # end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -46,19 +36,16 @@ class RemoteSallieMaeTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  # def test_failed_capture
-  #   assert response = @gateway.capture(@amount, '')
-  #   assert_failure response
-  #   assert_equal 'REPLACE WITH GATEWAY FAILURE MESSAGE', response.message
-  # end
+  def test_failed_capture
+    assert response = @gateway.capture(@amount, '')
+    assert_failure response
+    assert_equal 'Missing account number', response.message
+  end
 
-  # def test_invalid_login
-  #   gateway = SallieMaeGateway.new(
-  #               :login => '',
-  #               :password => ''
-  #             )
-  #   assert response = gateway.purchase(@amount, @credit_card, @options)
-  #   assert_failure response
-  #   assert_equal 'REPLACE WITH FAILURE MESSAGE', response.message
-  # end
+  def test_invalid_login
+    gateway = SallieMaeGateway.new(:account_id => '')
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Invalid merchant', response.message
+  end
 end
