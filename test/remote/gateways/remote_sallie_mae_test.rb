@@ -16,32 +16,35 @@ class RemoteSallieMaeTest < Test::Unit::TestCase
     }
   end
 
-  def test_a
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    response = @gateway.purchase(@amount, @declined_card, @options)
+  # def test_a
+  #   response = @gateway.authorize(@amount, @credit_card, @options)
+  #   p response
+  #   response = @gateway.capture(@amount, @credit_card, response.authorization, @options)
+  #   p response
+  #   #response = @gateway.purchase(@amount, @credit_card, @options)
+  # end
+
+  def test_successful_purchase
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Accepted', response.message
   end
-  
-  # def test_successful_purchase
-  #   assert response = @gateway.purchase(@amount, @credit_card, @options)
-  #   assert_success response
-  #   assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
-  # end
 
-  # def test_unsuccessful_purchase
-  #   assert response = @gateway.purchase(@amount, @declined_card, @options)
-  #   assert_failure response
-  #   assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
-  # end
+  def test_unsuccessful_purchase
+    assert response = @gateway.purchase(@amount, @declined_card, @options)
+    assert_failure response
+    assert_equal 'Cvv2 mismatch', response.message
+  end
 
-  # def test_authorize_and_capture
-  #   amount = @amount
-  #   assert auth = @gateway.authorize(amount, @credit_card, @options)
-  #   assert_success auth
-  #   assert_equal 'Success', auth.message
-  #   assert auth.authorization
-  #   assert capture = @gateway.capture(amount, auth.authorization)
-  #   assert_success capture
-  # end
+  def test_authorize_and_capture
+    amount = (@amount * rand).to_i
+    assert auth = @gateway.authorize(amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Accepted', auth.message
+    assert auth.authorization
+    assert capture = @gateway.capture(amount, auth.authorization)
+    assert_success capture
+  end
 
   # def test_failed_capture
   #   assert response = @gateway.capture(@amount, '')

@@ -10,10 +10,10 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
       # The homepage URL of the gateway
-      self.homepage_url = 'http://www.example.net/'
+      self.homepage_url = 'http://www.salliemae.com/'
 
       # The name of the gateway
-      self.display_name = 'New Gateway'
+      self.display_name = 'Sallie Mae'
 
       def initialize(options = {})
         requires!(options, :account_id)
@@ -42,6 +42,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
+        post = PostData.new
+        post[:postonly] = authorization
+        #add_creditcard(post, creditcard)
         commit(:capture, money, post)
       end
 
@@ -93,7 +96,7 @@ module ActiveMerchant #:nodoc:
           split("\r\n").
           map do |i|
             a = i.split("=")
-            h[a.first] = a.last
+            h[a.first] = a.last unless a.first.nil?
           end
         h
       end
@@ -101,15 +104,22 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters)
         parameters[:acctid] = @options[:account_id].to_s
         parameters[:subid]  = @options[:sub_id].to_s if @options[:sub_id].blank?
-        parameters[:amount] = "%.2f" % (money / 100.0)
 
         case action
         when :sale
           parameters[:action] = "ns_quicksale_cc"
+        parameters[:amount] = "%.2f" % (money / 100.0)
+        when :authonly
+          parameters[:action] = "ns_quicksale_cc"
+          parameters[:authonly] = 1
+        parameters[:amount] = "%.2f" % (money / 100.0)
+        when :capture
+          parameters[:action] = "ns_quicksale_cc"
+          parameters[:amount] = "%.2f" % (money / 100.0)
         end
 
         response = parse(ssl_post(URL, parameters.to_post_data))
-        Response.new(successful?(response), message_from(response))
+        Response.new(successful?(response), message_from(response), {}, :authorization => response["refcode"])
       end
 
       def successful?(response)
@@ -117,7 +127,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response["Reason"].split(":").last
+        if successful?(response)
+          "Accepted"
+        else
+          response["Reason"].split(":")[2].capitalize unless response["Reason"].nil?
+        end
       end
     end
   end
