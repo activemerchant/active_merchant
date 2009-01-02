@@ -9,7 +9,6 @@ require 'mocha'
 require 'yaml'
 
 begin
-begin
   gem 'actionpack'
 rescue LoadError
   raise StandardError, "The view tests need ActionPack installed as gem to run"
@@ -18,11 +17,6 @@ end
 require 'action_controller'
 require 'action_controller/test_process'
 require 'active_merchant/billing/integrations/action_view_helper'
-rescue Gem::Exception
-  puts "oh well"
-end
-
-
 
 ActiveMerchant::Billing::Base.mode = :test
 

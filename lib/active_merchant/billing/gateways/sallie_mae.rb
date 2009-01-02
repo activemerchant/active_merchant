@@ -44,7 +44,6 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = PostData.new
         post[:postonly] = authorization
-        #add_creditcard(post, creditcard)
         commit(:capture, money, post)
       end
 
