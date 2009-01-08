@@ -33,6 +33,8 @@ module ActiveMerchant #:nodoc:
 
       self.arb_test_url = 'https://apitest.authorize.net/xml/v1/request.api'
       self.arb_live_url = 'https://api.authorize.net/xml/v1/request.api'
+      
+      class_inheritable_accessor :duplicate_window
 
       APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
 
@@ -86,6 +88,7 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard)
         add_address(post, options)
         add_customer_data(post, options)
+        add_duplicate_window(post)
 
         commit('AUTH_ONLY', money, post)
       end
@@ -103,6 +106,7 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard)
         add_address(post, options)
         add_customer_data(post, options)
+        add_duplicate_window(post)
 
         commit('AUTH_CAPTURE', money, post)
       end
@@ -317,6 +321,15 @@ module ActiveMerchant #:nodoc:
 
         if options.has_key? :ip
           post[:customer_ip] = options[:ip]
+        end
+      end
+      
+      # x_duplicate_window won't be sent by default, because sending it changes the response.
+      # "If this field is present in the request with or without a value, an enhanced duplicate transaction response will be sent."
+      # (as of 2008-12-30) http://www.authorize.net/support/AIM_guide_SCC.pdf
+      def add_duplicate_window(post)
+        unless duplicate_window.nil?
+          post[:duplicate_window] = duplicate_window
         end
       end
 

@@ -73,6 +73,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'My Purchase is great', result[:description]
   end
   
+  def test_add_duplicate_window_without_duplicate_window
+    result = {}
+    ActiveMerchant::Billing::AuthorizeNetGateway.duplicate_window = nil
+    @gateway.send(:add_duplicate_window, result)
+    assert_nil result[:duplicate_window]
+  end
+  
+  def test_add_duplicate_window_with_duplicate_window
+    result = {}
+    ActiveMerchant::Billing::AuthorizeNetGateway.duplicate_window = 0
+    @gateway.send(:add_duplicate_window, result)
+    assert_equal 0, result[:duplicate_window]
+  end
+  
   def test_purchase_is_valid_csv
    params = { :amount => '1.01' }
    

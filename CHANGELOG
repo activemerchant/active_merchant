@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for Authorize.net duplicate window [Seamus Abshere]
 * Return transaction id for PayPal refunds [jxtps435]
 * Allow storage of e-checks with BraintreeGateway [jimiray]
 * Add test URL to PayJunction gateway [boomtowndesigngroup]
