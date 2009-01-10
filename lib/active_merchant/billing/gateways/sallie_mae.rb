@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, money, parameters)
         parameters[:acctid] = @options[:account_id].to_s
-        parameters[:subid]  = @options[:sub_id].to_s if @options[:sub_id].blank?
+        parameters[:subid]  = @options[:sub_id].to_s unless @options[:sub_id].blank?
         parameters[:amount] = "%.2f" % (money / 100.0)
 
         case action
