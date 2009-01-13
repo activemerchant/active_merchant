@@ -22,11 +22,11 @@ module ActiveMerchant #:nodoc:
       # Pass :store => some_number_or_string to specify the
       # customer_vault_id BrainTree should use (make sure it's
       # unique).
-      def authorize(money, creditcard, options = {})
+      def authorize(money, payment_source, options = {})
         post = {}
         add_invoice(post, options)
-        add_payment_source(post, creditcard,options)        
-        add_address(post, creditcard, options)        
+        add_payment_source(post, payment_source, options)        
+        add_address(post, payment_source, options)        
         add_customer_data(post, options)
         
         commit('auth', money, post)
