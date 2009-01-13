@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Support personal fixtures file on Windows [cody]
 * Clearer variable naming for BraintreeGateway#authorize [Jonathan S. Katz]
 * Fix brittle Authorize.net tests [cody]
 * Add support for Authorize.net duplicate window [Seamus Abshere]
