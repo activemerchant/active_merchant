@@ -172,7 +172,23 @@ psl_visa_address:
   address2: 
   address3: 
   city: 
-  zip: 
+  zip:
+    
+psl_visa_debit:
+  first_name:
+  last_name:
+  number:
+  month:
+  year:
+  verification_value:
+
+psl_visa_debit_address:
+  address1:
+  address2:
+  address3:
+  city:
+  state:
+  zip:
 
 quickpay:
   login: X
