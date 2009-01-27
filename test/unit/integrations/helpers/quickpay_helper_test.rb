@@ -14,16 +14,16 @@ class QuickpayHelperTest < Test::Unit::TestCase
   def test_basic_helper_fields
     assert_field 'merchant', '24352435'
     assert_field 'amount', '500'
-    assert_field 'ordernumber', 'order-500'
+    assert_field 'ordernumber', 'order500'
   end
   
   def test_generate_md5string
-    assert_equal '3authorize24352435daorder-500500USDhttp://example.com/okhttp://example.com/cancelhttp://example.com/notify00mysecretmd5string', 
+    assert_equal '3authorize24352435daorder500500USDhttp://example.com/okhttp://example.com/cancelhttp://example.com/notify00mysecretmd5string', 
                  @helper.generate_md5string
   end
   
   def test_generate_md5check
-    assert_equal 'd8f46a7bba02766986f679edfd8465e0', @helper.generate_md5check
+    assert_equal '31a0a94ce953208d05f3f3d255fff31f', @helper.generate_md5check
   end
   
   def test_unknown_mapping
