@@ -163,6 +163,7 @@ module ActiveMerchant
       
         add_amount(post, money, DISPATCH_NOW, options)
         add_reference(post, authorization)
+        add_purchase_details(post)
 
         commit(post)
       end

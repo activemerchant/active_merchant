@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix PSL gateway capturing [cody]
 * Fix failed Visa debit purchases with PSL gateway start date info is present [cody]
 * Support personal fixtures file on Windows [cody]
 * Clearer variable naming for BraintreeGateway#authorize [Jonathan S. Katz]
