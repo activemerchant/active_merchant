@@ -212,7 +212,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   private
-
   def post_data_fixture
     'x_encap_char=%24&x_card_num=4242424242424242&x_exp_date=0806&x_card_code=123&x_type=AUTH_ONLY&x_first_name=Longbob&x_version=3.1&x_login=X&x_last_name=Longsen&x_tran_key=Y&x_relay_response=FALSE&x_delim_data=TRUE&x_delim_char=%2C&x_amount=1.01'
   end
