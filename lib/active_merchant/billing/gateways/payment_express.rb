@@ -60,8 +60,15 @@ module ActiveMerchant #:nodoc:
       # NOTE: Perhaps in options we allow a transaction note to be inserted
       # Verifies that funds are available for the requested card and amount and reserves the specified amount.
       # See: http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#Authcomplete
-      def authorize(money, credit_card, options = {})
-        options[:credit_card] = credit_card
+      def authorize(money, payment_source, options = {})
+        
+        credit_card = payment_source if payment_source.respond_to?(:number)
+        
+        if credit_card        
+          options[:credit_card] = credit_card
+        else
+          options[:token]       = payment_source
+        end
 
         request = build_purchase_or_authorization_request(money, options)
         commit(:authorization, request)

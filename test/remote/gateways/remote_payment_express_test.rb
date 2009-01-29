@@ -121,6 +121,20 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert_equal "APPROVED", purchase.message
     assert_success purchase
     assert_not_nil purchase.authorization
-  end  
+  end
+  
+  def test_store_and_authorize_and_capture
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert_equal "APPROVED", response.message
+    assert (token = response.token)
+
+    assert auth = @gateway.authorize(@amount, token, @options)
+    assert_success auth
+    assert_equal 'APPROVED', auth.message
+    assert auth.authorization
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
   
 end
