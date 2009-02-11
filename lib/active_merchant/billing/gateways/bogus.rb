@@ -10,6 +10,7 @@ module ActiveMerchant #:nodoc:
       CREDIT_ERROR_MESSAGE = "Bogus Gateway: Use trans_id 1 for success, 2 for exception and anything else for error"
       UNSTORE_ERROR_MESSAGE = "Bogus Gateway: Use trans_id 1 for success, 2 for exception and anything else for error"
       CAPTURE_ERROR_MESSAGE = "Bogus Gateway: Use authorization number 1 for exception, 2 for error and anything else for success"
+      VOID_ERROR_MESSAGE = "Bogus Gateway: Use authorization number 1 for exception, 2 for error and anything else for success"
       
       self.supported_countries = ['US']
       self.supported_cardtypes = [:bogus]
@@ -57,6 +58,17 @@ module ActiveMerchant #:nodoc:
           Response.new(false, FAILURE_MESSAGE, {:paid_amount => money.to_s, :error => FAILURE_MESSAGE }, :test => true)
         else
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money.to_s}, :test => true)
+        end
+      end
+
+      def void(ident, options = {})
+        case ident
+        when '1'
+          raise Error, VOID_ERROR_MESSAGE
+        when '2'
+          Response.new(false, FAILURE_MESSAGE, {:authorization => ident, :error => FAILURE_MESSAGE }, :test => true)
+        else
+          Response.new(true, SUCCESS_MESSAGE, {:authorization => ident}, :test => true)
         end
       end
       
