@@ -36,44 +36,26 @@ module ActiveMerchant #:nodoc:
         super
       end  
       
-      def authorize(money, creditcard, options = {})
+      def authorize(money, credit_card_or_reference, options = {})
         post = {}
         
         add_amount(post, money, options)
-        add_creditcard(post, creditcard, options)
         add_invoice(post, options)
-        add_autocapture(post, options)
+        add_creditcard_or_reference(post, credit_card_or_reference, options)
+        add_autocapture(post, false)
 
-        commit(:authorize, post)
+        commit(recurring_or_authorize(credit_card_or_reference), post)
       end
-      
-      def subscribe(creditcard, options = {})                       
+            
+      def purchase(money, credit_card_or_reference, options = {})
         post = {}
         
-        add_creditcard(post, creditcard, options)
-        add_invoice(post, options)
-        add_description(post, options)
-
-        commit(:subscribe, post)
-      end
-      
-      def recurring(money, identification, options = {})
-        post = {}
-        
-        add_invoice(post, options)
         add_amount(post, money, options)
-        add_autocapture(post, options)
-        add_reference(post, identification)
-        
-        commit(:recurring, post)
-      end
-      
-      def cancel(identification, options = {})
-        post = {}
-        
-        add_reference(post, identification)
-        
-        commit(:cancel, post)
+        add_creditcard_or_reference(post, credit_card_or_reference, options)
+        add_invoice(post, options)
+        add_autocapture(post, true)
+
+        commit(recurring_or_authorize(credit_card_or_reference), post)
       end
       
       def capture(money, authorization, options = {})
@@ -85,7 +67,15 @@ module ActiveMerchant #:nodoc:
         commit(:capture, post)
       end
       
-      def refund(money, identification, options = {})
+      def void(identification, options = {})
+        post = {}
+        
+        add_reference(post, identification)
+        
+        commit(:cancel, post)
+      end
+      
+      def credit(money, identification, options = {})
         post = {}
 
         add_amount_without_currency(post, money)
@@ -94,37 +84,16 @@ module ActiveMerchant #:nodoc:
         commit(:refund, post)
       end
       
-      def status(identification, options = {})
+      def store(creditcard, options = {})                       
         post = {}
         
-        add_reference(post, identification)
-        
-        commit(:status, post)
+        add_creditcard(post, creditcard, options)
+        add_invoice(post, options)
+        add_description(post, options)
+
+        commit(:subscribe, post)
       end
       
-      def chstatus(options = {})
-        post = {}
-        
-        commit(:chstatus, post)
-      end
-    
-      # Alternative names for messages
-
-      # Known as 'refund' in the QuickPay API
-      def credit(money, identification, options = {})
-        refund(money, identification, options)
-      end
-
-      # Authorize with autocapture
-      def purchase(money, creditcard, options = {})
-        authorize(money, creditcard, options.merge(:autocapture => true))
-      end
-      
-      # Known as 'cancel' in the QuickPay API
-      def void(identification, options = {})
-        cancel(identification, options)
-      end
-    
       private                       
   
       def add_amount(post, money, options = {})
@@ -151,10 +120,22 @@ module ActiveMerchant #:nodoc:
         post[:transaction] = identification
       end
       
-      def add_autocapture(post, options)
-        post[:autocapture] = (options[:autocapture] == true || options[:autocapture].to_s == '1') ? '1' : '0'
+      def add_creditcard_or_reference(post, credit_card_or_reference, options)
+        if credit_card_or_reference.is_a?(String)
+          add_reference(post, credit_card_or_reference)
+        else
+          add_creditcard(post, credit_card_or_reference, options)
+        end
+      end        
+      
+      def add_autocapture(post, autocapture)
+        post[:autocapture] = autocapture ? 1 : 0
       end
       
+      def recurring_or_authorize(credit_card_or_reference)
+        credit_card_or_reference.is_a?(String) ? :recurring : :authorize
+      end
+
       def add_description(post, options)
         post[:description] = options[:description]
       end
