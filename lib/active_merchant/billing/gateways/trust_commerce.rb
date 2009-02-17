@@ -101,6 +101,9 @@ module ActiveMerchant #:nodoc:
         "failtoprocess" => "The bank servers are offline and unable to authorize transactions"
       }
       
+      TEST_LOGIN = 'TestMerchant'
+      TEST_PASSWORD = 'password'
+      
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :discover, :american_express, :diners_club, :jcb]
       self.supported_countries = ['US']
@@ -137,7 +140,8 @@ module ActiveMerchant #:nodoc:
       end
       
       def test?
-        @options[:test] || super
+        @options[:login] == TEST_LOGIN &&
+          @options[:password] == TEST_PASSWORD || @options[:test] || super
       end
       
       # authorize() is the first half of the preauth(authorize)/postauth(capture) model. The TC API docs call this

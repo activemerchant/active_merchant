@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Set Response#test? to true in TrustCommerce gateway when using the demo account in production [cody]
 * Correctly set Sage.supported_countries [cody]
 * Add BogusGateway#void [Donald Ball]
 * Fix PSL gateway capturing [cody]

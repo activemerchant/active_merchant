@@ -58,6 +58,18 @@ class TrustCommerceTest < Test::Unit::TestCase
     assert_equal [:visa, :master, :discover, :american_express, :diners_club, :jcb], TrustCommerceGateway.supported_cardtypes
   end
   
+  def test_test_flag_should_be_set_when_using_test_login_in_production
+    Base.gateway_mode = :production
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card)
+    assert_success response
+    assert response.test?
+  ensure
+    Base.gateway_mode = :test
+  end
+  
+  private
+  
   def successful_purchase_response
     <<-RESPONSE
 transid=025-0007423614
