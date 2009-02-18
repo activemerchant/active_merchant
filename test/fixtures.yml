@@ -95,6 +95,12 @@ net_registry:
   login: X
   password: Y
   
+ogone:
+  login: LOGIN
+  user: USER
+  password: PASSWORD
+  signature: SIGNATURE
+
 payflow:
   login: LOGIN
   password: PASSWORD
