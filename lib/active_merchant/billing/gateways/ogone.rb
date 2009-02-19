@@ -41,6 +41,8 @@ module ActiveMerchant #:nodoc:
     #   # run request
     #   response = gateway.purchase(1000, creditcard, :order_id => "1") # charge 10 EUR
     #
+    #   If you don't provide an :order_id, the gateway will generate a random one for you.
+    #
     #   puts response.success?      # Check whether the transaction was successful
     #   puts response.message       # Retrieve the message returned by Ogone
     #   puts response.authorization # Retrieve the unique transaction ID returned by Ogone
@@ -187,7 +189,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        add_pair post, 'orderID', options[:order_id]
+        add_pair post, 'orderID', options[:order_id] || generate_unique_id[0...30]
         add_pair post, 'COM',     options[:description]
       end
 

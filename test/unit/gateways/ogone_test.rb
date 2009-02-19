@@ -34,6 +34,15 @@ class OgoneTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_without_order_id
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @options.delete(:order_id)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal '3014726', response.authorization
+    assert response.test?
+  end
+
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     assert response = @gateway.capture(@amount, "3048326")
