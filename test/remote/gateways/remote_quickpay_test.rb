@@ -171,18 +171,11 @@ class RemoteQuickpayTest < Test::Unit::TestCase
     assert_success credit
   end
 
-  def test_successful_subscribe_and_recurring_and_status
-    assert subscribe = @gateway.subscribe(@visa, @options.merge(:description => "New subscription"))
-    assert_success subscribe
-    assert recurring = @gateway.recurring(@amount, subscribe.authorization, @options.merge(:order_id => generate_unique_id[0...10]))
-    assert_success recurring
-    assert status = @gateway.status(recurring.authorization, @options)
-    assert_success status
-  end
-
-  def test_successful_chstatus
-    assert chstatus = @gateway.chstatus(@options)
-    assert_success chstatus
+  def test_successful_store_and_reference_purchase
+    assert store = @gateway.store(@visa, @options.merge(:description => "New subscription"))
+    assert_success store
+    assert purchase = @gateway.purchase(@amount, store.authorization, @options.merge(:order_id => generate_unique_id[0...10]))
+    assert_success purchase
   end
 
   def test_invalid_login
