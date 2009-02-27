@@ -98,14 +98,12 @@ class PayflowTest < Test::Unit::TestCase
   end
   
   def test_express_instance
-    PayflowGateway.certification_id = '123456'
     gateway = PayflowGateway.new(
       :login => 'test',
       :password => 'password'
     )
     express = gateway.express
     assert_instance_of PayflowExpressGateway, express
-    assert_equal '123456', express.options[:certification_id]
     assert_equal 'PayPal', express.options[:partner]
     assert_equal 'test', express.options[:login]
     assert_equal 'password', express.options[:password]

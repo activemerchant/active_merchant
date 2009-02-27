@@ -4,10 +4,6 @@ module ActiveMerchant #:nodoc:
       def self.included(base)
         base.default_currency = 'USD'
           
-        # The certification id requirement has been removed by Payflow
-        # This is no longer being sent in the requests to the gateway
-        base.class_inheritable_accessor :certification_id
-
         base.class_inheritable_accessor :partner
         
         # Set the default partner to PayPal
@@ -60,7 +56,6 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login, :password)
         @options = {
-          :certification_id => self.class.certification_id,
           :partner => self.class.partner
         }.update(options)
         
