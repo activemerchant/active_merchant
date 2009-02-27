@@ -91,6 +91,12 @@ class PayflowTest < Test::Unit::TestCase
     assert_equal 'PayPal', gateway.options[:partner]
   end
   
+  def test_partner_class_accessor_used_when_passed_in_partner_is_blank
+    assert_equal 'PayPal', PayflowGateway.partner
+    gateway = PayflowGateway.new(:login => 'test', :password => 'test', :partner => '')
+    assert_equal 'PayPal', gateway.options[:partner]
+  end
+  
   def test_passed_in_partner_overrides_class_accessor
     assert_equal 'PayPal', PayflowGateway.partner
     gateway = PayflowGateway.new(:login => 'test', :password => 'test', :partner => 'PayPalUk')

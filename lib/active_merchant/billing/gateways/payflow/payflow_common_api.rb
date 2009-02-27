@@ -55,10 +55,9 @@ module ActiveMerchant #:nodoc:
           
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = {
-          :partner => self.class.partner
-        }.update(options)
         
+        @options = options
+        @options[:partner] = partner if @options[:partner].blank?
         super
       end  
       

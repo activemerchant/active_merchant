@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Use default partner id when passed in :partner is blank with PayflowGateway [cody]
 * Remove PayflowGateway.certification_id [cody]
 * Set Response#test? to true in TrustCommerce gateway when using the demo account in production [cody]
 * Correctly set Sage.supported_countries [cody]
