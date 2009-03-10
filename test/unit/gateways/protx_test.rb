@@ -9,13 +9,19 @@ class ProtxTest < Test::Unit::TestCase
     @credit_card = credit_card('4242424242424242', :type => 'visa')
     @options = { 
       :billing_address => { 
-        :address1 => '25 The Larches',
-        :city => "Narborough",
-        :state => "Leicester",
-        :zip => 'LE10 2RT'
+        :name => 'Tekin Suleyman',
+        :address1 => 'Flat 10 Lapwing Court',
+        :address2 => 'West Didsbury',
+        :city => "Manchester",
+        :county => 'Greater Manchester',
+        :country => 'GB',
+        :zip => 'M20 2PS'
       },
       :order_id => '1',
-      :description => 'Store purchase'
+      :description => 'Store purchase',
+      :ip => '86.150.65.37',
+      :email => 'tekin@tekin.co.uk',
+      :phone => '0161 123 4567'
     }
     @amount = 100
   end
@@ -25,7 +31,7 @@ class ProtxTest < Test::Unit::TestCase
     
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
-    assert_equal "1;{7307C8A9-766E-4BD1-AC41-3C34BB83F7E5};5559;WIUMDJS607", response.authorization
+    assert_equal "1;B8AE1CF6-9DEF-C876-1BB4-9B382E6CE520;4193753;OHMETD7DFK;purchase", response.authorization
     assert_success response
   end
 
@@ -103,20 +109,31 @@ class ProtxTest < Test::Unit::TestCase
 
   def successful_purchase_response
     <<-RESP
-VPSProtocol=2.22 
+VPSProtocol=2.23
 Status=OK
-StatusDetail=VSP Direct transaction from VSP Simulator.
-VPSTxId={7307C8A9-766E-4BD1-AC41-3C34BB83F7E5}
-SecurityKey=WIUMDJS607
-TxAuthNo=5559
+StatusDetail=0000 : The Authorisation was Successful.
+VPSTxId=B8AE1CF6-9DEF-C876-1BB4-9B382E6CE520
+SecurityKey=OHMETD7DFK
+TxAuthNo=4193753
 AVSCV2=NO DATA MATCHES
 AddressResult=NOTMATCHED
 PostCodeResult=MATCHED
 CV2Result=NOTMATCHED
+3DSecureStatus=NOTCHECKED
     RESP
   end
   
   def unsuccessful_purchase_response
-    "VPSProtocol=2.22\r\nStatus=NOTAUTHED\r\nStatusDetail=VSP Direct transaction from VSP Simulator.\r\nVPSTxId={7BBA9078-8489-48CD-BF0D-10B0E6B0EF30}\r\nSecurityKey=DKDYLDYLXV\r\nAVSCV2=ALL MATCH\r\nAddressResult=MATCHED\r\nPostCodeResult=MATCHED\r\nCV2Result=MATCHED\r\n"
+    <<-RESP
+VPSProtocol=2.23
+Status=NOTAUTHED
+StatusDetail=VSP Direct transaction from VSP Simulator.
+VPSTxId=7BBA9078-8489-48CD-BF0D-10B0E6B0EF30
+SecurityKey=DKDYLDYLXV
+AVSCV2=ALL MATCH
+AddressResult=MATCHED
+PostCodeResult=MATCHED
+CV2Result=MATCHED
+    RESP
   end
 end

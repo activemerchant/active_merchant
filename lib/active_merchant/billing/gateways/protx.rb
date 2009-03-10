@@ -15,7 +15,8 @@ module ActiveMerchant #:nodoc:
         :credit => 'REFUND',
         :authorization => 'DEFERRED',
         :capture => 'RELEASE',
-        :void => 'VOID'
+        :void => 'VOID',
+        :abort => 'ABORT'
       }
       
       CREDIT_CARDS = {
@@ -99,9 +100,11 @@ module ActiveMerchant #:nodoc:
         post = {}
         
         add_reference(post, identification)
-        commit(:void, post)
+        action = abort_or_void_from(identification)
+
+        commit(action, post)
       end
-      
+
       # Crediting requires a new order_id to passed in, as well as a description
       def credit(money, identification, options = {})
         requires!(options, :order_id, :description)
@@ -145,29 +148,35 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        add_pair(post, :BillingEmail, options[:email][0,255]) unless options[:email].blank?
-        add_pair(post, :ContactNumber, options[:phone].gsub(/[^0-9+]/, '')[0,20]) unless options[:phone].blank?
-        add_pair(post, :ContactFax, options[:fax].gsub(/[^0-9+]/, '')[0,20]) unless options[:fax].blank?
+        add_pair(post, :CustomerEMail, options[:email][0,255]) unless options[:email].blank?
+        add_pair(post, :BillingPhone, options[:phone].gsub(/[^0-9+]/, '')[0,20]) unless options[:phone].blank?
         add_pair(post, :ClientIPAddress, options[:ip])
       end
 
       def add_address(post, options)
-        address = options[:billing_address] || options[:address]
-        shipping_address = options[:shipping_address] || ''
+        if billing_address = options[:billing_address] || options[:address]
+          first_name, last_name = parse_first_and_last_name(billing_address[:name])
+          add_pair(post, :BillingSurname, last_name)
+          add_pair(post, :BillingFirstnames, first_name)
+          add_pair(post, :BillingAddress1, billing_address[:address1])
+          add_pair(post, :BillingAddress2, billing_address[:address2])
+          add_pair(post, :BillingCity, billing_address[:city])
+          add_pair(post, :BillingState, billing_address[:state]) if billing_address[:country] == 'US'
+          add_pair(post, :BillingCountry, billing_address[:country])
+          add_pair(post, :BillingPostCode, billing_address[:zip])
+        end
         
-        return if address.blank?
-
-        billing = "#{address[:address1]}\n#{address[:address2]}\n#{address[:city]}\n#{address[:state]}"
-
-        add_pair(post, :BillingAddress, billing)
-        add_pair(post, :BillingPostcode, address[:zip])
-
-        return if shipping_address.blank?
-
-        shipping = "#{shipping_address[:address1]}\n#{shipping_address[:address2]}\n#{shipping_address[:city]}\n#{shipping_address[:state]}"
-
-        add_pair(post, :DeliveryAddress, shipping)
-        add_pair(post, :DeliveryPostcode, shipping_address[:zip])
+        if shipping_address = options[:shipping_address] || billing_address
+          first_name, last_name = parse_first_and_last_name(shipping_address[:name])
+          add_pair(post, :DeliverySurname, last_name)
+          add_pair(post, :DeliveryFirstnames, first_name)
+          add_pair(post, :DeliveryAddress1, shipping_address[:address1])
+          add_pair(post, :DeliveryAddress2, shipping_address[:address2])
+          add_pair(post, :DeliveryCity, shipping_address[:city])
+          add_pair(post, :BillingState, shipping_address[:state]) if shipping_address[:country] == 'US'
+          add_pair(post, :DeliveryCountry, shipping_address[:country])
+          add_pair(post, :DeliveryPostCode, shipping_address[:zip])
+        end
       end
 
       def add_invoice(post, options)
@@ -222,7 +231,7 @@ module ActiveMerchant #:nodoc:
           
         Response.new(response["Status"] == APPROVED, message_from(response), response,
           :test => test?,
-          :authorization => authorization_from(response, parameters),
+          :authorization => authorization_from(response, parameters, action),
           :avs_result => { 
             :street_match => AVS_CVV_CODE[ response["AddressResult"] ],
             :postal_match => AVS_CVV_CODE[ response["PostCodeResult"] ],
@@ -231,13 +240,19 @@ module ActiveMerchant #:nodoc:
         )
       end
       
-      def authorization_from(response, params)
+      def authorization_from(response, params, action)
          [ params[:VendorTxCode],
            response["VPSTxId"],
            response["TxAuthNo"],
-           response["SecurityKey"] ].join(";")
+           response["SecurityKey"],
+           action ].join(";")
       end
-      
+
+      def abort_or_void_from(identification)
+        original_transaction = identification.split(';').last
+        original_transaction == 'authorization' ? :abort : :void
+      end
+
       def url_for(action)
         simulate ? build_simulator_url(action) : build_url(action)
       end
@@ -260,7 +275,7 @@ module ActiveMerchant #:nodoc:
         parameters.update(
           :Vendor => @options[:login],
           :TxType => TRANSACTIONS[action],
-          :VPSProtocol => "2.22"
+          :VPSProtocol => "2.23"
         )
         
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
@@ -277,6 +292,14 @@ module ActiveMerchant #:nodoc:
 
       def add_pair(post, key, value, options = {})
         post[key] = value if !value.blank? || options[:required]
+      end
+
+      def parse_first_and_last_name(value)
+        name = value.to_s.split(' ')
+        
+        last_name = name.pop || ''
+        first_name = name.join(' ')
+        [ first_name[0,20], last_name[0,20] ]
       end
     end
   end
