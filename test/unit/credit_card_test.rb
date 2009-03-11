@@ -152,6 +152,13 @@ class CreditCardTest < Test::Unit::TestCase
     assert_valid @visa
   end
 
+
+  def test_should_be_valid_with_start_month_and_year_as_string
+    @solo.start_month = '2'
+    @solo.start_year = '2007'
+    assert_valid @solo
+  end
+
   def test_should_identify_wrong_cardtype
     c = credit_card(:type => 'master')
     assert_not_valid c
