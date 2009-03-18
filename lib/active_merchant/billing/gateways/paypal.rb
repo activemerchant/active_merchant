@@ -11,9 +11,9 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside'
       self.display_name = 'PayPal Website Payments Pro (US)'
       
-      def authorize(money, credit_card, options = {})
+      def authorize(money, credit_card_or_referenced_id, options = {})
         requires!(options, :ip)
-        commit 'DoDirectPayment', build_sale_or_authorization_request('Authorization', money, credit_card, options)
+        commit define_transaction_type(credit_card_or_referenced_id), build_sale_or_authorization_request('Authorization', money, credit_card_or_referenced_id, options)
       end
 
       def purchase(money, credit_card_or_referenced_id, options = {})
