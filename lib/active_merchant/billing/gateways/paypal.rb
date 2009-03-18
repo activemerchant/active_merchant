@@ -11,14 +11,14 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside'
       self.display_name = 'PayPal Website Payments Pro (US)'
       
-      def authorize(money, credit_card, options = {})
+      def authorize(money, credit_card_or_reference_id, options = {})
         requires!(options, :ip)
-        commit 'DoDirectPayment', build_sale_or_authorization_request('Authorization', money, credit_card, options)
+        build_sale_or_authorization_request('Authorization', money, credit_card_or_reference_id, options)
       end
 
-      def purchase(money, credit_card, options = {})
+      def purchase(money, credit_card_or_reference_id, options = {})
         requires!(options, :ip)
-        commit 'DoDirectPayment', build_sale_or_authorization_request('Sale', money, credit_card, options)
+        build_sale_or_authorization_request('Sale', money, credit_card_or_reference_id, options)
       end
       
       def express
@@ -26,7 +26,51 @@ module ActiveMerchant #:nodoc:
       end
       
       private
-      def build_sale_or_authorization_request(action, money, credit_card, options)
+      
+      def build_sale_or_authorization_request(action, money, credit_card_or_reference_id, options = {})
+        if(credit_card_or_reference_id.is_a?(String))
+          commit 'DoReferenceTransaction', build_reference_transaction_request(action, money, credit_card_or_reference_id, options)
+        else
+          commit 'DoDirectPayment', build_credit_card_transaction_request(action, money, credit_card_or_reference_id, options)
+        end
+      end
+      
+      def build_reference_transaction_request(action, money, reference_id, options)
+        currency_code = options[:currency] || currency(money)
+       
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.tag! 'DoReferenceTransactionReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'DoReferenceTransactionRequest', 'xmlns:n2' => EBAY_NAMESPACE do
+            xml.tag! 'n2:Version', API_VERSION
+            xml.tag! 'n2:DoReferenceTransactionRequestDetails' do
+              xml.tag! 'n2:ReferenceID', reference_id
+              xml.tag! 'n2:PaymentAction', action
+              xml.tag! 'n2:PaymentDetails' do
+                xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => currency_code
+                
+                # All of the values must be included together and add up to the order total
+                if [:subtotal, :shipping, :handling, :tax].all?{ |o| options.has_key?(o) }
+                  xml.tag! 'n2:ItemTotal', amount(options[:subtotal]), 'currencyID' => currency_code
+                  xml.tag! 'n2:ShippingTotal', amount(options[:shipping]),'currencyID' => currency_code
+                  xml.tag! 'n2:HandlingTotal', amount(options[:handling]),'currencyID' => currency_code
+                  xml.tag! 'n2:TaxTotal', amount(options[:tax]), 'currencyID' => currency_code
+                end
+                
+                xml.tag! 'n2:NotifyURL', options[:notify_url]
+                xml.tag! 'n2:OrderDescription', options[:description]
+                xml.tag! 'n2:InvoiceID', options[:order_id]
+                xml.tag! 'n2:ButtonSource', application_id.to_s.slice(0,32) unless application_id.blank? 
+                
+                add_address(xml, 'n2:ShipToAddress', options[:shipping_address]) if options[:shipping_address]
+              end
+              xml.tag! 'n2:IPAddress', options[:ip]
+            end
+          end
+        end
+        xml.target!
+      end
+      
+      def build_credit_card_transaction_request(action, money, credit_card, options)
         billing_address = options[:billing_address] || options[:address]
         currency_code = options[:currency] || currency(money)
        
