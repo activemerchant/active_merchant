@@ -86,7 +86,7 @@ spec = Gem::Specification.new do |s|
   s.email = "tobi@leetsoft.com"
   s.homepage = "http://activemerchant.org/"
   
-  s.add_dependency('activesupport', '>= 1.4.1')
+  s.add_dependency('activesupport', '>= 2.3.2')
   s.add_dependency('builder', '>= 2.0.0')
   
   s.signing_key = ENV['GEM_PRIVATE_KEY']
