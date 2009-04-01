@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
       LIVE_URL = 'https://www3.moneris.com/gateway2/servlet/MpgRequest'
       
       self.supported_countries = ['CA']
-      self.supported_cardtypes = [:visa, :master]
+      self.supported_cardtypes = [:visa, :master, :american_express]
       self.homepage_url = 'http://www.moneris.com/'
       self.display_name = 'Moneris'
   
