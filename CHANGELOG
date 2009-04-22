@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for Guernsey to country.rb [cody]
 * Add American Express to the MonerisGateway [cody]
 * Use :words_connector instead of connector in RequiresParameters [cody]
 * Fixed CreditCard not validating start_month and start_year when set as string [Tekin]
