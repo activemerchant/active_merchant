@@ -4,7 +4,6 @@ require 'rake/testtask'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'rake/contrib/rubyforgepublisher'
-require File.dirname(__FILE__) + '/lib/tasks/cia'
 require File.dirname(__FILE__) + '/lib/support/gateway_support'
 
 
