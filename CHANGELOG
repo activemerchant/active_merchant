@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.4.2 (April 24, 2009)
+
 * Fix typo in Authorize.net CIM [infused]
 * Add missing ISO countries [Edward Ocampo-Gooding]
 * Add support for Guernsey to country.rb [cody]
