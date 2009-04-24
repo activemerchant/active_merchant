@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Fix typo in Authorize.net CIM [infused]
+* Add missing ISO countries [Edward Ocampo-Gooding]
 * Add support for Guernsey to country.rb [cody]
 * Add American Express to the MonerisGateway [cody]
 * Use :words_connector instead of connector in RequiresParameters [cody]
