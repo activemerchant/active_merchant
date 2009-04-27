@@ -20,6 +20,9 @@ module ActiveMerchant #:nodoc:
 
       RETURN_CODES = %w[ ACK NOK ]
 
+      # it seems that Wirecard only allows phone numbers with a format like this: +xxx(yyy)zzz-zzzz-ppp
+      VALID_PHONE_FORMAT = /\+\d{3}(\(?\d{3}\)?)?\d{3}-\d{4}-\d{3}/
+      
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       # TODO: Check supported countries
       self.supported_countries = ['DE']
@@ -202,9 +205,9 @@ module ActiveMerchant #:nodoc:
 	          xml.tag! 'Address2', address[:address2] if address[:address2]
 	          xml.tag! 'City', address[:city]
 	          xml.tag! 'ZipCode', address[:zip]
-	          xml.tag! 'State', address[:state].blank? ? 'N/A' : address[:state]
+	          xml.tag! 'State', address[:state].upcase if address[:country] =~ /^(us|ca)$/i
 	          xml.tag! 'Country', address[:country]
-	          xml.tag! 'Phone', address[:phone]
+            xml.tag! 'Phone', address[:phone] if address[:phone] =~ VALID_PHONE_FORMAT
 	          xml.tag! 'Email', address[:email]
 	        end
 	      end

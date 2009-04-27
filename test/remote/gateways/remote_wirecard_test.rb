@@ -18,6 +18,18 @@ class RemoteWirecardTest < Test::Unit::TestCase
       :description => 'Wirecard remote test purchase',
       :email => 'soleone@example.com'
     }
+    
+    @german_address = {
+      :name     => 'Jim Deutsch',
+      :address1 => '1234 Meine Street',
+      :company  => 'Widgets Inc',
+      :city     => 'Koblenz',
+      :state    => 'Rheinland-Pfalz',
+      :zip      => '56070',
+      :country  => 'DE',
+      :phone    => '0261 12345 23',
+      :fax      => '0261 12345 23-4'
+    }
   end
 
   # Success tested
@@ -41,6 +53,29 @@ class RemoteWirecardTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    puts response.message
+    # puts response.message
+    assert_success response
+    assert response.message[/THIS IS A DEMO/]
+  end
+  
+  def test_successful_purchase_with_german_address_german_state_and_german_phone
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:billing_address => @german_address))
+
+    assert_success response
+    assert response.message[/THIS IS A DEMO/]
+  end
+    
+  def test_successful_purchase_with_german_address_no_state_and_invalid_phone
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:billing_address => @german_address.merge({:state => nil, :phone => '1234'})))
+
+    assert_success response
+    assert response.message[/THIS IS A DEMO/]
+  end
+  
+  def test_successful_purchase_with_german_address_and_valid_phone
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:billing_address => @german_address.merge({:phone => '+049-261-1234-123'})))
+  
     assert_success response
     assert response.message[/THIS IS A DEMO/]
   end
