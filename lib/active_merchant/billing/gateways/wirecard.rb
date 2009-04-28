@@ -211,7 +211,11 @@ module ActiveMerchant #:nodoc:
 	          xml.tag! 'Address2', address[:address2] if address[:address2]
 	          xml.tag! 'City', address[:city]
 	          xml.tag! 'ZipCode', address[:zip]
-	          xml.tag! 'State', address[:state].upcase if address[:state] && address[:country] =~ /^(us|ca)$/i
+	          
+	          if address[:state] =~ /[A-Za-z]{2}/ && address[:country] =~ /^(us|ca)$/i
+	            xml.tag! 'State', address[:state].upcase
+	          end
+	          
 	          xml.tag! 'Country', address[:country]
             xml.tag! 'Phone', address[:phone] if address[:phone] =~ VALID_PHONE_FORMAT
 	          xml.tag! 'Email', address[:email]
