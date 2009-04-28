@@ -53,7 +53,6 @@ class RemoteWirecardTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    puts response.message
     # puts response.message
     assert_success response
     assert response.message[/THIS IS A DEMO/]
