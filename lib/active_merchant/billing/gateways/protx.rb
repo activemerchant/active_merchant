@@ -173,7 +173,7 @@ module ActiveMerchant #:nodoc:
           add_pair(post, :DeliveryAddress1, shipping_address[:address1])
           add_pair(post, :DeliveryAddress2, shipping_address[:address2])
           add_pair(post, :DeliveryCity, shipping_address[:city])
-          add_pair(post, :BillingState, shipping_address[:state]) if shipping_address[:country] == 'US'
+          add_pair(post, :DeliveryState, shipping_address[:state]) if shipping_address[:country] == 'US'
           add_pair(post, :DeliveryCountry, shipping_address[:country])
           add_pair(post, :DeliveryPostCode, shipping_address[:zip])
         end

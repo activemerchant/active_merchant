@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix typo in Protx DeliveryState field [cody]
 * Ignore Wirecard state unless it is 2 characters [Cody]
 * Update Wirecard to make country and state processing more robust [Soleone]
 * Update ProTX to use the latest v2.23 protocol [Tekin]
