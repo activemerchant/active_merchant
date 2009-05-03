@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
 			self.display_name = 'Merchant e-Solutions'
       
 			def initialize(options = {})
-				#requires!(options, :login, :password)
+				requires!(options, :login, :password)
 				@options = options
 				super
 			end  

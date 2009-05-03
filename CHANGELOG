@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for Merchant e-Solutions Gateway [Zac Williams, Robby Russell]
 * Fix Braintree unit test [cody]
 * Add support for checks to SmartPs gateways [jvoohris]
 * Extract SmartPs for Braintree and Transax [mmangino]
