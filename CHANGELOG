@@ -1,5 +1,8 @@
 = ActiveMerchant CHANGELOG
 
+* Fix Braintree unit test [cody]
+* Add support for checks to SmartPs gateways [jvoohris]
+* Extract SmartPs for Braintree and Transax [mmangino]
 * Ruby 1.9 compatibility [bschwartz]
 * Update Payflow Express to handle Street2 element [James MacAulay]
 * Fix typo in Protx DeliveryState field [cody]

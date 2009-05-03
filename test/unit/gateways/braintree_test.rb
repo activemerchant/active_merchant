@@ -83,7 +83,7 @@ class BraintreeTest < Test::Unit::TestCase
                       :account_number => '123456789012',
                       :account_holder_type => 'personal',
                       :account_type => 'checking')
-    @gateway.send(:add_check, post, check)
+    @gateway.send(:add_check, post, check, {})
     assert_equal %w[account_holder_type account_type checkaba checkaccount checkname payment], post.stringify_keys.keys.sort
   end
   
