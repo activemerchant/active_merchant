@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for InstaPay gateway [brahma]
 * Cleanup PaymentExpress reference purchases and turn on AVS [cody]
 * Add reference purchases and authorizations to PaymentExpress [mocra]
 * Add support for Merchant e-Solutions Gateway [Zac Williams, Robby Russell]
