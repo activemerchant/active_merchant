@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Ruby 1.9 compatibility [bschwartz]
 * Update Payflow Express to handle Street2 element [James MacAulay]
 * Fix typo in Protx DeliveryState field [cody]
 * Ignore Wirecard state unless it is 2 characters [Cody]
