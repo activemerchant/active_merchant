@@ -5,7 +5,7 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
   def setup
     @gateway = PaymentExpressGateway.new(fixtures(:payment_express))
     
-    @credit_card = credit_card
+    @credit_card = credit_card('4111111111111111')
 
     @options = { 
       :order_id => generate_unique_id,

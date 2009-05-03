@@ -109,14 +109,14 @@ class PaymentExpressTest < Test::Unit::TestCase
   def test_avs_result_not_supported
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
     
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @visa, @options)
     assert_nil response.avs_result['code']
   end
   
   def test_cvv_result_not_supported
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
 
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @visa, @options)
     assert_nil response.cvv_result['code']
   end
   

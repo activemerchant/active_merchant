@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Cleanup PaymentExpress reference purchases and turn on AVS [cody]
+* Add reference purchases and authorizations to PaymentExpress [mocra]
 * Add support for Merchant e-Solutions Gateway [Zac Williams, Robby Russell]
 * Fix Braintree unit test [cody]
 * Add support for checks to SmartPs gateways [jvoohris]
