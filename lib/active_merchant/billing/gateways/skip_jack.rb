@@ -1,3 +1,6 @@
+#!ruby19
+# encoding: utf-8
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SkipJackGateway < Gateway
@@ -127,9 +130,9 @@ module ActiveMerchant #:nodoc:
         '-88' => 'Point of Sale check account number missing or invalid Point of Sale check account number is invalid or empty.',
         '-89' => 'Point of Sale check MICR missing or invalid Point of Sale check MICR invalid or empty.',
         '-90' => 'Point of Sale check number missing or invalid Point of Sale check number invalid or empty.',
-        '-91' => 'CVV2 Invalid or empty “Make CVV a required field feature” enabled (New feature 01 April 2006) in the Merchant Account Setup interface but no CVV code was sent in the transaction data.',
+        '-91' => 'CVV2 Invalid or empty "Make CVV a required field feature" enabled (New feature 01 April 2006) in the Merchant Account Setup interface but no CVV code was sent in the transaction data.',
         '-92' => 'Approval Code Invalid Approval Code Invalid. Approval Code is a 6 digit code.',
-        '-93' => 'Blind Credits Request Refused “Allow Blind Credits” option must be enabled on the Skipjack Merchant Account.',
+        '-93' => 'Blind Credits Request Refused "Allow Blind Credits" option must be enabled on the Skipjack Merchant Account.',
         '-94' => 'Blind Credits Failed',
         '-95' => 'Voice Authorization Request Refused Voice Authorization option must be enabled on the Skipjack Merchant Account.',
         '-96' => 'Voice Authorizations Failed',
