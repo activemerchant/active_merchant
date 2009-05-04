@@ -59,6 +59,10 @@ ideal_ing_postbank:
   pem: |--
     PASTE YOUR PEM FILE HERE
 
+instapay:
+  login: TEST0
+  password:
+
 linkpoint:
   login: STOREID
   pem: |--
