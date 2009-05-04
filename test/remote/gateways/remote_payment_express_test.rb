@@ -21,7 +21,6 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal "APPROVED", response.message
     assert_success response
-    assert response.test?
     assert_not_nil response.authorization
   end
   
@@ -29,7 +28,6 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal "APPROVED", response.message
     assert_success response
-    assert response.test?
     assert_not_nil response.authorization
   end
   
@@ -37,14 +35,12 @@ class RemotePaymentExpressTest < Test::Unit::TestCase
     assert response = @gateway.purchase(176, @credit_card, @options)
     assert_equal 'DECLINED', response.message
     assert_failure response
-    assert response.test?
   end
   
   def test_successful_authorization
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal "APPROVED", response.message
     assert_success response
-    assert response.test?
     assert_not_nil response.authorization
   end
 
