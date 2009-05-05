@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Clean up the test helper [cody]
 * Fix DataCash unit test that was making a remote call [cody]
 * Don't check Request#test? for remote PaymentExpress tests because their test environment has changed [cody]
 * Update Instapay gateway to support capture and add address, order, and invoice fields. Add support for CVV and AVS response [cody]
