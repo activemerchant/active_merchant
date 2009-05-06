@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Use SHIPTOSTREET2 element instead of STREET2 element for Payflow Express Uk address [cody]
 * Clean up the test helper [cody]
 * Fix DataCash unit test that was making a remote call [cody]
 * Don't check Request#test? for remote PaymentExpress tests because their test environment has changed [cody]
