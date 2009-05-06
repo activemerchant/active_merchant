@@ -101,7 +101,7 @@ class PayflowExpressTest < Test::Unit::TestCase
     assert_equal 'Joe Smith', address['name']
     assert_nil address['company']
     assert_equal '111 Main St.', address['address1']
-    assert_equal 'Apt. 2', address['address2']
+    assert_nil address['address2']
     assert_equal 'San Jose', address['city']
     assert_equal 'CA', address['state']
     assert_equal '95100', address['zip']
@@ -138,7 +138,6 @@ class PayflowExpressTest < Test::Unit::TestCase
           <ShipTo>
             <Address>
               <Street>111 Main St.</Street>
-              <Street2>Apt. 2</Street2>
               <City>San Jose</City>
               <State>CA</State>
               <Zip>95100</Zip>
