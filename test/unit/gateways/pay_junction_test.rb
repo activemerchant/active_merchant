@@ -1,5 +1,5 @@
 require 'test/unit'
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class PayJunctionTest < Test::Unit::TestCase
   def setup

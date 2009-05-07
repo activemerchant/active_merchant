@@ -1,6 +1,6 @@
 # Author::    MoneySpyder, http://moneyspyder.co.uk
 
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class RemotePslCardTest < Test::Unit::TestCase
   

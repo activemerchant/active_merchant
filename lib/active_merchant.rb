@@ -21,20 +21,15 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
                     
-$:.unshift(File.dirname(__FILE__))      
+$:.unshift File.dirname(__FILE__)
 
 # Include rails' active support for all the core extensions we love
 begin
   require 'active_support'
 rescue LoadError
   require 'rubygems'
-  
-  if respond_to? :gem
-    gem 'activesupport', ">=2.0.0"
-    require 'active_support'
-  else
-    require_gem 'activesupport'
-  end
+  gem 'activesupport', ">=2.0.0"
+  require 'active_support'
 end
 
 begin
@@ -53,24 +48,12 @@ require 'active_merchant/lib/posts_data'
 require 'active_merchant/lib/post_data'
 require 'active_merchant/lib/requires_parameters'
 
-# Require the country class
 require 'active_merchant/lib/country'
-
-# Address Verification
 require 'active_merchant/billing/avs_result'
-
-# Card Verfication Code
 require 'active_merchant/billing/cvv_result'
-
-# CreditCard Utility class. 
 require 'active_merchant/billing/credit_card_methods'
 require 'active_merchant/billing/credit_card_formatting'
 require 'active_merchant/billing/credit_card'
-
 require 'active_merchant/billing/base'
-
-# Require the supported gateways
 require 'active_merchant/billing/gateways'
-
-# Require the supported integrations
 require 'active_merchant/billing/integrations'

@@ -4,7 +4,7 @@ require 'rake/testtask'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'rake/contrib/rubyforgepublisher'
-require File.dirname(__FILE__) + '/lib/support/gateway_support'
+require File.join(File.dirname(__FILE__), 'lib', 'support', 'gateway_support')
 
 
 PKG_VERSION = "1.4.2"
@@ -25,12 +25,14 @@ namespace :test do
   Rake::TestTask.new(:units) do |t|
     t.pattern = 'test/unit/**/*_test.rb'
     t.ruby_opts << '-rubygems'
+    t.libs << 'test'
     t.verbose = true
   end
 
   Rake::TestTask.new(:remote) do |t|
     t.pattern = 'test/remote/**/*_test.rb'
     t.ruby_opts << '-rubygems'
+    t.libs << 'test'
     t.verbose = true
   end
 
@@ -98,12 +100,6 @@ Rake::GemPackageTask.new(spec) do |p|
   p.need_zip = true
 end
 
-desc "Continuously watch unit tests"
-task :watch do
-  system("clear")
-  system("stakeout \"rake\" `find . -name '*.rb'`")
-end
-
 desc "Release the gems and docs to RubyForge"
 task :release => [ :publish, :upload_rdoc ]
 
@@ -155,6 +151,3 @@ namespace :gateways do
     end
   end
 end
-  
-  
-  

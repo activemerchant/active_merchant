@@ -17,7 +17,7 @@
 #
 # The LinkPoint staging server will also return different responses based
 # on the cent amount of the purhcase. Complete details can be found at
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 # http://sgserror.com/staging.php
 class LinkpointTest < Test::Unit::TestCase

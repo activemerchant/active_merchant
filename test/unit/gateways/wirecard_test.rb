@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class WirecardTest < Test::Unit::TestCase
   TEST_AUTHORIZATION_GUWID = 'C822580121385121429927'

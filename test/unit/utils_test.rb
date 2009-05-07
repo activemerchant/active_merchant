@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 
 class UtilsTest < Test::Unit::TestCase
   def test_unique_id_should_be_32_chars_and_alphanumeric

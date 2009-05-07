@@ -1,5 +1,5 @@
 # Author::    MoneySpyder, www.moneyspyder.co.uk
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class RemoteDataCashTest < Test::Unit::TestCase
 

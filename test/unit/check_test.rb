@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 
 class CheckTest < Test::Unit::TestCase
   VALID_ABA     = '111000025'

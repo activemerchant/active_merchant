@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 
 class MyPost < PostData
   self.required_fields = [ :ccnumber, :ccexp, :firstname, :lastname, :username, :password, :order_id, :key, :time ]
