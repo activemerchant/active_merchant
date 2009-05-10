@@ -130,9 +130,6 @@ module ActiveMerchant #:nodoc:
         self.class.name.scan(/\:\:(\w+)Gateway/).flatten.first
       end
       
-      # Return a String with the amount in the appropriate format
-      #--
-      # TODO Refactor this method. It's a tad on the ugly side.
       def amount(money)
         return nil if money.nil?
         cents = money.respond_to?(:cents) ? money.cents : money 
@@ -148,7 +145,6 @@ module ActiveMerchant #:nodoc:
         end
       end
       
-      # Ascertains the currency to be used on the money supplied.
       def currency(money)
         money.respond_to?(:currency) ? money.currency : self.default_currency
       end

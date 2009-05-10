@@ -44,11 +44,12 @@ require 'cgi'
 require 'active_merchant/lib/utils'
 require 'active_merchant/lib/error'
 require 'active_merchant/lib/validateable'
+require 'active_merchant/lib/connection'
 require 'active_merchant/lib/posts_data'
 require 'active_merchant/lib/post_data'
 require 'active_merchant/lib/requires_parameters'
-
 require 'active_merchant/lib/country'
+
 require 'active_merchant/billing/avs_result'
 require 'active_merchant/billing/cvv_result'
 require 'active_merchant/billing/credit_card_methods'
