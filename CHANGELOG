@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Don't setup the logger by default [cody]
 * Refactor ActiveMerchant::Connection out of the PostsData module. Add support for logging and wiredumping requests [cody]
 * Assume a valid load path when running tests [cody]
 * Use SHIPTOSTREET2 element instead of STREET2 element for Payflow Express Uk address [cody]
