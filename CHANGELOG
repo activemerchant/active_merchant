@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add shipping address to Authorize.net [Eric Tarn]
 * Don't setup the logger by default [cody]
 * Refactor ActiveMerchant::Connection out of the PostsData module. Add support for logging and wiredumping requests [cody]
 * Assume a valid load path when running tests [cody]

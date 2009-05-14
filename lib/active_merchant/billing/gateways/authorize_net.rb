@@ -334,7 +334,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-
         if address = options[:billing_address] || options[:address]
           post[:address] = address[:address1].to_s
           post[:company] = address[:company].to_s
@@ -343,6 +342,18 @@ module ActiveMerchant #:nodoc:
           post[:city]    = address[:city].to_s
           post[:country] = address[:country].to_s
           post[:state]   = address[:state].blank?  ? 'n/a' : address[:state]
+        end
+        
+        if address = options[:shipping_address]
+          post[:ship_to_first_name] = address[:first_name].to_s
+          post[:ship_to_last_name] = address[:last_name].to_s
+          post[:ship_to_address] = address[:address1].to_s
+          post[:ship_to_company] = address[:company].to_s
+          post[:ship_to_phone]   = address[:phone].to_s
+          post[:ship_to_zip]     = address[:zip].to_s
+          post[:ship_to_city]    = address[:city].to_s
+          post[:ship_to_country] = address[:country].to_s
+          post[:ship_to_state]   = address[:state].blank?  ? 'n/a' : address[:state]
         end
       end
 
