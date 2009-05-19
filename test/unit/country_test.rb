@@ -61,4 +61,10 @@ class CountryTest < Test::Unit::TestCase
       Country.find(nil)
     end
   end
+  
+  def test_country_names_are_alphabetized
+    country_names = Country::COUNTRIES.map { | each | each[:name] }
+    assert_equal(country_names.sort, country_names)
+  end
+  
 end
