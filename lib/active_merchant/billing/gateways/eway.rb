@@ -155,7 +155,11 @@ module ActiveMerchant #:nodoc:
     
         commit(money, post)
       end
-    
+      
+      def test?
+        @options[:test] || super
+      end
+      
       private                       
       def add_creditcard(post, creditcard)
         post[:CardNumber]  = creditcard.number
@@ -267,6 +271,7 @@ module ActiveMerchant #:nodoc:
           test ? TEST_URL : LIVE_URL
         end
       end
+      
     end
   end
 end
