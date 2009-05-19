@@ -583,6 +583,7 @@ module ActiveMerchant #:nodoc:
           xml.tag!('cardNumber', credit_card.number)
           # The expiration date of the credit card used for the subscription
           xml.tag!('expirationDate', expdate(credit_card))
+          xml.tag!('cardCode', credit_card.verification_value) if credit_card.verification_value?
         end
       end
       
