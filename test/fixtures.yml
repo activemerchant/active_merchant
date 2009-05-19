@@ -75,6 +75,11 @@ epay:
 eway:
   login: '87654321'
 
+eway_managed:
+  login: '87654321'
+  username: 'test@eway.com.au'
+  password: 'test123'
+
 # Working credentials, no need to replace
 exact:
   login: "A00427-01" 

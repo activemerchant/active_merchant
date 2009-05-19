@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Added support for storing cards in eWay [duffomelia]
 * Fixed a few things missed in the Orbital merge [ntalbott]
 * Add Orbital gateway [ntalbott]
 * Test deprecation warnings; add deprecation line numbers [ntabott]

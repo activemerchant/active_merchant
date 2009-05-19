@@ -42,6 +42,8 @@ module ActiveMerchant #:nodoc:
       
       connection.pem          = @options[:pem] if @options
       connection.pem_password = @options[:pem_password] if @options
+
+      connection.ignore_http_status = @options[:ignore_http_status] if @options
       
       connection.request(method, data, headers)
     end
