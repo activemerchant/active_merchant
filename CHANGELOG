@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Don't use Time.parse for the ExpiryDate [cody]
 * Add support for CVV code to Authorize.net CIM [Guy Naor]
 * Add shipping address to Authorize.net [Eric Tarn]
 * Don't setup the logger by default [cody]
