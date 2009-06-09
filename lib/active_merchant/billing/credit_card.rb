@@ -46,6 +46,9 @@ module ActiveMerchant #:nodoc:
       # Essential attributes for a valid, non-bogus creditcards
       attr_accessor :number, :month, :year, :type, :first_name, :last_name
       
+      # Track data for card-present transactions
+      attr_accessor :track2
+      
       # Required for Switch / Solo cards
       attr_accessor :start_month, :start_year, :issue_number
 

@@ -14,6 +14,10 @@ authorize_net:
   login: X
   password: Y
 
+authorize_net_card_present:
+  login: X
+  password: Y
+
 beanstream:
   login: merchant id
   user: username
