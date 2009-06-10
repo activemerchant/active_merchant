@@ -34,7 +34,7 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
   end
   
   def test_expired_credit_card
-    @credit_card.year = 2004 
+    @credit_card.year = 2004
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
@@ -99,12 +99,14 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card)
         
     assert_equal Response, response.class
-    assert_equal ["avs_result_code",
-                  "card_code",
-                  "response_code",
-                  "response_reason_code",
-                  "response_reason_text",
-                  "transaction_id"], response.params.keys.sort
+    assert_equal %w( authorization_code
+                     avs_result_code
+                     card_code
+                     response_code
+                     response_reason_code
+                     response_reason_text
+                     transaction_id ), 
+                     response.params.keys.sort
 
     assert_match(/The merchant login ID or password is invalid/, response.message)
     
@@ -120,12 +122,14 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card)
         
     assert_equal Response, response.class
-    assert_equal ["avs_result_code",
-                  "card_code",
-                  "response_code",
-                  "response_reason_code",
-                  "response_reason_text",
-                  "transaction_id"], response.params.keys.sort
+    assert_equal %w( authorization_code
+                     avs_result_code
+                     card_code
+                     response_code
+                     response_reason_code
+                     response_reason_text
+                     transaction_id ), 
+                     response.params.keys.sort
   
     assert_match(/The merchant login ID or password is invalid/, response.message)
     

@@ -109,9 +109,11 @@ module ActiveMerchant
       def post_data(action, parameters = {})
         post = {}
 
+        post[:cpversion]        = API_VERSION
         post[:login]            = @options[:login]
         post[:tran_key]         = @options[:password]
-        post[:cpversion]        = API_VERSION
+        post[:market_type]      = 2 # retail
+        post[:device_type]      = 7 # wireless POS
         post[:type]             = action
         post[:response_format]  = 1
         post[:delim_char]       = ","

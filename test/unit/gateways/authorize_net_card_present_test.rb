@@ -99,7 +99,7 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
 
     assert data = @gateway.send(:post_data, 'AUTH_ONLY', params)
     minimum_requirements.each do |key|
-      assert_not_nil(data =~ /x_#{key}=/)
+      assert_match /x_#{key}=/, data
     end
   end
   
@@ -135,7 +135,7 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
   private
 
   def minimum_requirements
-    %w(cpversion response_format delim_char encap_char login tran_key amount card_num exp_date type)
+    %w(cpversion login tran_key market_type device_type response_format delim_char encap_char amount card_num exp_date type)
   end
   
   def failed_credit_response
