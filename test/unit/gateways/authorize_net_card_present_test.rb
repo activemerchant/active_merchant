@@ -2,10 +2,12 @@ require 'test_helper'
 
 class AuthorizeNetCardPresentTest < Test::Unit::TestCase
   def setup
-    @gateway = AuthorizeNetCardPresentGateway.new(
+    @gateway_options = {
       :login => 'X',
-      :password => 'Y'
-    )
+      :password => 'Y',
+      :device_type => AuthorizeNetCardPresentGateway::DEVICE_TYPES[:unknown],
+    }
+    @gateway = AuthorizeNetCardPresentGateway.new(@gateway_options)
     @amount = 100
     @credit_card = credit_card
     @subscription_id = '100748'
@@ -91,15 +93,20 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
   end
   
   def test_purchase_meets_minimum_requirements
-    params = { 
-      :amount => "1.01",
-    }                                                         
-
+    params = { :amount => "1.01" }
     @gateway.send(:add_creditcard, params, @credit_card)
-
     assert data = @gateway.send(:post_data, 'AUTH_ONLY', params)
     minimum_requirements.each do |key|
       assert_match /x_#{key}=/, data
+    end
+  end
+  
+  def test_purchase_includes_values_from_gateway_options
+    params = { :amount => "1.01" }
+    @gateway.send(:add_creditcard, params, @credit_card)
+    assert data = @gateway.send(:post_data, 'AUTH_ONLY', params)
+    [:login, :password, :device_type].each do |key|
+      assert_match /x_[a-z_]+=#{@gateway_options[key]}/, data
     end
   end
   

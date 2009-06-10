@@ -7,7 +7,24 @@ module ActiveMerchant
       # There is no test-only endpoint
       self.test_url = 'https://cardpresent.authorize.net/gateway/transact.dll'
       self.live_url = 'https://cardpresent.authorize.net/gateway/transact.dll'
-
+      
+      # Only one supported market type
+      MARKET_TYPE_RETAIL = 2
+      
+      # Device types
+      DEVICE_TYPES = {
+        :unknown => 1,
+        :unattended_terminal => 2,
+        :self_service_terminal => 3,
+        :electronic_cash_register => 4,
+        :pc_terminal => 5,
+        :airpay => 6,
+        :wireless_pos => 7,
+        :website => 8,
+        :dial_terminal => 9,
+        :virtual_terminal => 10,
+      }.freeze
+      
       # These differ from AuthorizeNetGateway
       RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT = 1, 2, 3
       AUTHORIZATION_CODE, AVS_RESULT_CODE, CARD_CODE_RESPONSE_CODE, TRANSACTION_ID = 4, 5, 6, 7
@@ -112,8 +129,8 @@ module ActiveMerchant
         post[:cpversion]        = API_VERSION
         post[:login]            = @options[:login]
         post[:tran_key]         = @options[:password]
-        post[:market_type]      = 2 # retail
-        post[:device_type]      = 7 # wireless POS
+        post[:market_type]      = MARKET_TYPE_RETAIL
+        post[:device_type]      = @options[:device_type]
         post[:type]             = action
         post[:response_format]  = 1
         post[:delim_char]       = ","

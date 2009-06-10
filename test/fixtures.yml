@@ -17,6 +17,7 @@ authorize_net:
 authorize_net_card_present:
   login: X
   password: Y
+  device_type: 1
 
 beanstream:
   login: merchant id
