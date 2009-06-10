@@ -1,9 +1,9 @@
 require 'test_helper'
-require 'pp'
 
 class AuthorizeNetCardPresentTest < Test::Unit::TestCase
   def setup
-    Base.mode = :test
+    # To test authorize_and_void and authorize_and_capture you must configure a REAL CREDIT CARD
+    # Base.mode = :production # uncomment this line to test ONLY authorize_and_void and authorize_and_capture
     
     @gateway = AuthorizeNetCardPresentGateway.new(fixtures(:authorize_net_card_present))
     @amount = 100
@@ -15,6 +15,32 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store purchase'
     }
+  end
+  
+  # This test requires live production access with a real credit card.
+  # This test WILL MOVE MONEY.
+  def test_authorization_and_capture
+    return if Base.mode == :test # only tests in production mode
+    assert_equal Base.mode, :production
+    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+  
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+    assert_match(/This transaction has been approved/, capture.message)
+  end
+  
+  # This test requires live production access with a real credit card.
+  # This test will attempt to move money, but void the transaction.
+  def test_authorization_and_void
+    return if Base.mode == :test # only tests in production mode
+    assert_equal Base.mode, :production
+    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+  
+    assert void = @gateway.void(authorization.authorization)
+    assert_success void
+    assert_match(/This transaction has been approved/, void.message)
   end
   
   def test_successful_purchase
@@ -62,32 +88,6 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
     assert_success response
     assert_match(/This transaction has been approved/, response.message)
     assert response.authorization
-  end
-  
-  # This test requires live production access with a real credit card.
-  # This test WILL MOVE MONEY.
-  def test_authorization_and_capture
-    return if Base.mode == :test
-    assert Base.mode == :production
-    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success authorization
-  
-    assert capture = @gateway.capture(@amount, authorization.authorization)
-    assert_success capture
-    assert_match(/This transaction has been approved/, capture.message)
-  end
-  
-  # This test requires live production access with a real credit card.
-  # This test will attempt to move money, but void the transaction.
-  def test_authorization_and_void
-    return if Base.mode == :test
-    assert Base.mode == :production
-    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success authorization
-  
-    assert void = @gateway.void(authorization.authorization)
-    assert_success void
-    assert_match(/This transaction has been approved/, void.message)
   end
   
   def test_bad_login
