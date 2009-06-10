@@ -10,7 +10,7 @@ module ActiveMerchant
 
       # These differ from AuthorizeNetGateway
       RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT = 1, 2, 3
-      AVS_RESULT_CODE, CARD_CODE_RESPONSE_CODE, TRANSACTION_ID  = 5, 6, 7
+      AUTHORIZATION_CODE, AVS_RESULT_CODE, CARD_CODE_RESPONSE_CODE, TRANSACTION_ID = 4, 5, 6, 7
       
       # Captures the funds from an authorized transaction.
       #
@@ -61,6 +61,36 @@ module ActiveMerchant
       
       private
       
+      def commit(action, money, parameters)
+        parameters[:amount] = amount(money) unless action == 'VOID'
+
+        # Only activate the test_request when the :test option is passed in
+        parameters[:test_request] = @options[:test] ? 'TRUE' : 'FALSE'
+
+        url = test? ? self.test_url : self.live_url
+        data = ssl_post url, post_data(action, parameters)
+
+        response = parse(data)
+
+        message = message_from(response)
+
+        # Return the response. The authorization can be taken out of the transaction_id
+        # Test Mode on/off is something we have to parse from the response text.
+        # It usually looks something like this
+        #
+        #   (TESTMODE) Successful Sale
+        test_mode = test? || message =~ /TESTMODE/
+
+        Response.new(success?(response), message, response, 
+          :test => test_mode, 
+          :authorization => response[:transaction_id],
+          :authorization_code => response[:authorization_code],
+          :fraud_review => fraud_review?(response),
+          :avs_result => { :code => response[:avs_result_code] },
+          :cvv_result => response[:card_code]
+        )
+      end
+         
       def parse(body)
         fields = split(body)
 
@@ -68,6 +98,7 @@ module ActiveMerchant
           :response_code => fields[RESPONSE_CODE].to_i,
           :response_reason_code => fields[RESPONSE_REASON_CODE], 
           :response_reason_text => fields[RESPONSE_REASON_TEXT],
+          :authorization_code => fields[AUTHORIZATION_CODE],
           :avs_result_code => fields[AVS_RESULT_CODE],
           :transaction_id => fields[TRANSACTION_ID],
           :card_code => fields[CARD_CODE_RESPONSE_CODE]

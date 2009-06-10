@@ -18,6 +18,7 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal '508141794', response.authorization
+    assert_equal '000000', response.authorization_code
   end
   
   def test_successful_purchase
@@ -27,6 +28,7 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal '508141795', response.authorization
+    assert_equal '000000', response.authorization_code
   end
   
   def test_failed_authorization
@@ -36,6 +38,7 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
     assert_equal '2470195494', response.authorization
+    assert_equal '000000', response.authorization_code
   end
   
   def test_add_address_outsite_north_america
