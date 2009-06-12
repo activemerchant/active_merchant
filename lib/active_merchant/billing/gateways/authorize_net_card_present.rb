@@ -100,7 +100,11 @@ module ActiveMerchant
         
         # In test mode, authorizations are always "0"
         # So we fake them by taking the first 10 chars of the transaction MD5 hash.
-        authorization = response[:transaction_hash][0..9] if test_mode
+        authorization = if test_mode
+          response[:transaction_hash][0..9]
+        else
+          response[:transaction_id]
+        end
         
         Response.new(success?(response), message, response, 
           :test => test_mode, 
