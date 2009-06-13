@@ -21,6 +21,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {Efsnet}[http://www.concordefsnet.com/] - US
 * {eWAY}[http://www.eway.com.au/] - AU
 * {E-xact}[http://www.e-xact.com] - CA, US
+* {Iridium}[http://www.iridiumcorp.co.uk/] - UK, ES
 * {LinkPoint}[http://www.linkpoint.com/] - US
 * {Merchant e-Solutions}[http://merchante-solutions.com/] - US
 * {Modern Payments}[http://www.modpay.com] - US

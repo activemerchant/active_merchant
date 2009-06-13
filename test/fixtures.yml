@@ -79,6 +79,10 @@ instapay:
 jetpay:
   login: TESTTERMINAL
       
+iridium:
+    login: LOGIN
+    password: PASSWORD
+
 linkpoint:
   login: STOREID
   pem: |--
