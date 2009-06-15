@@ -82,7 +82,7 @@ module ActiveMerchant
         parameters[:amount] = amount(money) unless action == 'VOID'
 
         # Only activate the test_request when the :test option is passed in
-        parameters[:test_request] = @options[:test] ? 'TRUE' : 'FALSE'
+        parameters[:test_request] = (@options[:test] || test?) ? 'TRUE' : 'FALSE'
 
         url = test? ? self.test_url : self.live_url
         data = ssl_post url, post_data(action, parameters)
@@ -135,8 +135,6 @@ module ActiveMerchant
         post[:response_format]  = 1
         post[:delim_char]       = ","
         post[:encap_char]       = "$"
-        
-        parameters[:test_request]     = test? ? 'TRUE' : 'FALSE'
 
         request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
         request
