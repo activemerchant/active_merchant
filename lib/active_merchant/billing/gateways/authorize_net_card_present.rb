@@ -27,7 +27,7 @@ module ActiveMerchant
       
       # These differ from AuthorizeNetGateway
       RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT = 1, 2, 3
-      AUTHORIZATION_CODE, AVS_RESULT_CODE, CARD_CODE_RESPONSE_CODE, TRANSACTION_ID, TRANSACTION_HASH = 4, 5, 6, 7, 8
+      AUTHORIZATION_CODE, AVS_RESULT_CODE, CARD_CODE_RESPONSE_CODE, TRANSACTION_ID = 4, 5, 6, 7
       
       # Captures the funds from an authorized transaction.
       #
@@ -82,7 +82,7 @@ module ActiveMerchant
         parameters[:amount] = amount(money) unless action == 'VOID'
 
         # Only activate the test_request when the :test option is passed in
-        parameters[:test_request] = (@options[:test] || test?) ? 'TRUE' : 'FALSE'
+        parameters[:test_request] = @options[:test] ? 'TRUE' : 'FALSE'
 
         url = test? ? self.test_url : self.live_url
         data = ssl_post url, post_data(action, parameters)
@@ -97,14 +97,10 @@ module ActiveMerchant
         #
         #   (TESTMODE) Successful Sale
         test_mode = test? || message =~ /TESTMODE/
-        
-        # In test mode, authorizations are always "0"
-        # So we fake them by taking the first 10 chars of the transaction MD5 hash.
-        authorization = response[:transaction_hash][0..9] if test_mode
-        
+
         Response.new(success?(response), message, response, 
           :test => test_mode, 
-          :authorization => authorization,
+          :authorization => response[:transaction_id],
           :authorization_code => response[:authorization_code],
           :fraud_review => fraud_review?(response),
           :avs_result => { :code => response[:avs_result_code] },
@@ -122,8 +118,7 @@ module ActiveMerchant
           :authorization_code => fields[AUTHORIZATION_CODE],
           :avs_result_code => fields[AVS_RESULT_CODE],
           :transaction_id => fields[TRANSACTION_ID],
-          :transaction_hash => fields[TRANSACTION_HASH],
-          :card_code => fields[CARD_CODE_RESPONSE_CODE],
+          :card_code => fields[CARD_CODE_RESPONSE_CODE]
         }
         results
       end
@@ -141,6 +136,8 @@ module ActiveMerchant
         post[:delim_char]       = ","
         post[:encap_char]       = "$"
         
+        parameters[:test_request]     = test? ? 'TRUE' : 'FALSE'
+
         request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
         request
       end

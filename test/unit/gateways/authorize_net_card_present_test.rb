@@ -19,7 +19,7 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card)
     assert_instance_of Response, response
     assert_success response
-    assert_equal '77F2FA67D1', response.authorization
+    assert_equal '508141794', response.authorization
     assert_equal '000000', response.authorization_code
   end
   
@@ -29,7 +29,7 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_instance_of Response, response
     assert_success response
-    assert_equal '77F2FA67D1', response.authorization
+    assert_equal '508141795', response.authorization
     assert_equal '000000', response.authorization_code
   end
   
@@ -39,7 +39,7 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal '4DA279AC13', response.authorization
+    assert_equal '2470195494', response.authorization
     assert_equal '000000', response.authorization_code
   end
   
@@ -150,14 +150,14 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
   end
   
   def successful_authorization_response
-    '$1.0$,$1$,$1$,$This transaction has been approved.$,$000000$,$P$,$$,$77F2FA67D1$,$77F2FA67D1A4D2FBAB51F243D90BAB26$,$$'
+    '$1.0$,$1$,$1$,$This transaction has been approved.$,$000000$,$P$,$$,$508141794$,$77F2FA67D1A4D2FBAB51F243D90BAB26$,$$'
   end
   
   def successful_purchase_response
-    '$1.0$,$1$,$1$,$This transaction has been approved.$,$000000$,$P$,$$,$77F2FA67D1$,$77F2FA67D1A4D2FBAB51F243D90BAB26$,$$'
+    '$1.0$,$1$,$1$,$This transaction has been approved.$,$000000$,$P$,$$,$508141795$,$77F2FA67D1A4D2FBAB51F243D90BAB26$,$$'
   end
   
   def failed_authorization_response
-    '$1.0$,$2$,$2$,$This transaction has been declined.$,$000000$,$P$,$$,$4DA279AC13$,$4DA279AC13040A1CC8B0E5796D3E9D70$,$$'
+    '$1.0$,$2$,$2$,$This transaction has been declined.$,$000000$,$P$,$$,$2470195494$,$4DA279AC13040A1CC8B0E5796D3E9D70$,$$'
   end
 end

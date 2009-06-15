@@ -105,7 +105,6 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
                      response_code
                      response_reason_code
                      response_reason_text
-                     transaction_hash
                      transaction_id ), 
                      response.params.keys.sort
 
@@ -129,7 +128,6 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
                      response_code
                      response_reason_code
                      response_reason_text
-                     transaction_hash
                      transaction_id ), 
                      response.params.keys.sort
   
