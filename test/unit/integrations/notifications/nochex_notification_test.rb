@@ -46,6 +46,6 @@ class NochexNotificationTest < Test::Unit::TestCase
 
   private
   def http_raw_data
-    "transaction_date=27/09/2006 22:30:53&transaction_id=91191&order_id=11&from_email=test2@nochex.com&to_email=test1@nochex.com&amount=31.66&security_key=L254524366479818252491366&status=test&custom="
+    "transaction_date=27/09/2006 22:30:53&transaction_id=91191&order_id=11&from_email=test2@nochex.com&to_email=test1@nochex.com&amount=31.6600&security_key=L254524366479818252491366&status=test&custom="
   end  
 end
