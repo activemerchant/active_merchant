@@ -3,6 +3,7 @@
 * Add support for the Antigua based FirstPay payment gateway [Phil R]
 * Add support for PayPal reference transactions [kevin, John, Rahsun McAfee]
 * Add support for the MerchantWARE payment gateway [cody]
+* Rename Protx to SagePay [jstorimer]
 * Allow test mode for eWay gateway [Duff OMelia]
 * Don't use Time.parse for the ExpiryDate [cody]
 * Add support for CVV code to Authorize.net CIM [Guy Naor]

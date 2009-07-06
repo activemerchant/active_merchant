@@ -1,15 +1,15 @@
 require 'test_helper'
 
-# Some of the standard tests have been removed at Protx test
+# Some of the standard tests have been removed at SagePay test
 # server is pants and accepts anything and says Status=OK. (shift)
 # The tests for American Express will only pass if your account is 
 # American express enabled.
-class RemoteProtxTest < Test::Unit::TestCase
+class RemoteSagePayTest < Test::Unit::TestCase
   # set to true to run the tests in the simulated environment
-  ProtxGateway.simulate = false
+  SagePayGateway.simulate = false
   
   def setup
-    @gateway = ProtxGateway.new(fixtures(:protx))
+    @gateway = SagePayGateway.new(fixtures(:sage_pay))
     
     @amex = CreditCard.new(
       :number => '374200000000004',
@@ -201,9 +201,9 @@ class RemoteProtxTest < Test::Unit::TestCase
   end
   
   def test_invalid_login
-    message = ProtxGateway.simulate ? 'VSP Simulator cannot find your vendor name.  Ensure you have have supplied a Vendor field with your VSP Vendor name assigned to it.' : '3034 : The Vendor or VendorName value is required.' 
+    message = SagePayGateway.simulate ? 'VSP Simulator cannot find your vendor name.  Ensure you have have supplied a Vendor field with your VSP Vendor name assigned to it.' : '3034 : The Vendor or VendorName value is required.' 
     
-    gateway = ProtxGateway.new(
+    gateway = SagePayGateway.new(
         :login => ''
     )
     assert response = gateway.purchase(@amount, @mastercard, @options)

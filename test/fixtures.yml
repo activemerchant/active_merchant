@@ -135,7 +135,7 @@ plugnpay:
   login: LOGIN
   password: PASSWORD
   
-protx:
+sage_pay:
   login: LOGIN
   
 # Working credentials, no need to replace
