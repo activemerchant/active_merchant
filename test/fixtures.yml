@@ -68,6 +68,11 @@ linkpoint:
   pem: |--
     PASTE YOUR PEM FILE HERE
 
+merchant_ware:
+ login: 
+ password: 
+ name: 
+
 modern_payments:
   login: login
   password: password

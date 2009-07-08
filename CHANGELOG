@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for the MerchantWARE payment gateway [cody]
 * Allow test mode for eWay gateway [Duff OMelia]
 * Don't use Time.parse for the ExpiryDate [cody]
 * Add support for CVV code to Authorize.net CIM [Guy Naor]
