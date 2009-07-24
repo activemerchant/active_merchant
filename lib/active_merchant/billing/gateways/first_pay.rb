@@ -47,21 +47,17 @@ module ActiveMerchant #:nodoc:
         commit('sale', money, post)
       end                       
       
-      def credit(money, creditcard_or_transaction_id, options = {})
-        # unlinked credits are not supported. need both a creditcard and transactionid
-        # some calls to credit will pass only a CreditCard object and leave options blank attempting an unlinked refund
-        if creditcard_or_transaction_id.is_a?(ActiveMerchant::Billing::CreditCard) || options[:card].nil?
-          raise "Both TransactionID and CreditCard are required"
-        else        
-          post = FirstPayPostData.new
-          add_invoice(post, options)
-          add_creditcard(post, options[:card])
-          add_address(post, options)
-          add_customer_data(post, options)
-          add_credit_data(post, creditcard_or_transaction_id)
-        
-          commit('credit', money, post)
-        end
+      def credit(money, reference, options = {})
+        raise ArgumentError, "Both TransactionID and CreditCard are required" unless reference.is_a?(String) && options[:credit_card]
+
+        post = FirstPayPostData.new
+        add_invoice(post, options)
+        add_creditcard(post, options[:credit_card])
+        add_address(post, options)
+        add_customer_data(post, options)
+        add_credit_data(post, reference)
+      
+        commit('credit', money, post)
       end
       
       def void(money, creditcard, options = {})

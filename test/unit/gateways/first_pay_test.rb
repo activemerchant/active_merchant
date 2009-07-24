@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class FirstPayTest < Test::Unit::TestCase
   def setup
@@ -47,7 +47,7 @@ class FirstPayTest < Test::Unit::TestCase
   
   def test_successful_credit
     @gateway.expects(:ssl_post).returns(successful_credit_response)
-    @options[:card] = @credit_card
+    @options[:credit_card] = @credit_card
     
     assert response = @gateway.credit(@amount, '123456', @options)
     assert_success response
@@ -57,7 +57,7 @@ class FirstPayTest < Test::Unit::TestCase
   end
   
   def test_failed_credit
-    @options[:card] = @credit_card
+    @options[:credit_card] = @credit_card
     @gateway.expects(:ssl_post).returns(failed_credit_response)
     
     assert response = @gateway.credit(@amount, '123456', @options)
@@ -67,7 +67,7 @@ class FirstPayTest < Test::Unit::TestCase
   end
   
   def test_failed_unlinked_credit
-    assert_raise RuntimeError do
+    assert_raise ArgumentError do
       @gateway.credit(@amount, @credit_card)
     end
   end

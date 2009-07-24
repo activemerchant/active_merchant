@@ -1,8 +1,8 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class RemoteFirstPayTest < Test::Unit::TestCase
   def setup
-    @gateway = FirstPayGateway.new(:login => '', :password => '')
+    @gateway = FirstPayGateway.new(fixtures(:first_pay))
     
     @amount = 100
     @credit_card = credit_card('4111111111111111', {:first_name => 'Test', :last_name => 'Person'})
@@ -44,7 +44,7 @@ class RemoteFirstPayTest < Test::Unit::TestCase
     assert_not_nil(response.params["auth"])
     assert_not_nil(response.authorization)
     
-    @options[:card] = @credit_card
+    @options[:credit_card] = @credit_card
     
     assert response = @gateway.credit(@amount, response.authorization, @options)
     assert_success response
@@ -52,7 +52,7 @@ class RemoteFirstPayTest < Test::Unit::TestCase
   end
   
   def test_failed_credit
-    @options[:card] = @credit_card
+    @options[:credit_card] = @credit_card
     
     assert response = @gateway.credit(@amount, '000000', @options)
     assert_failure response
@@ -61,7 +61,7 @@ class RemoteFirstPayTest < Test::Unit::TestCase
   end
   
   def test_failed_unlinked_credit
-    assert_raise RuntimeError do
+    assert_raise ArgumentError do
       @gateway.credit(@amount, @credit_card)
     end
   end

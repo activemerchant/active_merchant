@@ -53,6 +53,10 @@ exact:
   login: "A00427-01" 
   password: testus
 
+first_pay:
+  login:
+  password:
+
 ideal_ing_postbank:
   login: LOGIN
   password: PASSWORD
