@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for the Ogone DirectLink payment gateway [Nicolas Jacobeus]
 * Add support for the Antigua based FirstPay payment gateway [Phil R]
 * Add support for PayPal reference transactions [kevin, John, Rahsun McAfee]
 * Add support for the MerchantWARE payment gateway [cody]

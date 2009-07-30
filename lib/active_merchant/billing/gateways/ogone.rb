@@ -140,23 +140,6 @@ module ActiveMerchant #:nodoc:
         commit('RFD', post)
       end
 
-      # Recurring payment is not supported yet.
-      def recurring(money, creditcard, options = {})
-        raise StandardError, "Not supported"
-      end
-
-      # Store is not supported as Ogone doesn't seem to allow this operation on its own.
-      # You can though store and unstore credit card numbers through the alias parameter.
-      def store(creditcard, options = {})
-        raise StandardError, "Not supported"
-      end
-
-      # Unstore is not supported as Ogone doesn't seem to allow this operation on its own.
-      # You can though store and unstore credit card numbers through the alias parameter.
-      def unstore(identification, options = {})
-        raise StandardError, "Not supported"
-      end
-
       private
 
       # Specific data to add to the hash ===============================================================

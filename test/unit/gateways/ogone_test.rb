@@ -82,24 +82,6 @@ class OgoneTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_recurring_should_not_work
-    assert_raise(StandardError) do
-      @gateway.recurring(@amount,@credit_card,@options)
-    end
-  end
-
-  def test_store_should_not_work
-    assert_raise(StandardError) do
-      @gateway.store(@credit_card,@options)
-    end
-  end
-
-  def test_unstore_should_not_work
-    assert_raise(StandardError) do
-      @gateway.unstore("my_identification",@options)
-    end
-  end
-
   def test_supported_countries
     assert_equal ['BE', 'DE', 'FR', 'NL', 'AT', 'CH'], OgoneGateway.supported_countries
   end
