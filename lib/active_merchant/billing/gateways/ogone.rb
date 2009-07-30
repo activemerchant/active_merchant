@@ -71,10 +71,12 @@ module ActiveMerchant #:nodoc:
       SUCCESS_MESSAGE = "The transaction was successful"
 
       self.supported_countries = ['BE', 'DE', 'FR', 'NL', 'AT', 'CH']
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      # also supports Airplus and UATP
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro]
       self.homepage_url = 'http://www.ogone.com/'
       self.display_name = 'Ogone'
       self.default_currency = 'EUR'
+      self.money_format = :cents
 
       def initialize(options = {})
         requires!(options, :login, :user, :password)
@@ -163,11 +165,16 @@ module ActiveMerchant #:nodoc:
       def add_payment_source(post, payment_source, options)
         if payment_source.is_a?(String)
           add_alias(post, payment_source)
+          add_eci(post, '9')
         else
           add_alias(post, options[:store])
           add_creditcard(post, payment_source)
         end
       end  
+      
+      def add_eci(post, eci)
+        add_pair post, 'ECI', eci
+      end
       
       def add_alias(post, _alias)
         add_pair post, 'ALIAS',   _alias
@@ -179,7 +186,7 @@ module ActiveMerchant #:nodoc:
 
       def add_money(post, money, options)
         add_pair post, 'currency', options[:currency] || currency(money)
-        add_pair post, 'amount',   money
+        add_pair post, 'amount',   amount(money)
       end
 
       def add_customer_data(post, options)
@@ -206,7 +213,6 @@ module ActiveMerchant #:nodoc:
         add_pair post, 'CARDNO', creditcard.number
         add_pair post, 'ED',     "%02d%02s" % [creditcard.month, creditcard.year.to_s[-2..-1]]
         add_pair post, 'CVC',    creditcard.verification_value
-        add_pair post, 'BRAND',  creditcard.type.upcase
       end
 
       def parse(body)
