@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Tweak Ogone gateway to use ActiveMerchant conventions for reference transactions [cody, jstorimer]
 * Add support for the Ogone DirectLink payment gateway [Nicolas Jacobeus]
 * Add support for the Antigua based FirstPay payment gateway [Phil R]
 * Add support for PayPal reference transactions [kevin, John, Rahsun McAfee]

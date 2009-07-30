@@ -1,7 +1,6 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class RemoteOgoneTest < Test::Unit::TestCase
-
   def setup
     @gateway = OgoneGateway.new(fixtures(:ogone))
     @amount = 100
@@ -82,15 +81,15 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal '!', credit.message
   end
 
-  def test_aliases
+  def test_reference_transactions
     # Setting an alias
-    assert response = @gateway.purchase(@amount, credit_card('4000100011112224'), @options.merge(:alias=>"awesomeman",:order_id=>Time.now.to_i.to_s+"1"))
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224'), @options.merge(:store => "awesomeman", :order_id=>Time.now.to_i.to_s+"1"))
     assert_success response
     # Updating an alias
-    assert response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(:alias=>"awesomeman",:order_id=>Time.now.to_i.to_s+"2"))
+    assert response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(:store => "awesomeman", :order_id=>Time.now.to_i.to_s+"2"))
     assert_success response
     # Using an alias (i.e. don't provide the credit card)
-    assert response = @gateway.purchase(@amount, nil, @options.merge(:alias=>"awesomeman",:order_id=>Time.now.to_i.to_s+"3"))
+    assert response = @gateway.purchase(@amount, "awesomeman", @options.merge(:order_id=>Time.now.to_i.to_s+"3"))
     assert_success response
   end
 

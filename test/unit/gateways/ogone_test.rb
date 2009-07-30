@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class OgoneTest < Test::Unit::TestCase
 
@@ -22,7 +22,7 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal '3014726', response.authorization
+    assert_equal '3014726;RES', response.authorization
     assert response.test?
   end
 
@@ -30,7 +30,7 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal '3014726', response.authorization
+    assert_equal '3014726;SAL', response.authorization
     assert response.test?
   end
 
@@ -39,7 +39,7 @@ class OgoneTest < Test::Unit::TestCase
     @options.delete(:order_id)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal '3014726', response.authorization
+    assert_equal '3014726;SAL', response.authorization
     assert response.test?
   end
 
@@ -47,7 +47,7 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     assert response = @gateway.capture(@amount, "3048326")
     assert_success response
-    assert_equal '3048326', response.authorization
+    assert_equal '3048326;SAL', response.authorization
     assert response.test?
   end
 
@@ -55,7 +55,7 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_void_response)
     assert response = @gateway.void("3048606")
     assert_success response
-    assert_equal '3048606', response.authorization
+    assert_equal '3048606;DES', response.authorization
     assert response.test?
   end
 
@@ -63,7 +63,7 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_referenced_credit_response)
     assert response = @gateway.credit(@amount, "3049652")
     assert_success response
-    assert_equal '3049652', response.authorization
+    assert_equal '3049652;RFD', response.authorization
     assert response.test?
   end
 
@@ -71,7 +71,7 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_unreferenced_credit_response)
     assert response = @gateway.credit(@amount, @credit_card)
     assert_success response
-    assert_equal "3049654", response.authorization
+    assert_equal "3049654;RFD", response.authorization
     assert response.test?
   end
 

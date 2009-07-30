@@ -82,24 +82,22 @@ module ActiveMerchant #:nodoc:
       end
 
       # Verify and reserve the specified amount on the account, without actually doing the transaction.
-      def authorize(money, creditcard, options = {})
+      def authorize(money, payment_source, options = {})
         post = {}
         add_invoice(post, options)
-        add_alias(post, options[:alias])
-        add_creditcard(post, creditcard)
-        add_address(post, creditcard, options)
+        add_payment_source(post, payment_source, options)
+        add_address(post, payment_source, options)
         add_customer_data(post, options)
         add_money(post, money, options)
         commit('RES', post)
       end
 
       # Verify and transfer the specified amount.
-      def purchase(money, creditcard, options = {})
+      def purchase(money, payment_source, options = {})
         post = {}
         add_invoice(post, options)
-        add_alias(post, options[:alias])
-        add_creditcard(post, creditcard)
-        add_address(post, creditcard, options)
+        add_payment_source(post, payment_source, options)
+        add_address(post, payment_source, options)
         add_customer_data(post, options)
         add_money(post, money, options)
         commit('SAL', post)
@@ -107,8 +105,8 @@ module ActiveMerchant #:nodoc:
 
       # Complete a previously authorized transaction.
       def capture(money, authorization, options = {})
-        post = {}
-        add_authorization(post, authorization)
+        post = {}        
+        add_authorization(post, reference_from(authorization))
         add_invoice(post, options)
         add_customer_data(post, options)
         add_money(post, money, options)
@@ -118,32 +116,58 @@ module ActiveMerchant #:nodoc:
       # Cancels a previously authorized transaction.
       def void(identification, options = {})
         post = {}
-        add_authorization(post, identification)
+        add_authorization(post, reference_from(identification))
         commit('DES', post)
       end
 
       # Credit the specified account by a specific amount.
-      def credit(money, identification_or_credit_card, options = {})
-        post = {}
-        if identification_or_credit_card.is_a?(String)
+      def credit(money, identification_or_credit_card, options = {})        
+        if reference_transaction?(identification_or_credit_card)
           # Referenced credit: refund of a settled transaction
-          add_authorization(post, identification_or_credit_card)
-        else # must be a credit card
-          # Non-referenced credit: acts like a reverse purchase
-          add_invoice(post, options)
-          add_alias(post, options[:alias])
-          add_creditcard(post, identification_or_credit_card)
-          add_address(post, identification_or_credit_card, options)
-          add_customer_data(post, options)
+          perform_reference_credit(money, identification_or_credit_card, options)
+        else # must be a credit card or card reference
+          perform_non_referenced_credit(money, identification_or_credit_card, options)
         end
-        add_money(post, money, options)
-        commit('RFD', post)
       end
 
       private
-
-      # Specific data to add to the hash ===============================================================
-
+      def reference_from(authorization)
+        authorization.split(";").first
+      end
+      
+      def reference_transaction?(identifier)
+        return false unless identifier.is_a?(String) 
+        reference, action = identifier.split(";")
+        !action.nil?
+      end
+      
+      def perform_reference_credit(money, payment_target, options = {})
+        post = {}
+        add_authorization(post, reference_from(payment_target))
+        add_money(post, money, options)
+        commit('RFD', post)        
+      end
+      
+      def perform_non_referenced_credit(money, payment_target, options = {})
+        # Non-referenced credit: acts like a reverse purchase
+        post = {}
+        add_invoice(post, options)
+        add_payment_source(post, payment_target, options)
+        add_address(post, payment_target, options)
+        add_customer_data(post, options)
+        add_money(post, money, options)
+        commit('RFD', post)
+      end
+      
+      def add_payment_source(post, payment_source, options)
+        if payment_source.is_a?(String)
+          add_alias(post, payment_source)
+        else
+          add_alias(post, options[:store])
+          add_creditcard(post, payment_source)
+        end
+      end  
+      
       def add_alias(post, _alias)
         add_pair post, 'ALIAS',   _alias
       end
@@ -177,8 +201,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard(post, creditcard)
-        return unless (creditcard and creditcard.valid?)
-        add_pair post, 'CN',     "#{creditcard.first_name} #{creditcard.last_name}"
+        add_pair post, 'CN',     creditcard.name
         add_pair post, 'CARDNO', creditcard.number
         add_pair post, 'ED',     "%02d%02s" % [creditcard.month, creditcard.year.to_s[-2..-1]]
         add_pair post, 'CVC',    creditcard.verification_value
@@ -200,7 +223,7 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(url, post_data(action, parameters)))
         success = response["NCERROR"]=="0"
         message = message_from(response)
-        options = { :authorization => response["PAYID"],
+        options = { :authorization => [response["PAYID"], action].join(";"),
                     :test => test?,
                     :avs_result => { :code => AVS_MAPPING[response["AAVCheck"]] },
                     :cvv_result => CVV_MAPPING[response["CVCCheck"]] }
