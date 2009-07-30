@@ -16,26 +16,26 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal '!', response.message
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
 
   def test_successful_purchase_without_order_id
     @options.delete(:order_id)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal '!', response.message
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal ' no card no|no exp date|no brand', response.message
+    assert_equal 'no brand', response.message
   end
 
   def test_authorize_and_capture
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
-    assert_equal '!', auth.message
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, auth.message
     assert auth.authorization
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
@@ -44,7 +44,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def test_unsuccessful_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal ' no card no|no exp date|no brand', response.message
+    assert_equal 'no card no, no exp date, no brand', response.message
   end
 
   def test_successful_void
@@ -52,7 +52,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_success auth
     assert auth.authorization
     assert void = @gateway.void(auth.authorization)
-    assert_equal '!', auth.message
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, auth.message
     assert_success void
   end
 
@@ -62,7 +62,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert credit = @gateway.credit(@amount, purchase.authorization, @options)
     assert_success credit
     assert credit.authorization
-    assert_equal '!', credit.message
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, credit.message
   end
 
   def test_unsuccessful_referenced_credit
@@ -78,7 +78,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert credit = @gateway.credit(@amount, @credit_card, @options)
     assert_success credit
     assert credit.authorization
-    assert_equal '!', credit.message
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, credit.message
   end
 
   def test_reference_transactions
@@ -101,7 +101,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal ' no pspid', response.message
+    assert_equal 'no pspid', response.message
   end
 
 end

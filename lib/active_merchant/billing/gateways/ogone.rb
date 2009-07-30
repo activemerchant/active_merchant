@@ -68,6 +68,7 @@ module ActiveMerchant #:nodoc:
       AVS_MAPPING = { 'OK' => 'M',
                       'KO' => 'N',
                       'NO' => 'R' }
+      SUCCESS_MESSAGE = "The transaction was successful"
 
       self.supported_countries = ['BE', 'DE', 'FR', 'NL', 'AT', 'CH']
       self.supported_cardtypes = [:visa, :master, :american_express]
@@ -208,8 +209,6 @@ module ActiveMerchant #:nodoc:
         add_pair post, 'BRAND',  creditcard.type.upcase
       end
 
-      # Backend methods ================================================================================
-
       def parse(body)
         xml = REXML::Document.new(body)
         xml.root.attributes
@@ -221,17 +220,19 @@ module ActiveMerchant #:nodoc:
         add_pair parameters, 'PSWD',       @options[:password]
         url = URLS[test? ? :test : production][parameters['PAYID'] ? :maintenance : :order ]
         response = parse(ssl_post(url, post_data(action, parameters)))
-        success = response["NCERROR"]=="0"
-        message = message_from(response)
         options = { :authorization => [response["PAYID"], action].join(";"),
                     :test => test?,
                     :avs_result => { :code => AVS_MAPPING[response["AAVCheck"]] },
                     :cvv_result => CVV_MAPPING[response["CVCCheck"]] }
-        Response.new(success, message, response, options)
+        Response.new(successful?(response), message_from(response), response, options)
+      end
+      
+      def successful?(response)
+        response["NCERROR"] == "0"
       end
 
       def message_from(response)
-        response["NCERRORPLUS"]
+        successful?(response) ? SUCCESS_MESSAGE : response["NCERRORPLUS"].to_s.strip.gsub("|", ", ")
       end
 
       def post_data(action, parameters = {})
