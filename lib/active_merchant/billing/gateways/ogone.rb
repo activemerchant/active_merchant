@@ -224,7 +224,7 @@ module ActiveMerchant #:nodoc:
         add_pair parameters, 'PSPID',      @options[:login]
         add_pair parameters, 'USERID',     @options[:user]
         add_pair parameters, 'PSWD',       @options[:password]
-        url = URLS[test? ? :test : production][parameters['PAYID'] ? :maintenance : :order ]
+        url = URLS[test? ? :test : :production][parameters['PAYID'] ? :maintenance : :order ]
         response = parse(ssl_post(url, post_data(action, parameters)))
         options = { :authorization => [response["PAYID"], action].join(";"),
                     :test => test?,
