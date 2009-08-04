@@ -118,6 +118,15 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     
     # Alternate format
     assert_equal 'laser', CreditCard.type?('6706950000000000000')
+    
+    # Alternate format (16 digits)
+    assert_equal 'laser', CreditCard.type?('6706123456789012')
+
+    # New format (16 digits)
+    assert_equal 'laser', CreditCard.type?('6709123456789012')
+    
+    # Ulster bank (Ireland) with 12 digits
+    assert_equal 'laser', CreditCard.type?('677117111234')
   end
   
   def test_should_detect_when_an_argument_type_does_not_match_calculated_type
