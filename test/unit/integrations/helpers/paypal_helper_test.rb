@@ -72,11 +72,20 @@ class PaypalHelperTest < Test::Unit::TestCase
   end
 
   def test_phone_parsing
-    @helper.shipping_address :phone => '111-222-3333'
+    @helper.shipping_address :country => 'CA', :phone => '111-222-3333'
 
     assert_field 'night_phone_a', '111'
     assert_field 'night_phone_b', '222'
     assert_field 'night_phone_c', '3333'
+  end
+
+
+  def test_phone_parsing_for_non_us
+    @helper.shipping_address :country => 'UK', :phone => '028 38841670'
+
+    assert_field 'night_phone_a', nil
+    assert_field 'night_phone_b', '02838841670'
+    assert_field 'night_phone_c', nil
   end
   
   

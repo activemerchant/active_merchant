@@ -60,25 +60,26 @@ module ActiveMerchant #:nodoc:
                                       :country => 'country'
           
           def shipping_address(params = {})
+
+            # Get the country code in the correct format
+            # Use what we were given if we can't find anything
+            country_code = lookup_country_code(params.delete(:country))
+            add_field(mappings[:shipping_address][:country], country_code)
             
             if params.has_key?(:phone)
               phone = params.delete(:phone).to_s
           
               # Whipe all non digits
               phone.gsub!(/\D+/, '')
-          
-              # Parse in the us style (555 555 5555) which seems to be the only format paypal supports. Ignore anything before this. 
-              if phone =~ /(\d{3})(\d{3})(\d{4})$/
+              
+              if ['US', 'CA'].include?(country_code) && phone =~ /(\d{3})(\d{3})(\d{4})$/
                 add_field('night_phone_a', $1) 
                 add_field('night_phone_b', $2) 
                 add_field('night_phone_c', $3) 
+              else
+                add_field('night_phone_b', phone)                
               end
             end
-            
-            # Get the country code in the correct format
-            # Use what we were given if we can't find anything
-            country_code = lookup_country_code(params.delete(:country))
-            add_field(mappings[:shipping_address][:country], country_code)
               
             province_code = params.delete(:state)
                        
