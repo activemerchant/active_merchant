@@ -1,5 +1,16 @@
 = ActiveMerchant CHANGELOG
 
+* Fix typo preventing OgoneGateway from working in production [Nicolas Jacobeus]
+* Fix recurring transactions in Ogone gateway [cody]
+* Fix money formatting for Ogone gateway [cody]
+* Tweak Ogone gateway to use ActiveMerchant conventions for reference transactions [cody, jstorimer]
+* Add support for the Ogone DirectLink payment gateway [Nicolas Jacobeus]
+* Add support for the Antigua based FirstPay payment gateway [Phil R]
+* Add support for PayPal reference transactions [kevin, John, Rahsun McAfee]
+* Add support for the MerchantWARE payment gateway [cody]
+* Rename Protx to SagePay [jstorimer]
+* Allow test mode for eWay gateway [Duff OMelia]
+* Don't use Time.parse for the ExpiryDate [cody]
 * Add support for CVV code to Authorize.net CIM [Guy Naor]
 * Add shipping address to Authorize.net [Eric Tarn]
 * Don't setup the logger by default [cody]

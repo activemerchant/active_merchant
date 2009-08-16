@@ -30,6 +30,24 @@ class PaypalTest < Test::Unit::TestCase
     assert response.test?
   end
   
+  def test_successful_reference_purchase
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '62U664727W5914806', response.authorization
+    
+    ref_id = response.authorization
+    
+    gateway2 = PaypalGateway.new(:login => 'cody', :password => 'test', :pem => 'PEM')
+    gateway2.expects(:ssl_post).returns(successful_reference_purchase_response)
+    assert response = gateway2.purchase(@amount, ref_id, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '62U664727W5915049', response.authorization
+    assert response.test?
+  end
+  
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
     
@@ -247,6 +265,37 @@ class PaypalTest < Test::Unit::TestCase
       <CVV2Code xsi:type="xs:string">M</CVV2Code>
       <TransactionID>62U664727W5914806</TransactionID>
     </DoDirectPaymentResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+    RESPONSE
+  end
+  
+  def successful_reference_purchase_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:market="urn:ebay:apis:Market" xmlns:auction="urn:ebay:apis:Auction" xmlns:sizeship="urn:ebay:api:PayPalAPI/sizeship.xsd" xmlns:ship="urn:ebay:apis:ship" xmlns:skype="urn:ebay:apis:skype" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ns="urn:ebay:api:PayPalAPI">
+  <SOAP-ENV:Header>
+    <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext" xsi:type="wsse:SecurityType"/>
+    <RequesterCredentials xmlns="urn:ebay:api:PayPalAPI" xsi:type="ebl:CustomSecurityHeaderType">
+      <Credentials xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:UserIdPasswordType">
+        <Username xsi:type="xs:string"/>
+        <Password xsi:type="xs:string"/>
+        <Subject xsi:type="xs:string"/>
+      </Credentials>
+    </RequesterCredentials>
+  </SOAP-ENV:Header>
+  <SOAP-ENV:Body id="_0">
+    <DoReferenceTransactionResponse xmlns="urn:ebay:api:PayPalAPI">
+      <Timestamp xmlns="urn:ebay:apis:eBLBaseComponents">2008-01-06T23:41:25Z</Timestamp>
+      <Ack xmlns="urn:ebay:apis:eBLBaseComponents">Success</Ack>
+      <CorrelationID xmlns="urn:ebay:apis:eBLBaseComponents">fee61882e6f47</CorrelationID>
+      <Version xmlns="urn:ebay:apis:eBLBaseComponents">2.000000</Version>
+      <Build xmlns="urn:ebay:apis:eBLBaseComponents">1.0006</Build>
+      <Amount xsi:type="cc:BasicAmountType" currencyID="USD">3.00</Amount>
+      <AVSCode xsi:type="xs:string">X</AVSCode>
+      <CVV2Code xsi:type="xs:string">M</CVV2Code>
+      <TransactionID>62U664727W5915049</TransactionID>
+    </DoReferenceTransactionResponse>
   </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
     RESPONSE

@@ -1,8 +1,8 @@
 require 'test_helper'
 
-class ProtxTest < Test::Unit::TestCase
+class SagePayTest < Test::Unit::TestCase
   def setup
-    @gateway = ProtxGateway.new(
+    @gateway = SagePayGateway.new(
       :login => 'X'
     )
 
@@ -44,50 +44,50 @@ class ProtxTest < Test::Unit::TestCase
   end
   
   def test_purchase_url
-    assert_equal 'https://ukvpstest.protx.com/vspgateway/service/vspdirect-register.vsp', @gateway.send(:url_for, :purchase)
+    assert_equal 'https://test.sagepay.com/gateway/service/vspdirect-register.vsp', @gateway.send(:url_for, :purchase)
   end
   
   def test_capture_url
-    assert_equal 'https://ukvpstest.protx.com/vspgateway/service/release.vsp', @gateway.send(:url_for, :capture)
+    assert_equal 'https://test.sagepay.com/gateway/service/release.vsp', @gateway.send(:url_for, :capture)
   end
   
   def test_electron_cards
     # Visa range
-    assert_no_match ProtxGateway::ELECTRON, '4245180000000000'
+    assert_no_match SagePayGateway::ELECTRON, '4245180000000000'
     
     # First electron range
-    assert_match ProtxGateway::ELECTRON, '4245190000000000'
+    assert_match SagePayGateway::ELECTRON, '4245190000000000'
                                                                 
     # Second range                                              
-    assert_match ProtxGateway::ELECTRON, '4249620000000000'
-    assert_match ProtxGateway::ELECTRON, '4249630000000000'
+    assert_match SagePayGateway::ELECTRON, '4249620000000000'
+    assert_match SagePayGateway::ELECTRON, '4249630000000000'
                                                                 
     # Third                                                     
-    assert_match ProtxGateway::ELECTRON, '4508750000000000'
+    assert_match SagePayGateway::ELECTRON, '4508750000000000'
                                                                 
     # Fourth                                                    
-    assert_match ProtxGateway::ELECTRON, '4844060000000000'
-    assert_match ProtxGateway::ELECTRON, '4844080000000000'
+    assert_match SagePayGateway::ELECTRON, '4844060000000000'
+    assert_match SagePayGateway::ELECTRON, '4844080000000000'
                                                                 
     # Fifth                                                     
-    assert_match ProtxGateway::ELECTRON, '4844110000000000'
-    assert_match ProtxGateway::ELECTRON, '4844550000000000'
+    assert_match SagePayGateway::ELECTRON, '4844110000000000'
+    assert_match SagePayGateway::ELECTRON, '4844550000000000'
                                                                 
     # Sixth                                                     
-    assert_match ProtxGateway::ELECTRON, '4917300000000000'
-    assert_match ProtxGateway::ELECTRON, '4917590000000000'
+    assert_match SagePayGateway::ELECTRON, '4917300000000000'
+    assert_match SagePayGateway::ELECTRON, '4917590000000000'
                                                                 
     # Seventh                                                   
-    assert_match ProtxGateway::ELECTRON, '4918800000000000'
+    assert_match SagePayGateway::ELECTRON, '4918800000000000'
     
     # Visa
-    assert_no_match ProtxGateway::ELECTRON, '4918810000000000'
+    assert_no_match SagePayGateway::ELECTRON, '4918810000000000'
     
     # 19 PAN length
-    assert_match ProtxGateway::ELECTRON, '4249620000000000000'
+    assert_match SagePayGateway::ELECTRON, '4249620000000000000'
     
     # 20 PAN length
-    assert_no_match ProtxGateway::ELECTRON, '42496200000000000'
+    assert_no_match SagePayGateway::ELECTRON, '42496200000000000'
   end
   
   def test_avs_result

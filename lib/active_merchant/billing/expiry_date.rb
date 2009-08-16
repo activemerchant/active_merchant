@@ -1,19 +1,25 @@
+require 'date'
+
 module ActiveMerchant
   module Billing
     class CreditCard
       class ExpiryDate #:nodoc:
         attr_reader :month, :year
         def initialize(month, year)
-          @month = month
-          @year = year
+          @month = month.to_i
+          @year = year.to_i
         end
         
         def expired? #:nodoc:
-          Time.now > expiration rescue true
+          Time.now.utc > expiration
         end
         
         def expiration #:nodoc:
-          Time.parse("#{month}/#{month_days}/#{year} 23:59:59") rescue Time.at(0)
+          begin
+            Time.utc(year, month, month_days, 23, 59, 59)
+          rescue ArgumentError
+            Time.at(0).utc
+          end
         end
         
         private
