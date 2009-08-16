@@ -271,10 +271,6 @@ module ActiveMerchant #:nodoc:
           test ? TEST_URL : LIVE_URL
         end
       end
-      
-      def test?
-        @options[:test] || super
-      end
     end
   end
 end
