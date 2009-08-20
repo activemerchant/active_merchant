@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
       private
       def add_customer_data(form, options)
         form[:email] = options[:email].to_s.slice(0, 100) unless options[:email].blank?
-        form[:customer_code] = options[:customer].to_s.slice(0, 17) unless options[:customer].blank?
+        form[:customer_code] = options[:customer].to_s.slice(0, 10) unless options[:customer].blank?
       end
       
       def add_invoice(form,options)
