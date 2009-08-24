@@ -224,6 +224,16 @@ class CreditCardTest < Test::Unit::TestCase
     assert_valid @solo
   end
   
+  def test_should_return_first_six_digits_of_card_number
+    ccn = CreditCard.new(:number => "4779139500118580")
+    assert_equal "477913", ccn.first_digits
+  end
+  
+  def test_bogus_first_digits
+    ccn = CreditCard.new(:number => "1")
+    assert_equal "1", ccn.first_digits
+  end
+  
   def test_should_return_last_four_digits_of_card_number
     ccn = CreditCard.new(:number => "4779139500118580")
     assert_equal "8580", ccn.last_digits
