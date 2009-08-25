@@ -182,7 +182,7 @@ module ActiveMerchant #:nodoc:
         {
           "Content-Type" => "text/xml",
           "Content-Length" => content_length.to_s,
-      	  "X-VPS-Timeout" => timeout.to_s,
+      	  "X-VPS-Client-Timeout" => timeout.to_s,
       	  "X-VPS-VIT-Integration-Product" => "ActiveMerchant",
       	  "X-VPS-VIT-Runtime-Version" => RUBY_VERSION,
       	  "X-VPS-Request-ID" => Utils.generate_unique_id
