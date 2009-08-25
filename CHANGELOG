@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Fix typo preventing OgoneGateway from working in production [Nicolas Jacobeus]
+* Add support for the Elavon MyVirtualMerchant gateway [jstorimer]
 * Fix recurring transactions in Ogone gateway [cody]
 * Fix money formatting for Ogone gateway [cody]
 * Tweak Ogone gateway to use ActiveMerchant conventions for reference transactions [cody, jstorimer]

@@ -44,6 +44,10 @@ efsnet:
   login: X
   password: Y
 
+elavon:
+  login: LOGIN
+  password: PASSWORD
+
 # Working credentials, no need to replace
 eway:
   login: '87654321'
