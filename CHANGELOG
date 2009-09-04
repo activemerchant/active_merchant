@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add amex support to eWay gateway [cody]
 * Change Payflow header X-VPS-Timeout -> X-VPS-Client-Timeout [cody]
 * Fix typo preventing OgoneGateway from working in production [Nicolas Jacobeus]
 * Add support for the Elavon MyVirtualMerchant gateway [jstorimer]
