@@ -17,6 +17,10 @@ class OgoneTest < Test::Unit::TestCase
       :description => 'Store Purchase'
     }
   end
+  
+  def teardown
+    Base.mode = :test
+  end
 
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
@@ -104,6 +108,19 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     response = @gateway.purchase(@amount, @credit_card)
     assert_equal 'P', response.cvv_result['code']
+  end
+  
+  def test_production_mode
+    Base.mode = :production
+    gateway = OgoneGateway.new(@credentials)
+    assert !gateway.test?
+  end
+
+  def test_test_mode
+    Base.mode = :production
+    @credentials[:test] = true
+    gateway = OgoneGateway.new(@credentials)
+    assert gateway.test?
   end
 
   private

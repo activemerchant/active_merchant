@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for :test => true option to OgoneGateway [cody]
 * Bump PayPal Version to 59.0 [cody]
 * Add amex support to eWay gateway [cody]
 * Change Payflow header X-VPS-Timeout -> X-VPS-Client-Timeout [cody]

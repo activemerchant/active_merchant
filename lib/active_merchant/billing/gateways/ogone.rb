@@ -132,7 +132,11 @@ module ActiveMerchant #:nodoc:
           perform_non_referenced_credit(money, identification_or_credit_card, options)
         end
       end
-
+      
+      def test?
+        @options[:test] || super
+      end
+      
       private
       def reference_from(authorization)
         authorization.split(";").first
