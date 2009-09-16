@@ -242,7 +242,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        successful?(response) ? SUCCESS_MESSAGE : response["NCERRORPLUS"].to_s.strip.gsub("|", ", ")
+        if successful?(response) 
+          SUCCESS_MESSAGE
+        else
+          format_error_message(response["NCERRORPLUS"])
+        end
+      end
+      
+      def format_error_message(message)
+        raw_message = message.to_s.strip
+        case raw_message
+        when /\|/
+          raw_message.split("|").join(", ").capitalize
+        when /\//
+          raw_message.split("/").first.to_s.capitalize
+        else
+          raw_message.to_s.capitalize
+        end
       end
 
       def post_data(action, parameters = {})

@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Improve Ogone error messages [cody]
 * Add support for :test => true option to OgoneGateway [cody]
 * Bump PayPal Version to 59.0 [cody]
 * Add amex support to eWay gateway [cody]
