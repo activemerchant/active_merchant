@@ -49,6 +49,7 @@ require 'active_merchant/lib/posts_data'
 require 'active_merchant/lib/post_data'
 require 'active_merchant/lib/requires_parameters'
 require 'active_merchant/lib/country'
+require 'active_merchant/lib/numeric_currency_code'
 
 require 'active_merchant/billing/avs_result'
 require 'active_merchant/billing/cvv_result'
