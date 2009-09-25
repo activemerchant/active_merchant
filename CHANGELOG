@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add line item support for LinkpointGateway. [Tony Primerano]
 * Add support for SallieMae gateway [iamjwc]
 * Add support for the JetPay gateway [Phil Ripperger, Peter Williams, cody]
 * Add support for advanced SkipJack processors. Pass :advanced => true when constructing gateway [cody]
