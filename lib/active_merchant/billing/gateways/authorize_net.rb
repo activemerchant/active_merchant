@@ -173,10 +173,10 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>:interval</tt> -- A hash containing information about the interval of time between payments. Must
       #   contain the keys <tt>:length</tt> and <tt>:unit</tt>. <tt>:unit</tt> can be either <tt>:months</tt> or <tt>:days</tt>.
-      #   If <tt>:unit</tt> is <tt>:months</tt> then <tt>:interval</tt> must be an integer between 1 and 12 inclusive.
-      #   If <tt>:unit</tt> is <tt>:days</tt> then <tt>:interval</tt> must be an integer between 7 and 365 inclusive.
+      #   If <tt>:unit</tt> is <tt>:months</tt> then <tt>:length</tt> must be an integer between 1 and 12 inclusive.
+      #   If <tt>:unit</tt> is <tt>:days</tt> then <tt>:length</tt> must be an integer between 7 and 365 inclusive.
       #   For example, to charge the customer once every three months the hash would be
-      #   +{ :unit => :months, :interval => 3 }+ (REQUIRED)
+      #   +:interval => { :unit => :months, :length => 3 }+ (REQUIRED)
       # * <tt>:duration</tt> -- A hash containing keys for the <tt>:start_date</tt> the subscription begins (also the date the
       #   initial billing occurs) and the total number of billing <tt>:occurences</tt> or payments for the subscription. (REQUIRED)
       def recurring(money, creditcard, options={})
