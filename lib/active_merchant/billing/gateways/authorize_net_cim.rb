@@ -458,6 +458,7 @@ module ActiveMerchant #:nodoc:
 
       def build_create_customer_profile_transaction_request(xml, options)
         add_transaction(xml, options[:transaction])
+        xml.tag!('extraOptions', "x_test_request=TRUE") if @options[:test]
         
         xml.target!
       end
