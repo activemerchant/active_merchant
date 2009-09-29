@@ -71,6 +71,9 @@ instapay:
   login: TEST0
   password:
 
+jetpay:
+  login: TESTTERMINAL
+      
 linkpoint:
   login: STOREID
   pem: |--

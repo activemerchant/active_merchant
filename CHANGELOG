@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for the JetPay gateway [Phil Ripperger, Peter Williams, cody]
 * Add support for advanced SkipJack processors. Pass :advanced => true when constructing gateway [cody]
 * Support test option in AuthorizeNetCimGateway [Tim]
 * Improve Ogone error messages [cody]
