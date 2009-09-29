@@ -110,6 +110,30 @@ class SkipJackTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
   
+  def test_basic_test_url
+    @gateway.stubs(:test?).returns(true)
+    @gateway.stubs(:advanced?).returns(false)
+    assert_equal "https://developer.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI", @gateway.send(:url_for, :authorization)
+  end
+  
+  def test_advanced_test_url
+    @gateway.stubs(:test?).returns(true)
+    @gateway.stubs(:advanced?).returns(true)
+    assert_equal "https://developer.skipjackic.com/evolvcc/evolvcc.aspx?AuthorizeAPI", @gateway.send(:url_for, :authorization)
+  end
+  
+  def test_basic_live_url
+    @gateway.stubs(:test?).returns(false)
+    @gateway.stubs(:advanced?).returns(false)
+    assert_equal "https://www.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI", @gateway.send(:url_for, :authorization)
+  end
+  
+  def test_advanced_live_url
+    @gateway.stubs(:test?).returns(false)
+    @gateway.stubs(:advanced?).returns(true)
+    assert_equal "https://www.skipjackic.com/evolvcc/evolvcc.aspx?AuthorizeAPI", @gateway.send(:url_for, :authorization)
+  end
+  
   private
   def successful_authorization_response
     <<-CSV
