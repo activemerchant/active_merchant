@@ -40,6 +40,10 @@ module ActiveMerchant
       def capture(money, authorization, options = {})
         post = {:ref_trans_id => authorization}
         add_customer_data(post, options)
+        if test? && options[:mock_response] == true
+          credit_card = CreditCard.new(:year => "15", :month => "01", :number => "4" + ("2" * 12))
+          add_creditcard(post, credit_card)
+        end
         commit('PRIOR_AUTH_CAPTURE', money, post)
       end
 
