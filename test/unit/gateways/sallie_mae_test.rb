@@ -29,6 +29,15 @@ class SallieMaeTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
+  
+  def test_non_test_account
+    assert !@gateway.test?
+  end
+  
+  def test_test_account
+    gateway = SallieMaeGateway.new(:login => "TEST0")
+    assert !@gateway.test?
+  end
 
   private
   

@@ -20,6 +20,10 @@ module ActiveMerchant #:nodoc:
         @options = options
         super
       end
+      
+      def test?
+        @options[:login] == "TEST0"
+      end
 
       def authorize(money, creditcard, options = {})
         post = PostData.new
@@ -104,7 +108,7 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters)
         parameters[:acctid] = @options[:login].to_s
         parameters[:subid]  = @options[:sub_id].to_s unless @options[:sub_id].blank?
-        parameters[:amount] = "%.2f" % (money / 100.0)
+        parameters[:amount] = amount(money)
 
         case action
         when :sale
@@ -117,7 +121,10 @@ module ActiveMerchant #:nodoc:
         end
 
         response = parse(ssl_post(URL, parameters.to_post_data) || "")
-        Response.new(successful?(response), message_from(response), {}, :authorization => response["refcode"])
+        Response.new(successful?(response), message_from(response), response,
+          :test => test?,
+          :authorization => response["refcode"]
+        )
       end
 
       def successful?(response)
