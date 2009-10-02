@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Sallie Mae'
 
       def initialize(options = {})
-        requires!(options, :account_id)
+        requires!(options, :login)
         @options = options
         super
       end
@@ -102,7 +102,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, money, parameters)
-        parameters[:acctid] = @options[:account_id].to_s
+        parameters[:acctid] = @options[:login].to_s
         parameters[:subid]  = @options[:sub_id].to_s unless @options[:sub_id].blank?
         parameters[:amount] = "%.2f" % (money / 100.0)
 

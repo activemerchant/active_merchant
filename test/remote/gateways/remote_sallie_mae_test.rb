@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class RemoteSallieMaeTest < Test::Unit::TestCase
   def setup
@@ -43,7 +43,7 @@ class RemoteSallieMaeTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = SallieMaeGateway.new(:account_id => '')
+    gateway = SallieMaeGateway.new(:login => '')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid merchant', response.message

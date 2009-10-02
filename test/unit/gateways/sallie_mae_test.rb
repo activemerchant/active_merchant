@@ -1,9 +1,9 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class SallieMaeTest < Test::Unit::TestCase
   def setup
     @gateway = SallieMaeGateway.new(
-                 :account_id => 'FAKEACCOUNT'
+                 :login => 'FAKEACCOUNT'
                )
 
     @credit_card = credit_card
