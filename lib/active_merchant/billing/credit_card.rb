@@ -49,6 +49,14 @@ module ActiveMerchant #:nodoc:
       # Track data for card-present transactions
       attr_accessor :track2
       
+      def track2=(track_data)
+        return if track_data.blank?
+        pan, exp = track_data.split('=')
+        self.number = pan.gsub(/\D/, '')
+        self.year = exp[0..1]
+        self.month = exp[2..3]
+      end
+      
       # Required for Switch / Solo cards
       attr_accessor :start_month, :start_year, :issue_number
 
