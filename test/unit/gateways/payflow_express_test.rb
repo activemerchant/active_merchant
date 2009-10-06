@@ -1,7 +1,7 @@
 require 'test_helper'
 
 class PayflowExpressTest < Test::Unit::TestCase
-  TEST_REDIRECT_URL = 'https://test-expresscheckout.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token=1234567890'
+  TEST_REDIRECT_URL = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token=1234567890'
   LIVE_REDIRECT_URL = 'https://www.paypal.com/cgibin/webscr?cmd=_express-checkout&token=1234567890'
   
   TEST_REDIRECT_URL_WITHOUT_REVIEW = "#{TEST_REDIRECT_URL}&useraction=commit"

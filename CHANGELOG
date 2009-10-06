@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Update to PayPal Sandbox URL for testing Payflow Pro Express Checkout. See Express Checkout for Payflow Pro guide [cody]
 * Provide a C_STATE value of "Outside United States" for SageGateway when processing international customers [cody]
 * PayPal Website Payments Pro Canada supports Amex [cody]
 * Add line item support for LinkpointGateway. [Tony Primerano]
