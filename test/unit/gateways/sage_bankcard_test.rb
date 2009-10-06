@@ -138,7 +138,41 @@ class SageBankcardGatewayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'M', response.cvv_result['code']
   end
-
+  
+  def test_us_address_with_state
+    post = {}
+    options = {
+      :billing_address => { :country => "US", :state => "CA"}
+    }
+    @gateway.send(:add_addresses, post, options)
+    
+    assert_equal "US", post[:C_country]
+    assert_equal "CA", post[:C_state]
+  end
+  
+  def test_us_address_without_state
+    post = {}
+    options = {
+      :billing_address => { :country => "US", :state => ""}
+    }
+    @gateway.send(:add_addresses, post, options)
+    
+    assert_equal "US", post[:C_country]
+    assert_equal "", post[:C_state]
+  end
+  
+  
+  def test_international_address_without_state
+    post = {}
+    options = {
+      :billing_address => { :country => "JP", :state => ""}
+    }
+    @gateway.send(:add_addresses, post, options)
+    
+    assert_equal "JP", post[:C_country]
+    assert_equal "Outside of United States", post[:C_state]
+  end
+  
   private
   def successful_authorization_response
     "\002A911911APPROVED                        00MX001234567890\0341000\0340\034\003"

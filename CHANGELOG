@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Provide a C_STATE value of "Outside United States" for SageGateway when processing international customers [cody]
 * PayPal Website Payments Pro Canada supports Amex [cody]
 * Add line item support for LinkpointGateway. [Tony Primerano]
 * Add support for SallieMae gateway [iamjwc]
