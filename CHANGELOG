@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Parse complete response of Authorize.net CIM gateway [Patrick Joyce]
 * Update to PayPal Sandbox URL for testing Payflow Pro Express Checkout. See Express Checkout for Payflow Pro guide [cody]
 * Provide a C_STATE value of "Outside United States" for SageGateway when processing international customers [cody]
 * PayPal Website Payments Pro Canada supports Amex [cody]
