@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Use basic SkipJack host for all non-authorization transactions. Fix status method [cody]
 * Strip non alpha numeric chars out of MerchantWare order number [cody]
 * Parse complete response of Authorize.net CIM gateway [Patrick Joyce]
 * Update to PayPal Sandbox URL for testing Payflow Pro Express Checkout. See Express Checkout for Payflow Pro guide [cody]

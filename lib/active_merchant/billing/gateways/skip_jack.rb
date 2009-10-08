@@ -245,9 +245,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def status(order_id)
-        post = { }
-        post[:szOrderNumber] = :order_id
-        commit(:get_status, nil, post)
+        commit(:get_status, nil, :szOrderNumber => order_id)
       end
       
       private
@@ -278,7 +276,7 @@ module ActiveMerchant #:nodoc:
       
       def url_for(action)
         result = test? ? TEST_HOST : LIVE_HOST
-        result += advanced? ? ADVANCED_PATH : BASIC_PATH
+        result += advanced? && action == :authorization ? ADVANCED_PATH : BASIC_PATH
         result += "?#{ACTIONS[action]}"
       end
       
