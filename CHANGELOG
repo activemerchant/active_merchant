@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add capture test to Linkpoint [Dusty Doris]
 * Fix bug in Linkpoint with ternary operator and Ruby 1.9.1 [Dusty Doris]
 * Add currency and processor options to Braintree gateway [cbillen]
 * Unify API to always look for billing_address/address hash inside of options [stopdropandrew]
