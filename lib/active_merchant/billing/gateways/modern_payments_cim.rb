@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       TEST_URL = "https://secure.modpay.com/netservices/test/ModpayTest.asmx"
       LIVE_URL = 'https://secure.modpay.com/ws/modpay.asmx'
       
-      LIVE_XMLNS = "http://secure.modpay.com:81/ws/"
+      LIVE_XMLNS = "https://secure.modpay.com/ws/"
       TEST_XMLNS = "https://secure.modpay.com/netservices/test/"
       
       self.supported_countries = ['US']
@@ -102,7 +102,7 @@ module ActiveMerchant #:nodoc:
         post[:zip]       = address[:zip]
         post[:phone]     = address[:phone]
         post[:fax]       = address[:fax]
-        post[:email]     = address[:email]
+        post[:email]     = options[:email]
       end
       
       def add_credit_card(post, credit_card)

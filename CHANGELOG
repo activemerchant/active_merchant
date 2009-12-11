@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix Modern Payments Gateway [cody]
 * Use basic SkipJack host for all non-authorization transactions. Fix status method [cody]
 * Strip non alpha numeric chars out of MerchantWare order number [cody]
 * Parse complete response of Authorize.net CIM gateway [Patrick Joyce]
