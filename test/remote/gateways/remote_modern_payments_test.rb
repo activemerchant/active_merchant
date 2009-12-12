@@ -53,4 +53,5 @@ class RemoteModernPaymentTest < Test::Unit::TestCase
       gateway.purchase(@amount, @credit_card, @options)
     end
   end
+  
 end

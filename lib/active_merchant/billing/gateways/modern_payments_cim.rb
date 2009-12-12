@@ -211,7 +211,7 @@ module ActiveMerchant #:nodoc:
         if node.has_elements?
           node.elements.each{|e| parse_element(response, e) }
         else
-          response[node.name.underscore.to_sym] = node.text
+          response[node.name.underscore.to_sym] = node.text.to_s.strip
         end
       end
     end
