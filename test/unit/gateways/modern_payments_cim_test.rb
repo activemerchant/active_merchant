@@ -50,7 +50,7 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
     assert_equal "999", response.params["trans_id"]
     assert_equal "RESPONSECODE=A,AUTHCODE=XXXXXX,DECLINEREASON=,AVSDATA=NYZ,TRANSID=C00 TESTXXXXXXX", response.params["auth_string"]
     assert_equal "RESPONSECODE=A,AUTHCODE=XXXXXX,DECLINEREASON=,AVSDATA=NYZ,TRANSID=C00 TESTXXXXXXX", response.params["message_text"]
-    assert_equal "false", response.params["approved"]
+    assert_equal "true", response.params["approved"]
     assert_equal nil, response.params["avs_code"]
     assert_equal nil, response.params["auth_code"]
     assert_equal nil, response.params["trans_code"]
@@ -64,7 +64,7 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
     assert response = @gateway.authorize_credit_card_payment("10001", @amount)
     assert_instance_of Response, response
     assert response.test?
-    assert_success response
+    assert_failure response
     assert_equal "999", response.authorization
     assert_match /RESPONSECODE=D/, response.params["message_text"]
   end
@@ -120,7 +120,7 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
 				<transCode/>
 				<authString>RESPONSECODE=A,AUTHCODE=XXXXXX,DECLINEREASON=,AVSDATA=NYZ,TRANSID=C00 TESTXXXXXXX</authString>
 				<messageText>RESPONSECODE=A,AUTHCODE=XXXXXX,DECLINEREASON=,AVSDATA=NYZ,TRANSID=C00 TESTXXXXXXX</messageText>
-				<approved>false</approved>
+				<approved>true</approved>
 			</AuthorizeCreditCardPaymentResult>
 		</AuthorizeCreditCardPaymentResponse>
 	</soap:Body>

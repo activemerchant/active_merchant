@@ -162,15 +162,21 @@ module ActiveMerchant #:nodoc:
       end
       
       def authorization_from(action, response)
-        response[result_key(action)]
+        response[authorization_key(action)]
       end
       
-      def result_key(action)
+      def authorization_key(action)
         action == "AuthorizeCreditCardPayment" ? :trans_id : "#{action.underscore}_result".to_sym
       end
       
       def successful?(action, response)
-        response[result_key(action)].to_i > 0
+        key = authorization_key(action)
+        
+        if key == :trans_id
+          response[:approved] == "true"
+        else
+          response[key].to_i > 0
+        end
       end
       
       def message_from(action, response)
