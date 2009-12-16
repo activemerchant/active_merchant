@@ -26,7 +26,8 @@ module ActiveMerchant #:nodoc:
         add_address(post, options[:billing_address] || options[:address])
         add_address(post, options[:shipping_address], "shipping")
         add_customer_data(post, options)
-        
+        add_currency(post, money, options)
+        add_processor(post, options)
         commit('auth', money, post)
       end
       
@@ -37,7 +38,8 @@ module ActiveMerchant #:nodoc:
         add_address(post, options[:billing_address] || options[:address])
         add_address(post, options[:shipping_address], "shipping")
         add_customer_data(post, options)
-             
+        add_currency(post, money, options)
+        add_processor(post, options)     
         commit('sale', money, post)
       end                       
     
@@ -60,7 +62,8 @@ module ActiveMerchant #:nodoc:
         add_address(post, options[:billing_address] || options[:address])
         add_customer_data(post, options)
         add_sku(post,options)
-        
+        add_currency(post, money, options)
+        add_processor(post, options)
         commit('credit', money, post)
       end
       
@@ -138,7 +141,15 @@ module ActiveMerchant #:nodoc:
           post[prefix+"state"]      = address[:state].blank?  ? 'n/a' : address[:state]
         end         
       end
-
+      
+      def add_currency(post, money, options)
+        post[:currency] = options[:currency] || currency(money)
+      end
+      
+      def add_processor(post, options)
+        post[:processor] = options[:processor] unless options[:processor].nil?
+      end
+      
       def add_invoice(post, options)
         post[:orderid] = options[:order_id].to_s.gsub(/[^\w.]/, '')
       end

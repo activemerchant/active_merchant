@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add currency and processor options to Braintree gateway [cbillen]
 * Unify API to always look for billing_address/address hash inside of options [stopdropandrew]
 * Fix bug with Modern Payments Gateway where failure authorizations appeared to be successful [cody]
 * Fix Modern Payments Gateway [cody]
