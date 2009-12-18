@@ -22,9 +22,9 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         post = {}
         add_invoice(post, options)
-        add_payment_source(post, creditcard,options)        
-        add_address(post, options[:billing_address]||options[:address])
-        add_address(post, options[:shipping_address],"shipping")
+        add_payment_source(post, creditcard,options)
+        add_address(post, options[:billing_address] || options[:address])
+        add_address(post, options[:shipping_address], "shipping")
         add_customer_data(post, options)
         
         commit('auth', money, post)
@@ -33,9 +33,9 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_source, options = {})
         post = {}
         add_invoice(post, options)
-        add_payment_source(post, payment_source, options)        
-        add_address(post, options)   
-        add_address(post, options[:shipping_address],"shipping")        
+        add_payment_source(post, payment_source, options)
+        add_address(post, options[:billing_address] || options[:address])
+        add_address(post, options[:shipping_address], "shipping")
         add_customer_data(post, options)
              
         commit('sale', money, post)
@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_payment_source(post, payment_source, options)        
-        add_address(post, options)
+        add_address(post, options[:billing_address] || options[:address])
         add_customer_data(post, options)
         add_sku(post,options)
         
@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
         post[:customer_vault] = "update_customer"
         add_customer_vault_id(post, vault_id)
         add_creditcard(post, creditcard, options)        
-        add_address(post, options)   
+        add_address(post, options[:billing_address] || options[:address])
         add_customer_data(post, options)
              
         commit(nil, nil, post)
