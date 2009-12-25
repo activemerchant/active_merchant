@@ -12,16 +12,24 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :discover, :diners_club]
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-pro-overview-outside'
       self.display_name = 'PayPal Payflow Pro'
+      
+      def validate_authentication(pares)
+        request = build_validate_authentication_request(:validate_authentication, pares)
+        commit(request)
+      end
     
+      def verify_enrollment(money, credit_card, options = {})
+        request = build_credit_card_request(:verify_enrollment, money, credit_card, options)        
+        commit(request)
+      end
+          
       def authorize(money, credit_card_or_reference, options = {})
         request = build_sale_or_authorization_request(:authorization, money, credit_card_or_reference, options)
-      
         commit(request)
       end
       
       def purchase(money, credit_card_or_reference, options = {})
         request = build_sale_or_authorization_request(:purchase, money, credit_card_or_reference, options)
-
         commit(request)
       end
       
@@ -72,6 +80,7 @@ module ActiveMerchant #:nodoc:
       end
       
       private
+      
       def build_sale_or_authorization_request(action, money, credit_card_or_reference, options)
         if credit_card_or_reference.is_a?(String)
           build_reference_sale_or_authorization_request(action, money, credit_card_or_reference, options)
@@ -105,7 +114,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
-
+    
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
               add_address(xml, 'ShipTo', options[:shipping_address], options) if options[:shipping_address]
@@ -114,14 +123,22 @@ module ActiveMerchant #:nodoc:
             end
             
             xml.tag! 'Tender' do
-              add_credit_card(xml, credit_card)
+              add_credit_card(xml, credit_card, options)
             end
-          end 
+          end
+        end
+        xml.target!
+      end
+      
+      def build_validate_authentication_request(action, pa_res)
+        xml = Builder::XmlMarkup.new 
+        xml.tag! TRANSACTIONS[action] do
+          xml.tag! "PARes", pa_res
         end
         xml.target!
       end
     
-      def add_credit_card(xml, credit_card)
+      def add_credit_card(xml, credit_card, options = {})
         xml.tag! 'Card' do
           xml.tag! 'CardType', credit_card_type(credit_card)
           xml.tag! 'CardNum', credit_card.number
@@ -134,6 +151,18 @@ module ActiveMerchant #:nodoc:
             xml.tag!('ExtData', 'Name' => 'CardIssue', 'Value' => format(credit_card.issue_number, :two_digits)) unless credit_card.issue_number.blank?
           end
           xml.tag! 'ExtData', 'Name' => 'LASTNAME', 'Value' =>  credit_card.last_name
+
+          if results = options[:buyer_auth_result]
+            xml.tag! "BuyerAuthResult" do 
+              xml.tag! "Status", results[:status]
+              xml.tag! "AuthenticationId", results[:authentication_id]
+              xml.tag! "ECI", results[:eci]
+            
+              # Only returned when the status is Y
+              xml.tag! "CAVV", results[:cavv] if results[:cavv]
+              xml.tag! "XID", results[:xid] if results[:xid]
+            end
+          end          
         end
       end
       
@@ -146,14 +175,14 @@ module ActiveMerchant #:nodoc:
       def expdate(creditcard)
         year  = sprintf("%.4i", creditcard.year)
         month = sprintf("%.2i", creditcard.month)
-
+    
         "#{year}#{month}"
       end
       
       def startdate(creditcard)
         year  = format(creditcard.start_year, :two_digits)
         month = format(creditcard.start_month, :two_digits)
-
+    
         "#{month}#{year}"
       end
       
@@ -161,7 +190,7 @@ module ActiveMerchant #:nodoc:
         unless RECURRING_ACTIONS.include?(action)
           raise StandardError, "Invalid Recurring Profile Action: #{action}"
         end
-
+    
         xml = Builder::XmlMarkup.new 
         xml.tag! 'RecurringProfiles' do
           xml.tag! 'RecurringProfile' do
@@ -204,7 +233,7 @@ module ActiveMerchant #:nodoc:
           end
         end
       end
-
+    
       def get_pay_period(options)
         requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily, :semimonthly, :quadweekly, :quarterly, :semiyearly])
         case options[:periodicity]
@@ -218,7 +247,7 @@ module ActiveMerchant #:nodoc:
           when :yearly then 'Yearly'
         end
       end
-
+    
       def format_rp_date(time)
         case time
           when Time, Date then time.strftime("%m%d%Y")

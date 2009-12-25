@@ -1,6 +1,7 @@
 require 'test_helper'
 
 class RemotePayflowTest < Test::Unit::TestCase
+
   def setup
     ActiveMerchant::Billing::Base.gateway_mode = :test
 
@@ -234,4 +235,20 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert credit = @gateway.credit(100, @credit_card, @options)
     assert_success credit
   end
+  
+  def test_verify_enrollment_transaction
+    @credit_card = credit_card('5100000000000008',
+      :type => 'master'
+    )
+    @gateway = PayflowGateway.new(fixtures(:payflow))
+    response = @gateway.verify_enrollment(100, @credit_card, @options)
+    
+    assert_success response
+    assert_equal "1", response.params["eci"]
+    assert_equal "https://pilot-buyerauth-post.verisign.com:443/DDDSecure/Acs3DSecureSim/start", response.params["acs_url"]
+    assert_not_nil response.params["authentication_id"]
+    assert_not_nil response.params["pa_req"]
+    assert_equal "E", response.params["status"]
+  end
+
 end

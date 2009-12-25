@@ -43,7 +43,9 @@ module ActiveMerchant #:nodoc:
         :authorization  => "Authorization",
         :capture        => "Capture",
         :void           => "Void",
-        :credit         => "Credit" 
+        :credit         => "Credit" ,
+        :verify_enrollment => "VerifyEnrollment",
+        :validate_authentication => "ValidateAuthentication"
       }
       
       CVV_CODE = {

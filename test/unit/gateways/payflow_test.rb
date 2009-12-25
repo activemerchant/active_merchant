@@ -195,6 +195,31 @@ class PayflowTest < Test::Unit::TestCase
   def test_ensure_gateway_uses_safe_retry
     assert @gateway.retry_safe
   end
+  
+  def test_successful_verify_enrollment
+    @gateway.expects(:ssl_post).returns(successful_verify_enrollment_response)
+    
+    response = @gateway.verify_enrollment(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "E", response.params['status']
+    assert_equal "1e542f17290374177e45", response.params['authentication_id']
+    assert_equal "eJxVUttuwjAM/RWE9tykpVCKTCQu08ZDERqbpu0tSz0oomlJ27Xs6+eUMjZLkX1s58Q5CTzvDeJyi6oyKCDCopA77CXxtO/i0Pc+3cAL+SDw3SBAf9gXsJk94UnAF5oiybRwHe54wK6QGIzaS10KkOo0X62FZw1YhyBFs1oKtzNgFwxapijmWJS9hTweE70jb+LeIktzqc/A2jqorNKlOYuxz4FdAVTmKPZlmU8Yq+va+SAWdSFRxOGoLAVme4DdhttUNiqIs0lisT6oul0PUfP2Tf414u+HWRN591NgtgNiWaLwOA/5yB31eDhx+WQQAGvzIFM7jLgjNWiyDkFuD5ldgGsLfxNAihvU6ixetku6zRUBNnmmkTpItd8Y2G3ixaMVV5Wk25Bo/9jY6twWLEtC4lA9bGksAGa3su4FWffYFP37BD9aga5V", response.params['pa_req']
+    assert_equal "https://pilot-buyerauth-post.verisign.com:443/DDDSecure/Acs3DSecureSim/start", response.params['acs_url']
+    assert_equal "1", response.params["eci"]
+  end
+  
+  def test_successful_validate_authorization
+    @gateway.expects(:ssl_post).returns(successful_validate_authentication_response)
+    
+    response = @gateway.validate_authentication("pa_res")
+
+    assert_success response
+    assert_equal "Y", response.params["status"]
+    assert_equal "472d2b0c082b34321d1b", response.params["authentication_id"]
+    assert_equal "5", response.params["eci"]
+    assert_equal "Mjg2ZDBlMzZkNWJhOGMxMDU1NzE=", response.params["cavv"]
+    assert_equal "MDAzZjNhMTE2YTM1N2UxNzIxNzY=", response.params["xid"]
+  end
     
   private
   def successful_recurring_response
@@ -299,6 +324,187 @@ class PayflowTest < Test::Unit::TestCase
 			</TransactionResult>
 		</TransactionResults>
 	</ResponseData>
+</XMLPayResponse>
+    XML
+  end
+    
+  def successful_verify_enrollment_response
+    <<-XML
+<?xml version="1.0"?>
+<XMLPayResponse xmlns="http://www.paypal.com/XMLPay">
+  <ResponseData>
+    <Vendor>jadedpixel</Vendor>
+    <Partner>paypal</Partner>
+    <TransactionResults>
+      <TransactionResult>
+        <Result>0</Result>
+        <BuyerAuthResult>
+          <Status>E</Status>
+          <AuthenticationId>1e542f17290374177e45</AuthenticationId>
+          <PAReq>eJxVUttuwjAM/RWE9tykpVCKTCQu08ZDERqbpu0tSz0oomlJ27Xs6+eUMjZLkX1s58Q5CTzvDeJyi6oyKCDCopA77CXxtO/i0Pc+3cAL+SDw3SBAf9gXsJk94UnAF5oiybRwHe54wK6QGIzaS10KkOo0X62FZw1YhyBFs1oKtzNgFwxapijmWJS9hTweE70jb+LeIktzqc/A2jqorNKlOYuxz4FdAVTmKPZlmU8Yq+va+SAWdSFRxOGoLAVme4DdhttUNiqIs0lisT6oul0PUfP2Tf414u+HWRN591NgtgNiWaLwOA/5yB31eDhx+WQQAGvzIFM7jLgjNWiyDkFuD5ldgGsLfxNAihvU6ixetku6zRUBNnmmkTpItd8Y2G3ixaMVV5Wk25Bo/9jY6twWLEtC4lA9bGksAGa3su4FWffYFP37BD9aga5V</PAReq>
+          <ACSUrl>https://pilot-buyerauth-post.verisign.com:443/DDDSecure/Acs3DSecureSim/start</ACSUrl>
+          <ECI>1</ECI>
+        </BuyerAuthResult>
+        <Message>OK</Message>
+      </TransactionResult>
+    </TransactionResults>
+  </ResponseData>
+</XMLPayResponse>    
+    XML
+  end
+  
+  def verify_enrollment_user_authentication_failed
+    <<-XML
+<?xml version="1.0"?>
+<XMLPayResponse xmlns="http://www.paypal.com/XMLPay">
+  <ResponseData>
+    <Vendor>vendor</Vendor>
+    <Partner>verisign</Partner>
+    <TransactionResults>
+      <TransactionResult>
+        <Result>1</Result>
+        <BuyerAuthResult>
+          <Status>I</Status>
+          <ECI>1</ECI>
+        </BuyerAuthResult>
+        <Message>User authentication failed: 3DCC</Message>
+      </TransactionResult>
+    </TransactionResults>
+  </ResponseData>
+</XMLPayResponse>
+    XML
+  end
+  
+  def successful_validate_authentication_response
+    <<-XML
+<?xml version="1.0"?>
+<XMLPayResponse xmlns="http://www.paypal.com/XMLPay">
+  <ResponseData>
+    <Vendor>jadedpixel</Vendor>
+    <Partner>paypal</Partner>
+    <TransactionResults>
+      <TransactionResult>
+        <Result>0</Result>
+        <BuyerAuthResult>
+          <Status>Y</Status>
+          <AuthenticationId>472d2b0c082b34321d1b</AuthenticationId>
+          <ECI>5</ECI>
+          <CAVV>Mjg2ZDBlMzZkNWJhOGMxMDU1NzE=</CAVV>
+          <XID>MDAzZjNhMTE2YTM1N2UxNzIxNzY=</XID>
+        </BuyerAuthResult>
+        <Message>OK</Message>
+      </TransactionResult>
+    </TransactionResults>
+  </ResponseData>
+</XMLPayResponse>
+    XML
+  end
+  
+  def failed_authentication_validate_authentication_response
+    <<-XML
+<?xml version="1.0"?>
+<XMLPayResponse xmlns="http://www.paypal.com/XMLPay">
+  <ResponseData>
+    <Vendor>jadedpixel</Vendor>
+    <Partner>paypal</Partner>
+    <TransactionResults>
+      <TransactionResult>
+        <Result>0</Result>
+        <BuyerAuthResult>
+          <Status>N</Status>
+          <AuthenticationId>496350475b25653e1562</AuthenticationId>
+          <ECI>1</ECI>
+        </BuyerAuthResult>
+        <Message>OK</Message>
+      </TransactionResult>
+    </TransactionResults>
+  </ResponseData>
+</XMLPayResponse>    
+    XML
+  end
+  
+  def invalid_pares_format_response
+    <<-XML
+<?xml version="1.0"?>
+<XMLPayResponse xmlns="http://www.paypal.com/XMLPay">
+  <ResponseData>
+    <Vendor>jadedpixel</Vendor>
+    <Partner>paypal</Partner>
+    <TransactionResults>
+      <TransactionResult>
+        <Result>1042</Result>
+        <BuyerAuthResult>
+          <Status>F</Status>
+        </BuyerAuthResult>
+        <Message>invalid PARES format</Message>
+      </TransactionResult>
+    </TransactionResults>
+  </ResponseData>
+</XMLPayResponse>
+    XML
+  end
+  
+  def successful_verified_by_visa_auth_response
+    <<-XML
+<?xml version="1.0"?>
+<XMLPayResponse xmlns="http://www.paypal.com/XMLPay">
+  <ResponseData>
+    <Vendor>jadedpixel</Vendor>
+    <Partner>paypal</Partner>
+    <TransactionResults>
+      <TransactionResult>
+        <Result>0</Result>
+        <ProcessorResult>
+          <CVResult>M</CVResult>
+          <CardSecure>2</CardSecure>
+          <HostCode>A</HostCode>
+        </ProcessorResult>
+        <FraudPreprocessResult>
+          <Message>No Rules Triggered</Message>
+        </FraudPreprocessResult>
+        <FraudPostprocessResult>
+          <Message>No Rules Triggered</Message>
+        </FraudPostprocessResult>
+        <CardSecure>Y</CardSecure>
+        <CVResult>Match</CVResult>
+        <Message>Approved</Message>
+        <PNRef>V18A2A47B809</PNRef>
+        <AuthCode>787PNI</AuthCode>
+        <ExtData Name="VISACARDLEVEL" Value="12"/>
+      </TransactionResult>
+    </TransactionResults>
+  </ResponseData>
+</XMLPayResponse>
+    XML
+  end
+  
+  def successful_secure_code_auth_response
+    <<-XML
+<?xml version="1.0"?>
+<XMLPayResponse xmlns="http://www.paypal.com/XMLPay">
+  <ResponseData>
+    <Vendor>jadedpixel</Vendor>
+    <Partner>paypal</Partner>
+    <TransactionResults>
+      <TransactionResult>
+        <Result>0</Result>
+        <ProcessorResult>
+          <CVResult>M</CVResult>
+          <HostCode>A</HostCode>
+        </ProcessorResult>
+        <FraudPreprocessResult>
+          <Message>No Rules Triggered</Message>
+        </FraudPreprocessResult>
+        <FraudPostprocessResult>
+          <Message>No Rules Triggered</Message>
+        </FraudPostprocessResult>
+        <CVResult>Match</CVResult>
+        <Message>Approved</Message>
+        <PNRef>V79A1F00B119</PNRef>
+        <AuthCode>313PNI</AuthCode>
+      </TransactionResult>
+    </TransactionResults>
+  </ResponseData>
 </XMLPayResponse>
     XML
   end
