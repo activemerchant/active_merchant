@@ -1,11 +1,12 @@
-require 'active_merchant/billing/integrations/bogus/helper.rb'
-require 'active_merchant/billing/integrations/bogus/notification.rb'
-require 'active_merchant/billing/integrations/bogus/return.rb'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module Bogus
+        autoload :Return, 'active_merchant/billing/integrations/bogus/return.rb'
+        autoload :Helper, 'active_merchant/billing/integrations/bogus/helper.rb'
+        autoload :Notification, 'active_merchant/billing/integrations/bogus/notification.rb'
+
         mattr_accessor :service_url
         self.service_url = 'http://www.bogus.com'
 

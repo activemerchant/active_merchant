@@ -1,8 +1,6 @@
-require 'active_merchant/billing/gateway'
-
 module ActiveMerchant
   module Billing
-    autoload :Gateway, 'gateway'
+    autoload :Gateway, 'active_merchant/billing/gateway'
         
     Dir[File.dirname(__FILE__) + '/gateways/**/*.rb'].each do |f|      
       
