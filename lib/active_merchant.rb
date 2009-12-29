@@ -40,7 +40,7 @@ rescue LoadError
 end
 
 require 'cgi'
-
+require 'rexml/document'
 require 'active_merchant/lib/utils'
 require 'active_merchant/lib/error'
 require 'active_merchant/lib/validateable'
@@ -56,5 +56,6 @@ require 'active_merchant/billing/credit_card_methods'
 require 'active_merchant/billing/credit_card_formatting'
 require 'active_merchant/billing/credit_card'
 require 'active_merchant/billing/base'
+require 'active_merchant/billing/check'
 require 'active_merchant/billing/gateways'
 require 'active_merchant/billing/integrations'
