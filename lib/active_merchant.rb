@@ -58,4 +58,9 @@ require 'active_merchant/billing/credit_card'
 require 'active_merchant/billing/base'
 require 'active_merchant/billing/check'
 require 'active_merchant/billing/gateways'
-require 'active_merchant/billing/integrations'
+
+module ActiveMerchant #:nodoc:
+  module Billing #:nodoc:    
+    autoload :Integrations, 'active_merchant/billing/integrations'    
+  end
+end
