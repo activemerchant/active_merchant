@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* SecurePay changed their delimeter from % to ,. Update gateway to handle changes [Soleone]
 * Fix documentation typo in base.rb [mig-hub]
 * Add capture test to Linkpoint [Dusty Doris]
 * Fix bug in Linkpoint with ternary operator and Ruby 1.9.1 [Dusty Doris]
