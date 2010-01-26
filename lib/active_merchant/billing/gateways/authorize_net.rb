@@ -651,7 +651,5 @@ module ActiveMerchant #:nodoc:
         end
       end
     end
-
-    AuthorizedNetGateway = AuthorizeNetGateway
   end
 end
