@@ -18,14 +18,7 @@ class RemoteBraintreeTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved', response.message
     assert_success response
   end
-  
-  def test_successful_purchase_with_old_naming
-    gateway = BrainTreeGateway.new(fixtures(:braintree))
-    assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_equal 'This transaction has been approved', response.message
-    assert_success response
-  end
-  
+    
   def test_successful_purchase_with_echeck
     check = ActiveMerchant::Billing::Check.new(
               :name => 'Fredd Bloggs',

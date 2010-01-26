@@ -11,7 +11,6 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.braintreepaymentsolutions.com'
       self.display_name = 'Braintree'
     end
-    BrainTreeGateway = BraintreeGateway
   end
 end
 

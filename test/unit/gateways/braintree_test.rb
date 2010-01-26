@@ -107,14 +107,6 @@ class BraintreeTest < Test::Unit::TestCase
     assert_equal 'N', response.cvv_result['code']
   end
   
-  def test_gateway_should_be_available_as_brain_tree
-    gateway = BrainTreeGateway.new(:login => 'l', :password => 'p')
-    gateway.expects(:ssl_post).returns(successful_purchase_response)
-    response = gateway.purchase(@amount, @credit_card)
-    assert_success response
-
-  end
-
   private
   def successful_purchase_response
     'response=1&responsetext=SUCCESS&authcode=123456&transactionid=510695343&avsresponse=N&cvvresponse=N&orderid=ea1e0d50dcc8cfc6e4b55650c592097e&type=sale&response_code=100'
