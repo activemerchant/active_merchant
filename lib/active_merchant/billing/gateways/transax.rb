@@ -20,7 +20,6 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'NELiX TransaX'
 
     end
-    TransaXGateway = TransaxGateway
   end
 end
 

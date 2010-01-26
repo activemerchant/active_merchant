@@ -302,7 +302,6 @@ module ActiveMerchant #:nodoc:
         [ first_name[0,20], last_name[0,20] ]
       end
     end
-    ProtxGateway = SagePayGateway
   end
 end
 

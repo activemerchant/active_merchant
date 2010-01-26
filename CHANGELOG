@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Remove old TransaXGateway constant [cody]
+* Remove old ProtxGateway constant [cody]
 * Remove old BrainTree constant [cody]
 * Remove AuthorizedNet constant [cody]
 * SecurePay changed their delimeter from % to ,. Update gateway to handle changes [Soleone]
