@@ -60,8 +60,51 @@ class ChronopayHelperTest < Test::Unit::TestCase
     fields = @helper.fields.dup
     @helper.billing_address :street => 'My Street'
     
-    # Will still set the state code to 'XX'
-    fields['state'] = 'XX'
+    # Will still set the state code to 'XX' and language to 'EN'
+    fields['state']    = 'XX'
+    fields['language'] = 'EN'
     assert_equal fields, @helper.fields
   end
+  
+  
+  def test_sets_corresponding_checkout_language_for_country
+    @helper.billing_address :country => 'DEU'
+    assert_field 'language', 'DE'
+
+    @helper.billing_address :country => 'RUS'
+    assert_field 'language', 'RU'
+
+    @helper.billing_address :country => 'Spain'
+    assert_field 'language', 'ES'
+
+    @helper.billing_address :country => 'Venezuela'
+    assert_field 'language', 'ES'
+
+    @helper.billing_address :country => 'Portugal'
+    assert_field 'language', 'PT'
+
+    @helper.billing_address :country => 'China'
+    assert_field 'language', 'CN1'
+
+    @helper.billing_address :country => 'Latvia'
+    assert_field 'language', 'LV'
+  end
+
+  def test_checkout_language_defaults_to_english
+    @helper.billing_address :country => 'USA'   
+    assert_field 'language', 'EN'
+
+    @helper.billing_address :country => 'Canada'
+    assert_field 'language', 'EN'
+
+    @helper.billing_address :country => 'Great Britain'
+    assert_field 'language', 'EN'
+
+    @helper.billing_address :country => 'Italy'
+    assert_field 'language', 'EN'
+
+    @helper.billing_address :country => 'Japan'
+    assert_field 'language', 'EN'
+  end
+  
 end
