@@ -42,8 +42,8 @@ end
 Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_dir = 'doc'
   rdoc.title    = "ActiveMerchant library"
-  rdoc.options << '--line-numbers' << '--inline-source' << '--main=README'
-  rdoc.rdoc_files.include('README', 'CHANGELOG')
+  rdoc.options << '--line-numbers' << '--inline-source' << '--main=README.rdoc'
+  rdoc.rdoc_files.include('README.rdoc', 'CHANGELOG')
   rdoc.rdoc_files.include('lib/**/*.rb')
   rdoc.rdoc_files.exclude('lib/tasks')
 end
