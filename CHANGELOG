@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix custom assertions for Ruby 1.9 [cody]
 * Deprecate Money objects [cody]
 * Update JCB rejex to catch all valid PANs [pjhyett]
 * Remove old TransaXGateway constant [cody]

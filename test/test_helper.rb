@@ -30,6 +30,8 @@ end
 
 module ActiveMerchant
   module Assertions
+    AssertionClass = RUBY_VERSION > '1.9' ? MiniTest::Assertion : Test::Unit::AssertionFailedError
+    
     def assert_field(field, value)
       clean_backtrace do 
         assert_equal value, @helper.fields[field]
@@ -92,10 +94,10 @@ module ActiveMerchant
     
     private
     def clean_backtrace(&block)
-      yield
-    rescue Test::Unit::AssertionFailedError => e
+      yield    
+    rescue AssertionClass => e
       path = File.expand_path(__FILE__)
-      raise Test::Unit::AssertionFailedError, e.message, e.backtrace.reject { |line| File.expand_path(line) =~ /#{path}/ }
+      raise AssertionClass, e.message, e.backtrace.reject { |line| File.expand_path(line) =~ /#{path}/ }
     end
   end
   
