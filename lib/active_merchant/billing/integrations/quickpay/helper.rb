@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
           mapping :md5secret, 'md5secret'
 
           mapping :customer, ''
-          mapping :billing_address, ''
+          mapping :billing_address, {}
           mapping :tax, ''
           mapping :shipping, ''
         end
