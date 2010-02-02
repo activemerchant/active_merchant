@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Set default currency of Braintree to USD [cody]
 * Fix QuickPay helper for Ruby 1.9 compat [cody]
 * Use String#each_line instead of collect in PaySecureGateway for Ruby 1.9 compat [cody]
 * Use String#each_line instead of to_a in SagePayGateway for Ruby 1.9 compat [cody]
