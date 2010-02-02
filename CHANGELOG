@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Deprecate Money objects [cody]
 * Update JCB rejex to catch all valid PANs [pjhyett]
 * Remove old TransaXGateway constant [cody]
 * Remove old ProtxGateway constant [cody]

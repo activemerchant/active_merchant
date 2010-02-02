@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * <tt>money</tt> -- The amount to be authorized. Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> -- The amount to be authorized as an Integer value in cents.
       # * <tt>creditcard</tt> -- The CreditCard details for the transaction.
       # * <tt>options</tt> -- A hash of optional parameters.
       def authorize(money, creditcard, options = {})
@@ -97,7 +97,7 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * <tt>money</tt> -- The amount to be purchased. Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> -- The amount to be purchased as an Integer value in cents.
       # * <tt>creditcard</tt> -- The CreditCard details for the transaction.
       # * <tt>options</tt> -- A hash of optional parameters.
       def purchase(money, creditcard, options = {})
@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * <tt>money</tt> -- The amount to be captured.  Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> -- The amount to be captured as an Integer value in cents.
       # * <tt>authorization</tt> -- The authorization returned from the previous authorize request.
       def capture(money, authorization, options = {})
         post = {:trans_id => authorization}
@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * <tt>money</tt> -- The amount to be credited to the customer. Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> -- The amount to be credited to the customer as an Integer value in cents.
       # * <tt>identification</tt> -- The ID of the original transaction against which the credit is being issued.
       # * <tt>options</tt> -- A hash of parameters.
       #
@@ -164,8 +164,7 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * <tt>money</tt> -- The amount to be charged to the customer at each interval. Either an Integer value in cents or
-      #   a Money object.
+      # * <tt>money</tt> -- The amount to be charged to the customer at each interval as an Integer value in cents.
       # * <tt>creditcard</tt> -- The CreditCard details for the transaction.
       # * <tt>options</tt> -- A hash of parameters.
       #

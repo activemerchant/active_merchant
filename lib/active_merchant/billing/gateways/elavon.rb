@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
       # Authorize a credit card for a given amount.
       # 
       # ==== Parameters
-      # * <tt>money</tt> - The amount to be authorized.  Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> - The amount to be authorized as an Integer value in cents.
       # * <tt>credit_card</tt> - The CreditCard details for the transaction.
       # * <tt>options</tt>
       #   * <tt>:billing_address</tt> - The billing address for the cardholder.      
@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
       # Capture authorized funds from a credit card.
       # 
       # ==== Parameters
-      # * <tt>money</tt> - The amount to be captured.  Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> - The amount to be captured as an Integer value in cents.
       # * <tt>authorization</tt> - The approval code returned from the initial authorization.
       # * <tt>options</tt>
       #   * <tt>:credit_card</tt> - The CreditCard details from the initial transaction (required).
