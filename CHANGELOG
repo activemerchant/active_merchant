@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Use String#each_line instead of collect in PaySecureGateway for Ruby 1.9 compat [cody]
 * Use String#each_line instead of to_a in SagePayGateway for Ruby 1.9 compat [cody]
 * Don't return an array when finding the country code. Fixes issue with Ruby 1.9 [cody]
 * Fix custom assertions for Ruby 1.9 [cody]
