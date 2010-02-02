@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix Gestpay notification to avoid Ruby 1.9 warnings [cody]
 * Fix Chronopay notification time parsing for Ruby 1.9 [Joe Van Dyk]
 * Set default currency of Braintree to USD [cody]
 * Fix QuickPay helper for Ruby 1.9 compat [cody]
