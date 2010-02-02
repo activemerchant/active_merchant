@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Don't return an array when finding the country code. Fixes issue with Ruby 1.9 [cody]
 * Fix custom assertions for Ruby 1.9 [cody]
 * Deprecate Money objects [cody]
 * Update JCB rejex to catch all valid PANs [pjhyett]

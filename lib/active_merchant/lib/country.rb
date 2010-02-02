@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
     end
 
     def code(format)
-      @codes.select{|c| c.format == format}
+      @codes.find{|c| c.format == format}
     end
 
     def to_s
