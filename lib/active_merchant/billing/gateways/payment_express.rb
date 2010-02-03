@@ -187,7 +187,7 @@ module ActiveMerchant #:nodoc:
         response = parse( ssl_post(URL, request.to_s) )
         
         # Return a response
-        PaymentExpressResponse.new(response[:success] == APPROVED, response[:response_text], response,
+        PaymentExpressResponse.new(response[:success] == APPROVED, response[:card_holder_help_text], response,
           :test => response[:test_mode] == '1',
           :authorization => response[:dps_txn_ref]
         )
