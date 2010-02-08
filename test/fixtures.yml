@@ -101,6 +101,10 @@ modern_payments:
 moneris:
   login: store1
   password: yesguy
+  
+netaxept:
+  login: LOGIN
+  password: PASSWORD
 
 # Working credentials, no need to replace
 # Contact Netbilling for login info to the admin area  
