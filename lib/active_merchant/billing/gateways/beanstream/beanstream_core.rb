@@ -105,7 +105,9 @@ module ActiveMerchant #:nodoc:
         post[:adjId] = reference
       end
       
-      def add_address(post, options)      
+      def add_address(post, options)
+        prepare_address_for_non_american_countries(options)
+        
         if billing_address = options[:billing_address] || options[:address]
           post[:ordName]          = billing_address[:name]
           post[:ordEmailAddress]  = options[:email]
@@ -129,6 +131,16 @@ module ActiveMerchant #:nodoc:
           post[:shipCountry]      = shipping_address[:country]
           post[:shippingMethod]   = shipping_address[:shipping_method]
           post[:deliveryEstimate] = shipping_address[:delivery_estimate]
+        end
+      end
+
+      def prepare_address_for_non_american_countries(options)
+        [ options[:billing_address], options[:shipping_address] ].compact.each do |address|
+          country = Country.find(address[:country])
+          unless country.name == 'Canada' || country.name == 'United States'
+            address[:state] = '--'
+            address[:zip]   = '000000' unless address[:zip]
+          end
         end
       end
 
