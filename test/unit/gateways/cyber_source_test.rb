@@ -136,8 +136,45 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response_capture.test?  
   end
 
+  def test_successful_purchase_with_shipping_address
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(mock_shipping_address))
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']}", response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_request_with_shipping_address
+    @gateway.stubs(:ssl_post).returns(successful_capture_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(mock_shipping_address))
+    assert response.success?
+    assert response.test?
+  end
+
+  def test_successful_auth_request_with_shipping_addres
+    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(mock_shipping_address))
+    assert_equal Response, response.class
+    assert response.success?
+    assert response.test?
+  end
+
   private
-  
+
+  def mock_shipping_address
+    { :shipping_address => {
+                :address1 => '5678 My Shipping Street',
+                :address2 => 'Apt 1',
+                :company => 'Widgets Inc',
+                :city => 'Ottawa',
+                :state => 'ON',
+                :zip => 'K1C2N6',
+                :country => 'Canada',
+                :phone => '(555)555-6666'
+    }}
+  end
+
   def successful_purchase_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">

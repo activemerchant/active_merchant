@@ -173,6 +173,7 @@ module ActiveMerchant #:nodoc:
       def build_auth_request(money, creditcard, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_address(xml, creditcard, options[:billing_address], options)
+        add_address(xml, creditcard, options[:shipping_address], options, true) if options[:shipping_address]
         add_purchase_data(xml, money, true, options)
         add_creditcard(xml, creditcard)
         add_auth_service(xml)
@@ -205,6 +206,7 @@ module ActiveMerchant #:nodoc:
       def build_purchase_request(money, creditcard, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_address(xml, creditcard, options[:billing_address], options)
+        add_address(xml, creditcard, options[:shipping_address], options, true) if options[:shipping_address]
         add_purchase_data(xml, money, true, options)
         add_creditcard(xml, creditcard)
         add_purchase_service(xml, options)

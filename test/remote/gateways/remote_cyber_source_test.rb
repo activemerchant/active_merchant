@@ -8,9 +8,9 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4111111111111111', :type => 'visa')
     @declined_card = credit_card('801111111111111', :type => 'visa')
-    
+
     @amount = 100
-    
+
     @options = {
       :billing_address => address,
 
@@ -29,7 +29,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
           :description => 'Marble Snowcone',
           :sku => 'FAKE1232132113123'
         }
-      ],  
+      ],
       :currency => 'USD',
       :email => 'someguy1232@fakeemail.net',
       :ignore_avs => 'true',
@@ -37,7 +37,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     }
 
   end
-  
+
   def test_successful_authorization
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal 'Successful transaction', response.message
@@ -63,18 +63,18 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   end
 
   def test_successful_tax_calculation_with_nexus
-    total_line_items_value = @options[:line_items].inject(0) do |sum, item| 
+    total_line_items_value = @options[:line_items].inject(0) do |sum, item|
                                sum += item[:declared_value] * item[:quantity]
                              end
-    
+
     canada_gst_rate = 0.05
     ontario_pst_rate = 0.08
-    
-    
+
+
     total_pst = total_line_items_value.to_f * ontario_pst_rate / 100
     total_gst = total_line_items_value.to_f * canada_gst_rate / 100
     total_tax = total_pst + total_gst
-    
+
     assert response = @gateway.calculate_tax(@credit_card, @options.merge(:nexus => 'ON'))
     assert_equal 'Successful transaction', response.message
     assert response.params['totalTaxAmount']
@@ -103,11 +103,11 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal 'Successful transaction', auth.message
-  
+
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
   end
-  
+
   def test_successful_authorization_and_failed_capture
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -130,7 +130,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_match /wsse:InvalidSecurity/, response.message
     assert_failure response
   end
-  
+
   def test_successful_credit
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Successful transaction', response.message
@@ -139,6 +139,38 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.credit(@amount, response.authorization)
     assert_equal 'Successful transaction', response.message
     assert_success response
-    assert response.test?       
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_shipping_address
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(mock_shipping_address))
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']}", response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorization_with_shipping_address
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(mock_shipping_address))
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+
+  private
+
+  def mock_shipping_address
+    { :shipping_address => {
+                :address1 => '5678 My Shipping Street',
+                :address2 => 'Apt 1',
+                :company => 'Widgets Inc',
+                :city => 'Ottawa',
+                :state => 'ON',
+                :zip => 'K1C2N6',
+                :country => 'Canada',
+                :phone => '(555)555-6666'
+    }}
   end
 end
