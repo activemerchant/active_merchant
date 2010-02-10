@@ -175,6 +175,21 @@ class SkipJackTest < Test::Unit::TestCase
     assert_failure response
   end
   
+
+  def test_serial_number_is_added_before_developer_serial_number_for_authorization
+    @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI', 'Year=2011&ShipToPhone=&SerialNumber=X&SJName=Longbob+Longsen&OrderString=1%7ENone%7E0.00%7E0%7EN%7E%7C%7C&OrderNumber=1&OrderDescription=&Month=9&InvoiceNumber=&Email=cody%40example.com&DeveloperSerialNumber=Y&CustomerCode=&CVV2=123&AccountNumber=4242424242424242').returns(successful_authorization_response)
+    
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+  end
+  
+  def test_serial_number_is_added_before_developer_serial_number_for_capture
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    
+    @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', "szTransactionId=#{response.authorization}&szSerialNumber=X&szForceSettlement=0&szDeveloperSerialNumber=Y&szDesiredStatus=SETTLE").returns(successful_capture_response)
+    assert response = @gateway.capture(@amount, response.authorization)    
+  end
+  
   private
   def successful_authorization_response
     <<-CSV
