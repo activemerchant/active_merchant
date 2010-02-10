@@ -136,8 +136,7 @@ module ActiveMerchant #:nodoc:
 
       def prepare_address_for_non_american_countries(options)
         [ options[:billing_address], options[:shipping_address] ].compact.each do |address|
-          country = Country.find(address[:country])
-          unless country.name == 'Canada' || country.name == 'United States'
+          unless ['US', 'CA'].include?(address[:country])
             address[:state] = '--'
             address[:zip]   = '000000' unless address[:zip]
           end
