@@ -1,5 +1,10 @@
 = ActiveMerchant CHANGELOG
 
+* Work around SkipJack bug by reversing the order of the query params [Soleone]
+* Fix uppercase character in autoload of 2Checkout's Notification class [Edward Ocampo-Gooding]
+* Detect language used in Chronopay integration based on billing address country [Soleone]
+* Better handle international addresses in BeanstreamGateway [Soleone]
+
 == Version 1.5.0 (February 2, 2010)
 
 * Fix Gestpay notification to avoid Ruby 1.9 warnings [cody]
