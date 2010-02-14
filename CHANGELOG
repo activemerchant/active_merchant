@@ -1,5 +1,8 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.5.1 (February 14, 2010)
+
+* Cleanup Rakefile, add gemspec and prepare for 1.5.1 release [cody]
 * Update copyright dates [cody]
 * Work around SkipJack bug by reversing the order of the query params [Soleone]
 * Fix uppercase character in autoload of 2Checkout's Notification class [Edward Ocampo-Gooding]
