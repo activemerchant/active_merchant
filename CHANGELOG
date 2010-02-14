@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Update copyright dates [cody]
 * Work around SkipJack bug by reversing the order of the query params [Soleone]
 * Fix uppercase character in autoload of 2Checkout's Notification class [Edward Ocampo-Gooding]
 * Detect language used in Chronopay integration based on billing address country [Soleone]
