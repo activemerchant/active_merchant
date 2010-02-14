@@ -1,12 +1,12 @@
 #!/usr/bin/env ruby
-$:.unshift(File.dirname(__FILE__) + '/../lib')
+$:.unshift File.expand_path('../../lib', __FILE__)
 
-require 'active_merchant'
 require 'rubygems'
-require 'money'
 require 'test/unit'
+require 'money'
 require 'mocha'
 require 'yaml'
+require 'active_merchant'
 
 begin
   gem 'actionpack'
