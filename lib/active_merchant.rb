@@ -23,24 +23,11 @@
                     
 $:.unshift File.dirname(__FILE__)
 
-# Include rails' active support for all the core extensions we love
-begin
-  require 'active_support'
-rescue LoadError
-  require 'rubygems'
-  gem 'activesupport', ">=2.0.0"
-  require 'active_support'
-end
-
-begin
-  require 'builder'
-rescue LoadError
-  require 'rubygems'
-  require 'builder'
-end
-
+require 'active_support'
+require 'builder'
 require 'cgi'
 require 'rexml/document'
+
 require 'active_merchant/lib/utils'
 require 'active_merchant/lib/error'
 require 'active_merchant/lib/validateable'
@@ -50,17 +37,10 @@ require 'active_merchant/lib/post_data'
 require 'active_merchant/lib/requires_parameters'
 require 'active_merchant/lib/country'
 
-require 'active_merchant/billing/avs_result'
-require 'active_merchant/billing/cvv_result'
-require 'active_merchant/billing/credit_card_methods'
-require 'active_merchant/billing/credit_card_formatting'
-require 'active_merchant/billing/credit_card'
-require 'active_merchant/billing/base'
-require 'active_merchant/billing/check'
-require 'active_merchant/billing/gateways'
+require 'active_merchant/billing'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:    
-    autoload :Integrations, 'active_merchant/billing/integrations'    
+    autoload :Integrations, 'active_merchant/billing/integrations'
   end
 end
