@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add JCB and Diners Club to LinkPoint [Soleone]
+
 == Version 1.5.1 (February 14, 2010)
 
 * Cleanup Rakefile, add gemspec and prepare for 1.5.1 release [cody]

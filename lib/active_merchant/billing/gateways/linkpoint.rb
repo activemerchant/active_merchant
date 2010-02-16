@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
       self.ssl_strict = false
       
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
       self.homepage_url = 'http://www.linkpoint.com/'
       self.display_name = 'LinkPoint'
            
