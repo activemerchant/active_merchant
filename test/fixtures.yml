@@ -23,6 +23,7 @@ beanstream:
   login: merchant id
   user: username
   password: password
+  secure_profile_api_key: API Access Passcode
   
 beanstream_interac:
   login: merchant id
