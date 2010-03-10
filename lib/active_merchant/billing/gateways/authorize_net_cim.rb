@@ -537,6 +537,8 @@ module ActiveMerchant #:nodoc:
           add_payment_profile(xml, options[:payment_profile]) 
         end
 
+        xml.tag!('validationMode', CIM_VALIDATION_MODES[options[:validation_mode]]) if options[:validation_mode]
+		
         xml.target!
       end
 
