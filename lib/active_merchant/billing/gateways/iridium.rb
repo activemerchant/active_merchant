@@ -131,19 +131,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customerdetails(xml, creditcard, address, options, shipTo = false)
-        country_code = CountryCodes.find_by_a2[address[:country]][:numeric] rescue 724 # rescue'd to Spain
         xml.tag! 'CustomerDetails' do
-          xml.tag! 'BillingAddress' do
-            xml.tag! 'Address1', address[:address1]
-            xml.tag! 'Address2', address[:address2]
-            xml.tag! 'City', address[:city]
-            xml.tag! 'State', address[:state]
-            xml.tag! 'PostCode', address[:zip]
-            xml.tag! 'CountryCode', country_code
+          if address
+            country_code = CountryCodes.find_by_a2[address[:country]][:numeric] rescue 724 # rescue'd to Spain
+            xml.tag! 'BillingAddress' do
+              xml.tag! 'Address1', address[:address1]
+              xml.tag! 'Address2', address[:address2]
+              xml.tag! 'City', address[:city]
+              xml.tag! 'State', address[:state]
+              xml.tag! 'PostCode', address[:zip]
+              xml.tag! 'CountryCode', country_code
+            end
+            xml.tag! 'PhoneNumber', address[:phone]
           end
           
           xml.tag! 'EmailAddress', options[:email]
-          xml.tag! 'PhoneNumber', address[:phone]
           xml.tag! 'CustomerIPAddress', options[:ip] || "127.0.0.1"
         end   
       end

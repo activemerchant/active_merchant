@@ -142,4 +142,18 @@ class RemoteIridiumTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Input Variable Errors', response.message
   end
+
+  def test_successful_purchase_with_no_verification_value
+    @credit_card.verification_value = nil
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization, response.authorization 
+    assert response.message[/AuthCode/], response.message
+  end
+  
+  def test_successful_authorize_with_no_address
+    @options.delete(:billing_address)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
 end
