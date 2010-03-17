@@ -1,7 +1,8 @@
 = ActiveMerchant CHANGELOG
 
+* Add Orbital gateay [ntalbott]
 * Test deprecation warnings; add deprecation line numbers [ntabott]
-* Add WorldPay Gateway [ntalbott]
+* Add WorldPay gateway [ntalbott]
 
 == Version 1.13.0 (Apr 19, 2011)
 

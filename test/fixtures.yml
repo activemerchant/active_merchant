@@ -169,6 +169,11 @@ paybox_direct:
   login: 199988899
   password: 1999888I
 
+orbital_gateway:
+  login: LOGIN
+  password: PASSWORD
+  merchant_id: MERCHANTID
+  
 payflow:
   login: LOGIN
   password: PASSWORD
