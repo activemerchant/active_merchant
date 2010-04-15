@@ -170,8 +170,8 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_allow_guest_checkout
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:allow_guest_checkout => true}))
     
-    assert_equal 'Sole', REXML::XPath.first(xml, '//n2:SolutionTypeType').text
-    assert_equal 'Billing', REXML::XPath.first(xml, '//n2:LandingPageType').text
+    assert_equal 'Sole', REXML::XPath.first(xml, '//n2:SolutionType').text
+    assert_equal 'Billing', REXML::XPath.first(xml, '//n2:LandingPage').text
   end
 
   private
