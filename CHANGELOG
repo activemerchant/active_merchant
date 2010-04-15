@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Use card_brand method for checking for checks in Sage and Beanstream [cody]
 * Add JCB and Diners Club to LinkPoint [Soleone]
 
 == Version 1.5.1 (February 14, 2010)

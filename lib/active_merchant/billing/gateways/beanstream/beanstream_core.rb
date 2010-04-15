@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
     
       private
       def purchase_action(source)
-        source.type.to_s == "check" ? :check_purchase : :purchase
+        card_brand(source) == "check" ? :check_purchase : :purchase
       end
       
       def void_action(original_transaction_type)
@@ -221,7 +221,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_source(post, source)
-        source.type == "check" ? add_check(post, source) : add_credit_card(post, source)
+        card_brand(source) == "check" ? add_check(post, source) : add_credit_card(post, source)
       end
       
       def add_transaction_type(post, action)
