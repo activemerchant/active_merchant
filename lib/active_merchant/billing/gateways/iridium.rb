@@ -133,14 +133,16 @@ module ActiveMerchant #:nodoc:
       def add_customerdetails(xml, creditcard, address, options, shipTo = false)
         xml.tag! 'CustomerDetails' do
           if address
-            country_code = Country.find(address[:country]).code(:numeric)
+            unless address[:country].blank?
+              country_code = Country.find(address[:country]).code(:numeric)
+            end
             xml.tag! 'BillingAddress' do
               xml.tag! 'Address1', address[:address1]
               xml.tag! 'Address2', address[:address2]
               xml.tag! 'City', address[:city]
               xml.tag! 'State', address[:state]
               xml.tag! 'PostCode', address[:zip]
-              xml.tag! 'CountryCode', country_code
+              xml.tag! 'CountryCode', country_code if country_code
             end
             xml.tag! 'PhoneNumber', address[:phone]
           end
