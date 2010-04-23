@@ -350,6 +350,6 @@ wirecard:
 
 # replace with your Merchant eSolutions developer profile credentials
 merchant_esolutions:
-  login: "profile_id"
-  password: "profile_key"
+  login: "94100008043900000004"
+  password: "gvQzgKXOTEoDzpzJzROrQQzoKLaEqxjf"
   
