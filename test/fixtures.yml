@@ -348,8 +348,13 @@ wirecard:
   login: 56500
   password: TestXAPTER
 
-# replace with your Merchant eSolutions developer profile credentials
+# Working test credentials, no need to replace
 merchant_esolutions:
   login: "94100008043900000004"
   password: "gvQzgKXOTEoDzpzJzROrQQzoKLaEqxjf"
+
+garanti:
+  client_id: '100104' 
+  login: 'paymentuser'
+  password: 'userpayment'
   

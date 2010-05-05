@@ -1,5 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+* Support for Garanti Sanal Pos: Turkish bank and billing gateway [Selem Delul]
+* Add deprecation note for Money objects to Bogus gateway [Soleone]
+* Updated test URL for Merchant eSolutions and added valid remote test credentials [Soleone]
+* Add new error class for SSL certificate problems in connection class  [Soleone]
 * Update valid_month and valid_expiry_year to coerce string arguments to integers [cody]
 * Add support for displaying credit cards with PayPal Express. Use the :allow_guest_checkout => true option when setting up the transaction [Edward Ocampo-Gooding]
 * Use card_brand method for checking for checks in Sage and Beanstream [cody]
