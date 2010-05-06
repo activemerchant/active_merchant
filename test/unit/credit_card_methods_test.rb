@@ -45,6 +45,19 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_false valid_start_year?(1987)
   end
   
+  def test_valid_start_year_can_handle_strings
+    assert valid_start_year?("2009")
+  end
+  
+  def test_valid_month_can_handle_strings
+    assert valid_month?("1")
+  end
+  
+  def test_valid_expiry_year_can_handle_strings
+    year = Time.now.year + 1
+    assert valid_expiry_year?(year.to_s)
+  end
+  
   def test_should_be_able_to_identify_valid_issue_numbers
     assert valid_issue_number?(1)
     assert valid_issue_number?(10)

@@ -22,11 +22,11 @@ module ActiveMerchant #:nodoc:
       end
       
       def valid_month?(month)
-        (1..12).include?(month)
+        (1..12).include?(month.to_i)
       end
       
       def valid_expiry_year?(year)
-        (Time.now.year..Time.now.year + 20).include?(year)
+        (Time.now.year..Time.now.year + 20).include?(year.to_i)
       end
       
       def valid_start_year?(year)
