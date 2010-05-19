@@ -30,6 +30,7 @@ require 'rexml/document'
 
 require 'active_merchant/common'
 require 'active_merchant/billing'
+require 'active_merchant/version'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:    

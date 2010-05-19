@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.homepage = 'http://activemerchant.org/'
   s.rubyforge_project = 'activemerchant'
   
-  s.files = Dir['CHANGELOG', 'README.rdoc', 'MIT-LICENSE', 'CONTRIBUTORS', 'gem-public_cert.pem', 'lib/**/*']
+  s.files = Dir['CHANGELOG', 'README.rdoc', 'MIT-LICENSE', 'CONTRIBUTORS', 'gem-public_cert.pem', 'lib/**/*', 'vendor/**/*']
   s.require_path = 'lib'
   
   s.has_rdoc = true

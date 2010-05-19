@@ -67,12 +67,12 @@ namespace :rubyforge do
   task :publish => :package do
     require 'rubyforge'
   
-    packages = %w( gem tgz zip ).collect{ |ext| "pkg/activemerchant-#{VERSION}.#{ext}" }
+    packages = %w( gem tgz zip ).collect{ |ext| "pkg/activemerchant-#{ActiveMerchant::VERSION}.#{ext}" }
   
     rubyforge = RubyForge.new
     rubyforge.configure
     rubyforge.login
-    rubyforge.add_release('activemerchant', 'activemerchant', "REL #{VERSION}", *packages)
+    rubyforge.add_release('activemerchant', 'activemerchant', "REL #{ActiveMerchant::VERSION}", *packages)
   end
 
   desc 'Upload RDoc to RubyForge'
