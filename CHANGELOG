@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix failing unit test for Garanti gateway [cody]
 * Fix failing CyberSource remote test [Patrick Joyce]
 * Support for Garanti Sanal Pos: Turkish bank and billing gateway [Selem Delul]
 * Add deprecation note for Money objects to Bogus gateway [Soleone]

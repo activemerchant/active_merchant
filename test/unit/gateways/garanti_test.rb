@@ -3,7 +3,11 @@ require 'test_helper'
 class GarantiTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
-    @gateway = GarantiGateway.new(fixtures(:garanti))
+    @gateway = GarantiGateway.new(
+                 :login => 'l',
+                 :password => 'p',
+                 :client_id => '1'
+               )
 
     @credit_card = credit_card
     @amount = 1000 #1000 cents, 10$
