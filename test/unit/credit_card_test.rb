@@ -106,8 +106,8 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_require_a_valid_card_month
-    @visa.month  = Time.now.month
-    @visa.year   = Time.now.year
+    @visa.month  = Time.now.utc.month
+    @visa.year   = Time.now.utc.year
     
     assert_valid @visa
   end

@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix timezone issue in credit card test. [cody]
 * Fix failing unit test for Garanti gateway [cody]
 * Fix failing CyberSource remote test [Patrick Joyce]
 * Support for Garanti Sanal Pos: Turkish bank and billing gateway [Selem Delul]
