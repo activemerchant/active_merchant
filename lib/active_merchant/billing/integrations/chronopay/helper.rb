@@ -18,9 +18,9 @@ module ActiveMerchant #:nodoc:
             'DE'  => %w( DE AT CH LI ),
             'PT'  => %w( AO BR CV GW MZ PT ST TL),
             'RU'  => %w( BY KG KZ RU ),
-            'LV'  => 'LV',
-            'CN1' => 'CN',
-            'NL'  => 'NL'
+            'LV'  => %w( LV ),
+            'CN1' => %w( CN ),
+            'NL'  => %w( NL )
           }
           
           LANG_FOR_COUNTRY = COUNTRIES_FOR_LANG.inject(Hash.new("EN")) do |memo, (lang, countries)|

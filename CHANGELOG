@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix test failure in chronopay helper in Ruby 1.9.1 [cody]
 * Fix timezone issue in credit card test. [cody]
 * Fix failing unit test for Garanti gateway [cody]
 * Fix failing CyberSource remote test [Patrick Joyce]
