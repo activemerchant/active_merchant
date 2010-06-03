@@ -102,10 +102,18 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:NoShipping', options[:no_shipping] ? '1' : '0'
               xml.tag! 'n2:ReturnURL', options[:return_url]
               xml.tag! 'n2:CancelURL', options[:cancel_return_url]
-              xml.tag! 'n2:IPAddress', options[:ip]
+              xml.tag! 'n2:IPAddress', options[:ip] unless options[:ip].blank?
               xml.tag! 'n2:OrderDescription', options[:description]
               xml.tag! 'n2:BuyerEmail', options[:email] unless options[:email].blank?
               xml.tag! 'n2:InvoiceID', options[:order_id]
+              
+              if options[:billing_agreement]
+                xml.tag! 'n2:BillingAgreementDetails' do
+                  xml.tag! 'n2:BillingType', options[:billing_agreement][:type]
+                  xml.tag! 'n2:BillingAgreementDescription', options[:billing_agreement][:description]
+                  xml.tag! 'n2:PaymentType', options[:billing_agreement][:payment_type] || 'InstantOnly'
+                end
+              end
         
               # Customization of the payment page
               xml.tag! 'n2:PageStyle', options[:page_style] unless options[:page_style].blank?
