@@ -47,7 +47,17 @@ module ActiveMerchant #:nodoc:
         # RCK for Returned Checks 
         # ARC for Account Receivable Entry 
         # TEL for TelephoneInitiated
-        post[:C_customer_type] = "WEB"
+        if (options[:customer_type] == 'business')
+          post[:C_customer_type] = "CCD"
+          post[:C_ein]     = options[:business_federal_tax_number]
+        else
+          post[:C_customer_type] = "WEB"
+          # Required  Check  Writer  Social  Security  Number  (  Numbers Only, No Dashes )  
+          post[:C_ssn] = options[:ssn].to_s.gsub(/[^\d]/, '')
+          post[:C_dl_state_code] = options[:drivers_license_state]
+          post[:C_dl_number]     = options[:drivers_license_number]
+          post[:C_dob]           = format_birth_date(options[:date_of_birth])                        
+        end
 
         # Optional  10  Digit Originator  ID – Assigned  By for  each transaction  class  or  business  purpose. If  not provided, the default Originator ID for the specific  Customer Type will be applied.  
         post[:C_originator_id] = options[:originator_id]
@@ -55,12 +65,6 @@ module ActiveMerchant #:nodoc:
         # Optional  Transaction Addenda
         post[:T_addenda] = options[:addenda]
 
-        # Required  Check  Writer  Social  Security  Number  (  Numbers Only, No Dashes )  
-        post[:C_ssn] = options[:ssn].to_s.gsub(/[^\d]/, '')
-
-        post[:C_dl_state_code] = options[:drivers_license_state]
-        post[:C_dl_number]     = options[:drivers_license_number]
-        post[:C_dob]           = format_birth_date(options[:date_of_birth])
       end
       
       def format_birth_date(date)
