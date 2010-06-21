@@ -4,6 +4,7 @@ require 'rake/testtask'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'lib/support/gateway_support'
+require 'lib/support/outbound_hosts'
 
 VERSION = "1.5.1"
 
@@ -112,4 +113,10 @@ namespace :gateways do
       support.features
     end
   end
+  
+  desc 'Print the list of destination hosts with port'
+  task :hosts do
+    OutboundHosts.list
+  end
+  
 end
