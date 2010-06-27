@@ -28,15 +28,7 @@ require 'builder'
 require 'cgi'
 require 'rexml/document'
 
-require 'active_merchant/lib/utils'
-require 'active_merchant/lib/error'
-require 'active_merchant/lib/validateable'
-require 'active_merchant/lib/connection'
-require 'active_merchant/lib/posts_data'
-require 'active_merchant/lib/post_data'
-require 'active_merchant/lib/requires_parameters'
-require 'active_merchant/lib/country'
-
+require 'active_merchant/common'
 require 'active_merchant/billing'
 
 module ActiveMerchant #:nodoc:
