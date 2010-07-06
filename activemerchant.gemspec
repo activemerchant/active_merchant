@@ -17,6 +17,7 @@ Gem::Specification.new do |s|
   
   s.add_dependency('activesupport', '>= 2.3.2')
   s.add_dependency('builder', '>= 2.0.0')
+  s.add_dependency('braintree', '>= 2.0.0')
   
   s.signing_key = ENV['GEM_PRIVATE_KEY']
   s.cert_chain  = ['gem-public_cert.pem']

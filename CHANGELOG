@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for new Braintree Blue Gateway (using the braintree gem) [Braintree]
 * Add a task rake gateways:hosts to get a list of all outbound hosts and ports [cody]
 * Fix test failure in chronopay helper in Ruby 1.9.1 [cody]
 * Fix timezone issue in credit card test. [cody]
