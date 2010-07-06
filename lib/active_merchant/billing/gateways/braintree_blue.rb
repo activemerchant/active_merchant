@@ -1,3 +1,5 @@
+require File.dirname(__FILE__) + '/braintree/braintree_common'
+
 begin
   require "braintree"
 rescue LoadError
@@ -9,9 +11,8 @@ raise "Need braintree gem 2.x.y. Run `gem install braintree --version '~>2.0'` t
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BraintreeBlueGateway < Gateway
-      self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb]
-      self.homepage_url = 'http://www.braintreepaymentsolutions.com'
+      include BraintreeCommon
+      
       self.display_name = 'Braintree (Blue Platform)'
 
       def initialize(options = {})

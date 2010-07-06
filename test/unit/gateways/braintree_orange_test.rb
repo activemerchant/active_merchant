@@ -38,9 +38,9 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     assert_equal ["address1", "city", "company", "country", "phone", "state", "zip"], result.stringify_keys.keys.sort
     assert_equal 'CO', result["state"]
     assert_equal '164 Waverley Street', result["address1"]
-    assert_equal 'US', result["country"]
-    
+    assert_equal 'US', result["country"]    
   end
+  
   def test_add_shipping_address
     result = {}
     
@@ -48,8 +48,7 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     assert_equal ["shipping_address1", "shipping_city", "shipping_company", "shipping_country", "shipping_phone", "shipping_state", "shipping_zip"], result.stringify_keys.keys.sort
     assert_equal 'CO', result["shipping_state"]
     assert_equal '164 Waverley Street', result["shipping_address1"]
-    assert_equal 'US', result["shipping_country"]
-    
+    assert_equal 'US', result["shipping_country"]    
   end
   
   def test_supported_countries
@@ -57,7 +56,7 @@ class BraintreeOrangeTest < Test::Unit::TestCase
   end
 
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover], BraintreeOrangeGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :discover, :jcb], BraintreeOrangeGateway.supported_cardtypes
   end
   
   def test_adding_store_adds_vault_id_flag
