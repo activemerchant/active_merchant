@@ -6,8 +6,6 @@ require 'rake/gempackagetask'
 require 'lib/support/gateway_support'
 require 'lib/support/outbound_hosts'
 
-VERSION = "1.5.1"
-
 desc "Run the unit test suite"
 task :default => 'test:units'
 
