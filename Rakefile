@@ -53,9 +53,7 @@ task :release => [ 'gemcutter:publish', 'rubyforge:publish', 'rubyforge:upload_r
 namespace :gemcutter do
   desc "Publish to gemcutter"
   task :publish => :package do
-    require 'rake/gemcutter'
-    Rake::Gemcutter::Tasks.new(spec).define
-    Rake::Task['gem:push'].invoke
+    sh "gem push pkg/activemerchant-#{ActiveMerchant::VERSION}.gem"
   end
 end
 
