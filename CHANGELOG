@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.7.0 (July 9, 2010)
+
 * Add support for new Braintree Blue Gateway (using the braintree gem) [Braintree]
 
 == Version 1.6.0 (July 6, 2010)
