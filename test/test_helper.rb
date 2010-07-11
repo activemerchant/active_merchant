@@ -15,7 +15,11 @@ rescue LoadError
 end
 
 require 'action_controller'
-require 'action_controller/test_process'
+begin
+  require 'action_dispatch/testing/test_process'
+rescue LoadError
+  require 'action_controller/test_process'
+end
 require 'active_merchant/billing/integrations/action_view_helper'
 
 ActiveMerchant::Billing::Base.mode = :test

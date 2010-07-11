@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
         
         private
         def ignore_binding?
-          ActionPack::VERSION::MAJOR >= 2 && ActionPack::VERSION::MINOR >= 2
+          ActionPack::VERSION::MAJOR >= 3 || (ActionPack::VERSION::MAJOR >= 2 && ActionPack::VERSION::MINOR >= 2)
         end
       end
     end
