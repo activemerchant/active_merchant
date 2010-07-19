@@ -3,12 +3,39 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Chronopay
         class Helper < ActiveMerchant::Billing::Integrations::Helper
+          # All currently supported checkout languages:
+          #   es (Spanish)
+          #   en (English)
+          #   de (German)
+          #   pt (Portuguese)
+          #   lv (Latvian)
+          #   cn1 (Chinese Version 1)
+          #   cn2 (Chinese version 2)
+          #   nl (Dutch)
+          #   ru (Russian)
+          COUNTRIES_FOR_LANG = {
+            'ES'  => %w( AR BO CL CO CR CU DO EC SV GQ GT HN MX NI PA PY PE ES UY VE),
+            'DE'  => %w( DE AT CH LI ),
+            'PT'  => %w( AO BR CV GW MZ PT ST TL),
+            'RU'  => %w( BY KG KZ RU ),
+            'LV'  => %w( LV ),
+            'CN1' => %w( CN ),
+            'NL'  => %w( NL )
+          }
+          
+          LANG_FOR_COUNTRY = COUNTRIES_FOR_LANG.inject(Hash.new("EN")) do |memo, (lang, countries)|
+            countries.each do |code|
+              memo[code] = lang
+            end
+            memo
+          end
+          
+
           self.country_format = :alpha3
           
           def initialize(order, account, options = {})
             super
             add_field('cb_type', 'p')
-            add_field('language', 'EN')
           end
 
           # product_id
@@ -56,6 +83,7 @@ module ActiveMerchant #:nodoc:
               field = mappings[:billing_address][k]
               add_field(field, v) unless field.nil?
             end 
+            add_field('language', checkout_language_from_country(country_code))
           end        
 
           # card_no
@@ -74,6 +102,17 @@ module ActiveMerchant #:nodoc:
           # cs2
           # cs3
           # decline_url
+          
+          
+          private
+          
+          def checkout_language_from_country(country_code)
+            country    = Country.find(country_code)
+            short_code = country.code(:alpha2).to_s
+            LANG_FOR_COUNTRY[short_code]
+          rescue InvalidCountryCodeError
+            'EN'
+          end
         end
       end
     end

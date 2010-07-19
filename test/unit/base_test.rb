@@ -15,7 +15,6 @@ class BaseTest < Test::Unit::TestCase
     assert_equal AuthorizeNetGateway,  Base.gateway(:authorize_net)
     assert_equal UsaEpayGateway,       Base.gateway(:usa_epay)
     assert_equal LinkpointGateway,     Base.gateway(:linkpoint)
-    assert_equal AuthorizedNetGateway, Base.gateway(:authorized_net)
   end
 
   def test_should_return_an_integration_by_name

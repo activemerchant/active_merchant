@@ -11,14 +11,14 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside'
       self.display_name = 'PayPal Website Payments Pro (US)'
       
-      def authorize(money, credit_card, options = {})
+      def authorize(money, credit_card_or_referenced_id, options = {})
         requires!(options, :ip)
-        commit 'DoDirectPayment', build_sale_or_authorization_request('Authorization', money, credit_card, options)
+        commit define_transaction_type(credit_card_or_referenced_id), build_sale_or_authorization_request('Authorization', money, credit_card_or_referenced_id, options)
       end
 
-      def purchase(money, credit_card, options = {})
+      def purchase(money, credit_card_or_referenced_id, options = {})
         requires!(options, :ip)
-        commit 'DoDirectPayment', build_sale_or_authorization_request('Sale', money, credit_card, options)
+        commit define_transaction_type(credit_card_or_referenced_id), build_sale_or_authorization_request('Sale', money, credit_card_or_referenced_id, options)
       end
       
       def express
@@ -26,15 +26,28 @@ module ActiveMerchant #:nodoc:
       end
       
       private
-      def build_sale_or_authorization_request(action, money, credit_card, options)
+      
+      def define_transaction_type(transaction_arg)
+        if transaction_arg.is_a?(String)
+          return 'DoReferenceTransaction'
+        else
+          return 'DoDirectPayment'
+        end
+      end
+      
+      def build_sale_or_authorization_request(action, money, credit_card_or_referenced_id, options)
+        transaction_type = define_transaction_type(credit_card_or_referenced_id)
+        reference_id = credit_card_or_referenced_id if transaction_type == "DoReferenceTransaction"
+        
         billing_address = options[:billing_address] || options[:address]
         currency_code = options[:currency] || currency(money)
        
         xml = Builder::XmlMarkup.new :indent => 2
-        xml.tag! 'DoDirectPaymentReq', 'xmlns' => PAYPAL_NAMESPACE do
-          xml.tag! 'DoDirectPaymentRequest', 'xmlns:n2' => EBAY_NAMESPACE do
+        xml.tag! transaction_type + 'Req', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! transaction_type + 'Request', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
-            xml.tag! 'n2:DoDirectPaymentRequestDetails' do
+            xml.tag! 'n2:' + transaction_type + 'RequestDetails' do
+              xml.tag! 'n2:ReferenceID', reference_id if transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:PaymentAction', action
               xml.tag! 'n2:PaymentDetails' do
                 xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => currency_code
@@ -54,7 +67,7 @@ module ActiveMerchant #:nodoc:
                 
                 add_address(xml, 'n2:ShipToAddress', options[:shipping_address]) if options[:shipping_address]
               end
-              add_credit_card(xml, credit_card, billing_address, options)
+              add_credit_card(xml, credit_card_or_referenced_id, billing_address, options) unless transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:IPAddress', options[:ip]
             end
           end

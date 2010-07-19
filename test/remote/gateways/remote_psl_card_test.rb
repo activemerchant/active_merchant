@@ -1,5 +1,3 @@
-# Author::    MoneySpyder, http://moneyspyder.co.uk
-
 require 'test_helper'
 
 class RemotePslCardTest < Test::Unit::TestCase

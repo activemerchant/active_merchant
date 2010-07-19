@@ -26,6 +26,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {Modern Payments}[http://www.modpay.com] - US
 * {Moneris}[http://www.moneris.com/] - CA
 * {NetRegistry}[http://www.netregistry.com.au] - AU
+* {NELiX TransaX Gateway}[http://www.nelixtransax.com] - US
 * {NETbilling}[http://www.netbilling.com] - US
 * {PayJunction}[http://www.payjunction.com/] - US
 * {PaySecure}[http://www.commsecure.com.au/paysecure.shtml] - AU
@@ -43,6 +44,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {Quickpay}[http://quickpay.dk/] - DK
 * {Realex}[http://www.realexpayments.com/] - IE, GB
 * {Sage Payment Solutions}[http://www.sagepayments.com] - US, CA
+* {Sallie Mae}[http://www.salliemae.com] - US
 * {SecurePay}[http://securepay.com.au] - AU
 * {SecurePay}[http://www.securepay.com/] - US
 * {SecurePayTech}[http://www.securepaytech.com/] - NZ

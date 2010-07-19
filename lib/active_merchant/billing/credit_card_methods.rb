@@ -8,13 +8,13 @@ module ActiveMerchant #:nodoc:
         'discover'           => /^(6011|65\d{2})\d{12}$/,
         'american_express'   => /^3[47]\d{13}$/,
         'diners_club'        => /^3(0[0-5]|[68]\d)\d{11}$/,
-        'jcb'                => /^3528\d{12}$/,
+        'jcb'                => /^35(28|29|[3-8]\d)\d{12}$/,
         'switch'             => /^6759\d{12}(\d{2,3})?$/,  
         'solo'               => /^6767\d{12}(\d{2,3})?$/,
         'dankort'            => /^5019\d{12}$/,
         'maestro'            => /^(5[06-8]|6\d)\d{10,17}$/,
         'forbrugsforeningen' => /^600722\d{10}$/,
-        'laser'              => /^(6304[89]\d{11}(\d{2,3})?|670695\d{13})$/
+        'laser'              => /^(6304|6706|6771|6709)\d{8}(\d{4}|\d{6,7})?$/
       }
     
       def self.included(base)
@@ -22,11 +22,11 @@ module ActiveMerchant #:nodoc:
       end
       
       def valid_month?(month)
-        (1..12).include?(month)
+        (1..12).include?(month.to_i)
       end
       
       def valid_expiry_year?(year)
-        (Time.now.year..Time.now.year + 20).include?(year)
+        (Time.now.year..Time.now.year + 20).include?(year.to_i)
       end
       
       def valid_start_year?(year)

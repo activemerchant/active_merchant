@@ -80,6 +80,8 @@ module ActiveMerchant
           raise ConnectionError, "The remote server reset the connection"
         rescue Errno::ECONNREFUSED => e
           raise RetriableConnectionError, "The remote server refused the connection"
+        rescue OpenSSL::X509::CertificateError => e
+          raise ClientCertificateError, "The remote server did not accept the provided SSL certificate"
         rescue Timeout::Error, Errno::ETIMEDOUT => e
           raise ConnectionError, "The connection to the remote server timed out"
         end

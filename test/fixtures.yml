@@ -29,10 +29,15 @@ beanstream_interac:
   user: username
   password: password
 
-braintree:
+braintree_orange:
   login: demo
   password: password
-  
+
+braintree_blue:
+  merchant_id: X
+  public_key: Y
+  private_key: Z
+
 card_stream:
   login: X
   password: Y
@@ -49,6 +54,10 @@ efsnet:
   login: X
   password: Y
 
+elavon:
+  login: LOGIN
+  password: PASSWORD
+
 # Working credentials, no need to replace
 eway:
   login: '87654321'
@@ -57,6 +66,10 @@ eway:
 exact:
   login: "A00427-01" 
   password: testus
+
+first_pay:
+  login:
+  password:
 
 ideal_ing_postbank:
   login: LOGIN
@@ -68,10 +81,18 @@ instapay:
   login: TEST0
   password:
 
+jetpay:
+  login: TESTTERMINAL
+      
 linkpoint:
   login: STOREID
   pem: |--
     PASTE YOUR PEM FILE HERE
+
+merchant_ware:
+ login: 
+ password: 
+ name: 
 
 modern_payments:
   login: login
@@ -91,6 +112,12 @@ net_registry:
   login: X
   password: Y
   
+ogone:
+  login: LOGIN
+  user: USER
+  password: PASSWORD
+  signature: SIGNATURE
+
 payflow:
   login: LOGIN
   password: PASSWORD
@@ -131,7 +158,7 @@ plugnpay:
   login: LOGIN
   password: PASSWORD
   
-protx:
+sage_pay:
   login: LOGIN
   
 # Working credentials, no need to replace
@@ -279,6 +306,9 @@ sage:
   login: login
   password: password
 
+sallie_mae:
+  login: TEST0
+
 secure_pay:
   login: LOGIN
   password: PASSWORD
@@ -328,8 +358,13 @@ wirecard:
   login: 56500
   password: TestXAPTER
 
-# replace with your Merchant eSolutions developer profile credentials
+# Working test credentials, no need to replace
 merchant_esolutions:
-  login: "profile_id"
-  password: "profile_key"
+  login: "94100008043900000004"
+  password: "gvQzgKXOTEoDzpzJzROrQQzoKLaEqxjf"
+
+garanti:
+  client_id: '100104' 
+  login: 'paymentuser'
+  password: 'userpayment'
   

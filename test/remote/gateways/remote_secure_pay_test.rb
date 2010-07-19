@@ -7,7 +7,7 @@ class RemoteSecurePayTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4111111111111111',
       :month => '7',
-      :year  => '2007'
+      :year  => '2014'
     )
     
     @options = { :order_id => generate_unique_id,

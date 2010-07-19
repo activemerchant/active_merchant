@@ -1,4 +1,3 @@
-# Author::    MoneySpyder, www.moneyspyder.co.uk
 require 'test_helper'
 
 class RemoteDataCashTest < Test::Unit::TestCase

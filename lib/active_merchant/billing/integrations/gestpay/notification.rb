@@ -26,7 +26,9 @@ module ActiveMerchant #:nodoc:
           end
           
           def currency
-            CURRENCY_MAPPING.index(params['PAY1_UICCODE'])
+            # Ruby 1.9 compat
+            method = CURRENCY_MAPPING.respond_to?(:key) ? :key : :index
+            CURRENCY_MAPPING.send(method, params['PAY1_UICCODE'])
           end
 
           def test?

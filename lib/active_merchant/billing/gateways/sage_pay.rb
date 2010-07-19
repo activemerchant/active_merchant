@@ -1,13 +1,13 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class ProtxGateway < Gateway  
+    class SagePayGateway < Gateway  
       cattr_accessor :simulate
       self.simulate = false
       
-      TEST_URL = 'https://ukvpstest.protx.com/vspgateway/service'
-      LIVE_URL = 'https://ukvps.protx.com/vspgateway/service'
-      SIMULATOR_URL = 'https://ukvpstest.protx.com/VSPSimulator'
-    
+      TEST_URL = 'https://test.sagepay.com/gateway/service'
+      LIVE_URL = 'https://live.sagepay.com/gateway/service'
+      SIMULATOR_URL = 'https://test.sagepay.com/Simulator'
+      
       APPROVED = 'OK'
     
       TRANSACTIONS = {
@@ -45,8 +45,8 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['GB']
       self.default_currency = 'GBP'
       
-      self.homepage_url = 'http://www.protx.com'
-      self.display_name = 'Protx'
+      self.homepage_url = 'http://www.sagepay.com'
+      self.display_name = 'SagePay'
 
       def initialize(options = {})
         requires!(options, :login)
@@ -281,12 +281,14 @@ module ActiveMerchant #:nodoc:
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
       
-      # Protx returns data in the following format
+      # SagePay returns data in the following format
       # Key1=value1
       # Key2=value2
       def parse(body)
         result = {}
-        body.to_a.each { |pair| result[$1] = $2 if pair.strip =~ /\A([^=]+)=(.+)\Z/im }
+        body.to_s.each_line do |pair|
+          result[$1] = $2 if pair.strip =~ /\A([^=]+)=(.+)\Z/im
+        end
         result
       end
 

@@ -5,9 +5,13 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SkipJackGateway < Gateway
       API_VERSION = '?.?'
-      LIVE_URL = "https://www.skipjackic.com/scripts/evolvcc.dll"
-      TEST_URL = "https://developer.skipjackic.com/scripts/evolvcc.dll"
-
+      
+      LIVE_HOST = "https://www.skipjackic.com" 
+      TEST_HOST = "https://developer.skipjackic.com"
+      
+      BASIC_PATH = "/scripts/evolvcc.dll"
+      ADVANCED_PATH = "/evolvcc/evolvcc.aspx"
+      
       ACTIONS = {
         :authorization => 'AuthorizeAPI',
         :change_status => 'SJAPI_TransactionChangeStatusRequest',
@@ -173,6 +177,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>:login</tt> -- The SkipJack Merchant Serial Number.
       # * <tt>:password</tt> -- The SkipJack Developer Serial Number.
       # * <tt>:test => +true+ or +false+</tt> -- Use the test or live SkipJack url.
+      # * <tt>:advanced => +true+ or +false+</tt> -- Set to true if you're using an advanced processor
+      # See the SkipJack Integration Guide for details. (default: +false+)
       def initialize(options = {})
         requires!(options, :login, :password)
         @options = options
@@ -239,12 +245,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def status(order_id)
-        post = { }
-        post[:szOrderNumber] = :order_id
-        commit(:get_status, nil, post)
+        commit(:get_status, nil, :szOrderNumber => order_id)
       end
-
+      
       private
+      
+      def advanced?
+        @options[:advanced]
+      end
+      
       def add_forced_settlement(post, options)
         post[:szForceSettlement] = options[:force_settlment] ? 1 : 0
       end
@@ -266,7 +275,8 @@ module ActiveMerchant #:nodoc:
       end
       
       def url_for(action)
-        result = test? ? TEST_URL : LIVE_URL
+        result = test? ? TEST_HOST : LIVE_HOST
+        result += advanced? && action == :authorization ? ADVANCED_PATH : BASIC_PATH
         result += "?#{ACTIONS[action]}"
       end
       
@@ -346,7 +356,8 @@ module ActiveMerchant #:nodoc:
       def post_data(action, money, params = {})
         add_credentials(params, action)
         add_amount(params, action, money)
-        params.collect { |key, value| "#{key.to_s}=#{CGI.escape(value.to_s)}" }.join("&")
+        sorted_params = params.to_a.sort{|a,b| a.to_s <=> b.to_s}.reverse
+        sorted_params.collect { |key, value| "#{key.to_s}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
       def add_transaction_id(post, transaction_id)

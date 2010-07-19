@@ -1,5 +1,3 @@
-# Authors::    MoneySpyder, http://moneyspyder.co.uk and E-consultancy, http://www.e-consultancy.com
-
 module ActiveMerchant
   module Billing
     class DataCashGateway < Gateway
@@ -58,7 +56,7 @@ module ActiveMerchant
       # Perform a purchase, which is essentially an authorization and capture in a single operation.
       # 
       # ==== Parameters
-      # * <tt>money</tt> The amount to be authorized.  Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> The amount to be authorized as an Integer value in cents.
       # * <tt>authorization_or_credit_card</tt>:: The continuous authority reference or CreditCard details for the transaction.
       # * <tt>options</tt> A hash of optional parameters.
       #   * <tt>:order_id</tt> A unique reference for this order (corresponds to merchantreference in datacash documentation)
@@ -86,7 +84,7 @@ module ActiveMerchant
       #
       # ==== Parameters
       #
-      # * <tt>money</tt> The amount to be authorized.  Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> The amount to be authorized as an Integer value in cents.
       # * <tt>authorization_or_credit_card</tt>:: The continuous authority reference or CreditCard details for the transaction.
       # * <tt>options</tt> A hash of optional parameters.
       #   * <tt>:order_id</tt> A unique reference for this order (corresponds to merchantreference in datacash documentation)
@@ -113,7 +111,7 @@ module ActiveMerchant
       # 
       # ==== Parameters
       #
-      # * <tt>money</tt> -- The amount to be captured.  Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> -- The amount to be captured as anInteger value in cents.
       # * <tt>authorization</tt> -- The authorization returned from the previous authorize request.   
       def capture(money, authorization, options = {})
         commit(build_void_or_capture_request(FULFILL_TYPE, money, authorization, options))
@@ -134,7 +132,7 @@ module ActiveMerchant
       # 
       # ==== Parameters
       #
-      # * <tt>money</tt> The amount to be refunded. Either an Integer value in cents or a Money object. Set to nil for a full refund on existing transaction.
+      # * <tt>money</tt> The amount to be refunded as an Integer value in cents. Set to nil for a full refund on existing transaction.
       # * <tt>reference_or_credit_card</tt> The credit card you want to refund OR the datacash_reference for the existing transaction you are refunding
       # * <tt>options</tt> Are ignored when refunding via reference to an existing transaction, otherwise
       #   * <tt>:order_id</tt> A unique reference for this order (corresponds to merchantreference in datacash documentation)
@@ -177,7 +175,7 @@ module ActiveMerchant
       # 
       # Parameters:
       # * <tt>type</tt> must be FULFILL_TYPE or CANCEL_TYPE
-      # * <tt>money</tt> - optional - Money object or value in cents
+      # * <tt>money</tt> - optional - Integer value in cents
       # * <tt>authorization</tt> - the Datacash authorization from a previous succesful authorize transaction
       # * <tt>options</tt>
       #   * <tt>order_id</tt> - A unique reference for the transaction

@@ -126,4 +126,12 @@ class ConnectionTest < Test::Unit::TestCase
     end
   end
   
+  def test_failure_with_ssl_certificate
+    Net::HTTP.any_instance.expects(:post).raises(OpenSSL::X509::CertificateError)
+
+    assert_raises(ActiveMerchant::ClientCertificateError) do
+      @connection.request(:post, '')
+    end
+  end
+  
 end

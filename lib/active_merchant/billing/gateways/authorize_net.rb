@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * <tt>money</tt> -- The amount to be authorized. Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> -- The amount to be authorized as an Integer value in cents.
       # * <tt>creditcard</tt> -- The CreditCard details for the transaction.
       # * <tt>options</tt> -- A hash of optional parameters.
       def authorize(money, creditcard, options = {})
@@ -97,7 +97,7 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * <tt>money</tt> -- The amount to be purchased. Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> -- The amount to be purchased as an Integer value in cents.
       # * <tt>creditcard</tt> -- The CreditCard details for the transaction.
       # * <tt>options</tt> -- A hash of optional parameters.
       def purchase(money, creditcard, options = {})
@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * <tt>money</tt> -- The amount to be captured.  Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> -- The amount to be captured as an Integer value in cents.
       # * <tt>authorization</tt> -- The authorization returned from the previous authorize request.
       def capture(money, authorization, options = {})
         post = {:trans_id => authorization}
@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * <tt>money</tt> -- The amount to be credited to the customer. Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> -- The amount to be credited to the customer as an Integer value in cents.
       # * <tt>identification</tt> -- The ID of the original transaction against which the credit is being issued.
       # * <tt>options</tt> -- A hash of parameters.
       #
@@ -164,8 +164,7 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * <tt>money</tt> -- The amount to be charged to the customer at each interval. Either an Integer value in cents or
-      #   a Money object.
+      # * <tt>money</tt> -- The amount to be charged to the customer at each interval as an Integer value in cents.
       # * <tt>creditcard</tt> -- The CreditCard details for the transaction.
       # * <tt>options</tt> -- A hash of parameters.
       #
@@ -173,10 +172,10 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>:interval</tt> -- A hash containing information about the interval of time between payments. Must
       #   contain the keys <tt>:length</tt> and <tt>:unit</tt>. <tt>:unit</tt> can be either <tt>:months</tt> or <tt>:days</tt>.
-      #   If <tt>:unit</tt> is <tt>:months</tt> then <tt>:interval</tt> must be an integer between 1 and 12 inclusive.
-      #   If <tt>:unit</tt> is <tt>:days</tt> then <tt>:interval</tt> must be an integer between 7 and 365 inclusive.
+      #   If <tt>:unit</tt> is <tt>:months</tt> then <tt>:length</tt> must be an integer between 1 and 12 inclusive.
+      #   If <tt>:unit</tt> is <tt>:days</tt> then <tt>:length</tt> must be an integer between 7 and 365 inclusive.
       #   For example, to charge the customer once every three months the hash would be
-      #   +{ :unit => :months, :interval => 3 }+ (REQUIRED)
+      #   +:interval => { :unit => :months, :length => 3 }+ (REQUIRED)
       # * <tt>:duration</tt> -- A hash containing keys for the <tt>:start_date</tt> the subscription begins (also the date the
       #   initial billing occurs) and the total number of billing <tt>:occurences</tt> or payments for the subscription. (REQUIRED)
       def recurring(money, creditcard, options={})
@@ -651,7 +650,5 @@ module ActiveMerchant #:nodoc:
         end
       end
     end
-
-    AuthorizedNetGateway = AuthorizeNetGateway
   end
 end

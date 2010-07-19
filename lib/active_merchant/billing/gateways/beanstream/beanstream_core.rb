@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
     
       private
       def purchase_action(source)
-        source.type.to_s == "check" ? :check_purchase : :purchase
+        card_brand(source) == "check" ? :check_purchase : :purchase
       end
       
       def void_action(original_transaction_type)
@@ -105,7 +105,9 @@ module ActiveMerchant #:nodoc:
         post[:adjId] = reference
       end
       
-      def add_address(post, options)      
+      def add_address(post, options)
+        prepare_address_for_non_american_countries(options)
+        
         if billing_address = options[:billing_address] || options[:address]
           post[:ordName]          = billing_address[:name]
           post[:ordEmailAddress]  = options[:email]
@@ -129,6 +131,15 @@ module ActiveMerchant #:nodoc:
           post[:shipCountry]      = shipping_address[:country]
           post[:shippingMethod]   = shipping_address[:shipping_method]
           post[:deliveryEstimate] = shipping_address[:delivery_estimate]
+        end
+      end
+
+      def prepare_address_for_non_american_countries(options)
+        [ options[:billing_address], options[:shipping_address] ].compact.each do |address|
+          unless ['US', 'CA'].include?(address[:country])
+            address[:state] = '--'
+            address[:zip]   = '000000' unless address[:zip]
+          end
         end
       end
 
@@ -210,7 +221,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_source(post, source)
-        source.type == "check" ? add_check(post, source) : add_credit_card(post, source)
+        card_brand(source) == "check" ? add_check(post, source) : add_credit_card(post, source)
       end
       
       def add_transaction_type(post, action)
