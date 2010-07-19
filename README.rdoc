@@ -11,6 +11,7 @@ Please visit the {ActiveMerchant homepage}[http://activemerchant.org] for more r
 
 The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] contains a {table of features supported by each gateway}[http://github.com/Shopify/active_merchant/wikis/gatewayfeaturematrix].
 
+* {Authorize.Net Card Present}[http://www.authorize.net/] - US
 * {Authorize.Net CIM}[http://www.authorize.net/] - US
 * {Authorize.Net}[http://www.authorize.net/] - US
 * {Beanstream.com}[http://www.beanstream.com/] - CA
