@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.7.1 (July 28, 2010)
+
 * Pull in only the necessary components of Active Support. Enables use of ActiveMerchant with Rails 3 [railsjedi]
 
 == Version 1.7.0 (July 9, 2010)
