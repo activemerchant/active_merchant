@@ -383,4 +383,5 @@ garanti:
   login: 'paymentuser'
   password: 'userpayment'
   
-
+direc_pay:
+  mid: 200904281000001
