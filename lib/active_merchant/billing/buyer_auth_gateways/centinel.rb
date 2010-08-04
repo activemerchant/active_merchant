@@ -36,6 +36,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def validate_authentication(pa_res, options = {})
+        requires!(options, :transaction_id)
         commit validate_authentication_request(pa_res, options[:transaction_id])
       end
       
