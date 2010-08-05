@@ -51,8 +51,7 @@ class CreditCardTest < Test::Unit::TestCase
     @visa.first_name = ''
 
     assert_not_valid @visa
-    assert @visa.errors.on(:first_name)
-    assert @visa.errors.on("first_name")
+    assert @visa.errors[:first_name].any?
   end
 
   def test_should_be_able_to_liberate_a_bogus_card
@@ -69,25 +68,25 @@ class CreditCardTest < Test::Unit::TestCase
 
     @visa.number = "11112222333344ff"
     assert_not_valid @visa
-    assert_false @visa.errors.on(:type)
-    assert       @visa.errors.on(:number)
+    assert_attribute_valid @visa, :type
+    assert_attribute_not_valid @visa, :number
 
     @visa.number = "111122223333444"
     assert_not_valid @visa
-    assert_false @visa.errors.on(:type)
-    assert       @visa.errors.on(:number)
+    assert_attribute_valid @visa, :type
+    assert_attribute_not_valid @visa, :number
 
     @visa.number = "11112222333344444"
     assert_not_valid @visa
-    assert_false @visa.errors.on(:type)
-    assert       @visa.errors.on(:number)
+    assert_attribute_valid @visa, :type
+    assert_attribute_not_valid @visa, :number
   end
 
   def test_should_have_errors_with_invalid_card_type_for_otherwise_correct_number
     @visa.type = 'master'
 
     assert_not_valid @visa
-    assert_not_equal @visa.errors.on(:number), @visa.errors.on(:type)
+    assert_not_equal @visa.errors[:number], @visa.errors[:type]
   end
 
   def test_should_be_invalid_when_type_cannot_be_detected
@@ -95,9 +94,8 @@ class CreditCardTest < Test::Unit::TestCase
     @visa.type = nil
 
     assert_not_valid @visa
-    assert !@visa.errors.on(:type)
-    assert @visa.errors.on(:number)
-    assert_equal 'is required', @visa.errors.on(:number)
+    assert @visa.errors[:type].include?('is required')
+    assert_attribute_not_valid @visa, :number
   end
 
   def test_should_be_a_valid_card_number
@@ -117,35 +115,35 @@ class CreditCardTest < Test::Unit::TestCase
     @visa.month = ''
 
     assert_not_valid @visa
-    assert_equal 'is required', @visa.errors.on('month')
+    assert_attribute_not_valid @visa, :month
   end
 
   def test_should_not_be_valid_for_edge_month_cases
     @visa.month = 13
     @visa.year = Time.now.year
     assert_not_valid @visa
-    assert @visa.errors.on('month')
+    assert_attribute_not_valid @visa, :month
 
     @visa.month = 0
     @visa.year = Time.now.year
     assert_not_valid @visa
-    assert @visa.errors.on('month')
-  end
+    assert_attribute_not_valid @visa, :month
+  end 
 
   def test_should_be_invalid_with_empty_year
     @visa.year = ''
     assert_not_valid @visa
-    assert_equal 'is required', @visa.errors.on('year')
+    assert_attribute_not_valid @visa, :year
   end
 
   def test_should_not_be_valid_for_edge_year_cases
     @visa.year  = Time.now.year - 1
     assert_not_valid @visa
-    assert @visa.errors.on('year')
+    assert_attribute_not_valid @visa, :year
 
     @visa.year  = Time.now.year + 21
     assert_not_valid @visa
-    assert @visa.errors.on('year')
+    assert_attribute_not_valid @visa, :year
   end
 
   def test_should_be_a_valid_future_year
@@ -209,10 +207,11 @@ class CreditCardTest < Test::Unit::TestCase
     @solo.issue_number = nil
 
     assert_not_valid @solo
-    assert @solo.errors.on('start_month')
-    assert @solo.errors.on('start_year')
-    assert @solo.errors.on('issue_number')
-
+    
+    assert_attribute_not_valid @solo, :start_month
+    assert_attribute_not_valid @solo, :start_year
+    assert_attribute_not_valid @solo, :issue_number
+    
     @solo.start_month = 2
     @solo.start_year  = 2007
     assert_valid @solo
@@ -224,9 +223,9 @@ class CreditCardTest < Test::Unit::TestCase
     @solo.issue_number = nil
 
     assert_not_valid @solo
-    assert @solo.errors.on('start_month')
-    assert @solo.errors.on('issue_number')
-
+    assert_attribute_not_valid @solo, :start_month
+    assert_attribute_not_valid @solo, :issue_number
+    
     @solo.issue_number = 3
     assert_valid @solo
   end
