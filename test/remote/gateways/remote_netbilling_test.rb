@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'pp'
 class RemoteNetbillingTest < Test::Unit::TestCase
  
   def setup
@@ -48,7 +47,6 @@ class RemoteNetbillingTest < Test::Unit::TestCase
     assert_success auth
     assert_equal NetbillingGateway::SUCCESS_MESSAGE, auth.message
     assert auth.authorization
-    pp auth
     assert capture = @gateway.capture(amount, auth.authorization)
     assert_success capture
   end
