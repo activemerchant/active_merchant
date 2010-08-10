@@ -1,5 +1,5 @@
 require 'test_helper'
-
+require 'pp'
 class RemoteNetbillingTest < Test::Unit::TestCase
  
   def setup
@@ -7,7 +7,7 @@ class RemoteNetbillingTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4444111111111119',
                      :month => '9',
-                     :year  => '2009',
+                     :year  => Time.now.year.to_i + 1,
                      :verification_value => nil
                    )
 
@@ -48,6 +48,7 @@ class RemoteNetbillingTest < Test::Unit::TestCase
     assert_success auth
     assert_equal NetbillingGateway::SUCCESS_MESSAGE, auth.message
     assert auth.authorization
+    pp auth
     assert capture = @gateway.capture(amount, auth.authorization)
     assert_success capture
   end
@@ -59,12 +60,27 @@ class RemoteNetbillingTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = NetbillingGateway.new(
-                :login => '',
-                :password => ''
-              )
-    assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_equal NetbillingGateway::FAILURE_MESSAGE, response.message
-    assert_failure response
+   gateway = NetbillingGateway.new(
+               :login => '',
+               :password => ''
+             )
+   assert response = gateway.purchase(@amount, @credit_card, @options)
+   assert_equal NetbillingGateway::FAILURE_MESSAGE, response.message
+   assert_failure response
   end
+  
+  def test_successful_refund
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_false response.authorization.blank?
+    assert_equal NetbillingGateway::SUCCESS_MESSAGE, response.message
+    assert response.test?
+    
+    assert refund_response = @gateway.credit(@amount, response.authorization, @options)
+    assert_success refund_response
+    assert_false response.authorization.blank?
+    assert_equal NetbillingGateway::SUCCESS_MESSAGE, response.message
+    assert response.test?
+  end
+  
 end

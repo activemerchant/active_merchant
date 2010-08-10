@@ -55,6 +55,13 @@ module ActiveMerchant #:nodoc:
         commit(:capture, money, post)
       end
       
+      def credit(money, source, options = {})
+        post = {}
+        add_amount(post, money)
+        add_reference(post, source)
+        commit(:referenced_credit, money, post)
+      end
+      
       def test?
         @options[:login] == TEST_LOGIN || super
       end
