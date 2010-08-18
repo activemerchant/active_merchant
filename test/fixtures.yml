@@ -124,6 +124,10 @@ ogone:
   user: USER
   password: PASSWORD
   signature: SIGNATURE
+  
+paybox_direct:
+  login: 199988899
+  password: 1999888I
 
 payflow:
   login: LOGIN
