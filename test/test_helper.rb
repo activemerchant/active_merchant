@@ -8,6 +8,14 @@ require 'mocha'
 require 'yaml'
 require 'active_merchant'
 
+require 'active_support/core_ext/integer/time'
+require 'active_support/core_ext/numeric/time'
+
+begin
+  require 'active_support/core_ext/time/acts_like'
+rescue LoadError
+end
+
 begin
   gem 'actionpack'
 rescue LoadError
@@ -15,6 +23,7 @@ rescue LoadError
 end
 
 require 'action_controller'
+require "action_view/template"
 begin
   require 'action_dispatch/testing/test_process'
 rescue LoadError

@@ -6,6 +6,7 @@ class ActionViewHelperTest < Test::Unit::TestCase
   include ActionView::Helpers::FormTagHelper
   include ActionView::Helpers::UrlHelper
   include ActionView::Helpers::TagHelper
+  include ActionView::Helpers::CaptureHelper
   include ActionView::Helpers::TextHelper
   
   attr_accessor :output_buffer
@@ -38,11 +39,18 @@ class ActionViewHelperTest < Test::Unit::TestCase
       assert expected.include?(line.chomp), "Failed to match #{line}"
     end
   end
-  
+    
   def test_payment_service_no_block_given
     assert_raise(ArgumentError){ payment_service_for }
   end
   
+  if "".respond_to? :html_safe?
+    def test_html_safety
+      html = payment_service_for('order-1','test', :service => :bogus){}
+      assert html.html_safe?
+    end
+  end
+
   protected
   def protect_against_forgery?
     false
