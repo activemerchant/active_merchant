@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
         # The helper creates a scope around a payment service helper
         # which provides the specific mapping for that service.
         # 
-        #  <%= payment_service_for 1000, 'paypalemail@mystore.com',
+        #  <% payment_service_for 1000, 'paypalemail@mystore.com',
         #                               :amount => 50.00, 
         #                               :currency => 'CAD', 
         #                               :service => :paypal, 
@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
          
           result << '</form>'
 
-          html_safe_string result.join("\n")
+          concat(html_safe_string(result.join("\n")))
         end
         
         private
