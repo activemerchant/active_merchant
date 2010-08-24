@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Fix SagePay to not send fractional amounts for Chinese YEN currency [Soleone]
+
 == Version 1.7.1 (July 28, 2010)
 
 * Pull in only the necessary components of Active Support. Enables use of ActiveMerchant with Rails 3 [railsjedi]
