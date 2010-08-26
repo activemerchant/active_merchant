@@ -4,3 +4,4 @@
 *.swo
 pkg
 .rvmrc
+.bundle/*

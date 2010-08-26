@@ -1,0 +1,28 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    actionpack (2.3.8)
+      activesupport (= 2.3.8)
+      rack (~> 1.1.0)
+    activesupport (2.3.8)
+    braintree (2.0.0)
+      builder
+      libxml-ruby
+    builder (2.1.2)
+    libxml-ruby (1.1.4)
+    mocha (0.9.8)
+      rake
+    money (3.0.5)
+    rack (1.1.0)
+    rake (0.8.7)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  actionpack (~> 2.3.8)
+  activesupport (~> 2.3.8)
+  braintree (~> 2.0.0)
+  builder (~> 2.1.2)
+  mocha (~> 0.9.8)
+  money (~> 3.0.5)

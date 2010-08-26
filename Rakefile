@@ -1,10 +1,13 @@
-require 'rubygems'
-require 'rake'
+require "rubygems"
+require "rake"
 require 'rake/testtask'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'lib/support/gateway_support'
 require 'lib/support/outbound_hosts'
+require "bundler"
+
+Bundler.setup
 
 desc "Run the unit test suite"
 task :default => 'test:units'
