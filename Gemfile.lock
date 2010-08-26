@@ -5,6 +5,9 @@ GEM
       activesupport (= 2.3.8)
       rack (~> 1.1.0)
     activesupport (2.3.8)
+    autotest (4.3.2)
+    autotest-growl (0.2.4)
+      autotest (>= 4.2.4)
     braintree (2.0.0)
       builder
       libxml-ruby
@@ -15,6 +18,10 @@ GEM
     money (3.0.5)
     rack (1.1.0)
     rake (0.8.7)
+    redgreen (1.2.2)
+    rubigen (1.5.5)
+      activesupport (~> 2.3.5)
+    wirble (0.1.3)
 
 PLATFORMS
   ruby
@@ -22,7 +29,12 @@ PLATFORMS
 DEPENDENCIES
   actionpack (~> 2.3.8)
   activesupport (~> 2.3.8)
+  autotest
+  autotest-growl
   braintree (~> 2.0.0)
   builder (~> 2.1.2)
   mocha (~> 0.9.8)
   money (~> 3.0.5)
+  redgreen
+  rubigen (~> 1.5.5)
+  wirble
