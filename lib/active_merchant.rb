@@ -20,7 +20,7 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
-                    
+
 $:.unshift File.dirname(__FILE__)
 
 require 'active_support'
@@ -41,7 +41,7 @@ require 'active_merchant/billing'
 require 'active_merchant/version'
 
 module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:    
+  module Billing #:nodoc:
     autoload :Integrations, 'active_merchant/billing/integrations'
   end
 end
