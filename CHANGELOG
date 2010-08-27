@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.7.2 (August 27, 2010)
+
 * Update Braintree integration to play nicely with the braintree 2.5.0 gem [Soleone]
 * Fix SagePay to not send fractional amounts for Chinese YEN currency [Soleone]
 
