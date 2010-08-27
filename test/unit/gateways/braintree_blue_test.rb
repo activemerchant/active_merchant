@@ -1,12 +1,9 @@
 require 'test_helper'
 
 class BraintreeBlueTest < Test::Unit::TestCase
-  def setup
-    # force it to load
-    BraintreeBlueGateway.new(:merchant_id => "test", :public_key => "test", :private_key => "test")
-  end
-
-  def test_user_agent_includes_activemerchant_version
-    assert Braintree::Configuration.user_agent.include?("(ActiveMerchant #{ActiveMerchant::VERSION})")
+  def test_initialize_does_not_raise_an_error
+    assert_nothing_raised do
+      BraintreeBlueGateway.new(:merchant_id => "test", :public_key => "test", :private_key => "test")
+    end
   end
 end

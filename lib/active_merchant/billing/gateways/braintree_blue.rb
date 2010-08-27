@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
         Braintree::Configuration.public_key = options[:public_key]
         Braintree::Configuration.private_key = options[:private_key]
         Braintree::Configuration.environment = test? ? :sandbox : :production
-        Braintree::Configuration.logger.level = Logger::ERROR#DEBUG
+        Braintree::Configuration.logger.level = Logger::ERROR if Braintree::Configuration.logger
         Braintree::Configuration.custom_user_agent = "ActiveMerchant #{ActiveMerchant::VERSION}"
         super
       end
