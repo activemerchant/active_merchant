@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
         def payment_service_for(order, account, options = {}, &proc)          
           raise ArgumentError, "Missing block" unless block_given?
 
-          integration_module = ActiveMerchant::Billing::Integrations.const_get(options.delete(:service).to_s.classify)
+          integration_module = ActiveMerchant::Billing::Integrations.const_get(options.delete(:service).to_s.camelize)
 
           result = []
           result << form_tag(integration_module.service_url, options.delete(:html) || {})
