@@ -1,10 +1,16 @@
 GEM
   remote: http://rubygems.org/
   specs:
-    actionpack (2.3.8)
-      activesupport (= 2.3.8)
-      rack (~> 1.1.0)
-    activesupport (2.3.8)
+    actionmailer (2.3.5)
+      actionpack (= 2.3.5)
+    actionpack (2.3.5)
+      activesupport (= 2.3.5)
+      rack (~> 1.0.0)
+    activerecord (2.3.5)
+      activesupport (= 2.3.5)
+    activeresource (2.3.5)
+      activesupport (= 2.3.5)
+    activesupport (2.3.5)
     autotest (4.3.2)
     autotest-growl (0.2.4)
       autotest (>= 4.2.4)
@@ -16,7 +22,14 @@ GEM
     mocha (0.9.8)
       rake
     money (3.0.5)
-    rack (1.1.0)
+    rack (1.0.1)
+    rails (2.3.5)
+      actionmailer (= 2.3.5)
+      actionpack (= 2.3.5)
+      activerecord (= 2.3.5)
+      activeresource (= 2.3.5)
+      activesupport (= 2.3.5)
+      rake (>= 0.8.3)
     rake (0.8.7)
     redgreen (1.2.2)
     rubigen (1.5.5)
@@ -27,14 +40,13 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  actionpack (~> 2.3.8)
-  activesupport (~> 2.3.8)
   autotest
   autotest-growl
   braintree (~> 2.0.0)
   builder (~> 2.1.2)
   mocha (~> 0.9.8)
   money (~> 3.0.5)
+  rails (= 2.3.5)
   redgreen
   rubigen (~> 1.5.5)
   wirble
