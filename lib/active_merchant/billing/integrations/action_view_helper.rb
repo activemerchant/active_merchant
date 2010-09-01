@@ -57,8 +57,14 @@ module ActiveMerchant #:nodoc:
           end
          
           result << '</form>'
-
-          concat(html_safe_string(result.join("\n")))
+          
+          result= result.join("\n")
+          if result.respond_to?(:html_safe) #RAILS 3, use native return 
+            return result.html_safe
+          else
+            concat(result)
+          end
+          
         end
         
         private
