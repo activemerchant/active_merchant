@@ -59,23 +59,15 @@ module ActiveMerchant #:nodoc:
           result << '</form>'
           
           result= result.join("\n")
-          if result.respond_to?(:html_safe) #RAILS 3, use native return 
+          
+          if Rails.version[0]=='3' #RAILS 3, use native return 
             return result.html_safe
           else
-            concat(result)
+            concat(result.respond_to?(:html_safe) ? result.html_safe : result)
           end
           
         end
         
-        private
-        
-        def html_safe_string(string)
-          if string.respond_to?(:html_safe)
-            string.html_safe
-          else
-            string
-          end
-        end
       end
     end
   end
