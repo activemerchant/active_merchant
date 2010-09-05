@@ -60,11 +60,10 @@ module ActiveMerchant #:nodoc:
           
           result= result.join("\n")
           
-          if Rails.version[0].chr=='3' #RAILS 3, use native return 
-            return result.html_safe
-          else
-            concat(result.respond_to?(:html_safe) ? result.html_safe : result)
-          end
+          
+          concat(result.respond_to?(:html_safe) ? result.html_safe : result)
+          
+          return nil
           
         end
         
