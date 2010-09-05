@@ -57,18 +57,10 @@ module ActiveMerchant #:nodoc:
           end
          
           result << '</form>'
-
-          concat(html_safe_string(result.join("\n")))
-        end
-        
-        private
-        
-        def html_safe_string(string)
-          if string.respond_to?(:html_safe)
-            string.html_safe
-          else
-            string
-          end
+          result= result.join("\n")
+          
+          concat(result.respond_to?(:html_safe) ? result.html_safe : result)
+          nil
         end
       end
     end
