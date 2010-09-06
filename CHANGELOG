@@ -1,5 +1,21 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.7.2 (August 27, 2010)
+
+* Update Braintree integration to play nicely with the braintree 2.5.0 gem [Soleone]
+* Fix SagePay to not send fractional amounts for Chinese YEN currency [Soleone]
+
+== Version 1.7.1 (July 28, 2010)
+
+* Pull in only the necessary components of Active Support. Enables use of ActiveMerchant with Rails 3 [railsjedi]
+
+== Version 1.7.0 (July 9, 2010)
+
+* Add support for new Braintree Blue Gateway (using the braintree gem) [Braintree]
+
+== Version 1.6.0 (July 6, 2010)
+
+* Add a task rake gateways:hosts to get a list of all outbound hosts and ports [cody]
 * Fix test failure in chronopay helper in Ruby 1.9.1 [cody]
 * Fix timezone issue in credit card test. [cody]
 * Fix failing unit test for Garanti gateway [cody]

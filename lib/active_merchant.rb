@@ -24,20 +24,21 @@
 $:.unshift File.dirname(__FILE__)
 
 require 'active_support'
+require 'active_support/core_ext/hash/indifferent_access'
+require 'active_support/core_ext/class/inheritable_attributes'
+require 'active_support/core_ext/class/attribute_accessors'
+require 'active_support/core_ext/class/delegating_attributes'
+require 'active_support/core_ext/module/attribute_accessors'
+require 'active_support/core_ext/kernel/requires'
+require 'active_support/inflector'
+
 require 'builder'
 require 'cgi'
 require 'rexml/document'
 
-require 'active_merchant/lib/utils'
-require 'active_merchant/lib/error'
-require 'active_merchant/lib/validateable'
-require 'active_merchant/lib/connection'
-require 'active_merchant/lib/posts_data'
-require 'active_merchant/lib/post_data'
-require 'active_merchant/lib/requires_parameters'
-require 'active_merchant/lib/country'
-
+require 'active_merchant/common'
 require 'active_merchant/billing'
+require 'active_merchant/version'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:    

@@ -4,8 +4,7 @@ require 'rake/testtask'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
 require 'lib/support/gateway_support'
-
-VERSION = "1.5.1"
+require 'lib/support/outbound_hosts'
 
 desc "Run the unit test suite"
 task :default => 'test:units'
@@ -54,9 +53,7 @@ task :release => [ 'gemcutter:publish', 'rubyforge:publish', 'rubyforge:upload_r
 namespace :gemcutter do
   desc "Publish to gemcutter"
   task :publish => :package do
-    require 'rake/gemcutter'
-    Rake::Gemcutter::Tasks.new(spec).define
-    Rake::Task['gem:push'].invoke
+    sh "gem push pkg/activemerchant-#{ActiveMerchant::VERSION}.gem"
   end
 end
 
@@ -66,12 +63,12 @@ namespace :rubyforge do
   task :publish => :package do
     require 'rubyforge'
   
-    packages = %w( gem tgz zip ).collect{ |ext| "pkg/activemerchant-#{VERSION}.#{ext}" }
+    packages = %w( gem tgz zip ).collect{ |ext| "pkg/activemerchant-#{ActiveMerchant::VERSION}.#{ext}" }
   
     rubyforge = RubyForge.new
     rubyforge.configure
     rubyforge.login
-    rubyforge.add_release('activemerchant', 'activemerchant', "REL #{VERSION}", *packages)
+    rubyforge.add_release('activemerchant', 'activemerchant', "REL #{ActiveMerchant::VERSION}", *packages)
   end
 
   desc 'Upload RDoc to RubyForge'
@@ -112,4 +109,10 @@ namespace :gateways do
       support.features
     end
   end
+  
+  desc 'Print the list of destination hosts with port'
+  task :hosts do
+    OutboundHosts.list
+  end
+  
 end

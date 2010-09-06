@@ -17,4 +17,8 @@ class BogusModuleTest < Test::Unit::TestCase
   def test_return_method
     assert_instance_of Bogus::Return, Bogus.return('name=cody')
   end
+
+  def teardown
+    Bogus.service_url = 'http://www.bogus.com'
+  end
 end 
