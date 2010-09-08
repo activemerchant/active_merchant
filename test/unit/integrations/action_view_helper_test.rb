@@ -23,7 +23,7 @@ class ActionViewHelperTest < Test::Unit::TestCase
   end
 
   def test_basic_payment_service
-    _erbout = payment_service_for('order-1','test', :service => :bogus){}
+    payment_service_for('order-1','test', :service => :bogus){}
 
     expected = [
       /^<form.*action="http:\/\/www.bogus.com".*/,
@@ -32,7 +32,7 @@ class ActionViewHelperTest < Test::Unit::TestCase
       /<\/form>/
     ]
 
-    _erbout.split("\n").reject(&:blank?).each_with_index do |line, index|
+    @output_buffer.split("\n").reject(&:blank?).each_with_index do |line, index|
       assert_match expected[index], line.chomp, "Failed to match #{line}"
     end
   end
@@ -59,11 +59,6 @@ if "".respond_to? :html_safe?
   end
 
   class PaymentServiceController < ActionController::Base
-    begin
-      require 'rails'
-      class MerchantApp < Rails::Application; end
-      include Rails.application.routes.url_helpers
-    rescue NameError, LoadError; end
 
     def payment_action
       render :inline => "<% payment_service_for('order-1','test', :service => :bogus){} %>"
@@ -71,10 +66,19 @@ if "".respond_to? :html_safe?
   end
 
   class PaymentServiceControllerTest < ActionController::TestCase
-    def test_html_safety
-      with_routing do |set|
-        set.draw { |map| map.connect ':controller/:action/:id' }
+    if ActionPack::VERSION::MAJOR == 3
+      begin
+        require 'rails'
+      rescue NameError, LoadError
+        puts "You need to install the 'rails' gem to run these tests"
+      end
 
+      class MerchantApp < Rails::Application; end
+      PaymentServiceController.send :include, Rails.application.routes.url_helpers
+    end
+
+    def test_html_safety
+      with_routes do
         get :payment_action
 
         expected = [
@@ -83,9 +87,27 @@ if "".respond_to? :html_safe?
           /<input id="order" name="order" type="hidden" value="order-1" \/>/,
           /<\/form>/
         ]
- 
+
         @response.body.split("\n").reject(&:blank?).each_with_index do |line, index|
           assert_match expected[index], line.chomp, "Failed to match #{line}"
+        end
+      end
+    end
+
+    private
+    def with_routes
+      raise "You need to pass a block to me" unless block_given?
+
+      if ActionPack::VERSION::MAJOR == 3
+        with_routing do |set|
+          set.draw { match '/:action', :controller => 'payment_service' }
+          yield
+        end
+      else
+        # Falling back to Rails 2.x
+        with_routing do |set|
+          set.draw { |map| map.connect ':controller/:action/:id' }
+          yield
         end
       end
     end
