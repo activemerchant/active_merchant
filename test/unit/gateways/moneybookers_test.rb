@@ -30,6 +30,11 @@ class MoneybookersTest < Test::Unit::TestCase
     assert response.token =~ /\w{32}/
   end
 
+  def test_amount_method
+    cents = 1000
+    assert_equal "10.00", @gateway.instance_eval {amount(cents)}
+  end
+
   def test_successful_purchase_setup_provides_checkout_url
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.setup_purchase(@amount)

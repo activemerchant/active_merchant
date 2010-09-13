@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
         @options[:currency] || "EUR"
       end
 
-      def post_data(amount, parameters = {})
+      def post_data(amount_in_cents, parameters = {})
         post = {}
         # mandatory fields
         post[:pay_to_email]        = @options[:pay_to_email]
@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
         post[:cancel_url]          = @options[:cancel_url]
         post[:detail1_description] = @options[:detail1_description]
         post[:detail1_text]        = @options[:detail1_text]
-        post[:amount]              = amount
+        post[:amount]              = amount(amount_in_cents)
         post[:language]            = @options[:language]
         post[:currency]            = currency
 
