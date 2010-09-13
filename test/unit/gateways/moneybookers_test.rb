@@ -9,6 +9,7 @@ class MoneybookersTest < Test::Unit::TestCase
       :return_url      => 'localhost:3000/payment_confirmed',
       :cancel_url      => 'localhost:3000/payment_canceled',
       :language        => "DE",
+      :notify_url      => 'localhost:3000/notify_payment_success',
       :detail1_description => "Bestellnummer: ",
       :detail1_text    => "FooBar123"
     }

@@ -40,11 +40,16 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options,
                   :pay_to_email,        # merchant email
-                  :return_url,          # client purchases
-                  :cancel_url,          # client cancels
-                  :language,            # displayed moneybookers language
+                  :return_url,          # after client purchases
+                  :cancel_url,          # after client cancels
+                  :language,            # displayed mb page language
+                  # notification from mb after successful payment
+                  # may also be an email, but you may use
+                  # :notify_email additionally for that
+                  :notify_url,
+                  # details show up in clients payments history
                   :detail1_description, # e.g. "Product ID:"
-                  :detail1_text        # part of clients history payments
+                  :detail1_text
                   )
         @options = options
         super
@@ -79,6 +84,8 @@ module ActiveMerchant #:nodoc:
         post[:detail1_text]        = @options[:detail1_text]
         post[:amount]              = amount(amount_in_cents)
         post[:language]            = @options[:language]
+        post[:status_url]          = @options[:notify_url] || @options[:status_url]
+        post[:status_url2]         = @options[:notify_email] || @options[:status_url2]
         post[:currency]            = currency
 
         # billing_address
