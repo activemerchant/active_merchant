@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?
-        @response =~ /^\w{30,255}$/
+        @response =~ /^\w{32}$/
       end
     end
 
