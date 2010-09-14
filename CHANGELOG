@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.7.3 (September 14, 2010)
+
 * Fix SagePay special handling for Japanese YEN currency to not send fractional amounts [Soleone]
 
 == Version 1.7.2 (August 27, 2010)
