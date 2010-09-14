@@ -1,9 +1,11 @@
 = ActiveMerchant CHANGELOG
 
+* Fix SagePay special handling for Japanese YEN currency to not send fractional amounts [Soleone]
+
 == Version 1.7.2 (August 27, 2010)
 
 * Update Braintree integration to play nicely with the braintree 2.5.0 gem [Soleone]
-* Fix SagePay to not send fractional amounts for Chinese YEN currency [Soleone]
+* Fix SagePay to not send fractional amounts for Japanese YEN currency [Soleone]
 
 == Version 1.7.1 (July 28, 2010)
 
