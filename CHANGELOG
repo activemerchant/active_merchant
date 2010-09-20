@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * DirecPay: Add support for additional options in Return class [Soleone]
+* PayFlow: Use same timeout of 60 seconds in HTTP header and XML for all requests [Soleone]
 * PayPal Website Payments Pro CA no longer supports American Express cards [Soleone]
 
 == Version 1.9.0 (October 14, 2010)
