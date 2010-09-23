@@ -316,6 +316,10 @@ sage:
 sallie_mae:
   login: TEST0
 
+secure_net:
+  login: X
+  password: Y
+
 secure_pay:
   login: LOGIN
   password: PASSWORD
