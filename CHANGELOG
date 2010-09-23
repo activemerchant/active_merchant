@@ -1,5 +1,15 @@
 = ActiveMerchant CHANGELOG
 
+* PayPal Express: Add support for billing agreements [Nathaniel Talbott]
+* Allow comparing countries [Nathaniel Talbott]
+* Iridium: Fix country handling [Nathaniel Talbott]
+* Iridium: Fix missing billing address [Nathaniel Talbott]
+* Iridium: Do not pass CV2 if not present [Nathaniel Talbott]
+* Add Iridium support [Phil Smy]
+* Add Netaxept support [Nathaniel Talbott]
+* PaymentExpress: Use Card Holder Help Text for the response message [Nathaniel Talbott]
+* Sort the country name list [Duff OMelia]
+
 == Version 1.7.3 (September 14, 2010)
 
 * Fix SagePay special handling for Japanese YEN currency to not send fractional amounts [Soleone]

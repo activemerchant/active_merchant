@@ -26,6 +26,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {Merchant e-Solutions}[http://merchante-solutions.com/] - US
 * {Modern Payments}[http://www.modpay.com] - US
 * {Moneris}[http://www.moneris.com/] - CA
+* {Netaxept}[http://www.betalingsterminal.no/Netthandel-forside] - NO, DK, SE, FI
 * {NetRegistry}[http://www.netregistry.com.au] - AU
 * {NELiX TransaX Gateway}[http://www.nelixtransax.com] - US
 * {NETbilling}[http://www.netbilling.com] - US
@@ -60,8 +61,8 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 == Supported Offsite Payment Gateways
 
 * {PayPal Website Payments Standard}[https://www.paypal.com/cgi-bin/webscr?cmd=_wp-standard-overview-outside]
-* Chronopay[http://www.chronopay.com]
-* Nochex[http://www.nochex.com]
+* {Chronopay}[http://www.chronopay.com]
+* {Nochex}[http://www.nochex.com]
 * {Banca Sella GestPay}[https://www.sella.it/banca/ecommerce/gestpay/gestpay.jsp]
 * {2 Checkout}[http://www.2checkout.com]
 * {HiTRUST}[http://www.hitrust.com.hk/]
