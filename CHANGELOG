@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.8.0 (September 24, 2010)
+
 * PayPal Express: Add support for billing agreements [Nathaniel Talbott]
 * Allow comparing countries [Nathaniel Talbott]
 * Iridium: Fix country handling [Nathaniel Talbott]
