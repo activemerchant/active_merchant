@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for SecureNet gateway [Kal]
 * Add support for the Inspire gateway [ryan r. smith]
 
 == Version 1.8.0 (September 24, 2010)
