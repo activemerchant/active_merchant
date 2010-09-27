@@ -1,10 +1,10 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class PayboxDirectTest < Test::Unit::TestCase
   def setup
     @gateway = PayboxDirectGateway.new(
-                 :login => '199988899',
-                 :password => '1999888I'
+                 :login => 'l',
+                 :password => 'p'
                )
 
     @credit_card = credit_card('1111222233334444',
@@ -20,7 +20,7 @@ class PayboxDirectTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase
-    #@gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
     
     assert response = @gateway.purchase(@amount, @credit_card, @options)
 

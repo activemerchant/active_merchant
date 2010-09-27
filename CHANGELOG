@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for PayboxDirect gateway [Donald Piret]
 * Add support for SecureNet gateway [Kal]
 * Add support for the Inspire gateway [ryan r. smith]
 
