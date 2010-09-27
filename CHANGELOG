@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for the Inspire gateway [ryan r. smith]
+
 == Version 1.8.0 (September 24, 2010)
 
 * PayPal Express: Add support for billing agreements [Nathaniel Talbott]
