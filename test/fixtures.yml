@@ -76,6 +76,10 @@ instapay:
   login: TEST0
   password:
 
+inspire:
+  login: demo
+  password: password
+
 jetpay:
   login: TESTTERMINAL
       
@@ -371,3 +375,4 @@ garanti:
   login: 'paymentuser'
   password: 'userpayment'
   
+
