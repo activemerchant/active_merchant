@@ -152,6 +152,13 @@ class NetaxeptTest < Test::Unit::TestCase
     assert_nil response.error_detail
   end
 
+  def test_uses_credit_card_brand_instead_of_credit_card_type
+    brand = @credit_card.type
+    @credit_card.expects(:type).never
+    @credit_card.expects(:brand).at_least_once.returns(brand)
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+  
   private
   
   # Place raw successful response from gateway here
