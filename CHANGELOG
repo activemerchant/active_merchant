@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * DirecPay: Add support for additional options in Return class [Soleone]
+* Iridium: Do not depend on ExpiryDate class for credit_card [Soleone]
 * PayFlow: Use same timeout of 60 seconds in HTTP header and XML for all requests [Soleone]
 * PayPal Website Payments Pro CA no longer supports American Express cards [Soleone]
 

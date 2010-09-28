@@ -84,6 +84,12 @@ class IridiumTest < Test::Unit::TestCase
     assert_success @gateway.purchase(400, @credit_card, @options.merge(:currency => 'MXN'))
   end
   
+  def test_do_not_depend_on_expiry_date_class
+    @credit_card.expects(:expiry_date).never
+    
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+  
   private
   
   # Place raw successful response from gateway here
