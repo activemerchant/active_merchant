@@ -67,6 +67,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:PayerID', options[:payer_id]
               xml.tag! 'n2:PaymentDetails' do
                 xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => currency_code
+                xml.tag! 'n2:OrderDescription', options[:description] unless options[:description].blank?
                 
                 # All of the values must be included together and add up to the order total
                 if [:subtotal, :shipping, :handling, :tax].all?{ |o| options.has_key?(o) }
