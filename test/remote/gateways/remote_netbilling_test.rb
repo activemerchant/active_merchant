@@ -52,9 +52,10 @@ class RemoteNetbillingTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    assert response = @gateway.capture(@amount, '1111')
-    assert_failure response
-    assert_equal NetbillingGateway::FAILURE_MESSAGE, response.message
+    capture_exception = assert_raise ActiveMerchant::ResponseError, "Failed with 611 No Record Found For Specified ID" do
+      @gateway.capture(@amount, '1111')
+    end
+    assert response = capture_exception.response
   end
 
   def test_invalid_login
@@ -62,9 +63,12 @@ class RemoteNetbillingTest < Test::Unit::TestCase
                :login => '',
                :password => ''
              )
-   assert response = gateway.purchase(@amount, @credit_card, @options)
-   assert_equal NetbillingGateway::FAILURE_MESSAGE, response.message
-   assert_failure response
+   
+   authentication_exception = assert_raise ActiveMerchant::ResponseError, 'Failed with 604 Missing Parameter (account_id)' do
+     gateway.purchase(@amount, @credit_card, @options)
+   end
+   assert response = authentication_exception.response
+
   end
   
   def test_successful_refund
