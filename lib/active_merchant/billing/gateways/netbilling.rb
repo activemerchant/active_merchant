@@ -23,6 +23,8 @@ module ActiveMerchant #:nodoc:
       
       def initialize(options = {})
         requires!(options, :login)
+        require 'pp'
+        pp options
         @options = options
         super
       end  
@@ -155,10 +157,15 @@ module ActiveMerchant #:nodoc:
       end
       
       def post_data(action, parameters = {})
+        puts "*" * 100
         parameters[:account_id] = @options[:login]
+        parameters[:dynip_sec_code] = @options[:dynip_sec_code] unless !@options.key? :dynip_sec_code
         parameters[:pay_type] = 'C'
         parameters[:tran_type] = TRANSACTIONS[action]  
         
+        require 'pp'
+        pp parameters
+        puts "*" * 100
         parameters.reject{|k,v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
       
