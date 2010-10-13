@@ -4,8 +4,9 @@ module ActiveMerchant #:nodoc:
       class Return
         attr_accessor :params
       
-        def initialize(query_string)
-          @params = parse(query_string)
+        def initialize(query_string, options = {})
+          @params  = parse(query_string)
+          @options = options
         end
       
         # Successful by default. Overridden in the child class
