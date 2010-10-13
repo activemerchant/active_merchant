@@ -84,7 +84,7 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
 	def test_unsuccessful_unstore
 		assert unstore = @gateway.unstore('')
 		assert_failure unstore
-		assert_equal 'Invalid Card ID', unstore.message
+		assert_equal 'Card ID required', unstore.message
 	end
 
 	def test_unsuccessful_void
@@ -93,6 +93,12 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
 		assert_equal 'Invalid Transaction ID', void.message
 	end
 
+	def test_verify
+		assert auth = @gateway.verify(@credit_card, @options)
+		assert_success auth
+		assert auth.authorization
+	end
+	
 	def test_successful_avs_check
     assert response = @gateway.purchase(@amount, @credit_card, @options)
 		assert_equal 'Y', response.avs_result['code']
