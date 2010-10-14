@@ -20,9 +20,6 @@ class AuthorizeNetSimModuleTest < ActionViewHelperTest
     payment_service_for('44','8wd65QS', :service => :authorize_net_sim,  :amount => 157.0){|service|
       35.times {service.add_line_item :name => 'beauty2 - ayoyo', :quantity => 1, :unit_price => 0}
     }
-    require 'ruby-debug'
-    #debugger
-    p @output_buffer
     assert @output_buffer =~ / more unshown items after this one/
     # it should display them all in, despite each having the same name
     assert @output_buffer.scan(/beauty2 - ayoyo/).length > 5
@@ -32,11 +29,18 @@ class AuthorizeNetSimModuleTest < ActionViewHelperTest
     payment_service_for('44','8wd65QS', :service => :authorize_net_sim,  :amount => 157.0){|service|
       35.times {|n| service.add_line_item :name => 'beauty2 - ayoyo' + n.to_s, :quantity => 1, :unit_price => 0}
     }
-    assert @output_buffer =~ /ayoyo3/
-    assert @output_buffer =~ /ayoyo4/
+    assert @output_buffer =~ / ayoyo3/
+    assert @output_buffer =~ / ayoyo4/
+  end
+  
+  def test_should_round_numbers
+    payment_service_for('44','8wd65QS', :service => :authorize_net_sim,  :amount => "157.003"){}
+    assert @output_buffer !~ /x_amount.*157.003"/
+    payment_service_for('44','8wd65QS', :service => :authorize_net_sim,  :amount => "157.005"){}
+    assert @output_buffer =~ /x_amount.*157.01"/
   end
 		
-  def test_all
+  def test_all_fields
     payment_service_for('44','8wd65QS', :service => :authorize_net_sim,  :amount => 157.0){|service|
 
        service.setup_hash :transaction_key => '8CP6zJ7uD875J6tY',
@@ -46,6 +50,7 @@ class AuthorizeNetSimModuleTest < ActionViewHelperTest
                           :last_name => 'g',
                           :email => 'g@g.com',
                           :phone => '3'
+                          
       service.billing_address :zip => 'g',
                       :country => 'United States of America',
                       :address1 => 'g'
@@ -55,14 +60,14 @@ class AuthorizeNetSimModuleTest < ActionViewHelperTest
                                :city => '',
                                :address1 => 'g',
                                :address2 => '',
-#                               :state => address.state,
+                               :state => 'ut',
                                :country => 'United States of America',
                                :zip => 'g'
                                
       service.invoice "516428355"
       service.notify_url "http://t/authorize_net_sim/payment_received_notification_sub_step"
       service.payment_header 'MyFavoritePal'
-      service.add_line_item :name => 'beauty2 - ayoyo', :quantity => 1, :unit_price => 0
+      service.add_line_item :name => 'beauty2 - ayoyo', :quantity => 1, :unit_price => 0.0
       service.test_request 'true'
       service.shipping '25.0'
       service.add_shipping_as_line_item
@@ -93,23 +98,19 @@ class AuthorizeNetSimModuleTest < ActionViewHelperTest
       <INPUT TYPE=HIDDEN name="x_header_html_payment_form" value="MyFavoritePal">
       <INPUT TYPE=HIDDEN name="x_email" value="g@g.com">
       <INPUT TYPE=HIDDEN name="x_fp_hash" value="31d572da4e9910b36e999d73925eb01c">
-      <INPUT TYPE=HIDDEN name="x_line_item" value="Item 1<|>beauty2-ayoyo<|>beauty2 - ayoyo<|>1<|>0.0<|>N">
-      <INPUT TYPE=HIDDEN name="x_line_item" value="Item 2<|>beauty2-44&quot;<|>beauty2 - 44&quot;<|>3<|>44.0<|>N">
+      <INPUT TYPE=HIDDEN name="x_line_item" value="Item 1<|>beauty2 - ayoyo<|>beauty2 - ayoyo<|>1<|>0.0<|>N">
       <INPUT TYPE=HIDDEN name="x_test_request" value="true">
       <INPUT TYPE=HIDDEN name="x_freight" value="25.0"/>
-      <INPUT TYPE=HIDDEN name="x_line_item" value="Shipping<|>Shipping Cost<|>Shipping and Handling Cost<|>1<|>25.0<|>N">
-    '
+      <INPUT TYPE=HIDDEN name="x_line_item" value="Shipping<|>Shipping and Handling Cost<|>Shipping and Handling Cost<|>1<|>25.0<|>N">'
     
-    all += 'name="x_line_item" value="Item 1<|>beauty2-ayoyo<|>beauty2 - ayoyo<|>1<|>0.0<|>N"' # add a single line item for test
-    #@output_buffer.upcase!
-    # clean it up a bit
+    # clean it up a bit for parsing
     @output_buffer.gsub!("type=\"hidden\" ", "")
     for line in all.split("\n") do
       line.strip!
-      next if line.downcase.include? 'x_line_item'
       if line =~ /(name=".*".*value=".*")/i
         line = $1
         unless @output_buffer.include? line
+        debugger
           raise 'didnt find' + line + 'in ' + @output_buffer 
         end
       end
@@ -141,7 +142,7 @@ class AuthorizeNetSimModuleTest < ActionViewHelperTest
       service.add_tax_as_line_item
     }
     all = ['<input id="x_line_item" name="x_line_item" type="hidden" value="Tax<|>Total Tax<|>Total Tax<|>1<|>44.0<|>N',
-    'input id="x_line_item" name="x_line_item" type="hidden" value="Shipping<|>Shipping Cost<|>Shipping Cost<|>1<|>44.0<|>N" />'
+    'input id="x_line_item" name="x_line_item" type="hidden" value="Shipping<|>Shipping and Handling Cost<|>Shipping and Handling Cost<|>1<|>44.0<|>N" />'
     ]
     check_inclusion all
   end
@@ -176,8 +177,18 @@ class AuthorizeNetSimModuleTest < ActionViewHelperTest
       service.add_tax_as_line_item
       service.add_shipping_as_line_item
     }
-    all = ["<input id=\"x_line_item\" name=\"x_line_item\" type=\"hidden\" value=\"Item 1<|>name1<|>name1<|>1<|>1<|>N\" />"]
+    all = ["<input id=\"x_line_item\" name=\"x_line_item\" type=\"hidden\" value=\"Item 1<|>name1<|>name1<|>1<|>1.0<|>N\" />"]
     check_inclusion all 
+  end
+  
+  def test_line_item_weird_prices
+    payment_service_for('44','8wd65QS', :service => :authorize_net_sim,  :amount => 157.0){|service|
+      service.add_line_item :name => 'name1', :quantity => 1, :unit_price => "1.001", :tax => 'true'
+      service.add_line_item :name => 'name2', :quantity => '2', :unit_price => '1.006'
+    }
+    # should round the prices
+    assert @output_buffer !~ /1.001/
+    assert @output_buffer =~ /1.01/
   end
   
   def test_ship_to

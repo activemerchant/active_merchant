@@ -35,16 +35,16 @@ module ActiveMerchant #:nodoc:
         #   service.test_request 'true' # only if it's just a test
         #   service.shipping '25.0'
         #   service.add_shipping_as_line_item # tell it to display a "0" line item for shipping, with the price in the name
-        #   since otherwise, bizarrely, it isn't shown.
+        #   server.add_tax_as_line_item # same with tax
+        #   since otherwise, bizarrely, it isn't shown at all, leaving the end user to wonder why the total is different than the sum of the line items.
         #   See the helper.rb file for various custom fields
         #   }
         class Helper < ActiveMerchant::Billing::Integrations::Helper
           
+          # any entry args, like :amount, must be done using this mapping fella...
+           
           mapping :order, 'x_fp_sequence'
           mapping :account, 'x_login'
-          mapping :amount, 'x_amount'
-
-          # some can be done automatically by straight mapping
           
           mapping :customer, :first_name => 'x_first_name',
                              :last_name  => 'x_last_name',
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
           mapping :return_url, ''
           mapping :cancel_return_url, ''
           
-          # custom fields for ANS ==>
+          # custom fields for Authorize.net SIM ==>
           # see http://www.authorize.net/support/SIM_guide.pdf for more descriptions
           mapping :fax, 'x_fax'
           mapping :customer_id, 'x_cust_id'
@@ -87,6 +87,7 @@ module ActiveMerchant #:nodoc:
           # verbatim when it does its relay (callback) to you
           # note that if you call it twice with the same name, this function only uses keeps the second value you called
           # it with.
+          
           def add_custom_field name, value
             add_field name, value
           end
@@ -97,10 +98,10 @@ module ActiveMerchant #:nodoc:
             add_line_item :name => 'Total Tax', :quantity => 1, :unit_price => @fields['x_tax'], :tax => 0, :line_title => 'Tax'
           end
           
-          # displays shipping as a line item, so they can see it.
+          # displays shipping as a line item, so they can see it. Otherwise it isn't displayed.
           def add_shipping_as_line_item extra_options = {}
-            raise unless @fields['x_freight']
-            add_line_item extra_options.merge({:name => 'Shipping Cost', :quantity => 1, :unit_price => @fields['x_freight'], :line_title => 'Shipping'})
+            raise 'must set shipping/freight before calling this' unless @fields['x_freight']
+            add_line_item extra_options.merge({:name => 'Shipping and Handling Cost', :quantity => 1, :unit_price => @fields['x_freight'], :line_title => 'Shipping'})
           end
           
           # add ship_to_address in the same format as the normal address is added
@@ -110,11 +111,11 @@ module ActiveMerchant #:nodoc:
                 add_field 'x_ship_to_' + setting.to_s, options[setting]
               end
             end
-            raise 'must use :address1 and :address2' if options[:address]
+            raise 'must use :address1 and/or :address2' if options[:address]
             add_field 'x_ship_to_address', (options[:address1].to_s + ' ' + options[:address2].to_s).strip
           end
           
-          # these untested , and control the look of the payment page:)
+          # these untested , and control the look of the SIM payment page
           # note you can include a css header in descriptors, etc.
           mapping :color_link, 'x_color_link'
           mapping :color_text, 'x_color_text'
@@ -132,7 +133,9 @@ module ActiveMerchant #:nodoc:
           # add a line item to authorize.net
           # call line add_line_item {:name => 'orange', :unit_price => 30, :tax_value => 'Y', :quantity => 3, }
           # note you can't pass in a negative unit price, and you can add an optional :line_title => 'special name' if you don't
-          # want it to say 'Item 1' or what not.
+          # want it to say 'Item 1' or what not, the default coded here.
+          # NB cannot have a negative price, nor a name with "'s or $
+          # NB that you can use the :line_title for the product name and then :name for description, if desired
           def add_line_item options
             raise 'needs name' unless options[:name]
             if @line_item_count == 30 # then add a note that we are not showing at least one -- AN doesn't display more than 30 or so
@@ -140,28 +143,26 @@ module ActiveMerchant #:nodoc:
               # pull off the second to last section, which is the description
               description_of_last =~ />([^>]*)<\|>[YN]$/
               # create a new description, which can't be too big, so truncate here
-              require 'ruby-debug'
-              #debugger
               @raw_html_fields[-1][1] = description_of_last.gsub($1, $1[0..200] + ' + more unshown items after this one.')
-              
             end
             
             name = options[:name]
             quantity = options[:quantity] || 1
             line_title = options[:line_title] || ('Item ' + (@line_item_count+1).to_s) # left most field
             unit_price = options[:unit_price] || 0 # could check if AN accepts it without a unit_price
+            unit_price = unit_price.to_f.round(2)
             tax_value = options[:tax_value] || 'N' # takes Y or N or true, false, 0/1
             
             # sanitization, in case they include a reserved word here, follow guidelines
             # they ignore the sanitized_short_name, anyway [though maybe it gets set within AN somewhere, maybe]
             # so..what if I just pass it CGI::escape instead, now?
             raise 'illegal char for line item <|>' if name.include? '<|>'
-            raise 'illegal char for line item"' if name.include? '"' # I think we should be safe besides these. Hope so, as
+            raise 'illegal char for line item "' if name.include? '"' # I think we should be safe besides these. Hope so, as
             raise 'cannot pass in dollar sign' if unit_price.to_s.include? '$'
             raise 'must have positive or 0 unit price' if unit_price.to_f < 0
             # using CGI::escape causes it to look messed [spaces turn into +'s on user display]
             sanitized_short_name = name[0..30] # gotta keep it short
-            name = name[0..255]
+            name = name[0..255]            
 
             # note I don't [yet] have h here
             # I think these are the only ones that can mess it up
@@ -175,11 +176,13 @@ module ActiveMerchant #:nodoc:
             add_field 'x_email_merchant', to_this_email
           end
           
-          # Note.  You MUST call this for it to work.  options must include :transaction_key and :order_timestamps
+          # Note.  You MUST call this at some point for it to actually work.  options must include :transaction_key and :order_timestamp
           def setup_hash options
             raise unless options[:transaction_key]
             raise unless options[:order_timestamp]
+            require 'ruby-debug'
             amount = @fields['x_amount']
+            debugger unless amount.to_s =~ /\d/
             raise 'odd -- non digit number!' unless amount.to_s =~ /\d/
             data = "#{@fields['x_login']}^#{@fields['x_fp_sequence']}^#{options[:order_timestamp].to_i}^#{amount}^#{@fields['x_currency_code']}"
             hmac = OpenSSL::HMAC.hexdigest(OpenSSL::Digest::Digest.new('md5'), options[:transaction_key], data)
@@ -194,9 +197,10 @@ module ActiveMerchant #:nodoc:
             add_field('x_type', 'AUTH_CAPTURE') # the only one we deal with, for now.  Not refunds or anything else, currently.
             add_field 'x_show_form', 'PAYMENT_FORM'
             add_field 'x_relay_response', 'TRUE'
-            add_field 'x_duplicate_window', '28800' # large duplicate window.
+            add_field 'x_duplicate_window', '28800' # large default duplicate window.
             add_field 'x_currency_code', currency_code
-          	add_field 'x_version' , '3.1' # version from docs
+          	add_field 'x_version' , '3.1' # version from doc
+            add_field 'x_amount', options[:amount].to_f.round(2)
           	@line_item_count = 0
           end
 
