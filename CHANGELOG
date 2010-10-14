@@ -1,5 +1,8 @@
 = ActiveMerchant CHANGELOG
 
+* Add support for DirecPay gateway [Soleone]
+* Add SagePay Form integration gateway [Adrian Irving-Beer]
+* Allow Return class to include a Notification for gateways that treat the direct response as a notification [Adrian Irving-Beer]
 * Add support for PayboxDirect gateway [Donald Piret]
 * Add support for SecureNet gateway [Kal]
 * Add support for the Inspire gateway [ryan r. smith]
