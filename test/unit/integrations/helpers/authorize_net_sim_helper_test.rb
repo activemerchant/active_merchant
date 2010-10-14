@@ -10,7 +10,7 @@ class AuthorizeNetSimHelperTest < Test::Unit::TestCase
  
   def test_basic_helper_fields
     assert_field 'x_login', 'cody@example.com'
-    assert_field 'x_amount', '500'
+    assert_field 'x_amount', '500.0'
     assert_field 'x_fp_sequence', 'order-500'
   end
   
