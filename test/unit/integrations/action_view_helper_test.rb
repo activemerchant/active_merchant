@@ -1,4 +1,4 @@
-require 'test_helper'
+require File.expand_path(File.dirname(__FILE__) + '/../../test_helper')
 
 class ActionViewHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations::ActionViewHelper
