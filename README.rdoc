@@ -77,6 +77,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {HiTRUST}[http://www.hitrust.com.hk/]
 * {Nochex}[http://www.nochex.com]
 * {PayPal Website Payments Standard}[https://www.paypal.com/cgi-bin/webscr?cmd=_wp-standard-overview-outside]
+* {SagePay Form}[http://www.sagepay.com/products_services/sage_pay_go/integration/form]
 
 == Download
 
