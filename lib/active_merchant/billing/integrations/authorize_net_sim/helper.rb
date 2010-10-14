@@ -4,10 +4,13 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module AuthorizeNetSim
-        #  example. Note the username as a parameter, and transaction key used later
+        #  An example. Note the username as a parameter, and transaction key used later
+        #  also note that the amount will be *rounded* that you pass in, so preferably pass in X.2 decimal so that no rounding occurs.
+        #  it is rounded because if it looks like 00.000 authorize.net fails the transaction as incorrectly formatted.
         #
-        #  payment_service_for('44','8wd65QS', :service => :authorize_net_sim,  :amount => 157.0){|service|
-        # 
+        #  payment_service_for('order_id','authorize_net_account', :service => :authorize_net_sim,  :amount => 157.0){|service|
+        #    # note: you must call setup_hash and invoice
+        #    
         #    service.setup_hash :transaction_key => '8CP6zJ7uD875J6tY',
         #        :order_timestamp => 1206836763
         #    service.customer_id 8
@@ -28,7 +31,7 @@ module ActiveMerchant #:nodoc:
         #                            :country => 'United States of America',
         #                            :zip => 'g'
         # 
-        #   service.invoice "516428355"
+        #   service.invoice "516428355" # your invoice number
         #   service.notify_url "http://t/authorize_net_sim/payment_received_notification_sub_step"
         #   # NB that you will need to setup, within authorize.net, what you want for your relay url, as above.
         #   # (auth.net calls back to that url, and displays its text back to the user--typically you have that text redirect them back to your site).
@@ -38,9 +41,10 @@ module ActiveMerchant #:nodoc:
         #   service.shipping '25.0'
         #   service.add_shipping_as_line_item # tell it to display a "0" line item for shipping, with the price in the name
         #   server.add_tax_as_line_item # same with tax
-        #   since otherwise, bizarrely, it isn't shown at all, leaving the end user to wonder why the total is different than the sum of the line items.
-        #   See the helper.rb file for various custom fields
+        #   # since otherwise, bizarrely, it isn't shown at all, leaving the end user to wonder why the total is different than the sum of the line items.
+        #   # See the helper.rb file for various custom fields
         #   }
+        #  
         class Helper < ActiveMerchant::Billing::Integrations::Helper
           
           # any entry args, like :amount, must be done using this mapping fella...
@@ -54,8 +58,8 @@ module ActiveMerchant #:nodoc:
                              :phone      => 'x_phone'
                             
           mapping :notify_url, 'x_relay_url'
-          mapping :return_url, ''
-          mapping :cancel_return_url, ''
+          mapping :return_url, '' # unused
+          mapping :cancel_return_url, '' # unused
           
           # custom fields for Authorize.net SIM ==>
           # see http://www.authorize.net/support/SIM_guide.pdf for more descriptions
@@ -186,17 +190,17 @@ module ActiveMerchant #:nodoc:
             raise unless options[:transaction_key]
             raise unless options[:order_timestamp]
             amount = @fields['x_amount']
-            raise 'odd -- number with no digits!' unless amount.to_s =~ /\d/
             data = "#{@fields['x_login']}^#{@fields['x_fp_sequence']}^#{options[:order_timestamp].to_i}^#{amount}^#{@fields['x_currency_code']}"
             hmac = OpenSSL::HMAC.hexdigest(OpenSSL::Digest::Digest.new('md5'), options[:transaction_key], data)
             add_field 'x_fp_hash', hmac
             add_field 'x_fp_timestamp', options[:order_timestamp].to_i
           end
           
-          # Note that you should call #invoice and #setup_hash as well, for the response_url to work
+          # Note that you should call #invoice and #setup_hash as well, for the response_url to actually work
           def initialize(order, account, options = {})
             super
             raise 'missing parameter' unless order and account and options[:amount]
+            raise 'error -- amount with no digits!' unless options[:amount].to_s =~ /\d/
             add_field('x_type', 'AUTH_CAPTURE') # the only one we deal with, for now.  Not refunds or anything else, currently.
             add_field 'x_show_form', 'PAYMENT_FORM'
             add_field 'x_relay_response', 'TRUE'
