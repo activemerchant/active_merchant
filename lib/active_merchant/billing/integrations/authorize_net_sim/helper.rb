@@ -1,3 +1,5 @@
+require 'active_support/core_ext/float/rounding.rb' # Float#round(precision)
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
@@ -153,8 +155,11 @@ module ActiveMerchant #:nodoc:
             unit_price = unit_price.to_f.round(2)
             tax_value = options[:tax_value] || 'N' # takes Y or N or true, false, 0/1
             
-            # sanitization, in case they include a reserved word here, follow guidelines
-            # they ignore the sanitized_short_name, anyway [though maybe it gets set within AN somewhere, maybe]
+            #
+            # sanitization, in case they include a reserved word here, following their guidelines
+            # unfortunately, they require 'raw' fields here, not CGI escaped, using their own delimiters.
+            # 
+            # Authorize.net ignores the second field (sanitized_short_name), anyway [though maybe it gets set internally somewhere...]
             # so..what if I just pass it CGI::escape instead, now?
             raise 'illegal char for line item <|>' if name.include? '<|>'
             raise 'illegal char for line item "' if name.include? '"' # I think we should be safe besides these. Hope so, as
@@ -180,10 +185,8 @@ module ActiveMerchant #:nodoc:
           def setup_hash options
             raise unless options[:transaction_key]
             raise unless options[:order_timestamp]
-            require 'ruby-debug'
             amount = @fields['x_amount']
-            debugger unless amount.to_s =~ /\d/
-            raise 'odd -- non digit number!' unless amount.to_s =~ /\d/
+            raise 'odd -- number with no digits!' unless amount.to_s =~ /\d/
             data = "#{@fields['x_login']}^#{@fields['x_fp_sequence']}^#{options[:order_timestamp].to_i}^#{amount}^#{@fields['x_currency_code']}"
             hmac = OpenSSL::HMAC.hexdigest(OpenSSL::Digest::Digest.new('md5'), options[:transaction_key], data)
             add_field 'x_fp_hash', hmac

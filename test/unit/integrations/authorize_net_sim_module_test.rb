@@ -110,7 +110,6 @@ class AuthorizeNetSimModuleTest < ActionViewHelperTest
       if line =~ /(name=".*".*value=".*")/i
         line = $1
         unless @output_buffer.include? line
-        debugger
           raise 'didnt find' + line + 'in ' + @output_buffer 
         end
       end
