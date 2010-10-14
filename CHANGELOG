@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.9.0 (October 14, 2010)
+
 * Add support for DirecPay gateway [Soleone]
 * Add SagePay Form integration gateway [Adrian Irving-Beer]
 * Allow Return class to include a Notification for gateways that treat the direct response as a notification [Adrian Irving-Beer]
