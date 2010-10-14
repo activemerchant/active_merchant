@@ -2,9 +2,10 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module SagePayForm 
-        autoload :Helper, File.dirname(__FILE__) + '/sage_pay_form/helper.rb'
-        autoload :Return, File.dirname(__FILE__) + '/sage_pay_form/return.rb'
-        autoload :Encryption, File.dirname(__FILE__) + '/sage_pay_form/encryption.rb'
+        autoload :Helper,       File.dirname(__FILE__) + '/sage_pay_form/helper.rb'
+        autoload :Return,       File.dirname(__FILE__) + '/sage_pay_form/return.rb'
+        autoload :Notification, File.dirname(__FILE__) + '/sage_pay_form/notification.rb'
+        autoload :Encryption,   File.dirname(__FILE__) + '/sage_pay_form/encryption.rb'
 
         mattr_accessor :production_url
         mattr_accessor :test_url

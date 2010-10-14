@@ -3,6 +3,7 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       class Return
         attr_accessor :params
+        attr_reader :notification
       
         def initialize(query_string, options = {})
           @params  = parse(query_string)

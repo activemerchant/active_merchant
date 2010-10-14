@@ -1,16 +1,14 @@
-require 'base64'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module SagePayForm
         module Encryption
           def sage_encrypt(plaintext, key)
-            Base64.encode64(sage_encrypt_xor(plaintext, key)).gsub("\n", '')
+            ActiveSupport::Base64.encode64s(sage_encrypt_xor(plaintext, key))
           end
 
           def sage_decrypt(ciphertext, key)
-            sage_encrypt_xor(Base64.decode64(ciphertext), key)
+            sage_encrypt_xor(ActiveSupport::Base64.decode64(ciphertext), key)
           end
           
           def sage_encrypt_salt(min, max)
