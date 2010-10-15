@@ -32,9 +32,18 @@ class SagePayFormReturnTest < Test::Unit::TestCase
   end
 
   def test_missing_key
-    r = SagePayForm::Return.new(successful_purchase)
+    r = SagePayForm::Return.new(successful_purchase, {})
     assert !r.success?
     assert_equal 'No merchant decryption key supplied', r.message
+  end
+
+  def test_notification
+    r = SagePayForm::Return.new(successful_purchase, @options)
+
+    assert r.notification
+    assert_kind_of SagePayForm::Notification, r.notification
+    assert r.notification.complete?
+    assert_equal 'Successfully Authorised Transaction', r.notification.message
   end
   
   private
