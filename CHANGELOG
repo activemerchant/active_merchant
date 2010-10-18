@@ -1,6 +1,6 @@
 = ActiveMerchant CHANGELOG
 
-* DirecPay: Add support for additional options in Return class [Soleone]
+* DirecPay: Add support for additional options in Return class and add convenience method to get transaction status update [Soleone]
 * Add new alias credit_card.brand for credit_card.type and handle the brand correctly in Netaxept [Soleone]
 * Iridium: Do not depend on ExpiryDate class for credit_card [Soleone]
 * PayFlow: Use same timeout of 60 seconds in HTTP header and XML for all requests [Soleone]
