@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add Barclays ePDQ Gateway [Nathaniel Talbott]
 * Add default fixture for Garanti and don't use fixture for Garanti [cody]
 * Add cms param for ePay [ePay]
 * Add Valitor Integration [Nathaniel Talbott]
