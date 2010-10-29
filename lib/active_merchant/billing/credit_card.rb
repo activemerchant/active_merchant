@@ -80,6 +80,12 @@ module ActiveMerchant #:nodoc:
         [@first_name, @last_name].compact.join(' ')
       end
 
+      def name=(full_name)
+        names = full_name.split
+        self.last_name  = names.pop
+        self.first_name = names.join(" ")
+      end
+
       def verification_value?
         !@verification_value.blank?
       end
