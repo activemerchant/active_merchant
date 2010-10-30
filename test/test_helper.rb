@@ -3,8 +3,20 @@ $:.unshift File.expand_path('../../lib', __FILE__)
 
 require 'rubygems'
 require 'test/unit'
+begin
 require 'money'
+rescue LoadError => e
+  STDERR.puts e.message
+  STDERR.puts "gem install money"
+  exit(1)
+end
+begin
 require 'mocha'
+rescue LoadError => e
+  STDERR.puts e.message
+  STDERR.puts "gem install mocha"
+  exit(1)
+end
 require 'yaml'
 require 'active_merchant'
 
