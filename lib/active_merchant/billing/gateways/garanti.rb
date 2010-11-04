@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
       # The homepage URL of the gateway
-      self.homepage_url = 'https://ccpos.garanti.com.tr/ccRaporlar/garanti/ccReports'
+      self.homepage_url = 'https://sanalposweb.garanti.com.tr/gvpsui/login/LoginStart.jsp'
 
       # The name of the gateway
       self.display_name = 'Garanti Sanal POS'
