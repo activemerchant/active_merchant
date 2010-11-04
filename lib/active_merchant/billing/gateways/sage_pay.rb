@@ -32,8 +32,6 @@ module ActiveMerchant #:nodoc:
         :jcb => "JCB"
       }
 
-      CURRENCIES_WITHOUT_FRACTIONS = [ 'JPY' ]
-      
       ELECTRON = /^(424519|42496[23]|450875|48440[6-8]|4844[1-5][1-5]|4917[3-5][0-9]|491880)\d{10}(\d{3})?$/
       
       AVS_CVV_CODE = {
