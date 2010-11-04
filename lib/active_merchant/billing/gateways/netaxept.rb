@@ -216,7 +216,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def encode(hash)
-        hash.collect{|(k,v)| "#{URI.encode(k.to_s)}=#{URI.encode(v.to_s)}"}.join('&')
+        hash.collect{|(k,v)| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"}.join('&')
       end
       
       class Response < Billing::Response
