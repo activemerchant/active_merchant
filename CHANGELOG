@@ -1,10 +1,12 @@
 = ActiveMerchant CHANGELOG
 
+* Netaxept: Make sure password (token) is URL escaped and update remote tests for updated server behavior [Soleone]
 * DirecPay: Add support for additional options in Return class and add convenience method to get transaction status update [Soleone]
 * Add new alias credit_card.brand for credit_card.type and handle the brand correctly in Netaxept [Soleone]
 * Iridium: Do not depend on ExpiryDate class for credit_card [Soleone]
 * PayFlow: Use same timeout of 60 seconds in HTTP header and XML for all requests [Soleone]
 * PayPal Website Payments Pro CA no longer supports American Express cards [Soleone]
+* Updated BIN ranges for Discover to match recent documents [kaunartist]
 
 == Version 1.9.0 (October 14, 2010)
 
