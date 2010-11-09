@@ -53,6 +53,10 @@ elavon:
   login: LOGIN
   password: PASSWORD
 
+epay:
+  merchant_number: X
+  referrer: Y
+
 # Working credentials, no need to replace
 eway:
   login: '87654321'
