@@ -1,10 +1,12 @@
+$:.unshift File.expand_path('../lib', __FILE__)
+
 require 'rubygems'
 require 'rake'
 require 'rake/testtask'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
-require 'lib/support/gateway_support'
-require 'lib/support/outbound_hosts'
+require 'support/gateway_support'
+require 'support/outbound_hosts'
 
 desc "Run the unit test suite"
 task :default => 'test:units'
