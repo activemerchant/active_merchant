@@ -11,7 +11,6 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     %w[
       5000000000000000 5099999999999999 5600000000000000
       5899999999999999 6000000000000000 6999999999999999
-      6761999999999999 6763000000000000 5038999999999999
     ]
   end
   
@@ -166,13 +165,11 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
   
   def test_matching_discover_card
-    assert_equal 'discover', CreditCard.type?('6011000000000000')
-    assert_equal 'discover', CreditCard.type?('6500000000000000')
-    assert_equal 'discover', CreditCard.type?('6221260000000000')
-    assert_equal 'discover', CreditCard.type?('6450000000000000')
+    assert CreditCard.matching_type?('6011000000000000', 'discover')
+    assert CreditCard.matching_type?('6500000000000000', 'discover')
     
-    assert_not_equal 'discover', CreditCard.type?('6010000000000000')
-    assert_not_equal 'discover', CreditCard.type?('6600000000000000')
+    assert_false CreditCard.matching_type?('6010000000000000', 'discover')
+    assert_false CreditCard.matching_type?('6600000000000000', 'discover')
   end
   
   def test_16_digit_maestro_uk
@@ -191,15 +188,5 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     number = '6759000000000000000'
     assert_equal 19, number.length
     assert_equal 'switch', CreditCard.type?(number)
-  end
-
-  def test_matching_switch_card
-    assert_equal 'switch', CreditCard.type?('4903000000000000')
-    assert_equal 'switch', CreditCard.type?('5641820000000000')
-    assert_equal 'switch', CreditCard.type?('6331100000000000')
-    assert_equal 'switch', CreditCard.type?('6759000000000000')
-
-    assert_not_equal 'switch', CreditCard.type?('67590000000000000') #17 digits
-    assert_not_equal 'switch', CreditCard.type?('67590000000000000000') #20 digits
   end
 end
