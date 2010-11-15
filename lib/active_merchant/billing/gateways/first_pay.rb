@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_invoice(post, options)
-        post[:trackid] = rand(Time.now)
+        post[:trackid] = rand(Time.now.to_i)
       end
       
       def add_creditcard(post, creditcard)
