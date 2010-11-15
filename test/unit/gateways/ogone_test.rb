@@ -1,12 +1,23 @@
 require 'test_helper'
 
+# Allow us to test private method, required for the signature tests
+class Class
+  def publicize_methods
+    saved_private_instance_methods = self.private_instance_methods
+    self.class_eval { public *saved_private_instance_methods }
+    yield
+    self.class_eval { private *saved_private_instance_methods }
+  end
+end
+
 class OgoneTest < Test::Unit::TestCase
 
   def setup
     @credentials = { :login => 'merchant id',
                      :user => 'username',
                      :password => 'password',
-                     :signature => 'mynicesig' }
+                     :signature => 'mynicesig',
+                     :created_after_10_may_2010 => false }
     @gateway = OgoneGateway.new(@credentials)
     @credit_card = credit_card
     @amount = 100
@@ -15,6 +26,16 @@ class OgoneTest < Test::Unit::TestCase
       :order_id => '1',
       :billing_address => address,
       :description => 'Store Purchase'
+    }
+    @parameters = {
+      'orderID' => '1',
+      'amount' => '100',
+      'currency' => 'EUR',
+      'CARDNO' => '4111111111111111',
+      'PSPID' => 'MrPSPID',
+      'Operation' => 'RES',
+      'ALIAS' => '2',
+      'CN' => 'Client Name'
     }
   end
   
@@ -148,6 +169,21 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns('<ncresponse NCERRORPLUS=" unknown order " STATUS="0" />')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal "Unknown order", response.message
+  end
+
+  def test_signature_for_accounts_created_before_10_may_2010
+    ActiveMerchant::Billing::OgoneGateway.publicize_methods do
+      assert signature = @gateway.add_signature(@parameters)
+      assert_equal Digest::SHA1.hexdigest("1100EUR4111111111111111MrPSPIDRES2mynicesig"), signature
+    end
+  end
+
+  def test_signature_for_accounts_created_after_10_may_2010
+    ActiveMerchant::Billing::OgoneGateway.publicize_methods do
+      gateway = OgoneGateway.new(@credentials.merge({:created_after_10_may_2010 => true}))
+      assert signature = gateway.add_signature(@parameters)
+      assert_equal Digest::SHA1.hexdigest("ALIAS=2mynicesigAMOUNT=100mynicesigCARDNO=4111111111111111mynicesigCN=Client NamemynicesigCURRENCY=EURmynicesigOPERATION=RESmynicesigORDERID=1mynicesigPSPID=MrPSPIDmynicesig"), signature
+    end
   end
 
   private
