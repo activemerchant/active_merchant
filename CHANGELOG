@@ -1,5 +1,8 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.9.1 (November 24, 2010)
+
+* PayPal Express and PayPal Pro: Send JPY currency correctly without decimals [Soleone]
 * Netaxept: Make sure password (token) is URL escaped and update remote tests for updated server behavior [Soleone]
 * DirecPay: Add support for additional options in Return class and add convenience method to get transaction status update [Soleone]
 * Add new alias credit_card.brand for credit_card.type and handle the brand correctly in Netaxept [Soleone]
