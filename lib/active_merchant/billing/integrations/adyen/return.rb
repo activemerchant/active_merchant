@@ -22,7 +22,11 @@ module ActiveMerchant #:nodoc:
           end
 
           def generate_signature
-            digest = OpenSSL::HMAC.digest(OpenSSL::Digest::SHA1.new, @shared_secret, generate_signature_string)
+            if @shared_secret.nil?
+              digest = OpenSSL::HMAC.digest(OpenSSL::Digest::SHA1.new, 'secret', generate_signature_string)
+            else
+              digest = OpenSSL::HMAC.digest(OpenSSL::Digest::SHA1.new, @shared_secret, generate_signature_string)
+            end
             return Base64.encode64(digest).strip
           end
           
