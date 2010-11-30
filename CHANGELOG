@@ -1,5 +1,8 @@
 = ActiveMerchant CHANGELOG
 
+* Add ePay gateway [ePay, Jonathan Rudenberg]
+* Allow access to the raw HTTP response [Jonathan Rudenberg]
+
 == Version 1.9.1 (November 24, 2010)
 
 * PayPal Express and PayPal Pro: Send JPY currency correctly without decimals [Soleone]
