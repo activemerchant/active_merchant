@@ -22,6 +22,14 @@ class OgoneTest < Test::Unit::TestCase
     Base.mode = :test
   end
 
+  def test_accessing_params_attribute_of_response
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'test123', response.params['ACCEPTANCE']
+    assert response.test?
+  end
+
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options)

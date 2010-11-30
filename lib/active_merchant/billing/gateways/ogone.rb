@@ -220,8 +220,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        xml = REXML::Document.new(body)
-        xml.root.attributes
+        Hash[REXML::Document.new(body).root.attributes.map { |k,v| [k.to_s, v] }]
       end
 
       def commit(action, parameters)
