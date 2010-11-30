@@ -13,7 +13,7 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_authorize
-    @gateway.capture(1000, @creditcard)    
+    @gateway.authorize(1000, @creditcard)    
   end
 
   def test_purchase
@@ -24,11 +24,15 @@ class BogusTest < Test::Unit::TestCase
     @gateway.credit(1000, @response.params["transid"])
   end
 
+  def test_capture
+    @gateway.capture(1000, @response.params["transid"])
+  end
+
   def test_void
     @gateway.void(@response.params["transid"])
   end
   
-  def  test_store
+  def test_store
     @gateway.store(@creditcard)
   end
   
