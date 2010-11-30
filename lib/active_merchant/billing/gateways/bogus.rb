@@ -17,9 +17,9 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://example.com'
       self.display_name = 'Bogus'
       
-      def authorize(money, creditcard, options = {})
+      def authorize(money, ident, options = {})
         money = amount(money)
-        case creditcard.number
+        case normalize_ident(ident)
         when '1'
           Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
         when '2'
@@ -29,9 +29,9 @@ module ActiveMerchant #:nodoc:
         end      
       end
   
-      def purchase(money, creditcard, options = {})
+      def purchase(money, ident, options = {})
         money = amount(money)
-        case creditcard.number
+        case normalize_ident(ident)
         when '1'
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
         when '2'
@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
  
       def credit(money, ident, options = {})
         money = amount(money)
-        case ident
+        case normalize_ident(ident)
         when '1'
           raise Error, CREDIT_ERROR_MESSAGE
         when '2'
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
  
       def capture(money, ident, options = {})
         money = amount(money)
-        case ident
+        case normalize_ident(ident)
         when '1'
           raise Error, CAPTURE_ERROR_MESSAGE
         when '2'
@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(ident, options = {})
-        case ident
+        case normalize_ident(ident)
         when '1'
           raise Error, VOID_ERROR_MESSAGE
         when '2'
@@ -76,8 +76,8 @@ module ActiveMerchant #:nodoc:
         end
       end
       
-      def store(creditcard, options = {})
-        case creditcard.number
+      def store(ident, options = {})
+        case normalize_ident(ident)
         when '1'
           Response.new(true, SUCCESS_MESSAGE, {:billingid => '1'}, :test => true, :authorization => AUTHORIZATION )
         when '2'
@@ -87,8 +87,8 @@ module ActiveMerchant #:nodoc:
         end              
       end
       
-      def unstore(identification, options = {})
-        case identification
+      def unstore(ident, options = {})
+        case normalize_ident(ident)
         when '1'
           Response.new(true, SUCCESS_MESSAGE, {}, :test => true)
         when '2'
@@ -96,6 +96,12 @@ module ActiveMerchant #:nodoc:
         else
           raise Error, UNSTORE_ERROR_MESSAGE
         end
+      end
+
+      private
+
+      def normalize_ident(ident)
+        ident.respond_to?(:number) ? ident.number : ident.to_s
       end
     end
   end
