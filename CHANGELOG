@@ -1,5 +1,8 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.9.2 (December 9, 2010)
+
+* Add support for PayPal mobile payments [Adrian Irving-Beer]
 * Add ePay gateway [ePay, Jonathan Rudenberg]
 * Allow access to the raw HTTP response [Jonathan Rudenberg]
 
