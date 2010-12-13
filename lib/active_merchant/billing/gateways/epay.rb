@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard_or_reference(post, credit_card_or_reference)
-        if credit_card_or_reference.is_a?(CreditCard)
+        if credit_card_or_reference.respond_to?(:number)
           add_creditcard(post, credit_card_or_reference)
         else
           add_reference(post, credit_card_or_reference.to_s)
