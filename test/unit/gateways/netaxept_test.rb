@@ -171,6 +171,16 @@ class NetaxeptTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options)
   end
   
+  def test_using_credit_card_transaction_service_type
+    s = sequence("request")
+    @gateway.expects(:ssl_get ).with(regexp_matches(/serviceType=M/)).returns(successful_purchase_response[0]).in_sequence(s)
+    @gateway.expects(:ssl_post).returns(successful_purchase_response[1]).in_sequence(s)
+    @gateway.expects(:ssl_get ).returns(successful_purchase_response[2]).in_sequence(s)
+    @gateway.expects(:ssl_get ).returns(successful_purchase_response[3]).in_sequence(s)
+    
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+  
   private
   
   # Place raw successful response from gateway here

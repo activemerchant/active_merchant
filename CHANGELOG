@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Fix BBS Netaxept to change transaction type from C (for MOTO: mail order telephone order) to M (for credit card orders) [Soleone]
+
 == Version 1.9.2 (December 9, 2010)
 
 * Add support for PayPal mobile payments [Adrian Irving-Beer]
