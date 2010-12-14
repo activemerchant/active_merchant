@@ -101,7 +101,7 @@ module ActiveMerchant #:nodoc:
 
       class_inheritable_accessor :test_url, :live_url
 
-      self.test_url = "https://demo.payjunction.com/quick_link"
+      self.test_url = "https://www.payjunctionlabs.com/quick_link"
       self.live_url = "https://payjunction.com/quick_link"
 
       TEST_LOGIN = 'pj-ql-01'
