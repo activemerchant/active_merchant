@@ -14,12 +14,15 @@ module ActiveMerchant #:nodoc:
         self.application_id = 'ActiveMerchant'
 
         def initialize(order, account, options = {})
-          options.assert_valid_keys([:amount, :currency, :test])
+          options.assert_valid_keys([:amount, :currency, :test, :credential2, :credential3, :credential4])
           @fields = {}
-          self.order = order
-          self.account = account
-          self.amount = options[:amount]
-          self.currency = options[:currency]
+          self.order       = order
+          self.account     = account
+          self.amount      = options[:amount]
+          self.currency    = options[:currency]
+          self.credential2 = options[:credential2]
+          self.credential3 = options[:credential3]
+          self.credential4 = options[:credential4]
         end
 
         def self.mapping(attribute, options = {})

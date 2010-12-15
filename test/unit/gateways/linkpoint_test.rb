@@ -29,6 +29,15 @@ class LinkpointTest < Test::Unit::TestCase
     assert_equal '1000', response.authorization
   end
   
+  def test_successful_capture
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+    
+    assert response = @gateway.capture(@email, '1000', @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '1000', response.authorization
+  end
+    
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     
@@ -53,11 +62,11 @@ class LinkpointTest < Test::Unit::TestCase
   end
   
   def test_amount_style
-   assert_equal '10.34', @gateway.send(:amount, 1034)
+    assert_equal '10.34', @gateway.send(:amount, 1034)
                                                       
-   assert_raise(ArgumentError) do
-     @gateway.send(:amount, '10.34')
-   end
+    assert_raise(ArgumentError) do
+      @gateway.send(:amount, '10.34')
+    end
   end
 
   def test_purchase_is_valid_xml
@@ -69,11 +78,11 @@ class LinkpointTest < Test::Unit::TestCase
         :zip => '90210'
       }
     )
-  
+
     assert data = @gateway.send(:post_data, @amount, @credit_card, @options)
     assert REXML::Document.new(data)
   end
-  
+
   def test_recurring_is_valid_xml
     parameters = @gateway.send(:parameters, 1000, @credit_card, :ordertype => "SALE", :action => "SUBMIT", :installments => 12, :startdate => "immediate", :periodicity => "monthly", :order_id => 1006,
       :billing_address => {
@@ -84,6 +93,23 @@ class LinkpointTest < Test::Unit::TestCase
       }
     )
     assert data = @gateway.send(:post_data, @amount, @credit_card, @options)
+    assert REXML::Document.new(data)
+  end
+
+  def test_line_items_are_valid_xml
+    options = {:ordertype => "SALE", :action => "SUBMIT", :installments => 12, :startdate => "immediate", :periodicity => "monthly", :order_id => 1006,
+      :billing_address => {
+        :address1 => '1313 lucky lane',
+        :city => 'Lost Angeles',
+        :state => 'CA',
+        :zip => '90210'
+      },
+      :line_items => [{:id => '123456', :description => "Logo T-Shirt", :price =>
+            "12.00", :quantity => '1', :options => [{:name => "Color", :value =>
+                "Red"}, {:name => "Size", :value => "XL"}]},{:id => '111', :description => "keychain", :price => "3.00", :quantity => '1'}]}
+
+
+    assert data = @gateway.send(:post_data, @amount, @credit_card, options)
     assert REXML::Document.new(data)
   end
 
@@ -131,7 +157,7 @@ class LinkpointTest < Test::Unit::TestCase
   end
   
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover], LinkpointGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :discover, :jcb, :diners_club], LinkpointGateway.supported_cardtypes
   end
   
   def test_avs_result
@@ -151,6 +177,10 @@ class LinkpointTest < Test::Unit::TestCase
   private
   def successful_authorization_response
     '<r_csp>CSI</r_csp><r_time>Sun Jan 6 21:41:31 2008</r_time><r_ref>0004486182</r_ref><r_error/><r_ordernum>1000</r_ordernum><r_message>APPROVED</r_message><r_code>1234560004486182:NNNM:100018312899:</r_code><r_tdate>1199680890</r_tdate><r_score/><r_authresponse/><r_approved>APPROVED</r_approved><r_avs>NNNM</r_avs>'
+  end
+  
+  def successful_capture_response
+    '<r_csp>CSI</r_csp><r_time>Wed Dec 2 13:57:19 2009</r_time><r_ref>0009554566</r_ref><r_error></r_error><r_ordernum>1000</r_ordernum><r_message>ACCEPTED</r_message><r_code>0000000009554566: :9554566:</r_code><r_tdate>1259780240</r_tdate><r_score></r_score><r_authresponse></r_authresponse><r_approved>APPROVED</r_approved><r_avs>    </r_avs>'
   end
   
   def successful_purchase_response

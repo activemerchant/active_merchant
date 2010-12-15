@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class MyPost < PostData
+class MyPost < ActiveMerchant::PostData
   self.required_fields = [ :ccnumber, :ccexp, :firstname, :lastname, :username, :password, :order_id, :key, :time ]
 end
 
@@ -11,19 +11,19 @@ class PostDataTest < Test::Unit::TestCase
   end
   
   def teardown
-    PostData.required_fields = []
+    ActiveMerchant::PostData.required_fields = []
   end
   
   def test_element_assignment
     name = 'Cody Fauser'
-    post = PostData.new
+    post = ActiveMerchant::PostData.new
     
     post[:name] = name
     assert_equal name, post[:name]
   end
   
   def test_ignore_blank_fields
-    post = PostData.new
+    post = ActiveMerchant::PostData.new
     assert_equal 0, post.keys.size
     
     post[:name] = ''
@@ -34,8 +34,8 @@ class PostDataTest < Test::Unit::TestCase
   end
   
   def test_dont_ignore_required_blank_fields
-    PostData.required_fields = [ :name ]
-    post = PostData.new
+    ActiveMerchant::PostData.required_fields = [ :name ]
+    post = ActiveMerchant::PostData.new
     
     assert_equal 0, post.keys.size
     

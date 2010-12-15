@@ -46,7 +46,16 @@ module ActiveMerchant #:nodoc:
     end
 
     def code(format)
-      @codes.select{|c| c.format == format}
+      @codes.detect{|c| c.format == format}
+    end
+    
+    def ==(other)
+      (@name == other.name)
+    end
+    alias eql? ==
+    
+    def hash
+      @name.hash
     end
 
     def to_s

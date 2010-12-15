@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def received_at
-            Time.local(*params['time'].scan(/../))
+            Time.parse("20#{params['time']}")
           end
 
           def gross

@@ -19,6 +19,13 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
+  
+  def test_successful_with_non_numeric_order_id
+    @options[:order_id] = "##{@options[:order_id][0...26]}.12"
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  end
 
   def test_successful_purchase_without_order_id
     @options.delete(:order_id)
@@ -30,7 +37,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'no brand', response.message
+    assert_equal 'No brand', response.message
   end
 
   def test_authorize_and_capture
@@ -45,7 +52,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def test_unsuccessful_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'no card no, no exp date, no brand', response.message
+    assert_equal 'No card no, no exp date, no brand', response.message
   end
 
   def test_successful_void
@@ -72,7 +79,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert credit = @gateway.credit(@amount+1, purchase.authorization, @options) # too much refund requested
     assert_failure credit
     assert credit.authorization
-    assert_equal 'Overflow in refunds requests/1/1', credit.message
+    assert_equal 'Overflow in refunds requests', credit.message
   end
 
   def test_successful_unreferenced_credit
@@ -102,7 +109,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'no pspid', response.message
+    assert_equal 'No pspid', response.message
   end
 
 end

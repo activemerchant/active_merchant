@@ -25,9 +25,12 @@ module ActiveMerchant #:nodoc:
     def ssl_post(endpoint, data, headers = {})
       ssl_request(:post, endpoint, data, headers)
     end
-    
-    private
-    def ssl_request(method, endpoint, data, headers = {})
+
+    def ssl_request(method, endpoint, data, headers)
+      handle_response(raw_ssl_request(method, endpoint, data, headers))
+    end
+
+    def raw_ssl_request(method, endpoint, data, headers = {})
       connection = Connection.new(endpoint)
       connection.open_timeout = open_timeout
       connection.read_timeout = read_timeout
@@ -41,6 +44,17 @@ module ActiveMerchant #:nodoc:
       connection.pem_password = @options[:pem_password] if @options
       
       connection.request(method, data, headers)
+    end
+
+    private
+
+    def handle_response(response)
+      case response.code.to_i
+      when 200...300
+        response.body
+      else
+        raise ResponseError.new(response)
+      end
     end
     
   end

@@ -110,6 +110,86 @@ class SkipJackTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
   
+  def test_basic_test_url
+    @gateway.stubs(:test?).returns(true)
+    @gateway.stubs(:advanced?).returns(false)
+    assert_equal "https://developer.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI", @gateway.send(:url_for, :authorization)
+  end
+  
+  def test_basic_test_url_non_authorization
+    @gateway.stubs(:test?).returns(true)
+    @gateway.stubs(:advanced?).returns(false)
+    assert_equal "https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest", @gateway.send(:url_for, :change_status)
+  end
+  
+  def test_advanced_test_url
+    @gateway.stubs(:test?).returns(true)
+    @gateway.stubs(:advanced?).returns(true)
+    assert_equal "https://developer.skipjackic.com/evolvcc/evolvcc.aspx?AuthorizeAPI", @gateway.send(:url_for, :authorization)
+  end
+  
+  def test_advanced_test_url_non_authorization
+    @gateway.stubs(:test?).returns(true)
+    @gateway.stubs(:advanced?).returns(true)
+    assert_equal "https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest", @gateway.send(:url_for, :change_status)
+  end
+  
+  def test_basic_live_url
+    @gateway.stubs(:test?).returns(false)
+    @gateway.stubs(:advanced?).returns(false)
+    assert_equal "https://www.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI", @gateway.send(:url_for, :authorization)
+  end
+  
+  def test_basic_live_url_non_authorization
+    @gateway.stubs(:test?).returns(false)
+    @gateway.stubs(:advanced?).returns(false)
+    assert_equal "https://www.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest", @gateway.send(:url_for, :change_status)
+  end
+  
+  def test_advanced_live_url
+    @gateway.stubs(:test?).returns(false)
+    @gateway.stubs(:advanced?).returns(true)
+    assert_equal "https://www.skipjackic.com/evolvcc/evolvcc.aspx?AuthorizeAPI", @gateway.send(:url_for, :authorization)
+  end
+  
+  def test_advanced_live_url_non_authorization
+    @gateway.stubs(:test?).returns(false)
+    @gateway.stubs(:advanced?).returns(true)
+    assert_equal "https://www.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest", @gateway.send(:url_for, :change_status)
+  end
+  
+  def test_paymentech_authorization_success    
+    @gateway.expects(:ssl_post).returns(successful_paymentech_authorization_response)
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '40000024585892.109', response.authorization
+  end
+  
+  def test_paymentech_authorization_failure
+    @gateway.expects(:ssl_post).returns(unsuccessful_paymentech_authorization_response)
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+  
+
+  def test_serial_number_is_added_before_developer_serial_number_for_authorization
+    @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI', 'Year=2011&TransactionAmount=1.00&ShipToPhone=&SerialNumber=X&SJName=Longbob+Longsen&OrderString=1%7ENone%7E0.00%7E0%7EN%7E%7C%7C&OrderNumber=1&OrderDescription=&Month=9&InvoiceNumber=&Email=cody%40example.com&DeveloperSerialNumber=Y&CustomerCode=&CVV2=123&AccountNumber=4242424242424242').returns(successful_authorization_response)
+    
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+  end
+  
+  def test_serial_number_is_added_before_developer_serial_number_for_capture
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    
+    @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', "szTransactionId=#{response.authorization}&szSerialNumber=X&szForceSettlement=0&szDeveloperSerialNumber=Y&szDesiredStatus=SETTLE").returns(successful_capture_response)
+    assert response = @gateway.capture(@amount, response.authorization)    
+  end
+  
   private
   def successful_authorization_response
     <<-CSV
@@ -130,4 +210,19 @@ class SkipJackTest < Test::Unit::TestCase
 "AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"\r\n"EMPTY","000386891209","100","","","","b1eec256d0182f29375e0cbae685092d","","0","","","-35","",""
     CSV
   end
+  
+  def unsuccessful_paymentech_authorization_response
+    <<-CSV
+"AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode",
+"EMPTY","000000000000","1.00","","","","43985b7953199d1f02c3017f948e9f13","","0","","","-83","","",    
+    CSV
+  end
+  
+  def successful_paymentech_authorization_response
+    <<-CSV
+"AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode",
+"093223","000000000000","1.00","","Y","Card authorized, exact address match with 5 digit zip code.","5ac0f04e737baea5a5370037afe827f6","093223","1","M","Match","1","40000024585892.109","",    
+    CSV
+  end
 end
+

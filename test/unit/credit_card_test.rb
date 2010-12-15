@@ -106,8 +106,8 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_require_a_valid_card_month
-    @visa.month  = Time.now.month
-    @visa.year   = Time.now.year
+    @visa.month  = Time.now.utc.month
+    @visa.year   = Time.now.utc.year
     
     assert_valid @visa
   end
@@ -314,5 +314,10 @@ class CreditCardTest < Test::Unit::TestCase
     card = credit_card(nil)
     assert !card.valid?
     assert_equal "", card.number
+  end
+  
+  def test_type_is_aliased_as_brand
+    assert_equal @visa.type, @visa.brand
+    assert_equal @solo.type, @solo.brand
   end
 end

@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
 	module Billing #:nodoc:
 		class MerchantESolutionsGateway < Gateway
 
-			TEST_URL = 'https://test.merchante-solutions.com/mes-api/tridentApi'
+			TEST_URL = 'https://cert.merchante-solutions.com/mes-api/tridentApi'
 			LIVE_URL = 'https://api.merchante-solutions.com/mes-api/tridentApi'
       
 			# The countries the gateway supports merchants from as 2 digit ISO country codes

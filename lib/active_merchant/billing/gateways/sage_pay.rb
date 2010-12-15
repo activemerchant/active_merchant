@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
         :diners_club => "DC",
         :jcb => "JCB"
       }
-      
+
       ELECTRON = /^(424519|42496[23]|450875|48440[6-8]|4844[1-5][1-5]|4917[3-5][0-9]|491880)\d{10}(\d{3})?$/
       
       AVS_CVV_CODE = {
@@ -138,8 +138,9 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_amount(post, money, options)
-        add_pair(post, :Amount, amount(money), :required => true)
-        add_pair(post, :Currency, options[:currency] || currency(money), :required => true)
+        currency = options[:currency] || currency(money)
+        add_pair(post, :Amount, localized_amount(money, currency), :required => true)
+        add_pair(post, :Currency, currency, :required => true)
       end
 
       # doesn't actually use the currency -- dodgy!
@@ -286,7 +287,9 @@ module ActiveMerchant #:nodoc:
       # Key2=value2
       def parse(body)
         result = {}
-        body.to_a.each { |pair| result[$1] = $2 if pair.strip =~ /\A([^=]+)=(.+)\Z/im }
+        body.to_s.each_line do |pair|
+          result[$1] = $2 if pair.strip =~ /\A([^=]+)=(.+)\Z/im
+        end
         result
       end
 
@@ -301,8 +304,12 @@ module ActiveMerchant #:nodoc:
         first_name = name.join(' ')
         [ first_name[0,20], last_name[0,20] ]
       end
+      
+      def localized_amount(money, currency)
+        amount = amount(money)
+        CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s) ? amount.split('.').first : amount
+      end
     end
-    ProtxGateway = SagePayGateway
   end
 end
 

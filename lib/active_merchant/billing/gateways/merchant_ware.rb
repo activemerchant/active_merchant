@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
       # Authorize a credit card for a given amount.
       # 
       # ==== Parameters
-      # * <tt>money</tt> - The amount to be authorized.  Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> - The amount to be authorized as an Integer value in cents.
       # * <tt>credit_card</tt> - The CreditCard details for the transaction.
       # * <tt>options</tt>
       #   * <tt>:order_id</tt> - A unique reference for this order (required).
@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
       # Authorize and immediately capture funds from a credit card.
       # 
       # ==== Parameters
-      # * <tt>money</tt> - The amount to be authorized.  Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> - The amount to be authorized as anInteger value in cents.
       # * <tt>credit_card</tt> - The CreditCard details for the transaction.
       # * <tt>options</tt>
       #   * <tt>:order_id</tt> - A unique reference for this order (required).
@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
       # Capture authorized funds from a credit card.
       # 
       # ==== Parameters
-      # * <tt>money</tt> - The amount to be captured.  Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> - The amount to be captured as anInteger value in cents.
       # * <tt>authorization</tt> - The authorization string returned from the initial authorization.
       def capture(money, authorization, options = {})
         request = build_capture_request(:capture, money, authorization, options)
@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
       # 
       # ==== Parameters
       #
-      # * <tt>money</tt> - The amount to be refunded. Either an Integer value in cents or a Money object.
+      # * <tt>money</tt> - The amount to be refunded as an Integer value in cents.
       # * <tt>identification</tt> - The credit card you want to refund or the authorization for the existing transaction you are refunding.
       # * <tt>options</tt>
       #   * <tt>:order_id</tt> - A unique reference for this order (required when performing a non-referenced credit)
@@ -179,7 +179,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_invoice(xml, options)
-        xml.tag! "strOrderNumber", options[:order_id].to_s.slice(0, 25)
+        xml.tag! "strOrderNumber", options[:order_id].to_s.gsub(/[^\w]/, '').slice(0, 25)
       end
       
       def add_amount(xml, money, tag = "strAmount")

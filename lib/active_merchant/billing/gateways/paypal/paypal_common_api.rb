@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
         base.cattr_accessor :signature
       end
       
-      API_VERSION = '52.0'
+      API_VERSION = '59.0'
       
       URLS = {
         :test => { :certificate => 'https://api.sandbox.paypal.com/2.0/',
@@ -133,6 +133,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'AuthorizationID', authorization
             xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
             xml.tag! 'CompleteType', 'Complete'
+            xml.tag! 'InvoiceID', options[:order_id] unless options[:order_id].blank?
             xml.tag! 'Note', options[:description]
           end
         end

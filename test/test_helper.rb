@@ -1,12 +1,20 @@
 #!/usr/bin/env ruby
-$:.unshift(File.dirname(__FILE__) + '/../lib')
+$:.unshift File.expand_path('../../lib', __FILE__)
 
-require 'active_merchant'
 require 'rubygems'
-require 'money'
 require 'test/unit'
+require 'money'
 require 'mocha'
 require 'yaml'
+require 'active_merchant'
+
+require 'active_support/core_ext/integer/time'
+require 'active_support/core_ext/numeric/time'
+
+begin
+  require 'active_support/core_ext/time/acts_like'
+rescue LoadError
+end
 
 begin
   gem 'actionpack'
@@ -15,7 +23,12 @@ rescue LoadError
 end
 
 require 'action_controller'
-require 'action_controller/test_process'
+require "action_view/template"
+begin
+  require 'action_dispatch/testing/test_process'
+rescue LoadError
+  require 'action_controller/test_process'
+end
 require 'active_merchant/billing/integrations/action_view_helper'
 
 ActiveMerchant::Billing::Base.mode = :test
@@ -30,6 +43,8 @@ end
 
 module ActiveMerchant
   module Assertions
+    AssertionClass = RUBY_VERSION > '1.9' ? MiniTest::Assertion : Test::Unit::AssertionFailedError
+    
     def assert_field(field, value)
       clean_backtrace do 
         assert_equal value, @helper.fields[field]
@@ -92,10 +107,10 @@ module ActiveMerchant
     
     private
     def clean_backtrace(&block)
-      yield
-    rescue Test::Unit::AssertionFailedError => e
+      yield    
+    rescue AssertionClass => e
       path = File.expand_path(__FILE__)
-      raise Test::Unit::AssertionFailedError, e.message, e.backtrace.reject { |line| File.expand_path(line) =~ /#{path}/ }
+      raise AssertionClass, e.message, e.backtrace.reject { |line| File.expand_path(line) =~ /#{path}/ }
     end
   end
   

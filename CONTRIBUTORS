@@ -39,6 +39,14 @@ NetRegistry Gateway
 
 * Originally contributed by George Ogata (mailto: george.ogata@gmail.com)
 
+DataCash Gateway (March 2, 2007)
+
+* MoneySpyder, http://moneyspyder.co.uk and E-consultancy, http://www.e-consultancy.com
+
+PSL Card Gateway (March 27, 2007)
+
+* MoneySpyder, http://moneyspyder.co.uk
+
 Viaklix Gateway (Sep 3, 2007)
 
 * Originally contributed by Sal Scotto
@@ -101,6 +109,10 @@ Instapay Gateway (May 3, 2009)
 
 * Thomas Rideout
 
+Iridium Gateway (June 13, 2009)
+
+* Phil Smy
+
 MerchantWARE (July 7, 2009)
 
 * Cody Fauser
@@ -112,3 +124,52 @@ FirstPay (July 24, 2009)
 Ogone (July 20, 2009)
 
 * Nicolas Jacobeus
+
+Elavon (August 09, 2009)
+
+* Jesse Storimer
+
+JetPay (September 29, 2009)
+
+* Phil Ripperger, Peter Williams
+
+SallieMae (October 2, 2009)
+
+* iamjwc
+
+Netaxept (February 08, 2010)
+
+* Nathaniel Talbott
+
+Garanti (May 05, 2010)
+
+* Selem Delul (moon@mac.home)
+
+Braintree Blue Gateway (May 19th, 2010)
+
+* Braintree (code@getbraintree.com)
+
+Inspire Gateway (September 27, 2010)
+
+* ryan r. smith
+
+SecureNet Gateway (September 27, 2010)
+
+* Kal
+
+PayboxDirect Gateway (September 27, 2010)
+
+* Donald Piret <donald@donaldpiret.com>
+
+SagePay Form Offsite Gateway (October 14, 2010)
+
+* Adrian Irving-Beer
+
+DirecPay Gateway (October 14, 2010)
+
+* Soleone
+
+ePay Gateway (November 23, 2010)
+
+* Original code by ePay (epay.dk)
+* Refactored by Jonathan Rudenberg
