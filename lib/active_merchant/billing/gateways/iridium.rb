@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_source, options = {})
         setup_address_hash(options)
         
-        if payment_source.is_a?(CreditCard)
+        if payment_source.respond_to?(:number)
           commit(build_purchase_request('SALE', money, payment_source, options), options)
         else
           commit(build_reference_request('SALE', money, payment_source, options), options)
