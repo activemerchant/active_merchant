@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.9.3 (December 17, 2010)
+
 * Fix BBS Netaxept to change transaction type from C (for MOTO: mail order telephone order) to M (for credit card orders) [Soleone]
 * Fix Iridium and ePay to work with any object that responds to credit card methods not only ActiveMerchant::CreditCard objects
 
