@@ -385,9 +385,10 @@ merchant_esolutions:
   password: "gvQzgKXOTEoDzpzJzROrQQzoKLaEqxjf"
 
 garanti:
-  client_id: '100104' 
-  login: 'paymentuser'
-  password: 'userpayment'
+  login: "PROVAUT"
+  terminal_id: 111995
+  merchant_id: 600218
+  password: "123qweASD"
   
 direc_pay:
   mid: 200904281000001
