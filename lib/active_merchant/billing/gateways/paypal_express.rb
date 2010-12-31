@@ -119,7 +119,7 @@ module ActiveMerchant #:nodoc:
         
               # Customization of the payment page
               xml.tag! 'n2:PageStyle', options[:page_style] unless options[:page_style].blank?
-              xml.tag! 'n2:cpp-image-header', options[:header_image] unless options[:header_image].blank?
+              xml.tag! 'n2:cpp-header-image', options[:header_image] unless options[:header_image].blank?
               xml.tag! 'n2:cpp-header-back-color', options[:header_background_color] unless options[:header_background_color].blank?
               xml.tag! 'n2:cpp-header-border-color', options[:header_border_color] unless options[:header_border_color].blank?
               xml.tag! 'n2:cpp-payflow-color', options[:background_color] unless options[:background_color].blank?
