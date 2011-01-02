@@ -98,6 +98,10 @@ linkpoint:
   pem: |--
     PASTE YOUR PEM FILE HERE
 
+lucy:
+ login: login
+ password: password
+
 merchant_ware:
  login: 
  password: 
