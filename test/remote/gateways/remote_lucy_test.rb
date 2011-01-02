@@ -5,7 +5,7 @@ class RemoteLucyTest < Test::Unit::TestCase
   
 
   def setup
-    @gateway = LucyGateway.new(fixtures(:lucy_approve))
+    @gateway = LucyGateway.new(fixtures(:lucy))
     
     @credit_card = ::ActiveMerchant::Billing::CreditCard.new({
                   :number => '4005551155111114',
@@ -52,31 +52,45 @@ class RemoteLucyTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_authorization_and_capture
+    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+    assert_equal 'Approved', authorization.message
+  
+    assert authorization.authorization
 
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+    assert_equal 'Approved', capture.message
+  end  
+  
+  def test_authorization_and_void
+    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+    assert_equal 'Approved', authorization.message
+  
+    assert authorization.authorization
 
-  #def test_authorize_and_capture
-  #  amount = @amount
-  #  assert auth = @gateway.authorize(amount, @credit_card, @options)
-  #  assert_success auth
-  #  assert_equal 'Success', auth.message
-  #  assert auth.authorization
-  #  assert capture = @gateway.capture(amount, auth.authorization)
-  #  assert_success capture
-  #end
+    assert void = @gateway.void(authorization.authorization)
+    assert_success void
+    assert_equal 'Approved', void.message
+  end  
+  
+  def test_invalid_login
+    gateway = LucyGateway.new(
+                :login => 'x',
+                :password => 'y'
+              )
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Invalid Login', response.message
+  end
 
+  
   #def test_failed_capture
   #  assert response = @gateway.capture(@amount, '')
   #  assert_failure response
   #  assert_equal 'REPLACE WITH GATEWAY FAILURE MESSAGE', response.message
   #end
 
-  #def test_invalid_login
-  #  gateway = LucyGateway.new(
-  #              :login => '',
-  #              :password => ''
-  #            )
-  #  assert response = gateway.purchase(@amount, @credit_card, @options)
-  #  assert_failure response
-  #  assert_equal 'REPLACE WITH FAILURE MESSAGE', response.message
-  #end
 end

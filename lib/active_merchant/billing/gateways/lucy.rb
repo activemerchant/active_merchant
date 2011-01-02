@@ -108,7 +108,13 @@ module ActiveMerchant #:nodoc:
       end                       
     
       def capture(money, authorization, options = {})
+        post = {:PNRef => authorization}
         commit('Capture', money, post)
+      end
+      
+      def void(authorization, options = {})
+        post = {:PNRef => authorization}
+        commit('Void', nil, post)
       end
     
       private                       
@@ -159,6 +165,8 @@ module ActiveMerchant #:nodoc:
         response = parse(data)
         message = message_from(response)
 
+        #puts "#{response.inspect}"
+
         # Return the response. The authorization can be taken out of the transaction_id
         # Test Mode on/off is something we have to parse from the response text.
         # It usually looks something like this
@@ -168,7 +176,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(response[:Result].to_s == '0', message, response,
           :test => test_mode,
-          :authorization => response[:AuthCode]
+          :authorization => response[:PNRef]
           #:fraud_review => fraud_review?(response),
           #:avs_result => { :code => response[:avs_result_code] },
           #:cvv_result => response[:card_code]
