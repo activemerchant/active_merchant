@@ -6,6 +6,7 @@ module ActiveMerchant #:nodoc:
         base.default_currency = 'USD'
         base.cattr_accessor :pem_file
         base.cattr_accessor :signature
+        base.completetype = "Complete"
       end
       
       API_VERSION = '59.0'
@@ -132,7 +133,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'AuthorizationID', authorization
             xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
-            xml.tag! 'CompleteType', 'Complete'
+            xml.tag! 'CompleteType', options[:completetype]
             xml.tag! 'InvoiceID', options[:order_id] unless options[:order_id].blank?
             xml.tag! 'Note', options[:description]
           end
