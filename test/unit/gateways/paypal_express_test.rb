@@ -135,6 +135,20 @@ class PaypalExpressTest < Test::Unit::TestCase
     response = @gateway.authorize(100, :token => 'EC-6WS104951Y388951L', :payer_id => 'FWRVKNRRZ3WUC', :currency => 'JPY')
     assert response.success?
   end
+
+  def test_does_not_add_allow_note_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { }))
+
+    assert_nil REXML::XPath.first(xml, '//n2:AllowNote')
+  end
+
+  def test_adds_allow_note_if_specified
+    allow_notes_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :allow_note => true }))
+    do_not_allow_notes_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :allow_note => false }))
+
+    assert_equal '1', REXML::XPath.first(allow_notes_xml, '//n2:AllowNote').text
+    assert_equal '0', REXML::XPath.first(do_not_allow_notes_xml, '//n2:AllowNote').text
+  end
   
   def test_handle_locale_code
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :locale => 'GB' }))

@@ -99,6 +99,9 @@ module ActiveMerchant #:nodoc:
               if options[:max_amount]
                 xml.tag! 'n2:MaxAmount', localized_amount(options[:max_amount], currency_code), 'currencyID' => currency_code
               end
+              if !options[:allow_note].nil?
+                xml.tag! 'n2:AllowNote', options[:allow_note] ? '1' : '0'
+              end
               add_address(xml, 'n2:Address', options[:shipping_address] || options[:address])
               xml.tag! 'n2:AddressOverride', options[:address_override] ? '1' : '0'
               xml.tag! 'n2:NoShipping', options[:no_shipping] ? '1' : '0'
