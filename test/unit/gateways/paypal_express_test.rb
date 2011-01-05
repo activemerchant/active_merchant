@@ -117,17 +117,35 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_uk_partner
     assert_equal 'PayPalUk', PayflowExpressUkGateway.partner
   end
+
+  def test_includes_description
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :description => 'a description' }))
+
+    assert_equal 'a description', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:OrderDescription').text
+  end
+
+  def test_includes_order_id
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :order_id => '12345' }))
+
+    assert_equal '12345', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:InvoiceID').text
+  end
+
+  def test_includes_correct_payment_action
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { }))
+
+    assert_equal 'SetExpressCheckout', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentAction').text
+  end
   
   def test_handle_non_zero_amount
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 50, {}))
     
-    assert_equal '0.50', REXML::XPath.first(xml, '//n2:OrderTotal').text
+    assert_equal '0.50', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:OrderTotal').text
   end
   
   def test_handles_zero_amount
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
     
-    assert_equal '1.00', REXML::XPath.first(xml, '//n2:OrderTotal').text
+    assert_equal '1.00', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:OrderTotal').text
   end
   
   def test_amount_format_for_jpy_currency
