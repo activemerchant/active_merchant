@@ -101,11 +101,35 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'n2:AllowNote', options[:allow_note] ? '1' : '0'
               end
               xml.tag! 'n2:PaymentDetails' do
-                xml.tag! 'n2:PaymentAction', action
                 xml.tag! 'n2:OrderTotal', amount(money).to_f.zero? ? localized_amount(100, currency_code) : localized_amount(money, currency_code), 'currencyID' => currency_code
+                # All of the values must be included together and add up to the order total
+                if [:subtotal, :shipping, :handling, :tax].all? { |o| options.has_key?(o) }
+                  xml.tag! 'n2:ItemTotal', amount(options[:subtotal]), 'currencyID' => options[:currency] || currency(options[:subtotal]) 
+                  xml.tag! 'n2:ShippingTotal', amount(options[:shipping]), 'currencyID' => options[:currency] || currency(options[:shipping])
+                  xml.tag! 'n2:HandlingTotal', amount(options[:handling]), 'currencyID' => options[:currency] || currency(options[:handling])
+                  xml.tag! 'n2:TaxTotal', amount(options[:tax]), 'currencyID' => options[:currency] || currency(options[:tax])
+                end
+
                 xml.tag! 'n2:OrderDescription', options[:description]
                 xml.tag! 'n2:InvoiceID', options[:order_id]
+
+                if options[:items]
+                  options[:items].each do |item|
+                    xml.tag! 'n2:PaymentDetailsItem' do
+                      xml.tag! 'n2:Name', item[:name] if item[:name]
+                      xml.tag! 'n2:Number', item[:number] if item[:number]
+                      xml.tag! 'n2:Quantity', item[:quantity] if item[:quantity]
+                      if item[:amount]
+                        xml.tag! 'n2:Amount', amount(item[:amount]), 'currencyID' => options[:currency] || currency(money)
+                      end
+                      xml.tag! 'n2:Description', item[:description] if item[:description]
+                    end
+                  end
+                end
+
+                xml.tag! 'n2:PaymentAction', action
               end
+
               add_address(xml, 'n2:Address', options[:shipping_address] || options[:address])
               xml.tag! 'n2:AddressOverride', options[:address_override] ? '1' : '0'
               xml.tag! 'n2:NoShipping', options[:no_shipping] ? '1' : '0'

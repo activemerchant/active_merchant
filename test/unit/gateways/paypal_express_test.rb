@@ -136,6 +136,33 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'SetExpressCheckout', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentAction').text
   end
   
+  def test_does_not_include_items_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
+
+    assert_nil REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem')
+  end
+
+  def test_items_are_included_if_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:currency => 'GBP', :items => [
+                                            {:name => 'item one', :description => 'item one description', :amount => 10000, :number => 1, :quantity => 3},
+                                            {:name => 'item two', :description => 'item two description', :amount => 20000, :number => 2, :quantity => 4}
+    ]}))
+
+    assert_equal 'item one', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Name').text
+    assert_equal 'item one description', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Description').text
+    assert_equal '100.00', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Amount').text
+    assert_equal 'GBP', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Amount').attribute('currencyID').value
+    assert_equal '1', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Number').text
+    assert_equal '3', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Quantity').text
+
+    assert_equal 'item two', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Name')[1].text
+    assert_equal 'item two description', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Description')[1].text
+    assert_equal '200.00', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Amount')[1].text
+    assert_equal 'GBP', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Amount')[1].attribute('currencyID').value
+    assert_equal '2', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Number')[1].text
+    assert_equal '4', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Quantity')[1].text
+  end
+
   def test_handle_non_zero_amount
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 50, {}))
     
