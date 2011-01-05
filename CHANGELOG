@@ -1,5 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.9.4 (Jan 5, 2011)
+
+* Update Garanti gateway to integrate with new API [Selem Delul]
+
 == Version 1.9.3 (December 17, 2010)
 
 * Fix BBS Netaxept to change transaction type from C (for MOTO: mail order telephone order) to M (for credit card orders) [Soleone]
