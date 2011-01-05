@@ -94,13 +94,17 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'SetExpressCheckoutRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'n2:SetExpressCheckoutRequestDetails' do
-              xml.tag! 'n2:PaymentAction', action
-              xml.tag! 'n2:OrderTotal', amount(money).to_f.zero? ? localized_amount(100, currency_code) : localized_amount(money, currency_code), 'currencyID' => currency_code
               if options[:max_amount]
                 xml.tag! 'n2:MaxAmount', localized_amount(options[:max_amount], currency_code), 'currencyID' => currency_code
               end
               if !options[:allow_note].nil?
                 xml.tag! 'n2:AllowNote', options[:allow_note] ? '1' : '0'
+              end
+              xml.tag! 'n2:PaymentDetails' do
+                xml.tag! 'n2:PaymentAction', action
+                xml.tag! 'n2:OrderTotal', amount(money).to_f.zero? ? localized_amount(100, currency_code) : localized_amount(money, currency_code), 'currencyID' => currency_code
+                xml.tag! 'n2:OrderDescription', options[:description]
+                xml.tag! 'n2:InvoiceID', options[:order_id]
               end
               add_address(xml, 'n2:Address', options[:shipping_address] || options[:address])
               xml.tag! 'n2:AddressOverride', options[:address_override] ? '1' : '0'
@@ -108,9 +112,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:ReturnURL', options[:return_url]
               xml.tag! 'n2:CancelURL', options[:cancel_return_url]
               xml.tag! 'n2:IPAddress', options[:ip] unless options[:ip].blank?
-              xml.tag! 'n2:OrderDescription', options[:description]
               xml.tag! 'n2:BuyerEmail', options[:email] unless options[:email].blank?
-              xml.tag! 'n2:InvoiceID', options[:order_id]
               
               if options[:billing_agreement]
                 xml.tag! 'n2:BillingAgreementDetails' do
