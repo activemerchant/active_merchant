@@ -27,6 +27,20 @@ class SagePayFormHelperTest < Test::Unit::TestCase
     assert_field 'BillingSurname', 'Fauser'
     assert_field 'CustomerEMail', 'cody@example.com'
   end
+
+  def test_customer_send_email
+    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', :send_email_confirmation => true
+    with_crypt_plaintext do |plain|
+      assert plain.include?('cody@example.com')
+    end
+  end
+
+  def test_customer_default_no_email
+    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com'
+    with_crypt_plaintext do |plain|
+      assert !plain.include?('cody@example.com')
+    end
+  end
   
   def test_us_address_mapping
     @helper.billing_address(
@@ -110,7 +124,7 @@ class SagePayFormHelperTest < Test::Unit::TestCase
 
   private
   
-  def assert_crypt(value, sr_seed = 'RandomRandomRandomRandomRandomRandomRandom', rand_seed = 42)
+  def assert_crypt(value, sr_seed, rand_seed)
     SecureRandom.expects(:base64).returns(sr_seed)
     srand(rand_seed)
 
