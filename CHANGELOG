@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* SagePayForm: Added send_email_confirmation (default false) to enable confirmation emails [wisq]
+
 == Version 1.9.4 (Jan 5, 2011)
 
 * Update Garanti gateway to integrate with new API [Selem Delul]
@@ -11,7 +13,7 @@
 
 == Version 1.9.2 (December 9, 2010)
 
-* Add support for PayPal mobile payments [Adrian Irving-Beer]
+* Add support for PayPal mobile payments [wisq]
 * Add ePay gateway [ePay, Jonathan Rudenberg]
 * Allow access to the raw HTTP response [Jonathan Rudenberg]
 
@@ -29,8 +31,8 @@
 == Version 1.9.0 (October 14, 2010)
 
 * Add support for DirecPay gateway [Soleone]
-* Add SagePay Form integration gateway [Adrian Irving-Beer]
-* Allow Return class to include a Notification for gateways that treat the direct response as a notification [Adrian Irving-Beer]
+* Add SagePay Form integration gateway [wisq]
+* Allow Return class to include a Notification for gateways that treat the direct response as a notification [wisq]
 * Add support for PayboxDirect gateway [Donald Piret]
 * Add support for SecureNet gateway [Kal]
 * Add support for the Inspire gateway [ryan r. smith]

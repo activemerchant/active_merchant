@@ -173,3 +173,9 @@ ePay Gateway (November 23, 2010)
 
 * Original code by ePay (epay.dk)
 * Refactored by Jonathan Rudenberg
+
+iDEAL/Rabobank Gateway (January 10, 2011)
+
+* Original code by Soemirno Kartosoewito
+* Refactored by Cody Fauser
+* Refactored and updated by Jonathan Rudenberg
