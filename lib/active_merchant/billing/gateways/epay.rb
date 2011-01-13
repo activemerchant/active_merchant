@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_amount(post, money, options)
-        add_invoice(post)
+        add_invoice(post, options)
         add_creditcard_or_reference(post, credit_card_or_reference)
         add_instant_capture(post, false)
 
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
 
         add_amount(post, money, options)
         add_creditcard_or_reference(post, credit_card_or_reference)
-        add_invoice(post)
+        add_invoice(post, options)
         add_instant_capture(post, true)
 
         commit(:authorize, post)
@@ -122,7 +122,7 @@ module ActiveMerchant #:nodoc:
         post[:transaction] = identification
       end
 
-      def add_invoice(post)
+      def add_invoice(post, options)
         post[:orderid] = format_order_number(options[:order_id])
       end
 
