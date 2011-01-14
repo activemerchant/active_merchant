@@ -72,7 +72,10 @@ first_pay:
   login:
   password:
 
-ideal_ing_postbank:
+# login: merchant number
+# password: password for the PEM secret key
+# pem: public certificate and PEM secret key
+ideal_rabobank:
   login: LOGIN
   password: PASSWORD
   pem: |--
@@ -385,9 +388,10 @@ merchant_esolutions:
   password: "gvQzgKXOTEoDzpzJzROrQQzoKLaEqxjf"
 
 garanti:
-  client_id: '100104' 
-  login: 'paymentuser'
-  password: 'userpayment'
+  login: "PROVAUT"
+  terminal_id: 111995
+  merchant_id: 600218
+  password: "123qweASD"
   
 direc_pay:
   mid: 200904281000001

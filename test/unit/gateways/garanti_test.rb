@@ -3,13 +3,9 @@ require 'test_helper'
 class GarantiTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
-    @gateway = GarantiGateway.new(
-                 :login => 'l',
-                 :password => 'p',
-                 :client_id => '1'
-               )
+    @gateway = GarantiGateway.new(fixtures(:garanti))
 
-    @credit_card = credit_card
+    @credit_card = credit_card(4242424242424242)
     @amount = 1000 #1000 cents, 10$
 
     @options = {
@@ -43,44 +39,71 @@ class GarantiTest < Test::Unit::TestCase
 
   # Place raw successful response from gateway here
   def successful_purchase_response
-   <<-EOF
-<CC5Response>
-  <OrderId>db4af18c5222503d845180350fbda516</OrderId>
-  <GroupId>db4af18c5222503d845180350fbda516</GroupId>
-  <Response>Approved</Response>
-  <AuthCode>853030</AuthCode>
-  <HostRefNum></HostRefNum>
-  <ProcReturnCode></ProcReturnCode>
-  <TransId>4bd864bb-e506-3000-002d-00144f7c9514</TransId>
-  <ErrMsg></ErrMsg>
-  <Extra>
-    <TRXDATE>20100428 21:27:32</TRXDATE>
-    <NUMCODE>00000099999999</NUMCODE>
-  </Extra>
-</CC5Response>
-
-EOF
+    <<-EOF
+<GVPSResponse>
+      <Mode></Mode>
+      <Order>
+            <OrderID>db4af18c5222503d845180350fbda516</OrderID>
+            <GroupID></GroupID>
+      </Order>
+      <Transaction>
+            <Response>
+                  <Source>HOST</Source>
+                  <Code>00</Code>
+                  <ReasonCode>00</ReasonCode>
+                  <Message>Approved</Message>
+                  <ErrorMsg></ErrorMsg>
+                  <SysErrMsg></SysErrMsg>
+            </Response>
+            <RetrefNum>035208609374</RetrefNum>
+            <AuthCode>784260</AuthCode>
+            <BatchNum>000089</BatchNum>
+            <SequenceNum>000008</SequenceNum>
+            <ProvDate>20101218 08:56:39</ProvDate>
+            <CardNumberMasked></CardNumberMasked>
+            <CardHolderName></CardHolderName>
+            <HostMsgList></HostMsgList>
+            <RewardInqResult>
+                  <RewardList></RewardList>
+                  <ChequeList></ChequeList>
+            </RewardInqResult>
+      </Transaction>
+</GVPSResponse>
+  EOF
   end
 
   # Place raw failed response from gateway here
   def failed_purchase_response
-     <<-EOF
-<?xml version="1.0" encoding="ISO-8859-9"?>
-<CC5Response>
-  <OrderId>97a1afb1ccc3aeaffa683e86ede62269</OrderId>
-  <GroupId>97a1afb1ccc3aeaffa683e86ede62269</GroupId>
-  <Response>Declined</Response>
-  <AuthCode></AuthCode>
-  <HostRefNum></HostRefNum>
-  <ProcReturnCode></ProcReturnCode>
-  <TransId>4bd864bb-e4fd-3000-002d-00144f7c9514</TransId>
-  <ErrMsg></ErrMsg>
-  <Extra>
-    <TRXDATE>20100428 21:27:30</TRXDATE>
-    <NUMCODE>00100099999999</NUMCODE>
-  </Extra>
-</CC5Response>
-
+    <<-EOF
+<GVPSResponse>
+      <Mode></Mode>
+      <Order>
+            <OrderID>db4af18c5222503d845180350fbda516</OrderID>
+            <GroupID></GroupID>
+      </Order>
+      <Transaction>
+            <Response>
+                  <Source>GVPS</Source>
+                  <Code>92</Code>
+                  <ReasonCode>0651</ReasonCode>
+                  <Message>Declined</Message>
+                  <ErrorMsg></ErrorMsg>
+                  <SysErrMsg>ErrorId: 0651</SysErrMsg>
+            </Response>
+            <RetrefNum></RetrefNum>
+            <AuthCode> </AuthCode>
+            <BatchNum></BatchNum>
+            <SequenceNum></SequenceNum>
+            <ProvDate>20101220 01:58:41</ProvDate>
+            <CardNumberMasked></CardNumberMasked>
+            <CardHolderName></CardHolderName>
+            <HostMsgList></HostMsgList>
+            <RewardInqResult>
+                  <RewardList></RewardList>
+                  <ChequeList></ChequeList>
+            </RewardInqResult>
+      </Transaction>
+</GVPSResponse>
     EOF
   end
 end

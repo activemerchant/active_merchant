@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
       
       def add_transaction(post, options)
         post[:transactionId] = generate_transaction_id(options)
-        post[:serviceType] = 'C'
+        post[:serviceType] = 'M'
         post[:redirectUrl] = 'http://example.com'
       end
       
