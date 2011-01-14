@@ -249,6 +249,10 @@ psl_visa_debit_address:
 quickpay:
   login: 89898989
   password: "n5KrR5e2538awi9hUk6728LHTQ6E4uG1z4IFSb2pPN9j76DqJ2vA4698X315M1cd"
+  
+quantum:
+  login: X
+  password: Y
     
 realex:
   login: X 
