@@ -14,6 +14,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {Authorize.Net CIM}[http://www.authorize.net/] - US
 * {Authorize.Net}[http://www.authorize.net/] - US
 * {Beanstream.com}[http://www.beanstream.com/] - CA
+* {BluePay}[http://www.bluepay.com/] - US
 * {Braintree}[http://www.braintreepaymentsolutions.com] - US
 * {CardStream}[http://www.cardstream.com/] - GB
 * {CyberSource}[http://www.cybersource.com] - US
@@ -53,7 +54,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {Protx}[http://www.protx.com] - GB
 * {Psigate}[http://www.psigate.com/] - CA
 * {PSL Payment Solutions}[http://www.paymentsolutionsltd.com/] - GB
-* {Quantum Gateway}[http://www.quantumgateway.com] - US
+* {Quantum}[http://www.quantumgateway.com] - US
 * {Quickpay}[http://quickpay.dk/] - DK
 * {Rabobank Nederland}[http://www.rabobank.nl/] - NL
 * {Realex}[http://www.realexpayments.com/] - IE, GB

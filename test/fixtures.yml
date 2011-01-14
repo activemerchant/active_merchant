@@ -24,6 +24,10 @@ beanstream_interac:
   user: username
   password: password
 
+blue_pay:
+  login: X
+  password: Y
+
 braintree_orange:
   login: demo
   password: password
