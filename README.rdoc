@@ -53,6 +53,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {Protx}[http://www.protx.com] - GB
 * {Psigate}[http://www.psigate.com/] - CA
 * {PSL Payment Solutions}[http://www.paymentsolutionsltd.com/] - GB
+* {Quantum Gateway}[http://www.quantumgateway.com] - US
 * {Quickpay}[http://quickpay.dk/] - DK
 * {Rabobank Nederland}[http://www.rabobank.nl/] - NL
 * {Realex}[http://www.realexpayments.com/] - IE, GB
