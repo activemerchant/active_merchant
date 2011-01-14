@@ -374,6 +374,10 @@ trust_commerce:
 # Working credentials, no need to replace
 usa_epay:
   login: 'yCaWGYQsSVR0S48B6AKMK07RQhaxHvGu'
+
+valitor:
+  login: WebsiteID
+  password: SecurityNumber
   
 # Working credentials, no need to replace
 verify:
