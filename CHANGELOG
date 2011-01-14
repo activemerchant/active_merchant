@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
-* Add QuantumGateway [Joshua Lippiner]
+* Add BluePay Gateway
+* Add Quantum Gateway [Joshua Lippiner]
 * SagePayForm: Added send_email_confirmation (default false) to enable confirmation emails [wisq]
 
 == Version 1.9.4 (Jan 5, 2011)
