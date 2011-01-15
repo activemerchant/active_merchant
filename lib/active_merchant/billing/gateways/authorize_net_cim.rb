@@ -54,6 +54,7 @@ module ActiveMerchant #:nodoc:
       CIM_TRANSACTION_TYPES = {
         :auth_capture => 'profileTransAuthCapture',
         :auth_only => 'profileTransAuthOnly',
+        :refund => "profileTransRefund",
         :capture_only => 'profileTransCaptureOnly'
       }
 
@@ -506,6 +507,7 @@ module ActiveMerchant #:nodoc:
             xml.tag!('customerProfileId', transaction[:customer_profile_id])
             xml.tag!('customerPaymentProfileId', transaction[:customer_payment_profile_id])
             xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
+            xml.tag!('transId', transaction[:transaction_id]) if transaction[:type] == :refund
             add_order(xml, transaction[:order]) if transaction[:order]
           end
         end
