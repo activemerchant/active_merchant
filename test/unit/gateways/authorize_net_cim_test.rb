@@ -194,6 +194,28 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
   end
 
+  def test_should_create_customer_profile_transaction_refund_request
+    @gateway.expects(:ssl_post).returns(successful_create_customer_profile_transaction_response(:refund))
+
+    assert response = @gateway.create_customer_profile_transaction(
+      :transaction => {
+        :customer_profile_id => @customer_profile_id,
+        :customer_payment_profile_id => @customer_payment_profile_id,
+        :type => :refund,
+        :order => {
+          :invoice_number => '1234',
+          :description => 'Test Order Description',
+          :purchase_order_number => '4321'
+        },
+        :amount => @amount
+      }
+    )
+    assert_instance_of Response, response
+    assert_success response
+    assert_nil response.authorization
+    assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
+  end
+
   def test_should_delete_customer_profile_request
     @gateway.expects(:ssl_post).returns(successful_delete_customer_profile_response)
 
@@ -630,7 +652,8 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   SUCCESSFUL_DIRECT_RESPONSE = {
     :auth_only => '1,1,1,This transaction has been approved.,Gw4NGI,Y,508223659,,,100.00,CC,auth_only,Up to 20 chars,,,,,,,,,,,Up to 255 Characters,,,,,,,,,,,,,,6E5334C13C78EA078173565FD67318E4,,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
     :capture_only => '1,1,1,This transaction has been approved.,,Y,508223660,,,100.00,CC,capture_only,Up to 20 chars,,,,,,,,,,,Up to 255 Characters,,,,,,,,,,,,,,6E5334C13C78EA078173565FD67318E4,,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
-    :auth_capture => '1,1,1,This transaction has been approved.,d1GENk,Y,508223661,32968c18334f16525227,Store purchase,1.00,CC,auth_capture,,Longbob,Longsen,,,,,,,,,,,,,,,,,,,,,,,269862C030129C1173727CC10B1935ED,P,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,'
+    :auth_capture => '1,1,1,This transaction has been approved.,d1GENk,Y,508223661,32968c18334f16525227,Store purchase,1.00,CC,auth_capture,,Longbob,Longsen,,,,,,,,,,,,,,,,,,,,,,,269862C030129C1173727CC10B1935ED,P,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
+    :refund => '1,1,1,This transaction has been approved.,d1GENk,Y,508223661,32968c18334f16525227,Store purchase,1.00,CC,auth_capture,,Longbob,Longsen,,,,,,,,,,,,,,,,,,,,,,,269862C030129C1173727CC10B1935ED,P,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,'
   }
 
   def successful_create_customer_profile_transaction_response(transaction_type)

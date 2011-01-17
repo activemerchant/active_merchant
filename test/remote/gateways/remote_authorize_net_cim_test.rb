@@ -159,6 +159,67 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal response.params['direct_response']['purchase_order_number'], '4321'
   end
   
+  def test_successful_create_customer_profile_transaction_refund_request
+    assert response = @gateway.create_customer_profile(@options)
+    @customer_profile_id = response.authorization
+
+    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    @customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
+    
+    invoice_number = rand(10_000).to_s
+    purchace_order_number = rand(10_000).to_s
+    assert response = @gateway.create_customer_profile_transaction(
+      :transaction => {
+        :customer_profile_id => @customer_profile_id,
+        :customer_payment_profile_id => @customer_payment_profile_id,
+        :type => :auth_capture,
+        :order => {
+          :invoice_number => invoice_number,
+          :description => 'Test Order Description',
+          :purchase_order_number => purchace_order_number
+        },
+        :amount => @amount
+      }
+    )
+
+    assert response.test?
+    assert_success response
+    assert_nil response.authorization
+    assert_equal "This transaction has been approved.", response.params['direct_response']['message']
+    assert response.params['direct_response']['approval_code'] =~ /\w{6}/
+    assert_equal "auth_capture", response.params['direct_response']['transaction_type']
+    assert_equal "100.00", response.params['direct_response']['amount']
+    assert_equal response.params['direct_response']['invoice_number'], invoice_number
+    assert_equal response.params['direct_response']['order_description'], 'Test Order Description'
+    assert_equal response.params['direct_response']['purchase_order_number'], purchace_order_number
+    transaction_id = response.params['direct_response']['transaction_id']
+    assert_match /\d+/, transaction_id
+
+    # Refund the previous transaction
+  
+    assert response = @gateway.create_customer_profile_transaction(
+      :transaction => {
+        :customer_profile_id => @customer_profile_id,
+        :customer_payment_profile_id => @customer_payment_profile_id,
+        :type => :refund,
+        :order => {
+          :invoice_number => invoice_number,
+          :description => 'Test Order Description',
+          :purchase_order_number => purchace_order_number
+        },
+        :trans_id => transaction_id,
+        :amount => @amount
+      }
+    )
+  
+    assert response.test?
+    assert_success response
+    assert_nil response.authorization
+    assert_equal "This transaction has been approved.", response.params['direct_response']['message']
+    assert_equal "credit", response.params['direct_response']['transaction_type']
+    assert_equal "100.00", response.params['direct_response']['amount']
+  end
+  
   def test_successful_create_customer_payment_profile_request
     payment_profile = @options[:profile].delete(:payment_profiles)
     assert response = @gateway.create_customer_profile(@options)

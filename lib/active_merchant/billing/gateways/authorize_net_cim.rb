@@ -54,7 +54,8 @@ module ActiveMerchant #:nodoc:
       CIM_TRANSACTION_TYPES = {
         :auth_capture => 'profileTransAuthCapture',
         :auth_only => 'profileTransAuthOnly',
-        :capture_only => 'profileTransCaptureOnly'
+        :capture_only => 'profileTransCaptureOnly',
+        :refund => 'profileTransRefund'
       }
 
       CIM_VALIDATION_MODES = {
