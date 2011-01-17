@@ -7,7 +7,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     @gateway = AuthorizeNetCimGateway.new(fixtures(:authorize_net))
     @amount = 100
-    @credit_card = credit_card('4242424242424242')
+    @credit_card = credit_card('370000000000002')
     @payment = {
       :credit_card => @credit_card
     }
@@ -264,7 +264,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     
     assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
     assert_equal 2, response.params['profile']['payment_profiles'].size
-    assert_equal 'XXXX4242', response.params['profile']['payment_profiles'][0]['payment']['credit_card']['card_number']
+    assert_equal 'XXXX0002', response.params['profile']['payment_profiles'][0]['payment']['credit_card']['card_number']
     assert_equal 'XXXX1234', response.params['profile']['payment_profiles'][1]['payment']['credit_card']['card_number']
   end
 
@@ -363,8 +363,8 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     )
 
     # The value before updating
-    assert_equal "XXXX4242", response.params['payment_profile']['payment']['credit_card']['card_number'], "The card number should contain the last 4 digits of the card we passed in 4242"
-
+    assert_equal "XXXX0002", response.params['payment_profile']['payment']['credit_card']['card_number'], "The card number should contain the last 4 digits of the card we passed in 0002"
+  
     #Update the payment profile
     assert response = @gateway.update_customer_payment_profile(
       :customer_profile_id => @customer_profile_id,
