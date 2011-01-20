@@ -95,7 +95,7 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'NC', address['state']
     assert_equal '23456', address['zip']
     assert_equal 'US', address['country']
-    assert_nil address['phone']
+    assert_equal '416-618-9984', address['phone']
   end
   
   def test_authorization
@@ -240,6 +240,7 @@ class PaypalExpressTest < Test::Unit::TestCase
           </Address>
         </PayerInfo>
         <InvoiceID xsi:type='xs:string'>1230123</InvoiceID>
+        <ContactPhone>416-618-9984</ContactPhone>
       </GetExpressCheckoutDetailsResponseDetails>
     </GetExpressCheckoutDetailsResponse>
   </SOAP-ENV:Body>

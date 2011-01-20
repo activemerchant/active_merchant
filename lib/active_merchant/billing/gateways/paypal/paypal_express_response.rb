@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
            'state'      => @params['state_or_province'],
            'country'    => @params['country'],
            'zip'        => @params['postal_code'],
-           'phone'      => nil
+           'phone'      => @params['contact_phone']
         }
       end
     end
