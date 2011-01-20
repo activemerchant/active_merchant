@@ -14,10 +14,25 @@ class RemoteLucyTest < Test::Unit::TestCase
                   :first_name => 'John',
                   :last_name => 'Doe'
                 })
+    @credit_card_present = ::ActiveMerchant::Billing::CreditCard.new({
+                  :number => '371449635398431',
+                  :month => 10,
+                  :year => Time.now.year + 1,
+                  :first_name => 'John',
+                  :last_name => 'Doe',
+                  :track2 => "371449635398431=#{Time.now.year+1}101015432112345678"
+                })
+    
+    @expired_credit_card_present = ::ActiveMerchant::Billing::CreditCard.new({
+                  :number => '371449635398431',
+                  :month => 10,
+                  :year => 2009,
+                  :first_name => 'John',
+                  :last_name => 'Doe',
+                  :track2 => '371449635398431=09101015432112345678'
+                })
     
     @amount = 100
-    #@credit_card = credit_card('4000100011112224')
-    #@declined_card = credit_card('4000300011112220')
     
     @options = { 
       :order_id => '1',
@@ -27,7 +42,13 @@ class RemoteLucyTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.purchase(100, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+  
+  def test_successful_purchase_with_card_present
+    assert response = @gateway.purchase(200, @credit_card_present, @options)
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -46,6 +67,13 @@ class RemoteLucyTest < Test::Unit::TestCase
     assert_failure response
   end
   
+  def test_expired_credit_card_with_card_present
+    #@credit_card.year = 2004
+    assert response = @gateway.purchase(@amount, @expired_credit_card_present, @options)
+    assert_equal 'Invalid Expiration Date', response.message
+    assert_failure response
+  end
+  
   def test_successful_authorization
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal 'Approved', response.message
@@ -53,7 +81,7 @@ class RemoteLucyTest < Test::Unit::TestCase
   end
 
   def test_authorization_and_capture
-    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert authorization = @gateway.authorize(300, @credit_card, @options)
     assert_success authorization
     assert_equal 'Approved', authorization.message
   
@@ -65,7 +93,7 @@ class RemoteLucyTest < Test::Unit::TestCase
   end  
   
   def test_authorization_and_void
-    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert authorization = @gateway.purchase(400, @credit_card, @options)
     assert_success authorization
     assert_equal 'Approved', authorization.message
   

@@ -33,22 +33,19 @@ class LucyTest < Test::Unit::TestCase
     assert_success response
     
     # Replace with authorization number from the successful response
-    assert_equal '095331', response.authorization
-    #assert response.test?
+    assert_equal '13266', response.authorization
   end
 
   def test_unsuccessful_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    #assert response.test?
   end
   
   def test_expired_credit_card
     @gateway.expects(:ssl_post).returns(expired_credit_card_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    #assert response.test?
   end
 
   def test_successful_authorization
@@ -57,7 +54,7 @@ class LucyTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card)
     assert_instance_of Response, response
     assert_success response
-    assert_equal '095431', response.authorization
+    assert_equal '13349', response.authorization
   end
 
   private

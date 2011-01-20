@@ -123,6 +123,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, creditcard, options)      
+        if address = options[:billing_address] || options[:address]
+          post[:Zip] = address[:zip].to_s
+          post[:Street] = address[:address].to_s
+        end
       end
 
       def add_invoice(post, options)
@@ -130,19 +134,15 @@ module ActiveMerchant #:nodoc:
       
       def add_creditcard(post, creditcard)
         post[:CardNum] = creditcard.number
-        #post[:card_code] = creditcard.verification_value if creditcard.verification_value?
+        post[:CVNum] = creditcard.verification_value if creditcard.verification_value?
         post[:ExpDate] = expdate(creditcard)
         post[:NameOnCard] = "#{creditcard.first_name} #{creditcard.last_name}"
-        #unless creditcard.track2.blank?
-        #  post[:track2] = creditcard.track2
-        #  post.delete :card_num
-        #  post.delete :card_code
-        #  post.delete :exp_date
-        # end
+        unless creditcard.track2.blank?
+          post[:MagData] = creditcard.track2
+        end
       end
       
       def parse(body)
-        #puts body.to_s.inspect
         response = {}
         xml = REXML::Document.new(body)
         REXML::XPath.first(xml, "/Response").elements.to_a.each do |node|
@@ -154,7 +154,7 @@ module ActiveMerchant #:nodoc:
       end     
       
       def commit(action, money, parameters)
-        parameters[:Amount] = amount(money) unless action == 'VOID'
+        parameters[:Amount] = amount(money) unless action == 'Void'
 
         # Only activate the test_request when the :test option is passed in
         parameters[:test_request] = @options[:test] ? 'TRUE' : 'FALSE'
@@ -165,8 +165,6 @@ module ActiveMerchant #:nodoc:
         response = parse(data)
         message = message_from(response)
 
-        #puts "#{response.inspect}"
-
         # Return the response. The authorization can be taken out of the transaction_id
         # Test Mode on/off is something we have to parse from the response text.
         # It usually looks something like this
@@ -176,10 +174,11 @@ module ActiveMerchant #:nodoc:
 
         Response.new(response[:Result].to_s == '0', message, response,
           :test => test_mode,
-          :authorization => response[:PNRef]
+          :authorization => response[:PNRef],
           #:fraud_review => fraud_review?(response),
           #:avs_result => { :code => response[:avs_result_code] },
-          #:cvv_result => response[:card_code]
+          :avs_result => { :code => (response[:GetAVSResult] if response[:GetAVSResult]) },
+          :cvv_result => (response[:GetCVResult] if response[:GetCVResult])
         )
       end
 
