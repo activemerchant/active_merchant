@@ -403,3 +403,7 @@ garanti:
   
 direc_pay:
   mid: 200904281000001
+
+federated_canada:
+  login: demo
+  password: password
