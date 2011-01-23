@@ -154,10 +154,7 @@ module ActiveMerchant #:nodoc:
       end     
       
       def commit(action, money, parameters)
-        parameters[:Amount] = amount(money) unless action == 'Void'
-
-        # Only activate the test_request when the :test option is passed in
-        parameters[:test_request] = @options[:test] ? 'TRUE' : 'FALSE'
+        parameters[:Amount] = (action == 'Void' ? "" : amount(money))
 
         url = test? ? TEST_URL : LIVE_URL
 
@@ -199,9 +196,8 @@ module ActiveMerchant #:nodoc:
         post[:MagData] = parameters[:MagData] || ""
         post[:NameOnCard] = parameters[:NameOnCard] || ""
         post[:PNRef] = parameters[:PNRef] || ""
-        post[:Street] = parameters[:Streen] || ""
+        post[:Street] = parameters[:Street] || ""
         post[:Zip] = parameters[:Zip] || ""
-
         request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
         request
       end
