@@ -148,7 +148,7 @@ module ActiveMerchant #:nodoc:
         REXML::XPath.first(xml, "/Response").elements.to_a.each do |node|
           response[node.name.to_sym] = (node.text || '').strip
         end
-        response[:test?] = true # test? ? true : fasle
+        response[:test?] = test? ? true : false
         response
 
       end     
