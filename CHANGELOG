@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add Valitor Integration [Nathaniel Talbott]
+
 == Version 1.10.0 (Jan 20, 2011)
 
 * PayPal Express: Support returning payer phone number [Soleone]
