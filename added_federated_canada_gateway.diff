@@ -1,0 +1,374 @@
+From 30172f6c94e4ef20ae4228f3b347c3626a5db3c3 Mon Sep 17 00:00:00 2001
+From: Bob Larrick <larrick@gmail.com>
+Date: Fri, 21 Jan 2011 17:26:15 -0500
+Subject: [PATCH] Finishing up satisfying the generated remote and unit tests for the added Federated Canada Gateway.  All generated tests now pass.
+
+---
+ .../billing/gateways/federated_canada.rb           |  156 ++++++++++++++++++++
+ test/fixtures.yml                                  |    4 +
+ .../gateways/remote_federated_canada_test.rb       |   72 +++++++++
+ test/unit/gateways/federated_canada_test.rb        |   56 +++++++
+ watchr_script.rb                                   |   33 ++++
+ 5 files changed, 321 insertions(+), 0 deletions(-)
+ create mode 100644 lib/active_merchant/billing/gateways/federated_canada.rb
+ create mode 100644 test/remote/gateways/remote_federated_canada_test.rb
+ create mode 100644 test/unit/gateways/federated_canada_test.rb
+ create mode 100644 watchr_script.rb
+
+diff --git a/lib/active_merchant/billing/gateways/federated_canada.rb b/lib/active_merchant/billing/gateways/federated_canada.rb
+new file mode 100644
+index 0000000..6084eb8
+--- /dev/null
++++ b/lib/active_merchant/billing/gateways/federated_canada.rb
+@@ -0,0 +1,156 @@
++module ActiveMerchant #:nodoc:
++  module Billing #:nodoc:
++    class FederatedCanadaGateway < Gateway
++			# Same URL for both test and live, testing is done by using the test username (demo) and password (password).
++      URL = 'https://secure.federatedgateway.com/api/transact.php'
++			
++			APPROVED, DECLINED, ERROR = 1, 2, 3
++      
++      # The countries the gateway supports merchants from as 2 digit ISO country codes
++      self.supported_countries = ['CA']
++      
++      # The card types supported by the payment gateway
++      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
++      
++      # The homepage URL of the gateway
++      self.homepage_url = 'http://www.example.net/'
++      
++      # The name of the gateway
++      self.display_name = 'New Gateway'
++      
++      def initialize(options = {})
++        requires!(options, :login, :password)
++        @options = options
++        super
++      end  
++
++      def credit(money, identification, options = {}) # also referred to as refund
++        post = { :transactionid => identification}
++        commit('refund', money, post)
++      end
++      
++      def authorize(money, creditcard, options = {})
++        post = {}
++        add_invoice(post, options)
++        add_creditcard(post, creditcard)        
++        add_address(post, creditcard, options)        
++        add_customer_data(post, options)
++        
++        commit('auth', money, post)
++      end
++      
++      def purchase(money, creditcard, options = {})
++        post = {}
++        add_invoice(post, options)
++        add_creditcard(post, creditcard)        
++        add_address(post, creditcard, options)   
++        add_customer_data(post, options)
++             
++        commit('sale', money, post)
++      end                       
++    
++      def capture(money, authorization, options = {})
++				options[:transactionid] = authorization
++        commit('capture', money, options)
++      end
++    
++      private                       
++      
++      def add_customer_data(post, options)
++				post[:firstname] = options[:first_name]
++				post[:lastname] = options[:last_name]
++				post[:phone] = options[:phone]				
++				post[:email] = options[:email]
++      end
++
++      def add_address(post, creditcard, options)
++        if address = options[:billing_address] || options[:address]
++          post[:company] = address[:company].to_s	
++          post[:address1] = address[:address1].to_s
++          post[:address2] = address[:address2].to_s
++          post[:city]    = address[:city].to_s
++          post[:state]   = address[:state].to_s
++          post[:zip]     = address[:zip].to_s
++          post[:country] = address[:country].to_s
++        end
++        if address = options[:shipping_address]
++          post[:shipping_firstname] = address[:first_name].to_s
++          post[:shipping_lastname] = address[:last_name].to_s
++          post[:shipping_company] = address[:company].to_s
++          post[:shipping_address1] = address[:address1].to_s
++          post[:shipping_address2] = address[:address2].to_s
++          post[:shipping_city]    = address[:city].to_s
++          post[:shipping_state]   = address[:state].to_s
++          post[:shipping_zip]     = address[:zip].to_s
++          post[:shipping_country] = address[:country].to_s
++          post[:shipping_email]   = address[:email].to_s
++        end
++      end
++
++      def add_invoice(post, options)
++      end
++      
++      def add_creditcard(post, creditcard)
++				post[:ccnumber] = creditcard.number
++				post[:ccexp] = expdate(creditcard)
++				post[:cvv] = creditcard.verification_value
++      end
++
++      def expdate(creditcard)
++        year  = sprintf("%.4i", creditcard.year)
++        month = sprintf("%.2i", creditcard.month)
++        "#{month}#{year[-2..-1]}"
++      end
++      
++      def parse(body)
++				body.split('&').inject({}) do |memo, x|
++					k, v = x.split('=')
++					memo[k] = v
++					memo
++				end
++      end     
++      
++      def commit(action, money, parameters)
++				parameters[:amount] = amount(money)
++        data = ssl_post(URL, post_data(action, parameters))
++				response = parse(data)
++				message = message_from(response)
++				test_mode = test?
++
++				Response.new(success?(response), message, response, 
++					:test => test?,
++					:authorization => response['transactionid'],					
++          :avs_result => response['avsresponse'],					
++          :cvv_result => response['cvvresponse']
++        )
++      end
++
++			def success?(response)
++				response['response'] == '1'
++			end
++			
++			def test?
++				(@options[:login].eql?('demo')) && (@options[:password].eql?('password'))
++			end
++
++      def message_from(response)
++				case response['response'].to_i
++				when 1
++					"Transaction Approved"
++				when 2
++					"Transaction Declined"
++				else
++					"Error in transaction data or system error"
++				end
++      end
++      
++      def post_data(action, parameters = {})
++				parameters[:type] = action
++				parameters[:username] = @options[:login]
++				parameters[:password] = @options[:password]
++				parameters.map{|k, v| "#{k}=#{CGI.escape(v.to_s)}"}.join('&')
++      end
++    end
++  end
++end
++
+diff --git a/test/fixtures.yml b/test/fixtures.yml
+index 389f6c0..4b2c5db 100644
+--- a/test/fixtures.yml
++++ b/test/fixtures.yml
+@@ -403,3 +403,7 @@ garanti:
+   
+ direc_pay:
+   mid: 200904281000001
++
++federated_canada:
++  login: demo
++  password: password
+\ No newline at end of file
+diff --git a/test/remote/gateways/remote_federated_canada_test.rb b/test/remote/gateways/remote_federated_canada_test.rb
+new file mode 100644
+index 0000000..432169d
+--- /dev/null
++++ b/test/remote/gateways/remote_federated_canada_test.rb
+@@ -0,0 +1,72 @@
++require 'test_helper'
++
++class RemoteFederatedCanadaTest < Test::Unit::TestCase
++  
++
++  def setup
++    @gateway = FederatedCanadaGateway.new(fixtures(:federated_canada))
++    
++    @amount = 100
++#    @credit_card = credit_card('6011601160116611') # Discover
++    @credit_card = credit_card('4111111111111111') # Visa
++#    @credit_card = credit_card('5431111111111111') # MC
++#    @credit_card = credit_card( '341111111111111') # AE
++		@credit_card.month = '11'
++		@credit_card.year = '2011'
++
++    @declined_amount = 99
++
++    @options = { 
++      :order_id => '1',
++      :billing_address => address,
++      :description => 'Store Purchase'
++    }
++  end
++
++	def test_gateway_should_exist
++		assert @gateway
++	end
++	
++	def test_validity_of_credit_card
++		assert @credit_card.valid?
++	end
++  
++  def test_successful_purchase
++    assert response = @gateway.purchase(@amount, @credit_card, @options)
++    assert_success response
++    assert_equal "Transaction Approved", response.message
++  end
++
++  def test_unsuccessful_purchase
++    assert response = @gateway.purchase(@declined_amount, @credit_card, @options)
++    assert_failure response
++    assert_equal "Transaction Declined", response.message
++  end
++
++  def test_authorize_and_capture
++    amount = @amount
++    assert auth = @gateway.authorize(amount, @credit_card, @options)
++    assert_success auth
++    assert_equal "Transaction Approved", auth.message
++
++    assert auth.authorization
++    assert capture = @gateway.capture(amount, auth.authorization)
++    assert_success capture
++  end
++
++  def test_failed_capture
++    assert response = @gateway.capture(@amount, '')
++    assert_failure response
++    assert_equal "Error in transaction data or system error", response.message
++  end
++
++  def test_invalid_login
++    gateway = FederatedCanadaGateway.new(
++                :login => '',
++                :password => ''
++              )
++    assert response = gateway.purchase(@amount, @credit_card, @options)
++    assert_failure response
++    assert_equal "Error in transaction data or system error", response.message
++  end
++end
+diff --git a/test/unit/gateways/federated_canada_test.rb b/test/unit/gateways/federated_canada_test.rb
+new file mode 100644
+index 0000000..48e4423
+--- /dev/null
++++ b/test/unit/gateways/federated_canada_test.rb
+@@ -0,0 +1,56 @@
++require 'test_helper'
++
++class FederatedCanadaTest < Test::Unit::TestCase
++  def setup
++    @gateway = FederatedCanadaGateway.new(
++                 :login => 'demo',
++                 :password => 'password'
++               )
++
++    @credit_card = credit_card
++		@credit_card.number = '4111111111111111'
++		@credit_card.month = '11'
++		@credit_card.year = '2011'
++		
++		@credit_card.verification_value = '999'
++    @amount = 100
++    
++    @options = { 
++      :order_id => '1',
++      :billing_address => address,
++      :description => 'Store Purchase'
++    }
++  end
++  
++  def test_successful_purchase
++    @gateway.expects(:ssl_post).returns(successful_purchase_response)
++    
++    assert response = @gateway.purchase(@amount, @credit_card, @options)
++    assert_instance_of Response, response
++    assert_success response
++    
++    # Replace with authorization number from the successful response
++    assert_equal '100', response.authorization
++    assert response.test?
++  end
++
++  def test_unsuccessful_request
++    @gateway.expects(:ssl_post).returns(failed_purchase_response)
++    
++    assert response = @gateway.purchase(@amount, @credit_card, @options)
++    assert_failure response
++    assert response.test?
++  end
++
++  private
++  
++  # Place raw successful response from gateway here
++  def successful_purchase_response
++		"response=1&responsetext=SUCCESS&authcode=123456&transactionid=1346648416&avsresponse=N&cvvresponse=N&orderid=&type=auth&response_code=100"
++  end
++  
++  # Place raw failed response from gateway here
++  def failed_purchase_response
++		"response=2&responsetext=DECLINE&authcode=&transactionid=1346648595&avsresponse=N&cvvresponse=N&orderid=&type=sale&response_code=200"
++  end
++end
+diff --git a/watchr_script.rb b/watchr_script.rb
+new file mode 100644
+index 0000000..c2eecf4
+--- /dev/null
++++ b/watchr_script.rb
+@@ -0,0 +1,33 @@
++
++
++
++class_dir  = 'lib/active_merchant/billing/gateways'
++remote_dir = "test/remote/gateways"
++unit_dir   = 'test/unit/gateways'
++
++watch("#{class_dir}/(.*)\.rb") do |file|
++	to_run  = ["#{unit_dir}/#{file[1]}_test.rb", "#{remote_dir}/remote_#{file[1]}_test.rb"]
++	puts "running \"#{to_run.join(' ')}\""
++	to_run.each{ |x| system "ruby -Itest #{x}"}
++end
++
++
++watch("#{remote_dir}/(.*)") do |file|
++#	tom = file[1].gsub('remote_', '')
++	to_run  = [ "#{remote_dir}/#{file[1]}"]
++	puts "running \"#{to_run.join(' ')}\""
++	to_run.each{ |x| system "ruby -Itest #{x}"}
++end
++
++watch("#{unit_dir}/(.*)") do |file|
++	to_run = ["#{unit_dir}/#{file[1]}"]
++	puts "running \"#{to_run.join(' ')}\""
++	to_run.each{ |x| system "ruby -Itest #{x}"}
++end
++
++
++
++
++
++
++
+-- 
+1.7.1
+
