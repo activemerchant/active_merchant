@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
     # - does not support multiple subID per merchant
     # - language is fixed to 'nl'
     class IdealRabobankGateway < IdealBaseGateway
-      class_inheritable_accessor :test_url, :live_url
+      class_attribute :test_url, :live_url
 
       self.test_url = 'https://idealtest.rabobank.nl/ideal/iDeal'
       self.live_url = 'https://ideal.rabobank.nl/ideal/iDeal'
