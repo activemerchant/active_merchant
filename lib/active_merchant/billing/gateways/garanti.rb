@@ -65,6 +65,7 @@ module ActiveMerchant #:nodoc:
 
       def build_xml_request(money, credit_card, options, &block)
         card_number = credit_card.respond_to?(:number) ? credit_card.number : ''
+        hash_data = generate_hash_data(format_order_id(options[:order_id]), @options[:terminal_id], card_number, amount(money), security_data)
         hash_data   = generate_hash_data(options[:order_id], @options[:terminal_id], card_number, amount(money), security_data)
 
         xml = Builder::XmlMarkup.new(:indent => 2)
@@ -135,7 +136,7 @@ module ActiveMerchant #:nodoc:
 
       def add_order_data(xml, options, &block)
         xml.tag! 'Order' do
-          xml.tag! 'OrderID', options[:order_id]
+          xml.tag! 'OrderID', format_order_id(options[:order_id])
           xml.tag! 'GroupID'
 
           if block_given?
@@ -156,6 +157,11 @@ module ActiveMerchant #:nodoc:
         format(value, :two_digits)
       end
 
+      # OrderId field must be A-Za-z0-9_ format and max 36 char      
+      def format_order_id(order_id)
+        order_id.to_s.gsub(/[^A-Za-z0-9_]/, '')[0...36]
+      end
+      
       def add_addresses(xml, options)
         xml.tag! 'AddressList' do
           if billing_address = options[:billing_address] || options[:address]
@@ -207,7 +213,7 @@ module ActiveMerchant #:nodoc:
         success = success?(response)
 
         Response.new(success,
-                     success ? 'Approved' : "Declined (Reason: #{response[:reason_code]} - #{response[:error_msg]})",
+                     success ? 'Approved' : "Declined (Reason: #{response[:reason_code]} - #{response[:error_msg]} - #{response[:sys_err_msg]})",
                      response,
                      :test => test?,
                      :authorization => response[:order_id])
