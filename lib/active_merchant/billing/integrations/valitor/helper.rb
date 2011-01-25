@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
             add_field 'SlokkvaHaus', '0'
             @security_number = options[:credential2]
             @amount          = options[:amount]
-            @order           = options[:order]
+            @order           = order
           end
           
           mapping :account, 'VefverslunID'
