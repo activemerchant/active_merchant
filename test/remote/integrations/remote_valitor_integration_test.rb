@@ -107,6 +107,26 @@ class RemoteValitorIntegrationTest < Test::Unit::TestCase
     check_product_row(rows[3], "PRODUCT3", "6", "300 ISK", "0 ISK",  "1.800 ISK")
     assert_match /2.050 ISK/, rows[4].element_children.first.text
   end
+
+  def test_default_product_if_none_provided
+    payment_page = submit %(
+      <% payment_service_for('#{@order}', '#{@login}', :service => :valitor, :credential2 => #{@password}, :html => {:method => 'GET'}) do |service| %>
+        <% service.return_url = 'http://example.org/return' %>
+        <% service.cancel_return_url = 'http://example.org/cancel' %>
+        <% service.success_text = 'SuccessText!' %>
+        <% service.language = 'en' %>
+        <% service.collect_customer_info %>
+      <% end %>
+    )
+    
+    assert_match(%r(http://example.org/cancel)i, payment_page.body)
+
+    doc = Nokogiri::HTML(payment_page.body)
+    rows = doc.xpath("//table[@class='VoruTafla']//tr")
+    assert_equal 5, rows.size
+    check_product_row(rows[1], "PRODUCT1", "1", "100 ISK", "0 ISK",  "100 ISK")
+    assert_match /2.050 ISK/, rows[4].element_children.first.text
+  end
   
   def check_product_row(row, desc, quantity, amount, discount, total)
     assert_equal desc,     row.element_children[0].text.strip

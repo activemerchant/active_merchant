@@ -8,7 +8,8 @@ class ValitorHelperTest < Test::Unit::TestCase
       'order-500',
       'cody@example.com',
       :currency => 'USD',
-      :credential2 => '123'
+      :credential2 => '123',
+      :amount => 1000
       )
   end
  
@@ -19,7 +20,7 @@ class ValitorHelperTest < Test::Unit::TestCase
     assert_field 'Tilvisunarnumer', 'order-500'
     assert_field 'Gjaldmidill', 'USD'
     
-    assert_equal Digest::MD5.hexdigest(['123', '0', 'cody@example.com', 'order-500', 'USD'].join('')),
+    assert_equal Digest::MD5.hexdigest(['123', '0', '1', '1000', '0', 'cody@example.com', 'order-500', 'USD'].join('')),
                  @helper.form_fields['RafraenUndirskrift']
   end
   
@@ -99,6 +100,7 @@ class ValitorHelperTest < Test::Unit::TestCase
 
     assert_equal Digest::MD5.hexdigest(
       ['123', '0',
+         '1', '1000', '0',
         'cody@example.com', 'order-500', 'http://example.com/return', 'http://example.com/notify', 'USD'].join('')),
       @helper.form_fields['RafraenUndirskrift']
   end
