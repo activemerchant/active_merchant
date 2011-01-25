@@ -7,9 +7,9 @@ class ValitorHelperTest < Test::Unit::TestCase
     @helper = Valitor::Helper.new(
       'order-500',
       'cody@example.com',
-      :currency => 'USD'
+      :currency => 'USD',
+      :credential2 => '123'
       )
-    @helper.password('123')
   end
  
   def test_basic_helper_fields
@@ -81,7 +81,7 @@ class ValitorHelperTest < Test::Unit::TestCase
   end
   
   def test_missing_password
-    @helper.password(nil)
+    @helper.instance_eval{@security_number = nil}
     assert_raise ArgumentError do
       @helper.form_fields
     end

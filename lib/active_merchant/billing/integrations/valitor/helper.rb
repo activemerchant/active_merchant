@@ -13,6 +13,7 @@ module ActiveMerchant #:nodoc:
             add_field 'Adeinsheimild', '0'
             add_field 'KaupandaUpplysingar', '0'
             add_field 'SlokkvaHaus', '0'
+            @security_number = options[:credential2]
           end
           
           mapping :account, 'VefverslunID'
@@ -27,10 +28,6 @@ module ActiveMerchant #:nodoc:
           mapping :success_text, 'SlodTokstAdGjaldfaeraTexti'
           
           mapping :language, 'Lang'
-          
-          def password(number)
-            @security_number = number
-          end
           
           def authorize_only
             add_field 'Adeinsheimild', '1'

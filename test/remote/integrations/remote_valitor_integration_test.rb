@@ -14,8 +14,7 @@ class RemoteValitorIntegrationTest < Test::Unit::TestCase
   def test_full_purchase
     notification_request = listen_for_notification(80) do |notify_url|
       payment_page = submit %(
-        <% payment_service_for('#{@order}', '#{@login}', :service => :valitor, :html => {:method => 'GET'}) do |service| %>
-          <% service.password '#{@password}' %>
+        <% payment_service_for('#{@order}', '#{@login}', :service => :valitor, :credential2 => #{@password}, :html => {:method => 'GET'}) do |service| %>
           <% service.product(1, :amount => 100, :description => 'PRODUCT1', :discount => '0') %>
           <% service.return_url = 'http://example.org/return' %>
           <% service.cancel_return_url = 'http://example.org/cancel' %>
@@ -46,8 +45,7 @@ class RemoteValitorIntegrationTest < Test::Unit::TestCase
   
   def test_customer_fields
     payment_page = submit %(
-      <% payment_service_for('#{@order}', '#{@login}', :service => :valitor, :html => {:method => 'GET'}) do |service| %>
-        <% service.password '#{@password}' %>
+      <% payment_service_for('#{@order}', '#{@login}', :service => :valitor, :credential2 => #{@password}, :html => {:method => 'GET'}) do |service| %>
         <% service.product(1, :amount => 100, :description => 'test', :discount => '0') %>
         <% service.return_url = 'http://example.org/return' %>
         <% service.cancel_return_url = 'http://example.org/cancel' %>
@@ -87,8 +85,7 @@ class RemoteValitorIntegrationTest < Test::Unit::TestCase
 
   def test_products
     payment_page = submit %(
-      <% payment_service_for('#{@order}', '#{@login}', :service => :valitor, :html => {:method => 'GET'}) do |service| %>
-        <% service.password '#{@password}' %>
+      <% payment_service_for('#{@order}', '#{@login}', :service => :valitor, :credential2 => #{@password}, :html => {:method => 'GET'}) do |service| %>
         <% service.product(1, :amount => 100, :description => 'PRODUCT1') %>
         <% service.product(2, :amount => 200, :description => 'PRODUCT2', :discount => '50') %>
         <% service.product(3, :amount => 300, :description => 'PRODUCT3', :quantity => '6') %>
