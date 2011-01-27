@@ -88,6 +88,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
+				post[:orderid] = options[:order_id]
+				post[:orderdescription] = options[:description]
       end
       
       def add_creditcard(post, creditcard)
