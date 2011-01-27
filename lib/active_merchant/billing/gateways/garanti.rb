@@ -65,8 +65,7 @@ module ActiveMerchant #:nodoc:
 
       def build_xml_request(money, credit_card, options, &block)
         card_number = credit_card.respond_to?(:number) ? credit_card.number : ''
-        hash_data = generate_hash_data(format_order_id(options[:order_id]), @options[:terminal_id], card_number, amount(money), security_data)
-        hash_data   = generate_hash_data(options[:order_id], @options[:terminal_id], card_number, amount(money), security_data)
+        hash_data   = generate_hash_data(format_order_id(options[:order_id]), @options[:terminal_id], card_number, amount(money), security_data)
 
         xml = Builder::XmlMarkup.new(:indent => 2)
         xml.instruct! :xml, :version => "1.0", :encoding => "UTF-8"
