@@ -24,6 +24,10 @@ beanstream_interac:
   user: username
   password: password
 
+blue_pay:
+  login: X
+  password: Y
+
 braintree_orange:
   login: demo
   password: password
@@ -249,6 +253,10 @@ psl_visa_debit_address:
 quickpay:
   login: 89898989
   password: "n5KrR5e2538awi9hUk6728LHTQ6E4uG1z4IFSb2pPN9j76DqJ2vA4698X315M1cd"
+  
+quantum:
+  login: X
+  password: Y
     
 realex:
   login: X 
@@ -366,6 +374,10 @@ trust_commerce:
 # Working credentials, no need to replace
 usa_epay:
   login: 'yCaWGYQsSVR0S48B6AKMK07RQhaxHvGu'
+
+valitor:
+  login: WebsiteID
+  password: SecurityNumber
   
 # Working credentials, no need to replace
 verify:

@@ -33,6 +33,9 @@ require 'active_merchant/billing/integrations/action_view_helper'
 
 ActiveMerchant::Billing::Base.mode = :test
 
+require 'logger'
+ActiveMerchant::Billing::Gateway.logger = Logger.new(STDOUT) if ENV['DEBUG_ACTIVE_MERCHANT'] == 'true'
+
 # Test gateways
 class SimpleTestGateway < ActiveMerchant::Billing::Gateway
 end
