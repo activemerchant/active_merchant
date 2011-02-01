@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add default fixture for Garanti and don't use fixture for Garanti [cody]
+* Add cms param for ePay [ePay]
 * Add Valitor Integration [Nathaniel Talbott]
 
 == Version 1.10.0 (Jan 20, 2011)
