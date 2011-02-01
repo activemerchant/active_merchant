@@ -247,6 +247,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize_post_data(params = {})
         params[:language] = '2'
+        params[:cms] = 'activemerchant'
         params[:accepturl] = 'https://ssl.ditonlinebetalingssystem.dk/auth/default.aspx?accept=1'
         params[:declineurl] = 'https://ssl.ditonlinebetalingssystem.dk/auth/default.aspx?decline=1'
         params[:merchantnumber] = @options[:login]
