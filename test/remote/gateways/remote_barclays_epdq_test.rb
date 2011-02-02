@@ -99,7 +99,7 @@ class RemoteBarclaysEpdqTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@approved_amount, @approved_card, @options)
     assert_success response
     
-    assert credit = @gateway.credit(@approved_amount, @options[:order_id], @options)
+    assert credit = @gateway.credit(@approved_amount, response.authorization)
     assert_success credit
     assert_equal 'Approved.', credit.message
   end

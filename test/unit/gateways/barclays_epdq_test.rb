@@ -35,6 +35,12 @@ class BarclaysEpdqTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_credit
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/>asdfasdf</)).returns(successful_credit_response)
+    assert response = @gateway.credit(@amount, "asdfasdf:jklljkll")
+    assert_success response
+  end
+
   private
 
   def successful_purchase_response
@@ -305,6 +311,117 @@ class BarclaysEpdqTest < Test::Unit::TestCase
  <TimeOut DataType="DateTime">1296598179756</TimeOut>
 
 </EngineDocList>
+)
+  end
+
+  def successful_credit_response
+    %(<?xml version="1.0" encoding="UTF-8"?>
+<EngineDocList>
+ <DocVersion DataType="String">1.0</DocVersion>
+ <EngineDoc>
+  <ContentType DataType="String">OrderFormDoc</ContentType>
+  <DocumentId DataType="String">4d45da6a-8bcd-3000-002b-00144ff2e45c</DocumentId>
+  <Instructions>
+   <Pipeline DataType="String">Payment</Pipeline>
+
+  </Instructions>
+  <MessageList>
+
+  </MessageList>
+  <OrderFormDoc>
+   <Consumer>
+    <BillTo>
+     <Location>
+      <Address>
+       <City DataType="String">Ottawa</City>
+       <PostalCode DataType="String">K1C2N6</PostalCode>
+       <StateProv DataType="String">ON</StateProv>
+       <Street1 DataType="String">1234 My Street</Street1>
+       <Street2 DataType="String">Apt 1</Street2>
+
+      </Address>
+      <Id DataType="String">4d45da6a-8bcc-3000-002b-00144ff2e45c</Id>
+
+     </Location>
+
+    </BillTo>
+    <PaymentMech>
+     <CreditCard>
+      <ExchangeType DataType="S32">1</ExchangeType>
+      <Expires DataType="ExpirationDate">09/12</Expires>
+      <Number DataType="String">4715320629000001</Number>
+
+     </CreditCard>
+     <Type DataType="String">CreditCard</Type>
+
+    </PaymentMech>
+
+   </Consumer>
+   <DateTime DataType="DateTime">1296679499967</DateTime>
+   <FraudInfo>
+    <FraudResult DataType="String">None</FraudResult>
+    <FraudResultCode DataType="S32">0</FraudResultCode>
+    <OrderScore DataType="Numeric" Precision="0">0</OrderScore>
+    <StrategyList>
+     <Strategy>
+      <FraudAction DataType="String">None</FraudAction>
+      <StrategyId DataType="S32">1</StrategyId>
+      <StrategyName DataType="String">My Rules</StrategyName>
+      <StrategyOwnerId DataType="S32">2974</StrategyOwnerId>
+      <StrategyScore DataType="Numeric" Precision="0">0</StrategyScore>
+
+     </Strategy>
+
+    </StrategyList>
+    <TotalScore DataType="Numeric" Precision="0">0</TotalScore>
+
+   </FraudInfo>
+   <GroupId DataType="String">b92b5bff09d05d771c17e6b6b30531ed</GroupId>
+   <Id DataType="String">b92b5bff09d05d771c17e6b6b30531ed</Id>
+   <Mode DataType="String">P</Mode>
+   <Transaction>
+    <CardProcResp>
+     <CcErrCode DataType="S32">1</CcErrCode>
+     <CcReturnMsg DataType="String">Approved.</CcReturnMsg>
+     <ProcReturnCode DataType="String">1</ProcReturnCode>
+     <ProcReturnMsg DataType="String">Approved</ProcReturnMsg>
+     <Status DataType="String">1</Status>
+
+    </CardProcResp>
+    <CardholderPresentCode DataType="S32">7</CardholderPresentCode>
+    <ChargeTypeCode DataType="String">S</ChargeTypeCode>
+    <CurrentTotals>
+     <Totals>
+      <Total DataType="Money" Currency="826">3900</Total>
+
+     </Totals>
+
+    </CurrentTotals>
+    <Id DataType="String">4d45da6a-8bce-3000-002b-00144ff2e45c</Id>
+    <InputEnvironment DataType="S32">4</InputEnvironment>
+    <SecurityIndicator DataType="S32">7</SecurityIndicator>
+    <TerminalInputCapability DataType="S32">1</TerminalInputCapability>
+    <Type DataType="String">Credit</Type>
+
+   </Transaction>
+
+  </OrderFormDoc>
+  <User>
+   <Alias DataType="String">2974</Alias>
+   <ClientId DataType="S32">2974</ClientId>
+   <EffectiveAlias DataType="String">2974</EffectiveAlias>
+   <EffectiveClientId DataType="S32">2974</EffectiveClientId>
+   <Name DataType="String">spreedlytesting</Name>
+   <Password DataType="String">XXXXXXX</Password>
+
+  </User>
+
+ </EngineDoc>
+ <TimeIn DataType="DateTime">1296679499961</TimeIn>
+ <TimeOut DataType="DateTime">1296679500312</TimeOut>
+
+</EngineDocList>
+
 )
   end
 end

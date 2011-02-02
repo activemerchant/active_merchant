@@ -94,7 +94,8 @@ module ActiveMerchant #:nodoc:
         commit(document)
       end
 
-      def credit_existing_order(money, order_id, options)
+      def credit_existing_order(money, authorization, options)
+        order_id, _ = authorization.split(":")
         document = Document.new(self, @options) do
           add_order_form(order_id) do
             add_transaction(:Credit, money)
