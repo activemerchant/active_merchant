@@ -90,7 +90,7 @@ class PayJunctionTest < Test::Unit::TestCase
     purchase = @gateway.purchase(AMOUNT, @credit_card, @options)
     assert_success purchase
     
-    assert response = @gateway.void(AMOUNT, purchase.authorization, :order_id => order_id)    
+    assert response = @gateway.void(purchase.authorization, :order_id => order_id)
     assert_success response
     assert_equal 'void', response.params["posture"], 'Should be a capture'
     assert_equal purchase.authorization, response.authorization,
