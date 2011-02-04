@@ -56,20 +56,20 @@ module ActiveMerchant #:nodoc:
 				post[:card_id] = card_id
 				commit('X', nil, post)
 			end
-	
+
 			def credit(money, creditcard_or_card_id, options = {})
 				post ={}
 				add_payment_source(post, creditcard_or_card_id, options)
 				commit('C', money, post)
 			end
 
-			def void(transaction_id)
+			def void(transaction_id, options = {})
 				post = {}
 				post[:transaction_id] = transaction_id
 				commit('V', nil, post)
 			end
-    
-			private                       
+
+			private
 
 			def add_address(post, options)
 				if address = options[:billing_address] || options[:address]
