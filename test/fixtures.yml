@@ -14,6 +14,11 @@ authorize_net:
   login: X
   password: Y
 
+barclays_epdq:
+  login: test
+  password: test
+  client_id: 1234
+
 beanstream:
   login: merchant id
   user: username
@@ -75,6 +80,12 @@ exact:
 first_pay:
   login:
   password:
+    
+garanti:
+  login:
+  password:
+  terminal_id:
+  merchant_id:
 
 # login: merchant number
 # password: password for the PEM secret key
