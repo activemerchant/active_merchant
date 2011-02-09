@@ -1,5 +1,17 @@
 = ActiveMerchant CHANGELOG
 
+* Add Barclays ePDQ Gateway [Nathaniel Talbott]
+* Add default fixture for Garanti and don't use fixture for Garanti [cody]
+* Add cms param for ePay [ePay]
+* Add Valitor Integration [Nathaniel Talbott]
+
+== Version 1.10.0 (Jan 20, 2011)
+
+* PayPal Express: Support returning payer phone number [Soleone]
+* Fix ePay to correctly send order number [Soleone]
+* Add BluePay Gateway [Nathaniel Talbott]
+* Add Quantum Gateway [Joshua Lippiner]
+* Add iDEAL/Rabobank gateway [Jonathan Rudenberg]
 * SagePayForm: Added send_email_confirmation (default false) to enable confirmation emails [wisq]
 
 == Version 1.9.4 (Jan 5, 2011)

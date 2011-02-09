@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
           COUNTRY        = 'IND'
           CURRENCY       = 'INR'
           OTHER_DETAILS  = 'NULL'
-          EDIT_ALLOWED   = 'N'
+          EDIT_ALLOWED   = 'Y'
           
           PHONE_CODES = {
             'IN' => '91',

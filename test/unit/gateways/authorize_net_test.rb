@@ -75,14 +75,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
   
   def test_add_duplicate_window_without_duplicate_window
     result = {}
-    ActiveMerchant::Billing::AuthorizeNetGateway.duplicate_window = nil
+    @gateway.class.duplicate_window = nil
     @gateway.send(:add_duplicate_window, result)
     assert_nil result[:duplicate_window]
   end
   
   def test_add_duplicate_window_with_duplicate_window
     result = {}
-    ActiveMerchant::Billing::AuthorizeNetGateway.duplicate_window = 0
+    @gateway.class.duplicate_window = 0
     @gateway.send(:add_duplicate_window, result)
     assert_equal 0, result[:duplicate_window]
   end
