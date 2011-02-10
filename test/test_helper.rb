@@ -25,6 +25,7 @@ end
 require 'action_controller'
 require "action_view/template"
 begin
+  require 'active_support/core_ext/module/deprecation'
   require 'action_dispatch/testing/test_process'
 rescue LoadError
   require 'action_controller/test_process'

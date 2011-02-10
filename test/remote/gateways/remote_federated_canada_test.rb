@@ -1,36 +1,35 @@
 require 'test_helper'
 
 class RemoteFederatedCanadaTest < Test::Unit::TestCase
-  
 
   def setup
     @gateway = FederatedCanadaGateway.new(fixtures(:federated_canada))
-    
+
     @amount = 100
 #    @credit_card = credit_card('6011601160116611') # Discover
     @credit_card = credit_card('4111111111111111') # Visa
 #    @credit_card = credit_card('5431111111111111') # MC
 #    @credit_card = credit_card( '341111111111111') # AE
-		@credit_card.month = '11'
-		@credit_card.year = '2011'
+    @credit_card.month = '11'
+    @credit_card.year = '2011'
 
     @declined_amount = 99
 
     @options = { 
-      :order_id => '1',
+      :order_id => ActiveMerchant::Utils.generate_unique_id,
       :billing_address => address,
-      :description => 'Store Purchase'
+      :description => 'Active Merchant Remote Test Purchase'
     }
   end
 
-	def test_gateway_should_exist
-		assert @gateway
-	end
-	
-	def test_validity_of_credit_card
-		assert @credit_card.valid?
-	end
-  
+  def test_gateway_should_exist
+    assert @gateway
+  end
+
+  def test_validity_of_credit_card
+    assert @credit_card.valid?
+  end
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -43,21 +42,46 @@ class RemoteFederatedCanadaTest < Test::Unit::TestCase
     assert_equal "Transaction Declined", response.message
   end
 
-  def test_authorize_and_capture
-    amount = @amount
-    assert auth = @gateway.authorize(amount, @credit_card, @options)
-    assert_success auth
-    assert_equal "Transaction Approved", auth.message
-
-    assert auth.authorization
-    assert capture = @gateway.capture(amount, auth.authorization)
-    assert_success capture
+  def test_successful_authorization
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "Transaction Approved", response.message
   end
 
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
     assert_equal "Error in transaction data or system error", response.message
+  end
+
+  def test_purchase_and_refund
+    assert auth = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal "Transaction Approved", auth.message
+    assert auth.authorization
+    assert capture = @gateway.refund(@amount, auth.authorization)
+    assert_equal "Transaction Approved", capture.message
+    assert_success capture
+  end
+
+  def test_authorize_and_void
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal "Transaction Approved", auth.message
+    assert auth.authorization
+    assert capture = @gateway.void(auth.authorization)
+    assert_equal "Transaction Approved", capture.message
+    assert_success capture
+  end
+
+  def test_authorize_and_capture
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal "Transaction Approved", auth.message
+    assert auth.authorization
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_equal "Transaction Approved", capture.message
+    assert_success capture
   end
 
   def test_invalid_login
