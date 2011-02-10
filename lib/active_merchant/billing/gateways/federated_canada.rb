@@ -9,6 +9,8 @@ module ActiveMerchant #:nodoc:
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['CA']
 
+      self.default_currency = 'CAD'
+
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
@@ -67,7 +69,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:firstname] = options[:first_name]
         post[:lastname] = options[:last_name]
-        post[:phone] = options[:phone]
+
         post[:email] = options[:email]
       end
 
@@ -80,6 +82,7 @@ module ActiveMerchant #:nodoc:
           post[:state]   = address[:state].to_s
           post[:zip]     = address[:zip].to_s
           post[:country] = address[:country].to_s
+          post[:phone] = address[:phone]
         end
         if address = options[:shipping_address]
           post[:shipping_firstname] = address[:first_name].to_s

@@ -52,8 +52,8 @@ class FederatedCanadaTest < Test::Unit::TestCase
 
   def test_add_address
     result = {}
-    @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Happy Town Road', :address2 => "apt 13", :country => 'CA', :state => 'SK'} )
-    assert_equal ["address1", "address2", "city", "company", "country", "state", "zip"], result.stringify_keys.keys.sort
+    @gateway.send(:add_address, result, :billing_address => {:address1 => '123 Happy Town Road', :address2 => "apt 13", :country => 'CA', :state => 'SK', :phone => '1234567890'} )
+    assert_equal ["address1", "address2", "city", "company", "country", "phone", "state", "zip"], result.stringify_keys.keys.sort
     assert_equal 'SK', result[:state]
     assert_equal '123 Happy Town Road', result[:address1]
     assert_equal 'apt 13', result[:address2]    
