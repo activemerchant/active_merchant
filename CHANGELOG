@@ -1,5 +1,13 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.11.0 (Feb 11, 2011)
+
+* Bump dependency for activesupport from 2.3.2 to 2.3.8 [Soleone]
+* Garanti: Normalize text in xml fields for non-standard characters [Selem Delul]
+* Garanti: Make sure order number does not contain illegal characters [Soleone]
+* Fix ActionView tests for ActiveSupport 3.0.4 [Soleone]
+* DirecPay: Make address information editable by default [Soleone]
+* Fix ePDQ credit to expect and handle full authorization [Nathaniel Talbott]
 * Add Barclays ePDQ Gateway [Nathaniel Talbott]
 * Add default fixture for Garanti and don't use fixture for Garanti [cody]
 * Add cms param for ePay [ePay]
