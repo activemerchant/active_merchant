@@ -248,7 +248,7 @@ module ActiveMerchant #:nodoc:
         def add_creditcard(creditcard)
           xml.PaymentMech do
             xml.CreditCard do
-              xml.Type({ :DataType => 'S32' }, EPDQ_CARD_TYPES[creditcard.type.to_sym])     
+              xml.Type({ :DataType => 'S32' }, EPDQ_CARD_TYPES[creditcard.brand.to_sym])
               xml.Number creditcard.number
               xml.Expires({ :DataType => 'ExpirationDate', :Locale => 826 }, format_expiry_date(creditcard))
               if creditcard.verification_value.present?
