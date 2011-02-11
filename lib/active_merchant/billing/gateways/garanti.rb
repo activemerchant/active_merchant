@@ -156,11 +156,11 @@ module ActiveMerchant #:nodoc:
         format(value, :two_digits)
       end
 
-      # OrderId field must be A-Za-z0-9_ format and max 36 char      
+      # OrderId field must be A-Za-z0-9_ format and max 36 char
       def format_order_id(order_id)
         order_id.to_s.gsub(/[^A-Za-z0-9_]/, '')[0...36]
       end
-      
+
       def add_addresses(xml, options)
         xml.tag! 'AddressList' do
           if billing_address = options[:billing_address] || options[:address]
@@ -180,18 +180,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, address)
-        xml.tag! 'Name', address[:name]
+        xml.tag! 'Name', normalize(address[:name])
         address_text = address[:address1]
-        address_text << " #{address[:address2]}" if address[:address2]
-        xml.tag! 'Text', address_text
-        xml.tag! 'City', address[:city]
-        xml.tag! 'District', address[:state]
+        address_text << " #{ address[:address2]}" if address[:address2]
+        xml.tag! 'Text', normalize(address_text)
+        xml.tag! 'City', normalize(address[:city])
+        xml.tag! 'District', normalize(address[:state])
         xml.tag! 'PostalCode', address[:zip]
-        xml.tag! 'Country', address[:country]
-        xml.tag! 'Company', address[:company]
+        xml.tag! 'Country', normalize(address[:country])
+        xml.tag! 'Company', normalize(address[:company])
         xml.tag! 'PhoneNumber', address[:phone].to_s.gsub(/[^0-9]/, '') if address[:phone]
       end
-      
+
+      def normalize(text)
+        ActiveSupport::Inflector.transliterate(text,'')
+      end
+
       def add_transaction_data(xml, money, options)
         xml.tag! 'Transaction' do
           xml.tag! 'Type', options[:gvp_order_type]

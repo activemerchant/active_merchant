@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'test_helper'
 
 class GarantiTest < Test::Unit::TestCase
@@ -33,6 +34,11 @@ class GarantiTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
+  end
+
+  def test_character_normalization
+    assert_equal 'ABCCDEFGGHIIJKLMNOOPRSSTUUVYZ', @gateway.send(:normalize, 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ')
+    assert_equal 'abccdefgghiijklmnooprsstuuvyz', @gateway.send(:normalize, 'abcçdefgğhıijklmnoöprsştuüvyz')
   end
 
   private
