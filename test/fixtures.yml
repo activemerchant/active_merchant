@@ -420,3 +420,6 @@ viaklix:
 wirecard:
   login: 56500
   password: TestXAPTER
+
+world_pay:
+  login: 211616
