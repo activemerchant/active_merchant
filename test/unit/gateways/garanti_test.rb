@@ -49,6 +49,11 @@ class GarantiTest < Test::Unit::TestCase
     end
   end
 
+  def test_nil_normalization
+    assert_nil @gateway.send(:normalize, nil)
+  end
+  
+  
   private
 
   # Place raw successful response from gateway here

@@ -6,6 +6,7 @@
 * Make fully compatible with Rails 2 & 3, and Ruby 1.8 & 1.9 [ntalbott]
 * Authorize.Net: Only return AVS message for AVS-related reason codes. [ntalbott]
 * Merge Federated Canada gateway [ntalbott]
+* Garanti: Fix text normalization for nil values [Selem Delul]
 * Valitor: Always send amount without any decimal places [Soleone]
 * Add WorldPay integration [Soleone]
 
