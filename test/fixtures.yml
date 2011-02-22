@@ -130,6 +130,10 @@ moneris:
   login: store1
   password: yesguy
   
+nab_transact:
+  login: ABC0001
+  password: changeit
+
 netaxept:
   login: LOGIN
   password: PASSWORD
