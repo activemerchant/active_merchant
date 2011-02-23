@@ -185,6 +185,14 @@ class OgoneTest < Test::Unit::TestCase
       assert_equal Digest::SHA1.hexdigest("ALIAS=2mynicesigAMOUNT=100mynicesigCARDNO=4111111111111111mynicesigCN=Client NamemynicesigCURRENCY=EURmynicesigOPERATION=RESmynicesigORDERID=1mynicesigPSPID=MrPSPIDmynicesig"), signature
     end
   end
+  
+  def test_accessing_params_attribute_of_response
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'test123', response.params['ACCEPTANCE']
+    assert response.test?
+  end
 
   private
 
