@@ -315,4 +315,9 @@ class CreditCardTest < Test::Unit::TestCase
     assert !card.valid?
     assert_equal "", card.number
   end
+  
+  def test_type_is_aliased_as_brand
+    assert_equal @visa.type, @visa.brand
+    assert_equal @solo.type, @solo.brand
+  end
 end

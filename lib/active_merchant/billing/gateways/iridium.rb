@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_source, options = {})
         setup_address_hash(options)
         
-        if payment_source.is_a?(CreditCard)
+        if payment_source.respond_to?(:number)
           commit(build_purchase_request('SALE', money, payment_source, options), options)
         else
           commit(build_reference_request('SALE', money, payment_source, options), options)
@@ -157,7 +157,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'CardName', creditcard.name
           xml.tag! 'CV2', creditcard.verification_value if creditcard.verification_value
           xml.tag! 'CardNumber', creditcard.number
-          xml.tag! 'ExpiryDate', { 'Month' => creditcard.expiry_date.month.to_s.rjust(2, "0"), 'Year' => creditcard.expiry_date.year.to_s[/\d\d$/] }
+          xml.tag! 'ExpiryDate', { 'Month' => creditcard.month.to_s.rjust(2, "0"), 'Year' => creditcard.year.to_s[/\d\d$/] }
         end
       end
       

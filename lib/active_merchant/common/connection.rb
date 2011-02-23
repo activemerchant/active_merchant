@@ -71,9 +71,8 @@ module ActiveMerchant
           end
           
           info "--> %d %s (%d %.4fs)" % [result.code, result.message, result.body ? result.body.length : 0, realtime], tag
-          response = handle_response(result)
-          debug response
-          response
+          debug result.body
+          result
         rescue EOFError => e
           raise ConnectionError, "The remote server dropped the connection"
         rescue Errno::ECONNRESET => e
@@ -144,15 +143,6 @@ module ActiveMerchant
         retries -= 1
         retry if retry_safe && !retries.zero?
         raise
-      end
-    end
-    
-    def handle_response(response)
-      case response.code.to_i
-      when 200...300
-        response.body
-      else
-        raise ResponseError.new(response)
       end
     end
     

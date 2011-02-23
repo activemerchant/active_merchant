@@ -373,7 +373,7 @@ module ActiveMerchant #:nodoc:
           return AVSResult.messages[ results[:avs_result_code] ] if AVS_ERRORS.include?(results[:avs_result_code])
         end
 
-        return results[:response_reason_text].nil? ? '' : results[:response_reason_text][0..-2]
+        return results[:response_reason_text].nil? ? '' : results[:response_reason_text].chomp('.')
       end
 
       def expdate(creditcard)

@@ -13,13 +13,16 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 
 * {Authorize.Net CIM}[http://www.authorize.net/] - US
 * {Authorize.Net}[http://www.authorize.net/] - US
+* {Barclays ePDQ}[http://www.barclaycard.co.uk/business/accepting-payments/epdq-mpi/] - UK
 * {Beanstream.com}[http://www.beanstream.com/] - CA
+* {BluePay}[http://www.bluepay.com/] - US
 * {Braintree}[http://www.braintreepaymentsolutions.com] - US
 * {CardStream}[http://www.cardstream.com/] - GB
 * {CyberSource}[http://www.cybersource.com] - US
 * {DataCash}[http://www.datacash.com/] - GB
 * {Efsnet}[http://www.concordefsnet.com/] - US
 * {Elavon MyVirtualMerchant}[http://www.elavon.com] - US, CA
+* {ePay}[http://www.epay.dk/] - DK
 * {eWAY}[http://www.eway.com.au/] - AU
 * {E-xact}[http://www.e-xact.com] - CA, US
 * {FirstPay}[http://www.first-pay.com] - US
@@ -52,7 +55,9 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {Protx}[http://www.protx.com] - GB
 * {Psigate}[http://www.psigate.com/] - CA
 * {PSL Payment Solutions}[http://www.paymentsolutionsltd.com/] - GB
+* {Quantum}[http://www.quantumgateway.com] - US
 * {Quickpay}[http://quickpay.dk/] - DK
+* {Rabobank Nederland}[http://www.rabobank.nl/] - NL
 * {Realex}[http://www.realexpayments.com/] - IE, GB
 * {Sage Payment Solutions}[http://www.sagepayments.com] - US, CA
 * {Sallie Mae}[http://www.salliemae.com] - US
@@ -78,6 +83,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {Nochex}[http://www.nochex.com]
 * {PayPal Website Payments Standard}[https://www.paypal.com/cgi-bin/webscr?cmd=_wp-standard-overview-outside]
 * {SagePay Form}[http://www.sagepay.com/products_services/sage_pay_go/integration/form]
+* {Valitor}[http://www.valitor.is/] - IS
 
 == Download
 

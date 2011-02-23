@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
       
       def add_transaction(post, options)
         post[:transactionId] = generate_transaction_id(options)
-        post[:serviceType] = 'C'
+        post[:serviceType] = 'M'
         post[:redirectUrl] = 'http://example.com'
       end
       
@@ -106,9 +106,10 @@ module ActiveMerchant #:nodoc:
         'american_express' => 'a',
       }
       def add_creditcard(post, creditcard)
-        prefix = CARD_TYPE_PREFIXES[creditcard.type]
+        brand = Gateway.card_brand(creditcard)
+        prefix = CARD_TYPE_PREFIXES[brand]
         unless prefix
-          raise ArgumentError.new("Card type #{creditcard.type} not supported.")
+          raise ArgumentError.new("Card type #{brand} not supported.")
         end
 
         post[:creditcard] = {}
@@ -215,7 +216,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def encode(hash)
-        hash.collect{|(k,v)| "#{URI.encode(k.to_s)}=#{URI.encode(v.to_s)}"}.join('&')
+        hash.collect{|(k,v)| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"}.join('&')
       end
       
       class Response < Billing::Response

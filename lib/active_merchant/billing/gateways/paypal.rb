@@ -50,14 +50,14 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:ReferenceID', reference_id if transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:PaymentAction', action
               xml.tag! 'n2:PaymentDetails' do
-                xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => currency_code
+                xml.tag! 'n2:OrderTotal', localized_amount(money, currency_code), 'currencyID' => currency_code
                 
                 # All of the values must be included together and add up to the order total
                 if [:subtotal, :shipping, :handling, :tax].all?{ |o| options.has_key?(o) }
-                  xml.tag! 'n2:ItemTotal', amount(options[:subtotal]), 'currencyID' => currency_code
-                  xml.tag! 'n2:ShippingTotal', amount(options[:shipping]),'currencyID' => currency_code
-                  xml.tag! 'n2:HandlingTotal', amount(options[:handling]),'currencyID' => currency_code
-                  xml.tag! 'n2:TaxTotal', amount(options[:tax]), 'currencyID' => currency_code
+                  xml.tag! 'n2:ItemTotal', localized_amount(options[:subtotal], currency_code), 'currencyID' => currency_code
+                  xml.tag! 'n2:ShippingTotal', localized_amount(options[:shipping], currency_code),'currencyID' => currency_code
+                  xml.tag! 'n2:HandlingTotal', localized_amount(options[:handling], currency_code),'currencyID' => currency_code
+                  xml.tag! 'n2:TaxTotal', localized_amount(options[:tax], currency_code), 'currencyID' => currency_code
                 end
                 
                 xml.tag! 'n2:NotifyURL', options[:notify_url]

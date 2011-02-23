@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       include PaypalCommonAPI
       include PaypalExpressCommon
       
-      self.test_redirect_url = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token='
+      self.test_redirect_url = 'https://www.sandbox.paypal.com/cgi-bin/webscr'
       self.supported_countries = ['US']
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside'
       self.display_name = 'PayPal Express Checkout'
@@ -66,14 +66,14 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:Token', options[:token]
               xml.tag! 'n2:PayerID', options[:payer_id]
               xml.tag! 'n2:PaymentDetails' do
-                xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => currency_code
+                xml.tag! 'n2:OrderTotal', localized_amount(money, currency_code), 'currencyID' => currency_code
                 
                 # All of the values must be included together and add up to the order total
                 if [:subtotal, :shipping, :handling, :tax].all?{ |o| options.has_key?(o) }
-                  xml.tag! 'n2:ItemTotal', amount(options[:subtotal]), 'currencyID' => currency_code
-                  xml.tag! 'n2:ShippingTotal', amount(options[:shipping]),'currencyID' => currency_code
-                  xml.tag! 'n2:HandlingTotal', amount(options[:handling]),'currencyID' => currency_code
-                  xml.tag! 'n2:TaxTotal', amount(options[:tax]), 'currencyID' => currency_code
+                  xml.tag! 'n2:ItemTotal', localized_amount(options[:subtotal], currency_code), 'currencyID' => currency_code
+                  xml.tag! 'n2:ShippingTotal', localized_amount(options[:shipping], currency_code),'currencyID' => currency_code
+                  xml.tag! 'n2:HandlingTotal', localized_amount(options[:handling], currency_code),'currencyID' => currency_code
+                  xml.tag! 'n2:TaxTotal', localized_amount(options[:tax], currency_code), 'currencyID' => currency_code
                 end
                 
                 xml.tag! 'n2:NotifyURL', options[:notify_url]
@@ -87,15 +87,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_setup_request(action, money, options)
+        currency_code = options[:currency] || currency(money)
+        
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'SetExpressCheckoutReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'SetExpressCheckoutRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'n2:SetExpressCheckoutRequestDetails' do
               xml.tag! 'n2:PaymentAction', action
-              xml.tag! 'n2:OrderTotal', amount(money).to_f.zero? ? amount(100) : amount(money), 'currencyID' => options[:currency] || currency(money)
+              xml.tag! 'n2:OrderTotal', amount(money).to_f.zero? ? localized_amount(100, currency_code) : localized_amount(money, currency_code), 'currencyID' => currency_code
               if options[:max_amount]
-                xml.tag! 'n2:MaxAmount', amount(options[:max_amount]), 'currencyID' => options[:currency] || currency(options[:max_amount])
+                xml.tag! 'n2:MaxAmount', localized_amount(options[:max_amount], currency_code), 'currencyID' => currency_code
               end
               add_address(xml, 'n2:Address', options[:shipping_address] || options[:address])
               xml.tag! 'n2:AddressOverride', options[:address_override] ? '1' : '0'

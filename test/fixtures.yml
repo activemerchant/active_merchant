@@ -14,6 +14,11 @@ authorize_net:
   login: X
   password: Y
 
+barclays_epdq:
+  login: test
+  password: test
+  client_id: 1234
+
 beanstream:
   login: merchant id
   user: username
@@ -23,6 +28,10 @@ beanstream_interac:
   login: merchant id
   user: username
   password: password
+
+blue_pay:
+  login: X
+  password: Y
 
 braintree_orange:
   login: demo
@@ -53,6 +62,12 @@ elavon:
   login: LOGIN
   password: PASSWORD
 
+# login: merchant number
+# password: referrer url (for authorize authentication)
+epay:
+  login: X
+  password: Y
+
 # Working credentials, no need to replace
 eway:
   login: '87654321'
@@ -65,8 +80,17 @@ exact:
 first_pay:
   login:
   password:
+    
+garanti:
+  login:
+  password:
+  terminal_id:
+  merchant_id:
 
-ideal_ing_postbank:
+# login: merchant number
+# password: password for the PEM secret key
+# pem: public certificate and PEM secret key
+ideal_rabobank:
   login: LOGIN
   password: PASSWORD
   pem: |--
@@ -241,6 +265,10 @@ psl_visa_debit_address:
 quickpay:
   login: 89898989
   password: "n5KrR5e2538awi9hUk6728LHTQ6E4uG1z4IFSb2pPN9j76DqJ2vA4698X315M1cd"
+  
+quantum:
+  login: X
+  password: Y
     
 realex:
   login: X 
@@ -358,6 +386,10 @@ trust_commerce:
 # Working credentials, no need to replace
 usa_epay:
   login: 'yCaWGYQsSVR0S48B6AKMK07RQhaxHvGu'
+
+valitor:
+  login: WebsiteID
+  password: SecurityNumber
   
 # Working credentials, no need to replace
 verify:
@@ -380,9 +412,10 @@ merchant_esolutions:
   password: "gvQzgKXOTEoDzpzJzROrQQzoKLaEqxjf"
 
 garanti:
-  client_id: '100104' 
-  login: 'paymentuser'
-  password: 'userpayment'
+  login: "PROVAUT"
+  terminal_id: 111995
+  merchant_id: 600218
+  password: "123qweASD"
   
 direc_pay:
   mid: 200904281000001

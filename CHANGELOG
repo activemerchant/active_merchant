@@ -1,10 +1,58 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.11.0 (Feb 11, 2011)
+
+* Bump dependency for activesupport from 2.3.2 to 2.3.8 [Soleone]
+* Garanti: Normalize text in xml fields for non-standard characters [Selem Delul]
+* Garanti: Make sure order number does not contain illegal characters [Soleone]
+* Fix ActionView tests for ActiveSupport 3.0.4 [Soleone]
+* DirecPay: Make address information editable by default [Soleone]
+* Fix ePDQ credit to expect and handle full authorization [Nathaniel Talbott]
+* Add Barclays ePDQ Gateway [Nathaniel Talbott]
+* Add default fixture for Garanti and don't use fixture for Garanti [cody]
+* Add cms param for ePay [ePay]
+* Add Valitor Integration [Nathaniel Talbott]
+
+== Version 1.10.0 (Jan 20, 2011)
+
+* PayPal Express: Support returning payer phone number [Soleone]
+* Fix ePay to correctly send order number [Soleone]
+* Add BluePay Gateway [Nathaniel Talbott]
+* Add Quantum Gateway [Joshua Lippiner]
+* Add iDEAL/Rabobank gateway [Jonathan Rudenberg]
+* SagePayForm: Added send_email_confirmation (default false) to enable confirmation emails [wisq]
+
+== Version 1.9.4 (Jan 5, 2011)
+
+* Update Garanti gateway to integrate with new API [Selem Delul]
+
+== Version 1.9.3 (December 17, 2010)
+
+* Fix BBS Netaxept to change transaction type from C (for MOTO: mail order telephone order) to M (for credit card orders) [Soleone]
+* Fix Iridium and ePay to work with any object that responds to credit card methods not only ActiveMerchant::CreditCard objects
+
+== Version 1.9.2 (December 9, 2010)
+
+* Add support for PayPal mobile payments [wisq]
+* Add ePay gateway [ePay, Jonathan Rudenberg]
+* Allow access to the raw HTTP response [Jonathan Rudenberg]
+
+== Version 1.9.1 (November 24, 2010)
+
+* PayPal Express and PayPal Pro: Send JPY currency correctly without decimals [Soleone]
+* Netaxept: Make sure password (token) is URL escaped and update remote tests for updated server behavior [Soleone]
+* DirecPay: Add support for additional options in Return class and add convenience method to get transaction status update [Soleone]
+* Add new alias credit_card.brand for credit_card.type and handle the brand correctly in Netaxept [Soleone]
+* Iridium: Do not depend on ExpiryDate class for credit_card [Soleone]
+* PayFlow: Use same timeout of 60 seconds in HTTP header and XML for all requests [Soleone]
+* PayPal Website Payments Pro CA no longer supports American Express cards [Soleone]
+* Updated BIN ranges for Discover to match recent documents [kaunartist]
+
 == Version 1.9.0 (October 14, 2010)
 
 * Add support for DirecPay gateway [Soleone]
-* Add SagePay Form integration gateway [Adrian Irving-Beer]
-* Allow Return class to include a Notification for gateways that treat the direct response as a notification [Adrian Irving-Beer]
+* Add SagePay Form integration gateway [wisq]
+* Allow Return class to include a Notification for gateways that treat the direct response as a notification [wisq]
 * Add support for PayboxDirect gateway [Donald Piret]
 * Add support for SecureNet gateway [Kal]
 * Add support for the Inspire gateway [ryan r. smith]

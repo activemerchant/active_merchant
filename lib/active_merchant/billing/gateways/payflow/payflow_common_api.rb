@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
       def build_request(body, request_type = nil)
         xml = Builder::XmlMarkup.new
         xml.instruct!
-        xml.tag! 'XMLPayRequest', 'Timeout' => 30, 'version' => "2.1", "xmlns" => XMLNS do
+        xml.tag! 'XMLPayRequest', 'Timeout' => timeout.to_s, 'version' => "2.1", "xmlns" => XMLNS do
           xml.tag! 'RequestData' do
             xml.tag! 'Vendor', @options[:login]
             xml.tag! 'Partner', @options[:partner]
