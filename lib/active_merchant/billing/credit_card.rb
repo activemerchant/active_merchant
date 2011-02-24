@@ -215,19 +215,19 @@ module ActiveMerchant #:nodoc:
 
       def validate_card_number #:nodoc:
         if number.blank?
-          errors.add :number, "is required"
+          errors.add :number, :required
         elsif !CreditCard.valid_number?(number)
-          errors.add :number, "is not a valid credit card number"
+          errors.add :number, :invalid
         end
 
         unless errors.on(:number) || errors.on(:type)
-          errors.add :type, "is not the correct card type" unless CreditCard.matching_type?(number, type)
+          errors.add :type, :incorrect unless CreditCard.matching_type?(number, type)
         end
       end
 
       def validate_card_type #:nodoc:
-        errors.add :type, "is required" if type.blank? && number.present?
-        errors.add :type, "is invalid"  unless type.blank? || CreditCard.card_companies.keys.include?(type)
+        errors.add :type, :required if type.blank? && number.present?
+        errors.add :type, :invalid  unless type.blank? || CreditCard.card_companies.keys.include?(type)
       end
 
       def validate_essential_attributes #:nodoc:
@@ -236,34 +236,34 @@ module ActiveMerchant #:nodoc:
       end
 
       def validate_name #:nodoc:
-        errors.add :first_name, "cannot be empty"      if @first_name.blank?
-        errors.add :last_name,  "cannot be empty"      if @last_name.blank?
+        errors.add :first_name, :empty      if @first_name.blank?
+        errors.add :last_name,  :empty      if @last_name.blank?
       end
       
       def validate_expiration_date #:nodoc:
         if @month.to_i.zero? || @year.to_i.zero?
-          errors.add :month, "is required"  if @month.to_i.zero?
-          errors.add :year,  "is required"  if @year.to_i.zero?
+          errors.add :month, :required  if @month.to_i.zero?
+          errors.add :year,  :required  if @year.to_i.zero?
         else
-          errors.add :month,      "is not a valid month" unless valid_month?(@month)
-          errors.add :year,       "expired"              if expired?
-          errors.add :year,       "is not a valid year"  unless expired? || valid_expiry_year?(@year)
+          errors.add :month,      :invalid unless valid_month?(@month)
+          errors.add :year,       :expired              if expired?
+          errors.add :year,       :invalid  unless expired? || valid_expiry_year?(@year)
         end
       end
       
       def validate_switch_or_solo_attributes #:nodoc:
         if %w[switch solo].include?(type)
           unless valid_month?(@start_month) && valid_start_year?(@start_year) || valid_issue_number?(@issue_number)
-            errors.add :start_month,  "is invalid"      unless valid_month?(@start_month)
-            errors.add :start_year,   "is invalid"      unless valid_start_year?(@start_year)
-            errors.add :issue_number, "cannot be empty" unless valid_issue_number?(@issue_number)
+            errors.add :start_month,  :invalid unless valid_month?(@start_month)
+            errors.add :start_year,   :invalid unless valid_start_year?(@start_year)
+            errors.add :issue_number, :empty   unless valid_issue_number?(@issue_number)
           end
         end
       end
 
       def validate_verification_value #:nodoc:
         if CreditCard.requires_verification_value?
-          errors.add :verification_value, "is required" unless verification_value?
+          errors.add :verification_value, :required unless verification_value?
         end
       end
     end

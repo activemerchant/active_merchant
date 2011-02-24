@@ -1,0 +1,38 @@
+en:
+  activemerchant:
+    attributes:
+      check:
+        name: "Name"
+        routing_number: "Routing number"
+        account_number: "Account number"
+        account_holder_type: "Account holder type"
+        account_type: "Account type"
+      credit_card:
+        issue_number: "Issue number"
+        number: "Card number"
+        type: "Card type"
+        first_name: "Last month"
+        last_name: "Last name"
+        month:  "Expire month"
+        year: "Expire year"
+        start_month: "Start month"
+        start_year: "Start year"
+        verification_value: "Verification value"
+    errors:
+      messages: 
+        empty: "can't be empty"
+        expired: "is expired"
+        invalid: "is invalid"
+        required: "is required"
+        must_be_personal_or_business: "must be personal or business"
+        must_be_checking_or_savings: "must be checking or savings"
+        credit_card:
+          attributes:
+            number:
+              invalid: "is not a valid credit card number"
+            type:
+              incorrect: "is not the correct card type"
+            month:
+              invalid: "is not a valid month"
+            year:
+              invalid: "is not a valid year"
