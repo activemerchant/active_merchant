@@ -32,6 +32,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(base)
         @base = base
+        @i18n_key = @base.class.to_s.demodulize.underscore
       end
       
       def count
@@ -42,35 +43,45 @@ module ActiveMerchant #:nodoc:
       # if more than one error is available we will only return the first. If no error is available 
       # we return an empty string
       def on(field)
-        self[field].to_a.first
+        message = [self[field]].flatten.first
+
+        return nil unless message
+
+        if message.is_a?(String)
+          key, default = nil, message
+        else
+          key, default = :"activemerchant.errors.models.#{@i18n_key}.attributes.#{message}", :"activemerchant.errors.messages.#{message}"
+        end
+        
+        I18n.t(key, :default => default)
       end
 
       def add(field, error)
         self[field] ||= []
         self[field] << error
-      end    
+      end
       
       def add_to_base(error)
         add(:base, error)
       end
 
       def each_full
-        full_messages.each { |msg| yield msg }      
+        full_messages.each { |msg| yield msg }
       end
 
       def full_messages
         result = []
-
-        self.each do |key, messages| 
-          if key == 'base'
-            result << "#{messages.first}"
+        
+        self.each do |key, v|
+          if key.to_sym == :base
+            result << "#{self.on(key)}"
           else
-            result << "#{key.to_s.humanize} #{messages.first}"
+            result << "#{I18n.t("activemerchant.attributes.#{@i18n_key}.#{key}", :default => key.to_s.humanize)} #{self.on(key)}"
           end
         end
-
+        
         result
-      end   
-    end  
+      end
+    end
   end
 end

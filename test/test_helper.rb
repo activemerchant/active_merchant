@@ -18,8 +18,8 @@ end
 
 begin
   gem 'actionpack'
-rescue LoadError
-  raise StandardError, "The view tests need ActionPack installed as gem to run"
+rescue LoadError => e
+  raise e, "The view tests need ActionPack installed as gem to run"
 end
 
 require 'action_controller'

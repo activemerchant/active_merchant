@@ -6,9 +6,9 @@ class Dood
   attr_accessor :name, :email, :country
 
   def validate
-    errors.add "name", "cannot be empty" if name.blank?
-    errors.add "email", "cannot be empty" if email.blank?
-    errors.add_to_base "The country cannot be blank" if country.blank?
+    errors.add "name", :empty if name.blank?
+    errors.add "email", :empty if email.blank?
+    errors.add_to_base "The country can't be blank" if country.blank?
   end
 
 end
@@ -46,15 +46,15 @@ class ValidateableTest < Test::Unit::TestCase
 
   def test_messages
     @dood.valid?
-    assert_equal "cannot be empty", @dood.errors.on('name')
-    assert_equal "cannot be empty", @dood.errors.on('email')
+    assert_equal "can't be empty", @dood.errors.on('name')
+    assert_equal "can't be empty", @dood.errors.on('email')
     assert_equal nil, @dood.errors.on('doesnt_exist')
 
   end
 
   def test_full_messages
     @dood.valid?
-    assert_equal ["Email cannot be empty", "Name cannot be empty", "The country cannot be blank"], @dood.errors.full_messages.sort
+    assert_equal ["Email can't be empty", "Name can't be empty", "The country can't be blank"], @dood.errors.full_messages.sort
   end
 
 end
