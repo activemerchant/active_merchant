@@ -8,14 +8,14 @@ module ActiveMerchant #:nodoc:
     # communication between Ogone systems and your e-commerce website.
     #
     # This implementation follows the specification provided in the DirectLink integration
-    # guide version 3.5 (15 November 2010), available here:
+    # guide version 4.0 (24 February 2011), available here:
     # https://secure.ogone.com/ncol/Ogone_DirectLink_EN.pdf
     #
     # It also features aliases, which allow to store/unstore credit cards, as specified in
-    # the Alias Manager Option guide version 2.5 (15 November 2010) available here:
+    # the Alias Manager Option guide version 3.0 (24 February 2011) available here:
     # https://secure.ogone.com/ncol/Ogone_Alias_EN.pdf
     #
-    # It was last tested on Release 04.86 of Ogone DirectLink + AliasManager (15 November 2010).
+    # It was last tested on Release 04.87 of Ogone DirectLink + AliasManager (24 February 2011).
     #
     # For any questions or comments, please contact Nicolas Jacobeus (nj@belighted.com) or Sébastien Grosjean (public@zencocoon.com).
     #
