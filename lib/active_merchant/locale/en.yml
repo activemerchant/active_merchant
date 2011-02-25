@@ -26,6 +26,7 @@ en:
         required: "is required"
         must_be_personal_or_business: "must be personal or business"
         must_be_checking_or_savings: "must be checking or savings"
+      models:
         credit_card:
           attributes:
             number:
