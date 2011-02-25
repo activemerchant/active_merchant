@@ -43,16 +43,16 @@ module ActiveMerchant #:nodoc:
       # if more than one error is available we will only return the first. If no error is available 
       # we return an empty string
       def on(field)
-        message = [self[field]].flatten.first
+        type = [self[field]].flatten.first
 
-        return nil unless message
+        return nil unless type
 
-        if message.is_a?(String)
-          key, default = nil, message
+        if type.is_a?(String)
+          key, default = nil, type
         else
-          key, default = :"activemerchant.errors.models.#{@i18n_key}.attributes.#{message}", :"activemerchant.errors.messages.#{message}"
+          key, default = :"activemerchant.errors.models.#{@i18n_key}.attributes.#{field}.#{type}", :"activemerchant.errors.messages.#{type}"
         end
-        
+
         I18n.t(key, :default => default)
       end
 
