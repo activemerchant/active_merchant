@@ -11,7 +11,7 @@ en:
         issue_number: "Issue number"
         number: "Card number"
         type: "Card type"
-        first_name: "Last month"
+        first_name: "First name"
         last_name: "Last name"
         month:  "Expire month"
         year: "Expire year"
