@@ -77,6 +77,10 @@ exact:
   login: "A00427-01" 
   password: testus
 
+federated_canada:
+  login: demo
+  password: password
+
 first_pay:
   login:
   password:

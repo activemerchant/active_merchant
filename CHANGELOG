@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Merge Federated Canada gateway [ntalbott]
+
 == Version 1.11.0 (Feb 11, 2011)
 
 * Bump dependency for activesupport from 2.3.2 to 2.3.8 [Soleone]
