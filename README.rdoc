@@ -41,6 +41,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {NetRegistry}[http://www.netregistry.com.au] - AU
 * {NELiX TransaX Gateway}[http://www.nelixtransax.com] - US
 * {NETbilling}[http://www.netbilling.com] - US
+* {NMI}[http://nmi.com/] - US
 * {Ogone DirectLink}[http://www.ogone.com] - BE, DE, FR, NL, AT, CH
 * {PayBox Direct}[http://www.paybox.com] - FR
 * {PayJunction}[http://www.payjunction.com/] - US

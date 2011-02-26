@@ -146,6 +146,10 @@ netbilling:
 net_registry:
   login: X
   password: Y
+
+nmi:
+  login: demo
+  password: password
   
 ogone:
   login: LOGIN
