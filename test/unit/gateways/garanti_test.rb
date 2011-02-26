@@ -37,8 +37,16 @@ class GarantiTest < Test::Unit::TestCase
   end
 
   def test_character_normalization
-    assert_equal 'ABCCDEFGGHIIJKLMNOOPRSSTUUVYZ', @gateway.send(:normalize, 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ')
-    assert_equal 'abccdefgghiijklmnooprsstuuvyz', @gateway.send(:normalize, 'abcçdefgğhıijklmnoöprsştuüvyz')
+    if ActiveSupport::Inflector.method(:transliterate).arity == -2
+      assert_equal 'ABCCDEFGGHIIJKLMNOOPRSSTUUVYZ', @gateway.send(:normalize, 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ')
+      assert_equal 'abccdefgghiijklmnooprsstuuvyz', @gateway.send(:normalize, 'abcçdefgğhıijklmnoöprsştuüvyz')
+    elsif RUBY_VERSION >= '1.9'
+      assert_equal 'ABCDEFGHIJKLMNOPRSTUVYZ', @gateway.send(:normalize, 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ')
+      assert_equal 'abcdefghijklmnoprstuvyz', @gateway.send(:normalize, 'abcçdefgğhıijklmnoöprsştuüvyz')
+    else
+      assert_equal 'ABCCDEFGGHIIJKLMNOOPRSSTUUVYZ', @gateway.send(:normalize, 'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ')
+      assert_equal 'abccdefgghijklmnooprsstuuvyz', @gateway.send(:normalize, 'abcçdefgğhıijklmnoöprsştuüvyz')
+    end
   end
 
   private
