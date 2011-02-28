@@ -81,6 +81,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {2 Checkout}[http://www.2checkout.com]
 * {Banca Sella GestPay}[https://www.sella.it/banca/ecommerce/gestpay/gestpay.jsp]
 * {Chronopay}[http://www.chronopay.com]
+* {Direct-eBanking / sofortueberweisung.de by Payment-Networks AG}[https://www.payment-network.com/deb_com_en/merchantarea/home] - DE, AT, CH, BE, UK, NL
 * {DirecPay}[http://www.timesofmoney.com/direcpay/jsp/home.jsp]
 * {HiTRUST}[http://www.hitrust.com.hk/]
 * {Moneybookers}[http://www.moneybookers.com]
