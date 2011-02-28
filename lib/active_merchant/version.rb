@@ -1,3 +1,3 @@
 module ActiveMerchant
-  VERSION = "1.11.0-merchant-warrior"
+  VERSION = "1.11.1"
 end
