@@ -426,3 +426,9 @@ garanti:
   
 direc_pay:
   mid: 200904281000001
+
+merchant_warrior:
+  merchant_uuid: '4b6bb68c75487'
+  api_key: 'jwcd0uz1'
+  api_passphrase: 'k9hflvig'
+  
