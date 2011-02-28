@@ -65,15 +65,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        post.merge!('customerName' => options[:address[:name]])
+        post.merge!('customerName' => options[:address][:name])
       end
 
       def add_address(post, creditcard, options)
-        post.merge!('customerCountry' => options[:address[:country]],
-                    'customerState' => options[:address[:state]],
-                    'customerCity' => options[:address[:city]],
-                    'customerAddress' => options[:address[:address1]],
-                    'customerPostCode' => options[:address[:zip]])
+        post.merge!('customerCountry' => options[:address][:country],
+                    'customerState' => options[:address][:state],
+                    'customerCity' => options[:address][:city],
+                    'customerAddress' => options[:address][:address1],
+                    'customerPostCode' => options[:address][:zip])
       end
 
       def add_product(post, options)

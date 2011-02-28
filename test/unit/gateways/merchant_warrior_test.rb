@@ -18,12 +18,23 @@ class MerchantWarriorTest < Test::Unit::TestCase
     @failure_amount = '100.33'
 
     @options = {
+      :address => {
+        :name => 'Longbob Longsen',
+        :country => 'AU',
+        :state => 'Queensland',
+        :city => 'Brisbane',
+        :address1 => '123 test st',
+        :zip => '4000'
+      },
+      :transaction_product => 'TestProduct',
       :credit_amount => @success_amount
     }
+
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    puts @options[:address]
+		@gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(@success_amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_equal 'Transaction approved', response.params["response_message"]
