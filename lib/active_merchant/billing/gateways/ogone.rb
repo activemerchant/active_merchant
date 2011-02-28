@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
     #   puts response.message       # Retrieve the message returned by Ogone
     #   puts response.authorization # Retrieve the unique transaction ID returned by Ogone
     #
-    #   To use the alias feature, simply add :alias in the options hash:
+    #   To use the alias feature, simply add :store in the options hash:
     #
     #   gateway.purchase(1000, creditcard,          :order_id => "1", :store => "myawesomecustomer") # associates the alias to that creditcard
     #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2") # You can use the alias instead of the creditcard for subsequent orders
