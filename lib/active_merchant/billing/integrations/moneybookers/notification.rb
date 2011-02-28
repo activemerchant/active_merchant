@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def status
-	    params['status']
+            params['status']
           end
 
           def item_id
@@ -73,17 +73,17 @@ module ActiveMerchant #:nodoc:
 
           # Was this a test transaction?
           def test?
-            nil
+            false
           end
 
           # Acknowledge the transaction to MoneyBooker. This method has to be called after a new 
-          # apc arrives. It will verify that all the information we received are correct and will return a
-          # ok or a fail. 
+          # apc arrives. It will verify that all the information we received is correct and will return a
+          # ok or a fail.
           # 
           # Example:
           # 
           #   def ipn
-          #     notify = MoneyBookerNotification.new(request.raw_post)
+          #     notify = Moneybookers::Notification.new(request.raw_post)
           #
           #     if notify.acknowledge('secretpass')
           #       ... process order ... if notify.complete?
@@ -91,7 +91,8 @@ module ActiveMerchant #:nodoc:
           #       ... log possible hacking attempt ...
           #     end
           def acknowledge(secret = '')
-            md5sig == Digest::MD5.hexdigest(merchant_id + transaction_id + Digest::MD5.hexdigest(secret).upcase + gross + currency + status).upcase
+            fields = [merchant_id, transaction_id, Digest::MD5.hexdigest(secret).upcase, gross, currency, status].join
+            md5sig == Digest::MD5.hexdigest(fields).upcase
           end
         end
       end
