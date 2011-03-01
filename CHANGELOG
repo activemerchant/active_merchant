@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.12.0 (Mar 1, 2011)
+
 * DirecPay: Send phone number as mobile phone by default [Soleone]
 * Support sending line items for PayPal Express transactions [Jonathan Rudenberg]
 * Update PayPal Express XML format to latest version [Jonathan Rudenberg]
