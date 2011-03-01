@@ -70,10 +70,18 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  def test_addcard
-    assert response = @gateway.addcard(@token_credit_card)
+  def test_successful_token_purchase
+    assert response = @gateway.token_addcard(@token_credit_card)
     assert_instance_of Response, response
+    assert_equal 'Operation successful', response.params["response_message"]
     assert_success response
+
+		card_id = response.params["card_id"]
+		card_key = response.params["card_key"]
+		card_replace = @gateway.card_replace_key
+		puts card_replace
+		
+		assert response = @gateway.token_processcard(@success_amount, card_id, card_key, card_replace, @options)
   end
 
 end

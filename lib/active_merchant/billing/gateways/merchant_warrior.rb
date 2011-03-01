@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
 				post = {}
 				add_product(post, options)
 				add_creditcard(post, creditcard)
-				add_address(post, creditcard, options)
+				add_address(post, options)
 				add_customer_data(post, options)
 
 				commit('processCard', money, post)
@@ -58,13 +58,33 @@ module ActiveMerchant #:nodoc:
 							 })
 			end
 
-			def addcard(creditcard)
+			def token_addcard(creditcard)
 				month = sprintf '%02d', creditcard.month
 				token_commit('addCard', {
 										'cardName'	=> creditcard.name,
 										'cardNumber' => creditcard.number,
 										'cardExpiryMonth' => month,
 										'cardExpiryYear' => creditcard.year})
+			end
+
+
+			def token_processcard(money, card_id, card_key, key_replace, options = {})
+				post = {}
+				add_product(post, options)
+				add_address(post, options)
+				add_customer_data(post, options)
+				post.merge!('cardID' => card_id)
+				post.merge!('cardKey' => card_key)
+				post.merge!('cardKeyReplace' => key_replace)
+				post.merge!('hash' => verification_hash(money))
+				post.merge!('transactionAmount' => money.to_s)
+				post.merge!('transactionCurrency' => currency(money))
+				token_commit('processCard', post)
+			end
+
+			def card_replace_key
+				seed = "--#{rand(10000)}--#{Time.now}--"; 
+				Digest::SHA1.hexdigest(seed)[0,16]
 			end
 
 			private
@@ -81,7 +101,7 @@ module ActiveMerchant #:nodoc:
 				post.merge!('customerName' => options[:address][:name])
 			end
 
-			def add_address(post, creditcard, options)
+			def add_address(post, options)
 				post.merge!('customerCountry' => options[:address][:country],
 										'customerState' => options[:address][:state],
 										'customerCity' => options[:address][:city],
@@ -138,7 +158,15 @@ module ActiveMerchant #:nodoc:
 				Response.new(success?(response), message_from(response), response,
 										 :test => test?)
 			end
-
+			
+			def token_purchase(action, money, parameters)
+				url = test? ? TOKEN_TEST_URL : TOKEN_LIVE_URL
+				data = ssl_post(url + "/" + action, token_purchase_data(money, parameters))
+				response = parse(data)
+				puts response
+				Response.new(success?(response), message_from(response), response,
+										 :test => test?)
+			end
 
 			def message_from(response)
 				response[:responseMessage]
