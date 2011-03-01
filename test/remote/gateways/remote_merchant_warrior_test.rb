@@ -9,8 +9,9 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     @gateway = MerchantWarriorGateway.new(test_values)
 
     @success_amount = '100.00'
-    @token_success_amount = '133.33'
-    @failure_amount = '100.33'
+		# DO NOT USE DECIMALS FOR TOKEN TESTING
+    @token_success_amount = '133.00'
+    @failure_amount = '102.33'
     @credit_card = credit_card('5123456789012346',
                                :month => 5,
                                :year => 2013,
