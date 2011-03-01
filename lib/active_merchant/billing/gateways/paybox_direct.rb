@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       LIVE_URL_BACKUP = 'https://ppps1.paybox.com/PPPS.php'
 
       # Payment API Version
-      API_VERSION = '00104'
+      API_VERSION = '00103'
 
       # Transactions hash
       TRANSACTIONS = {
