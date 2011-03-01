@@ -16,6 +16,12 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
                                :verification_value => '123',
                                :type => 'master')
 
+    @token_credit_card = credit_card('5123456789012346',
+                               :month => 05,
+                               :year => 13,
+                               :verification_value => '123',
+                               :type => 'master')
+
     @options = {
       :address => {
         :name => 'Longbob Longsen',
@@ -62,6 +68,12 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_equal 'MW - 011:Invalid transactionID', response.params["response_message"]
     assert_failure response
+  end
+
+  def test_addcard
+    assert response = @gateway.addcard(@token_credit_card)
+    assert_instance_of Response, response
+    assert_success response
   end
 
 end

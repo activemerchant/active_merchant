@@ -33,7 +33,6 @@ class MerchantWarriorTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    puts @options[:address]
 		@gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(@success_amount, @credit_card, @options)
     assert_instance_of Response, response
