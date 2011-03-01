@@ -67,7 +67,6 @@ module ActiveMerchant #:nodoc:
 										'cardExpiryYear' => creditcard.year})
 			end
 
-
 			def token_processcard(money, card_id, card_key, key_replace, options = {})
 				post = {}
 				add_product(post, options)
@@ -154,7 +153,6 @@ module ActiveMerchant #:nodoc:
 				url = test? ? TOKEN_TEST_URL : TOKEN_LIVE_URL
 				data = ssl_post(url + "/" + action, token_data(parameters))
 				response = parse(data)
-				puts response
 				Response.new(success?(response), message_from(response), response,
 										 :test => test?)
 			end
@@ -163,7 +161,6 @@ module ActiveMerchant #:nodoc:
 				url = test? ? TOKEN_TEST_URL : TOKEN_LIVE_URL
 				data = ssl_post(url + "/" + action, token_purchase_data(money, parameters))
 				response = parse(data)
-				puts response
 				Response.new(success?(response), message_from(response), response,
 										 :test => test?)
 			end

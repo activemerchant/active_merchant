@@ -9,6 +9,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     @gateway = MerchantWarriorGateway.new(test_values)
 
     @success_amount = '100.00'
+    @token_success_amount = '133.33'
     @failure_amount = '100.33'
     @credit_card = credit_card('5123456789012346',
                                :month => 5,
@@ -79,9 +80,9 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 		card_id = response.params["card_id"]
 		card_key = response.params["card_key"]
 		card_replace = @gateway.card_replace_key
-		puts card_replace
 		
-		assert response = @gateway.token_processcard(@success_amount, card_id, card_key, card_replace, @options)
+		assert response = @gateway.token_processcard(@token_success_amount, card_id, card_key, card_replace, @options)
+		assert_equal 'Transaction approved', response.params["response_message"]
   end
 
 end
