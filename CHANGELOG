@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Add InvoiceID and OrderDescription to PayPal Express Authorize and Capture [cody]
 * Merge QBMS gateway [ntalbott]
 * Add support for NMI gateway [ntalbott]
 * Make fully compatible with Rails 2 & 3, and Ruby 1.8 & 1.9 [ntalbott]
