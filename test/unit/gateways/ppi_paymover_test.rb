@@ -3,8 +3,7 @@ require 'test_helper'
 class PpiPaymoverTest < Test::Unit::TestCase
   def setup
     @gateway = PpiPaymoverGateway.new(
-                 :login => 'login',
-                 :password => 'password'
+                 :login => 'login'
                )
 
     @credit_card = credit_card
