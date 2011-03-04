@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
         mattr_accessor :service_url
         self.service_url = 'https://secure.quickpay.dk/form/'
 
-        def self.notification(post)
+        def self.notification(post, options = {})
           Notification.new(post)
         end  
       end

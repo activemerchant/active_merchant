@@ -25,8 +25,8 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        def self.notification(post)
-          Notification.new(post)
+        def self.notification(post, options = {})
+          Notification.new(post, options)
         end  
       end
     end
