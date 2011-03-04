@@ -148,10 +148,10 @@ class RemoteValitorIntegrationTest < Test::Unit::TestCase
   end
   
   def return_from(uri)
-    ActiveMerchant::Billing::Integrations::Valitor.return(uri.split('?').last, :password => @password)
+    ActiveMerchant::Billing::Integrations::Valitor.return(uri.split('?').last, :credential2 => @password)
   end
   
   def notification_from(request)
-    ActiveMerchant::Billing::Integrations::Valitor.notification(request.params["QUERY_STRING"], :password => @password)
+    ActiveMerchant::Billing::Integrations::Valitor.notification(request.params["QUERY_STRING"], :credential2 => @password)
   end
 end

@@ -33,12 +33,12 @@ class ValitorNotificationTest < Test::Unit::TestCase
   end
   
   def test_validity_check
-    valid = Valitor::Notification.new(http_raw_query, :password => 'password')
+    valid = Valitor::Notification.new(http_raw_query, :credential2 => 'password')
     assert valid.valid?
     assert valid.success?
     assert valid.complete?
     
-    invalid = Valitor::Notification.new(http_raw_query, :password => 'bogus')
+    invalid = Valitor::Notification.new(http_raw_query, :credential2 => 'bogus')
     assert !invalid.valid?
     assert !invalid.success?
     assert !invalid.complete?

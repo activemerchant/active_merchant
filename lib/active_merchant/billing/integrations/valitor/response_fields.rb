@@ -74,9 +74,13 @@ module ActiveMerchant #:nodoc:
             params['Athugasemdir']
           end
           
+          def password
+            @options[:credential2]
+          end
+          
           def valid?
             unless @valid
-              @valid = if(security_number = @options[:password])
+              @valid = if(security_number = password)
                 (params['RafraenUndirskriftSvar'] == Digest::MD5.hexdigest("#{security_number}#{order}"))
               else
                 true
