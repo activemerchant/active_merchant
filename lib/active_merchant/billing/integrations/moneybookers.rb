@@ -13,8 +13,8 @@ module ActiveMerchant #:nodoc:
           self.production_url
         end
 
-        def self.notification(post)
-          Notification.new(post)
+        def self.notification(post, options)
+          Notification.new(post, options)
         end
 
       end

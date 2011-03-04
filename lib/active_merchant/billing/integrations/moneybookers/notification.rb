@@ -6,9 +6,14 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Moneybookers
         class Notification < ActiveMerchant::Billing::Integrations::Notification
-          include PostsData
 
-          # was the transaction comlete?
+          def initialize(data, options)
+            if options[:credential2].nil?
+              raise ArgumentError, "You need to provide the md5 secret as the option :credential2 to verify that the notification originated from Moneybookers"
+            end
+            super
+          end
+          
           def complete?
             status == "2"
           end
@@ -71,22 +76,27 @@ module ActiveMerchant #:nodoc:
           def test?
             false
           end
-
+          
+          def secret
+            @options[:credential2]
+          end
+          
           # Acknowledge the transaction to MoneyBooker. This method has to be called after a new 
           # apc arrives. It will verify that all the information we received is correct and will return a
-          # ok or a fail.
+          # ok or a fail. The secret (second credential) has to be provided in the parameter :credential2
+          # when instantiating the Notification object.
           # 
           # Example:
           # 
           #   def ipn
-          #     notify = Moneybookers::Notification.new(request.raw_post)
+          #     notify = Moneybookers.notification(request.raw_post, :credential2 => 'secret')
           #
-          #     if notify.acknowledge('secretpass')
+          #     if notify.acknowledge
           #       ... process order ... if notify.complete?
           #     else
           #       ... log possible hacking attempt ...
           #     end
-          def acknowledge(secret = '')
+          def acknowledge
             fields = [merchant_id, transaction_id, Digest::MD5.hexdigest(secret).upcase, gross, currency, status].join
             md5sig == Digest::MD5.hexdigest(fields).upcase
           end
