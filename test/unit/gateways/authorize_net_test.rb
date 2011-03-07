@@ -75,14 +75,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
   
   def test_add_duplicate_window_without_duplicate_window
     result = {}
-    ActiveMerchant::Billing::AuthorizeNetGateway.duplicate_window = nil
+    @gateway.class.duplicate_window = nil
     @gateway.send(:add_duplicate_window, result)
     assert_nil result[:duplicate_window]
   end
   
   def test_add_duplicate_window_with_duplicate_window
     result = {}
-    ActiveMerchant::Billing::AuthorizeNetGateway.duplicate_window = 0
+    @gateway.class.duplicate_window = 0
     @gateway.send(:add_duplicate_window, result)
     assert_equal 0, result[:duplicate_window]
   end
@@ -159,6 +159,26 @@ class AuthorizeNetTest < Test::Unit::TestCase
     
     response = @gateway.purchase(@amount, @credit_card)
     assert_equal 'M', response.cvv_result['code']
+  end
+
+  def test_message_from
+    @gateway.class_eval {
+      public :message_from
+    }
+    result = {
+      :response_code => 2,
+      :card_code => 'N',
+      :avs_result_code => 'A',
+      :response_reason_code => '27',
+      :response_reason_text => 'Failure.',
+    }
+    assert_equal "No Match", @gateway.message_from(result)
+
+    result[:card_code] = 'M'
+    assert_equal "Street address matches, but 5-digit and 9-digit postal code do not match.", @gateway.message_from(result)
+
+    result[:response_reason_code] = '22'
+    assert_equal "Failure", @gateway.message_from(result)
   end
   
   # ARB Unit Tests

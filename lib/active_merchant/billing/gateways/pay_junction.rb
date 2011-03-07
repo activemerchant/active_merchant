@@ -101,7 +101,7 @@ module ActiveMerchant #:nodoc:
 
       class_inheritable_accessor :test_url, :live_url
 
-      self.test_url = "https://demo.payjunction.com/quick_link"
+      self.test_url = "https://www.payjunctionlabs.com/quick_link"
       self.live_url = "https://payjunction.com/quick_link"
 
       TEST_LOGIN = 'pj-ql-01'
@@ -207,22 +207,22 @@ module ActiveMerchant #:nodoc:
           :transaction_amount => amount(money),
           :transaction_id => authorization
         }
-                                                  
+
         commit('CREDIT', parameters)
       end
-      
+
       # Cancel a transaction that has been charged but has not yet made it
       # through the batch process.
-      def void(money, authorization, options = {})
+      def void(authorization, options = {})
         parameters = {
           :transaction_id => authorization,
           :posture => 'void'
         }
-        
-        add_optional_fields(parameters, options)                                          
+
+        add_optional_fields(parameters, options)
         commit('update', parameters)
       end
-      
+
       # Set up a sale that will be made on a regular basis for the same amount 
       # (ex. $20 a month for 12 months)
       #

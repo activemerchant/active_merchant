@@ -95,7 +95,7 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'NC', address['state']
     assert_equal '23456', address['zip']
     assert_equal 'US', address['country']
-    assert_nil address['phone']
+    assert_equal '416-618-9984', address['phone']
   end
   
   def test_authorization
@@ -117,23 +117,82 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_uk_partner
     assert_equal 'PayPalUk', PayflowExpressUkGateway.partner
   end
+
+  def test_includes_description
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :description => 'a description' }))
+
+    assert_equal 'a description', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:OrderDescription').text
+  end
+
+  def test_includes_order_id
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :order_id => '12345' }))
+
+    assert_equal '12345', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:InvoiceID').text
+  end
+
+  def test_includes_correct_payment_action
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { }))
+
+    assert_equal 'SetExpressCheckout', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentAction').text
+  end
   
+  def test_does_not_include_items_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
+
+    assert_nil REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem')
+  end
+
+  def test_items_are_included_if_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:currency => 'GBP', :items => [
+                                            {:name => 'item one', :description => 'item one description', :amount => 10000, :number => 1, :quantity => 3},
+                                            {:name => 'item two', :description => 'item two description', :amount => 20000, :number => 2, :quantity => 4}
+    ]}))
+
+    assert_equal 'item one', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Name').text
+    assert_equal 'item one description', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Description').text
+    assert_equal '100.00', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Amount').text
+    assert_equal 'GBP', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Amount').attribute('currencyID').value
+    assert_equal '1', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Number').text
+    assert_equal '3', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Quantity').text
+
+    assert_equal 'item two', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Name')[1].text
+    assert_equal 'item two description', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Description')[1].text
+    assert_equal '200.00', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Amount')[1].text
+    assert_equal 'GBP', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Amount')[1].attribute('currencyID').value
+    assert_equal '2', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Number')[1].text
+    assert_equal '4', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Quantity')[1].text
+  end
+
   def test_handle_non_zero_amount
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 50, {}))
     
-    assert_equal '0.50', REXML::XPath.first(xml, '//n2:OrderTotal').text
+    assert_equal '0.50', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:OrderTotal').text
   end
   
   def test_handles_zero_amount
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
     
-    assert_equal '1.00', REXML::XPath.first(xml, '//n2:OrderTotal').text
+    assert_equal '1.00', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:OrderTotal').text
   end
   
   def test_amount_format_for_jpy_currency
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/n2:OrderTotal currencyID=.JPY.>1<\/n2:OrderTotal>/)).returns(successful_authorization_response)
     response = @gateway.authorize(100, :token => 'EC-6WS104951Y388951L', :payer_id => 'FWRVKNRRZ3WUC', :currency => 'JPY')
     assert response.success?
+  end
+
+  def test_does_not_add_allow_note_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { }))
+
+    assert_nil REXML::XPath.first(xml, '//n2:AllowNote')
+  end
+
+  def test_adds_allow_note_if_specified
+    allow_notes_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :allow_note => true }))
+    do_not_allow_notes_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :allow_note => false }))
+
+    assert_equal '1', REXML::XPath.first(allow_notes_xml, '//n2:AllowNote').text
+    assert_equal '0', REXML::XPath.first(do_not_allow_notes_xml, '//n2:AllowNote').text
   end
   
   def test_handle_locale_code
@@ -240,6 +299,7 @@ class PaypalExpressTest < Test::Unit::TestCase
           </Address>
         </PayerInfo>
         <InvoiceID xsi:type='xs:string'>1230123</InvoiceID>
+        <ContactPhone>416-618-9984</ContactPhone>
       </GetExpressCheckoutDetailsResponseDetails>
     </GetExpressCheckoutDetailsResponse>
   </SOAP-ENV:Body>

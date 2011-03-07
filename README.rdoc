@@ -13,7 +13,9 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 
 * {Authorize.Net CIM}[http://www.authorize.net/] - US
 * {Authorize.Net}[http://www.authorize.net/] - US
+* {Barclays ePDQ}[http://www.barclaycard.co.uk/business/accepting-payments/epdq-mpi/] - UK
 * {Beanstream.com}[http://www.beanstream.com/] - CA
+* {BluePay}[http://www.bluepay.com/] - US
 * {Braintree}[http://www.braintreepaymentsolutions.com] - US
 * {CardStream}[http://www.cardstream.com/] - GB
 * {CyberSource}[http://www.cybersource.com] - US
@@ -23,6 +25,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {ePay}[http://www.epay.dk/] - DK
 * {eWAY}[http://www.eway.com.au/] - AU
 * {E-xact}[http://www.e-xact.com] - CA, US
+* {Federated Canada}[http://www.federatedcanada.com/] - CA
 * {FirstPay}[http://www.first-pay.com] - US
 * {Garanti Sanal POS}[https://ccpos.garanti.com.tr/ccRaporlar/garanti/ccReports] - US, TR
 * {Inspire}[http://www.inspiregateway.com] - US
@@ -38,6 +41,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {NetRegistry}[http://www.netregistry.com.au] - AU
 * {NELiX TransaX Gateway}[http://www.nelixtransax.com] - US
 * {NETbilling}[http://www.netbilling.com] - US
+* {NMI}[http://nmi.com/] - US
 * {Ogone DirectLink}[http://www.ogone.com] - BE, DE, FR, NL, AT, CH
 * {PayBox Direct}[http://www.paybox.com] - FR
 * {PayJunction}[http://www.payjunction.com/] - US
@@ -53,7 +57,10 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {Protx}[http://www.protx.com] - GB
 * {Psigate}[http://www.psigate.com/] - CA
 * {PSL Payment Solutions}[http://www.paymentsolutionsltd.com/] - GB
+* {Quantum}[http://www.quantumgateway.com] - US
+* {QuickBooks Merchant Services}[http://payments.intuit.com/] - US
 * {Quickpay}[http://quickpay.dk/] - DK
+* {Rabobank Nederland}[http://www.rabobank.nl/] - NL
 * {Realex}[http://www.realexpayments.com/] - IE, GB
 * {Sage Payment Solutions}[http://www.sagepayments.com] - US, CA
 * {Sallie Mae}[http://www.salliemae.com] - US
@@ -76,9 +83,12 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {Chronopay}[http://www.chronopay.com]
 * {DirecPay}[http://www.timesofmoney.com/direcpay/jsp/home.jsp]
 * {HiTRUST}[http://www.hitrust.com.hk/]
+* {Moneybookers}[http://www.moneybookers.com]
 * {Nochex}[http://www.nochex.com]
 * {PayPal Website Payments Standard}[https://www.paypal.com/cgi-bin/webscr?cmd=_wp-standard-overview-outside]
 * {SagePay Form}[http://www.sagepay.com/products_services/sage_pay_go/integration/form]
+* {Valitor}[http://www.valitor.is/] - IS
+* {WorldPay}[http://www.worldpay.com]
 
 == Download
 

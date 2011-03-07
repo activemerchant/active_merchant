@@ -90,6 +90,16 @@ class IridiumTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options)
   end
   
+  def test_use_ducktyping_for_credit_card
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    credit_card = stub(:number => '4242424242424242', :verification_value => '123', :name => "Hans Tester", :year => 2012, :month => 1)
+    
+    assert_nothing_raised do
+      assert_success @gateway.purchase(@amount, credit_card, @options)
+    end
+  end
+  
   private
   
   # Place raw successful response from gateway here

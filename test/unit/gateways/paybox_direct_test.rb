@@ -41,6 +41,11 @@ class PayboxDirectTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_version
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/VERSION=00103/)).returns(successful_purchase_response)
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+  
   private
   
   # Place raw successful response from gateway here
