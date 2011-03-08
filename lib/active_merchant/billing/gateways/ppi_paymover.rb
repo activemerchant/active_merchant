@@ -2,14 +2,16 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PpiPaymoverGateway < Gateway
       API_VERSION = '4'
-      DEBUG = true
+      DEBUG = false
       
-      APPROVED = '1'
+      APPROVED, DECLINED, NOT_POSSIBLE = '1', '100', '6'
+      FRAUD_REVIEW = '8'
       
       DEFAULT_INDUSTRY = 'DIRECT_MARKETING'
       TRANSACTION_CONDITION_CODES = {
         :card_present_swiped => 7,
-        :card_present_keyed => 8,
+        :card_present_swiped_no_sig => 8,
+        :card_present_keyed => 9,
         :debit_card_swiped_w_pin => 60,
         :ebt_card_keyed_w_pin => 61,
         :mail_or_fax_order => 1,
@@ -75,17 +77,66 @@ module ActiveMerchant #:nodoc:
       
       def purchase(money, creditcard, options = {})
         post = {}
+        
+        add_default_options(post, options)
         add_invoice(post, options)
         add_creditcard(post, creditcard)        
         add_address(post, creditcard, options)   
         add_customer_data(post, options)
              
-        commit('sale', money, post)
+        commit('SALE', money, post)
       end                       
     
       def capture(money, authorization, options = {})
-        commit('capture', money, post)
+        post = {:order_id => authorization}
+        add_customer_data(post, options)
+        commit('CAPTURE', money, post)
       end
+
+      # Void a previous transaction
+      #
+      # ==== Parameters
+      #
+      # * <tt>authorization</tt> - The authorization returned from the previous authorize request.
+      def void(authorization, options = {})
+        post = {:order_id => authorization}
+        add_customer_data(post, options)
+        
+        resp = commit('VOID', nil, post)
+        
+        if resp.success?
+          # Attempt the second void (for purchase and auth/capture transactions)
+          second = commit('VOID', nil, post)
+          if second.params['response_code'] == NOT_POSSIBLE
+            # Second transaction wasn't necessary
+            return resp
+          else
+            return second
+          end
+        else
+          return resp
+        end
+      end
+      
+      # Credit an account.
+      #
+      # This transaction is also referred to as a Refund and indicates to the gateway that
+      # money should flow from the merchant to the customer.
+      #
+      # ==== Parameters
+      #
+      # * <tt>money</tt> -- The amount to be credited to the customer as an Integer value in cents.
+      # * <tt>identification</tt> -- The ID of the original transaction against which the credit is being issued. (REQUIRED)
+      # * <tt>options</tt> -- A hash of parameters.
+      def credit(money, identification, options = {})
+        post = { :order_id => identification }
+        add_customer_data(post, options)
+
+        commit('CREDIT', money, post)
+      end
+
+
+      
     
       private                       
       
@@ -191,7 +242,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def fraud_review?(response)
-        return false
+        return response['response_code'] == DECLINED && response['secondary_response_code'] == FRAUD_REVIEW
       end
 
       def message_from(response)
