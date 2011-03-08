@@ -6,6 +6,21 @@ module ActiveMerchant #:nodoc:
       
       APPROVED = '1'
       
+      DEFAULT_INDUSTRY = 'DIRECT_MARKETING'
+      TRANSACTION_CONDITION_CODES = {
+        :card_present_swiped => 7,
+        :card_present_keyed => 8,
+        :debit_card_swiped_w_pin => 60,
+        :ebt_card_keyed_w_pin => 61,
+        :mail_or_fax_order => 1,
+        :telephone_order => 2,
+        :secure_ecommerce => 5,
+        :recurring_payment => 6,
+        :prearranged_payments => 50,
+        :ach_telephone => 51,
+        :ach_web => 52
+      }
+      
       TEST_URL = 'https://etrans.paygateway.com/TransactionManager'
       LIVE_URL = 'https://example.com/live'
       
@@ -31,9 +46,16 @@ module ActiveMerchant #:nodoc:
       # * <tt>:login</tt> -- The PPI Paymover Token (REQUIRED)
       # * <tt>:version_id</tt> -- The version of your application, passed through with request
       # * <tt>:cartridge_type</tt> -- A unique string that identifies your application.  Defaults to "Rails - ActiveMerchant"
+      # * <tt>:industry</tt> -- Set the default industry passed with transactions.  One of "DIRECT_MARKETING", "RETAIL",
+      #                         "LODGING", or "RESTAURANT".  Defaults to "DIRECT MARKETING". You can override this on
+      #                         a per-transaction basis.
+      # * <tt>:condition_code</tt> -- Set the default transaction condition code passed with transactions.  Defaults
+      #                               to 5 (Secure Ecommerce).  You can override this on a per-transaction basis.
       def initialize(options = {})
         requires!(options, :login)
         options[:cartridge_type] ||= "Rails - ActiveMerchant"
+        options[:industry] ||= DEFAULT_INDUSTRY
+        options[:condition_code] ||= TRANSACTION_CONDITION_CODES[:secure_ecommerce]
         
         @options = options
         super
@@ -41,6 +63,8 @@ module ActiveMerchant #:nodoc:
       
       def authorize(money, creditcard, options = {})
         post = {}
+        
+        add_default_options(post, options)
         add_invoice(post, options)
         add_creditcard(post, creditcard)        
         add_address(post, creditcard, options)        
@@ -183,7 +207,6 @@ module ActiveMerchant #:nodoc:
         post[:charge_type]       = action
         post[:transaction_type]  = "CREDIT_CARD"
         post[:cartridge_type]    = @options[:cartridge_type]
-        
 
         request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
         
@@ -195,6 +218,12 @@ module ActiveMerchant #:nodoc:
         
         request
       end
+      
+      def add_default_options(post, options)
+        post[:transaction_condition_code] = options[:condition_code] || @options[:condition_code]
+        post[:industry] = options[:industry] || @options[:industry]
+      end
+      
     end
   end
 end
