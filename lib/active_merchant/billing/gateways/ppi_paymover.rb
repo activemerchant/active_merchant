@@ -48,11 +48,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>:login</tt> -- The PPI Paymover Token (REQUIRED)
       # * <tt>:version_id</tt> -- The version of your application, passed through with request
       # * <tt>:cartridge_type</tt> -- A unique string that identifies your application.  Defaults to "Rails - ActiveMerchant"
-      # * <tt>:industry</tt> -- Set the default industry passed with transactions.  One of "DIRECT_MARKETING", "RETAIL",
-      #                         "LODGING", or "RESTAURANT".  Defaults to "DIRECT MARKETING". You can override this on
-      #                         a per-transaction basis.
-      # * <tt>:condition_code</tt> -- Set the default transaction condition code passed with transactions.  Defaults
-      #                               to 5 (Secure Ecommerce).  You can override this on a per-transaction basis.
+      # * <tt>:industry</tt> -- Set the default industry passed with transactions.  One of "DIRECT_MARKETING", "RETAIL", "LODGING", or "RESTAURANT".  Defaults to "DIRECT MARKETING". You can override this on a per-transaction basis.
+      # * <tt>:condition_code</tt> -- Set the default transaction condition code passed with transactions.  Defaults to 5 (Secure Ecommerce).  You can override this on a per-transaction basis.
       def initialize(options = {})
         requires!(options, :login)
         options[:cartridge_type] ||= "Rails - ActiveMerchant"
