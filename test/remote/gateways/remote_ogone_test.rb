@@ -109,7 +109,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'No pspid', response.message
+    assert_equal 'Some of the data entered is incorrect. please retry.', response.message
   end
 
 end

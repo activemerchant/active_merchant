@@ -8,16 +8,16 @@ module ActiveMerchant #:nodoc:
     # communication between Ogone systems and your e-commerce website.
     #
     # This implementation follows the specification provided in the DirectLink integration
-    # guide version 2.4 (December 2008), available here:
+    # guide version 4.0 (24 February 2011), available here:
     # https://secure.ogone.com/ncol/Ogone_DirectLink_EN.pdf
     #
     # It also features aliases, which allow to store/unstore credit cards, as specified in
-    # the Alias Manager Option guide version 2.2 available here:
+    # the Alias Manager Option guide version 3.0 (24 February 2011) available here:
     # https://secure.ogone.com/ncol/Ogone_Alias_EN.pdf
     #
-    # It was last tested on Release 04.79 of Ogone e-Commerce (dated 11/02/2009).
+    # It was last tested on Release 04.87 of Ogone DirectLink + AliasManager (24 February 2011).
     #
-    # For any questions or comments, please contact Nicolas Jacobeus (nj@belighted.com).
+    # For any questions or comments, please contact Nicolas Jacobeus (nj@belighted.com) or Sébastien Grosjean (public@zencocoon.com).
     #
     # == Example use:
     #
@@ -25,7 +25,8 @@ module ActiveMerchant #:nodoc:
     #               :login     => "my_ogone_psp_id",
     #               :user      => "my_ogone_user_id",
     #               :password  => "my_ogone_pswd",
-    #               :signature => "my_ogone_sha1_signature" # extra security, only if you configured your Ogone environment so
+    #               :signature => "my_ogone_sha1_signature", # extra security, only if you configured your Ogone environment so
+    #               :created_after_10_may_2010 => true # must be set to true if your account was created after 10 May 2010. This is due to the new SHA-1 signature process
     #            )
     #
     #   # set up credit card obj as in main ActiveMerchant example
@@ -47,10 +48,10 @@ module ActiveMerchant #:nodoc:
     #   puts response.message       # Retrieve the message returned by Ogone
     #   puts response.authorization # Retrieve the unique transaction ID returned by Ogone
     #
-    #   To use the alias feature, simply add :alias in the options hash:
+    #   To use the alias feature, simply add :store in the options hash:
     #
-    #   gateway.purchase(1000, creditcard, :order_id => "1", :alias => "myawesomecustomer") # associates the alias to that creditcard
-    #   gateway.purchase(2000, nil,        :order_id => "2", :alias => "myawesomecustomer") # don't need to know the creditcard for subsequent orders
+    #   gateway.purchase(1000, creditcard,          :order_id => "1", :store => "myawesomecustomer") # associates the alias to that creditcard
+    #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2") # You can use the alias instead of the creditcard for subsequent orders
     #
     class OgoneGateway < Gateway
 
@@ -262,11 +263,17 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         add_pair parameters, 'Operation' , action
-        if @options[:signature] # the user wants a SHA-1 signature
-          string = ['orderID','amount','currency','CARDNO','PSPID','Operation','ALIAS'].map{|s|parameters[s]}.join + @options[:signature]
-          add_pair parameters, 'SHASign' , Digest::SHA1.hexdigest(string)
-        end
+        add_signature(parameters) if @options[:signature] # the user wants a SHA-1 signature
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+      end
+
+      def add_signature(parameters)
+        if @options[:created_after_10_may_2010]
+          string = parameters.keys.sort{|a, b| a.upcase <=> b.upcase }.map{|s| "#{s.upcase}=#{parameters[s]}" unless parameters[s].to_s.blank? }.join(@options[:signature]) + @options[:signature]
+        else
+          string = ['orderID','amount','currency','CARDNO','PSPID','Operation','ALIAS'].map{|s|parameters[s]}.join + @options[:signature]
+        end
+        add_pair parameters, 'SHASign' , Digest::SHA1.hexdigest(string)
       end
 
       def add_pair(post, key, value, options = {})
