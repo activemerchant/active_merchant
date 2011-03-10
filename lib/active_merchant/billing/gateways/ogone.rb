@@ -25,8 +25,9 @@ module ActiveMerchant #:nodoc:
     #               :login     => "my_ogone_psp_id",
     #               :user      => "my_ogone_user_id",
     #               :password  => "my_ogone_pswd",
-    #               :signature => "my_ogone_sha1_signature", # extra security, only if you configured your Ogone environment so
-    #               :created_after_10_may_2010 => true # must be set to true if your account was created after 10 May 2010. This is due to the new SHA-1 signature process
+    #               :created_after_10_may_2010 => true      # must be set to true if your account was created after 10 May 2010. This is due to the new SHA-1/256/512 signature process
+    #               :signature => "my_ogone_sha_signature", # extra security, only if you configured your Ogone environment so
+    #               :signature_encryptor => "sha512",       # can be "sha1" (default), "sha256" or "sha512", must be the same as the one configured in your Ogone account
     #            )
     #
     #   # set up credit card obj as in main ActiveMerchant example
@@ -109,7 +110,7 @@ module ActiveMerchant #:nodoc:
 
       # Complete a previously authorized transaction.
       def capture(money, authorization, options = {})
-        post = {}        
+        post = {}
         add_authorization(post, reference_from(authorization))
         add_invoice(post, options)
         add_customer_data(post, options)
@@ -125,7 +126,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Credit the specified account by a specific amount.
-      def credit(money, identification_or_credit_card, options = {})        
+      def credit(money, identification_or_credit_card, options = {})
         if reference_transaction?(identification_or_credit_card)
           # Referenced credit: refund of a settled transaction
           perform_reference_credit(money, identification_or_credit_card, options)
@@ -133,29 +134,30 @@ module ActiveMerchant #:nodoc:
           perform_non_referenced_credit(money, identification_or_credit_card, options)
         end
       end
-      
+
       def test?
         @options[:test] || super
       end
-      
+
       private
+      
       def reference_from(authorization)
         authorization.split(";").first
       end
-      
+
       def reference_transaction?(identifier)
-        return false unless identifier.is_a?(String) 
+        return false unless identifier.is_a?(String)
         reference, action = identifier.split(";")
         !action.nil?
       end
-      
+
       def perform_reference_credit(money, payment_target, options = {})
         post = {}
         add_authorization(post, reference_from(payment_target))
         add_money(post, money, options)
-        commit('RFD', post)        
+        commit('RFD', post)
       end
-      
+
       def perform_non_referenced_credit(money, payment_target, options = {})
         # Non-referenced credit: acts like a reverse purchase
         post = {}
@@ -166,7 +168,7 @@ module ActiveMerchant #:nodoc:
         add_money(post, money, options)
         commit('RFD', post)
       end
-      
+
       def add_payment_source(post, payment_source, options)
         if payment_source.is_a?(String)
           add_alias(post, payment_source)
@@ -175,18 +177,18 @@ module ActiveMerchant #:nodoc:
           add_alias(post, options[:store])
           add_creditcard(post, payment_source)
         end
-      end  
-      
+      end
+
       def add_eci(post, eci)
         add_pair post, 'ECI', eci
       end
-      
+
       def add_alias(post, _alias)
-        add_pair post, 'ALIAS',   _alias
+        add_pair post, 'ALIAS', _alias
       end
 
       def add_authorization(post, authorization)
-        add_pair post, 'PAYID',   authorization
+        add_pair post, 'PAYID', authorization
       end
 
       def add_money(post, money, options)
@@ -225,10 +227,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        add_pair parameters, 'PSPID',      @options[:login]
-        add_pair parameters, 'USERID',     @options[:user]
-        add_pair parameters, 'PSWD',       @options[:password]
-        url = URLS[test? ? :test : :production][parameters['PAYID'] ? :maintenance : :order ]
+        add_pair parameters, 'PSPID',  @options[:login]
+        add_pair parameters, 'USERID', @options[:user]
+        add_pair parameters, 'PSWD',   @options[:password]
+        url = URLS[test? ? :test : :production][parameters['PAYID'] ? :maintenance : :order]
+
         response = parse(ssl_post(url, post_data(action, parameters)))
         options = { :authorization => [response["PAYID"], action].join(";"),
                     :test => test?,
@@ -236,19 +239,19 @@ module ActiveMerchant #:nodoc:
                     :cvv_result => CVV_MAPPING[response["CVCCheck"]] }
         Response.new(successful?(response), message_from(response), response, options)
       end
-      
+
       def successful?(response)
         response["NCERROR"] == "0"
       end
 
       def message_from(response)
-        if successful?(response) 
+        if successful?(response)
           SUCCESS_MESSAGE
         else
           format_error_message(response["NCERRORPLUS"])
         end
       end
-      
+
       def format_error_message(message)
         raw_message = message.to_s.strip
         case raw_message
@@ -262,22 +265,33 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, parameters = {})
-        add_pair parameters, 'Operation' , action
+        add_pair parameters, 'Operation', action
         add_signature(parameters) if @options[:signature] # the user wants a SHA-1 signature
+
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
       def add_signature(parameters)
-        if @options[:created_after_10_may_2010]
-          string = parameters.keys.sort{|a, b| a.upcase <=> b.upcase }.map{|s| "#{s.upcase}=#{parameters[s]}" unless parameters[s].to_s.blank? }.join(@options[:signature]) + @options[:signature]
+        sha_encryptor = case @options[:signature_encryptor]
+        when 'sha256'
+          Digest::SHA256
+        when 'sha512'
+          Digest::SHA512
         else
-          string = ['orderID','amount','currency','CARDNO','PSPID','Operation','ALIAS'].map{|s|parameters[s]}.join + @options[:signature]
+          Digest::SHA1
         end
-        add_pair parameters, 'SHASign' , Digest::SHA1.hexdigest(string)
+
+        string_to_digest = if @options[:created_after_10_may_2010]
+          parameters.keys.sort { |a, b| a.upcase <=> b.upcase }.map { |s| "#{s.upcase}=#{parameters[s]}" }.join(@options[:signature])
+        else
+          %w[orderID amount currency CARDNO PSPID Operation ALIAS].map { |key| parameters[key] }.join
+        end + @options[:signature]
+        # puts string_to_digest
+        add_pair parameters, 'SHASign', sha_encryptor.hexdigest(string_to_digest).upcase
       end
 
-      def add_pair(post, key, value, options = {})
-        post[key] = value if !value.blank? || options[:required]
+      def add_pair(post, key, value)
+        post[key] = value if !value.blank?
       end
 
     end

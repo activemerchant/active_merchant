@@ -164,6 +164,7 @@ ogone:
   user: USER
   password: PASSWORD
   signature: SIGNATURE
+  signature_encryptor: sha1
   created_after_10_may_2010: true # False by default to remain backward compatible with accounts created before 10 May 2010
 
 paybox_direct:
