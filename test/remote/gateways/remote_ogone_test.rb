@@ -5,8 +5,9 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def setup
     @gateway = OgoneGateway.new(fixtures(:ogone))
     @amount = 100
-    @credit_card =   credit_card('4000100011112224')
-    @declined_card = credit_card('1111111111111111')
+    @credit_card     = credit_card('4000100011112224')
+    @declined_card   = credit_card('1111111111111111')
+    @credit_card_3ds = credit_card('4000000000000002', :verification_value => '111')
     @options = {
       :order_id => generate_unique_id[0...30],
       :billing_address => address,
@@ -36,6 +37,17 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
+  
+  # # BEWARE: The 3D Secure request can only be "tested" using a production environment!!!
+  # # CURRENT TEST STATE AS OF Wednesday 09 March 2011: NOT TESTED (by rymai)
+  # def test_successful_purchase_with_3d_secure
+  #   assert response = @gateway.purchase(@amount, @credit_card_3ds, @options.merge(:flag_3ds => true))
+  #   assert_success response
+  #   assert_equal '46', response.params["STATUS"]
+  #   assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  #   assert response.params["HTML_ANSWER"]
+  #   puts Base64.decode64(response.params["HTML_ANSWER"]), 
+  # end
 
   def test_successful_with_non_numeric_order_id
     @options[:order_id] = "##{@options[:order_id][0...26]}.12"

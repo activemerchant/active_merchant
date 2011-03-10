@@ -15,7 +15,11 @@ module ActiveMerchant #:nodoc:
     # the Alias Manager Option guide version 3.0 (24 February 2011) available here:
     # https://secure.ogone.com/ncol/Ogone_Alias_EN.pdf
     #
-    # It was last tested on Release 04.87 of Ogone DirectLink + AliasManager (24 February 2011).
+    # It also implements the 3-D Secure feature, as specified in the DirectLink with 3D Secure guide version 3.0 available here:
+    # https://secure.ogone.com/ncol/Ogone_DirectLink-3-D_EN.pdf
+    # 
+    #
+    # It was last tested on Release 04.87 of Ogone DirectLink + AliasManager + DirectLink with 3D Secure (24 February 2011).
     #
     # For any questions or comments, please contact Nicolas Jacobeus (nj@belighted.com) or Sébastien Grosjean (public@zencocoon.com).
     #
@@ -54,6 +58,19 @@ module ActiveMerchant #:nodoc:
     #   gateway.purchase(1000, creditcard,          :order_id => "1", :store => "myawesomecustomer") # associates the alias to that creditcard
     #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2") # You can use the alias instead of the creditcard for subsequent orders
     #
+    #   To use the 3D-Secure feature, simply add :flag_3ds => true in the options hash:
+    #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2", :flag_3ds => true)
+    # 
+    #   Specific 3-D Secure request options are (please refer to the documentation for more infos about these options):
+    #   :win3ds          => :main_window (default), :pop_up or :pop_ix.
+    #   :http_accept     => "*/*" (default), or any other HTTP_ACCEPT header value.
+    #   :http_user_agent => The cardholder's User-Agent string
+    #   :accepturl       => URL of the web page to show the customer when the payment is authorized. (or waiting to be authorized).
+    #   :declineurl      => URL of the web page to show the customer when the acquirer rejects the authorization more than the maximum permitted number of authorization attempts (10 by default, but can be changed in the "Global transaction parameters" tab, "Payment retry" section of the Technical Information page).
+    #   :exceptionurl    => URL of the web page to show the customer when the payment result is uncertain.
+    #   :paramplus       => Field to submit the miscellaneous parameters and their values that you wish to be returned in the post sale request or final redirection.
+    #   :complus         => Field to submit a value you wish to be returned in the post sale request or output.
+    #   :language        => Customer's language, for example: "en_EN"
     class OgoneGateway < Gateway
 
       URLS = {
@@ -70,6 +87,11 @@ module ActiveMerchant #:nodoc:
       AVS_MAPPING = { 'OK' => 'M',
                       'KO' => 'N',
                       'NO' => 'R' }
+
+      THREE_D_SECURE_DISPLAY_WAYS = { :main_window => 'MAINW',  # display the identification page in the main window (default value).
+                                      :pop_up      => 'POPUP',  # display the identification page in a pop-up window and return to the main window at the end.
+                                      :pop_ix      => 'POPIX' } # display the identification page in a pop-up window and remain in the pop-up window.
+
       SUCCESS_MESSAGE = "The transaction was successful"
 
       self.supported_countries = ['BE', 'DE', 'FR', 'NL', 'AT', 'CH']
@@ -175,6 +197,20 @@ module ActiveMerchant #:nodoc:
           add_eci(post, '9')
         else
           add_alias(post, options[:store])
+          if options[:flag_3ds]
+            add_pair post, 'FLAG3D', 'Y'
+            win3ds = THREE_D_SECURE_DISPLAY_WAYS.key?(options[:win_3ds]) ? THREE_D_SECURE_DISPLAY_WAYS[options[:win_3ds]] : THREE_D_SECURE_DISPLAY_WAYS[:main_window]
+            add_pair post, 'WIN3DS', win3ds
+            
+            add_pair post, 'HTTP_ACCEPT',     options[:http_accept] || "*/*"
+            add_pair post, 'HTTP_USER_AGENT', options[:http_user_agent] if options[:http_user_agent]
+            add_pair post, 'accepturl',       options[:accepturl] if options[:accepturl]
+            add_pair post, 'declineurl',      options[:declineurl] if options[:declineurl]
+            add_pair post, 'exceptionurl',    options[:exceptionurl] if options[:exceptionurl]
+            add_pair post, 'paramplus',       options[:paramplus] if options[:paramplus]
+            add_pair post, 'complus',         options[:complus] if options[:complus]
+            add_pair post, 'LANGUAGE',        options[:language] if options[:language]
+          end
           add_creditcard(post, payment_source)
         end
       end

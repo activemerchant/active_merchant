@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'base64'
 
 # Allow us to test private method, required for the signature tests
 class Class
@@ -37,8 +38,13 @@ class OgoneTest < Test::Unit::TestCase
       'ALIAS' => '2',
       'CN' => 'Client Name'
     }
+    @parameters_3ds = {
+      'FLAG3D' => 'Y',
+      'WIN3DS' => 'MAINW',
+      'HTTP_ACCEPT' => "*/*"
+    }
   end
-  
+
   def teardown
     Base.mode = :test
   end
@@ -52,8 +58,13 @@ class OgoneTest < Test::Unit::TestCase
     assert_equal '3014726;RES', response.authorization
     assert response.test?
   end
+  
+  def test_successful_3dsecure_authorize
+    @gateway.expects(:ssl_post).returns(successful_3dsecure_purchase_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge({ :flag_3ds => true }))
     assert_success response
     assert_equal '3014726;RES', response.authorization
+    assert_equal "<html>Redirection to 3D-Secure authentication.</html>", Base64.decode64(response.params['HTML_ANSWER'])
     assert response.test?
   end
   
@@ -211,6 +222,14 @@ class OgoneTest < Test::Unit::TestCase
     end
   end
 
+  def test_signature_for_accounts_created_after_10_may_2010_with_3dsecure
+    ActiveMerchant::Billing::OgoneGateway.publicize_methods do
+      gateway = OgoneGateway.new(@credentials.merge({ :created_after_10_may_2010 => true }))
+      assert signature = gateway.add_signature(@parameters.merge(@parameters_3ds))
+      assert_equal Digest::SHA1.hexdigest("ALIAS=2mynicesigAMOUNT=100mynicesigCARDNO=4111111111111111mynicesigCN=Client NamemynicesigCURRENCY=EURmynicesigFLAG3D=YmynicesigHTTP_ACCEPT=*/*mynicesigOPERATION=RESmynicesigORDERID=1mynicesigPSPID=MrPSPIDmynicesigWIN3DS=MAINWmynicesig").upcase, signature
+    end
+  end
+
   def test_signature_for_accounts_created_after_10_may_2010_with_signature_encryptor_to_sha256
     ActiveMerchant::Billing::OgoneGateway.publicize_methods do
       gateway = OgoneGateway.new(@credentials.merge({ :created_after_10_may_2010 => true, :signature_encryptor => 'sha256' }))
@@ -281,6 +300,31 @@ class OgoneTest < Test::Unit::TestCase
         currency="EUR"
         PM="CreditCard"
         BRAND="VISA">
+      </ncresponse>
+    END
+  end
+
+  def successful_3dsecure_purchase_response
+    <<-END
+      <?xml version="1.0"?><ncresponse
+        orderID="1233680882919266242708828"
+        PAYID="3014726"
+        NCSTATUS="0"
+        NCERROR="0"
+        NCERRORPLUS="!"
+        ACCEPTANCE="test123"
+        STATUS="46"
+        IPCTY="99"
+        CCCTY="99"
+        ECI="7"
+        CVCCheck="NO"
+        AAVCheck="NO"
+        VC="NO"
+        amount="1"
+        currency="EUR"
+        PM="CreditCard"
+        BRAND="VISA"
+        HTML_ANSWER="#{Base64.encode64("<html>Redirection to 3D-Secure authentication.</html>")}">
       </ncresponse>
     END
   end
