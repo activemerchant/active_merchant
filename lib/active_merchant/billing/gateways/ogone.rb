@@ -228,7 +228,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_money(post, money, options)
-        add_pair post, 'currency', options[:currency] || currency(money)
+        add_pair post, 'currency', options[:currency] || @options[:currency] || currency(money)
         add_pair post, 'amount',   amount(money)
       end
 
