@@ -23,14 +23,9 @@ class MoneybookersNotificationTest < Test::Unit::TestCase
   end
 
   # Replace with real successful acknowledgement code
-  def test_acknowledgement    
-
-  end
-
   def test_acknowledgement
-   
   end
-
+  
   def test_respond_to_acknowledge
     assert @moneybookers.respond_to?(:acknowledge)
   end

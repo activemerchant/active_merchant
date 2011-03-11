@@ -18,15 +18,11 @@ module ActiveMerchant #:nodoc:
           end
 
           def item_id
-            nil
+            params['transaction_id']
           end
 
           def transaction_id
-            if params.has_key?("transaction_id")
-              params['transaction_id']
-            else
-              params['mb_transaction_id']
-            end
+            params['transaction_id'] || params['mb_transaction_id']
           end
 
           # When was this payment received by the client. 
