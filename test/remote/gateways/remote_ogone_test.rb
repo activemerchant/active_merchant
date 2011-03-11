@@ -25,7 +25,8 @@ class RemoteOgoneTest < Test::Unit::TestCase
   # NOTE: You have to set the "Hash algorithm" to "SHA-256" in the "Technical information"->"Global security parameters"
   #       section of your account admin on https://secure.ogone.com/ncol/test/frame_ogone.asp before running this test
   def test_successful_purchase_with_signature_encryptor_to_sha256
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:signature_encryptor => 'sha256'))
+    gateway = OgoneGateway.new(fixtures(:ogone).merge(:signature_encryptor => 'sha256'))
+    assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
@@ -33,7 +34,8 @@ class RemoteOgoneTest < Test::Unit::TestCase
   # NOTE: You have to set the "Hash algorithm" to "SHA-512" in the "Technical information"->"Global security parameters"
   #       section of your account admin on https://secure.ogone.com/ncol/test/frame_ogone.asp before running this test
   def test_successful_purchase_with_signature_encryptor_to_sha512
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:signature_encryptor => 'sha512'))
+    gateway = OgoneGateway.new(fixtures(:ogone).merge(:signature_encryptor => 'sha512'))
+    assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
