@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'rexml/document'
 
 module ActiveMerchant #:nodoc:
@@ -74,12 +75,10 @@ module ActiveMerchant #:nodoc:
     class OgoneGateway < Gateway
 
       URLS = {
-        :test =>       { :order => 'https://secure.ogone.com/ncol/test/orderdirect.asp',
-                         :maintenance => 'https://secure.ogone.com/ncol/test/maintenancedirect.asp' },
-        :production => { :order => 'https://secure.ogone.com/ncol/prod/orderdirect.asp',
-                         :maintenance => 'https://secure.ogone.com/ncol/prod/maintenancedirect.asp' }
+        :order       => 'https://secure.ogone.com/ncol/%s/orderdirect.asp',
+        :maintenance => 'https://secure.ogone.com/ncol/%s/maintenancedirect.asp'
       }
-
+      
       CVV_MAPPING = { 'OK' => 'M',
                       'KO' => 'N',
                       'NO' => 'P' }
@@ -204,11 +203,11 @@ module ActiveMerchant #:nodoc:
             
             add_pair post, 'HTTP_ACCEPT',     options[:http_accept] || "*/*"
             add_pair post, 'HTTP_USER_AGENT', options[:http_user_agent] if options[:http_user_agent]
-            add_pair post, 'accepturl',       options[:accepturl] if options[:accepturl]
-            add_pair post, 'declineurl',      options[:declineurl] if options[:declineurl]
-            add_pair post, 'exceptionurl',    options[:exceptionurl] if options[:exceptionurl]
-            add_pair post, 'paramplus',       options[:paramplus] if options[:paramplus]
-            add_pair post, 'complus',         options[:complus] if options[:complus]
+            add_pair post, 'ACCEPTURL',       options[:accepturl] if options[:accepturl]
+            add_pair post, 'DECLINEURL',      options[:declineurl] if options[:declineurl]
+            add_pair post, 'EXCEPTIONURL',    options[:exceptionurl] if options[:exceptionurl]
+            add_pair post, 'PARAMPLUS',       options[:paramplus] if options[:paramplus]
+            add_pair post, 'COMPLUS',         options[:complus] if options[:complus]
             add_pair post, 'LANGUAGE',        options[:language] if options[:language]
           end
           add_creditcard(post, payment_source)
@@ -266,9 +265,10 @@ module ActiveMerchant #:nodoc:
         add_pair parameters, 'PSPID',  @options[:login]
         add_pair parameters, 'USERID', @options[:user]
         add_pair parameters, 'PSWD',   @options[:password]
-        url = URLS[test? ? :test : :production][parameters['PAYID'] ? :maintenance : :order]
-
-        response = parse(ssl_post(url, post_data(action, parameters)))
+        
+        url_type = parameters['PAYID'] ? :maintenance : :order
+        
+        response = parse(ssl_post(URLS[url_type] % [test? ? "test" : "prod"], post_data(action, parameters)))
         options = { :authorization => [response["PAYID"], action].join(";"),
                     :test => test?,
                     :avs_result => { :code => AVS_MAPPING[response["AAVCheck"]] },
@@ -304,7 +304,7 @@ module ActiveMerchant #:nodoc:
         add_pair parameters, 'Operation', action
         add_signature(parameters) if @options[:signature] # the user wants a SHA-1 signature
 
-        parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        parameters.map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
       def add_signature(parameters)
@@ -322,7 +322,6 @@ module ActiveMerchant #:nodoc:
         else
           %w[orderID amount currency CARDNO PSPID Operation ALIAS].map { |key| parameters[key] }.join
         end + @options[:signature]
-        # puts string_to_digest
         add_pair parameters, 'SHASign', sha_encryptor.hexdigest(string_to_digest).upcase
       end
 
