@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'test_helper'
 
 class RemoteOgoneTest < Test::Unit::TestCase
@@ -22,6 +23,18 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
   
+  def test_successful_purchase_with_utf8_encodin1
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => "Rémy", :last_name => "Fröåïør"), @options)
+    assert_success response
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  end
+  
+  def test_successful_purchase_with_utf8_encoding_2
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => "ワタシ", :last_name => "ёжзийклмнопрсуфхцч"), @options)
+    assert_success response
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  end
+
   def test_successful_purchase_with_custom_currency_at_the_gateway_level
     gateway = OgoneGateway.new(fixtures(:ogone).merge(:currency => 'USD'))
     assert response = gateway.purchase(@amount, @credit_card)
@@ -48,17 +61,16 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
   
-  # # BEWARE: The 3D Secure request can only be "tested" using a production environment!!!
-  # # CURRENT TEST STATE AS OF Wednesday 09 March 2011: NOT TESTED (by rymai)
-  # def test_successful_purchase_with_3d_secure
-  #   assert response = @gateway.purchase(@amount, @credit_card_3ds, @options.merge(:flag_3ds => true))
-  #   assert_success response
-  #   assert_equal '46', response.params["STATUS"]
-  #   assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
-  #   assert response.params["HTML_ANSWER"]
-  #   puts Base64.decode64(response.params["HTML_ANSWER"]), 
-  # end
-
+  # BEWARE: The 3D Secure request can only be half-tested using the test environment (only the special status is returned)!
+  # Wednesday 14 March 2011: special status is tested, but not the special "HTML_ANSWER" response parameter (by rymai)
+  def test_successful_purchase_with_3d_secure
+    assert response = @gateway.purchase(@amount, @credit_card_3ds, @options.merge(:flag_3ds => true))
+    assert_success response
+    assert_equal '46', response.params["STATUS"]
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+    # assert response.params["HTML_ANSWER"] # Can't be tested. In test environment, "HTML_ANSWER" is not passed
+  end
+  
   def test_successful_with_non_numeric_order_id
     @options[:order_id] = "##{@options[:order_id][0...26]}.12"
     assert response = @gateway.purchase(@amount, @credit_card, @options)
