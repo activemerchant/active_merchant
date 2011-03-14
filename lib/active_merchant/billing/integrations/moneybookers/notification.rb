@@ -15,19 +15,41 @@ module ActiveMerchant #:nodoc:
           end
           
           def complete?
-            status == "2"
+            status == 'Completed'
           end
 
+          # ‘2’ Processed – This status is sent when the transaction is processed and the funds have been received on your Moneybookers account.
+          # ‘0’ Pending – This status is sent when the customers pays via the pending bank transfer option. Such transactions will auto-process IF the bank transfer is received by Moneybookers. We strongly recommend that you do NOT process the order/transaction in your system upon receipt of a pending status from Moneybookers.
+          # ‘-1’ Cancelled – Pending transactions can either be cancelled manually by the sender in their online account history or they will auto-cancel after 14 days if still pending.
+          # ‘-2’ Failed – This status is sent when the customer tries to pay via Credit Card or Direct Debit but our provider declines the transaction. If you do not accept Credit Card or Direct Debit payments via Moneybookers (see page 17) then you will never receive the failed status.
+          # ‘-3’ Chargeback – This status could be received only if your account is configured to receive chargebacks. If this is the case, whenever a chargeback is received by Moneybookers, a -3 status will be posted on the status_url for the reversed transaction.
           def status
+            case status_code
+            when '2'
+              'Completed'
+            when '0'
+              'Pending'
+            when '-1'
+              'Cancelled'
+            when '-2'
+              'Failed'
+            when '-3'
+              'Reversed'
+            else
+              'Error'
+            end
+          end
+          
+          def status_code
             params['status']
           end
-
+          
           def item_id
             params['transaction_id']
           end
 
           def transaction_id
-            params['transaction_id'] || params['mb_transaction_id']
+            params['mb_transaction_id']
           end
 
           # When was this payment received by the client. 
@@ -52,24 +74,24 @@ module ActiveMerchant #:nodoc:
             params['merchant_id']
           end
 
-          # currency of mb_amount, will always be the same as the currency of the beneficiary's account at Moneybookers.com
-          def currency
-            params['mb_currency']
-          end
-
-          # total amount of the payment in Merchants currency (ex 25.46/25.4/25)
-          def gross
-            params['mb_amount']
-          end
-
           # currency of the payment as posted by the merchant on the entry form
-          def posted_currency
+          def currency
             params['currency']
           end
 
           # amount of the payment as posted by the merchant on the entry form (ex. 39.60/39.6/39)
-          def posted_amount
+          def gross
             params['amount']
+          end
+
+          # currency of mb_amount, will always be the same as the currency of the beneficiary's account at Moneybookers.com
+          def merchant_currency
+            params['mb_currency']
+          end
+
+          # total amount of the payment in Merchants currency (ex 25.46/25.4/25)
+          def merchant_amount
+            params['mb_amount']
           end
 
           # Was this a test transaction?
@@ -97,7 +119,7 @@ module ActiveMerchant #:nodoc:
           #       ... log possible hacking attempt ...
           #     end
           def acknowledge
-            fields = [merchant_id, transaction_id, Digest::MD5.hexdigest(secret).upcase, gross, currency, status].join
+            fields = [merchant_id, item_id, Digest::MD5.hexdigest(secret).upcase, merchant_amount, merchant_currency, status_code].join
             md5sig == Digest::MD5.hexdigest(fields).upcase
           end
         end
