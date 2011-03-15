@@ -66,9 +66,9 @@ module ActiveMerchant #:nodoc:
     #   :win3ds          => :main_window (default), :pop_up or :pop_ix.
     #   :http_accept     => "*/*" (default), or any other HTTP_ACCEPT header value.
     #   :http_user_agent => The cardholder's User-Agent string
-    #   :accepturl       => URL of the web page to show the customer when the payment is authorized. (or waiting to be authorized).
-    #   :declineurl      => URL of the web page to show the customer when the acquirer rejects the authorization more than the maximum permitted number of authorization attempts (10 by default, but can be changed in the "Global transaction parameters" tab, "Payment retry" section of the Technical Information page).
-    #   :exceptionurl    => URL of the web page to show the customer when the payment result is uncertain.
+    #   :accept_url      => URL of the web page to show the customer when the payment is authorized. (or waiting to be authorized).
+    #   :decline_url     => URL of the web page to show the customer when the acquirer rejects the authorization more than the maximum permitted number of authorization attempts (10 by default, but can be changed in the "Global transaction parameters" tab, "Payment retry" section of the Technical Information page).
+    #   :exception_url   => URL of the web page to show the customer when the payment result is uncertain.
     #   :paramplus       => Field to submit the miscellaneous parameters and their values that you wish to be returned in the post sale request or final redirection.
     #   :complus         => Field to submit a value you wish to be returned in the post sale request or output.
     #   :language        => Customer's language, for example: "en_EN"
@@ -203,9 +203,9 @@ module ActiveMerchant #:nodoc:
             
             add_pair post, 'HTTP_ACCEPT',     options[:http_accept] || "*/*"
             add_pair post, 'HTTP_USER_AGENT', options[:http_user_agent] if options[:http_user_agent]
-            add_pair post, 'ACCEPTURL',       options[:accepturl] if options[:accepturl]
-            add_pair post, 'DECLINEURL',      options[:declineurl] if options[:declineurl]
-            add_pair post, 'EXCEPTIONURL',    options[:exceptionurl] if options[:exceptionurl]
+            add_pair post, 'ACCEPTURL',       options[:accept_url] if options[:accepturl]
+            add_pair post, 'DECLINEURL',      options[:decline_url] if options[:declineurl]
+            add_pair post, 'EXCEPTIONURL',    options[:exception_url] if options[:exceptionurl]
             add_pair post, 'PARAMPLUS',       options[:paramplus] if options[:paramplus]
             add_pair post, 'COMPLUS',         options[:complus] if options[:complus]
             add_pair post, 'LANGUAGE',        options[:language] if options[:language]
@@ -258,7 +258,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[REXML::Document.new(body).root.attributes.map { |k,v| [k.to_s, v] }]
+        Hash[REXML::Document.new(body).root.attributes.map { |key, value| [key.to_s, value] }]
       end
 
       def commit(action, parameters)
@@ -318,10 +318,11 @@ module ActiveMerchant #:nodoc:
         end
 
         string_to_digest = if @options[:created_after_10_may_2010]
-          parameters.keys.sort { |a, b| a.upcase <=> b.upcase }.map { |s| "#{s.upcase}=#{parameters[s]}" }.join(@options[:signature])
+          parameters.sort { |a, b| a[0].upcase <=> b[0].upcase }.map { |k, v| "#{k.upcase}=#{v}" }.join(@options[:signature])
         else
           %w[orderID amount currency CARDNO PSPID Operation ALIAS].map { |key| parameters[key] }.join
         end + @options[:signature]
+
         add_pair parameters, 'SHASign', sha_encryptor.hexdigest(string_to_digest).upcase
       end
 
