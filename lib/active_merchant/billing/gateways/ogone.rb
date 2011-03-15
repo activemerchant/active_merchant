@@ -59,8 +59,8 @@ module ActiveMerchant #:nodoc:
     #   gateway.purchase(1000, creditcard,          :order_id => "1", :store => "myawesomecustomer") # associates the alias to that creditcard
     #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2") # You can use the alias instead of the creditcard for subsequent orders
     #
-    #   To use the 3D-Secure feature, simply add :flag_3ds => true in the options hash:
-    #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2", :flag_3ds => true)
+    #   To use the 3D-Secure feature, simply add :d3d => true in the options hash:
+    #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2", :d3d => true)
     # 
     #   Specific 3-D Secure request options are (please refer to the documentation for more infos about these options):
     #   :win3ds          => :main_window (default), :pop_up or :pop_ix.
@@ -196,9 +196,9 @@ module ActiveMerchant #:nodoc:
           add_eci(post, '9')
         else
           add_alias(post, options[:store])
-          if options[:flag_3ds]
+          if options[:d3d]
             add_pair post, 'FLAG3D', 'Y'
-            win3ds = THREE_D_SECURE_DISPLAY_WAYS.key?(options[:win_3ds]) ? THREE_D_SECURE_DISPLAY_WAYS[options[:win_3ds]] : THREE_D_SECURE_DISPLAY_WAYS[:main_window]
+            win3ds = THREE_D_SECURE_DISPLAY_WAYS.key?(options[:win_3d]) ? THREE_D_SECURE_DISPLAY_WAYS[options[:win_3d]] : THREE_D_SECURE_DISPLAY_WAYS[:main_window]
             add_pair post, 'WIN3DS', win3ds
             
             add_pair post, 'HTTP_ACCEPT',     options[:http_accept] || "*/*"

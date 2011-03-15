@@ -71,7 +71,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase_with_3d_secure
-    assert response = @gateway.purchase(@amount, @credit_card_3ds, @options.merge(:flag_3ds => true))
+    assert response = @gateway.purchase(@amount, @credit_card_3ds, @options.merge(:d3d => true))
     assert_success response
     assert_equal '46', response.params["STATUS"]
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message

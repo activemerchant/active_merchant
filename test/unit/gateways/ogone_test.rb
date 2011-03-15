@@ -61,7 +61,7 @@ class OgoneTest < Test::Unit::TestCase
 
   def test_successful_3dsecure_authorize
     @gateway.expects(:ssl_post).returns(successful_3dsecure_purchase_response)
-    assert response = @gateway.authorize(@amount, @credit_card, @options.merge({ :flag_3ds => true }))
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge({ :d3d => true }))
     assert_success response
     assert_equal '3014726;RES', response.authorization
     assert response.params['HTML_ANSWER']
