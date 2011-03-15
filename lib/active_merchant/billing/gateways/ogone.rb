@@ -203,12 +203,12 @@ module ActiveMerchant #:nodoc:
             
             add_pair post, 'HTTP_ACCEPT',     options[:http_accept] || "*/*"
             add_pair post, 'HTTP_USER_AGENT', options[:http_user_agent] if options[:http_user_agent]
-            add_pair post, 'ACCEPTURL',       options[:accept_url] if options[:accepturl]
-            add_pair post, 'DECLINEURL',      options[:decline_url] if options[:declineurl]
-            add_pair post, 'EXCEPTIONURL',    options[:exception_url] if options[:exceptionurl]
-            add_pair post, 'PARAMPLUS',       options[:paramplus] if options[:paramplus]
-            add_pair post, 'COMPLUS',         options[:complus] if options[:complus]
-            add_pair post, 'LANGUAGE',        options[:language] if options[:language]
+            add_pair post, 'ACCEPTURL',       options[:accept_url]      if options[:accepturl]
+            add_pair post, 'DECLINEURL',      options[:decline_url]     if options[:declineurl]
+            add_pair post, 'EXCEPTIONURL',    options[:exception_url]   if options[:exceptionurl]
+            add_pair post, 'PARAMPLUS',       options[:paramplus]       if options[:paramplus]
+            add_pair post, 'COMPLUS',         options[:complus]         if options[:complus]
+            add_pair post, 'LANGUAGE',        options[:language]        if options[:language]
           end
           add_creditcard(post, payment_source)
         end
