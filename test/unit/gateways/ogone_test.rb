@@ -65,6 +65,7 @@ class OgoneTest < Test::Unit::TestCase
     assert_success response
     assert_equal '3014726;RES', response.authorization
     assert response.params['HTML_ANSWER']
+    assert_equal nil, response.params['HTML_ANSWER'] =~ /<HTML_ANSWER>/
     assert response.test?
   end
 

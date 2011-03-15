@@ -261,7 +261,8 @@ module ActiveMerchant #:nodoc:
         root = REXML::Document.new(body).root
         response = Hash[root.attributes.map { |key, value| [key.to_s, value] }]
         # Add HTML_ANSWER element (3-D Secure specific to the response's params)
-        response["HTML_ANSWER"] = REXML::XPath.first(root, "//HTML_ANSWER")
+        html_answer = REXML::XPath.first(root, "//HTML_ANSWER")
+        response["HTML_ANSWER"] = html_answer.text unless html_answer.nil?
         response
       end
 
