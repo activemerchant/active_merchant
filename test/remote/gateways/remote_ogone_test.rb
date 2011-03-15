@@ -43,6 +43,15 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal "USD", response.params["currency"]
   end
   
+  # NOTE: You have to set the "Hash algorithm" to "SHA-1" in the "Technical information"->"Global security parameters"
+  #       section of your account admin on https://secure.ogone.com/ncol/test/frame_ogone.asp before running this test
+  def test_successful_purchase_with_signature_encryptor_to_sha1
+    gateway = OgoneGateway.new(fixtures(:ogone).merge(:signature_encryptor => 'sha1'))
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  end
+  
   # NOTE: You have to set the "Hash algorithm" to "SHA-256" in the "Technical information"->"Global security parameters"
   #       section of your account admin on https://secure.ogone.com/ncol/test/frame_ogone.asp before running this test
   def test_successful_purchase_with_signature_encryptor_to_sha256
@@ -61,14 +70,12 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
   
-  # BEWARE: The 3D Secure request can only be half-tested using the test environment (only the special status is returned)!
-  # Wednesday 14 March 2011: special status is tested, but not the special "HTML_ANSWER" response parameter (by rymai)
   def test_successful_purchase_with_3d_secure
     assert response = @gateway.purchase(@amount, @credit_card_3ds, @options.merge(:flag_3ds => true))
     assert_success response
     assert_equal '46', response.params["STATUS"]
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
-    # assert response.params["HTML_ANSWER"] # Can't be tested. In test environment, "HTML_ANSWER" is not passed
+    assert response.params["HTML_ANSWER"]
   end
   
   def test_successful_with_non_numeric_order_id

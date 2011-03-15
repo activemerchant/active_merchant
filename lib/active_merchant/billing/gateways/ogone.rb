@@ -258,7 +258,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[REXML::Document.new(body).root.attributes.map { |key, value| [key.to_s, value] }]
+        root = REXML::Document.new(body).root
+        response = Hash[root.attributes.map { |key, value| [key.to_s, value] }]
+        # Add HTML_ANSWER element (3-D Secure specific to the response's params)
+        response["HTML_ANSWER"] = REXML::XPath.first(root, "//HTML_ANSWER")
+        response
       end
 
       def commit(action, parameters)
@@ -266,13 +270,14 @@ module ActiveMerchant #:nodoc:
         add_pair parameters, 'USERID', @options[:user]
         add_pair parameters, 'PSWD',   @options[:password]
         
-        url_type = parameters['PAYID'] ? :maintenance : :order
-        
-        response = parse(ssl_post(URLS[url_type] % [test? ? "test" : "prod"], post_data(action, parameters)))
-        options = { :authorization => [response["PAYID"], action].join(";"),
-                    :test => test?,
-                    :avs_result => { :code => AVS_MAPPING[response["AAVCheck"]] },
-                    :cvv_result => CVV_MAPPING[response["CVCCheck"]] }
+        url = URLS[parameters['PAYID'] ? :maintenance : :order] % [test? ? "test" : "prod"]
+        response = parse(ssl_post(url, post_data(action, parameters)))
+        options = {
+          :authorization => [response["PAYID"], action].join(";"),
+          :test          => test?,
+          :avs_result    => { :code => AVS_MAPPING[response["AAVCheck"]] },
+          :cvv_result    => CVV_MAPPING[response["CVCCheck"]]
+        }
         Response.new(successful?(response), message_from(response), response, options)
       end
 
