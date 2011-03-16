@@ -131,6 +131,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>authorization</tt> - The authorization returned from the previous authorize request.
       def void(authorization, options = {})
         post = {:trans_id => authorization}
+        add_duplicate_window(post)
         commit('VOID', nil, post)
       end
 
@@ -155,6 +156,7 @@ module ActiveMerchant #:nodoc:
                  :card_num => options[:card_number]
                }
         add_invoice(post, options)
+        add_duplicate_window(post)
 
         commit('CREDIT', money, post)
       end
