@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
     #
     # It also implements the 3-D Secure feature, as specified in the DirectLink with 3D Secure guide version 3.0 available here:
     # https://secure.ogone.com/ncol/Ogone_DirectLink-3-D_EN.pdf
-    # 
+    #
     #
     # It was last tested on Release 04.87 of Ogone DirectLink + AliasManager + DirectLink with 3D Secure (24 February 2011).
     #
@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
     #
     #   To use the 3D-Secure feature, simply add :d3d => true in the options hash:
     #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2", :d3d => true)
-    # 
+    #
     #   Specific 3-D Secure request options are (please refer to the documentation for more infos about these options):
     #   :win3ds          => :main_window (default), :pop_up or :pop_ix.
     #   :http_accept     => "*/*" (default), or any other HTTP_ACCEPT header value.
@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
         :order       => 'https://secure.ogone.com/ncol/%s/orderdirect.asp',
         :maintenance => 'https://secure.ogone.com/ncol/%s/maintenancedirect.asp'
       }
-      
+
       CVV_MAPPING = { 'OK' => 'M',
                       'KO' => 'N',
                       'NO' => 'P' }
@@ -161,7 +161,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
-      
+
       def reference_from(authorization)
         authorization.split(";").first
       end
@@ -200,7 +200,7 @@ module ActiveMerchant #:nodoc:
             add_pair post, 'FLAG3D', 'Y'
             win3ds = THREE_D_SECURE_DISPLAY_WAYS.key?(options[:win_3d]) ? THREE_D_SECURE_DISPLAY_WAYS[options[:win_3d]] : THREE_D_SECURE_DISPLAY_WAYS[:main_window]
             add_pair post, 'WIN3DS', win3ds
-            
+
             add_pair post, 'HTTP_ACCEPT',     options[:http_accept] || "*/*"
             add_pair post, 'HTTP_USER_AGENT', options[:http_user_agent] if options[:http_user_agent]
             add_pair post, 'ACCEPTURL',       options[:accept_url]      if options[:accepturl]
@@ -270,9 +270,10 @@ module ActiveMerchant #:nodoc:
         add_pair parameters, 'PSPID',  @options[:login]
         add_pair parameters, 'USERID', @options[:user]
         add_pair parameters, 'PSWD',   @options[:password]
-        
+
         url = URLS[parameters['PAYID'] ? :maintenance : :order] % [test? ? "test" : "prod"]
         response = parse(ssl_post(url, post_data(action, parameters)))
+
         options = {
           :authorization => [response["PAYID"], action].join(";"),
           :test          => test?,
