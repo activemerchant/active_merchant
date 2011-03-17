@@ -6,8 +6,8 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module WorldPay 
        
-        mattr_accessor :service_url
-        self.service_url = 'https://select.worldpay.com/wcc/purchase'
+        mattr_accessor :production_url
+        self.production_url = 'https://select.worldpay.com/wcc/purchase'
 
         mattr_accessor :test_url
         self.test_url = 'https://select-test.worldpay.com/wcc/purchase'
