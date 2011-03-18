@@ -18,6 +18,8 @@ class RemotePpiPaymoverTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store Purchase'
     }
+    
+    @card_swipe = fixtures(:ppi_swipe_data)
   end
   
   def test_successful_authorization
@@ -94,11 +96,30 @@ class RemotePpiPaymoverTest < Test::Unit::TestCase
     assert_success void
     assert_equal 'Successful transaction: Test transaction response.', void.message
   end
-
+  
   def test_failed_capture
     assert response = @gateway.capture(@amounts[:success], '')
     assert_failure response
     assert_equal 'Missing required request field: Order ID', response.message
+  end
+  
+  def test_successful_authorization_swipe
+    unless @card_swipe == 'ignore'
+      @options.delete(:billing_address)
+      assert response = @gateway.authorize(@amounts[:success], @card_swipe, @options)
+      assert_success response
+      assert !response.fraud_review?
+      assert_equal 'Successful transaction: Test transaction response.', response.message
+    end
+  end
+  
+  def test_purchase_and_query
+    assert purchase = @gateway.purchase(@amounts[:success], @credit_card, @options)
+    assert_success purchase
+    
+    assert query = @gateway.query_purchase(purchase.authorization)
+    assert_success query
+    assert_equal 'Successful transaction: The transaction completed successfully.', query.message
   end
   
   def test_invalid_login

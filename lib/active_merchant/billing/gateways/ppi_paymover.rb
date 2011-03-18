@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PpiPaymoverGateway < Gateway
-      API_VERSION = '4'
+      API_VERSION = '12'
       DEBUG = false
       
       APPROVED, DECLINED, NOT_POSSIBLE = '1', '100', '6'
@@ -60,30 +60,62 @@ module ActiveMerchant #:nodoc:
         super
       end  
       
+      # Performs an authorization, which reserves the funds on the customer's credit card, but does not
+      # charge the card.
+      #
+      # ==== Parameters
+      #
+      # * <tt>money</tt> -- The amount to be authorized as an Integer value in cents.
+      # * <tt>creditcard</tt> -- The CreditCard details for the transaction.  For encrypted card swipe transactions, just pass the raw String data here.
+      # * <tt>options</tt> -- A hash of optional parameters.
       def authorize(money, creditcard, options = {})
         post = {}
         
         add_default_options(post, options)
         add_invoice(post, options)
-        add_creditcard(post, creditcard)        
         add_address(post, creditcard, options)        
         add_customer_data(post, options)
+        
+        if creditcard.kind_of?(String)
+          add_cardswipe(post, creditcard)
+        else
+          add_creditcard(post, creditcard)        
+        end
         
         commit('AUTH', money, post)
       end
       
+      # Perform a purchase, which is essentially an authorization and capture in a single operation.
+      #
+      # ==== Parameters
+      #
+      # * <tt>money</tt> -- The amount to be purchased as an Integer value in cents.
+      # * <tt>creditcard</tt> -- The CreditCard details for the transaction. For encrypted card swipe transactions, just pass the raw String data here.
+      # * <tt>options</tt> -- A hash of optional parameters.
       def purchase(money, creditcard, options = {})
         post = {}
         
         add_default_options(post, options)
         add_invoice(post, options)
-        add_creditcard(post, creditcard)        
         add_address(post, creditcard, options)   
         add_customer_data(post, options)
+
+        if creditcard.kind_of?(String)
+          add_cardswipe(post, creditcard)
+        else
+          add_creditcard(post, creditcard)        
+        end
              
         commit('SALE', money, post)
       end                       
     
+      # Captures the funds from an authorized transaction.
+      #
+      # ==== Parameters
+      #
+      # * <tt>money</tt> -- The amount to be captured as an Integer value in cents.
+      # * <tt>authorization</tt> -- The authorization returned from the previous authorize request.
+      # * <tt>options</tt> -- A hash of optional parameters.
       def capture(money, authorization, options = {})
         post = {:order_id => authorization}
         add_customer_data(post, options)
@@ -132,8 +164,27 @@ module ActiveMerchant #:nodoc:
         commit('CREDIT', money, post)
       end
 
+      # Query a previous purchase transaction
+      #
+      # ==== Parameters
+      #
+      # * <tt>order_id</tt> - The order id from a previous request.
+      def query_purchase(order_id, options = {})
+        post = {:order_id => order_id}
+        add_customer_data(post, options)
+        commit('QUERY_PAYMENT', nil, post)
+      end
 
-      
+      # Query a previous credit transaction
+      #
+      # ==== Parameters
+      #
+      # * <tt>order_id</tt> - The order id from a previous request.
+      def query_credit(order_id, options = {})
+        post = {:order_id => order_id}
+        add_customer_data(post, options)
+        commit('QUERY_CREDIT', nil, post)
+      end
     
       private                       
       
@@ -181,6 +232,28 @@ module ActiveMerchant #:nodoc:
         post[:expire_year] = creditcard.year
         post[:bill_first_name] = creditcard.first_name
         post[:bill_last_name]  = creditcard.last_name
+      end
+      
+      def add_cardswipe(post, creditcard)
+        parts = creditcard.split('|')
+        
+        if DEBUG
+          puts "----- swipe data -----"
+          for i in 0...parts.size
+            puts "[#{i}]: #{parts[i]}"
+          end
+          puts "----------------------"
+        end
+        
+        raise ArgumentError.new("Invalid card swipe data") if parts.size != 13    
+        
+        post[:track1] = parts[2]
+        post[:track2] = parts[3]
+        post[:magnetic_signature] = parts[6]
+        post[:magnetic_signature_status] = parts[5]
+        post[:msr_device_serial_number] = parts[7]
+        post[:msr_key_serial_number] = parts[9]
+        post[:msr_encryption_type] = "MAGENSA_V5"
       end
       
       def parse(body)

@@ -14,6 +14,9 @@ class PpiPaymoverTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store Purchase'
     }
+    
+    @card_swipe = "000|111|222|333|444|555|666|777|888|999|101010|111111|121212"
+    
   end
   
   def test_successful_authorization
@@ -110,6 +113,47 @@ class PpiPaymoverTest < Test::Unit::TestCase
     assert_equal "Card declined: Test transaction response: Hold card and call issuer.", response.message
   end
   
+  def test_invalid_cardswipe
+    assert_raise ArgumentError do
+      @gateway.purchase(@amount, "bad swipe data")
+    end
+    
+    assert_raise ArgumentError do
+      @gateway.purchase(@amount, "000|111|222|333|444|555|666|777|888|999|101010|111111")
+    end
+    
+    assert_raise ArgumentError do
+      @gateway.purchase(@amount, "000|111|222|333|444|555|666|777|888|999|101010|111111|121212|131313")
+    end
+  end
+  
+  def test_successful_authorization
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+  
+    assert response = @gateway.authorize(@amount, @card_swipe)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '1', response.authorization
+  end
+  
+  def test_successful_purchase_swipe
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+  
+    assert response = @gateway.purchase(@amount, @card_swipe)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '1', response.authorization
+  end
+  
+  def test_successful_query
+    @gateway.expects(:ssl_post).returns(successful_query_response)
+  
+    assert response = @gateway.query_purchase('1')
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '1', response.authorization
+  end
+  
 
 
   private
@@ -150,5 +194,9 @@ class PpiPaymoverTest < Test::Unit::TestCase
   
   def failed_authorization_response
     "response_code=100\nresponse_code_text=Card declined: Test transaction response.\ntime_stamp=1299616622275\nretry_recommended=false\nsecondary_response_code=0\norder_id=1\ncapture_reference_id=1\niso_code=\nbank_approval_code=\nbank_transaction_id=\nbatch_id=\navs_code=\ncredit_card_verification_response=\n"
+  end
+  
+  def successful_query_response
+    "response_code=1\nresponse_code_text=Successful transaction: The transaction completed successfully.\ntime_stamp=1300484952005\nretry_recommended=false\nsecondary_response_code=0\norder_id=1\ncapture_reference_id=1\niso_code=\nbank_approval_code=\nbank_transaction_id=\nbatch_id=7\navs_code=\ncredit_card_verification_response=\ntime_stamp_created=1300484951000\nstate=payment_deposited\ncaptured_amount=0.01\nauthorized_amount=0.01\noriginal_authorized_amount=0.01\nrequested_amount=0.01\n"
   end
 end
