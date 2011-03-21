@@ -23,7 +23,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
   
-  def test_successful_purchase_with_utf8_encodin1
+  def test_successful_purchase_with_utf8_encoding1
     assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => "Rémy", :last_name => "Fröåïør"), @options)
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
