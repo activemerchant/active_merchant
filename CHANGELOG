@@ -1,5 +1,10 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.12.1 (Mar 21, 2011)
+
+* Ogone: Make sure response.params is a real Hash [Soleone]
+* WorldPay: Fix service_url in production mode [Soleone]
+
 == Version 1.12.0 (Mar 1, 2011)
 
 * DirecPay: Send phone number as mobile phone by default [Soleone]
