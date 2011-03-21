@@ -197,6 +197,26 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(action, xml)
+        legacy_hash = legacy_parse(action, xml)
+        xml = strip_attributes(xml)
+        hash = Hash.from_xml(xml)
+        hash = hash.fetch('Envelope').fetch('Body').fetch("#{action}Response")
+        hash = hash["#{action}ResponseDetails"] if hash["#{action}ResponseDetails"]
+
+        legacy_hash.merge(hash)
+      rescue IndexError
+        legacy_hash.merge(hash['Envelope']['Body'])
+      end
+
+      def strip_attributes(xml)
+        xml = REXML::Document.new(xml)
+        REXML::XPath.each(xml, '//SOAP-ENV:Envelope//*[@*]') do |el|
+          el.attributes.each_attribute { |a| a.remove }
+        end
+        xml.to_s
+      end
+
+      def legacy_parse(action, xml)
         response = {}
         
         error_messages = []
@@ -225,22 +245,22 @@ module ActiveMerchant #:nodoc:
                 error_messages << message
               end
             else
-              parse_element(response, node)
+              legacy_parse_element(response, node)
             end
           end
           response[:message] = error_messages.uniq.join(". ") unless error_messages.empty?
           response[:error_codes] = error_codes.uniq.join(",") unless error_codes.empty?
         elsif root = REXML::XPath.first(xml, "//SOAP-ENV:Fault")
-          parse_element(response, root)
+          legacy_parse_element(response, root)
           response[:message] = "#{response[:faultcode]}: #{response[:faultstring]} - #{response[:detail]}"
         end
 
         response
       end
 
-      def parse_element(response, node)
+      def legacy_parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|e| parse_element(response, e) }
+          node.elements.each{|e| legacy_parse_element(response, e) }
         else
           response[node.name.underscore.to_sym] = node.text
           node.attributes.each do |k, v|
