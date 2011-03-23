@@ -208,6 +208,11 @@ pay_secure:
 plugnpay:
   login: LOGIN
   password: PASSWORD
+
+ppi_paymover:
+  login: TOKEN
+
+ppi_swipe_data: ignore
   
 sage_pay:
   login: LOGIN
