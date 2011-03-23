@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
       }
       
       TEST_URL = 'https://etrans.paygateway.com/TransactionManager'
-      LIVE_URL = 'https://example.com/live'
+      LIVE_URL = 'https://etrans.paygateway.com/TransactionManager'
       
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']
