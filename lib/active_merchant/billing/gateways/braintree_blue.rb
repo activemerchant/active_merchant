@@ -46,9 +46,14 @@ module ActiveMerchant #:nodoc:
         create_transaction(:credit, money, credit_card_or_vault_id, options)
       end
 
-      def refund(transaction_id, options = {})
+      def refund(*args)
+        # legacy signature: #refund(transaction_id, options = {})
+        # new signature: #refund(money, transaction_id, options = {})
+        money, transaction_id, options = extract_refund_args(args)
+        money = amount(money).to_s if money
+
         commit do
-          result = Braintree::Transaction.find(transaction_id).refund
+          result = Braintree::Transaction.refund(transaction_id, money)
           Response.new(result.success?, message_from_result(result))
         end
       end
@@ -202,6 +207,19 @@ module ActiveMerchant #:nodoc:
           response.instance_variable_set("@avs_result", avs_result)
           response.instance_variable_set("@cvv_result", cvv_result)
           response
+        end
+      end
+
+      def extract_refund_args(args)
+        options = args.extract_options!
+
+        # money, transaction_id, options
+        if args.length == 1 # legacy signature
+          return nil, args[0], options
+        elsif args.length == 2
+          return args[0], args[1], options
+        else
+          raise ArgumentError, "wrong number of arguments (#{args.length} for 2)"
         end
       end
     end
