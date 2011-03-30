@@ -209,6 +209,7 @@ module ActiveMerchant #:nodoc:
             add_pair post, 'PARAMPLUS',       options[:paramplus]       if options[:paramplus]
             add_pair post, 'COMPLUS',         options[:complus]         if options[:complus]
             add_pair post, 'LANGUAGE',        options[:language]        if options[:language]
+            add_pair post, 'TP',              options[:tp]              if options[:tp]
           end
           add_creditcard(post, payment_source)
         end
