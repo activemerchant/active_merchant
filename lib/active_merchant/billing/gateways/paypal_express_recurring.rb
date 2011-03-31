@@ -263,7 +263,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-        Rails.logger.error xml.inspect
+
         xml.target!
       end
 
