@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
       
       def validate_card_number #:nodoc:
         errors.add :number, :invalid unless CreditCard.valid_number?(number)
-        unless errors.on(:number) || errors.on(:type)
+        unless errors[:number] || errors[:type]
           errors.add :type, :incorrect unless CreditCard.matching_type?(number, type)
         end
       end
