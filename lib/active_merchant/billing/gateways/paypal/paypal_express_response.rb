@@ -22,6 +22,11 @@ module ActiveMerchant #:nodoc:
         @params['PayerInfo']['PayerCountry']
       end
       
+      # PayPal returns a contact telephone number only if your Merchant account profile settings require that the buyer enter one.
+      def contact_phone
+        @params['ContactPhone']
+      end
+      
       def address
         address = @params['PaymentDetails']['ShipToAddress']
         {  'name'       => address['Name'],
@@ -32,7 +37,7 @@ module ActiveMerchant #:nodoc:
            'state'      => address['StateOrProvince'],
            'country'    => address['Country'],
            'zip'        => address['PostalCode'],
-           'phone'      => @params['ContactPhone']
+           'phone'      => contact_phone || address['Phone']
         }
       end
     end
