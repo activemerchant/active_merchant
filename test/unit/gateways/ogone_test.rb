@@ -150,6 +150,12 @@ class OgoneTest < Test::Unit::TestCase
     assert_equal "Unknown order", response.message
   end
 
+  def test_response_params_is_hash
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Hash, response.params
+  end
+  
   private
 
   def successful_authorize_response

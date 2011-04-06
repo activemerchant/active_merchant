@@ -211,3 +211,7 @@ NMI
 QBMS
 
 * Will Glozer (wg)
+WorldPay (Feb 17, 2011)
+
+* Original code by Unknown from this patch: https://jadedpixel.lighthouseapp.com/projects/11599/tickets/3-patch-integration-support-for-worldpay-uk
+* Refactored by Soleone

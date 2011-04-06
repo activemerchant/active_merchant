@@ -221,7 +221,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         xml = REXML::Document.new(body)
-        xml.root.attributes
+        convert_attributes_to_hash(xml.root.attributes)
       end
 
       def commit(action, parameters)
@@ -274,6 +274,13 @@ module ActiveMerchant #:nodoc:
         post[key] = value if !value.blank? || options[:required]
       end
 
+      def convert_attributes_to_hash(rexml_attributes)
+        response_hash = {}
+        rexml_attributes.each do |key, value|
+          response_hash[key] = value
+        end
+        response_hash
+      end
     end
   end
 end

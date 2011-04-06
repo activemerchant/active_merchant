@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
                                      :state    => 'custState',
                                      :zip      => 'custPinCode',
                                      :country  => 'custCountry',
-                                     :phone2   => 'custMobileNo'
+                                     :phone    => 'custMobileNo'
 
           mapping :shipping_address, :name     => 'deliveryName',
                                      :city     => 'deliveryCity',
@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
                                      :state    => 'deliveryState',
                                      :zip      => 'deliveryPinCode',
                                      :country  => 'deliveryCountry',
-                                     :phone2   => 'deliveryMobileNo'
+                                     :phone    => 'deliveryMobileNo'
 
           mapping :customer, :name  => 'custName',
                              :email => 'custEmailId'
@@ -79,16 +79,13 @@ module ActiveMerchant #:nodoc:
           end
           
           def shipping_address(params = {})
-            add_street_address!(params)
+            update_address(:shipping_address, params)
             super(params.dup)
-            add_field(mappings[:shipping_address][:name], fields[mappings[:customer][:name]]) if fields[mappings[:shipping_address][:name]].blank?
-            add_phone_for!(:shipping_address, params)
           end
           
           def billing_address(params = {})
-            add_street_address!(params)
+            update_address(:billing_address, params)
             super(params.dup)
-            add_phone_for!(:billing_address, params)
           end
           
           def form_fields
@@ -123,24 +120,27 @@ module ActiveMerchant #:nodoc:
             end
           end
           
-          def add_street_address!(params)
+          def update_address(address_type, params)
             address = params[:address1]
             address << " #{params[:address2]}" if params[:address2]
-            params.merge!(:address1 => address)
+            params[:address1] = address
+            params[:phone] = normalize_phone_number(params[:phone])
+            add_land_line_phone_for(address_type, params)
+            
+            if address_type == :shipping_address && params[:name].blank?
+              add_field(mappings[:shipping_address][:name], fields[mappings[:customer][:name]])
+            end
           end
-                    
-          def add_phone_for!(address_type, params)
+          
+          # Split a single phone number into the country code, area code and local number as best as possible
+          def add_land_line_phone_for(address_type, params)
             address_field = address_type == :billing_address ? 'custPhoneNo' : 'deliveryPhNo'
             
-            if params.has_key?(:phone)
-              country = fields[mappings[address_type][:country]]
-              phone = params[:phone].to_s
-              # Remove all non digits
-              phone.gsub!(/[^\d ]+/, '')
-              
+            if params.has_key?(:phone2)
+              phone = normalize_phone_number(params[:phone2])
               phone_country_code, phone_area_code, phone_number = nil
-
-              if country == 'IN' && phone =~ /(91)? *(\d{3}) *(\d{4,})$/
+              
+              if params[:country] == 'IN' && phone =~ /(91)? *(\d{3}) *(\d{4,})$/
                 phone_country_code, phone_area_code, phone_number = $1, $2, $3
               else
                 numbers = phone.split(' ')
@@ -154,11 +154,15 @@ module ActiveMerchant #:nodoc:
                   phone_area_code, phone_number = $1, $2
                 end
               end
-
-              add_field("#{address_field}1", phone_country_code || phone_code_for_country(country) || '91')
+              
+              add_field("#{address_field}1", phone_country_code || phone_code_for_country(params[:country]) || '91')
               add_field("#{address_field}2", phone_area_code)
               add_field("#{address_field}3", phone_number)
             end
+          end
+          
+          def normalize_phone_number(phone)
+            phone.gsub(/[^\d ]+/, '') if phone
           end
           
           # Special characters are NOT allowed while posting transaction parameters on DirecPay system

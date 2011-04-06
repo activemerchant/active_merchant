@@ -1,10 +1,26 @@
 = ActiveMerchant CHANGELOG
 
-* Merge QBMS gateway [ntalbott]
-* Add support for NMI gateway [ntalbott]
+== Version 1.12.1 (Mar 21, 2011)
+
+* Ogone: Make sure response.params is a real Hash [Soleone]
+* WorldPay: Fix service_url in production mode [Soleone]
+
+== Version 1.12.0 (Mar 1, 2011)
+
+* DirecPay: Send phone number as mobile phone by default [Soleone]
+* Support sending line items for PayPal Express transactions [Jonathan Rudenberg]
+* Update PayPal Express XML format to latest version [Jonathan Rudenberg]
+* Fix custom image header for PayPal Express [mwagg]
+* Add InvoiceID and OrderDescription to PayPal Express Authorize and Capture [cody]
+* Add Moneybookers integration [Alex Diakov]
+* Add QBMS (Quickbooks Merchant Services) gateway [ntalbott]
+* Add NMI gateway [ntalbott]
 * Make fully compatible with Rails 2 & 3, and Ruby 1.8 & 1.9 [ntalbott]
 * Authorize.Net: Only return AVS message for AVS-related reason codes. [ntalbott]
-* Merge Federated Canada gateway [ntalbott]
+* Add Federated Canada gateway [ntalbott]
+* Garanti: Fix text normalization for nil values [Selem Delul]
+* Valitor: Always send amount without any decimal places [Soleone]
+* Add WorldPay integration [Soleone]
 
 == Version 1.11.0 (Feb 11, 2011)
 

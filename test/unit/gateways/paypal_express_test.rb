@@ -82,7 +82,7 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert response.success?
     assert response.test?
     
-    assert_equal 'EC-6WS104951Y388951L', response.token
+    assert_equal 'EC-2XE90996XX9870316', response.token
     assert_equal 'FWRVKNRRZ3WUC', response.payer_id
     assert_equal 'buyer@jadedpallet.com', response.email
     
@@ -247,35 +247,43 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'Sole', REXML::XPath.first(xml, '//n2:SolutionType').text
     assert_equal 'Billing', REXML::XPath.first(xml, '//n2:LandingPage').text
   end
-
+  
+  def test_get_phone_number_from_address_if_contact_phone_not_sent
+    response = successful_details_response.sub(%r{<ContactPhone>416-618-9984</ContactPhone>\n}, '')
+    @gateway.expects(:ssl_post).returns(response)
+    response = @gateway.details_for('EC-2OPN7UJGFWK9OYFV')
+    assert address = response.address
+    assert_equal '123-456-7890', address['phone']
+  end
+  
   private
   def successful_details_response
     <<-RESPONSE
-<?xml version='1.0' encoding='UTF-8'?>
-<SOAP-ENV:Envelope xmlns:cc='urn:ebay:apis:CoreComponentTypes' xmlns:sizeship='urn:ebay:api:PayPalAPI/sizeship.xsd' xmlns:SOAP-ENV='http://schemas.xmlsoap.org/soap/envelope/' xmlns:SOAP-ENC='http://schemas.xmlsoap.org/soap/encoding/' xmlns:saml='urn:oasis:names:tc:SAML:1.0:assertion' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:wsu='http://schemas.xmlsoap.org/ws/2002/07/utility' xmlns:ebl='urn:ebay:apis:eBLBaseComponents' xmlns:ds='http://www.w3.org/2000/09/xmldsig#' xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns:ns='urn:ebay:api:PayPalAPI' xmlns:market='urn:ebay:apis:Market' xmlns:ship='urn:ebay:apis:ship' xmlns:auction='urn:ebay:apis:Auction' xmlns:wsse='http://schemas.xmlsoap.org/ws/2002/12/secext' xmlns:xsd='http://www.w3.org/2001/XMLSchema'>
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ed="urn:ebay:apis:EnhancedDataTypes" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ns="urn:ebay:api:PayPalAPI">
   <SOAP-ENV:Header>
-    <Security xsi:type='wsse:SecurityType' xmlns='http://schemas.xmlsoap.org/ws/2002/12/secext'/>
-    <RequesterCredentials xsi:type='ebl:CustomSecurityHeaderType' xmlns='urn:ebay:api:PayPalAPI'>
-      <Credentials xsi:type='ebl:UserIdPasswordType' xmlns='urn:ebay:apis:eBLBaseComponents'>
-        <Username xsi:type='xs:string'/>
-        <Password xsi:type='xs:string'/>
-        <Subject xsi:type='xs:string'/>
+    <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext" xsi:type="wsse:SecurityType"/>
+    <RequesterCredentials xmlns="urn:ebay:api:PayPalAPI" xsi:type="ebl:CustomSecurityHeaderType">
+      <Credentials xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:UserIdPasswordType">
+        <Username xsi:type="xs:string"/>
+        <Password xsi:type="xs:string"/>
+        <Subject xsi:type="xs:string"/>
       </Credentials>
     </RequesterCredentials>
   </SOAP-ENV:Header>
-  <SOAP-ENV:Body id='_0'>
-    <GetExpressCheckoutDetailsResponse xmlns='urn:ebay:api:PayPalAPI'>
-      <Timestamp xmlns='urn:ebay:apis:eBLBaseComponents'>2007-02-12T23:59:43Z</Timestamp>
-      <Ack xmlns='urn:ebay:apis:eBLBaseComponents'>Success</Ack>
-      <CorrelationID xmlns='urn:ebay:apis:eBLBaseComponents'>c73044f11da65</CorrelationID>
-      <Version xmlns='urn:ebay:apis:eBLBaseComponents'>2.000000</Version>
-      <Build xmlns='urn:ebay:apis:eBLBaseComponents'>1.0006</Build>
-      <GetExpressCheckoutDetailsResponseDetails xsi:type='ebl:GetExpressCheckoutDetailsResponseDetailsType' xmlns='urn:ebay:apis:eBLBaseComponents'>
-        <Token xsi:type='ebl:ExpressCheckoutTokenType'>EC-6WS104951Y388951L</Token>
-        <PayerInfo xsi:type='ebl:PayerInfoType'>
-          <Payer xsi:type='ebl:EmailAddressType'>buyer@jadedpallet.com</Payer>
-          <PayerID xsi:type='ebl:UserIDType'>FWRVKNRRZ3WUC</PayerID>
-          <PayerStatus xsi:type='ebl:PayPalUserStatusCodeType'>verified</PayerStatus>
+  <SOAP-ENV:Body id="_0">
+    <GetExpressCheckoutDetailsResponse xmlns="urn:ebay:api:PayPalAPI">
+      <Timestamp xmlns="urn:ebay:apis:eBLBaseComponents">2011-03-01T20:19:35Z</Timestamp>
+      <Ack xmlns="urn:ebay:apis:eBLBaseComponents">Success</Ack>
+      <CorrelationID xmlns="urn:ebay:apis:eBLBaseComponents">84aff0e17b6f</CorrelationID>
+      <Version xmlns="urn:ebay:apis:eBLBaseComponents">62.0</Version>
+      <Build xmlns="urn:ebay:apis:eBLBaseComponents">1741654</Build>
+      <GetExpressCheckoutDetailsResponseDetails xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:GetExpressCheckoutDetailsResponseDetailsType">
+        <Token xsi:type="ebl:ExpressCheckoutTokenType">EC-2XE90996XX9870316</Token>
+        <PayerInfo xsi:type="ebl:PayerInfoType">
+          <Payer xsi:type="ebl:EmailAddressType">buyer@jadedpallet.com</Payer>
+          <PayerID xsi:type="ebl:UserIDType">FWRVKNRRZ3WUC</PayerID>
+          <PayerStatus xsi:type="ebl:PayPalUserStatusCodeType">verified</PayerStatus>
           <PayerName xsi:type='ebl:PersonNameType'>
             <Salutation xmlns='urn:ebay:apis:eBLBaseComponents'/>
             <FirstName xmlns='urn:ebay:apis:eBLBaseComponents'>Fred</FirstName>
@@ -283,23 +291,60 @@ class PaypalExpressTest < Test::Unit::TestCase
             <LastName xmlns='urn:ebay:apis:eBLBaseComponents'>Brooks</LastName>
             <Suffix xmlns='urn:ebay:apis:eBLBaseComponents'/>
           </PayerName>
-          <PayerCountry xsi:type='ebl:CountryCodeType'>US</PayerCountry>
-          <PayerBusiness xsi:type='xs:string'/>
-          <Address xsi:type='ebl:AddressType'>
-            <Name xsi:type='xs:string'>Fred Brooks</Name>
-            <Street1 xsi:type='xs:string'>1234 Penny Lane</Street1>
-            <Street2 xsi:type='xs:string'/>
-            <CityName xsi:type='xs:string'>Jonsetown</CityName>
-            <StateOrProvince xsi:type='xs:string'>NC</StateOrProvince>
-            <Country xsi:type='ebl:CountryCodeType'>US</Country>
+          <PayerCountry xsi:type="ebl:CountryCodeType">US</PayerCountry>
+          <PayerBusiness xsi:type="xs:string"/>
+          <Address xsi:type="ebl:AddressType">
+            <Name xsi:type="xs:string">Fred Brooks</Name>
+            <Street1 xsi:type="xs:string">1 Infinite Loop</Street1>
+            <Street2 xsi:type="xs:string"/>
+            <CityName xsi:type="xs:string">Cupertino</CityName>
+            <StateOrProvince xsi:type="xs:string">CA</StateOrProvince>
+            <Country xsi:type="ebl:CountryCodeType">US</Country>
             <CountryName>United States</CountryName>
-            <PostalCode xsi:type='xs:string'>23456</PostalCode>
-            <AddressOwner xsi:type='ebl:AddressOwnerCodeType'>PayPal</AddressOwner>
-            <AddressStatus xsi:type='ebl:AddressStatusCodeType'>Confirmed</AddressStatus>
+            <PostalCode xsi:type="xs:string">95014</PostalCode>
+            <AddressOwner xsi:type="ebl:AddressOwnerCodeType">PayPal</AddressOwner>
+            <AddressStatus xsi:type="ebl:AddressStatusCodeType">Confirmed</AddressStatus>
           </Address>
         </PayerInfo>
-        <InvoiceID xsi:type='xs:string'>1230123</InvoiceID>
+        <InvoiceID xsi:type="xs:string">1230123</InvoiceID>
         <ContactPhone>416-618-9984</ContactPhone>
+        <PaymentDetails xsi:type="ebl:PaymentDetailsType">
+          <OrderTotal xsi:type="cc:BasicAmountType" currencyID="USD">19.00</OrderTotal>
+          <ItemTotal xsi:type="cc:BasicAmountType" currencyID="USD">19.00</ItemTotal>
+          <ShippingTotal xsi:type="cc:BasicAmountType" currencyID="USD">0.00</ShippingTotal>
+          <HandlingTotal xsi:type="cc:BasicAmountType" currencyID="USD">0.00</HandlingTotal>
+          <TaxTotal xsi:type="cc:BasicAmountType" currencyID="USD">0.00</TaxTotal>
+          <ShipToAddress xsi:type="ebl:AddressType">
+            <Name xsi:type="xs:string">Fred Brooks</Name>
+            <Street1 xsi:type="xs:string">1234 Penny Lane</Street1>
+            <Street2 xsi:type="xs:string"/>
+            <CityName xsi:type="xs:string">Jonsetown</CityName>
+            <StateOrProvince xsi:type="xs:string">NC</StateOrProvince>
+            <Country xsi:type="ebl:CountryCodeType">US</Country>
+            <CountryName>United States</CountryName>
+            <Phone xsi:type="xs:string">123-456-7890</Phone>
+            <PostalCode xsi:type="xs:string">23456</PostalCode>
+            <AddressID xsi:type="xs:string"/>
+            <AddressOwner xsi:type="ebl:AddressOwnerCodeType">PayPal</AddressOwner>
+            <ExternalAddressID xsi:type="xs:string"/>
+            <AddressStatus xsi:type="ebl:AddressStatusCodeType">Confirmed</AddressStatus>
+          </ShipToAddress>
+          <PaymentDetailsItem xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:PaymentDetailsItemType">
+            <Name xsi:type="xs:string">Shopify T-Shirt</Name>
+            <Quantity>1</Quantity>
+            <Tax xsi:type="cc:BasicAmountType" currencyID="USD">0.00</Tax>
+            <Amount xsi:type="cc:BasicAmountType" currencyID="USD">19.00</Amount>
+            <EbayItemPaymentDetailsItem xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:EbayItemPaymentDetailsItemType"/>
+          </PaymentDetailsItem>
+          <InsuranceTotal xsi:type="cc:BasicAmountType" currencyID="USD">0.00</InsuranceTotal>
+          <ShippingDiscount xsi:type="cc:BasicAmountType" currencyID="USD">0.00</ShippingDiscount>
+          <InsuranceOptionOffered xsi:type="xs:string">false</InsuranceOptionOffered>
+          <SellerDetails xsi:type="ebl:SellerDetailsType"/>
+          <PaymentRequestID xsi:type="xs:string"/>
+          <OrderURL xsi:type="xs:string"/>
+          <SoftDescriptor xsi:type="xs:string"/>
+        </PaymentDetails>
+        <CheckoutStatus xsi:type="xs:string">PaymentActionNotInitiated</CheckoutStatus>
       </GetExpressCheckoutDetailsResponseDetails>
     </GetExpressCheckoutDetailsResponse>
   </SOAP-ENV:Body>

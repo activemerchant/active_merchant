@@ -3,13 +3,12 @@ require 'iconv'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PayboxDirectGateway < Gateway
-      TEST_URL = 'https://ppps.paybox.com/PPPS.php'
-      TEST_URL_BACKUP = 'https://ppps1.paybox.com/PPPS.php'
+      TEST_URL = 'https://preprod-ppps.paybox.com/PPPS.php'
       LIVE_URL = 'https://ppps.paybox.com/PPPS.php'
       LIVE_URL_BACKUP = 'https://ppps1.paybox.com/PPPS.php'
 
       # Payment API Version
-      API_VERSION = '00104'
+      API_VERSION = '00103'
 
       # Transactions hash
       TRANSACTIONS = {
@@ -142,7 +141,7 @@ module ActiveMerchant #:nodoc:
         parameters[:devise] = CURRENCY_CODES[options[:currency] || currency(money)]
         request_data = post_data(action,parameters)
         response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request_data))
-        response = parse(ssl_post(test? ? TEST_URL_BACKUP : LIVE_URL_BACKUP, request_data)) if service_unavailable?(response)
+        response = parse(ssl_post(LIVE_URL_BACKUP, request_data)) if service_unavailable?(response) && !test?
         Response.new(success?(response), message_from(response), response.merge(
           :timestamp => parameters[:dateq]),
           :test => test?,

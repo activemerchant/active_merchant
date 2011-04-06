@@ -10,7 +10,7 @@ class ValitorNotificationTest < Test::Unit::TestCase
 
   def test_accessors
     assert @notification.complete?
-    assert @notification.valid?
+    assert @notification.acknowledge
     assert @notification.success?
     assert_equal "OK", @notification.status
     assert_equal "2b969de3-6928-4fa7-a0d6-6dec63fec5c3", @notification.transaction_id
@@ -32,14 +32,14 @@ class ValitorNotificationTest < Test::Unit::TestCase
     assert !@notification.test?
   end
   
-  def test_validity_check
-    valid = Valitor::Notification.new(http_raw_query, :password => 'password')
-    assert valid.valid?
+  def test_acknowledge
+    valid = Valitor::Notification.new(http_raw_query, :credential2 => 'password')
+    assert valid.acknowledge
     assert valid.success?
     assert valid.complete?
     
-    invalid = Valitor::Notification.new(http_raw_query, :password => 'bogus')
-    assert !invalid.valid?
+    invalid = Valitor::Notification.new(http_raw_query, :credential2 => 'bogus')
+    assert !invalid.acknowledge
     assert !invalid.success?
     assert !invalid.complete?
   end

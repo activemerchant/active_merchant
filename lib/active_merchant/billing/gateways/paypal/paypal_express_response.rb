@@ -2,35 +2,42 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaypalExpressResponse < Response
       def email
-        @params['payer']
+        @params['PayerInfo']['Payer']
       end
       
       def name
-        [@params['first_name'], @params['middle_name'], @params['last_name']].compact.join(' ')
+        payer = @params['PayerInfo']['PayerName']
+        [payer['FirstName'], payer['MiddleName'], payer['LastName']].compact.join(' ')
       end
       
       def token
-        @params['token']
+        @params['Token']
       end
       
       def payer_id
-        @params['payer_id']
+        @params['PayerInfo']['PayerID']
       end
       
       def payer_country
-        @params['payer_country']
+        @params['PayerInfo']['PayerCountry']
+      end
+      
+      # PayPal returns a contact telephone number only if your Merchant account profile settings require that the buyer enter one.
+      def contact_phone
+        @params['ContactPhone']
       end
       
       def address
-        {  'name'       => @params['name'],
-           'company'    => @params['payer_business'],
-           'address1'   => @params['street1'],
-           'address2'   => @params['street2'],
-           'city'       => @params['city_name'],
-           'state'      => @params['state_or_province'],
-           'country'    => @params['country'],
-           'zip'        => @params['postal_code'],
-           'phone'      => @params['contact_phone']
+        address = @params['PaymentDetails']['ShipToAddress']
+        {  'name'       => address['Name'],
+           'company'    => @params['PayerInfo']['PayerBusiness'],
+           'address1'   => address['Street1'],
+           'address2'   => address['Street2'],
+           'city'       => address['CityName'],
+           'state'      => address['StateOrProvince'],
+           'country'    => address['Country'],
+           'zip'        => address['PostalCode'],
+           'phone'      => contact_phone || address['Phone']
         }
       end
     end

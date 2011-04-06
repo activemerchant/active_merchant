@@ -126,4 +126,10 @@ class ValitorHelperTest < Test::Unit::TestCase
     @helper.language = 'en'
     assert_field 'Lang', 'en'
   end
+  
+  def test_amount_gets_sent_without_decimals
+    @helper = Valitor::Helper.new('order-500', 'cody@example.com', :currency => 'ISK', :credential2 => '123', :amount => 115.10)
+    @helper.form_fields
+    assert_field "Vara_1_Verd", '115'
+  end
 end
