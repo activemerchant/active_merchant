@@ -50,6 +50,16 @@ module ActiveMerchant #:nodoc:
 				commit('processCard', money, post)
 			end
 
+			def process_auth(money, creditcard, options = {})
+				post = {}
+				add_product(post, options)
+				add_creditcard(post, creditcard)
+				add_address(post, options)
+				add_customer_data(post, options)
+
+				commit('processAuth', money, post)
+			end
+
 			def credit(money, identification, options = {})
 				requires!(options, :credit_amount)
 				commit('refundCard', money, {
