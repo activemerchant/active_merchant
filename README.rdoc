@@ -1,4 +1,4 @@
-= This fork adds Merchant Warrior support
+*This fork adds Merchant Warrior support
 
 = Active Merchant
 
