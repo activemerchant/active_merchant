@@ -79,6 +79,11 @@ module ActiveMerchant #:nodoc:
 
       # Psigate Credit
       def credit(money, authorization, options = {})
+        warn CREDIT_DEPRECATION_MESSAGE
+        refund(money, authorization, options)
+      end
+
+      def refund(money, authorization, options = {})
         options.update({ :CardAction => "3", :order_id => authorization })
         commit(money, nil, options)
       end

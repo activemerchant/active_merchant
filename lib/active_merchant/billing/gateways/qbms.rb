@@ -104,6 +104,11 @@ module ActiveMerchant #:nodoc:
       #
       #
       def credit(money, identification, options = {})
+        warn CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options = {})
+      end
+
+      def refund(money, identification, options = {})
         commit(:refund, money, options.merge(:transaction_id => identification))
       end
 

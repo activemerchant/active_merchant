@@ -50,10 +50,18 @@ class QbmsTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_successful_credit
+  def test_successful_deprecated_credit
     @gateway.expects(:ssl_post).returns(credit_response)
 
     assert response = @gateway.credit(@amount, "x", @options)
+    assert_instance_of Response, response
+    assert_success response
+  end
+
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(credit_response)
+
+    assert response = @gateway.refund(@amount, "x", @options)
     assert_instance_of Response, response
     assert_success response
   end
