@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         commit do
           result = Braintree::Transaction.void(authorization)
           Response.new(result.success?, message_from_result(result),
-            :braintree_transaction => (result.transaction if result.success?)
+            :braintree_transaction => (transaction_hash(result.transaction) if result.success?)
           )
         end
       end
@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
           )
           Response.new(result.success?, message_from_result(result),
             {
-              :braintree_customer => (result.customer if result.success?),
+              :braintree_customer => (customer_hash(result.customer) if result.success?),
               :customer_vault_id => (result.customer.id if result.success?)
             }
           )
@@ -100,7 +100,7 @@ module ActiveMerchant #:nodoc:
             :email => options[:email]
           )
           Response.new(result.success?, message_from_result(result),
-            :braintree_customer => (Braintree::Customer.find(vault_id) if result.success?)
+            :braintree_customer => (customer_hash(Braintree::Customer.find(vault_id)) if result.success?)
           )
         end
         return customer_update_result unless customer_update_result.success?
@@ -111,7 +111,7 @@ module ActiveMerchant #:nodoc:
               :expiration_year => creditcard.year.to_s
           )
           Response.new(result.success?, message_from_result(result),
-            :braintree_customer => (Braintree::Customer.find(vault_id) if result.success?)
+            :braintree_customer => (customer_hash(Braintree::Customer.find(vault_id)) if result.success?)
           )
         end
       end
@@ -186,7 +186,7 @@ module ActiveMerchant #:nodoc:
           result = Braintree::Transaction.send(transaction_type, parameters)
           response_params, response_options, avs_result, cvv_result = {}, {}, {}, {}
           if result.success?
-            response_params[:braintree_transaction] = result.transaction
+            response_params[:braintree_transaction] = transaction_hash(result.transaction)
             response_params[:customer_vault_id] = result.transaction.customer_details.id
             response_options[:authorization] = result.transaction.id
           end
@@ -221,6 +221,70 @@ module ActiveMerchant #:nodoc:
         else
           raise ArgumentError, "wrong number of arguments (#{args.length} for 2)"
         end
+      end
+
+      def customer_hash(customer)
+        credit_cards = customer.credit_cards.map do |cc|
+          {
+            "bin" => cc.bin,
+            "expiration_date" => cc.expiration_date
+          }
+        end
+
+        {
+          "email" => customer.email,
+          "first_name" => customer.first_name,
+          "last_name" => customer.last_name,
+          "credit_cards" => credit_cards
+        }
+      end
+
+      def transaction_hash(transaction)
+        if transaction.vault_customer
+          vault_customer = {
+          }
+          vault_customer["credit_cards"] = transaction.vault_customer.credit_cards.map do |cc|
+            {
+              "bin" => cc.bin
+            }
+          end
+        else
+          vault_customer = nil
+        end
+
+        customer_details = {
+          "id" => transaction.customer_details.id,
+          "email" => transaction.customer_details.email
+        }
+
+        billing_details = {
+          "street_address"   => transaction.billing_details.street_address,
+          "extended_address" => transaction.billing_details.extended_address,
+          "company"          => transaction.billing_details.company,
+          "locality"         => transaction.billing_details.locality,
+          "region"           => transaction.billing_details.region,
+          "postal_code"      => transaction.billing_details.postal_code,
+          "country_name"     => transaction.billing_details.country_name,
+        }
+
+        shipping_details = {
+          "street_address"   => transaction.shipping_details.street_address,
+          "extended_address" => transaction.shipping_details.extended_address,
+          "company"          => transaction.shipping_details.company,
+          "locality"         => transaction.shipping_details.locality,
+          "region"           => transaction.shipping_details.region,
+          "postal_code"      => transaction.shipping_details.postal_code,
+          "country_name"     => transaction.shipping_details.country_name,
+        }
+
+        {
+          "order_id"         => transaction.order_id,
+          "status"           => transaction.status,
+          "customer_details" => customer_details,
+          "billing_details"  => billing_details,
+          "shipping_details" => shipping_details,
+          "vault_customer"   => vault_customer
+        }
       end
     end
   end
