@@ -84,7 +84,7 @@ class JetpayTest < Test::Unit::TestCase
 
     @gateway.expects(:ssl_post).returns(successful_credit_response)
     
-    # linked credit
+    # linked credit # now deprecated, use refund
     assert response = @gateway.credit(9900, '010327153017T10017')
     assert_success response
     
@@ -99,6 +99,18 @@ class JetpayTest < Test::Unit::TestCase
     assert_success response    
   end
   
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_credit_response)
+    
+    # linked credit
+    assert response = @gateway.refund(9900, '010327153017T10017')
+    assert_success response
+    
+    assert_equal('010327153017T10017;002F6B;9900', response.authorization)
+    assert_equal('002F6B', response.params['approval'])
+    assert response.test?
+  end
+
   def test_avs_result
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     

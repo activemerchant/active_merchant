@@ -35,6 +35,21 @@ class EfsnetTest < Test::Unit::TestCase
     assert_equal 'Declined', response.message
   end
 
+  def test_credit
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/AccountNumber>#{@credit_card.number}<\/AccountNumber/), anything).returns("")
+    @gateway.credit(@amount, @credit_card, :order_id => 5)
+  end
+
+  def test_deprecated_credit
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OriginalTransactionID>transaction_id<\/OriginalTransactionID>/), anything).returns("")
+    @gateway.credit(@amount, "transaction_id", :order_id => 5)
+  end
+
+  def test_refund
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OriginalTransactionID>transaction_id<\/OriginalTransactionID>/), anything).returns("")
+    @gateway.refund(@amount, "transaction_id", :order_id => 5)
+  end
+
   def test_authorize_is_valid_xml
     params = {
       :order_id => "order1",

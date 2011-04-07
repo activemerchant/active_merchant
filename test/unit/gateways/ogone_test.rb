@@ -79,6 +79,14 @@ class OgoneTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_referenced_credit_response)
+    assert response = @gateway.refund(@amount, "3049652")
+    assert_success response
+    assert_equal '3049652;RFD', response.authorization
+    assert response.test?
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
