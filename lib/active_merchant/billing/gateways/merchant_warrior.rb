@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
 				@options[:test] || super
 			end
 
-			def purchase(money, creditcard, options = {})
+			def process_card(money, creditcard, options = {})
 				post = {}
 				add_product(post, options)
 				add_creditcard(post, creditcard)
@@ -60,7 +60,17 @@ module ActiveMerchant #:nodoc:
 				commit('processAuth', money, post)
 			end
 
-			def credit(money, identification, options = {})
+			def process_capture(money, transaction_id, capture_amount)
+				post = {}
+				post.merge!('transactionID' => transaction_id)
+				post.merge!('transactionAmount' => money.to_s)
+				post.merge!('captureAmount' => capture_amount.to_s)
+				post.merge!('hash' => verification_hash(money))
+				post.merge!('transactionCurrency' => currency(money))
+				commit('processCapture', money, post)
+			end
+
+			def refund_card(money, identification, options = {})
 				requires!(options, :credit_amount)
 				commit('refundCard', money, {
 								 'transactionID' => identification,
@@ -68,16 +78,17 @@ module ActiveMerchant #:nodoc:
 							 })
 			end
 
-			def token_addcard(creditcard)
+			def token_add_card(creditcard)
 				month = sprintf '%02d', creditcard.month
+				year = sprintf '%02d', creditcard.year
 				token_commit('addCard', {
 										'cardName'	=> creditcard.name,
 										'cardNumber' => creditcard.number,
 										'cardExpiryMonth' => month,
-										'cardExpiryYear' => creditcard.year})
+										'cardExpiryYear' => year})
 			end
 
-			def token_processcard(money, card_id, card_key, key_replace, options = {})
+			def token_process_card(money, card_id, card_key, key_replace, options = {})
 				post = {}
 				add_product(post, options)
 				add_address(post, options)
@@ -90,6 +101,21 @@ module ActiveMerchant #:nodoc:
 				post.merge!('transactionCurrency' => currency(money))
 				token_commit('processCard', post)
 			end
+
+			def token_process_auth(money, card_id, card_key, key_replace, options = {})
+				post = {}
+				add_product(post, options)
+				add_address(post, options)
+				add_customer_data(post, options)
+				post.merge!('cardID' => card_id)
+				post.merge!('cardKey' => card_key)
+				post.merge!('cardKeyReplace' => key_replace)
+				post.merge!('hash' => verification_hash(money))
+				post.merge!('transactionAmount' => money.to_s)
+				post.merge!('transactionCurrency' => currency(money))
+				token_commit('processAuth', post)
+			end
+
 
 			def card_replace_key
 				seed = "--#{rand(10000)}--#{Time.now}--"; 
