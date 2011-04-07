@@ -54,7 +54,10 @@ module ActiveMerchant #:nodoc:
 
         commit do
           result = Braintree::Transaction.refund(transaction_id, money)
-          Response.new(result.success?, message_from_result(result))
+          Response.new(result.success?, message_from_result(result),
+            {:braintree_transaction => (result.transaction if result.success?)},
+            {:authorization => (result.transaction.id if result.success?)}
+           )
         end
       end
 
@@ -62,7 +65,8 @@ module ActiveMerchant #:nodoc:
         commit do
           result = Braintree::Transaction.void(authorization)
           Response.new(result.success?, message_from_result(result),
-            :braintree_transaction => (result.transaction if result.success?)
+            {:braintree_transaction => (result.transaction if result.success?)},
+            {:authorization => (result.transaction.id if result.success?)}
           )
         end
       end
