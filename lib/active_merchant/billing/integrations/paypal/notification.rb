@@ -114,7 +114,7 @@ module ActiveMerchant #:nodoc:
 
           # Was this a test transaction?
           def test?
-            params['test_ipn'].to_i == 1
+            params['test_ipn'] == '1'
           end
           
           def account
