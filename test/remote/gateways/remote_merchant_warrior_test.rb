@@ -80,14 +80,25 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 		assert response = @gateway.process_auth('150.00', @credit_card, @options)
 		assert_equal '0', response.params["response_code"]
 		assert_equal 'Transaction approved', response.params["response_message"]
-		# assert_equal '0', response.params["auth_response_code"]
-		# assert_equal 'Approved', response.params["auth_message"]
 		transaction_id = response.params["transaction_id"]
 		auth_code = response.params["auth_code"]
 		assert_success response
 		
 		assert response = @gateway.process_capture(@success_amount, transaction_id, @success_amount)
 		assert_success response
+	end
+
+	def test_card_auth_too_much
+		assert response = @gateway.process_auth('150.00', @credit_card, @options)
+		assert_equal '0', response.params["response_code"]
+		assert_equal 'Transaction approved', response.params["response_message"]
+		transaction_id = response.params["transaction_id"]
+		auth_code = response.params["auth_code"]
+		assert_success response
+		
+		assert response = @gateway.process_capture(150, transaction_id, 160)
+		assert_equal 'MW - 024:Capture amount is greater than the transaction amount', response.params["response_message"]
+		assert_failure response
 	end
 
 
