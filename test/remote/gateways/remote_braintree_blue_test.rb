@@ -73,7 +73,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       )
     )
     assert_success response
-    assert_equal({'code' => '', 'message' => '', 'street_match' => true, 'postal_match' => true}, response.avs_result)
+    assert_equal({'code' => nil, 'message' => nil, 'street_match' => 'M', 'postal_match' => 'M'}, response.avs_result)
   end
 
   def test_avs_no_match
@@ -83,7 +83,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       )
     )
     assert_success response
-    assert_equal({'code' => '', 'message' => '', 'street_match' => false, 'postal_match' => false}, response.avs_result)
+    assert_equal({'code' => nil, 'message' => nil, 'street_match' => 'N', 'postal_match' => 'N'}, response.avs_result)
   end
 
   def test_cvv_match
