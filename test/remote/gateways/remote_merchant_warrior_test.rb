@@ -12,16 +12,16 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 		# DO NOT USE DECIMALS FOR TOKEN TESTING
 		@token_success_amount = '133.00'
 		@failure_amount = '102.33'
-		@credit_card = credit_card('4564710000000004',
-															 :month => 2,
-															 :year => 19,
-															 :verification_value => '847',
-															 :type => 'visa')
-		@token_card = credit_card('4564710000000004',
-															 :month => 2,
-															 :year => 19,
-															 :verification_value => '847',
-															 :type => 'visa')
+		@credit_card = credit_card('5123456789012346',
+															 :month => 5,
+															 :year => 13,
+															 :verification_value => '123',
+															 :type => 'master')
+		@token_card = credit_card('5123456789012346',
+															 :month => 5,
+															 :year => 13,
+															 :verification_value => '123',
+															 :type => 'master')
 		@expired_card = credit_card('4564710000000012',
 															 :month => 2,
 															 :year => 5,
@@ -50,9 +50,8 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 	end
 
 	def test_unsuccessful_purchase
-		assert response = @gateway.process_card(@failure_amount, @expired_card, @options)
-		# assert_equal 'Card has expired', response.params["response_message"]
-		assert_equal "MW - 006:Field 'paymentCardExpiry' is invalid", response.params["response_message"]
+		assert response = @gateway.process_card(@failure_amount, @credit_card, @options)
+		assert_equal 'Card has expired', response.params["response_message"]
 		assert_failure response
 	end
 
