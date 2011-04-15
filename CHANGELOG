@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Braintree/Transax: Add tax field [wisq]
+
 == Version 1.12.1 (Mar 21, 2011)
 
 * Ogone: Make sure response.params is a real Hash [Soleone]
