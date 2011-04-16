@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Stop using has_rdoc= when rubygems version is 1.7.0 or greater, since it's deprecated [ssoroka]
 * Braintree/Transax: Add tax field [wisq]
 
 == Version 1.12.1 (Mar 21, 2011)
