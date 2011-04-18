@@ -104,7 +104,7 @@ class OgoneTest < Test::Unit::TestCase
 
   def test_successful_referenced_credit
     @gateway.expects(:ssl_post).returns(successful_referenced_credit_response)
-    assert response = @gateway.credit(@amount, "3049652")
+    assert response = @gateway.credit(@amount, "3049652;SAL")
     assert_success response
     assert_equal '3049652;RFD', response.authorization
     assert response.test?
