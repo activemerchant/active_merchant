@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.13.0 (Apr 19, 2011)
+
 * Add a Gemfile for optional bundler support [ssoroka]
 * Stop using has_rdoc= when rubygems version is 1.7.0 or greater, since it's deprecated [ssoroka]
 * Add tax field to braintree [wisq]
