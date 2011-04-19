@@ -9,6 +9,7 @@
 * PayPal Express: Extract phone number from address if no contact phone was sent [Soleone]
 * Unify all offsite gateways that verify the signature of Returns or Notifications by always using the #acknowledge method and calling the secret :credential2 [Soleone]
 * Valitor: Change name of credential for Return and Notification from :password to :credential2 in symmetry with the other Integrations [Soleone]
+* Moneybookers: Add support for tracking token [Soleone]
 * Moneybookers: Require credential when creating Notifications instead of adding an argument to #acknowledge [Soleone]
 * Moneybookers: Fix Notification to return correct status [Soleone]
 * Support default Return class for all Integrations that don't use returns [Soleone]

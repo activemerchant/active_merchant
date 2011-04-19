@@ -4,6 +4,7 @@ class MoneybookersHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
   
   def setup
+    Moneybookers::Helper.application_id = 'ActiveMerchant'
     @helper = Moneybookers::Helper.new('order-500','cody@example.com', :amount => 500, :currency => 'USD')
   end
  
@@ -50,5 +51,17 @@ class MoneybookersHelperTest < Test::Unit::TestCase
     fields = @helper.fields.dup
     @helper.billing_address :street => 'My Street'
     assert_equal fields, @helper.fields
+  end
+  
+  def test_tracking_token
+    Moneybookers::Helper.application_id = '123'
+    @helper = Moneybookers::Helper.new('order-500','cody@example.com', :amount => 500, :currency => 'USD')
+    assert_field 'merchant_fields', 'platform'
+    assert_field 'platform', '123'
+  end
+
+  def test_tracking_token_not_added_by_default
+    assert_nil @helper.fields['merchant_fields']
+    assert_nil @helper.fields['platform']
   end
 end
