@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
       def build_periodic_request(body)
         xml = Builder::XmlMarkup.new
         xml.instruct!
-        xml.tag! 'NABTransacMessage' do
+        xml.tag! 'NABTransactMessage' do
           xml.tag! 'MessageInfo' do
             xml.tag! 'messageID', ActiveMerchant::Utils.generate_unique_id.slice(0, 30)
             xml.tag! 'messageTimestamp', generate_timestamp
