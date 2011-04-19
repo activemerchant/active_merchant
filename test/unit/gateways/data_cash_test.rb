@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class DataCashTest < Test::Unit::TestCase
   # 100 Cents
@@ -77,6 +77,7 @@ class DataCashTest < Test::Unit::TestCase
   end
   
   def test_purchase_does_not_raise_exception_with_missing_billing_address
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert @gateway.authorize(100, @credit_card, {:order_id => generate_unique_id }).is_a?(ActiveMerchant::Billing::Response)
   end
   

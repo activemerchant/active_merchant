@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class BogusTest < Test::Unit::TestCase
   def setup
@@ -22,6 +22,10 @@ class BogusTest < Test::Unit::TestCase
 
   def test_credit
     @gateway.credit(1000, @response.params["transid"])
+  end
+
+  def test_void
+    @gateway.void(@response.params["transid"])
   end
   
   def  test_store

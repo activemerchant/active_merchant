@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class GatewayTest < Test::Unit::TestCase
   def test_should_detect_if_a_card_is_supported

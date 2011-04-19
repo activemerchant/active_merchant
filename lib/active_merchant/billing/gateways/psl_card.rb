@@ -1,5 +1,3 @@
-# Author::    MoneySpyder, http://moneyspyder.co.uk
-
 module ActiveMerchant
   module Billing
     #
@@ -99,7 +97,7 @@ module ActiveMerchant
       # Purchase the item straight away
       # 
       # Parameters:
-      #   -money: Money object for the total to be charged
+      #   -money: Amount to be charged as an Integer value in cents
       #   -authorization: the PSL cross reference from the previous authorization
       #   -options:
       #
@@ -127,7 +125,7 @@ module ActiveMerchant
       # is available and only 'reserves' the nominal amount (currently a pound and a penny)
       # 
       # Parameters:
-      #   -money: Money object for the total to be charged
+      #   -money: Amount to be charged as an Integer value in cents
       #   -authorization: the PSL cross reference from the previous authorization
       #   -options:
       #
@@ -151,7 +149,7 @@ module ActiveMerchant
       # Captures the funds from an authorized transaction. 
       # 
       # Parameters:
-      #   -money: Money object for the total to be charged
+      #   -money: Amount to be charged as an Integer value in cents
       #   -authorization: The PSL Cross Reference
       #   -options:
       #
@@ -163,6 +161,7 @@ module ActiveMerchant
       
         add_amount(post, money, DISPATCH_NOW, options)
         add_reference(post, authorization)
+        add_purchase_details(post)
 
         commit(post)
       end
@@ -175,9 +174,12 @@ module ActiveMerchant
         post[:EMVTerminalType] = EMV_TERMINAL_TYPE
         post[:ExpMonth] = credit_card.month
         post[:ExpYear] = credit_card.year
-        post[:IssueNumber] = credit_card.issue_number unless credit_card.issue_number.blank?
-        post[:StartMonth] = credit_card.start_month unless credit_card.start_month.blank?
-        post[:StartYear] = credit_card.start_year unless credit_card.start_year.blank?
+        
+        if requires_start_date_or_issue_number?(credit_card)        
+          post[:IssueNumber] = credit_card.issue_number unless credit_card.issue_number.blank?
+          post[:StartMonth] = credit_card.start_month unless credit_card.start_month.blank?
+          post[:StartYear] = credit_card.start_year unless credit_card.start_year.blank?
+        end
         
         # CV2 check
         post[:AVSCV2Check] = credit_card.verification_value? ? 'YES' : 'NO'
@@ -226,7 +228,7 @@ module ActiveMerchant
       # however PSL requires the ISO 4217:2001 Numeric code.
       # 
       # Parameters:
-      #   -money: Money object with the amount and currency
+      #   -money: Integer value in cents
       #   
       # Returns:
       #   -the ISO 4217:2001 Numberic currency code

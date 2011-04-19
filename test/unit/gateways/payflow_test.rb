@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class PayflowTest < Test::Unit::TestCase
   def setup
@@ -91,6 +91,12 @@ class PayflowTest < Test::Unit::TestCase
     assert_equal 'PayPal', gateway.options[:partner]
   end
   
+  def test_partner_class_accessor_used_when_passed_in_partner_is_blank
+    assert_equal 'PayPal', PayflowGateway.partner
+    gateway = PayflowGateway.new(:login => 'test', :password => 'test', :partner => '')
+    assert_equal 'PayPal', gateway.options[:partner]
+  end
+  
   def test_passed_in_partner_overrides_class_accessor
     assert_equal 'PayPal', PayflowGateway.partner
     gateway = PayflowGateway.new(:login => 'test', :password => 'test', :partner => 'PayPalUk')
@@ -98,14 +104,12 @@ class PayflowTest < Test::Unit::TestCase
   end
   
   def test_express_instance
-    PayflowGateway.certification_id = '123456'
     gateway = PayflowGateway.new(
       :login => 'test',
       :password => 'password'
     )
     express = gateway.express
     assert_instance_of PayflowExpressGateway, express
-    assert_equal '123456', express.options[:certification_id]
     assert_equal 'PayPal', express.options[:partner]
     assert_equal 'test', express.options[:login]
     assert_equal 'password', express.options[:password]
@@ -192,6 +196,16 @@ class PayflowTest < Test::Unit::TestCase
     assert @gateway.retry_safe
   end
     
+  def test_timeout_is_same_in_header_and_xml
+    timeout = PayflowGateway.timeout.to_s
+
+    headers = @gateway.send(:build_headers, 1)
+    assert_equal timeout, headers['X-VPS-Client-Timeout']
+    
+    xml = @gateway.send(:build_request, 'dummy body')
+    assert_match /Timeout="#{timeout}"/, xml
+  end
+  
   private
   def successful_recurring_response
     <<-XML

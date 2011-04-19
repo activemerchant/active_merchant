@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 
 class CreditCardFormattingTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::CreditCardFormatting

@@ -4,10 +4,6 @@ module ActiveMerchant #:nodoc:
       def self.included(base)
         base.default_currency = 'USD'
           
-        # The certification id requirement has been removed by Payflow
-        # This is no longer being sent in the requests to the gateway
-        base.class_inheritable_accessor :certification_id
-
         base.class_inheritable_accessor :partner
         
         # Set the default partner to PayPal
@@ -59,11 +55,9 @@ module ActiveMerchant #:nodoc:
           
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = {
-          :certification_id => self.class.certification_id,
-          :partner => self.class.partner
-        }.update(options)
         
+        @options = options
+        @options[:partner] = partner if @options[:partner].blank?
         super
       end  
       
@@ -85,7 +79,7 @@ module ActiveMerchant #:nodoc:
       def build_request(body, request_type = nil)
         xml = Builder::XmlMarkup.new
         xml.instruct!
-        xml.tag! 'XMLPayRequest', 'Timeout' => 30, 'version' => "2.1", "xmlns" => XMLNS do
+        xml.tag! 'XMLPayRequest', 'Timeout' => timeout.to_s, 'version' => "2.1", "xmlns" => XMLNS do
           xml.tag! 'RequestData' do
             xml.tag! 'Vendor', @options[:login]
             xml.tag! 'Partner', @options[:partner]
@@ -188,7 +182,7 @@ module ActiveMerchant #:nodoc:
         {
           "Content-Type" => "text/xml",
           "Content-Length" => content_length.to_s,
-      	  "X-VPS-Timeout" => timeout.to_s,
+      	  "X-VPS-Client-Timeout" => timeout.to_s,
       	  "X-VPS-VIT-Integration-Product" => "ActiveMerchant",
       	  "X-VPS-VIT-Runtime-Version" => RUBY_VERSION,
       	  "X-VPS-Request-ID" => Utils.generate_unique_id

@@ -20,6 +20,15 @@ module ActiveMerchant #:nodoc:
 
       RETURN_CODES = %w[ ACK NOK ]
 
+      # Wirecard only allows phone numbers with a format like this: +xxx(yyy)zzz-zzzz-ppp, where: 
+      #   xxx = Country code 
+      #   yyy = Area or city code 
+      #   zzz-zzzz = Local number 
+      #   ppp = PBX extension 
+      # For example, a typical U.S. or Canadian number would be "+1(202)555-1234-739" indicating PBX extension 739 at phone 
+      # number 5551234 within area code 202 (country code 1).
+      VALID_PHONE_FORMAT = /\+\d{1,3}(\(?\d{3}\)?)?\d{3}-\d{4}-\d{3}/
+      
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       # TODO: Check supported countries
       self.supported_countries = ['DE']
@@ -202,9 +211,13 @@ module ActiveMerchant #:nodoc:
 	          xml.tag! 'Address2', address[:address2] if address[:address2]
 	          xml.tag! 'City', address[:city]
 	          xml.tag! 'ZipCode', address[:zip]
-	          xml.tag! 'State', address[:state].blank? ? 'N/A' : address[:state]
+	          
+	          if address[:state] =~ /[A-Za-z]{2}/ && address[:country] =~ /^(us|ca)$/i
+	            xml.tag! 'State', address[:state].upcase
+	          end
+	          
 	          xml.tag! 'Country', address[:country]
-	          xml.tag! 'Phone', address[:phone]
+            xml.tag! 'Phone', address[:phone] if address[:phone] =~ VALID_PHONE_FORMAT
 	          xml.tag! 'Email', address[:email]
 	        end
 	      end
@@ -220,7 +233,7 @@ module ActiveMerchant #:nodoc:
         xml = REXML::Document.new(xml)
         if root = REXML::XPath.first(xml, "#{basepath}/W_JOB")
           parse_response(response, root)
-        elsif root = REXML::XPath.first(xml, "/#{basepath}/ERROR")
+        elsif root = REXML::XPath.first(xml, "//ERROR")
           parse_error(response, root)
         else
           response[:Message] = "No valid XML response message received. \
@@ -239,36 +252,37 @@ module ActiveMerchant #:nodoc:
             status = REXML::XPath.first(node, "CC_TRANSACTION/PROCESSING_STATUS")
           end
         end
-        # Get message
-        message = ''
-        if info = status.elements['Info']
-          message << info.text
+        message = ""
+        if status
+          if info = status.elements['Info']
+            message << info.text
+          end
+          # Get basic response information
+          status.elements.to_a.each do |node|
+            response[node.name.to_sym] = (node.text || '').strip
+          end
         end
+        parse_error(root, message)
+        response[:Message] = message
+      end
+
+      # Parse a generic error response from the gateway
+      def parse_error(root, message = "")
         # Get errors if available and append them to the message
-        errors = errors_to_string(status)
+        errors = errors_to_string(root)
         unless errors.strip.blank?
           message << ' - ' unless message.strip.blank?
           message << errors
         end
-        response[:Message] = message
-     
-        # Get basic response information
-        status.elements.to_a.each do |node|
-          response[node.name.to_sym] = (node.text || '').strip
-        end
-      end
-
-      # Parse a generic error response from the gateway
-      def parse_error(response, root)
-        # TODO: Implement parsing of more generic error messages
+        message
       end
 
       # Parses all <ERROR> elements in the response and converts the information
       # to a single string
-      def errors_to_string(status)
+      def errors_to_string(root)
         # Get context error messages (can be 0..*)
         errors = []
-        REXML::XPath.each(status, "ERROR") do |error_elem|
+        REXML::XPath.each(root, "//ERROR") do |error_elem|
           error = {}
           error[:Advice] = []
           error[:Message] = error_elem.elements['Message'].text

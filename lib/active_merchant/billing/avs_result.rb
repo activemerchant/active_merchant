@@ -1,3 +1,6 @@
+#!ruby19
+# encoding: utf-8
+
 module ActiveMerchant
   module Billing 
     # Implements the Address Verification System
@@ -13,23 +16,23 @@ module ActiveMerchant
         'C' => 'Street address and postal code do not match.',
         'D' => 'Street address and postal code match.',
         'E' => 'AVS data is invalid or AVS is not allowed for this card type.',
-        'F' => 'Card member’s name does not match, but billing postal code matches.',
+        'F' => 'Card member\'s name does not match, but billing postal code matches.',
         'G' => 'Non-U.S. issuing bank does not support AVS.',
-        'H' => 'Card member’s name does not match. Street address and postal code match.',
+        'H' => 'Card member\'s name does not match. Street address and postal code match.',
         'I' => 'Address not verified.',
-        'J' => 'Card member’s name, billing address, and postal code match. Shipping information verified and chargeback protection guaranteed through the Fraud Protection Program.',
-        'K' => 'Card member’s name matches but billing address and billing postal code do not match.',
-        'L' => 'Card member’s name and billing postal code match, but billing address does not match.',
+        'J' => 'Card member\'s name, billing address, and postal code match. Shipping information verified and chargeback protection guaranteed through the Fraud Protection Program.',
+        'K' => 'Card member\'s name matches but billing address and billing postal code do not match.',
+        'L' => 'Card member\'s name and billing postal code match, but billing address does not match.',
         'M' => 'Street address and postal code match.',
         'N' => 'Street address and postal code do not match.',
-        'O' => 'Card member’s name and billing address match, but billing postal code does not match.',
+        'O' => 'Card member\'s name and billing address match, but billing postal code does not match.',
         'P' => 'Postal code matches, but street address not verified.',
-        'Q' => 'Card member’s name, billing address, and postal code match. Shipping information verified but chargeback protection not guaranteed.',
+        'Q' => 'Card member\'s name, billing address, and postal code match. Shipping information verified but chargeback protection not guaranteed.',
         'R' => 'System unavailable.',
         'S' => 'U.S.-issuing bank does not support AVS.',
-        'T' => 'Card member’s name does not match, but street address matches.',
+        'T' => 'Card member\'s name does not match, but street address matches.',
         'U' => 'Address information unavailable.',
-        'V' => 'Card member’s name, billing address, and billing postal code match.',
+        'V' => 'Card member\'s name, billing address, and billing postal code match.',
         'W' => 'Street address does not match, but 9-digit postal code matches.',
         'X' => 'Street address and 9-digit postal code match.',
         'Y' => 'Street address and 5-digit postal code match.',

@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class AuthorizeNetTest < Test::Unit::TestCase
   def setup
@@ -71,6 +71,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
     result = {}
     @gateway.send(:add_invoice, result, :description => 'My Purchase is great')
     assert_equal 'My Purchase is great', result[:description]
+  end
+  
+  def test_add_duplicate_window_without_duplicate_window
+    result = {}
+    ActiveMerchant::Billing::AuthorizeNetGateway.duplicate_window = nil
+    @gateway.send(:add_duplicate_window, result)
+    assert_nil result[:duplicate_window]
+  end
+  
+  def test_add_duplicate_window_with_duplicate_window
+    result = {}
+    ActiveMerchant::Billing::AuthorizeNetGateway.duplicate_window = 0
+    @gateway.send(:add_duplicate_window, result)
+    assert_equal 0, result[:duplicate_window]
   end
   
   def test_purchase_is_valid_csv
@@ -193,15 +207,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_expdate_formatting
-    assert_equal '2009-09', @gateway.send(:arb_expdate, @credit_card)
-
-    assert_equal '2013-11', @gateway.send(:arb_expdate, credit_card('4111111111111111',
-                                          :month => 11,
-                                          :year => 2013))
+    assert_equal '2009-09', @gateway.send(:arb_expdate, credit_card('4111111111111111', :month => "9", :year => "2009"))
+    assert_equal '2013-11', @gateway.send(:arb_expdate, credit_card('4111111111111111', :month => "11", :year => "2013"))
   end
 
   private
-
   def post_data_fixture
     'x_encap_char=%24&x_card_num=4242424242424242&x_exp_date=0806&x_card_code=123&x_type=AUTH_ONLY&x_first_name=Longbob&x_version=3.1&x_login=X&x_last_name=Longsen&x_tran_key=Y&x_relay_response=FALSE&x_delim_data=TRUE&x_delim_char=%2C&x_amount=1.01'
   end

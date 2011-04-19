@@ -24,10 +24,15 @@ beanstream_interac:
   user: username
   password: password
 
-braintree:
+braintree_orange:
   login: demo
   password: password
-  
+
+braintree_blue:
+  merchant_id: X
+  public_key: Y
+  private_key: Z
+
 card_stream:
   login: X
   password: Y
@@ -44,6 +49,16 @@ efsnet:
   login: X
   password: Y
 
+elavon:
+  login: LOGIN
+  password: PASSWORD
+
+# login: merchant number
+# password: referrer url (for authorize authentication)
+epay:
+  login: X
+  password: Y
+
 # Working credentials, no need to replace
 eway:
   login: '87654321'
@@ -53,16 +68,40 @@ exact:
   login: "A00427-01" 
   password: testus
 
+first_pay:
+  login:
+  password:
+
 ideal_ing_postbank:
   login: LOGIN
   password: PASSWORD
   pem: |--
     PASTE YOUR PEM FILE HERE
 
+instapay:
+  login: TEST0
+  password:
+
+inspire:
+  login: demo
+  password: password
+
+jetpay:
+  login: TESTTERMINAL
+      
+iridium:
+    login: LOGIN
+    password: PASSWORD
+
 linkpoint:
   login: STOREID
   pem: |--
     PASTE YOUR PEM FILE HERE
+
+merchant_ware:
+ login: 
+ password: 
+ name: 
 
 modern_payments:
   login: login
@@ -72,6 +111,10 @@ modern_payments:
 moneris:
   login: store1
   password: yesguy
+  
+netaxept:
+  login: LOGIN
+  password: PASSWORD
 
 # Working credentials, no need to replace
 # Contact Netbilling for login info to the admin area  
@@ -82,6 +125,16 @@ net_registry:
   login: X
   password: Y
   
+ogone:
+  login: LOGIN
+  user: USER
+  password: PASSWORD
+  signature: SIGNATURE
+  
+paybox_direct:
+  login: 199988899
+  password: 1999888I
+
 payflow:
   login: LOGIN
   password: PASSWORD
@@ -122,7 +175,7 @@ plugnpay:
   login: LOGIN
   password: PASSWORD
   
-protx:
+sage_pay:
   login: LOGIN
   
 # Working credentials, no need to replace
@@ -172,11 +225,27 @@ psl_visa_address:
   address2: 
   address3: 
   city: 
-  zip: 
+  zip:
+    
+psl_visa_debit:
+  first_name:
+  last_name:
+  number:
+  month:
+  year:
+  verification_value:
+
+psl_visa_debit_address:
+  address1:
+  address2:
+  address3:
+  city:
+  state:
+  zip:
 
 quickpay:
-  login: X
-  password: Y
+  login: 89898989
+  password: "n5KrR5e2538awi9hUk6728LHTQ6E4uG1z4IFSb2pPN9j76DqJ2vA4698X315M1cd"
     
 realex:
   login: X 
@@ -254,6 +323,13 @@ sage:
   login: login
   password: password
 
+sallie_mae:
+  login: TEST0
+
+secure_net:
+  login: X
+  password: Y
+
 secure_pay:
   login: LOGIN
   password: PASSWORD
@@ -274,6 +350,10 @@ skipjack:
 trans_first:
   login: LOGIN
   password: PASSWORD
+
+transax:
+  login: demo
+  password: password
 
 # Working credentials, no need to replace
 trust_commerce: 
@@ -298,4 +378,17 @@ viaklix:
 wirecard:
   login: 56500
   password: TestXAPTER
+
+# Working test credentials, no need to replace
+merchant_esolutions:
+  login: "94100008043900000004"
+  password: "gvQzgKXOTEoDzpzJzROrQQzoKLaEqxjf"
+
+garanti:
+  login: "PROVAUT"
+  terminal_id: 111995
+  merchant_id: 600218
+  password: "123qweASD"
   
+direc_pay:
+  mid: 200904281000001

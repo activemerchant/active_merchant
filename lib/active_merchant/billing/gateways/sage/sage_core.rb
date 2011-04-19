@@ -55,7 +55,13 @@ module ActiveMerchant #:nodoc:
         
         post[:C_address]    = billing_address[:address1]
         post[:C_city]       = billing_address[:city]
-        post[:C_state]      = billing_address[:state]
+        
+        if ['US', 'CA'].include?(billing_address[:country])
+          post[:C_state]    = billing_address[:state]
+        else
+          post[:C_state]    = "Outside of United States"
+        end
+        
         post[:C_zip]        = billing_address[:zip]
         post[:C_country]    = billing_address[:country] 
         post[:C_telephone]  = billing_address[:phone]

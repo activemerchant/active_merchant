@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class UsaEpayTest < Test::Unit::TestCase
   def setup
@@ -95,6 +95,14 @@ class UsaEpayTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
 
+  def test_does_not_raise_error_on_missing_values
+    @gateway.expects(:ssl_post).returns("status")
+    assert_nothing_raised do
+      response = @gateway.purchase(@amount, @credit_card, @options)
+      assert_failure response
+    end
+  end
+  
   private
   def assert_address(type, post) 
     prefix = key_prefix(type)

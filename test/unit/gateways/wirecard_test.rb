@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class WirecardTest < Test::Unit::TestCase
   TEST_AUTHORIZATION_GUWID = 'C822580121385121429927'
@@ -16,6 +16,16 @@ class WirecardTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Wirecard Purchase',
       :email => 'soleone@example.com'
+    }
+    
+    @address_without_state = {
+      :name     => 'Jim Smith',
+      :address1 => '1234 My Street',
+      :company  => 'Widgets Inc',
+      :city     => 'Ottawa',
+      :zip      => 'K12 P2A',
+      :country  => 'CA',
+      :state    => nil,
     }
   end
 
@@ -59,6 +69,14 @@ class WirecardTest < Test::Unit::TestCase
 
     assert_failure response
     assert response.message["Could not find referenced transaction for GuWID 1234567890123456789012."]  
+  end
+
+  def test_doesnt_raise_an_error_if_no_state_is_provided_in_address
+    options = @options.merge(:billing_address => @address_without_state)
+    @gateway.expects(:ssl_post).returns(unauthorized_capture_response)
+    assert_nothing_raised do
+      @gateway.authorize(@amount, @credit_card, options)
+    end
   end
 
   private

@@ -17,7 +17,7 @@
 #
 # The LinkPoint staging server will also return different responses based
 # on the cent amount of the purhcase. Complete details can be found at
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 # http://sgserror.com/staging.php
 class LinkpointTest < Test::Unit::TestCase
@@ -89,7 +89,16 @@ class LinkpointTest < Test::Unit::TestCase
     assert_success credit
   end
 
-  
+  def test_successfull_purchase_with_item_entity
+    @options.merge!({:line_items => [
+        {:id => '123456', :description => "Logo T-Shirt", :price => "12.00", :quantity => '1', :options =>
+            [{:name => "Color", :value => "Red"}, {:name => "Size", :value => "XL"}]},
+        {:id => '111', :description => "keychain", :price => "3.00", :quantity => '1'}]})
+    assert purchase = @gateway.purchase(1500, @credit_card, @options)
+    assert_success purchase
+
+  end
+
   def test_successful_recurring_payment
     assert response = @gateway.recurring(2400, @credit_card, 
       :order_id => generate_unique_id, 

@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class RemoteCardStreamTest < Test::Unit::TestCase
   def setup
@@ -7,38 +7,38 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     @gateway = CardStreamGateway.new(fixtures(:card_stream))
     
     @amex = credit_card('374245455400001',
-              :month => 12,
-              :year => 2009,
-              :verification_value => 4887,
+              :month => '12',
+              :year => '2009',
+              :verification_value => '4887',
               :type => :american_express
             )
 
-    @uk_maestro = credit_card('6759016800000120097',
-                    :month => 6,
-                    :year => 2009,
-                    :issue_number => 1,
-                    :verification_value => 701,
+    @uk_maestro = credit_card('675940410531100173',
+                    :month => '12',
+                    :year => '2008',
+                    :issue_number => '0',
+                    :verification_value => '134',
                     :type => :switch
                   )
     
-    @solo = credit_card('6334960300099354',
-              :month => 6,
-              :year => 2008,
-              :issue_number => 1,
-              :verification_value => 227,
+    @solo = credit_card('676740340572345678',
+              :month => '12',
+              :year => '2008',
+              :issue_number => '1',
+              :verification_value => '773',
               :type => :solo
             )
 
     @mastercard = credit_card('5301250070000191',
-                    :month => 12,
-                    :year => 2009,
-                    :verification_value => 419,
+                    :month => '12',
+                    :year => '2009',
+                    :verification_value => '419',
                     :type => :master
                   )
 
     @declined_card = credit_card('4000300011112220',
-                      :month => 9,
-                      :year => 2009
+                      :month => '9',
+                      :year => '2009'
                     )
 
     @mastercard_options = { 
@@ -75,7 +75,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       :description => 'Store purchase'
     }
   end
-
+  
   def test_successful_mastercard_purchase
     assert response = @gateway.purchase(100, @mastercard, @mastercard_options)
     assert_equal 'APPROVED', response.message
@@ -135,13 +135,13 @@ class RemoteCardStreamTest < Test::Unit::TestCase
       :password => ''
     )
     assert response = gateway.purchase(100, @mastercard, @mastercard_options)
-    assert_equal 'Merchant ID or Password Error', response.message
+    assert_equal 'MERCHANT ID MISSING', response.message
     assert_failure response
   end
   
   def test_unsupported_merchant_currency
     assert response = @gateway.purchase(100, @mastercard, @mastercard_options.update(:currency => 'USD'))
-    assert_equal "ERROR 5456:CURRENCY NOT SUPPORTED FOR THIS MERCHANT ACCOUNT", response.message
+    assert_equal "ERROR 1052", response.message
     assert_failure response
     assert response.test?
   end

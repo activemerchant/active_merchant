@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 require 'pp'
 
 class AuthorizeNetCimTest < Test::Unit::TestCase
@@ -101,6 +101,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response.params['direct_response']['approval_code'] =~ /\w{6}/
     assert_equal "auth_only", response.params['direct_response']['transaction_type']
     assert_equal "100.00", response.params['direct_response']['amount']
+    assert_match /\d+/, response.params['direct_response']['transaction_id']
 
     approval_code = response.params['direct_response']['approval_code']
 

@@ -82,12 +82,41 @@ module ActiveMerchant #:nodoc:
     #    :transactiondetails => [:transactionorigin, :oid, :ponumber, :taxexempt, :terminaltype, :ip, :reference_number, :recurring, :tdate],
     #    :periodic => [:action, :installments, :threshold, :startdate, :periodicity, :comments],
     #    :notes => [:comments, :referred]
+    #    :items => [:item => [:price, :quantity, :description, :id, :options => [:option => [:name, :value]]]]
     #  }
     #
-    #
-    # IMPORTANT NOTICE: 
     # 
-    # LinkPoint's Items entity is not yet supported in this module.
+    # LinkPoint's Items entity is an optional entity that can be attached to orders.
+    # It is entered as :line_items to be consistent with the CyberSource implementation
+    #
+    # The line_item hash goes in the options hash and should look like
+    #
+    #         :line_items => [
+    #           {
+    #             :id => '123456',
+    #             :description => 'Logo T-Shirt',
+    #             :price => '12.00',
+    #             :quantity => '1',
+    #             :options => [
+    #               {
+    #                 :name => 'Color',
+    #                 :value => 'Red'
+    #               },
+    #               {
+    #                 :name => 'Size',
+    #                 :value => 'XL'
+    #               }
+    #             ]
+    #           },
+    #           {
+    #             :id => '111',
+    #             :description => 'keychain',
+    #             :price => '3.00',
+    #             :quantity => '1'
+    #           }
+    #         ]
+    # This functionality is only supported by this particular gateway may
+    # be changed at any time
     # 
     class LinkpointGateway < Gateway     
       # Your global PEM file. This will be assigned to you by linkpoint
@@ -105,7 +134,7 @@ module ActiveMerchant #:nodoc:
       self.ssl_strict = false
       
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
       self.homepage_url = 'http://www.linkpoint.com/'
       self.display_name = 'LinkPoint'
            
@@ -247,16 +276,38 @@ module ActiveMerchant #:nodoc:
         # Loop over the params hash to construct the XML string
         for key, value in params
           elem = order.add_element(key.to_s)
-          for k, v in params[key]
-            elem.add_element(k.to_s).text = params[key][k].to_s if params[key][k]
+          if key == :items
+            build_items(elem, value)
+          else
+            for k, v in params[key]
+              elem.add_element(k.to_s).text = params[key][k].to_s if params[key][k]
+            end
           end
           # Linkpoint doesn't understand empty elements: 
           order.delete(elem) if elem.size == 0
         end
-        
         return xml.to_s
       end
-            
+
+      # adds LinkPoint's Items entity to the XML.  Called from post_data
+      def build_items(element, items)
+        for item in items
+          item_element = element.add_element("item")
+          for key, value in item
+            if key == :options
+              options_element = item_element.add_element("options")
+              for option in value
+                opt_element = options_element.add_element("option")
+                opt_element.add_element("name").text =  option[:name]   unless option[:name].blank?
+                opt_element.add_element("value").text =  option[:value]   unless option[:value].blank?
+              end
+            else
+              item_element.add_element(key.to_s).text =  item[key].to_s unless item[key].blank?
+            end
+          end
+        end
+      end
+
       # Set up the parameters hash just once so we don't have to do it
       # for every action. 
       def parameters(money, creditcard, options = {})
@@ -307,10 +358,10 @@ module ActiveMerchant #:nodoc:
       
         if creditcard
           params[:creditcard] = {
-             :cardnumber => creditcard.number,
-             :cardexpmonth => creditcard.month,
-             :cardexpyear => format_creditcard_expiry_year(creditcard.year),
-             :track => nil
+            :cardnumber => creditcard.number,
+            :cardexpmonth => creditcard.month,
+            :cardexpyear => format_creditcard_expiry_year(creditcard.year),
+            :track => nil
           }
           
           if creditcard.verification_value?
@@ -324,7 +375,7 @@ module ActiveMerchant #:nodoc:
         if billing_address = options[:billing_address] || options[:address]          
           
           params[:billing] = {}        
-          params[:billing][:name]      = billing_address[:name] || creditcard ? creditcard.name : nil
+          params[:billing][:name]      = billing_address[:name] || (creditcard ? creditcard.name : nil)
           params[:billing][:address1]  = billing_address[:address1] unless billing_address[:address1].blank?
           params[:billing][:address2]  = billing_address[:address2] unless billing_address[:address2].blank?
           params[:billing][:city]      = billing_address[:city]     unless billing_address[:city].blank?
@@ -348,6 +399,8 @@ module ActiveMerchant #:nodoc:
           params[:shipping][:country]   = shipping_address[:country]  unless shipping_address[:country].blank?
         end        
 
+        params[:items] = options[:line_items] if options[:line_items]
+        
         return params
       end
         

@@ -98,8 +98,12 @@ module ActiveMerchant #:nodoc:
     # See #recurring for periodic transaction fields
     class PayJunctionGateway < Gateway
       API_VERSION   = '1.2'
-      URL      = 'https://payjunction.com/quick_link' # also handles test requests 
-      
+
+      class_inheritable_accessor :test_url, :live_url
+
+      self.test_url = "https://demo.payjunction.com/quick_link"
+      self.live_url = "https://payjunction.com/quick_link"
+
       TEST_LOGIN = 'pj-ql-01'
       TEST_PASSWORD = 'pj-ql-01p'
       
@@ -318,7 +322,9 @@ module ActiveMerchant #:nodoc:
       end
       
       def commit(action, parameters)
-        response = parse( ssl_post(URL, post_data(action, parameters)) )
+        url = test? ? self.test_url : self.live_url
+
+        response = parse( ssl_post(url, post_data(action, parameters)) )
         
         Response.new(successful?(response), message_from(response), response, 
           :test => test?, 

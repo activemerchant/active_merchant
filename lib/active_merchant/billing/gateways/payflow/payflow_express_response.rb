@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
         {  'name'       => full_name,
            'company'    => nil,
            'address1'   => @params['street'],
-           'address2'   => nil,
+           'address2'   => @params['shiptostreet2'],
            'city'       => @params['city'],
            'state'      => @params['state'],
            'country'    => @params['country'],

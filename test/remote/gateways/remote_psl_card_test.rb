@@ -1,6 +1,4 @@
-# Author::    MoneySpyder, http://moneyspyder.co.uk
-
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class RemotePslCardTest < Test::Unit::TestCase
   
@@ -16,6 +14,9 @@ class RemotePslCardTest < Test::Unit::TestCase
     @visa = CreditCard.new(fixtures(:psl_visa))
     @visa_address = fixtures(:psl_visa_address)
     
+    @visa_debit = CreditCard.new(fixtures(:psl_visa_debit))
+    @visa_address = fixtures(:psl_visa_debit_address)
+    
     # The test results are determined by the amount of the transaction
     @accept_amount = 1000
     @referred_amount = 6000
@@ -29,6 +30,22 @@ class RemotePslCardTest < Test::Unit::TestCase
     )
     assert_success response
     assert response.test?
+  end
+  
+  def test_successful_visa_debit_purchase
+    response = @gateway.purchase(@accept_amount, @visa_debit,
+      :billing_address => @visa_debit_address
+    )
+    assert_success response
+  end
+  
+  # Fix regression discovered in production
+  def test_visa_debit_purchase_should_not_send_debit_info_if_present
+    @visa_debit.start_month = "07"
+    response = @gateway.purchase(@accept_amount, @visa_debit,
+      :billing_address => @visa_debit_address
+    )
+    assert_success response
   end
   
   def test_successful_visa_purchase_specifying_currency
@@ -73,8 +90,8 @@ class RemotePslCardTest < Test::Unit::TestCase
   end
   
   def test_successful_authorization
-    response = @gateway.authorize(@accept_amount, @uk_maestro, 
-      :billing_address => @uk_maestro_address
+    response = @gateway.authorize(@accept_amount, @visa, 
+      :billing_address => @visa_address
     )
     assert_success response
     assert response.test?
@@ -92,8 +109,8 @@ class RemotePslCardTest < Test::Unit::TestCase
   end
   
   def test_successful_authorization_and_capture
-    authorization = @gateway.authorize(@accept_amount, @uk_maestro,
-      :billing_address => @uk_maestro_address
+    authorization = @gateway.authorize(@accept_amount, @visa,
+      :billing_address => @visa_address
     )
     assert_success authorization
     assert authorization.test?

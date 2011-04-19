@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class QuickpayTest < Test::Unit::TestCase
   def setup
@@ -13,7 +13,7 @@ class QuickpayTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase
-    @gateway.expects(:ssl_post).times(2).returns(successful_authorization_response, successful_capture_response)
+    @gateway.expects(:ssl_post).returns(successful_authorization_response, successful_capture_response)
     
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -45,8 +45,8 @@ class QuickpayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal '008', response.params['qpstat']
-    assert_equal 'Missing/error in cardnumberMissing/error in expirationdateMissing/error in card verification dataMissing/error in amountMissing/error in ordernumMissing/error in currency', response.params['qpstatmsg']
-    assert_equal 'Missing/error in cardnumber, Missing/error in expirationdate, Missing/error in card verification data, Missing/error in amount, Missing/error in ordernum, and Missing/error in currency', response.message
+    assert_equal 'Missing/error in cardnumber, Missing/error in expirationdate, Missing/error in card verification data, Missing/error in amount, Missing/error in ordernum, Missing/error in currency', response.params['qpstatmsg']
+    assert_equal 'Missing/error in cardnumber, Missing/error in expirationdate, Missing/error in card verification data, Missing/error in amount, Missing/error in ordernum, Missing/error in currency', response.message
   end
   
   def test_merchant_error
@@ -91,22 +91,22 @@ class QuickpayTest < Test::Unit::TestCase
   private
   
   def error_response
-    "<?xml version='1.0' encoding='ISO-8859-1'?><values qpstat='008' qpstatmsg='Missing/error in cardnumberMissing/error in expirationdateMissing/error in card verification dataMissing/error in amountMissing/error in ordernumMissing/error in currency'/>"
+    "<?xml version='1.0' encoding='ISO-8859-1'?><response><qpstat>008</qpstat><qpstatmsg>Missing/error in cardnumber, Missing/error in expirationdate, Missing/error in card verification data, Missing/error in amount, Missing/error in ordernum, Missing/error in currency</qpstatmsg></response>"
   end
   
   def merchant_error
-    "<?xml version='1.0' encoding='ISO-8859-1'?><values qpstat='008' qpstatmsg='Missing/error in merchant'/>"
+    "<?xml version='1.0' encoding='ISO-8859-1'?><response><qpstat>008</qpstat><qpstatmsg>Missing/error in merchant</qpstatmsg></response>"
   end
   
   def successful_authorization_response
-    "<?xml version='1.0' encoding='ISO-8859-1'?><values qpstat='000' transaction='2865261' time='070425223705' ordernum='104680' merchantemail='cody@example.com' pbsstat='000' cardtype='Visa' amount='100' qpstatmsg='OK' merchant='Shopify' msgtype='1110' currency='USD'/>"
+    "<?xml version='1.0' encoding='ISO-8859-1'?><response><qpstat>000</qpstat><transaction>2865261</transaction><time>070425223705</time><ordernum>104680</ordernum><merchantemail>cody@example.com</merchantemail><pbsstat>000</pbsstat><cardtype>Visa</cardtype><amount>100</amount><qpstatmsg>OK</qpstatmsg><merchant>Shopify</merchant><msgtype>1110</msgtype><currency>USD</currency></response>"
   end
   
   def successful_capture_response
-    '<?xml version="1.0" encoding="ISO-8859-1"?><values msgtype="1230" amount="100" time="080107061755" pbsstat="000" qpstat="000" qpstatmsg="OK" currency="DKK" ordernum="4820346075804536193" transaction="2865261" merchant="Shopify" merchantemail="pixels@jadedpixel.com" />'
+    '<?xml version="1.0" encoding="ISO-8859-1"?><response><msgtype>1230</msgtype><amount>100</amount><time>080107061755</time><pbsstat>000</pbsstat><qpstat>000</qpstat><qpstatmsg>OK</qpstatmsg><currency>DKK</currency><ordernum>4820346075804536193</ordernum><transaction>2865261</transaction><merchant>Shopify</merchant><merchantemail>pixels@jadedpixel.com</merchantemail></response>'
   end
   
   def failed_authorization_response
-    '<?xml version="1.0" encoding="ISO-8859-1"?><values qpstat="008" qpstatmsg="Missing/error in card verification data" />'
+    '<?xml version="1.0" encoding="ISO-8859-1"?><response><qpstat>008</qpstat><qpstatmsg>Missing/error in card verification data</qpstatmsg></response>'
   end
 end

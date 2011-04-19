@@ -1,5 +1,202 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.9.4 (Jan 5, 2011)
+
+* Update Garanti gateway to integrate with new API [Selem Delul]
+
+== Version 1.9.3 (December 17, 2010)
+
+* Fix BBS Netaxept to change transaction type from C (for MOTO: mail order telephone order) to M (for credit card orders) [Soleone]
+* Fix Iridium and ePay to work with any object that responds to credit card methods not only ActiveMerchant::CreditCard objects
+
+== Version 1.9.2 (December 9, 2010)
+
+* Add support for PayPal mobile payments [Adrian Irving-Beer]
+* Add ePay gateway [ePay, Jonathan Rudenberg]
+* Allow access to the raw HTTP response [Jonathan Rudenberg]
+
+== Version 1.9.1 (November 24, 2010)
+
+* PayPal Express and PayPal Pro: Send JPY currency correctly without decimals [Soleone]
+* Netaxept: Make sure password (token) is URL escaped and update remote tests for updated server behavior [Soleone]
+* DirecPay: Add support for additional options in Return class and add convenience method to get transaction status update [Soleone]
+* Add new alias credit_card.brand for credit_card.type and handle the brand correctly in Netaxept [Soleone]
+* Iridium: Do not depend on ExpiryDate class for credit_card [Soleone]
+* PayFlow: Use same timeout of 60 seconds in HTTP header and XML for all requests [Soleone]
+* PayPal Website Payments Pro CA no longer supports American Express cards [Soleone]
+* Updated BIN ranges for Discover to match recent documents [kaunartist]
+
+== Version 1.9.0 (October 14, 2010)
+
+* Add support for DirecPay gateway [Soleone]
+* Add SagePay Form integration gateway [Adrian Irving-Beer]
+* Allow Return class to include a Notification for gateways that treat the direct response as a notification [Adrian Irving-Beer]
+* Add support for PayboxDirect gateway [Donald Piret]
+* Add support for SecureNet gateway [Kal]
+* Add support for the Inspire gateway [ryan r. smith]
+
+== Version 1.8.0 (September 24, 2010)
+
+* PayPal Express: Add support for billing agreements [Nathaniel Talbott]
+* Allow comparing countries [Nathaniel Talbott]
+* Iridium: Fix country handling [Nathaniel Talbott]
+* Iridium: Fix missing billing address [Nathaniel Talbott]
+* Iridium: Do not pass CV2 if not present [Nathaniel Talbott]
+* Add Iridium support [Phil Smy]
+* Add Netaxept support [Nathaniel Talbott]
+* PaymentExpress: Use Card Holder Help Text for the response message [Nathaniel Talbott]
+* Sort the country name list [Duff OMelia]
+
+== Version 1.7.3 (September 14, 2010)
+
+* Fix SagePay special handling for Japanese YEN currency to not send fractional amounts [Soleone]
+
+== Version 1.7.2 (August 27, 2010)
+
+* Update Braintree integration to play nicely with the braintree 2.5.0 gem [Soleone]
+* Fix SagePay to not send fractional amounts for Japanese YEN currency [Soleone]
+
+== Version 1.7.1 (July 28, 2010)
+
+* Pull in only the necessary components of Active Support. Enables use of ActiveMerchant with Rails 3 [railsjedi]
+
+== Version 1.7.0 (July 9, 2010)
+
+* Add support for new Braintree Blue Gateway (using the braintree gem) [Braintree]
+
+== Version 1.6.0 (July 6, 2010)
+
+* Add a task rake gateways:hosts to get a list of all outbound hosts and ports [cody]
+* Fix test failure in chronopay helper in Ruby 1.9.1 [cody]
+* Fix timezone issue in credit card test. [cody]
+* Fix failing unit test for Garanti gateway [cody]
+* Fix failing CyberSource remote test [Patrick Joyce]
+* Support for Garanti Sanal Pos: Turkish bank and billing gateway [Selem Delul]
+* Add deprecation note for Money objects to Bogus gateway [Soleone]
+* Updated test URL for Merchant eSolutions and added valid remote test credentials [Soleone]
+* Add new error class for SSL certificate problems in connection class  [Soleone]
+* Update valid_month and valid_expiry_year to coerce string arguments to integers [cody]
+* Add support for displaying credit cards with PayPal Express. Use the :allow_guest_checkout => true option when setting up the transaction [Edward Ocampo-Gooding]
+* Use card_brand method for checking for checks in Sage and Beanstream [cody]
+* Add JCB and Diners Club to LinkPoint [Soleone]
+
+== Version 1.5.1 (February 14, 2010)
+
+* Cleanup Rakefile, add gemspec and prepare for 1.5.1 release [cody]
+* Update copyright dates [cody]
+* Work around SkipJack bug by reversing the order of the query params [Soleone]
+* Fix uppercase character in autoload of 2Checkout's Notification class [Edward Ocampo-Gooding]
+* Detect language used in Chronopay integration based on billing address country [Soleone]
+* Better handle international addresses in BeanstreamGateway [Soleone]
+
+== Version 1.5.0 (February 2, 2010)
+
+* Fix Gestpay notification to avoid Ruby 1.9 warnings [cody]
+* Fix Chronopay notification time parsing for Ruby 1.9 [Joe Van Dyk]
+* Set default currency of Braintree to USD [cody]
+* Fix QuickPay helper for Ruby 1.9 compat [cody]
+* Use String#each_line instead of collect in PaySecureGateway for Ruby 1.9 compat [cody]
+* Use String#each_line instead of to_a in SagePayGateway for Ruby 1.9 compat [cody]
+* Don't return an array when finding the country code. Fixes issue with Ruby 1.9 [cody]
+* Fix custom assertions for Ruby 1.9 [cody]
+* Deprecate Money objects [cody]
+* Update JCB rejex to catch all valid PANs [pjhyett]
+* Remove old TransaXGateway constant [cody]
+* Remove old ProtxGateway constant [cody]
+* Remove old BrainTree constant [cody]
+* Remove AuthorizedNet constant [cody]
+* SecurePay changed their delimeter from % to ,. Update gateway to handle changes [Soleone]
+* Fix documentation typo in base.rb [mig-hub]
+* Add capture test to Linkpoint [Dusty Doris]
+* Fix bug in Linkpoint with ternary operator and Ruby 1.9.1 [Dusty Doris]
+* Add currency and processor options to Braintree gateway [cbillen]
+* Unify API to always look for billing_address/address hash inside of options [stopdropandrew]
+* Fix bug with Modern Payments Gateway where failure authorizations appeared to be successful [cody]
+* Fix Modern Payments Gateway [cody]
+* Use basic SkipJack host for all non-authorization transactions. Fix status method [cody]
+* Strip non alpha numeric chars out of MerchantWare order number [cody]
+* Parse complete response of Authorize.net CIM gateway [Patrick Joyce]
+* Update to PayPal Sandbox URL for testing Payflow Pro Express Checkout. See Express Checkout for Payflow Pro guide [cody]
+* Provide a C_STATE value of "Outside United States" for SageGateway when processing international customers [cody]
+* PayPal Website Payments Pro Canada supports Amex [cody]
+* Add line item support for LinkpointGateway. [Tony Primerano]
+* Add support for SallieMae gateway [iamjwc]
+* Add support for the JetPay gateway [Phil Ripperger, Peter Williams, cody]
+* Add support for advanced SkipJack processors. Pass :advanced => true when constructing gateway [cody]
+* Support test option in AuthorizeNetCimGateway [Tim]
+* Improve Ogone error messages [cody]
+* Add support for :test => true option to OgoneGateway [cody]
+* Bump PayPal Version to 59.0 [cody]
+* Add amex support to eWay gateway [cody]
+* Change Payflow header X-VPS-Timeout -> X-VPS-Client-Timeout [cody]
+* Fix typo preventing OgoneGateway from working in production [Nicolas Jacobeus]
+* Add support for the Elavon MyVirtualMerchant gateway [jstorimer]
+* Fix recurring transactions in Ogone gateway [cody]
+* Fix money formatting for Ogone gateway [cody]
+* Tweak Ogone gateway to use ActiveMerchant conventions for reference transactions [cody, jstorimer]
+* Add support for the Ogone DirectLink payment gateway [Nicolas Jacobeus]
+* Add support for the Antigua based FirstPay payment gateway [Phil R]
+* Add support for PayPal reference transactions [kevin, John, Rahsun McAfee]
+* Add support for the MerchantWARE payment gateway [cody]
+* Rename Protx to SagePay [jstorimer]
+* Allow test mode for eWay gateway [Duff OMelia]
+* Don't use Time.parse for the ExpiryDate [cody]
+* Add support for CVV code to Authorize.net CIM [Guy Naor]
+* Add shipping address to Authorize.net [Eric Tarn]
+* Don't setup the logger by default [cody]
+* Refactor ActiveMerchant::Connection out of the PostsData module. Add support for logging and wiredumping requests [cody]
+* Assume a valid load path when running tests [cody]
+* Use SHIPTOSTREET2 element instead of STREET2 element for Payflow Express Uk address [cody]
+* Clean up the test helper [cody]
+* Fix DataCash unit test that was making a remote call [cody]
+* Don't check Request#test? for remote PaymentExpress tests because their test environment has changed [cody]
+* Update Instapay gateway to support capture and add address, order, and invoice fields. Add support for CVV and AVS response [cody]
+* Add support for Instapay gateway [brahma]
+* Cleanup PaymentExpress reference purchases and turn on AVS [cody]
+* Add reference purchases and authorizations to PaymentExpress [mocra]
+* Add support for Merchant e-Solutions Gateway [Zac Williams, Robby Russell]
+* Fix Braintree unit test [cody]
+* Add support for checks to SmartPs gateways [jvoohris]
+* Extract SmartPs for Braintree and Transax [mmangino]
+* Ruby 1.9 compatibility [bschwartz]
+* Update Payflow Express to handle Street2 element [James MacAulay]
+* Fix typo in Protx DeliveryState field [cody]
+* Ignore Wirecard state unless it is 2 characters [Cody]
+* Update Wirecard to make country and state processing more robust [Soleone]
+* Update ProTX to use the latest v2.23 protocol [Tekin]
+
+== Version 1.4.2 (April 24, 2009)
+
+* Fix typo in Authorize.net CIM [infused]
+* Add missing ISO countries [Edward Ocampo-Gooding]
+* Add support for Guernsey to country.rb [cody]
+* Add American Express to the MonerisGateway [cody]
+* Use :words_connector instead of connector in RequiresParameters [cody]
+* Fixed CreditCard not validating start_month and start_year when set as string [Tekin]
+* Update PostsData to support get requests [cody]
+* Fix broken Quickpay remote test [cody]
+* Update Quickpay gateway to v3. Add support for offsite integration for Danish Dankort cards [Lars Pind]
+* Use default partner id when passed in :partner is blank with PayflowGateway [cody]
+* Remove PayflowGateway.certification_id [cody]
+* Set Response#test? to true in TrustCommerce gateway when using the demo account in production [cody]
+* Correctly set Sage.supported_countries [cody]
+* Add BogusGateway#void [Donald Ball]
+* Fix PSL gateway capturing [cody]
+* Fix failed Visa debit purchases with PSL gateway start date info is present [cody]
+* Support personal fixtures file on Windows [cody]
+* Clearer variable naming for BraintreeGateway#authorize [Jonathan S. Katz]
+* Fix brittle Authorize.net tests [cody]
+* Add support for Authorize.net duplicate window [Seamus Abshere]
+* Return transaction id for PayPal refunds [jxtps435]
+* Allow storage of e-checks with BraintreeGateway [jimiray]
+* Add test URL to PayJunction gateway [boomtowndesigngroup]
+* More robust parsing for Wirecard gateway [Soleone]
+* Pass the issue number to CardStream verbatim and update test card numbers [Soleone]
+
+== Version 1.4.1 (December 9, 2008)
+
+* Update CardStream URL. Note that you will also need to update your login id. [cody]
+
 == Version 1.4.0 (November 27, 2008)
 
 * Return failed authorization when SkipJack purchase fails [Tron, cody]
@@ -384,4 +581,6 @@
 * Added Moneris support
 * Credit card in memory object resembling a AR object
 * Credit card validation methods as static methods of the credit card object
+
+== PlanetArgon fork for integrating Merchant eSolutions gateway
 

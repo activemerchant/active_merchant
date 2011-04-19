@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../test_helper'
+require 'test_helper'
 
 class CreditCardTest < Test::Unit::TestCase
   def setup
@@ -106,8 +106,8 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_require_a_valid_card_month
-    @visa.month  = Time.now.month
-    @visa.year   = Time.now.year
+    @visa.month  = Time.now.utc.month
+    @visa.year   = Time.now.utc.year
     
     assert_valid @visa
   end
@@ -150,6 +150,13 @@ class CreditCardTest < Test::Unit::TestCase
   def test_should_be_a_valid_future_year
     @visa.year = Time.now.year + 1
     assert_valid @visa
+  end
+
+
+  def test_should_be_valid_with_start_month_and_year_as_string
+    @solo.start_month = '2'
+    @solo.start_year = '2007'
+    assert_valid @solo
   end
 
   def test_should_identify_wrong_cardtype
@@ -307,5 +314,10 @@ class CreditCardTest < Test::Unit::TestCase
     card = credit_card(nil)
     assert !card.valid?
     assert_equal "", card.number
+  end
+  
+  def test_type_is_aliased_as_brand
+    assert_equal @visa.type, @visa.brand
+    assert_equal @solo.type, @solo.brand
   end
 end

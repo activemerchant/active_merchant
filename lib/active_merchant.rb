@@ -1,5 +1,5 @@
 #--
-# Copyright (c) 2005-2007 Tobias Luetke
+# Copyright (c) 2005-2010 Tobias Luetke
 #
 # Permission is hereby granted, free of charge, to any person obtaining
 # a copy of this software and associated documentation files (the
@@ -21,56 +21,29 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
                     
-$:.unshift(File.dirname(__FILE__))      
+$:.unshift File.dirname(__FILE__)
 
-# Include rails' active support for all the core extensions we love
-begin
-  require 'active_support'
-rescue LoadError
-  require 'rubygems'
-  
-  if respond_to? :gem
-    gem 'activesupport', ">=2.0.0"
-    require 'active_support'
-  else
-    require_gem 'activesupport'
+require 'active_support'
+require 'active_support/core_ext/string/inflections'
+require 'active_support/core_ext/hash/indifferent_access'
+require 'active_support/core_ext/class/inheritable_attributes'
+require 'active_support/core_ext/class/attribute_accessors'
+require 'active_support/core_ext/class/delegating_attributes'
+require 'active_support/core_ext/module/attribute_accessors'
+require 'active_support/core_ext/kernel/requires'
+require 'active_support/base64'
+require 'active_support/secure_random'
+
+require 'builder'
+require 'cgi'
+require 'rexml/document'
+
+require 'active_merchant/common'
+require 'active_merchant/billing'
+require 'active_merchant/version'
+
+module ActiveMerchant #:nodoc:
+  module Billing #:nodoc:    
+    autoload :Integrations, 'active_merchant/billing/integrations'
   end
 end
-
-begin
-  require 'builder'
-rescue LoadError
-  require 'rubygems'
-  require 'builder'
-end
-
-require 'cgi'
-
-require 'active_merchant/lib/utils'
-require 'active_merchant/lib/error'
-require 'active_merchant/lib/validateable'
-require 'active_merchant/lib/posts_data'
-require 'active_merchant/lib/post_data'
-require 'active_merchant/lib/requires_parameters'
-
-# Require the country class
-require 'active_merchant/lib/country'
-
-# Address Verification
-require 'active_merchant/billing/avs_result'
-
-# Card Verfication Code
-require 'active_merchant/billing/cvv_result'
-
-# CreditCard Utility class. 
-require 'active_merchant/billing/credit_card_methods'
-require 'active_merchant/billing/credit_card_formatting'
-require 'active_merchant/billing/credit_card'
-
-require 'active_merchant/billing/base'
-
-# Require the supported gateways
-require 'active_merchant/billing/gateways'
-
-# Require the supported integrations
-require 'active_merchant/billing/integrations'

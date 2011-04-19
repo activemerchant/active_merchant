@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class MonerisTest < Test::Unit::TestCase
   def setup
@@ -87,7 +87,7 @@ class MonerisTest < Test::Unit::TestCase
   end
   
   def test_supported_card_types
-    assert_equal [:visa, :master], MonerisGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express], MonerisGateway.supported_cardtypes
   end
 
   def test_should_raise_error_if_transaction_param_empty_on_credit_request

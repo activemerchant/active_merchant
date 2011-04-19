@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 # This test suite assumes that you have enabled username/password transaction validation in your Beanstream account.
 # You will experience some test failures if username/password validation transaction validation is not enabled.
