@@ -19,19 +19,22 @@ module ActiveMerchant #:nodoc:
       
       def authorize(money, creditcard, options = {})
         money = amount(money)
-        case creditcard.number
+        case creditcard.number.to_s[-1,1]
         when '1'
           Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
         when '2'
           Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money, :error => FAILURE_MESSAGE }, :test => true)
         else
           raise Error, ERROR_MESSAGE
-        end      
+        end
       end
-  
-      def purchase(money, creditcard, options = {})
+
+      def purchase(money, payment_source, options = {})
+        if payment_source.is_a?(String)
+          payment_source = ActiveMerchant::Billing::CreditCard.new(:number => payment_source.to_s)
+        end
         money = amount(money)
-        case creditcard.number
+        case payment_source.number.to_s[-1,1]
         when '1'
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
         when '2'
@@ -40,10 +43,10 @@ module ActiveMerchant #:nodoc:
           raise Error, ERROR_MESSAGE
         end
       end
- 
+
       def credit(money, ident, options = {})
         money = amount(money)
-        case ident
+        case ident.to_s[-1,1]
         when '1'
           raise Error, CREDIT_ERROR_MESSAGE
         when '2'
@@ -52,10 +55,10 @@ module ActiveMerchant #:nodoc:
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
         end
       end
- 
+
       def capture(money, ident, options = {})
         money = amount(money)
-        case ident
+        case ident.to_s[-1,1]
         when '1'
           raise Error, CAPTURE_ERROR_MESSAGE
         when '2'
@@ -66,7 +69,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(ident, options = {})
-        case ident
+        case ident.to_s[-1,1]
         when '1'
           raise Error, VOID_ERROR_MESSAGE
         when '2'
@@ -75,20 +78,20 @@ module ActiveMerchant #:nodoc:
           Response.new(true, SUCCESS_MESSAGE, {:authorization => ident}, :test => true)
         end
       end
-      
+
       def store(creditcard, options = {})
-        case creditcard.number
+        case creditcard.number.to_s[-1,1]
         when '1'
           Response.new(true, SUCCESS_MESSAGE, {:billingid => '1'}, :test => true, :authorization => AUTHORIZATION )
         when '2'
           Response.new(false, FAILURE_MESSAGE, {:billingid => nil, :error => FAILURE_MESSAGE }, :test => true)
         else
           raise Error, ERROR_MESSAGE
-        end              
+        end
       end
-      
+
       def unstore(identification, options = {})
-        case identification
+        case identification.to_s[-1,1]
         when '1'
           Response.new(true, SUCCESS_MESSAGE, {}, :test => true)
         when '2'
