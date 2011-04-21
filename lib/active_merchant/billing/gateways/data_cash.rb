@@ -139,7 +139,7 @@ module ActiveMerchant
       #   * <tt>:address</tt>:: billing address for card
       def credit(money, reference_or_credit_card, options = {})
         if reference_or_credit_card.is_a?(String)
-          warn CREDIT_DEPRECATION_MESSAGE
+          deprecated CREDIT_DEPRECATION_MESSAGE
           refund(money, reference_or_credit_card)
         else
           request = build_refund_request(money, reference_or_credit_card, options)

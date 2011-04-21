@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
       
       def credit(money, identification_or_credit_card, options = {})
         if identification_or_credit_card.is_a?(String)
-          warn CREDIT_DEPRECATION_MESSAGE
+          deprecated CREDIT_DEPRECATION_MESSAGE
           # Perform referenced credit
           refund(money, identification_or_credit_card, options)
         else

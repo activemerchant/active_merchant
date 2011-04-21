@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
       
       def credit(money, credit_card_or_authorization, options = {})
         if credit_card_or_authorization.is_a?(String)
-          warn CREDIT_DEPRECATION_MESSAGE
+          deprecated CREDIT_DEPRECATION_MESSAGE
           refund(money, credit_card_or_authorization, options)
         else
           sale_authorization_or_credit_template(:credit, money, credit_card_or_authorization, options)

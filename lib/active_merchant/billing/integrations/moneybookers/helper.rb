@@ -40,7 +40,6 @@ module ActiveMerchant #:nodoc:
 
             add_field('merchant_fields', 'platform')
             add_field('platform', application_id)
-            puts @fields.inspect
           end
         end
       end

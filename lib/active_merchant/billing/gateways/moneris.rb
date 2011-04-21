@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
       # Moneris interface consistent with other gateways. (See +capture+ for 
       # details.)
       def credit(money, authorization, options = {})
-        warn CREDIT_DEPRECATION_MESSAGE
+        deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
    

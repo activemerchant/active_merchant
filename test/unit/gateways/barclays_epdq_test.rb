@@ -37,7 +37,14 @@ class BarclaysEpdqTest < Test::Unit::TestCase
 
   def test_deprecated_credit
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/>asdfasdf</)).returns(successful_credit_response)
-    assert response = @gateway.credit(@amount, "asdfasdf:jklljkll")
+    assert_deprecation_warning('Support for using credit to refund existing transactions is deprecated and will be removed from a future release of ActiveMerchant. Please use the refund method instead.', @gateway) do
+      assert_success @gateway.credit(@amount, "asdfasdf:jklljkll")
+    end
+  end
+
+  def test_refund
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/>asdfasdf</)).returns(successful_credit_response)
+    assert response = @gateway.refund(@amount, "asdfasdf:jklljkll")
     assert_success response
   end
 

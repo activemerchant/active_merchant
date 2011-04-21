@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
       # Credit the specified account by a specific amount.
       def credit(money, identification_or_credit_card, options = {})        
         if reference_transaction?(identification_or_credit_card)
-          warn CREDIT_DEPRECATION_MESSAGE
+          deprecated CREDIT_DEPRECATION_MESSAGE
           # Referenced credit: refund of a settled transaction
           refund(money, identification_or_credit_card, options)
         else # must be a credit card or card reference

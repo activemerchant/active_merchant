@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Test deprecation warnings; add deprecation line numbers [ntabott]
 * Add WorldPay Gateway [ntalbott]
 
 == Version 1.13.0 (Apr 19, 2011)

@@ -135,7 +135,7 @@ module ActiveMerchant #:nodoc:
       def amount(money)
         return nil if money.nil?
         cents = if money.respond_to?(:cents)
-          warn "Support for Money objects is deprecated and will be removed from a future release of ActiveMerchant. Please use an Integer value in cents"
+          deprecated "Support for Money objects is deprecated and will be removed from a future release of ActiveMerchant. Please use an Integer value in cents"
           money.cents
         else
           money

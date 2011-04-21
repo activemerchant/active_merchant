@@ -48,8 +48,9 @@ class DataCashTest < Test::Unit::TestCase
 
   def test_deprecated_credit
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>txn_refund<\/method>/)).returns(successful_purchase_response)
-
-    @gateway.credit(@amount, "transaction_id", @options)
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      @gateway.credit(@amount, "transaction_id", @options)
+    end
   end
 
   def test_refund

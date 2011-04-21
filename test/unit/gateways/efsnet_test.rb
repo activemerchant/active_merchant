@@ -42,7 +42,9 @@ class EfsnetTest < Test::Unit::TestCase
 
   def test_deprecated_credit
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OriginalTransactionID>transaction_id<\/OriginalTransactionID>/), anything).returns("")
-    @gateway.credit(@amount, "transaction_id", :order_id => 5)
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      @gateway.credit(@amount, "transaction_id", :order_id => 5)
+    end
   end
 
   def test_refund

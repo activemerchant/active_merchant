@@ -79,7 +79,7 @@ module ActiveMerchant #:nodoc:
 
       # Psigate Credit
       def credit(money, authorization, options = {})
-        warn CREDIT_DEPRECATION_MESSAGE
+        deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
 
