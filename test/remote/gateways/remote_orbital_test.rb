@@ -10,7 +10,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
     
     @options = { 
-      :order_id => '1',
+      :order_id => generate_unique_id,
       :address => address,
     }
     
@@ -97,8 +97,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     for suite in @test_suite do
       amount = suite[:amount]
       card = credit_card(@cards[suite[:card]], :verification_value => suite[:CVD])
-      options = @options; options[:address].merge!(:zip => suite[:AVSzip])
-      assert response = @gateway.authorize(amount, card, options)
+      @options[:address].merge!(:zip => suite[:AVSzip])
+      assert response = @gateway.authorize(amount, card, @options)
       
       # Makes it easier to fill in cert sheet if you print these to the command line
       # puts "Auth/Resp Code => " + (response.params["auth_code"] || response.params["resp_code"])
@@ -160,7 +160,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_void_transactions
     [3000, 105500, 2900].each do |amount|
       assert auth_response = @gateway.authorize(amount, @credit_card, @options)
-      assert void_response = @gateway.void(amount, auth_response.authorization, @options)
+      assert void_response = @gateway.void(amount, auth_response.authorization, @options.merge(:transaction_index => 1))
       
       # Makes it easier to fill in cert sheet if you print these to the command line
       # puts "TxRefNum => " + void_response.params["tx_ref_num"]

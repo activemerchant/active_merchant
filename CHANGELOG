@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
-* Add Orbital gateay [ntalbott]
+* Fixed a few things missed in the Orbital merge [ntalbott]
+* Add Orbital gateway [ntalbott]
 * Test deprecation warnings; add deprecation line numbers [ntabott]
 * Add WorldPay gateway [ntalbott]
 

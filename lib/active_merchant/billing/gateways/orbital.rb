@@ -206,7 +206,7 @@ module ActiveMerchant #:nodoc:
         begin response = request.call; rescue ConnectionError; retry end
         
         Response.new(success?(response), message_from(response), response,
-          {:authorization => response[:tx_ref_num],
+          {:authorization => "#{response[:tx_ref_num]};#{response[:order_id]}",
            :test => self.test?,
            :avs_result => {:code => response[:avs_resp_code]},
            :cvv_result => response[:cvv2_resp_code]
@@ -239,11 +239,8 @@ module ActiveMerchant #:nodoc:
         @options[:ip_authentication] == true
       end
 
-      def order_id(parameters)
-        parameters[:order_id].to_s[0...22]
-      end
-      
       def build_new_order_xml(action, money, parameters = {})
+        requires!(parameters, :order_id)
         xml = Builder::XmlMarkup.new(:indent => 2)
         xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
         xml.tag! :Request do
@@ -259,45 +256,51 @@ module ActiveMerchant #:nodoc:
             yield xml if block_given?
             
             xml.tag! :Comments, parameters[:comments] if parameters[:comments]
-            xml.tag! :OrderID, order_id(parameters)
+            xml.tag! :OrderID, parameters[:order_id].to_s[0...22]
             xml.tag! :Amount, amount(money)
             
             # Append Transaction Reference Number at the end for Refund transactions
-            xml.tag! :TxRefNum, parameters[:authorization] if action == "R"
+            if action == "R"
+              tx_ref_num, _ = parameters[:authorization].split(';')
+              xml.tag! :TxRefNum, tx_ref_num
+            end
           end
         end
         xml.target!
       end
       
       def build_mark_for_capture_xml(money, authorization, parameters = {})
+        tx_ref_num, order_id = authorization.split(';')
         xml = Builder::XmlMarkup.new(:indent => 2)
         xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
         xml.tag! :Request do
           xml.tag! :MarkForCapture do
             xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
             xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
-            xml.tag! :OrderID, order_id(parameters)
+            xml.tag! :OrderID, order_id
             xml.tag! :Amount, amount(money)
             xml.tag! :BIN, '000002' # PNS Tampa
             xml.tag! :MerchantID, @options[:merchant_id]
             xml.tag! :TerminalID, parameters[:terminal_id] || '001'
-            xml.tag! :TxRefNum, authorization
+            xml.tag! :TxRefNum, tx_ref_num
           end
         end
         xml.target!
       end
       
       def build_void_request_xml(money, authorization, parameters = {})
+        requires!(parameters, :transaction_index)
+        tx_ref_num, order_id = authorization.split(';')
         xml = Builder::XmlMarkup.new(:indent => 2)
         xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
         xml.tag! :Request do
           xml.tag! :Reversal do
             xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
             xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
-            xml.tag! :TxRefNum, authorization
+            xml.tag! :TxRefNum, tx_ref_num
             xml.tag! :TxRefIdx, parameters[:transaction_index]
-            xml.tag! :AdjustedAmt, money
-            xml.tag! :OrderID, order_id(parameters)
+            xml.tag! :AdjustedAmt, amount(money)
+            xml.tag! :OrderID, order_id
             xml.tag! :BIN, '000002' # PNS Tampa
             xml.tag! :MerchantID, @options[:merchant_id]
             xml.tag! :TerminalID, parameters[:terminal_id] || '001'
