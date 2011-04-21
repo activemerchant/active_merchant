@@ -4,6 +4,7 @@
 * Add Orbital gateway [ntalbott]
 * Test deprecation warnings; add deprecation line numbers [ntabott]
 * Add WorldPay gateway [ntalbott]
+* Add bogus gateway refund support, improve tests. [wisq]
 
 == Version 1.13.0 (Apr 19, 2011)
 
