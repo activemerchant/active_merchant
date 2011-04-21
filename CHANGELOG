@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add WorldPay Gateway [ntalbott]
+
 == Version 1.13.0 (Apr 19, 2011)
 
 * Add a Gemfile for optional bundler support [ssoroka]

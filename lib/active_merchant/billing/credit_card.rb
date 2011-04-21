@@ -65,19 +65,19 @@ module ActiveMerchant #:nodoc:
       end
       
       def name?
-        first_name? && last_name?
+        first_name? || last_name?
       end
       
       def first_name?
-        !@first_name.blank?
+        @first_name.present?
       end
       
       def last_name?
-        !@last_name.blank?
+        @last_name.present?
       end
             
       def name
-        "#{@first_name} #{@last_name}"
+        [@first_name, @last_name].compact.join(' ')
       end
             
       def verification_value?

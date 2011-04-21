@@ -75,6 +75,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {Verifi}[http://www.verifi.com/] - US
 * {ViaKLIX}[http://viaklix.com] - US
 * {Wirecard}[http://www.wirecard.com] - DE
+* {WorldPay}[http://www.worldpay.com] - AU, HK, UK, US
 
 == Supported Offsite Payment Gateways
 

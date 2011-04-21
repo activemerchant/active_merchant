@@ -258,6 +258,16 @@ class CreditCardTest < Test::Unit::TestCase
     assert c.name?
   end
 
+  def test_should_handle_full_name_when_first_or_last_is_missing
+    c = CreditCard.new(:first_name => 'James')
+    assert c.name?
+    assert_equal "James", c.name
+
+    c = CreditCard.new(:last_name => 'Herdman')
+    assert c.name?
+    assert_equal "Herdman", c.name
+  end
+
   # The following is a regression for a bug that raised an exception when
   # a new credit card was validated
   def test_validate_new_card

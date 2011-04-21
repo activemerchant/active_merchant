@@ -423,3 +423,7 @@ wirecard:
 
 world_pay:
   login: 211616
+
+world_pay_gateway:
+  login: LOGIN
+  password: PASSWORD
