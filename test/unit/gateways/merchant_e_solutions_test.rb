@@ -56,11 +56,9 @@ class MerchantESolutionsTest < Test::Unit::TestCase
     assert_success @gateway.refund(@amount, '0a5ca4662ac034a59595acb61e8da025', @options)
 	end
 
-  def test_deprecated_credit
+  def test_credit
     @gateway.expects(:ssl_post).returns(successful_refund_response)
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
-      assert_success @gateway.credit(@amount, '0a5ca4662ac034a59595acb61e8da025', @options)
-    end
+    assert_success @gateway.credit(@amount, @credit_card, @options)
   end
 
 	def test_void
