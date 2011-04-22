@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
         end
       end
  
-      def credit(money, ident, options = {})
+      def refund(money, ident, options = {})
         money = amount(money)
         case ident
         when '1'
@@ -51,6 +51,11 @@ module ActiveMerchant #:nodoc:
         else
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
         end
+      end
+
+      def credit(money, ident, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, ident, options)
       end
  
       def capture(money, ident, options = {})

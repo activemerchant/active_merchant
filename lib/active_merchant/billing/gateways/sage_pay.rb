@@ -105,8 +105,8 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      # Crediting requires a new order_id to passed in, as well as a description
-      def credit(money, identification, options = {})
+      # Refunding requires a new order_id to passed in, as well as a description
+      def refund(money, identification, options = {})
         requires!(options, :order_id, :description)
         
         post = {}
@@ -116,6 +116,11 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         
         commit(:credit, post)
+      end
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
       
       private

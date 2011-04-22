@@ -69,10 +69,10 @@ module ActiveMerchant #:nodoc:
         commit('credit', money, post)
       end
       
-      def refund(auth, options = {})
+      def refund(money, auth, options = {})
         post = {}
         add_transaction(post, auth)
-        commit('refund', options.delete(:amount), post)
+        commit('refund', money, post)
       end
       
       

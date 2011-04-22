@@ -75,13 +75,18 @@ module ActiveMerchant #:nodoc:
         commit(:cancel, post)
       end
       
-      def credit(money, identification, options = {})
+      def refund(money, identification, options = {})
         post = {}
 
         add_amount_without_currency(post, money)
         add_reference(post, identification)
 
         commit(:refund, post)
+      end
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)      
       end
       
       def store(creditcard, options = {})                       

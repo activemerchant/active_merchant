@@ -5,7 +5,7 @@ class RealexTest < Test::Unit::TestCase
   
   class ActiveMerchant::Billing::RealexGateway
     # For the purposes of testing, lets redefine some protected methods as public.
-    public :build_purchase_or_authorization_request, :build_credit_request, :build_void_request, :build_capture_request, :stringify_values, :avs_input_code
+    public :build_purchase_or_authorization_request, :build_refund_request, :build_void_request, :build_capture_request, :stringify_values, :avs_input_code
   end
   
   def setup
@@ -83,14 +83,21 @@ class RealexTest < Test::Unit::TestCase
     assert response.test?
   end
   
-  def test_successful_credit
-    @gateway.expects(:ssl_post).returns(successful_credit_response)    
-    assert_success @gateway.credit(@amount, '1234;1234;1234')
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_refund_response)    
+    assert_success @gateway.refund(@amount, '1234;1234;1234')
   end
   
-  def test_unsuccessful_credit
-    @gateway.expects(:ssl_post).returns(unsuccessful_credit_response)
-    assert_failure @gateway.credit(@amount, '1234;1234;1234')
+  def test_unsuccessful_refund
+    @gateway.expects(:ssl_post).returns(unsuccessful_refund_response)
+    assert_failure @gateway.refund(@amount, '1234;1234;1234')
+  end
+  
+  def test_deprecated_credit
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert_success @gateway.credit(@amount, '1234;1234;1234')
+    end
   end
   
   def test_supported_countries
@@ -213,10 +220,10 @@ SRC
     assert_equal valid_auth_request_xml, @gateway.build_purchase_or_authorization_request(:authorization, @amount, @credit_card, options)
   end
   
-  def test_credit_xml
+  def test_refund_xml
     @gateway.expects(:new_timestamp).returns('20090824160201')
 
-    valid_credit_request_xml = <<-SRC
+    valid_refund_request_xml = <<-SRC
 <request timestamp="20090824160201" type="rebate">
   <merchantid>your_merchant_id</merchantid>
   <account>your_account</account>
@@ -229,16 +236,16 @@ SRC
 </request>
 SRC
 
-    assert_equal valid_credit_request_xml, @gateway.build_credit_request(@amount, '1;4321;1234', {})
+    assert_equal valid_refund_request_xml, @gateway.build_refund_request(@amount, '1;4321;1234', {})
 
   end
   
-  def test_credit_with_rebate_secret_xml
+  def test_refund_with_rebate_secret_xml
     gateway = RealexGateway.new(:login => @login, :password => @password, :account => @account, :rebate_secret => @rebate_secret)
     
     gateway.expects(:new_timestamp).returns('20090824160201')
 
-    valid_credit_request_xml = <<-SRC
+    valid_refund_request_xml = <<-SRC
 <request timestamp="20090824160201" type="rebate">
   <merchantid>your_merchant_id</merchantid>
   <account>your_account</account>
@@ -252,7 +259,7 @@ SRC
 </request>
 SRC
 
-    assert_equal valid_credit_request_xml, gateway.build_credit_request(@amount, '1;4321;1234', {})
+    assert_equal valid_refund_request_xml, gateway.build_refund_request(@amount, '1;4321;1234', {})
 
   end
   
@@ -350,7 +357,7 @@ SRC
     RESPONSE
   end
   
-  def successful_credit_response
+  def successful_refund_response
     <<-RESPONSE
 <response timestamp='20010427043422'>
   <merchantid>your merchant id</merchantid>
@@ -368,7 +375,7 @@ SRC
     RESPONSE
   end
 
-  def unsuccessful_credit_response
+  def unsuccessful_refund_response
     <<-RESPONSE
 <response timestamp='20010427043422'>
   <merchantid>your merchant id</merchantid>

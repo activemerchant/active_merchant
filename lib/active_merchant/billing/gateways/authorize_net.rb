@@ -134,21 +134,21 @@ module ActiveMerchant #:nodoc:
         commit('VOID', nil, post)
       end
 
-      # Credit an account.
+      # Refund a transaction.
       #
-      # This transaction is also referred to as a Refund and indicates to the gateway that
+      # This transaction indicates to the gateway that
       # money should flow from the merchant to the customer.
       #
       # ==== Parameters
       #
       # * <tt>money</tt> -- The amount to be credited to the customer as an Integer value in cents.
-      # * <tt>identification</tt> -- The ID of the original transaction against which the credit is being issued.
+      # * <tt>identification</tt> -- The ID of the original transaction against which the refund is being issued.
       # * <tt>options</tt> -- A hash of parameters.
       #
       # ==== Options
       #
-      # * <tt>:card_number</tt> -- The credit card number the credit is being issued to. (REQUIRED)
-      def credit(money, identification, options = {})
+      # * <tt>:card_number</tt> -- The credit card number the refund is being issued to. (REQUIRED)
+      def refund(money, identification, options = {})
         requires!(options, :card_number)
 
         post = { :trans_id => identification,
@@ -157,6 +157,11 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
 
         commit('CREDIT', money, post)
+      end
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
 
       # Create a recurring payment.

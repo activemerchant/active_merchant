@@ -24,10 +24,15 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
       
-      def credit(money, identification, options = {})
+      def refund(money, identification, options = {})
         request = build_reference_request(:credit, money, identification, options)
         commit(request)
       end        
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
+      end
 
       def setup_authorization(money, options = {})
         requires!(options, :return_url, :cancel_return_url)

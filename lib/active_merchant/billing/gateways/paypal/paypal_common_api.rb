@@ -105,8 +105,13 @@ module ActiveMerchant #:nodoc:
         commit 'DoVoid', build_void_request(authorization, options)
       end
       
+      def refund(money, identification, options = {})
+        commit 'RefundTransaction', build_refund_request(money, identification, options)
+      end
+
       def credit(money, identification, options = {})
-        commit 'RefundTransaction', build_credit_request(money, identification, options)
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
 
       private
@@ -141,7 +146,7 @@ module ActiveMerchant #:nodoc:
         xml.target!        
       end
       
-      def build_credit_request(money, identification, options)
+      def build_refund_request(money, identification, options)
         xml = Builder::XmlMarkup.new
             
         xml.tag! 'RefundTransactionReq', 'xmlns' => PAYPAL_NAMESPACE do

@@ -128,10 +128,14 @@ module ActiveMerchant #:nodoc:
         commit(build_void_request(identification, options), options)
       end
 
-      def credit(money, identification, options = {})
+      def refund(money, identification, options = {})
         commit(build_credit_request(money, identification, options), options)
       end
       
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
+      end
 
       # CyberSource requires that you provide line item information for tax calculations
       # If you do not have prices for each item or want to simplify the situation then pass in one fake line item that costs the subtotal of the order

@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
         :authorization => 10,
         :capture => 11,
         :void => 6,
-        :credit => 4
+        :refund => 4
       }
       
       SUCCESS_CODES = [ '00', '08', '11', '16', '77' ]
@@ -62,8 +62,13 @@ module ActiveMerchant #:nodoc:
         commit :capture, build_reference_request(money, reference)
       end
       
+      def refund(money, reference)
+        commit :refund, build_reference_request(money, reference)
+      end
+
       def credit(money, reference)
-        commit :credit, build_reference_request(money, reference)
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, reference)
       end
 
       def void(reference)

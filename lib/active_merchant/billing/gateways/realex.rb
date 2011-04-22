@@ -68,9 +68,14 @@ module ActiveMerchant
         commit(request)
       end
 
-      def credit(money, authorization, options = {})
-        request = build_credit_request(money, authorization, options)
+      def refund(money, authorization, options = {})
+        request = build_refund_request(money, authorization, options)
         commit(request)
+      end
+
+      def credit(money, authorization, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, authorization, options)
       end
 
       def void(authorization, options = {})
@@ -145,7 +150,7 @@ module ActiveMerchant
         xml.target!
       end
 
-      def build_credit_request(money, authorization, options)
+      def build_refund_request(money, authorization, options)
         timestamp = new_timestamp
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'rebate' do

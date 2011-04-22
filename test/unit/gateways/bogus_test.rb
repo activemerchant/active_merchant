@@ -20,8 +20,8 @@ class BogusTest < Test::Unit::TestCase
     @gateway.purchase(1000, @creditcard)    
   end
 
-  def test_credit
-    @gateway.credit(1000, @response.params["transid"])
+  def test_refund
+    @gateway.refund(1000, @response.params["transid"])
   end
 
   def test_void
