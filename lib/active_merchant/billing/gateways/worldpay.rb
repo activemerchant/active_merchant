@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'GBP'
       self.money_format = :cents
-      self.supported_countries = ['HK', 'US', 'UK', 'AU']
+      self.supported_countries = ['HK', 'US', 'GB', 'AU']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.worldpay.com/'
       self.display_name = 'WorldPay'
