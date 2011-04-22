@@ -58,7 +58,8 @@ module ActiveMerchant #:nodoc:
         "025" =>  "Transaction Not Found.",
         "981" =>  "AVS Error.",
         "913" =>  "Invalid Card Type.",
-        "996" =>  "Terminal ID Not Found."
+        "996" =>  "Terminal ID Not Found.",
+        nil   =>  "No response returned (missing credentials?)."
       }
       
       def initialize(options = {})
@@ -180,6 +181,8 @@ module ActiveMerchant #:nodoc:
       end
       
       def parse(body)
+        return {} if body.blank?
+
         xml = REXML::Document.new(body)
         
         response = {}
