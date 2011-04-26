@@ -75,14 +75,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
   
   def test_add_duplicate_window_without_duplicate_window
     result = {}
-    ActiveMerchant::Billing::AuthorizeNetGateway.duplicate_window = nil
+    @gateway.class.duplicate_window = nil
     @gateway.send(:add_duplicate_window, result)
     assert_nil result[:duplicate_window]
   end
   
   def test_add_duplicate_window_with_duplicate_window
     result = {}
-    ActiveMerchant::Billing::AuthorizeNetGateway.duplicate_window = 0
+    @gateway.class.duplicate_window = 0
     @gateway.send(:add_duplicate_window, result)
     assert_equal 0, result[:duplicate_window]
   end
@@ -109,19 +109,28 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end
   end
   
-  def test_successful_credit
+  def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert response = @gateway.credit(@amount, '123456789', :card_number => @credit_card.number)
+    assert response = @gateway.refund(@amount, '123456789', :card_number => @credit_card.number)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
   end
   
-  def test_failed_credit
-    @gateway.expects(:ssl_post).returns(failed_credit_response)
+  def test_failed_refund
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
     
-    assert response = @gateway.credit(@amount, '123456789', :card_number => @credit_card.number)
+    assert response = @gateway.refund(@amount, '123456789', :card_number => @credit_card.number)
     assert_failure response
     assert_equal 'The referenced transaction does not meet the criteria for issuing a credit', response.message
+  end
+
+  def test_deprecated_credit
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.credit(@amount, '123456789', :card_number => @credit_card.number)
+      assert_success response
+      assert_equal 'This transaction has been approved', response.message
+    end
   end
   
   def test_supported_countries
@@ -159,6 +168,26 @@ class AuthorizeNetTest < Test::Unit::TestCase
     
     response = @gateway.purchase(@amount, @credit_card)
     assert_equal 'M', response.cvv_result['code']
+  end
+
+  def test_message_from
+    @gateway.class_eval {
+      public :message_from
+    }
+    result = {
+      :response_code => 2,
+      :card_code => 'N',
+      :avs_result_code => 'A',
+      :response_reason_code => '27',
+      :response_reason_text => 'Failure.',
+    }
+    assert_equal "No Match", @gateway.message_from(result)
+
+    result[:card_code] = 'M'
+    assert_equal "Street address matches, but 5-digit and 9-digit postal code do not match.", @gateway.message_from(result)
+
+    result[:response_reason_code] = '22'
+    assert_equal "Failure", @gateway.message_from(result)
   end
   
   # ARB Unit Tests
@@ -220,7 +249,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     %w(version delim_data relay_response login tran_key amount card_num exp_date type)
   end
   
-  def failed_credit_response
+  def failed_refund_response
     '$3$,$2$,$54$,$The referenced transaction does not meet the criteria for issuing a credit.$,$$,$P$,$0$,$$,$$,$1.00$,$CC$,$credit$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$39265D8BA0CDD4F045B5F4129B2AAA01$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
   end
   

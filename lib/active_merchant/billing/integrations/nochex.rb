@@ -75,11 +75,11 @@ module ActiveMerchant #:nodoc:
 
         # Simply a convenience method that returns a new 
         # ActiveMerchant::Billing::Integrations::Nochex::Notification
-        def self.notification(post)
+        def self.notification(post, options = {})
           Notification.new(post)
         end  
         
-        def self.return(query_string)
+        def self.return(query_string, options = {})
           Return.new(query_string)
         end
       end

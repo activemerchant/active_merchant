@@ -187,15 +187,20 @@ module ActiveMerchant #:nodoc:
         commit('postauth', parameters)
       end
       
-      # credit() allows you to return money to a card that was previously billed. You need to supply the amount, in cents or a money object,
+      # refund() allows you to return money to a card that was previously billed. You need to supply the amount, in cents or a money object,
       # that you want to refund, and a TC transid for the transaction that you are refunding.
-      def credit(money, identification, options = {})  
+      def refund(money, identification, options = {})  
         parameters = {
           :amount => amount(money),
           :transid => identification
         }
                                                   
         commit('credit', parameters)
+      end
+
+      def credit(money, identification, options = {})  
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
       
       # void() clears an existing authorization and releases the reserved fund

@@ -14,5 +14,9 @@ module ActiveMerchant #:nodoc:
     end
     
     module_function :generate_unique_id
+
+    def deprecated(message)
+      warn(Kernel.caller[1] + message)
+    end
   end
 end

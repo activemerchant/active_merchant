@@ -53,6 +53,8 @@ module ActiveMerchant #:nodoc:
       # run validation on the passed in value if it is supplied
       attr_accessor :verification_value
 
+      alias_method :brand, :type
+      
       # Provides proxy access to an expiry date object
       def expiry_date
         ExpiryDate.new(@month, @year)
@@ -63,19 +65,19 @@ module ActiveMerchant #:nodoc:
       end
       
       def name?
-        first_name? && last_name?
+        first_name? || last_name?
       end
       
       def first_name?
-        !@first_name.blank?
+        @first_name.present?
       end
       
       def last_name?
-        !@last_name.blank?
+        @last_name.present?
       end
             
       def name
-        "#{@first_name} #{@last_name}"
+        [@first_name, @last_name].compact.join(' ')
       end
             
       def verification_value?

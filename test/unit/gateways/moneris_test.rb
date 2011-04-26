@@ -29,6 +29,20 @@ class MonerisTest < Test::Unit::TestCase
     assert_failure response
   end
   
+  def test_deprecated_credit
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/txn_number>123<\//), anything).returns("")
+    @gateway.expects(:parse).returns({})
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      @gateway.credit(@amount, "123;456", @options)
+    end
+  end
+  
+  def test_refund
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/txn_number>123<\//), anything).returns("")
+    @gateway.expects(:parse).returns({})
+    @gateway.refund(@amount, "123;456", @options)
+  end
+  
   def test_amount_style
    assert_equal '10.34', @gateway.send(:amount, 1034)
                                                       

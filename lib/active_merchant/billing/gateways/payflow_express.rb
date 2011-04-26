@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       include PayflowCommonAPI
       include PaypalExpressCommon
       
-      self.test_redirect_url = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token='
+      self.test_redirect_url = 'https://www.sandbox.paypal.com/cgi-bin/webscr'
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside'
       self.display_name = 'PayPal Express Checkout'
       
@@ -24,10 +24,15 @@ module ActiveMerchant #:nodoc:
         commit(request)
       end
       
-      def credit(money, identification, options = {})
+      def refund(money, identification, options = {})
         request = build_reference_request(:credit, money, identification, options)
         commit(request)
       end        
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
+      end
 
       def setup_authorization(money, options = {})
         requires!(options, :return_url, :cancel_return_url)

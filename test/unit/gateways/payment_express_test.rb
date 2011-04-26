@@ -33,7 +33,7 @@ class PaymentExpressTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(invalid_credentials_response)
     
     assert response = @gateway.purchase(@amount, @visa, @options)
-    assert_equal 'Invalid Credentials', response.message
+    assert_equal 'The transaction was Declined (AG)', response.message
     assert_failure response
   end
   
@@ -43,7 +43,7 @@ class PaymentExpressTest < Test::Unit::TestCase
      assert response = @gateway.purchase(@amount, @visa, @options)
      assert_success response
      assert response.test?
-     assert_equal 'APPROVED', response.message
+     assert_equal 'The Transaction was approved', response.message
      assert_equal '00000004011a2478', response.authorization
   end
   
@@ -53,7 +53,7 @@ class PaymentExpressTest < Test::Unit::TestCase
      assert response = @gateway.purchase(@amount, @solo, @options)
      assert_success response
      assert response.test?
-     assert_equal 'APPROVED', response.message
+     assert_equal 'The Transaction was approved', response.message
      assert_equal '00000004011a2478', response.authorization
   end
   
@@ -94,7 +94,7 @@ class PaymentExpressTest < Test::Unit::TestCase
     
     assert response = @gateway.purchase(@amount, token, @options)
     assert_success response
-    assert_equal 'APPROVED', response.message
+    assert_equal 'The Transaction was approved', response.message
     assert_equal '0000000303ace8db', response.authorization
   end
   
@@ -122,7 +122,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   
   private
   def invalid_credentials_response
-    '<Txn><ReCo>0</ReCo><ResponseText>Invalid Credentials</ResponseText></Txn>'
+    '<Txn><ReCo>0</ReCo><ResponseText>Invalid Credentials</ResponseText><CardHolderHelpText>The transaction was Declined (AG)</CardHolderHelpText></Txn>'
   end
     
   def successful_authorization_response

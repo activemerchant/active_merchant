@@ -106,8 +106,8 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_require_a_valid_card_month
-    @visa.month  = Time.now.month
-    @visa.year   = Time.now.year
+    @visa.month  = Time.now.utc.month
+    @visa.year   = Time.now.utc.year
     
     assert_valid @visa
   end
@@ -258,6 +258,16 @@ class CreditCardTest < Test::Unit::TestCase
     assert c.name?
   end
 
+  def test_should_handle_full_name_when_first_or_last_is_missing
+    c = CreditCard.new(:first_name => 'James')
+    assert c.name?
+    assert_equal "James", c.name
+
+    c = CreditCard.new(:last_name => 'Herdman')
+    assert c.name?
+    assert_equal "Herdman", c.name
+  end
+
   # The following is a regression for a bug that raised an exception when
   # a new credit card was validated
   def test_validate_new_card
@@ -314,5 +324,10 @@ class CreditCardTest < Test::Unit::TestCase
     card = credit_card(nil)
     assert !card.valid?
     assert_equal "", card.number
+  end
+  
+  def test_type_is_aliased_as_brand
+    assert_equal @visa.type, @visa.brand
+    assert_equal @solo.type, @solo.brand
   end
 end

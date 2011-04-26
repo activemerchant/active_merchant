@@ -8,27 +8,70 @@ class BogusTest < Test::Unit::TestCase
     )
     
     @creditcard = credit_card('1')
-    
+
     @response = ActiveMerchant::Billing::Response.new(true, "Transaction successful", :transid => BogusGateway::AUTHORIZATION)
   end
 
   def test_authorize
-    @gateway.capture(1000, @creditcard)    
+    assert  @gateway.authorize(1000, credit_card('1')).success?
+    assert !@gateway.authorize(1000, credit_card('2')).success?
+    assert_raises(ActiveMerchant::Billing::Error) do
+      @gateway.authorize(1000, credit_card('123'))
+    end
   end
 
   def test_purchase
-    @gateway.purchase(1000, @creditcard)    
+    assert  @gateway.purchase(1000, credit_card('1')).success?
+    assert !@gateway.purchase(1000, credit_card('2')).success?
+    assert_raises(ActiveMerchant::Billing::Error) do
+      @gateway.purchase(1000, credit_card('123'))
+    end
+  end
+
+  def test_capture
+    assert  @gateway.capture(1000, '1337').success?
+    assert  @gateway.capture(1000, @response.params["transid"]).success?
+    assert !@gateway.capture(1000, '2').success?
+    assert_raises(ActiveMerchant::Billing::Error) do
+      @gateway.capture(1000, '1')
+    end
   end
 
   def test_credit
-    @gateway.credit(1000, @response.params["transid"])
+    assert  @gateway.credit(1000, credit_card('1')).success?
+    assert !@gateway.credit(1000, credit_card('2')).success?
+    assert_raises(ActiveMerchant::Billing::Error) do
+      @gateway.credit(1000, credit_card('123'))
+    end
+  end
+
+  def test_refund
+    assert  @gateway.refund(1000, '1337').success?
+    assert  @gateway.refund(1000, @response.params["transid"]).success?
+    assert !@gateway.refund(1000, '2').success?
+    assert_raises(ActiveMerchant::Billing::Error) do
+      @gateway.refund(1000, '1')
+    end
+  end
+
+  def test_credit_uses_refund
+    options = {:foo => :bar}
+    @gateway.expects(:refund).with(1000, '1337', options)
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      @gateway.credit(1000, '1337', options)
+    end
   end
 
   def test_void
-    @gateway.void(@response.params["transid"])
+    assert  @gateway.void('1337').success?
+    assert  @gateway.void(@response.params["transid"]).success?
+    assert !@gateway.void('2').success?
+    assert_raises(ActiveMerchant::Billing::Error) do
+      @gateway.void('1')
+    end
   end
-  
-  def  test_store
+
+  def test_store
     @gateway.store(@creditcard)
   end
   

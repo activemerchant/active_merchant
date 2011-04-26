@@ -27,16 +27,19 @@ module ActiveMerchant #:nodoc:
       
       def credit(money, identification_or_credit_card, options = {})
         if identification_or_credit_card.is_a?(String)
+          deprecated CREDIT_DEPRECATION_MESSAGE
           # Perform referenced credit
-          request = build_reference_request(:credit, money, identification_or_credit_card, options)
+          refund(money, identification_or_credit_card, options)
         else
           # Perform non-referenced credit
           request = build_credit_card_request(:credit, money, identification_or_credit_card, options)
+          commit(request)
         end
-        
-        commit(request)
       end
       
+      def refund(money, reference, options = {})
+        commit(build_reference_request(:credit, money, reference, options))
+      end
       # Adds or modifies a recurring Payflow profile.  See the Payflow Pro Recurring Billing Guide for more details:
       # https://www.paypal.com/en_US/pdf/PayflowPro_RecurringBilling_Guide.pdf
       #    

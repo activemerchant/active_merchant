@@ -48,6 +48,7 @@ module ActiveMerchant #:nodoc:
 
       CARD_CODE_ERRORS = %w( N S )
       AVS_ERRORS = %w( A E N R W Z )
+      AVS_REASON_CODES = %w(27 45)
 
       AUTHORIZE_NET_ARB_NAMESPACE = 'AnetApi/xml/v1/schema/AnetApiSchema.xsd'
 
@@ -133,21 +134,21 @@ module ActiveMerchant #:nodoc:
         commit('VOID', nil, post)
       end
 
-      # Credit an account.
+      # Refund a transaction.
       #
-      # This transaction is also referred to as a Refund and indicates to the gateway that
+      # This transaction indicates to the gateway that
       # money should flow from the merchant to the customer.
       #
       # ==== Parameters
       #
       # * <tt>money</tt> -- The amount to be credited to the customer as an Integer value in cents.
-      # * <tt>identification</tt> -- The ID of the original transaction against which the credit is being issued.
+      # * <tt>identification</tt> -- The ID of the original transaction against which the refund is being issued.
       # * <tt>options</tt> -- A hash of parameters.
       #
       # ==== Options
       #
-      # * <tt>:card_number</tt> -- The credit card number the credit is being issued to. (REQUIRED)
-      def credit(money, identification, options = {})
+      # * <tt>:card_number</tt> -- The credit card number the refund is being issued to. (REQUIRED)
+      def refund(money, identification, options = {})
         requires!(options, :card_number)
 
         post = { :trans_id => identification,
@@ -156,6 +157,11 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
 
         commit('CREDIT', money, post)
+      end
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
 
       # Create a recurring payment.
@@ -370,10 +376,12 @@ module ActiveMerchant #:nodoc:
       def message_from(results)  
         if results[:response_code] == DECLINED
           return CVVResult.messages[ results[:card_code] ] if CARD_CODE_ERRORS.include?(results[:card_code])
-          return AVSResult.messages[ results[:avs_result_code] ] if AVS_ERRORS.include?(results[:avs_result_code])
+          if AVS_REASON_CODES.include?(results[:response_reason_code]) && AVS_ERRORS.include?(results[:avs_result_code])
+            return AVSResult.messages[ results[:avs_result_code] ] 
+          end
         end
 
-        return results[:response_reason_text].nil? ? '' : results[:response_reason_text][0..-2]
+        (results[:response_reason_text] ? results[:response_reason_text].chomp('.') : '')
       end
 
       def expdate(creditcard)

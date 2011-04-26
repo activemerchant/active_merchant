@@ -7,12 +7,12 @@ module ActiveMerchant #:nodoc:
         :authorization  => 'PA',
         :purchase       => 'P',
         :capture        => 'PAC',
-        :credit         => 'R',
+        :refund         => 'R',
         :void           => 'VP',
         :check_purchase => 'D',
-        :check_credit   => 'C',
+        :check_refund   => 'C',
         :void_purchase  => 'VP',
-        :void_credit    => 'VR'
+        :void_refund    => 'VR'
       }
 
       CVD_CODES = {
@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
       
       # Only <tt>:login</tt> is required by default, 
       # which is the merchant's merchant ID. If you'd like to perform void, 
-      # capture or credit transactions then you'll also need to add a username
+      # capture or refund transactions then you'll also need to add a username
       # and password to your account under administration -> account settings ->
       # order settings -> Use username/password validation
       def initialize(options = {})
@@ -67,26 +67,31 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
       
-      def credit(money, source, options = {})
+      def refund(money, source, options = {})
         post = {}
         reference, amount, type = split_auth(source)
         add_reference(post, reference)
-        add_transaction_type(post, credit_action(type))
+        add_transaction_type(post, refund_action(type))
         add_amount(post, money)
         commit(post)
+      end
+
+      def credit(money, source, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, source, options)
       end
     
       private
       def purchase_action(source)
-        source.type.to_s == "check" ? :check_purchase : :purchase
+        (card_brand(source) == "check") ? :check_purchase : :purchase
       end
       
       def void_action(original_transaction_type)
-        original_transaction_type == TRANSACTIONS[:credit] ? :void_credit : :void_purchase
+        (original_transaction_type == TRANSACTIONS[:refund]) ? :void_refund : :void_purchase
       end
       
-      def credit_action(type)
-        type == TRANSACTIONS[:check_purchase] ? :check_credit : :credit
+      def refund_action(type)
+        (type == TRANSACTIONS[:check_purchase]) ? :check_refund : :refund
       end
       
       def split_auth(string)
@@ -221,7 +226,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_source(post, source)
-        source.type == "check" ? add_check(post, source) : add_credit_card(post, source)
+        card_brand(source) == "check" ? add_check(post, source) : add_credit_card(post, source)
       end
       
       def add_transaction_type(post, action)

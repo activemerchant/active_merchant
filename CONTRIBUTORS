@@ -109,6 +109,10 @@ Instapay Gateway (May 3, 2009)
 
 * Thomas Rideout
 
+Iridium Gateway (June 13, 2009)
+
+* Phil Smy
+
 MerchantWARE (July 7, 2009)
 
 * Cody Fauser
@@ -132,3 +136,92 @@ JetPay (September 29, 2009)
 SallieMae (October 2, 2009)
 
 * iamjwc
+
+Netaxept (February 08, 2010)
+
+* Nathaniel Talbott
+
+Garanti (May 05, 2010)
+
+* Selem Delul (moon@mac.home)
+
+Braintree Blue Gateway (May 19th, 2010)
+
+* Braintree (code@getbraintree.com)
+
+Inspire Gateway (September 27, 2010)
+
+* ryan r. smith
+
+SecureNet Gateway (September 27, 2010)
+
+* Kal
+
+PayboxDirect Gateway (September 27, 2010)
+
+* Donald Piret <donald@donaldpiret.com>
+
+SagePay Form Offsite Gateway (October 14, 2010)
+
+* Adrian Irving-Beer
+
+DirecPay Gateway (October 14, 2010)
+
+* Soleone
+
+ePay Gateway (November 23, 2010)
+
+* Original code by ePay (epay.dk)
+* Refactored by Jonathan Rudenberg
+
+iDEAL/Rabobank Gateway (January 10, 2011)
+
+* Original code by Soemirno Kartosoewito
+* Refactored by Cody Fauser
+* Refactored and updated by Jonathan Rudenberg
+
+Quantum Gateway
+
+* Joshua Lippiner
+* Refactored by Nathaniel Talbott
+
+BluePay Gateway
+
+* Mel Sleight
+* Refactored by Nathaniel Talbott
+
+Valitor Integration (January 2011)
+
+* Nathaniel Talbott
+* Sponsored by Sævar Öfjörð Magnússon
+
+Barclays ePDQ
+
+* Original code by Rob W (rfwatson)
+* Refactored by Nathaniel Talbott
+
+Federated Canada
+
+* Bob Larrick (deathbob)
+
+NMI
+
+* Nathaniel Talbott (ntalbott)
+
+QBMS
+
+* Will Glozer (wg)
+
+WorldPay Integration (Feb 17, 2011)
+
+* Original code by Unknown from this patch: https://jadedpixel.lighthouseapp.com/projects/11599/tickets/3-patch-integration-support-for-worldpay-uk
+* Refactored by Soleone
+
+WorldPay Gateway
+
+* Original code by Amit kumar (ask4amit@gmail.com)
+* Refactored by Nathaniel Talbott (ntalbott)
+
+Orbital Paymentech Gateway (July, 2009)
+
+* Sam Vincent - http://ecommerce.versapay.com

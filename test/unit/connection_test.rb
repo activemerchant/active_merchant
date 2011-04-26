@@ -4,7 +4,6 @@ class ConnectionTest < Test::Unit::TestCase
 
   def setup
     @ok = stub(:code => 200, :message => 'OK', :body => 'success')
-    @internal_server_error = stub(:code => 500, :message => 'Internal Server Error', :body => 'failure')
     
     @endpoint   = 'https://example.com/tx.php'
     @connection = ActiveMerchant::Connection.new(@endpoint) 
@@ -29,13 +28,13 @@ class ConnectionTest < Test::Unit::TestCase
   def test_successful_get_request
     Net::HTTP.any_instance.expects(:get).with('/tx.php', {}).returns(@ok)
     response = @connection.request(:get, nil, {})
-    assert_equal 'success', response
+    assert_equal 'success', response.body
   end
   
   def test_successful_post_request
     Net::HTTP.any_instance.expects(:post).with('/tx.php', 'data', ActiveMerchant::Connection::RUBY_184_POST_HEADERS).returns(@ok)
     response = @connection.request(:post, 'data', {})
-    assert_equal 'success', response
+    assert_equal 'success', response.body
   end
   
   def test_get_raises_argument_error_if_passed_data
@@ -50,12 +49,7 @@ class ConnectionTest < Test::Unit::TestCase
     end
   end
   
-  def test_500_response_during_request_raises_client_error
-    Net::HTTP.any_instance.stubs(:post).returns(@internal_server_error)
-    assert_raises(ActiveMerchant::ResponseError) do
-      @connection.request(:post, '', {})
-    end
-  end
+
   
   def test_default_read_timeout
     assert_equal ActiveMerchant::Connection::READ_TIMEOUT, @connection.read_timeout
@@ -122,6 +116,14 @@ class ConnectionTest < Test::Unit::TestCase
     @connection.retry_safe = true
                                                      
     assert_raises(ActiveMerchant::ConnectionError) do  
+      @connection.request(:post, '')
+    end
+  end
+  
+  def test_failure_with_ssl_certificate
+    Net::HTTP.any_instance.expects(:post).raises(OpenSSL::X509::CertificateError)
+
+    assert_raises(ActiveMerchant::ClientCertificateError) do
       @connection.request(:post, '')
     end
   end

@@ -1,5 +1,154 @@
 = ActiveMerchant CHANGELOG
 
+* Fixed a few things missed in the Orbital merge [ntalbott]
+* Add Orbital gateway [ntalbott]
+* Test deprecation warnings; add deprecation line numbers [ntabott]
+* Add WorldPay gateway [ntalbott]
+* Add bogus gateway refund support, improve tests. [wisq]
+
+== Version 1.13.0 (Apr 19, 2011)
+
+* Add a Gemfile for optional bundler support [ssoroka]
+* Stop using has_rdoc= when rubygems version is 1.7.0 or greater, since it's deprecated [ssoroka]
+* Add tax field to braintree [wisq]
+* Quickpay: Also add Sweden as supported country [Soleone]
+* Adding refund method for gateways that are using the credit method for referenced based refunds, added deprecation worning to the credit method [John Duff]
+* Return the Braintree transaction id in the response for void and refund transaction calls [John Duff]
+* PayPal Express: Extract phone number from address if no contact phone was sent [Soleone]
+* Unify all offsite gateways that verify the signature of Returns or Notifications by always using the #acknowledge method and calling the secret :credential2 [Soleone]
+* Valitor: Change name of credential for Return and Notification from :password to :credential2 in symmetry with the other Integrations [Soleone]
+* Moneybookers: Add support for tracking token [Soleone]
+* Moneybookers: Require credential when creating Notifications instead of adding an argument to #acknowledge [Soleone]
+* Moneybookers: Fix Notification to return correct status [Soleone]
+* Support default Return class for all Integrations that don't use returns [Soleone]
+* Add support for passing additional options when creating a Notification to all Integrations [Soleone]
+* Update BraintreeBlue#refund to have consistent method signature [Jonathan Rudenberg]
+* Add rails/init.rb for gem campatability in Rails [Rūdolfs Ošiņš]
+* Fix Paypal Express response parser [Jonathan Rudenberg]
+* Braintree/Transax: Add tax field [wisq]
+
+== Version 1.12.1 (Mar 21, 2011)
+
+* Ogone: Make sure response.params is a real Hash [Soleone]
+* WorldPay: Fix service_url in production mode [Soleone]
+
+== Version 1.12.0 (Mar 1, 2011)
+
+* DirecPay: Send phone number as mobile phone by default [Soleone]
+* Support sending line items for PayPal Express transactions [Jonathan Rudenberg]
+* Update PayPal Express XML format to latest version [Jonathan Rudenberg]
+* Fix custom image header for PayPal Express [mwagg]
+* Add InvoiceID and OrderDescription to PayPal Express Authorize and Capture [cody]
+* Add Moneybookers integration [Alex Diakov]
+* Add QBMS (Quickbooks Merchant Services) gateway [ntalbott]
+* Add NMI gateway [ntalbott]
+* Make fully compatible with Rails 2 & 3, and Ruby 1.8 & 1.9 [ntalbott]
+* Authorize.Net: Only return AVS message for AVS-related reason codes. [ntalbott]
+* Add Federated Canada gateway [ntalbott]
+* Garanti: Fix text normalization for nil values [Selem Delul]
+* Valitor: Always send amount without any decimal places [Soleone]
+* Add WorldPay integration [Soleone]
+
+== Version 1.11.0 (Feb 11, 2011)
+
+* Bump dependency for activesupport from 2.3.2 to 2.3.8 [Soleone]
+* Garanti: Normalize text in xml fields for non-standard characters [Selem Delul]
+* Garanti: Make sure order number does not contain illegal characters [Soleone]
+* Fix ActionView tests for ActiveSupport 3.0.4 [Soleone]
+* DirecPay: Make address information editable by default [Soleone]
+* Fix ePDQ credit to expect and handle full authorization [Nathaniel Talbott]
+* Add Barclays ePDQ Gateway [Nathaniel Talbott]
+* Add default fixture for Garanti and don't use fixture for Garanti [cody]
+* Add cms param for ePay [ePay]
+* Add Valitor Integration [Nathaniel Talbott]
+
+== Version 1.10.0 (Jan 20, 2011)
+
+* PayPal Express: Support returning payer phone number [Soleone]
+* Fix ePay to correctly send order number [Soleone]
+* Add BluePay Gateway [Nathaniel Talbott]
+* Add Quantum Gateway [Joshua Lippiner]
+* Add iDEAL/Rabobank gateway [Jonathan Rudenberg]
+* SagePayForm: Added send_email_confirmation (default false) to enable confirmation emails [wisq]
+
+== Version 1.9.4 (Jan 5, 2011)
+
+* Update Garanti gateway to integrate with new API [Selem Delul]
+
+== Version 1.9.3 (December 17, 2010)
+
+* Fix BBS Netaxept to change transaction type from C (for MOTO: mail order telephone order) to M (for credit card orders) [Soleone]
+* Fix Iridium and ePay to work with any object that responds to credit card methods not only ActiveMerchant::CreditCard objects
+
+== Version 1.9.2 (December 9, 2010)
+
+* Add support for PayPal mobile payments [wisq]
+* Add ePay gateway [ePay, Jonathan Rudenberg]
+* Allow access to the raw HTTP response [Jonathan Rudenberg]
+
+== Version 1.9.1 (November 24, 2010)
+
+* PayPal Express and PayPal Pro: Send JPY currency correctly without decimals [Soleone]
+* Netaxept: Make sure password (token) is URL escaped and update remote tests for updated server behavior [Soleone]
+* DirecPay: Add support for additional options in Return class and add convenience method to get transaction status update [Soleone]
+* Add new alias credit_card.brand for credit_card.type and handle the brand correctly in Netaxept [Soleone]
+* Iridium: Do not depend on ExpiryDate class for credit_card [Soleone]
+* PayFlow: Use same timeout of 60 seconds in HTTP header and XML for all requests [Soleone]
+* PayPal Website Payments Pro CA no longer supports American Express cards [Soleone]
+* Updated BIN ranges for Discover to match recent documents [kaunartist]
+
+== Version 1.9.0 (October 14, 2010)
+
+* Add support for DirecPay gateway [Soleone]
+* Add SagePay Form integration gateway [wisq]
+* Allow Return class to include a Notification for gateways that treat the direct response as a notification [wisq]
+* Add support for PayboxDirect gateway [Donald Piret]
+* Add support for SecureNet gateway [Kal]
+* Add support for the Inspire gateway [ryan r. smith]
+
+== Version 1.8.0 (September 24, 2010)
+
+* PayPal Express: Add support for billing agreements [Nathaniel Talbott]
+* Allow comparing countries [Nathaniel Talbott]
+* Iridium: Fix country handling [Nathaniel Talbott]
+* Iridium: Fix missing billing address [Nathaniel Talbott]
+* Iridium: Do not pass CV2 if not present [Nathaniel Talbott]
+* Add Iridium support [Phil Smy]
+* Add Netaxept support [Nathaniel Talbott]
+* PaymentExpress: Use Card Holder Help Text for the response message [Nathaniel Talbott]
+* Sort the country name list [Duff OMelia]
+
+== Version 1.7.3 (September 14, 2010)
+
+* Fix SagePay special handling for Japanese YEN currency to not send fractional amounts [Soleone]
+
+== Version 1.7.2 (August 27, 2010)
+
+* Update Braintree integration to play nicely with the braintree 2.5.0 gem [Soleone]
+* Fix SagePay to not send fractional amounts for Japanese YEN currency [Soleone]
+
+== Version 1.7.1 (July 28, 2010)
+
+* Pull in only the necessary components of Active Support. Enables use of ActiveMerchant with Rails 3 [railsjedi]
+
+== Version 1.7.0 (July 9, 2010)
+
+* Add support for new Braintree Blue Gateway (using the braintree gem) [Braintree]
+
+== Version 1.6.0 (July 6, 2010)
+
+* Add a task rake gateways:hosts to get a list of all outbound hosts and ports [cody]
+* Fix test failure in chronopay helper in Ruby 1.9.1 [cody]
+* Fix timezone issue in credit card test. [cody]
+* Fix failing unit test for Garanti gateway [cody]
+* Fix failing CyberSource remote test [Patrick Joyce]
+* Support for Garanti Sanal Pos: Turkish bank and billing gateway [Selem Delul]
+* Add deprecation note for Money objects to Bogus gateway [Soleone]
+* Updated test URL for Merchant eSolutions and added valid remote test credentials [Soleone]
+* Add new error class for SSL certificate problems in connection class  [Soleone]
+* Update valid_month and valid_expiry_year to coerce string arguments to integers [cody]
+* Add support for displaying credit cards with PayPal Express. Use the :allow_guest_checkout => true option when setting up the transaction [Edward Ocampo-Gooding]
+* Use card_brand method for checking for checks in Sage and Beanstream [cody]
 * Add JCB and Diners Club to LinkPoint [Soleone]
 
 == Version 1.5.1 (February 14, 2010)

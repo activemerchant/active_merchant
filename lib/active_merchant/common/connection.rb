@@ -71,15 +71,16 @@ module ActiveMerchant
           end
           
           info "--> %d %s (%d %.4fs)" % [result.code, result.message, result.body ? result.body.length : 0, realtime], tag
-          response = handle_response(result)
-          debug response
-          response
+          debug result.body
+          result
         rescue EOFError => e
           raise ConnectionError, "The remote server dropped the connection"
         rescue Errno::ECONNRESET => e
           raise ConnectionError, "The remote server reset the connection"
         rescue Errno::ECONNREFUSED => e
           raise RetriableConnectionError, "The remote server refused the connection"
+        rescue OpenSSL::X509::CertificateError => e
+          raise ClientCertificateError, "The remote server did not accept the provided SSL certificate"
         rescue Timeout::Error, Errno::ETIMEDOUT => e
           raise ConnectionError, "The connection to the remote server timed out"
         end
@@ -142,15 +143,6 @@ module ActiveMerchant
         retries -= 1
         retry if retry_safe && !retries.zero?
         raise
-      end
-    end
-    
-    def handle_response(response)
-      case response.code.to_i
-      when 200...300
-        response.body
-      else
-        raise ResponseError.new(response)
       end
     end
     
