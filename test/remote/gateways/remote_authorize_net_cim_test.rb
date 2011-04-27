@@ -17,7 +17,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
       :email => 'Up to 255 Characters', # Optional
       :payment_profiles => { # Optional
         :customer_type => 'individual', # Optional
-        :bill_to => @address,
+        :bill_to => address,
         :payment => @payment
       },
       :ship_to_list => {
@@ -437,7 +437,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_nil response.params['address']['phone_number']
   end
 
-  def test_successful_validate_customer_payment_profile_request
+  def test_successful_validate_customer_payment_profile_request_live
     assert response = @gateway.create_customer_profile(@options)
     @customer_profile_id = response.authorization
 
@@ -456,6 +456,48 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_success response
     assert_nil response.authorization
     assert_equal "This transaction has been approved.", response.params['direct_response']['message']
+  end
+
+  def test_validate_customer_payment_profile_request_live_requires_billing_address
+    @options[:profile][:payment_profiles].delete(:bill_to)
+    assert response = @gateway.create_customer_profile(@options)
+    @customer_profile_id = response.authorization
+
+    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    assert @customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
+    assert @customer_address_id = response.params['profile']['ship_to_list']['customer_address_id']
+
+    assert response = @gateway.validate_customer_payment_profile(
+      :customer_profile_id => @customer_profile_id,
+      :customer_payment_profile_id => @customer_payment_profile_id,
+      :customer_address_id => @customer_address_id,
+      :validation_mode => :live
+    )
+
+    assert response.test?
+    assert_failure response
+    assert_equal "There is one or more missing or invalid required fields.", response.message
+  end
+
+  def test_validate_customer_payment_profile_request_old_does_not_require_billing_address
+    @options[:profile][:payment_profiles].delete(:bill_to)
+    assert response = @gateway.create_customer_profile(@options)
+    @customer_profile_id = response.authorization
+
+    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    assert @customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
+    assert @customer_address_id = response.params['profile']['ship_to_list']['customer_address_id']
+
+    assert response = @gateway.validate_customer_payment_profile(
+      :customer_profile_id => @customer_profile_id,
+      :customer_payment_profile_id => @customer_payment_profile_id,
+      :customer_address_id => @customer_address_id,
+      :validation_mode => :old
+    )
+
+    assert response.test?
+    assert_success response
+    assert_equal "Successful.", response.message
   end
 
   def test_should_create_customer_profile_transaction_auth_capture_and_then_void_request

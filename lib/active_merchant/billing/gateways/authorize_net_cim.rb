@@ -63,7 +63,8 @@ module ActiveMerchant #:nodoc:
       CIM_VALIDATION_MODES = {
         :none => 'none',
         :test => 'testMode',
-        :live => 'liveMode'
+        :live => 'liveMode',
+        :old => 'oldLiveMode'
       }
       
       BANK_ACCOUNT_TYPES = {
