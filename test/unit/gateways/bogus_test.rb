@@ -28,6 +28,14 @@ class BogusTest < Test::Unit::TestCase
     end
   end
 
+  def test_recurring
+    assert  @gateway.recurring(1000, credit_card('1')).success?
+    assert !@gateway.recurring(1000, credit_card('2')).success?
+    assert_raises(ActiveMerchant::Billing::Error) do
+      @gateway.recurring(1000, credit_card('123'))
+    end
+  end
+
   def test_capture
     assert  @gateway.capture(1000, '1337').success?
     assert  @gateway.capture(1000, @response.params["transid"]).success?
