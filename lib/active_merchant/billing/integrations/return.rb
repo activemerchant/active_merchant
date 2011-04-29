@@ -14,7 +14,12 @@ module ActiveMerchant #:nodoc:
         def success?
           true
         end
-      
+
+        # Not cancelled by default.  Overridden in the child class.
+        def cancelled?
+          false
+        end
+
         def message
           
         end
