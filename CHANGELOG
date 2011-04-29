@@ -1,14 +1,21 @@
 = ActiveMerchant CHANGELOG
 
-* Added support for storing cards in Beanstream [duffomelia]
-* Added support for storing cards in eWay [duffomelia]
-* Fixed a few things missed in the Orbital merge [ntalbott]
-* Add Orbital gateway [ntalbott]
+* SagePayForm: Implement #cancelled? for Return. [wisq]
+* Add #cancelled? to Integrations::Return [wisq]
+* Bogus gateway: Add refund support and better tests [wisq]
+* Beanstream: Add support for storing cards [duffomelia]
+* eWay: Add support for storing cards [duffomelia]
+* Add validation mode to update profile request [Ken Miller]
+* Authorize.net CIM: Add oldLiveMode [ntalbott]
+* Authorize.net CIM: Add extra transaction types [Ken Miller]
+* JetPay: gateway tweaks [ntalbott]
+* Deprecate a bunch more #credit methods [ntalbott]
+* RealEx: Add authorize/capture/credit/void [ntalbott]
+* SecurePay AU: Add authorize/capture/credit/void [ntalbott]
+* PayPal Express: Make response parsing more robust [ntalbott]
 * Test deprecation warnings; add deprecation line numbers [ntabott]
-* Add WorldPay gateway [ntalbott]
-* Add bogus gateway refund support, improve tests. [wisq]
-* Add #cancelled? to Integrations::Return. [wisq]
-* Implement #cancelled? for SagePayForm's Return. [wisq]
+* Add Orbital direct gateway [ntalbott]
+* Add WorldPay direct gateway [ntalbott]
 
 == Version 1.13.0 (Apr 19, 2011)
 
