@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.14.0 (Apr 29, 2011)
+
 * SagePayForm: Implement #cancelled? for Return. [wisq]
 * Add #cancelled? to Integrations::Return [wisq]
 * Bogus gateway: Add refund support and better tests [wisq]
