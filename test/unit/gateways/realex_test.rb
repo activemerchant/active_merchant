@@ -5,7 +5,7 @@ class RealexTest < Test::Unit::TestCase
   
   class ActiveMerchant::Billing::RealexGateway
     # For the purposes of testing, lets redefine some protected methods as public.
-    public :build_purchase_or_authorization_request, :build_refund_request, :build_void_request, :build_capture_request, :stringify_values, :avs_input_code
+    public :build_purchase_or_authorization_request, :build_refund_request, :build_void_request, :build_capture_request, :avs_input_code
   end
   
   def setup
@@ -57,12 +57,13 @@ class RealexTest < Test::Unit::TestCase
   end  
   
   def test_hash
-    result =  Digest::SHA1.hexdigest("20061213105925.your_merchant_id.1.400.EUR.4263971921001307")
-    assert_equal "6bbce4d13f8e830401db4ee530eecb060bc50f64", result
-    
-    #add the secret to the end
-    result = Digest::SHA1.hexdigest(result + "." + @password)
-    assert_equal "06a8b619cbd76024676401e5a83e7e5453521af3", result
+    gateway = RealexGateway.new(
+      :login => 'thestore',
+      :password => 'mysecret'
+    )
+    Time.stubs(:now).returns(Time.parse("2001-04-03 12:32:45"))
+    gateway.expects(:ssl_post).with(anything, regexp_matches(/9af7064afd307c9f988e8dfc271f9257f1fc02f6/)).returns(successful_purchase_response)
+    gateway.purchase(29900, credit_card('5105105105105100'), :order_id => 'ORD453-11')
   end
 
   def test_successful_purchase
@@ -261,17 +262,6 @@ SRC
 
     assert_equal valid_refund_request_xml, gateway.build_refund_request(@amount, '1;4321;1234', {})
 
-  end
-  
-  def test_stringify_values
-    assert_equal "timestamp.merchantid.orderid.ammount.currency.creditcard", 
-      @gateway.stringify_values(["timestamp","merchantid", "orderid", "ammount", "currency", "creditcard"])
-    
-    assert_equal "timestamp.merchantid.orderid.ammount.currency.", 
-      @gateway.stringify_values(["timestamp","merchantid", "orderid", "ammount", "currency"])
-    
-    assert_equal "timestamp.merchantid.orderid...", 
-      @gateway.stringify_values(["timestamp","merchantid", "orderid"])
   end
   
   def test_should_extract_avs_input

@@ -145,7 +145,7 @@ module ActiveMerchant
           add_merchant_details(xml, options)
           add_transaction_identifiers(xml, authorization, options)
           add_comments(xml, options)
-          add_signed_digest(xml, timestamp, @options[:login], options[:order_id])
+          add_signed_digest(xml, timestamp, @options[:login], options[:order_id], nil, nil, nil)
         end
         xml.target!
       end
@@ -160,7 +160,7 @@ module ActiveMerchant
           xml.tag! 'refundhash', @options[:refund_hash] if @options[:refund_hash]
           xml.tag! 'autosettle', 'flag' => 1
           add_comments(xml, options)
-          add_signed_digest(xml, timestamp, @options[:login], options[:order_id], amount(money), (options[:currency] || currency(money)))
+          add_signed_digest(xml, timestamp, @options[:login], options[:order_id], amount(money), (options[:currency] || currency(money)), nil)
         end
         xml.target!
       end
@@ -172,7 +172,7 @@ module ActiveMerchant
           add_merchant_details(xml, options)
           add_transaction_identifiers(xml, authorization, options)
           add_comments(xml, options)
-          add_signed_digest(xml, timestamp, @options[:login], options[:order_id])
+          add_signed_digest(xml, timestamp, @options[:login], options[:order_id], nil, nil, nil)
         end
         xml.target!
       end
@@ -207,7 +207,7 @@ module ActiveMerchant
       def add_merchant_details(xml, options)
         xml.tag! 'merchantid', @options[:login]
         if options[:account] || @options[:account]
-          xml.tag! 'account', options[:account] || @options[:account]
+          xml.tag! 'account', (options[:account] || @options[:account])
         end
       end
 
@@ -252,22 +252,13 @@ module ActiveMerchant
         string.gsub(/[\D]/,'')
       end
 
-      def stringify_values(values)
-        string = ""
-        (0..5).each do |i|
-          string << "#{values[i]}"
-          string << "." unless i == 5
-        end
-        string
-      end
-      
       def new_timestamp
         Time.now.strftime('%Y%m%d%H%M%S')
       end
 
       def add_signed_digest(xml, *values)
-        string = stringify_values(values)
-        xml.tag! 'sha1hash', sha1from(string)
+        string = Digest::SHA1.hexdigest(values.join("."))
+        xml.tag! 'sha1hash', Digest::SHA1.hexdigest([string, @options[:password]].join("."))
       end
 
       def auto_settle_flag(action)
@@ -276,10 +267,6 @@ module ActiveMerchant
 
       def expiry_date(credit_card)
         "#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}"
-      end
-
-      def sha1from(string)
-        Digest::SHA1.hexdigest("#{Digest::SHA1.hexdigest(string)}.#{@options[:password]}")
       end
 
       def normalize(field)
