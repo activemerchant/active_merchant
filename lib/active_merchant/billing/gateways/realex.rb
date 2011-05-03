@@ -131,7 +131,7 @@ module ActiveMerchant
           add_amount(xml, money, options)
           add_card(xml, credit_card)
           xml.tag! 'autosettle', 'flag' => auto_settle_flag(action)
-          add_signed_digest(xml, timestamp, @options[:login], options[:order_id], amount(money), (options[:currency] || currency(money)), credit_card.number)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), credit_card.number)
           add_comments(xml, options)
           add_address_and_customer_info(xml, options)
         end
@@ -145,7 +145,7 @@ module ActiveMerchant
           add_merchant_details(xml, options)
           add_transaction_identifiers(xml, authorization, options)
           add_comments(xml, options)
-          add_signed_digest(xml, timestamp, @options[:login], options[:order_id], nil, nil, nil)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), nil, nil, nil)
         end
         xml.target!
       end
@@ -160,7 +160,7 @@ module ActiveMerchant
           xml.tag! 'refundhash', @options[:refund_hash] if @options[:refund_hash]
           xml.tag! 'autosettle', 'flag' => 1
           add_comments(xml, options)
-          add_signed_digest(xml, timestamp, @options[:login], options[:order_id], amount(money), (options[:currency] || currency(money)), nil)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), nil)
         end
         xml.target!
       end
@@ -172,7 +172,7 @@ module ActiveMerchant
           add_merchant_details(xml, options)
           add_transaction_identifiers(xml, authorization, options)
           add_comments(xml, options)
-          add_signed_digest(xml, timestamp, @options[:login], options[:order_id], nil, nil, nil)
+          add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), nil, nil, nil)
         end
         xml.target!
       end
