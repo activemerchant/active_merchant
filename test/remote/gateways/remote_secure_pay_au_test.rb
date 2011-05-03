@@ -53,24 +53,24 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     assert_equal 'Preauth was done for smaller amount', capture.message
   end
 
-  def test_successful_credit
+  def test_successful_refund
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     authorization = response.authorization
 
-    assert response = @gateway.credit(@amount, authorization)
+    assert response = @gateway.refund(@amount, authorization)
     assert_success response
     assert_equal 'Approved', response.message
   end
   
-  def test_failed_credit
+  def test_failed_refund
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     authorization = response.authorization
 
-    assert response = @gateway.credit(@amount+1, authorization)
+    assert response = @gateway.refund(@amount+1, authorization)
     assert_failure response
-    assert_equal 'Only $1.00 available for refund', response.message
+    assert_equal 'Only $1.0 available for refund', response.message
   end
   
   def test_successful_void
@@ -90,16 +90,16 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
 
     assert response = @gateway.void(authorization+'1')
     assert_failure response
-    assert_equal 'Transaction was done for different amount', response.message
+    assert_equal 'Unable to retrieve original FDR txn', response.message
   end
 
   def test_invalid_login
     gateway = SecurePayAuGateway.new(
-                :login => '',
-                :password => ''
+                :login => 'a',
+                :password => 'a'
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Invalid merchant ID", response.message
+    assert_equal "Fatal Unknown Error", response.message
   end
 end
