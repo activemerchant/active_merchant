@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add Eurobank (ProxyPay) gateway [nikosd]
+
 == Version 1.14.0 (Apr 29, 2011)
 
 * SagePayForm: Implement #cancelled? for Return. [wisq]

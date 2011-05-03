@@ -2,6 +2,8 @@
 *.orig
 *.swp
 *.swo
+*.idea
+*.iml
 pkg
 .rvmrc
 vendor/cache
