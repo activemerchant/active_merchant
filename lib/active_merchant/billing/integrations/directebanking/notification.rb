@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
           end
           
           def item_id
-            params[:user_variable_1.to_s]
+            params[:user_variable_0.to_s]
           end
           
           def transaction_id
@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
             params[:currency_id.to_s]
           end
           
-          # for verifying the signature of the URL parameters returned by Adyen after the payment process
+          # for verifying the signature of the URL parameters
           PAYMENT_HOOK_SIGNATURE_FIELDS = [
             :transaction,
             :user_id,
@@ -80,11 +80,14 @@ module ActiveMerchant #:nodoc:
             :transaction,
             :amount,
             :currency_id,
+            :user_variable_0,
             :user_variable_1,
+            :user_variable_2,
+            :user_variable_3,
             :created
           ]
           
-          # Provide access to raw fields from quickpay
+          # Provide access to raw fields
           PAYMENT_HOOK_SIGNATURE_FIELDS.each do |key|
             if !PAYMENT_HOOK_IGNORE_AT_METHOD_CREATION_FIELDS.include?(key) 
               define_method(key.to_s) do
@@ -94,8 +97,8 @@ module ActiveMerchant #:nodoc:
           end
           
           def generate_signature_string
-            #format is: transaction|user_id|project_id|sender_holder|sender_account_number|sender_bank_code| sender_bank_name|sender_bank_bic|sender_iban|sender_country_id|recipient_holder| recipient_account_number|recipient_bank_code|recipient_bank_name|recipient_bank_bic| recipient_iban|recipient_country_id|international_transaction|amount|currency_id| reason_1|reason_2|security_criteria|user_variable_0|user_variable_1|user_variable_2| user_variable_3|user_variable_4|user_variable_5|created|notification_password
-            PAYMENT_HOOK_SIGNATURE_FIELDS.map {|key| params[key.to_s]} * "|"+ "|"+@options[:credential4]
+            #format is: transaction|user_id|project_id|sender_holder|sender_account_number|sender_bank_code|sender_bank_name|sender_bank_bic|sender_iban|sender_country_id|recipient_holder|recipient_account_number|recipient_bank_code|recipient_bank_name|recipient_bank_bic|recipient_iban|recipient_country_id|international_transaction|amount|currency_id|reason_1|reason_2|security_criteria|user_variable_0|user_variable_1|user_variable_2|user_variable_3|user_variable_4|user_variable_5|created|notification_password
+            PAYMENT_HOOK_SIGNATURE_FIELDS.map {|key| params[key.to_s]} * "|" + "|#{@options[:credential4]}"
           end
 
           def generate_signature

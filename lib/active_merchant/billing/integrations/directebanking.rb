@@ -5,7 +5,15 @@ module ActiveMerchant #:nodoc:
         autoload :Return,       File.dirname(__FILE__) + '/directebanking/return.rb'
         autoload :Helper,       File.dirname(__FILE__) + '/directebanking/helper.rb'
         autoload :Notification, File.dirname(__FILE__) + '/directebanking/notification.rb'
-               
+        
+        # Supported countries:
+        # Germany - DE
+        # Austria - AT
+        # Belgium - BE
+        # Netherlands - NL
+        # Switzerland - CH
+        # Great Britain - GB
+        
         # Overwrite this if you want to change the directebanking test url
         mattr_accessor :test_url
         self.test_url = 'https://www.directebanking.com/payment/start'
@@ -26,7 +34,7 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        def self.notification(post)
+        def self.notification(post, options = {})
           Notification.new(post)
         end  
 

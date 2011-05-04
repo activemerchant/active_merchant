@@ -4,17 +4,16 @@ module ActiveMerchant #:nodoc:
       module Directebanking
         class Helper < ActiveMerchant::Billing::Integrations::Helper
 
-          # Variables that need to be set by the admin in Shopify interface
           # All credentials are mandatory and need to be set
           #
           # credential1: User ID
           # credential2: Project ID
           # credential3: Project Password (Algorithm: SH1)
           # credential4: Notification Password (Algorithm: SH1)
-
           def initialize(order, account, options = {})
             super
-            add_field(:user_variable_1.to_s, order)
+            add_field('user_variable_0', order)
+            add_field('project_id', options[:credential2])
             @project_password = options[:credential3]
           end
 
@@ -40,8 +39,12 @@ module ActiveMerchant #:nodoc:
           SIGNATURE_IGNORE_AT_METHOD_CREATION_FIELDS = [
             :user_id,
             :amount,
+            :project_id,
             :currency_id,
-            :user_variable_1
+            :user_variable_0,
+            :user_variable_1,
+            :user_variable_2,
+            :user_variable_3
           ]
           
           SIGNATURE_FIELDS.each do |key|
@@ -60,8 +63,8 @@ module ActiveMerchant #:nodoc:
           end
 
           def generate_signature_string
-            # format of signature: user_id|project_id|sender_holder|sender_account_number|sender_bank_code| sender_country_id|amount|currency_id|reason_1|reason_2|user_variable_0|user_variable_1| user_variable_2|user_variable_3|user_variable_4|user_variable_5|project_password
-            SIGNATURE_FIELDS.map {|key| @fields[key.to_s]} * "|"+ "|"+@project_password
+            # format of signature: user_id|project_id|sender_holder|sender_account_number|sender_bank_code| sender_country_id|amount|currency_id|reason_1|reason_2|user_variable_0|user_variable_1|user_variable_2|user_variable_3|user_variable_4|user_variable_5|project_password
+            SIGNATURE_FIELDS.map {|key| @fields[key.to_s]} * "|" + "|#{@project_password}"
           end
 
           def generate_signature
@@ -72,11 +75,14 @@ module ActiveMerchant #:nodoc:
             @fields.merge('hash' => generate_signature)
           end
             
-          # Replace with the real mapping
           mapping :account, 'user_id'
-          mapping :credential2, 'project_id'
           mapping :amount, 'amount'
           mapping :currency, 'currency_id'
+          mapping :description, 'reason_1'
+          
+          mapping :return_url, 'user_variable_1'
+          mapping :cancel_return_url, 'user_variable_2'
+          mapping :notify_url, 'user_variable_3'
         end
       end
     end
