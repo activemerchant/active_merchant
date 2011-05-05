@@ -12,34 +12,37 @@ module ActiveMerchant #:nodoc:
           end
           
           def complete?
-            true
+            status == 'Completed'
           end
           
           def item_id
-            params[:user_variable_0.to_s]
+            params['user_variable_0']
           end
           
           def transaction_id
-            params[:transaction.to_s]
+            params['transaction']
           end
           
           # When was this payment received by the client. 
           def received_at
-            Time.parse(params[:created.to_s])
+            Time.parse(params['created']) if params['created']
           end
           
           # the money amount we received in X.2 decimal.
           def gross
-            "%.2f" % params[:amount.to_s].to_f
+            "%.2f" % params['amount'].to_f
           end
 
           def status
-            # Notifications: Please pay attention that you are only notified about successful transactions.
-            true # so it is always true
+            'Completed'
           end
 
           def currency
-            params[:currency_id.to_s]
+            params['currency_id']
+          end
+          
+          def test?
+            params['sender_bank_name'] == 'Testbank'
           end
           
           # for verifying the signature of the URL parameters

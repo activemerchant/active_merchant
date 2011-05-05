@@ -9,12 +9,13 @@ class DirectebankingNotificationTest < Test::Unit::TestCase
 
   def test_accessors
     assert @deb.complete?
-    assert_equal true, @deb.status
+    assert_equal 'Completed', @deb.status
     assert_equal "19488-100576-4D6A7F5F-7FC4", @deb.transaction_id
     assert_equal "123456789", @deb.item_id
     assert_equal "1.00", @deb.gross
     assert_equal "EUR", @deb.currency
     assert_equal Time.parse("2011-02-27 17:45:23"), @deb.received_at
+    assert @deb.test?
   end
   
   def test_compositions
