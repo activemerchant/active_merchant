@@ -103,8 +103,16 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard)        
         add_address(post, creditcard, options)   
         add_customer_data(post, options)
-             
         commit('Sale', money, post)
+      end                       
+      
+      def refund(money, creditcard, options = {})
+        post = {}
+        add_invoice(post, options)
+        add_creditcard(post, creditcard)        
+        add_address(post, creditcard, options)   
+        add_customer_data(post, options)
+        commit('Return', money, post)
       end                       
     
       def capture(money, authorization, options = {})
