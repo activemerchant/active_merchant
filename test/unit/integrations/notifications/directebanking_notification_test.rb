@@ -4,7 +4,7 @@ class DirectebankingNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @deb = Directebanking::Notification.new(http_raw_data, :credential4 => "3qx-:03DDfmUVh}b16#Y")
+    @deb = Directebanking.notification(http_raw_data, :credential4 => "3qx-:03DDfmUVh}b16#Y")
   end
 
   def test_accessors
