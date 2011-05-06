@@ -136,15 +136,15 @@ module ActiveMerchant #:nodoc:
 
         def parse
           doc = REXML::Document.new(@response)
-          auth_type = find(doc, "//Transaction/Type").to_sym
+          auth_type = find(doc, "//Transaction/Type").to_s
 
           message = find(doc, "//Message/Text")
           if message.blank?
             message = find(doc, "//Transaction/CardProcResp/CcReturnMsg")
           end
 
-          case auth_type.to_sym
-          when :Credit, :Void
+          case auth_type
+          when 'Credit', 'Void'
             success = find(doc, "//CcReturnMsg") == "Approved."
           else
             success = find(doc, "//Transaction/AuthCode").present?
