@@ -13,7 +13,6 @@ class Dood
 
 end
 
-require 'ruby-debug'
 class ValidateableTest < Test::Unit::TestCase
   include ActiveMerchant
 
