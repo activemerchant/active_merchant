@@ -69,18 +69,18 @@ module ActiveMerchant #:nodoc:
       def authorize(money, options = {})
         requires!(options, :token, :payer_id)
         request = build_sale_or_authorization_request('Authorization', money, options)
-        commit(request)
+        commit(request, options)
       end
       
       def purchase(money, options = {})        
         requires!(options, :token, :payer_id)
         request = build_sale_or_authorization_request('Sale', money, options)
-        commit(request)
+        commit(request, options)
       end
       
       def refund(money, identification, options = {})
         request = build_reference_request(:credit, money, identification, options)
-        commit(request)
+        commit(request, options)
       end        
 
       def credit(money, identification, options = {})
@@ -92,19 +92,19 @@ module ActiveMerchant #:nodoc:
         requires!(options, :return_url, :cancel_return_url)
         
         request = build_setup_express_sale_or_authorization_request('Authorization', money, options)
-        commit(request)
+        commit(request, options)
       end
       
       def setup_purchase(money, options = {})
         requires!(options, :return_url, :cancel_return_url)
         
         request = build_setup_express_sale_or_authorization_request('Sale', money, options)
-        commit(request)
+        commit(request, options)
       end
       
       def details_for(token)
         request = build_get_express_details_request(token)
-        commit(request)
+        commit(request, options)
       end
       
       private

@@ -16,13 +16,13 @@ module ActiveMerchant #:nodoc:
       def authorize(money, credit_card_or_reference, options = {})
         request = build_sale_or_authorization_request(:authorization, money, credit_card_or_reference, options)
       
-        commit(request)
+        commit(request, options)
       end
       
       def purchase(money, credit_card_or_reference, options = {})
         request = build_sale_or_authorization_request(:purchase, money, credit_card_or_reference, options)
 
-        commit(request)
+        commit(request, options)
       end
       
       def credit(money, identification_or_credit_card, options = {})
@@ -33,12 +33,12 @@ module ActiveMerchant #:nodoc:
         else
           # Perform non-referenced credit
           request = build_credit_card_request(:credit, money, identification_or_credit_card, options)
-          commit(request)
+          commit(request, options)
         end
       end
       
       def refund(money, reference, options = {})
-        commit(build_reference_request(:credit, money, reference, options))
+        commit(build_reference_request(:credit, money, reference, options), options)
       end
       # Adds or modifies a recurring Payflow profile.  See the Payflow Pro Recurring Billing Guide for more details:
       # https://www.paypal.com/en_US/pdf/PayflowPro_RecurringBilling_Guide.pdf
@@ -57,17 +57,17 @@ module ActiveMerchant #:nodoc:
         request = build_recurring_request(options[:profile_id] ? :modify : :add, money, options) do |xml|
           add_credit_card(xml, credit_card) if credit_card
         end
-        commit(request, :recurring)
+        commit(request, options.merge(:request_type => :recurring))
       end
       
       def cancel_recurring(profile_id)
         request = build_recurring_request(:cancel, 0, :profile_id => profile_id)
-        commit(request, :recurring)
+        commit(request, options.merge(:request_type => :recurring))
       end
       
       def recurring_inquiry(profile_id, options = {})
         request = build_recurring_request(:inquiry, nil, options.update( :profile_id => profile_id ))
-        commit(request, :recurring)
+        commit(request, options.merge(:request_type => :recurring))
       end   
       
       def express
