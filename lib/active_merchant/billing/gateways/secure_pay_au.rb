@@ -58,20 +58,20 @@ module ActiveMerchant #:nodoc:
         commit :authorization, build_purchase_request(money, credit_card, options)
       end
       
-      def capture(money, reference)
+      def capture(money, reference, options = {})
         commit :capture, build_reference_request(money, reference)
       end
       
-      def refund(money, reference)
+      def refund(money, reference, options = {})
         commit :refund, build_reference_request(money, reference)
       end
 
-      def credit(money, reference)
+      def credit(money, reference, options = {})
         deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, reference)
       end
 
-      def void(reference)
+      def void(reference, options = {})
         commit :void, build_reference_request(nil, reference)
       end
       

@@ -69,7 +69,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     
-    assert response = @gateway.capture(@amount, "crazy*reference*thingy*100")
+    assert response = @gateway.capture(@amount, "crazy*reference*thingy*100", {})
     assert_success response
     assert_equal "Approved", response.message
   end
@@ -84,7 +84,7 @@ class SecurePayAuTest < Test::Unit::TestCase
   
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
-    assert_success @gateway.refund(@amount, "crazy*reference*thingy*100")
+    assert_success @gateway.refund(@amount, "crazy*reference*thingy*100", {})
   end
   
   def test_failed_refund
@@ -99,14 +99,14 @@ class SecurePayAuTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_refund_response)
     
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
-      assert_success @gateway.credit(@amount, "crazy*reference*thingy*100")
+      assert_success @gateway.credit(@amount, "crazy*reference*thingy*100", {})
     end
   end
   
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
     
-    assert response = @gateway.void("crazy*reference*thingy*100")
+    assert response = @gateway.void("crazy*reference*thingy*100", {})
     assert_success response
   end
   
