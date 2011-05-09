@@ -84,6 +84,19 @@ module ActiveMerchant #:nodoc:
                 add_address(xml, 'BillTo', billing_address, options) if billing_address
                 add_address(xml, 'ShipTo', options[:shipping_address], options) if options[:shipping_address]
                 
+                options[:items].each_with_index do |item, index|
+                  xml.tag! 'ExtData', 'Name' => "L_DESC#{index}", 'Value' => item[:description]
+                  xml.tag! 'ExtData', 'Name' => "L_COST#{index}", 'Value' => amount(money)
+                  xml.tag! 'ExtData', 'Name' => "L_QTY#{index}", 'Value' => 1
+                  xml.tag! 'ExtData', 'Name' => "L_NAME#{index}", 'Value' => item[:name]
+                  # Note: An ItemURL is supported in Paypal Express (different API), but not PayFlow Express, as far as I can tell.
+                  # L_URLn nor L_ITEMURLn seem to work
+                end
+                if options[:items].any?
+                  xml.tag! 'ExtData', 'Name' => 'CURRENCY', 'Value' => options[:currency] || currency(money)
+                  xml.tag! 'ExtData', 'Name' => "ITEMAMT", 'Value' => amount(money)
+                end
+
                 xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
               end
               
@@ -128,9 +141,12 @@ module ActiveMerchant #:nodoc:
           # Customization of the payment page
           xml.tag! 'PageStyle', options[:page_style] unless options[:page_style].blank?
           xml.tag! 'HeaderImage', options[:header_image] unless options[:header_image].blank?
+          xml.tag! 'PayflowColor', options[:background_color] unless options[:background_color].blank?
+          # Note: HeaderImage and PayflowColor apply to both the new (as of 2010) and the old checkout experience
+          # HeaderBackColor and HeaderBorderColor apply only to the old checkout experience which is being phased out.
           xml.tag! 'HeaderBackColor', options[:header_background_color] unless options[:header_background_color].blank?
           xml.tag! 'HeaderBorderColor', options[:header_border_color] unless options[:header_border_color].blank?
-          xml.tag! 'PayflowColor', options[:background_color] unless options[:background_color].blank?
+          xml.tag! 'ExtData', 'Name' => 'ALLOWNOTE', 'Value' => options[:allow_note]
         end
       end
       
