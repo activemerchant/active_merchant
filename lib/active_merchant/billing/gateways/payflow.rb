@@ -84,10 +84,21 @@ module ActiveMerchant #:nodoc:
       end
       
       def build_reference_sale_or_authorization_request(action, money, reference, options)
-        xml = Builder::XmlMarkup.new 
+        xml = Builder::XmlMarkup.new
         xml.tag! TRANSACTIONS[action] do
           xml.tag! 'PayData' do
             xml.tag! 'Invoice' do
+              # Fields accepted by PayFlow and recommended to be provided even for Reference Transaction, per Payflow docs.
+              xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
+              xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
+              xml.tag! 'Description', options[:description] unless options[:description].blank?
+              xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
+              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
+
+              billing_address = options[:billing_address] || options[:address]
+              add_address(xml, 'BillTo', billing_address, options) if billing_address
+              add_address(xml, 'ShipTo', options[:shipping_address],options) if options[:shipping_address]
+
               xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
             end
             xml.tag! 'Tender' do
@@ -109,8 +120,8 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
               # Comment and Comment2 will show up in manager.paypal.com as Comment1 and Comment2
-              xml.tag! 'Comment', options[:comment] unless options[:comment].nil?
-              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].nil?
+              xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
+              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
