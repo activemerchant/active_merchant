@@ -132,8 +132,13 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'Invoice' do
                 xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
                 xml.tag! 'InvNum', options[:order_id] unless options[:order_id].blank?
+                # Description field will be shown to buyer, unless line items are also being supplied (then only line items are shown).
                 xml.tag! 'Description', options[:description] unless options[:description].blank?
-            
+                # Comment, Comment2 should make it to the backend at manager.paypal.com, as with Payflow credit card transactions
+                # but that doesn't seem to work (yet?). See: https://www.x.com/thread/51908?tstart=0
+                xml.tag! 'Comment', options[:comment] unless options[:comment].nil?
+                xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].nil?
+
                 billing_address = options[:billing_address] || options[:address]
                 add_address(xml, 'BillTo', billing_address, options) if billing_address
                 add_address(xml, 'ShipTo', options[:shipping_address], options) if options[:shipping_address]
