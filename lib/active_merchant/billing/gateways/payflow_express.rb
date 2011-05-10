@@ -31,6 +31,8 @@ module ActiveMerchant #:nodoc:
       # [<tt>:return_url</tt>] (req) URL to which the buyer’s browser is returned after choosing to pay.
       # [<tt>:cancel_return_url</tt>] (req) URL to which the buyer is returned if the buyer cancels the order.
       # [<tt>:notify_url</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
+      # [<tt>:comment</tt>] (opt) Comment field which will be reported to Payflow backend (at manager.paypal.com) as Comment1
+      # [<tt>:comment2</tt>] (opt) Comment field which will be reported to Payflow backend (at manager.paypal.com) as Comment2
       #
       # ==Line Items
       # Support for order line items is available, but has to be enabled on the PayFlow backend. This is what I was told by Todd Sieber at Technical Support:
