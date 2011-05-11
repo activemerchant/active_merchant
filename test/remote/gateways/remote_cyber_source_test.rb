@@ -53,6 +53,17 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal false,  response.success?
   end
 
+  def test_successful_auth_reversal
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    assert response = @gateway.auth_reversal(response.authorization)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test? 
+  end
+
   def test_successful_tax_calculation
     assert response = @gateway.calculate_tax(@credit_card, @options)
     assert_equal 'Successful transaction', response.message
