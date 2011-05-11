@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
       
       SUCCESS, APPROVED = '0', '00'
       
-      class_inheritable_accessor :primary_test_url, :secondary_test_url, :primary_live_url, :secondary_live_url
+      class_attribute :primary_test_url, :secondary_test_url, :primary_live_url, :secondary_live_url
       
       self.primary_test_url = "https://orbitalvar1.paymentech.net/authorize"
       self.secondary_test_url = "https://orbitalvar2.paymentech.net/authorize"
