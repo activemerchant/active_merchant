@@ -160,7 +160,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
-    assert response = @gateway.credit(@amount, response.authorization)
+    assert response = @gateway.refund(@amount, response.authorization)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?       
