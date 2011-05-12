@@ -272,10 +272,6 @@ module ActiveMerchant #:nodoc:
         end
       end
       
-      def test?
-        @options[:test] || super
-      end
-      
     end
   end
 end
