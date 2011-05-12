@@ -76,22 +76,22 @@ module ActiveMerchant #:nodoc:
       # The format of the amounts used by the gateway
       # :dollars => '12.50'
       # :cents => '1250'
-      class_inheritable_accessor :money_format
+      class_attribute :money_format
       self.money_format = :dollars
       
       # The default currency for the transactions if no currency is provided
-      class_inheritable_accessor :default_currency
+      class_attribute :default_currency
       
       # The countries of merchants the gateway supports
-      class_inheritable_accessor :supported_countries
+      class_attribute :supported_countries
       self.supported_countries = []
       
       # The supported card types for the gateway
-      class_inheritable_accessor :supported_cardtypes
+      class_attribute :supported_cardtypes
       self.supported_cardtypes = []
       
-      class_inheritable_accessor :homepage_url
-      class_inheritable_accessor :display_name
+      class_attribute :homepage_url
+      class_attribute :display_name
       
       # The application making the calls to the gateway
       # Useful for things like the PayPal build notation (BN) id fields

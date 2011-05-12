@@ -4,14 +4,14 @@ module ActiveMerchant #:nodoc:
       def self.included(base)
         base.default_currency = 'USD'
           
-        base.class_inheritable_accessor :partner
+        base.class_attribute :partner
         
         # Set the default partner to PayPal
         base.partner = 'PayPal'
         
         base.supported_countries = ['US', 'CA', 'SG', 'AU']
         
-        base.class_inheritable_accessor :timeout
+        base.class_attribute :timeout
         base.timeout = 60
         
         # Enable safe retry of failed connections

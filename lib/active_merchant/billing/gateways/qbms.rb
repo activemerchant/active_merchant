@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
     class QbmsGateway < Gateway
       API_VERSION = '4.0'
 
-      class_inheritable_accessor :test_url, :live_url
+      class_attribute :test_url, :live_url
 
       self.test_url = "https://webmerchantaccount.ptc.quickbooks.com/j/AppGateway"
       self.live_url = "https://webmerchantaccount.quickbooks.com/j/AppGateway"
