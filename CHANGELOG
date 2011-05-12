@@ -1,5 +1,23 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.15.0 (May 12, 2011)
+* DirecPay: Fix address to not include address2 twice in some cases [Soleone]
+* DirecPay: Send company if available [Soleone]
+* Realex: Fix hash signature [ntalbott/Soleone]
+* SecurePay AU: Update remote tests [ntalbott]
+* SecurePay AU: Fix method arity for #capture, #refund, #credit and #void [Soleone]
+* Barclays ePDQ: Make response parsing more robust [Soleone]
+* Payflow Express: Add line item support [wolframarnold]
+* Payflow Express: Add comment field support [wolframarnold]
+* Payflow: Add more optional fields [wolframarnold]
+* Beanstream/Paypal: Fix CREDIT_DEPRECATION_MESSAGE errors [Jonathan Rudenberg]
+* BraintreeBlue: Return a hash instead of a transaction object [braintreeps]
+* BraintreeBlue: Return proper AVS/CVV values [braintreeps]
+* Bogus: Add #recurring [trwomey]
+* Make Validateable compatible with ActiveModel [CodeMonkeySteve]
+* Add DirectEBanking offsite gateway [Gerwin Brunner/Soleone]
+* ActiveSupport 3.1 beta support [cgriego]
+
 == Version 1.14.0 (Apr 29, 2011)
 
 * SagePayForm: Implement #cancelled? for Return. [wisq]
