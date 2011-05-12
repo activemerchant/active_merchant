@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BraintreeBlueGateway < Gateway
       include BraintreeCommon
-      
+
       self.display_name = 'Braintree (Blue Platform)'
 
       def initialize(options = {})
@@ -195,21 +195,18 @@ module ActiveMerchant #:nodoc:
             response_options[:authorization] = result.transaction.id
           end
           if result.transaction
-            avs_result = {
-              'code' => '', 'message' => '',
-              'street_match' => result.transaction.avs_street_address_response_code == 'M',
-              'postal_match' => result.transaction.avs_postal_code_response_code == 'M'
+            response_options[:avs_result] = {
+              :code => nil, :message => nil,
+              :street_match => result.transaction.avs_street_address_response_code,
+              :postal_match => result.transaction.avs_postal_code_response_code
             }
-            cvv_result = {
-              'code' => result.transaction.cvv_response_code, 'message' => ''
-            }
+            response_options[:cvv_result] = result.transaction.cvv_response_code
             message = result.transaction.processor_response_code + " " + result.transaction.processor_response_text
           else
             message = message_from_result(result)
           end
           response = Response.new(result.success?, message, response_params, response_options)
-          response.instance_variable_set("@avs_result", avs_result)
-          response.instance_variable_set("@cvv_result", cvv_result)
+          response.cvv_result['message'] = ''
           response
         end
       end
