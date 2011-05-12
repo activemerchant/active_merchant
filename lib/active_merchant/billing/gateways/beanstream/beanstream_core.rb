@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, source, options = {})
-        deprecated CREDIT_DEPRECATION_MESSAGE
+        deprecated Gateway::CREDIT_DEPRECATION_MESSAGE
         refund(money, source, options)
       end
     
