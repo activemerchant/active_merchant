@@ -31,6 +31,8 @@ module ActiveMerchant #:nodoc:
       # [<tt>:return_url</tt>] (req) URL to which the buyer’s browser is returned after choosing to pay.
       # [<tt>:cancel_return_url</tt>] (req) URL to which the buyer is returned if the buyer cancels the order.
       # [<tt>:notify_url</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
+      # [<tt>:comment</tt>] (opt) Comment field which will be reported to Payflow backend (at manager.paypal.com) as Comment1
+      # [<tt>:comment2</tt>] (opt) Comment field which will be reported to Payflow backend (at manager.paypal.com) as Comment2
       #
       # ==Line Items
       # Support for order line items is available, but has to be enabled on the PayFlow backend. This is what I was told by Todd Sieber at Technical Support:
@@ -128,46 +130,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'SetExpressCheckout' do
           xml.tag! action do
-            xml.tag! 'PayData' do
-              xml.tag! 'Invoice' do
-                xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
-                xml.tag! 'InvNum', options[:order_id] unless options[:order_id].blank?
-                # Description field will be shown to buyer, unless line items are also being supplied (then only line items are shown).
-                xml.tag! 'Description', options[:description] unless options[:description].blank?
-                # Comment, Comment2 should make it to the backend at manager.paypal.com, as with Payflow credit card transactions
-                # but that doesn't seem to work (yet?). See: https://www.x.com/thread/51908?tstart=0
-                xml.tag! 'Comment', options[:comment] unless options[:comment].nil?
-                xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].nil?
-
-                billing_address = options[:billing_address] || options[:address]
-                add_address(xml, 'BillTo', billing_address, options) if billing_address
-                add_address(xml, 'ShipTo', options[:shipping_address], options) if options[:shipping_address]
-
-                # Note: To get order line-items to show up with Payflow Express, this feature has to be enabled on the backend.
-                # Call Support at 888 883 9770, press 2. Then request that they update your account in "Pandora" under Product Settings >> PayPal
-                # Mark and update the Features Bitmap to 1111111111111112.  This is 15 ones and a two.
-                # See here for the forum discussion: https://www.x.com/message/206214#206214
-                items = options[:items] || []
-                items.each_with_index do |item, index|
-                  xml.tag! 'ExtData', 'Name' => "L_DESC#{index}", 'Value' => item[:description]
-                  xml.tag! 'ExtData', 'Name' => "L_COST#{index}", 'Value' => amount(item[:amount])
-                  xml.tag! 'ExtData', 'Name' => "L_QTY#{index}", 'Value' => item[:quantity] || '1'
-                  xml.tag! 'ExtData', 'Name' => "L_NAME#{index}", 'Value' => item[:name]
-                  # Note: An ItemURL is supported in Paypal Express (different API), but not PayFlow Express, as far as I can tell.
-                  # L_URLn nor L_ITEMURLn seem to work
-                end
-                if items.any?
-                  xml.tag! 'ExtData', 'Name' => 'CURRENCY', 'Value' => options[:currency] || currency(money)
-                  xml.tag! 'ExtData', 'Name' => "ITEMAMT", 'Value' => amount(money)
-                end
-
-                xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
-              end
-              
-              xml.tag! 'Tender' do
-                add_paypal_details(xml, options)
-              end
-            end
+            add_pay_data xml, money, options
           end
         end
         xml.target!
@@ -177,17 +140,53 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'DoExpressCheckout' do
           xml.tag! action do
-            xml.tag! 'PayData' do
-              xml.tag! 'Invoice' do 
-                xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
-              end
-              xml.tag! 'Tender' do
-                add_paypal_details xml, options
-              end
-            end
+            add_pay_data xml, money, options
           end
         end
         xml.target!
+      end
+
+      def add_pay_data(xml, money, options)
+        xml.tag! 'PayData' do
+          xml.tag! 'Invoice' do
+            xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
+            xml.tag! 'InvNum', options[:order_id] unless options[:order_id].blank?
+            # Description field will be shown to buyer, unless line items are also being supplied (then only line items are shown).
+            xml.tag! 'Description', options[:description] unless options[:description].blank?
+            # Comment, Comment2 should make it to the backend at manager.paypal.com, as with Payflow credit card transactions
+            # but that doesn't seem to work (yet?). See: https://www.x.com/thread/51908?tstart=0
+            xml.tag! 'Comment', options[:comment] unless options[:comment].nil?
+            xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].nil?
+
+            billing_address = options[:billing_address] || options[:address]
+            add_address(xml, 'BillTo', billing_address, options) if billing_address
+            add_address(xml, 'ShipTo', options[:shipping_address], options) if options[:shipping_address]
+
+            # Note: To get order line-items to show up with Payflow Express, this feature has to be enabled on the backend.
+            # Call Support at 888 883 9770, press 2. Then request that they update your account in "Pandora" under Product Settings >> PayPal
+            # Mark and update the Features Bitmap to 1111111111111112.  This is 15 ones and a two.
+            # See here for the forum discussion: https://www.x.com/message/206214#206214
+            items = options[:items] || []
+            items.each_with_index do |item, index|
+              xml.tag! 'ExtData', 'Name' => "L_DESC#{index}", 'Value' => item[:description]
+              xml.tag! 'ExtData', 'Name' => "L_COST#{index}", 'Value' => amount(item[:amount])
+              xml.tag! 'ExtData', 'Name' => "L_QTY#{index}", 'Value' => item[:quantity] || '1'
+              xml.tag! 'ExtData', 'Name' => "L_NAME#{index}", 'Value' => item[:name]
+              # Note: An ItemURL is supported in Paypal Express (different API), but not PayFlow Express, as far as I can tell.
+              # L_URLn nor L_ITEMURLn seem to work
+            end
+            if items.any?
+              xml.tag! 'ExtData', 'Name' => 'CURRENCY', 'Value' => options[:currency] || currency(money)
+              xml.tag! 'ExtData', 'Name' => "ITEMAMT", 'Value' => amount(money)
+            end
+
+            xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
+          end
+
+          xml.tag! 'Tender' do
+            add_paypal_details(xml, options)
+          end
+        end
       end
 
       def add_paypal_details(xml, options)
