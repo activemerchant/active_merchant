@@ -110,8 +110,8 @@ module ActiveMerchant #:nodoc:
         commit(build_auth_request(money, creditcard, options), options )
       end
       
-      def auth_reversal(identification, options = {})
-        commit(build_auth_reversal_request(identification, options), options)
+      def auth_reversal(money, identification, options = {})
+        commit(build_auth_reversal_request(money, identification, options), options)
       end
 
       # Capture an authorization that has previously been requested
@@ -229,14 +229,14 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_auth_reversal_request(identification, options)
+      def build_auth_reversal_request(money, identification, options)
         order_id, request_id, request_token = identification.split(";")
         options[:order_id] = order_id
         xml = Builder::XmlMarkup.new :indent => 2
+        add_purchase_data(xml, money, true, options)
         add_auth_reversal_service(xml, request_id, request_token)
         xml.target!
       end
-
 
       def build_credit_request(money, identification, options)
         order_id, request_id, request_token = identification.split(";")
