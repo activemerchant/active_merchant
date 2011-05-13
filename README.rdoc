@@ -35,6 +35,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {LinkPoint}[http://www.linkpoint.com/] - US
 * {Merchant e-Solutions}[http://merchante-solutions.com/] - US
 * {MerchantWare}[http://merchantwarehouse.com/merchantware] - US
+* {MerchantWarrior}[http://www.merchantwarrior.com/] - AU
 * {Modern Payments}[http://www.modpay.com] - US
 * {Moneris}[http://www.moneris.com/] - CA
 * {Netaxept}[http://www.betalingsterminal.no/Netthandel-forside] - NO, DK, SE, FI
