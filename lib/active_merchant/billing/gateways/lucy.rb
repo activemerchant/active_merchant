@@ -89,7 +89,6 @@ module ActiveMerchant #:nodoc:
       
       def authorize(money, creditcard, options = {})
         post = {}
-        add_invoice(post, options)
         add_creditcard(post, creditcard)        
         add_address(post, creditcard, options)        
         
@@ -98,7 +97,6 @@ module ActiveMerchant #:nodoc:
       
       def purchase(money, creditcard, options = {})
         post = {}
-        add_invoice(post, options)
         add_creditcard(post, creditcard)        
         add_address(post, creditcard, options)   
         commit('Sale', money, post)
@@ -106,7 +104,6 @@ module ActiveMerchant #:nodoc:
       
       def credit(money, creditcard, options = {})
         post = {}
-        add_invoice(post, options)
         add_creditcard(post, creditcard)        
         add_address(post, creditcard, options)   
         commit('Return', money, post)
@@ -131,9 +128,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_invoice(post, options)
-      end
-      
       def add_creditcard(post, creditcard)
         post[:CardNum] = creditcard.number
         post[:CVNum] = creditcard.verification_value if creditcard.verification_value?
