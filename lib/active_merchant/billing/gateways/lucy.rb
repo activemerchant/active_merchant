@@ -106,7 +106,7 @@ module ActiveMerchant #:nodoc:
         commit('Sale', money, post)
       end                       
       
-      def refund(money, creditcard, options = {})
+      def credit(money, creditcard, options = {})
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)        
