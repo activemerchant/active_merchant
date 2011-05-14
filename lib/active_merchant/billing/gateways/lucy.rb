@@ -92,7 +92,6 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard(post, creditcard)        
         add_address(post, creditcard, options)        
-        add_customer_data(post, options)
         
         commit('Auth', money, post)
       end
@@ -102,7 +101,6 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard(post, creditcard)        
         add_address(post, creditcard, options)   
-        add_customer_data(post, options)
         commit('Sale', money, post)
       end                       
       
@@ -111,7 +109,6 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard(post, creditcard)        
         add_address(post, creditcard, options)   
-        add_customer_data(post, options)
         commit('Return', money, post)
       end                       
     
@@ -127,9 +124,6 @@ module ActiveMerchant #:nodoc:
     
       private                       
       
-      def add_customer_data(post, options)
-      end
-
       def add_address(post, creditcard, options)      
         if address = options[:billing_address] || options[:address]
           post[:Zip] = address[:zip].to_s
