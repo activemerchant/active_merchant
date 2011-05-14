@@ -167,7 +167,6 @@ module ActiveMerchant #:nodoc:
         Response.new(response[:Result].to_s == '0', message, response,
           :test => test_mode,
           :authorization => response[:PNRef],
-          :fraud_review => fraud_review?(response),
           :avs_result => { :code => (response[:GetAVSResult] if response[:GetAVSResult]) },
           :cvv_result => (response[:GetCVResult] if response[:GetCVResult])
         )
