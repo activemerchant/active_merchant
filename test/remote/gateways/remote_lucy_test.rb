@@ -115,10 +115,10 @@ class RemoteLucyTest < Test::Unit::TestCase
   end
 
   
-  #def test_failed_capture
-  #  assert response = @gateway.capture(@amount, '')
-  #  assert_failure response
-  #  assert_equal 'REPLACE WITH GATEWAY FAILURE MESSAGE', response.message
-  #end
+  def test_failed_capture
+    assert response = @gateway.capture(@amount, '123456')
+    assert_failure response
+    assert_equal 'Capture Error', response.message
+  end
 
 end
