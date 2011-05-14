@@ -67,7 +67,6 @@ module ActiveMerchant #:nodoc:
         1014 => "No Records To Settle (in the current batch)",
         1015 => "No Records To Process (in the current batch)"
       } 
-      self.ssl_strict = false
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']
