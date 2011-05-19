@@ -179,6 +179,10 @@ orbital_gateway:
   login: LOGIN
   password: PASSWORD
   merchant_id: MERCHANTID
+
+pay_gate_xml:
+  login: '10011021600'
+  password: 'test'
   
 payflow:
   login: LOGIN
