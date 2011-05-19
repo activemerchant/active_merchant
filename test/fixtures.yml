@@ -256,6 +256,11 @@ orbital_gateway:
   password: PASSWORD
   merchant_id: MERCHANTID
 
+# Working credentials, no need to replace
+pay_gate_xml:
+  login: '10011021600'
+  password: 'test'
+
 payflow:
   login: LOGIN
   password: PASSWORD
