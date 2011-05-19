@@ -176,6 +176,7 @@ module ActiveMerchant #:nodoc:
             end
             xml.tag! 'n2:Description', item[:description]
             xml.tag! 'n2:ItemURL', item[:url]
+            xml.tag! 'n2:ItemCategory', item[:category] if item[:category]
           end
         end
       end

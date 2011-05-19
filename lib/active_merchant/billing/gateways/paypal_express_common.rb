@@ -2,8 +2,8 @@ module ActiveMerchant
   module Billing
     module PaypalExpressCommon
       def self.included(base)
-        base.cattr_accessor :test_redirect_url
-        base.cattr_accessor :live_redirect_url
+        base.class_inheritable_accessor :test_redirect_url
+        base.class_inheritable_accessor :live_redirect_url
         base.live_redirect_url = 'https://www.paypal.com/cgibin/webscr'
       end
       
