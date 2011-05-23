@@ -124,6 +124,25 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'a description', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:OrderDescription').text
   end
 
+
+  def test_includes_billing_agreement
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { 
+      :description => 'a description',
+      :billing_agreement => {
+        :type => 'MerchantInitiatedBilling', 
+        :description => 'Agreement Description', 
+        :payment_type => '' }}))
+    assert_equal 'a description', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:OrderDescription').text
+    assert_equal 'MerchantInitiatedBilling', REXML::XPath.first(xml, '//n2:BillingAgreementDetails/n2:BillingType').text
+    assert_equal 'Agreement Description', REXML::XPath.first(xml, '//n2:BillingAgreementDetails/n2:BillingAgreementDescription').text
+    assert_not_nil REXML::XPath.first(xml, '//n2:BillingAgreementDetails/n2:PaymentType')
+    assert_equal nil, REXML::XPath.first(xml, '//n2:BillingAgreementDetails/n2:PaymentType').text
+
+    # Order of the SOAP tags matters in this case.  BillingAgreementDetails MUST be before PaymentDetails
+    element_tags = REXML::XPath.match(xml, '//').collect{|i| i.class == REXML::Element ? i.name : nil}.compact
+    assert element_tags.index("BillingAgreementDetails") < element_tags.index("PaymentDetails")
+  end
+
   def test_includes_order_id
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :order_id => '12345' }))
 
