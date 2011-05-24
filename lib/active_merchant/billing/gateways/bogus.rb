@@ -85,7 +85,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, ident, options = {})
         money = amount(money)
-        case ident.to_s[-1,1]
+        case ident
         when '1'
           raise Error, CAPTURE_ERROR_MESSAGE
         when '2'
@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def unstore(identification, options = {})
-        case identification.to_s[-1,1]
+        case identification
         when '1'
           Response.new(true, SUCCESS_MESSAGE, {}, :test => true)
         when '2'
