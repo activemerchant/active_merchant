@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard, options = {})
         money = amount(money)
-        case creditcard.number.to_s[-1,1]
+        case creditcard.number
         when '1'
           Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
         when '2'
@@ -30,12 +30,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def purchase(money, payment_source, options = {})
-        if payment_source.is_a?(String)
-          payment_source = ActiveMerchant::Billing::CreditCard.new(:number => payment_source.to_s)
-        end
+      def purchase(money, creditcard, options = {})
         money = amount(money)
-        case payment_source.number.to_s[-1,1]
+        case creditcard.number
         when '1'
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
         when '2'
@@ -99,7 +96,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(ident, options = {})
-        case ident.to_s[-1,1]
+        case ident
         when '1'
           raise Error, VOID_ERROR_MESSAGE
         when '2'
@@ -110,7 +107,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(creditcard, options = {})
-        case creditcard.number.to_s[-1,1]
+        case creditcard.number
         when '1'
           Response.new(true, SUCCESS_MESSAGE, {:billingid => '1'}, :test => true, :authorization => AUTHORIZATION )
         when '2'
