@@ -10,8 +10,9 @@ end
 
 require 'rake'
 require 'rake/testtask'
-require 'rake/rdoctask'
-require 'rake/gempackagetask'
+require 'rdoc/rdoc'
+require 'rdoc/task'
+require 'rubygems/package_task'
 require 'support/gateway_support'
 require 'support/outbound_hosts'
 
@@ -50,7 +51,7 @@ task :cleanup => [ :clobber_package, :clobber_rdoc ]
 
 spec = eval(File.read('activemerchant.gemspec'))
 
-Rake::GemPackageTask.new(spec) do |p|
+Gem::PackageTask.new(spec) do |p|
   p.gem_spec = spec
   p.need_tar = true
   p.need_zip = true
@@ -72,30 +73,30 @@ namespace :gateways do
     support = GatewaySupport.new
     support.to_s
   end
-  
+
   namespace :print do
     desc 'Print the currently supported gateways in RDoc format'
     task :rdoc do
       support = GatewaySupport.new
       support.to_rdoc
     end
-  
+
     desc 'Print the currently supported gateways in Textile format'
     task :textile do
       support = GatewaySupport.new
       support.to_textile
     end
-    
+
     desc 'Print the gateway functionality supported by each gateway'
     task :features do
       support = GatewaySupport.new
       support.features
     end
   end
-  
+
   desc 'Print the list of destination hosts with port'
   task :hosts do
     OutboundHosts.list
   end
-  
+
 end

@@ -37,6 +37,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {MerchantWare}[http://merchantwarehouse.com/merchantware] - US
 * {Modern Payments}[http://www.modpay.com] - US
 * {Moneris}[http://www.moneris.com/] - CA
+* {NABTransact}[http://www.nab.com.au/nabtransact/] - AU
 * {Netaxept}[http://www.betalingsterminal.no/Netthandel-forside] - NO, DK, SE, FI
 * {NetRegistry}[http://www.netregistry.com.au] - AU
 * {NELiX TransaX Gateway}[http://www.nelixtransax.com] - US
@@ -130,7 +131,7 @@ Installation from RubyGems
   # $10.00
   amount = 1000
 
-  # The card verification value is also known as CVV2, CVC2, or CID 
+  # The card verification value is also known as CVV2, CVC2, or CID
   credit_card = ActiveMerchant::Billing::CreditCard.new(
                   :first_name         => 'Bob',
                   :last_name          => 'Bobsen',
@@ -155,10 +156,20 @@ Installation from RubyGems
     if response.success?
       puts "Successfully charged $#{sprintf("%.2f", amount / 100)} to the credit card #{credit_card.display_number}"
     else
-      raise StandardError, response.message 
+      raise StandardError, response.message
     end
   end
 
 == Contributing
 
 Please see the {ActiveMerchant Guide to Contributing}[http://github.com/Shopify/active_merchant/wikis/contributing] for information on adding a new gateway to ActiveMerchant.
+
+== Testing
+
+Active Merchant uses tests to ensure gateways continue to work. To run tests ; bundle install :
+  bundle exec rake test:units   #Should all be passing
+  bundle exec rake test:remotes #Will not pass without updating test/fixtures.yml
+
+  To run a test individually :
+
+  bundle exec rake test:units TEST=test/unit/gateways/nab_transact_test.rb
