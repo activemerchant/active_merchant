@@ -10,8 +10,9 @@ end
 
 require 'rake'
 require 'rake/testtask'
-require 'rake/rdoctask'
-require 'rake/gempackagetask'
+require 'rdoc/rdoc'
+require 'rdoc/task'
+require 'rubygems/package_task'
 require 'support/gateway_support'
 require 'support/outbound_hosts'
 
@@ -50,7 +51,7 @@ task :cleanup => [ :clobber_package, :clobber_rdoc ]
 
 spec = eval(File.read('activemerchant.gemspec'))
 
-Rake::GemPackageTask.new(spec) do |p|
+Gem::PackageTask.new(spec) do |p|
   p.gem_spec = spec
   p.need_tar = true
   p.need_zip = true
