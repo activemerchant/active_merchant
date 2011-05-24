@@ -64,17 +64,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def triggered(money, options = {})
-        requires!(options, :billingid)
+        requires!(options, :billing_id)
         commit_periodic build_periodic_item(:trigger, money, nil, options)
       end
 
       def store(creditcard, options = {})
-        requires!(options, :billingid, :amount)
+        requires!(options, :billing_id, :amount)
         commit_periodic(build_periodic_item(:addcrn, options[:amount], creditcard, options))
       end
 
       def unstore(identification, options = {})
-        options[:billingid] = identification
+        options[:billing_id] = identification
         commit_periodic(build_periodic_item(:deletecrn, options[:amount], nil, options))
       end
 
@@ -137,7 +137,7 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! 'actionType', action.to_s
         xml.tag! 'periodicType', PERIODIC_TYPES[action] if PERIODIC_TYPES[action]
-        xml.tag! 'crn', options[:billingid]
+        xml.tag! 'crn', options[:billing_id]
 
         if credit_card
           xml.tag! 'CreditCardInfo' do
