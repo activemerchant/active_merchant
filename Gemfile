@@ -10,5 +10,10 @@ group :test do
   gem 'i18n'
   gem 'mocha'
   gem 'rake'
+
+  #remote test requirements
+  gem 'mechanize'
+  gem 'launchy'
+  gem 'mongrel'
 end
 
