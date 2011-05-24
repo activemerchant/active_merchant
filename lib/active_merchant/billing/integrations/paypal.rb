@@ -26,11 +26,11 @@ module ActiveMerchant #:nodoc:
           end
         end
             
-        def self.notification(post)
+        def self.notification(post, options = {})
           Notification.new(post)
         end
         
-        def self.return(query_string)
+        def self.return(query_string, options = {})
           Return.new(query_string)
         end
       end

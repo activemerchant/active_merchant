@@ -177,7 +177,7 @@ class SkipJackTest < Test::Unit::TestCase
   
 
   def test_serial_number_is_added_before_developer_serial_number_for_authorization
-    @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI', 'Year=2011&TransactionAmount=1.00&ShipToPhone=&SerialNumber=X&SJName=Longbob+Longsen&OrderString=1%7ENone%7E0.00%7E0%7EN%7E%7C%7C&OrderNumber=1&OrderDescription=&Month=9&InvoiceNumber=&Email=cody%40example.com&DeveloperSerialNumber=Y&CustomerCode=&CVV2=123&AccountNumber=4242424242424242').returns(successful_authorization_response)
+    @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI', "Year=#{Time.now.year + 1}&TransactionAmount=1.00&ShipToPhone=&SerialNumber=X&SJName=Longbob+Longsen&OrderString=1%7ENone%7E0.00%7E0%7EN%7E%7C%7C&OrderNumber=1&OrderDescription=&Month=9&InvoiceNumber=&Email=cody%40example.com&DeveloperSerialNumber=Y&CustomerCode=&CVV2=123&AccountNumber=4242424242424242").returns(successful_authorization_response)
     
     assert response = @gateway.authorize(@amount, @credit_card, @options)
   end

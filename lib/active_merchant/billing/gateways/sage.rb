@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:drivers_license_number</tt> - The customer's drivers license number.
       # * <tt>:date_of_birth</tt> - The customer's date of birth as a Time or Date object or a string in the format <tt>mm/dd/yyyy</tt>.
       def purchase(money, source, options = {})
-        if source.type == "check"
+        if card_brand(source) == "check"
           virtual_check.purchase(money, source, options)
         else
           bankcard.purchase(money, source, options)
@@ -125,7 +125,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>money</tt> - The amount to be authorized as an integer value in cents.
       # * <tt>source</tt> - The CreditCard or Check object to be used as the target for the credit.
       def credit(money, source, options = {})
-        if source.type == "check"
+        if card_brand(source) == "check"
           virtual_check.credit(money, source, options)
         else
           bankcard.credit(money, source, options)

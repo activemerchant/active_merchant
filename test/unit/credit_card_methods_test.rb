@@ -11,6 +11,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     %w[
       5000000000000000 5099999999999999 5600000000000000
       5899999999999999 6000000000000000 6999999999999999
+      6761999999999999 6763000000000000 5038999999999999
     ]
   end
   
@@ -43,6 +44,19 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert valid_start_year?(3000)
     
     assert_false valid_start_year?(1987)
+  end
+  
+  def test_valid_start_year_can_handle_strings
+    assert valid_start_year?("2009")
+  end
+  
+  def test_valid_month_can_handle_strings
+    assert valid_month?("1")
+  end
+  
+  def test_valid_expiry_year_can_handle_strings
+    year = Time.now.year + 1
+    assert valid_expiry_year?(year.to_s)
   end
   
   def test_should_be_able_to_identify_valid_issue_numbers
@@ -152,11 +166,13 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
   
   def test_matching_discover_card
-    assert CreditCard.matching_type?('6011000000000000', 'discover')
-    assert CreditCard.matching_type?('6500000000000000', 'discover')
+    assert_equal 'discover', CreditCard.type?('6011000000000000')
+    assert_equal 'discover', CreditCard.type?('6500000000000000')
+    assert_equal 'discover', CreditCard.type?('6221260000000000')
+    assert_equal 'discover', CreditCard.type?('6450000000000000')
     
-    assert_false CreditCard.matching_type?('6010000000000000', 'discover')
-    assert_false CreditCard.matching_type?('6600000000000000', 'discover')
+    assert_not_equal 'discover', CreditCard.type?('6010000000000000')
+    assert_not_equal 'discover', CreditCard.type?('6600000000000000')
   end
   
   def test_16_digit_maestro_uk

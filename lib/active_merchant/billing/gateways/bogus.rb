@@ -7,10 +7,11 @@ module ActiveMerchant #:nodoc:
       SUCCESS_MESSAGE = "Bogus Gateway: Forced success"
       FAILURE_MESSAGE = "Bogus Gateway: Forced failure"
       ERROR_MESSAGE = "Bogus Gateway: Use CreditCard number 1 for success, 2 for exception and anything else for error"
-      CREDIT_ERROR_MESSAGE = "Bogus Gateway: Use trans_id 1 for success, 2 for exception and anything else for error"
+      CREDIT_ERROR_MESSAGE = "Bogus Gateway: Use CreditCard number 1 for success, 2 for exception and anything else for error"
       UNSTORE_ERROR_MESSAGE = "Bogus Gateway: Use trans_id 1 for success, 2 for exception and anything else for error"
       CAPTURE_ERROR_MESSAGE = "Bogus Gateway: Use authorization number 1 for exception, 2 for error and anything else for success"
       VOID_ERROR_MESSAGE = "Bogus Gateway: Use authorization number 1 for exception, 2 for error and anything else for success"
+      REFUND_ERROR_MESSAGE = "Bogus Gateway: Use trans_id number 1 for exception, 2 for error and anything else for success"
       
       self.supported_countries = ['US']
       self.supported_cardtypes = [:bogus]
@@ -18,46 +19,79 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Bogus'
       
       def authorize(money, creditcard, options = {})
+        money = amount(money)
         case creditcard.number
         when '1'
-          Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money.to_s}, :test => true, :authorization => AUTHORIZATION )
+          Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
         when '2'
-          Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money.to_s, :error => FAILURE_MESSAGE }, :test => true)
+          Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money, :error => FAILURE_MESSAGE }, :test => true)
         else
           raise Error, ERROR_MESSAGE
         end      
       end
   
       def purchase(money, creditcard, options = {})
+        money = amount(money)
         case creditcard.number
         when '1'
-          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money.to_s}, :test => true)
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
         when '2'
-          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money.to_s, :error => FAILURE_MESSAGE },:test => true)
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE },:test => true)
         else
           raise Error, ERROR_MESSAGE
         end
       end
  
-      def credit(money, ident, options = {})
+      def recurring(money, creditcard, options = {})
+        money = amount(money)
+        case creditcard.number
+        when '1'
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
+        when '2'
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE },:test => true)
+        else
+          raise Error, ERROR_MESSAGE
+        end
+      end
+ 
+      def credit(money, creditcard, options = {})
+        if creditcard.is_a?(String)
+          deprecated CREDIT_DEPRECATION_MESSAGE
+          return refund(money, creditcard, options)
+        end
+
+        money = amount(money)
+        case creditcard.number
+        when '1'
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true )
+        when '2'
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true)
+        else
+          raise Error, CREDIT_ERROR_MESSAGE
+        end
+      end
+
+      def refund(money, ident, options = {})
+        money = amount(money)
         case ident
         when '1'
-          raise Error, CREDIT_ERROR_MESSAGE
+          raise Error, REFUND_ERROR_MESSAGE
         when '2'
-          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money.to_s, :error => FAILURE_MESSAGE }, :test => true)
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true)
         else
-          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money.to_s}, :test => true)
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
         end
       end
  
       def capture(money, ident, options = {})
+        money = amount(money)
         case ident
         when '1'
           raise Error, CAPTURE_ERROR_MESSAGE
         when '2'
-          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money.to_s, :error => FAILURE_MESSAGE }, :test => true)
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true)
         else
-          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money.to_s}, :test => true)
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
         end
       end
 
