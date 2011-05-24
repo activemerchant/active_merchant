@@ -60,4 +60,80 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Invalid merchant ID', response.message
   end
+
+  def test_successful_store
+    @gateway.unstore(1234)
+
+    assert response = @gateway.store(@credit_card, {:billingid => 1234, :amount => 150})
+    assert_success response
+    assert_equal 'Successful', response.message
+  end
+
+  def test_unsuccessful_store
+    @gateway.unstore(1235)
+
+    assert response = @gateway.store(@declined_card, {:billingid => 1235, :amount => 150})
+    assert_failure response
+    assert_equal 'Invalid Credit Card Number', response.message
+  end
+
+  def test_duplicate_store
+    @gateway.unstore(1236)
+
+    assert response = @gateway.store(@credit_card, {:billingid => 1236, :amount => 150})
+    assert_success response
+    assert_equal 'Successful', response.message
+
+    assert response = @gateway.store(@credit_card, {:billingid => 1236, :amount => 150})
+    assert_failure response
+    assert_equal 'Duplicate CRN Found', response.message
+  end
+
+  def test_unstore
+    gateway_id = '1234'
+    @gateway.unstore(gateway_id)
+
+    assert response = @gateway.store(@credit_card, {:billingid => gateway_id, :amount => 150})
+    assert_success response
+    assert_equal 'Successful', response.message
+
+    assert gateway_id = response.params["crn"]
+    assert unstore_response = @gateway.unstore(gateway_id)
+    assert_success unstore_response
+  end
+
+  def test_successful_periodic_trigger_purchase
+    gateway_id = '1234'
+    trigger_amount = 12000
+    @gateway.unstore(gateway_id)
+
+    assert response = @gateway.store(@credit_card, {:billingid => gateway_id, :amount => 150})
+    assert_success response
+    assert_equal 'Successful', response.message
+
+    purchase_response = @gateway.purchase_trigger(trigger_amount, {:billingid => gateway_id})
+
+    assert gateway_id = purchase_response.params["crn"]
+    assert trigger_amount = purchase_response.params["amount"]
+    assert_success purchase_response
+    assert_equal 'Approved', purchase_response.message
+  end
+
+  def test_failure_periodic_trigger_purchase
+    gateway_id = '1234'
+    trigger_amount = 0
+    @gateway.unstore(gateway_id)
+
+    assert response = @gateway.store(@credit_card, {:billingid => gateway_id, :amount => 150})
+    assert_success response
+    assert_equal 'Successful', response.message
+
+    purchase_response = @gateway.purchase_trigger(trigger_amount, {:billingid => gateway_id})
+
+    assert gateway_id = purchase_response.params["crn"]
+    assert_failure purchase_response
+    assert_equal 'Invalid Amount', purchase_response.message
+  end
+
+
 end

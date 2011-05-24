@@ -47,6 +47,15 @@ class NabTransactTest < Test::Unit::TestCase
     assert_equal "Invalid merchant ID", response.message
   end
 
+  def test_supported_countries
+    assert_equal ['AU'], NabTransactGateway.supported_countries
+  end
+
+  def test_supported_card_types
+    assert_equal [:visa, :master, :american_express, :diners_club, :jcb], NabTransactGateway.supported_cardtypes
+  end
+
+
   private
 
   def failed_login_response
@@ -54,7 +63,7 @@ class NabTransactTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    <<-XML
+    <<-XML.gsub(/^\s{4}/,'')
     <?xml version="1.0" encoding="UTF-8"?>
     <NABTransactMessage>
       <MessageInfo>
@@ -97,7 +106,7 @@ class NabTransactTest < Test::Unit::TestCase
   end
 
   def failed_purchase_response
-    <<-XML
+    <<-XML.gsub(/^\s{4}/,'')
     <?xml version="1.0" encoding="UTF-8"?>
     <NABTransactMessage>
       <MessageInfo>
