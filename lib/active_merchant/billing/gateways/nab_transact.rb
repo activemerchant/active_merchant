@@ -1,3 +1,5 @@
+require 'rexml/document'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class NabTransactGateway < Gateway
@@ -17,7 +19,7 @@ module ActiveMerchant #:nodoc:
       # steps in setting up your account, as detailed in the NAB Transact API
       self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :diners_club]
 
-      class_inheritable_accessor :request_timeout
+      cattr_accessor :request_timeout
       self.request_timeout = 60
 
       #Transactions currently accepted by NAB Transact XML API
