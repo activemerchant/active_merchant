@@ -6,11 +6,11 @@ module ActiveMerchant #:nodoc:
 
           def initialize(order, account, options = {})
             super
-            add_field('protocol', '3')
-            add_field('msgtype', 'authorize')
+            add_field('protocol', '4')
+            add_field('msgtype', options[:msgtype] || 'authorize')
             add_field('language', 'da')
-            add_field('autocapture', 0)
-            add_field('testmode', 0)
+            add_field('autocapture', options[:autocapture] || 0)
+            add_field('testmode', options[:testmode] || 0)
             add_field('ordernumber', format_order_number(order))
           end
               
