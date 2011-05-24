@@ -11,6 +11,10 @@ module ActiveMerchant #:nodoc:
       def api_url
         'https://secure.braintreepaymentgateway.com/api/transact.php'
       end
+
+      def add_processor(post, options)
+        post[:processor_id] = options[:processor] unless options[:processor].nil?
+      end
     end
   end
 end

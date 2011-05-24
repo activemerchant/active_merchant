@@ -23,6 +23,14 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     assert_equal '510695343', response.authorization
   end
 
+  def test_add_processor
+    result = {}
+
+    @gateway.send(:add_processor, result,   {:processor => 'ccprocessorb'} )
+    assert_equal ["processor_id"], result.stringify_keys.keys.sort
+    assert_equal 'ccprocessorb', result[:processor_id]
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
   
