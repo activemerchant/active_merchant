@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         commit :purchase, build_purchase_request(money, credit_card, options)
       end
 
-      def purchase_trigger(money, options = {})
+      def triggered(money, options = {})
         requires!(options, :billingid)
         commit_periodic build_periodic_item(:trigger, money, nil, options)
       end

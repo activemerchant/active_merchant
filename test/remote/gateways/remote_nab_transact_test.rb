@@ -102,7 +102,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert_success unstore_response
   end
 
-  def test_successful_periodic_trigger_purchase
+  def test_successful_trigger_purchase
     gateway_id = '1234'
     trigger_amount = 12000
     @gateway.unstore(gateway_id)
@@ -111,7 +111,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Successful', response.message
 
-    purchase_response = @gateway.purchase_trigger(trigger_amount, {:billingid => gateway_id})
+    purchase_response = @gateway.triggered(trigger_amount, {:billingid => gateway_id})
 
     assert gateway_id = purchase_response.params["crn"]
     assert trigger_amount = purchase_response.params["amount"]
@@ -119,7 +119,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert_equal 'Approved', purchase_response.message
   end
 
-  def test_failure_periodic_trigger_purchase
+  def test_failure_trigger_purchase
     gateway_id = '1234'
     trigger_amount = 0
     @gateway.unstore(gateway_id)
@@ -128,7 +128,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Successful', response.message
 
-    purchase_response = @gateway.purchase_trigger(trigger_amount, {:billingid => gateway_id})
+    purchase_response = @gateway.triggered(trigger_amount, {:billingid => gateway_id})
 
     assert gateway_id = purchase_response.params["crn"]
     assert_failure purchase_response
