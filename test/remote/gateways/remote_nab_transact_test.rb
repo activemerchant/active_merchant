@@ -53,8 +53,8 @@ class RemoteNabTransactTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = NabTransactGateway.new(
-                :login => '',
-                :password => ''
+                :login => 'ABCFAKE',
+                :password => 'changeit'
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
