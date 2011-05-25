@@ -111,7 +111,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Successful', response.message
 
-    purchase_response = @gateway.triggered(trigger_amount, {:billing_id => gateway_id})
+    purchase_response = @gateway.purchase(trigger_amount, gateway_id)
 
     assert gateway_id = purchase_response.params["crn"]
     assert trigger_amount = purchase_response.params["amount"]
@@ -128,7 +128,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Successful', response.message
 
-    purchase_response = @gateway.triggered(trigger_amount, {:billing_id => gateway_id})
+    purchase_response = @gateway.purchase(trigger_amount, gateway_id)
 
     assert gateway_id = purchase_response.params["crn"]
     assert_failure purchase_response
