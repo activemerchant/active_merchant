@@ -71,9 +71,13 @@ module ActiveMerchant #:nodoc:
       # Moneris interface consistent with other gateways. (See +capture+ for 
       # details.)
       def credit(money, authorization, options = {})
-        commit 'refund', crediting_params(authorization, :amount => amount(money))
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, authorization, options)
       end
    
+      def refund(money, authorization, options = {})
+        commit 'refund', crediting_params(authorization, :amount => amount(money))
+      end
     private # :nodoc: all
     
       def expdate(creditcard)

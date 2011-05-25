@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
     # 5. Click Submit
     class AuthorizeNetCimGateway < Gateway
     
-      class_inheritable_accessor :test_url, :live_url
+      class_attribute :test_url, :live_url
 
       self.test_url = 'https://apitest.authorize.net/xml/v1/request.api'
       self.live_url = 'https://api.authorize.net/xml/v1/request.api'
@@ -54,13 +54,17 @@ module ActiveMerchant #:nodoc:
       CIM_TRANSACTION_TYPES = {
         :auth_capture => 'profileTransAuthCapture',
         :auth_only => 'profileTransAuthOnly',
-        :capture_only => 'profileTransCaptureOnly'
+        :capture_only => 'profileTransCaptureOnly',
+        :prior_auth_capture => 'profileTransPriorAuthCapture',
+        :refund => 'profileTransRefund',
+        :void => 'profileTransVoid'
       }
 
       CIM_VALIDATION_MODES = {
         :none => 'none',
         :test => 'testMode',
-        :live => 'liveMode'
+        :live => 'liveMode',
+        :old => 'oldLiveMode'
       }
       
       BANK_ACCOUNT_TYPES = {
@@ -309,14 +313,105 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Transaction
       #
-      # * <tt>:type</tt> -- The type of transaction. Can be either <tt>:auth_only</tt>, <tt>:capture_only</tt>, or <tt>:auth_capture</tt>. (REQUIRED)
-      # * <tt>:amount</tt> -- The amount for the tranaction. Formatted with a decimal. For example "4.95" (REQUIRED)
-      # * <tt>:customer_profile_id</tt> -- The Customer Profile ID of the customer to use in this transaction. (REQUIRED)
-      # * <tt>:customer_payment_profile_id</tt> -- The Customer Payment Profile ID of the Customer Payment Profile to use in this transaction. (REQUIRED)
+      # * <tt>:type</tt> -- The type of transaction. Can be either <tt>:auth_only</tt>, <tt>:capture_only</tt>, <tt>:auth_capture</tt>, <tt>:prior_auth_capture</tt>, <tt>:refund</tt> or <tt>:void</tt>. (REQUIRED)
+      # * <tt>:amount</tt> -- The amount for the tranaction. Formatted with a decimal. For example "4.95" (CONDITIONAL)
+      #     - :type == :void (NOT USED)
+      #     - :type == (:refund, :auth_only, :capture_only, :auth_capture, :prior_auth_capture) (REQUIRED)
+      #
+      # * <tt>:customer_profile_id</tt> -- The Customer Profile ID of the customer to use in this transaction. (CONDITIONAL)
+      #     - :type == (:void, :prior_auth_capture) (OPTIONAL)
+      #     - :type == :refund (CONDITIONAL - required if masked information is not being submitted [see below])
+      #     - :type == (:auth_only, :capture_only, :auth_capture) (REQUIRED)
+      #
+      # * <tt>:customer_payment_profile_id</tt> -- The Customer Payment Profile ID of the Customer Payment Profile to use in this transaction. (CONDITIONAL)
+      #     - :type == (:void, :prior_auth_capture) (OPTIONAL)
+      #     - :type == :refund (CONDITIONAL - required if masked information is not being submitted [see below])
+      #     - :type == (:auth_only, :capture_only, :auth_capture) (REQUIRED)
+      #
+      # * <tt>:trans_id</tt> -- The payment gateway assigned transaction ID of the original transaction (CONDITIONAL):
+      #     - :type = (:void, :refund, :prior_auth_capture) (REQUIRED)
+      #     - :type = (:auth_only, :capture_only, :auth_capture) (NOT USED)
+      #
+      # * <tt>customer_shipping_address_id</tt> -- Payment gateway assigned ID associated with the customer shipping address (CONDITIONAL)
+      #     - :type = (:void, :refund) (OPTIONAL)
+      #     - :type = (:auth_only, :capture_only, :auth_capture) (NOT USED)
+      #     - :type = (:prior_auth_capture) (OPTIONAL)
+      #
+      # ==== For :type == :refund only
+      # * <tt>:credit_card_number_masked</tt> -- (CONDITIONAL - requied for credit card refunds is :customer_profile_id AND :customer_payment_profile_id are missing)
+      # * <tt>:bank_routing_number_masked && :bank_account_number_masked</tt> -- (CONDITIONAL - requied for electronic check refunds is :customer_profile_id AND :customer_payment_profile_id are missing) (NOT ABLE TO TEST - I keep getting "ACH transactions are not accepted by this merchant." when trying to make a payment and, until that's possible I can't refund (wiseleyb@gmail.com))
       def create_customer_profile_transaction(options)
         requires!(options, :transaction)
-        requires!(options[:transaction], :type, :amount, :customer_profile_id, :customer_payment_profile_id)
+        requires!(options[:transaction], :type)
+        case options[:transaction][:type]
+          when :void
+            requires!(options[:transaction], :trans_id)
+          when :refund
+            requires!(options[:transaction], :trans_id) &&
+              (
+                (options[:transaction][:customer_profile_id] && options[:transaction][:customer_payment_profile_id]) ||
+                options[:transaction][:credit_card_number_masked] ||
+                (options[:transaction][:bank_routing_number_masked] && options[:transaction][:bank_account_number_masked])
+              )
+          when :prior_auth_capture
+            requires!(options[:transaction], :amount, :trans_id)
+          else
+            requires!(options[:transaction], :amount, :customer_profile_id, :customer_payment_profile_id)
+        end
+        request = build_request(:create_customer_profile_transaction, options)
+        commit(:create_customer_profile_transaction, request)
+      end
 
+      # Creates a new payment transaction for refund from an existing customer profile
+      #
+      # This is what is used to refund a transaction you have stored in a Customer Profile.
+      #
+      # Returns a Response object that contains the result of the transaction in <tt>params['direct_response']</tt>
+      #
+      # ==== Options
+      #
+      # * <tt>:transaction</tt> -- A hash containing information on the transaction that is being requested. (REQUIRED)
+      #
+      # ==== Transaction
+      #
+      # * <tt>:amount</tt> -- The total amount to be refunded (REQUIRED)
+      #
+      # * <tt>:customer_profile_id</tt> -- The Customer Profile ID of the customer to use in this transaction. (CONDITIONAL :customer_payment_profile_id must be included if used)
+      # * <tt>:customer_payment_profile_id</tt> -- The Customer Payment Profile ID of the Customer Payment Profile to use in this transaction. (CONDITIONAL :customer_profile_id must be included if used)
+      #
+      # * <tt>:credit_card_number_masked</tt> -- Four Xs follwed by the last four digits of the credit card (CONDITIONAL - used if customer_profile_id and customer_payment_profile_id aren't given)
+      #
+      # * <tt>:bank_routing_number_masked</tt> -- The last four gidits of the routing number to be refunded (CONDITIONAL - must be used with :bank_account_number_masked)
+      # * <tt>:bank_account_number_masked</tt> -- The last four digis of the bank account number to be refunded, Ex. XXXX1234 (CONDITIONAL - must be used with :bank_routing_number_masked)
+      def create_customer_profile_transaction_for_refund(options)
+        requires!(options, :transaction)
+        options[:transaction][:type] = :refund
+        requires!(options[:transaction], :trans_id)
+        requires!(options[:transaction], :amount)
+        request = build_request(:create_customer_profile_transaction, options)
+        commit(:create_customer_profile_transaction, request)
+      end
+
+      # Creates a new payment transaction for void from an existing customer profile
+      #
+      # This is what is used to void a transaction you have stored in a Customer Profile.
+      #
+      # Returns a Response object that contains the result of the transaction in <tt>params['direct_response']</tt>
+      #
+      # ==== Options
+      #
+      # * <tt>:transaction</tt> -- A hash containing information on the transaction that is being requested. (REQUIRED)
+      #
+      # ==== Transaction
+      #
+      # * <tt>:trans_id</tt> -- The payment gateway assigned transaction id of the original transaction. (REQUIRED)
+      # * <tt>:customer_profile_id</tt> -- The Customer Profile ID of the customer to use in this transaction.
+      # * <tt>:customer_payment_profile_id</tt> -- The Customer Payment Profile ID of the Customer Payment Profile to use in this transaction.
+      # * <tt>:customer_shipping_address_id</tt> -- Payment gateway assigned ID associated with the customer shipping address.
+      def create_customer_profile_transaction_for_void(options)
+        requires!(options, :transaction)
+        options[:transaction][:type] = :void
+        requires!(options[:transaction], :trans_id)
         request = build_request(:create_customer_profile_transaction, options)
         commit(:create_customer_profile_transaction, request)
       end
@@ -443,6 +538,8 @@ module ActiveMerchant #:nodoc:
           add_payment_profile(xml, options[:payment_profile]) 
         end
 
+        xml.tag!('validationMode', CIM_VALIDATION_MODES[options[:validation_mode]]) if options[:validation_mode]
+		
         xml.target!
       end
 
@@ -502,10 +599,31 @@ module ActiveMerchant #:nodoc:
         xml.tag!('transaction') do
           xml.tag!(CIM_TRANSACTION_TYPES[transaction[:type]]) do
             # The amount to be billed to the customer
-            xml.tag!('amount', transaction[:amount])
-            xml.tag!('customerProfileId', transaction[:customer_profile_id])
-            xml.tag!('customerPaymentProfileId', transaction[:customer_payment_profile_id])
-            xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
+            case transaction[:type]
+              when :void
+                tag_unless_blank(xml,'customerProfileId', transaction[:customer_profile_id])
+                tag_unless_blank(xml,'customerPaymentProfileId', transaction[:customer_payment_profile_id])
+                tag_unless_blank(xml,'customerShippingAddressId', transaction[:customer_shipping_address_id])
+                xml.tag!('transId', transaction[:trans_id])
+              when :refund
+                #TODO - add support for all the other options fields
+                xml.tag!('amount', transaction[:amount])
+                tag_unless_blank(xml, 'customerProfileId', transaction[:customer_profile_id])
+                tag_unless_blank(xml, 'customerPaymentProfileId', transaction[:customer_payment_profile_id])
+                tag_unless_blank(xml, 'customerShippingAddressId', transaction[:customer_shipping_address_id])
+                tag_unless_blank(xml, 'creditCardNumberMasked', transaction[:credit_card_number_masked])
+                tag_unless_blank(xml, 'bankRoutingNumberMasked', transaction[:bank_routing_number_masked])
+                tag_unless_blank(xml, 'bankAccountNumberMasked', transaction[:bank_account_number_masked])
+                xml.tag!('transId', transaction[:trans_id])
+              when :prior_auth_capture
+                xml.tag!('amount', transaction[:amount])
+                xml.tag!('transId', transaction[:trans_id])
+              else
+                xml.tag!('amount', transaction[:amount])
+                xml.tag!('customerProfileId', transaction[:customer_profile_id])
+                xml.tag!('customerPaymentProfileId', transaction[:customer_payment_profile_id])
+                xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
+            end
             add_order(xml, transaction[:order]) if transaction[:order]
           end
         end
@@ -648,6 +766,10 @@ module ActiveMerchant #:nodoc:
         response
       end
       
+      def tag_unless_blank(xml, tag_name, data)
+        xml.tag!(tag_name, data) unless data.blank? || data.nil?
+      end
+
       def parse_direct_response(response)
         direct_response = {'raw' => response.params['direct_response']}
         direct_response_fields = response.params['direct_response'].split(',')

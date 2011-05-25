@@ -57,17 +57,26 @@ class IridiumTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_credit
+  def test_successful_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_credit_response)
-    assert response = @gateway.credit(@amount, '123456789')
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.credit(@amount, '123456789')
+      assert_success response
+      assert_equal 'Refund successful', response.message
+    end
+  end
+  
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_credit_response)
+    assert response = @gateway.refund(@amount, '123456789')
     assert_success response
     assert_equal 'Refund successful', response.message
   end
   
-  def test_failed_credit
+  def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_credit_response)
     
-    assert response = @gateway.credit(@amount, '123456789')
+    assert response = @gateway.refund(@amount, '123456789')
     assert_failure response
     assert_equal 'Amount exceeds that available for refund [17]', response.message
   end

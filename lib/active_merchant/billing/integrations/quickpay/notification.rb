@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
           ]
 
           def generate_md5string
-            MD5_CHECK_FIELDS.map { |key| params[key.to_s] } * "" + @options[:md5secret]
+            MD5_CHECK_FIELDS.map { |key| params[key.to_s] } * "" + @options[:credential2]
           end
           
           def generate_md5check

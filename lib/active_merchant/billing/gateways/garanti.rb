@@ -1,3 +1,7 @@
+if RUBY_VERSION < '1.9' && $KCODE == "NONE"
+  $KCODE = 'u'
+end
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class GarantiGateway < Gateway
@@ -65,7 +69,7 @@ module ActiveMerchant #:nodoc:
 
       def build_xml_request(money, credit_card, options, &block)
         card_number = credit_card.respond_to?(:number) ? credit_card.number : ''
-        hash_data   = generate_hash_data(options[:order_id], @options[:terminal_id], card_number, amount(money), security_data)
+        hash_data   = generate_hash_data(format_order_id(options[:order_id]), @options[:terminal_id], card_number, amount(money), security_data)
 
         xml = Builder::XmlMarkup.new(:indent => 2)
         xml.instruct! :xml, :version => "1.0", :encoding => "UTF-8"
@@ -135,7 +139,7 @@ module ActiveMerchant #:nodoc:
 
       def add_order_data(xml, options, &block)
         xml.tag! 'Order' do
-          xml.tag! 'OrderID', options[:order_id]
+          xml.tag! 'OrderID', format_order_id(options[:order_id])
           xml.tag! 'GroupID'
 
           if block_given?
@@ -154,6 +158,11 @@ module ActiveMerchant #:nodoc:
 
       def format_exp(value)
         format(value, :two_digits)
+      end
+
+      # OrderId field must be A-Za-z0-9_ format and max 36 char
+      def format_order_id(order_id)
+        order_id.to_s.gsub(/[^A-Za-z0-9_]/, '')[0...36]
       end
 
       def add_addresses(xml, options)
@@ -175,18 +184,30 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, address)
-        xml.tag! 'Name', address[:name]
+        xml.tag! 'Name', normalize(address[:name])
         address_text = address[:address1]
-        address_text << " #{address[:address2]}" if address[:address2]
-        xml.tag! 'Text', address_text
-        xml.tag! 'City', address[:city]
-        xml.tag! 'District', address[:state]
+        address_text << " #{ address[:address2]}" if address[:address2]
+        xml.tag! 'Text', normalize(address_text)
+        xml.tag! 'City', normalize(address[:city])
+        xml.tag! 'District', normalize(address[:state])
         xml.tag! 'PostalCode', address[:zip]
-        xml.tag! 'Country', address[:country]
-        xml.tag! 'Company', address[:company]
+        xml.tag! 'Country', normalize(address[:country])
+        xml.tag! 'Company', normalize(address[:company])
         xml.tag! 'PhoneNumber', address[:phone].to_s.gsub(/[^0-9]/, '') if address[:phone]
       end
-      
+
+      def normalize(text)
+        return unless text
+        
+        if ActiveSupport::Inflector.method(:transliterate).arity == -2
+          ActiveSupport::Inflector.transliterate(text,'')
+        elsif RUBY_VERSION >= '1.9'
+          text.gsub(/[^\x00-\x7F]+/, '')
+        else
+          ActiveSupport::Inflector.transliterate(text).to_s
+        end
+      end
+
       def add_transaction_data(xml, money, options)
         xml.tag! 'Transaction' do
           xml.tag! 'Type', options[:gvp_order_type]
@@ -207,7 +228,7 @@ module ActiveMerchant #:nodoc:
         success = success?(response)
 
         Response.new(success,
-                     success ? 'Approved' : "Declined (Reason: #{response[:reason_code]} - #{response[:error_msg]})",
+                     success ? 'Approved' : "Declined (Reason: #{response[:reason_code]} - #{response[:error_msg]} - #{response[:sys_err_msg]})",
                      response,
                      :test => test?,
                      :authorization => response[:order_id])

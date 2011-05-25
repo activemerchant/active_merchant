@@ -1,4 +1,4 @@
-module ActiveMerchant #:nodoc:  
+module ActiveMerchant #:nodoc:
   module Validateable #:nodoc:
     def valid?
       errors.clear
@@ -7,13 +7,13 @@ module ActiveMerchant #:nodoc:
       validate if respond_to?(:validate, true)
 
       errors.empty?
-    end  
+    end
 
     def initialize(attributes = {})
       self.attributes = attributes
     end
 
-    def errors    
+    def errors
       @errors ||= Errors.new(self)
     end
 
@@ -22,46 +22,51 @@ module ActiveMerchant #:nodoc:
     def attributes=(attributes)
       unless attributes.nil?
         for key, value in attributes
-          send("#{key}=", value )            
+          send("#{key}=", value )
         end
       end
-    end  
+    end
 
     # This hash keeps the errors of the object
     class Errors < HashWithIndifferentAccess
 
       def initialize(base)
+        super() { |h, k|  h[k] = [] ; h[k] }
         @base = base
       end
-      
+
       def count
         size
       end
 
-      # returns a specific fields error message. 
-      # if more than one error is available we will only return the first. If no error is available 
+      def empty?
+        all? { |k, v| v && v.empty? }
+      end
+
+      # returns a specific fields error message.
+      # if more than one error is available we will only return the first. If no error is available
       # we return an empty string
       def on(field)
         self[field].to_a.first
       end
 
       def add(field, error)
-        self[field] ||= []
         self[field] << error
-      end    
-      
+      end
+
       def add_to_base(error)
         add(:base, error)
       end
 
       def each_full
-        full_messages.each { |msg| yield msg }      
+        full_messages.each { |msg| yield msg }
       end
 
       def full_messages
         result = []
 
-        self.each do |key, messages| 
+        self.each do |key, messages|
+          next if messages.blank?
           if key == 'base'
             result << "#{messages.first}"
           else
@@ -70,7 +75,7 @@ module ActiveMerchant #:nodoc:
         end
 
         result
-      end   
-    end  
+      end
+    end
   end
 end

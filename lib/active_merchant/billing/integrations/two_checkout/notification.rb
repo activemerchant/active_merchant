@@ -87,14 +87,14 @@ module ActiveMerchant #:nodoc:
             end
           end
           
-          def verify(secret)
-            return false if security_key.blank?
-            
-            Digest::MD5.hexdigest("#{secret}#{params['sid']}#{transaction_id}#{gross}").upcase == security_key.upcase
+          def secret
+            @options[:credential2]
           end
           
           def acknowledge
-            true
+            return false if security_key.blank?
+            
+            Digest::MD5.hexdigest("#{secret}#{params['sid']}#{transaction_id}#{gross}").upcase == security_key.upcase
           end
           
           private

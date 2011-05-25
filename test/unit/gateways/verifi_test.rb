@@ -37,6 +37,26 @@ class VerifiTest < Test::Unit::TestCase
     assert response.test?
   end
   
+  def test_credit
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/ccnumber=#{@credit_card.number}/), anything).returns("")
+    @gateway.expects(:parse).returns({})
+    @gateway.credit(@amount, @credit_card, @options)
+  end
+  
+  def test_deprecated_credit
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/transactionid=transaction_id/), anything).returns("")
+    @gateway.expects(:parse).returns({})
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      @gateway.credit(@amount, "transaction_id", @options)
+    end
+  end
+  
+  def test_refund
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/transactionid=transaction_id/), anything).returns("")
+    @gateway.expects(:parse).returns({})
+    @gateway.refund(@amount, "transaction_id", @options)
+  end
+  
   def test_amount_style
     assert_equal '10.34', @gateway.send(:amount, 1034)
                                                       

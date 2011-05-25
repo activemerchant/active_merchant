@@ -62,30 +62,43 @@ class DirecPayHelperTest < Test::Unit::TestCase
   end
   
   def test_address_with_two_street_address_fields
-    @helper.billing_address :address1 => "1 My Street", :address2 => "Apt 3"
-    @helper.shipping_address :address1 => "1 My Street", :address2 => "Apt 3"
-    assert_field "custAddress", "1 My Street Apt 3"
-    assert_field "deliveryAddress", "1 My Street Apt 3"
+    @helper.customer :first_name => "Bob", :last_name => "Biller"
+    @helper.billing_address :address1 => "1 Bill Street", :address2 => "Bill Address 2"
+    @helper.shipping_address :first_name => "Stan", :last_name => "Shipper", :address1 => "1 Ship Street", :address2 => "Ship Address 2"
+    assert_field 'custName', 'Bob Biller'
+    assert_field "custAddress", "1 Bill Street Bill Address 2"
+    assert_field 'deliveryName', 'Stan Shipper'
+    assert_field "deliveryAddress", "1 Ship Street Ship Address 2"
   end
   
-  def test_phone_number_mapping_for_india
-    @helper.billing_address :phone => "+91 022 28000000", :country => 'IN'
+  def test_phone_number_for_billing_address
+    @helper.billing_address :phone => "+91 022 28000000"
+    assert_field 'custMobileNo', '91 022 28000000'
+  end
+  
+  def test_phone_number_for_shipping_address
+    @helper.shipping_address :phone => "+91 022 28000000"
+    assert_field 'deliveryMobileNo', '91 022 28000000'
+  end
+  
+  def test_land_line_phone_number_mapping_for_india
+    @helper.billing_address :phone2 => "+91 022 28000000", :country => 'IN'
     
     assert_field 'custPhoneNo1', '91'
     assert_field 'custPhoneNo2', '022'
     assert_field 'custPhoneNo3', '28000000'
   end
   
-  def test_phone_number_mapping_for_america
-    @helper.billing_address :phone => "6131234567", :country => 'CA'
+  def test_land_line_phone_number_mapping_for_america
+    @helper.billing_address :phone2 => "6131234567", :country => 'CA'
     
     assert_field 'custPhoneNo1', '01'
     assert_field 'custPhoneNo2', '613'
     assert_field 'custPhoneNo3', '1234567'
   end
   
-  def test_phone_number_mapping_for_germany
-    @helper.billing_address :phone => "+49 2628 12345", :country => 'DE'
+  def test_land_line_phone_number_mapping_for_germany
+    @helper.billing_address :phone2 => "+49 2628 12345", :country => 'DE'
     
     assert_field 'custPhoneNo1', '49'
     assert_field 'custPhoneNo2', '2628'
@@ -93,6 +106,13 @@ class DirecPayHelperTest < Test::Unit::TestCase
   end
   
   def test_shipping_address_mapping
+    @helper.billing_address :address1 => '2 My Street',
+                             :address2 => 'apartment 8',
+                             :city => 'Leeds',
+                             :state => 'Yorkshire',
+                             :zip => 'LS2 7EE',
+                             :country  => 'IN'
+
     @helper.shipping_address :address1 => '2 My Street',
                              :address2 => 'apartment 8',
                              :city => 'Leeds',

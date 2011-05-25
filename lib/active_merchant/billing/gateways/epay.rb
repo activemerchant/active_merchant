@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_amount(post, money, options)
-        add_invoice(post)
+        add_invoice(post, options)
         add_creditcard_or_reference(post, credit_card_or_reference)
         add_instant_capture(post, false)
 
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
 
         add_amount(post, money, options)
         add_creditcard_or_reference(post, credit_card_or_reference)
-        add_invoice(post)
+        add_invoice(post, options)
         add_instant_capture(post, true)
 
         commit(:authorize, post)
@@ -97,7 +97,7 @@ module ActiveMerchant #:nodoc:
         commit(:void, post)
       end
 
-      def credit(money, identification, options = {})
+      def refund(money, identification, options = {})
         post = {}
 
         add_amount_without_currency(post, money)
@@ -106,6 +106,10 @@ module ActiveMerchant #:nodoc:
         commit(:credit, post)
       end
 
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
+      end
 
       private
 
@@ -122,7 +126,7 @@ module ActiveMerchant #:nodoc:
         post[:transaction] = identification
       end
 
-      def add_invoice(post)
+      def add_invoice(post, options)
         post[:orderid] = format_order_number(options[:order_id])
       end
 
@@ -247,6 +251,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize_post_data(params = {})
         params[:language] = '2'
+        params[:cms] = 'activemerchant'
         params[:accepturl] = 'https://ssl.ditonlinebetalingssystem.dk/auth/default.aspx?accept=1'
         params[:declineurl] = 'https://ssl.ditonlinebetalingssystem.dk/auth/default.aspx?decline=1'
         params[:merchantnumber] = @options[:login]
