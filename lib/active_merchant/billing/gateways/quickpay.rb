@@ -134,6 +134,13 @@ module ActiveMerchant #:nodoc:
       
       def add_fraud_parameters(post, options)
         post[:fraud_http_referer] = options[:fraud_http_referer]
+        post[:fraud_remote_addr] = options[:]
+        post[:fraud_http_accept] = options[:]
+        post[:fraud_http_accept_language] = options[:]
+        post[:fraud_http_accept_encoding] = options[:]
+        post[:fraud_http_accept_charset] = options[:]
+        post[:fraud_http_referer] = options[:]
+        post[:fraud_http_user_agent] = options[:]
       end
       
       def add_creditcard_or_reference(post, credit_card_or_reference, options)
