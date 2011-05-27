@@ -15,7 +15,7 @@ Gem::Specification.new do |s|
   
   s.has_rdoc = true if Gem::VERSION < '1.7.0'
   
-  s.add_dependency('activesupport', '>= 2.3.8')
+  s.add_dependency('activesupport', '>= 2.3.11')
   s.add_dependency('builder', '>= 2.0.0')
   s.add_dependency('braintree', '>= 2.0.0')
   
