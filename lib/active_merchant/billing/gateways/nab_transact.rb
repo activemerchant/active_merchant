@@ -60,13 +60,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, credit_card_or_stored_id, options = {})
-        if credit_card_or_stored_id.is_a?(String) || credit_card_or_stored_id.is_a?(Integer)
-          #Triggered payment for an existing stored credit card
-          options[:billing_id] = credit_card_or_stored_id
-          commit_periodic build_periodic_item(:trigger, money, nil, options)
-        else
+        if credit_card_or_stored_id.is_a?(ActiveMerchant::Billing::CreditCard)
           #Credit card for instant payment
           commit :purchase, build_purchase_request(money, credit_card_or_stored_id, options)
+        else
+          #Triggered payment for an existing stored credit card
+          options[:billing_id] = credit_card_or_stored_id.to_s
+          commit_periodic build_periodic_item(:trigger, money, nil, options)
         end
       end
 
