@@ -49,7 +49,7 @@ end
 desc "Delete tar.gz / zip / rdoc"
 task :cleanup => [ :clobber_package, :clobber_rdoc ]
 
-spec = eval(File.read('activemerchant.gemspec'))
+spec = eval(File.read('active_merchant.gemspec'))
 
 Gem::PackageTask.new(spec) do |p|
   p.gem_spec = spec
