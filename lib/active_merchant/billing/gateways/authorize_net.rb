@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
     class AuthorizeNetGateway < Gateway
       API_VERSION = '3.1'
 
-      class_inheritable_accessor :test_url, :live_url, :arb_test_url, :arb_live_url
+      class_attribute :test_url, :live_url, :arb_test_url, :arb_live_url
 
       self.test_url = "https://test.authorize.net/gateway/transact.dll"
       self.live_url = "https://secure.authorize.net/gateway/transact.dll"
@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
       self.arb_test_url = 'https://apitest.authorize.net/xml/v1/request.api'
       self.arb_live_url = 'https://api.authorize.net/xml/v1/request.api'
       
-      class_inheritable_accessor :duplicate_window
+      class_attribute :duplicate_window
 
       APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
 
@@ -131,32 +131,39 @@ module ActiveMerchant #:nodoc:
       # * <tt>authorization</tt> - The authorization returned from the previous authorize request.
       def void(authorization, options = {})
         post = {:trans_id => authorization}
+        add_duplicate_window(post)
         commit('VOID', nil, post)
       end
 
-      # Credit an account.
+      # Refund a transaction.
       #
-      # This transaction is also referred to as a Refund and indicates to the gateway that
+      # This transaction indicates to the gateway that
       # money should flow from the merchant to the customer.
       #
       # ==== Parameters
       #
       # * <tt>money</tt> -- The amount to be credited to the customer as an Integer value in cents.
-      # * <tt>identification</tt> -- The ID of the original transaction against which the credit is being issued.
+      # * <tt>identification</tt> -- The ID of the original transaction against which the refund is being issued.
       # * <tt>options</tt> -- A hash of parameters.
       #
       # ==== Options
       #
-      # * <tt>:card_number</tt> -- The credit card number the credit is being issued to. (REQUIRED)
-      def credit(money, identification, options = {})
+      # * <tt>:card_number</tt> -- The credit card number the refund is being issued to. (REQUIRED)
+      def refund(money, identification, options = {})
         requires!(options, :card_number)
 
         post = { :trans_id => identification,
                  :card_num => options[:card_number]
                }
         add_invoice(post, options)
+        add_duplicate_window(post)
 
         commit('CREDIT', money, post)
+      end
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
 
       # Create a recurring payment.

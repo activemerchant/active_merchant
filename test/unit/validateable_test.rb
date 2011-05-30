@@ -15,31 +15,31 @@ end
 
 class ValidateableTest < Test::Unit::TestCase
   include ActiveMerchant
-  
+
   def setup
     @dood = Dood.new
   end
 
-  def test_validation  
+  def test_validation
     assert ! @dood.valid?
     assert ! @dood.errors.empty?
   end
 
-  def test_assigns 
+  def test_assigns
     @dood = Dood.new(:name => "tobi", :email => "tobi@neech.de", :country => 'DE')
 
-    assert_equal "tobi", @dood.name 
+    assert_equal "tobi", @dood.name
     assert_equal "tobi@neech.de", @dood.email
     assert @dood.valid?
   end
 
   def test_multiple_calls
-    @dood.name = "tobi"        
-    assert !@dood.valid?    
-    
-    @dood.email = "tobi@neech.de"    
+    @dood.name = "tobi"
     assert !@dood.valid?
-    
+
+    @dood.email = "tobi@neech.de"
+    assert !@dood.valid?
+
     @dood.country = 'DE'
     assert @dood.valid?
   end

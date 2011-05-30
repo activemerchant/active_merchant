@@ -10,7 +10,7 @@ class ValitorReturnTest < Test::Unit::TestCase
 
   def test_accessors
     assert @ret.complete?
-    assert @ret.valid?
+    assert @ret.acknowledge
     assert @ret.success?
     assert_equal "OK", @ret.status
     assert_equal "2b969de3-6928-4fa7-a0d6-6dec63fec5c3", @ret.transaction_id
@@ -32,14 +32,14 @@ class ValitorReturnTest < Test::Unit::TestCase
     assert !@ret.test?
   end
   
-  def test_validity_check
-    valid = Valitor::Return.new(http_raw_query, :password => 'password')
-    assert valid.valid?
+  def test_acknowledge
+    valid = Valitor::Return.new(http_raw_query, :credential2 => 'password')
+    assert valid.acknowledge
     assert valid.success?
     assert valid.complete?
     
-    invalid = Valitor::Return.new(http_raw_query, :password => 'bogus')
-    assert !invalid.valid?
+    invalid = Valitor::Return.new(http_raw_query, :credential2 => 'bogus')
+    assert !invalid.acknowledge
     assert !invalid.success?
     assert !invalid.complete?
   end

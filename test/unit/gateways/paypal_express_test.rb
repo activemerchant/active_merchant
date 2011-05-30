@@ -247,7 +247,15 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'Sole', REXML::XPath.first(xml, '//n2:SolutionType').text
     assert_equal 'Billing', REXML::XPath.first(xml, '//n2:LandingPage').text
   end
-
+  
+  def test_get_phone_number_from_address_if_contact_phone_not_sent
+    response = successful_details_response.sub(%r{<ContactPhone>416-618-9984</ContactPhone>\n}, '')
+    @gateway.expects(:ssl_post).returns(response)
+    response = @gateway.details_for('EC-2OPN7UJGFWK9OYFV')
+    assert address = response.address
+    assert_equal '123-456-7890', address['phone']
+  end
+  
   private
   def successful_details_response
     <<-RESPONSE
@@ -314,7 +322,7 @@ class PaypalExpressTest < Test::Unit::TestCase
             <StateOrProvince xsi:type="xs:string">NC</StateOrProvince>
             <Country xsi:type="ebl:CountryCodeType">US</Country>
             <CountryName>United States</CountryName>
-            <Phone xsi:type="xs:string"/>
+            <Phone xsi:type="xs:string">123-456-7890</Phone>
             <PostalCode xsi:type="xs:string">23456</PostalCode>
             <AddressID xsi:type="xs:string"/>
             <AddressOwner xsi:type="ebl:AddressOwnerCodeType">PayPal</AddressOwner>

@@ -57,6 +57,26 @@ class MerchantWareTest < Test::Unit::TestCase
     assert_equal "FAILED", response.params["status"]
     assert_equal "1014", response.params["failure_code"]
   end
+
+  def test_credit
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<strPAN>#{@credit_card.number}<\//), anything).returns("")
+    @gateway.expects(:parse).returns({})
+    @gateway.credit(@amount, @credit_card, @options)
+  end
+  
+  def test_deprecated_credit
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<strReferenceCode>transaction_id<\//), anything).returns("")
+    @gateway.expects(:parse).returns({})
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      @gateway.credit(@amount, "transaction_id", @options)
+    end
+  end
+  
+  def test_refund
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<strReferenceCode>transaction_id<\//), anything).returns("")
+    @gateway.expects(:parse).returns({})
+    @gateway.refund(@amount, "transaction_id", @options)
+  end
   
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)

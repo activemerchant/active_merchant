@@ -1,5 +1,63 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.15.0 (May 12, 2011)
+* DirecPay: Fix address to not include address2 twice in some cases [Soleone]
+* DirecPay: Send company if available [Soleone]
+* Realex: Fix hash signature [ntalbott/Soleone]
+* SecurePay AU: Update remote tests [ntalbott]
+* SecurePay AU: Fix method arity for #capture, #refund, #credit and #void [Soleone]
+* Barclays ePDQ: Make response parsing more robust [Soleone]
+* Payflow Express: Add line item support [wolframarnold]
+* Payflow Express: Add comment field support [wolframarnold]
+* Payflow: Add more optional fields [wolframarnold]
+* Beanstream/Paypal: Fix CREDIT_DEPRECATION_MESSAGE errors [Jonathan Rudenberg]
+* BraintreeBlue: Return a hash instead of a transaction object [braintreeps]
+* BraintreeBlue: Return proper AVS/CVV values [braintreeps]
+* Bogus: Add #recurring [trwomey]
+* Make Validateable compatible with ActiveModel [CodeMonkeySteve]
+* Add DirectEBanking offsite gateway [Gerwin Brunner/Soleone]
+* ActiveSupport 3.1 beta support [cgriego]
+
+== Version 1.14.0 (Apr 29, 2011)
+
+* SagePayForm: Implement #cancelled? for Return. [wisq]
+* Add #cancelled? to Integrations::Return [wisq]
+* Bogus gateway: Add refund support and better tests [wisq]
+* Beanstream: Add support for storing cards [duffomelia]
+* eWay: Add support for storing cards [duffomelia]
+* Add validation mode to update profile request [Ken Miller]
+* Authorize.net CIM: Add oldLiveMode [ntalbott]
+* Authorize.net CIM: Add extra transaction types [Ken Miller]
+* JetPay: gateway tweaks [ntalbott]
+* Deprecate a bunch more #credit methods [ntalbott]
+* RealEx: Add authorize/capture/credit/void [ntalbott]
+* SecurePay AU: Add authorize/capture/credit/void [ntalbott]
+* PayPal Express: Make response parsing more robust [ntalbott]
+* Test deprecation warnings; add deprecation line numbers [ntabott]
+* Add Orbital direct gateway [ntalbott]
+* Add WorldPay direct gateway [ntalbott]
+
+== Version 1.13.0 (Apr 19, 2011)
+
+* Add a Gemfile for optional bundler support [ssoroka]
+* Stop using has_rdoc= when rubygems version is 1.7.0 or greater, since it's deprecated [ssoroka]
+* Add tax field to braintree [wisq]
+* Quickpay: Also add Sweden as supported country [Soleone]
+* Adding refund method for gateways that are using the credit method for referenced based refunds, added deprecation worning to the credit method [John Duff]
+* Return the Braintree transaction id in the response for void and refund transaction calls [John Duff]
+* PayPal Express: Extract phone number from address if no contact phone was sent [Soleone]
+* Unify all offsite gateways that verify the signature of Returns or Notifications by always using the #acknowledge method and calling the secret :credential2 [Soleone]
+* Valitor: Change name of credential for Return and Notification from :password to :credential2 in symmetry with the other Integrations [Soleone]
+* Moneybookers: Add support for tracking token [Soleone]
+* Moneybookers: Require credential when creating Notifications instead of adding an argument to #acknowledge [Soleone]
+* Moneybookers: Fix Notification to return correct status [Soleone]
+* Support default Return class for all Integrations that don't use returns [Soleone]
+* Add support for passing additional options when creating a Notification to all Integrations [Soleone]
+* Update BraintreeBlue#refund to have consistent method signature [Jonathan Rudenberg]
+* Add rails/init.rb for gem campatability in Rails [Rūdolfs Ošiņš]
+* Fix Paypal Express response parser [Jonathan Rudenberg]
+* Braintree/Transax: Add tax field [wisq]
+
 == Version 1.12.1 (Mar 21, 2011)
 
 * Ogone: Make sure response.params is a real Hash [Soleone]

@@ -23,6 +23,7 @@ beanstream:
   login: merchant id
   user: username
   password: password
+  secure_profile_api_key: API Access Passcode
   
 beanstream_interac:
   login: merchant id
@@ -74,6 +75,11 @@ epay:
 # Working credentials, no need to replace
 eway:
   login: '87654321'
+
+eway_managed:
+  login: '87654321'
+  username: 'test@eway.com.au'
+  password: 'test123'
 
 # Working credentials, no need to replace
 exact:
@@ -169,6 +175,11 @@ paybox_direct:
   login: 199988899
   password: 1999888I
 
+orbital_gateway:
+  login: LOGIN
+  password: PASSWORD
+  merchant_id: MERCHANTID
+  
 payflow:
   login: LOGIN
   password: PASSWORD
@@ -423,3 +434,7 @@ wirecard:
 
 world_pay:
   login: 211616
+
+world_pay_gateway:
+  login: LOGIN
+  password: PASSWORD

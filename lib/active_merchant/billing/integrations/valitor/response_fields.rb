@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       module Valitor
         module ResponseFields
           def success?
-            valid?
+            acknowledge
           end
           alias :complete? :success?
           
@@ -74,15 +74,12 @@ module ActiveMerchant #:nodoc:
             params['Athugasemdir']
           end
           
-          def valid?
-            unless @valid
-              @valid = if(security_number = @options[:password])
-                (params['RafraenUndirskriftSvar'] == Digest::MD5.hexdigest("#{security_number}#{order}"))
-              else
-                true
-              end
-            end
-            @valid
+          def password
+            @options[:credential2]
+          end
+          
+          def acknowledge
+            password ? Digest::MD5.hexdigest("#{password}#{order}") == params['RafraenUndirskriftSvar'] : true
           end
         end
       end

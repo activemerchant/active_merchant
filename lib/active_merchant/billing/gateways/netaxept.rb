@@ -57,11 +57,16 @@ module ActiveMerchant #:nodoc:
         commit('Capture', post, false)
       end
 
-      def credit(money, authorization, options = {})
+      def refund(money, authorization, options = {})
         post = {}
         add_credentials(post, options)
         add_authorization(post, authorization, money)
         commit('Credit', post, false)
+      end
+
+      def credit(money, authorization, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, authorization, options)
       end
 
       def void(authorization, options = {})

@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class ViaklixGateway < Gateway
-      class_inheritable_accessor :test_url, :live_url, :delimiter, :actions
+      class_attribute :test_url, :live_url, :delimiter, :actions
 
       self.test_url = 'https://demo.viaklix.com/process.asp'
       self.live_url = 'https://www.viaklix.com/process.asp'

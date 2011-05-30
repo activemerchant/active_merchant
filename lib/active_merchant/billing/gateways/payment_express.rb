@@ -64,11 +64,16 @@ module ActiveMerchant #:nodoc:
       end
       
       # Refund funds to the card holder
-      def credit(money, identification, options = {})
+      def refund(money, identification, options = {})
         requires!(options, :description)
         
         request = build_capture_or_credit_request(money, identification, options)                                            
         commit(:credit, request)
+      end
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
       
       # token based billing

@@ -24,6 +24,6 @@ class WorldPayModuleTest < Test::Unit::TestCase
   end
   
   def test_notification_method
-    assert_instance_of WorldPay::Notification, WorldPay.notification('name=Andrew White')
+    assert_instance_of WorldPay::Notification, WorldPay.notification('name=Andrew White', {})
   end
 end 

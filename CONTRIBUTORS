@@ -26,6 +26,7 @@ Linkpoint Gateway
 eWay Gateway
 
 * Originally contributed by Lucas Carlson  (mailto:lucas@rufy.com)
+* Managed Payments support by Jason Stirk with improvements by Keith Pitt
 
 CardStream Gateway
 
@@ -83,6 +84,7 @@ PaypalNVGateway (Apr 12, 2008)
 Beanstream (May 13, 2008)
 
 * Created by xiaobozz ( xiaobozzz at gmail dot com )
+* Secure Profiles support by Forrest Zeisler (http://github.com/forrest)
 
 Sage (June, 2008)
 
@@ -211,7 +213,21 @@ NMI
 QBMS
 
 * Will Glozer (wg)
-WorldPay (Feb 17, 2011)
+
+WorldPay Integration (Feb 17, 2011)
 
 * Original code by Unknown from this patch: https://jadedpixel.lighthouseapp.com/projects/11599/tickets/3-patch-integration-support-for-worldpay-uk
 * Refactored by Soleone
+
+WorldPay Gateway
+
+* Original code by Amit kumar (ask4amit@gmail.com)
+* Refactored by Nathaniel Talbott (ntalbott)
+
+Orbital Paymentech Gateway (July, 2009)
+
+* Sam Vincent - http://ecommerce.versapay.com
+
+DIRECTebanking - Payment Network AG (May, 2011)
+
+* Gerwin Brunner (Vilango)

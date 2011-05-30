@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
         mattr_accessor :service_url
         self.service_url = 'https://www.2checkout.com/2co/buyer/purchase'
 
-        def self.notification(post)
+        def self.notification(post, options = {})
           Notification.new(post)
         end  
         

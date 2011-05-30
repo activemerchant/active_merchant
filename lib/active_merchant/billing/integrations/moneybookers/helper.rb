@@ -26,6 +26,21 @@ module ActiveMerchant #:nodoc:
           mapping :return_url, 'return_url'
           mapping :cancel_return_url, 'cancel_url'
           mapping :description, 'detail1_text'
+          
+          def initialize(order, account, options = {})
+            super
+            add_tracking_token
+          end
+
+
+          private
+          
+          def add_tracking_token
+            return if application_id.blank? || application_id == 'ActiveMerchant'
+
+            add_field('merchant_fields', 'platform')
+            add_field('platform', application_id)
+          end
         end
       end
     end

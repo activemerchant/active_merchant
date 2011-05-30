@@ -70,8 +70,13 @@ module ActiveMerchant #:nodoc:
         commit(build_void_request(identification, options), options)
       end
 
-      def credit(money, identification, options = {})
+      def refund(money, identification, options = {})
         commit(build_credit_request(money, identification, options), options)
+      end
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
 
       private

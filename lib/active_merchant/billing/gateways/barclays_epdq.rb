@@ -64,10 +64,15 @@ module ActiveMerchant #:nodoc:
       # code returned by ePDQ
       def credit(money, creditcard_or_authorization, options = {})
         if creditcard_or_authorization.is_a?(String)
-          credit_existing_order(money, creditcard_or_authorization, options)
+          deprecated CREDIT_DEPRECATION_MESSAGE
+          refund(money, creditcard_or_authorization, options)
         else
           credit_new_order(money, creditcard_or_authorization, options)
         end
+      end
+
+      def refund(money, authorization, options = {})
+        credit_existing_order(money, authorization, options)
       end
 
       def void(authorization, options = {})
@@ -131,15 +136,15 @@ module ActiveMerchant #:nodoc:
 
         def parse
           doc = REXML::Document.new(@response)
-          auth_type = find(doc, "//Transaction/Type").to_sym
+          auth_type = find(doc, "//Transaction/Type").to_s
 
           message = find(doc, "//Message/Text")
           if message.blank?
             message = find(doc, "//Transaction/CardProcResp/CcReturnMsg")
           end
 
-          case auth_type.to_sym
-          when :Credit, :Void
+          case auth_type
+          when 'Credit', 'Void'
             success = find(doc, "//CcReturnMsg") == "Approved."
           else
             success = find(doc, "//Transaction/AuthCode").present?

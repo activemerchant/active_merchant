@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
         mattr_accessor :service_url
         self.service_url = 'https://ecomm.sella.it/gestpay/pagam.asp'
 
-        def self.notification(post)
+        def self.notification(post, options = {})
           Notification.new(post)
         end  
         

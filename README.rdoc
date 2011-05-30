@@ -43,6 +43,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {NETbilling}[http://www.netbilling.com] - US
 * {NMI}[http://nmi.com/] - US
 * {Ogone DirectLink}[http://www.ogone.com] - BE, DE, FR, NL, AT, CH
+* {Orbital Paymentech}[http://chasepaymentech.com/] - CA, US
 * {PayBox Direct}[http://www.paybox.com] - FR
 * {PayJunction}[http://www.payjunction.com/] - US
 * {PaySecure}[http://www.commsecure.com.au/paysecure.shtml] - AU
@@ -59,7 +60,7 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {PSL Payment Solutions}[http://www.paymentsolutionsltd.com/] - GB
 * {Quantum}[http://www.quantumgateway.com] - US
 * {QuickBooks Merchant Services}[http://payments.intuit.com/] - US
-* {Quickpay}[http://quickpay.dk/] - DK
+* {Quickpay}[http://quickpay.dk/] - DK, SE
 * {Rabobank Nederland}[http://www.rabobank.nl/] - NL
 * {Realex}[http://www.realexpayments.com/] - IE, GB
 * {Sage Payment Solutions}[http://www.sagepayments.com] - US, CA
@@ -75,12 +76,14 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {Verifi}[http://www.verifi.com/] - US
 * {ViaKLIX}[http://viaklix.com] - US
 * {Wirecard}[http://www.wirecard.com] - DE
+* {WorldPay}[http://www.worldpay.com] - AU, HK, GB, US
 
 == Supported Offsite Payment Gateways
 
 * {2 Checkout}[http://www.2checkout.com]
 * {Banca Sella GestPay}[https://www.sella.it/banca/ecommerce/gestpay/gestpay.jsp]
 * {Chronopay}[http://www.chronopay.com]
+* {Direct-eBanking / sofortueberweisung.de by Payment-Networks AG}[https://www.payment-network.com/deb_com_en/merchantarea/home] - DE, AT, CH, BE, UK, NL
 * {DirecPay}[http://www.timesofmoney.com/direcpay/jsp/home.jsp]
 * {HiTRUST}[http://www.hitrust.com.hk/]
 * {Moneybookers}[http://www.moneybookers.com]
