@@ -117,6 +117,14 @@ module ActiveMerchant #:nodoc:
           bankcard.void(reference, options)
         end
       end
+      
+      
+      def recurring(money, credit_card, options = {})
+        if card_brand(credit_card) == "check"
+          raise ActiveMerchantError.new("Can't use checks for recurring payments")
+        end
+        bankcard.recurring(money, credit_card, options)
+      end
 
       # Performs a credit transaction. (Sage +Credit+ transaction).
       #
