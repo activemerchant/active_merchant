@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
         add_credit_card(post, credit_card)        
         add_address(post, credit_card, options)        
         add_customer_data(post, options)
-             
+        add_special_options(post, options)
         commit(:purchase, money, post)
       end                       
     
@@ -78,6 +78,15 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:cust_email] = options[:email]
         post[:cust_ip] = options[:ip]
+      end
+
+      def add_special_options(post, options)
+        post[:disable_cvv2]           = options[:disable_cvv2] if options.has_key?(:disable_cvv2)
+        post[:disable_avs]            = options[:disable_avs] if options.has_key?(:disable_avs)
+        post[:disable_fraud_checks]   = options[:disable_fraud_checks] if options.has_key?(:disable_fraud_checks)
+        post[:disable_negative_db]    = options[:disable_negative_db] if options.has_key?(:disable_negative_db)
+        post[:disable_email_receipts] = options[:disable_cvv2] if options.has_key?(:disable_email_receipts)
+        post[:cisp_storage]           = options[:cisp_storage] if options.has_key?(:cisp_storage)
       end
 
       def add_address(post, credit_card, options)
@@ -126,7 +135,7 @@ module ActiveMerchant #:nodoc:
       
       def commit(action, money, parameters)
         response = parse(ssl_post(URL, post_data(action, parameters)))
-        
+       
         Response.new(success?(response), message_from(response), response, 
           :test => test_response?(response), 
           :authorization => response[:trans_id],
