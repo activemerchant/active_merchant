@@ -4,7 +4,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   
 
   def setup
-    @gateway = WorldpayGateway.new(fixtures(:worldpay_gateway))
+    @gateway = WorldpayGateway.new(fixtures(:world_pay_gateway))
     
     @amount = 100
     @credit_card = credit_card('4111111111111111')
