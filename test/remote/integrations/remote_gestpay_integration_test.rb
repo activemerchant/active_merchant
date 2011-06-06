@@ -12,7 +12,7 @@ class RemoteGestpayIntegrationTest < Test::Unit::TestCase
 
   def test_get_encryption_string
     # Extra fields don't work yet
-    # @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'codyfauser@gmail.com'
+    # @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com'
     response = @helper.send(:get_encrypted_string)
     assert !response.blank?
   end
