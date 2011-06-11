@@ -8,6 +8,12 @@ group :test do
   gem 'rails', '>= 2.3.11'
   gem 'i18n'
   gem 'mocha'
-  gem 'rake'
+  gem 'rake', "0.8.7"
+end
+
+group :remote_test do
+  gem 'mechanize'
+  gem 'launchy'
+  gem 'mongrel'
 end
 
