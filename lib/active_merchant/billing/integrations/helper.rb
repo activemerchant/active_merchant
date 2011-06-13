@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
         self.application_id = 'ActiveMerchant'
 
         def initialize(order, account, options = {})
-          options.assert_valid_keys([:amount, :currency, :test, :credential2, :credential3, :credential4])
+          options.assert_valid_keys([:amount, :currency, :test, :credential2, :credential3, :credential4, :country, :account_name])
           @fields = {}
           self.order       = order
           self.account     = account
@@ -64,9 +64,9 @@ module ActiveMerchant #:nodoc:
           add_fields(key, params)
         end
         
-        def lookup_country_code(name_or_code)
+        def lookup_country_code(name_or_code, format = country_format)
           country = Country.find(name_or_code)
-          country.code(country_format).to_s
+          country.code(format).to_s
         rescue InvalidCountryCodeError
           name_or_code
         end
