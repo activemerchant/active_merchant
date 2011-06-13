@@ -30,6 +30,8 @@ module ActiveMerchant #:nodoc:
           def initialize(order, account, options = {})
             super
             add_tracking_token
+            add_default_parameters
+            add_seller_details(options)
           end
 
 
@@ -40,6 +42,15 @@ module ActiveMerchant #:nodoc:
 
             add_field('merchant_fields', 'platform')
             add_field('platform', application_id)
+          end
+          
+          def add_default_parameters
+            add_field('hide_login', 1)
+          end
+          
+          def add_seller_details(options)
+            add_field('recipient_description', options[:account_name]) if options[:account_name]
+            add_field('country', lookup_country_code(options[:country], :alpha3)) if options[:country]
           end
         end
       end
