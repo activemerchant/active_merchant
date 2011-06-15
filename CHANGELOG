@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add Diners Club to Braintree [cody]
+
 == Version 1.15.0 (May 12, 2011)
 * DirecPay: Fix address to not include address2 twice in some cases [Soleone]
 * DirecPay: Send company if available [Soleone]
