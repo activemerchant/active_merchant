@@ -401,6 +401,9 @@ skipjack:
   login: X
   password: Y 
 
+stripe:
+  login: 
+
 trans_first:
   login: LOGIN
   password: PASSWORD
