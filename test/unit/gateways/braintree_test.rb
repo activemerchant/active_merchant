@@ -28,7 +28,7 @@ class BraintreeTest < Test::Unit::TestCase
   end
   
   def test_should_have_supported_credit_card_types
-    assert_equal [:visa, :master, :american_express, :discover, :jcb], BraintreeGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :discover, :jcb, :diners_club], BraintreeGateway.supported_cardtypes
   end
   
   def test_should_have_supported_countries
