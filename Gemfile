@@ -8,6 +8,9 @@ group :test do
   gem 'rails', '>= 2.3.11'
   gem 'i18n'
   gem 'mocha'
+  gem 'mechanize'
+  gem 'launchy'
+  gem 'mongrel'
   gem 'rake'
 end
 

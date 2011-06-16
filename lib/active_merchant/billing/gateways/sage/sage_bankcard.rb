@@ -52,6 +52,15 @@ module ActiveMerchant #:nodoc:
         add_transaction_data(post, money, options)
         commit(:credit, post)
       end
+      
+      def recurring(money, credit_card, options = {})
+        post = {}
+        add_credit_card(post, credit_card)
+        add_amount(post, money)
+        add_addresses(post, options)
+        add_recurring(post, money, options)
+        commit(:purchase, post)
+      end
           
       private
       def exp_date(credit_card)
@@ -59,6 +68,26 @@ module ActiveMerchant #:nodoc:
         month = sprintf("%.2i", credit_card.month)
 
         "#{month}#{year[-2..-1]}"
+      end
+      
+      def add_recurring(post, money, options)
+        post[:T_recurring] = 1
+        post[:T_recurring_amount] = amount(money)
+        post[:T_recurring_type] = (options[:type].try(:to_sym) == :daily ? 2 : 1)
+        post[:T_recurring_interval] = options[:interval] || 1
+        post[:T_recurring_non_business_days] =  case options[:non_business_days]
+                                                when :before
+                                                  1
+                                                when :after
+                                                  0
+                                                else 
+                                                  0
+                                                end
+        post[:T_recurring_start_date] = (options[:start_date] || Date.today).strftime('%D')
+        post[:T_recurring_indefinite] = (options[:indefinite] ? '1' : '0')
+        post[:T_recurring_times_to_process] = options[:times_to_process]
+        post[:T_recurring_group] = options[:group]
+        post[:T_recurring_payment] = options[:payment]
       end
 
       def add_credit_card(post, credit_card)

@@ -96,6 +96,14 @@ class RemoteSageBankcardTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
   end
+  
+  def test_successful_recurring_and_void
+     assert response = @gateway.recurring(@amount, @visa, @options)
+     assert_success response
+     assert response.test?
+  end
+  
+
 
   def test_invalid_login
     gateway = SageBankcardGateway.new(
