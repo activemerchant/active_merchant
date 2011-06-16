@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.paymentexpress.com/'
       self.display_name = 'PaymentExpress'
       
-      URL = 'https://www.paymentexpress.com/pxpost.aspx'
+      URL = 'https://sec.paymentexpress.com/pxpost.aspx'
       
       APPROVED = '1'
       
