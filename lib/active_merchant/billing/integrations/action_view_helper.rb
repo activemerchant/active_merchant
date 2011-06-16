@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
         #    <% service.customer :first_name => 'Cody',
         #                       :last_name => 'Fauser',
         #                       :phone => '(555)555-5555',
-        #                       :email => 'codyfauser@gmail.com' %>
+        #                       :email => 'cody@example.com' %>
         #
         #    <% service.billing_address :city => 'Ottawa',
         #                              :address1 => '21 Snowy Brook Lane',
@@ -42,36 +42,25 @@ module ActiveMerchant #:nodoc:
         def payment_service_for(order, account, options = {}, &proc)          
           raise ArgumentError, "Missing block" unless block_given?
 
-          integration_module = ActiveMerchant::Billing::Integrations.const_get(options.delete(:service).to_s.classify)
+          integration_module = ActiveMerchant::Billing::Integrations.const_get(options.delete(:service).to_s.camelize)
 
-          if ignore_binding?
-            concat(form_tag(integration_module.service_url, options.delete(:html) || {}))
-          else
-            concat(form_tag(integration_module.service_url, options.delete(:html) || {}), proc.binding)
-          end
-          result = "\n"
+          result = []
+          result << form_tag(integration_module.service_url, options.delete(:html) || {})
           
           service_class = integration_module.const_get('Helper')
           service = service_class.new(order, account, options)
-          yield service
-          
-          result << service.form_fields.collect do |field, value|
-            hidden_field_tag(field, value)
-          end.join("\n")
 
-          result << "\n"
-          result << '</form>' 
+          result << capture(service, &proc)
 
-          if ignore_binding?
-            concat(result)
-          else
-            concat(result, proc.binding)
+          service.form_fields.each do |field, value|
+            result << hidden_field_tag(field, value)
           end
-        end
-        
-        private
-        def ignore_binding?
-          ActionPack::VERSION::MAJOR >= 2 && ActionPack::VERSION::MINOR >= 2
+         
+          result << '</form>'
+          result= result.join("\n")
+          
+          concat(result.respond_to?(:html_safe) ? result.html_safe : result)
+          nil
         end
       end
     end

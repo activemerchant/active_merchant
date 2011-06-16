@@ -238,6 +238,11 @@ class PaypalTest < Test::Unit::TestCase
     assert_equal "You do not have permissions to make this API call", response.message
   end
   
+  def test_amount_format_for_jpy_currency
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/n2:OrderTotal currencyID=.JPY.>1<\/n2:OrderTotal>/)).returns(successful_purchase_response)
+    response = @gateway.purchase(100, @credit_card, @options.merge(:currency => 'JPY'))
+    assert response.success?
+  end  
   private
   def successful_purchase_response
     <<-RESPONSE

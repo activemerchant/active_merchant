@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'DKK'  
       self.money_format = :cents
       self.supported_cardtypes = [ :dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro ]
-      self.supported_countries = ['DK']
+      self.supported_countries = ['DK', 'SE']
       self.homepage_url = 'http://quickpay.dk/'
       self.display_name = 'Quickpay'
       
@@ -75,13 +75,18 @@ module ActiveMerchant #:nodoc:
         commit(:cancel, post)
       end
       
-      def credit(money, identification, options = {})
+      def refund(money, identification, options = {})
         post = {}
 
         add_amount_without_currency(post, money)
         add_reference(post, identification)
 
         commit(:refund, post)
+      end
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)      
       end
       
       def store(creditcard, options = {})                       

@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
       # The name of the gateway
       self.display_name = 'SecurePay'
       
-      class_inheritable_accessor :request_timeout
+      class_attribute :request_timeout
       self.request_timeout = 60
       
       self.money_format = :cents
@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
         :authorization => 10,
         :capture => 11,
         :void => 6,
-        :credit => 4
+        :refund => 4
       }
       
       SUCCESS_CODES = [ '00', '08', '11', '16', '77' ]
@@ -49,9 +49,32 @@ module ActiveMerchant #:nodoc:
       end
       
       def purchase(money, credit_card, options = {})
+        requires!(options, :order_id)
         commit :purchase, build_purchase_request(money, credit_card, options)
       end                       
     
+      def authorize(money, credit_card, options = {})
+        requires!(options, :order_id)
+        commit :authorization, build_purchase_request(money, credit_card, options)
+      end
+      
+      def capture(money, reference, options = {})
+        commit :capture, build_reference_request(money, reference)
+      end
+      
+      def refund(money, reference, options = {})
+        commit :refund, build_reference_request(money, reference)
+      end
+
+      def credit(money, reference, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, reference)
+      end
+
+      def void(reference, options = {})
+        commit :void, build_reference_request(nil, reference)
+      end
+      
       private
       
       def build_purchase_request(money, credit_card, options)
@@ -66,6 +89,19 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'expiryDate', expdate(credit_card)
           xml.tag! 'cvv', credit_card.verification_value if credit_card.verification_value?
         end
+        
+        xml.target!
+      end
+      
+      def build_reference_request(money, reference)
+        xml = Builder::XmlMarkup.new
+        
+        transaction_id, order_id, preauth_id, original_amount = reference.split("*")
+        xml.tag! 'amount', (money ? amount(money) : original_amount)
+        xml.tag! 'currency', options[:currency] || currency(money)
+        xml.tag! 'txnID', transaction_id
+        xml.tag! 'purchaseOrderNo', order_id
+        xml.tag! 'preauthID', preauth_id
         
         xml.target!
       end
@@ -115,7 +151,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def authorization_from(response)
-        response[:txn_id]
+        [response[:txn_id], response[:purchase_order_no], response[:preauth_id], response[:amount]].join('*')
       end
           
       def message_from(response)

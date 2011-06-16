@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
         :diners_club => "DC",
         :jcb => "JCB"
       }
-      
+
       ELECTRON = /^(424519|42496[23]|450875|48440[6-8]|4844[1-5][1-5]|4917[3-5][0-9]|491880)\d{10}(\d{3})?$/
       
       AVS_CVV_CODE = {
@@ -105,8 +105,8 @@ module ActiveMerchant #:nodoc:
         commit(action, post)
       end
 
-      # Crediting requires a new order_id to passed in, as well as a description
-      def credit(money, identification, options = {})
+      # Refunding requires a new order_id to passed in, as well as a description
+      def refund(money, identification, options = {})
         requires!(options, :order_id, :description)
         
         post = {}
@@ -116,6 +116,11 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         
         commit(:credit, post)
+      end
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
       
       private
@@ -138,8 +143,9 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_amount(post, money, options)
-        add_pair(post, :Amount, amount(money), :required => true)
-        add_pair(post, :Currency, options[:currency] || currency(money), :required => true)
+        currency = options[:currency] || currency(money)
+        add_pair(post, :Amount, localized_amount(money, currency), :required => true)
+        add_pair(post, :Currency, currency, :required => true)
       end
 
       # doesn't actually use the currency -- dodgy!
@@ -302,6 +308,11 @@ module ActiveMerchant #:nodoc:
         last_name = name.pop || ''
         first_name = name.join(' ')
         [ first_name[0,20], last_name[0,20] ]
+      end
+      
+      def localized_amount(money, currency)
+        amount = amount(money)
+        CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s) ? amount.split('.').first : amount
       end
     end
   end

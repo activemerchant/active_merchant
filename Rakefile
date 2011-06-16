@@ -1,12 +1,19 @@
-require 'rubygems'
+$:.unshift File.expand_path('../lib', __FILE__)
+
+begin
+  require 'bundler'
+  Bundler.setup
+rescue LoadError => e
+  puts "Error loading bundler (#{e.message}): \"gem install bundler\" for bundler support."
+  require 'rubygems'
+end
+
 require 'rake'
 require 'rake/testtask'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
-require 'lib/support/gateway_support'
-require 'lib/support/outbound_hosts'
-
-VERSION = "1.5.1"
+require 'support/gateway_support'
+require 'support/outbound_hosts'
 
 desc "Run the unit test suite"
 task :default => 'test:units'
@@ -50,41 +57,13 @@ Rake::GemPackageTask.new(spec) do |p|
 end
 
 desc "Release the gems and docs to RubyForge"
-task :release => [ 'gemcutter:publish', 'rubyforge:publish', 'rubyforge:upload_rdoc' ]
+task :release => [ 'gemcutter:publish' ]
 
 namespace :gemcutter do
   desc "Publish to gemcutter"
   task :publish => :package do
-    require 'rake/gemcutter'
-    Rake::Gemcutter::Tasks.new(spec).define
-    Rake::Task['gem:push'].invoke
+    sh "gem push pkg/activemerchant-#{ActiveMerchant::VERSION}.gem"
   end
-end
-
-namespace :rubyforge do
-  
-  desc "Publish the release files to RubyForge."
-  task :publish => :package do
-    require 'rubyforge'
-  
-    packages = %w( gem tgz zip ).collect{ |ext| "pkg/activemerchant-#{VERSION}.#{ext}" }
-  
-    rubyforge = RubyForge.new
-    rubyforge.configure
-    rubyforge.login
-    rubyforge.add_release('activemerchant', 'activemerchant', "REL #{VERSION}", *packages)
-  end
-
-  desc 'Upload RDoc to RubyForge'
-  task :upload_rdoc => :rdoc do
-    require 'rake/contrib/rubyforgepublisher'
-    user = ENV['RUBYFORGE_USER'] 
-    project = "/var/www/gforge-projects/activemerchant"
-    local_dir = 'doc'
-    pub = Rake::SshDirPublisher.new user, project, local_dir
-    pub.upload
-  end
-  
 end
 
 namespace :gateways do

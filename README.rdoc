@@ -13,21 +13,38 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 
 * {Authorize.Net CIM}[http://www.authorize.net/] - US
 * {Authorize.Net}[http://www.authorize.net/] - US
+* {Barclays ePDQ}[http://www.barclaycard.co.uk/business/accepting-payments/epdq-mpi/] - UK
 * {Beanstream.com}[http://www.beanstream.com/] - CA
+* {BluePay}[http://www.bluepay.com/] - US
 * {Braintree}[http://www.braintreepaymentsolutions.com] - US
 * {CardStream}[http://www.cardstream.com/] - GB
 * {CyberSource}[http://www.cybersource.com] - US
 * {DataCash}[http://www.datacash.com/] - GB
 * {Efsnet}[http://www.concordefsnet.com/] - US
+* {Elavon MyVirtualMerchant}[http://www.elavon.com] - US, CA
+* {ePay}[http://www.epay.dk/] - DK
 * {eWAY}[http://www.eway.com.au/] - AU
 * {E-xact}[http://www.e-xact.com] - CA, US
+* {Federated Canada}[http://www.federatedcanada.com/] - CA
+* {FirstPay}[http://www.first-pay.com] - US
+* {Garanti Sanal POS}[https://ccpos.garanti.com.tr/ccRaporlar/garanti/ccReports] - US, TR
+* {Inspire}[http://www.inspiregateway.com] - US
+* {InstaPay}[http://www.instapayllc.com] - US
+* {Iridium}[http://www.iridiumcorp.co.uk/] - UK, ES
+* {JetPay}[http://www.jetpay.com] - US
 * {LinkPoint}[http://www.linkpoint.com/] - US
 * {Merchant e-Solutions}[http://merchante-solutions.com/] - US
+* {MerchantWare}[http://merchantwarehouse.com/merchantware] - US
 * {Modern Payments}[http://www.modpay.com] - US
 * {Moneris}[http://www.moneris.com/] - CA
+* {Netaxept}[http://www.betalingsterminal.no/Netthandel-forside] - NO, DK, SE, FI
 * {NetRegistry}[http://www.netregistry.com.au] - AU
 * {NELiX TransaX Gateway}[http://www.nelixtransax.com] - US
 * {NETbilling}[http://www.netbilling.com] - US
+* {NMI}[http://nmi.com/] - US
+* {Ogone DirectLink}[http://www.ogone.com] - BE, DE, FR, NL, AT, CH
+* {Orbital Paymentech}[http://chasepaymentech.com/] - CA, US
+* {PayBox Direct}[http://www.paybox.com] - FR
 * {PayJunction}[http://www.payjunction.com/] - US
 * {PaySecure}[http://www.commsecure.com.au/paysecure.shtml] - AU
 * {PayPal Express Checkout}[https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside] - US, CA, SG, AU
@@ -41,10 +58,14 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {Protx}[http://www.protx.com] - GB
 * {Psigate}[http://www.psigate.com/] - CA
 * {PSL Payment Solutions}[http://www.paymentsolutionsltd.com/] - GB
-* {Quickpay}[http://quickpay.dk/] - DK
+* {Quantum}[http://www.quantumgateway.com] - US
+* {QuickBooks Merchant Services}[http://payments.intuit.com/] - US
+* {Quickpay}[http://quickpay.dk/] - DK, SE
+* {Rabobank Nederland}[http://www.rabobank.nl/] - NL
 * {Realex}[http://www.realexpayments.com/] - IE, GB
 * {Sage Payment Solutions}[http://www.sagepayments.com] - US, CA
 * {Sallie Mae}[http://www.salliemae.com] - US
+* {SecureNet}[http://www.securenet.com] - US
 * {SecurePay}[http://securepay.com.au] - AU
 * {SecurePay}[http://www.securepay.com/] - US
 * {SecurePayTech}[http://www.securepaytech.com/] - NZ
@@ -55,15 +76,22 @@ The {ActiveMerchant Wiki}[http://github.com/Shopify/active_merchant/wikis] conta
 * {Verifi}[http://www.verifi.com/] - US
 * {ViaKLIX}[http://viaklix.com] - US
 * {Wirecard}[http://www.wirecard.com] - DE
+* {WorldPay}[http://www.worldpay.com] - AU, HK, GB, US
 
 == Supported Offsite Payment Gateways
 
-* {PayPal Website Payments Standard}[https://www.paypal.com/cgi-bin/webscr?cmd=_wp-standard-overview-outside]
-* Chronopay[http://www.chronopay.com]
-* Nochex[http://www.nochex.com]
-* {Banca Sella GestPay}[https://www.sella.it/banca/ecommerce/gestpay/gestpay.jsp]
 * {2 Checkout}[http://www.2checkout.com]
+* {Banca Sella GestPay}[https://www.sella.it/banca/ecommerce/gestpay/gestpay.jsp]
+* {Chronopay}[http://www.chronopay.com]
+* {Direct-eBanking / sofortueberweisung.de by Payment-Networks AG}[https://www.payment-network.com/deb_com_en/merchantarea/home] - DE, AT, CH, BE, UK, NL
+* {DirecPay}[http://www.timesofmoney.com/direcpay/jsp/home.jsp]
 * {HiTRUST}[http://www.hitrust.com.hk/]
+* {Moneybookers}[http://www.moneybookers.com]
+* {Nochex}[http://www.nochex.com]
+* {PayPal Website Payments Standard}[https://www.paypal.com/cgi-bin/webscr?cmd=_wp-standard-overview-outside]
+* {SagePay Form}[http://www.sagepay.com/products_services/sage_pay_go/integration/form]
+* {Valitor}[http://www.valitor.is/] - IS
+* {WorldPay}[http://www.worldpay.com]
 
 == Download
 

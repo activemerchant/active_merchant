@@ -45,30 +45,36 @@ class FirstPayTest < Test::Unit::TestCase
     assert response.test?
   end
   
-  def test_successful_credit
-    @gateway.expects(:ssl_post).returns(successful_credit_response)
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
     @options[:credit_card] = @credit_card
     
-    assert response = @gateway.credit(@amount, '123456', @options)
-    assert_success response
+    assert_success(response = @gateway.refund(@amount, '123456', @options))
     
     assert_equal '53147613', response.authorization
-    assert response.test?    
   end
   
-  def test_failed_credit
+  def test_failed_refund
     @options[:credit_card] = @credit_card
-    @gateway.expects(:ssl_post).returns(failed_credit_response)
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
     
-    assert response = @gateway.credit(@amount, '123456', @options)
+    assert response = @gateway.refund(@amount, '123456', @options)
     assert_failure response
     assert_equal('PARENT TRANSACTION NOT FOUND', response.message)
     assert response.test?
   end
   
-  def test_failed_unlinked_credit
+  def test_failed_unlinked_refund
     assert_raise ArgumentError do
-      @gateway.credit(@amount, @credit_card)
+      @gateway.refund(@amount, "asdf")
+    end
+  end
+  
+  def test_deprecated_credit
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    @options[:credit_card] = @credit_card
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert_success(response = @gateway.credit(@amount, '123456', @options))
     end
   end
   
@@ -103,11 +109,11 @@ class FirstPayTest < Test::Unit::TestCase
     "NOT CAPTURED:DECLINE:NA:NA:Dec 11 2003:278654:NLS:NLS:NLS:53147611:200312111612:NA:NA:NA:NA:NA:NA"
   end
   
-  def successful_credit_response
+  def successful_refund_response
     "CAPTURED:945101216:199641568:NA:Dec 11 2003:278655:NLS:NLS:NLS:53147613:200312111613:NA:NA:NA:NA:NA"
   end
   
-  def failed_credit_response
+  def failed_refund_response
     "NOT CAPTURED:PARENT TRANSACTION NOT FOUND:NA:NA:Dec 11 2003:278614:NLS:NLS:NLS:53147499:200311251526:NA:NA:NA:NA:NA"
   end
   

@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
       base.superclass_delegating_accessor :ssl_strict
       base.ssl_strict = true
       
-      base.class_inheritable_accessor :retry_safe
+      base.class_attribute :retry_safe
       base.retry_safe = false
 
       base.superclass_delegating_accessor :open_timeout
@@ -25,9 +25,12 @@ module ActiveMerchant #:nodoc:
     def ssl_post(endpoint, data, headers = {})
       ssl_request(:post, endpoint, data, headers)
     end
-    
-    private
-    def ssl_request(method, endpoint, data, headers = {})
+
+    def ssl_request(method, endpoint, data, headers)
+      handle_response(raw_ssl_request(method, endpoint, data, headers))
+    end
+
+    def raw_ssl_request(method, endpoint, data, headers = {})
       connection = Connection.new(endpoint)
       connection.open_timeout = open_timeout
       connection.read_timeout = read_timeout
@@ -39,8 +42,21 @@ module ActiveMerchant #:nodoc:
       
       connection.pem          = @options[:pem] if @options
       connection.pem_password = @options[:pem_password] if @options
+
+      connection.ignore_http_status = @options[:ignore_http_status] if @options
       
       connection.request(method, data, headers)
+    end
+
+    private
+
+    def handle_response(response)
+      case response.code.to_i
+      when 200...300
+        response.body
+      else
+        raise ResponseError.new(response)
+      end
     end
     
   end

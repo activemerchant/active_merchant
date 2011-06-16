@@ -1,0 +1,15 @@
+releasing Active Merchant
+
+1. Get the gem-private_key.pem from Cody and store it chmod 660 somewhere safe
+2. Check the Semantic Versioning page for info on how to version the new release: http://semver.org
+3. Update the version of Active Merchant in lib/active_merchant/version.rb and in activemerchant.gemspec
+4. Add a CHANGELOG entry for the new release with the date
+5. Commit the changes with a commit message like "Packaging for release X.Y.Z"
+6. Tag the release with the version (Leave REV blank for HEAD or provide a SHA)
+  $ git tag vX.Y.Z REV
+7. Push out the changes
+  $ git push
+8. Push out the tags
+  $ git push --tags
+9. Publish the Gem to gemcutter
+  $ rake release GEM_PRIVATE_KEY=/path/to/private/key

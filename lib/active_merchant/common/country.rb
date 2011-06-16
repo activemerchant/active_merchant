@@ -46,7 +46,16 @@ module ActiveMerchant #:nodoc:
     end
 
     def code(format)
-      @codes.select{|c| c.format == format}
+      @codes.detect{|c| c.format == format}
+    end
+    
+    def ==(other)
+      (@name == other.name)
+    end
+    alias eql? ==
+    
+    def hash
+      @name.hash
     end
 
     def to_s
@@ -67,7 +76,6 @@ module ActiveMerchant #:nodoc:
       { :alpha2 => 'AW', :name => 'Aruba', :alpha3 => 'ABW', :numeric => '533' }, 
       { :alpha2 => 'AU', :name => 'Australia', :alpha3 => 'AUS', :numeric => '036' }, 
       { :alpha2 => 'AT', :name => 'Austria', :alpha3 => 'AUT', :numeric => '040' },
-      { :alpha2 => 'AX', :name => 'Åland Islands', :alpha3 => 'ALA', :numeric => '248' },
       { :alpha2 => 'AZ', :name => 'Azerbaijan', :alpha3 => 'AZE', :numeric => '031' }, 
       { :alpha2 => 'BS', :name => 'Bahamas', :alpha3 => 'BHS', :numeric => '044' }, 
       { :alpha2 => 'BH', :name => 'Bahrain', :alpha3 => 'BHR', :numeric => '048' }, 
@@ -84,8 +92,8 @@ module ActiveMerchant #:nodoc:
       { :alpha2 => 'BW', :name => 'Botswana', :alpha3 => 'BWA', :numeric => '072' }, 
       { :alpha2 => 'BV', :name => 'Bouvet Island', :alpha3 => 'BVD', :numeric => '074' }, 
       { :alpha2 => 'BR', :name => 'Brazil', :alpha3 => 'BRA', :numeric => '076' }, 
-      { :alpha2 => 'BN', :name => 'Brunei Darussalam', :alpha3 => 'BRN', :numeric => '096' },
       { :alpha2 => 'IO', :name => 'British Indian Ocean Territory', :alpha3 => 'IOT', :numeric => '086' }, 
+      { :alpha2 => 'BN', :name => 'Brunei Darussalam', :alpha3 => 'BRN', :numeric => '096' },
       { :alpha2 => 'BG', :name => 'Bulgaria', :alpha3 => 'BGR', :numeric => '100' }, 
       { :alpha2 => 'BF', :name => 'Burkina Faso', :alpha3 => 'BFA', :numeric => '854' }, 
       { :alpha2 => 'BI', :name => 'Burundi', :alpha3 => 'BDI', :numeric => '108' }, 
@@ -142,15 +150,15 @@ module ActiveMerchant #:nodoc:
       { :alpha2 => 'GP', :name => 'Guadeloupe', :alpha3 => 'GLP', :numeric => '312' }, 
       { :alpha2 => 'GU', :name => 'Guam', :alpha3 => 'GUM', :numeric => '316' }, 
       { :alpha2 => 'GT', :name => 'Guatemala', :alpha3 => 'GTM', :numeric => '320' }, 
+      { :alpha2 => 'GG', :name => 'Guernsey', :alpha3 => 'GGY', :numeric => '831' },
       { :alpha2 => 'GN', :name => 'Guinea', :alpha3 => 'GIN', :numeric => '324' }, 
       { :alpha2 => 'GW', :name => 'Guinea-Bissau', :alpha3 => 'GNB', :numeric => '624' }, 
       { :alpha2 => 'GY', :name => 'Guyana', :alpha3 => 'GUY', :numeric => '328' },
-      { :alpha2 => 'GG', :name => 'Guernsey', :alpha3 => 'GGY', :numeric => '831' },
       { :alpha2 => 'HT', :name => 'Haiti', :alpha3 => 'HTI', :numeric => '332' }, 
+      { :alpha2 => 'HM', :name => 'Heard Island And Mcdonald Islands', :alpha3 => 'HMD', :numeric => '334' }, 
       { :alpha2 => 'VA', :name => 'Holy See (Vatican City State)', :alpha3 => 'VAT', :numeric => '336' }, 
       { :alpha2 => 'HN', :name => 'Honduras', :alpha3 => 'HND', :numeric => '340' }, 
       { :alpha2 => 'HK', :name => 'Hong Kong', :alpha3 => 'HKG', :numeric => '344' }, 
-      { :alpha2 => 'HM', :name => 'Heard Island And Mcdonald Islands', :alpha3 => 'HMD', :numeric => '334' }, 
       { :alpha2 => 'HU', :name => 'Hungary', :alpha3 => 'HUN', :numeric => '348' }, 
       { :alpha2 => 'IS', :name => 'Iceland', :alpha3 => 'ISL', :numeric => '352' }, 
       { :alpha2 => 'IN', :name => 'India', :alpha3 => 'IND', :numeric => '356' }, 
@@ -298,7 +306,8 @@ module ActiveMerchant #:nodoc:
       { :alpha2 => 'EH', :name => 'Western Sahara', :alpha3 => 'ESH', :numeric => '732' }, 
       { :alpha2 => 'YE', :name => 'Yemen', :alpha3 => 'YEM', :numeric => '887' }, 
       { :alpha2 => 'ZM', :name => 'Zambia', :alpha3 => 'ZMB', :numeric => '894' }, 
-      { :alpha2 => 'ZW', :name => 'Zimbabwe', :alpha3 => 'ZWE', :numeric => '716' }
+      { :alpha2 => 'ZW', :name => 'Zimbabwe', :alpha3 => 'ZWE', :numeric => '716' },
+      { :alpha2 => 'AX', :name => 'Åland Islands', :alpha3 => 'ALA', :numeric => '248' }
     ]
 
     def self.find(name)
