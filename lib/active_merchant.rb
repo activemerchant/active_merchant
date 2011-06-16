@@ -20,8 +20,6 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
-                    
-$:.unshift File.dirname(__FILE__)
 
 require 'active_support'
 require 'active_support/core_ext/string/inflections'
