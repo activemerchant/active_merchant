@@ -1,11 +1,8 @@
-if RUBY_VERSION =~ /^1\.8\./
-  require 'json'
-end
+require 'json'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class StripeGateway < Gateway
-      VERSION = '1.0.0'
       LIVE_URL = 'https://api.stripe.com/v1/'
 
       AVS_CODE_TRANSLATOR = {
@@ -33,8 +30,6 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://stripe.com/'
       self.display_name = 'Stripe'
 
-      @@ua = nil
-
       def initialize(options = {})
         requires!(options, :login)
         @api_key = options[:login]
@@ -49,9 +44,9 @@ module ActiveMerchant #:nodoc:
         add_customer(post, options)
         add_customer_data(post, options)
 
-        if (!post[:card] && !post[:customer])
+        if !post[:card] && !post[:customer]
           raise ArgumentError.new("Customer or Credit Card required.")
-        elsif (post[:card] && post[:customer])
+        elsif post[:card] && post[:customer]
           raise ArgumentError.new("Can't provide both Customer and Credit Card.")
         end
 
@@ -117,7 +112,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        JSON.parse(body, :symbolize_names => true)
+        JSON.parse(body)
       end
 
       def post_data(params)
@@ -137,7 +132,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         @@ua ||= JSON.dump({
-          :bindings_version => VERSION,
+          :bindings_version => ActiveMerchant::VERSION,
           :lang => 'ruby',
           :lang_version => "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
           :platform => RUBY_PLATFORM,
@@ -146,8 +141,8 @@ module ActiveMerchant #:nodoc:
         })
 
         {
-          "Authorization" => "Basic " + ActiveSupport::Base64.encode64(@api_key+":").gsub(/\n/, ''),
-          "User-Agent" => "Stripe/v1 ActiveMerchantBindings/#{VERSION}",
+          "Authorization" => "Basic " + ActiveSupport::Base64.encode64(@api_key+":").strip(),
+          "User-Agent" => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "X-Stripe-Client-User-Agent" => @@ua
         }
       end
@@ -158,7 +153,7 @@ module ActiveMerchant #:nodoc:
         begin
           raw_response = ssl_request(method, LIVE_URL + url, post_data(parameters), headers)
           response = parse(raw_response)
-          success = !response.key?(:error)
+          success = !response.key?("error")
         rescue ResponseError => e
           raw_response = e.response.body
           response = response_error(raw_response)
@@ -166,14 +161,14 @@ module ActiveMerchant #:nodoc:
           response = json_error(raw_response)
         end
 
-        card = response[:card] || {}
-        avs_code = AVS_CODE_TRANSLATOR["line1: #{card[:address_line1_check]}, zip: #{card[:address_zip_check]}"]
-        cvc_code = CVC_CODE_TRANSLATOR[card[:cvc_check]]
+        card = response["card"] || {}
+        avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
+        cvc_code = CVC_CODE_TRANSLATOR[card["cvc_check"]]
         Response.new(success,
-          success ? "Transaction approved" : response[:error][:message],
+          success ? "Transaction approved" : response["error"]["message"],
           response,
-          :test => !response[:livemode],
-          :authorization => response[:id],
+          :test => !response["livemode"],
+          :authorization => response["id"],
           :avs_result => { :code => avs_code },
           :cvv_result => cvc_code
         )
