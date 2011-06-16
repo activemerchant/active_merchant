@@ -50,11 +50,11 @@ module ActiveMerchant #:nodoc:
           raise ArgumentError.new("Can't provide both Customer and Credit Card.")
         end
 
-        commit('charges', :post, post)
+        commit('charges', post)
       end
 
       def void(identification, options={})
-        commit("charges/#{CGI.escape(identification)}/refund", :post, {})
+        commit("charges/#{CGI.escape(identification)}/refund", {})
       end
 
       def store(creditcard, options={})
@@ -63,9 +63,9 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
 
         if options[:customer]
-          commit("customers/#{CGI.escape(options[:customer])}", :post, post)
+          commit("customers/#{CGI.escape(options[:customer])}", post)
         else
-          commit('customers', :post, post)
+          commit('customers', post)
         end
       end
 
@@ -147,7 +147,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def commit(url, method, parameters)
+      def commit(url, parameters, method=:post)
         raw_response = response = nil
         success = false
         begin
@@ -186,8 +186,8 @@ module ActiveMerchant #:nodoc:
         msg = 'Invalid response received from the Stripe API.  Please contact support@stripe.com if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
         {
-          :error => {
-            :message => msg
+          "error" => {
+            "message" => msg
           }
         }
       end
