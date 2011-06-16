@@ -31,7 +31,6 @@ require 'active_support/core_ext/class/attribute'
 require 'active_support/core_ext/class/attribute_accessors'
 require 'active_support/core_ext/class/delegating_attributes'
 require 'active_support/core_ext/module/attribute_accessors'
-require 'active_support/core_ext/kernel/requires'
 require 'active_support/base64'
 require 'active_support/secure_random'
 
