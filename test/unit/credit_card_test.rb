@@ -269,6 +269,20 @@ class CreditCardTest < Test::Unit::TestCase
     assert_equal "Herdman", c.name
   end
 
+  def test_should_assign_a_full_name
+    c = CreditCard.new :name => "James Herdman"
+    assert_equal "James", c.first_name
+    assert_equal "Herdman", c.last_name
+
+    c = CreditCard.new :name => "Rocket J. Squirrel"
+    assert_equal "Rocket J.", c.first_name
+    assert_equal "Squirrel", c.last_name
+
+    c = CreditCard.new :name => "Twiggy"
+    assert_equal "", c.first_name
+    assert_equal "Twiggy", c.last_name
+  end
+
   # The following is a regression for a bug that raised an exception when
   # a new credit card was validated
   def test_validate_new_card
