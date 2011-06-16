@@ -70,6 +70,12 @@ class StripeTest < Test::Unit::TestCase
     assert_equal "test_customer", post[:customer]
   end
 
+  def test_doesnt_add_customer_if_card
+    post = { :card => 'foo' }
+    @gateway.send(:add_customer, post, {:customer => "test_customer"})
+    assert !post[:customer]
+  end
+
   def test_add_customer_data
     post = {}
     @gateway.send(:add_customer_data, post, {:description => "a test customer"})
@@ -95,12 +101,6 @@ class StripeTest < Test::Unit::TestCase
   def test_purchase_without_card_or_customer
     assert_raises ArgumentError do
       @gateway.purchase(@amount, nil)
-    end
-  end
-
-  def test_purchase_with_card_and_customer
-    assert_raises ArgumentError do
-      @gateway.purchase(@amount, @credit_card, {:customer => "test_customer"})
     end
   end
 

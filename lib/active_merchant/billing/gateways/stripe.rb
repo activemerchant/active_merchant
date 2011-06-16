@@ -44,11 +44,7 @@ module ActiveMerchant #:nodoc:
         add_customer(post, options)
         add_customer_data(post, options)
 
-        if !post[:card] && !post[:customer]
-          raise ArgumentError.new("Customer or Credit Card required.")
-        elsif post[:card] && post[:customer]
-          raise ArgumentError.new("Can't provide both Customer and Credit Card.")
-        end
+        raise ArgumentError.new("Customer or Credit Card required.") if !post[:card] && !post[:customer]
 
         commit('charges', post)
       end
@@ -92,7 +88,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard(post, creditcard, options)
-        if creditcard.kind_of?(CreditCard)
+        if creditcard.respond_to?(:number)
           card = {}
           card[:number] = creditcard.number
           card[:exp_month] = creditcard.month
@@ -108,7 +104,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer(post, options)
-        post[:customer] = options[:customer] if options[:customer]
+        post[:customer] = options[:customer] if options[:customer] && !post[:card]
       end
 
       def parse(body)
