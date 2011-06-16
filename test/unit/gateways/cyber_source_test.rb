@@ -142,6 +142,13 @@ class CyberSourceTest < Test::Unit::TestCase
     end
   end
 
+  def test_successful_auth_reversal_request
+    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert response.success?
+    assert_success(@gateway.auth_reversal(@amount, response.authorization, @options))
+  end
+
   private
   
   def successful_purchase_response
