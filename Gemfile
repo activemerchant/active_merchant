@@ -9,7 +9,6 @@ group :test do
   gem 'i18n'
   gem 'mocha'
   gem 'rake'
-  gem 'mongrel'
   gem 'mechanize'
   gem 'launchy'
 end
