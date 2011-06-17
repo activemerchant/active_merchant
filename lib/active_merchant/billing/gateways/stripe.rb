@@ -11,7 +11,6 @@ module ActiveMerchant #:nodoc:
         'line1: pass, zip: unchecked' => 'B',
         'line1: fail, zip: pass' => 'Z',
         'line1: fail, zip: fail' => 'N',
-        # AVSResult will parse this as a failed, not unchecked, street address.  Only 'F' would parse correctly, but F isn't the right text here.
         'line1: unchecked, zip: pass' => 'P',
         'line1: unchecked, zip: unchecked' => 'I'
       }
