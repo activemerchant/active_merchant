@@ -23,6 +23,10 @@ module ActiveMerchant #:nodoc:
             params['VefverslunSalaID']
           end
           
+          def currency
+            nil
+          end
+          
           def status
             "Completed" if acknowledge
           end

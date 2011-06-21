@@ -29,6 +29,7 @@ class ValitorNotificationTest < Test::Unit::TestCase
     assert_equal "EMAIL@EXAMPLE.COM", @notification.customer_email
     assert_equal "COMMENTS", @notification.customer_comment
     assert_equal "100.00", @notification.gross
+    assert_nil @notification.currency
     
     assert !@notification.test?
   end
