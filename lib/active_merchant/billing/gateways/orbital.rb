@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
 
       def add_creditcard(xml, creditcard, currency=nil)
         xml.tag! :AccountNum, creditcard.number
-        xml.tag! :Exp, creditcard.expiry_date.expiration.strftime("%m%y")
+        xml.tag! :Exp, expiry_date(creditcard)
         
         xml.tag! :CurrencyCode, currency_code(currency)
         xml.tag! :CurrencyExponent, '2' # Will need updating to support currencies such as the Yen.
@@ -311,6 +311,10 @@ module ActiveMerchant #:nodoc:
       
       def currency_code(currency)
         CURRENCY_CODES[(currency || self.default_currency)].to_s
+      end
+      
+      def expiry_date(credit_card)
+        "#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}"
       end
     end
   end
