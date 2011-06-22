@@ -40,6 +40,10 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end
   end
   
+  def test_expiry_date
+    assert_equal "0912", @gateway.send(:expiry_date, credit_card)
+  end
+  
   private
   
   # Place raw successful response from gateway here
