@@ -153,8 +153,7 @@ module ActiveMerchant #:nodoc:
           {       
             :success => success,
             :message => message,
-            :authorization =>
-              [find(doc, "//OrderFormDoc/Id"), find(doc, "//Transaction/Id")].join(":"),
+            :authorization => find(doc, "//Transaction/Id"),
             :avs_result => find(doc, "//Transaction/AvsRespCode"),
             :cvv_result => find(doc, "//Transaction/Cvv2Resp"),
             :order_id => find(doc, "//OrderFormDoc/Transaction/Id"),
