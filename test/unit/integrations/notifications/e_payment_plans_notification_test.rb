@@ -1,10 +1,10 @@
 require 'test_helper'
 
-class EPaymentPlanNotificationTest < Test::Unit::TestCase
+class EPaymentPlansNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @e_payment_plan = EPaymentPlan::Notification.new(http_raw_data)
+    @e_payment_plan = EPaymentPlans::Notification.new(http_raw_data)
   end
 
   def test_accessors
@@ -20,10 +20,10 @@ class EPaymentPlanNotificationTest < Test::Unit::TestCase
   end
 
   def test_acknowledgement
-    EPaymentPlan::Notification.any_instance.stubs(:ssl_post).returns('AUTHORISED')
+    EPaymentPlans::Notification.any_instance.stubs(:ssl_post).returns('AUTHORISED')
     assert @e_payment_plan.acknowledge
 
-    EPaymentPlan::Notification.any_instance.stubs(:ssl_post).returns('DECLINED')
+    EPaymentPlans::Notification.any_instance.stubs(:ssl_post).returns('DECLINED')
     assert !@e_payment_plan.acknowledge
   end
 

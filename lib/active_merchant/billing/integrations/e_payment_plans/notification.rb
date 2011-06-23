@@ -3,7 +3,7 @@ require 'net/http'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
-      module EPaymentPlan
+      module EPaymentPlans
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           include ActiveMerchant::PostsData
           def complete?
@@ -44,14 +44,14 @@ module ActiveMerchant #:nodoc:
             params['status'].capitalize
           end
 
-          # Acknowledge the transaction to EPaymentPlan. This method has to be called after a new
-          # apc arrives. EPaymentPlan will verify that all the information we received are correct and will return a 
-          # ok or a fail.
+          # Acknowledge the transaction to EPaymentPlans. This method has to be called after a new
+          # apc arrives. EPaymentPlans will verify that all the information we received are correct 
+          # and will return ok or a fail.
           #
           # Example:
           #
           #   def ipn
-          #     notify = EPaymentPlanNotification.new(request.raw_post)
+          #     notify = EPaymentPlans.notification(request.raw_post)
           #
           #     if notify.acknowledge
           #       ... process order ... if notify.complete?
@@ -61,10 +61,10 @@ module ActiveMerchant #:nodoc:
           def acknowledge
             payload = raw
 
-            response = ssl_post(payload)
+            response = ssl_post(EPaymentPlans.notification_confirmation_url, payload)
 
             # Replace with the appropriate codes
-            raise StandardError.new("Faulty EPaymentPlan result: #{response}") unless ["AUTHORISED", "DECLINED"].include?(response)
+            raise StandardError.new("Faulty EPaymentPlans result: #{response}") unless ["AUTHORISED", "DECLINED"].include?(response)
             response == "AUTHORISED"
           end
 
