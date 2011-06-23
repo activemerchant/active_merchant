@@ -1,10 +1,10 @@
 require 'test_helper'
 
-class EPaymentPlanHelperTest < Test::Unit::TestCase
+class EPaymentPlansHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @helper = EPaymentPlan::Helper.new('order-500','cody@example.com', :amount => 500, :currency => 'USD')
+    @helper = EPaymentPlans::Helper.new('order-500','cody@example.com', :amount => 500, :currency => 'USD')
   end
 
   def test_basic_helper_fields
