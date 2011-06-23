@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
-      module EPaymentPlan
+      module EPaymentPlans
         class Helper < ActiveMerchant::Billing::Integrations::Helper
           mapping :account, 'order[account]'
           mapping :amount, 'order[amount]'

@@ -1,9 +1,9 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
-      module EPaymentPlan
-        autoload :Helper, File.dirname(__FILE__) + '/e_payment_plan/helper.rb'
-        autoload :Notification, File.dirname(__FILE__) + '/e_payment_plan/notification.rb'
+      module EPaymentPlans
+        autoload :Helper, File.dirname(__FILE__) + '/e_payment_plans/helper.rb'
+        autoload :Notification, File.dirname(__FILE__) + '/e_payment_plans/notification.rb'
 
         mattr_accessor :production_url
         self.production_url = 'https://www.epaymentplans.com'
