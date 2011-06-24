@@ -1,7 +1,7 @@
 require 'test_helper'
 require 'logger'
 
-class UsaEpayCimTest < Test::Unit::TestCase
+class UsaEpaySoapTest < Test::Unit::TestCase
 
   def setup
     # Optional Logger Setup
@@ -12,7 +12,7 @@ class UsaEpayCimTest < Test::Unit::TestCase
     # UsaEpayCimGateway.wiredump_device = File.open('/tmp/usa_epay_dump.log', 'a+')
     # UsaEpayCimGateway.wiredump_device.sync = true
 
-    @gateway = UsaEpayCimGateway.new(
+    @gateway = UsaEpaySoapGateway.new(
                  :login => 'X',
                  :password => 'Y',
                  :software_id => 'Z'

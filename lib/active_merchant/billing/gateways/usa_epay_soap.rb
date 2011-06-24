@@ -3,12 +3,10 @@ require 'digest'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    # ==== Customer Information Manager (CIM)
+    # ==== USA ePay Advanced SOAP Interface
     #
-    # This class  encapuslates USA ePay's Advanced SOAP Interface. This class is called 'CIM' to match the
-    # existing active_merchant terminology, and you will not find 'CIM' referenced in any of USA ePay's
-    # documentation. The Advanced Soap Interface allows the standard transactions, as well as storing
-    # customer information and complete recurring billing (vs their Transaction API). Storing sensitive
+    # This class encapuslates USA ePay's Advanced SOAP Interface. The Advanced Soap Interface allows 
+    # standard transactions, storing customer information, and recurring billing. Storing sensitive
     # information on USA ePay's servers can help with PCI DSS compliance, since customer and card data
     # do not need to be stored locally.
     #
@@ -63,7 +61,7 @@ module ActiveMerchant #:nodoc:
     # * {USA ePay Merchant Console}[https://sandbox.usaepay.com/login]
     # * {USA ePay Developer Login}[https://www.usaepay.com/developer/login]
     #
-    class UsaEpayCimGateway < Gateway
+    class UsaEpaySoapGateway < Gateway
       API_VERSION = "1.4"
       
       class_attribute :test_url, :live_url

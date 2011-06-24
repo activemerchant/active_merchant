@@ -1,7 +1,7 @@
 require 'test_helper'
 require 'logger'
 
-class RemoteUsaEpayCimTest < Test::Unit::TestCase
+class RemoteUsaEpaySoapTest < Test::Unit::TestCase
 
   def setup
     # Optional Logger Setup
@@ -12,7 +12,7 @@ class RemoteUsaEpayCimTest < Test::Unit::TestCase
     # UsaEpayCimGateway.wiredump_device = File.open('/tmp/usa_epay_dump.log', 'a+')
     # UsaEpayCimGateway.wiredump_device.sync = true
 
-    @gateway = UsaEpayCimGateway.new(fixtures(:usa_epay_cim))
+    @gateway = UsaEpaySoapGateway.new(fixtures(:usa_epay_soap))
 
     @amount = 2111
     
@@ -143,7 +143,7 @@ class RemoteUsaEpayCimTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = UsaEpayCimGateway.new(
+    gateway = UsaEpaySoapGateway.new(
                 :login => '',
                 :password => '',
                 :software_id => ''
