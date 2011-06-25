@@ -5,12 +5,12 @@ class RemoteUsaEpaySoapTest < Test::Unit::TestCase
 
   def setup
     # Optional Logger Setup
-    # UsaEpayCimGateway.logger = Logger.new('/tmp/usa_epay.log')
-    # UsaEpayCimGateway.logger.level = Logger::DEBUG
+    # UsaEpaySoapGateway.logger = Logger.new('/tmp/usa_epay.log')
+    # UsaEpaySoapGateway.logger.level = Logger::DEBUG
 
     # Optional Wiredump Setup
-    # UsaEpayCimGateway.wiredump_device = File.open('/tmp/usa_epay_dump.log', 'a+')
-    # UsaEpayCimGateway.wiredump_device.sync = true
+    # UsaEpaySoapGateway.wiredump_device = File.open('/tmp/usa_epay_dump.log', 'a+')
+    # UsaEpaySoapGateway.wiredump_device.sync = true
 
     @gateway = UsaEpaySoapGateway.new(fixtures(:usa_epay_soap))
 
