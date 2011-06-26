@@ -42,14 +42,31 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard, options)
         add_customer(post, options)
         add_customer_data(post, options)
+        add_flags(post, options)
 
         raise ArgumentError.new("Customer or Credit Card required.") if !post[:card] && !post[:customer]
 
         commit('charges', post)
       end
 
+      def authorize(money, creditcard, options = {})
+        purchase(money, creditcard, options.merge(:uncaptured => true))
+      end
+
+      def capture(money, identification, options = {})
+        commit("charges/#{CGI.escape(identification)}/capture", {})
+      end
+
       def void(identification, options={})
         commit("charges/#{CGI.escape(identification)}/refund", {})
+      end
+
+      def refund(money, identification, options = {})
+        post = {}
+
+        post[:amount] = amount(money) if money
+
+        commit("charges/#{CGI.escape(identification)}/refund", post)
       end
 
       def store(creditcard, options={})
@@ -104,6 +121,10 @@ module ActiveMerchant #:nodoc:
 
       def add_customer(post, options)
         post[:customer] = options[:customer] if options[:customer] && !post[:card]
+      end
+
+      def add_flags(post, options)
+        post[:uncaptured] = true if options[:uncaptured]
       end
 
       def parse(body)
