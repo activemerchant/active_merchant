@@ -87,6 +87,7 @@ module ActiveMerchant #:nodoc:
         post[:disable_negative_db]    = options[:disable_negative_db] if options.has_key?(:disable_negative_db)
         post[:disable_email_receipts] = options[:disable_cvv2] if options.has_key?(:disable_email_receipts)
         post[:cisp_storage]           = options[:cisp_storage] if options.has_key?(:cisp_storage)
+        post[:cust_ip]                = options[:cust_ip] if options.has_key?(:cust_ip)
       end
 
       def add_address(post, credit_card, options)
