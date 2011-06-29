@@ -12,5 +12,7 @@ group :test do
   gem 'rake'
   gem 'mechanize'
   gem 'launchy'
+  gem 'json-jruby', :platforms => :jruby
+  gem 'jruby-openssl', :platforms => :jruby
 end
 
