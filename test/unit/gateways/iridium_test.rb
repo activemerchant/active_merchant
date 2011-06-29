@@ -94,6 +94,7 @@ class IridiumTest < Test::Unit::TestCase
   end
   
   def test_do_not_depend_on_expiry_date_class
+    @gateway.stubs(:ssl_post).returns(successful_purchase_response)
     @credit_card.expects(:expiry_date).never
     
     @gateway.purchase(@amount, @credit_card, @options)
