@@ -164,4 +164,4 @@ Installation from RubyGems
 
 Please see the {ActiveMerchant Guide to Contributing}[http://github.com/Shopify/active_merchant/wikis/contributing] for information on adding a new gateway to ActiveMerchant.
 
-{Build Status}[http://secure.travis-ci.org/Shopify/liquid.png]
+{Build Status}[http://travis-ci.org/Shopify/active_merchant.png]
