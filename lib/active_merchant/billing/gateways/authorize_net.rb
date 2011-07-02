@@ -326,6 +326,22 @@ module ActiveMerchant #:nodoc:
           post[:cust_id] = options[:customer]
         end
 
+        if options.has_key? :jrb_added_tax
+          post[:tax] = options[:jrb_added_tax]
+        end
+        
+        if options.has_key? :jrb_added_freight
+          post[:freight] = options[:jrb_added_freight]
+        end
+        
+        if options.has_key? :jrb_added_customer_type
+          post[:customer_type] = options[:jrb_added_customer_type]
+        end
+        
+        if options.has_key? :jrb_added_taxId
+          post[:tax_id] = options[:jrb_added_taxId]
+        end
+
         if options.has_key? :ip
           post[:customer_ip] = options[:ip]
         end
