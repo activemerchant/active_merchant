@@ -106,8 +106,6 @@ garanti:
 ideal_rabobank:
   login: LOGIN
   password: PASSWORD
-  pem: |--
-    PASTE YOUR PEM FILE HERE
 
 instapay:
   login: TEST0
@@ -126,8 +124,6 @@ iridium:
 
 linkpoint:
   login: STOREID
-  pem: |--
-    PASTE YOUR PEM FILE HERE
 
 # Working test credentials, no need to replace
 merchant_esolutions:
@@ -204,8 +200,6 @@ paypal_certificate:
   login: LOGIN
   password: PASSWORD
   subject:
-  pem: |--
-    PASTE YOUR PEM FILE HERE
 
 paypal_signature:
   login: LOGIN
@@ -415,6 +409,11 @@ trust_commerce:
 # Working credentials, no need to replace
 usa_epay:
   login: 'yCaWGYQsSVR0S48B6AKMK07RQhaxHvGu'
+
+usa_epay_soap:
+  login: X
+  password: Y
+  software_id: Z
 
 valitor:
   login: WebsiteID
