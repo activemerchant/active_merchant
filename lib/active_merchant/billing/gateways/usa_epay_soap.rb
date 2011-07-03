@@ -428,6 +428,27 @@ module ActiveMerchant #:nodoc:
         commit(__method__, request)
       end
 
+      # Update a customer payment method.
+      #
+      # ==== Required
+      # * <tt>:method_id</tt> -- method_id to update
+      #
+      # ==== Options
+      # * <tt>:method</tt> -- credit_card or check
+      # * <tt>:name</tt> -- optional name/label for the method
+      # * <tt>:sort</tt> -- an integer value specifying the backup sort order, 0 is default
+      # * <tt>:verify</tt> -- set +true+ to run auth_only verification; throws fault if cannot verify
+      #
+      # ==== Response
+      # * <tt>#message</tt> -- hash of payment method
+      #
+      def update_customer_payment_method(options={})
+        requires! options, :method_id
+
+        request = build_request(__method__, options)
+        commit(__method__, request)
+      end
+
       # Delete one the payment methods beloning to a customer
       #
       # ==== Required
@@ -1028,6 +1049,15 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      # METHOD updateCustomerPaymentMethod
+      def build_update_customer_payment_method(soap, options)
+        soap.tag! 'ns1:updateCustomerPaymentMethod' do |soap|
+          build_token soap, options
+          build_customer_payment_methods soap, options
+          build_tag soap, :boolean, 'Verify', options[:verify]
+        end
+      end
+
       # METHOD deleteCustomerPaymentMethod
       def build_delete_customer_payment_method(soap, options)
         soap.tag! "ns1:deleteCustomerPaymentMethod" do |soap|
@@ -1233,10 +1263,12 @@ module ActiveMerchant #:nodoc:
           payment_methods = options[:payment_methods]
           tag_name = 'item'
         else
-          raise ArgumentError, 'options should not include both :payment_method and :payment_methods'
+          payment_methods = [options]
+          tag_name = 'PaymentMethod'
         end
         payment_methods.each do |payment_method|
           soap.tag! tag_name, 'xsi:type' => "ns1:PaymentMethod" do |soap|
+            build_tag soap, :integer, 'MethodID', payment_method[:method_id]
             build_tag soap, :string, 'MethodType', payment_method[:type]
             build_tag soap, :string, 'MethodName', payment_method[:name]
             build_tag soap, :integer, 'SecondarySort', payment_method[:sort]
@@ -1245,8 +1277,10 @@ module ActiveMerchant #:nodoc:
               build_tag soap, :string, 'CardNumber', payment_method[:method].number
               build_tag soap, :string, 'CardExpiration', 
                 "#{payment_method[:method].year}-#{"%02d" % payment_method[:method].month}"
-              build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
-              build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
+              if options[:billing_address]
+                build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
+                build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
+              end
               build_tag soap, :string, 'CardCode', payment_method[:method].verification_value
             when payment_method[:method].kind_of?(ActiveMerchant::Billing::Check)
               build_tag soap, :string, 'Account', payment_method[:method].number
@@ -1312,8 +1346,10 @@ module ActiveMerchant #:nodoc:
           build_tag soap, :string, 'CardNumber', options[:payment_method].number
           build_tag soap, :string, 'CardExpiration', 
             "#{options[:payment_method].year}-#{"%02d" % options[:payment_method].month}"
-          build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
-          build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
+          if options[:billing_address]
+            build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
+            build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
+          end
           build_tag soap, :string, 'CardCode', options[:payment_method].verification_value
           build_tag soap, :boolean, 'CardPresent', options[:card_present] || false
           CREDIT_CARD_DATA_OPTIONS.each do |k,v|
@@ -1371,9 +1407,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_shipping_address(soap, options)
-        if !options[:shipping_address] && options[:billing_address]
-          options[:shipping_address] = options[:billing_address] # Use billing if shipping not present
-        end
         if options[:shipping_address]
           if options[:shipping_address][:name]
             name = options[:shipping_address][:name].split(nil,2) # divide name

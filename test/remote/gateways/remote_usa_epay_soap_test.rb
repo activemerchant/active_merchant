@@ -218,6 +218,20 @@ class RemoteUsaEpaySoapTest < Test::Unit::TestCase
     assert response.params['get_customer_payment_method_return']
   end
 
+  def test_update_customer_payment_method
+    response = @gateway.add_customer(@options.merge(@customer_options))
+    customer_number = response.params['add_customer_return']
+    
+    @options.merge!(:customer_number => customer_number).merge!(@add_payment_options)
+    response = @gateway.add_customer_payment_method(@options)
+    payment_method_id = response.params['add_customer_payment_method_return']
+
+    update_payment_options = @add_payment_options[:payment_method].merge(:method_id => payment_method_id, 
+                                                                         :name => "Updated Card.")
+    response = @gateway.update_customer_payment_method(update_payment_options)
+    assert response.params['update_customer_payment_method_return']
+  end
+
   def test_delete_customer_payment_method
     response = @gateway.add_customer(@options.merge(@customer_options))
     customer_number = response.params['add_customer_return']

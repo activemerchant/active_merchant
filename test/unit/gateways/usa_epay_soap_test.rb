@@ -262,6 +262,19 @@ class UsaEpaySoapTest < Test::Unit::TestCase
     assert_equal 2, response.message.length
   end
 
+  def test_successful_update_customer_payment_method
+    @options.merge!(@payment_options).merge!(:method_id => 1)
+    @gateway.expects(:ssl_post).returns(successful_update_customer_payment_method_response)
+
+    assert response = @gateway.update_customer_payment_method(@options)
+    assert_instance_of Response, response
+    assert response.test?
+    assert_success response
+    assert_equal 'true', response.params['update_customer_payment_method_return']
+    assert_equal 'true', response.message
+    assert_nil response.authorization
+  end
+
   def test_successful_delete_customer_payment_method
     @gateway.expects(:ssl_post).returns(successful_delete_customer_payment_method_response)
 
@@ -642,6 +655,13 @@ class UsaEpaySoapTest < Test::Unit::TestCase
   def successful_single_get_customer_payment_methods_response
     <<-XML
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:getCustomerPaymentMethodsResponse><getCustomerPaymentMethodsReturn SOAP-ENC:arrayType="ns1:PaymentMethod[1]" xsi:type="ns1:PaymentMethodArray"><item xsi:type="ns1:PaymentMethod"><MethodType xsi:type="xsd:string">cc</MethodType><MethodID xsi:type="xsd:integer">15</MethodID><MethodName xsi:type="xsd:string">My Visa</MethodName><SecondarySort xsi:type="xsd:integer">2</SecondarySort><Created xsi:type="xsd:dateTime">2011-06-05T19:44:09+08:00</Created><Modified xsi:type="xsd:dateTime">2011-06-05T19:44:09+08:00</Modified><AvsStreet xsi:type="xsd:string">1234 My Street</AvsStreet><AvsZip xsi:type="xsd:string">K1C2N6</AvsZip><CardExpiration xsi:type="xsd:string">2012-09</CardExpiration><CardNumber xsi:type="xsd:string">XXXXXXXXXXXX4242</CardNumber><CardType xsi:type="xsd:string">V</CardType></item></getCustomerPaymentMethodsReturn></ns1:getCustomerPaymentMethodsResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
+    XML
+  end
+
+  def successful_update_customer_payment_method_response
+    <<-XML
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:updateCustomerPaymentMethodResponse><updateCustomerPaymentMethodReturn xsi:type="xsd:boolean">true</updateCustomerPaymentMethodReturn></ns1:updateCustomerPaymentMethodResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
     XML
   end
 
