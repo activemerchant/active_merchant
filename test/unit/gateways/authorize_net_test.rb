@@ -138,7 +138,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover], AuthorizeNetGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb], AuthorizeNetGateway.supported_cardtypes
   end
   
   def test_failure_without_response_reason_text

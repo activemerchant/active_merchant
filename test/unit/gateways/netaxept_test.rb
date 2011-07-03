@@ -156,7 +156,8 @@ class NetaxeptTest < Test::Unit::TestCase
     brand = @credit_card.type
     @credit_card.expects(:type).never
     @credit_card.expects(:brand).at_least_once.returns(brand)
-    @gateway.purchase(@amount, @credit_card, @options)
+
+    @gateway.send(:add_creditcard, {}, @credit_card)
   end
   
   def test_url_escape_password

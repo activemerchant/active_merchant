@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
       AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE  = 5, 6, 38
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net'
 
