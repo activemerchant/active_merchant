@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Fix Orbital gateway's handling of phone numbers. [ntalbott]
 * Add Diners Club to Braintree [cody]
 
 == Version 1.15.0 (May 12, 2011)
