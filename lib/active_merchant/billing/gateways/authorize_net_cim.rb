@@ -332,7 +332,11 @@ module ActiveMerchant #:nodoc:
       #     - :type = (:void, :refund, :prior_auth_capture) (REQUIRED)
       #     - :type = (:auth_only, :capture_only, :auth_capture) (NOT USED)
       #
-      # * <tt>customer_shipping_address_id</tt> -- Payment gateway assigned ID associated with the customer shipping address (CONDITIONAL)
+      # * <tt>:card_code</tt> -- CVV/CCV code (OPTIONAL)
+      #     - :type = (:void, :refund, :prior_auth_capture) (NOT USED)
+      #     - :type = (:auth_only, :capture_only, :auth_capture) (OPTIONAL)
+      #
+      # * <tt>:customer_shipping_address_id</tt> -- Payment gateway assigned ID associated with the customer shipping address (CONDITIONAL)
       #     - :type = (:void, :refund) (OPTIONAL)
       #     - :type = (:auth_only, :capture_only, :auth_capture) (NOT USED)
       #     - :type = (:prior_auth_capture) (OPTIONAL)
@@ -424,8 +428,9 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>:customer_profile_id</tt> -- The Customer Profile ID of the customer to use in this transaction. (REQUIRED)
       # * <tt>:customer_payment_profile_id</tt> -- The Customer Payment Profile ID of the Customer Payment Profile to be verified. (REQUIRED)
-      # * <tt>:customer_address_id</tt> -- The Customer Address ID of the Customer Shipping Address to be verified.
-      # * <tt>:validation_mode</tt> -- <tt>:live</tt> or <tt>:test</tt> In Test Mode, only field validation is performed. 
+      # * <tt>:customer_address_id</tt> -- The Customer Address ID of the Customer Shipping Address to be verified. (OPTIONAL)
+      # * <tt>:card_code</tt> -- If the payment profile is a credit card, the CCV/CVV code to validate with (OPTIONAL)
+      # * <tt>:validation_mode</tt> -- <tt>:live</tt> or <tt>:test</tt> In Test Mode, only field validation is performed. (REQUIRED
       #   In Live Mode, a transaction is generated and submitted to the processor with the amount of $0.01. If successful, the transaction is immediately voided. (REQUIRED)
       def validate_customer_payment_profile(options)
         requires!(options, :customer_profile_id, :customer_payment_profile_id, :validation_mode)
@@ -564,6 +569,7 @@ module ActiveMerchant #:nodoc:
         xml.tag!('customerProfileId', options[:customer_profile_id])
         xml.tag!('customerPaymentProfileId', options[:customer_payment_profile_id])
         xml.tag!('customerShippingAddressId', options[:customer_address_id]) if options[:customer_address_id]
+        tag_unless_blank(xml, 'cardCode', options[:card_code])
         xml.tag!('validationMode', CIM_VALIDATION_MODES[options[:validation_mode]]) if options[:validation_mode]
 
         xml.target!
@@ -623,6 +629,7 @@ module ActiveMerchant #:nodoc:
                 xml.tag!('customerProfileId', transaction[:customer_profile_id])
                 xml.tag!('customerPaymentProfileId', transaction[:customer_payment_profile_id])
                 xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
+                tag_unless_blank(xml, 'cardCode', transaction[:card_code])
             end
             add_order(xml, transaction[:order]) if transaction[:order]
           end
@@ -702,6 +709,10 @@ module ActiveMerchant #:nodoc:
           xml.tag!('cardNumber', credit_card.number)
           # The expiration date of the credit card used for the subscription
           xml.tag!('expirationDate', expdate(credit_card))
+          # Note that Authorize.net does not save CVV codes as part of the
+          # payment profile. Any transactions/validations after the payment
+          # profile is created that wish to use CVV verification must pass
+          # the CVV code to authorize.net again.
           xml.tag!('cardCode', credit_card.verification_value) if credit_card.verification_value?
         end
       end
@@ -815,7 +826,12 @@ module ActiveMerchant #:nodoc:
             'purchase_order_number' => direct_response_fields[36],
             'md5_hash' => direct_response_fields[37],
             'card_code' => direct_response_fields[38],
-            'cardholder_authentication_verification_response' => direct_response_fields[39]
+            'cardholder_authentication_verification_response' => direct_response_fields[39],
+            'account_number' => direct_response_fields[50],
+            'card_type' => direct_response_fields[51],
+            'split_tender_id' => direct_response_fields[52],
+            'requested_amount' => direct_response_fields[53],
+            'balance_on_card' => direct_response_fields[54],
           }
         )
       end

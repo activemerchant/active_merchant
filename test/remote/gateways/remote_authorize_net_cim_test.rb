@@ -78,6 +78,8 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal 'new email address', response.params['profile']['email']
   end
 
+  # FIXME - prior_auth_capture should be used to complete a auth_only request
+  # (not capture_only).
   def test_successful_create_customer_profile_transaction_auth_only_and_then_capture_only_requests
     assert response = @gateway.create_customer_profile(@options)
     @customer_profile_id = response.authorization
