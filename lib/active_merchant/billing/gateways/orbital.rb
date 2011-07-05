@@ -154,7 +154,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! :AVSaddress2, address[:address2]
           xml.tag! :AVScity, address[:city]
           xml.tag! :AVSstate, address[:state]
-          xml.tag! :AVSphoneNum, address[:phone] ? address[:phone].scan(/\d/).to_s : nil
+          xml.tag! :AVSphoneNum, address[:phone] ? address[:phone].scan(/\d/).join.to_s : nil
           xml.tag! :AVSname, creditcard.name
           xml.tag! :AVScountryCode, address[:country]
         end
