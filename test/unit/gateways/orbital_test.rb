@@ -48,7 +48,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_phone_number
     response = stub_comms do
-      @gateway.purchase(50, credit_card, order_id: 1, billing_address: {phone: '123-456-7890'})
+      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => {:phone => '123-456-7890'})
     end.check_request do |endpoint, data, headers|
       assert_match(/1234567890/, data)
     end.respond_with(successful_purchase_response)
