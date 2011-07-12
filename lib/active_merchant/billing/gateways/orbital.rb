@@ -167,6 +167,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! :CurrencyCode, currency_code(currency)
         xml.tag! :CurrencyExponent, '2' # Will need updating to support currencies such as the Yen.
         
+        xml.tag! :CardSecValInd, 1 if creditcard.verification_value? && %w( visa discover ).include?(creditcard.type)
         xml.tag! :CardSecVal,  creditcard.verification_value if creditcard.verification_value?
       end
       
