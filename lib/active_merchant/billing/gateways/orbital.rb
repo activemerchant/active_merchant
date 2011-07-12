@@ -224,11 +224,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        if response[:message_type] == "R"
+        if response[:message_type].nil? || response[:message_type] == "R"
           response[:proc_status] == SUCCESS
         else
           response[:proc_status] == SUCCESS &&
-          response[:resp_code] == APPROVED 
+            response[:resp_code] == APPROVED
         end
       end
       
