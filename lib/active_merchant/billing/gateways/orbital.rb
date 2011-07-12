@@ -80,8 +80,8 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         unless options[:ip_authentication] == true
           requires!(options, :login, :password, :merchant_id)
-          @options = options
         end
+        @options = options
         super
       end
       
