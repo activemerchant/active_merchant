@@ -48,9 +48,11 @@ module ActiveMerchant #:nodoc:
         return nil unless type
 
         if type.is_a?(String)
-          key, default = nil, type
+          key     = nil 
+          default = type
         else
-          key, default = :"activemerchant.errors.models.#{@i18n_key}.attributes.#{field}.#{type}", :"activemerchant.errors.messages.#{type}"
+          key     = :"activemerchant.errors.models.#{@i18n_key}.attributes.#{field}.#{type}"
+          default = :"activemerchant.errors.messages.#{type}"
         end
 
         I18n.t(key, :default => default)
