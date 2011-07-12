@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
       
       def add_customer_data(post, options)
         post[:cust_email] = options[:email]
-        post[:cust_ip] = options[:ip]
+        post[:cust_ip] = options[:cust_ip]
       end
 
       def add_special_options(post, options)
