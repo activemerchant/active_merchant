@@ -16,11 +16,11 @@ module ActiveMerchant #:nodoc:
       PROTOCOL = 4
       
       MD5_CHECK_FIELDS = {
-        :authorize => [:protocol, :msgtype, :merchant, :ordernumber, :amount, :currency, :autocapture, :cardnumber, :expirationdate, :cvd, :cardtypelock, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
+        :authorize => [:protocol, :msgtype, :merchant, :ordernumber, :amount, :currency, :autocapture, :cardnumber, :expirationdate, :cvd, :cardtypelock, :testmode, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
         :capture   => [:protocol, :msgtype, :merchant, :amount, :transaction, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
         :cancel    => [:protocol, :msgtype, :merchant, :transaction, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
         :refund    => [:protocol, :msgtype, :merchant, :amount, :transaction, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
-        :subscribe => [:protocol, :msgtype, :merchant, :ordernumber, :cardnumber, :expirationdate, :cvd, :cardtypelock, :description, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
+        :subscribe => [:protocol, :msgtype, :merchant, :ordernumber, :cardnumber, :expirationdate, :cvd, :cardtypelock, :description, :testmode, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],        
         :recurring => [:protocol, :msgtype, :merchant, :ordernumber, :amount, :currency, :autocapture, :transaction, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
         :status    => [:protocol, :msgtype, :merchant, :transaction, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
         :chstatus  => [:protocol, :msgtype, :merchant, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard_or_reference(post, credit_card_or_reference, options)
         add_autocapture(post, false)
+        add_testmode(post)
         add_fraud_parameters(post, options)
 
         commit(recurring_or_authorize(credit_card_or_reference), post)
@@ -101,6 +102,7 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard, options)
         add_invoice(post, options)
         add_description(post, options)
+        add_testmode(post)
         add_fraud_parameters(post, options)
 
         commit(:subscribe, post)
@@ -133,13 +135,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_fraud_parameters(post, options)
-        post[:fraud_remote_addr] = options[:fraud_remote_addr]
-        post[:fraud_http_accept] = options[:fraud_http_accept]
-        post[:fraud_http_accept_language] = options[:fraud_http_accept_language]
-        post[:fraud_http_accept_encoding] = options[:fraud_http_accept_encoding]
-        post[:fraud_http_accept_charset] = options[:fraud_http_accept_charset]
         post[:fraud_http_referer] = options[:fraud_http_referer]
-        post[:fraud_http_user_agent] = options[:fraud_http_user_agent]
       end
       
       def add_creditcard_or_reference(post, credit_card_or_reference, options)
@@ -161,7 +157,11 @@ module ActiveMerchant #:nodoc:
       def add_description(post, options)
         post[:description] = options[:description]
       end
-      
+
+      def add_testmode(post)
+        post[:testmode] = test? ? '1' : '0'
+      end
+
       def commit(action, params)
         response = parse(ssl_post(URL, post_data(action, params)))
         
@@ -202,7 +202,6 @@ module ActiveMerchant #:nodoc:
         params[:msgtype]  = action.to_s
         params[:merchant] = @options[:login]
         params[:apikey] = @options[:apikey] if @options[:apikey]
-        #params[:testmode] = '1' if test?
         params[:md5check] = generate_check_hash(action, params)
         
         params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
