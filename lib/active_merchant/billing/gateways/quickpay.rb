@@ -16,11 +16,11 @@ module ActiveMerchant #:nodoc:
       PROTOCOL = 3
       
       MD5_CHECK_FIELDS = {
-        :authorize => [:protocol, :msgtype, :merchant, :ordernumber, :amount, :currency, :autocapture, :cardnumber, :expirationdate, :cvd, :cardtypelock],
+        :authorize => [:protocol, :msgtype, :merchant, :ordernumber, :amount, :currency, :autocapture, :cardnumber, :expirationdate, :cvd, :cardtypelock, :testmode],
         :capture   => [:protocol, :msgtype, :merchant, :amount, :transaction],
         :cancel    => [:protocol, :msgtype, :merchant, :transaction],
         :refund    => [:protocol, :msgtype, :merchant, :amount, :transaction],
-        :subscribe => [:protocol, :msgtype, :merchant, :ordernumber, :cardnumber, :expirationdate, :cvd, :cardtypelock, :description],
+        :subscribe => [:protocol, :msgtype, :merchant, :ordernumber, :cardnumber, :expirationdate, :cvd, :cardtypelock, :description, :testmode],
         :recurring => [:protocol, :msgtype, :merchant, :ordernumber, :amount, :currency, :autocapture, :transaction],
         :status    => [:protocol, :msgtype, :merchant, :transaction],
         :chstatus  => [:protocol, :msgtype, :merchant],
@@ -43,6 +43,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard_or_reference(post, credit_card_or_reference, options)
         add_autocapture(post, false)
+        add_testmode(post)
 
         commit(recurring_or_authorize(credit_card_or_reference), post)
       end
@@ -95,6 +96,7 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard, options)
         add_invoice(post, options)
         add_description(post, options)
+        add_testmode(post)
 
         commit(:subscribe, post)
       end
@@ -144,7 +146,11 @@ module ActiveMerchant #:nodoc:
       def add_description(post, options)
         post[:description] = options[:description]
       end
-      
+
+      def add_testmode(post)
+        post[:testmode] = test? ? '1' : '0'
+      end
+
       def commit(action, params)
         response = parse(ssl_post(URL, post_data(action, params)))
         
@@ -184,7 +190,6 @@ module ActiveMerchant #:nodoc:
         params[:protocol] = PROTOCOL
         params[:msgtype]  = action.to_s
         params[:merchant] = @options[:login]
-        #params[:testmode] = '1' if test?
         params[:md5check] = generate_check_hash(action, params)
         
         params.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
