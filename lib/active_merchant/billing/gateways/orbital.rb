@@ -248,7 +248,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! :NewOrder do
             xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
             xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
-            xml.tag! :IndustryType, "EC" # E-Commerce transaction 
+            xml.tag! :IndustryType, parameters[:industry_type] || "EC"
             xml.tag! :MessageType, action
             xml.tag! :BIN, '000002' # PNS Tampa
             xml.tag! :MerchantID, @options[:merchant_id]
