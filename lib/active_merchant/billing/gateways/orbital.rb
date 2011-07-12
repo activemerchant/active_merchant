@@ -290,7 +290,6 @@ module ActiveMerchant #:nodoc:
       end
       
       def build_void_request_xml(money, authorization, parameters = {})
-        requires!(parameters, :transaction_index)
         tx_ref_num, order_id = authorization.split(';')
         xml = Builder::XmlMarkup.new(:indent => 2)
         xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
