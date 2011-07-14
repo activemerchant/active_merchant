@@ -106,7 +106,7 @@ garanti:
 ideal_rabobank:
   login: LOGIN
   password: PASSWORD
-  pem: |--
+  pem: |
     PASTE YOUR PEM FILE HERE
 
 instapay:
@@ -126,7 +126,7 @@ iridium:
 
 linkpoint:
   login: STOREID
-  pem: |--
+  pem: |
     PASTE YOUR PEM FILE HERE
 
 # Working test credentials, no need to replace
@@ -204,7 +204,7 @@ paypal_certificate:
   login: LOGIN
   password: PASSWORD
   subject:
-  pem: |--
+  pem: |
     PASTE YOUR PEM FILE HERE
 
 paypal_signature:
