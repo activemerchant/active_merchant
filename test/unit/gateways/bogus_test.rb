@@ -86,6 +86,11 @@ class BogusTest < Test::Unit::TestCase
   def test_unstore
     @gateway.unstore('1')
   end
+
+  def test_store_then_purchase
+    reference = @gateway.store(@creditcard)
+    assert @gateway.purchase(1000, reference.authorization).success?
+  end
   
   def test_supported_countries
     assert_equal ['US'], BogusGateway.supported_countries
