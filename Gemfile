@@ -8,7 +8,7 @@ group :test do
   gem 'rails', '>= 2.3.11'
   gem 'i18n'
   gem 'mocha'
-  gem 'rake', "0.8.7"
+  gem 'rake'
 end
 
 group :remote_test do
