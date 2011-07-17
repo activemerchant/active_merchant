@@ -45,4 +45,11 @@ class GatewayTest < Test::Unit::TestCase
     
     assert_equal SimpleTestGateway.application_id, SubclassGateway.application_id
   end
+
+  def test_defines_abstract_methods
+    methods = %w[purchase authorize capture void credit recurring store unstore]
+    methods.each do |method|
+      assert_raise(NotImplementedError) { Gateway.new.__send__(method, nil, nil) }
+    end
+  end
 end
