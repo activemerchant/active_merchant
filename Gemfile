@@ -20,3 +20,9 @@ group :remote_test do
   gem 'mongrel', '1.2.0.pre2', :platforms => :ruby
 end
 
+group :remote_test do
+  gem 'mechanize'
+  gem 'launchy'
+  gem 'mongrel'
+end
+
