@@ -78,7 +78,6 @@ module ActiveMerchant #:nodoc:
           card_companies.reject { |c,p| c == 'maestro' }.each do |company, pattern|
             return company.dup if number =~ pattern 
           end
-          
           return 'maestro' if number =~ card_companies['maestro']
 
           return nil
