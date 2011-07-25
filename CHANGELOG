@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
-== Version 1.16.0 (May 12, 2011)
+* Authorize.Net: Pass through first name, last name, and zip for refunds. [ntalbott]
+
+== Version 1.16.0 (July 18, 2011)
 
 * Bogus: Support referenced transactions for #authorize, #purchase, #recurring and
 #credit [dasch/jduff]

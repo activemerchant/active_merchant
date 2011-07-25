@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class AuthorizeNetTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = AuthorizeNetGateway.new(
       :login => 'X',
@@ -114,6 +116,17 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response = @gateway.refund(@amount, '123456789', :card_number => @credit_card.number)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
+  end
+  
+  def test_refund_passing_extra_info
+    response = stub_comms do
+      @gateway.refund(50, '123456789', :card_number => @credit_card.number, :first_name => "Bob", :last_name => "Smith", :zip => "12345")
+    end.check_request do |endpoint, data, headers|
+      assert_match(/x_first_name=Bob/, data)
+      assert_match(/x_last_name=Smith/, data)
+      assert_match(/x_zip=12345/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
   end
   
   def test_failed_refund

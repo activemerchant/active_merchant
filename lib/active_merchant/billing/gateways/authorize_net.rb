@@ -149,12 +149,20 @@ module ActiveMerchant #:nodoc:
       # ==== Options
       #
       # * <tt>:card_number</tt> -- The credit card number the refund is being issued to. (REQUIRED)
+      # * <tt>:first_name</tt> -- The first name of the account being refunded.
+      # * <tt>:last_name</tt> -- The last name of the account being refunded.
+      # * <tt>:zip</tt> -- The postal code of the account being refunded.
       def refund(money, identification, options = {})
         requires!(options, :card_number)
 
         post = { :trans_id => identification,
                  :card_num => options[:card_number]
                }
+
+        post[:first_name] = options[:first_name] if options[:first_name]
+        post[:last_name] = options[:last_name] if options[:last_name]
+        post[:zip] = options[:zip] if options[:zip]
+
         add_invoice(post, options)
         add_duplicate_window(post)
 
