@@ -1,8 +1,27 @@
 = ActiveMerchant CHANGELOG
 
-* Add Diners Club to Braintree [cody]
+== Version 1.16.0 (May 12, 2011)
+
+* Bogus: Support referenced transactions for #authorize, #purchase, #recurring and
+#credit [dasch/jduff]
+* Payment Express: Update gateway url [bayan/titanous]
+* Moneybookers: Send country and account_name if provided [Soleone]
+* Moneris: Add Diners Club and Discover [Soleone]
+* Cybersource: add auth_reversal support [jeberly/titanous]
+* WorldPay: Update endpoint URLs for offsite gateway [Soleone]
+* Worldpay: Add JCB and add Maestro [Soleone]
+* Authorize.net: Add Diners Club and JCB [Soleone]
+* Quickpay: Add testmode for subscribe and authorize [dasch/jduff]
+* Orbital: fix handling of phone numbers. [ntalbott]
+* Braintree: Add Diners Club [cody]
+* Add ePaymentPlans offsite payment [robertomiranda/Soleone]
+* Add Stripe gateway [boucher/titanous]
+* Add Paystation gateway [nikz/jduff]
+* Bump minimum ActiveSupport version to 2.3.11 [titanous]
+* Use securerandom from stdlib not active_support [phlipper/jduff]
 
 == Version 1.15.0 (May 12, 2011)
+
 * DirecPay: Fix address to not include address2 twice in some cases [Soleone]
 * DirecPay: Send company if available [Soleone]
 * Realex: Fix hash signature [ntalbott/Soleone]
