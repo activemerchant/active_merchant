@@ -129,11 +129,11 @@ module ActiveMerchant #:nodoc:
                     end
                   end
                 end
+                add_address(xml, 'n2:ShipToAddress', options[:shipping_address] || options[:address])
 
                 xml.tag! 'n2:PaymentAction', action
               end
 
-              add_address(xml, 'n2:Address', options[:shipping_address] || options[:address])
               xml.tag! 'n2:AddressOverride', options[:address_override] ? '1' : '0'
               xml.tag! 'n2:NoShipping', options[:no_shipping] ? '1' : '0'
               xml.tag! 'n2:ReturnURL', options[:return_url]

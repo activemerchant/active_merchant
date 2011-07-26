@@ -163,6 +163,24 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal '4', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Quantity')[1].text
   end
 
+  def test_address_is_included_if_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'Sale', 0, {:currency => 'GBP', :address => {
+      :name     => "John Doe",
+      :address1 => "123 somewhere",
+      :city     => "Townville",
+      :country  => "Canada",
+      :zip      => "k1l4p2",
+      :phone    => "1231231231"
+    }}))
+
+    assert_equal 'John Doe', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:Name').text
+    assert_equal '123 somewhere', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:Street1').text
+    assert_equal 'Townville', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:CityName').text
+    assert_equal 'Canada', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:Country').text
+    assert_equal 'k1l4p2', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:PostalCode').text
+    assert_equal '1231231231', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:Phone').text
+  end
+
   def test_handle_non_zero_amount
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 50, {}))
     
