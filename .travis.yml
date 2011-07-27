@@ -8,4 +8,4 @@ rvm:
 script: "bundle exec rake test:units"
 
 notifications:
-  disable: true
+  disabled: true
