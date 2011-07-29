@@ -44,13 +44,13 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [PayBox Direct](http://www.paybox.com) - FR
 * [PayJunction](http://www.payjunction.com/) - US
 * [PaySecure](http://www.commsecure.com.au/paysecure.shtml) - AU
-* [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd#xpt/merchant/ExpressCheckoutIntro-outside) - US, CA, SG, AU
-* [PayPal Payflow Pro](https://www.paypal.com/cgi-bin/webscr?cmd#_payflow-pro-overview-outside) - US, CA, SG, AU
-* [PayPal Website Payments Pro (UK)](https://www.paypal.com/uk/cgi-bin/webscr?cmd#_wp-pro-overview-outside) - GB
+* [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside) - US, CA, SG, AU
+* [PayPal Payflow Pro](https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-pro-overview-outside) - US, CA, SG, AU
+* [PayPal Website Payments Pro (UK)](https://www.paypal.com/uk/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - GB
 * [PaymentExpress](http://www.paymentexpress.com/) - AU, MY, NZ, SG, ZA, GB, US
-* [PayPal Website Payments Pro (CA)](https://www.paypal.com/cgi-bin/webscr?cmd#_wp-pro-overview-outside) - CA
-* [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd#xpt/merchant/ExpressCheckoutIntro-outside) - US
-* [PayPal Website Payments Pro (US)](https://www.paypal.com/cgi-bin/webscr?cmd#_wp-pro-overview-outside) - US
+* [PayPal Website Payments Pro (CA)](https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - CA
+* [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside) - US
+* [PayPal Website Payments Pro (US)](https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - US
 * [Plug'n Pay](http://www.plugnpay.com/) - US
 * [Protx](http://www.protx.com) - GB
 * [Psigate](http://www.psigate.com/) - CA
@@ -124,33 +124,33 @@ require 'rubygems'
 require 'active_merchant'
 
 # Use the TrustCommerce test servers
-ActiveMerchant::Billing::Base.mode # :test
+ActiveMerchant::Billing::Base.mode = :test
 
 # ActiveMerchant accepts all amounts as Integer values in cents
 # $10.00
-amount # 1000
+amount = 1000
 
 # The card verification value is also known as CVV2, CVC2, or CID 
-credit_card # ActiveMerchant::Billing::CreditCard.new(
-                :first_name         #> 'Bob',
-                :last_name          #> 'Bobsen',
-                :number             #> '4242424242424242',
-                :month              #> '8',
-                :year               #> '2012',
-                :verification_value #> '123'
+credit_card - ActiveMerchant::Billing::CreditCard.new(
+                :first_name         => 'Bob',
+                :last_name          => 'Bobsen',
+                :number             => '4242424242424242',
+                :month              => '8',
+                :year               => '2012',
+                :verification_value => '123'
               )
 
 # Validating the card automatically detects the card type
 if credit_card.valid?
 
   # Create a gateway object for the TrustCommerce service
-  gateway # ActiveMerchant::Billing::TrustCommerceGateway.new(
-              :login #> 'TestMerchant',
-              :password #> 'password'
+  gateway = ActiveMerchant::Billing::TrustCommerceGateway.new(
+              :login => 'TestMerchant',
+              :password => 'password'
             )
 
   # Authorize for the amount
-  response # gateway.purchase(amount, credit_card)
+  response = gateway.purchase(amount, credit_card)
 
   if response.success?
     puts "Successfully charged $#{sprintf("%.2f", amount / 100)} to the credit card #{credit_card.display_number}"
