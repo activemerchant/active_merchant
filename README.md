@@ -44,13 +44,13 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [PayBox Direct](http://www.paybox.com) - FR
 * [PayJunction](http://www.payjunction.com/) - US
 * [PaySecure](http://www.commsecure.com.au/paysecure.shtml) - AU
-* [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd#xpt/merchant/ExpressCheckoutIntro-outside) - US, CA, SG, AU
-* [PayPal Payflow Pro](https://www.paypal.com/cgi-bin/webscr?cmd#_payflow-pro-overview-outside) - US, CA, SG, AU
-* [PayPal Website Payments Pro (UK)](https://www.paypal.com/uk/cgi-bin/webscr?cmd#_wp-pro-overview-outside) - GB
+* [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside) - US, CA, SG, AU
+* [PayPal Payflow Pro](https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-pro-overview-outside) - US, CA, SG, AU
+* [PayPal Website Payments Pro (UK)](https://www.paypal.com/uk/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - GB
 * [PaymentExpress](http://www.paymentexpress.com/) - AU, MY, NZ, SG, ZA, GB, US
-* [PayPal Website Payments Pro (CA)](https://www.paypal.com/cgi-bin/webscr?cmd#_wp-pro-overview-outside) - CA
-* [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd#xpt/merchant/ExpressCheckoutIntro-outside) - US
-* [PayPal Website Payments Pro (US)](https://www.paypal.com/cgi-bin/webscr?cmd#_wp-pro-overview-outside) - US
+* [PayPal Website Payments Pro (CA)](https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - CA
+* [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside) - US
+* [PayPal Website Payments Pro (US)](https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - US
 * [Plug'n Pay](http://www.plugnpay.com/) - US
 * [Protx](http://www.protx.com) - GB
 * [Psigate](http://www.psigate.com/) - CA
