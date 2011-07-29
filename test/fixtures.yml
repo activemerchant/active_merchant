@@ -102,6 +102,10 @@ lucy:
  login: login
  password: password
 
+maxx:
+ login: login
+ password: password
+
 merchant_ware:
  login: 
  password: 
