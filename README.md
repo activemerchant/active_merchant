@@ -131,7 +131,7 @@ ActiveMerchant::Billing::Base.mode = :test
 amount = 1000
 
 # The card verification value is also known as CVV2, CVC2, or CID 
-credit_card - ActiveMerchant::Billing::CreditCard.new(
+credit_card = ActiveMerchant::Billing::CreditCard.new(
                 :first_name         => 'Bob',
                 :last_name          => 'Bobsen',
                 :number             => '4242424242424242',
