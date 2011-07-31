@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
         # (TESTMODE) Successful Sale
         test_mode = test? || message =~ /TESTMODE/
 
-        Response.new(response[:response_code].to_s == '0', message, response,
+        Response.new(response[:response_code].to_s == '100', message, response,
           :test => test_mode,
           #:authorization => response[:PNRef],
           :authorization => response[:authcode],
