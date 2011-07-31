@@ -137,7 +137,7 @@ module ActiveMerchant #:nodoc:
         Response.new(response[:response_code].to_s == '100', message, response,
           :test => test_mode,
           #:authorization => response[:PNRef],
-          :authorization => response[:authcode],
+          :authorization => response[:transactionid],
           :avs_result => { :code => (response[:avsresponse] if response[:avsresponse]) },
           :cvv_result => (response[:cvvresponse] if response[:cvvresponse])
         )
