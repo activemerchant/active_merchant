@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
       attr_accessor :number, :month, :year, :type, :first_name, :last_name
 
       # Track data for card-present transactions
-      attr_accessor :track2
+      attr_accessor :track1, :track2
       
       # Required for Switch / Solo cards
       attr_accessor :start_month, :start_year, :issue_number

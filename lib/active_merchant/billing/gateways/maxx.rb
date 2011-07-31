@@ -182,7 +182,7 @@ module ActiveMerchant #:nodoc:
         hash = {}
         response = response.split('&')
         response.each do |k|
-          hash[k.split('=')[0]] = k.split('=')[1]
+          hash[(k.split('=')[0]).to_sym] = k.split('=')[1]
         end
         hash
       end
