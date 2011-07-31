@@ -110,11 +110,8 @@ module ActiveMerchant #:nodoc:
         post[:ccexp] = expdate(creditcard)
         post[:firstname] = "#{creditcard.first_name}"
         post[:lastname] = "#{creditcard.last_name}"
-        #
-
-        unless creditcard.track2.blank?
-          post[:track_2] = creditcard.track2
-        end
+        post[:track_1] = creditcard.track1 unless creditcard.track1.blank?
+        post[:track_2] = creditcard.track2 unless creditcard.track2.blank?
       end
       
       def parse(body)
@@ -158,6 +155,7 @@ module ActiveMerchant #:nodoc:
         post[:cvv] = parameters[:cvv] || ""
         post[:ccnumber] = parameters[:ccnumber] || ""
         post[:ccexp] = parameters[:ccexp] || ""
+        post[:track_1] = parameters[:track_1] || ""
         post[:track_2] = parameters[:track_2] || ""
         post[:transactionid] = parameters[:transactionid] || ""
         post[:firstname] = parameters[:firstname] || ""
