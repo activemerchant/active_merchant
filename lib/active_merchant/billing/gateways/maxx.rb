@@ -84,12 +84,12 @@ module ActiveMerchant #:nodoc:
       end                       
     
       def capture(money, authorization, options = {})
-        post = {:PNRef => authorization}
+        post = {:transactionid => authorization}
         commit('capture', money, post)
       end
       
       def void(authorization, options = {})
-        post = {:PNRef => authorization}
+        post = {:transactionid => authorization}
         commit('void', nil, post)
       end
     
