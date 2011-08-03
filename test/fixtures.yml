@@ -170,7 +170,12 @@ ogone:
   user: USER
   password: PASSWORD
   signature: SIGNATURE
-  
+
+optimal_payment:
+  login: test
+  password: test
+  account: 'ACCOUNT_NUMBER'
+
 paybox_direct:
   login: 199988899
   password: 1999888I
