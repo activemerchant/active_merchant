@@ -3,7 +3,6 @@ rvm:
   - 1.9.2
   - rbx
   - ree
-  - jruby
 
 script: "bundle exec rake test:units"
 
