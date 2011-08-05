@@ -434,6 +434,10 @@ viaklix:
   login: LOGIN
   password: PASSWORD
   user: USER
+
+vindicia:
+  login: LOGIN
+  password: PASSWORD
   
 # Working test credentials, no need to replace
 wirecard:
