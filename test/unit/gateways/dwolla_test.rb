@@ -2,10 +2,7 @@ require 'test_helper'
 
 class DwollaTest < Test::Unit::TestCase
   def setup
-    @gateway = DwollaGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+    @gateway = DwollaGateway.new(fixtures(:dwolla))
 
     @credit_card = credit_card
     @amount = 100

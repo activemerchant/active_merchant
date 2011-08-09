@@ -7,13 +7,19 @@ class RemoteDwollaTest < Test::Unit::TestCase
     @gateway = DwollaGateway.new(fixtures(:dwolla))
     
     @amount = 100
-    @credit_card = credit_card('4000100011112224')
-    @declined_card = credit_card('4000300011112220')
-    
-    @options = { 
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+    @options = {
+      :order_id => '230000',
+      :email => 'buyer@jadedpallet.com',
+      :billing_address => { :name => 'Fred Brooks',
+                    :address1 => '1234 Penny Lane',
+                    :city => 'Jonsetown',
+                    :state => 'NC',
+                    :country => 'US',
+                    :zip => '23456'
+                  } ,
+      :description => 'Stuff that you purchased, yo!',
+      :return_url => 'http://example.com/return',
+      :cancel_return_url => 'http://example.com/cancel'
     }
   end
   

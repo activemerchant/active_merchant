@@ -2,19 +2,19 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class DwollaGateway < Gateway
       TEST_URL = 'https://example.com/test'
-      LIVE_URL = 'https://example.com/live'
+      LIVE_URL = 'https://www.dwolla.com/payment/request'
       
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']
       
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = []
       
       # The homepage URL of the gateway
-      self.homepage_url = 'http://www.example.net/'
+      self.homepage_url = 'http://www.dwolla.com/'
       
       # The name of the gateway
-      self.display_name = 'New Gateway'
+      self.display_name = 'Dwolla'
       
       def initialize(options = {})
         #requires!(options, :login, :password)
