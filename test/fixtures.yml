@@ -299,8 +299,13 @@ psl_visa_debit_address:
   zip:
 
 quickpay:
-  login: 89898989
-  password: "n5KrR5e2538awi9hUk6728LHTQ6E4uG1z4IFSb2pPN9j76DqJ2vA4698X315M1cd"
+  login: 89898978
+  password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
+  apikey: "wrUl58B5S4nWhYDR4b8J2t78QpZ27PMCqk9V7363X6TvE9gm46G4d2FK6A53119x"
+
+quickpay_without_api_key:
+  login: 89898978
+  password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
   
 quantum:
   login: X
