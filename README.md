@@ -1,8 +1,84 @@
 # Active Merchant
 
-A Ruby library for dealing with credit cards and payment processors.
+Active Merchant is an extraction from the e-commerce system [Shopify](http://www.shopify.com).
+Shopify's requirements for a simple and unified API to access dozens of different payment
+gateways with very different internal APIs was the chief principle in designing the library.
 
-This library is used for processing payments in [Shopify](http://www.shopify.com).
+Active Merchant has been in production use since June 2006 and is now used in most modern
+Ruby applications which deal with financial transactions.
+
+It was developed for usage in Ruby on Rails web applications and integrates seamlessly
+as a plugin but it also works excellently as a stand alone library.
+
+See {file:GettingStarted.md} if you want to learn more about using Active Merchant in your
+applications.
+
+## Installation
+
+### From Git
+
+You can check out the latest source from git:
+
+    git clone git://github.com/Shopify/active_merchant.git
+
+### As a Rails plugin
+
+ActiveMerchant includes an init.rb file. This means that Rails will automatically load ActiveMerchant on startup. Run
+the following command from the root directory of your Rails project to install ActiveMerchant as a Rails plugin:
+
+    script/plugin install git://github.com/Shopify/active_merchant.git
+
+### From RubyGems
+
+Installation from RubyGems
+
+    gem install activemerchant
+
+Alternatively, add the following to your Gemfile
+
+    gem 'activemerchant', :require => 'active_merchant'
+
+## Usage
+
+This simple example demonstrates how a purchase can be made using a person's
+credit card details.
+
+	require 'rubygems'
+	require 'active_merchant'
+	
+	# Use the TrustCommerce test servers
+	ActiveMerchant::Billing::Base.mode = :test
+
+	gateway = ActiveMerchant::Billing::TrustCommerceGateway.new(
+	            :login => 'TestMerchant',
+	            :password => 'password')
+	
+	# ActiveMerchant accepts all amounts as Integer values in cents
+	amount = 1000  # $10.00
+	
+	# The card verification value is also known as CVV2, CVC2, or CID 
+	credit_card = ActiveMerchant::Billing::CreditCard.new(
+	                :first_name         => 'Bob',
+	                :last_name          => 'Bobsen',
+	                :number             => '4242424242424242',
+	                :month              => '8',
+	                :year               => '2012',
+	                :verification_value => '123')
+	
+	# Validating the card automatically detects the card type
+	if credit_card.valid?
+	  # Capture $10 from the credit card
+	  response = gateway.purchase(amount, credit_card)
+	
+	  if response.success?
+	    puts "Successfully charged $#{sprintf("%.2f", amount / 100)} to the credit card #{credit_card.display_number}"
+	  else
+	    raise StandardError, response.message 
+	  end
+	end
+
+For more in-depth documentation and tutorials, see {file:GettingStarted.md} and the
+[API documentation](http://rubydoc.info/github/Shopify/active_merchant/master/file/README.md).
 
 ## Supported Direct Payment Gateways
 
@@ -91,76 +167,11 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Valitor](http://www.valitor.is/) - IS
 * [WorldPay](http://www.worldpay.com)
 
-## Download
-
-Currently this library is available with git from:
-
-    git://github.com/Shopify/active_merchant.git
-
-## Installation
-
-### From Git
-
-You can check out the latest source from git:
-
-    git pull git://github.com/Shopify/active_merchant.git
-
-### As a Rails plugin
-
-ActiveMerchant includes an init.rb file. This means that Rails will automatically load ActiveMerchant on startup. Run
-the following command from the root directory of your Rails project to install ActiveMerchant as a Rails plugin:
-
-    script/plugin install git://github.com/Shopify/active_merchant.git
-
-### From RubyGems
-
-Installation from RubyGems
-
-    gem install activemerchant
-
-## Usage Example
-```ruby
-require 'rubygems'
-require 'active_merchant'
-
-# Use the TrustCommerce test servers
-ActiveMerchant::Billing::Base.mode = :test
-
-# ActiveMerchant accepts all amounts as Integer values in cents
-# $10.00
-amount = 1000
-
-# The card verification value is also known as CVV2, CVC2, or CID 
-credit_card = ActiveMerchant::Billing::CreditCard.new(
-                :first_name         => 'Bob',
-                :last_name          => 'Bobsen',
-                :number             => '4242424242424242',
-                :month              => '8',
-                :year               => '2012',
-                :verification_value => '123'
-              )
-
-# Validating the card automatically detects the card type
-if credit_card.valid?
-
-  # Create a gateway object for the TrustCommerce service
-  gateway = ActiveMerchant::Billing::TrustCommerceGateway.new(
-              :login => 'TestMerchant',
-              :password => 'password'
-            )
-
-  # Authorize for the amount
-  response = gateway.purchase(amount, credit_card)
-
-  if response.success?
-    puts "Successfully charged $#{sprintf("%.2f", amount / 100)} to the credit card #{credit_card.display_number}"
-  else
-    raise StandardError, response.message 
-  end
-end
-```
-
 ## Contributing
+
+The source code is hosted at [GitHub](http://github.com/Shopify/active_merchant), and can be fetched using:
+
+    git clone git://github.com/Shopify/active_merchant.git
 
 Please see the [ActiveMerchant Guide to Contributing](http://github.com/Shopify/active_merchant/wikis/contributing) for
 information on adding a new gateway to ActiveMerchant.
