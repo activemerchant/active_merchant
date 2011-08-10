@@ -159,7 +159,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
     assert_success auth
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert credit = @gateway.credit(@amount, auth.authorization)
+    assert credit = @gateway.refund(@amount, auth.authorization)
     assert_success credit
     assert_equal 'OK', credit.message
   end
@@ -167,7 +167,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
   def test_successful_purchase_and_credit
     assert purchase = @gateway.purchase(@amount, @visa, @options)
     assert_success purchase
-    assert credit = @gateway.credit(@amount, purchase.authorization)
+    assert credit = @gateway.refund(@amount, purchase.authorization)
     assert_success credit
   end
 
