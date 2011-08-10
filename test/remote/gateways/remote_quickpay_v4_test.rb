@@ -1,10 +1,10 @@
 require 'test_helper'
 
-class RemoteQuickpayTest < Test::Unit::TestCase
-  # These tests assumes that you have added your development IP
-  # in the Quickpay Manager
+class RemoteQuickpayV4Test < Test::Unit::TestCase
+  # These test assumes that you have not added your development IP in
+  # the Quickpay Manager.
   def setup  
-    @gateway = QuickpayGateway.new(fixtures(:quickpay))
+    @gateway = QuickpayGateway.new(fixtures(:quickpay_with_api_key))
     
     @amount = 100
     @options = { 
@@ -36,6 +36,24 @@ class RemoteQuickpayTest < Test::Unit::TestCase
     assert_success response
     assert !response.authorization.blank?
   end
+  
+  def test_successful_purchase_with_all_fraud_parameters
+    @options[:fraud_http_referer] = 'http://www.excample.com'
+    @options[:fraud_remote_addr] = '127.0.0.1'
+    @options[:fraud_http_accept] = 'foo'
+    @options[:fraud_http_accept_language] = "DK"
+    @options[:fraud_http_accept_encoding] = "UFT8"
+    @options[:fraud_http_accept_charset] = "Latin"
+    @options[:fraud_http_user_agent] = "Safari"
+    
+    assert response = @gateway.purchase(@amount, @visa, @options)
+    assert_equal 'OK', response.message
+    assert_equal 'DKK', response.params['currency']
+    assert_success response
+    assert !response.authorization.blank?
+  end
+  
+  
   
   def test_successful_usd_purchase
     assert response = @gateway.purchase(@amount, @visa, @options.update(:currency => 'USD'))
