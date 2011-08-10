@@ -1,5 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
-require 'active_merchant/billing/gateways/optimal_payments'
+require 'test_helper'
 
 class ActiveMerchant::Billing::OptimalPaymentGateway
   public :cc_auth_request
