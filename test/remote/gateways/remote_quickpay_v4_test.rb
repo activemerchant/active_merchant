@@ -9,8 +9,7 @@ class RemoteQuickpayV4Test < Test::Unit::TestCase
     @amount = 100
     @options = { 
       :order_id => generate_unique_id[0...10], 
-      :billing_address => address,
-      :fraud_http_referer => "http://www.example.org"
+      :billing_address => address
     }
     
     @visa_no_cvv2   = credit_card('4000300011112220', :verification_value => nil)
@@ -37,6 +36,24 @@ class RemoteQuickpayV4Test < Test::Unit::TestCase
     assert_success response
     assert !response.authorization.blank?
   end
+  
+  def test_successful_purchase_with_all_fraud_parameters
+    @options[:fraud_http_referer] = 'http://www.excample.com'
+    @options[:fraud_remote_addr] = '127.0.0.1'
+    @options[:fraud_http_accept] = 'foo'
+    @options[:fraud_http_accept_language] = "DK"
+    @options[:fraud_http_accept_encoding] = "UFT8"
+    @options[:fraud_http_accept_charset] = "Latin"
+    @options[:fraud_http_user_agent] = "Safari"
+    
+    assert response = @gateway.purchase(@amount, @visa, @options)
+    assert_equal 'OK', response.message
+    assert_equal 'DKK', response.params['currency']
+    assert_success response
+    assert !response.authorization.blank?
+  end
+  
+  
   
   def test_successful_usd_purchase
     assert response = @gateway.purchase(@amount, @visa, @options.update(:currency => 'USD'))
