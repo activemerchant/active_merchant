@@ -116,6 +116,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [NETbilling](http://www.netbilling.com) - US
 * [NMI](http://nmi.com/) - US
 * [Ogone DirectLink](http://www.ogone.com) - BE, DE, FR, NL, AT, CH
+* [Optimal Payments](http://www.optimalpayments.com/) - CA, US, GB
 * [Orbital Paymentech](http://chasepaymentech.com/) - CA, US
 * [PayBox Direct](http://www.paybox.com) - FR
 * [PayJunction](http://www.payjunction.com/) - US
