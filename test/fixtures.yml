@@ -293,9 +293,18 @@ psl_visa_debit_address:
   state:
   zip:
 
+# Quickpay offers a test account.
+# To log in to the manager, use demo@quickpay.net and test234
 quickpay:
-  login: 89898989
-  password: "n5KrR5e2538awi9hUk6728LHTQ6E4uG1z4IFSb2pPN9j76DqJ2vA4698X315M1cd"
+  login: 89898978
+  password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
+# To get the right apikey, log in to the manager.
+# Go to Indstillinger > API adgang and make sure you have the right key in the fixture.
+quickpay_with_api_key:
+  login: 89898978
+  password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
+  apikey: "3WrEgfY995CnetPlp7R7XG6J5aq83K4k7B4Z3jsLd1vz53x1w6h42M81u7H62Sb4"
+  version: 4
   
 quantum:
   login: X
