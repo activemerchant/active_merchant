@@ -19,6 +19,12 @@ module ActiveMerchant #:nodoc:
             status_code == 'OK'
           end
 
+          # Was the transaction cancelled?
+          # Unfortunately, we can't distinguish "user abort" from "idle too long".
+          def cancelled?
+            status_code == 'ABORT'
+          end
+
           # Text version of #complete?, since we don't support Pending.
           def status
             complete? ? 'Completed' : 'Failed'

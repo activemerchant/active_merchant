@@ -4,7 +4,7 @@ class SagePayFormModuleTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
   
   def test_return_method
-    assert_instance_of SagePayForm::Return, SagePayForm.return('name=cody')
+    assert_instance_of SagePayForm::Return, SagePayForm.return('name=cody', {})
   end
 
   def test_production_mode

@@ -1,4 +1,4 @@
-require_library_or_gem 'action_pack'
+require 'action_pack'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
         #    <% service.customer :first_name => 'Cody',
         #                       :last_name => 'Fauser',
         #                       :phone => '(555)555-5555',
-        #                       :email => 'codyfauser@gmail.com' %>
+        #                       :email => 'cody@example.com' %>
         #
         #    <% service.billing_address :city => 'Ottawa',
         #                              :address1 => '21 Snowy Brook Lane',

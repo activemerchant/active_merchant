@@ -4,7 +4,7 @@ class QuickpayNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @quickpay = Quickpay::Notification.new(http_raw_data, :md5secret => "mysecretmd5string")
+    @quickpay = Quickpay::Notification.new(http_raw_data, :credential2 => "mysecretmd5string")
   end
 
   def test_accessors
@@ -27,12 +27,12 @@ class QuickpayNotificationTest < Test::Unit::TestCase
   end
   
   def test_failed_acknnowledgement
-    @quickpay = Quickpay::Notification.new(http_raw_data, :md5secret => "badmd5string")
+    @quickpay = Quickpay::Notification.new(http_raw_data, :credential2 => "badmd5string")
     assert !@quickpay.acknowledge
   end
 
   def test_acknowledgement_with_cardnumber
-    @quickpay = Quickpay::Notification.new(http_raw_data_with_cardnumber, :md5secret => "mysecretmd5string")
+    @quickpay = Quickpay::Notification.new(http_raw_data_with_cardnumber, :credential2 => "mysecretmd5string")
     assert @quickpay.acknowledge
   end
   

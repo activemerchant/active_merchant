@@ -101,13 +101,14 @@ class OgoneTest < Test::Unit::TestCase
     assert_equal '3048606;DES', response.authorization
     assert response.test?
   end
-
-  def test_successful_referenced_credit
+  
+  def test_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_referenced_credit_response)
-    assert response = @gateway.credit(@amount, "3049652;SAL")
-    assert_success response
-    assert_equal '3049652;RFD', response.authorization
-    assert response.test?
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.credit(@amount, "3049652;SAL")
+      assert_success response
+      assert response.test?
+    end
   end
 
   def test_successful_unreferenced_credit
@@ -118,8 +119,13 @@ class OgoneTest < Test::Unit::TestCase
     assert response.test?
   end
 
-
-  # Unsuccessful transactions
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_referenced_credit_response)
+    assert response = @gateway.refund(@amount, "3049652")
+    assert_success response
+    assert_equal '3049652;RFD', response.authorization
+    assert response.test?
+  end
 
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
@@ -255,6 +261,12 @@ class OgoneTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_response_params_is_hash
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Hash, response.params
+  end
+  
   private
 
   def successful_authorize_response

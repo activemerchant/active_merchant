@@ -80,6 +80,8 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'n2:ButtonSource', application_id.to_s.slice(0,32) unless application_id.blank?
                 xml.tag! 'n2:InvoiceID', options[:order_id]
                 xml.tag! 'n2:OrderDescription', options[:description]
+
+                add_items_xml(xml, options, currency_code) if options[:items]
               end
             end
           end
@@ -115,25 +117,13 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'n2:OrderDescription', options[:description]
                 xml.tag! 'n2:InvoiceID', options[:order_id]
 
-                if options[:items]
-                  options[:items].each do |item|
-                    xml.tag! 'n2:PaymentDetailsItem' do
-                      xml.tag! 'n2:Name', item[:name]
-                      xml.tag! 'n2:Number', item[:number]
-                      xml.tag! 'n2:Quantity', item[:quantity]
-                      if item[:amount]
-                        xml.tag! 'n2:Amount', localized_amount(item[:amount], currency_code), 'currencyID' => currency_code
-                      end
-                      xml.tag! 'n2:Description', item[:description]
-                      xml.tag! 'n2:ItemURL', item[:url]
-                    end
-                  end
-                end
+                add_items_xml(xml, options, currency_code) if options[:items]
+
+                add_address(xml, 'n2:ShipToAddress', options[:shipping_address] || options[:address])
 
                 xml.tag! 'n2:PaymentAction', action
               end
 
-              add_address(xml, 'n2:Address', options[:shipping_address] || options[:address])
               xml.tag! 'n2:AddressOverride', options[:address_override] ? '1' : '0'
               xml.tag! 'n2:NoShipping', options[:no_shipping] ? '1' : '0'
               xml.tag! 'n2:ReturnURL', options[:return_url]
@@ -171,6 +161,23 @@ module ActiveMerchant #:nodoc:
       
       def build_response(success, message, response, options = {})
         PaypalExpressResponse.new(success, message, response, options)
+      end
+
+      private
+
+      def add_items_xml(xml, options, currency_code)
+        options[:items].each do |item|
+          xml.tag! 'n2:PaymentDetailsItem' do
+            xml.tag! 'n2:Name', item[:name]
+            xml.tag! 'n2:Number', item[:number]
+            xml.tag! 'n2:Quantity', item[:quantity]
+            if item[:amount]
+              xml.tag! 'n2:Amount', localized_amount(item[:amount], currency_code), 'currencyID' => currency_code
+            end
+            xml.tag! 'n2:Description', item[:description]
+            xml.tag! 'n2:ItemURL', item[:url]
+          end
+        end
       end
     end
   end

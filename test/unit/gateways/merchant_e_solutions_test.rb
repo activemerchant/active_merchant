@@ -51,13 +51,15 @@ class MerchantESolutionsTest < Test::Unit::TestCase
     assert response.test?
 	end
 
-	def test_credit
-		@gateway.expects(:ssl_post).returns(successful_credit_response)
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
-    assert response.success?
-    assert_equal '0a5ca4662ac034a59595acb61e8da025', response.authorization
-    assert response.test?
+	def test_refund
+		@gateway.expects(:ssl_post).returns(successful_refund_response)
+    assert_success @gateway.refund(@amount, '0a5ca4662ac034a59595acb61e8da025', @options)
 	end
+
+  def test_credit
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    assert_success @gateway.credit(@amount, @credit_card, @options)
+  end
 
 	def test_void
 		@gateway.expects(:ssl_post).returns(successful_void_response)
@@ -142,7 +144,7 @@ class MerchantESolutionsTest < Test::Unit::TestCase
 		'transaction_id=42e52603e4c83a55890fbbcfb92b8de1&error_code=000&auth_response_text=Exact Match&auth_code=12345A'
 	end
 
-	def successful_credit_response
+	def successful_refund_response
 		'transaction_id=0a5ca4662ac034a59595acb61e8da025&error_code=000&auth_response_text=Credit Approved'
 	end
 

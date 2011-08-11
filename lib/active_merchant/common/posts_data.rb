@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
       base.superclass_delegating_accessor :ssl_strict
       base.ssl_strict = true
       
-      base.class_inheritable_accessor :retry_safe
+      base.class_attribute :retry_safe
       base.retry_safe = false
 
       base.superclass_delegating_accessor :open_timeout
@@ -42,6 +42,8 @@ module ActiveMerchant #:nodoc:
       
       connection.pem          = @options[:pem] if @options
       connection.pem_password = @options[:pem_password] if @options
+
+      connection.ignore_http_status = @options[:ignore_http_status] if @options
       
       connection.request(method, data, headers)
     end

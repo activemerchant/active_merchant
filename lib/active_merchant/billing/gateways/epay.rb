@@ -97,7 +97,7 @@ module ActiveMerchant #:nodoc:
         commit(:void, post)
       end
 
-      def credit(money, identification, options = {})
+      def refund(money, identification, options = {})
         post = {}
 
         add_amount_without_currency(post, money)
@@ -106,6 +106,10 @@ module ActiveMerchant #:nodoc:
         commit(:credit, post)
       end
 
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
+      end
 
       private
 

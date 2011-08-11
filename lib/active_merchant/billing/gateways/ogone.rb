@@ -149,11 +149,17 @@ module ActiveMerchant #:nodoc:
       # Credit the specified account by a specific amount.
       def credit(money, identification_or_credit_card, options = {})
         if reference_transaction?(identification_or_credit_card)
+          deprecated CREDIT_DEPRECATION_MESSAGE
           # Referenced credit: refund of a settled transaction
-          perform_reference_credit(money, identification_or_credit_card, options)
+          refund(money, identification_or_credit_card, options)
         else # must be a credit card or card reference
           perform_non_referenced_credit(money, identification_or_credit_card, options)
         end
+      end
+
+      # Refund of a settled transaction
+      def refund(money, reference, options = {})
+        perform_reference_credit(money, reference, options)
       end
 
       def test?
@@ -259,11 +265,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        root = REXML::Document.new(body).root
-        response = Hash[root.attributes.map { |key, value| [key.to_s, value] }]
+        xml_root = REXML::Document.new(body).root
+        response = convert_attributes_to_hash(xml_root.attributes)
+
         # Add HTML_ANSWER element (3-D Secure specific to the response's params)
-        html_answer = REXML::XPath.first(root, "//HTML_ANSWER")
-        response["HTML_ANSWER"] = html_answer.text unless html_answer.nil?
+        # Note: HTML_ANSWER is not an attribute so we add it "by hand" to the response
+        if html_answer = REXML::XPath.first(xml_root, "//HTML_ANSWER")
+          response["HTML_ANSWER"] = html_answer.text
+        end
+
         response
       end
 
@@ -338,6 +348,13 @@ module ActiveMerchant #:nodoc:
         post[key] = value if !value.blank?
       end
 
+      def convert_attributes_to_hash(rexml_attributes)
+        response_hash = {}
+        rexml_attributes.each do |key, value|
+          response_hash[key] = value
+        end
+        response_hash
+      end
     end
   end
 end

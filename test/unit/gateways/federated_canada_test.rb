@@ -7,11 +7,7 @@ class FederatedCanadaTest < Test::Unit::TestCase
                  :password => 'password'
                )
 
-    @credit_card = credit_card
-    @credit_card.number = '4111111111111111'
-    @credit_card.month = '11'
-    @credit_card.year = '2011'
-
+    @credit_card = credit_card('4111111111111111')
     @credit_card.verification_value = '999'
     @amount = 100
 

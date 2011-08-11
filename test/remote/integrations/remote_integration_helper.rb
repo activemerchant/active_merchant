@@ -1,7 +1,7 @@
 require 'mechanize'
 require 'action_view/base'
 require 'launchy'
-require 'mongrel'
+require 'mongrel' unless defined?(JRUBY_VERSION)
 
 module RemoteIntegrationHelper
   class FakeView < ActionView::Base

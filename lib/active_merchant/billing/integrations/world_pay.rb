@@ -6,28 +6,21 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module WorldPay 
        
-        mattr_accessor :service_url
-        self.service_url = 'https://select.worldpay.com/wcc/purchase'
-
-        mattr_accessor :test_url
-        self.test_url = 'https://select-test.worldpay.com/wcc/purchase'
-
-
+        # production and test have the same endpoint
+        mattr_accessor :production_url
+        self.production_url = 'https://secure.wp3.rbsworldpay.com/wcc/purchase'
+        
         def self.service_url
-          mode = ActiveMerchant::Billing::Base.integration_mode
-          case mode
-          when :production
-            production_url
-          when :test
-            test_url
-          else
-            raise StandardError, "Integration mode set to an invalid value: #{mode}"
-          end
+          production_url
         end
 
-        def self.notification(post)
-          Notification.new(post)
-        end  
+        def self.notification(post, options = {})
+          Notification.new(post, options)
+        end
+        
+        def self.return(post, options = {})
+          Return.new(post, options)
+        end
       end
     end
   end

@@ -109,6 +109,10 @@ module ActiveMerchant #:nodoc:
         setup_address_hash(options)
         commit(build_auth_request(money, creditcard, options), options )
       end
+      
+      def auth_reversal(money, identification, options = {})
+        commit(build_auth_reversal_request(money, identification, options), options)
+      end
 
       # Capture an authorization that has previously been requested
       def capture(money, authorization, options = {})
@@ -128,10 +132,14 @@ module ActiveMerchant #:nodoc:
         commit(build_void_request(identification, options), options)
       end
 
-      def credit(money, identification, options = {})
+      def refund(money, identification, options = {})
         commit(build_credit_request(money, identification, options), options)
       end
       
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
+      end
 
       # CyberSource requires that you provide line item information for tax calculations
       # If you do not have prices for each item or want to simplify the situation then pass in one fake line item that costs the subtotal of the order
@@ -218,6 +226,15 @@ module ActiveMerchant #:nodoc:
         
         xml = Builder::XmlMarkup.new :indent => 2
         add_void_service(xml, request_id, request_token)
+        xml.target!
+      end
+
+      def build_auth_reversal_request(money, identification, options)
+        order_id, request_id, request_token = identification.split(";")
+        options[:order_id] = order_id
+        xml = Builder::XmlMarkup.new :indent => 2
+        add_purchase_data(xml, money, true, options)
+        add_auth_reversal_service(xml, request_id, request_token)
         xml.target!
       end
 
@@ -317,6 +334,13 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'voidService', {'run' => 'true'} do
           xml.tag! 'voidRequestID', request_id
           xml.tag! 'voidRequestToken', request_token
+        end
+      end
+
+      def add_auth_reversal_service(xml, request_id, request_token)
+        xml.tag! 'ccAuthReversalService', {'run' => 'true'} do
+          xml.tag! 'authRequestID', request_id
+          xml.tag! 'authRequestToken', request_token
         end
       end
 
