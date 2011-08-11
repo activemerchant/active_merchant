@@ -256,13 +256,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        case response[:qpstat]
-        when '008'   # Error in request data
-          response[:qpstatmsg].to_s
-          #.scan(/[A-Z][a-z0-9 \/]+/).to_sentence
-        else
-          response[:qpstatmsg].to_s
-        end
+        response[:qpstatmsg].to_s
       end
 
       def post_data(action, params = {})
