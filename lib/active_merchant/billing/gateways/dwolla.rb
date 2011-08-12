@@ -1,3 +1,10 @@
+#After doing a successful purchase call you will be given a redirect_url (Response.params['redirect_url'])
+   #Redirect the user to this URL, which will allow them to Authorize with Dwolla and accept the purchase
+    #This will now redirect the user back to the 'redirect_url' you specified in the options of the gateway initialize
+      #This will contain a few GET params for referencing your data.
+    #This will also make a POST to the url you specified as 'callback_url' you specified in the options of the gateway initialize
+      #This will contain a few POST params to save in your database for reference.
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class DwollaGateway < Gateway
