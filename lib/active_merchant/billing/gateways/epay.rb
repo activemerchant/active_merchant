@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.supported_cardtypes = [:dankort, :forbrugsforeningen, :visa, :master,
                                   :american_express, :diners_club, :jcb, :maestro]
-      self.supported_countries = ['DK']
+      self.supported_countries = ['DK', 'SE', 'NO']
       self.homepage_url = 'http://epay.dk/'
       self.display_name = 'ePay'
 
