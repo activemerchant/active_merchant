@@ -4,60 +4,63 @@ class RemoteDwollaTest < Test::Unit::TestCase
   
 
   def setup
+    ActiveMerchant::Billing::Base.mode = :test
+
     @gateway = DwollaGateway.new(fixtures(:dwolla))
     
-    @amount = 100
-    @options = {
-      :order_id => '230000',
-      :email => 'buyer@jadedpallet.com',
-      :billing_address => { :name => 'Fred Brooks',
-                    :address1 => '1234 Penny Lane',
-                    :city => 'Jonsetown',
-                    :state => 'NC',
-                    :country => 'US',
-                    :zip => '23456'
-                  } ,
-      :description => 'Stuff that you purchased, yo!',
-      :return_url => 'http://example.com/return',
-      :cancel_return_url => 'http://example.com/cancel'
-    }
+    @amount = 1
+    @options = {:destination_id => "812-546-3855",
+                :discount => 0,
+                :shipping => 0,
+                :tax => 0,
+                :payment_callback => "http://dwolla-merchant.heroku.com/test/callback", # Only need this if you want it different than your application defines in Dwolla settings
+                :payment_redirect => "http://localhost:3000/test/redirect", # Only need this if you want it different than your application defines in Dwolla settings
+                :description => "testing active record",
+                :ordered_items =>
+                    [
+                        {:name => "Test Item Name",
+                                      :description => "Test Item Description",
+                                      :price => 1,
+                                      :quantity => 1}
+                    ],
+                }
+     @bad_options = {:destination_id => "812-546-3855",
+                :discount => 0,
+                :shipping => 0,
+                :tax => 0,
+                :payment_callback => "http://dwolla-merchant.heroku.com/test/callback", # Only need this if you want it different than your application defines in Dwolla settings
+                :payment_redirect => "http://localhost:3000/test/redirect", # Only need this if you want it different than your application defines in Dwolla settings
+                :description => "testing active record",
+                :ordered_items =>
+                    [
+                        {:name => "Test Item Name",
+                                      :description => "Test Item Description",
+                                      :price => 1,
+                                      :quantity => 0}
+                    ],
+                }
   end
   
   def test_successful_purchase
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.purchase(@amount, @options)
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_equal 'Successfully purchase order setup.', response.message
   end
 
   def test_unsuccessful_purchase
-    assert response = @gateway.purchase(@amount, @declined_card, @options)
+    assert response = @gateway.purchase(@amount, @bad_options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
-  end
-
-  def test_authorize_and_capture
-    amount = @amount
-    assert auth = @gateway.authorize(amount, @credit_card, @options)
-    assert_success auth
-    assert_equal 'Success', auth.message
-    assert auth.authorization
-    assert capture = @gateway.capture(amount, auth.authorization)
-    assert_success capture
-  end
-
-  def test_failed_capture
-    assert response = @gateway.capture(@amount, '')
-    assert_failure response
-    assert_equal 'REPLACE WITH GATEWAY FAILURE MESSAGE', response.message
+    assert_equal 'Failed purchase order setup', response.message
   end
 
   def test_invalid_login
     gateway = DwollaGateway.new(
-                :login => '',
-                :password => ''
+                :public_key => '',
+                :private_key => ''
               )
-    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert response = gateway.purchase(@amount, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILURE MESSAGE', response.message
+    assert_equal 'Failed purchase order setup', response.message
+    assert_equal 'Invalid application credentials.', response.params["error"]
   end
 end

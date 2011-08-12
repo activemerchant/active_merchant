@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
         response = {}
 
         json_response = JSON.parse(body)
-        
+
         if json_response["Result"] == "Failure"
           response[:response] = 'ERROR'
           response[:message] = json_response["Message"]
@@ -109,17 +109,15 @@ module ActiveMerchant #:nodoc:
         if response[:response] == "ERROR"
           Response.new(
               false,
-              response[:message],
-              {:error => response[:message],
-              :test => post[:test]},
-              {})
+              'Failed purchase order setup',
+              {:error => response[:message]},
+              {:test => post[:test]})
         else
           Response.new(true,
-                       response[:message],
+                       "Successfully purchase order setup.",
                         {:checkout_id => response[:checkout_id],
-                        :redirect_url => CHECKOUT_URL + response[:checkout_id],
-                       :test => post[:test]},
-                        {})
+                        :redirect_url => CHECKOUT_URL + response[:checkout_id]},
+                        {:test => post[:test]})
         end
       end
 
