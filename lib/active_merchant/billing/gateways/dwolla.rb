@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
           purchase_order = self[:purchase_order]
           items = []
           purchase_order[:ordered_items].each do |item|
-            items << %-{"Description":"#{item[:description]}","Name":"#{item[:name]}","Price": #{item[:price]},"Quantity": #{item[:quantity]}}-
+            items << %-{"Description":"#{item[:description]}","Name":"#{item[:name]}","Price": #{"%.2f" % item[:price]},"Quantity": #{item[:quantity]}}-
           end
 
           urls = ""
@@ -15,7 +15,8 @@ module ActiveMerchant #:nodoc:
           urls << %-"Redirect":"#{self[:payment_redirect]}",- unless self[:payment_redirect].nil?
           test_string << %-"Test":"true",- unless self[:test] == false
 
-          %-{"Key":"#{self[:key]}","Secret":"#{self[:secret]}",#{urls}#{test_string}"PurchaseOrder":{"DestinationId":"#{purchase_order[:destination_id]}","Discount": #{purchase_order[:discount]},"OrderItems":[#{items.join(',')}],"Shipping": #{purchase_order[:shipping]},"Tax": #{purchase_order[:tax]},"Total": #{purchase_order[:total]}}}-
+          #Fording formatting of dollar amounts to decimals for Dwolla server.
+          %-{"Key":"#{self[:key]}","Secret":"#{self[:secret]}",#{urls}#{test_string}"PurchaseOrder":{"DestinationId":"#{purchase_order[:destination_id]}","Discount": #{"%.2f" %  purchase_order[:discount]},"OrderItems":[#{items.join(',')}],"Shipping": #{"%.2f" % purchase_order[:shipping]},"Tax": #{"%.2f" % purchase_order[:tax]},"Total": #{"%.2f" % purchase_order[:total]}}}-
        end
       end
 
