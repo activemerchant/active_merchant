@@ -3,31 +3,19 @@ module ActiveMerchant #:nodoc:
     class DwollaGateway < Gateway
       class DwollaPostData < PostData
         def to_json_post_data
-          purchase_order = self[:purchaseorder]
+          purchase_order = self[:purchase_order]
           items = []
-          purchase_order[:ordereditems].each do |item|
-            items << "{\"Description\":\"#{item[:description]}\",\"Name\":\"#{item[:name]}\",\"Price\": #{item[:price]},\"Quantity\": #{item[:quantity]}}"
+          purchase_order[:ordered_items].each do |item|
+            items << %-{"Description":"#{item[:description]}","Name":"#{item[:name]}","Price": #{item[:price]},"Quantity": #{item[:quantity]}}-
           end
 
           urls = ""
-          if self[:payment_callback].nil? == false
-            urls << "\"Callback\":\"#{self[:payment_callback]}\","
-          end
-
-          puts urls
-    
-          if self[:payment_redirect].nil? == false
-            urls << "\"Redirect\":\"#{self[:payment_redirect]}\","
-          end
-
-           puts urls
-
           test_string = ""
-          if self[:test]
-            test_string << "\"Test\":\"true\","
-          end
+          urls << %-"Callback":"#{self[:payment_callback]}",- unless self[:payment_callback].nil?
+          urls << %-"Redirect":"#{self[:payment_redirect]}",- unless self[:payment_redirect].nil?
+          test_string << %-"Test":"true",- unless self[:test] == false
 
-          "{\"Key\":\"#{self[:key]}\",\"Secret\":\"#{self[:secret]}\",#{urls}#{test_string}\"PurchaseOrder\":{\"DestinationId\":\"#{purchase_order[:destination_id]}\",\"Discount\": #{purchase_order[:discount]},\"OrderItems\":[#{items.join(',')}],\"Shipping\": #{purchase_order[:shipping]},\"Tax\": #{purchase_order[:tax]},\"Total\": #{purchase_order[:total]}}}"
+          %-{"Key":"#{self[:key]}","Secret":"#{self[:secret]}",#{urls}#{test_string}"PurchaseOrder":{"DestinationId":"#{purchase_order[:destination_id]}","Discount": #{purchase_order[:discount]},"OrderItems":[#{items.join(',')}],"Shipping": #{purchase_order[:shipping]},"Tax": #{purchase_order[:tax]},"Total": #{purchase_order[:total]}}}-
        end
       end
 
@@ -46,7 +34,8 @@ module ActiveMerchant #:nodoc:
       # The name of the gateway
       self.display_name = 'Dwolla'
 
-       self.money_format = :dollars
+      # The type of moneys the gateway takes
+      self.money_format = :dollars
 
       def initialize(options = {})
         requires!(options, :public_key, :private_key)
@@ -59,21 +48,14 @@ module ActiveMerchant #:nodoc:
         add_purchase_order(post, total, options)
         add_callback(post, options)
 
-
-
-        commit('sale', post)
+        commit(post)
       end
 
       private
 
       def add_callback(post, options)
-        if options[:payment_callback]
-          post[:payment_callback] = options[:payment_callback]
-        end
-
-        if options[:payment_redirect]
-          post[:payment_redirect] = options[:payment_redirect]
-        end
+          post[:payment_callback] = options[:payment_callback] unless options[:payment_callback].empty?
+          post[:payment_redirect] = options[:payment_redirect] unless options[:payment_redirect].empty?
       end
 
       def add_purchase_order(post, total, options)
@@ -86,7 +68,7 @@ module ActiveMerchant #:nodoc:
 
         purchase_order = add_ordered_items(purchase_order, options)
 
-        post[:purchaseorder] = purchase_order
+        post[:purchase_order] = purchase_order
       end
 
       def add_ordered_items(purchase_order, options)
@@ -99,7 +81,7 @@ module ActiveMerchant #:nodoc:
                           :quantity => 1}]
         end
 
-        purchase_order[:ordereditems] = ordered_items
+        purchase_order[:ordered_items] = ordered_items
 
         purchase_order
       end
@@ -119,11 +101,9 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def commit(action, post)
+      def commit(post)
         post[:test] = test? ? true : false
-        response = parse( ssl_post(LIVE_URL, post_data(action, post), {"Content-Type" => "application/json"}) )
-
-        puts response.inspect
+        response = parse(ssl_post(LIVE_URL, post_data(post), {"Content-Type" => "application/json"}) )
 
         if response[:response] == "ERROR"
           Response.new(
@@ -142,15 +122,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def message_from(response)
-
-      end
-
-      def post_data(action, post = {})
+      def post_data(post = {})
         post[:key]        = @options[:public_key]
         post[:secret]   = @options[:private_key]
-
-        puts post.to_json_post_data
         
         post.to_json_post_data
       end
