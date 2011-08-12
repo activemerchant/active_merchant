@@ -58,6 +58,18 @@ class OptimalPaymentTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.void("1234567", @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    # Replace with authorization number from the successful response
+    assert_equal '126740505', response.authorization
+    assert response.test?
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 

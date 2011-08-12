@@ -40,6 +40,11 @@ module ActiveMerchant #:nodoc:
         commit('ccCredit', money, options)
       end
 
+      def void(authorization, options = {})
+        options[:confirmationNumber] = authorization
+        commit('ccAuthorizeReversal', nil, options)
+      end
+
       def capture(money, authorization, options = {})
         options[:confirmationNumber] = authorization
         commit('ccSettlement', money, options)
@@ -73,6 +78,8 @@ module ActiveMerchant #:nodoc:
           cc_post_auth_request(money, post)
         when 'ccStoredDataAuthorize', 'ccStoredDataPurchase'
           cc_stored_data_request(money, post)
+        when 'ccAuthorizeReversal'
+          cc_auth_reversal_request(post)
         #when 'ccCancelSettle', 'ccCancelCredit', 'ccCancelPayment'
         #  cc_cancel_request(money, post)
         #when 'ccPayment'
@@ -141,6 +148,14 @@ module ActiveMerchant #:nodoc:
           xml.amount(money/100.0)
           build_card(xml, opts)
           build_billing_details(xml, opts)
+        end
+      end
+
+      def cc_auth_reversal_request(opts)
+        xml_document('ccAuthReversalRequestV1') do |xml|
+          build_merchant_account(xml, @options)
+          xml.confirmationNumber opts[:confirmationNumber]
+          xml.merchantRefNum opts[:order_id]
         end
       end
 
