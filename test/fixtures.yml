@@ -169,7 +169,10 @@ net_registry:
 nmi:
   login: demo
   password: password
-  
+
+nmi_three_step:
+  login: 2F822Rw39fx762MaV7Yy86jXGTC7sCDy
+
 ogone:
   login: LOGIN
   user: USER
