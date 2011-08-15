@@ -8,31 +8,79 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'DKK'
       self.money_format = :cents
-      self.supported_cardtypes = [ :dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro ]
+      self.supported_cardtypes = [:dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro]
       self.supported_countries = ['DK', 'SE']
       self.homepage_url = 'http://quickpay.dk/'
       self.display_name = 'Quickpay'
 
       MD5_CHECK_FIELDS = {
         3 => {
-          :authorize => [:protocol, :msgtype, :merchant, :ordernumber, :amount, :currency, :autocapture, :cardnumber, :expirationdate, :cvd, :cardtypelock, :testmode],
-          :capture   => [:protocol, :msgtype, :merchant, :amount, :transaction],
-          :cancel    => [:protocol, :msgtype, :merchant, :transaction],
-          :refund    => [:protocol, :msgtype, :merchant, :amount, :transaction],
-          :subscribe => [:protocol, :msgtype, :merchant, :ordernumber, :cardnumber, :expirationdate, :cvd, :cardtypelock, :description, :testmode],
-          :recurring => [:protocol, :msgtype, :merchant, :ordernumber, :amount, :currency, :autocapture, :transaction],
-          :status    => [:protocol, :msgtype, :merchant, :transaction],
-          :chstatus  => [:protocol, :msgtype, :merchant],
+          :authorize => %w(protocol msgtype merchant ordernumber amount
+                           currency autocapture cardnumber expirationdate
+                           cvd cardtypelock testmode),
+
+          :capture   => %w(protocol msgtype merchant amount transaction),
+
+          :cancel    => %w(protocol msgtype merchant transaction),
+
+          :refund    => %w(protocol msgtype merchant amount transaction),
+
+          :subscribe => %w(protocol msgtype merchant ordernumber cardnumber
+                           expirationdate cvd cardtypelock description testmode),
+
+          :recurring => %w(protocol msgtype merchant ordernumber amount
+                           currency autocapture transaction),
+
+          :status    => %w(protocol msgtype merchant transaction),
+
+          :chstatus  => %w(protocol msgtype merchant)
         },
+
         4 => {
-          :authorize => [:protocol, :msgtype, :merchant, :ordernumber, :amount, :currency, :autocapture, :cardnumber, :expirationdate, :cvd, :cardtypelock, :testmode, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
-          :capture   => [:protocol, :msgtype, :merchant, :amount, :transaction, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
-          :cancel    => [:protocol, :msgtype, :merchant, :transaction, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
-          :refund    => [:protocol, :msgtype, :merchant, :amount, :transaction, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
-          :subscribe => [:protocol, :msgtype, :merchant, :ordernumber, :cardnumber, :expirationdate, :cvd, :cardtypelock, :description, :testmode, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
-          :recurring => [:protocol, :msgtype, :merchant, :ordernumber, :amount, :currency, :autocapture, :transaction, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
-          :status    => [:protocol, :msgtype, :merchant, :transaction, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
-          :chstatus  => [:protocol, :msgtype, :merchant, :fraud_remote_addr, :fraud_http_accept, :fraud_http_accept_language, :fraud_http_accept_encoding, :fraud_http_accept_charset, :fraud_http_referer, :fraud_http_user_agent, :apikey],
+          :authorize => %w(protocol msgtype merchant ordernumber amount
+                           currency autocapture cardnumber expirationdate cvd
+                           cardtypelock testmode fraud_remote_addr
+                           fraud_http_accept fraud_http_accept_language
+                           fraud_http_accept_encoding fraud_http_accept_charset
+                           fraud_http_referer fraud_http_user_agent apikey),
+
+          :capture   => %w(protocol msgtype merchant amount transaction
+                           fraud_remote_addr fraud_http_accept
+                           fraud_http_accept_language fraud_http_accept_encoding
+                           fraud_http_accept_charset fraud_http_referer
+                           fraud_http_user_agent apikey),
+
+          :cancel    => %w(protocol msgtype merchant transaction fraud_remote_addr
+                           fraud_http_accept fraud_http_accept_language
+                           fraud_http_accept_encoding fraud_http_accept_charset
+                           fraud_http_referer fraud_http_user_agent apikey),
+
+          :refund    => %w(protocol msgtype merchant amount transaction
+                           fraud_remote_addr fraud_http_accept fraud_http_accept_language
+                           fraud_http_accept_encoding fraud_http_accept_charset
+                           fraud_http_referer fraud_http_user_agent apikey),
+
+          :subscribe => %w(protocol msgtype merchant ordernumber cardnumber
+                           expirationdate cvd cardtypelock description testmode
+                           fraud_remote_addr fraud_http_accept fraud_http_accept_language
+                           fraud_http_accept_encoding fraud_http_accept_charset
+                           fraud_http_referer fraud_http_user_agent apikey),
+
+          :recurring => %w(protocol msgtype merchant ordernumber amount currency
+                           autocapture transaction fraud_remote_addr fraud_http_accept
+                           fraud_http_accept_language fraud_http_accept_encoding
+                           fraud_http_accept_charset fraud_http_referer
+                           fraud_http_user_agent apikey),
+
+          :status    => %w(protocol msgtype merchant transaction fraud_remote_addr
+                           fraud_http_accept fraud_http_accept_language
+                           fraud_http_accept_encoding fraud_http_accept_charset
+                           fraud_http_referer fraud_http_user_agent apikey),
+
+          :chstatus  => %w(protocol msgtype merchant fraud_remote_addr fraud_http_accept
+                           fraud_http_accept_language fraud_http_accept_encoding
+                           fraud_http_accept_charset fraud_http_referer
+                           fraud_http_user_agent apikey)
         }
       }
 
@@ -208,13 +256,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        case response[:qpstat]
-        when '008'   # Error in request data
-          response[:qpstatmsg].to_s
-          #.scan(/[A-Z][a-z0-9 \/]+/).to_sentence
-        else
-          response[:qpstatmsg].to_s
-        end
+        response[:qpstatmsg].to_s
       end
 
       def post_data(action, params = {})
@@ -229,7 +271,7 @@ module ActiveMerchant #:nodoc:
 
       def generate_check_hash(action, params)
         string = MD5_CHECK_FIELDS[@protocol][action].collect do |key|
-          params[key]
+          params[key.to_sym]
         end.join('')
 
         # Add the md5checkword
