@@ -60,6 +60,10 @@ data_cash:
   login: X
   password: Y
 
+dwolla:
+  public_key: dQOao5wQBpm0PzMniSZnZWZP8jplcBO4vDpiMBYRbosHu7mZMW
+  private_key: DdoJL67As/bRbLb6CAy9fjyU2W/7WwMQoFQkQyy0TGsJJWLfVD
+
 direc_pay:
   login: 200904281000001
   
