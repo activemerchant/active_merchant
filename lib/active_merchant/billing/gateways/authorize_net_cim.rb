@@ -555,7 +555,7 @@ module ActiveMerchant #:nodoc:
 
       def build_create_customer_profile_transaction_request(xml, options)
         add_transaction(xml, options[:transaction])
-        xml.tag!('extraOptions', "x_test_request=TRUE") if @options[:test]
+        add_extra_options(xml)
         
         xml.target!
       end
@@ -627,6 +627,16 @@ module ActiveMerchant #:nodoc:
             add_order(xml, transaction[:order]) if transaction[:order]
           end
         end
+      end
+      
+      def add_extra_options(xml)
+        xOpts  = @options[:test] ? ["x_test_request=TRUE"] : []
+        xOpts += ["x_duplicate_window=#{@options[:duplicate_window]}"] if @options[:duplicate_window]
+        return if xOpts.empty?
+        
+        xml.tag!('extraOptions') {
+          xml.cdata!( xOpts.join('&') )
+        } 
       end
       
       def add_order(xml, order)
