@@ -94,6 +94,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>:password</tt> -- The Authorize.Net Transaction Key. (REQUIRED)
       # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test server. 
       #   Otherwise, perform transactions against the production server.
+      # * <tt>:duplicate_window</tt> -- Number of seconds following submission during which processing
+      #    of duplicate transactions will be prevented.  Valid range is 0 - 28800, default is 120.
       def initialize(options = {})
         requires!(options, :login, :password)
         @options = options
