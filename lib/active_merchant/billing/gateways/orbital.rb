@@ -80,8 +80,8 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         unless options[:ip_authentication] == true
           requires!(options, :login, :password, :merchant_id)
-          @options = options
         end
+        @options = options
         super
       end
       
@@ -167,6 +167,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! :CurrencyCode, currency_code(currency)
         xml.tag! :CurrencyExponent, '2' # Will need updating to support currencies such as the Yen.
         
+        xml.tag! :CardSecValInd, 1 if creditcard.verification_value? && %w( visa discover ).include?(creditcard.type)
         xml.tag! :CardSecVal,  creditcard.verification_value if creditcard.verification_value?
       end
       
@@ -223,11 +224,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        if response[:message_type] == "R"
+        if response[:message_type].nil? || response[:message_type] == "R"
           response[:proc_status] == SUCCESS
         else
           response[:proc_status] == SUCCESS &&
-          response[:resp_code] == APPROVED 
+            response[:resp_code] == APPROVED
         end
       end
       
@@ -247,7 +248,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! :NewOrder do
             xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
             xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
-            xml.tag! :IndustryType, "EC" # E-Commerce transaction 
+            xml.tag! :IndustryType, parameters[:industry_type] || "EC"
             xml.tag! :MessageType, action
             xml.tag! :BIN, '000002' # PNS Tampa
             xml.tag! :MerchantID, @options[:merchant_id]
@@ -289,7 +290,6 @@ module ActiveMerchant #:nodoc:
       end
       
       def build_void_request_xml(money, authorization, parameters = {})
-        requires!(parameters, :transaction_index)
         tx_ref_num, order_id = authorization.split(';')
         xml = Builder::XmlMarkup.new(:indent => 2)
         xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
