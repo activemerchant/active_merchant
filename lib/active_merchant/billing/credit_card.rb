@@ -1,6 +1,7 @@
 require 'time'
 require 'date'
 require 'active_merchant/billing/expiry_date'
+require 'active_model'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -48,7 +49,9 @@ module ActiveMerchant #:nodoc:
     #
     class CreditCard
       include CreditCardMethods
-      include Validateable
+      include ActiveModel::Validations
+      include ActiveModel::MassAssignmentSecurity
+      include MassAssignment
 
       cattr_accessor :require_verification_value
       self.require_verification_value = true
@@ -111,6 +114,8 @@ module ActiveMerchant #:nodoc:
       #
       # @return [String] the verification value
       attr_accessor :verification_value
+      
+      validate :validate
 
       alias_method :brand, :type
 
@@ -182,6 +187,7 @@ module ActiveMerchant #:nodoc:
       #
       # Any validation errors are added to the {#errors} attribute.
       def validate
+        cleanup_attributes
         validate_essential_attributes
 
         # Bogus card is pretty much for testing purposes. Lets just skip these extra tests if its used
@@ -199,7 +205,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def before_validate #:nodoc:
+      def cleanup_attributes #:nodoc: 
         self.month = month.to_i
         self.year  = year.to_i
         self.start_month = start_month.to_i unless start_month.nil?
@@ -216,7 +222,7 @@ module ActiveMerchant #:nodoc:
           errors.add :number, "is not a valid credit card number"
         end
 
-        unless errors.on(:number) || errors.on(:type)
+        unless errors[:number].any? || errors[:type].any?
           errors.add :type, "is not the correct card type" unless CreditCard.matching_type?(number, type)
         end
       end
