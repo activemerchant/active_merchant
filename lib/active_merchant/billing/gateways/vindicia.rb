@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
         response = authorize(money, creditcard, options)
         return response if !response.success? || response.fraud_review?
 
-        capture(money, [response.authorization], options)
+        capture(money, response.authorization, options)
       end
 
       # Performs an authorization, which reserves the funds on the customer's credit card, but does not
@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>identification</tt> -- The authorization returned from the previous authorize request.
       def capture(money, identification, options = {})
         response = post(Vindicia::Transaction.capture({
-          :transactions => { :merchantTransactionId => identification }
+          :transactions => [{ :merchantTransactionId => identification }]
         }))
 
         if response[:return][:returnCode] != '200' || response[:qtyFail].to_i > 0
