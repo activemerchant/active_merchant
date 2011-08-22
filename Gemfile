@@ -4,8 +4,7 @@ gem 'activesupport', '>= 2.3.11'
 gem 'money'
 gem 'braintree', '>= 2.0.0'
 gem 'json', :platforms => :ruby_18
-
-gem 'vindicia-api', :git => 'git@github.com:agoragames/vindicia-api.git', :branch => 'only_builder'
+gem 'vindicia-api'
 
 group :test do
   gem 'rails', '>= 2.3.11'
