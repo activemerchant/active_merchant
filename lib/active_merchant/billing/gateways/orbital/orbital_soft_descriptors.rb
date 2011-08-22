@@ -1,7 +1,9 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class OrbitalSoftDescriptors
-      include Validateable
+      include ActiveModel::Validations
+      include ActiveModel::MassAssignmentSecurity
+      include MassAssignment
       
       PHONE_FORMAT_1 = /\A\d{3}-\d{3}-\d{4}\z/
       PHONE_FORMAT_2 = /\A\d{3}-\w{7}\z/

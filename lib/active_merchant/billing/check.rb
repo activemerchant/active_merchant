@@ -7,12 +7,16 @@ module ActiveMerchant #:nodoc:
     # You may use Check in place of CreditCard with any gateway that supports it. Currently, only
     # +BraintreeGateway+ supports the Check object.
     class Check
-      include Validateable
+      include ActiveModel::Validations
+      include ActiveModel::MassAssignmentSecurity
+      include MassAssignment
       
       attr_accessor :first_name, :last_name, :routing_number, :account_number, :account_holder_type, :account_type, :number
       
       # Used for Canadian bank accounts
       attr_accessor :institution_number, :transit_number
+      
+      validate :validate
       
       def name
         @name ||= "#{@first_name} #{@last_name}".strip

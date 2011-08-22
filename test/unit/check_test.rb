@@ -39,50 +39,50 @@ class CheckTest < Test::Unit::TestCase
   def test_invalid_routing_number
     c = Check.new(:routing_number => INVALID_ABA)
     assert !c.valid?
-    assert_equal c.errors.on(:routing_number), "is invalid"
+    assert_equal c.errors[:routing_number].join, "is invalid"
   end
   
   def test_malformed_routing_number
     c = Check.new(:routing_number => MALFORMED_ABA)
     assert !c.valid?
-    assert_equal c.errors.on(:routing_number), "is invalid"
+    assert_equal c.errors[:routing_number].join, "is invalid"
   end
   
   def test_account_holder_type
     c = Check.new
     c.account_holder_type = 'business'
     c.valid?
-    assert !c.errors.on(:account_holder_type)
+    assert_attribute_valid c, :account_holder_type
     
     c.account_holder_type = 'personal'
     c.valid?
-    assert !c.errors.on(:account_holder_type)
+    assert_attribute_valid c, :account_holder_type
     
     c.account_holder_type = 'pleasure'
     c.valid?
-    assert_equal c.errors.on(:account_holder_type), 'must be personal or business'
+    assert_equal c.errors[:account_holder_type].join, 'must be personal or business'
     
     c.account_holder_type = nil
     c.valid?
-    assert !c.errors.on(:account_holder_type)
+    assert_attribute_valid c, :account_holder_type
   end
   
   def test_account_type
     c = Check.new
     c.account_type = 'checking'
     c.valid?
-    assert !c.errors.on(:account_type)
+    assert_attribute_valid c, :account_type
     
     c.account_type = 'savings'
     c.valid?
-    assert !c.errors.on(:account_type)
+    assert_attribute_valid c, :account_type
     
     c.account_type = 'moo'
     c.valid?
-    assert_equal c.errors.on(:account_type), "must be checking or savings"
+    assert_equal c.errors[:account_type].join, "must be checking or savings"
     
     c.account_type = nil
     c.valid?
-    assert !c.errors.on(:account_type)
+    assert_attribute_valid c, :account_type
   end
 end
