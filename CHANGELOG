@@ -1,5 +1,17 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.17.0 (August 23, 2011)
+
+* Add Payflow Link integration [jduff]
+* Add CardSave gateway [MrJaba/jduff]]
+* Quickpay: Support protocal version 4 and fraud parameters [anderslemke/jduff]
+* Authorize.net: Add status_recurring [mm1/jduff]
+* Paypal Express: Support specifying :items with purchase [sivabudh/jduff]
+* ePay: Add Sweden and Norway to supported countries [ePay/jduff]
+* Brainreee: Support passing merchant_account_id parameter [braintreeps/jduff]
+* Paypal Express: Remove deprecated Address field in favor of ShipToAddress[jduff]
+* Add Optimal Payments gateway [jamie/jduff]
+* Documentation improvements [dasch/nhemsley/jstorimer/jduff]
 * Authorize.Net: Pass through first name, last name, and zip for refunds. [ntalbott]
 
 == Version 1.16.0 (July 18, 2011)
