@@ -95,7 +95,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [DataCash](http://www.datacash.com/) - GB
 * [Efsnet](http://www.concordefsnet.com/) - US
 * [Elavon MyVirtualMerchant](http://www.elavon.com) - US, CA
-* [ePay](http://www.epay.dk/) - DK
+* [ePay](http://www.epay.dk/) - DK, SE, NO
 * [eWAY](http://www.eway.com.au/) - AU
 * [E-xact](http://www.e-xact.com) - CA, US
 * [Federated Canada](http://www.federatedcanada.com/) - CA
