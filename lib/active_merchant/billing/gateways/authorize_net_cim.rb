@@ -109,9 +109,13 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Options
       #
-      # TODO
+      # * <tt>:profile</tt> -- It contains information about the customer whose profile is to be created. Atleast
+      # one of the following fields must be submitted: merchant_customer_id, :description or :email. More than one
+      # option can be submitted.
+      #
       def create_customer_profile(options)
-        # TODO Add requires
+        raise StandardError, ":profile key must be passed" unless options[:profile]
+
         request = build_request(:create_customer_profile, options)
         commit(:create_customer_profile, request)
       end

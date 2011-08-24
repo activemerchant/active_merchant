@@ -47,7 +47,13 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal '2009-09', @gateway.send(:expdate, credit_card('4111111111111111', :month => "9", :year => "2009"))
     assert_equal '2013-11', @gateway.send(:expdate, credit_card('4111111111111111', :month => "11", :year => "2013"))
   end
-  
+
+  def test_should_not_create_customer_profile_request
+    assert_raise(StandardError) do
+      @gateway.create_customer_profile({})
+    end
+  end
+
   def test_should_create_customer_profile_request
     @gateway.expects(:ssl_post).returns(successful_create_customer_profile_response)
 
