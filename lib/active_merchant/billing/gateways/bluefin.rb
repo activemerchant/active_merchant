@@ -173,6 +173,14 @@ module ActiveMerchant #:nodoc:
         SUCCESS_CODES.include? response[:status_code]
       end
       
+      
+      def expdate(creditcard)
+        year  = sprintf("%.4i", creditcard.year)
+        month = sprintf("%.2i", creditcard.month)
+
+        "#{month}#{year[-2..-1]}"
+      end
+      
     end
   end
 end
