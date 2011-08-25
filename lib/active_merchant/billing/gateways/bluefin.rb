@@ -164,7 +164,7 @@ module ActiveMerchant #:nodoc:
         
         # combine with the other parameters and URL encode
         request = post.merge(parameters)
-        request.to_params
+        request.to_query
         request
       end
       
