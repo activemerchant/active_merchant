@@ -153,6 +153,12 @@ class CreditCardTest < Test::Unit::TestCase
     assert_valid @visa
   end
 
+  def test_expired_card_should_have_one_error_on_year
+    @visa.year = Time.now.year - 1
+    assert_not_valid @visa
+    assert_equal 1, @visa.errors['year'].length
+    assert /expired/ =~ @visa.errors['year'].first
+  end
 
   def test_should_be_valid_with_start_month_and_year_as_string
     @solo.start_month = '2'
