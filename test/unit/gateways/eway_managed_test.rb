@@ -28,7 +28,8 @@ class EwayManagedTest < Test::Unit::TestCase
                :email => 'someguy1232@fakeemail.net',
                :order_id => '1000',
                :customer => 'mycustomerref',
-               :description => 'My Description'
+               :description => 'My Description',
+               :invoice => 'invoice-4567'
     }
   end
 
@@ -79,6 +80,51 @@ class EwayManagedTest < Test::Unit::TestCase
     assert_success response
     assert_equal "123456", response.authorization
     assert response.test?
+  end
+  
+  def test_expected_request_on_purchase
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      # Compare the actual and expected XML documents, by converting them to Hashes first
+      expected = Hash.from_xml(expected_purchase_request)
+      actual = Hash.from_xml(data)
+      expected == actual
+    }.returns(successful_purchase_response)
+    @gateway.purchase(@amount, @valid_customer_id, @options)
+  end
+  
+  def test_purchase_invoice_reference_comes_from_order_id_or_invoice
+    options = @options.dup
+
+    # invoiceReference == options[:order_id]
+    options[:order_id] = 'order_id'
+    options.delete(:invoice)
+    
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      request_hash = Hash.from_xml(data)
+      request_hash['Envelope']['Body']['ProcessPayment']['invoiceReference'] == 'order_id'
+    }.returns(successful_purchase_response)
+    @gateway.purchase(@amount, @valid_customer_id, options)
+    
+    # invoiceReference == options[:invoice]
+    options[:invoice] = 'invoice'
+    options.delete(:order_id)
+    
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      request_hash = Hash.from_xml(data)
+      request_hash['Envelope']['Body']['ProcessPayment']['invoiceReference'] == 'invoice'
+    }.returns(successful_purchase_response)
+    @gateway.purchase(@amount, @valid_customer_id, options)
+
+    # invoiceReference == options[:order_id] || options[:invoice]
+    options[:order_id] = 'order_id'
+    options[:invoice] = 'invoice'
+    
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      request_hash = Hash.from_xml(data)
+      request_hash['Envelope']['Body']['ProcessPayment']['invoiceReference'] == 'order_id'
+    }.returns(successful_purchase_response)
+    @gateway.purchase(@amount, @valid_customer_id, options)
+
   end
 
   def test_invalid_customer_id
@@ -285,5 +331,29 @@ class EwayManagedTest < Test::Unit::TestCase
 </soap12:Envelope>
     XML
   end
+
+    # Documented here: https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx?op=CreateCustomer
+    def expected_purchase_request
+      <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+  <soap12:Header>
+    <eWAYHeader xmlns="https://www.eway.com.au/gateway/managedpayment">
+      <eWAYCustomerID>login</eWAYCustomerID>
+      <Username>username</Username>
+      <Password>password</Password>
+    </eWAYHeader>
+  </soap12:Header>
+  <soap12:Body>
+    <ProcessPayment xmlns="https://www.eway.com.au/gateway/managedpayment">
+      <managedCustomerID>#{@valid_customer_id}</managedCustomerID>
+      <amount>#{@amount}</amount>
+      <invoiceReference>#{@options[:order_id] || @options[:invoice]}</invoiceReference>
+      <invoiceDescription>#{@options[:description]}</invoiceDescription>
+    </ProcessPayment>
+  </soap12:Body>
+</soap12:Envelope>
+      XML
+    end
 
 end
