@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
         
         add_creditcard(post, creditcard)
         add_address(post, billing_address)
-        add_misc_fields(post, billing_address)
+        add_misc_fields(post, options)
              
         commit("CreateCustomer", post)
       end
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         post[:managedCustomerID]=billing_id
         add_creditcard(post, creditcard)
         add_address(post, billing_address)
-        add_misc_fields(post, billing_address)
+        add_misc_fields(post, options)
              
         commit("UpdateCustomer", post)
       end
@@ -102,12 +102,13 @@ private
       end
       
       def add_misc_fields(post, options)
-        post[:CustomerRef]=options[:customer_ref].to_s
-        post[:Title]=options[:title]
-        post[:Company]=options[:company]
-        post[:JobDesc]=options[:job_desc]
-        post[:Email]=options[:email]
-        post[:URL]=options[:url]
+        post[:CustomerRef]=options[:billing_address][:customer_ref] || options[:customer]
+        post[:Title]=options[:billing_address][:title]
+        post[:Company]=options[:billing_address][:company]
+        post[:JobDesc]=options[:billing_address][:job_desc]
+        post[:Email]=options[:billing_address][:email] || options[:email]
+        post[:URL]=options[:billing_address][:url]
+        post[:Comments]=options[:description]
       end
       
       # add credit card details to be stored by eway. NOTE eway requires "title" field
