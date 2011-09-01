@@ -16,10 +16,16 @@ Gem::Specification.new do |s|
   s.has_rdoc = true if Gem::VERSION < '1.7.0'
   
   s.add_dependency('activesupport', '>= 2.3.11')
+  s.add_dependency('i18n')
+  s.add_dependency('money')
   s.add_dependency('builder', '>= 2.0.0')
   s.add_dependency('braintree', '>= 2.0.0')
   s.add_dependency('json', '>= 1.5.1') if RUBY_VERSION =~ /^1\.8\./
-  
+  s.add_dependency('active_utils')
+
+  s.add_development_dependency('rake')
+  s.add_development_dependency('mocha')
+  s.add_development_dependency('rails', '>= 2.3.11')
   s.signing_key = ENV['GEM_PRIVATE_KEY']
   s.cert_chain  = ['gem-public_cert.pem']
 end
