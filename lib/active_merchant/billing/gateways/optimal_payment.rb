@@ -49,6 +49,10 @@ module ActiveMerchant #:nodoc:
         commit('ccSettlement', money, options)
       end
 
+      def test?
+        super || @options[:test]
+      end
+
     private
 
       def parse_card_or_auth(card_or_auth, options)
