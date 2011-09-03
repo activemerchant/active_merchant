@@ -34,6 +34,7 @@ module ActiveMerchant #:nodoc:
         add_credit_card(post, credit_card)        
         add_address(post, credit_card, options)        
         add_customer_data(post, options)
+        add_special_options(post, options)
         
         commit(:authorization, money, post)
       end
