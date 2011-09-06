@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
         
         add_creditcard(post, creditcard)
         add_address(post, billing_address)
-        add_misc_fields(post, billing_address)
+        add_misc_fields(post, options)
              
         commit("CreateCustomer", post)
       end
@@ -63,17 +63,30 @@ module ActiveMerchant #:nodoc:
         post[:managedCustomerID]=billing_id
         add_creditcard(post, creditcard)
         add_address(post, billing_address)
-        add_misc_fields(post, billing_address)
+        add_misc_fields(post, options)
              
         commit("UpdateCustomer", post)
       end
       
-      #process payment for given amount from stored CC "ManagedCustomerID = billing_id"
+      # Process a payment in the given amount against the stored credit card given by billing_id
+      #
+      # ==== Parameters
+      #
+      # * <tt>money</tt> -- The amount to be purchased as an Integer value in cents.
+      # * <tt>billing_id</tt> -- The eWay provided card/customer token to charge (managedCustomerID)
+      # * <tt>options</tt> -- A hash of optional parameters.
+      #
+      # ==== Options
+      #
+      # * <tt>:order_id</tt> -- The order number, passed to eWay as the "Invoice Reference"
+      # * <tt>:invoice</tt> -- The invoice number, passed to eWay as the "Invoice Reference" unless :order_id is also given
+      # * <tt>:description</tt> -- A description of the payment, passed to eWay as the "Invoice Description"
       def purchase(money, billing_id, options={})        
         post = {}  
         post[:managedCustomerID] = billing_id.to_s
         post[:amount]=money
-             
+        add_invoice(post, options)
+        
         commit("ProcessPayment", post)
       end
       
@@ -102,13 +115,20 @@ private
       end
       
       def add_misc_fields(post, options)
-        post[:CustomerRef]=options[:customer_ref].to_s
-        post[:Title]=options[:title]
-        post[:Company]=options[:company]
-        post[:JobDesc]=options[:job_desc]
-        post[:Email]=options[:email]
-        post[:URL]=options[:url]
+        post[:CustomerRef]=options[:billing_address][:customer_ref] || options[:customer]
+        post[:Title]=options[:billing_address][:title]
+        post[:Company]=options[:billing_address][:company]
+        post[:JobDesc]=options[:billing_address][:job_desc]
+        post[:Email]=options[:billing_address][:email] || options[:email]
+        post[:URL]=options[:billing_address][:url]
+        post[:Comments]=options[:description]
       end
+      
+      def add_invoice(post, options)
+        post[:invoiceReference] = options[:order_id] || options[:invoice]
+        post[:invoiceDescription] = options[:description]
+      end
+      
       
       # add credit card details to be stored by eway. NOTE eway requires "title" field
       def add_creditcard(post, creditcard)
@@ -188,7 +208,12 @@ private
       # Where we build the full SOAP 1.2 request using builder
       def soap_request(arguments, action)
         # eWay demands all fields be sent, but contain an empty string if blank
-        post=default_fields.merge(arguments)
+        post = case action
+        when 'ProcessPayment'
+          default_payment_fields.merge(arguments)
+        else    
+          default_customer_fields.merge(arguments)
+        end
         
         xml = Builder::XmlMarkup.new :indent => 2
           xml.instruct!
@@ -211,9 +236,17 @@ private
         xml.target!
       end
       
-      def default_fields
+      def default_customer_fields
         hash={}
         %w( CustomerRef Title FirstName LastName Company JobDesc Email Address Suburb State PostCode Country Phone Mobile Fax URL Comments CCNumber CCNameOnCard CCExpiryMonth CCExpiryYear ).each do |field|
+          hash[field.to_sym]=''
+        end
+        return hash
+      end
+      
+      def default_payment_fields
+        hash={}
+        %w( managedCustomerID amount invoiceReference invoiceDescription ).each do |field|
           hash[field.to_sym]=''
         end
         return hash
