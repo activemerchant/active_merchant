@@ -1,75 +1,305 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-  <meta charset='utf-8'>
+  <meta http-equiv="Content-type" content="text/html; charset=us-ascii" />
 
-  <title>Shopify/active_merchant @ GitHub</title>
+  <title>Active Merchant</title>
+  <style type="text/css" media="screen">
+/*<![CDATA[*/
+    body { margin: 0; margin-bottom: 25px; padding: 0; background-color: #f0f0f0; font-family: "Lucida Grande", "Bitstream Vera Sans", "Verdana"; font-size: 13px; color: #333; }
+    h1 { font-size: 28px; color: #000; }
+    h2 { font-size: 15px; color: #000; margin-top: 2em; margin-bottom: 0.5em; }
+    a  {color: #03c}
+    a:hover { background-color: #03c; color: white; text-decoration: none; }
 
-  <style type="text/css">
-    body {
-      margin-top: 1.0em;
-      background-color: #02699e;
-      font-family: Helvetica, Arial, FreeSans, san-serif;
-      color: #ffffff;
-    }
-    #container {
-      margin: 0 auto;
-      width: 700px;
-    }
-    h1 { font-size: 3.8em; color: #fd9661; margin-bottom: 3px; }
-    h1 .small { font-size: 0.4em; }
-    h1 a { text-decoration: none }
-    h2 { font-size: 1.5em; color: #fd9661; }
-    h3 { text-align: center; color: #fd9661; }
-    a { color: #fd9661; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-    .download { float: right; }
-    pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
+    #page { width: 900px; margin: 0; margin-top: 20px; margin-left: auto; margin-right: auto; }
+    #content { float: left; background-color: white; border: 3px solid #aaa; padding: 25px; width: 650px; }
+    #sidebar { float: right; width: 175px; }
+    #footer { clear: both; padding: 5px 2px; color: #999; font-size: 9px; }
+
+    #header, #intro { padding-left: 10px; padding-right: 30px; }
+    #header h1, #header h2 { margin: 0 }
+    #header h2 { color: #888; font-weight: normal; font-size: 16px; }
+
+    #intro { border-top: 1px solid #ccc; margin-top: 25px; padding-top: 15px; }
+    #intro h1 { margin: 0; font-size: 20px; }
+    #intro ol { margin-left: 0; padding-left: 0; }
+    #intro li { font-size: 18px; color: #888; margin-bottom: 25px; }
+    #intro li p { color: #555; font-size: 13px; }
+
+    #sidebar ul { margin-left: 0; padding-left: 0; }
+    #sidebar ul h3 { margin-top: 25px; font-size: 16px; padding-bottom: 10px; border-bottom: 1px solid #ccc; }
+    #sidebar li { list-style-type: none; }
+    #sidebar ul.links li { margin-bottom: 5px; }
+
+    #outtro { border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; background: #eee; color: #555; font-size: 9px; padding: 10px; margin: 5em 0 0 0; text-align: center; }
+    #outtro a { color: #333; }
+    #outtro a:hover { color: white; }
+
+    span.highlight { background: #ffc; }
+
+
+    table.downloads { width: 100%; border-spacing: 0 4px; }
+    table.downloads tr { height: 80px; }
+    table.downloads td { background: #efefef; }
+    table.downloads h2 { margin: 0; width: 100%; }
+    table.downloads .icon { text-align: center; width: 105px; }
+    table.downloads p.code { margin-right:10px; padding: 4px 10px; overflow: auto; border: 1px solid #aaa; border-left: 4px solid #aaa; }
+
+    table.code { margin: 0; padding: 0.5em; width: 100%; border-left: 4px solid #ddd; background: #efefef; }
+    /* Pygments */
+    .c { color: #999988; font-style: italic } /* Comment */
+    .err { color: #a61717; background-color: #e3d2d2 } /* Error */
+    .k { font-weight: bold } /* Keyword */
+    .o { font-weight: bold } /* Operator */
+    .cm { color: #999988; font-style: italic } /* Comment.Multiline */
+    .cp { color: #999999; font-weight: bold } /* Comment.Preproc */
+    .c1 { color: #999988; font-style: italic } /* Comment.Single */
+    .cs { color: #999999; font-weight: bold; font-style: italic } /* Comment.Special */
+    .gd { color: #000000; background-color: #ffdddd } /* Generic.Deleted */
+    .ge { font-style: italic } /* Generic.Emph */
+    .gr { color: #aa0000 } /* Generic.Error */
+    .gh { color: #999999 } /* Generic.Heading */
+    .gi { color: #000000; background-color: #ddffdd } /* Generic.Inserted */
+    .go { color: #888888 } /* Generic.Output */
+    .gp { color: #555555 } /* Generic.Prompt */
+    .gs { font-weight: bold } /* Generic.Strong */
+    .gu { color: #aaaaaa } /* Generic.Subheading */
+    .gt { color: #aa0000 } /* Generic.Traceback */
+    .kc { font-weight: bold } /* Keyword.Constant */
+    .kd { font-weight: bold } /* Keyword.Declaration */
+    .kn { font-weight: bold } /* Keyword.Namespace */
+    .kp { font-weight: bold } /* Keyword.Pseudo */
+    .kr { font-weight: bold } /* Keyword.Reserved */
+    .kt { color: #445588; font-weight: bold } /* Keyword.Type */
+    .m { color: #009999 } /* Literal.Number */
+    .s { color: #bb8844 } /* Literal.String */
+    .na { color: #008080 } /* Name.Attribute */
+    .nb { color: #999999 } /* Name.Builtin */
+    .nc { color: #445588; font-weight: bold } /* Name.Class */
+    .no { color: #008080 } /* Name.Constant */
+    .ni { color: #800080 } /* Name.Entity */
+    .ne { color: #990000; font-weight: bold } /* Name.Exception */
+    .nf { color: #990000; font-weight: bold } /* Name.Function */
+    .nn { color: #555555 } /* Name.Namespace */
+    .nt { color: #000080 } /* Name.Tag */
+    .nv { color: #008080 } /* Name.Variable */
+    .ow { font-weight: bold } /* Operator.Word */
+    .w { color: #bbbbbb } /* Text.Whitespace */
+    .mf { color: #009999 } /* Literal.Number.Float */
+    .mh { color: #009999 } /* Literal.Number.Hex */
+    .mi { color: #009999 } /* Literal.Number.Integer */
+    .mo { color: #009999 } /* Literal.Number.Oct */
+    .sb { color: #bb8844 } /* Literal.String.Backtick */
+    .sc { color: #bb8844 } /* Literal.String.Char */
+    .sd { color: #bb8844 } /* Literal.String.Doc */
+    .s2 { color: #bb8844 } /* Literal.String.Double */
+    .se { color: #bb8844 } /* Literal.String.Escape */
+    .sh { color: #bb8844 } /* Literal.String.Heredoc */
+    .si { color: #bb8844 } /* Literal.String.Interpol */
+    .sx { color: #bb8844 } /* Literal.String.Other */
+    .sr { color: #808000 } /* Literal.String.Regex */
+    .s1 { color: #bb8844 } /* Literal.String.Single */
+    .ss { color: #bb8844 } /* Literal.String.Symbol */
+    .bp { color: #999999 } /* Name.Builtin.Pseudo */
+    .vc { color: #008080 } /* Name.Variable.Class */
+    .vg { color: #008080 } /* Name.Variable.Global */
+    .vi { color: #008080 } /* Name.Variable.Instance */
+    .il { color: #009999 } /* Literal.Number.Integer.Long */
+  /*]]>*/
   </style>
 </head>
 
 <body>
-  <a href="http://github.com/Shopify/active_merchant"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+  <div id="page">
+    <div id="sidebar">
+      <ul id="sidebar-items">
+        <li>
+          <h3>PeepCode PDF</h3>
 
-  <div id="container">
+          <ul class="links">
+            <li><a href="https://peepcode.com/products/activemerchant-pdf"><img src=
+            "/images/activemerchant-cover-small.png" alt="ActiveMerchant PeepCode PDF" /></a></li>
+          </ul>
+        </li>
 
-    <div class="download">
-      <a href="http://github.com/Shopify/active_merchant/zipball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-      <a href="http://github.com/Shopify/active_merchant/tarball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
+        <li>
+          <h3>Triple D</h3>
+
+          <ul class="links">
+            <li><a href="#download">Download</a></li>
+
+            <li><a href="https://groups.google.com/forum/#!forum/activemerchant">Discussion</a></li>
+
+            <li><a href="http://rdoc.info/github/Shopify/active_merchant/master/frames">Documentation</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <h3>Development</h3>
+
+          <ul class="links">
+            <li><a href="https://github.com/Shopify/active_merchant">GitHub</a></li>
+
+            <li><a href="https://github.com/Shopify/active_merchant/issues">Issues</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <h3>Developers</h3>
+
+          <ul class="links">
+            <li><a href="http://shopify.com">Shopify</a></li>
+
+            <li><a href="http://www.codyfauser.com">Cody Fauser</a></li>
+
+            <li><a href="http://blog.leetsoft.com">Tobias L&uuml;tke</a></li>
+          </ul>
+        </li>
+      </ul>
     </div>
 
-    <h1><a href="http://github.com/Shopify/active_merchant">active_merchant</a>
-      <span class="small">by <a href="http://github.com/Shopify">Shopify</a></span></h1>
+    <div id="content">
+      <div id="header">
+        <h1>Active Merchant</h1>
 
-    <div class="description">
-      Active Merchant is a simple payment abstraction library used in and sponsored by Shopify. It is written by Tobias Luetke, Cody Fauser, and contributors. The aim of the project is to feel natural to Ruby users and to abstract as many parts as possible away from the user to offer a consistent interface across all supported gateways.
+        <h2>A Ruby library for dealing with credit cards and payment processors.</h2>
+      </div>
+
+      <div id="intro">
+        <p>Active Merchant is an <span class="highlight">extraction from the e-commerce system <a href=
+        "http://shopify.com">Shopify</a></span>. Shopify's requirements for a simple and unified API to access dozens
+        of different payment gateways with very different internal APIs was the chief principle in designing the
+        library.</p>
+
+        <p>Active Merchant has been in <span class="highlight">production use since June 2006</span> and is now used in
+        most modern Ruby applications which deal with financial transactions.</p>
+
+        <p>It was developed to for usage in <span class="highlight">Ruby on Rails</span> web applications and
+        integrates seamlessly as a plugin but it also works excellently as a stand alone library.</p>
+
+        <h2>What does it look like?</h2>
+
+        <table class="code">
+          <tr>
+            <td class="code">
+              <pre>
+<span class="c1"># Send requests to the gateway's test servers</span>
+<span class="no">ActiveMerchant</span><span class="o">::</span><span class="no">Billing</span><span class=
+"o">::</span><span class="no">Base</span><span class="o">.</span><span class="n">mode</span> <span class=
+"o">=</span> <span class="ss">:test</span>
+
+<span class="c1"># Create a new credit card object</span>
+<span class="n">credit_card</span> <span class="o">=</span> <span class="no">ActiveMerchant</span><span class=
+"o">::</span><span class="no">Billing</span><span class="o">::</span><span class="no">CreditCard</span><span class=
+"o">.</span><span class="n">new</span><span class="p">(</span>
+  <span class="ss">:number</span>     <span class="o">=&gt;</span> <span class=
+"s1">'4111111111111111'</span><span class="p">,</span>
+  <span class="ss">:month</span>      <span class="o">=&gt;</span> <span class="s1">'8'</span><span class="p">,</span>
+  <span class="ss">:year</span>       <span class="o">=&gt;</span> <span class="s1">'2009'</span><span class=
+"p">,</span>
+  <span class="ss">:first_name</span> <span class="o">=&gt;</span> <span class="s1">'Tobias'</span><span class=
+"p">,</span>
+  <span class="ss">:last_name</span>  <span class="o">=&gt;</span> <span class="s1">'Luetke'</span><span class=
+"p">,</span>
+  <span class="ss">:verification_value</span>  <span class="o">=&gt;</span> <span class="s1">'123'</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">credit_card</span><span class="o">.</span><span class="n">valid?</span>
+  <span class="c1"># Create a gateway object to the TrustCommerce service</span>
+  <span class="n">gateway</span> <span class="o">=</span> <span class="no">ActiveMerchant</span><span class=
+"o">::</span><span class="no">Billing</span><span class="o">::</span><span class=
+"no">TrustCommerceGateway</span><span class="o">.</span><span class="n">new</span><span class="p">(</span>
+    <span class="ss">:login</span>    <span class="o">=&gt;</span> <span class="s1">'TestMerchant'</span><span class=
+"p">,</span>
+    <span class="ss">:password</span> <span class="o">=&gt;</span> <span class="s1">'password'</span>
+  <span class="p">)</span>
+
+  <span class="c1"># Authorize for $10 dollars (1000 cents)</span>
+  <span class="n">response</span> <span class="o">=</span> <span class="n">gateway</span><span class=
+"o">.</span><span class="n">authorize</span><span class="p">(</span><span class="mi">1000</span><span class=
+"p">,</span> <span class="n">credit_card</span><span class="p">)</span>
+
+  <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">success?</span>
+    <span class="c1"># Capture the money</span>
+    <span class="n">gateway</span><span class="o">.</span><span class="n">capture</span><span class=
+"p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">response</span><span class=
+"o">.</span><span class="n">authorization</span><span class="p">)</span>
+  <span class="k">else</span>
+    <span class="k">raise</span> <span class="no">StandardError</span><span class="p">,</span> <span class=
+"n">response</span><span class="o">.</span><span class="n">message</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</pre>
+            </td>
+          </tr>
+        </table>
+
+        <h2 id="download">How do I get it?</h2>
+
+        <table class="downloads">
+          <tr>
+            <td class="icon"><img src="/images/rubygems.png" width="100" height="100" alt="Rubygems" align=
+            "middle" /></td>
+
+            <td>
+              <h2>RubyGems</h2>
+
+              <p class="code"><code>gem install activemerchant</code></p>
+
+              <p class="node">If you want to install this gem on a High Security setup you need to<br />
+              <code>gem cert --add <a href=
+              "/gem-public_cert.pem">gem-public_cert.pem</a></code></p>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="icon"><img src="/images/rails.png" width="60" alt="Ruby on Rails" /></td>
+
+            <td>
+              <h2>Ruby on Rails plugin</h2>
+              <h4>Rails 3.0</h4>
+              <p>Add <tt>gem 'activemerchant'</tt> to your Gemfile.</p>
+
+              <h4>Rails 2.3</h4>
+              <p class="code"><code>./script/plugin install \</code>
+              <code>&nbsp;&nbsp;git://github.com/Shopify/active_merchant.git</code></p>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="icon"><img src="/images/ruby.png" width="60" height="60" alt="Ruby" /></td>
+
+            <td>
+              <h2>Download Release</h2>
+
+              <p><a href="http://rubygems.org/gems/active_merchant">from RubyGems</a></p>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="icon"><img src="/images/ruby.png" width="60" height="60" alt="Ruby" /></td>
+
+            <td>
+              <h2>Git Clone</h2>
+
+              <p><a href="https://github.com/Shopify/active_merchant">from GitHub</a></p>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div id="outtro">
+        <strong>ActiveMerchant</strong> is a sponsored and made possible by constant development from <a href=
+        "http://shopify.com">Shopify</a>.
+      </div>
     </div>
 
-    <h2>Contact</h2>
-<p>Shopify (developers@jadedpixel.com)<br/>      </p>
-
-
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="http://github.com/Shopify/active_merchant/zipball/master">zip</a> or
-      <a href="http://github.com/Shopify/active_merchant/tarball/master">tar</a> formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/Shopify/active_merchant</pre>
-    </p>
-
-    <div class="footer">
-      get the source code on GitHub : <a href="http://github.com/Shopify/active_merchant">Shopify/active_merchant</a>
+    <div id="footer">
+      &copy; 2011
     </div>
-
   </div>
-
-  
 </body>
 </html>
