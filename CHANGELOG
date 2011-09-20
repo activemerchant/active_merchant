@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* NoChex: Update the URL that payment requests are posted to [caseywhalen]
+
 == Version 1.17.0 (August 23, 2011)
 
 * Add Payflow Link integration [jduff]
