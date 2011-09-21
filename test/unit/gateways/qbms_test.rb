@@ -135,6 +135,8 @@ class QbmsTest < Test::Unit::TestCase
     @gateway.stubs(:parse).returns({})
     @gateway.expects(:ssl_post).with(QbmsGateway.test_url, anything, anything).returns(authorization_response)
     @gateway.authorize(@amount, @card, @options)
+
+    ActiveMerchant::Billing::Base.mode = :test
   end
 
   # helper methods start here
