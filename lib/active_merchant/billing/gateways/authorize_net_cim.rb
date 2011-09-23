@@ -75,7 +75,8 @@ module ActiveMerchant #:nodoc:
       
       ECHECK_TYPES = {
         :ccd => 'CCD',
-        :ppd => 'PPD'
+        :ppd => 'PPD',
+        :web => 'WEB'
       }
       
       self.homepage_url = 'http://www.authorize.net/'
