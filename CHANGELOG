@@ -1,6 +1,14 @@
 = ActiveMerchant CHANGELOG
 
-* NoChex: Update the URL that payment requests are posted to [caseywhalen]
+== Version 1.18.0 (September 23, 2011)
+
+* NoChex: Update the URL that payment requests are posted to [caseywhalen/jduff]
+* QBMS: fixed test mode check [Soleone]
+* Realex: encode avs info with shipping address [Soleone]
+* Add Dwolla offsite gateway [armsteadj1/jduff]
+* Eway: pass email, customer, description and options to store [moklett/tobi]
+* New dependency: active_utils gem [odorcicd]
+* Optimal Payments: fix test mode check [jduff]
 
 == Version 1.17.0 (August 23, 2011)
 
