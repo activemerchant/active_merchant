@@ -14,6 +14,10 @@ module ActiveMerchant #:nodoc:
           end
 
           def transaction_id
+            params['TransactionId']
+          end
+
+          def item_id
             params['OrderId']
           end
 
