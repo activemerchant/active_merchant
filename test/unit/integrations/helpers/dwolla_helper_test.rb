@@ -4,26 +4,28 @@ class DwollaHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
   
   def setup
-    @helper = Dwolla::Helper.new('order-500','cody@example.com', :credential2 => 'secret', :amount => 500, :currency => 'USD')
+    @helper = Dwolla::Helper.new('order-500','812-546-3855', :credential2 => 'mykey', :credential3 => 'mysecret', :amount => 500, :currency => 'USD')
   end
  
   def test_basic_helper_fields
     assert_field 'amount', '500'
     assert_field 'orderid', 'order-500'
-    assert_field 'secret', 'secret'
+    assert_field 'destinationid', '812-546-3855'
+    assert_field 'key', 'mykey'
+    assert_field 'secret', 'mysecret'
   end
   
   def test_other_fields
-    @helper.credential1 "key"
     @helper.return_url 'http://test.com/ecommerce/redirect.aspx'
     @helper.notify_url 'http://test.com/test/callback'
     @helper.test_mode true
     @helper.description 'Store Purchase Description'
-    @helper.account '812-546-3855'
     @helper.shipping 0.00
     @helper.tax 0.00
 
-    assert_field 'key', 'key'
+    assert_field 'key', 'mykey'
+    assert_field 'destinationid', '812-546-3855'
+    assert_field 'secret', 'mysecret'
     assert_field 'redirect', 'http://test.com/ecommerce/redirect.aspx'
     assert_field 'callback', 'http://test.com/test/callback'
     assert_field 'test', 'true'

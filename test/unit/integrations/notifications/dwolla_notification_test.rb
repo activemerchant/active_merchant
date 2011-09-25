@@ -10,7 +10,7 @@ class DwollaNotificationTest < Test::Unit::TestCase
 
   def test_success_accessors
     assert @dwolla.complete?
-    assert_equal "1234asdfasd567", @dwolla.transaction_id
+    assert_equal "1234asdfasd567", @dwolla.item_id
     assert_equal "Completed", @dwolla.status
     assert_equal 1.00, @dwolla.gross
     assert_equal "USD", @dwolla.currency
@@ -19,7 +19,7 @@ class DwollaNotificationTest < Test::Unit::TestCase
 
   def test_error_accessors
     assert_false @error_dwolla.complete?
-    assert_equal "order-1", @error_dwolla.transaction_id
+    assert_equal "order-1", @error_dwolla.item_id
     assert_equal nil, @error_dwolla.status
     assert_equal nil, @error_dwolla.gross
     assert_equal "USD", @error_dwolla.currency
