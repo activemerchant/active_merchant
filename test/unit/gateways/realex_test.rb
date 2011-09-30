@@ -287,8 +287,8 @@ SRC
     
   end
 
-  def test_avs_encoded_address_details
-    @gateway.expects(:ssl_post).with(anything, Not(regexp_matches(/<code>BT2 8XX<\/code>/))).returns(successful_purchase_response)
+  def test_zip_in_shipping_address
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<code>BT28XX<\/code>/)).returns(successful_purchase_response)
     
     options = {
       :order_id => '1',
