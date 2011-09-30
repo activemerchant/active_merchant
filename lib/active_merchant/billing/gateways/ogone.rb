@@ -16,23 +16,28 @@ module ActiveMerchant #:nodoc:
     # the Alias Manager Option guide version 3.0 (24 February 2011) available here:
     # https://secure.ogone.com/ncol/Ogone_Alias_EN.pdf
     #
-    # It also implements the 3-D Secure feature, as specified in the DirectLink with 3D Secure guide version 3.0 available here:
+    # It also implements the 3-D Secure feature, as specified in the DirectLink with 3-D Secure guide version 3.0 available here:
     # https://secure.ogone.com/ncol/Ogone_DirectLink-3-D_EN.pdf
     #
     #
-    # It was last tested on Release 04.87 of Ogone DirectLink + AliasManager + DirectLink with 3D Secure (24 February 2011).
+    # It was last tested on Release 4.89 of Ogone DirectLink + AliasManager + DirectLink with 3-D Secure (30 September 2011).
     #
-    # For any questions or comments, please contact Nicolas Jacobeus (nj@belighted.com) or Sébastien Grosjean (public@zencocoon.com).
+    # For any questions or comments, please contact one of the following:
+    # - Nicolas Jacobeus (nj@belighted.com),
+    # - Sébastien Grosjean (public@zencocoon.com),
+    # - Rémy Coutable (remy@jilion.com).
     #
-    # == Example use:
+    # == Usage
     #
     #   gateway = ActiveMerchant::Billing::OgoneGateway.new(
-    #               :login     => "my_ogone_psp_id",
-    #               :user      => "my_ogone_user_id",
-    #               :password  => "my_ogone_pswd",
-    #               :created_after_10_may_2010 => true      # must be set to true if your account was created after 10 May 2010. This is due to the new SHA-1/256/512 signature process
-    #               :signature => "my_ogone_sha_signature", # extra security, only if you configured your Ogone environment so
-    #               :signature_encryptor => "sha512",       # can be "sha1" (default), "sha256" or "sha512", must be the same as the one configured in your Ogone account
+    #               :login                     => "my_ogone_psp_id",
+    #               :user                      => "my_ogone_user_id",
+    #               :password                  => "my_ogone_pswd",
+    #               :created_after_10_may_2010 => true # Must be true if your account was created after 10 May 2010.
+    #                                                  # This is due to the new SHA1/256/512 signature process.
+    #               :signature                 => "my_ogone_sha_signature", # Only if you configured your Ogone environment so.
+    #               :signature_encryptor       => "sha512", # Can be "sha1" (default), "sha256" or "sha512".
+    #                                                       # Must be the same as the one configured in your Ogone account.
     #            )
     #
     #   # set up credit card obj as in main ActiveMerchant example
@@ -54,24 +59,29 @@ module ActiveMerchant #:nodoc:
     #   puts response.message       # Retrieve the message returned by Ogone
     #   puts response.authorization # Retrieve the unique transaction ID returned by Ogone
     #
+    # == Alias feature
+    #
     #   To use the alias feature, simply add :store in the options hash:
     #
     #   gateway.purchase(1000, creditcard,          :order_id => "1", :store => "myawesomecustomer") # associates the alias to that creditcard
     #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2") # You can use the alias instead of the creditcard for subsequent orders
     #
-    #   To use the 3D-Secure feature, simply add :d3d => true in the options hash:
+    # == 3-D Secure feature
+    #
+    #   To use the 3-D Secure feature, simply add :d3d => true in the options hash:
     #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2", :d3d => true)
     #
     #   Specific 3-D Secure request options are (please refer to the documentation for more infos about these options):
-    #   :win3ds          => :main_window (default), :pop_up or :pop_ix.
-    #   :http_accept     => "*/*" (default), or any other HTTP_ACCEPT header value.
-    #   :http_user_agent => The cardholder's User-Agent string
-    #   :accept_url      => URL of the web page to show the customer when the payment is authorized. (or waiting to be authorized).
-    #   :decline_url     => URL of the web page to show the customer when the acquirer rejects the authorization more than the maximum permitted number of authorization attempts (10 by default, but can be changed in the "Global transaction parameters" tab, "Payment retry" section of the Technical Information page).
-    #   :exception_url   => URL of the web page to show the customer when the payment result is uncertain.
-    #   :paramplus       => Field to submit the miscellaneous parameters and their values that you wish to be returned in the post sale request or final redirection.
-    #   :complus         => Field to submit a value you wish to be returned in the post sale request or output.
-    #   :language        => Customer's language, for example: "en_EN"
+    #     :win3ds          => :main_window (default), :pop_up or :pop_ix.
+    #     :http_accept     => "*/*" (default), or any other HTTP_ACCEPT header value.
+    #     :http_user_agent => The cardholder's User-Agent string
+    #     :accept_url      => URL of the web page to show the customer when the payment is authorized. (or waiting to be authorized).
+    #     :decline_url     => URL of the web page to show the customer when the acquirer rejects the authorization more than the maximum permitted number of authorization attempts (10 by default, but can be changed in the "Global transaction parameters" tab, "Payment retry" section of the Technical Information page).
+    #     :exception_url   => URL of the web page to show the customer when the payment result is uncertain.
+    #     :paramplus       => Field to submit the miscellaneous parameters and their values that you wish to be returned in the post sale request or final redirection.
+    #     :complus         => Field to submit a value you wish to be returned in the post sale request or output.
+    #     :language        => Customer's language, for example: "en_EN"
+    #
     class OgoneGateway < Gateway
 
       URLS = {
