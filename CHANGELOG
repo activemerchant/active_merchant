@@ -1,5 +1,10 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.18.1 (September 23, 2011)
+
+* Braintree: allow setting merchant_account_id on initialize [jduff]
+* Realex: only send letters and numbers in shipping code field [Soleone]
+
 == Version 1.18.0 (September 23, 2011)
 
 * NoChex: Update the URL that payment requests are posted to [caseywhalen/jduff]
