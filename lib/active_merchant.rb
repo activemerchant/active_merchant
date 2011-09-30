@@ -36,7 +36,7 @@ require 'builder'
 require 'cgi'
 require 'rexml/document'
 
-require 'active_merchant/common'
+require 'active_utils'
 require 'active_merchant/billing'
 require 'active_merchant/version'
 

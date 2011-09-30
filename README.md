@@ -95,7 +95,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [DataCash](http://www.datacash.com/) - GB
 * [Efsnet](http://www.concordefsnet.com/) - US
 * [Elavon MyVirtualMerchant](http://www.elavon.com) - US, CA
-* [ePay](http://www.epay.dk/) - DK
+* [ePay](http://www.epay.dk/) - DK, SE, NO
 * [eWAY](http://www.eway.com.au/) - AU
 * [E-xact](http://www.e-xact.com) - CA, US
 * [Federated Canada](http://www.federatedcanada.com/) - CA
@@ -160,6 +160,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Chronopay](http://www.chronopay.com)
 * [Direct-eBanking / sofortueberweisung.de by Payment-Networks AG](https://www.payment-network.com/deb_com_en/merchantarea/home) - DE, AT, CH, BE, UK, NL
 * [DirecPay](http://www.timesofmoney.com/direcpay/jsp/home.jsp)
+* [Dwolla](https://www.dwolla.com/default.aspx)
 * [HiTRUST](http://www.hitrust.com.hk/)
 * [Moneybookers](http://www.moneybookers.com)
 * [Nochex](http://www.nochex.com)

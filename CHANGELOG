@@ -1,5 +1,27 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.18.0 (September 23, 2011)
+
+* NoChex: Update the URL that payment requests are posted to [caseywhalen/jduff]
+* QBMS: fixed test mode check [Soleone]
+* Realex: encode avs info with shipping address [Soleone]
+* Add Dwolla offsite gateway [armsteadj1/jduff]
+* Eway: pass email, customer, description and options to store [moklett/tobi]
+* New dependency: active_utils gem [odorcicd]
+* Optimal Payments: fix test mode check [jduff]
+
+== Version 1.17.0 (August 23, 2011)
+
+* Add Payflow Link integration [jduff]
+* Add CardSave gateway [MrJaba/jduff]]
+* Quickpay: Support protocal version 4 and fraud parameters [anderslemke/jduff]
+* Authorize.net: Add status_recurring [mm1/jduff]
+* Paypal Express: Support specifying :items with purchase [sivabudh/jduff]
+* ePay: Add Sweden and Norway to supported countries [ePay/jduff]
+* Brainreee: Support passing merchant_account_id parameter [braintreeps/jduff]
+* Paypal Express: Remove deprecated Address field in favor of ShipToAddress[jduff]
+* Add Optimal Payments gateway [jamie/jduff]
+* Documentation improvements [dasch/nhemsley/jstorimer/jduff]
 * Authorize.Net: Pass through first name, last name, and zip for refunds. [ntalbott]
 
 == Version 1.16.0 (July 18, 2011)

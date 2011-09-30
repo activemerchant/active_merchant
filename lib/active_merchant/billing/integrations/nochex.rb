@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
         
        
         mattr_accessor :service_url
-        self.service_url = 'https://www.nochex.com/nochex.dll/checkout'
+        self.service_url = 'https://secure.nochex.com'
 
         mattr_accessor :notification_confirmation_url
         self.notification_confirmation_url = 'https://www.nochex.com/nochex.dll/apc/apc'

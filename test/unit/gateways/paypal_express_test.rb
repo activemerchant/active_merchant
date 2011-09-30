@@ -194,7 +194,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
   
   def test_amount_format_for_jpy_currency
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/n2:OrderTotal currencyID=.JPY.>1<\/n2:OrderTotal>/)).returns(successful_authorization_response)
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/n2:OrderTotal currencyID=.JPY.>1<\/n2:OrderTotal>/), {}).returns(successful_authorization_response)
     response = @gateway.authorize(100, :token => 'EC-6WS104951Y388951L', :payer_id => 'FWRVKNRRZ3WUC', :currency => 'JPY')
     assert response.success?
   end

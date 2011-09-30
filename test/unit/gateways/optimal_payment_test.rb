@@ -58,12 +58,43 @@ class OptimalPaymentTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.void("1234567", @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    # Replace with authorization number from the successful response
+    assert_equal '126740505', response.authorization
+    assert response.test?
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
+  end
+
+  def test_in_production_with_test_param_sends_request_to_test_server
+    begin
+      ActiveMerchant::Billing::Base.mode = :production
+      @gateway = OptimalPaymentGateway.new(
+                   :login => 'login',
+                   :password => 'password',
+                   :test => true
+                 )
+      @gateway.expects(:ssl_post).with("https://webservices.test.optimalpayments.com/creditcardWS/CreditCardServlet/v1", anything).returns(successful_purchase_response)
+
+      assert response = @gateway.purchase(@amount, @credit_card, @options)
+      assert_instance_of Response, response
+      assert_success response
+      assert response.test?
+    ensure
+      ActiveMerchant::Billing::Base.mode = :test
+    end
   end
 
   private

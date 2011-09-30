@@ -1,4 +1,3 @@
-require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class OptimalPaymentGateway < Gateway
@@ -40,9 +39,18 @@ module ActiveMerchant #:nodoc:
         commit('ccCredit', money, options)
       end
 
+      def void(authorization, options = {})
+        options[:confirmationNumber] = authorization
+        commit('ccAuthorizeReversal', nil, options)
+      end
+
       def capture(money, authorization, options = {})
         options[:confirmationNumber] = authorization
         commit('ccSettlement', money, options)
+      end
+
+      def test?
+        super || @options[:test]
       end
 
     private
@@ -58,9 +66,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        return Nokogiri::XML('') if body.nil?
-        # received XML has odd xmlns that cause nokogiri to fail, so we just strip it out
-        Nokogiri::XML(body.gsub(/ xmlns="(.*?")/, ''))
+        REXML::Document.new(body || '')
       end
 
       def commit(action, money, post)
@@ -73,6 +79,8 @@ module ActiveMerchant #:nodoc:
           cc_post_auth_request(money, post)
         when 'ccStoredDataAuthorize', 'ccStoredDataPurchase'
           cc_stored_data_request(money, post)
+        when 'ccAuthorizeReversal'
+          cc_auth_reversal_request(post)
         #when 'ccCancelSettle', 'ccCancelCredit', 'ccCancelPayment'
         #  cc_cancel_request(money, post)
         #when 'ccPayment'
@@ -92,20 +100,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def successful?(response)
-        response.xpath('//decision')[0].content == 'ACCEPTED' rescue false
+        REXML::XPath.first(response, '//decision').text == 'ACCEPTED' rescue false
       end
 
       def message_from(response)
-        response.xpath('//detail').each do |detail|
-          if detail.css('tag')[0].content == 'InternalResponseDescription'
-            return detail.css('value')[0].content
+        REXML::XPath.each(response, '//detail') do |detail|
+          if detail.is_a?(REXML::Element) && detail.elements['tag'].text == 'InternalResponseDescription'
+            return detail.elements['value'].text
           end
         end
         nil
       end
 
       def authorization_from(response)
-        response.xpath('//confirmationNumber')[0].content rescue nil
+        REXML::XPath.first(response, '//confirmationNumber').text rescue nil
       end
 
       def hash_from_xml(response)
@@ -115,12 +123,13 @@ module ActiveMerchant #:nodoc:
            actionCode avsResponse cvdResponse
            txnTime duplicateFound
         ).each do |tag|
-          node = response.css(tag)[0]
-          hsh[tag] = node.content if node
+          node = REXML::XPath.first(response, "//#{tag}")
+          hsh[tag] = node.text if node
         end
-        response.xpath('//detail').each do |detail|
-          tag = detail.css('tag')[0].content
-          value = detail.css('value')[0].content
+        REXML::XPath.each(response, '//detail') do |detail|
+          next unless detail.is_a?(REXML::Element)
+          tag = detail.elements['tag'].text
+          value = detail.elements['value'].text
           hsh[tag] = value
         end
         hsh
@@ -141,6 +150,14 @@ module ActiveMerchant #:nodoc:
           xml.amount(money/100.0)
           build_card(xml, opts)
           build_billing_details(xml, opts)
+        end
+      end
+
+      def cc_auth_reversal_request(opts)
+        xml_document('ccAuthReversalRequestV1') do |xml|
+          build_merchant_account(xml, @options)
+          xml.confirmationNumber opts[:confirmationNumber]
+          xml.merchantRefNum opts[:order_id]
         end
       end
 

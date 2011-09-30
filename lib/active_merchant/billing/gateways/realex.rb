@@ -197,7 +197,7 @@ module ActiveMerchant
 
           if shipping_address
             xml.tag! 'address', 'type' => 'shipping' do
-              xml.tag! 'code', shipping_address[:zip]
+              xml.tag! 'code', avs_input_code( shipping_address )
               xml.tag! 'country', shipping_address[:country]
             end
           end
