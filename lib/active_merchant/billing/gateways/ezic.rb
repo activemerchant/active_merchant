@@ -109,7 +109,8 @@ module ActiveMerchant #:nodoc:
         hash.to_options!
         # for some reason CGI::parse leaves each value as an array
         hash.each {|k, v| hash[k] = v.first if v.is_a? Array } 
-        hash[:transaction_id] = hash["trans_id"]
+        
+        hash["transaction_id"] = hash["trans_id"]
       end     
 
 
