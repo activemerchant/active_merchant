@@ -19,8 +19,8 @@ module ActiveMerchant #:nodoc:
       PAY_TYPE = 'C'
 
       SUCCESS, PENDING, SUCCESS_AUTH_ONLY, FAILED, SETTLEMENT_FAILED, DUPLICATE = '1', 'I', 'T', '0', 'F', 'D'
-      SUCCESS_CODES = [SUCCESS, SUCCESS_AUTH_ONLY, PENDING]
-      FAILURE_CODES = [FAILED, SETTLEMENT_FAILED, DUPLICATE]
+      SUCCESS_CODES = [SUCCESS, SUCCESS_AUTH_ONLY, PENDING, DUPLICATE]
+      FAILURE_CODES = [FAILED, SETTLEMENT_FAILED]
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']
@@ -109,6 +109,10 @@ module ActiveMerchant #:nodoc:
         hash.to_options!
         # for some reason CGI::parse leaves each value as an array
         hash.each {|k, v| hash[k] = v.first if v.is_a? Array } 
+        
+        puts '&$*%&$(%&*$*(&%($*&%(*$&%(*$&(%*&$(%)))))))'
+        puts hash
+        puts
         
         hash["transaction_id"] = hash["trans_id"]
       end     
