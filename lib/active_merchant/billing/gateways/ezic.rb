@@ -114,7 +114,8 @@ module ActiveMerchant #:nodoc:
         puts hash
         puts
         
-        hash["transaction_id"] = hash["trans_id"]
+        # transpose the transaction_id to something we expect
+        hash["transaction_id"] = hash[:trans_id]
       end     
 
 
