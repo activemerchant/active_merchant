@@ -112,10 +112,12 @@ module ActiveMerchant #:nodoc:
         
         puts '&$*%&$(%&*$*(&%($*&%(*$&%(*$&(%*&$(%)))))))'
         puts hash
-        puts
+        puts hash.class.name
         
         # transpose the transaction_id to something we expect
-        hash["transaction_id"] = hash[:trans_id]
+        hash[:transaction_id] = hash[:trans_id]
+        
+        hash
       end     
 
 
