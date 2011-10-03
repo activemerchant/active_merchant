@@ -64,7 +64,8 @@ module ActiveMerchant #:nodoc:
         commit(SALE, money, post)
       end                       
 
-
+      
+      # expects the authorization to be the transaction_number instead of the authorization
       def capture(money, authorization, options = {})
         post = {:orig_id => authorization}
         commit(CAPTURE, money, post)
@@ -109,11 +110,7 @@ module ActiveMerchant #:nodoc:
         hash.to_options!
         # for some reason CGI::parse leaves each value as an array
         hash.each {|k, v| hash[k] = v.first if v.is_a? Array } 
-        
-        puts '&$*%&$(%&*$*(&%($*&%(*$&%(*$&(%*&$(%)))))))'
-        puts hash
-        puts hash.class.name
-        
+
         # transpose the transaction_id to something we expect
         hash[:transaction_id] = hash[:trans_id]
         
