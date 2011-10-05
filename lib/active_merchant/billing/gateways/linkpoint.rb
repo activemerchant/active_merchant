@@ -233,12 +233,17 @@ module ActiveMerchant #:nodoc:
       # 
       # identification must be a valid order id previously submitted by SALE
       #
-      def credit(money, identification, options = {})
+      def refund(money, identification, options = {})
         options.update(
           :ordertype => "CREDIT",
           :order_id => identification
         )
         commit(money, nil, options)
+      end
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
     
       def test?

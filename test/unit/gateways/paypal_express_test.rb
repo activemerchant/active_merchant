@@ -142,7 +142,7 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_nil REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem')
   end
 
-  def test_items_are_included_if_specified
+  def test_items_are_included_if_specified_in_build_setup_request
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:currency => 'GBP', :items => [
                                             {:name => 'item one', :description => 'item one description', :amount => 10000, :number => 1, :quantity => 3},
                                             {:name => 'item two', :description => 'item two description', :amount => 20000, :number => 2, :quantity => 4}
@@ -163,6 +163,24 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal '4', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Quantity')[1].text
   end
 
+  def test_address_is_included_if_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'Sale', 0, {:currency => 'GBP', :address => {
+      :name     => "John Doe",
+      :address1 => "123 somewhere",
+      :city     => "Townville",
+      :country  => "Canada",
+      :zip      => "k1l4p2",
+      :phone    => "1231231231"
+    }}))
+
+    assert_equal 'John Doe', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:Name').text
+    assert_equal '123 somewhere', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:Street1').text
+    assert_equal 'Townville', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:CityName').text
+    assert_equal 'Canada', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:Country').text
+    assert_equal 'k1l4p2', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:PostalCode').text
+    assert_equal '1231231231', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:ShipToAddress/n2:Phone').text
+  end
+
   def test_handle_non_zero_amount
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 50, {}))
     
@@ -176,7 +194,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
   
   def test_amount_format_for_jpy_currency
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/n2:OrderTotal currencyID=.JPY.>1<\/n2:OrderTotal>/)).returns(successful_authorization_response)
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/n2:OrderTotal currencyID=.JPY.>1<\/n2:OrderTotal>/), {}).returns(successful_authorization_response)
     response = @gateway.authorize(100, :token => 'EC-6WS104951Y388951L', :payer_id => 'FWRVKNRRZ3WUC', :currency => 'JPY')
     assert response.success?
   end
@@ -210,6 +228,26 @@ class PaypalExpressTest < Test::Unit::TestCase
     
     xml = REXML::Document.new(@gateway.send(:build_sale_or_authorization_request, 'Test', 100, {}))
     assert_equal 'ActiveMerchant_EC', REXML::XPath.first(xml, '//n2:ButtonSource').text
+  end
+
+  def test_items_are_included_if_specified_in_build_sale_or_authorization_request
+    xml = REXML::Document.new(@gateway.send(:build_sale_or_authorization_request, 'Sale', 100, {:items => [
+                                            {:name => 'item one', :description => 'item one description', :amount => 10000, :number => 1, :quantity => 3},
+                                            {:name => 'item two', :description => 'item two description', :amount => 20000, :number => 2, :quantity => 4}
+    ]}))
+
+
+    assert_equal 'item one', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Name').text
+    assert_equal 'item one description', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Description').text
+    assert_equal '100.00', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Amount').text
+    assert_equal '1', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Number').text
+    assert_equal '3', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Quantity').text
+
+    assert_equal 'item two', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Name')[1].text
+    assert_equal 'item two description', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Description')[1].text
+    assert_equal '200.00', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Amount')[1].text
+    assert_equal '2', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Number')[1].text
+    assert_equal '4', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Quantity')[1].text
   end
   
   def test_error_code_for_single_error 

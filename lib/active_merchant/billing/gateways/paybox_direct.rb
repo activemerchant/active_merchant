@@ -99,6 +99,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
+      end
+
+      def refund(money, identification, options = {})
         post = {}
         add_invoice(post, options)
         add_reference(post, identification)

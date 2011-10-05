@@ -19,14 +19,14 @@ module ActiveMerchant #:nodoc:
     # 
     # Automated Recurring Billing (ARB) is an optional service for submitting and managing recurring, or subscription-based, transactions.
     # 
-    # To use recurring, update_recurring, and cancel_recurring ARB must be enabled for your account.
+    # To use recurring, update_recurring, cancel_recurring and status_recurring ARB must be enabled for your account.
     # 
     # Information about ARB is available on the {Authorize.Net website}[http://www.authorize.net/solutions/merchantsolutions/merchantservices/automatedrecurringbilling/].
     # Information about the ARB API is available at the {Authorize.Net Integration Center}[http://developer.authorize.net/]
     class AuthorizeNetGateway < Gateway
       API_VERSION = '3.1'
 
-      class_inheritable_accessor :test_url, :live_url, :arb_test_url, :arb_live_url
+      class_attribute :test_url, :live_url, :arb_test_url, :arb_live_url
 
       self.test_url = "https://test.authorize.net/gateway/transact.dll"
       self.live_url = "https://secure.authorize.net/gateway/transact.dll"
@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
       self.arb_test_url = 'https://apitest.authorize.net/xml/v1/request.api'
       self.arb_live_url = 'https://api.authorize.net/xml/v1/request.api'
       
-      class_inheritable_accessor :duplicate_window
+      class_attribute :duplicate_window
 
       APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
 
@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
       AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE  = 5, 6, 38
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net'
 
@@ -55,7 +55,8 @@ module ActiveMerchant #:nodoc:
       RECURRING_ACTIONS = {
         :create => 'ARBCreateSubscription',
         :update => 'ARBUpdateSubscription',
-        :cancel => 'ARBCancelSubscription'
+        :cancel => 'ARBCancelSubscription',
+        :status => 'ARBGetSubscriptionStatus'
       }
 
       # Creates a new AuthorizeNetGateway
@@ -131,32 +132,47 @@ module ActiveMerchant #:nodoc:
       # * <tt>authorization</tt> - The authorization returned from the previous authorize request.
       def void(authorization, options = {})
         post = {:trans_id => authorization}
+        add_duplicate_window(post)
         commit('VOID', nil, post)
       end
 
-      # Credit an account.
+      # Refund a transaction.
       #
-      # This transaction is also referred to as a Refund and indicates to the gateway that
+      # This transaction indicates to the gateway that
       # money should flow from the merchant to the customer.
       #
       # ==== Parameters
       #
       # * <tt>money</tt> -- The amount to be credited to the customer as an Integer value in cents.
-      # * <tt>identification</tt> -- The ID of the original transaction against which the credit is being issued.
+      # * <tt>identification</tt> -- The ID of the original transaction against which the refund is being issued.
       # * <tt>options</tt> -- A hash of parameters.
       #
       # ==== Options
       #
-      # * <tt>:card_number</tt> -- The credit card number the credit is being issued to. (REQUIRED)
-      def credit(money, identification, options = {})
+      # * <tt>:card_number</tt> -- The credit card number the refund is being issued to. (REQUIRED)
+      # * <tt>:first_name</tt> -- The first name of the account being refunded.
+      # * <tt>:last_name</tt> -- The last name of the account being refunded.
+      # * <tt>:zip</tt> -- The postal code of the account being refunded.
+      def refund(money, identification, options = {})
         requires!(options, :card_number)
 
         post = { :trans_id => identification,
                  :card_num => options[:card_number]
                }
+
+        post[:first_name] = options[:first_name] if options[:first_name]
+        post[:last_name] = options[:last_name] if options[:last_name]
+        post[:zip] = options[:zip] if options[:zip]
+
         add_invoice(post, options)
+        add_duplicate_window(post)
 
         commit('CREDIT', money, post)
+      end
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
 
       # Create a recurring payment.
@@ -225,6 +241,19 @@ module ActiveMerchant #:nodoc:
       def cancel_recurring(subscription_id)
         request = build_recurring_request(:cancel, :subscription_id => subscription_id)
         recurring_commit(:cancel, request)
+      end
+
+      # Get Subscription Status of a recurring payment.
+      #
+      # This transaction gets the status of an existing Automated Recurring Billing (ARB) subscription. Your account must have ARB enabled.
+      #
+      # ==== Parameters
+      #
+      # * <tt>subscription_id</tt> -- A string containing the +subscription_id+ of the recurring payment already in place
+      #   for a given credit card. (REQUIRED)
+      def status_recurring(subscription_id)
+        request = build_recurring_request(:status, :subscription_id => subscription_id)
+        recurring_commit(:status, request)
       end
 
       private
@@ -435,6 +464,13 @@ module ActiveMerchant #:nodoc:
 
       # Builds body for ARBCancelSubscriptionRequest
       def build_arb_cancel_subscription_request(xml, options)
+        xml.tag!('subscriptionId', options[:subscription_id])
+
+        xml.target!
+      end
+
+      # Builds body for ARBGetSubscriptionStatusRequest
+      def build_arb_status_subscription_request(xml, options)
         xml.tag!('subscriptionId', options[:subscription_id])
 
         xml.target!

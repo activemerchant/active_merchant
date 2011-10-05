@@ -126,14 +126,27 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
 
+  def test_successful_refund_request
+    @gateway.stubs(:ssl_post).returns(successful_capture_response, successful_refund_response)
+    assert_success(response = @gateway.purchase(@amount, @credit_card, @options))
+
+    assert_success(response_refund = @gateway.refund(@amount, response.authorization))
+  end
+
   def test_successful_credit_request
-    @gateway.stubs(:ssl_post).returns(successful_capture_response, successful_credit_response)
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    @gateway.stubs(:ssl_post).returns(successful_capture_response, successful_refund_response)
+    assert_success(response = @gateway.purchase(@amount, @credit_card, @options))
+
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert_success(response_refund = @gateway.credit(@amount, response.authorization))
+    end
+  end
+
+  def test_successful_auth_reversal_request
+    @gateway.stubs(:ssl_post).returns(successful_authorization_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert response.success?
-    assert response.test?
-    assert response_capture = @gateway.credit(@amount, response.authorization)
-    assert response_capture.success?
-    assert response_capture.test?  
+    assert_success(@gateway.auth_reversal(@amount, response.authorization, @options))
   end
 
   private
@@ -177,7 +190,7 @@ class CyberSourceTest < Test::Unit::TestCase
     XML
   end
 
-  def successful_credit_response
+  def successful_refund_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
 <soap:Header>

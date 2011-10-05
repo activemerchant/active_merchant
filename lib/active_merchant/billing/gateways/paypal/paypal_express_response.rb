@@ -2,11 +2,15 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaypalExpressResponse < Response
       def email
-        @params['PayerInfo']['Payer']
+        info['Payer']
+      end
+
+      def info
+        (@params['PayerInfo']||{})
       end
       
       def name
-        payer = @params['PayerInfo']['PayerName']
+        payer = (info['PayerName']||{})
         [payer['FirstName'], payer['MiddleName'], payer['LastName']].compact.join(' ')
       end
       
@@ -15,11 +19,11 @@ module ActiveMerchant #:nodoc:
       end
       
       def payer_id
-        @params['PayerInfo']['PayerID']
+        info['PayerID']
       end
       
       def payer_country
-        @params['PayerInfo']['PayerCountry']
+        info['PayerCountry']
       end
       
       # PayPal returns a contact telephone number only if your Merchant account profile settings require that the buyer enter one.
@@ -28,16 +32,16 @@ module ActiveMerchant #:nodoc:
       end
       
       def address
-        address = @params['PaymentDetails']['ShipToAddress']
+        address = (@params['PaymentDetails']||{})['ShipToAddress']
         {  'name'       => address['Name'],
-           'company'    => @params['PayerInfo']['PayerBusiness'],
+           'company'    => info['PayerBusiness'],
            'address1'   => address['Street1'],
            'address2'   => address['Street2'],
            'city'       => address['CityName'],
            'state'      => address['StateOrProvince'],
            'country'    => address['Country'],
            'zip'        => address['PostalCode'],
-           'phone'      => contact_phone || address['Phone']
+           'phone'      => (contact_phone || address['Phone'])
         }
       end
     end

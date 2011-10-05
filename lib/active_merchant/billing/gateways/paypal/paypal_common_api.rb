@@ -63,10 +63,13 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login, :password)
         
+        headers = {'X-PP-AUTHORIZATION' => options.delete(:auth_signature), 'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'} if options[:auth_signature]
         @options = {
           :pem => pem_file,
-          :signature => signature
+          :signature => signature,
+          :headers => headers || {}
         }.update(options)
+
         
         if @options[:pem].blank? && @options[:signature].blank?
           raise ArgumentError, "An API Certificate or API Signature is required to make requests to PayPal" 
@@ -105,8 +108,13 @@ module ActiveMerchant #:nodoc:
         commit 'DoVoid', build_void_request(authorization, options)
       end
       
+      def refund(money, identification, options = {})
+        commit 'RefundTransaction', build_refund_request(money, identification, options)
+      end
+
       def credit(money, identification, options = {})
-        commit 'RefundTransaction', build_credit_request(money, identification, options)
+        deprecated Gateway::CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
 
       private
@@ -141,7 +149,7 @@ module ActiveMerchant #:nodoc:
         xml.target!        
       end
       
-      def build_credit_request(money, identification, options)
+      def build_refund_request(money, identification, options)
         xml = Builder::XmlMarkup.new
             
         xml.tag! 'RefundTransactionReq', 'xmlns' => PAYPAL_NAMESPACE do
@@ -275,7 +283,7 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
         xml.tag! 'env:Envelope', ENVELOPE_NAMESPACES do
           xml.tag! 'env:Header' do
-            add_credentials(xml)
+            add_credentials(xml) unless @options[:headers] && @options[:headers]['X-PP-AUTHORIZATION']
           end
           
           xml.tag! 'env:Body' do
@@ -315,7 +323,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, request)
-        response = parse(action, ssl_post(endpoint_url, build_request(request)))
+        response = parse(action, ssl_post(endpoint_url, build_request(request), @options[:headers]))
        
         build_response(successful?(response), message_from(response), response,
     	    :test => test?,

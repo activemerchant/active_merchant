@@ -9,8 +9,6 @@ class RemoteFederatedCanadaTest < Test::Unit::TestCase
     @declined_amount = 99
 
     @credit_card = credit_card('4111111111111111') # Visa
-    @credit_card.month = '11'
-    @credit_card.year = '2011'
 
     @options = { 
       :order_id => ActiveMerchant::Utils.generate_unique_id,

@@ -33,6 +33,20 @@ class PayboxDirectTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_deprecated_credit
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/NUMAPPEL=transid/), anything).returns("")
+    @gateway.expects(:parse).returns({})
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      @gateway.credit(@amount, "transid", @options)
+    end
+  end
+  
+  def test_refund
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/NUMAPPEL=transid/), anything).returns("")
+    @gateway.expects(:parse).returns({})
+    @gateway.refund(@amount, "transid", @options)
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
     

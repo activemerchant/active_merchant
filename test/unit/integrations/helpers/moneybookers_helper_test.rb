@@ -4,10 +4,12 @@ class MoneybookersHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
   
   def setup
+    Moneybookers::Helper.application_id = 'ActiveMerchant'
     @helper = Moneybookers::Helper.new('order-500','cody@example.com', :amount => 500, :currency => 'USD')
   end
  
   def test_basic_helper_fields
+    assert_field 'hide_login', '1'
     assert_field 'pay_to_email', 'cody@example.com'
     assert_field 'amount', '500'
     assert_field 'transaction_id', 'order-500'
@@ -50,5 +52,33 @@ class MoneybookersHelperTest < Test::Unit::TestCase
     fields = @helper.fields.dup
     @helper.billing_address :street => 'My Street'
     assert_equal fields, @helper.fields
+  end
+  
+  def test_tracking_token
+    Moneybookers::Helper.application_id = '123'
+    @helper = Moneybookers::Helper.new('order-500','cody@example.com', :amount => 500, :currency => 'USD')
+    assert_field 'merchant_fields', 'platform'
+    assert_field 'platform', '123'
+  end
+
+  def test_tracking_token_not_added_by_default
+    assert_nil @helper.fields['merchant_fields']
+    assert_nil @helper.fields['platform']
+  end
+  
+  def test_country
+    @helper = Moneybookers::Helper.new('order-500','cody@example.com', :amount => 500, :currency => 'USD', :country => 'GBR')
+    assert_field 'country', 'GBR'
+    
+    @helper = Moneybookers::Helper.new('order-500','cody@example.com', :amount => 500, :currency => 'USD', :country => 'GB')
+    assert_field 'country', 'GBR'
+    
+    @helper = Moneybookers::Helper.new('order-500','cody@example.com', :amount => 500, :currency => 'USD', :country => 'United Kingdom')
+    assert_field 'country', 'GBR'
+  end
+  
+  def test_account_name
+    @helper = Moneybookers::Helper.new('order-500','cody@example.com', :amount => 500, :currency => 'USD', :account_name => 'My account name')
+    assert_field 'recipient_description', "My account name"
   end
 end

@@ -57,16 +57,18 @@ module ActiveMerchant #:nodoc:
 				commit('X', nil, post)
 			end
 
+			def refund(money, identification, options = {})
+				commit('U', money, options.merge(:transaction_id => identification))
+			end
+
 			def credit(money, creditcard_or_card_id, options = {})
-				post ={}
+				post = {}
 				add_payment_source(post, creditcard_or_card_id, options)
 				commit('C', money, post)
 			end
 
 			def void(transaction_id, options = {})
-				post = {}
-				post[:transaction_id] = transaction_id
-				commit('V', nil, post)
+				commit('V', nil, options.merge(:transaction_id => transaction_id))
 			end
 
 			private

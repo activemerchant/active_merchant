@@ -50,10 +50,20 @@ class QbmsTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_successful_credit
+  def test_successful_deprecated_credit
     @gateway.expects(:ssl_post).returns(credit_response)
 
-    assert response = @gateway.credit(@amount, "x", @options)
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.credit(@amount, "x", @options)
+      assert_instance_of Response, response
+      assert_success response
+    end
+  end
+
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(credit_response)
+
+    assert response = @gateway.refund(@amount, "x", @options)
     assert_instance_of Response, response
     assert_success response
   end
@@ -116,6 +126,17 @@ class QbmsTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @card, @options)
     assert_instance_of Response, response
     assert_failure response
+  end
+
+  def test_use_test_url_when_overwriting_with_test_option
+    ActiveMerchant::Billing::Base.mode = :production
+
+    @gateway = QbmsGateway.new(:login => "test", :ticket => "abc123", :test => true)
+    @gateway.stubs(:parse).returns({})
+    @gateway.expects(:ssl_post).with(QbmsGateway.test_url, anything, anything).returns(authorization_response)
+    @gateway.authorize(@amount, @card, @options)
+
+    ActiveMerchant::Billing::Base.mode = :test
   end
 
   # helper methods start here
