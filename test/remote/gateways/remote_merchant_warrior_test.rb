@@ -97,7 +97,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 		assert_success response
 		
 		assert response = @gateway.process_capture(150, transaction_id, 160)
-		assert_equal 'MW - 024:Capture amount is greater than the transaction amount', response.params["response_message"]
+		assert_equal "MW - 002:Field 'transactionAmount' is invalid", response.params["response_message"]
 		assert_failure response
 	end
 
