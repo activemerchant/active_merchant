@@ -15,7 +15,8 @@ module ActiveMerchant #:nodoc:
 
         def initialize(order, account, options = {})
           options.assert_valid_keys([:amount, :currency, :test, :credential2, :credential3, :credential4, :country, :account_name])
-          @fields = {}
+          @fields          = {}
+          @test            = options[:test]
           self.order       = order
           self.account     = account
           self.amount      = options[:amount]
@@ -52,6 +53,10 @@ module ActiveMerchant #:nodoc:
         
         def form_fields
           @fields
+        end
+
+        def test?
+          @test_mode ||= ActiveMerchant::Billing::Base.integration_mode == :test || @test
         end
 
         private

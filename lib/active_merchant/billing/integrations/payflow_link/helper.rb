@@ -3,21 +3,26 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module PayflowLink
         class Helper < ActiveMerchant::Billing::Integrations::Helper
+          include PostsData
 
           def initialize(order, account, options = {})
             super
             add_field('login', account)
-            add_field('type', 'S')
             add_field('echodata', 'True')
-            add_field('user2', ActiveMerchant::Billing::Base.integration_mode == :test || options[:test])
+            add_field('user2', self.test?)
             add_field('invoice', order)
+            add_field('vendor', account)
+            add_field('user', account)
+            add_field('trxtype', 'S')
           end
 
-          mapping :amount, 'amount'
           mapping :account, 'login'
-          mapping :credential2, 'partner'
+          mapping :credential2, 'pwd'
+          mapping :credential3, 'partner'
           mapping :order, 'user1'
           mapping :description, 'description'
+
+          mapping :amount, 'amt'
 
 
           mapping :billing_address,  :city    => 'city',
@@ -50,6 +55,43 @@ module ActiveMerchant #:nodoc:
               field = mappings[:billing_address][k]
               add_field(field, v) unless field.nil?
             end
+          end
+
+          def form_fields
+            token, token_id = request_secure_token
+
+            {"securetoken" => token, "securetokenid" => token_id, "mode" => test? ? "test" : "live"}
+          end
+
+          private
+
+          def secure_token_id
+            @secure_token_id ||= Utils.generate_unique_id
+          end
+
+          def secure_token_url
+            test? ? "https://pilot-payflowpro.paypal.com" : "https://payflowpro.paypal.com"
+          end
+
+          def request_secure_token
+            @fields["securetokenid"] = secure_token_id
+            @fields["createsecuretoken"] = "Y"
+
+            fields = @fields.collect {|key, value| "#{key}[#{value.length}]=#{value}" }.join("&")
+
+            response = ssl_post(secure_token_url, fields)
+
+            parse_response(response)
+          end
+
+          def parse_response(response)
+            response = response.split("&").inject({}) do |hash, param|
+              key, value = param.split("=")
+              hash[key] = value
+              hash
+            end
+
+            [response['SECURETOKEN'], response['SECURETOKENID']] if response['RESPMSG'] && response['RESPMSG'].downcase == "approved"
           end
         end
       end
