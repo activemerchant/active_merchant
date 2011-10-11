@@ -39,6 +39,36 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert Braintree::Configuration.instantiate.user_agent.include?("(ActiveMerchant #{ActiveMerchant::VERSION})")
   end
 
+  def test_merchant_account_id_present_when_provided_on_gateway_initialization
+    @gateway = BraintreeBlueGateway.new(
+      :merchant_id => 'test',
+      :merchant_account_id => 'present',
+      :public_key => 'test',
+      :private_key => 'test'
+    )
+
+    Braintree::Transaction.expects(:sale).
+      with(has_entries(:merchant_account_id => "present")).
+      returns(braintree_result)
+
+    @gateway.authorize(100, credit_card("41111111111111111111"))
+  end
+
+  def test_merchant_account_id_on_transaction_takes_precedence
+    @gateway = BraintreeBlueGateway.new(
+      :merchant_id => 'test',
+      :merchant_account_id => 'present',
+      :public_key => 'test',
+      :private_key => 'test'
+    )
+
+    Braintree::Transaction.expects(:sale).
+      with(has_entries(:merchant_account_id => "account_on_transaction")).
+      returns(braintree_result)
+
+    @gateway.authorize(100, credit_card("41111111111111111111"), :merchant_account_id => "account_on_transaction")
+  end
+
   def test_merchant_account_id_present_when_provided
     Braintree::Transaction.expects(:sale).
       with(has_entries(:merchant_account_id => "present")).
