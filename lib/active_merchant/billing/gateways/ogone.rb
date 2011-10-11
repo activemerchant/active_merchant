@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
     # https://secure.ogone.com/ncol/Ogone_DirectLink-3-D_EN.pdf
     #
     #
-    # It was last tested on Release 4.89 of Ogone DirectLink + AliasManager + DirectLink with 3-D Secure (30 September 2011).
+    # It was last tested on Release 4.89 of Ogone DirectLink + AliasManager + DirectLink with 3-D Secure (11 October 2011).
     #
     # For any questions or comments, please contact one of the following:
     # - Nicolas Jacobeus (nj@belighted.com),
@@ -213,23 +213,27 @@ module ActiveMerchant #:nodoc:
         else
           add_alias(post, options[:store])
           add_eci(post, options[:eci] || '7')
-          if options[:d3d]
-            add_pair post, 'FLAG3D', 'Y'
-            win3ds = THREE_D_SECURE_DISPLAY_WAYS.key?(options[:win_3d]) ? THREE_D_SECURE_DISPLAY_WAYS[options[:win_3d]] : THREE_D_SECURE_DISPLAY_WAYS[:main_window]
-            add_pair post, 'WIN3DS', win3ds
-
-            add_pair post, 'HTTP_ACCEPT',     options[:http_accept] || "*/*"
-            add_pair post, 'HTTP_USER_AGENT', options[:http_user_agent] if options[:http_user_agent]
-            add_pair post, 'ACCEPTURL',       options[:accept_url]      if options[:accepturl]
-            add_pair post, 'DECLINEURL',      options[:decline_url]     if options[:declineurl]
-            add_pair post, 'EXCEPTIONURL',    options[:exception_url]   if options[:exceptionurl]
-            add_pair post, 'PARAMPLUS',       options[:paramplus]       if options[:paramplus]
-            add_pair post, 'COMPLUS',         options[:complus]         if options[:complus]
-            add_pair post, 'LANGUAGE',        options[:language]        if options[:language]
-            add_pair post, 'TP',              options[:tp]              if options[:tp]
-          end
+          add_d3d(post, options) if options[:d3d]
           add_creditcard(post, payment_source)
         end
+      end
+
+      def add_d3d(post, options)
+        add_pair post, 'FLAG3D', 'Y'
+        win3ds = THREE_D_SECURE_DISPLAY_WAYS.key?(options[:win_3d]) ?
+          THREE_D_SECURE_DISPLAY_WAYS[options[:win_3d]] :
+          THREE_D_SECURE_DISPLAY_WAYS[:main_window]
+        add_pair post, 'WIN3DS', win3ds
+
+        add_pair post, 'HTTP_ACCEPT',     options[:http_accept] || "*/*"
+        add_pair post, 'HTTP_USER_AGENT', options[:http_user_agent] if options[:http_user_agent]
+        add_pair post, 'ACCEPTURL',       options[:accept_url]      if options[:accepturl]
+        add_pair post, 'DECLINEURL',      options[:decline_url]     if options[:declineurl]
+        add_pair post, 'EXCEPTIONURL',    options[:exception_url]   if options[:exceptionurl]
+        add_pair post, 'PARAMPLUS',       options[:paramplus]       if options[:paramplus]
+        add_pair post, 'COMPLUS',         options[:complus]         if options[:complus]
+        add_pair post, 'LANGUAGE',        options[:language]        if options[:language]
+        add_pair post, 'TP',              options[:tp]              if options[:tp]
       end
 
       def add_eci(post, eci)

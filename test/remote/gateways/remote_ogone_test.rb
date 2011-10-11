@@ -73,6 +73,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
 
+  # NOTE: You have to contact Ogone to make sure your test account allow 3D Secure transactions before running this test
   def test_successful_purchase_with_3d_secure
     assert response = @gateway.purchase(@amount, @credit_card_3ds, @options.merge(:d3d => true))
     assert_success response
@@ -191,5 +192,4 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Some of the data entered is incorrect. please retry.', response.message
   end
-
 end
