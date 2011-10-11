@@ -209,9 +209,10 @@ module ActiveMerchant #:nodoc:
       def add_payment_source(post, payment_source, options)
         if payment_source.is_a?(String)
           add_alias(post, payment_source)
-          add_eci(post, '9')
+          add_eci(post, options[:eci] || '9')
         else
           add_alias(post, options[:store])
+          add_eci(post, options[:eci] || '7')
           if options[:d3d]
             add_pair post, 'FLAG3D', 'Y'
             win3ds = THREE_D_SECURE_DISPLAY_WAYS.key?(options[:win_3d]) ? THREE_D_SECURE_DISPLAY_WAYS[options[:win_3d]] : THREE_D_SECURE_DISPLAY_WAYS[:main_window]
