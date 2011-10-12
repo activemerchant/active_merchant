@@ -46,26 +46,26 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     auth_code = response.params["auth_code"]
     assert_success response
     
-    assert response = @gateway.process_capture(@success_amount, transaction_id, @success_amount)
+    assert response = @gateway.capture(@success_amount, transaction_id, @success_amount)
     assert_success response
   end
 
 
   def test_successful_purchase
-    assert response = @gateway.process_card(@success_amount, @credit_card, @options)
+    assert response = @gateway.purchase(@success_amount, @credit_card, @options)
     assert_equal 'Transaction approved', response.params["response_message"]
     assert_success response
   end
 
   def test_unsuccessful_purchase
-    assert response = @gateway.process_card(@failure_amount, @credit_card, @options)
+    assert response = @gateway.purchase(@failure_amount, @credit_card, @options)
     assert_equal 'Card has expired', response.params["response_message"]
     assert_failure response
   end
 
   def test_successful_credit
     #first make a purchase, to be credited
-    assert response = @gateway.process_card(@success_amount, @credit_card, @options)
+    assert response = @gateway.purchase(@success_amount, @credit_card, @options)
     transaction_id = response.params["transaction_id"]
 
     assert response = @gateway.credit(@success_amount, transaction_id,
@@ -92,7 +92,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     auth_code = response.params["auth_code"]
     assert_success response
     
-    assert response = @gateway.process_capture(150, transaction_id, 160)
+    assert response = @gateway.capture(150, transaction_id, 160)
     assert_equal "MW - 002:Field 'transactionAmount' is invalid", response.params["response_message"]
     assert_failure response
   end
@@ -131,7 +131,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     auth_code = response.params["auth_code"]
     assert_success response
     
-    assert response = @gateway.process_capture(@token_success_amount, transaction_id, @token_success_amount)
+    assert response = @gateway.capture(@token_success_amount, transaction_id, @token_success_amount)
     assert_success response
   end
 
