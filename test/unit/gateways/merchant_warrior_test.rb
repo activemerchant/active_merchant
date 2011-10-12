@@ -4,9 +4,9 @@ require 'test_helper'
 class MerchantWarriorTest < Test::Unit::TestCase
   def setup
     @gateway = MerchantWarriorGateway.new(
-                 :merchant_uuid => '4b6bb68c75487',
-                 :api_key => 'jwcd0uz1',
-                 :api_passphrase => 'k9hflvig'
+                 :merchant_uuid => '4e922de8c2a4c',
+                 :api_key => 'g6jrxa9o',
+                 :api_passphrase => 'vp4ujoem'
                )
 
     @credit_card = credit_card
@@ -34,7 +34,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
 
   def test_successful_purchase
 		@gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert response = @gateway.purchase(@success_amount, @credit_card, @options)
+    assert response = @gateway.process_card(@success_amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_equal 'Transaction approved', response.params["response_message"]
     assert_success response
@@ -45,7 +45,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
-    assert response = @gateway.purchase(@failure_amount, @credit_card, @options)
+    assert response = @gateway.process_card(@failure_amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_equal 'Card has expired', response.params["response_message"]
     assert_failure response
