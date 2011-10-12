@@ -90,7 +90,11 @@ module ActiveMerchant #:nodoc:
     
       private
       def purchase_action(source)
-        (card_brand(source) == "check") ? :check_purchase : :purchase
+        if source.is_a?(Check)
+          :check_purchase
+        else
+          :purchase
+        end
       end
       
       def void_action(original_transaction_type)
