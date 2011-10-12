@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
         commit('processAuth', money, post)
       end
       
-      def process_card(money, creditcard, options = {})
+      def purchase(money, creditcard, options = {})
         post = {}
         add_product(post, options)
         add_creditcard(post, creditcard)
@@ -60,9 +60,7 @@ module ActiveMerchant #:nodoc:
         commit('processCard', money, post)
       end
 
-
-
-      def process_capture(money, transaction_id, capture_amount)
+      def capture(money, transaction_id, capture_amount)
         post = {}
         post.merge!('transactionID' => transaction_id)
         post.merge!('transactionAmount' => money.to_s)
@@ -117,7 +115,6 @@ module ActiveMerchant #:nodoc:
         post.merge!('transactionCurrency' => currency(money))
         token_commit('processAuth', post)
       end
-
 
       def card_replace_key
         seed = "--#{rand(10000)}--#{Time.now}--"; 
