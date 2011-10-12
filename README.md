@@ -129,7 +129,6 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside) - US
 * [PayPal Website Payments Pro (US)](https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - US
 * [Plug'n Pay](http://www.plugnpay.com/) - US
-* [Protx](http://www.protx.com) - GB
 * [Psigate](http://www.psigate.com/) - CA
 * [PSL Payment Solutions](http://www.paymentsolutionsltd.com/) - GB
 * [Quantum](http://www.quantumgateway.com) - US
@@ -137,6 +136,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Quickpay](http://quickpay.dk/) - DK, SE
 * [Rabobank Nederland](http://www.rabobank.nl/) - NL
 * [Realex](http://www.realexpayments.com/) - IE, GB
+* [SagePay](http://www.sagepay.com) - GB
 * [Sage Payment Solutions](http://www.sagepayments.com) - US, CA
 * [Sallie Mae](http://www.salliemae.com) - US
 * [SecureNet](http://www.securenet.com) - US
