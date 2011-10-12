@@ -118,7 +118,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@amount, @visa, @options)
     assert_success purchase
     
-    assert credit = @gateway.credit(@amount, purchase.authorization)
+    assert credit = @gateway.refund(@amount, purchase.authorization)
     assert_success purchase
     
     assert void = @gateway.void(credit.authorization)
@@ -136,7 +136,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@amount, @check, @options)
     assert_success purchase
     
-    assert credit = @gateway.credit(@amount, purchase.authorization)
+    assert credit = @gateway.refund(@amount, purchase.authorization)
     assert_success credit
   end
   
