@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
  private
           # Take the posted data and move the relevant data into a hash
           def parse(post)
+            @raw = post.to_s
             json_post = JSON.parse(post)
             params.merge!(json_post)
           end

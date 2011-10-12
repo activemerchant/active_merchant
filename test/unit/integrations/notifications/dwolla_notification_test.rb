@@ -40,6 +40,10 @@ class DwollaNotificationTest < Test::Unit::TestCase
     assert @dwolla.respond_to?(:acknowledge)
   end
 
+  def test_raw_should_be_set
+    assert @dwolla.raw.present?
+  end
+
   private
   def http_raw_error_data
     %*{"OrderId":"order-1", "Result": "Error", "Message": "Invalid Credentials", "TestMode":true}*
