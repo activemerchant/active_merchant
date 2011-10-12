@@ -3,6 +3,7 @@ require 'test_helper'
 
 class MerchantWarriorTest < Test::Unit::TestCase
   def setup
+
     @gateway = MerchantWarriorGateway.new(
                  :merchant_uuid => '4e922de8c2a4c',
                  :api_key => 'g6jrxa9o',
@@ -10,11 +11,8 @@ class MerchantWarriorTest < Test::Unit::TestCase
                )
 
     @credit_card = credit_card
-
-
     @success_amount = '100.00'
     @transaction_id = '30-98a79008-dae8-11df-9322-0022198101cd'
-
     @failure_amount = '100.33'
 
     @options = {
