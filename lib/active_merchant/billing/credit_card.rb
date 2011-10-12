@@ -236,7 +236,7 @@ module ActiveMerchant #:nodoc:
         else
           errors.add :month,      "is not a valid month" unless valid_month?(@month)
           errors.add :year,       "expired"              if expired?
-          errors.add :year,       "is not a valid year"  unless valid_expiry_year?(@year)
+          errors.add :year,       "is not a valid year"  unless expired? || valid_expiry_year?(@year)
         end
       end
 
