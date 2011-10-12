@@ -28,6 +28,10 @@ module ActiveMerchant #:nodoc:
       def details_for(token)
         commit 'GetExpressCheckoutDetails', build_get_details_request(token)
       end
+      
+      def transaction_details_for(transaction_id)
+        commit 'GetTransactionDetails', build_get_transaction_details_request(transaction_id)
+      end
 
       def authorize(money, options = {})
         requires!(options, :token, :payer_id)
@@ -51,6 +55,18 @@ module ActiveMerchant #:nodoc:
           end
         end
 
+        xml.target!
+      end
+      
+      def build_get_transaction_details_request(transaction_id)
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.tag! 'GetTransactionDetailsReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'GetTransactionDetailsRequest', 'xmlns:n2' => EBAY_NAMESPACE do
+            xml.tag! 'n2:Version', API_VERSION
+            xml.tag! 'TransactionID', transaction_id
+          end
+        end
+        
         xml.target!
       end
       
