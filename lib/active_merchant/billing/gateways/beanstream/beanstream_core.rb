@@ -90,10 +90,10 @@ module ActiveMerchant #:nodoc:
     
       private
       def purchase_action(source)
-        if source.is_a?(String) or source.is_a?(Integer)
-          :purchase
+        if source.is_a?(Check)
+          :check_purchase
         else
-          card_brand(source) == "check" ? :check_purchase : :purchase
+          :purchase
         end
       end
       
