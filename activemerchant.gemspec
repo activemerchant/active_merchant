@@ -1,4 +1,5 @@
-require File.expand_path('../lib/active_merchant/version', __FILE__)
+$:.push File.expand_path("../lib", __FILE__)
+require 'active_merchant/version'
 
 Gem::Specification.new do |s|
   s.platform     = Gem::Platform::RUBY
