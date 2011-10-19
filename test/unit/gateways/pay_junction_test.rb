@@ -49,6 +49,22 @@ class PayJunctionTest < Test::Unit::TestCase
     assert_equal PayJunctionGateway::DECLINE_CODES['FE'], response.message
   end
   
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    response = @gateway.refund(@amount, "123")
+    assert_success response
+    assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
+  end
+  
+  def test_successful_deprecated_credit
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      response = @gateway.credit(@amount, "123")
+      assert_success response
+      assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
+    end
+  end
+  
   def test_avs_result_not_supported
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
     
@@ -77,6 +93,59 @@ dc_number =&gt; *
 dc_password =&gt; *
 dc_transaction_amount =&gt; 4.00
 dc_transaction_type =&gt; AUTHORIZATION
+dc_verification_number =&gt; *
+dc_version =&gt; 1.2
+----End Vars----
+
+----Start Response Sent----
+dc_merchant_name=PayJunction - (demo)
+dc_merchant_address=3 W. Carrillo
+dc_merchant_city=Santa Barbara
+dc_merchant_state=CA
+dc_merchant_zip=93101
+dc_merchant_phone=800-601-0230
+dc_device_id=1174
+dc_transaction_date=2007-11-28 19:22:33.791634
+dc_transaction_action=charge
+dc_approval_code=TAS193
+dc_response_code=00
+dc_response_message=APPROVAL TAS193 
+dc_transaction_id=3144302
+dc_posture=hold
+dc_invoice_number=9f76c4e4bd66a36dc5aeb4bd7b3a02fa
+dc_notes=null
+dc_card_name=cody fauser
+dc_card_brand=VSA
+dc_card_exp=XX/XX
+dc_card_number=XXXX-XXXX-XXXX-3344
+dc_card_address=
+dc_card_city=
+dc_card_zipcode=
+dc_card_state=
+dc_card_country=
+dc_base_amount=4.00
+dc_tax_amount=0.00
+dc_capture_amount=4.00
+dc_cashback_amount=0.00
+dc_shipping_amount=0.00
+----End Response Sent----
+dc_card_name=cody fauserdc_card_brand=VSAdc_card_exp=XX/XXdc_card_number=XXXX-XXXX-XXXX-3344dc_card_address=dc_card_city=dc_card_zipcode=dc_card_state=dc_card_country=dc_base_amount=4.00dc_tax_amount=0.00dc_capture_amount=4.00dc_cashback_amount=0.00dc_shipping_amount=0.00
+    RESPONSE
+  end
+
+  def successful_refund_response
+    <<-RESPONSE
+dc_merchant_name=PayJunction - (demo)dc_merchant_address=3 W. Carrillodc_merchant_city=Santa Barbaradc_merchant_state=CAdc_merchant_zip=93101dc_merchant_phone=800-601-0230dc_device_id=1174dc_transaction_date=2007-11-28 19:22:33.791634dc_transaction_action=creditdc_approval_code=TAS193dc_response_code=00dc_response_message=APPROVAL TAS193 dc_transaction_id=3144302dc_posture=holddc_invoice_number=9f76c4e4bd66a36dc5aeb4bd7b3a02fadc_notes=--START QUICK-LINK DEBUG--
+----Vars Received----
+dc_expiration_month =&gt; *
+dc_expiration_year =&gt; *
+dc_invoice =&gt; 9f76c4e4bd66a36dc5aeb4bd7b3a02fa
+dc_logon =&gt; pj-ql-01
+dc_name =&gt; Cody Fauser
+dc_number =&gt; *
+dc_password =&gt; *
+dc_transaction_amount =&gt; 4.00
+dc_transaction_type =&gt; CREDIT
 dc_verification_number =&gt; *
 dc_version =&gt; 1.2
 ----End Vars----
