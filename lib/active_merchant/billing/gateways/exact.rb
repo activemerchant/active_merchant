@@ -68,6 +68,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, authorization, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, authorization, options)
+      end
+
+      def refund(money, authorization, options = {})
         commit(:credit, build_capture_or_credit_request(money, authorization, options))
       end
          

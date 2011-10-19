@@ -71,6 +71,24 @@ class SkipJackTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_refund_success
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    assert response = @gateway.refund(@amount, 123)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
+  def test_deprecated_credit
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.credit(@amount, 123)
+      assert_instance_of Response, response
+      assert_failure response
+    end
+  end
+
   def test_split_line
     keys = @gateway.send(:split_line, '"AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"')
   
@@ -202,6 +220,13 @@ class SkipJackTest < Test::Unit::TestCase
     <<-CSV
 "000386891209","0","1","","","","","","","","","" 
 "000386891209","1.0000","SETTLE","SUCCESSFUL","Valid","618844630c5fad658e95abfd5e1d4e22","9802853156029.022"
+    CSV
+  end
+  
+  def successful_refund_response
+    <<-CSV
+"AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"
+"TAS204","000386891209","100","","Y","Card authorized, exact address match with 5 digit zip code.","107a0fdb21ba42cf04f60274908085ea","TAS204","1","M","Match","1","9802853155172.022",""
     CSV
   end
   
