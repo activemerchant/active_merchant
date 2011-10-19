@@ -432,7 +432,7 @@ trust_commerce:
   password: 'password'
 
 # Working credentials, no need to replace
-usa_epay_transaction:
+usa_epay:
   login: 'yCaWGYQsSVR0S48B6AKMK07RQhaxHvGu'
 
 # Get credentials here: https://www.usaepay.com/developer/login

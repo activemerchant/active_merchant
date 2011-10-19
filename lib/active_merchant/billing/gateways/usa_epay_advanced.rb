@@ -979,7 +979,6 @@ module ActiveMerchant #:nodoc:
 
       # Customer ======================================================
 
-      # METHOD addCustomer
       def build_add_customer(soap, options)
         soap.tag! "ns1:addCustomer" do |soap|
           build_token soap, options
@@ -990,40 +989,30 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD updateCustomer
+      def build_customer(soap, options, type, add_customer_data=false)
+        soap.tag! "ns1:#{type}" do |soap|
+          build_token soap, options
+          build_tag soap, :integer, 'CustNum', options[:customer_number]
+          build_customer_data soap, options if add_customer_data
+        end
+      end
+
       def build_update_customer(soap, options)
-        soap.tag! "ns1:updateCustomer" do |soap|
-          build_token soap, options
-          build_tag soap, :integer, 'CustNum', options[:customer_number]
-          build_customer_data soap, options
-        end
+        build_customer(soap, options, 'updateCustomer', true)
       end
 
-      # METHOD enableCustomer
       def build_enable_customer(soap, options)
-        soap.tag! "ns1:enableCustomer" do |soap|
-          build_token soap, options
-          build_tag soap, :integer, 'CustNum', options[:customer_number]
-        end
+        build_customer(soap, options, 'enableCustomer')
       end
 
-      # METHOD disableCustomer
       def build_disable_customer(soap, options)
-        soap.tag! "ns1:disableCustomer" do |soap|
-          build_token soap, options
-          build_tag soap, :integer, 'CustNum', options[:customer_number]
-        end
+        build_customer(soap, options, 'disableCustomer')
       end
 
-      # METHOD deleteCustomer
       def build_delete_customer(soap, options)
-        soap.tag! "ns1:deleteCustomer" do |soap|
-          build_token soap, options
-          build_tag soap, :integer, 'CustNum', options[:customer_number]
-        end
+        build_customer(soap, options, 'deleteCustomer')
       end
 
-      # METHOD addCustomerPaymentMethod
       def build_add_customer_payment_method(soap, options)
         soap.tag! "ns1:addCustomerPaymentMethod" do |soap|
           build_token soap, options
@@ -1043,13 +1032,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_get_customer_payment_methods(soap, options)
-        soap.tag! 'ns1:getCustomerPaymentMethods' do |soap|
-          build_token soap, options
-          build_tag soap, :integer, 'CustNum', options[:customer_number]
-        end
+        build_customer(soap, options, 'getCustomerPaymentMethods')
       end
 
-      # METHOD updateCustomerPaymentMethod
       def build_update_customer_payment_method(soap, options)
         soap.tag! 'ns1:updateCustomerPaymentMethod' do |soap|
           build_token soap, options
@@ -1058,7 +1043,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD deleteCustomerPaymentMethod
       def build_delete_customer_payment_method(soap, options)
         soap.tag! "ns1:deleteCustomerPaymentMethod" do |soap|
           build_token soap, options
@@ -1067,7 +1051,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: runCustomerTransaction
       def build_run_customer_transaction(soap, options)
         soap.tag! "ns1:runCustomerTransaction" do |soap|
           build_token soap, options
@@ -1079,7 +1062,6 @@ module ActiveMerchant #:nodoc:
 
       # Transactions ==================================================
       
-      # METHOD: runTransaction
       def build_run_transaction(soap, options)
         soap.tag! 'ns1:runTransaction' do |soap|
           build_token soap, options
@@ -1087,7 +1069,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: runSale
       def build_run_sale(soap, options)
         soap.tag! 'ns1:runSale' do |soap|
           build_token soap, options
@@ -1095,7 +1076,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: runAuthOnly
       def build_run_auth_only(soap, options)
         soap.tag! 'ns1:runAuthOnly' do |soap|
           build_token soap, options
@@ -1103,7 +1083,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: runCredit
       def build_run_credit(soap, options)
         soap.tag! 'ns1:runCredit' do |soap|
           build_token soap, options
@@ -1111,7 +1090,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: runCheckSale
       def build_run_check_sale(soap, options)
         soap.tag! 'ns1:runCheckSale' do |soap|
           build_token soap, options
@@ -1119,7 +1097,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: runCheckCredit
       def build_run_check_credit(soap, options)
         soap.tag! 'ns1:runCheckCredit' do |soap|
           build_token soap, options
@@ -1127,7 +1104,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: postAuth
       def build_post_auth(soap, options)
         soap.tag! 'ns1:postAuth' do |soap|
           build_token soap, options
@@ -1135,7 +1111,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: runQuickSale
       def build_run_quick_sale(soap, options)
         soap.tag! 'ns1:runQuickSale' do |soap|
           build_token soap, options
@@ -1145,7 +1120,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: runQuickCredit
       def build_run_quick_credit(soap, options)
         soap.tag! 'ns1:runQuickCredit' do |soap|
           build_token soap, options
@@ -1154,7 +1128,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: getTransaction
       def build_get_transaction(soap, options)
         soap.tag! "ns1:getTransaction" do |soap|
           build_token soap, options
@@ -1162,7 +1135,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: getTransactionStatus
       def build_get_transaction_status(soap, options)
         soap.tag! "ns1:getTransactionStatus" do |soap|
           build_token soap, options
@@ -1170,7 +1142,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: getTransactionCustom
       def build_get_transaction_custom(soap, options)
         soap.tag! "ns1:getTransactionCustom" do |soap|
           build_token soap, options
@@ -1179,7 +1150,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: getCheckTrace
       def build_get_check_trace(soap, options)
         soap.tag! "ns1:getCheckTrace" do |soap|
           build_token soap, options
@@ -1187,7 +1157,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: captureTransaction
       def build_capture_transaction(soap, options)
         soap.tag! "ns1:captureTransaction" do |soap|
           build_token soap, options
@@ -1196,7 +1165,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: voidTransaction
       def build_void_transaction(soap, options)
         soap.tag! "ns1:voidTransaction" do |soap|
           build_token soap, options
@@ -1204,7 +1172,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: refundTransaction
       def build_refund_transaction(soap, options)
         soap.tag! "ns1:refundTransaction" do |soap|
           build_token soap, options
@@ -1213,7 +1180,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # METHOD: overrideTransaction
       def build_override_transaction(soap, options)
         soap.tag! "ns1:overrideTransaction" do |soap|
           build_token soap, options
@@ -1224,7 +1190,6 @@ module ActiveMerchant #:nodoc:
 
       # Account =======================================================
 
-      # METHOD: getAccountDetails
       def build_get_account_details(soap, options)
         soap.tag! "ns1:getAccountDetails" do |soap|
           build_token soap, options
@@ -1254,7 +1219,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_customer_payment_methods(soap, options)
+      def extract_methods_and_tag(options)
         case
         when options[:payment_method] && !options[:payment_methods]
           payment_methods = [options[:payment_method]]
@@ -1266,30 +1231,39 @@ module ActiveMerchant #:nodoc:
           payment_methods = [options]
           tag_name = 'PaymentMethod'
         end
+        [payment_methods, tag_name]
+      end
+
+      def build_credit_card_or_check(soap, payment_method)
+        case
+        when payment_method[:method].kind_of?(ActiveMerchant::Billing::CreditCard)
+          build_tag soap, :string, 'CardNumber', payment_method[:method].number
+          build_tag soap, :string, 'CardExpiration', 
+            "#{payment_method[:method].year}-#{"%02d" % payment_method[:method].month}"
+          if options[:billing_address]
+            build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
+            build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
+          end
+          build_tag soap, :string, 'CardCode', payment_method[:method].verification_value
+        when payment_method[:method].kind_of?(ActiveMerchant::Billing::Check)
+          build_tag soap, :string, 'Account', payment_method[:method].number
+          build_tag soap, :string, 'Routing', payment_method[:method].routing_number
+          build_tag soap, :string, 'AccountType', payment_method[:method].account_type.capitalize
+          build_tag soap, :string, 'DriversLicense', options[:drivers_license]
+          build_tag soap, :string, 'DriversLicenseState', options[:drivers_license_state]
+          build_tag soap, :string, 'RecordType', options[:record_type]
+        end
+      end
+
+      def build_customer_payment_methods(soap, options)
+        payment_methods, tag_name = extract_methods_and_tag(options)
         payment_methods.each do |payment_method|
           soap.tag! tag_name, 'xsi:type' => "ns1:PaymentMethod" do |soap|
             build_tag soap, :integer, 'MethodID', payment_method[:method_id]
             build_tag soap, :string, 'MethodType', payment_method[:type]
             build_tag soap, :string, 'MethodName', payment_method[:name]
             build_tag soap, :integer, 'SecondarySort', payment_method[:sort]
-            case
-            when payment_method[:method].kind_of?(ActiveMerchant::Billing::CreditCard)
-              build_tag soap, :string, 'CardNumber', payment_method[:method].number
-              build_tag soap, :string, 'CardExpiration', 
-                "#{payment_method[:method].year}-#{"%02d" % payment_method[:method].month}"
-              if options[:billing_address]
-                build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
-                build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
-              end
-              build_tag soap, :string, 'CardCode', payment_method[:method].verification_value
-            when payment_method[:method].kind_of?(ActiveMerchant::Billing::Check)
-              build_tag soap, :string, 'Account', payment_method[:method].number
-              build_tag soap, :string, 'Routing', payment_method[:method].routing_number
-              build_tag soap, :string, 'AccountType', payment_method[:method].account_type.capitalize
-              build_tag soap, :string, 'DriversLicense', options[:drivers_license]
-              build_tag soap, :string, 'DriversLicenseState', options[:drivers_license_state]
-              build_tag soap, :string, 'RecordType', options[:record_type]
-            end
+            build_credit_card_or_check(soap, payment_method)
           end
         end
       end
@@ -1433,28 +1407,24 @@ module ActiveMerchant #:nodoc:
 
         begin
           soap = ssl_post(url, request, "Content-Type" => "text/xml")
-          response_params = parse(action, soap)
-          success, message, authorization, avs, cvv = successful? action, response_params
-
-          response_params.merge!('soap_response' => soap) if @options[:soap_response]
-
-          response = Response.new(
-            success, message, response_params,
-            :test => test?, :authorization => authorization,
-            :avs_result => avs_from(avs),
-            :cvv_result => cvv
-          )
         rescue ActiveMerchant::ResponseError => error
           soap = error.response.body
-          response_params = parse action, soap
-          success, message, authorization = successful? action, response_params
-
-          response_params.merge!('soap_response' => soap) if @options[:soap_response]
-          
-          response = Response.new(success, message, response_params, :test => test?)
         end
 
-        response
+        response = build_response(action, soap)
+      end
+
+      def build_response(action, soap)
+        response_params, success, message, authorization, avs, cvv = parse(action, soap)
+
+        response_params.merge!('soap_response' => soap) if @options[:soap_response]
+
+        response = Response.new(
+          success, message, response_params,
+          :test => test?, :authorization => authorization,
+          :avs_result => avs_from(avs),
+          :cvv_result => cvv
+        )
       end
 
       def avs_from(avs)
@@ -1463,13 +1433,17 @@ module ActiveMerchant #:nodoc:
         avs_params
       end
 
-      def successful?(action, response_params)
+      def parse(action, soap)
+        xml = REXML::Document.new(soap)
+        root = REXML::XPath.first(xml, "//SOAP-ENV:Body")
+        response = root ? parse_element(root[0]) : { :response => soap }
+
         success, message, authorization, avs, cvv = false, FAILURE_MESSAGE, nil, nil, nil
 
-        fault = (!response_params) || (response_params.length < 1) || response_params.has_key?('faultcode')
-        return [success, response_params['faultstring'], authorization, avs, cvv] if fault
+        fault = (!response) || (response.length < 1) || response.has_key?('faultcode')
+        return [response, success, response['faultstring'], authorization, avs, cvv] if fault
 
-        if response_params.respond_to?(:[]) && p = response_params["#{action}_return"] 
+        if response.respond_to?(:[]) && p = response["#{action}_return"] 
           if p.respond_to?(:key?) && p.key?('result_code')
             success = p['result_code'] == 'A' ? true : false
             authorization = p['ref_num']
@@ -1486,17 +1460,11 @@ module ActiveMerchant #:nodoc:
           else
             p
           end
-        elsif response_params.respond_to?(:[]) && p = response_params[:response]
+        elsif response.respond_to?(:[]) && p = response[:response]
           message = p # when response is html
         end
 
-        [success, message, authorization, avs, cvv]
-      end
-
-      def parse(action, soap)
-        xml = REXML::Document.new(soap)
-        root = REXML::XPath.first(xml, "//SOAP-ENV:Body")
-        response = root ? parse_element(root[0]) : { :response => soap }
+        [response, success, message, authorization, avs, cvv]
       end
 
       def parse_element(node)

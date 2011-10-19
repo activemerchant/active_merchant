@@ -175,7 +175,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
   def test_successful_update_customer
     @options.merge!(@customer_options)
-    @gateway.expects(:ssl_post).returns(successful_update_customer_response)
+    @gateway.expects(:ssl_post).returns(successful_customer_response('updateCustomer'))
 
     assert response = @gateway.update_customer(@options)
     assert_instance_of Response, response
@@ -187,7 +187,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
   def test_successful_enable_customer
     @options.merge!(@standard_transaction_options)
-    @gateway.expects(:ssl_post).returns(successful_enable_customer_response)
+    @gateway.expects(:ssl_post).returns(successful_customer_response('enableCustomer'))
 
     assert response = @gateway.enable_customer(@options)
     assert_instance_of Response, response
@@ -199,7 +199,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
   def test_successful_disable_customer
     @options.merge!(@standard_transaction_options)
-    @gateway.expects(:ssl_post).returns(successful_disable_customer_response)
+    @gateway.expects(:ssl_post).returns(successful_customer_response('disableCustomer'))
 
     assert response = @gateway.disable_customer(@options)
     assert_instance_of Response, response
@@ -304,7 +304,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
   def test_successful_delete_customer
     @options.merge! @delete_customer_options
-    @gateway.expects(:ssl_post).returns(successful_delete_customer_response)
+    @gateway.expects(:ssl_post).returns(successful_customer_response('deleteCustomer'))
 
     assert response = @gateway.delete_customer(@options)
     assert_instance_of Response, response
@@ -317,7 +317,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
   def test_successful_run_transaction
     @options.merge!(@transaction_options)
-    @gateway.expects(:ssl_post).returns(successful_run_transaction_response)
+    @gateway.expects(:ssl_post).returns(successful_avs_cvv_transaction_response('runTransaction'))
 
     assert response = @gateway.run_transaction(@options)
     assert_instance_of Response, response
@@ -330,32 +330,32 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
   def test_successful_run_sale
     @options.merge!(@transaction_options)
-    @gateway.expects(:ssl_post).returns(successful_run_sale_response)
+    @gateway.expects(:ssl_post).returns(successful_avs_cvv_transaction_response('runSale'))
 
     assert response = @gateway.run_sale(@options)
     assert_instance_of Response, response
     assert response.test?
     assert_success response
-    assert_equal '47567595', response.authorization
+    assert_equal '47567593', response.authorization
     assert_avs_cvv_match response
   end
 
   def test_successful_run_auth_only
     @options.merge!(@transaction_options)
-    @gateway.expects(:ssl_post).returns(successful_run_auth_only_response)
+    @gateway.expects(:ssl_post).returns(successful_avs_cvv_transaction_response('runAuthOnly'))
 
     assert response = @gateway.run_auth_only(@options)
     assert_instance_of Response, response
     assert response.test?
     assert_success response
     assert_equal 'Approved', response.message['result']
-    assert_equal '47568685', response.authorization
+    assert_equal '47567593', response.authorization
     assert_avs_cvv_match response
   end
 
   def test_successful_run_credit
     @options.merge!(@transaction_options)
-    @gateway.expects(:ssl_post).returns(successful_run_credit_response)
+    @gateway.expects(:ssl_post).returns(successful_transaction_response('runCredit'))
 
     assert response = @gateway.run_credit(@options)
     assert_instance_of Response, response
@@ -367,26 +367,26 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
   def test_successful_run_check_sale
     @options.merge!(@transaction_options)
-    @gateway.expects(:ssl_post).returns(successful_run_check_sale_response)
+    @gateway.expects(:ssl_post).returns(successful_transaction_response('runCheckSale'))
 
     assert response = @gateway.run_check_sale(@options)
     assert_instance_of Response, response
     assert response.test?
     assert_success response
     assert_equal 'Approved', response.message['result']
-    assert_equal '47568731', response.authorization
+    assert_equal '47568689', response.authorization
   end
 
   def test_successful_run_check_credit
     @options.merge!(@transaction_options)
-    @gateway.expects(:ssl_post).returns(successful_run_check_credit_response)
+    @gateway.expects(:ssl_post).returns(successful_transaction_response('runCheckCredit'))
 
     assert response = @gateway.run_check_credit(@options)
     assert_instance_of Response, response
     assert response.test?
     assert_success response
     assert_equal 'Approved', response.message['result']
-    assert_equal '47568732', response.authorization
+    assert_equal '47568689', response.authorization
   end
 
   # TODO get post_auth response
@@ -407,26 +407,26 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
   def test_successful_run_quick_sale
     @options.merge!(@transaction_options)
     @options.merge!(@standard_transaction_options)
-    @gateway.expects(:ssl_post).returns(successful_run_quick_sale_response)
+    @gateway.expects(:ssl_post).returns(successful_transaction_response('runQuickSale'))
 
     assert response = @gateway.run_quick_sale(@options)
     assert_instance_of Response, response
     assert response.test?
     assert_success response
     assert_equal 'Approved', response.message['result']
-    assert_equal '47587241', response.authorization
+    assert_equal '47568689', response.authorization
   end
 
   def test_successful_run_quick_credit
     @options.merge!(@transaction_options)
-    @gateway.expects(:ssl_post).returns(successful_run_quick_credit_response)
+    @gateway.expects(:ssl_post).returns(successful_transaction_response('runQuickCredit'))
 
     assert response = @gateway.run_quick_credit(@options)
     assert_instance_of Response, response
     assert response.test?
     assert_success response
     assert_equal 'Approved', response.message['result']
-    assert_equal '47587249', response.authorization
+    assert_equal '47568689', response.authorization
   end
 
   def test_successful_capture_transaction
@@ -598,21 +598,9 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
     XML
   end
 
-  def successful_update_customer_response
+  def successful_customer_response(method)
     <<-XML
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:updateCustomerResponse><updateCustomerReturn xsi:type="xsd:boolean">true</updateCustomerReturn></ns1:updateCustomerResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-    XML
-  end
-
-  def successful_enable_customer_response
-    <<-XML
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:enableCustomerResponse><enableCustomerReturn xsi:type="xsd:boolean">true</enableCustomerReturn></ns1:enableCustomerResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-    XML
-  end
-
-  def successful_disable_customer_response
-    <<-XML
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:disableCustomerResponse><disableCustomerReturn xsi:type="xsd:boolean">true</disableCustomerReturn></ns1:disableCustomerResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:#{method}Response><#{method}Return xsi:type="xsd:boolean">true</#{method}Return></ns1:#{method}Response></SOAP-ENV:Body></SOAP-ENV:Envelope>
     XML
   end
 
@@ -677,12 +665,6 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
     XML
   end
 
-  def successful_delete_customer_response
-    <<-XML
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:deleteCustomerResponse><deleteCustomerReturn xsi:type="xsd:boolean">true</deleteCustomerReturn></ns1:deleteCustomerResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-    XML
-  end
-
   def failed_delete_customer_response
     <<-XML
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"><SOAP-ENV:Body><SOAP-ENV:Fault><faultcode>SOAP-ENV:Server</faultcode><faultstring>40030: Customer Not Found</faultstring></SOAP-ENV:Fault></SOAP-ENV:Body></SOAP-ENV:Envelope>
@@ -690,45 +672,21 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
   end
 
   # Transaction =======================================================
-  def successful_run_transaction_response
+  def successful_avs_cvv_transaction_response(method)
     <<-XML
- <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:runTransactionResponse><runTransactionReturn xsi:type="ns1:TransactionResponse"><AcsUrl xsi:type="xsd:string"></AcsUrl><AuthAmount xsi:type="xsd:double">0</AuthAmount><AuthCode xsi:type="xsd:string">048867</AuthCode><AvsResult xsi:type="xsd:string">Address: Match &amp; 5 Digit Zip: Match</AvsResult><AvsResultCode xsi:type="xsd:string">YYY</AvsResultCode><BatchNum xsi:type="xsd:integer">1</BatchNum><BatchRefNum xsi:type="xsd:integer">14004</BatchRefNum><CardCodeResult xsi:type="xsd:string">Match</CardCodeResult><CardCodeResultCode xsi:type="xsd:string">M</CardCodeResultCode><CardLevelResult xsi:type="xsd:string">Visa Traditional</CardLevelResult><CardLevelResultCode xsi:type="xsd:string">A</CardLevelResultCode><ConversionRate xsi:type="xsd:double">0</ConversionRate><ConvertedAmount xsi:type="xsd:double">0</ConvertedAmount><ConvertedAmountCurrency xsi:type="xsd:string">840</ConvertedAmountCurrency><CustNum xsi:type="xsd:integer">0</CustNum><Error xsi:type="xsd:string">Approved</Error><ErrorCode xsi:type="xsd:integer">0</ErrorCode><isDuplicate xsi:type="xsd:boolean">false</isDuplicate><Payload xsi:type="xsd:string"></Payload><RefNum xsi:type="xsd:integer">47567593</RefNum><Result xsi:type="xsd:string">Approved</Result><ResultCode xsi:type="xsd:string">A</ResultCode><Status xsi:type="xsd:string">Pending</Status><StatusCode xsi:type="xsd:string">P</StatusCode><VpasResultCode xsi:type="xsd:string"></VpasResultCode></runTransactionReturn></ns1:runTransactionResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
+ <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:#{method}Response><#{method}Return xsi:type="ns1:TransactionResponse"><AcsUrl xsi:type="xsd:string"></AcsUrl><AuthAmount xsi:type="xsd:double">0</AuthAmount><AuthCode xsi:type="xsd:string">048867</AuthCode><AvsResult xsi:type="xsd:string">Address: Match &amp; 5 Digit Zip: Match</AvsResult><AvsResultCode xsi:type="xsd:string">YYY</AvsResultCode><BatchNum xsi:type="xsd:integer">1</BatchNum><BatchRefNum xsi:type="xsd:integer">14004</BatchRefNum><CardCodeResult xsi:type="xsd:string">Match</CardCodeResult><CardCodeResultCode xsi:type="xsd:string">M</CardCodeResultCode><CardLevelResult xsi:type="xsd:string">Visa Traditional</CardLevelResult><CardLevelResultCode xsi:type="xsd:string">A</CardLevelResultCode><ConversionRate xsi:type="xsd:double">0</ConversionRate><ConvertedAmount xsi:type="xsd:double">0</ConvertedAmount><ConvertedAmountCurrency xsi:type="xsd:string">840</ConvertedAmountCurrency><CustNum xsi:type="xsd:integer">0</CustNum><Error xsi:type="xsd:string">Approved</Error><ErrorCode xsi:type="xsd:integer">0</ErrorCode><isDuplicate xsi:type="xsd:boolean">false</isDuplicate><Payload xsi:type="xsd:string"></Payload><RefNum xsi:type="xsd:integer">47567593</RefNum><Result xsi:type="xsd:string">Approved</Result><ResultCode xsi:type="xsd:string">A</ResultCode><Status xsi:type="xsd:string">Pending</Status><StatusCode xsi:type="xsd:string">P</StatusCode><VpasResultCode xsi:type="xsd:string"></VpasResultCode></#{method}Return></ns1:#{method}Response></SOAP-ENV:Body></SOAP-ENV:Envelope>
     XML
   end
 
-  def successful_run_sale_response
+  def successful_transaction_response(method)
     <<-XML
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:runSaleResponse><runSaleReturn xsi:type="ns1:TransactionResponse"><AcsUrl xsi:type="xsd:string"></AcsUrl><AuthAmount xsi:type="xsd:double">0</AuthAmount><AuthCode xsi:type="xsd:string">048869</AuthCode><AvsResult xsi:type="xsd:string">Address: Match &amp; 5 Digit Zip: Match</AvsResult><AvsResultCode xsi:type="xsd:string">YYY</AvsResultCode><BatchNum xsi:type="xsd:integer">1</BatchNum><BatchRefNum xsi:type="xsd:integer">14004</BatchRefNum><CardCodeResult xsi:type="xsd:string">Match</CardCodeResult><CardCodeResultCode xsi:type="xsd:string">M</CardCodeResultCode><CardLevelResult xsi:type="xsd:string">Visa Traditional</CardLevelResult><CardLevelResultCode xsi:type="xsd:string">A</CardLevelResultCode><ConversionRate xsi:type="xsd:double">0</ConversionRate><ConvertedAmount xsi:type="xsd:double">0</ConvertedAmount><ConvertedAmountCurrency xsi:type="xsd:string">840</ConvertedAmountCurrency><CustNum xsi:type="xsd:integer">0</CustNum><Error xsi:type="xsd:string">Approved</Error><ErrorCode xsi:type="xsd:integer">0</ErrorCode><isDuplicate xsi:type="xsd:boolean">false</isDuplicate><Payload xsi:type="xsd:string"></Payload><RefNum xsi:type="xsd:integer">47567595</RefNum><Result xsi:type="xsd:string">Approved</Result><ResultCode xsi:type="xsd:string">A</ResultCode><Status xsi:type="xsd:string">Pending</Status><StatusCode xsi:type="xsd:string">P</StatusCode><VpasResultCode xsi:type="xsd:string"></VpasResultCode></runSaleReturn></ns1:runSaleResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-    XML
-  end
-    
-  def successful_run_auth_only_response
-    <<-XML
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:runAuthOnlyResponse><runAuthOnlyReturn xsi:type="ns1:TransactionResponse"><AcsUrl xsi:type="xsd:string"></AcsUrl><AuthAmount xsi:type="xsd:double">0</AuthAmount><AuthCode xsi:type="xsd:string">049942</AuthCode><AvsResult xsi:type="xsd:string">Address: Match &amp; 5 Digit Zip: Match</AvsResult><AvsResultCode xsi:type="xsd:string">YYY</AvsResultCode><BatchNum xsi:type="xsd:integer">1</BatchNum><BatchRefNum xsi:type="xsd:integer">14004</BatchRefNum><CardCodeResult xsi:type="xsd:string">Match</CardCodeResult><CardCodeResultCode xsi:type="xsd:string">M</CardCodeResultCode><CardLevelResult xsi:type="xsd:string">Visa Traditional</CardLevelResult><CardLevelResultCode xsi:type="xsd:string">A</CardLevelResultCode><ConversionRate xsi:type="xsd:double">0</ConversionRate><ConvertedAmount xsi:type="xsd:double">0</ConvertedAmount><ConvertedAmountCurrency xsi:type="xsd:string">840</ConvertedAmountCurrency><CustNum xsi:type="xsd:integer">0</CustNum><Error xsi:type="xsd:string">Approved</Error><ErrorCode xsi:type="xsd:integer">0</ErrorCode><isDuplicate xsi:type="xsd:boolean">false</isDuplicate><Payload xsi:type="xsd:string"></Payload><RefNum xsi:type="xsd:integer">47568685</RefNum><Result xsi:type="xsd:string">Approved</Result><ResultCode xsi:type="xsd:string">A</ResultCode><Status xsi:type="xsd:string">Pending</Status><StatusCode xsi:type="xsd:string">P</StatusCode><VpasResultCode xsi:type="xsd:string"></VpasResultCode></runAuthOnlyReturn></ns1:runAuthOnlyResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-    XML
-  end
-
-  def successful_run_credit_response
-    <<-XML
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:runCreditResponse><runCreditReturn xsi:type="ns1:TransactionResponse"><AcsUrl xsi:type="xsd:string"></AcsUrl><AuthAmount xsi:type="xsd:double">0</AuthAmount><AuthCode xsi:type="xsd:string">47578712</AuthCode><AvsResult xsi:type="xsd:string">Unmapped AVS response (   )</AvsResult><AvsResultCode xsi:type="xsd:string"></AvsResultCode><BatchNum xsi:type="xsd:integer">0</BatchNum><BatchRefNum xsi:type="xsd:integer">0</BatchRefNum><CardCodeResult xsi:type="xsd:string">No CVV2/CVC data available for transaction.</CardCodeResult><CardCodeResultCode xsi:type="xsd:string"></CardCodeResultCode><CardLevelResult xsi:type="xsd:string">Unknown Code </CardLevelResult><CardLevelResultCode xsi:type="xsd:string"></CardLevelResultCode><ConversionRate xsi:type="xsd:double">0</ConversionRate><ConvertedAmount xsi:type="xsd:double">0</ConvertedAmount><ConvertedAmountCurrency xsi:type="xsd:string">840</ConvertedAmountCurrency><CustNum xsi:type="xsd:integer">0</CustNum><Error xsi:type="xsd:string"></Error><ErrorCode xsi:type="xsd:integer">0</ErrorCode><isDuplicate xsi:type="xsd:boolean">false</isDuplicate><Payload xsi:type="xsd:string"></Payload><RefNum xsi:type="xsd:integer">47568689</RefNum><Result xsi:type="xsd:string">Approved</Result><ResultCode xsi:type="xsd:string">A</ResultCode><Status xsi:type="xsd:string">Pending</Status><StatusCode xsi:type="xsd:string">P</StatusCode><VpasResultCode xsi:type="xsd:string"></VpasResultCode></runCreditReturn></ns1:runCreditResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-    XML
-  end
-
-  def successful_run_check_sale_response
-    <<-XML
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:runCheckSaleResponse><runCheckSaleReturn xsi:type="ns1:TransactionResponse"><AcsUrl xsi:type="xsd:string"></AcsUrl><AuthAmount xsi:type="xsd:double">0</AuthAmount><AuthCode xsi:type="xsd:string">TM2B16</AuthCode><AvsResult xsi:type="xsd:string">No AVS response (Typically no AVS data sent or swiped transaction)</AvsResult><AvsResultCode xsi:type="xsd:string"></AvsResultCode><BatchNum xsi:type="xsd:integer">0</BatchNum><BatchRefNum xsi:type="xsd:integer">0</BatchRefNum><CardCodeResult xsi:type="xsd:string">No CVV2/CVC data available for transaction.</CardCodeResult><CardCodeResultCode xsi:type="xsd:string"></CardCodeResultCode><CardLevelResult xsi:type="xsd:string">Unknown Code </CardLevelResult><CardLevelResultCode xsi:type="xsd:string"></CardLevelResultCode><ConversionRate xsi:type="xsd:double">0</ConversionRate><ConvertedAmount xsi:type="xsd:double">0</ConvertedAmount><ConvertedAmountCurrency xsi:type="xsd:string">840</ConvertedAmountCurrency><CustNum xsi:type="xsd:integer">0</CustNum><Error xsi:type="xsd:string"></Error><ErrorCode xsi:type="xsd:integer">0</ErrorCode><isDuplicate xsi:type="xsd:boolean">false</isDuplicate><Payload xsi:type="xsd:string"></Payload><RefNum xsi:type="xsd:integer">47568731</RefNum><Result xsi:type="xsd:string">Approved</Result><ResultCode xsi:type="xsd:string">A</ResultCode><Status xsi:type="xsd:string">Pending</Status><StatusCode xsi:type="xsd:string">P</StatusCode><VpasResultCode xsi:type="xsd:string"></VpasResultCode></runCheckSaleReturn></ns1:runCheckSaleResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:#{method}Response><#{method}Return xsi:type="ns1:TransactionResponse"><AcsUrl xsi:type="xsd:string"></AcsUrl><AuthAmount xsi:type="xsd:double">0</AuthAmount><AuthCode xsi:type="xsd:string">47578712</AuthCode><AvsResult xsi:type="xsd:string">Unmapped AVS response (   )</AvsResult><AvsResultCode xsi:type="xsd:string"></AvsResultCode><BatchNum xsi:type="xsd:integer">0</BatchNum><BatchRefNum xsi:type="xsd:integer">0</BatchRefNum><CardCodeResult xsi:type="xsd:string">No CVV2/CVC data available for transaction.</CardCodeResult><CardCodeResultCode xsi:type="xsd:string"></CardCodeResultCode><CardLevelResult xsi:type="xsd:string">Unknown Code </CardLevelResult><CardLevelResultCode xsi:type="xsd:string"></CardLevelResultCode><ConversionRate xsi:type="xsd:double">0</ConversionRate><ConvertedAmount xsi:type="xsd:double">0</ConvertedAmount><ConvertedAmountCurrency xsi:type="xsd:string">840</ConvertedAmountCurrency><CustNum xsi:type="xsd:integer">0</CustNum><Error xsi:type="xsd:string"></Error><ErrorCode xsi:type="xsd:integer">0</ErrorCode><isDuplicate xsi:type="xsd:boolean">false</isDuplicate><Payload xsi:type="xsd:string"></Payload><RefNum xsi:type="xsd:integer">47568689</RefNum><Result xsi:type="xsd:string">Approved</Result><ResultCode xsi:type="xsd:string">A</ResultCode><Status xsi:type="xsd:string">Pending</Status><StatusCode xsi:type="xsd:string">P</StatusCode><VpasResultCode xsi:type="xsd:string"></VpasResultCode></#{method}Return></ns1:#{method}Response></SOAP-ENV:Body></SOAP-ENV:Envelope>
     XML
   end
 
   def failed_run_check_sale_response
     <<-XML
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:runCheckSaleResponse><runCheckSaleReturn xsi:type="ns1:TransactionResponse"><AcsUrl xsi:type="xsd:string"></AcsUrl><AuthAmount xsi:type="xsd:double">0</AuthAmount><AuthCode xsi:type="xsd:string">000000</AuthCode><AvsResult xsi:type="xsd:string">No AVS response (Typically no AVS data sent or swiped transaction)</AvsResult><AvsResultCode xsi:type="xsd:string"></AvsResultCode><BatchNum xsi:type="xsd:integer">0</BatchNum><BatchRefNum xsi:type="xsd:integer">0</BatchRefNum><CardCodeResult xsi:type="xsd:string">No CVV2/CVC data available for transaction.</CardCodeResult><CardCodeResultCode xsi:type="xsd:string"></CardCodeResultCode><CardLevelResult xsi:type="xsd:string">Unknown Code </CardLevelResult><CardLevelResultCode xsi:type="xsd:string"></CardLevelResultCode><ConversionRate xsi:type="xsd:double">0</ConversionRate><ConvertedAmount xsi:type="xsd:double">0</ConvertedAmount><ConvertedAmountCurrency xsi:type="xsd:string"></ConvertedAmountCurrency><CustNum xsi:type="xsd:integer">0</CustNum><Error xsi:type="xsd:string">Invalid Routing Number.</Error><ErrorCode xsi:type="xsd:integer">38</ErrorCode><isDuplicate xsi:type="xsd:boolean">false</isDuplicate><Payload xsi:type="xsd:string"></Payload><RefNum xsi:type="xsd:integer">0</RefNum><Result xsi:type="xsd:string">Error</Result><ResultCode xsi:type="xsd:string">E</ResultCode><Status xsi:type="xsd:string">Pending</Status><StatusCode xsi:type="xsd:string">P</StatusCode><VpasResultCode xsi:type="xsd:string"></VpasResultCode></runCheckSaleReturn></ns1:runCheckSaleResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-    XML
-  end
-
-  def successful_run_check_credit_response
-    <<-XML
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:runCheckCreditResponse><runCheckCreditReturn xsi:type="ns1:TransactionResponse"><AcsUrl xsi:type="xsd:string"></AcsUrl><AuthAmount xsi:type="xsd:double">0</AuthAmount><AuthCode xsi:type="xsd:string">TM0DBD</AuthCode><AvsResult xsi:type="xsd:string">No AVS response (Typically no AVS data sent or swiped transaction)</AvsResult><AvsResultCode xsi:type="xsd:string"></AvsResultCode><BatchNum xsi:type="xsd:integer">0</BatchNum><BatchRefNum xsi:type="xsd:integer">0</BatchRefNum><CardCodeResult xsi:type="xsd:string">No CVV2/CVC data available for transaction.</CardCodeResult><CardCodeResultCode xsi:type="xsd:string"></CardCodeResultCode><CardLevelResult xsi:type="xsd:string">Unknown Code </CardLevelResult><CardLevelResultCode xsi:type="xsd:string"></CardLevelResultCode><ConversionRate xsi:type="xsd:double">0</ConversionRate><ConvertedAmount xsi:type="xsd:double">0</ConvertedAmount><ConvertedAmountCurrency xsi:type="xsd:string">840</ConvertedAmountCurrency><CustNum xsi:type="xsd:integer">0</CustNum><Error xsi:type="xsd:string"></Error><ErrorCode xsi:type="xsd:integer">0</ErrorCode><isDuplicate xsi:type="xsd:boolean">false</isDuplicate><Payload xsi:type="xsd:string"></Payload><RefNum xsi:type="xsd:integer">47568732</RefNum><Result xsi:type="xsd:string">Approved</Result><ResultCode xsi:type="xsd:string">A</ResultCode><Status xsi:type="xsd:string">Pending</Status><StatusCode xsi:type="xsd:string">P</StatusCode><VpasResultCode xsi:type="xsd:string"></VpasResultCode></runCheckCreditReturn></ns1:runCheckCreditResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
     XML
   end
 
@@ -746,20 +704,6 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
   def failed_post_auth_response
     <<-XML
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:postAuthResponse><postAuthReturn xsi:type="ns1:TransactionResponse"><AcsUrl xsi:type="xsd:string"></AcsUrl><AuthAmount xsi:type="xsd:double">0</AuthAmount><AuthCode xsi:type="xsd:string">000000</AuthCode><AvsResult xsi:type="xsd:string">No AVS response (Typically no AVS data sent or swiped transaction)</AvsResult><AvsResultCode xsi:type="xsd:string"></AvsResultCode><BatchNum xsi:type="xsd:integer">0</BatchNum><BatchRefNum xsi:type="xsd:integer">0</BatchRefNum><CardCodeResult xsi:type="xsd:string">No CVV2/CVC data available for transaction.</CardCodeResult><CardCodeResultCode xsi:type="xsd:string"></CardCodeResultCode><CardLevelResult xsi:type="xsd:string">Unknown Code </CardLevelResult><CardLevelResultCode xsi:type="xsd:string"></CardLevelResultCode><ConversionRate xsi:type="xsd:double">0</ConversionRate><ConvertedAmount xsi:type="xsd:double">0</ConvertedAmount><ConvertedAmountCurrency xsi:type="xsd:string"></ConvertedAmountCurrency><CustNum xsi:type="xsd:integer">0</CustNum><Error xsi:type="xsd:string">Valid AuthCode required for PostAuth</Error><ErrorCode xsi:type="xsd:integer">108</ErrorCode><isDuplicate xsi:type="xsd:boolean">false</isDuplicate><Payload xsi:type="xsd:string"></Payload><RefNum xsi:type="xsd:integer">0</RefNum><Result xsi:type="xsd:string">Error</Result><ResultCode xsi:type="xsd:string">E</ResultCode><Status xsi:type="xsd:string">Pending</Status><StatusCode xsi:type="xsd:string">P</StatusCode><VpasResultCode xsi:type="xsd:string"></VpasResultCode></postAuthReturn></ns1:postAuthResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-    XML
-  end
-
-  def successful_run_quick_sale_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:runQuickSaleResponse><runQuickSaleReturn xsi:type="ns1:TransactionResponse"><AcsUrl xsi:nil="true"/><AuthAmount xsi:type="xsd:double">0</AuthAmount><AuthCode xsi:type="xsd:string">004037</AuthCode><AvsResult xsi:type="xsd:string">Address: Match &amp; 5 Digit Zip: Match</AvsResult><AvsResultCode xsi:type="xsd:string">YYY</AvsResultCode><BatchNum xsi:type="xsd:integer">14004</BatchNum><BatchRefNum xsi:type="xsd:integer">14004</BatchRefNum><CardCodeResult xsi:type="xsd:string">Match</CardCodeResult><CardCodeResultCode xsi:type="xsd:string">M</CardCodeResultCode><CardLevelResult xsi:type="xsd:string">Visa Traditional</CardLevelResult><CardLevelResultCode xsi:type="xsd:string">A</CardLevelResultCode><ConversionRate xsi:type="xsd:double">0</ConversionRate><ConvertedAmount xsi:type="xsd:double">0</ConvertedAmount><ConvertedAmountCurrency xsi:nil="true"/><CustNum xsi:type="xsd:integer">0</CustNum><Error xsi:type="xsd:string">Approved</Error><ErrorCode xsi:type="xsd:integer">0</ErrorCode><isDuplicate xsi:type="xsd:boolean">false</isDuplicate><Payload xsi:nil="true"/><RefNum xsi:type="xsd:integer">47587241</RefNum><Result xsi:type="xsd:string">Approved</Result><ResultCode xsi:type="xsd:string">A</ResultCode><Status xsi:type="xsd:string">Pending</Status><StatusCode xsi:type="xsd:string">P</StatusCode><VpasResultCode xsi:type="xsd:string"></VpasResultCode></runQuickSaleReturn></ns1:runQuickSaleResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-    XML
-  end
-
-  def successful_run_quick_credit_response
-    <<-XML
-<?xml version="1.0" encoding="UTF-8"?>
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:runQuickCreditResponse><runQuickCreditReturn xsi:type="ns1:TransactionResponse"><AcsUrl xsi:nil="true"/><AuthAmount xsi:type="xsd:double">0</AuthAmount><AuthCode xsi:type="xsd:string">47597272</AuthCode><AvsResult xsi:type="xsd:string">Unmapped AVS response (   )</AvsResult><AvsResultCode xsi:type="xsd:string"></AvsResultCode><BatchNum xsi:type="xsd:integer">14004</BatchNum><BatchRefNum xsi:type="xsd:integer">14004</BatchRefNum><CardCodeResult xsi:type="xsd:string">No CVV2/CVC data available for transaction.</CardCodeResult><CardCodeResultCode xsi:type="xsd:string"></CardCodeResultCode><CardLevelResult xsi:type="xsd:string">Unknown Code </CardLevelResult><CardLevelResultCode xsi:type="xsd:string"></CardLevelResultCode><ConversionRate xsi:type="xsd:double">0</ConversionRate><ConvertedAmount xsi:type="xsd:double">0</ConvertedAmount><ConvertedAmountCurrency xsi:nil="true"/><CustNum xsi:type="xsd:integer">0</CustNum><Error xsi:type="xsd:string"></Error><ErrorCode xsi:nil="true"/><isDuplicate xsi:type="xsd:boolean">false</isDuplicate><Payload xsi:nil="true"/><RefNum xsi:type="xsd:integer">47587249</RefNum><Result xsi:type="xsd:string">Approved</Result><ResultCode xsi:type="xsd:string">A</ResultCode><Status xsi:type="xsd:string">Pending</Status><StatusCode xsi:type="xsd:string">P</StatusCode><VpasResultCode xsi:type="xsd:string"></VpasResultCode></runQuickCreditReturn></ns1:runQuickCreditResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
     XML
   end
 

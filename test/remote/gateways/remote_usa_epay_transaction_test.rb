@@ -3,7 +3,7 @@ require 'test_helper'
 class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
-    @gateway = UsaEpayTransactionGateway.new(fixtures(:usa_epay_transaction))
+    @gateway = UsaEpayTransactionGateway.new(fixtures(:usa_epay))
     @creditcard = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
     @options = { :billing_address => address }
