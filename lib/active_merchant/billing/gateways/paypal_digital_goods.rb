@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
       self.test_redirect_url = 'https://www.sandbox.paypal.com/incontext'
       self.live_redirect_url = 'https://www.paypal.com/incontext'
 
-      self.supported_countries = ['US']
+      self.supported_countries = %w(AU CA CN FI GB ID IN IT MY NO NZ PH PL SE SG TH VN)
       self.homepage_url = 'https://www.x.com/community/ppx/xspaces/digital_goods'
       self.display_name = 'PayPal Express Checkout for Digital Goods'
       
