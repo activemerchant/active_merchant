@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'test_helper'
 
 class RemoteOgoneTest < Test::Unit::TestCase
@@ -5,8 +6,8 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def setup
     @gateway = OgoneGateway.new(fixtures(:ogone))
     @amount = 100
-    @credit_card =   credit_card('4000100011112224')
-    @declined_card = credit_card('1111111111111111')
+    @credit_card     = credit_card('4000100011112224')
+    @declined_card   = credit_card('1111111111111111')
     @options = {
       :order_id => generate_unique_id[0...30],
       :billing_address => address,
@@ -19,7 +20,46 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
-  
+
+  def test_successful_purchase_with_utf8_encoding_1
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => "Rémy", :last_name => "Fröåïør"), @options)
+    assert_success response
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  end
+
+  def test_successful_purchase_with_utf8_encoding_2
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => "ワタシ", :last_name => "ёжзийклмнопрсуфхцч"), @options)
+    assert_success response
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  end
+
+  # NOTE: You have to set the "Hash algorithm" to "SHA-1" in the "Technical information"->"Global security parameters"
+  #       section of your account admin on https://secure.ogone.com/ncol/test/frame_ogone.asp before running this test
+  def test_successful_purchase_with_signature_encryptor_to_sha1
+    gateway = OgoneGateway.new(fixtures(:ogone).merge(:signature_encryptor => 'sha1'))
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  end
+
+  # NOTE: You have to set the "Hash algorithm" to "SHA-256" in the "Technical information"->"Global security parameters"
+  #       section of your account admin on https://secure.ogone.com/ncol/test/frame_ogone.asp before running this test
+  def test_successful_purchase_with_signature_encryptor_to_sha256
+    gateway = OgoneGateway.new(fixtures(:ogone).merge(:signature_encryptor => 'sha256'))
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  end
+
+  # NOTE: You have to set the "Hash algorithm" to "SHA-512" in the "Technical information"->"Global security parameters"
+  #       section of your account admin on https://secure.ogone.com/ncol/test/frame_ogone.asp before running this test
+  def test_successful_purchase_with_signature_encryptor_to_sha512
+    gateway = OgoneGateway.new(fixtures(:ogone).merge(:signature_encryptor => 'sha512'))
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  end
+
   def test_successful_with_non_numeric_order_id
     @options[:order_id] = "##{@options[:order_id][0...26]}.12"
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -27,7 +67,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
 
-  def test_successful_purchase_without_order_id
+  def test_successful_purchase_without_explicit_order_id
     @options.delete(:order_id)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -45,7 +85,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_success auth
     assert_equal OgoneGateway::SUCCESS_MESSAGE, auth.message
     assert auth.authorization
-    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
   end
 
@@ -109,7 +149,6 @@ class RemoteOgoneTest < Test::Unit::TestCase
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'No pspid', response.message
+    assert_equal 'Some of the data entered is incorrect. please retry.', response.message
   end
-
 end
