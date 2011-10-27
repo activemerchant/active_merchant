@@ -150,6 +150,28 @@ class OgoneTest < Test::Unit::TestCase
 
   def test_default_currency
     assert_equal 'EUR', OgoneGateway.default_currency
+
+    gateway = OgoneGateway.new(@credentials)
+    gateway.expects(:add_pair).at_least(1)
+    gateway.expects(:add_pair).with(anything, 'currency', 'EUR')
+    gateway.expects(:ssl_post).returns(successful_purchase_response)
+    gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_custom_currency_at_gateway_level
+    gateway = OgoneGateway.new(@credentials.merge(:currency => 'USD'))
+    gateway.expects(:add_pair).at_least(1)
+    gateway.expects(:add_pair).with(anything, 'currency', 'USD')
+    gateway.expects(:ssl_post).returns(successful_purchase_response)
+    gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_local_custom_currency_overwrite_gateway_level
+    gateway = OgoneGateway.new(@credentials.merge(:currency => 'USD'))
+    gateway.expects(:add_pair).at_least(1)
+    gateway.expects(:add_pair).with(anything, 'currency', 'EUR')
+    gateway.expects(:ssl_post).returns(successful_purchase_response)
+    gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'EUR'))
   end
 
   def test_avs_result

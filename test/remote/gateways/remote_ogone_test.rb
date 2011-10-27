@@ -11,7 +11,8 @@ class RemoteOgoneTest < Test::Unit::TestCase
     @options = {
       :order_id => generate_unique_id[0...30],
       :billing_address => address,
-      :description => 'Store Purchase'
+      :description => 'Store Purchase',
+      :currency => fixtures(:ogone)[:currency] || 'EUR'
     }
   end
 
@@ -20,6 +21,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
     assert_equal '7', response.params['ECI']
+    assert_equal @options[:currency], response.params["currency"]
   end
 
   def test_successful_purchase_with_utf8_encoding_1
@@ -80,6 +82,26 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
     assert_equal '4', response.params['ECI']
+  end
+
+  # NOTE: You have to allow USD as a supported currency in the "Account"->"Currencies"
+  #       section of your account admin on https://secure.ogone.com/ncol/test/frame_ogone.asp before running this test
+  def test_successful_purchase_with_custom_currency_at_the_gateway_level
+    gateway = OgoneGateway.new(fixtures(:ogone).merge(:currency => 'USD'))
+    assert response = gateway.purchase(@amount, @credit_card)
+    assert_success response
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+    assert_equal "USD", response.params["currency"]
+  end
+
+  # NOTE: You have to allow USD as a supported currency in the "Account"->"Currencies"
+  #       section of your account admin on https://secure.ogone.com/ncol/test/frame_ogone.asp before running this test
+  def test_successful_purchase_with_custom_currency
+    gateway = OgoneGateway.new(fixtures(:ogone).merge(:currency => 'EUR'))
+    assert response = gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'USD'))
+    assert_success response
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+    assert_equal "USD", response.params["currency"]
   end
 
   def test_unsuccessful_purchase
