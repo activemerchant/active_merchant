@@ -34,6 +34,8 @@ class OgoneTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ECI', '7')
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -50,9 +52,31 @@ class OgoneTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_custom_eci
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ECI', '4')
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:eci => 4))
+    assert_success response
+    assert_equal '3014726;SAL', response.authorization
+    assert response.test?
+  end
+
   def test_successful_authorize
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ECI', '7')
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal '3014726;RES', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorize_with_custom_eci
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ECI', '4')
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(:eci => 4))
     assert_success response
     assert_equal '3014726;RES', response.authorization
     assert response.test?

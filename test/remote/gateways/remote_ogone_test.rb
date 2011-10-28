@@ -19,6 +19,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+    assert_equal '7', response.params['ECI']
   end
 
   def test_successful_purchase_with_utf8_encoding_1
@@ -74,6 +75,13 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
   end
 
+  def test_successful_purchase_with_custom_eci
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:eci => 4))
+    assert_success response
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+    assert_equal '4', response.params['ECI']
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -84,6 +92,17 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal OgoneGateway::SUCCESS_MESSAGE, auth.message
+    assert_equal '7', auth.params['ECI']
+    assert auth.authorization
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
+
+  def test_authorize_and_capture_with_custom_eci
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(:eci => 4))
+    assert_success auth
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, auth.message
+    assert_equal '4', auth.params['ECI']
     assert auth.authorization
     assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
@@ -133,12 +152,15 @@ class RemoteOgoneTest < Test::Unit::TestCase
     # Setting an alias
     assert response = @gateway.purchase(@amount, credit_card('4000100011112224'), @options.merge(:store => "awesomeman", :order_id=>Time.now.to_i.to_s+"1"))
     assert_success response
+    assert_equal '7', response.params['ECI']
     # Updating an alias
     assert response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(:store => "awesomeman", :order_id=>Time.now.to_i.to_s+"2"))
     assert_success response
+    assert_equal '7', response.params['ECI']
     # Using an alias (i.e. don't provide the credit card)
-    assert response = @gateway.purchase(@amount, "awesomeman", @options.merge(:order_id=>Time.now.to_i.to_s+"3"))
+    assert response = @gateway.purchase(@amount, "awesomeman", @options.merge(:order_id => Time.now.to_i.to_s + "3"))
     assert_success response
+    assert_equal '9', response.params['ECI']
   end
 
   def test_invalid_login

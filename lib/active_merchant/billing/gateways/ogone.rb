@@ -189,15 +189,16 @@ module ActiveMerchant #:nodoc:
       def add_payment_source(post, payment_source, options)
         if payment_source.is_a?(String)
           add_alias(post, payment_source)
-          add_eci(post, '9')
+          add_eci(post, options[:eci] || '9')
         else
           add_alias(post, options[:store])
+          add_eci(post, options[:eci] || '7')
           add_creditcard(post, payment_source)
         end
       end
 
       def add_eci(post, eci)
-        add_pair post, 'ECI', eci
+        add_pair post, 'ECI', eci.to_s
       end
 
       def add_alias(post, _alias)
