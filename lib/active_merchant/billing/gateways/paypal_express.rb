@@ -80,6 +80,10 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'n2:ButtonSource', application_id.to_s.slice(0,32) unless application_id.blank?
                 xml.tag! 'n2:InvoiceID', options[:order_id]
                 xml.tag! 'n2:OrderDescription', options[:description]
+                if options[:allow_guest_checkout]
+                  xml.tag! 'n2:SolutionType', 'Sole'
+                  xml.tag! 'n2:LandingPage', 'Billing'
+                end
 
                 add_items_xml(xml, options, currency_code) if options[:items]
               end
@@ -130,6 +134,10 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:CancelURL', options[:cancel_return_url]
               xml.tag! 'n2:IPAddress', options[:ip] unless options[:ip].blank?
               xml.tag! 'n2:BuyerEmail', options[:email] unless options[:email].blank?
+              if options[:allow_guest_checkout]
+                xml.tag! 'n2:SolutionType', 'Sole'
+                xml.tag! 'n2:LandingPage', 'Billing'
+              end
               
               if options[:billing_agreement]
                 xml.tag! 'n2:BillingAgreementDetails' do
