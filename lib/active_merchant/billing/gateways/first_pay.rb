@@ -47,8 +47,8 @@ module ActiveMerchant #:nodoc:
         commit('sale', money, post)
       end                       
       
-      def credit(money, reference, options = {})
-        raise ArgumentError, "Both TransactionID and CreditCard are required" unless reference.is_a?(String) && options[:credit_card]
+      def refund(money, reference, options = {})
+        requires!(options, :credit_card)
 
         post = FirstPayPostData.new
         add_invoice(post, options)
@@ -58,6 +58,11 @@ module ActiveMerchant #:nodoc:
         add_credit_data(post, reference)
       
         commit('credit', money, post)
+      end
+
+      def credit(money, reference, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, reference, options)
       end
       
       def void(money, creditcard, options = {})

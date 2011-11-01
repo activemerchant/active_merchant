@@ -16,27 +16,30 @@ module ActiveMerchant #:nodoc:
       def authorize(money, credit_card_or_reference, options = {})
         request = build_sale_or_authorization_request(:authorization, money, credit_card_or_reference, options)
       
-        commit(request)
+        commit(request, options)
       end
       
       def purchase(money, credit_card_or_reference, options = {})
         request = build_sale_or_authorization_request(:purchase, money, credit_card_or_reference, options)
 
-        commit(request)
+        commit(request, options)
       end
       
       def credit(money, identification_or_credit_card, options = {})
         if identification_or_credit_card.is_a?(String)
+          deprecated CREDIT_DEPRECATION_MESSAGE
           # Perform referenced credit
-          request = build_reference_request(:credit, money, identification_or_credit_card, options)
+          refund(money, identification_or_credit_card, options)
         else
           # Perform non-referenced credit
           request = build_credit_card_request(:credit, money, identification_or_credit_card, options)
+          commit(request, options)
         end
-        
-        commit(request)
       end
       
+      def refund(money, reference, options = {})
+        commit(build_reference_request(:credit, money, reference, options), options)
+      end
       # Adds or modifies a recurring Payflow profile.  See the Payflow Pro Recurring Billing Guide for more details:
       # https://www.paypal.com/en_US/pdf/PayflowPro_RecurringBilling_Guide.pdf
       #    
@@ -54,17 +57,17 @@ module ActiveMerchant #:nodoc:
         request = build_recurring_request(options[:profile_id] ? :modify : :add, money, options) do |xml|
           add_credit_card(xml, credit_card) if credit_card
         end
-        commit(request, :recurring)
+        commit(request, options.merge(:request_type => :recurring))
       end
       
       def cancel_recurring(profile_id)
         request = build_recurring_request(:cancel, 0, :profile_id => profile_id)
-        commit(request, :recurring)
+        commit(request, options.merge(:request_type => :recurring))
       end
       
       def recurring_inquiry(profile_id, options = {})
         request = build_recurring_request(:inquiry, nil, options.update( :profile_id => profile_id ))
-        commit(request, :recurring)
+        commit(request, options.merge(:request_type => :recurring))
       end   
       
       def express
@@ -81,10 +84,21 @@ module ActiveMerchant #:nodoc:
       end
       
       def build_reference_sale_or_authorization_request(action, money, reference, options)
-        xml = Builder::XmlMarkup.new 
+        xml = Builder::XmlMarkup.new
         xml.tag! TRANSACTIONS[action] do
           xml.tag! 'PayData' do
             xml.tag! 'Invoice' do
+              # Fields accepted by PayFlow and recommended to be provided even for Reference Transaction, per Payflow docs.
+              xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
+              xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
+              xml.tag! 'Description', options[:description] unless options[:description].blank?
+              xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
+              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
+
+              billing_address = options[:billing_address] || options[:address]
+              add_address(xml, 'BillTo', billing_address, options) if billing_address
+              add_address(xml, 'ShipTo', options[:shipping_address],options) if options[:shipping_address]
+
               xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
             end
             xml.tag! 'Tender' do
@@ -105,6 +119,9 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
               xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
               xml.tag! 'Description', options[:description] unless options[:description].blank?
+              # Comment and Comment2 will show up in manager.paypal.com as Comment1 and Comment2
+              xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
+              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address

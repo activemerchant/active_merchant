@@ -41,14 +41,20 @@ module ActiveMerchant #:nodoc:
 
       def credit(money, identification_or_credit_card, options = {})
         if identification_or_credit_card.is_a?(String)
+          deprecated CREDIT_DEPRECATION_MESSAGE
           # Perform authorization reversal
-          request = build_refund_or_settle_request(money, identification_or_credit_card, options)
-          commit(:credit_card_refund, request)
+          refund(money, identification_or_credit_card, options)
         else
           # Perform credit
           request = build_credit_card_request(money, identification_or_credit_card, options)
           commit(:credit_card_credit, request)
         end
+      end
+
+      def refund(money, reference, options = {})
+        # Perform authorization reversal
+        request = build_refund_or_settle_request(money, reference, options)
+        commit(:credit_card_refund, request)
       end
 
       def void(identification, options = {})

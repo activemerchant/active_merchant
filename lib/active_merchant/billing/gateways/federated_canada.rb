@@ -49,19 +49,18 @@ module ActiveMerchant #:nodoc:
         commit('capture', money, options)
       end
 
-      def credit(money, identification, options = {}) # also referred to as refund
-        post = { :transactionid => identification}
-        commit('refund', money, post)
-      end
-
       def void(authorization, options = {})
         options[:transactionid] = authorization
         commit('void', nil, options)
       end
 
       def refund(money, authorization, options = {})
-        options[:transactionid] = authorization
-        commit('refund', money, options)
+        commit('refund', money, options.merge(:transactionid => authorization))
+      end
+
+      def credit(money, authorization, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, authorization, options)
       end
 
       private

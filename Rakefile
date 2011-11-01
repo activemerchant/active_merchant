@@ -1,6 +1,13 @@
 $:.unshift File.expand_path('../lib', __FILE__)
 
-require 'rubygems'
+begin
+  require 'bundler'
+  Bundler.setup
+rescue LoadError => e
+  puts "Error loading bundler (#{e.message}): \"gem install bundler\" for bundler support."
+  require 'rubygems'
+end
+
 require 'rake'
 require 'rake/testtask'
 require 'rake/rdoctask'

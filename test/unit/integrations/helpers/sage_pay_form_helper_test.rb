@@ -114,12 +114,14 @@ class SagePayFormHelperTest < Test::Unit::TestCase
   end
 
   def test_crypt_field
-    assert_crypt 'FgEOFyoVEQ1JOC4LHV5AZz0tDBYcTRsbCws5SEwBAhUGGxEAHB4XEFI7GCFfcF9cMAAXT0xeRFk=', 'SomeSeed', 42
-    assert_crypt 'AQcFFCoVEQ1JOC4LHV5AZz0tDBYcTRsbCws5SEwBAhUGGxEAHB4XEFI7GCFfcF9cMAAXT0xeRFk=', 'DiffSeed', 42
-    assert_crypt 'FgEOFyoVEQ1JLyYKDF9GDnBAU0JfMwEbHQslBgAMZ2ABSDUXFxQbGzsWCAodVA9cNwoGAFRFRFk=', 'SomeSeed', 1337
+    if defined?(RUBY_ENGINE) && RUBY_ENGINE !~ /rbx|jruby/ # srand behaviour is incompatible on Rubinius/JRuby
+      assert_crypt 'FgEOFyoVEQ1JOC4LHV5AZz0tDBYcTRsbCws5SEwBAhUGGxEAHB4XEFI7GCFfcF9cMAAXT0xeRFk=', 'SomeSeed', 42
+      assert_crypt 'AQcFFCoVEQ1JOC4LHV5AZz0tDBYcTRsbCws5SEwBAhUGGxEAHB4XEFI7GCFfcF9cMAAXT0xeRFk=', 'DiffSeed', 42
+      assert_crypt 'FgEOFyoVEQ1JLyYKDF9GDnBAU0JfMwEbHQslBgAMZ2ABSDUXFxQbGzsWCAodVA9cNwoGAFRFRFk=', 'SomeSeed', 1337
 
-    assert_crypt 'Fg8PBj8FGgobByQLKlReViYaEDMrEVI/CgAvCgtlSnAqCgZPFgIQDB1DflVJF3FGNxwGHBoJSTw8Km0kFF5HXTFTVlxJQA==',             'SaltFunctionSelectsARandomSeedLength', 42
-    assert_crypt 'Fg8PBj8FGgobByQLKlReViYaEDMrERoNAAMYABxVfhUGGxEAHB4XEFI7GCFfcF9cMAAXT0xeRFlJOC4LHV5AZz0tDBYcTRsbCws5SEwBAg==', 'SaltFunctionSelectsARandomSeedLength', 1234
+      assert_crypt 'Fg8PBj8FGgobByQLKlReViYaEDMrEVI/CgAvCgtlSnAqCgZPFgIQDB1DflVJF3FGNxwGHBoJSTw8Km0kFF5HXTFTVlxJQA==',             'SaltFunctionSelectsARandomSeedLength', 42
+      assert_crypt 'Fg8PBj8FGgobByQLKlReViYaEDMrERoNAAMYABxVfhUGGxEAHB4XEFI7GCFfcF9cMAAXT0xeRFlJOC4LHV5AZz0tDBYcTRsbCws5SEwBAg==', 'SaltFunctionSelectsARandomSeedLength', 1234
+    end
   end
 
   private

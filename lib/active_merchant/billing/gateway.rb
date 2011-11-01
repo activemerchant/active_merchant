@@ -63,6 +63,7 @@ module ActiveMerchant #:nodoc:
       
       DEBIT_CARDS = [ :switch, :solo ]
       CURRENCIES_WITHOUT_FRACTIONS = [ 'JPY' ]
+      CREDIT_DEPRECATION_MESSAGE = "Support for using credit to refund existing transactions is deprecated and will be removed from a future release of ActiveMerchant. Please use the refund method instead."
             
       cattr_reader :implementations
       @@implementations = []
@@ -75,22 +76,22 @@ module ActiveMerchant #:nodoc:
       # The format of the amounts used by the gateway
       # :dollars => '12.50'
       # :cents => '1250'
-      class_inheritable_accessor :money_format
+      class_attribute :money_format
       self.money_format = :dollars
       
       # The default currency for the transactions if no currency is provided
-      class_inheritable_accessor :default_currency
+      class_attribute :default_currency
       
       # The countries of merchants the gateway supports
-      class_inheritable_accessor :supported_countries
+      class_attribute :supported_countries
       self.supported_countries = []
       
       # The supported card types for the gateway
-      class_inheritable_accessor :supported_cardtypes
+      class_attribute :supported_cardtypes
       self.supported_cardtypes = []
       
-      class_inheritable_accessor :homepage_url
-      class_inheritable_accessor :display_name
+      class_attribute :homepage_url
+      class_attribute :display_name
       
       # The application making the calls to the gateway
       # Useful for things like the PayPal build notation (BN) id fields
@@ -134,7 +135,7 @@ module ActiveMerchant #:nodoc:
       def amount(money)
         return nil if money.nil?
         cents = if money.respond_to?(:cents)
-          warn "Support for Money objects is deprecated and will be removed from a future release of ActiveMerchant. Please use an Integer value in cents"
+          deprecated "Support for Money objects is deprecated and will be removed from a future release of ActiveMerchant. Please use an Integer value in cents"
           money.cents
         else
           money

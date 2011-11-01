@@ -56,7 +56,7 @@ class RemoteJetpayTest < Test::Unit::TestCase
     assert_success void
   end
   
-  def test_linked_credit
+  def test_refund
     # no need for csv
     card = credit_card('4242424242424242', :verification_value => nil)
     
@@ -67,14 +67,14 @@ class RemoteJetpayTest < Test::Unit::TestCase
     assert_not_nil response.params["approval"]
     
     # linked to a specific transaction_id
-    assert credit = @gateway.credit(9900, response.authorization, :credit_card => card)
+    assert credit = @gateway.refund(9900, response.authorization, :credit_card => card)
     assert_success credit
     assert_not_nil(credit.authorization)
     assert_not_nil(response.params["approval"])
     assert_equal [response.params['transaction_id'], response.params["approval"], 9900].join(";"), response.authorization
   end
   
-  def test_unlinked_credit
+  def test_credit
     # no need for csv
     card = credit_card('4242424242424242', :verification_value => nil)
     
@@ -92,12 +92,18 @@ class RemoteJetpayTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = JetpayGateway.new(:login => '')
+    gateway = JetpayGateway.new(:login => 'bogus')
     assert response = gateway.purchase(9900, @credit_card, @options)
     assert_failure response
     
     assert_equal 'Terminal ID Not Found.', response.message
   end
   
-  
+  def test_missing_login
+    gateway = JetpayGateway.new(:login => '')
+    assert response = gateway.purchase(9900, @credit_card, @options)
+    assert_failure response
+    
+    assert_equal 'No response returned (missing credentials?).', response.message
+  end
 end

@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
     class PayJunctionGateway < Gateway
       API_VERSION   = '1.2'
 
-      class_inheritable_accessor :test_url, :live_url
+      class_attribute :test_url, :live_url
 
       self.test_url = "https://www.payjunctionlabs.com/quick_link"
       self.live_url = "https://payjunction.com/quick_link"
@@ -202,13 +202,18 @@ module ActiveMerchant #:nodoc:
       
       # Return money to a card that was previously billed.
       # _authorization_ should be the transaction id of the transaction we are returning.
-      def credit(money, authorization, options = {})  
+      def refund(money, authorization, options = {})  
         parameters = {
           :transaction_amount => amount(money),
           :transaction_id => authorization
         }
 
         commit('CREDIT', parameters)
+      end
+
+      def credit(money, authorization, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, authorization, options)
       end
 
       # Cancel a transaction that has been charged but has not yet made it
