@@ -51,7 +51,11 @@ card_save:
 card_stream:
   login: X
   password: Y
-  
+
+certo_direct:
+  login: 1
+  password: vP6OwK3
+
 cyber_source:
   login: X
   password: Y
