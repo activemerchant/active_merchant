@@ -26,7 +26,10 @@ class EwayManagedTest < Test::Unit::TestCase
                   :phone => '(555)555-5555'
                },
                :email => 'someguy1232@fakeemail.net',
-               :order_id => '1000'
+               :order_id => '1000',
+               :customer => 'mycustomerref',
+               :description => 'My Description',
+               :invoice => 'invoice-4567'
     }
   end
 
@@ -78,6 +81,51 @@ class EwayManagedTest < Test::Unit::TestCase
     assert_equal "123456", response.authorization
     assert response.test?
   end
+  
+  def test_expected_request_on_purchase
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      # Compare the actual and expected XML documents, by converting them to Hashes first
+      expected = Hash.from_xml(expected_purchase_request)
+      actual = Hash.from_xml(data)
+      expected == actual
+    }.returns(successful_purchase_response)
+    @gateway.purchase(@amount, @valid_customer_id, @options)
+  end
+  
+  def test_purchase_invoice_reference_comes_from_order_id_or_invoice
+    options = @options.dup
+
+    # invoiceReference == options[:order_id]
+    options[:order_id] = 'order_id'
+    options.delete(:invoice)
+    
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      request_hash = Hash.from_xml(data)
+      request_hash['Envelope']['Body']['ProcessPayment']['invoiceReference'] == 'order_id'
+    }.returns(successful_purchase_response)
+    @gateway.purchase(@amount, @valid_customer_id, options)
+    
+    # invoiceReference == options[:invoice]
+    options[:invoice] = 'invoice'
+    options.delete(:order_id)
+    
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      request_hash = Hash.from_xml(data)
+      request_hash['Envelope']['Body']['ProcessPayment']['invoiceReference'] == 'invoice'
+    }.returns(successful_purchase_response)
+    @gateway.purchase(@amount, @valid_customer_id, options)
+
+    # invoiceReference == options[:order_id] || options[:invoice]
+    options[:order_id] = 'order_id'
+    options[:invoice] = 'invoice'
+    
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      request_hash = Hash.from_xml(data)
+      request_hash['Envelope']['Body']['ProcessPayment']['invoiceReference'] == 'order_id'
+    }.returns(successful_purchase_response)
+    @gateway.purchase(@amount, @valid_customer_id, options)
+
+  end
 
   def test_invalid_customer_id
     @gateway.expects(:ssl_post).returns(unsuccessful_authorization_response)
@@ -96,6 +144,84 @@ class EwayManagedTest < Test::Unit::TestCase
     assert_success response
     assert_equal "1234567", response.token
     assert response.test?
+  end
+  
+  def test_expected_request_on_store
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      # Compare the actual and expected XML documents, by converting them to Hashes first
+      expected = Hash.from_xml(expected_store_request)
+      actual = Hash.from_xml(data)
+      expected == actual
+    }.returns(successful_store_response)
+    @gateway.store(@credit_card, @options)
+  end
+  
+  def test_email_on_store_may_come_from_options_root_or_billing_address
+    options = @options.dup
+
+    # Legacy Behavior
+    options.delete(:email)
+    options[:billing_address][:email] = 'email+billing@example.com'
+
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      request_hash = Hash.from_xml(data)
+      request_hash['Envelope']['Body']['CreateCustomer']['Email'] == 'email+billing@example.com'
+    }.returns(successful_store_response)
+    @gateway.store(@credit_card, options)
+
+    # Desired Behavior
+    options[:billing_address].delete(:email)
+    options[:email] = 'email+root@example.com'
+    
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      request_hash = Hash.from_xml(data)
+      request_hash['Envelope']['Body']['CreateCustomer']['Email'] == 'email+root@example.com'
+    }.returns(successful_store_response)
+    @gateway.store(@credit_card, options)
+    
+    # Precedence given to billing address when email is in both hashes (to support legacy behavior)
+    options[:billing_address][:email] = 'email+billing@example.com'
+    options[:email] = 'email+root@example.com'
+
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      request_hash = Hash.from_xml(data)
+      request_hash['Envelope']['Body']['CreateCustomer']['Email'] == 'email+billing@example.com'
+    }.returns(successful_store_response)
+    @gateway.store(@credit_card, options)
+  end
+
+  def test_customer_ref_on_store_may_come_from_options_root_or_billing_address
+    options = @options.dup
+
+    # Legacy Behavior
+    options.delete(:customer)
+    options[:billing_address][:customer_ref] = 'customer_ref+billing'
+
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      request_hash = Hash.from_xml(data)
+      request_hash['Envelope']['Body']['CreateCustomer']['CustomerRef'] == 'customer_ref+billing'
+    }.returns(successful_store_response)
+    @gateway.store(@credit_card, options)
+
+    # Desired Behavior
+    options[:billing_address].delete(:customer_ref)
+    options[:customer] = 'customer_ref+root'
+    
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      request_hash = Hash.from_xml(data)
+      request_hash['Envelope']['Body']['CreateCustomer']['CustomerRef'] == 'customer_ref+root'
+    }.returns(successful_store_response)
+    @gateway.store(@credit_card, options)
+    
+    # Precedence given to billing address when customer_ref is in both hashes (to support legacy behavior)
+    options[:billing_address][:customer_ref] = 'customer_ref+billing'
+    options[:customer] = 'customer_ref+root'
+
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      request_hash = Hash.from_xml(data)
+      request_hash['Envelope']['Body']['CreateCustomer']['CustomerRef'] == 'customer_ref+billing'
+    }.returns(successful_store_response)
+    @gateway.store(@credit_card, options)
   end
 
   def test_sucessful_update
@@ -164,5 +290,70 @@ class EwayManagedTest < Test::Unit::TestCase
 </soap12:Envelope>
     XML
   end
+  
+  # Documented here: https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx?op=CreateCustomer
+  def expected_store_request
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+  <soap12:Header>
+    <eWAYHeader xmlns="https://www.eway.com.au/gateway/managedpayment">
+      <eWAYCustomerID>login</eWAYCustomerID>
+      <Username>username</Username>
+      <Password>password</Password>
+    </eWAYHeader>
+  </soap12:Header>
+  <soap12:Body>
+    <CreateCustomer xmlns="https://www.eway.com.au/gateway/managedpayment">
+      <Title>Mr.</Title>
+      <FirstName>#{@credit_card.first_name}</FirstName>
+      <LastName>#{@credit_card.last_name}</LastName>
+      <Address>#{@options[:billing_address][:address1]}</Address>
+      <Suburb>#{@options[:billing_address][:city]}</Suburb>
+      <State>#{@options[:billing_address][:state]}</State>
+      <Company>#{@options[:billing_address][:company]}</Company>
+      <PostCode>#{@options[:billing_address][:zip]}</PostCode>
+      <Country>#{@options[:billing_address][:country]}</Country>
+      <Email>#{@options[:email]}</Email>
+      <Fax></Fax>
+      <Phone>#{@options[:billing_address][:phone]}</Phone>
+      <Mobile></Mobile>
+      <CustomerRef>#{@options[:customer]}</CustomerRef>
+      <JobDesc></JobDesc>
+      <Comments>#{@options[:description]}</Comments>
+      <URL></URL>
+      <CCNumber>#{@credit_card.number}</CCNumber>
+      <CCNameOnCard>#{@credit_card.first_name} #{@credit_card.last_name}</CCNameOnCard>
+      <CCExpiryMonth>#{sprintf("%.2i", @credit_card.month)}</CCExpiryMonth>
+      <CCExpiryYear>#{sprintf("%.4i", @credit_card.year)[-2..-1]}</CCExpiryYear>
+    </CreateCustomer>
+  </soap12:Body>
+</soap12:Envelope>
+    XML
+  end
+
+    # Documented here: https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx?op=CreateCustomer
+    def expected_purchase_request
+      <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+  <soap12:Header>
+    <eWAYHeader xmlns="https://www.eway.com.au/gateway/managedpayment">
+      <eWAYCustomerID>login</eWAYCustomerID>
+      <Username>username</Username>
+      <Password>password</Password>
+    </eWAYHeader>
+  </soap12:Header>
+  <soap12:Body>
+    <ProcessPayment xmlns="https://www.eway.com.au/gateway/managedpayment">
+      <managedCustomerID>#{@valid_customer_id}</managedCustomerID>
+      <amount>#{@amount}</amount>
+      <invoiceReference>#{@options[:order_id] || @options[:invoice]}</invoiceReference>
+      <invoiceDescription>#{@options[:description]}</invoiceDescription>
+    </ProcessPayment>
+  </soap12:Body>
+</soap12:Envelope>
+      XML
+    end
 
 end

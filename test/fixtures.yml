@@ -42,6 +42,11 @@ braintree_blue:
   merchant_id: X
   public_key: Y
   private_key: Z
+  
+#Username/Password given in sign up email. Not MMS credentials
+card_save:
+  login: merchant_id
+  password: password
 
 card_stream:
   login: X
@@ -106,7 +111,7 @@ garanti:
 ideal_rabobank:
   login: LOGIN
   password: PASSWORD
-  pem: |--
+  pem: |
     PASTE YOUR PEM FILE HERE
 
 instapay:
@@ -126,7 +131,7 @@ iridium:
 
 linkpoint:
   login: STOREID
-  pem: |--
+  pem: |
     PASTE YOUR PEM FILE HERE
 
 # Working test credentials, no need to replace
@@ -170,7 +175,12 @@ ogone:
   user: USER
   password: PASSWORD
   signature: SIGNATURE
-  
+
+optimal_payment:
+  login: test
+  password: test
+  account: 'ACCOUNT_NUMBER'
+
 paybox_direct:
   login: 199988899
   password: 1999888I
@@ -204,7 +214,7 @@ paypal_certificate:
   login: LOGIN
   password: PASSWORD
   subject:
-  pem: |--
+  pem: |
     PASTE YOUR PEM FILE HERE
 
 paypal_signature:
@@ -288,9 +298,18 @@ psl_visa_debit_address:
   state:
   zip:
 
+# Quickpay offers a test account.
+# To log in to the manager, use demo@quickpay.net and test234
 quickpay:
-  login: 89898989
-  password: "n5KrR5e2538awi9hUk6728LHTQ6E4uG1z4IFSb2pPN9j76DqJ2vA4698X315M1cd"
+  login: 89898978
+  password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
+# To get the right apikey, log in to the manager.
+# Go to Indstillinger > API adgang and make sure you have the right key in the fixture.
+quickpay_with_api_key:
+  login: 89898978
+  password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
+  apikey: "3WrEgfY995CnetPlp7R7XG6J5aq83K4k7B4Z3jsLd1vz53x1w6h42M81u7H62Sb4"
+  version: 4
   
 quantum:
   login: X
@@ -395,6 +414,9 @@ secure_pay_au:
 skipjack:
   login: X
   password: Y 
+
+stripe:
+  login: 
 
 trans_first:
   login: LOGIN

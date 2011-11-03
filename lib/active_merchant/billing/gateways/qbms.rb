@@ -1,5 +1,3 @@
-require 'securerandom'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class QbmsGateway < Gateway
@@ -117,8 +115,12 @@ module ActiveMerchant #:nodoc:
         commit(:query, nil, {})
       end
 
+      def test?
+        @options[:test] || super  
+      end
+
       private
-      
+
       def hosted?
         @options[:pem]
       end

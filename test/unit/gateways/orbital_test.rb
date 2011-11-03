@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class OrbitalGatewayTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = ActiveMerchant::Billing::OrbitalGateway.new(
       :login => 'login',
@@ -38,6 +40,19 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_nothing_raised do
       @gateway.purchase(101, credit_card, :order_id => 1)
     end
+  end
+  
+  def test_expiry_date
+    assert_equal "0912", @gateway.send(:expiry_date, credit_card)
+  end
+
+  def test_phone_number
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => {:phone => '123-456-7890'})
+    end.check_request do |endpoint, data, headers|
+      assert_match(/1234567890/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
   end
   
   private

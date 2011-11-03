@@ -35,7 +35,7 @@ class RemoteEwayManagedTest < Test::Unit::TestCase
       :username => ''
     )
     assert response = gateway.purchase(@amount, @valid_customer_id, @options)
-    assert_equal 'Login failed', response.message
+    assert_equal 'Login failed. ', response.message
     assert_failure response
   end
   

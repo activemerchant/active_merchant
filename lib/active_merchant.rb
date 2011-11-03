@@ -20,8 +20,6 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
-                    
-$:.unshift File.dirname(__FILE__)
 
 require 'active_support'
 require 'active_support/core_ext/string/inflections'
@@ -31,20 +29,19 @@ require 'active_support/core_ext/class/attribute'
 require 'active_support/core_ext/class/attribute_accessors'
 require 'active_support/core_ext/class/delegating_attributes'
 require 'active_support/core_ext/module/attribute_accessors'
-require 'active_support/core_ext/kernel/requires'
 require 'active_support/base64'
-require 'active_support/secure_random'
 
+require 'securerandom'
 require 'builder'
 require 'cgi'
 require 'rexml/document'
 
-require 'active_merchant/common'
+require 'active_utils'
 require 'active_merchant/billing'
 require 'active_merchant/version'
 
 module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:    
+  module Billing #:nodoc:
     autoload :Integrations, 'active_merchant/billing/integrations'
   end
 end

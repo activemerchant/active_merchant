@@ -1,9 +1,11 @@
 require 'test_helper'
 
 class RemoteQuickpayTest < Test::Unit::TestCase
+  # These tests assumes that you have added your development IP
+  # in the Quickpay Manager
   def setup  
     @gateway = QuickpayGateway.new(fixtures(:quickpay))
-
+    
     @amount = 100
     @options = { 
       :order_id => generate_unique_id[0...10], 
@@ -47,77 +49,77 @@ class RemoteQuickpayTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @dankort, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'Dankort', response.params['cardtype']
+    assert_equal 'dankort', response.params['cardtype']
   end
   
   def test_successful_visa_dankort_authorization
     assert response = @gateway.authorize(@amount, @visa_dankort, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'Visa-Dankort', response.params['cardtype']
+    assert_equal 'visa-dk', response.params['cardtype']
   end
   
   def test_successful_visa_electron_authorization
     assert response = @gateway.authorize(@amount, @electron_dk, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'Visa-Electron-DK', response.params['cardtype']
+    assert_equal 'visa-electron-dk', response.params['cardtype']
   end
   
   def test_successful_diners_club_authorization
     assert response = @gateway.authorize(@amount, @diners_club, @options)    
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'Diners', response.params['cardtype']
+    assert_equal 'diners', response.params['cardtype']
   end
   
   def test_successful_diners_club_dk_authorization
     assert response = @gateway.authorize(@amount, @diners_club_dk, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'Diners-DK', response.params['cardtype']
+    assert_equal 'diners-dk', response.params['cardtype']
   end
   
   def test_successful_maestro_authorization
     assert response = @gateway.authorize(@amount, @maestro, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'Maestro', response.params['cardtype']
+    assert_equal 'maestro', response.params['cardtype']
   end
   
   def test_successful_maestro_dk_authorization
     assert response = @gateway.authorize(@amount, @maestro_dk, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'Maestro-DK', response.params['cardtype']
+    assert_equal 'maestro-dk', response.params['cardtype']
   end
   
   def test_successful_mastercard_dk_authorization
     assert response = @gateway.authorize(@amount, @mastercard_dk, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'MasterCard-DK', response.params['cardtype']
+    assert_equal 'mastercard-dk', response.params['cardtype']
   end
   
   def test_successful_american_express_dk_authorization
     assert response = @gateway.authorize(@amount, @amex_dk, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'AmericanExpress-DK', response.params['cardtype']
+    assert_equal 'american-express-dk', response.params['cardtype']
   end
 
   def test_successful_american_express_authorization
     assert response = @gateway.authorize(@amount, @amex, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'AmericanExpress', response.params['cardtype']
+    assert_equal 'american-express', response.params['cardtype']
   end
   
   def test_successful_forbrugsforeningen_authorization
     assert response = @gateway.authorize(@amount, @forbrugsforeningen, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'FBG-1886', response.params['cardtype']
+    assert_equal 'fbg1886', response.params['cardtype']
   end
   
   def test_unsuccessful_purchase_with_missing_cvv2
@@ -159,7 +161,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
     assert_success auth
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
-    assert credit = @gateway.credit(@amount, auth.authorization)
+    assert credit = @gateway.refund(@amount, auth.authorization)
     assert_success credit
     assert_equal 'OK', credit.message
   end
@@ -167,7 +169,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
   def test_successful_purchase_and_credit
     assert purchase = @gateway.purchase(@amount, @visa, @options)
     assert_success purchase
-    assert credit = @gateway.credit(@amount, purchase.authorization)
+    assert credit = @gateway.refund(@amount, purchase.authorization)
     assert_success credit
   end
 

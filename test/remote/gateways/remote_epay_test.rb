@@ -71,20 +71,20 @@ class RemoteEpayTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_credit
+  def test_successful_refund
     authorize_response = @gateway.purchase(@amount, @credit_card, @options)
 
-    assert response = @gateway.credit(@amount, authorize_response.authorization)
+    assert response = @gateway.refund(@amount, authorize_response.authorization)
     assert_equal 'true', response.params['result']
     assert_success response
     assert response.test?
   end
 
-  def test_failed_credit
-    assert response_credit = @gateway.credit(@amount, 0)
-    assert_equal 'false', response_credit.params['result']
-    assert_failure response_credit
-    assert response_credit.test?
+  def test_failed_refund
+    assert response_refund = @gateway.refund(@amount, 0)
+    assert_equal 'false', response_refund.params['result']
+    assert_failure response_refund
+    assert response_refund.test?
   end
 
   def test_successful_void
