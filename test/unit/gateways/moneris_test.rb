@@ -42,7 +42,23 @@ class MonerisTest < Test::Unit::TestCase
     @gateway.expects(:parse).returns({})
     @gateway.refund(@amount, "123;456", @options)
   end
-  
+
+  def test_avs_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response_with_avs_and_cvd)
+
+    assert response = @gateway.authorize(100, @credit_card, @options)
+    assert_success response
+    assert_equal 'M', response.avs_result["code"]
+  end
+
+  def test_cvd_result
+    @gateway.expects(:ssl_post).returns(successful_purchase_response_with_avs_and_cvd)
+
+    assert response = @gateway.authorize(100, @credit_card, @options)
+    assert_success response
+    assert_equal 'M', response.cvv_result["code"]
+  end
+
   def test_amount_style
    assert_equal '10.34', @gateway.send(:amount, 1034)
                                                       
@@ -135,7 +151,33 @@ class MonerisTest < Test::Unit::TestCase
     
     RESPONSE
   end
-  
+
+    def successful_purchase_response_with_avs_and_cvd
+    <<-RESPONSE
+<?xml version="1.0"?>
+<response>
+  <receipt>
+    <ReceiptId>1026.1</ReceiptId>
+    <ReferenceNum>661221050010170010</ReferenceNum>
+    <ResponseCode>027</ResponseCode>
+    <ISO>01</ISO>
+    <AuthCode>013511</AuthCode>
+    <TransTime>18:41:13</TransTime>
+    <TransDate>2008-01-05</TransDate>
+    <TransType>00</TransType>
+    <Complete>true</Complete>
+    <Message>APPROVED * =</Message>
+    <TransAmount>1.00</TransAmount>
+    <CardType>V</CardType>
+    <TransID>58-0_3</TransID>
+    <TimedOut>false</TimedOut>
+    <AvsResultCode>M</AvsResultCode>
+    <CvdResultCode>1M</CvdResultCode>
+  </receipt>
+</response>
+    RESPONSE
+  end
+
   def failed_purchase_response
     <<-RESPONSE
 <?xml version="1.0"?>
