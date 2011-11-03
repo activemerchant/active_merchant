@@ -138,6 +138,17 @@ module ActiveMerchant #:nodoc:
           raise Error, ERROR_MESSAGE
         end              
       end
+      
+      def update_subscription(identification, options = {})
+        case identification
+        when '1'
+          Response.new(true, SUCCESS_MESSAGE, {:billingid => '1'}, :test => true, :authorization => AUTHORIZATION )
+        when '2'
+          Response.new(false, FAILURE_MESSAGE, {:billingid => nil, :error => FAILURE_MESSAGE }, :test => true)
+        else
+          raise Error, ERROR_MESSAGE
+        end              
+      end
     end
   end
 end
