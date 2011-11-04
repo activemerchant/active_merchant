@@ -215,3 +215,4 @@ Test::Unit::TestCase.class_eval do
   include ActiveMerchant::Utils
   include ActiveMerchant::Fixtures
 end
+
