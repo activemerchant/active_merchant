@@ -4,7 +4,12 @@ module ActiveMerchant #:nodoc:
       class_attribute :gateway_url
       self.gateway_url = "https://secure.certodirect.com/gateway/process/v2"
 
-      self.supported_countries = ['US']
+      self.supported_countries = [
+        "BE", "BG", "CZ", "DK", "DE", "EE", "IE", "EL", "ES", "FR",
+        "IT", "CY", "LV", "LT", "LU", "HU", "MT", "NL", "AT", "PL",
+        "PT", "RO", "SI", "SK", "FI", "SE", "UK"
+      ]
+
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.certodirect.com/'
       self.display_name = 'CertoDirect'
