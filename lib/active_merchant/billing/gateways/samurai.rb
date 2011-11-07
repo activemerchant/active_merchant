@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
             :last_name    => creditcard.last_name,
             :address_1    => options[:billing_address][:address1],
             :address_2    => options[:billing_address][:address2],
-            :city         => options[:billing_address][:state],
+            :city         => options[:billing_address][:city],
             :zip          => options[:billing_address][:zip],
             :sandbox      => @sandbox
           })
