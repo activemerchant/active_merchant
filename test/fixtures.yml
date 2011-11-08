@@ -43,6 +43,11 @@ braintree_blue:
   public_key: Y
   private_key: Z
   
+braintree_blue_with_processing_rules:
+  merchant_id: X
+  public_key: Y
+  private_key: Z
+
 #Username/Password given in sign up email. Not MMS credentials
 card_save:
   login: merchant_id
