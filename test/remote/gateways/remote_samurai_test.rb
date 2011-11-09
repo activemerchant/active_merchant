@@ -7,14 +7,12 @@ class RemoteSamuraiTest < Test::Unit::TestCase
     @gateway = SamuraiGateway.new(fixtures(:samurai))
 
     @amount = 100
-    @declined_amount = 100.02
-    @invalid_card_amount = 100.07
-    @expired_card_amount = 100.08
+    @declined_amount = 102
+    @invalid_card_amount = 107
+    @expired_card_amount = 108
     @credit_card = credit_card('4111111111111111', :verification_value => '111')
 
     @options = {
-      :address1            => "1000 1st Av",
-      :zip                 => "10101",
       :billing_reference   => "billing_reference",
       :customer_reference  => "customer_reference",
       :custom              => "custom",
@@ -43,7 +41,7 @@ class RemoteSamuraiTest < Test::Unit::TestCase
   def test_expired_purchase
     assert response = @gateway.purchase(@expired_card_amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'The expiration date month was invalid, or prior to today.', response.message
+    assert_equal 'The expiration date month was invalid, or prior to today. The expiration date year was invalid, or prior to today.', response.message
   end
 
   def test_successful_auth_and_capture

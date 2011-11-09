@@ -3,13 +3,14 @@ require 'test_helper'
 class SamuraiTest < Test::Unit::TestCase
   def setup
     @gateway = SamuraiGateway.new(
-              :merchant_key => "MERCHANT KEY",
-              :merchant_password => "MERCHANT_PASSWORD",
+              :login => "MERCHANT KEY",
+              :password => "MERCHANT_PASSWORD",
               :processor_token => "PROCESSOR_TOKEN"
                )
-    @successful_credit_card = credit_card()
+    @successful_credit_card = credit_card
     @successful_payment_method_token = "successful_token"
-    @amount = 100
+    @amount = '1.00'
+    @amount_cents = 100
     @successful_authorization_id = "successful_authorization_id"
     @options = {
        :billing_reference   => "billing_reference",
@@ -25,9 +26,10 @@ class SamuraiTest < Test::Unit::TestCase
                        with(@successful_payment_method_token, @amount, @options).
                        returns(successful_purchase_response)
 
-    response = @gateway.purchase(@amount, @successful_payment_method_token, @options)
+    response = @gateway.purchase(@amount_cents, @successful_payment_method_token, @options)
     assert_instance_of Response, response
-    assert response.success?, "Response failed: #{response.inspect}"
+    assert_success response
+    assert_equal "reference_id", response.authorization
   end
 
   def test_successful_authorize_with_payment_method_token
@@ -35,9 +37,10 @@ class SamuraiTest < Test::Unit::TestCase
                        with(@successful_payment_method_token, @amount, @options).
                        returns(successful_authorize_response)
 
-    response = @gateway.authorize(@amount, @successful_payment_method_token, @options)
+    response = @gateway.authorize(@amount_cents, @successful_payment_method_token, @options)
     assert_instance_of Response, response
-    assert response.success?, "Response failed: #{response.inspect}"
+    assert_success response
+    assert_equal "reference_id", response.authorization
   end
 
 
@@ -50,9 +53,10 @@ class SamuraiTest < Test::Unit::TestCase
               with(@successful_payment_method_token, @amount, @options).
               returns(successful_purchase_response)
 
-    response = @gateway.purchase(@amount, @successful_credit_card, @options)
+    response = @gateway.purchase(@amount_cents, @successful_credit_card, @options)
     assert_instance_of Response, response
-    assert response.success?, "Response failed: #{response.inspect}"
+    assert_success response
+    assert_equal "reference_id", response.authorization
   end
 
   def test_successful_authorize_with_credit_card
@@ -64,9 +68,10 @@ class SamuraiTest < Test::Unit::TestCase
               with(@successful_payment_method_token, @amount, @options).
               returns(successful_authorize_response)
 
-    response = @gateway.authorize(@amount, @successful_credit_card, @options)
+    response = @gateway.authorize(@amount_cents, @successful_credit_card, @options)
     assert_instance_of Response, response
-    assert response.success?, "Response failed: #{response.inspect}"
+    assert_success response
+    assert_equal "reference_id", response.authorization
   end
 
   def test_successful_capture
@@ -78,13 +83,14 @@ class SamuraiTest < Test::Unit::TestCase
                 with(@amount).
                 returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, @successful_authorization_id, @options)
+    response = @gateway.capture(@amount_cents, @successful_authorization_id, @options)
     assert_instance_of Response, response
-    assert response.success?, "Response failed: #{response.inspect}"
+    assert_success response
+    assert_equal "reference_id", response.authorization
   end
 
 
-  def test_successful_credit
+  def test_successful_refund
     Samurai::Transaction.expects(:find).
                          with(@successful_authorization_id).
                          returns(transaction = successful_authorize_response)
@@ -93,9 +99,10 @@ class SamuraiTest < Test::Unit::TestCase
                 with(@amount).
                 returns(successful_credit_response)
 
-    response = @gateway.credit(@amount, @successful_authorization_id, @options)
+    response = @gateway.refund(@amount_cents, @successful_authorization_id, @options)
     assert_instance_of Response, response
-    assert response.success?, "Response failed: #{response.inspect}"
+    assert_success response
+    assert_equal "reference_id", response.authorization
   end
 
   def test_successful_store
@@ -110,52 +117,32 @@ class SamuraiTest < Test::Unit::TestCase
       :address_2    => nil,
       :city         => nil,
       :zip          => nil,
-      :sandbox      => false
+      :sandbox      => true
     }
     Samurai::PaymentMethod.expects(:create).
                            with(card_to_store).
                            returns(successful_create_payment_method_response)
     response = @gateway.store(@successful_credit_card, @options)
     assert_instance_of Response, response
-    assert response.success?, "Response failed: #{response.inspect}"
+    assert_success response
   end
 
   private
 
   def successful_purchase_response
-    payment_method = Samurai::PaymentMethod.new(:payment_method_token => "payment_method_token")
-    processor_response = Samurai::ProcessorResponse.new(:avs_result_code => "Y", :success => true, :messages => [])
-    Samurai::Transaction.new({
-      :reference_id => "reference_id",
-      :transaction_token => "transaction_token",
-      :payment_method => payment_method,
-      :processor_response => processor_response,
-      :transaction_type => "Purchase"
-    })
+    successful_response("Purchase")
   end
 
   def successful_capture_response
-    payment_method = Samurai::PaymentMethod.new(:payment_method_token => "payment_method_token")
-    processor_response = Samurai::ProcessorResponse.new(:avs_result_code => "Y", :success => true, :messages => [])
-    @transaction = Samurai::Transaction.new({
-      :reference_id => "reference_id",
-      :transaction_token => "transaction_token",
-      :payment_method => payment_method,
-      :processor_response => processor_response,
-      :transaction_type => "Capture"
-    })
+    successful_response("Capture")
   end
 
   def successful_credit_response
-    payment_method = Samurai::PaymentMethod.new(:payment_method_token => "payment_method_token")
-    processor_response = Samurai::ProcessorResponse.new(:success=>true, :messages => [])
-    @transaction = Samurai::Transaction.new({
-      :reference_id => "reference_id",
-      :transaction_token => "transaction_token",
-      :payment_method => payment_method,
-      :processor_response => processor_response,
-      :transaction_type => "Credit"
-    })
+    successful_response("Credit")
+  end
+
+  def successful_authorize_response
+    successful_response("Authorize")
   end
 
   def successful_store_result
@@ -166,17 +153,16 @@ class SamuraiTest < Test::Unit::TestCase
     Samurai::PaymentMethod.new(:is_sensitive_data_valid => true, :payment_method_token => @successful_payment_method_token)
   end
 
-
-  def successful_authorize_response
+  def successful_response(transaction_type, options = {})
     payment_method = Samurai::PaymentMethod.new(:payment_method_token => "payment_method_token")
     processor_response = Samurai::ProcessorResponse.new(:avs_result_code => "Y", :success => true, :messages => [])
     Samurai::Transaction.new({
-      :reference_id => "reference_id",
-      :transaction_token => "transaction_token",
-      :payment_method => payment_method,
-      :processor_response => processor_response,
-      :transaction_type => "Authorize"
-    })
+      :reference_id         => "reference_id",
+      :transaction_token    => "transaction_token",
+      :payment_method       => payment_method,
+      :processor_response   => processor_response,
+      :transaction_type     => transaction_type
+    }.merge(options))
   end
 
 end
