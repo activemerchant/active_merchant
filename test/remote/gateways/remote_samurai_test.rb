@@ -2,7 +2,6 @@ require 'test_helper'
 
 class RemoteSamuraiTest < Test::Unit::TestCase
 
-
   def setup
     @gateway = SamuraiGateway.new(fixtures(:samurai))
 
