@@ -393,10 +393,9 @@ realex_mastercard_coms_error:
   verification_value: '123'
 
 samurai:
-  merchant_key: 'a1ebafb6da5238fb8a3ac9f6'
-  merchant_password: 'ae1aa640f6b735c4730fbb56'
+  login: 'a1ebafb6da5238fb8a3ac9f6'
+  password: 'ae1aa640f6b735c4730fbb56'
   processor_token: '5a0e1ca1e5a11a2997bbf912'
-  sandbox: true
 
 sage:
   login: login
