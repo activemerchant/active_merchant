@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(creditcard, options = {})
-        options[:billing_address] ||= {}
+        address = options[:billing_address] || options[:address] || {}
 
         result = Samurai::PaymentMethod.create({
           :card_number  => creditcard.number,
@@ -70,10 +70,10 @@ module ActiveMerchant #:nodoc:
           :cvv          => creditcard.verification_value,
           :first_name   => creditcard.first_name,
           :last_name    => creditcard.last_name,
-          :address_1    => options[:billing_address][:address1],
-          :address_2    => options[:billing_address][:address2],
-          :city         => options[:billing_address][:city],
-          :zip          => options[:billing_address][:zip],
+          :address_1    => address[:address1],
+          :address_2    => address[:address2],
+          :city         => address[:city],
+          :zip          => address[:zip],
           :sandbox      => test?
         })
 
@@ -107,11 +107,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from_result(result)
-        if result.success?
-          "OK"
-        else
-          result.errors.map {|_, messages| messages }.flatten.join(" ")
-        end
+        return "OK" if result.success?
+        result.errors.values.flatten.join(" ")
       end
 
       def processor_options(options)
