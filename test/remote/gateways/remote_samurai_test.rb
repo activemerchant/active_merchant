@@ -52,6 +52,11 @@ class RemoteSamuraiTest < Test::Unit::TestCase
     assert_equal 'OK', capture.message
   end
 
+  def test_successful_auth_and_void
+    assert_success authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success @gateway.void(authorize.authorization, @options)
+  end
+
   def test_invalid_login
     assert_raise(ArgumentError) do
       SamuraiGateway.new( :login => '', :password => '' )

@@ -46,8 +46,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization_id, options = {})
-        authorization = Samurai::Transaction.find(authorization_id)
-        handle_result(authorization.capture(amount(money)))
+        transaction = Samurai::Transaction.find(authorization_id)
+        handle_result(transaction.capture(amount(money)))
       end
 
       def refund(money, transaction_id, options = {})
@@ -55,9 +55,9 @@ module ActiveMerchant #:nodoc:
         handle_result(transaction.credit(amount(money)))
       end
 
-      def void(money, transaction_id, options = {})
-        void = Samurai::Processor.void(transaction_id, amount(money), process_options(options))
-        handle_result(void)
+      def void(transaction_id, options = {})
+        transaction = Samurai::Transaction.find(transaction_id)
+        handle_result(transaction.void)
       end
 
       def store(creditcard, options = {})
