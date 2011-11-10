@@ -115,12 +115,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def processor_options(options)
-        {
-          :billing_reference   => options[:billing_reference],
-          :customer_reference  => options[:customer_reference],
-          :custom              => options[:custom],
-          :descriptor          => options[:descriptor],
-        }
+        options.slice(:billing_reference, :customer_reference, :custom, :descriptor)
       end
     end
   end

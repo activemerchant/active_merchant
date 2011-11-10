@@ -12,21 +12,15 @@ class SamuraiTest < Test::Unit::TestCase
     @amount = '1.00'
     @amount_cents = 100
     @successful_authorization_id = "successful_authorization_id"
-    @options = {
-       :billing_reference   => "billing_reference",
-       :customer_reference  => "customer_reference",
-       :custom              => "custom",
-       :descriptor          => "descriptor",
-    }
   end
 
 
   def test_successful_purchase_with_payment_method_token
     Samurai::Processor.expects(:purchase).
-                       with(@successful_payment_method_token, @amount, @options).
+                       with(@successful_payment_method_token, @amount, {}).
                        returns(successful_purchase_response)
 
-    response = @gateway.purchase(@amount_cents, @successful_payment_method_token, @options)
+    response = @gateway.purchase(@amount_cents, @successful_payment_method_token, {})
     assert_instance_of Response, response
     assert_success response
     assert_equal "reference_id", response.authorization
@@ -34,10 +28,10 @@ class SamuraiTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_payment_method_token
     Samurai::Processor.expects(:authorize).
-                       with(@successful_payment_method_token, @amount, @options).
+                       with(@successful_payment_method_token, @amount, {}).
                        returns(successful_authorize_response)
 
-    response = @gateway.authorize(@amount_cents, @successful_payment_method_token, @options)
+    response = @gateway.authorize(@amount_cents, @successful_payment_method_token)
     assert_instance_of Response, response
     assert_success response
     assert_equal "reference_id", response.authorization
@@ -46,14 +40,14 @@ class SamuraiTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_credit_card
     @gateway.expects(:store).
-             with(@successful_credit_card, @options).
+             with(@successful_credit_card, {}).
              returns(successful_store_result)
 
     Samurai::Processor.expects(:purchase).
-              with(@successful_payment_method_token, @amount, @options).
+              with(@successful_payment_method_token, @amount, {}).
               returns(successful_purchase_response)
 
-    response = @gateway.purchase(@amount_cents, @successful_credit_card, @options)
+    response = @gateway.purchase(@amount_cents, @successful_credit_card)
     assert_instance_of Response, response
     assert_success response
     assert_equal "reference_id", response.authorization
@@ -61,14 +55,14 @@ class SamuraiTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_credit_card
     @gateway.expects(:store).
-             with(@successful_credit_card, @options).
+             with(@successful_credit_card, {}).
              returns(successful_store_result)
 
     Samurai::Processor.expects(:authorize).
-              with(@successful_payment_method_token, @amount, @options).
+              with(@successful_payment_method_token, @amount, {}).
               returns(successful_authorize_response)
 
-    response = @gateway.authorize(@amount_cents, @successful_credit_card, @options)
+    response = @gateway.authorize(@amount_cents, @successful_credit_card)
     assert_instance_of Response, response
     assert_success response
     assert_equal "reference_id", response.authorization
@@ -83,7 +77,7 @@ class SamuraiTest < Test::Unit::TestCase
                 with(@amount).
                 returns(successful_capture_response)
 
-    response = @gateway.capture(@amount_cents, @successful_authorization_id, @options)
+    response = @gateway.capture(@amount_cents, @successful_authorization_id)
     assert_instance_of Response, response
     assert_success response
     assert_equal "reference_id", response.authorization
@@ -99,7 +93,7 @@ class SamuraiTest < Test::Unit::TestCase
                 with(@amount).
                 returns(successful_credit_response)
 
-    response = @gateway.refund(@amount_cents, @successful_authorization_id, @options)
+    response = @gateway.refund(@amount_cents, @successful_authorization_id)
     assert_instance_of Response, response
     assert_success response
     assert_equal "reference_id", response.authorization
@@ -112,7 +106,7 @@ class SamuraiTest < Test::Unit::TestCase
 
     transaction.expects(:void).returns(successful_void_response)
 
-    response = @gateway.void(@successful_authorization_id, @options)
+    response = @gateway.void(@successful_authorization_id)
     assert_instance_of Response, response
     assert_success response
     assert_equal "reference_id", response.authorization
@@ -135,9 +129,20 @@ class SamuraiTest < Test::Unit::TestCase
     Samurai::PaymentMethod.expects(:create).
                            with(card_to_store).
                            returns(successful_create_payment_method_response)
-    response = @gateway.store(@successful_credit_card, @options)
+    response = @gateway.store(@successful_credit_card)
     assert_instance_of Response, response
     assert_success response
+  end
+
+  def test_passing_optional_processor_options
+    Samurai::Processor.expects(:purchase).
+                       with(@successful_payment_method_token, @amount, {:billing_reference => 'billing_reference'}).
+                       returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount_cents, @successful_payment_method_token, {:billing_reference => 'billing_reference', :invalid_option => 'not_included'})
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal "reference_id", response.authorization
   end
 
   private
