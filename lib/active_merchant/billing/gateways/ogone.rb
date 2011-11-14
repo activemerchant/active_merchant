@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
 
       # Complete a previously authorized transaction.
       def capture(money, authorization, options = {})
-        post = {}        
+        post = {}
         add_authorization(post, reference_from(authorization))
         add_invoice(post, options)
         add_customer_data(post, options)
@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Credit the specified account by a specific amount.
-      def credit(money, identification_or_credit_card, options = {})        
+      def credit(money, identification_or_credit_card, options = {})
         if reference_transaction?(identification_or_credit_card)
           deprecated CREDIT_DEPRECATION_MESSAGE
           # Referenced credit: refund of a settled transaction
@@ -133,34 +133,34 @@ module ActiveMerchant #:nodoc:
           perform_non_referenced_credit(money, identification_or_credit_card, options)
         end
       end
-      
+
       # Refund of a settled transaction
-      def refund(money, reference, options = {})        
+      def refund(money, reference, options = {})
         perform_reference_credit(money, reference, options)
       end
 
       def test?
         @options[:test] || super
       end
-      
+
       private
       def reference_from(authorization)
         authorization.split(";").first
       end
-      
+
       def reference_transaction?(identifier)
-        return false unless identifier.is_a?(String) 
+        return false unless identifier.is_a?(String)
         reference, action = identifier.split(";")
         !action.nil?
       end
-      
+
       def perform_reference_credit(money, payment_target, options = {})
         post = {}
         add_authorization(post, reference_from(payment_target))
         add_money(post, money, options)
-        commit('RFD', post)        
+        commit('RFD', post)
       end
-      
+
       def perform_non_referenced_credit(money, payment_target, options = {})
         # Non-referenced credit: acts like a reverse purchase
         post = {}
@@ -171,21 +171,22 @@ module ActiveMerchant #:nodoc:
         add_money(post, money, options)
         commit('RFD', post)
       end
-      
+
       def add_payment_source(post, payment_source, options)
         if payment_source.is_a?(String)
           add_alias(post, payment_source)
-          add_eci(post, '9')
+          add_eci(post, options[:eci] || '9')
         else
           add_alias(post, options[:store])
+          add_eci(post, options[:eci] || '7')
           add_creditcard(post, payment_source)
         end
-      end  
-      
-      def add_eci(post, eci)
-        add_pair post, 'ECI', eci
       end
-      
+
+      def add_eci(post, eci)
+        add_pair post, 'ECI', eci.to_s
+      end
+
       def add_alias(post, _alias)
         add_pair post, 'ALIAS',   _alias
       end
@@ -242,19 +243,19 @@ module ActiveMerchant #:nodoc:
                     :cvv_result => CVV_MAPPING[response["CVCCheck"]] }
         Response.new(successful?(response), message_from(response), response, options)
       end
-      
+
       def successful?(response)
         response["NCERROR"] == "0"
       end
 
       def message_from(response)
-        if successful?(response) 
+        if successful?(response)
           SUCCESS_MESSAGE
         else
           format_error_message(response["NCERRORPLUS"])
         end
       end
-      
+
       def format_error_message(message)
         raw_message = message.to_s.strip
         case raw_message
