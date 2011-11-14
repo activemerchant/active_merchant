@@ -1,5 +1,20 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.19.0 (November 14, 2011)
+
+* Add support for USA ePay Advanced SOAP interface [matthewcalebsmith/jduff]
+* Beanstram: fix purchase with Secure Profile [pitr/jduff]
+* Orbital: various fixes [Soleone]
+* Add Samuari gateway by Fee Fighters [jkrall/odorcicd]
+* Lock money gem to 3.7.1 or less since newer versions break in 1.9 [jduff]
+* Braintree: handle gateway rejected transactions gracefully [braintreeps/jduff]
+* Ogone: support different signature encryptors, custom currency and eci [ZenCocoon/rymai/jduff]
+* Payflow Link: use secure token [jduff]
+* Added refund method to Exact, Pay Junction and Skip Jack gateways [jduff]
+* Elavon: added test url [kylekeesling/jduff]
+* Fix redundent errors when credit card is expired [castiglione/jduff]
+* Two Checkout: update service url [vampirechicken/jduff]
+
 == Version 1.18.1 (September 23, 2011)
 
 * Braintree: allow setting merchant_account_id on initialize [jduff]
