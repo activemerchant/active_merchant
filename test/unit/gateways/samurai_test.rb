@@ -190,8 +190,8 @@ class SamuraiTest < Test::Unit::TestCase
   def successful_response(transaction_type, options = {})
     payment_method = Samurai::PaymentMethod.new(:payment_method_token => "payment_method_token")
     processor_response = Samurai::ProcessorResponse.new(:success => true,
-          :messages => [stub(:context => 'processor.avs_result_code', :key => 'Y', :subclass => 'info'),
-                        stub(:context => 'processor.cvv_result_code', :key => 'M', :subclass => 'info')])
+          :messages => [{:context => 'processor.avs_result_code', :key => 'Y', :subclass => 'info'},
+                        {:context => 'processor.cvv_result_code', :key => 'M', :subclass => 'info'}])
     Samurai::Transaction.new({
       :reference_id         => "reference_id",
       :transaction_token    => "transaction_token",

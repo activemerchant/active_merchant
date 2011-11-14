@@ -109,7 +109,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from_result(result)
         return "OK" if result.success?
-        result.errors.values.flatten.join(" ")
+        result.errors.map {|_, messages| messages }.join(" ")
       end
 
       def processor_options(options)
