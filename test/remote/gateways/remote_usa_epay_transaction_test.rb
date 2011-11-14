@@ -1,9 +1,9 @@
 require 'test_helper'
 
-class RemoveUsaEpayTest < Test::Unit::TestCase
+class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
-    @gateway = UsaEpayGateway.new(fixtures(:usa_epay))
+    @gateway = UsaEpayTransactionGateway.new(fixtures(:usa_epay))
     @creditcard = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
     @options = { :billing_address => address }
@@ -18,7 +18,7 @@ class RemoveUsaEpayTest < Test::Unit::TestCase
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
-    assert_equal 'Card Declined', response.message
+    assert_equal 'Card Declined (00)', response.message
     assert_failure response
   end
 
@@ -34,11 +34,11 @@ class RemoveUsaEpayTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'Unable to find original transaciton.', response.message
+    assert_equal 'Unable to find original transaction.', response.message
   end
 
   def test_invalid_key
-    gateway = UsaEpayGateway.new(:login => '')
+    gateway = UsaEpayTransactionGateway.new(:login => '')
     assert response = gateway.purchase(@amount, @creditcard, @options)
     assert_equal 'Specified source key not found.', response.message
     assert_failure response
