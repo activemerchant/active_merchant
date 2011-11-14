@@ -108,6 +108,7 @@ module ActiveMerchant #:nodoc:
         commit 'DoVoid', build_void_request(authorization, options)
       end
       
+      # Options[:refund_type] defaults to 'Partial' but can be 'Full'
       def refund(money, identification, options = {})
         commit 'RefundTransaction', build_refund_request(money, identification, options)
       end
@@ -157,7 +158,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'TransactionID', identification
             xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
-            xml.tag! 'RefundType', 'Partial'
+            xml.tag! 'RefundType', options[:refund_type] || 'Partial'
             xml.tag! 'Memo', options[:note] unless options[:note].blank?
           end
         end
