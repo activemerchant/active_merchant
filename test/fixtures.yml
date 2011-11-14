@@ -445,6 +445,12 @@ trust_commerce:
 usa_epay:
   login: 'yCaWGYQsSVR0S48B6AKMK07RQhaxHvGu'
 
+# Get credentials here: https://www.usaepay.com/developer/login
+usa_epay_advanced:
+  login: X
+  password: Y
+  software_id: Z
+
 valitor:
   login: WebsiteID
   password: SecurityNumber
