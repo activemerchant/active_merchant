@@ -236,7 +236,7 @@ module ActiveMerchant #:nodoc:
       #   gateway.recurring(tendollar, creditcard, :periodicity => :weekly)
       #
       # You can optionally specify how long you want payments to continue using 'payments'
-      def recurring(money, creditcard, options = {})        
+      def recurring(money, creditcard_or_billing_id, options = {})        
         requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily] )
       
         cycle = case options[:periodicity]
@@ -262,7 +262,7 @@ module ActiveMerchant #:nodoc:
           :payments => options[:payments] || nil,
         }
         
-        add_creditcard(parameters, creditcard)
+        add_payment_source(parameters, creditcard_or_billing_id)
                                                   
         commit('store', parameters)
       end      
