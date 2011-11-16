@@ -278,7 +278,16 @@ module ActiveMerchant #:nodoc:
         params[:vbvEnabled] = '0'
         params[:scEnabled] = '0'
         
-        params.reject{|k, v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        param_str = params.reject{|k, v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        
+        # Allow for hash key authentication instead of user / pass
+        # Only need to specify merchant_id and hash_value in the gateway.yml file
+        if @options[:hash_value]
+          request_hash = Digest::SHA1.hexdigest(param_str + @options[:hash_value])
+          param_str += "&hashValue=#{request_hash}"
+        end
+        
+        param_str
       end
     end
   end
