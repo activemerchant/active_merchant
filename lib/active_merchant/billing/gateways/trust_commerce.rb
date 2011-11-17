@@ -65,7 +65,8 @@ module ActiveMerchant #:nodoc:
     # below and the rest of active_merchant's documentation, as well as Trust Commerce's user and developer documentation.
     
     class TrustCommerceGateway < Gateway
-      URL = 'https://vault.trustcommerce.com/trans/'
+      COMMIT_URL = 'https://vault.trustcommerce.com/trans/'
+      QUERY_URL = 'https://vault.trustcommerce.com/query/'
       
       SUCCESS_TYPES = ["approved", "accepted"]
       
@@ -291,6 +292,17 @@ module ActiveMerchant #:nodoc:
                                                   
         commit('unstore', parameters)
       end      
+
+      # query methods to retrieve data from TrustCommerce
+      def get_transaction_data(options = {})
+        parameters = {
+          :billingid => options[:billingid] || options[:billing_id] || nil,
+          :begindate => options[:begindate] || options[:begin_date] || nil,
+          :enddate => options[:enddate] || options[:end_date] || nil,
+        }
+
+        query_transactions(parameters)
+      end
           
       private
       def add_payment_source(params, source)
@@ -380,7 +392,7 @@ module ActiveMerchant #:nodoc:
         data = if tclink?
           TCLink.send(parameters)
         else
-          parse( ssl_post(URL, post_data(parameters)) )
+          parse( ssl_post(COMMIT_URL, post_data(parameters)) )
         end
         
         # to be considered successful, transaction status must be either "approved" or "accepted"
@@ -393,6 +405,22 @@ module ActiveMerchant #:nodoc:
           :avs_result => { :code => data["avs"] }
         )
       end
+
+      def query_transactions(parameters)
+        parameters[:custid]    = @options[:login]
+        parameters[:password]  = @options[:password]
+        parameters[:demo]      = test? ? 'y' : 'n'
+        parameters[:querytype] = 'transaction'
+                
+        clean_and_stringify_params(parameters)
+        
+        response = ssl_post(QUERY_URL, post_data(parameters))
+
+        success = response.length > 4 && !response.include?("ERROR")
+        message = success ? "Successfully querried transactions" : response
+        transactions = success ? parse_query_response(response) : []
+        TransactionResponse.new(success, message, test?, transactions)
+      end
       
       def parse(body)
         results = {}
@@ -403,6 +431,29 @@ module ActiveMerchant #:nodoc:
         end
         
         results
+      end
+
+      def parse_query_response(body)
+        field_names = body.split("\n")[0].split(',')
+        indexes = field_names.inject({}) {|h, field| h[field.to_sym] = field_names.index(field); h }
+
+        # --- [ build transaction array ] ---
+        raw_transactions = body.split("\n")            
+        raw_transactions.shift # get rid of header
+
+        transactions = []
+        raw_transactions.each do |line|
+          raw_transaction = line.split(',')
+          transaction = { }
+
+          indexes.each do |key,index|
+            transaction[key] = raw_transaction[index]
+          end
+
+          transactions << transaction
+        end
+
+        return transactions
       end
       
       def message_from(data)        
