@@ -422,7 +422,7 @@ module ActiveMerchant #:nodoc:
         
         response = ssl_post(QUERY_URL, post_data(parameters))
 
-        success = response.length > 4 && !response.include?("ERROR")
+        success = !response.include?("ERROR")
         message = success ? "Successfully querried transactions" : response
         transactions = success ? parse_query_response(response) : []
         TransactionResponse.new(success, message, test?, transactions)
