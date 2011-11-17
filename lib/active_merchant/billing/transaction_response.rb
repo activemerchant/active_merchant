@@ -20,6 +20,13 @@ module ActiveMerchant #:nodoc:
         @test = test
         @transactions = transactions
       end
+
+      def to_s
+        "Success: " + success?.to_s + "\n" +
+        "Test: " + test?.to_s + "\n" +
+        "Message: " + message + "\n" +
+        "Transactions: " + transactions.inspect
+      end
     end
   end
 end

@@ -305,6 +305,10 @@ module ActiveMerchant #:nodoc:
       end
           
       private
+      def format_time_for_request(time)
+        time.strftime("%m-%d-%Y %R:%S")
+      end
+
       def add_payment_source(params, source)
         if source.is_a?(String)
           add_billing_id(params, source)
@@ -411,6 +415,8 @@ module ActiveMerchant #:nodoc:
         parameters[:password]  = @options[:password]
         parameters[:demo]      = test? ? 'y' : 'n'
         parameters[:querytype] = 'transaction'
+        parameters[:begindate] = format_time_for_request(parameters[:begindate]) if parameters[:begindate].is_a?(Time)
+        parameters[:enddate] = format_time_for_request(parameters[:enddate]) if parameters[:enddate].is_a?(Time)
                 
         clean_and_stringify_params(parameters)
         
