@@ -146,6 +146,41 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
           :description => 'Test Order Description',
           :purchase_order_number => '4321'
         },
+        :amount => @amount + 1
+      }
+    )
+
+    assert response.test?
+    assert_success response
+    assert_nil response.authorization
+    assert_equal "This transaction has been approved.", response.params['direct_response']['message']
+    assert response.params['direct_response']['approval_code'] =~ /\w{6}/
+    assert_equal "auth_capture", response.params['direct_response']['transaction_type']
+    assert_equal "101.00", response.params['direct_response']['amount']
+    assert_equal response.params['direct_response']['invoice_number'], '1234'
+    assert_equal response.params['direct_response']['order_description'], 'Test Order Description'
+    assert_equal response.params['direct_response']['purchase_order_number'], '4321'
+    assert_equal '', response.params['direct_response']['card_code']
+  end
+
+  def test_successful_create_customer_profile_transaction_auth_capture_request_with_verification_value
+    assert response = @gateway.create_customer_profile(@options)
+    @customer_profile_id = response.authorization
+
+    assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
+    @customer_payment_profile_id = response.params['profile']['payment_profiles']['customer_payment_profile_id']
+
+    assert response = @gateway.create_customer_profile_transaction(
+      :transaction => {
+        :customer_profile_id => @customer_profile_id,
+        :customer_payment_profile_id => @customer_payment_profile_id,
+        :verification_value => '900',
+        :type => :auth_capture,
+        :order => {
+          :invoice_number => '1234',
+          :description => 'Test Order Description',
+          :purchase_order_number => '4321'
+        },
         :amount => @amount
       }
     )
@@ -160,8 +195,9 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal response.params['direct_response']['invoice_number'], '1234'
     assert_equal response.params['direct_response']['order_description'], 'Test Order Description'
     assert_equal response.params['direct_response']['purchase_order_number'], '4321'
+    assert_equal 'M', response.params['direct_response']['card_code']
   end
-  
+
   def test_successful_create_customer_payment_profile_request
     payment_profile = @options[:profile].delete(:payment_profiles)
     assert response = @gateway.create_customer_profile(@options)
