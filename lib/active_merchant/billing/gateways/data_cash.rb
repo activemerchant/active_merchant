@@ -163,7 +163,7 @@ module ActiveMerchant
       # Create the xml document for a 'cancel' or 'fulfill' transaction.
       # 
       # Final XML should look like:
-      # <Request>
+      # <Request version="2">
       #  <Authentication>
       #    <client>99000001</client>
       #    <password>******</password>
@@ -220,7 +220,7 @@ module ActiveMerchant
       # 
       # Final XML should look like:
       # 
-      # <Request>
+      # <Request version="2">
       #  <Authentication>
       #    <client>99000000</client>
       #    <password>*******</password>
@@ -280,7 +280,7 @@ module ActiveMerchant
       def build_purchase_or_authorization_request_with_credit_card_request(type, money, credit_card, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, :version => MIGS_VERSION do
           add_authentication(xml)
           
           xml.tag! :Transaction do
@@ -305,7 +305,7 @@ module ActiveMerchant
       # 
       # Final XML should look like:
       # 
-      # <Request> 
+      # <Request version="2"> 
       #   <Transaction> 
       #     <ContAuthTxn type="historic" /> 
       #     <TxnDetails> 
@@ -340,7 +340,7 @@ module ActiveMerchant
 
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, :version => MIGS_VERSION do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :ContAuthTxn, :type => 'historic'
@@ -362,7 +362,7 @@ module ActiveMerchant
       # 
       # Final XML should look like:
       #
-      # <Request> 
+      # <Request version="2"> 
       #   <Authentication> 
       #     <client>99000001</client> 
       #     <password>*******</password> 
@@ -381,7 +381,7 @@ module ActiveMerchant
       def build_transaction_refund_request(money, reference)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, :version => MIGS_VERSION do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :HistoricTxn do
@@ -402,7 +402,7 @@ module ActiveMerchant
       # 
       # Final XML should look like:
       #
-      # <Request> 
+      # <Request version="2"> 
       #   <Authentication> 
       #     <client>99000001</client> 
       #     <password>*****</password> 
@@ -425,7 +425,7 @@ module ActiveMerchant
       def build_refund_request(money, credit_card, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, :version => MIGS_VERSION do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :CardTxn do
