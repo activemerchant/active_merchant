@@ -36,6 +36,9 @@ module ActiveMerchant
       # Datacash success code
       DATACASH_SUCCESS = '1'
 
+      # MIGS version
+      MIGS_VERSION = "2"
+
       # Creates a new DataCashGateway
       # 
       # The gateway requires that a valid login and password be passed
@@ -192,7 +195,7 @@ module ActiveMerchant
 
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, :version => MIGS_VERSION do
           add_authentication(xml)
           
           xml.tag! :Transaction do
