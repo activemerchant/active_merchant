@@ -288,8 +288,6 @@ module ActiveMerchant
           xml.tag! :Transaction do
             if options[:set_up_continuous_authority]
               xml.tag! :ContAuthTxn, :type => 'setup'
-            else
-              xml.tag! :capturemethod, 'ecomm'
             end
             xml.tag! :CardTxn do
               xml.tag! :method, type
@@ -298,6 +296,9 @@ module ActiveMerchant
             xml.tag! :TxnDetails do
               xml.tag! :merchantreference, format_reference_number(options[:order_id])
               xml.tag! :amount, amount(money), :currency => options[:currency] || currency(money)
+              unless options[:set_up_continuous_authority]
+                xml.tag! :capturemethod, 'ecomm'
+              end
             end
           end
         end
