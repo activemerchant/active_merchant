@@ -40,6 +40,13 @@ class DataCashTest < Test::Unit::TestCase
     assert_equal '4400200050664928;123456789;', response.authorization
   end
 
+  def test_url
+    @gateway.options[:url] = "https://another_test_url.com"
+    @gateway.expects(:ssl_post).with("https://another_test_url.com", anything).returns(successful_purchase_response)
+
+    @gateway.credit(@amount, @credit_card, @options)
+  end
+
   def test_credit
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>refund<\/method>/)).returns(successful_purchase_response)
 

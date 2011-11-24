@@ -48,6 +48,7 @@ module ActiveMerchant
       #
       # * <tt>:login</tt> -- The Datacash account login.
       # * <tt>:password</tt> -- The Datacash account password.
+      # * <tt>:url</tt> -- The URL to post to. Defaults to the TEST_URL or LIVE_URL.
       # * <tt>:test => +true+ or +false+</tt> -- Use the test or live Datacash url.
       #     
       def initialize(options = {})
@@ -229,6 +230,7 @@ module ActiveMerchant
       #    <TxnDetails>
       #      <merchantreference>123456</merchantreference>
       #      <amount currency="EUR">10.00</amount>
+      #      <capturemethod>ecomm</capturemethod>
       #    </TxnDetails>
       #    <CardTxn>
       #      <Card>
@@ -286,6 +288,8 @@ module ActiveMerchant
           xml.tag! :Transaction do
             if options[:set_up_continuous_authority]
               xml.tag! :ContAuthTxn, :type => 'setup'
+            else
+              xml.tag! :capturemethod, 'ecomm'
             end
             xml.tag! :CardTxn do
               xml.tag! :method, type
@@ -534,7 +538,8 @@ module ActiveMerchant
       #   - ActiveMerchant::Billing::Response object
       #   
       def commit(request)
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request))      
+        url = @options[:url] || (test? ? TEST_URL : LIVE_URL)
+        response = parse(ssl_post(url, request))
 
         Response.new(response[:status] == DATACASH_SUCCESS, response[:reason], response,
           :test => test?,
