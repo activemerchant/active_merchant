@@ -1,6 +1,12 @@
 module ActiveMerchant
   module Billing
     class DataCashGateway < Gateway
+
+      # Custom response class so we can pass through response/request XML
+      class DataCashResponse < Response
+        attr_accessor :request, :response
+      end
+
       self.default_currency = 'GBP'
       self.supported_countries = ['GB']
 
@@ -533,16 +539,21 @@ module ActiveMerchant
       #   -request: The XML data that is to be sent to Datacash
       #   
       # Returns:
-      #   - ActiveMerchant::Billing::Response object
+      #   - ActiveMerchant::Billing::DataCashGateway::DataCashResponse object
       #   
       def commit(request)
         url = @options[:url] || (test? ? TEST_URL : LIVE_URL)
-        response = parse(ssl_post(url, request))
+        response = ssl_post(url, request)
+        parsed = parse(response)
 
-        Response.new(response[:status] == DATACASH_SUCCESS, response[:reason], response,
+        data_cash_response = DataCashResponse.new(parsed[:status] == DATACASH_SUCCESS, parsed[:reason], parsed,
           :test => test?,
-          :authorization => "#{response[:datacash_reference]};#{response[:authcode]};#{response[:ca_reference]}"
+          :authorization => "#{parsed[:datacash_reference]};#{parsed[:authcode]};#{parsed[:ca_reference]}"
         )
+        data_cash_response.response = response
+        data_cash_response.request = request
+
+        data_cash_response
       end
 
       # Returns a date string in the format Datacash expects
