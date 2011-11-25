@@ -36,9 +36,6 @@ module ActiveMerchant
       # Datacash success code
       DATACASH_SUCCESS = '1'
 
-      # MIGS version
-      MIGS_VERSION = "2"
-
       # Creates a new DataCashGateway
       # 
       # The gateway requires that a valid login and password be passed
@@ -196,7 +193,7 @@ module ActiveMerchant
 
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request, :version => MIGS_VERSION do
+        xml.tag! :Request, version_options do
           add_authentication(xml)
           
           xml.tag! :Transaction do
@@ -282,7 +279,7 @@ module ActiveMerchant
       def build_purchase_or_authorization_request_with_credit_card_request(type, money, credit_card, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request, :version => MIGS_VERSION do
+        xml.tag! :Request, version_options do
           add_authentication(xml)
           
           xml.tag! :Transaction do
@@ -345,7 +342,7 @@ module ActiveMerchant
 
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request, :version => MIGS_VERSION do
+        xml.tag! :Request, version_options do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :ContAuthTxn, :type => 'historic'
@@ -386,7 +383,7 @@ module ActiveMerchant
       def build_transaction_refund_request(money, reference)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request, :version => MIGS_VERSION do
+        xml.tag! :Request, version_options do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :HistoricTxn do
@@ -430,7 +427,7 @@ module ActiveMerchant
       def build_refund_request(money, credit_card, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request, :version => MIGS_VERSION do
+        xml.tag! :Request, version_options do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :CardTxn do
@@ -595,6 +592,14 @@ module ActiveMerchant
           node.elements.each{|e| parse_element(response, e) }
         else
           response[node.name.underscore.to_sym] = node.text
+        end
+      end
+
+      def version_options(options = {})
+        if @options[:version]
+          { :version => @options[:version] }.merge(options)
+        else
+          options
         end
       end
 

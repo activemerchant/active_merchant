@@ -47,6 +47,13 @@ class DataCashTest < Test::Unit::TestCase
     @gateway.credit(@amount, @credit_card, @options)
   end
 
+  def test_version
+    @gateway.options[:version] = "3"
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/version="3"/)).returns(successful_purchase_response)
+
+    @gateway.credit(@amount, @credit_card, @options)
+  end
+
   def test_credit
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>refund<\/method>/)).returns(successful_purchase_response)
 
