@@ -42,20 +42,20 @@ class DataCashTest < Test::Unit::TestCase
 
   def test_url
     @gateway.options[:url] = "https://another_test_url.com"
-    @gateway.expects(:ssl_post).with("https://another_test_url.com", anything).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with("https://another_test_url.com", anything, { 'Content-Type' => 'text/xml' }).returns(successful_purchase_response)
 
     @gateway.credit(@amount, @credit_card, @options)
   end
 
   def test_version
     @gateway.options[:version] = "3"
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/version="3"/)).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/version="3"/), anything).returns(successful_purchase_response)
 
     @gateway.credit(@amount, @credit_card, @options)
   end
 
   def test_custom_response_class
-    @gateway.expects(:ssl_post).with(anything, anything).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, anything, anything).returns(successful_purchase_response)
     response = @gateway.credit(@amount, @credit_card, @options)
 
     assert_match /Request/, response.request
@@ -63,20 +63,20 @@ class DataCashTest < Test::Unit::TestCase
   end
 
   def test_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>refund<\/method>/)).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>refund<\/method>/), anything).returns(successful_purchase_response)
 
     @gateway.credit(@amount, @credit_card, @options)
   end
 
   def test_deprecated_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>txn_refund<\/method>/)).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>txn_refund<\/method>/), anything).returns(successful_purchase_response)
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
       @gateway.credit(@amount, "transaction_id", @options)
     end
   end
 
   def test_refund
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>txn_refund<\/method>/)).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>txn_refund<\/method>/), anything).returns(successful_purchase_response)
 
     @gateway.refund(@amount, "transaction_id", @options)
   end

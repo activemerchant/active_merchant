@@ -543,7 +543,7 @@ module ActiveMerchant
       #   
       def commit(request)
         url = @options[:url] || (test? ? TEST_URL : LIVE_URL)
-        response = ssl_post(url, request)
+        response = ssl_post(url, request, { 'Content-Type' => 'text/xml' })
         parsed = parse(response)
 
         data_cash_response = DataCashResponse.new(parsed[:status] == DATACASH_SUCCESS, parsed[:reason], parsed,
