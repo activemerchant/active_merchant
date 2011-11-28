@@ -177,6 +177,12 @@ nab_transact:
   login: ABC0001
   password: changeit
   
+# Working credentials, no need to replace
+my_gate:
+  gateway: fnb_live
+  merchant_id: 79958a8d-0c7b-4038-8e2e-8948e1d678e1
+  application_id: 4b775479-a264-444c-b774-22d5521852d8
+  
 netaxept:
   login: LOGIN
   password: PASSWORD
