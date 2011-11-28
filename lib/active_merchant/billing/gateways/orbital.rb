@@ -78,9 +78,8 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        unless options[:ip_authentication] == true
-          requires!(options, :login, :password, :merchant_id)
-        end
+        requires!(options, :merchant_id)
+        requires!(options, :login, :password) unless options[:ip_authentication]
         @options = options
         super
       end
@@ -305,7 +304,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def bin
-        @options[:bin] || '000001' # default is Salem Global
+        @options[:bin] || (salem_mid? ? '000001' : '000002')
       end
 
       def xml_envelope
@@ -323,6 +322,10 @@ module ActiveMerchant #:nodoc:
         xml.tag! :BIN, bin
         xml.tag! :MerchantID, @options[:merchant_id]
         xml.tag! :TerminalID, parameters[:terminal_id] || '001'
+      end
+
+      def salem_mid?
+        @options[:merchant_id].length == 6
       end
     end
   end
