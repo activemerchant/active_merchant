@@ -114,14 +114,14 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_success void
   end
   
-  def test_successful_purchase_and_credit_and_void_credit
+  def test_successful_purchase_and_refund_and_void_refund
     assert purchase = @gateway.purchase(@amount, @visa, @options)
     assert_success purchase
     
-    assert credit = @gateway.credit(@amount, purchase.authorization)
+    assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success purchase
     
-    assert void = @gateway.void(credit.authorization)
+    assert void = @gateway.void(refund.authorization)
     assert_success void
   end
   
@@ -132,11 +132,11 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
   
-  def test_successful_check_purchase_and_credit
+  def test_successful_check_purchase_and_refund
     assert purchase = @gateway.purchase(@amount, @check, @options)
     assert_success purchase
     
-    assert credit = @gateway.credit(@amount, purchase.authorization)
+    assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success credit
   end
   

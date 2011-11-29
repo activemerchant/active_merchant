@@ -160,7 +160,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_void_transactions
     [3000, 105500, 2900].each do |amount|
       assert auth_response = @gateway.authorize(amount, @credit_card, @options)
-      assert void_response = @gateway.void(amount, auth_response.authorization, @options.merge(:transaction_index => 1))
+      assert void_response = @gateway.void(auth_response.authorization, @options.merge(:transaction_index => 1))
       
       # Makes it easier to fill in cert sheet if you print these to the command line
       # puts "TxRefNum => " + void_response.params["tx_ref_num"]
