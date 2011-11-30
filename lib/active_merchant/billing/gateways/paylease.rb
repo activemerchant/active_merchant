@@ -122,7 +122,7 @@ module ActiveMerchant #:nodoc:
       end
       
       
-      def post_data(action, parameters = {})
+      def post_data(action, xml = {})
         post = {}
         post['XML'] = xml
         post.to_query
