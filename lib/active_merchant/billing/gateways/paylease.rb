@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'BillingCity', address[:city].to_s
               xml.tag! 'BillingState', address[:state].to_s
               xml.tag! 'BillingCountry', 'US' # only accepted value
-              xml.tag! 'BillingZip', , address[:zip].to_s
+              xml.tag! 'BillingZip', address[:zip].to_s
             end
             
             xml.tag! 'TotalAmount', amount(money)
