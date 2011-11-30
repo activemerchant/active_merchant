@@ -150,7 +150,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         message = response[:status]
-        if response[:code] >= 16
+        if response.has_key?(:code) && response[:code] >= 16
           message += " - #{response[:message]}"
         end
         message
@@ -158,7 +158,7 @@ module ActiveMerchant #:nodoc:
       
       
       def success?(response)
-        response[:code] < 15
+        response.has_key?(:code) && response[:code] < 15
       end
       
     end
