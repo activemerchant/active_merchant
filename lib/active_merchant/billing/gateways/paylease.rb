@@ -131,15 +131,18 @@ module ActiveMerchant #:nodoc:
       
       def parse(data)
         response = {}
-
+        response[:original_data] = data
+        
         xml = REXML::Document.new(data)
         response[:test] = xml.root.elements["Mode"].text == "Test"
         
         xml = REXML::XPath.first(xml, "//Transaction")
-        response[:trans_id] = xml.elements['TransactionId'].text
-        response[:status] = xml.elements['Status'].text
-        response[:code] = xml.elements['Code'].text.to_i
-        response[:message] = xml.elements['Message'].text
+        if xml
+          response[:trans_id] = xml.elements['TransactionId'].text
+          response[:status] = xml.elements['Status'].text
+          response[:code] = xml.elements['Code'].text.to_i
+          response[:message] = xml.elements['Message'].text
+        end
         
         response
       end
