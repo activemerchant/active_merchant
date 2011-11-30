@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'PayLeaseGatewayRequest' do
           add_credentials(xml, options)
           add_mode(xml, options)
-          add_transactions(xml, CC_PAYEMNT, money, creditcard, options)
+          add_transactions(xml, CC_PAYMENT, money, creditcard, options)
         end 
         commit(xml.target!)
       end                       
