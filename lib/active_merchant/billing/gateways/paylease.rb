@@ -135,7 +135,7 @@ module ActiveMerchant #:nodoc:
         xml = REXML::Document.new(data)
         response[:test] = xml.root.elements["Mode"].text == "Test"
         
-        xml = REXML::XPATH.first(xml, "//Transaction")
+        xml = REXML::XPath.first(xml, "//Transaction")
         response[:trans_id] = xml.elements['TransactionId'].text
         response[:status] = xml.elements['Status'].text
         response[:code] = xml.elements['Code'].text.to_i
