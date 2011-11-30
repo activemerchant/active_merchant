@@ -110,7 +110,9 @@ module ActiveMerchant #:nodoc:
 
       def commit(xml)
         url = test? ? TEST_URL : LIVE_URL
-
+        
+        puts post_data(xml)
+        
         data = ssl_post url, post_data(xml)
         response = parse(data)
         message = message_from(response)
