@@ -47,9 +47,9 @@ module ActiveMerchant #:nodoc:
       
       def add_credentials(xml, options)
         xml.tag! 'Credentials' do
-          xml.tag! 'GatewayId', options[:gateway_id]
-          xml.tag! 'Username', options[:login]
-          xml.tag! 'Password', options[:password]
+          xml.tag! 'GatewayId', @options[:gateway_id]
+          xml.tag! 'Username', @options[:login]
+          xml.tag! 'Password', @options[:password]
         end
       end
       
@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'PaymentReferenceId', options[:payment_reference_id] || SecureRandom.hex(10)
             xml.tag! 'PaymentTraceId', options[:payment_trace_id] || SecureRandom.hex(10)
             xml.tag! 'PayerReferenceId', options[:payer_reference_id]
-            xml.tag! 'PayeeId', options[:payee_id]
+            xml.tag! 'PayeeId', @options[:payee_id]
             xml.tag! 'PayerFirstName', creditcard.first_name
             xml.tag! 'PayerLastName', creditcard.last_name
             
