@@ -111,7 +111,16 @@ module ActiveMerchant #:nodoc:
       def commit(xml)
         url = test? ? TEST_URL : LIVE_URL
 
+        file = File.open('/Users/brettv/Desktop/credit_card_request.txt', 'w+')
+        file << xml
+        file.close
+
         data = ssl_post url, post_data(xml)
+
+        file = File.open('/Users/brettv/Desktop/credit_card_response.txt', 'w+')
+        file << data
+        file.close
+
         response = parse(data)
         response[:original_request] = post_data(xml)
         message = message_from(response)
