@@ -95,6 +95,13 @@ module ActiveMerchant #:nodoc:
       
       
       def credit_card_type(creditcard)
+        
+        file = File.open('/Users/brettv/Desktop/credit_card_type.txt', 'w+')
+        file << creditcard.inspect
+        file << "\n\n"
+        file << creditcard.type
+        file.close
+        
         case creditcard.type
         when "visa"
           'Visa'
