@@ -135,6 +135,11 @@ module ActiveMerchant #:nodoc:
         response[:original_data] = data
         
         xml = REXML::Document.new(data)
+        
+        file = File.open('/Users/brettv/Desktop/credit_card_output.txt', 'w+')
+        file << data
+        file.close
+        
         response[:test] = xml.root.elements["Mode"].text == "Test"
         
         xml = REXML::XPath.first(xml, "//Transaction")
