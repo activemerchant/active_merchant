@@ -148,15 +148,18 @@ module ActiveMerchant #:nodoc:
         file = File.open('/Users/brettv/Desktop/credit_card_output.txt', 'w+')
         file << data
         file.close
-        
+
+        raise "Gateway communication error" unless xml.root
         response[:test] = xml.root.elements["Mode"].text == "Test"
         
         xml = REXML::XPath.first(xml, "//Transaction")
         if xml
-          response[:trans_id] = xml.elements['TransactionId'].text
+          response[:trans_id] = xml.elements['TransactionId'].text if xml.elements['TransactionId']
           response[:status] = xml.elements['Status'].text
           response[:code] = xml.elements['Code'].text.to_i
           response[:message] = xml.elements['Message'].text
+        else
+          raise "Unknown gateway error"
         end
         
         response
