@@ -95,13 +95,6 @@ module ActiveMerchant #:nodoc:
       
       
       def credit_card_type(creditcard)
-        
-        file = File.open('/Users/brettv/Desktop/credit_card_type.txt', 'w+')
-        file << creditcard.inspect
-        file << "\n\n"
-        file << creditcard.type
-        file.close
-        
         case creditcard.type
         when "visa"
           'Visa'
@@ -118,16 +111,7 @@ module ActiveMerchant #:nodoc:
       def commit(xml)
         url = test? ? TEST_URL : LIVE_URL
 
-        file = File.open('/Users/brettv/Desktop/credit_card_request.txt', 'w+')
-        file << xml
-        file.close
-
         data = ssl_post url, post_data(xml)
-
-        file = File.open('/Users/brettv/Desktop/credit_card_response.txt', 'w+')
-        file << data
-        file.close
-
         response = parse(data)
         response[:original_request] = post_data(xml)
         message = message_from(response)
@@ -151,11 +135,6 @@ module ActiveMerchant #:nodoc:
         response[:original_data] = data
         
         xml = REXML::Document.new(data)
-        
-        file = File.open('/Users/brettv/Desktop/credit_card_output.txt', 'w+')
-        file << data
-        file.close
-
         raise "Gateway communication error" unless xml.root
         response[:test] = xml.root.elements["Mode"].text == "Test"
         
