@@ -2,47 +2,45 @@ require File.dirname(__FILE__) + '/paypal/paypal_common_api'
 require File.dirname(__FILE__) + '/paypal/paypal_express_response'
 require File.dirname(__FILE__) + '/paypal_express_common'
 
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+module ActiveMerchant
+  module Billing
     class PaypalRecurringGateway < Gateway
       include PaypalCommonAPI
       include PaypalExpressCommon
-      
+
       self.test_redirect_url = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token='
       self.live_redirect_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token='
-      # self.supported_countries = ['US']
-      # self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside'
-      # self.display_name = 'PayPal Express Checkout Recurring'
+
       API_VERSION = '59.0'
-      
+
       def setup_authorization(money, options = {})
         requires!(options, :description, :return_url, :cancel_return_url)
-        
+
         commit 'SetExpressCheckout', build_setup_request('Authorization', money, options)
       end
-      
+
       def setup_purchase(money, options = {})
         requires!(options, :return_url, :cancel_return_url)
-        
+
         commit 'SetExpressCheckout', build_setup_request('Sale', money, options)
       end
-      
+
       def details_for(token)
         commit 'GetExpressCheckoutDetails', build_get_details_request(token)
       end
-      
+
       def authorize(money, options = {})
         requires!(options, :token, :payer_id)
-      
+
         commit 'DoExpressCheckoutPayment', build_sale_or_authorization_request('Authorization', money, options)
       end
-      
+
       def purchase(money, options = {})
         requires!(options, :token, :payer_id)
-        
+
         commit 'DoExpressCheckoutPayment', build_sale_or_authorization_request('Sale', money, options)
       end
-      
+
       def get_agreement(token)
         commit 'GetBillingAgreementCustomerDetails', build_get_agreement_request(token)
       end
@@ -84,7 +82,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'SetExpressCheckoutReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'SetExpressCheckoutRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
-            xml.tag! 'n2:SetExpressCheckoutRequestDetails' do            
+            xml.tag! 'n2:SetExpressCheckoutRequestDetails' do
               xml.tag! 'n2:BillingAgreementDetails' do
                 xml.tag! 'n2:BillingType', 'RecurringPayments'
                 xml.tag! 'n2:BillingAgreementDescription', options[:description]
@@ -98,19 +96,19 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:IPAddress', options[:ip] unless options[:ip].blank?
               # IMPORTANT: If you want to use Invoice ID, it has to be unique!
               # xml.tag! 'n2:InvoiceID', 'InvoiceID' + Time.now.to_i.to_s
-              
+
               xml.tag! 'n2:AllowNote', '0'
               xml.tag! 'n2:LocaleCode', options[:locale] unless options[:locale].blank?
             end
           end
         end
-      
+
         xml.target!
       end
-      
+
       def build_sale_or_authorization_request(action, money, options)
         currency_code = options[:currency] || currency(money)
-        
+
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'DoExpressCheckoutPaymentReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'DoExpressCheckoutPaymentRequest', 'xmlns:n2' => EBAY_NAMESPACE do
@@ -121,7 +119,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:PayerID', options[:payer_id]
               xml.tag! 'n2:PaymentDetails' do
                 xml.tag! 'n2:OrderTotal', amount(money), 'currencyID' => currency_code
-                
+
                 # All of the values must be included together and add up to the order total
                 if [:subtotal, :shipping, :handling, :tax].all?{ |o| options.has_key?(o) }
                   xml.tag! 'n2:ItemTotal', amount(options[:subtotal]), 'currencyID' => currency_code
@@ -129,7 +127,7 @@ module ActiveMerchant #:nodoc:
                   xml.tag! 'n2:HandlingTotal', amount(options[:handling]),'currencyID' => currency_code
                   xml.tag! 'n2:TaxTotal', amount(options[:tax]), 'currencyID' => currency_code
                 end
-                
+
                 xml.tag! 'n2:NotifyURL', options[:notify_url]
                 xml.tag! 'n2:ButtonSource', application_id.to_s.slice(0,32) unless application_id.blank?
               end
@@ -195,13 +193,13 @@ module ActiveMerchant #:nodoc:
                     xml.tag! 'n2:BillingFrequency', options[:trialfrequency]
                     xml.tag! 'n2:TotalBillingCycles', options[:trialcycles] || 1
                     xml.tag! 'n2:Amount', amount(options[:trialamount]), 'currencyID' => options[:currency] || 'USD'
-                  end        
+                  end
                 end
                 if !options[:initial_amount].blank?
                   xml.tag! 'n2:ActivationDetails' do
                     xml.tag! 'n2:InitialAmount', amount(options[:initial_amount]), 'currencyID' => options[:currency] || 'USD'
                     xml.tag! 'n2:FailedInitialAmountAction', options[:continue_on_failure] ? 'ContinueOnFailure' : 'CancelOnFailure'
-                  end        
+                  end
                 end
                 # xml.tag! 'n2:MaxFailedPayments', options[:max_failed_payments] unless options[:max_failed_payments].blank?
                 xml.tag! 'n2:AutoBillOutstandingAmount', options[:auto_bill_outstanding] ? 'AddToNextBilling' : 'NoAutoBill'
@@ -255,7 +253,7 @@ module ActiveMerchant #:nodoc:
 
         xml.target!
       end
-      
+
       def build_manage_profile_request(profile_id, action, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'ManageRecurringPaymentsProfileStatusReq', 'xmlns' => PAYPAL_NAMESPACE do
@@ -295,19 +293,19 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:ExpMonth', format(credit_card.month, :two_digits)
           xml.tag! 'n2:ExpYear', format(credit_card.year, :four_digits)
           xml.tag! 'n2:CVV2', credit_card.verification_value
-          
+
           if [ 'switch', 'solo' ].include?(card_brand(credit_card).to_s)
             xml.tag! 'n2:StartMonth', format(credit_card.start_month, :two_digits) unless credit_card.start_month.blank?
             xml.tag! 'n2:StartYear', format(credit_card.start_year, :four_digits) unless credit_card.start_year.blank?
             xml.tag! 'n2:IssueNumber', format(credit_card.issue_number, :two_digits) unless credit_card.issue_number.blank?
           end
-          
+
           xml.tag! 'n2:CardOwner' do
             xml.tag! 'n2:PayerName' do
               xml.tag! 'n2:FirstName', credit_card.first_name
               xml.tag! 'n2:LastName', credit_card.last_name
             end
-            
+
             xml.tag! 'n2:Payer', options[:email]
             add_address(xml, 'n2:Address', address) if address
           end

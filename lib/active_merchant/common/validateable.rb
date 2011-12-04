@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
       # if more than one error is available we will only return the first. If no error is available
       # we return an empty string
       def on(field)
-        self[field].to_a.first if self[:field].present?
+        self[field].to_a.first if self[field].present?
       end
 
       def add(field, error)
