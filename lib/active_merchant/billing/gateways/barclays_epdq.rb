@@ -260,7 +260,6 @@ module ActiveMerchant #:nodoc:
               else
                 xml.Cvv2Indicator 5
               end
-              xml.IssueNum(creditcard.issue_number) if creditcard.issue_number.present?
             end
           end
         end
@@ -304,4 +303,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
