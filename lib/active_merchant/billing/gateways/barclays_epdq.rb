@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['UK']
       self.default_currency = 'GBP'
-      self.supported_cardtypes = [:visa, :master, :maestro, :switch ]
+      self.supported_cardtypes = [ :visa, :master, :maestro ]
       self.money_format = :cents
       self.homepage_url = 'http://www.barclaycard.co.uk/business/accepting-payments/epdq-mpi/'
       self.display_name = 'Barclays ePDQ'
@@ -177,8 +177,7 @@ module ActiveMerchant #:nodoc:
         EPDQ_CARD_TYPES = {
           :visa => 1,
           :master => 2,
-          :switch => 9,
-          :maestro => 10,
+          :maestro => 10
         }
       
         def initialize(gateway, options = {}, document_options = {}, &block)
@@ -261,7 +260,6 @@ module ActiveMerchant #:nodoc:
               else
                 xml.Cvv2Indicator 5
               end
-              xml.IssueNum(creditcard.issue_number) if creditcard.issue_number.present?
             end
           end
         end
@@ -305,4 +303,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
