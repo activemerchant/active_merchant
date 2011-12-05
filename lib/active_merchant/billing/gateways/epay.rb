@@ -185,7 +185,8 @@ module ActiveMerchant #:nodoc:
           headers['Referer'] = options[:password] 
         else
           headers['Referer'] = 'activemerchant.org';
-
+  			end
+				
         response = raw_ssl_request(:post, 'https://' + API_HOST + '/auth/default.aspx', authorize_post_data(params), headers)
 
         # Authorize gives the response back by redirecting with the values in
