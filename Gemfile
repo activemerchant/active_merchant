@@ -7,6 +7,7 @@ group :test do
 
   # gateway-specific dependencies, keeping these gems out of the gemspec
   gem 'samurai', '>= 0.2.25'
+  gem 'LitleOnline', '>= 0.0.2'
 end
 
 group :remote_test do

@@ -2,8 +2,7 @@ require File.dirname(__FILE__) + '/../../test_helper'
 
 class LitleTest < Test::Unit::TestCase
 
-  @gateway = LitleGateway.new(LitleGateway.initialize(:user => 'PHXMLTEST',
-:password => 'certpass'))
+  @gateway = LitleGateway.new(LitleGateway.initialize(:user => 'TEST',:password => 'pass'))
   	
   def test_auth
 	order = {
@@ -25,8 +24,8 @@ class LitleTest < Test::Unit::TestCase
 				 'firstName' => 'test',
 				 'lastName' => 'litle',
 				 'addressLine1' => '900 chelmsford st',
-   				 'city' => 'lowell',
-  				 'state' => 'ma',
+   			 'city' => 'lowell',
+  			 'state' => 'ma',
  				 'zip' => '01851',
 		 		 'country' => 'US',
 				 'email'=>'test@litle.com'
@@ -57,8 +56,8 @@ class LitleTest < Test::Unit::TestCase
 				 'firstName' => 'test',
 				 'lastName' => 'litle',
 				 'addressLine1' => '900 chelmsford st',
-   				 'city' => 'lowell',
-  				 'state' => 'ma',
+   			 'city' => 'lowell',
+  			 'state' => 'ma',
  				 'zip' => '01851',
 		 		 'country' => 'US'}}
 	response= LitleGateway.captureGivenAuth(order, card, options)
@@ -71,7 +70,7 @@ class LitleTest < Test::Unit::TestCase
 		  'orderId'=>'12344',
 		  'amount'=>'106',
 		  'orderSource'=>'ecommerce'
-		}
+		  }
 	card = {
 		 'number' => '4100000000000001',
 		 'month' => '10',
@@ -121,8 +120,8 @@ class LitleTest < Test::Unit::TestCase
 				 'firstName' => 'test',
 				 'lastName' => 'litle',
 				 'addressLine1' => '900 chelmsford st',
-   				 'city' => 'lowell',
-  				 'state' => 'ma',
+   			 'city' => 'lowell',
+  			 'state' => 'ma',
  				 'zip' => '01851',
 		 		 'country' => 'US',
 				 'email'=>'test@litle.com'
@@ -131,8 +130,8 @@ class LitleTest < Test::Unit::TestCase
 				 'firstName' => 'test',
 				 'lastName' => 'litle',
 				 'addressLine1' => '900 chelmsford st',
-   				 'city' => 'lowell',
-  				 'state' => 'ma',
+   			 'city' => 'lowell',
+  			 'state' => 'ma',
  				 'zip' => '01851',
 		 		 'country' => 'US'}}
 	response= LitleGateway.sale(order, card, options)
