@@ -4,8 +4,9 @@ require 'LitleOnline'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class LitleGateway < Gateway
-      TEST_URL = 'https://Litle.com/'
-      LIVE_URL = 'https://Litle.com/'
+      
+      TEST_URL = 'https://cert.litle.com/vap/communicator/online'
+      LIVE_URL = 'https://payments.litle.com/vap/communicator/online'
       
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']
