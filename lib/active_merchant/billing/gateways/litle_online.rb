@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club]
       
       # The homepage URL of the gateway
-      self.homepage_url = 'http://www.Litle.com/'
+      self.homepage_url = 'http://www.litle.com/'
       
       # The name of the gateway
       self.display_name = 'Litle'
