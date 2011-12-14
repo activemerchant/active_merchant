@@ -309,7 +309,7 @@ module ActiveMerchant #:nodoc:
         parameters[:password]  = @options[:password]
         # parameters[:demo]      = test? ? 'y' : 'n'
         parameters[:querytype] = 'billingid'
-        parameters[:billingid] = options[:billingid] || options[:billing_id] || nil,
+        parameters[:billingid] = parameters[:billingid] || parameters[:billing_id] || nil,
         parameters[:begindate] = format_time_for_request(parameters[:begindate]) if parameters[:begindate].is_a?(Time)
         parameters[:enddate] = format_time_for_request(parameters[:enddate]) if parameters[:enddate].is_a?(Time)
 
@@ -321,7 +321,6 @@ module ActiveMerchant #:nodoc:
         message = success ? "Successfully querried billing id(s)" : response
         entries = success ? parse_query_response(response) : []
         QueryResponse.new(success, message, test?, entries)
-
       end
 
       private
