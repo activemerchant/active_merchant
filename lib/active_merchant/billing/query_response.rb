@@ -4,8 +4,8 @@ module ActiveMerchant #:nodoc:
     class Error < ActiveMerchantError #:nodoc:
     end
 
-    class TransactionResponse
-      attr_reader :message, :test, :transactions
+    class QueryResponse
+      attr_reader :message, :test, :entries
 
       def success?
         @success
@@ -15,17 +15,17 @@ module ActiveMerchant #:nodoc:
         @test
       end
 
-      def initialize(success, message, test, transactions)
+      def initialize(success, message, test, entries)
         @success, @message = success, message
         @test = test
-        @transactions = transactions
+        @entries = entries
       end
 
       def to_s
         "Success: " + success?.to_s + "\n" +
         "Test: " + test?.to_s + "\n" +
         "Message: " + message + "\n" +
-        "Transactions: " + transactions.inspect
+        "Entries: " + entries.inspect
       end
     end
   end

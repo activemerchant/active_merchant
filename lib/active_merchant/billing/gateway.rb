@@ -1,7 +1,7 @@
 require 'net/http'
 require 'net/https'
 require 'active_merchant/billing/response'
-require 'active_merchant/billing/transaction_response'
+require 'active_merchant/billing/query_response'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
