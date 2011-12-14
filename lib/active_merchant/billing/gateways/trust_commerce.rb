@@ -314,11 +314,8 @@ module ActiveMerchant #:nodoc:
         parameters[:enddate] = format_time_for_request(parameters[:enddate]) if parameters[:enddate].is_a?(Time)
 
         clean_and_stringify_params(parameters)
-        pp "OUTGOING PARAMS: " + parameters.inspect
 
         response = ssl_post(QUERY_URL, post_data(parameters))
-
-        pp "BILLINGID RESPONSE: " + response
 
         success = !response.include?("ERROR")
         message = success ? "Successfully querried billing id(s)" : response
@@ -415,7 +412,6 @@ module ActiveMerchant #:nodoc:
         parameters[:action]      = action
 
         clean_and_stringify_params(parameters)
-        pp "PARAMS: " + parameters.inspect
 
         data = if tclink?
           TCLink.send(parameters)
