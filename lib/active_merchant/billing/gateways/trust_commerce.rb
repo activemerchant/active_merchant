@@ -63,12 +63,13 @@ module ActiveMerchant #:nodoc:
     #
     # This should be enough to get you started with Trust Commerce and active_merchant. For further information, review the methods
     # below and the rest of active_merchant's documentation, as well as Trust Commerce's user and developer documentation.
-    
+
     class TrustCommerceGateway < Gateway
-      URL = 'https://vault.trustcommerce.com/trans/'
-      
+      COMMIT_URL = 'https://vault.trustcommerce.com/trans/'
+      QUERY_URL = 'https://vault.trustcommerce.com/query/'
+
       SUCCESS_TYPES = ["approved", "accepted"]
-      
+
       DECLINE_CODES = {
         "decline"       => "The credit card was declined",
         "avs"           => "AVS failed; the address entered does not match the billing address on file at the bank",
@@ -84,7 +85,7 @@ module ActiveMerchant #:nodoc:
         "weeklylimit"   => "Weekly limit in transaction count or amount as been reached",
         "monthlylimit"  => "Monthly limit in transaction count or amount as been reached"
       }
-      
+
       BADDATA_CODES = {
         "missingfields"       => "One or more parameters required for this transaction type were not sent",
         "extrafields"         => "Parameters not allowed for this transaction type were sent",
@@ -93,27 +94,27 @@ module ActiveMerchant #:nodoc:
         "merchantcantaccept"  => "The merchant can't accept data passed in this field",
         "mismatch"            => "Data in one of the offending fields did not cross-check with the other offending field"
       }
-      
+
       ERROR_CODES = {
         "cantconnect"   => "Couldn't connect to the TrustCommerce gateway",
         "dnsfailure"    => "The TCLink software was unable to resolve DNS hostnames",
         "linkfailure"   => "The connection was established, but was severed before the transaction could complete",
         "failtoprocess" => "The bank servers are offline and unable to authorize transactions"
       }
-      
+
       TEST_LOGIN = 'TestMerchant'
       TEST_PASSWORD = 'password'
-      
+
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :discover, :american_express, :diners_club, :jcb]
       self.supported_countries = ['US']
       self.homepage_url = 'http://www.trustcommerce.com/'
       self.display_name = 'TrustCommerce'
-      
+
       def self.tclink?
         defined?(TCLink)
       end
-      
+
       # Creates a new TrustCommerceGateway
       # 
       # The gateway requires that a valid login and password be passed
@@ -130,44 +131,44 @@ module ActiveMerchant #:nodoc:
       # * <tt>:password</tt> -- password
       def initialize(options = {})
         requires!(options, :login, :password)
-      
+
         @options = options
         super
       end
-      
+
       def tclink?
         self.class.tclink?
       end
-      
+
       def test?
         @options[:login] == TEST_LOGIN &&
           @options[:password] == TEST_PASSWORD || @options[:test] || super
       end
-      
+
       # authorize() is the first half of the preauth(authorize)/postauth(capture) model. The TC API docs call this
       # preauth, we preserve active_merchant's nomenclature of authorize() for consistency with the rest of the library. This
       # method simply checks to make sure funds are available for a transaction, and returns a transid that can be used later to
       # postauthorize (capture) the funds.
-      
+
       def authorize(money, creditcard_or_billing_id, options = {})
         parameters = {
           :amount => amount(money),
-        }                                                             
-        
+        }
+
         add_order_id(parameters, options)
         add_customer_data(parameters, options)
         add_payment_source(parameters, creditcard_or_billing_id)
         add_addresses(parameters, options)
         commit('preauth', parameters)
       end
-      
+
       # purchase() is a simple sale. This is one of the most common types of transactions, and is extremely simple. All that you need
       # to process a purchase are an amount in cents or a money object and a creditcard object or billingid string.
       def purchase(money, creditcard_or_billing_id, options = {})        
         parameters = {
           :amount => amount(money),
-        }                                                             
-        
+        }
+
         add_order_id(parameters, options)
         add_customer_data(parameters, options)
         add_payment_source(parameters, creditcard_or_billing_id)
@@ -183,10 +184,10 @@ module ActiveMerchant #:nodoc:
           :amount => amount(money),
           :transid => authorization,
         }
-                                                  
+
         commit('postauth', parameters)
       end
-      
+
       # refund() allows you to return money to a card that was previously billed. You need to supply the amount, in cents or a money object,
       # that you want to refund, and a TC transid for the transaction that you are refunding.
       def refund(money, identification, options = {})  
@@ -194,7 +195,7 @@ module ActiveMerchant #:nodoc:
           :amount => amount(money),
           :transid => identification
         }
-                                                  
+
         commit('credit', parameters)
       end
 
@@ -202,7 +203,7 @@ module ActiveMerchant #:nodoc:
         deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, identification, options)
       end
-      
+
       # void() clears an existing authorization and releases the reserved fund
       # s back to the cardholder. The TC API refers to this transaction as a 
       # reversal. After voiding, you will no longer be able to capture funds 
@@ -221,10 +222,10 @@ module ActiveMerchant #:nodoc:
         parameters = {
           :transid => authorization,
         }
-        
+
         commit('reversal', parameters)
       end
-      
+
       # recurring() a TrustCommerce account that is activated for Citatdel, TrustCommerce's
       # hosted customer billing info database.
       #
@@ -236,9 +237,9 @@ module ActiveMerchant #:nodoc:
       #   gateway.recurring(tendollar, creditcard, :periodicity => :weekly)
       #
       # You can optionally specify how long you want payments to continue using 'payments'
-      def recurring(money, creditcard, options = {})        
+      def recurring(money, creditcard_or_billing_id, options = {})        
         requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily] )
-      
+
         cycle = case options[:periodicity]
         when :monthly
           '1m'
@@ -253,7 +254,7 @@ module ActiveMerchant #:nodoc:
         when :daily
           '1d'
         end
-        
+
         parameters = {
           :amount => amount(money),
           :cycle => cycle,
@@ -261,38 +262,51 @@ module ActiveMerchant #:nodoc:
           :billingid => options[:billingid] || nil,
           :payments => options[:payments] || nil,
         }
-        
-        add_creditcard(parameters, creditcard)
-                                                  
+
+        add_payment_source(parameters, creditcard_or_billing_id)
+
         commit('store', parameters)
       end      
-      
+
       # store() requires a TrustCommerce account that is activated for Citatdel. You can call it with a credit card and a billing ID
       # you would like to use to reference the stored credit card info for future captures. Use 'verify' to specify whether you want
       # to simply store the card in the DB, or you want TC to verify the data first.
-      
+
       def store(creditcard, options = {})   
         parameters = {
           :verify => options[:verify] || 'y',
           :billingid => options[:billingid] || options[:billing_id] || nil,
         }
-        
+
         add_creditcard(parameters, creditcard)
-        add_addresses(parameters, options)                              
+        add_addresses(parameters, options)
         commit('store', parameters)
       end
-      
+
       # To unstore a creditcard stored in Citadel using store() or recurring(), all that is required is the billing id. When you run
       # unstore() the information will be removed and a Response object will be returned indicating the success of the action.
       def unstore(identification, options = {})
         parameters = {
           :billingid => identification,
         }
-                                                  
+
         commit('unstore', parameters)
-      end      
-          
+      end
+
+      # query methods to retrieve data from TrustCommerce
+      def query_transaction(parameters = {})
+        query('transaction', parameters)
+      end
+
+      def query_billingid(parameters = {})
+        query('billingid', parameters)
+      end
+
       private
+      def format_time_for_request(time)
+        time.strftime("%m-%d-%Y %R:%S")
+      end
+
       def add_payment_source(params, source)
         if source.is_a?(String)
           add_billing_id(params, source)
@@ -300,14 +314,14 @@ module ActiveMerchant #:nodoc:
           add_creditcard(params, source)
         end
       end
-      
+
       def expdate(creditcard)
         year  = sprintf("%.4i", creditcard.year)
         month = sprintf("%.2i", creditcard.month)
 
         "#{month}#{year[-2..-1]}"
       end
-      
+
       def add_creditcard(params, creditcard)
         params[:media]     = "cc"
         params[:name]      = creditcard.name
@@ -315,23 +329,23 @@ module ActiveMerchant #:nodoc:
         params[:exp]       = expdate(creditcard)
         params[:cvv]       = creditcard.verification_value if creditcard.verification_value?
       end
-      
+
       def add_order_id(params, options)
         params[:ticket] = options[:order_id] unless options[:order_id].blank?
       end
-      
+
       def add_billing_id(params, billingid)
         params[:billingid] = billingid
       end
-      
+
       def add_customer_data(params, options)
         params[:email] = options[:email] unless options[:email].blank?
         params[:ip] = options[:ip] unless options[:ip].blank?
       end
-      
+
       def add_addresses(params, options)
         address = options[:billing_address] || options[:address]
-        
+
         if address          
           params[:address1]  = address[:address1] unless address[:address1].blank?
           params[:address2]  = address[:address2] unless address[:address2].blank?
@@ -341,7 +355,7 @@ module ActiveMerchant #:nodoc:
           params[:country]   = address[:country]  unless address[:country].blank?
           params[:avs]       = 'n'
         end
-        
+
         if shipping_address = options[:shipping_address]
           params[:shipto_name]     = shipping_address[:name]     unless shipping_address[:name].blank?
           params[:shipto_address1] = shipping_address[:address1] unless shipping_address[:address1].blank?
@@ -352,7 +366,7 @@ module ActiveMerchant #:nodoc:
           params[:shipto_country]  = shipping_address[:country]  unless shipping_address[:country].blank?
         end
       end
-      
+
       def clean_and_stringify_params(parameters)
         # TCLink wants us to send a hash with string keys, and activemerchant pushes everything around with
         # symbol keys. Before sending our input to TCLink, we convert all our keys to strings and dump the symbol keys.
@@ -364,25 +378,25 @@ module ActiveMerchant #:nodoc:
           parameters.delete(key)
         end
       end
-      
+
       def post_data(parameters)
         parameters.collect { |key, value| "#{key}=#{ CGI.escape(value.to_s)}" }.join("&")
       end
-  
+
       def commit(action, parameters)
         parameters[:custid]      = @options[:login]
         parameters[:password]    = @options[:password]
         parameters[:demo]        = test? ? 'y' : 'n'
         parameters[:action]      = action
-                
+
         clean_and_stringify_params(parameters)
-        
+
         data = if tclink?
           TCLink.send(parameters)
         else
-          parse( ssl_post(URL, post_data(parameters)) )
+          parse( ssl_post(COMMIT_URL, post_data(parameters)) )
         end
-        
+
         # to be considered successful, transaction status must be either "approved" or "accepted"
         success = SUCCESS_TYPES.include?(data["status"])
         message = message_from(data)
@@ -393,19 +407,59 @@ module ActiveMerchant #:nodoc:
           :avs_result => { :code => data["avs"] }
         )
       end
-      
+
+      def query(action, parameters)
+        parameters[:custid]    = @options[:login]
+        parameters[:password]  = @options[:password]
+        parameters[:querytype] = action
+        parameters[:begindate] = format_time_for_request(parameters[:begindate]) if parameters[:begindate].is_a?(Time)
+        parameters[:enddate] = format_time_for_request(parameters[:enddate]) if parameters[:enddate].is_a?(Time)
+
+        clean_and_stringify_params(parameters)
+
+        response = ssl_post(QUERY_URL, post_data(parameters))
+
+        success = !response.include?("ERROR")
+        message = success ? "Successfully querried" : response
+        entries = success ? parse_query_response(response) : []
+        QueryResponse.new(success, message, test?, entries)
+      end
+
       def parse(body)
         results = {}
-        
+
         body.split(/\n/).each do |pair|
           key,val = pair.split(/=/)
           results[key] = val
         end
-        
+
         results
       end
-      
-      def message_from(data)        
+
+      def parse_query_response(body)
+        field_names = body.split("\n")[0].split(',')
+        indexes = field_names.inject({}) {|h, field| h[field.to_sym] = field_names.index(field); h }
+
+        # --- [ build entries array ] ---
+        raw_entries = body.split("\n")
+        raw_entries.shift # get rid of header
+
+        entries = []
+        raw_entries.each do |line|
+          raw_entry = line.split(',')
+          entry = { }
+
+          indexes.each do |key,index|
+            entry[key] = raw_entry[index]
+          end
+
+          entries << entry
+        end
+
+        return entries
+      end
+
+      def message_from(data)
         status = case data["status"]
         when "decline" 
           return DECLINE_CODES[data["declinetype"]]
@@ -417,7 +471,7 @@ module ActiveMerchant #:nodoc:
           return "The transaction was successful"
         end
       end
-      
+
     end
   end
 end
