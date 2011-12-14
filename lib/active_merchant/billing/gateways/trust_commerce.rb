@@ -294,33 +294,12 @@ module ActiveMerchant #:nodoc:
       end
 
       # query methods to retrieve data from TrustCommerce
-      def get_transaction_data(options = {})
-        parameters = {
-          :billingid => options[:billingid] || options[:billing_id] || nil,
-          :begindate => options[:begindate] || options[:begin_date] || nil,
-          :enddate => options[:enddate] || options[:end_date] || nil,
-        }
-
-        query_transactions(parameters)
+      def query_transaction(parameters = {})
+        query('transaction', parameters)
       end
 
       def query_billingid(parameters = {})
-        parameters[:custid]    = @options[:login]
-        parameters[:password]  = @options[:password]
-        # parameters[:demo]      = test? ? 'y' : 'n'
-        parameters[:querytype] = 'billingid'
-        parameters[:billingid] = parameters[:billingid] || parameters[:billing_id] || nil,
-        parameters[:begindate] = format_time_for_request(parameters[:begindate]) if parameters[:begindate].is_a?(Time)
-        parameters[:enddate] = format_time_for_request(parameters[:enddate]) if parameters[:enddate].is_a?(Time)
-
-        clean_and_stringify_params(parameters)
-
-        response = ssl_post(QUERY_URL, post_data(parameters))
-
-        success = !response.include?("ERROR")
-        message = success ? "Successfully querried billing id(s)" : response
-        entries = success ? parse_query_response(response) : []
-        QueryResponse.new(success, message, test?, entries)
+        query('billingid', parameters)
       end
 
       private
@@ -429,11 +408,10 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def query_transactions(parameters)
+      def query(action, parameters)
         parameters[:custid]    = @options[:login]
         parameters[:password]  = @options[:password]
-        parameters[:demo]      = test? ? 'y' : 'n'
-        parameters[:querytype] = 'transaction'
+        parameters[:querytype] = action
         parameters[:begindate] = format_time_for_request(parameters[:begindate]) if parameters[:begindate].is_a?(Time)
         parameters[:enddate] = format_time_for_request(parameters[:enddate]) if parameters[:enddate].is_a?(Time)
 
@@ -442,10 +420,28 @@ module ActiveMerchant #:nodoc:
         response = ssl_post(QUERY_URL, post_data(parameters))
 
         success = !response.include?("ERROR")
-        message = success ? "Successfully querried transactions" : response
+        message = success ? "Successfully querried" : response
         entries = success ? parse_query_response(response) : []
         QueryResponse.new(success, message, test?, entries)
       end
+
+      # def query_transactions(parameters)
+      #   parameters[:custid]    = @options[:login]
+      #   parameters[:password]  = @options[:password]
+      #   parameters[:demo]      = test? ? 'y' : 'n'
+      #   parameters[:querytype] = 'transaction'
+      #   parameters[:begindate] = format_time_for_request(parameters[:begindate]) if parameters[:begindate].is_a?(Time)
+      #   parameters[:enddate] = format_time_for_request(parameters[:enddate]) if parameters[:enddate].is_a?(Time)
+
+      #   clean_and_stringify_params(parameters)
+
+      #   response = ssl_post(QUERY_URL, post_data(parameters))
+
+      #   success = !response.include?("ERROR")
+      #   message = success ? "Successfully querried transactions" : response
+      #   entries = success ? parse_query_response(response) : []
+      #   QueryResponse.new(success, message, test?, entries)
+      # end
 
       def parse(body)
         results = {}
