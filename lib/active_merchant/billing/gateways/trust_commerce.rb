@@ -425,24 +425,6 @@ module ActiveMerchant #:nodoc:
         QueryResponse.new(success, message, test?, entries)
       end
 
-      # def query_transactions(parameters)
-      #   parameters[:custid]    = @options[:login]
-      #   parameters[:password]  = @options[:password]
-      #   parameters[:demo]      = test? ? 'y' : 'n'
-      #   parameters[:querytype] = 'transaction'
-      #   parameters[:begindate] = format_time_for_request(parameters[:begindate]) if parameters[:begindate].is_a?(Time)
-      #   parameters[:enddate] = format_time_for_request(parameters[:enddate]) if parameters[:enddate].is_a?(Time)
-
-      #   clean_and_stringify_params(parameters)
-
-      #   response = ssl_post(QUERY_URL, post_data(parameters))
-
-      #   success = !response.include?("ERROR")
-      #   message = success ? "Successfully querried transactions" : response
-      #   entries = success ? parse_query_response(response) : []
-      #   QueryResponse.new(success, message, test?, entries)
-      # end
-
       def parse(body)
         results = {}
 
