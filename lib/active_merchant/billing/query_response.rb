@@ -22,10 +22,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def to_s
-        "Success: " + success?.to_s + "\n" +
-        "Test: " + test?.to_s + "\n" +
-        "Message: " + message + "\n" +
-        "Entries: " + entries.inspect
+        "Success: #{success?} \n" +
+        "Test: #{test?} \n" +
+        "Message: #{message} \n" +
+        "Entries: #{entries.inspect}"
       end
     end
   end
