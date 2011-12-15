@@ -144,7 +144,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [SecurePay](http://www.securepay.com/) - US
 * [SecurePayTech](http://www.securepaytech.com/) - NZ
 * [SkipJack](http://www.skipjack.com/) - US, CA
-* [Stripe](https://stripe.com/welcome) - US
+* [Stripe](https://stripe.com/) - US
 * [TransFirst](http://www.transfirst.com/) - US
 * [TrustCommerce](http://www.trustcommerce.com/) - US
 * [USA ePay](http://www.usaepay.com/) - US

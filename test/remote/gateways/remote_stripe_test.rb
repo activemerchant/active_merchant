@@ -11,6 +11,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4242424242424242')
     @declined_card = credit_card('4000')
+    @new_credit_card = credit_card('5105105105105100')
 
     @options = {
       :description => 'ActiveMerchant Test Purchase'
@@ -57,7 +58,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   def test_unsuccessful_capture
     assert captured = @gateway.capture(nil, "active_merchant_fake_charge")
     assert_failure captured
-    assert_equal "Invalid charge id: active_merchant_fake_charge", captured.message
+    assert_match /active_merchant_fake_charge/, captured.message
   end
 
   def test_successful_void
@@ -71,7 +72,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   def test_unsuccessful_void
     assert void = @gateway.void("active_merchant_fake_charge")
     assert_failure void
-    assert_equal "Invalid charge id: active_merchant_fake_charge", void.message
+    assert_match /active_merchant_fake_charge/, void.message
   end
 
   def test_successful_refund
@@ -85,7 +86,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   def test_unsuccessful_refund
     assert refund = @gateway.refund(@amount, "active_merchant_fake_charge")
     assert_failure refund
-    assert_equal "Invalid charge id: active_merchant_fake_charge", refund.message
+    assert_match /active_merchant_fake_charge/, refund.message
   end
 
   def test_successful_store
@@ -94,6 +95,21 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "customer", response.params["object"]
     assert_equal "Active Merchant Test Customer", response.params["description"]
     assert_equal @credit_card.last_digits, response.params["active_card"]["last4"]
+  end
+
+  def test_successful_update
+    creation = @gateway.store(@credit_card, {:description => "Active Merchant Update Customer"})
+    assert response = @gateway.update(creation.params['id'], @new_credit_card)
+    assert_success response
+    assert_equal "Active Merchant Update Customer", response.params["description"]
+    assert_equal @new_credit_card.last_digits, response.params["active_card"]["last4"]
+  end
+
+  def test_successful_unstore
+    creation = @gateway.store(@credit_card, {:description => "Active Merchant Unstore Customer"})
+    assert response = @gateway.unstore(creation.params['id'])
+    assert_success response
+    assert_equal true, response.params["deleted"]
   end
 
   def test_invalid_login
