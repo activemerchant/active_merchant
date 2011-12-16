@@ -410,7 +410,7 @@ module ActiveMerchant #:nodoc:
 
       def query(action, parameters)
         parameters[:custid]    = @options[:login]
-        parameters[:password]  = @options[:password]
+        parameters[:password]  = @options[:vault_password]
         parameters[:querytype] = action
         parameters[:begindate] = format_time_for_request(parameters[:begindate]) if parameters[:begindate].is_a?(Time)
         parameters[:enddate] = format_time_for_request(parameters[:enddate]) if parameters[:enddate].is_a?(Time)
