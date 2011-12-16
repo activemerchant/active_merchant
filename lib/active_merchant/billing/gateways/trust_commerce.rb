@@ -409,6 +409,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def query(action, parameters)
+        if @options[:vault_password].blank?
+          return QueryResponse.new(false, "Vault Password must be provided for queries", test?, [])
+        end
         parameters[:custid]    = @options[:login]
         parameters[:password]  = @options[:vault_password]
         parameters[:querytype] = action
