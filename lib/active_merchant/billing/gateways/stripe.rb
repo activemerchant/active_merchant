@@ -57,11 +57,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, creditcard, options = {})
-        purchase(money, creditcard, options.merge(:uncaptured => true))
+        raise "Stripe does not support separate authorization and capture"
       end
 
       def capture(money, identification, options = {})
-        commit("charges/#{CGI.escape(identification)}/capture", {})
+        raise "Stripe does not support separate authorization and capture"
       end
 
       def void(identification, options = {})

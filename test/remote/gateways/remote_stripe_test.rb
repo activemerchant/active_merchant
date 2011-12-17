@@ -31,34 +31,12 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal 'Your card number is invalid', response.message
   end
 
-  def test_successful_authorize
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success response
-    assert_equal "charge", response.params["object"]
-    assert response.params["paid"]
-    assert response.params["uncaptured"]
+  def test_authorize
+    assert_raises(RuntimeError) { @gateway.authorize(@amount, @credit_card, @options) }
   end
 
-  def test_unsuccessful_authorize
-    assert response = @gateway.authorize(@amount, @declined_card, @options)
-    assert_failure response
-    assert_equal 'Your card number is invalid', response.message
-  end
-
-  def test_successful_capture
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success response
-    assert response.authorization
-
-    assert captured = @gateway.capture(nil, response.authorization)
-    assert_success captured
-    assert !captured.params["uncaptured"]
-  end
-
-  def test_unsuccessful_capture
-    assert captured = @gateway.capture(nil, "active_merchant_fake_charge")
-    assert_failure captured
-    assert_match /active_merchant_fake_charge/, captured.message
+  def test_capture
+    assert_raises(RuntimeError) { @gateway.authorize(@amount, @credit_card, @options) }
   end
 
   def test_successful_void
