@@ -1,5 +1,11 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.20.1 (December 22, 2011)
+
+* PayflowExpressUk: Fix parsing street2 from response [odorcicd]
+* AuthorizeNet: Support tracking id [odorcicd]
+* SagePay Form: Map billing address to shipping address [jduff]
+
 == Version 1.20.0 (November 14, 2011)
 
 * Add support for USA ePay Advanced SOAP interface [matthewcalebsmith/jduff]
