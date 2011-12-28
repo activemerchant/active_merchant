@@ -264,6 +264,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal '2013-11', @gateway.send(:arb_expdate, credit_card('4111111111111111', :month => "11", :year => "2013"))
   end
 
+  def test_solution_id_is_added_to_post_data_parameters
+    assert !@gateway.send(:post_data, 'AUTH_ONLY').include?("x_solution_ID=A1000000")
+    ActiveMerchant::Billing::AuthorizeNetGateway.application_id = 'A1000000'
+    assert @gateway.send(:post_data, 'AUTH_ONLY').include?("x_solution_ID=A1000000")
+  ensure
+    ActiveMerchant::Billing::AuthorizeNetGateway.application_id = nil
+  end
+
   private
   def post_data_fixture
     'x_encap_char=%24&x_card_num=4242424242424242&x_exp_date=0806&x_card_code=123&x_type=AUTH_ONLY&x_first_name=Longbob&x_version=3.1&x_login=X&x_last_name=Longsen&x_tran_key=Y&x_relay_response=FALSE&x_delim_data=TRUE&x_delim_char=%2C&x_amount=1.01'

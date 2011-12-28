@@ -86,6 +86,56 @@ class SagePayFormHelperTest < Test::Unit::TestCase
     end
   end
   
+  def test_shipping_address_falls_back_to_billing_address
+    @helper.billing_address(
+      :address1 => '1 My Street',
+      :address2 => '',
+      :city => 'Chicago',
+      :state => 'IL',
+      :zip => '60606',
+      :country  => 'US'
+    )
+   
+    @helper.form_fields
+    assert_equal 19, @helper.fields.size
+    assert_field 'DeliveryAddress1', '1 My Street'
+    assert_field 'DeliveryCity', 'Chicago'
+    assert_field 'DeliveryState', 'IL'
+    assert_field 'DeliveryPostCode', '60606'
+    assert_field 'DeliveryCountry', 'US'
+
+    with_crypt_plaintext do |plain|
+      assert plain.include?('&DeliveryState=IL')
+    end
+  end
+  
+  def test_set_shipping_address_wont_be_overridden_by_billing_address
+    @helper.billing_address(
+      :address1 => '1 My Street',
+      :address2 => '',
+      :city => 'Chicago',
+      :state => 'IL',
+      :zip => '60606',
+      :country  => 'US'
+    )
+    @helper.shipping_address(
+      :address1 => '1 Shipping Street',
+      :address2 => '',
+      :city => 'Chicago Shipping',
+      :state => 'NY',
+      :zip => '123123',
+      :country  => 'US'
+    )
+   
+    @helper.form_fields
+    assert_equal 18, @helper.fields.size
+    assert_field 'DeliveryAddress1', '1 Shipping Street'
+    assert_field 'DeliveryCity', 'Chicago Shipping'
+    assert_field 'DeliveryState', 'NY'
+    assert_field 'DeliveryPostCode', '123123'
+    assert_field 'DeliveryCountry', 'US'
+  end
+  
   def test_unknown_address_mapping
     @helper.billing_address :farm => 'CA'
     assert_equal 5, @helper.fields.size

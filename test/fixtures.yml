@@ -43,6 +43,11 @@ braintree_blue:
   public_key: Y
   private_key: Z
   
+braintree_blue_with_processing_rules:
+  merchant_id: X
+  public_key: Y
+  private_key: Z
+
 #Username/Password given in sign up email. Not MMS credentials
 card_save:
   login: merchant_id
@@ -392,6 +397,11 @@ realex_mastercard_coms_error:
   year: '2020'
   verification_value: '123'
 
+samurai:
+  login: 'a1ebafb6da5238fb8a3ac9f6'
+  password: 'ae1aa640f6b735c4730fbb56'
+  processor_token: '5a0e1ca1e5a11a2997bbf912'
+
 sage:
   login: login
   password: password
@@ -439,6 +449,12 @@ trust_commerce:
 # Working credentials, no need to replace
 usa_epay:
   login: 'yCaWGYQsSVR0S48B6AKMK07RQhaxHvGu'
+
+# Get credentials here: https://www.usaepay.com/developer/login
+usa_epay_advanced:
+  login: X
+  password: Y
+  software_id: Z
 
 valitor:
   login: WebsiteID
