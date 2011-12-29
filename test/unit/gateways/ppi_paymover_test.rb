@@ -81,7 +81,7 @@ class PpiPaymoverTest < Test::Unit::TestCase
     assert_equal 'RESTAURANT', result[:industry]
     assert_equal PpiPaymoverGateway::TRANSACTION_CONDITION_CODES[:ach_web], result[:transaction_condition_code]
   end
-
+  
   def test_successful_credit
     @gateway.expects(:ssl_post).returns(successful_credit_response)
     assert response = @gateway.credit(@amount, '123456789', :card_number => @credit_card.number)
@@ -154,7 +154,43 @@ class PpiPaymoverTest < Test::Unit::TestCase
     assert_equal '1', response.authorization
   end
   
-
+  def test_successful_mpd_authorization
+    @gateway.expects(:ssl_post).returns(successful_mpd_authorization_response)
+    @options[:manage_payer_data] = true
+    
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '1', response.authorization
+    assert_equal '00000000-1111-2222-3333-444444444444', response.params['payer_identifier']
+    assert_equal @credit_card.last_digits, response.params['span']
+  end
+  
+  def test_successful_mpd_purchase
+    @gateway.expects(:ssl_post).returns(successful_mpd_purchase_response)
+    @options[:manage_payer_data] = true
+    @options[:span] = @credit_card.last_digits
+    @options[:payer_identifier] = '00000000-1111-2222-3333-444444444444'
+    
+    assert response = @gateway.purchase(@amount, nil, @options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '1', response.authorization
+    assert_equal '00000000-1111-2222-3333-444444444444', response.params['payer_identifier']
+    assert_equal @credit_card.last_digits, response.params['span']
+    assert_equal "%.2f" % (@amount / 100.0), response.params['captured_amount']
+  end
+  
+  def test_failured_mpd_purchase
+    @gateway.expects(:ssl_post).returns(failed_mpd_purchase_response)
+    @options[:manage_payer_data] = true
+    @options[:span] = @credit_card.last_digits
+    @options[:payer_identifier] = '00000000-1111-2222-3333-444444444444'
+    
+    assert response = @gateway.purchase(@amount, nil, @options)
+    assert_instance_of Response, response
+    assert_failure response
+  end
 
   private
   
@@ -170,6 +206,18 @@ class PpiPaymoverTest < Test::Unit::TestCase
 
   def successful_authorization_response
     "response_code=1\nresponse_code_text=Successful transaction: Test transaction response.\ntime_stamp=1299616617942\nretry_recommended=false\nsecondary_response_code=0\norder_id=1\ncapture_reference_id=1\niso_code=\nbank_approval_code=\nbank_transaction_id=\nbatch_id=\navs_code=\ncredit_card_verification_response=\n"
+  end
+  
+  def successful_mpd_authorization_response
+    "response_code=1\nresponse_code_text=Successful transaction: Test transaction response.\ntime_stamp=1325184123822\nretry_recommended=false\nsecondary_response_code=0\npayer_identifier=00000000-1111-2222-3333-444444444444\nmanage_until=1327603323878\nmpd_response_code=1\nmpd_response_code_text=Success\nspan=4242\nexpire_month=9\nexpire_year=2012\norder_id=1\ncapture_reference_id=1\niso_code=\nbank_approval_code=\nbank_transaction_id=\nbatch_id=\navs_code=\ncredit_card_verification_response=\nrequested_amount=0.01\nauthorized_amount=0.01\ncaptured_amount=0.00\n"
+  end
+  
+  def successful_mpd_purchase_response
+    "response_code=1\nresponse_code_text=Successful transaction: Test transaction response.\ntime_stamp=1325184493835\nretry_recommended=false\nsecondary_response_code=0\npayer_identifier=00000000-1111-2222-3333-444444444444\nmanage_until=1327603693881\nmpd_response_code=1\nmpd_response_code_text=Success\nspan=4242\nexpire_month=9\nexpire_year=2012\norder_id=1\ncapture_reference_id=1\niso_code=\nbank_approval_code=\nbank_transaction_id=\nbatch_id=29\navs_code=\ncredit_card_verification_response=\nrequested_amount=1.00\nauthorized_amount=1.00\ncaptured_amount=1.00\n"
+  end
+  
+  def failed_mpd_purchase_response
+    "response_code=6\nresponse_code_text=Transaction Not Possible: specified payer data is not under management\ntime_stamp=1325184663794\nretry_recommended=false\nsecondary_response_code=0\n"
   end
   
   def successful_void_response

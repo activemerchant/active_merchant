@@ -1,8 +1,23 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PpiPaymoverGateway < Gateway
+      #
+      # -- MANAGED PAYER DATA -- 
+      # Now has support for storing cc information via the managed payer data.
+      # To enable use of the MPD, pass some additional parameters with the hash:
+      #
+      # :manage_payer_data => You must set this to true to enable MPD processing
+      # :payer_identifier => The payer_id of an existing MPD entry.  Don't include this when adding
+      #                      new payer data to the system (one will be generated for you and returned with the response)
+      # :span => The last 4 digits of the card on file.  Do not pass this when adding payer data
+      #          to the system.  It is required when updating, deleting, or charging the MPD account
+      #
+      # When you want to charge an existing MPD account, pass the payer_identifier and span options,
+      # and pass nil for the 'credit_card' second parameter 
+      
       API_VERSION = '12'
       DEBUG = false
+      DEBUG_READABLE = false
       
       APPROVED, DECLINED, NOT_POSSIBLE = '1', '100', '6'
       FRAUD_REVIEW = '8'
@@ -66,7 +81,7 @@ module ActiveMerchant #:nodoc:
       # ==== Parameters
       #
       # * <tt>money</tt> -- The amount to be authorized as an Integer value in cents.
-      # * <tt>creditcard</tt> -- The CreditCard details for the transaction.  For encrypted card swipe transactions, just pass the raw String data here.
+      # * <tt>creditcard</tt> -- The CreditCard details for the transaction.  For encrypted card swipe transactions, just pass the raw String data here.  For MPD charges, pass nil here unless you want to update the payer data.
       # * <tt>options</tt> -- A hash of optional parameters.
       def authorize(money, creditcard, options = {})
         post = {}
@@ -90,7 +105,7 @@ module ActiveMerchant #:nodoc:
       # ==== Parameters
       #
       # * <tt>money</tt> -- The amount to be purchased as an Integer value in cents.
-      # * <tt>creditcard</tt> -- The CreditCard details for the transaction. For encrypted card swipe transactions, just pass the raw String data here.
+      # * <tt>creditcard</tt> -- The CreditCard details for the transaction. For encrypted card swipe transactions, just pass the raw String data here.  For MPD charges, pass nil here unless you want to update the payer data.
       # * <tt>options</tt> -- A hash of optional parameters.
       def purchase(money, creditcard, options = {})
         post = {}
@@ -192,6 +207,9 @@ module ActiveMerchant #:nodoc:
         post[:bill_email] = options[:email] unless options[:email].blank?
         post[:order_customer_id] = options[:customer] unless options[:customer].blank?
         post[:customer_ip_address] = options[:customer_ip] unless options[:ip].blank?
+        post[:manage_payer_data] = options[:manage_payer_data] unless options[:manage_payer_data].blank?
+        post[:payer_identifier] = options[:payer_identifier] unless options[:payer_identifier].blank?
+        post[:span] = options[:span] unless options[:span].blank?
       end
 
       def add_address(post, creditcard, options)      
@@ -226,12 +244,14 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_creditcard(post, creditcard)      
-        post[:credit_card_number]   = creditcard.number
-        post[:credit_card_verification_number]  = creditcard.verification_value if creditcard.verification_value?
-        post[:expire_month] = creditcard.month
-        post[:expire_year] = creditcard.year
-        post[:bill_first_name] = creditcard.first_name
-        post[:bill_last_name]  = creditcard.last_name
+        unless creditcard.nil?  # Will be nil on MPD requests
+          post[:credit_card_number]   = creditcard.number
+          post[:credit_card_verification_number]  = creditcard.verification_value if creditcard.verification_value?
+          post[:expire_month] = creditcard.month
+          post[:expire_year] = creditcard.year
+          post[:bill_first_name] = creditcard.first_name
+          post[:bill_last_name]  = creditcard.last_name
+        end
       end
       
       def add_cardswipe(post, creditcard)
@@ -281,7 +301,11 @@ module ActiveMerchant #:nodoc:
         
         if DEBUG
           puts "RAW RESPONSE:"
-          puts data.inspect
+          if DEBUG_READABLE
+            puts data
+          else
+            puts data.inspect
+          end
           puts "----------"
         end
 
