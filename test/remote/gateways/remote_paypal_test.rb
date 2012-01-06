@@ -124,19 +124,21 @@ class PaypalTest < Test::Unit::TestCase
     assert_success response
   end
   
-  def test_purchase_and_full_credit
+  def test_purchase_and_full_refund
     purchase = @gateway.purchase(@amount, @creditcard, @params)
     assert_success purchase
     
-    credit = @gateway.credit(@amount, purchase.authorization, :note => 'Sorry')
-    assert_success credit
-    assert credit.test?
-    assert_equal 'USD',  credit.params['net_refund_amount_currency_id']
-    assert_equal '0.67', credit.params['net_refund_amount']
-    assert_equal 'USD',  credit.params['gross_refund_amount_currency_id']
-    assert_equal '1.00', credit.params['gross_refund_amount']
-    assert_equal 'USD',  credit.params['fee_refund_amount_currency_id']
-    assert_equal '0.33', credit.params['fee_refund_amount']
+    refund = @gateway.refund(@amount, purchase.authorization, :note => 'Sorry', :refund_source => 'instant')
+    assert_success refund
+    assert refund.test?
+    assert_equal 'USD',  refund.params['net_refund_amount_currency_id']
+    assert_equal '0.97', refund.params['net_refund_amount']
+    assert_equal 'USD',  refund.params['gross_refund_amount_currency_id']
+    assert_equal '1.00', refund.params['gross_refund_amount']
+    assert_equal 'USD',  refund.params['fee_refund_amount_currency_id']
+    assert_equal '0.03', refund.params['fee_refund_amount']
+    assert_equal 'Instant', refund.params['RefundInfo']['RefundStatus']
+    assert_equal 'none', refund.params['RefundInfo']['PendingReason']
   end
   
   def test_failed_voiding
