@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
         base.cattr_accessor :signature
       end
       
-      API_VERSION = '62.0'
+      API_VERSION = '84.0'
       
       URLS = {
         :test => { :certificate => 'https://api.sandbox.paypal.com/2.0/',
@@ -143,6 +143,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'CompleteType', 'Complete'
             xml.tag! 'InvoiceID', options[:order_id] unless options[:order_id].blank?
             xml.tag! 'Note', options[:description]
+            add_merchant_details(xml, options[:merchant_details])
           end
         end
 
@@ -159,6 +160,9 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
             xml.tag! 'RefundType', 'Partial'
             xml.tag! 'Memo', options[:note] unless options[:note].blank?
+            xml.tag! 'RetryUntil', options[:retry_until] unless options[:retry_until].blank?
+            xml.tag! 'RefundSource', options[:refund_source] unless options[:refund_source].blank?
+            add_merchant_details(xml, options[:merchant_details])
           end
         end
       
@@ -315,6 +319,14 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:Country', address[:country]
           xml.tag! 'n2:PostalCode', address[:zip]
           xml.tag! 'n2:Phone', address[:phone]
+        end
+      end
+      
+      def add_merchant_details(xml, details)
+        return if details.nil?
+        xml.tag! 'n2:MerchantStoreDetails' do
+          xml.tag! 'StoreID', details[:store_id]
+          xml.tag! 'TerminalID', details[:terminal_id]
         end
       end
       
