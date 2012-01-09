@@ -152,6 +152,7 @@ module ActiveMerchant #:nodoc:
               end
               
               xml.tag! 'n2:LocaleCode', options[:locale] unless options[:locale].blank?
+              xml.tag! 'n2:BrandName', options[:brand_name] unless options[:brand_name].blank?
             end
           end
         end
