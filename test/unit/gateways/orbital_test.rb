@@ -53,7 +53,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   
 
   def test_expiry_date
-    assert_equal "0912", @gateway.send(:expiry_date, credit_card)
+    assert_equal "0913", @gateway.send(:expiry_date, credit_card)
   end
 
   def test_phone_number
