@@ -42,6 +42,16 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end
   end
   
+  def test_order_id_format
+    response = stub_comms do
+      @gateway.purchase(101, credit_card, :order_id => "#1001.1")
+    end.check_request do |endpoint, data, headers|
+      assert_match /<OrderID>1001-1<\/OrderID>/, data
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+  
+
   def test_expiry_date
     assert_equal "0912", @gateway.send(:expiry_date, credit_card)
   end

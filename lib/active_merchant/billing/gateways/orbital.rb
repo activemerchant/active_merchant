@@ -252,7 +252,7 @@ module ActiveMerchant #:nodoc:
             yield xml if block_given?
             
             xml.tag! :Comments, parameters[:comments] if parameters[:comments]
-            xml.tag! :OrderID, parameters[:order_id].to_s[0...22]
+            xml.tag! :OrderID, format_order_id(parameters[:order_id])
             xml.tag! :Amount, amount(money)
             
             # Append Transaction Reference Number at the end for Refund transactions
@@ -326,6 +326,18 @@ module ActiveMerchant #:nodoc:
 
       def salem_mid?
         @options[:merchant_id].length == 6
+      end
+
+      # The valid characters include:
+      #
+      # 1. all letters and digits
+      # 2. - , $ @ & and a space character, though the space character cannot be the leading character
+      # 3. PINless Debit transactions can only use uppercase and lowercase alpha (A-Z, a-z) and numeric (0-9)
+      def format_order_id(order_id)
+        illegal_characters = /[^,$@\- \w]/
+        order_id = order_id.to_s.gsub(/\./, '-')
+        order_id.gsub!(illegal_characters, '')
+        order_id[0...22]
       end
     end
   end
