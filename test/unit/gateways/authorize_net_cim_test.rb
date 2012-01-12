@@ -185,6 +185,10 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
           :description => 'Test Order Description',
           :purchase_order_number => '4321'
         },
+        :line_items => [
+          {:item_id => '1', :name => 'item 1', :description => 'desc', :quantity => '1', :unit_price => '1.00', :taxable => 'false'},
+          {:item_id => '2', :name => 'item 2', :description => 'desc', :quantity => '1', :unit_price => '2.00', :taxable => 'false'}
+        ],
         :amount => @amount
       }
     )
