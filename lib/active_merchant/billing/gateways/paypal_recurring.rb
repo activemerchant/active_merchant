@@ -85,7 +85,9 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'n2:BillingAgreementDescription', options[:description]
               end
               xml.tag! 'n2:PaymentAction', action
-              xml.tag! 'n2:OrderTotal', amount(money).to_f.zero? ? amount(100) : amount(money), 'currencyID' => options[:currency] || currency(money)
+              xml.tag! 'n2:PaymentDetails' do
+                xml.tag! 'n2:OrderTotal', amount(money).to_f.zero? ? amount(100) : amount(money), 'currencyID' => options[:currency] || currency(money)
+              end
               xml.tag! 'n2:AddressOverride', '0'
               xml.tag! 'n2:NoShipping', '1'
               xml.tag! 'n2:ReturnURL', options[:return_url]
