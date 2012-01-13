@@ -179,3 +179,4 @@ Please see the [ActiveMerchant Guide to Contributing](http://github.com/Shopify/
 information on adding a new gateway to ActiveMerchant.
 
 [![Build Status](https://secure.travis-ci.org/Shopify/active_merchant.png)](http://travis-ci.org/Shopify/active_merchant)
+[![Dependency Status](https://gemnasium.com/Shopify/active_merchant.png)](https://gemnasium.com/Shopify/active_merchant)
