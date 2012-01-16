@@ -285,7 +285,18 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'Sole', REXML::XPath.first(xml, '//n2:SolutionType').text
     assert_equal 'Billing', REXML::XPath.first(xml, '//n2:LandingPage').text
   end
-  
+
+  def test_not_adds_brand_name_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {}))
+
+    assert_nil REXML::XPath.first(xml, '//n2:BrandName')
+  end
+
+  def test_adds_brand_name_if_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:brand_name => 'Acme'}))
+    assert_equal 'Acme', REXML::XPath.first(xml, '//n2:BrandName').text
+  end
+
   def test_get_phone_number_from_address_if_contact_phone_not_sent
     response = successful_details_response.sub(%r{<ContactPhone>416-618-9984</ContactPhone>\n}, '')
     @gateway.expects(:ssl_post).returns(response)
