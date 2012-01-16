@@ -1,5 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.20.2 (January 16, 2012)
+
+* Remove authorize/capture support for Stripe [gdb]
+
 == Version 1.20.1 (December 22, 2011)
 
 * PayflowExpressUk: Fix parsing street2 from response [odorcicd]
