@@ -136,6 +136,18 @@ class PaypalExpressTest < Test::Unit::TestCase
 
     assert_equal 'SetExpressCheckout', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentAction').text
   end
+
+  def test_includes_custom_tag_if_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:custom => 'Foo'}))
+
+    assert_equal 'Foo', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:Custom').text
+  end
+
+  def test_does_not_include_custom_tag_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
+
+    assert_nil REXML::XPath.first(xml, '//n2:PaymentDetails/n2:Custom')
+  end
   
   def test_does_not_include_items_if_not_specified
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))

@@ -150,6 +150,7 @@ module ActiveMerchant #:nodoc:
                 add_items_xml(xml, options, currency_code) if options[:items]
 
                 xml.tag! 'n2:PaymentAction', action
+                xml.tag! 'n2:Custom', options[:custom] unless options[:custom].blank?
               end
 
               if options[:shipping_options]
