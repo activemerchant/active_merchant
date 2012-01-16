@@ -116,7 +116,7 @@ class SamuraiTest < Test::Unit::TestCase
     card_to_store = {
       :card_number  => "4242424242424242",
       :expiry_month => "09",
-      :expiry_year  => "2012",
+      :expiry_year  => (Time.now.year + 1).to_s,
       :cvv          => "123",
       :first_name   => "Longbob",
       :last_name    => "Longsen",
