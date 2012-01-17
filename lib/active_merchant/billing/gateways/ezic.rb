@@ -9,8 +9,8 @@ module ActiveMerchant #:nodoc:
     # This is only a partial implementation of what the gateway is capable of
     #
     class EzicGateway < Gateway
-      TEST_URL = 'https://secure.bluefingateway.com:1402/gw/sas/direct3.1'
-      LIVE_URL = 'https://secure.bluefingateway.com:1402/gw/sas/direct3.1'
+      TEST_URL = 'https://secure.ezic.com:1402/gw/sas/direct3.1'
+      LIVE_URL = 'https://secure.ezic.com:1402/gw/sas/direct3.1'
 
       # There is no testing gateway, the account has to be in test mode or run this specific CC number
       TESTING_CC = '4444333322221111'
