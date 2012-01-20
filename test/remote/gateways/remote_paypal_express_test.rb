@@ -3,9 +3,9 @@ require 'test_helper'
 class PaypalExpressTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
-    
+
     @gateway = PaypalExpressGateway.new(fixtures(:paypal_certificate))
-  
+
     @options = {
       :order_id => '230000',
       :email => 'buyer@jadedpallet.com',
@@ -22,7 +22,7 @@ class PaypalExpressTest < Test::Unit::TestCase
       :cancel_return_url => 'http://example.com/cancel'
     }
   end
-  
+
   def test_set_express_authorization
     @options.update(
       :return_url => 'http://example.com',
@@ -34,7 +34,7 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert response.test?
     assert !response.params['token'].blank?
   end
-  
+
   def test_set_express_purchase
     @options.update(
       :return_url => 'http://example.com',
@@ -46,4 +46,17 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert response.test?
     assert !response.params['token'].blank?
   end
-end 
+
+  def test_set_express_order
+    @options.update(
+      :return_url => 'http://example.com',
+      :cancel_return_url => 'http://example.com',
+      :email => 'Buyer1@paypal.com'
+    )
+    response = @gateway.setup_order(500, @options)
+    assert response.success?
+    assert response.test?
+    assert !response.params['token'].blank?
+  end
+
+end
