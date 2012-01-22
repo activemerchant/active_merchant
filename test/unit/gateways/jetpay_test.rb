@@ -85,7 +85,7 @@ class JetpayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_credit_response)
     
     # linked credit
-    assert response = @gateway.credit(9900, '010327153017T10017')
+    assert response = @gateway.refund(9900, '010327153017T10017')
     assert_success response
     
     assert_equal('010327153017T10017;002F6B;9900', response.authorization)
@@ -98,7 +98,28 @@ class JetpayTest < Test::Unit::TestCase
     assert response = @gateway.credit(9900, card)
     assert_success response    
   end
+
+  def test_deprecated_credit
+    @gateway.expects(:ssl_post).returns(successful_credit_response)
+
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.credit(9900, '010327153017T10017')
+      assert_success response
+    end
+  end
   
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_credit_response)
+    
+    # linked credit
+    assert response = @gateway.refund(9900, '010327153017T10017')
+    assert_success response
+    
+    assert_equal('010327153017T10017;002F6B;9900', response.authorization)
+    assert_equal('002F6B', response.params['approval'])
+    assert response.test?
+  end
+
   def test_avs_result
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     

@@ -7,8 +7,6 @@ module ActiveMerchant #:nodoc:
     # login to the Iridium Merchant Management System. Instead, you will 
     # use the API username and password you were issued separately.
     class IridiumGateway < Gateway
-      TEST_URL = 'https://gw1.iridiumcorp.net/'
-      LIVE_URL = 'https://gw1.iridiumcorp.net/'
       
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['GB', 'ES']
@@ -37,6 +35,8 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login, :password)
         @options = options
+        @test_url = 'https://gw1.iridiumcorp.net/'
+        @live_url = 'https://gw1.iridiumcorp.net/'
         super
       end  
       
@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_source, options = {})
         setup_address_hash(options)
         
-        if payment_source.is_a?(CreditCard)
+        if payment_source.respond_to?(:number)
           commit(build_purchase_request('SALE', money, payment_source, options), options)
         else
           commit(build_reference_request('SALE', money, payment_source, options), options)
@@ -59,6 +59,11 @@ module ActiveMerchant #:nodoc:
       end
       
       def credit(money, authorization, options={})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, authorization, options)
+      end
+
+      def refund(money, authorization, options={})
         commit(build_reference_request('REFUND', money, authorization, options), options)
       end
       
@@ -157,7 +162,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'CardName', creditcard.name
           xml.tag! 'CV2', creditcard.verification_value if creditcard.verification_value
           xml.tag! 'CardNumber', creditcard.number
-          xml.tag! 'ExpiryDate', { 'Month' => creditcard.expiry_date.month.to_s.rjust(2, "0"), 'Year' => creditcard.expiry_date.year.to_s[/\d\d$/] }
+          xml.tag! 'ExpiryDate', { 'Month' => creditcard.month.to_s.rjust(2, "0"), 'Year' => creditcard.year.to_s[/\d\d$/] }
         end
       end
       
@@ -167,7 +172,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(request, options)
         requires!(options, :action)
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request,
+        response = parse(ssl_post(test? ? @test_url : @live_url, request,
                               {"SOAPAction" => "https://www.thepaymentgateway.net/#{options[:action]}",
                                "Content-Type" => "text/xml; charset=utf-8" }))
   

@@ -24,17 +24,10 @@ class ActionViewHelperTest < Test::Unit::TestCase
 
   def test_basic_payment_service
     payment_service_for('order-1','test', :service => :bogus){}
-
-    expected = [
-      /^<form.*action="http:\/\/www.bogus.com".*/,
-      /<input id="account" name="account" type="hidden" value="test" \/>/,
-      /<input id="order" name="order" type="hidden" value="order-1" \/>/,
-      /<\/form>/
-    ]
-
-    @output_buffer.split("\n").reject(&:blank?).each_with_index do |line, index|
-      assert_match expected[index], line.chomp, "Failed to match #{line}"
-    end
+    assert_match(/^<form.*action="http:\/\/www.bogus.com".*/, @output_buffer)
+    assert_match(/<input id="account" name="account" type="hidden" value="test" \/>/, @output_buffer)
+    assert_match(/<input id="order" name="order" type="hidden" value="order-1" \/>/, @output_buffer)
+    assert_match(/<\/form>/, @output_buffer)
   end
 
   def test_payment_service_no_block_given
@@ -81,16 +74,10 @@ if "".respond_to? :html_safe?
       with_routes do
         get :payment_action
 
-        expected = [
-          /^<form.*action="http:\/\/www.bogus.com".*/,
-          /<input id="account" name="account" type="hidden" value="test" \/>/,
-          /<input id="order" name="order" type="hidden" value="order-1" \/>/,
-          /<\/form>/
-        ]
-
-        @response.body.split("\n").reject(&:blank?).each_with_index do |line, index|
-          assert_match expected[index], line.chomp, "Failed to match #{line}"
-        end
+        assert_match(/^<form.*action="http:\/\/www.bogus.com".*/, @response.body)
+        assert_match(/<input id="account" name="account" type="hidden" value="test" \/>/, @response.body)
+        assert_match(/<input id="order" name="order" type="hidden" value="order-1" \/>/, @response.body)
+        assert_match(/<\/form>/, @response.body)
       end
     end
 

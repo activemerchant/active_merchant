@@ -131,6 +131,9 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response = @gateway.update_recurring(:subscription_id => subscription_id, :amount => @amount * 2)
     assert_success response
 
+    assert response = @gateway.status_recurring(subscription_id)
+    assert_success response
+
     assert response = @gateway.cancel_recurring(subscription_id)
     assert_success response
   end
@@ -141,5 +144,16 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
     assert_equal 'E00018', response.params['code']
+  end
+
+  def test_successful_purchase_with_solution_id
+    ActiveMerchant::Billing::AuthorizeNetGateway.application_id = 'A1000000'
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  ensure
+    ActiveMerchant::Billing::AuthorizeNetGateway.application_id = nil
   end
 end

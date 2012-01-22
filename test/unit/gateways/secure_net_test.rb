@@ -122,7 +122,7 @@ class SecureNetTest < Test::Unit::TestCase
   
   def test_failure_without_response_reason_text
     assert_nothing_raised do
-      assert_equal '', @gateway.send(:message_from, '')
+      assert_equal '', @gateway.send(:message_from, {})
     end
   end
 

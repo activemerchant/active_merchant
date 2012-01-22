@@ -26,6 +26,7 @@ Linkpoint Gateway
 eWay Gateway
 
 * Originally contributed by Lucas Carlson  (mailto:lucas@rufy.com)
+* Managed Payments support by Jason Stirk with improvements by Keith Pitt
 
 CardStream Gateway
 
@@ -83,6 +84,7 @@ PaypalNVGateway (Apr 12, 2008)
 Beanstream (May 13, 2008)
 
 * Created by xiaobozz ( xiaobozzz at gmail dot com )
+* Secure Profiles support by Forrest Zeisler (http://github.com/forrest)
 
 Sage (June, 2008)
 
@@ -168,3 +170,92 @@ SagePay Form Offsite Gateway (October 14, 2010)
 DirecPay Gateway (October 14, 2010)
 
 * Soleone
+
+ePay Gateway (November 23, 2010)
+
+* Original code by ePay (epay.dk)
+* Refactored by Jonathan Rudenberg
+
+iDEAL/Rabobank Gateway (January 10, 2011)
+
+* Original code by Soemirno Kartosoewito
+* Refactored by Cody Fauser
+* Refactored and updated by Jonathan Rudenberg
+
+Quantum Gateway
+
+* Joshua Lippiner
+* Refactored by Nathaniel Talbott
+
+BluePay Gateway
+
+* Mel Sleight
+* Refactored by Nathaniel Talbott
+
+Valitor Integration (January 2011)
+
+* Nathaniel Talbott
+* Sponsored by Sævar Öfjörð Magnússon
+
+Barclays ePDQ
+
+* Original code by Rob W (rfwatson)
+* Refactored by Nathaniel Talbott
+
+Federated Canada
+
+* Bob Larrick (deathbob)
+
+NMI
+
+* Nathaniel Talbott (ntalbott)
+
+QBMS
+
+* Will Glozer (wg)
+
+WorldPay Integration (Feb 17, 2011)
+
+* Original code by Unknown from this patch: https://jadedpixel.lighthouseapp.com/projects/11599/tickets/3-patch-integration-support-for-worldpay-uk
+* Refactored by Soleone
+
+WorldPay Gateway
+
+* Original code by Amit kumar (ask4amit@gmail.com)
+* Refactored by Nathaniel Talbott (ntalbott)
+
+Orbital Paymentech Gateway (July, 2009)
+
+* Sam Vincent - http://ecommerce.versapay.com
+
+DIRECTebanking - Payment Network AG (May, 2011)
+
+* Gerwin Brunner (Vilango)
+
+Stripe
+
+* Ross Boucher (boucher)
+
+Paystation (July, 2011)
+
+* Nik Wakelin (nikz)
+
+ePaymentPlans offsite gatway (June, 2011)
+
+* Roberto Miranda (robertomiranda)
+
+Optimal Payments (August, 2011)
+
+* Jamie Macey (jamie)
+
+CardSave (August, 2011)
+
+* Tom Crinson (MrJaba)
+
+Dwolla (September, 2011)
+
+* James Armstead (armsteadj1)
+
+Samurai (November, 2011)
+
+* Joshua Krall (jkrall)

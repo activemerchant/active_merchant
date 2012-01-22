@@ -57,17 +57,26 @@ class IridiumTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_credit
+  def test_successful_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_credit_response)
-    assert response = @gateway.credit(@amount, '123456789')
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.credit(@amount, '123456789')
+      assert_success response
+      assert_equal 'Refund successful', response.message
+    end
+  end
+  
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_credit_response)
+    assert response = @gateway.refund(@amount, '123456789')
     assert_success response
     assert_equal 'Refund successful', response.message
   end
   
-  def test_failed_credit
+  def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_credit_response)
     
-    assert response = @gateway.credit(@amount, '123456789')
+    assert response = @gateway.refund(@amount, '123456789')
     assert_failure response
     assert_equal 'Amount exceeds that available for refund [17]', response.message
   end
@@ -82,6 +91,23 @@ class IridiumTest < Test::Unit::TestCase
       with(anything, all_of(regexp_matches(/Amount="400"/), regexp_matches(/CurrencyCode="484"/)), anything).
       returns(successful_purchase_response)
     assert_success @gateway.purchase(400, @credit_card, @options.merge(:currency => 'MXN'))
+  end
+  
+  def test_do_not_depend_on_expiry_date_class
+    @gateway.stubs(:ssl_post).returns(successful_purchase_response)
+    @credit_card.expects(:expiry_date).never
+    
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+  
+  def test_use_ducktyping_for_credit_card
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    credit_card = stub(:number => '4242424242424242', :verification_value => '123', :name => "Hans Tester", :year => 2012, :month => 1)
+    
+    assert_nothing_raised do
+      assert_success @gateway.purchase(@amount, credit_card, @options)
+    end
   end
   
   private

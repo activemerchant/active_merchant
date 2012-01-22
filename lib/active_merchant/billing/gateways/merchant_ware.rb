@@ -98,11 +98,17 @@ module ActiveMerchant #:nodoc:
       #   * <tt>:order_id</tt> - A unique reference for this order (required when performing a non-referenced credit)
       def credit(money, identification, options = {})
         if identification.is_a?(String)          
-          perform_reference_credit(money, identification, options)
+          deprecated CREDIT_DEPRECATION_MESSAGE
+          refund(money, identification, options)
         else
           perform_credit(money, identification, options)
         end
       end
+
+      def refund(money, reference, options = {})
+        perform_reference_credit(money, reference, options)
+      end
+
     
       private
       

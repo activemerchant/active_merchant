@@ -71,6 +71,24 @@ class SkipJackTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_refund_success
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    assert response = @gateway.refund(@amount, 123)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
+  def test_deprecated_credit
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.credit(@amount, 123)
+      assert_instance_of Response, response
+      assert_failure response
+    end
+  end
+
   def test_split_line
     keys = @gateway.send(:split_line, '"AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"')
   
@@ -177,7 +195,7 @@ class SkipJackTest < Test::Unit::TestCase
   
 
   def test_serial_number_is_added_before_developer_serial_number_for_authorization
-    @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI', 'Year=2011&TransactionAmount=1.00&ShipToPhone=&SerialNumber=X&SJName=Longbob+Longsen&OrderString=1%7ENone%7E0.00%7E0%7EN%7E%7C%7C&OrderNumber=1&OrderDescription=&Month=9&InvoiceNumber=&Email=cody%40example.com&DeveloperSerialNumber=Y&CustomerCode=&CVV2=123&AccountNumber=4242424242424242').returns(successful_authorization_response)
+    @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI', "Year=#{Time.now.year + 1}&TransactionAmount=1.00&ShipToPhone=&SerialNumber=X&SJName=Longbob+Longsen&OrderString=1%7ENone%7E0.00%7E0%7EN%7E%7C%7C&OrderNumber=1&OrderDescription=&Month=9&InvoiceNumber=&Email=cody%40example.com&DeveloperSerialNumber=Y&CustomerCode=&CVV2=123&AccountNumber=4242424242424242").returns(successful_authorization_response)
     
     assert response = @gateway.authorize(@amount, @credit_card, @options)
   end
@@ -202,6 +220,13 @@ class SkipJackTest < Test::Unit::TestCase
     <<-CSV
 "000386891209","0","1","","","","","","","","","" 
 "000386891209","1.0000","SETTLE","SUCCESSFUL","Valid","618844630c5fad658e95abfd5e1d4e22","9802853156029.022"
+    CSV
+  end
+  
+  def successful_refund_response
+    <<-CSV
+"AUTHCODE","szSerialNumber","szTransactionAmount","szAuthorizationDeclinedMessage","szAVSResponseCode","szAVSResponseMessage","szOrderNumber","szAuthorizationResponseCode","szIsApproved","szCVV2ResponseCode","szCVV2ResponseMessage","szReturnCode","szTransactionFileName","szCAVVResponseCode"
+"TAS204","000386891209","100","","Y","Card authorized, exact address match with 5 digit zip code.","107a0fdb21ba42cf04f60274908085ea","TAS204","1","M","Match","1","9802853155172.022",""
     CSV
   end
   

@@ -25,6 +25,21 @@ class ExactTest < Test::Unit::TestCase
     ExactGateway::SENSITIVE_FIELDS.each{ |f| assert !response.params.has_key?(f.to_s) }
   end
   
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    assert response = @gateway.refund(@amount, "123")
+    assert_success response
+  end
+
+  def test_deprecated_credit
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.credit(@amount, "123")
+      assert_success response
+    end
+  end
+  
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
   
@@ -103,6 +118,41 @@ SIGNATURE
 
 
 _______________________________________ 
+
+</CTR></types:TransactionResult></soap:Body></soap:Envelope>
+    RESPONSE
+  end
+  def successful_refund_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/" xmlns:types="http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/encodedTypes" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><q1:SendAndCommitResponse xmlns:q1="http://secure2.e-xact.com/vplug-in/transaction/rpc-enc/Response"><SendAndCommitResult href="#id1" /></q1:SendAndCommitResponse><types:TransactionResult id="id1" xsi:type="types:TransactionResult"><ExactID xsi:type="xsd:string">A00427-01</ExactID><Password xsi:type="xsd:string">#######</Password><Transaction_Type xsi:type="xsd:string">00</Transaction_Type><DollarAmount xsi:type="xsd:string">1</DollarAmount><SurchargeAmount xsi:type="xsd:string">0</SurchargeAmount><Card_Number xsi:type="xsd:string">4242424242424242</Card_Number><Transaction_Tag xsi:type="xsd:string">106625152</Transaction_Tag><Authorization_Num xsi:type="xsd:string">ET1700</Authorization_Num><Expiry_Date xsi:type="xsd:string">0909</Expiry_Date><CardHoldersName xsi:type="xsd:string">Longbob Longsen</CardHoldersName><VerificationStr2 xsi:type="xsd:string">123</VerificationStr2><CVD_Presence_Ind xsi:type="xsd:string">1</CVD_Presence_Ind><Secure_AuthRequired xsi:type="xsd:string">0</Secure_AuthRequired><Secure_AuthResult xsi:type="xsd:string">0</Secure_AuthResult><Ecommerce_Flag xsi:type="xsd:string">0</Ecommerce_Flag><CAVV_Algorithm xsi:type="xsd:string">0</CAVV_Algorithm><Reference_No xsi:type="xsd:string">1</Reference_No><Reference_3 xsi:type="xsd:string">Store Purchase</Reference_3><Language xsi:type="xsd:string">0</Language><LogonMessage xsi:type="xsd:string">Processed by: 
+E-xact Transaction Gateway :- Version 8.4.0 B19b 
+Copyright 2006 
+{34:2652}</LogonMessage><Error_Number xsi:type="xsd:string">0</Error_Number><Error_Description xsi:type="xsd:string" /><Transaction_Error xsi:type="xsd:boolean">false</Transaction_Error><Transaction_Approved xsi:type="xsd:boolean">true</Transaction_Approved><EXact_Resp_Code xsi:type="xsd:string">00</EXact_Resp_Code><EXact_Message xsi:type="xsd:string">Transaction Normal</EXact_Message><Bank_Resp_Code xsi:type="xsd:string">00</Bank_Resp_Code><Bank_Message xsi:type="xsd:string">VER UNAVAILABLE </Bank_Message><SequenceNo xsi:type="xsd:string">377</SequenceNo><AVS xsi:type="xsd:string">U</AVS><CVV2 xsi:type="xsd:string">M</CVV2><Retrieval_Ref_No xsi:type="xsd:string">200801181700</Retrieval_Ref_No><MerchantName xsi:type="xsd:string">E-xact ConnectionShop</MerchantName><MerchantAddress xsi:type="xsd:string">Suite 400 - 1152 Mainland St.</MerchantAddress><MerchantCity xsi:type="xsd:string">Vancouver</MerchantCity><MerchantProvince xsi:type="xsd:string">BC</MerchantProvince><MerchantCountry xsi:type="xsd:string">Canada</MerchantCountry><MerchantPostal xsi:type="xsd:string">V6B 4X2</MerchantPostal><MerchantURL xsi:type="xsd:string">www.e-xact.com</MerchantURL><CTR xsi:type="xsd:string">========== TRANSACTION RECORD ========= 
+  
+E-xact ConnectionShop 
+Suite 400 - 1152 Mainland St. 
+Vancouver, BC V6B 4X2 
+www.e-xact.com 
+  
+TYPE: Refund 
+  
+ACCT: Visa             $1.00 USD 
+  
+CARD NUMBER : ############4242 
+TRANS. REF. : 1 
+CARD HOLDER : Longbob Longsen 
+EXPIRY DATE : xx/xx 
+DATE/TIME   : 18 Jan 08 14:17:00 
+REFERENCE # : 5999 377 M 
+  
+      Approved - Thank You 00 
+  
+SIGNATURE 
+
+
+Please retain this copy for your records.
+
+ =========================================
 
 </CTR></types:TransactionResult></soap:Body></soap:Envelope>
     RESPONSE

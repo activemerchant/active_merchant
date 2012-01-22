@@ -24,12 +24,16 @@ module ActiveMerchant #:nodoc:
           end
         end
         
-        def self.notification(post)
+        def self.notification(post, options = {})
           Notification.new(post)
         end
         
-        def self.return(query_string)
-          Return.new(query_string)
+        def self.return(query_string, options = {})
+          Return.new(query_string, options)
+        end
+                
+        def self.request_status_update(mid, transaction_id, notification_url)
+          Status.new(mid).update(transaction_id, notification_url)
         end
       end
     end

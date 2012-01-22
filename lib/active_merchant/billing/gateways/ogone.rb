@@ -1,3 +1,4 @@
+# coding: utf-8
 require 'rexml/document'
 
 module ActiveMerchant #:nodoc:
@@ -8,27 +9,32 @@ module ActiveMerchant #:nodoc:
     # communication between Ogone systems and your e-commerce website.
     #
     # This implementation follows the specification provided in the DirectLink integration
-    # guide version 2.4 (December 2008), available here:
+    # guide version 4.2.0 (26 October 2011), available here:
     # https://secure.ogone.com/ncol/Ogone_DirectLink_EN.pdf
     #
     # It also features aliases, which allow to store/unstore credit cards, as specified in
-    # the Alias Manager Option guide version 2.2 available here:
+    # the Alias Manager Option guide version 3.2.0 (26 October 2011) available here:
     # https://secure.ogone.com/ncol/Ogone_Alias_EN.pdf
     #
-    # It was last tested on Release 04.79 of Ogone e-Commerce (dated 11/02/2009).
+    # It was last tested on Release 4.89 of Ogone DirectLink + AliasManager (26 October 2011).
     #
-    # For any questions or comments, please contact Nicolas Jacobeus (nj@belighted.com).
+    # For any questions or comments, please contact one of the following:
+    # - Nicolas Jacobeus (nj@belighted.com),
+    # - Sébastien Grosjean (public@zencocoon.com),
+    # - Rémy Coutable (remy@jilion.com).
     #
-    # == Example use:
+    # == Usage
     #
     #   gateway = ActiveMerchant::Billing::OgoneGateway.new(
-    #               :login     => "my_ogone_psp_id",
-    #               :user      => "my_ogone_user_id",
-    #               :password  => "my_ogone_pswd",
-    #               :signature => "my_ogone_sha1_signature" # extra security, only if you configured your Ogone environment so
+    #               :login                     => "my_ogone_psp_id",
+    #               :user                      => "my_ogone_user_id",
+    #               :password                  => "my_ogone_pswd",
+    #               :signature                 => "my_ogone_sha_signature", # Only if you configured your Ogone environment so.
+    #               :signature_encryptor       => "sha512", # Can be "sha1" (default), "sha256" or "sha512".
+    #                                                       # Must be the same as the one configured in your Ogone account.
     #            )
     #
-    #   # set up credit card obj as in main ActiveMerchant example
+    #   # set up credit card object as in main ActiveMerchant example
     #   creditcard = ActiveMerchant::Billing::CreditCard.new(
     #     :type       => 'visa',
     #     :number     => '4242424242424242',
@@ -47,18 +53,21 @@ module ActiveMerchant #:nodoc:
     #   puts response.message       # Retrieve the message returned by Ogone
     #   puts response.authorization # Retrieve the unique transaction ID returned by Ogone
     #
-    #   To use the alias feature, simply add :alias in the options hash:
+    # == Alias feature
     #
-    #   gateway.purchase(1000, creditcard, :order_id => "1", :alias => "myawesomecustomer") # associates the alias to that creditcard
-    #   gateway.purchase(2000, nil,        :order_id => "2", :alias => "myawesomecustomer") # don't need to know the creditcard for subsequent orders
+    #   To use the alias feature, simply add :store in the options hash:
+    #
+    #   # Associate the alias to that credit card
+    #   gateway.purchase(1000, creditcard, :order_id => "1", :store => "myawesomecustomer")
+    #
+    #   # You can use the alias instead of the credit card for subsequent orders
+    #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2")
     #
     class OgoneGateway < Gateway
 
       URLS = {
-        :test =>       { :order => 'https://secure.ogone.com/ncol/test/orderdirect.asp',
-                         :maintenance => 'https://secure.ogone.com/ncol/test/maintenancedirect.asp' },
-        :production => { :order => 'https://secure.ogone.com/ncol/prod/orderdirect.asp',
-                         :maintenance => 'https://secure.ogone.com/ncol/prod/maintenancedirect.asp' }
+        :order       => 'https://secure.ogone.com/ncol/%s/orderdirect.asp',
+        :maintenance => 'https://secure.ogone.com/ncol/%s/maintenancedirect.asp'
       }
 
       CVV_MAPPING = { 'OK' => 'M',
@@ -68,7 +77,11 @@ module ActiveMerchant #:nodoc:
       AVS_MAPPING = { 'OK' => 'M',
                       'KO' => 'N',
                       'NO' => 'R' }
+
       SUCCESS_MESSAGE = "The transaction was successful"
+
+      OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE   = "Signature usage will be required from a future release of ActiveMerchant's Ogone Gateway. Please update your Ogone account to use it."
+      OGONE_LOW_ENCRYPTION_DEPRECATION_MESSAGE = "SHA512 signature encryptor will be required from a future release of ActiveMerchant's Ogone Gateway. Please update your Ogone account to use it."
 
       self.supported_countries = ['BE', 'DE', 'FR', 'NL', 'AT', 'CH']
       # also supports Airplus and UATP
@@ -108,7 +121,7 @@ module ActiveMerchant #:nodoc:
 
       # Complete a previously authorized transaction.
       def capture(money, authorization, options = {})
-        post = {}        
+        post = {}
         add_authorization(post, reference_from(authorization))
         add_invoice(post, options)
         add_customer_data(post, options)
@@ -124,37 +137,44 @@ module ActiveMerchant #:nodoc:
       end
 
       # Credit the specified account by a specific amount.
-      def credit(money, identification_or_credit_card, options = {})        
+      def credit(money, identification_or_credit_card, options = {})
         if reference_transaction?(identification_or_credit_card)
+          deprecated CREDIT_DEPRECATION_MESSAGE
           # Referenced credit: refund of a settled transaction
-          perform_reference_credit(money, identification_or_credit_card, options)
+          refund(money, identification_or_credit_card, options)
         else # must be a credit card or card reference
           perform_non_referenced_credit(money, identification_or_credit_card, options)
         end
       end
-      
+
+      # Refund of a settled transaction
+      def refund(money, reference, options = {})
+        perform_reference_credit(money, reference, options)
+      end
+
       def test?
         @options[:test] || super
       end
-      
+
       private
+
       def reference_from(authorization)
         authorization.split(";").first
       end
-      
+
       def reference_transaction?(identifier)
-        return false unless identifier.is_a?(String) 
+        return false unless identifier.is_a?(String)
         reference, action = identifier.split(";")
         !action.nil?
       end
-      
+
       def perform_reference_credit(money, payment_target, options = {})
         post = {}
         add_authorization(post, reference_from(payment_target))
         add_money(post, money, options)
-        commit('RFD', post)        
+        commit('RFD', post)
       end
-      
+
       def perform_non_referenced_credit(money, payment_target, options = {})
         # Non-referenced credit: acts like a reverse purchase
         post = {}
@@ -165,31 +185,32 @@ module ActiveMerchant #:nodoc:
         add_money(post, money, options)
         commit('RFD', post)
       end
-      
+
       def add_payment_source(post, payment_source, options)
         if payment_source.is_a?(String)
           add_alias(post, payment_source)
-          add_eci(post, '9')
+          add_eci(post, options[:eci] || '9')
         else
           add_alias(post, options[:store])
+          add_eci(post, options[:eci] || '7')
           add_creditcard(post, payment_source)
         end
-      end  
-      
-      def add_eci(post, eci)
-        add_pair post, 'ECI', eci
       end
-      
+
+      def add_eci(post, eci)
+        add_pair post, 'ECI', eci.to_s
+      end
+
       def add_alias(post, _alias)
-        add_pair post, 'ALIAS',   _alias
+        add_pair post, 'ALIAS', _alias
       end
 
       def add_authorization(post, authorization)
-        add_pair post, 'PAYID',   authorization
+        add_pair post, 'PAYID', authorization
       end
 
       def add_money(post, money, options)
-        add_pair post, 'currency', options[:currency] || currency(money)
+        add_pair post, 'currency', options[:currency] || @options[:currency] || currency(money)
         add_pair post, 'amount',   amount(money)
       end
 
@@ -220,35 +241,39 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        xml = REXML::Document.new(body)
-        xml.root.attributes
+        xml_root = REXML::Document.new(body).root
+        convert_attributes_to_hash(xml_root.attributes)
       end
 
       def commit(action, parameters)
-        add_pair parameters, 'PSPID',      @options[:login]
-        add_pair parameters, 'USERID',     @options[:user]
-        add_pair parameters, 'PSWD',       @options[:password]
-        url = URLS[test? ? :test : :production][parameters['PAYID'] ? :maintenance : :order ]
+        add_pair parameters, 'PSPID',  @options[:login]
+        add_pair parameters, 'USERID', @options[:user]
+        add_pair parameters, 'PSWD',   @options[:password]
+
+        url = URLS[parameters['PAYID'] ? :maintenance : :order] % [test? ? "test" : "prod"]
         response = parse(ssl_post(url, post_data(action, parameters)))
-        options = { :authorization => [response["PAYID"], action].join(";"),
-                    :test => test?,
-                    :avs_result => { :code => AVS_MAPPING[response["AAVCheck"]] },
-                    :cvv_result => CVV_MAPPING[response["CVCCheck"]] }
+
+        options = {
+          :authorization => [response["PAYID"], action].join(";"),
+          :test          => test?,
+          :avs_result    => { :code => AVS_MAPPING[response["AAVCheck"]] },
+          :cvv_result    => CVV_MAPPING[response["CVCCheck"]]
+        }
         Response.new(successful?(response), message_from(response), response, options)
       end
-      
+
       def successful?(response)
         response["NCERROR"] == "0"
       end
 
       def message_from(response)
-        if successful?(response) 
+        if successful?(response)
           SUCCESS_MESSAGE
         else
           format_error_message(response["NCERRORPLUS"])
         end
       end
-      
+
       def format_error_message(message)
         raw_message = message.to_s.strip
         case raw_message
@@ -262,18 +287,44 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, parameters = {})
-        add_pair parameters, 'Operation' , action
-        if @options[:signature] # the user wants a SHA-1 signature
-          string = ['orderID','amount','currency','CARDNO','PSPID','Operation','ALIAS'].map{|s|parameters[s]}.join + @options[:signature]
-          add_pair parameters, 'SHASign' , Digest::SHA1.hexdigest(string)
+        add_pair parameters, 'Operation', action
+        @options[:signature] ? add_signature(parameters) : deprecated(OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE)
+        parameters.to_query
+      end
+
+      def add_signature(parameters)
+        deprecated(OGONE_LOW_ENCRYPTION_DEPRECATION_MESSAGE) unless @options[:signature_encryptor] == 'sha512'
+
+        sha_encryptor = case @options[:signature_encryptor]
+                        when 'sha256'
+                          Digest::SHA256
+                        when 'sha512'
+                          Digest::SHA512
+                        else
+                          Digest::SHA1
+                        end
+
+        string_to_digest = if @options[:signature_encryptor]
+          parameters.sort { |a, b| a[0].upcase <=> b[0].upcase }.map { |k, v| "#{k.upcase}=#{v}" }.join(@options[:signature])
+        else
+          %w[orderID amount currency CARDNO PSPID Operation ALIAS].map { |key| parameters[key] }.join
         end
-        parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        string_to_digest << @options[:signature]
+
+        add_pair parameters, 'SHASign', sha_encryptor.hexdigest(string_to_digest).upcase
       end
 
-      def add_pair(post, key, value, options = {})
-        post[key] = value if !value.blank? || options[:required]
+      def add_pair(post, key, value)
+        post[key] = value if !value.blank?
       end
 
+      def convert_attributes_to_hash(rexml_attributes)
+        response_hash = {}
+        rexml_attributes.each do |key, value|
+          response_hash[key] = value
+        end
+        response_hash
+      end
     end
   end
 end

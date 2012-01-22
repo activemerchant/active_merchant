@@ -12,16 +12,17 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BraintreeBlueGateway < Gateway
       include BraintreeCommon
-      
+
       self.display_name = 'Braintree (Blue Platform)'
 
       def initialize(options = {})
         requires!(options, :merchant_id, :public_key, :private_key)
         @options = options
+        @merchant_account_id = options[:merchant_account_id]
         Braintree::Configuration.merchant_id = options[:merchant_id]
         Braintree::Configuration.public_key = options[:public_key]
         Braintree::Configuration.private_key = options[:private_key]
-        Braintree::Configuration.environment = test? ? :sandbox : :production
+        Braintree::Configuration.environment = (options[:environment] || (test? ? :sandbox : :production)).to_sym
         Braintree::Configuration.logger.level = Logger::ERROR if Braintree::Configuration.logger
         Braintree::Configuration.custom_user_agent = "ActiveMerchant #{ActiveMerchant::VERSION}"
         super
@@ -46,10 +47,18 @@ module ActiveMerchant #:nodoc:
         create_transaction(:credit, money, credit_card_or_vault_id, options)
       end
 
-      def refund(transaction_id, options = {})
+      def refund(*args)
+        # legacy signature: #refund(transaction_id, options = {})
+        # new signature: #refund(money, transaction_id, options = {})
+        money, transaction_id, options = extract_refund_args(args)
+        money = amount(money).to_s if money
+
         commit do
-          result = Braintree::Transaction.find(transaction_id).refund
-          Response.new(result.success?, message_from_result(result))
+          result = Braintree::Transaction.refund(transaction_id, money)
+          Response.new(result.success?, message_from_result(result),
+            {:braintree_transaction => (transaction_hash(result.transaction) if result.success?)},
+            {:authorization => (result.transaction.id if result.success?)}
+           )
         end
       end
 
@@ -57,7 +66,8 @@ module ActiveMerchant #:nodoc:
         commit do
           result = Braintree::Transaction.void(authorization)
           Response.new(result.success?, message_from_result(result),
-            :braintree_transaction => (result.transaction if result.success?)
+            {:braintree_transaction => (transaction_hash(result.transaction) if result.success?)},
+            {:authorization => (result.transaction.id if result.success?)}
           )
         end
       end
@@ -77,7 +87,7 @@ module ActiveMerchant #:nodoc:
           )
           Response.new(result.success?, message_from_result(result),
             {
-              :braintree_customer => (result.customer if result.success?),
+              :braintree_customer => (customer_hash(result.customer) if result.success?),
               :customer_vault_id => (result.customer.id if result.success?)
             }
           )
@@ -95,7 +105,7 @@ module ActiveMerchant #:nodoc:
             :email => options[:email]
           )
           Response.new(result.success?, message_from_result(result),
-            :braintree_customer => (Braintree::Customer.find(vault_id) if result.success?)
+            :braintree_customer => (customer_hash(Braintree::Customer.find(vault_id)) if result.success?)
           )
         end
         return customer_update_result unless customer_update_result.success?
@@ -106,7 +116,7 @@ module ActiveMerchant #:nodoc:
               :expiration_year => creditcard.year.to_s
           )
           Response.new(result.success?, message_from_result(result),
-            :braintree_customer => (Braintree::Customer.find(vault_id) if result.success?)
+            :braintree_customer => (customer_hash(Braintree::Customer.find(vault_id)) if result.success?)
           )
         end
       end
@@ -149,6 +159,116 @@ module ActiveMerchant #:nodoc:
       end
 
       def create_transaction(transaction_type, money, credit_card_or_vault_id, options)
+        transaction_params = create_transaction_parameters(money, credit_card_or_vault_id, options)
+
+        commit do
+          result = Braintree::Transaction.send(transaction_type, transaction_params)
+          response_params, response_options, avs_result, cvv_result = {}, {}, {}, {}
+          if result.success?
+            response_params[:braintree_transaction] = transaction_hash(result.transaction)
+            response_params[:customer_vault_id] = result.transaction.customer_details.id
+            response_options[:authorization] = result.transaction.id
+          end
+          if result.transaction
+            response_options[:avs_result] = {
+              :code => nil, :message => nil,
+              :street_match => result.transaction.avs_street_address_response_code,
+              :postal_match => result.transaction.avs_postal_code_response_code
+            }
+            response_options[:cvv_result] = result.transaction.cvv_response_code
+            if result.transaction.status == "gateway_rejected"
+              message = "Transaction declined - gateway rejected"
+            else
+              message = "#{result.transaction.processor_response_code} #{result.transaction.processor_response_text}"
+            end
+          else
+            message = message_from_result(result)
+          end
+          response = Response.new(result.success?, message, response_params, response_options)
+          response.cvv_result['message'] = ''
+          response
+        end
+      end
+
+      def extract_refund_args(args)
+        options = args.extract_options!
+
+        # money, transaction_id, options
+        if args.length == 1 # legacy signature
+          return nil, args[0], options
+        elsif args.length == 2
+          return args[0], args[1], options
+        else
+          raise ArgumentError, "wrong number of arguments (#{args.length} for 2)"
+        end
+      end
+
+      def customer_hash(customer)
+        credit_cards = customer.credit_cards.map do |cc|
+          {
+            "bin" => cc.bin,
+            "expiration_date" => cc.expiration_date
+          }
+        end
+
+        {
+          "email" => customer.email,
+          "first_name" => customer.first_name,
+          "last_name" => customer.last_name,
+          "credit_cards" => credit_cards
+        }
+      end
+
+      def transaction_hash(transaction)
+        if transaction.vault_customer
+          vault_customer = {
+          }
+          vault_customer["credit_cards"] = transaction.vault_customer.credit_cards.map do |cc|
+            {
+              "bin" => cc.bin
+            }
+          end
+        else
+          vault_customer = nil
+        end
+
+        customer_details = {
+          "id" => transaction.customer_details.id,
+          "email" => transaction.customer_details.email
+        }
+
+        billing_details = {
+          "street_address"   => transaction.billing_details.street_address,
+          "extended_address" => transaction.billing_details.extended_address,
+          "company"          => transaction.billing_details.company,
+          "locality"         => transaction.billing_details.locality,
+          "region"           => transaction.billing_details.region,
+          "postal_code"      => transaction.billing_details.postal_code,
+          "country_name"     => transaction.billing_details.country_name,
+        }
+
+        shipping_details = {
+          "street_address"   => transaction.shipping_details.street_address,
+          "extended_address" => transaction.shipping_details.extended_address,
+          "company"          => transaction.shipping_details.company,
+          "locality"         => transaction.shipping_details.locality,
+          "region"           => transaction.shipping_details.region,
+          "postal_code"      => transaction.shipping_details.postal_code,
+          "country_name"     => transaction.shipping_details.country_name,
+        }
+
+        {
+          "order_id"            => transaction.order_id,
+          "status"              => transaction.status,
+          "customer_details"    => customer_details,
+          "billing_details"     => billing_details,
+          "shipping_details"    => shipping_details,
+          "vault_customer"      => vault_customer,
+          "merchant_account_id" => transaction.merchant_account_id
+        }
+      end
+
+      def create_transaction_parameters(money, credit_card_or_vault_id, options)
         parameters = {
           :amount => amount(money).to_s,
           :order_id => options[:order_id],
@@ -161,6 +281,9 @@ module ActiveMerchant #:nodoc:
             :submit_for_settlement => options[:submit_for_settlement]
           }
         }
+        if merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
+          parameters[:merchant_account_id] = merchant_account_id
+        end
         if credit_card_or_vault_id.is_a?(String) || credit_card_or_vault_id.is_a?(Integer)
           parameters[:customer_id] = credit_card_or_vault_id
         else
@@ -177,32 +300,7 @@ module ActiveMerchant #:nodoc:
         end
         parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address]
         parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
-        commit do
-          result = Braintree::Transaction.send(transaction_type, parameters)
-          response_params, response_options, avs_result, cvv_result = {}, {}, {}, {}
-          if result.success?
-            response_params[:braintree_transaction] = result.transaction
-            response_params[:customer_vault_id] = result.transaction.customer_details.id
-            response_options[:authorization] = result.transaction.id
-          end
-          if result.transaction
-            avs_result = {
-              'code' => '', 'message' => '',
-              'street_match' => result.transaction.avs_street_address_response_code == 'M',
-              'postal_match' => result.transaction.avs_postal_code_response_code == 'M'
-            }
-            cvv_result = {
-              'code' => result.transaction.cvv_response_code, 'message' => ''
-            }
-            message = result.transaction.processor_response_code + " " + result.transaction.processor_response_text
-          else
-            message = message_from_result(result)
-          end
-          response = Response.new(result.success?, message, response_params, response_options)
-          response.instance_variable_set("@avs_result", avs_result)
-          response.instance_variable_set("@cvv_result", cvv_result)
-          response
-        end
+        parameters
       end
     end
   end

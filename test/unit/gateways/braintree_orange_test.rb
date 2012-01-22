@@ -55,10 +55,6 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     assert_equal ['US'], BraintreeOrangeGateway.supported_countries
   end
 
-  def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover, :jcb], BraintreeOrangeGateway.supported_cardtypes
-  end
-  
   def test_adding_store_adds_vault_id_flag
     result = {}
     

@@ -19,7 +19,8 @@ module ActiveMerchant #:nodoc:
             :first_name => 'BillingFirstnames',
             :last_name  => 'BillingSurname',
             :email      => 'CustomerEMail',
-            :phone      => 'BillingPhone'
+            :phone      => 'BillingPhone',
+            :send_email_confirmation => 'SendEmail'
 
           mapping :billing_address,
             :city     => 'BillingCity',
@@ -40,16 +41,33 @@ module ActiveMerchant #:nodoc:
           mapping :return_url, 'SuccessURL'
           mapping :description, 'Description'
 
+          def shipping_address(params = {})
+            @shipping_address_set = true unless params.empty?
+
+            params.each do |k, v|
+              field = mappings[:shipping_address][k]
+              add_field(field, v) unless field.nil?
+            end
+          end
+
+          def map_billing_address_to_shipping_address
+            %w(City Address1 Address2 State PostCode Country).each do |field|
+              fields["Delivery#{field}"] = fields["Billing#{field}"]
+            end
+          end
+
           def form_fields
+            map_billing_address_to_shipping_address unless @shipping_address_set
+
             fields['DeliveryFirstnames'] ||= fields['BillingFirstnames']
             fields['DeliverySurname']    ||= fields['BillingSurname']
-            
+
             fields['FailureURL'] ||= fields['SuccessURL']
 
-            crypt_skip = ['Vendor', 'EncryptKey']
+            crypt_skip = ['Vendor', 'EncryptKey', 'SendEmail']
             crypt_skip << 'BillingState'  unless fields['BillingCountry']  == 'US'
             crypt_skip << 'DeliveryState' unless fields['DeliveryCountry'] == 'US'
-            
+            crypt_skip << 'CustomerEMail' unless fields['SendEmail']
             key = fields['EncryptKey']
             @crypt ||= create_crypt_field(fields.except(*crypt_skip), key)
             

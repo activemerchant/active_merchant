@@ -53,9 +53,9 @@ module ActiveMerchant
       # Map vendor's AVS result code to a street match code
       STREET_MATCH_CODE = {
         'Y' => %w( A B D H J M O Q T V X Y ),
-        'N' => %w( C K L N P W Z ),
+        'N' => %w( C K L N W Z ),
         'X' => %w( G S ),
-        nil => %w( E F I R U )
+        nil => %w( E F I P R U )
       }.inject({}) do |map, (type, codes)|
         codes.each { |code| map[code] = type }
         map

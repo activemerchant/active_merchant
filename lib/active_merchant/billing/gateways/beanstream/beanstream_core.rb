@@ -2,17 +2,24 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module BeanstreamCore
       URL = 'https://www.beanstream.com/scripts/process_transaction.asp'
+      SECURE_PROFILE_URL = 'https://www.beanstream.com/scripts/payment_profile.asp'
+      SP_SERVICE_VERSION = '1.1'
 
       TRANSACTIONS = {
         :authorization  => 'PA',
         :purchase       => 'P',
         :capture        => 'PAC',
-        :credit         => 'R',
+        :refund         => 'R',
         :void           => 'VP',
         :check_purchase => 'D',
-        :check_credit   => 'C',
+        :check_refund   => 'C',
         :void_purchase  => 'VP',
-        :void_credit    => 'VR'
+        :void_refund    => 'VR'
+      }
+
+      PROFILE_OPERATIONS = {
+        :new => 'N',
+        :modify => 'M'
       }
 
       CVD_CODES = {
@@ -48,7 +55,7 @@ module ActiveMerchant #:nodoc:
       
       # Only <tt>:login</tt> is required by default, 
       # which is the merchant's merchant ID. If you'd like to perform void, 
-      # capture or credit transactions then you'll also need to add a username
+      # capture or refund transactions then you'll also need to add a username
       # and password to your account under administration -> account settings ->
       # order settings -> Use username/password validation
       def initialize(options = {})
@@ -67,26 +74,39 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
       
-      def credit(money, source, options = {})
+      def refund(money, source, options = {})
         post = {}
         reference, amount, type = split_auth(source)
         add_reference(post, reference)
-        add_transaction_type(post, credit_action(type))
+        add_transaction_type(post, refund_action(type))
         add_amount(post, money)
         commit(post)
+      end
+
+      def credit(money, source, options = {})
+        deprecated Gateway::CREDIT_DEPRECATION_MESSAGE
+        refund(money, source, options)
       end
     
       private
       def purchase_action(source)
-        card_brand(source) == "check" ? :check_purchase : :purchase
+        if source.is_a?(Check)
+          :check_purchase
+        else
+          :purchase
+        end
       end
       
       def void_action(original_transaction_type)
-        original_transaction_type == TRANSACTIONS[:credit] ? :void_credit : :void_purchase
+        (original_transaction_type == TRANSACTIONS[:refund]) ? :void_refund : :void_purchase
       end
       
-      def credit_action(type)
-        type == TRANSACTIONS[:check_purchase] ? :check_credit : :credit
+      def refund_action(type)
+        (type == TRANSACTIONS[:check_purchase]) ? :check_refund : :refund
+      end
+      
+      def secure_profile_action(type)
+        PROFILE_OPERATIONS[type] || PROFILE_OPERATIONS[:new]
       end
       
       def split_auth(string)
@@ -154,11 +174,13 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_credit_card(post, credit_card)
-        post[:trnCardOwner] = credit_card.name
-        post[:trnCardNumber] = credit_card.number
-        post[:trnExpMonth] = format(credit_card.month, :two_digits)
-        post[:trnExpYear] = format(credit_card.year, :two_digits)
-        post[:trnCardCvd] = credit_card.verification_value
+        if credit_card
+          post[:trnCardOwner] = credit_card.name
+          post[:trnCardNumber] = credit_card.number
+          post[:trnExpMonth] = format(credit_card.month, :two_digits)
+          post[:trnExpYear] = format(credit_card.year, :two_digits)
+          post[:trnCardCvd] = credit_card.verification_value
+        end
       end
             
       def add_check(post, check)
@@ -173,6 +195,16 @@ module ActiveMerchant #:nodoc:
         
         # The account number of the consumer’s bank account.  Required for both Canadian and US dollar EFT transactions.
         post[:accountNumber] = check.account_number
+      end
+      
+      def add_secure_profile_variables(post, options = {})
+        post[:serviceVersion] = SP_SERVICE_VERSION
+        post[:responseFormat] = 'QS'
+        post[:cardValidation] = (options[:cardValidation].to_i == 1) || '0'
+        
+        post[:operationType] = options[:operationType] || options[:operation] || secure_profile_action(:new)
+        post[:customerCode] = options[:billing_id] || options[:vault_id] || false
+        post[:status] = options[:status]
       end
       
       def parse(body)
@@ -194,12 +226,13 @@ module ActiveMerchant #:nodoc:
         results
       end
       
-      def commit(params)
-        post(post_data(params))
+      def commit(params, use_profile_api = false)
+        post(post_data(params,use_profile_api),use_profile_api)
       end
       
-      def post(data)
-        response = parse(ssl_post(URL, data))
+      def post(data, use_profile_api=nil)
+        response = parse(ssl_post((use_profile_api ? SECURE_PROFILE_URL : URL), data))
+        response[:customer_vault_id] = response[:customerCode] if response[:customerCode]
         build_response(success?(response), message_from(response), response,
           :test => test? || response[:authCode] == "TEST",
           :authorization => authorization_from(response),
@@ -213,26 +246,35 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response[:messageText]
+        response[:messageText] || response[:responseMessage]
       end
 
       def success?(response)
-        response[:responseType] == 'R' || response[:trnApproved] == '1'
+        response[:responseType] == 'R' || response[:trnApproved] == '1' || response[:responseCode] == '1'
       end
       
       def add_source(post, source)
-        card_brand(source) == "check" ? add_check(post, source) : add_credit_card(post, source)
+        if source.is_a?(String) or source.is_a?(Integer)
+          post[:customerCode] = source
+        else
+          card_brand(source) == "check" ? add_check(post, source) : add_credit_card(post, source)
+        end
       end
       
       def add_transaction_type(post, action)
         post[:trnType] = TRANSACTIONS[action]
       end
           
-      def post_data(params)
+      def post_data(params, use_profile_api)
         params[:requestType] = 'BACKEND'
-        params[:merchant_id] = @options[:login]
-        params[:username] = @options[:user] if @options[:user]
-        params[:password] = @options[:password] if @options[:password]
+        if use_profile_api
+          params[:merchantId] = @options[:login] 
+          params[:passCode] = @options[:secure_profile_api_key]
+        else
+          params[:username] = @options[:user] if @options[:user]
+          params[:password] = @options[:password] if @options[:password]
+          params[:merchant_id] = @options[:login]     
+        end
         params[:vbvEnabled] = '0'
         params[:scEnabled] = '0'
         
