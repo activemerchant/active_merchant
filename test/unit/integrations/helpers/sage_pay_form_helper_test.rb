@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'test_helper'
 
 class SagePayFormHelperTest < Test::Unit::TestCase
@@ -157,6 +159,16 @@ class SagePayFormHelperTest < Test::Unit::TestCase
   def test_basic_form_fields
     params = @helper.form_fields
     
+    assert_equal '2.23', params['VPSProtocol']
+    assert_equal 'PAYMENT', params['TxType']
+    assert_equal 'cody@example.com', params['Vendor']
+    assert_not_nil params['Crypt']
+  end
+
+  def test_unicode_fields
+    @helper.customer :first_name => 'Tobias', :last_name => "Lütke", :email => 'cody@example.com'
+    params = @helper.form_fields
+
     assert_equal '2.23', params['VPSProtocol']
     assert_equal 'PAYMENT', params['TxType']
     assert_equal 'cody@example.com', params['Vendor']
