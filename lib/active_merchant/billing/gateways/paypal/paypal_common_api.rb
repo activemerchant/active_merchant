@@ -7,19 +7,19 @@ module ActiveMerchant #:nodoc:
         base.cattr_accessor :pem_file
         base.cattr_accessor :signature
       end
-      
+
       API_VERSION = '84.0'
-      
+
       URLS = {
         :test => { :certificate => 'https://api.sandbox.paypal.com/2.0/',
                    :signature   => 'https://api-3t.sandbox.paypal.com/2.0/' },
         :live => { :certificate => 'https://api-aa.paypal.com/2.0/',
                    :signature   => 'https://api-3t.paypal.com/2.0/' }
       }
-      
+
       PAYPAL_NAMESPACE = 'urn:ebay:api:PayPalAPI'
       EBAY_NAMESPACE = 'urn:ebay:apis:eBLBaseComponents'
-      
+
       ENVELOPE_NAMESPACES = { 'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
                               'xmlns:env' => 'http://schemas.xmlsoap.org/soap/envelope/',
                               'xmlns:xsi' => 'http://www.w3.org/2001/XMLSchema-instance'
@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
                                  'xmlns:n1' => EBAY_NAMESPACE,
                                  'env:mustUnderstand' => '0'
                                }
-      
+
       AUSTRALIAN_STATES = {
         'ACT' => 'Australian Capital Territory',
         'NSW' => 'New South Wales',
@@ -39,11 +39,11 @@ module ActiveMerchant #:nodoc:
         'VIC' => 'Victoria',
         'WA'  => 'Western Australia'
       }
-      
+
       SUCCESS_CODES = [ 'Success', 'SuccessWithWarning' ]
-      
+
       FRAUD_REVIEW_CODE = "11610"
-      
+
       # The gateway must be configured with either your PayPal PEM file
       # or your PayPal API Signature.  Only one is required.
       #
@@ -54,15 +54,15 @@ module ActiveMerchant #:nodoc:
       #                       globally and then you won't need to
       #                       include this option
       #
-      # <tt>:signature</tt>   The text of your PayPal signature. 
+      # <tt>:signature</tt>   The text of your PayPal signature.
       #                       If you are only using one API Signature
       #                       on your site you can declare it
       #                       globally and then you won't need to
       #                       include this option
-      
+
       def initialize(options = {})
         requires!(options, :login, :password)
-        
+
         headers = {'X-PP-AUTHORIZATION' => options.delete(:auth_signature), 'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'} if options[:auth_signature]
         @options = {
           :pem => pem_file,
@@ -70,26 +70,30 @@ module ActiveMerchant #:nodoc:
           :headers => headers || {}
         }.update(options)
 
-        
+
         if @options[:pem].blank? && @options[:signature].blank?
-          raise ArgumentError, "An API Certificate or API Signature is required to make requests to PayPal" 
+          raise ArgumentError, "An API Certificate or API Signature is required to make requests to PayPal"
         end
-        
+
         super
       end
-      
+
       def test?
         @options[:test] || Base.gateway_mode == :test
+      end
+
+      def authorize_order(money, transaction_id, options = {})
+        commit 'DoAuthorization', build_authorize_order_request(money, transaction_id, options)
       end
 
       def reauthorize(money, authorization, options = {})
         commit 'DoReauthorization', build_reauthorize_request(money, authorization, options)
       end
-      
+
       def capture(money, authorization, options = {})
         commit 'DoCapture', build_capture_request(money, authorization, options)
       end
-      
+
       # Transfer money to one or more recipients.
       #
       #   gateway.transfer 1000, 'bob@example.com',
@@ -107,7 +111,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         commit 'DoVoid', build_void_request(authorization, options)
       end
-      
+
       def refund(money, identification, options = {})
         commit 'RefundTransaction', build_refund_request(money, identification, options)
       end
@@ -118,9 +122,24 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+      def build_authorize_order_request(money, transaction_id, options)
+        xml = Builder::XmlMarkup.new
+
+        xml.tag! 'DoAuthorizationReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'DoAuthorizationRequest', 'xmlns:n2' => EBAY_NAMESPACE do
+            xml.tag! 'n2:Version', API_VERSION
+            xml.tag! 'TransactionID', transaction_id
+            xml.tag! 'TransactionEntity', 'Order' # can't be anything else
+            xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
+          end
+        end
+
+        xml.target!
+      end
+
       def build_reauthorize_request(money, authorization, options)
         xml = Builder::XmlMarkup.new
-        
+
         xml.tag! 'DoReauthorizationReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'DoReauthorizationRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
@@ -129,12 +148,12 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        xml.target!        
+        xml.target!
       end
-          
-      def build_capture_request(money, authorization, options)   
+
+      def build_capture_request(money, authorization, options)
         xml = Builder::XmlMarkup.new
-        
+
         xml.tag! 'DoCaptureReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'DoCaptureRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
@@ -147,12 +166,12 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        xml.target!        
+        xml.target!
       end
-      
+
       def build_refund_request(money, identification, options)
         xml = Builder::XmlMarkup.new
-            
+
         xml.tag! 'RefundTransactionReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'RefundTransactionRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
@@ -165,13 +184,13 @@ module ActiveMerchant #:nodoc:
             add_merchant_details(xml, options[:merchant_details])
           end
         end
-      
-        xml.target!        
+
+        xml.target!
       end
-      
+
       def build_void_request(authorization, options)
         xml = Builder::XmlMarkup.new
-        
+
         xml.tag! 'DoVoidReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'DoVoidRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
@@ -180,15 +199,15 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        xml.target!        
+        xml.target!
       end
-      
-      def build_mass_pay_request(*args)   
+
+      def build_mass_pay_request(*args)
         default_options = args.last.is_a?(Hash) ? args.pop : {}
         recipients = args.first.is_a?(Array) ? args : [args]
-        
+
         xml = Builder::XmlMarkup.new
-        
+
         xml.tag! 'MassPayReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'MassPayRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
@@ -204,7 +223,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-        
+
         xml.target!
       end
 
@@ -230,18 +249,18 @@ module ActiveMerchant #:nodoc:
 
       def legacy_parse(action, xml)
         response = {}
-        
+
         error_messages = []
         error_codes = []
-        
+
         xml = REXML::Document.new(xml)
         if root = REXML::XPath.first(xml, "//#{action}Response")
-          root.elements.each do |node|            
+          root.elements.each do |node|
             case node.name
             when 'Errors'
               short_message = nil
               long_message = nil
-              
+
               node.elements.each do |child|
                 case child.name
                 when "LongMessage"
@@ -283,20 +302,20 @@ module ActiveMerchant #:nodoc:
 
       def build_request(body)
         xml = Builder::XmlMarkup.new
-        
+
         xml.instruct!
         xml.tag! 'env:Envelope', ENVELOPE_NAMESPACES do
           xml.tag! 'env:Header' do
             add_credentials(xml) unless @options[:headers] && @options[:headers]['X-PP-AUTHORIZATION']
           end
-          
+
           xml.tag! 'env:Body' do
             xml << body
           end
         end
         xml.target!
       end
-     
+
       def add_credentials(xml)
         xml.tag! 'RequesterCredentials', CREDENTIALS_NAMESPACES do
           xml.tag! 'n1:Credentials' do
@@ -307,7 +326,7 @@ module ActiveMerchant #:nodoc:
           end
         end
       end
-      
+
       def add_address(xml, element, address)
         return if address.nil?
         xml.tag! element do
@@ -321,7 +340,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:Phone', address[:phone]
         end
       end
-      
+
       def add_merchant_details(xml, details)
         return if details.nil?
         xml.tag! 'n2:MerchantStoreDetails' do
@@ -329,14 +348,14 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'TerminalID', details[:terminal_id]
         end
       end
-      
+
       def endpoint_url
         URLS[test? ? :test : :live][@options[:signature].blank? ? :certificate : :signature]
       end
 
       def commit(action, request)
         response = parse(action, ssl_post(endpoint_url, build_request(request), @options[:headers]))
-       
+
         build_response(successful?(response), message_from(response), response,
     	    :test => test?,
     	    :authorization => authorization_from(response),
@@ -345,19 +364,19 @@ module ActiveMerchant #:nodoc:
     	    :cvv_result => response[:cvv2_code]
         )
       end
-      
+
       def fraud_review?(response)
         response[:error_codes] == FRAUD_REVIEW_CODE
       end
-      
+
       def authorization_from(response)
         response[:transaction_id] || response[:authorization_id] || response[:refund_transaction_id] # middle one is from reauthorization
       end
-      
+
       def successful?(response)
         SUCCESS_CODES.include?(response[:ack])
       end
-      
+
       def message_from(response)
         response[:message] || response[:ack]
       end
