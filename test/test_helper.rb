@@ -14,6 +14,7 @@ require 'money'
 require 'mocha'
 require 'yaml'
 require 'active_merchant'
+require 'comm_stub'
 
 require 'active_support/core_ext/integer/time'
 require 'active_support/core_ext/numeric/time'

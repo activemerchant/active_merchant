@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class AuthorizeNetTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = AuthorizeNetGateway.new(
       :login => 'X',
@@ -9,6 +11,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card
     @subscription_id = '100748'
+    @subscription_status = 'active'
   end
 
   def test_successful_authorization
@@ -116,6 +119,17 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved', response.message
   end
   
+  def test_refund_passing_extra_info
+    response = stub_comms do
+      @gateway.refund(50, '123456789', :card_number => @credit_card.number, :first_name => "Bob", :last_name => "Smith", :zip => "12345")
+    end.check_request do |endpoint, data, headers|
+      assert_match(/x_first_name=Bob/, data)
+      assert_match(/x_last_name=Smith/, data)
+      assert_match(/x_zip=12345/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+  
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
     
@@ -138,7 +152,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
   
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover], AuthorizeNetGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb], AuthorizeNetGateway.supported_cardtypes
   end
   
   def test_failure_without_response_reason_text
@@ -235,9 +249,27 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal @subscription_id, response.authorization
   end
 
+  def test_successful_status_recurring
+    @gateway.expects(:ssl_post).returns(successful_status_recurring_response)
+
+    response = @gateway.status_recurring(@subscription_id)
+    assert_instance_of Response, response
+    assert response.success?
+    assert response.test?
+    assert_equal @subscription_status, response.params['status']
+  end
+
   def test_expdate_formatting
     assert_equal '2009-09', @gateway.send(:arb_expdate, credit_card('4111111111111111', :month => "9", :year => "2009"))
     assert_equal '2013-11', @gateway.send(:arb_expdate, credit_card('4111111111111111', :month => "11", :year => "2013"))
+  end
+
+  def test_solution_id_is_added_to_post_data_parameters
+    assert !@gateway.send(:post_data, 'AUTH_ONLY').include?("x_solution_ID=A1000000")
+    ActiveMerchant::Billing::AuthorizeNetGateway.application_id = 'A1000000'
+    assert @gateway.send(:post_data, 'AUTH_ONLY').include?("x_solution_ID=A1000000")
+  ensure
+    ActiveMerchant::Billing::AuthorizeNetGateway.application_id = nil
   end
 
   private
@@ -314,6 +346,22 @@ class AuthorizeNetTest < Test::Unit::TestCase
   </messages>
   <subscriptionId>#{@subscription_id}</subscriptionId>
 </ARBCancelSubscriptionResponse>
+    XML
+  end
+
+  def successful_status_recurring_response
+    <<-XML
+<ARBGetSubscriptionStatusResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+  <refId>Sample</refId>
+  <messages>
+    <resultCode>Ok</resultCode>
+    <message>
+      <code>I00001</code>
+      <text>Successful.</text>
+    </message>
+  </messages>
+  <Status>#{@subscription_status}</Status>
+</ARBGetSubscriptionStatusResponse>
     XML
   end
 end

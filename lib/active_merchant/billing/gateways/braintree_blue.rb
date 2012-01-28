@@ -18,10 +18,11 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :merchant_id, :public_key, :private_key)
         @options = options
+        @merchant_account_id = options[:merchant_account_id]
         Braintree::Configuration.merchant_id = options[:merchant_id]
         Braintree::Configuration.public_key = options[:public_key]
         Braintree::Configuration.private_key = options[:private_key]
-        Braintree::Configuration.environment = test? ? :sandbox : :production
+        Braintree::Configuration.environment = (options[:environment] || (test? ? :sandbox : :production)).to_sym
         Braintree::Configuration.logger.level = Logger::ERROR if Braintree::Configuration.logger
         Braintree::Configuration.custom_user_agent = "ActiveMerchant #{ActiveMerchant::VERSION}"
         super
@@ -158,36 +159,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def create_transaction(transaction_type, money, credit_card_or_vault_id, options)
-        parameters = {
-          :amount => amount(money).to_s,
-          :order_id => options[:order_id],
-          :customer => {
-            :id => options[:store] == true ? "" : options[:store],
-            :email => options[:email]
-          },
-          :options => {
-            :store_in_vault => options[:store] ? true : false,
-            :submit_for_settlement => options[:submit_for_settlement]
-          }
-        }
-        if credit_card_or_vault_id.is_a?(String) || credit_card_or_vault_id.is_a?(Integer)
-          parameters[:customer_id] = credit_card_or_vault_id
-        else
-          parameters[:customer].merge!(
-            :first_name => credit_card_or_vault_id.first_name,
-            :last_name => credit_card_or_vault_id.last_name
-          )
-          parameters[:credit_card] = {
-            :number => credit_card_or_vault_id.number,
-            :cvv => credit_card_or_vault_id.verification_value,
-            :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
-            :expiration_year => credit_card_or_vault_id.year.to_s
-          }
-        end
-        parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address]
-        parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
+        transaction_params = create_transaction_parameters(money, credit_card_or_vault_id, options)
+
         commit do
-          result = Braintree::Transaction.send(transaction_type, parameters)
+          result = Braintree::Transaction.send(transaction_type, transaction_params)
           response_params, response_options, avs_result, cvv_result = {}, {}, {}, {}
           if result.success?
             response_params[:braintree_transaction] = transaction_hash(result.transaction)
@@ -201,7 +176,11 @@ module ActiveMerchant #:nodoc:
               :postal_match => result.transaction.avs_postal_code_response_code
             }
             response_options[:cvv_result] = result.transaction.cvv_response_code
-            message = result.transaction.processor_response_code + " " + result.transaction.processor_response_text
+            if result.transaction.status == "gateway_rejected"
+              message = "Transaction declined - gateway rejected"
+            else
+              message = "#{result.transaction.processor_response_code} #{result.transaction.processor_response_text}"
+            end
           else
             message = message_from_result(result)
           end
@@ -279,13 +258,49 @@ module ActiveMerchant #:nodoc:
         }
 
         {
-          "order_id"         => transaction.order_id,
-          "status"           => transaction.status,
-          "customer_details" => customer_details,
-          "billing_details"  => billing_details,
-          "shipping_details" => shipping_details,
-          "vault_customer"   => vault_customer
+          "order_id"            => transaction.order_id,
+          "status"              => transaction.status,
+          "customer_details"    => customer_details,
+          "billing_details"     => billing_details,
+          "shipping_details"    => shipping_details,
+          "vault_customer"      => vault_customer,
+          "merchant_account_id" => transaction.merchant_account_id
         }
+      end
+
+      def create_transaction_parameters(money, credit_card_or_vault_id, options)
+        parameters = {
+          :amount => amount(money).to_s,
+          :order_id => options[:order_id],
+          :customer => {
+            :id => options[:store] == true ? "" : options[:store],
+            :email => options[:email]
+          },
+          :options => {
+            :store_in_vault => options[:store] ? true : false,
+            :submit_for_settlement => options[:submit_for_settlement]
+          }
+        }
+        if merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
+          parameters[:merchant_account_id] = merchant_account_id
+        end
+        if credit_card_or_vault_id.is_a?(String) || credit_card_or_vault_id.is_a?(Integer)
+          parameters[:customer_id] = credit_card_or_vault_id
+        else
+          parameters[:customer].merge!(
+            :first_name => credit_card_or_vault_id.first_name,
+            :last_name => credit_card_or_vault_id.last_name
+          )
+          parameters[:credit_card] = {
+            :number => credit_card_or_vault_id.number,
+            :cvv => credit_card_or_vault_id.verification_value,
+            :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
+            :expiration_year => credit_card_or_vault_id.year.to_s
+          }
+        end
+        parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address]
+        parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
+        parameters
       end
     end
   end

@@ -287,6 +287,19 @@ SRC
     
   end
 
+  def test_zip_in_shipping_address
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<code>BT28XX<\/code>/)).returns(successful_purchase_response)
+    
+    options = {
+      :order_id => '1',
+      :billing_address => @address,
+      :shipping_address => @address
+    }
+
+    @gateway.authorize(@amount, @credit_card, options)
+  end
+
+
   private
   
   def successful_purchase_response

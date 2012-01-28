@@ -4,22 +4,34 @@ require 'active_merchant/billing/expiry_date'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    # == Description
-    # This credit card object can be used as a stand alone object. It acts just like an ActiveRecord object
-    # but doesn't support the .save method as its not backed by a database.
+    # A +CreditCard+ object represents a physical credit card, and is capable of validating the various
+    # data associated with these.
     #
-    # For testing purposes, use the 'bogus' credit card type. This card skips the vast majority of
-    # validations. This allows you to focus on your core concerns until you're ready to be more concerned
-    # with the details of particular creditcards or your gateway.
+    # At the moment, the following credit card types are supported:
+    #
+    # * Visa
+    # * MasterCard
+    # * Discover
+    # * American Express
+    # * Diner's Club
+    # * JCB
+    # * Switch
+    # * Solo
+    # * Dankort
+    # * Maestro
+    # * Forbrugsforeningen
+    # * Laser
+    #
+    # For testing purposes, use the 'bogus' credit card type. This skips the vast majority of
+    # validations, allowing you to focus on your core concerns until you're ready to be more concerned
+    # with the details of particular credit cards or your gateway.
     #
     # == Testing With CreditCard
     # Often when testing we don't care about the particulars of a given card type. When using the 'test'
-    # mode in your Gateway, there are six different valid card numbers: 1, 2, 3, 'success', 'fail',
+    # mode in your {Gateway}, there are six different valid card numbers: 1, 2, 3, 'success', 'fail',
     # and 'error'.
     #
-    #--
-    # For details, see CreditCardMethods#valid_number?
-    #++
+    # For details, see {CreditCardMethods::ClassMethods#valid_number?}
     #
     # == Example Usage
     #   cc = CreditCard.new(
@@ -38,53 +50,126 @@ module ActiveMerchant #:nodoc:
       include CreditCardMethods
       include Validateable
 
-      ## Attributes
-
       cattr_accessor :require_verification_value
       self.require_verification_value = true
 
-      # Essential attributes for a valid, non-bogus creditcards
-      attr_accessor :number, :month, :year, :type, :first_name, :last_name
+      # Returns or sets the credit card number.
+      #
+      # @return [String]
+      attr_accessor :number
+
+      # Returns or sets the expiry month for the card.
+      #
+      # @return [Integer]
+      attr_accessor :month
+
+      # Returns or sets the expiry year for the card.
+      #
+      # @return [Integer]
+      attr_accessor :year
+
+      # Returns or sets the credit card type.
+      #
+      # Valid card types are
+      #
+      # * +'visa'+
+      # * +'master'+
+      # * +'discover'+
+      # * +'american_express'+
+      # * +'diners_club'+
+      # * +'jcb'+
+      # * +'switch'+
+      # * +'solo'+
+      # * +'dankort'+
+      # * +'maestro'+
+      # * +'forbrugsforeningen'+
+      # * +'laser'+
+      #
+      # Or, if you wish to test your implementation, +'bogus'+.
+      #
+      # @return (String) the credit card type
+      attr_accessor :type
+
+      # Returns or sets the first name of the card holder.
+      #
+      # @return [String]
+      attr_accessor :first_name
+
+      # Returns or sets the last name of the card holder.
+      #
+      # @return [String]
+      attr_accessor :last_name
 
       # Required for Switch / Solo cards
       attr_accessor :start_month, :start_year, :issue_number
 
-      # Optional verification_value (CVV, CVV2 etc). Gateways will try their best to
-      # run validation on the passed in value if it is supplied
+      # Returns or sets the card verification value.
+      #
+      # This attribute is optional but recommended. The verification value is
+      # a {card security code}[http://en.wikipedia.org/wiki/Card_security_code]. If provided,
+      # the gateway will attempt to validate the value.
+      #
+      # @return [String] the verification value
       attr_accessor :verification_value
 
       alias_method :brand, :type
-      
+
       # Provides proxy access to an expiry date object
+      #
+      # @return [ExpiryDate]
       def expiry_date
         ExpiryDate.new(@month, @year)
       end
 
+      # Returns whether the credit card has expired.
+      #
+      # @return +true+ if the card has expired, +false+ otherwise
       def expired?
         expiry_date.expired?
       end
 
+      # Returns whether either the +first_name+ or the +last_name+ attributes has been set.
       def name?
         first_name? || last_name?
       end
 
+      # Returns whether the +first_name+ attribute has been set.
       def first_name?
         @first_name.present?
       end
 
+      # Returns whether the +last_name+ attribute has been set.
       def last_name?
         @last_name.present?
       end
 
+      # Returns the full name of the card holder.
+      #
+      # @return [String] the full name of the card holder
       def name
         [@first_name, @last_name].compact.join(' ')
+      end
+
+      def name=(full_name)
+        names = full_name.split
+        self.last_name  = names.pop
+        self.first_name = names.join(" ")
       end
 
       def verification_value?
         !@verification_value.blank?
       end
 
-      # Show the card number, with all but last 4 numbers replace with "X". (XXXX-XXXX-XXXX-4338)
+      # Returns a display-friendly version of the card number.
+      #
+      # All but the last 4 numbers are replaced with an "X", and hyphens are
+      # inserted in order to improve legibility.
+      #
+      # @example
+      #   credit_card = CreditCard.new(:number => "2132542376824338")
+      #   credit_card.display_number  # "XXXX-XXXX-XXXX-4338"
+      #
+      # @return [String] a display-friendly version of the card number
       def display_number
         self.class.mask(number)
       end
@@ -93,6 +178,9 @@ module ActiveMerchant #:nodoc:
         self.class.last_digits(number)
       end
 
+      # Validates the credit card details.
+      #
+      # Any validation errors are added to the {#errors} attribute.
       def validate
         validate_essential_attributes
 
@@ -148,7 +236,7 @@ module ActiveMerchant #:nodoc:
         else
           errors.add :month,      "is not a valid month" unless valid_month?(@month)
           errors.add :year,       "expired"              if expired?
-          errors.add :year,       "is not a valid year"  unless valid_expiry_year?(@year)
+          errors.add :year,       "is not a valid year"  unless expired? || valid_expiry_year?(@year)
         end
       end
 

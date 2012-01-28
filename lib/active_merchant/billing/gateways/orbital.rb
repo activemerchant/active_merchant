@@ -80,8 +80,8 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         unless options[:ip_authentication] == true
           requires!(options, :login, :password, :merchant_id)
-          @options = options
         end
+        @options = options
         super
       end
       
@@ -122,8 +122,8 @@ module ActiveMerchant #:nodoc:
       end
       
       # setting money to nil will perform a full void
-      def void(money, authorization, options = {})
-        order = build_void_request_xml(money, authorization, options)
+      def void(authorization, options = {})
+        order = build_void_request_xml(authorization, options)
         commit(order)
       end
     
@@ -154,7 +154,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! :AVSaddress2, address[:address2]
           xml.tag! :AVScity, address[:city]
           xml.tag! :AVSstate, address[:state]
-          xml.tag! :AVSphoneNum, address[:phone] ? address[:phone].scan(/\d/).to_s : nil
+          xml.tag! :AVSphoneNum, address[:phone] ? address[:phone].scan(/\d/).join.to_s : nil
           xml.tag! :AVSname, creditcard.name
           xml.tag! :AVScountryCode, address[:country]
         end
@@ -162,11 +162,12 @@ module ActiveMerchant #:nodoc:
 
       def add_creditcard(xml, creditcard, currency=nil)
         xml.tag! :AccountNum, creditcard.number
-        xml.tag! :Exp, creditcard.expiry_date.expiration.strftime("%m%y")
+        xml.tag! :Exp, expiry_date(creditcard)
         
         xml.tag! :CurrencyCode, currency_code(currency)
         xml.tag! :CurrencyExponent, '2' # Will need updating to support currencies such as the Yen.
         
+        xml.tag! :CardSecValInd, 1 if creditcard.verification_value? && %w( visa discover ).include?(creditcard.brand)
         xml.tag! :CardSecVal,  creditcard.verification_value if creditcard.verification_value?
       end
       
@@ -223,11 +224,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        if response[:message_type] == "R"
+        if response[:message_type].nil? || response[:message_type] == "R"
           response[:proc_status] == SUCCESS
         else
           response[:proc_status] == SUCCESS &&
-          response[:resp_code] == APPROVED 
+            response[:resp_code] == APPROVED
         end
       end
       
@@ -241,17 +242,13 @@ module ActiveMerchant #:nodoc:
 
       def build_new_order_xml(action, money, parameters = {})
         requires!(parameters, :order_id)
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
+        xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :NewOrder do
-            xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
-            xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
-            xml.tag! :IndustryType, "EC" # E-Commerce transaction 
+            add_xml_credentials(xml)
+            xml.tag! :IndustryType, parameters[:industry_type] || "EC"
             xml.tag! :MessageType, action
-            xml.tag! :BIN, '000002' # PNS Tampa
-            xml.tag! :MerchantID, @options[:merchant_id]
-            xml.tag! :TerminalID, parameters[:terminal_id] || '001'            
+            add_bin_merchant_and_terminal(xml, parameters)
             
             yield xml if block_given?
             
@@ -271,39 +268,29 @@ module ActiveMerchant #:nodoc:
       
       def build_mark_for_capture_xml(money, authorization, parameters = {})
         tx_ref_num, order_id = authorization.split(';')
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
+        xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :MarkForCapture do
-            xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
-            xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
+            add_xml_credentials(xml)
             xml.tag! :OrderID, order_id
             xml.tag! :Amount, amount(money)
-            xml.tag! :BIN, '000002' # PNS Tampa
-            xml.tag! :MerchantID, @options[:merchant_id]
-            xml.tag! :TerminalID, parameters[:terminal_id] || '001'
+            add_bin_merchant_and_terminal(xml, parameters)
             xml.tag! :TxRefNum, tx_ref_num
           end
         end
         xml.target!
       end
       
-      def build_void_request_xml(money, authorization, parameters = {})
-        requires!(parameters, :transaction_index)
+      def build_void_request_xml(authorization, parameters = {})
         tx_ref_num, order_id = authorization.split(';')
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
+        xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :Reversal do
-            xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
-            xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
+            add_xml_credentials(xml)
             xml.tag! :TxRefNum, tx_ref_num
             xml.tag! :TxRefIdx, parameters[:transaction_index]
-            xml.tag! :AdjustedAmt, amount(money)
             xml.tag! :OrderID, order_id
-            xml.tag! :BIN, '000002' # PNS Tampa
-            xml.tag! :MerchantID, @options[:merchant_id]
-            xml.tag! :TerminalID, parameters[:terminal_id] || '001'
+            add_bin_merchant_and_terminal(xml, parameters)
           end
         end
         xml.target!
@@ -311,6 +298,31 @@ module ActiveMerchant #:nodoc:
       
       def currency_code(currency)
         CURRENCY_CODES[(currency || self.default_currency)].to_s
+      end
+      
+      def expiry_date(credit_card)
+        "#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}"
+      end
+
+      def bin
+        @options[:bin] || '000001' # default is Salem Global
+      end
+
+      def xml_envelope
+        xml = Builder::XmlMarkup.new(:indent => 2)
+        xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
+        xml
+      end
+
+      def add_xml_credentials(xml)
+        xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
+        xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
+      end
+
+      def add_bin_merchant_and_terminal(xml, parameters)
+        xml.tag! :BIN, bin
+        xml.tag! :MerchantID, @options[:merchant_id]
+        xml.tag! :TerminalID, parameters[:terminal_id] || '001'
       end
     end
   end
