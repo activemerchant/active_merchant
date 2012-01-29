@@ -48,14 +48,11 @@ module ActiveMerchant #:nodoc:
             end
           end
 
-          MD5_CHECK_FIELDS = [
-            :msgtype, :ordernumber, :amount, :currency, :time, :state,
-            :chstat, :chstatmsg, :qpstat, :qpstatmsg, :merchant, :merchantemail,
-            :transaction, :cardtype, :cardnumber, :testmode
-          ]
-
           def generate_md5string
-            MD5_CHECK_FIELDS.map { |key| params[key.to_s] } * "" + @options[:credential2]
+            @raw.split('&').map do |line|
+              key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
+              CGI.unescape(value) unless key == 'md5check'
+            end.join("") + @options[:credential2]
           end
           
           def generate_md5check
