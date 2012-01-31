@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       
       SUCCESS_MESSAGE = 'The transaction was successful.'
       
-      MONETARY_CHANGE_STATUSES = ['AUTHORIZE', 'AUTHORIZE ADDITIONAL', 'CREDIT', 'SPLITSETTLE']
+      MONETARY_CHANGE_STATUSES = ['SETTLE', 'AUTHORIZE', 'AUTHORIZE ADDITIONAL', 'CREDIT', 'SPLITSETTLE']
 
       CARD_CODE_ERRORS = %w( N S "" )
 
