@@ -51,6 +51,10 @@ if "".respond_to? :html_safe?
     include ActionView::Helpers::TextHelper
   end
 
+  if ActionPack::VERSION::MAJOR == 2
+    MissingSourceFile::REGEXPS << [/^cannot load such file -- (.+)$/i, 1]
+  end
+
   class PaymentServiceController < ActionController::Base
 
     def payment_action
