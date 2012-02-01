@@ -163,6 +163,71 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal '4', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Quantity')[1].text
   end
 
+  def test_does_not_include_callback_url_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
+
+    assert_nil REXML::XPath.first(xml, '//n2:CallbackURL')
+  end
+
+  def test_callback_url_is_included_if_specified_in_build_setup_request
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:callback_url => "http://example.com/update_callback"}))
+
+    assert_equal 'http://example.com/update_callback', REXML::XPath.first(xml, '//n2:CallbackURL').text
+  end
+
+  def test_does_not_include_callback_timeout_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
+
+    assert_nil REXML::XPath.first(xml, '//n2:CallbackTimeout')
+  end
+
+  def test_callback_timeout_is_included_if_specified_in_build_setup_request
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:callback_timeout => 2}))
+
+    assert_equal '2', REXML::XPath.first(xml, '//n2:CallbackTimeout').text
+  end
+
+  def test_does_not_include_callback_version_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
+
+    assert_nil REXML::XPath.first(xml, '//n2:CallbackVersion')
+  end
+
+  def test_callback_version_is_included_if_specified_in_build_setup_request
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:callback_version => '53.0'}))
+
+    assert_equal '53.0', REXML::XPath.first(xml, '//n2:CallbackVersion').text
+  end
+
+  def test_does_not_include_flatrate_shipping_options_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
+
+    assert_nil REXML::XPath.first(xml, '//n2:FlatRateShippingOptions')
+  end
+
+  def test_flatrate_shipping_options_are_included_if_specified_in_build_setup_request
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:currency => 'AUD', :shipping_options => [
+            {:default => true,
+             :name => "first one",
+             :amount => 1000
+            },
+            {:default => false,
+             :name => "second one",
+             :amount => 2000
+            }
+    ]}))
+
+    assert_equal 'true', REXML::XPath.first(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionIsDefault').text
+    assert_equal 'first one', REXML::XPath.first(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionName').text
+    assert_equal '10.00', REXML::XPath.first(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionAmount').text
+    assert_equal 'AUD', REXML::XPath.first(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionAmount').attribute('currencyID').value
+
+    assert_equal 'false', REXML::XPath.match(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionIsDefault')[1].text
+    assert_equal 'second one', REXML::XPath.match(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionName')[1].text
+    assert_equal '20.00', REXML::XPath.match(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionAmount')[1].text
+    assert_equal 'AUD', REXML::XPath.match(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionAmount')[1].attribute('currencyID').value
+  end
+
   def test_address_is_included_if_specified
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'Sale', 0, {:currency => 'GBP', :address => {
       :name     => "John Doe",

@@ -130,7 +130,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:CancelURL', options[:cancel_return_url]
               xml.tag! 'n2:IPAddress', options[:ip] unless options[:ip].blank?
               xml.tag! 'n2:BuyerEmail', options[:email] unless options[:email].blank?
-              
+
               if options[:billing_agreement]
                 xml.tag! 'n2:BillingAgreementDetails' do
                   xml.tag! 'n2:BillingType', options[:billing_agreement][:type]
@@ -150,7 +150,22 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'n2:SolutionType', 'Sole'
                 xml.tag! 'n2:LandingPage', 'Billing'
               end
-              
+
+              # Instant Update API
+              xml.tag! 'n2:CallbackURL', options[:callback_url] unless options[:callback_url].blank?
+              xml.tag! 'n2:CallbackTimeout', options[:callback_timeout] unless options[:callback_timeout].blank?
+              xml.tag! 'n2:CallbackVersion', options[:callback_version] unless options[:callback_version].blank?
+
+              if options[:shipping_options]
+                options[:shipping_options].each do |shipping_option|
+                  xml.tag! 'n2:FlatRateShippingOptions' do
+                    xml.tag! 'n2:ShippingOptionIsDefault', shipping_option[:default]
+                    xml.tag! 'n2:ShippingOptionName', shipping_option[:name]
+                    xml.tag! 'n2:ShippingOptionAmount', localized_amount(shipping_option[:amount], currency_code), 'currencyID' => currency_code
+                  end
+                end
+              end
+
               xml.tag! 'n2:LocaleCode', options[:locale] unless options[:locale].blank?
             end
           end
