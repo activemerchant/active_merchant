@@ -130,7 +130,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:CancelURL', options[:cancel_return_url]
               xml.tag! 'n2:IPAddress', options[:ip] unless options[:ip].blank?
               xml.tag! 'n2:BuyerEmail', options[:email] unless options[:email].blank?
-
+              
               if options[:billing_agreement]
                 xml.tag! 'n2:BillingAgreementDetails' do
                   xml.tag! 'n2:BillingType', options[:billing_agreement][:type]
