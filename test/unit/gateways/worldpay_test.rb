@@ -40,7 +40,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_purchase_passes_correct_currency
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'CAD'))
+      @gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'CAD'))
     end.check_request do |endpoint, data, headers|
       assert_match(/CAD/, data)
     end.respond_with(successful_authorize_response, successful_capture_response)
