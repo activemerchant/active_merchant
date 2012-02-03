@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_creditcard(post, creditcard, options)
         add_customer(post, options)
-        add_customer_data(post, options)
+        post[:description] = options[:description] || options[:email]
         add_flags(post, options)
 
         raise ArgumentError.new("Customer or Credit Card required.") if !post[:card] && !post[:customer]
@@ -79,7 +79,8 @@ module ActiveMerchant #:nodoc:
       def store(creditcard, options = {})
         post = {}
         add_creditcard(post, creditcard, options)
-        add_customer_data(post, options)
+        post[:description] = options[:description]
+        post[:email] = options[:email]
 
         if options[:customer]
           commit("customers/#{CGI.escape(options[:customer])}", post)
