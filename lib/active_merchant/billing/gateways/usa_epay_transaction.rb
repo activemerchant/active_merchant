@@ -13,7 +13,8 @@ module ActiveMerchant #:nodoc:
         :authorization => 'authonly',
         :purchase => 'sale',
         :capture => 'capture',
-        :refund => 'refund'
+        :refund => 'refund',
+        :void => 'void'
       }
 
       def initialize(options = {})
@@ -58,6 +59,11 @@ module ActiveMerchant #:nodoc:
 
         add_amount(post, money)
         commit(:refund, post)
+      end
+
+      def void(authorization, options = {})
+        post = { :refNum => authorization }
+        commit(:void, post)
       end
 
       private
