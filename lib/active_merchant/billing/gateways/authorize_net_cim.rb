@@ -106,10 +106,10 @@ module ActiveMerchant #:nodoc:
       # Returns a Response with the Customer Profile ID of the new customer profile in the authorization field. 
       # It is *CRITICAL* that you save this ID. There is no way to retrieve this through the API. You will not 
       # be able to create another Customer Profile with the same information.
-      # 
+      #
       # ==== Options
       #
-      # * <tt>:profile</tt> -- A hash containing profile information
+      # * <tt>:profile</tt> -- A hash containing profile information (Required.  Include either <tt>:email</tt>, <tt>:merchant_customer_id</tt>, or <tt>:description</tt>)
       # * <tt>profile[:email]</tt> -- The customer's email address
       # * <tt>profile[:merchant_customer_id]</tt> - Arbitrary unique id set by the merchant (not authnet)
       # * <tt>profile[:description]</tt> - Description of the customer or customer profile
