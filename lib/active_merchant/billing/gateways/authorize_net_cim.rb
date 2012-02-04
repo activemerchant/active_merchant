@@ -387,6 +387,10 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>:bank_routing_number_masked</tt> -- The last four gidits of the routing number to be refunded (CONDITIONAL - must be used with :bank_account_number_masked)
       # * <tt>:bank_account_number_masked</tt> -- The last four digis of the bank account number to be refunded, Ex. XXXX1234 (CONDITIONAL - must be used with :bank_routing_number_masked)
+      #
+      # * <tt>:tax</tt> - A hash containing tax information for the refund (OPTIONAL - <tt>:amount</tt>, <tt>:name</tt> (31 characters), <tt>:description</tt> (255 characters))
+      # * <tt>:duty</tt> - A hash containting duty information for the refund (OPTIONAL - <tt>:amount</tt>, <tt>:name</tt> (31 characters), <tt>:description</tt> (255 characters))
+      # * <tt>:shipping</t> - A hash containing shipping information for the refund (OPTIONAL - <tt>:amount</tt>, <tt>:name</tt> (31 characters), <tt>:description</tt> (255 characters))
       def create_customer_profile_transaction_for_refund(options)
         requires!(options, :transaction)
         options[:transaction][:type] = :refund
