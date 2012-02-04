@@ -109,9 +109,13 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Options
       #
-      # TODO
+      # * <tt>:profile</tt> -- A hash containing profile information (Required.  Include either <tt>:email</tt>, <tt>:merchant_customer_id</tt>, or <tt>:description</tt>)
+      # * <tt>profile[:email]</tt> -- The customer's email address
+      # * <tt>profile[:merchant_customer_id]</tt> - Arbitrary unique id set by the merchant (not authnet)
+      # * <tt>profile[:description]</tt> - Description of the customer or customer profile
+      # * <tt>profile[:payment_profiles]</tt> - Payment profiles for the customer profile (more options in the API documentation)
       def create_customer_profile(options)
-        # TODO Add requires
+        requires!(options, :profile)
         request = build_request(:create_customer_profile, options)
         commit(:create_customer_profile, request)
       end
