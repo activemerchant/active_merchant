@@ -58,6 +58,33 @@ class OptimalPaymentTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_purchase_from_canada_includes_state_field
+    @options[:billing_address][:country] = "CA"
+    @gateway.expects(:ssl_post).with do |url, data|
+      data =~ /state/ && data !~ /region/
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_purchase_from_us_includes_state_field
+    @options[:billing_address][:country] = "US"
+    @gateway.expects(:ssl_post).with do |url, data|
+      data =~ /state/ && data !~ /region/
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_purchase_from_any_other_country_includes_region_field
+    @options[:billing_address][:country] = "GB"
+    @gateway.expects(:ssl_post).with do |url, data|
+      data =~ /region/ && data !~ /state/
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
