@@ -30,15 +30,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, options = {})
-        do_express_checkout_payment('Authorization', money, options)
+        do_express_checkout('Authorization', money, options)
+      end
+
+      # create an authorization on a previous Order
+      def authorize_order(money, transaction_id, options = {})
+        commit 'DoAuthorization', build_authorize_order_request(money, transaction_id, options)
       end
 
       def purchase(money, options = {})
-        do_express_checkout_payment('Sale', money, options)
+        do_express_checkout('Sale', money, options)
       end
 
       def order(money, options={})
-        do_express_checkout_payment('Order', money, options)
+        do_express_checkout('Order', money, options)
       end
 
 
@@ -49,10 +54,25 @@ module ActiveMerchant #:nodoc:
         commit 'SetExpressCheckout', build_setup_request(action, money, options)
       end
 
-      def do_express_checkout_payment(action, money, options = {})
+      def do_express_checkout(action, money, options = {})
         requires!(options, :token, :payer_id)
 
         commit 'DoExpressCheckoutPayment', build_action_request(action, money, options)
+      end
+
+      def build_authorize_order_request(money, transaction_id, options)
+        xml = Builder::XmlMarkup.new
+
+        xml.tag! 'DoAuthorizationReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'DoAuthorizationRequest', 'xmlns:n2' => EBAY_NAMESPACE do
+            xml.tag! 'n2:Version', API_VERSION
+            xml.tag! 'TransactionID', transaction_id
+            xml.tag! 'TransactionEntity', 'Order' # can't be anything else
+            xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
+          end
+        end
+
+        xml.target!
       end
 
       def build_get_details_request(token)

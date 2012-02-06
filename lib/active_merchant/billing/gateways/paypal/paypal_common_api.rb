@@ -82,10 +82,6 @@ module ActiveMerchant #:nodoc:
         @options[:test] || Base.gateway_mode == :test
       end
 
-      def authorize_order(money, transaction_id, options = {})
-        commit 'DoAuthorization', build_authorize_order_request(money, transaction_id, options)
-      end
-
       def reauthorize(money, authorization, options = {})
         commit 'DoReauthorization', build_reauthorize_request(money, authorization, options)
       end
@@ -122,21 +118,6 @@ module ActiveMerchant #:nodoc:
       end
 
       private
-      def build_authorize_order_request(money, transaction_id, options)
-        xml = Builder::XmlMarkup.new
-
-        xml.tag! 'DoAuthorizationReq', 'xmlns' => PAYPAL_NAMESPACE do
-          xml.tag! 'DoAuthorizationRequest', 'xmlns:n2' => EBAY_NAMESPACE do
-            xml.tag! 'n2:Version', API_VERSION
-            xml.tag! 'TransactionID', transaction_id
-            xml.tag! 'TransactionEntity', 'Order' # can't be anything else
-            xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
-          end
-        end
-
-        xml.target!
-      end
-
       def build_reauthorize_request(money, authorization, options)
         xml = Builder::XmlMarkup.new
 
@@ -159,7 +140,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'AuthorizationID', authorization
             xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
-            xml.tag! 'CompleteType', 'Complete'
+            xml.tag! 'CompleteType', options[:allow_multiple] ? 'NotComplete' : 'Complete'
             xml.tag! 'InvoiceID', options[:order_id] unless options[:order_id].blank?
             xml.tag! 'Note', options[:description]
             add_merchant_details(xml, options[:merchant_details])

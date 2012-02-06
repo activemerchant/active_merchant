@@ -59,4 +59,32 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert !response.params['token'].blank?
   end
 
+  # NOTE: multiple auths per order needs to be specifically enabled on your test account.
+  # Create your order elsewhere and drop-in the ID here.
+  def test_successful_order_flow
+    order_id = "O-2J515159AF8397729" # $100
+
+    # first authorization...
+    auth_one = @gateway.authorize_order(5000, order_id, :currency => 'CAD')
+    assert_success auth_one
+    assert auth_one.params['transaction_id']
+
+    # capture it...
+    response = @gateway.capture(5000, auth_one.authorization, :currency => 'CAD')
+    assert_success response
+    assert response.params['transaction_id']
+    assert_equal '50.00', response.params['gross_amount']
+
+    # second authorization...
+    auth_two = @gateway.authorize_order(6500, order_id, :currency => 'CAD') # multi-auths up to 115% of order amount
+    assert_success auth_two
+    assert auth_two.params['transaction_id']
+
+    # capture it...
+    response = @gateway.capture(6500, auth_two.authorization, :currency => 'CAD')
+    assert_success response
+    assert response.params['transaction_id']
+    assert_equal '65.00', response.params['gross_amount']
+  end
+
 end
