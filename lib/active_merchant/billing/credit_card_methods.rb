@@ -84,6 +84,10 @@ module ActiveMerchant #:nodoc:
           return nil
         end
         
+        def first_digits(number)
+          number.to_s.slice(0,6) 
+        end
+        
         def last_digits(number)     
           number.to_s.length <= 4 ? number : number.to_s.slice(-4..-1) 
         end
