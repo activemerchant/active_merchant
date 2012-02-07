@@ -1,5 +1,15 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.20.3 (February 7, 2012)
+
+* Various fixes to support Ruby 1.9 [wisq]
+* SkipJack: Fix partial capture [jduff]
+* Optimal Payments: submit region when outside North America [jduff]
+* USA ePay: Add void and refund support [duff/ntalbott]
+* Add first digits to credit card [codyfauser]
+* Orbital: fixes to authentication and order id [Soleone]
+* Stripe: fixes to purchase method [duff/ntalbott]
+
 == Version 1.20.2 (January 16, 2012)
 
 * Remove authorize/capture support for Stripe [gdb]
