@@ -177,7 +177,7 @@ module ActiveMerchant #:nodoc:
         })
 
         {
-          "Authorization" => "Basic " + ActiveSupport::Base64.encode64(@api_key.to_s + ":").strip,
+          "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":").strip,
           "User-Agent" => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "X-Stripe-Client-User-Agent" => @@ua
         }
