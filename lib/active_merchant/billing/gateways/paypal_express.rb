@@ -104,6 +104,15 @@ module ActiveMerchant #:nodoc:
               if !options[:allow_note].nil?
                 xml.tag! 'n2:AllowNote', options[:allow_note] ? '1' : '0'
               end
+              
+              if options[:billing_agreement]
+                xml.tag! 'n2:BillingAgreementDetails' do
+                  xml.tag! 'n2:BillingType', options[:billing_agreement][:type]
+                  xml.tag! 'n2:BillingAgreementDescription', options[:billing_agreement][:description]
+                  xml.tag! 'n2:PaymentType', options[:billing_agreement][:payment_type] || 'InstantOnly'
+                end
+              end
+
               xml.tag! 'n2:PaymentDetails' do
                 xml.tag! 'n2:OrderTotal', amount(money).to_f.zero? ? localized_amount(100, currency_code) : localized_amount(money, currency_code), 'currencyID' => currency_code
                 # All of the values must be included together and add up to the order total
@@ -130,14 +139,6 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:CancelURL', options[:cancel_return_url]
               xml.tag! 'n2:IPAddress', options[:ip] unless options[:ip].blank?
               xml.tag! 'n2:BuyerEmail', options[:email] unless options[:email].blank?
-              
-              if options[:billing_agreement]
-                xml.tag! 'n2:BillingAgreementDetails' do
-                  xml.tag! 'n2:BillingType', options[:billing_agreement][:type]
-                  xml.tag! 'n2:BillingAgreementDescription', options[:billing_agreement][:description]
-                  xml.tag! 'n2:PaymentType', options[:billing_agreement][:payment_type] || 'InstantOnly'
-                end
-              end
         
               # Customization of the payment page
               xml.tag! 'n2:PageStyle', options[:page_style] unless options[:page_style].blank?
