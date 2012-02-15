@@ -224,7 +224,7 @@ module ActiveMerchant #:nodoc:
            :credit_card_charge			=> CREDIT_CARD_FIELDS,
            :credit_card_voice_authorize		=> CREDIT_CARD_FIELDS,
            :credit_card_capture			=> CREDIT_CARD_FIELDS,
-           :credit_card_credit			=> CREDIT_CARD_FIELDS << "OriginalTransactionAmount",
+           :credit_card_credit			=> CREDIT_CARD_FIELDS + ["OriginalTransactionAmount"],
            :credit_card_refund			=> %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
            :void_transaction			=> %w(ReferenceNumber TransactionID),
            :credit_card_settle			=> %w(ReferenceNumber TransactionAmount OriginalTransactionAmount OriginalTransactionID ClientIpAddress),
