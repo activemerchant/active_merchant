@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'nokogiri'
 
 class PaypalExpressTest < Test::Unit::TestCase
   TEST_REDIRECT_URL        = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token=1234567890'
@@ -292,6 +293,49 @@ class PaypalExpressTest < Test::Unit::TestCase
     response = @gateway.details_for('EC-2OPN7UJGFWK9OYFV')
     assert address = response.address
     assert_equal '123-456-7890', address['phone']
+  end
+
+  def test_structure_correct
+    all_options_enabled = {
+        :allow_guest_checkout => true,
+        :max_amount => 50,
+        :locale => 'AU',
+        :page_style => 'test-gray',
+        :header_image => 'https://example.com/my_business',
+        :header_background_color => 'CAFE00',
+        :header_border_color => 'CAFE00',
+        :background_color => 'CAFE00',
+        :email => 'joe@example.com',
+        :billing_agreement => {:type => 'MerchantInitiatedBilling', :description => '9.99 per month for a year'},
+        :allow_note => true,
+        :subtotal => 35,
+        :shipping => 10,
+        :handling => 0,
+        :tax => 5,
+        :items => [{:name => 'item one',
+                    :number => 'number 1',
+                    :quantity => 3,
+                    :amount => 35,
+                    :description => 'one description',
+                    :url => 'http://example.com/number_1'}],
+        :address => {:name => 'John Doe',
+                     :address1 => 'Apartment 1',
+                     :address2 => '1 Road St',
+                     :city => 'First City',
+                     :state => 'NSW',
+                     :country => 'AU',
+                     :zip => '2000',
+                     :phone => '555 5555'}
+    }
+
+    doc = Nokogiri::XML(@gateway.send(:build_setup_request, 'Sale', 10, all_options_enabled))
+    #Strip back to the SetExpressCheckoutRequestDetails element - this is where the base component xsd starts
+    xml = doc.xpath('//base:SetExpressCheckoutRequestDetails', 'base' => 'urn:ebay:apis:eBLBaseComponents').first
+    sub_doc = Nokogiri::XML::Document.new
+    sub_doc.root = xml
+
+    schema = Nokogiri::XML::Schema(File.read(File.join(File.dirname(__FILE__), '..', '..', 'schema', 'paypal', 'eBLBaseComponents.xsd')))
+    assert_equal [], schema.validate(sub_doc)
   end
   
   private
