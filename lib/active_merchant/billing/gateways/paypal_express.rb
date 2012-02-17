@@ -129,6 +129,8 @@ module ActiveMerchant #:nodoc:
               if !options[:allow_note].nil?
                 xml.tag! 'n2:AllowNote', options[:allow_note] ? '1' : '0'
               end
+              xml.tag! 'n2:CallbackURL', options[:callback_url] unless options[:callback_url].blank?
+
               xml.tag! 'n2:PaymentDetails' do
                 xml.tag! 'n2:OrderTotal', amount(money).to_f.zero? ? localized_amount(100, currency_code) : localized_amount(money, currency_code), 'currencyID' => currency_code
                 # All of the values must be included together and add up to the order total
@@ -148,6 +150,19 @@ module ActiveMerchant #:nodoc:
 
                 xml.tag! 'n2:PaymentAction', action
               end
+
+              if options[:shipping_options]
+                options[:shipping_options].each do |shipping_option|
+                  xml.tag! 'n2:FlatRateShippingOptions' do
+                    xml.tag! 'n2:ShippingOptionIsDefault', shipping_option[:default]
+                    xml.tag! 'n2:ShippingOptionAmount', localized_amount(shipping_option[:amount], currency_code), 'currencyID' => currency_code
+                    xml.tag! 'n2:ShippingOptionName', shipping_option[:name]
+                  end
+                end
+              end
+
+              xml.tag! 'n2:CallbackTimeout', options[:callback_timeout] unless options[:callback_timeout].blank?
+              xml.tag! 'n2:CallbackVersion', options[:callback_version] unless options[:callback_version].blank?
             end
           end
         end
