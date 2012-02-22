@@ -1,5 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.20.4 (February 22, 2012)
+
+* Fix json dependency
+
 == Version 1.20.3 (February 7, 2012)
 
 * Various fixes to support Ruby 1.9 [wisq]
