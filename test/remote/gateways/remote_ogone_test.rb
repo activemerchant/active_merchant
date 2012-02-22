@@ -144,6 +144,13 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal OgoneGateway::SUCCESS_MESSAGE, auth.message
     assert_success void
   end
+  
+  def test_successful_alias_creation
+    assert response = @gateway.create_alias(@credit_card, 'test_alias')
+    assert_success response
+    assert response = @gateway.purchase(@amount, 'test_alias')
+    assert_success response
+  end
 
   def test_successful_referenced_credit
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
