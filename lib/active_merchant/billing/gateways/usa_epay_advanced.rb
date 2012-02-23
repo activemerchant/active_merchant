@@ -179,7 +179,6 @@ module ActiveMerchant #:nodoc:
       } #:nodoc:
 
       CHECK_DATA_OPTIONS = {
-        :check_number => [:integer, 'CheckNumber'],
         :drivers_license => [:string, 'DriversLicense'],
         :drivers_license_state => [:string, 'DriversLicenseState'],
         :record_type => [:string, 'RecordType'],
@@ -1251,7 +1250,7 @@ module ActiveMerchant #:nodoc:
           end
           build_tag soap, :string, 'CardCode', payment_method[:method].verification_value
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::Check)
-          build_tag soap, :string, 'Account', payment_method[:method].number
+          build_tag soap, :string, 'Account', payment_method[:method].account_number
           build_tag soap, :string, 'Routing', payment_method[:method].routing_number
           build_tag soap, :string, 'AccountType', payment_method[:method].account_type.capitalize
           build_tag soap, :string, 'DriversLicense', options[:drivers_license]
@@ -1339,6 +1338,7 @@ module ActiveMerchant #:nodoc:
 
       def build_check_data(soap, options)
         soap.CheckData 'xsi:type' => "ns1:CheckData" do |soap|
+          build_tag soap, :integer, 'CheckNumber', options[:payment_method].number
           build_tag soap, :string, 'Account', options[:payment_method].account_number
           build_tag soap, :string, 'Routing', options[:payment_method].routing_number
           build_tag soap, :string, 'AccountType', options[:payment_method].account_type.capitalize

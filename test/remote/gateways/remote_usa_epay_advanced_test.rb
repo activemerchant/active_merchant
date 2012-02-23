@@ -5,8 +5,8 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
 
   def setup
     # Optional Logger Setup
-    # UsaEpayAdvancedGateway.logger = Logger.new('/tmp/usa_epay.log')
-    # UsaEpayAdvancedGateway.logger.level = Logger::DEBUG
+    UsaEpayAdvancedGateway.logger = Logger.new('/tmp/usa_epay.log')
+    UsaEpayAdvancedGateway.logger.level = Logger::DEBUG
 
     # Optional Wiredump Setup
     # UsaEpayAdvancedGateway.wiredump_device = File.open('/tmp/usa_epay_dump.log', 'a+')
@@ -37,7 +37,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     )
 
     @check = ActiveMerchant::Billing::Check.new(
-      :number => '123456789',
+      :account_number => '123456789',
       :routing_number => '120450780',
       :account_type => 'checking',
       :first_name => "Fred",
