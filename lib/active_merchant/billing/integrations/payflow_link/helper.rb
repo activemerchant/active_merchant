@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
             add_field('invoice', order)
             add_field('vendor', account)
             add_field('user', options[:credential4] || account)
-            add_field('trxtype', 'S')
+            add_field('trxtype', options[:authorize_only] ? 'A' : 'S')
           end
 
           mapping :account, 'login'
