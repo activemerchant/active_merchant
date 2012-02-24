@@ -51,9 +51,11 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description] || options[:email]
         add_flags(post, options)
 
+        meta = generate_meta(options)
+
         raise ArgumentError.new("Customer or Credit Card required.") if !post[:card] && !post[:customer]
 
-        commit('charges', post)
+        commit(:post, 'charges', post, meta)
       end
 
       def authorize(money, creditcard, options = {})
@@ -65,15 +67,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(identification, options = {})
-        commit("charges/#{CGI.escape(identification)}/refund", {})
+        commit(:post, "charges/#{CGI.escape(identification)}/refund", {})
       end
 
       def refund(money, identification, options = {})
+        meta = generate_meta(options)
         post = {}
 
         post[:amount] = amount(money) if money
 
-        commit("charges/#{CGI.escape(identification)}/refund", post)
+        commit(:post, "charges/#{CGI.escape(identification)}/refund", post, meta)
       end
 
       def store(creditcard, options = {})
@@ -82,11 +85,14 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         post[:email] = options[:email]
 
-        if options[:customer]
-          commit("customers/#{CGI.escape(options[:customer])}", post)
+        meta = generate_meta(options)
+        path = if options[:customer]
+          "customers/#{CGI.escape(options[:customer])}"
         else
-          commit('customers', post)
+          'customers'
         end
+
+        commit(:post, path, post, meta)
       end
 
       def update(customer_id, creditcard, options = {})
@@ -95,7 +101,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def unstore(customer_id, options = {})
-        commit("customers/#{CGI.escape(customer_id)}", nil, :delete)
+        meta = generate_meta(options)
+        commit(:delete, "customers/#{CGI.escape(customer_id)}", nil, meta)
       end
 
       private
@@ -166,7 +173,11 @@ module ActiveMerchant #:nodoc:
         end.compact.join("&")
       end
 
-      def headers
+      def generate_meta(options)
+        {:ip => options[:ip]}
+      end
+
+      def headers(meta={})
         @@ua ||= JSON.dump({
           :bindings_version => ActiveMerchant::VERSION,
           :lang => 'ruby',
@@ -179,15 +190,16 @@ module ActiveMerchant #:nodoc:
         {
           "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":").strip,
           "User-Agent" => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "X-Stripe-Client-User-Agent" => @@ua
+          "X-Stripe-Client-User-Agent" => @@ua,
+          "X-Stripe-Client-User-Metadata" => meta.to_json
         }
       end
 
-      def commit(url, parameters, method=:post)
+      def commit(method, url, parameters=nil, meta={})
         raw_response = response = nil
         success = false
         begin
-          raw_response = ssl_request(method, LIVE_URL + url, post_data(parameters), headers)
+          raw_response = ssl_request(method, LIVE_URL + url, post_data(parameters), headers(meta))
           response = parse(raw_response)
           success = !response.key?("error")
         rescue ResponseError => e
