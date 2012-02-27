@@ -71,6 +71,13 @@ module ActiveMerchant #:nodoc:
 				commit('V', nil, options.merge(:transaction_id => transaction_id))
 			end
 
+			def verify(credit_card, options = {})
+        post = options
+        add_creditcard(post, credit_card, options)
+        add_address(post, options)
+        commit('A', nil, post)
+			end
+
 			private
 
 			def add_address(post, options)
@@ -117,8 +124,8 @@ module ActiveMerchant #:nodoc:
 				parameters[:transaction_amount]  = amount(money) if money unless action == 'V'
 		
 				response = parse( ssl_post(url, post_data(action,parameters)) )
-
-				Response.new(response["error_code"] == "000", message_from(response), response, 
+         
+				Response.new(success_response(action,response), message_from(response), response, 
 					:authorization => response["transaction_id"],
 					:test => test?,
 					:cvv_result => response["cvv2_result"],
@@ -139,6 +146,11 @@ module ActiveMerchant #:nodoc:
 				else
 					response["auth_response_text"]
 				end
+			end
+			
+			def success_response(action, response)
+			  ((response["error_code"] == "000") || 
+          (action == 'A' && response["error_code"] == "085")) #085 is a valid verify only response as per section 8.2 
 			end
       
 			def post_data(action, parameters = {})

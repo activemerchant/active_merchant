@@ -69,6 +69,14 @@ class MerchantESolutionsTest < Test::Unit::TestCase
     assert response.test?
 	end
 
+	def test_verify
+		@gateway.expects(:ssl_post).returns(successful_verify_response)
+		assert response = @gateway.verify(@credit_card)
+    assert response.success?
+		assert_equal '236a9857af2b3b58a0b9f16b9772d30f', response.authorization
+    assert response.test?
+	end
+
 	def test_store
 		@gateway.expects(:ssl_post).returns(successful_store_response)
 		assert response = @gateway.store(@credit_card)
@@ -94,9 +102,27 @@ class MerchantESolutionsTest < Test::Unit::TestCase
 		assert_equal response.avs_result['postal_match'], "Y"
 	end
 
+  def test_successful_avs_check_verify
+		@gateway.expects(:ssl_post).returns(successful_purchase_response + '&avs_result=Y')
+    assert response = @gateway.verify(@credit_card, @options)
+		assert_equal response.avs_result['code'], "Y"
+		assert_equal response.avs_result['message'], "Street address and 5-digit postal code match."
+		assert_equal response.avs_result['street_match'], "Y"
+		assert_equal response.avs_result['postal_match'], "Y"
+	end
+
 	def test_unsuccessful_avs_check_with_bad_street_address
 		@gateway.expects(:ssl_post).returns(successful_purchase_response + '&avs_result=Z')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+		assert_equal response.avs_result['code'], "Z"
+		assert_equal response.avs_result['message'], "Street address does not match, but 5-digit postal code matches."
+		assert_equal response.avs_result['street_match'], "N"
+		assert_equal response.avs_result['postal_match'], "Y"
+	end
+
+  def test_unsuccessful_avs_check_with_bad_street_address_verify
+		@gateway.expects(:ssl_post).returns(successful_purchase_response + '&avs_result=Z')
+    assert response = @gateway.verify(@credit_card, @options)
 		assert_equal response.avs_result['code'], "Z"
 		assert_equal response.avs_result['message'], "Street address does not match, but 5-digit postal code matches."
 		assert_equal response.avs_result['street_match'], "N"
@@ -112,6 +138,16 @@ class MerchantESolutionsTest < Test::Unit::TestCase
 		assert_equal response.avs_result['postal_match'], "N"
 	end
 
+  def test_unsuccessful_avs_check_with_bad_zip_verify
+		@gateway.expects(:ssl_post).returns(successful_purchase_response + '&avs_result=A')
+    assert response = @gateway.verify(@credit_card, @options)
+		assert_equal response.avs_result['code'], "A"
+		assert_equal response.avs_result['message'], "Street address matches, but 5-digit and 9-digit postal code do not match."
+		assert_equal response.avs_result['street_match'], "Y"
+		assert_equal response.avs_result['postal_match'], "N"
+	end
+
+
 	def test_successful_cvv_check
 		@gateway.expects(:ssl_post).returns(successful_purchase_response + '&cvv2_result=M')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -119,12 +155,28 @@ class MerchantESolutionsTest < Test::Unit::TestCase
 		assert_equal response.cvv_result['message'], "Match"
 	end
 
+  def test_successful_cvv_check_verify
+		@gateway.expects(:ssl_post).returns(successful_purchase_response + '&cvv2_result=M')
+    assert response = @gateway.verify(@credit_card, @options)
+		assert_equal response.cvv_result['code'], "M"
+		assert_equal response.cvv_result['message'], "Match"
+	end
+
+
 	def test_unsuccessful_cvv_check
 		@gateway.expects(:ssl_post).returns(failed_purchase_response + '&cvv2_result=N')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
 		assert_equal response.cvv_result['code'], "N"
 		assert_equal response.cvv_result['message'], "No Match"
 	end
+
+  def test_unsuccessful_cvv_check_verify
+		@gateway.expects(:ssl_post).returns(failed_purchase_response + '&cvv2_result=N')
+    assert response = @gateway.verify(@credit_card, @options)
+		assert_equal response.cvv_result['code'], "N"
+		assert_equal response.cvv_result['message'], "No Match"
+	end
+
 
 	def test_supported_countries
     assert_equal ['US'], MerchantESolutionsGateway.supported_countries
@@ -167,5 +219,10 @@ class MerchantESolutionsTest < Test::Unit::TestCase
   def failed_purchase_response
 		'transaction_id=error&error_code=101&auth_response_text=Invalid%20I%20or%20Key%20Incomplete%20Request'
   end
+
+  def successful_verify_response
+		'transaction_id=236a9857af2b3b58a0b9f16b9772d30f&error_code=000&auth_response_text=Exact Match'
+	end
+
 
 end
