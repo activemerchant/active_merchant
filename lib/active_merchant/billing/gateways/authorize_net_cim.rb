@@ -75,7 +75,8 @@ module ActiveMerchant #:nodoc:
       
       ECHECK_TYPES = {
         :ccd => 'CCD',
-        :ppd => 'PPD'
+        :ppd => 'PPD',
+        :web => 'WEB'
       }
       
       self.homepage_url = 'http://www.authorize.net/'
@@ -465,6 +466,8 @@ module ActiveMerchant #:nodoc:
       
       def build_create_customer_profile_request(xml, options)
         add_profile(xml, options[:profile])
+
+        xml.tag!('validationMode', CIM_VALIDATION_MODES[options[:validation_mode]]) if options[:validation_mode]
 
         xml.target!
       end

@@ -137,7 +137,7 @@ class RealexTest < Test::Unit::TestCase
 </request>
 SRC
     
-    assert_equal valid_capture_xml, @gateway.build_capture_request('1;4321;1234', {})
+    assert_xml_equal valid_capture_xml, @gateway.build_capture_request('1;4321;1234', {})
   end
   
   def test_purchase_xml
@@ -169,7 +169,7 @@ SRC
 </request>
 SRC
 
-    assert_equal valid_purchase_request_xml, @gateway.build_purchase_or_authorization_request(:purchase, @amount, @credit_card, options)
+    assert_xml_equal valid_purchase_request_xml, @gateway.build_purchase_or_authorization_request(:purchase, @amount, @credit_card, options)
   end
   
   def test_void_xml
@@ -186,7 +186,7 @@ SRC
 </request>
 SRC
 
-    assert_equal valid_void_request_xml, @gateway.build_void_request('1;4321;1234', {})
+    assert_xml_equal valid_void_request_xml, @gateway.build_void_request('1;4321;1234', {})
   end
   
   def test_auth_xml
@@ -218,7 +218,7 @@ SRC
 </request>
 SRC
 
-    assert_equal valid_auth_request_xml, @gateway.build_purchase_or_authorization_request(:authorization, @amount, @credit_card, options)
+    assert_xml_equal valid_auth_request_xml, @gateway.build_purchase_or_authorization_request(:authorization, @amount, @credit_card, options)
   end
   
   def test_refund_xml
@@ -237,7 +237,7 @@ SRC
 </request>
 SRC
 
-    assert_equal valid_refund_request_xml, @gateway.build_refund_request(@amount, '1;4321;1234', {})
+    assert_xml_equal valid_refund_request_xml, @gateway.build_refund_request(@amount, '1;4321;1234', {})
 
   end
   
@@ -260,7 +260,7 @@ SRC
 </request>
 SRC
 
-    assert_equal valid_refund_request_xml, gateway.build_refund_request(@amount, '1;4321;1234', {})
+    assert_xml_equal valid_refund_request_xml, gateway.build_refund_request(@amount, '1;4321;1234', {})
 
   end
   
@@ -394,5 +394,20 @@ SRC
   <md5hash>34e7....a77d</md5hash>
 </response>"
     RESPONSE
+  end
+
+  require 'nokogiri'
+  def assert_xml_equal(expected, actual)
+    assert_xml_equal_recursive(Nokogiri::XML(expected).root, Nokogiri::XML(actual).root)
+  end
+
+  def assert_xml_equal_recursive(a, b)
+    assert_equal(a.name, b.name)
+    assert_equal(a.text, b.text)
+    a.attributes.zip(b.attributes).each do |(_, a1), (_, b1)|
+      assert_equal a1.name, b1.name
+      assert_equal a1.value, b1.value
+    end
+    a.children.zip(b.children).all?{|a1, b1| assert_xml_equal_recursive(a1, b1)}
   end
 end
