@@ -79,6 +79,7 @@ class EwayManagedTest < Test::Unit::TestCase
     assert_equal "00,Transaction Approved(Test Gateway)", response.message
     assert_success response
     assert_equal "123456", response.authorization
+    assert_equal "123456", response.params['transaction_number']
     assert response.test?
   end
   
