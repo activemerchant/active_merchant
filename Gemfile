@@ -7,6 +7,7 @@ group :test do
 
   # gateway-specific dependencies, keeping these gems out of the gemspec
   gem 'samurai', '>= 0.2.25'
+  gem 'braintree', '>= 2.0.0'
 end
 
 group :remote_test do
@@ -16,5 +17,6 @@ group :remote_test do
 
   # gateway-specific dependencies, keeping these gems out of the gemspec
   gem 'samurai', '>= 0.2.25'
+  gem 'braintree', '>= 2.0.0'
 end
 
