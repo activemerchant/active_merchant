@@ -25,10 +25,6 @@ class CertoDirectTest < Test::Unit::TestCase
     }
   end
 
-  def teardown
-  end
-
-
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
