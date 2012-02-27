@@ -28,6 +28,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('rake')
   s.add_development_dependency('mocha')
   s.add_development_dependency('rails', '>= 2.3.11')
+  s.add_development_dependency('rubigen')
   s.signing_key = ENV['GEM_PRIVATE_KEY']
   s.cert_chain  = ['gem-public_cert.pem']
 end
