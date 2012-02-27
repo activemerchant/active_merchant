@@ -149,6 +149,11 @@ merchant_ware:
  password: 
  name: 
 
+merchant_warrior:
+  merchant_uuid: '4e922de8c2a4c'
+  api_key: 'g6jrxa9o'
+  api_passphrase: 'vp4ujoem'
+
 modern_payments:
   login: login
   password: password
