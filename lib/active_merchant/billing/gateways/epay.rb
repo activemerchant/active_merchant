@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
       # login: merchant number
       # password: referrer url (for authorize authentication)
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, :login)
         @options = options
         super
       end
@@ -181,8 +181,12 @@ module ActiveMerchant #:nodoc:
 
       def do_authorize(params)
         headers = {}
-        headers['Referer'] = options[:password] if options[:password]
-
+        if options[:password]
+          headers['Referer'] = options[:password] 
+        else
+          headers['Referer'] = 'activemerchant.org';
+  	end
+				
         response = raw_ssl_request(:post, 'https://' + API_HOST + '/auth/default.aspx', authorize_post_data(params), headers)
 
         # Authorize gives the response back by redirecting with the values in
