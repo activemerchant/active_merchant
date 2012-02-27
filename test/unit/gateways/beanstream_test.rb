@@ -38,6 +38,10 @@ class BeanstreamTest < Test::Unit::TestCase
       :tax2 => 100,
       :custom => 'reference one'
     }
+
+    @recurring_options = @options.merge(
+      :interval => { :unit => :months, :length => 1 },
+      :occurrences => 5)
   end
   
   def test_successful_purchase
@@ -133,7 +137,42 @@ class BeanstreamTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options)
   end
   
-  
+  def test_successful_recurring
+    @gateway.expects(:ssl_post).returns(successful_recurring_response)
+
+    assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_update_recurring
+    @gateway.expects(:ssl_post).returns(successful_recurring_response)
+
+    assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
+    assert_success response
+    assert_equal 'Approved', response.message
+
+    @gateway.expects(:ssl_post).returns(successful_update_recurring_response)
+
+    assert response = @gateway.update_recurring(@amount, @credit_card, @recurring_options.merge(:account_id => response.params["rbAccountId"]))
+    assert_success response
+    assert_equal "Request successful", response.message
+  end
+
+  def test_successful_cancel_recurring
+    @gateway.expects(:ssl_post).returns(successful_recurring_response)
+
+    assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
+    assert_success response
+    assert_equal 'Approved', response.message
+
+    @gateway.expects(:ssl_post).returns(successful_cancel_recurring_response)
+
+    assert response = @gateway.cancel_recurring(:account_id => response.params["rbAccountId"])
+    assert_success response
+    assert_equal "Request successful", response.message
+  end
+
   private
     
   def successful_purchase_response
@@ -163,4 +202,18 @@ class BeanstreamTest < Test::Unit::TestCase
   def next_year
     (Time.now.year + 1).to_s[/\d\d$/]
   end
+
+  def successful_recurring_response
+    "trnApproved=1&trnId=10000072&messageId=1&messageText=Approved&trnOrderNumber=5d9f511363a0f35d37de53b4d74f5b&authCode=&errorType=N&errorFields=&responseType=T&trnAmount=15%2E00&trnDate=6%2F4%2F2008+6%3A33%3A55+PM&avsProcessed=0&avsId=0&avsResult=0&avsAddrMatch=0&avsPostalMatch=0&avsMessage=Address+Verification+not+performed+for+this+transaction%2E&trnType=D&paymentMethod=EFT&ref1=reference+one&ref2=&ref3=&ref4=&ref5="
+  end
+
+  def successful_update_recurring_response
+    "<response><code>1</code><message>Request successful</message></response>"
+  end
+
+  def successful_cancel_recurring_response
+    "<response><code>1</code><message>Request successful</message></response>"
+  end
+
 end
+
