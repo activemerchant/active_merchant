@@ -5,10 +5,10 @@ require 'test_helper'
 # Beanstream does not allow Payment Profiles to be deleted with their API. The accounts are 'closed', but have to be deleted manually.  Because of this, some of these tests will
 # only work the first time you run them since the profile, if created again, becomes a duplicate.  There is a setting in order settings which, when unchecked will allow the tests to be run any number
 # of times without needing the manual deletion step between test runs.  The setting is: Do not allow profile to be created with card data duplicated from an existing profile.
-class RemoteBeanstreamTest < Test::Unit::TestCase
+class RemoteBeanstreamHashAuthTest < Test::Unit::TestCase
   
   def setup
-    @gateway = BeanstreamGateway.new(fixtures(:beanstream))
+    @gateway = BeanstreamGateway.new(fixtures(:beanstream_hash_auth))
     
     # Beanstream test cards. Cards require a CVV of 123, which is the default of the credit card helper
     @visa                = credit_card('4030000010001234')
