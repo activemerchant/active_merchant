@@ -398,17 +398,16 @@ SRC
 
   require 'nokogiri'
   def assert_xml_equal(expected, actual)
-    unless compare_xml(Nokogiri::XML(expected).root, Nokogiri::XML(actual).root)
-      assert_equal expected, actual
-    end
+    assert_xml_equal_recursive(Nokogiri::XML(expected).root, Nokogiri::XML(actual).root)
   end
 
-  def compare_xml(a, b)
-    (
-      (a.name == b.name) &&
-      (a.text == b.text) &&
-      (a.attributes == b.attributes) &&
-      (a.children.zip(b.children).all?{|a1, b1| compare_xml(a1, b1)})
-    )
+  def assert_xml_equal_recursive(a, b)
+    assert_equal(a.name, b.name)
+    assert_equal(a.text, b.text)
+    a.attributes.zip(b.attributes).each do |(_, a1), (_, b1)|
+      assert_equal a1.name, b1.name
+      assert_equal a1.value, b1.value
+    end
+    a.children.zip(b.children).all?{|a1, b1| assert_xml_equal_recursive(a1, b1)}
   end
 end
