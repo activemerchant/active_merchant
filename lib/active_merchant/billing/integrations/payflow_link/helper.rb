@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
             add_field('invoice', order)
             add_field('vendor', account)
             add_field('user', options[:credential4] || account)
-            add_field('trxtype', options[:transaction_type])
+            add_field('trxtype', options[:transaction_type] || 'S')
           end
 
           mapping :account, 'login'
@@ -21,7 +21,6 @@ module ActiveMerchant #:nodoc:
           mapping :credential3, 'partner'
           mapping :order, 'user1'
           mapping :description, 'description'
-          mapping :transaction_type, 'trxtype'
 
           mapping :amount, 'amt'
 
