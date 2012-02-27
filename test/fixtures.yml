@@ -476,3 +476,9 @@ world_pay:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+x_charge:
+  TerminalID: "12345"
+  XWebID: "12345"
+  AuthKey: "AUTHKEY"
+  Industry: "ECOMMERCE"

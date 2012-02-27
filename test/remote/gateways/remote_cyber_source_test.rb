@@ -1,5 +1,9 @@
 require 'test_helper'
 
+# Note:
+# to successfully run the echeck test cases, your cybersource test account must be set up
+# with one of cybersource's check processors; these cases pass against Paymenttech
+
 class RemoteCyberSourceTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
@@ -12,8 +16,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     @amount = 100
     
     @options = {
-      :billing_address => address,
-
+      :billing_address => address.merge(:first_name => 'Jim', :last_name => 'Smith'),
       :order_id => generate_unique_id,
       :line_items => [
         {
@@ -35,7 +38,38 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       :ignore_avs => 'true',
       :ignore_cvv => 'true'
     }
-
+    
+    @subscription_options = {
+      :order_id => generate_unique_id,
+      :email => 'someguy1232@fakeemail.net',
+      :credit_card => @credit_card,
+      :billing_address => address.merge(:first_name => 'Jim', :last_name => 'Smith'),
+      :subscription => {
+        :frequency => "weekly",
+        :start_date => Date.today.next_week,
+        :occurrences => 4,
+        :auto_renew => true,
+        :amount => 100
+      }
+    }
+    
+    @check = ActiveMerchant::Billing::Check.new(
+      :name => 'Mr CustomerTwo',
+      :routing_number => '121042882', # Valid ABA # - Bank of America, TX
+      :account_number => '4100',
+      :account_holder_type => 'personal',
+      :account_type => 'checking'
+    )
+    
+    check_fields = {
+      :billing_address => address.merge(:first_name => 'Jim', :last_name => 'CustomerTwo', :phone_number => "123-456-7890"),
+      :drivers_license_number => "C2222222",
+      :drivers_license_state  => "CA"
+    }
+    
+    @check_options = @options.merge(check_fields)
+    
+    @check_subscription_options = @subscription_options.merge(check_fields)
   end
   
   def test_successful_authorization
@@ -107,11 +141,17 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_purchase
+  def test_successful_purchase_with_cc
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
+  end
+
+  def test_successful_purchase_with_echeck
+    assert response = @gateway.purchase(@amount, @check, @check_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
   end
 
   def test_unsuccessful_purchase
@@ -155,7 +195,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_match /wsse:InvalidSecurity/, response.body
   end
   
-  def test_successful_credit
+  def test_successful_refund
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Successful transaction', response.message
     assert_success response
@@ -164,5 +204,62 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?       
+  end
+  
+  def test_successful_create_subscription_with_cc
+    assert response = @gateway.create_subscription(@credit_card, @subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_create_subscription_with_cc_and_setup_fee
+    assert response = @gateway.create_subscription(@credit_card, @subscription_options.merge(:setup_fee => 100))
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+  
+  def test_successful_create_subscription_with_echeck
+    assert response = @gateway.create_subscription(@check, @check_subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+  
+  def test_successful_update_subscription
+    assert response = @gateway.create_subscription(@credit_card, @subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    
+    assert response = @gateway.update_subscription(response.authorization, {:order_id =>generate_unique_id,:credit_card => @credit_card, :setup_fee => 100})
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_cc_subscription
+    assert response = @gateway.create_subscription(@credit_card, @subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    
+    assert response = @gateway.purchase(@amount, response.authorization, @options.merge(:type => :credit_card))
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_echeck_subscription
+    assert response = @gateway.create_subscription(@check, @check_subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    
+    assert response = @gateway.purchase(@amount, response.authorization, @options.merge(:type => :check))
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
   end
 end
