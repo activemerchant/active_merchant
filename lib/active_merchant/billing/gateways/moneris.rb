@@ -101,7 +101,9 @@ module ActiveMerchant #:nodoc:
           :amount     => amount(money),
           :pan        => creditcard.number,
           :expdate    => expdate(creditcard),
-          :crypt_type => options[:crypt_type] || @options[:crypt_type]
+          :crypt_type => options[:crypt_type] || @options[:crypt_type],
+          :cvv        => creditcard.verification_value,
+          :billing_address => options[:address] || options[:billing_address]
         }
       end
       
@@ -129,7 +131,9 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful?(response), message_from(response[:message]), response,
           :test          => test?,
-          :authorization => authorization_from(response)
+          :authorization => authorization_from(response),
+          :avs_result    => {:code => response[:avs_result_code]},
+          :cvv_result    => response[:cvd_result_code] && response[:cvd_result_code].last
         )
       end
       
@@ -172,10 +176,32 @@ module ActiveMerchant #:nodoc:
         actions[action].each do |key|
           transaction.add_element(key.to_s).text = parameters[key] unless parameters[key].blank?
         end
-        
+
+        add_avs_info(transaction, parameters)
+        add_cvd_info(transaction, parameters)
+
         xml.to_s
       end
-    
+
+      def add_avs_info(transaction, parameters)
+        if address = parameters[:billing_address]
+          street_number, street_name = address[:address1].split(' ', 2)
+
+          avs_info = transaction.add_element('avs_info')
+          avs_info.add_element('avs_street_number').text  = street_number
+          avs_info.add_element('avs_street_name').text    = street_name
+          avs_info.add_element('avs_zipcode').text        = address[:zip]
+        end
+      end
+
+      def add_cvd_info(transaction, parameters)
+        if cvd_value = parameters[:cvv]
+          cvd_info = transaction.add_element('cvd_info')
+          cvd_info.add_element('cvd_indicator').text  = '1'
+          cvd_info.add_element('cvd_value').text      = cvd_value
+        end
+      end
+
       def message_from(message)
         return 'Unspecified error' if message.blank?
         message.gsub(/[^\w]/, ' ').split.join(" ").capitalize
