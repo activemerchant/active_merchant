@@ -4,10 +4,10 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module AuthorizeNetSim
-        # An example. Note the username as a parameter and transaction key
-        # you will want to use later. The amount that you pass in will be *rounded*, so
-        # preferably pass in X.2 decimal so that no rounding occurs. It # is
-        # rounded because if it looks like 00.000 Authorize.Net fails the #
+        # An example. Note the username as a parameter and transaction key you
+        # will want to use later. The amount that you pass in will be *rounded*,
+        # so preferably pass in X.2 decimal so that no rounding occurs. It is
+        # rounded because if it looks like 00.000 Authorize.Net fails the
         # transaction as incorrectly formatted.
         # 
         #  payment_service_for('order_id', 'authorize_net_account', :service => :authorize_net_sim,  :amount => 157.0) do |service|

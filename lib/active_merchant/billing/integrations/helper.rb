@@ -44,12 +44,10 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-
-        # call to add a field that has characters that CGI::escape would mangle
-        # note this may mean you may want to call CGI::escape on some of your own elements before passing them in here
-        # this call allows for multiple fields with the same name
-        # so it can work for line items
+        # Add a field that has characters that CGI::escape would mangle. Allows
+        # for multiple fields with the same name (e.g., to support line items).
         def add_raw_html_field(name, value)
+          return if name.blank? || value.blank?
           @raw_html_fields << [name, value]
         end
         
@@ -93,7 +91,7 @@ module ActiveMerchant #:nodoc:
         def method_missing(method_id, *args)
           method_id = method_id.to_s.gsub(/=$/, '').to_sym
           # Return and do nothing if the mapping was not found. This allows 
-          # For easy substitution of the different integrations 
+          # For easy substitution of the different integrations
           return if mappings[method_id].nil?
 
           mapping = mappings[method_id]
