@@ -21,7 +21,7 @@ class AuthorizeNetSimModuleTest < ActionViewHelperTest
       35.times {service.add_line_item :name => 'beauty2 - ayoyo', :quantity => 1, :unit_price => 0}
     }
     assert @output_buffer =~ / more unshown items after this one/
-    # it should display them all in, despite each having the same name
+    # It should display them all in, despite each having the same name.
     assert @output_buffer.scan(/beauty2 - ayoyo/).length > 5
   end
   
@@ -109,18 +109,14 @@ class AuthorizeNetSimModuleTest < ActionViewHelperTest
       line.strip!
       if line =~ /(name=".*".*value=".*")/i
         line = $1
-        unless @output_buffer.include? line
-          raise 'didnt find' + line + 'in ' + @output_buffer 
-        end
+        assert @output_buffer.include?(line), 'didnt find' + line + 'in ' + @output_buffer
       end
     end
   end
 
   def check_inclusion these_lines
     for line in these_lines do
-      unless @output_buffer.include? line
-        raise ['unable to find ', line, ' ', 'in \n', @output_buffer].join(' ')
-      end
+      assert @output_buffer.include?(line), ['unable to find ', line, ' ', 'in \n', @output_buffer].join(' ')
     end
   end
   
@@ -156,9 +152,7 @@ class AuthorizeNetSimModuleTest < ActionViewHelperTest
      <input id=\"x_ship_to_country\" name=\"x_ship_to_country\" type=\"hidden\" value=\"US\" />\n<input id=\"x_ship_to_zip\" name=\"x_ship_to_zip\" type=\"hidden\" value=\"84601\" />\n<input id=\"x_ship_to_company\" name=\"x_ship_to_company\" type=\"hidden\" value=\"company1\" />\n
      <input id=\"x_ship_to_state\" name=\"x_ship_to_state\" type=\"hidden\" value=\"TX\" />\n"
     for line in expected.split("\n") do
-      unless @output_buffer.include? line.strip
-        raise 'expected but not found' + line 
-      end
+      assert @output_buffer.include?(line.strip), 'expected but not found' + line 
     end
   end
   
@@ -195,7 +189,7 @@ class AuthorizeNetSimModuleTest < ActionViewHelperTest
         service.tax 4
         service.ship_to_address :first_name => 'firsty'
       }
-      raise unless @output_buffer.include? "<input id=\"x_ship_to_first_name\" name=\"x_ship_to_first_name\" type=\"hidden\" value=\"firsty\" />"
+      assert @output_buffer.include? "<input id=\"x_ship_to_first_name\" name=\"x_ship_to_first_name\" type=\"hidden\" value=\"firsty\" />"
   end
 
   def test_normal_fields
@@ -234,7 +228,7 @@ class AuthorizeNetSimModuleTest < ActionViewHelperTest
     <input id=\"x_freight\" name=\"x_freight\" type=\"hidden\" value=\"30.00\" />".split("\n")
 
     for line in expected
-      raise 'missing field' + line + ' in' + "\n" + @output_buffer unless @output_buffer.include? line.strip
+      assert @output_buffer.include?(line.strip), 'missing field' + line + ' in' + "\n"
     end
 
   end

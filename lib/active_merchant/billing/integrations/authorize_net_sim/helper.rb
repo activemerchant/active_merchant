@@ -4,12 +4,15 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module AuthorizeNetSim
-        #  An example. Note the username as a parameter, and transaction key used later
-        #  also note that the amount will be *rounded* that you pass in, so preferably pass in X.2 decimal so that no rounding occurs.
-        #  it is rounded because if it looks like 00.000 authorize.net fails the transaction as incorrectly formatted.
-        #
-        #  payment_service_for('order_id','authorize_net_account', :service => :authorize_net_sim,  :amount => 157.0){|service|
-        #    # note: you must call setup_hash and invoice
+        # An example. Note the username as a parameter and transaction key
+        # you will want to use later. The amount that you pass in will be *rounded*, so
+        # preferably pass in X.2 decimal so that no rounding occurs. It # is
+        # rounded because if it looks like 00.000 Authorize.Net fails the #
+        # transaction as incorrectly formatted.
+        # 
+        #  payment_service_for('order_id', 'authorize_net_account', :service => :authorize_net_sim,  :amount => 157.0) do |service|
+        # 
+        #    # You must call setup_hash and invoice
         #    
         #    service.setup_hash :transaction_key => '8CP6zJ7uD875J6tY',
         #        :order_timestamp => 1206836763
@@ -32,23 +35,21 @@ module ActiveMerchant #:nodoc:
         #                            :zip => 'g'
         # 
         #   service.invoice "516428355" # your invoice number
+        #   # The end-user is presented with the HTML produced by the notify_url.
         #   service.notify_url "http://t/authorize_net_sim/payment_received_notification_sub_step"
-        #   # NB that you will need to setup, within authorize.net, what you want for your relay url, as above.
-        #   # (auth.net calls back to that url, and displays its text back to the user--typically you have that text redirect them back to your site).
         #   service.payment_header 'My store name'
         #   service.add_line_item :name => 'item name', :quantity => 1, :unit_price => 0
         #   service.test_request 'true' # only if it's just a test
         #   service.shipping '25.0'
-        #   service.add_shipping_as_line_item # tell it to display a "0" line item for shipping, with the price in the name
+        #   # Tell it to display a "0" line item for shipping, with the price in
+        #   # the name, otherwise it isn't shown at all, leaving the end user to
+        #   # wonder why the total is different than the sum of the line items.
+        #   service.add_shipping_as_line_item
         #   server.add_tax_as_line_item # same with tax
-        #   # since otherwise, bizarrely, it isn't shown at all, leaving the end user to wonder why the total is different than the sum of the line items.
         #   # See the helper.rb file for various custom fields
-        #   }
-        #  
-        class Helper < ActiveMerchant::Billing::Integrations::Helper
-          
-          # any entry args, like :amount, must be done using this mapping fella...
-           
+        # end
+         
+        class Helper < ActiveMerchant::Billing::Integrations::Helper           
           mapping :order, 'x_fp_sequence'
           mapping :account, 'x_login'
           
@@ -61,56 +62,59 @@ module ActiveMerchant #:nodoc:
           mapping :return_url, '' # unused
           mapping :cancel_return_url, '' # unused
           
-          # custom fields for Authorize.net SIM ==>
-          # see http://www.authorize.net/support/SIM_guide.pdf for more descriptions
+          # Custom fields for Authorize.net SIM.
+          # See http://www.Authorize.Net/support/SIM_guide.pdf for more descriptions.
           mapping :fax, 'x_fax'
           mapping :customer_id, 'x_cust_id'
-          mapping :description, 'x_description' # This one isn't even shown to the user unless you specifically set it up to be
-          # these next two ignored by AN (?)
+          mapping :description, 'x_description'
           mapping :tax, 'x_tax'
           mapping :shipping, 'x_freight'
           
-          # true or false, or 0 or 1 same effect [not required to send one, defaults to false]
+          # True or false, or 0 or 1 same effect [not required to send one,
+          # defaults to false].
           mapping :test_request, 'x_test_request'
           
-          # this one is necessary for the notify url to be able to parse its information later!
-          # they also pass back customer id, if that's useful
+          # This one is necessary for the notify url to be able to parse its
+          # information later! They also pass back customer id, if that's
+          # useful.
           def invoice number
             add_field 'x_invoice_num', number
           end
           
-          # set the billing address.  Call like service.billing_address {:city => 'provo, :state => 'UT'}...
-          def billing_address options # allow us to combine the addresses, just in case they use address2
-            for setting in [:city, :state, :zip, :country, :po_num] do # I think po_num works
+          # Set the billing address. Call like service.billing_address {:city =>
+          # 'provo, :state => 'UT'}...
+          def billing_address options
+            for setting in [:city, :state, :zip, :country, :po_num] do
               add_field 'x_' + setting.to_s, options[setting]
             end
             raise 'must use address1 and address2' if options[:address]
-            # allow for nil :address2
             add_field 'x_address', (options[:address1].to_s + ' ' + options[:address2].to_s).strip
           end
           
-          # adds a custom field which you submit to authorize.net.  These fields are all passed back to you 
-          # verbatim when it does its relay (callback) to you
-          # note that if you call it twice with the same name, this function only uses keeps the second value you called
-          # it with.
-          
+          # Adds a custom field which you submit to Authorize.Net. These fields
+          # are all passed back to you verbatim when it does its relay
+          # (callback) to you note that if you call it twice with the same name,
+          # this function only uses keeps the second value you called it with.          
           def add_custom_field name, value
             add_field name, value
           end
           
-          # displays tax as a line item, so they can see it. Otherwise it isn't displayed.
+          # Displays tax as a line item, so they can see it. Otherwise it isn't
+          # displayed.
           def add_tax_as_line_item
             raise unless @fields['x_tax']
             add_line_item :name => 'Total Tax', :quantity => 1, :unit_price => @fields['x_tax'], :tax => 0, :line_title => 'Tax'
           end
           
-          # displays shipping as a line item, so they can see it. Otherwise it isn't displayed.
+          # Displays shipping as a line item, so they can see it. Otherwise it
+          # isn't displayed.
           def add_shipping_as_line_item extra_options = {}
             raise 'must set shipping/freight before calling this' unless @fields['x_freight']
             add_line_item extra_options.merge({:name => 'Shipping and Handling Cost', :quantity => 1, :unit_price => @fields['x_freight'], :line_title => 'Shipping'})
           end
           
-          # add ship_to_address in the same format as the normal address is added
+          # Add ship_to_address in the same format as the normal address is
+          # added.
           def ship_to_address options
             for setting in [:first_name, :last_name, :company, :city, :state, :zip, :country] do
               if options[setting] then
@@ -121,8 +125,8 @@ module ActiveMerchant #:nodoc:
             add_field 'x_ship_to_address', (options[:address1].to_s + ' ' + options[:address2].to_s).strip
           end
           
-          # these untested , and control the look of the SIM payment page
-          # note you can include a css header in descriptors, etc.
+          # These control the look of the SIM payment page. Note that you can
+          # include a CSS header in descriptors, etc.
           mapping :color_link, 'x_color_link'
           mapping :color_text, 'x_color_text'
           mapping :logo_url, 'x_logo_url'
@@ -130,62 +134,67 @@ module ActiveMerchant #:nodoc:
           mapping :payment_header, 'x_header_html_payment_form'
           mapping :payment_footer, 'x_footer_html_payment_form'
           
-          # for this to work you must have also passed in an email for the purchaser
-          # NOTE there are more that could be added here--email body, etc.
+          # For this to work you must have also passed in an email for the
+          # purchaser.
           def yes_email_customer_from_authorizes_side
             add_field 'x_email_customer', 'TRUE'
           end
 
-          # add a line item to authorize.net
-          # call line add_line_item {:name => 'orange', :unit_price => 30, :tax_value => 'Y', :quantity => 3, }
-          # note you can't pass in a negative unit price, and you can add an optional :line_title => 'special name' if you don't
-          # want it to say 'Item 1' or what not, the default coded here.
-          # NB cannot have a negative price, nor a name with "'s or $
-          # NB that you can use the :line_title for the product name and then :name for description, if desired
+          # Add a line item to Authorize.Net.
+          # Call line add_line_item {:name => 'orange', :unit_price => 30, :tax_value => 'Y', :quantity => 3, }
+          # Note you can't pass in a negative unit price, and you can add an
+          # optional :line_title => 'special name' if you don't want it to say
+          # 'Item 1' or what not, the default coded here.
+          # Cannot have a negative price, nor a name with "'s or $
+          # You can use the :line_title for the product name and then :name for description, if desired
           def add_line_item options
             raise 'needs name' unless options[:name]
-            if @line_item_count == 30 # then add a note that we are not showing at least one -- AN doesn't display more than 30 or so
+            
+            if @line_item_count == 30
+              # Add a note that we are not showing at least one -- AN doesn't
+              # display more than 30 or so.
               description_of_last = @raw_html_fields[-1][1]
-              # pull off the second to last section, which is the description
+              # Pull off the second to last section, which is the description.
               description_of_last =~ />([^>]*)<\|>[YN]$/
-              # create a new description, which can't be too big, so truncate here
+              # Create a new description, which can't be too big, so truncate here.
               @raw_html_fields[-1][1] = description_of_last.gsub($1, $1[0..200] + ' + more unshown items after this one.')
             end
             
             name = options[:name]
             quantity = options[:quantity] || 1
-            line_title = options[:line_title] || ('Item ' + (@line_item_count+1).to_s) # left most field
-            unit_price = options[:unit_price] || 0 # could check if AN accepts it without a unit_price
+            line_title = options[:line_title] || ('Item ' + (@line_item_count + 1).to_s) # left most field
+            unit_price = options[:unit_price] || 0
             unit_price = unit_price.to_f.round(2)
-            tax_value = options[:tax_value] || 'N' # takes Y or N or true, false, 0/1
+            tax_value = options[:tax_value] || 'N'
             
-            #
-            # sanitization, in case they include a reserved word here, following their guidelines
-            # unfortunately, they require 'raw' fields here, not CGI escaped, using their own delimiters.
+            # Sanitization, in case they include a reserved word here, following
+            # their guidelines; unfortunately, they require 'raw' fields here,
+            # not CGI escaped, using their own delimiters.
             # 
-            # Authorize.net ignores the second field (sanitized_short_name), anyway [though maybe it gets set internally somewhere...]
-            # so..what if I just pass it CGI::escape instead, now?
+            # Authorize.net ignores the second field (sanitized_short_name)
             raise 'illegal char for line item <|>' if name.include? '<|>'
-            raise 'illegal char for line item "' if name.include? '"' # I think we should be safe besides these. Hope so, as
+            raise 'illegal char for line item "' if name.include? '"'
             raise 'cannot pass in dollar sign' if unit_price.to_s.include? '$'
             raise 'must have positive or 0 unit price' if unit_price.to_f < 0
-            # using CGI::escape causes it to look messed [spaces turn into +'s on user display]
-            sanitized_short_name = name[0..30] # gotta keep it short
+            # Using CGI::escape causes the output to be formated incorrectly in
+            # the HTML presented to the end-user's browser (e.g., spaces turn
+            # into +'s).
+            sanitized_short_name = name[0..30]
             name = name[0..255]            
 
-            # note I don't [yet] have h here
-            # I think these are the only ones that can mess it up
             add_raw_html_field "x_line_item", "#{line_title}<|>#{sanitized_short_name}<|>#{name}<|>#{quantity}<|>#{unit_price}<|>#{tax_value}"
+
             @line_item_count += 1
           end
             
-          # if you call this it will e-mail to this email a copy of a receipt after
-          # successful, from authorize.net
+          # If you call this it will e-mail to this address a copy of a receipt
+          # after successful, from Authorize.Net.
           def email_merchant_from_authorizes_side to_this_email
             add_field 'x_email_merchant', to_this_email
           end
           
-          # Note.  You MUST call this at some point for it to actually work.  options must include :transaction_key and :order_timestamp
+          # You MUST call this at some point for it to actually work. Options
+          # must include :transaction_key and :order_timestamp
           def setup_hash options
             raise unless options[:transaction_key]
             raise unless options[:order_timestamp]
@@ -196,7 +205,8 @@ module ActiveMerchant #:nodoc:
             add_field 'x_fp_timestamp', options[:order_timestamp].to_i
           end
           
-          # Note that you should call #invoice and #setup_hash as well, for the response_url to actually work
+          # Note that you should call #invoice and #setup_hash as well, for the
+          # response_url to actually work.
           def initialize(order, account, options = {})
             super
             raise 'missing parameter' unless order and account and options[:amount]

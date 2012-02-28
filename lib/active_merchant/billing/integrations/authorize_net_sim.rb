@@ -1,6 +1,5 @@
 require File.dirname(__FILE__) + '/authorize_net_sim/helper.rb'
 require File.dirname(__FILE__) + '/authorize_net_sim/notification.rb'
-#require 'active_merchant/billing/integrations/authorize_net_sim/return.rb'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
