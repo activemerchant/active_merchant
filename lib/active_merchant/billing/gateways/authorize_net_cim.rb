@@ -657,6 +657,7 @@ module ActiveMerchant #:nodoc:
                 xml.tag!('transId', transaction[:trans_id])
               else
                 xml.tag!('amount', transaction[:amount])
+                add_line_items(xml, transaction[:line_items]) if transaction[:line_items]
                 xml.tag!('customerProfileId', transaction[:customer_profile_id])
                 xml.tag!('customerPaymentProfileId', transaction[:customer_payment_profile_id])
                 xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
@@ -671,6 +672,19 @@ module ActiveMerchant #:nodoc:
           xml.tag!('invoiceNumber', order[:invoice_number]) if order[:invoice_number]
           xml.tag!('description', order[:description]) if order[:description]
           xml.tag!('purchaseOrderNumber', order[:purchase_order_number]) if order[:purchase_order_number]
+        end
+      end
+
+      def add_line_items(xml, line_items)
+        line_items.each do |line_item|
+          xml.tag!('lineItems') do
+            xml.tag!('itemId', line_item[:item_id])
+            xml.tag!('name', line_item[:name])
+            xml.tag!('description', line_item[:description])
+            xml.tag!('quantity', line_item[:quantity])
+            xml.tag!('unitPrice', line_item[:unit_price])
+            xml.tag!('taxable', line_item[:taxable])
+          end
         end
       end
       
