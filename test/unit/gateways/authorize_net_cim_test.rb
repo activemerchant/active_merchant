@@ -99,7 +99,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal 'customerAddressId', response.params['customer_address_id']
   end
 
-  def test_should_create_customer_profile_transaction_auth_only_and_then_capture_only_requests
+  def test_should_create_customer_profile_transaction_auth_only_and_then_prior_auth_capture_requests
     @gateway.expects(:ssl_post).returns(successful_create_customer_profile_transaction_response(:auth_only))
 
     assert response = @gateway.create_customer_profile_transaction(
@@ -115,8 +115,8 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal response.authorization, response.params['direct_response']['transaction_id']
     assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
     assert_equal 'auth_only', response.params['direct_response']['transaction_type']
-    assert_equal 'Gw4NGI', approval_code = response.params['direct_response']['approval_code']
-    assert_equal '508223659', response.params['direct_response']['transaction_id']
+    assert_equal 'Gw4NGI', response.params['direct_response']['approval_code']
+    assert_equal '508223659', trans_id = response.params['direct_response']['transaction_id']
 
     assert_equal '1', response.params['direct_response']['response_code']
     assert_equal '1', response.params['direct_response']['response_subcode']
@@ -155,6 +155,49 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal '', response.params['direct_response']['card_code']
     assert_equal '2', response.params['direct_response']['cardholder_authentication_verification_response']
 
+    assert_equal response.authorization, trans_id
+
+    @gateway.expects(:ssl_post).returns(successful_create_customer_profile_transaction_response(:prior_auth_capture))
+
+    assert response = @gateway.create_customer_profile_transaction(
+      :transaction => {
+        :customer_profile_id => @customer_profile_id,
+        :customer_payment_profile_id => @customer_payment_profile_id,
+        :type => :prior_auth_capture,
+        :amount => @amount,
+        :trans_id => trans_id
+      }
+    )
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
+  end
+  
+  # NOTE - do not pattern your production application after this (refer to
+  # test_should_create_customer_profile_transaction_auth_only_and_then_prior_auth_capture_requests
+  # instead as the correct way to do an auth then capture). capture_only
+  # "is used to complete a previously authorized transaction that was not
+  #  originally submitted through the payment gateway or that required voice
+  #  authorization" and can in some situations perform an auth_capture leaking
+  # the original authorization.
+  def test_should_create_customer_profile_transaction_auth_only_and_then_capture_only_requests
+    @gateway.expects(:ssl_post).returns(successful_create_customer_profile_transaction_response(:auth_only))
+
+    assert response = @gateway.create_customer_profile_transaction(
+      :transaction => {
+        :customer_profile_id => @customer_profile_id, 
+        :customer_payment_profile_id => @customer_payment_profile_id, 
+        :type => :auth_only, 
+        :amount => @amount
+      }
+    )
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal response.authorization, response.params['direct_response']['transaction_id']
+    assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
+    assert_equal 'auth_only', response.params['direct_response']['transaction_type']
+    assert_equal 'Gw4NGI', approval_code = response.params['direct_response']['approval_code']
+
     @gateway.expects(:ssl_post).returns(successful_create_customer_profile_transaction_response(:capture_only))
 
     assert response = @gateway.create_customer_profile_transaction(
@@ -168,7 +211,6 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     )
     assert_instance_of Response, response
     assert_success response
-    assert_equal response.authorization, response.params['direct_response']['transaction_id']
     assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
   end
 
@@ -185,11 +227,13 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
           :description => 'Test Order Description',
           :purchase_order_number => '4321'
         },
-        :amount => @amount
+        :amount => @amount,
+        :card_code => '123'
       }
     )
     assert_instance_of Response, response
     assert_success response
+    assert_equal 'M', response.params['direct_response']['card_code'] # M => match
     assert_equal response.authorization, response.params['direct_response']['transaction_id']
     assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
   end
@@ -909,7 +953,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   SUCCESSFUL_DIRECT_RESPONSE = {
     :auth_only => '1,1,1,This transaction has been approved.,Gw4NGI,Y,508223659,,,100.00,CC,auth_only,Up to 20 chars,,,,,,,,,,,Up to 255 Characters,,,,,,,,,,,,,,6E5334C13C78EA078173565FD67318E4,,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
     :capture_only => '1,1,1,This transaction has been approved.,,Y,508223660,,,100.00,CC,capture_only,Up to 20 chars,,,,,,,,,,,Up to 255 Characters,,,,,,,,,,,,,,6E5334C13C78EA078173565FD67318E4,,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
-    :auth_capture => '1,1,1,This transaction has been approved.,d1GENk,Y,508223661,32968c18334f16525227,Store purchase,1.00,CC,auth_capture,,Longbob,Longsen,,,,,,,,,,,,,,,,,,,,,,,269862C030129C1173727CC10B1935ED,P,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
+    :auth_capture => '1,1,1,This transaction has been approved.,d1GENk,Y,508223661,32968c18334f16525227,Store purchase,1.00,CC,auth_capture,,Longbob,Longsen,,,,,,,,,,,,,,,,,,,,,,,269862C030129C1173727CC10B1935ED,M,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
     :void => '1,1,1,This transaction has been approved.,nnCMEx,P,2149222068,1245879759,,0.00,CC,void,1245879759,,,,,,,K1C2N6,,,,,,,,,,,,,,,,,,F240D65BB27ADCB8C80410B92342B22C,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
     :refund => '1,1,1,This transaction has been approved.,nnCMEx,P,2149222068,1245879759,,0.00,CC,refund,1245879759,,,,,,,K1C2N6,,,,,,,,,,,,,,,,,,F240D65BB27ADCB8C80410B92342B22C,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
     :prior_auth_capture => '1,1,1,This transaction has been approved.,VR0lrD,P,2149227870,1245958544,,1.00,CC,prior_auth_capture,1245958544,,,,,,,K1C2N6,,,,,,,,,,,,,,,,,,0B8BFE0A0DE6FDB69740ED20F79D04B0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
