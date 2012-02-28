@@ -152,11 +152,12 @@ module ActiveMerchant #:nodoc:
         perform_reference_credit(money, reference, options)
       end
       
-      # Create an alias for a credit_card
-      def create_alias(payment_source, aliaz, options = {})
-        res = authorize(1, payment_source, :store => aliaz)
-        void(res.params['PAYID'])
-        res
+      # Store a credit card by creating an Ogone Alias
+      def store(payment_source, options = {})
+        options.merge!(:alias_operation => 'BYOGONE') if options[:store].blank?
+        response = authorize(1, payment_source, options)
+        void(response.authorization) if response.success?
+        response
       end
 
       def test?
@@ -195,10 +196,10 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_source(post, payment_source, options)
         if payment_source.is_a?(String)
-          add_alias(post, payment_source)
+          add_alias(post, payment_source, options[:alias_operation])
           add_eci(post, options[:eci] || '9')
         else
-          add_alias(post, options[:store])
+          add_alias(post, options[:store], options[:alias_operation])
           add_eci(post, options[:eci] || '7')
           add_creditcard(post, payment_source)
         end
@@ -208,8 +209,9 @@ module ActiveMerchant #:nodoc:
         add_pair post, 'ECI', eci.to_s
       end
 
-      def add_alias(post, _alias)
+      def add_alias(post, _alias, alias_operation = nil)
         add_pair post, 'ALIAS', _alias
+        add_pair post, 'ALIASOPERATION', alias_operation unless alias_operation.nil?
       end
 
       def add_authorization(post, authorization)

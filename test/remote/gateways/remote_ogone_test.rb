@@ -145,11 +145,18 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_success void
   end
   
-  def test_successful_alias_creation
-    assert response = @gateway.create_alias(@credit_card, 'test_alias')
+  def test_successful_store
+    assert response = @gateway.store(@credit_card, :store => 'test_alias')
     assert_success response
-    assert response = @gateway.purchase(@amount, 'test_alias')
+    assert purchase = @gateway.purchase(@amount, 'test_alias')
+    assert_success purchase
+  end
+  
+  def test_successful_store_generated_alias
+    assert response = @gateway.store(@credit_card)
     assert_success response
+    assert purchase = @gateway.purchase(@amount, response.params['ALIAS'])
+    assert_success purchase
   end
 
   def test_successful_referenced_credit
