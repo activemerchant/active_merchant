@@ -297,6 +297,14 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal @customer_profile_id, response.authorization
   end
 
+  def test_should_get_customer_profile_ids_request
+    @gateway.expects(:ssl_post).returns(successful_get_customer_profile_ids_response)
+
+    assert response = @gateway.get_customer_profile_ids
+    assert_instance_of Response, response
+    assert_success response
+  end
+
   def test_should_get_customer_profile_request_with_multiple_payment_profiles
     @gateway.expects(:ssl_post).returns(successful_get_customer_profile_response_with_multiple_payment_profiles)
 
@@ -724,6 +732,27 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
           </paymentProfiles>
         </profile>
       </getCustomerProfileResponse>
+    XML
+  end
+
+  def successful_get_customer_profile_ids_response
+    <<-XML
+      <?xml version="1.0" encoding="utf-8"?>
+      <getCustomerProfileIdsResponse xmlns="AnetApi/xml/v1/schema/
+      AnetApiSchema.xsd">
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+        <ids>
+          <numericString>10000</numericString>
+          <numericString>10001</numericString>
+          <numericString>10002</numericString>
+        </ids>
+      </getCustomerProfileIdsResponse>
     XML
   end
 
