@@ -1,5 +1,25 @@
 = ActiveMerchant CHANGELOG
 
+* Stripe: Add support for passing IP [collision]
+* Merchant e-Solutions: pass expiration date when purchasing with a stored credit card [chrisyoung]
+* Braintree: Fix passing custom processor ids to old accounts [maxsilver]
+* Authorize.net CIM: Add validation mode option to create_customer_profile_request [jwood]
+* eWay Managed: Include transaction number in response params [jamsi]
+* Fix various hash ordering issues exposed by Ruby 1.8 [ntalbott]
+* Authorize.Net CIM: Add WEB echeck type [deathbob]
+* Move Braintree from the gemspec to the Gemfile [ntalbott]
+* Add CertoDirect gateway [hron]
+* Authorize.Net CIM: Add option for setting a custom delimiter [bmorton]
+* Authorize.Net CIM: Add 3.1 response fields [bmorton]
+* Authorize.Net CIM: Misc fixes and doc improvements [bmorton]
+* Moneris: Add AVS/CVV support [odorcicd]
+* Authorize.Net CIM: Fix error when order is blank [KeeperPat]
+* Beanstream: Add recurring payments support [castiglione]
+* Make ePay password optional [ePay]
+* Quickpay: skip testmode if transaction provided [brentmc79]
+* Payflow: add additional fields [thorstadt]
+* Authorize.Net CIM: Add get_customer_profile_ids [howaboutwe]
+
 == Version 1.20.4 (February 22, 2012)
 
 * Fix json dependency
