@@ -953,12 +953,17 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   SUCCESSFUL_DIRECT_RESPONSE = {
-    :auth_only => '1,1,1,This transaction has been approved.,Gw4NGI,Y,508223659,,,100.00,CC,auth_only,Up to 20 chars,,,,,,,,,,,Up to 255 Characters,,,,,,,,,,,,,,6E5334C13C78EA078173565FD67318E4,,2,,,,,,,,,,,XXXX1234,Visa,,,,,,,,,,,,,,,,',
-    :capture_only => '1,1,1,This transaction has been approved.,,Y,508223660,,,100.00,CC,capture_only,Up to 20 chars,,,,,,,,,,,Up to 255 Characters,,,,,,,,,,,,,,6E5334C13C78EA078173565FD67318E4,,2,,,,,,,,,,,XXXX1234,Visa,,,,,,,,,,,,,,,,',
-    :auth_capture => '1,1,1,This transaction has been approved.,d1GENk,Y,508223661,32968c18334f16525227,Store purchase,1.00,CC,auth_capture,,Longbob,Longsen,,,,,,,,,,,,,,,,,,,,,,,269862C030129C1173727CC10B1935ED,M,2,,,,,,,,,,,XXXX1234,Visa,,,,,,,,,,,,,,,,',
-    :void => '1,1,1,This transaction has been approved.,nnCMEx,P,2149222068,1245879759,,0.00,CC,void,1245879759,,,,,,,K1C2N6,,,,,,,,,,,,,,,,,,F240D65BB27ADCB8C80410B92342B22C,,,,,,,,,,,,,XXXX1234,Visa,,,,,,,,,,,,,,,',
-    :refund => '1,1,1,This transaction has been approved.,nnCMEx,P,2149222068,1245879759,,0.00,CC,refund,1245879759,,,,,,,K1C2N6,,,,,,,,,,,,,,,,,,F240D65BB27ADCB8C80410B92342B22C,,,,,,,,,,,,,XXXX1234,Visa,,,,,,,,,,,,,,,,',
-    :prior_auth_capture => '1,1,1,This transaction has been approved.,VR0lrD,P,2149227870,1245958544,,1.00,CC,prior_auth_capture,1245958544,,,,,,,K1C2N6,,,,,,,,,,,,,,,,,,0B8BFE0A0DE6FDB69740ED20F79D04B0,,,,,,,,,,,,,XXXX1234,Visa,,,,,,,,,,,,,,,,,'
+    :auth_only => '1,1,1,This transaction has been approved.,Gw4NGI,Y,508223659,,,100.00,CC,auth_only,Up to 20 chars,,,,,,,,,,,Up to 255 Characters,,,,,,,,,,,,,,6E5334C13C78EA078173565FD67318E4,,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
+911	  	
+    :capture_only => '1,1,1,This transaction has been approved.,,Y,508223660,,,100.00,CC,capture_only,Up to 20 chars,,,,,,,,,,,Up to 255 Characters,,,,,,,,,,,,,,6E5334C13C78EA078173565FD67318E4,,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
+912	  	
+    :auth_capture => '1,1,1,This transaction has been approved.,d1GENk,Y,508223661,32968c18334f16525227,Store purchase,1.00,CC,auth_capture,,Longbob,Longsen,,,,,,,,,,,,,,,,,,,,,,,269862C030129C1173727CC10B1935ED,P,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
+913	  	
+    :void => '1,1,1,This transaction has been approved.,nnCMEx,P,2149222068,1245879759,,0.00,CC,void,1245879759,,,,,,,K1C2N6,,,,,,,,,,,,,,,,,,F240D65BB27ADCB8C80410B92342B22C,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
+914	  	
+    :refund => '1,1,1,This transaction has been approved.,nnCMEx,P,2149222068,1245879759,,0.00,CC,refund,1245879759,,,,,,,K1C2N6,,,,,,,,,,,,,,,,,,F240D65BB27ADCB8C80410B92342B22C,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
+915	  	
+    :prior_auth_capture => '1,1,1,This transaction has been approved.,VR0lrD,P,2149227870,1245958544,,1.00,CC,prior_auth_capture,1245958544,,,,,,,K1C2N6,,,,,,,,,,,,,,,,,,0B8BFE0A0DE6FDB69740ED20F79D04B0,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,',
     :auth_capture_version_3_1 => '1,1,1,This transaction has been approved.,CSYM0K,Y,2163585627,1234,Test Order Description,100.00,CC,auth_capture,Up to 20 chars,,,Widgets Inc,1234 My Street,Ottawa,ON,K1C2N6,CA,,,Up to 255 Characters,,,,,,,,,,,,,4321,02DFBD7934AD862AB16688D44F045D31,,2,,,,,,,,,,,XXXX4242,Visa,,,,,,,,,,,,,,,,'
   }
   UNSUCCESSUL_DIRECT_RESPONSE = {

@@ -19,7 +19,6 @@
 * Quickpay: skip testmode if transaction provided [brentmc79]
 * Payflow: add additional fields [thorstadt]
 * Authorize.Net CIM: Add get_customer_profile_ids [howaboutwe]
-* Authorize.net CIM: Add CVV code support for transactions [tgarnett]
 
 == Version 1.20.4 (February 22, 2012)
 
