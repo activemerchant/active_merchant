@@ -77,13 +77,13 @@ module ActiveMerchant #:nodoc:
           # This one is necessary for the notify url to be able to parse its
           # information later! They also pass back customer id, if that's
           # useful.
-          def invoice number
+          def invoice(number)
             add_field 'x_invoice_num', number
           end
           
           # Set the billing address. Call like service.billing_address {:city =>
           # 'provo, :state => 'UT'}...
-          def billing_address options
+          def billing_address(options)
             for setting in [:city, :state, :zip, :country, :po_num] do
               add_field 'x_' + setting.to_s, options[setting]
             end
@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
           # are all passed back to you verbatim when it does its relay
           # (callback) to you note that if you call it twice with the same name,
           # this function only uses keeps the second value you called it with.          
-          def add_custom_field name, value
+          def add_custom_field(name, value)
             add_field name, value
           end
           
@@ -108,14 +108,14 @@ module ActiveMerchant #:nodoc:
           
           # Displays shipping as a line item, so they can see it. Otherwise it
           # isn't displayed.
-          def add_shipping_as_line_item extra_options = {}
+          def add_shipping_as_line_item(extra_options = {})
             raise 'must set shipping/freight before calling this' unless @fields['x_freight']
             add_line_item extra_options.merge({:name => 'Shipping and Handling Cost', :quantity => 1, :unit_price => @fields['x_freight'], :line_title => 'Shipping'})
           end
           
           # Add ship_to_address in the same format as the normal address is
           # added.
-          def ship_to_address options
+          def ship_to_address(options)
             for setting in [:first_name, :last_name, :company, :city, :state, :zip, :country] do
               if options[setting] then
                 add_field 'x_ship_to_' + setting.to_s, options[setting]
@@ -147,7 +147,7 @@ module ActiveMerchant #:nodoc:
           # 'Item 1' or what not, the default coded here.
           # Cannot have a negative price, nor a name with "'s or $
           # You can use the :line_title for the product name and then :name for description, if desired
-          def add_line_item options
+          def add_line_item(options)
             raise 'needs name' unless options[:name]
             
             if @line_item_count == 30
@@ -189,13 +189,13 @@ module ActiveMerchant #:nodoc:
             
           # If you call this it will e-mail to this address a copy of a receipt
           # after successful, from Authorize.Net.
-          def email_merchant_from_authorizes_side to_this_email
+          def email_merchant_from_authorizes_side(to_this_email)
             add_field 'x_email_merchant', to_this_email
           end
           
           # You MUST call this at some point for it to actually work. Options
           # must include :transaction_key and :order_timestamp
-          def setup_hash options
+          def setup_hash(options)
             raise unless options[:transaction_key]
             raise unless options[:order_timestamp]
             amount = @fields['x_amount']

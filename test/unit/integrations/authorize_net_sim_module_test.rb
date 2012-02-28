@@ -114,7 +114,7 @@ class AuthorizeNetSimModuleTest < ActionViewHelperTest
     end
   end
 
-  def check_inclusion these_lines
+  def check_inclusion(these_lines)
     for line in these_lines do
       assert @output_buffer.include?(line), ['unable to find ', line, ' ', 'in \n', @output_buffer].join(' ')
     end

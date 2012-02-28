@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
       module AuthorizeNetSim
         class Notification < ActiveMerchant::Billing::Integrations::Notification
 
-          def unescape val #:nodoc:
+          def unescape(val) #:nodoc:
             if val
               CGI::unescape val
             else
@@ -318,7 +318,7 @@ module ActiveMerchant #:nodoc:
           #
           # Note this is somewhat unsafe unless you actually set that md5 hash
           # to something (defaults to '' in their system).
-          def acknowledge md5_hash_set_in_authorize_net, authorize_net_login_name
+          def acknowledge(md5_hash_set_in_authorize_net, authorize_net_login_name)
             Digest::MD5.hexdigest(md5_hash_set_in_authorize_net + authorize_net_login_name + params['x_trans_id'] + gross) == params['x_MD5_Hash'].downcase
           end
           
