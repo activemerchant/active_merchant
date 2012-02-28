@@ -94,16 +94,6 @@ module ActiveMerchant #:nodoc:
         commit(build_void_request(money, identification))
       end
 
-      # Void a previous transaction
-      #
-      # ==== Parameters
-      #
-      # * <tt>money</tt> -- The amount to be captured as an Integer value in cents.
-      # * <tt>identification</tt> - The authorization returned from the previous authorize request.
-      def void(money, identification, options = {})
-        commit(build_void_request(money, identification))
-      end
-
       # Create a recurring payment.
       #
       # ==== Parameters
