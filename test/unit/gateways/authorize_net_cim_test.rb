@@ -953,7 +953,6 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   end
 
   SUCCESSFUL_DIRECT_RESPONSE = {
-<<<<<<< HEAD
     :auth_only => '1,1,1,This transaction has been approved.,Gw4NGI,Y,508223659,,,100.00,CC,auth_only,Up to 20 chars,,,,,,,,,,,Up to 255 Characters,,,,,,,,,,,,,,6E5334C13C78EA078173565FD67318E4,,2,,,,,,,,,,,XXXX1234,Visa,,,,,,,,,,,,,,,,',
     :capture_only => '1,1,1,This transaction has been approved.,,Y,508223660,,,100.00,CC,capture_only,Up to 20 chars,,,,,,,,,,,Up to 255 Characters,,,,,,,,,,,,,,6E5334C13C78EA078173565FD67318E4,,2,,,,,,,,,,,XXXX1234,Visa,,,,,,,,,,,,,,,,',
     :auth_capture => '1,1,1,This transaction has been approved.,d1GENk,Y,508223661,32968c18334f16525227,Store purchase,1.00,CC,auth_capture,,Longbob,Longsen,,,,,,,,,,,,,,,,,,,,,,,269862C030129C1173727CC10B1935ED,M,2,,,,,,,,,,,XXXX1234,Visa,,,,,,,,,,,,,,,,',
