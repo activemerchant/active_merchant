@@ -106,6 +106,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:NoShipping', options[:no_shipping] ? '1' : '0'
               xml.tag! 'n2:AddressOverride', options[:address_override] ? '1' : '0'
               xml.tag! 'n2:LocaleCode', options[:locale] unless options[:locale].blank?
+              xml.tag! 'n2:BrandName', options[:brand_name] unless options[:brand_name].blank?
               # Customization of the payment page
               xml.tag! 'n2:PageStyle', options[:page_style] unless options[:page_style].blank?
               xml.tag! 'n2:cpp-header-image', options[:header_image] unless options[:header_image].blank?
@@ -149,6 +150,7 @@ module ActiveMerchant #:nodoc:
                 add_items_xml(xml, options, currency_code) if options[:items]
 
                 xml.tag! 'n2:PaymentAction', action
+                xml.tag! 'n2:Custom', options[:custom] unless options[:custom].blank?
               end
 
               if options[:shipping_options]
