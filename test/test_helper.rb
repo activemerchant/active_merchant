@@ -216,16 +216,18 @@ Test::Unit::TestCase.class_eval do
   include ActiveMerchant::Fixtures
 end
 
-class ActionViewHelperTestCase < Test::Unit::TestCase
-  include ActiveMerchant::Billing::Integrations::ActionViewHelper
-  include ActionView::Helpers::FormHelper
-  include ActionView::Helpers::FormTagHelper
-  include ActionView::Helpers::UrlHelper
-  include ActionView::Helpers::TagHelper
-  include ActionView::Helpers::CaptureHelper
-  include ActionView::Helpers::TextHelper
+module ActionViewHelperTestHelper
 
-  attr_accessor :output_buffer
+  def self.included(base)
+    base.send(:include, ActiveMerchant::Billing::Integrations::ActionViewHelper)
+    base.send(:include, ActionView::Helpers::FormHelper)
+    base.send(:include, ActionView::Helpers::FormTagHelper)
+    base.send(:include, ActionView::Helpers::UrlHelper)
+    base.send(:include, ActionView::Helpers::TagHelper)
+    base.send(:include, ActionView::Helpers::CaptureHelper)
+    base.send(:include, ActionView::Helpers::TextHelper)
+    base.send(:attr_accessor, :output_buffer)
+  end
 
   def setup
     @controller = Class.new do

@@ -1,6 +1,7 @@
 require 'test_helper'
 
-class AuthorizeNetSimModuleTest < ActionViewHelperTestCase
+class AuthorizeNetSimModuleTest < Test::Unit::TestCase
+  include ActionViewHelperTestHelper
   include ActiveMerchant::Billing::Integrations
 
   def test_notification_method

@@ -1,6 +1,7 @@
 require 'test_helper'
 
-class ActionViewHelperTest < ActionViewHelperTestCase
+class ActionViewHelperTest < Test::Unit::TestCase
+  include ActionViewHelperTestHelper
 
   def test_basic_payment_service
     payment_service_for('order-1','test', :service => :bogus){}
