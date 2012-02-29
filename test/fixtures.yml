@@ -157,6 +157,11 @@ modern_payments:
 moneris:
   login: store1
   password: yesguy
+
+#Working credentials, no need to replace
+nab_transact:
+  login: ABC0001
+  password: changeit
   
 netaxept:
   login: LOGIN
