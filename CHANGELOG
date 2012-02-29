@@ -19,6 +19,14 @@
 * Quickpay: skip testmode if transaction provided [brentmc79]
 * Payflow: add additional fields [thorstadt]
 * Authorize.Net CIM: Add get_customer_profile_ids [howaboutwe]
+* PayPal Express: Add support for BrandName and Custom fields [exviva]
+* Payflow: Handle dates with leading zeros [jcoleman]
+* Authorize.Net CIM: Add CCV code support & improve tests [tgarnett]
+* Add Authorize.Net SIM integration [courtland & rdp]
+* Secure Pay AU: Handle periodic payments [tommeier]
+* Viaklix: Add discover as a supported card type [waelchatila]
+* Improvements to testing infrastructure for integrations [jduff]
+* Add NAB Transact (AU) Gateway [tommeier]
 
 == Version 1.20.4 (February 22, 2012)
 

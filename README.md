@@ -91,6 +91,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [BluePay](http://www.bluepay.com/) - US
 * [Braintree](http://www.braintreepaymentsolutions.com) - US
 * [CardStream](http://www.cardstream.com/) - GB
+* [CertoDirect](http://www.certodirect.com/) - BE, BG, CZ, DK, DE, EE, IE, EL, ES, FR, IT, CY, LV, LT, LU, HU, MT, NL, AT, PL, PT, RO, SI, SK, FI, SE, UK
 * [CyberSource](http://www.cybersource.com) - US
 * [DataCash](http://www.datacash.com/) - GB
 * [Efsnet](http://www.concordefsnet.com/) - US
@@ -157,6 +158,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 ## Supported Offsite Payment Gateways
 
 * [2 Checkout](http://www.2checkout.com)
+* [Authorize.Net SIM](http://developer.authorize.net/api/sim/) - US
 * [Banca Sella GestPay](https://www.sella.it/banca/ecommerce/gestpay/gestpay.jsp)
 * [Chronopay](http://www.chronopay.com)
 * [Direct-eBanking / sofortueberweisung.de by Payment-Networks AG](https://www.payment-network.com/deb_com_en/merchantarea/home) - DE, AT, CH, BE, UK, NL
