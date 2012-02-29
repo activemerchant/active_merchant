@@ -215,3 +215,31 @@ Test::Unit::TestCase.class_eval do
   include ActiveMerchant::Utils
   include ActiveMerchant::Fixtures
 end
+
+class ActionViewHelperTestCase < Test::Unit::TestCase
+  include ActiveMerchant::Billing::Integrations::ActionViewHelper
+  include ActionView::Helpers::FormHelper
+  include ActionView::Helpers::FormTagHelper
+  include ActionView::Helpers::UrlHelper
+  include ActionView::Helpers::TagHelper
+  include ActionView::Helpers::CaptureHelper
+  include ActionView::Helpers::TextHelper
+
+  attr_accessor :output_buffer
+
+  def setup
+    @controller = Class.new do
+      attr_reader :url_for_options
+      def url_for(options, *parameters_for_method_reference)
+        @url_for_options = options
+      end
+    end
+    @controller = @controller.new
+    @output_buffer = ''
+  end
+
+  protected
+  def protect_against_forgery?
+    false
+  end
+end
