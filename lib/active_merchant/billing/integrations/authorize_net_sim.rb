@@ -1,11 +1,10 @@
-require File.dirname(__FILE__) + '/authorize_net_sim/helper.rb'
-require File.dirname(__FILE__) + '/authorize_net_sim/notification.rb'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module AuthorizeNetSim 
-        
+        autoload :Helper, 'active_merchant/billing/integrations/authorize_net_sim/helper.rb'
+        autoload :Notification, 'active_merchant/billing/integrations/authorize_net_sim/notification.rb'
+
         # Overwrite this if you want to change the ANS test url
         mattr_accessor :test_url
         self.test_url = 'https://test.authorize.net/gateway/transact.dll'

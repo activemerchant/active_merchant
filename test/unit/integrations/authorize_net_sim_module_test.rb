@@ -1,5 +1,4 @@
-require File.expand_path(File.dirname(__FILE__) + '/../../test_helper')
-require File.dirname(__FILE__) + '/action_view_helper_test'
+require 'test_helper'
 
 class AuthorizeNetSimModuleTest < ActionViewHelperTest
   include ActiveMerchant::Billing::Integrations
@@ -160,10 +159,8 @@ class AuthorizeNetSimModuleTest < ActionViewHelperTest
     payment_service_for('44','8wd65QS', :service => :authorize_net_sim,  :amount => 157.0){|service|
       service.add_line_item :name => 'name1', :quantity => 1, :unit_price => 1, :tax => 'true'
       service.add_line_item :name => 'name2', :quantity => '2', :unit_price => '2'
-      begin
+      assert_raise(RuntimeError) do
         service.add_line_item :name => 'name3', :quantity => '3',  :unit_price => '-3'
-	      flunk 'cant have negative price'
-      rescue
       end
       service.tax 4
       service.shipping 5
