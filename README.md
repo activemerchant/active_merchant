@@ -178,4 +178,7 @@ The source code is hosted at [GitHub](http://github.com/Shopify/active_merchant)
 Please see the [ActiveMerchant Guide to Contributing](http://github.com/Shopify/active_merchant/wikis/contributing) for
 information on adding a new gateway to ActiveMerchant.
 
+Please don't touch the CHANGELOG in your pull requests, we'll add the appropriate CHANGELOG entries
+at release time.
+
 [![Build Status](https://secure.travis-ci.org/Shopify/active_merchant.png)](http://travis-ci.org/Shopify/active_merchant)

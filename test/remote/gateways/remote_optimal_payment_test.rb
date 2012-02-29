@@ -21,6 +21,14 @@ class RemoteOptimalPaymentTest < Test::Unit::TestCase
     assert_equal 'no_error', response.message
   end
 
+  def test_successful_great_britain
+    @options[:billing_address][:country] = "GB"
+    @options[:billing_address][:state] = "North West England"
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'no_error', response.message
+  end
+
   def test_minimal_successful_purchase
     options = {
       :order_id => '1',

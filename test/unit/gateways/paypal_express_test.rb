@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'nokogiri'
 
 class PaypalExpressTest < Test::Unit::TestCase
   TEST_REDIRECT_URL        = 'https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token=1234567890'
@@ -135,6 +136,18 @@ class PaypalExpressTest < Test::Unit::TestCase
 
     assert_equal 'SetExpressCheckout', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:PaymentAction').text
   end
+
+  def test_includes_custom_tag_if_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:custom => 'Foo'}))
+
+    assert_equal 'Foo', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:Custom').text
+  end
+
+  def test_does_not_include_custom_tag_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
+
+    assert_nil REXML::XPath.first(xml, '//n2:PaymentDetails/n2:Custom')
+  end
   
   def test_does_not_include_items_if_not_specified
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
@@ -161,6 +174,71 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'GBP', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Amount')[1].attribute('currencyID').value
     assert_equal '2', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Number')[1].text
     assert_equal '4', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Quantity')[1].text
+  end
+
+  def test_does_not_include_callback_url_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
+
+    assert_nil REXML::XPath.first(xml, '//n2:CallbackURL')
+  end
+
+  def test_callback_url_is_included_if_specified_in_build_setup_request
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:callback_url => "http://example.com/update_callback"}))
+
+    assert_equal 'http://example.com/update_callback', REXML::XPath.first(xml, '//n2:CallbackURL').text
+  end
+
+  def test_does_not_include_callback_timeout_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
+
+    assert_nil REXML::XPath.first(xml, '//n2:CallbackTimeout')
+  end
+
+  def test_callback_timeout_is_included_if_specified_in_build_setup_request
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:callback_timeout => 2}))
+
+    assert_equal '2', REXML::XPath.first(xml, '//n2:CallbackTimeout').text
+  end
+
+  def test_does_not_include_callback_version_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
+
+    assert_nil REXML::XPath.first(xml, '//n2:CallbackVersion')
+  end
+
+  def test_callback_version_is_included_if_specified_in_build_setup_request
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:callback_version => '53.0'}))
+
+    assert_equal '53.0', REXML::XPath.first(xml, '//n2:CallbackVersion').text
+  end
+
+  def test_does_not_include_flatrate_shipping_options_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
+
+    assert_nil REXML::XPath.first(xml, '//n2:FlatRateShippingOptions')
+  end
+
+  def test_flatrate_shipping_options_are_included_if_specified_in_build_setup_request
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {:currency => 'AUD', :shipping_options => [
+            {:default => true,
+             :name => "first one",
+             :amount => 1000
+            },
+            {:default => false,
+             :name => "second one",
+             :amount => 2000
+            }
+    ]}))
+
+    assert_equal 'true', REXML::XPath.first(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionIsDefault').text
+    assert_equal 'first one', REXML::XPath.first(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionName').text
+    assert_equal '10.00', REXML::XPath.first(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionAmount').text
+    assert_equal 'AUD', REXML::XPath.first(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionAmount').attribute('currencyID').value
+
+    assert_equal 'false', REXML::XPath.match(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionIsDefault')[1].text
+    assert_equal 'second one', REXML::XPath.match(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionName')[1].text
+    assert_equal '20.00', REXML::XPath.match(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionAmount')[1].text
+    assert_equal 'AUD', REXML::XPath.match(xml, '//n2:FlatRateShippingOptions/n2:ShippingOptionAmount')[1].attribute('currencyID').value
   end
 
   def test_address_is_included_if_specified
@@ -285,13 +363,73 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'Sole', REXML::XPath.first(xml, '//n2:SolutionType').text
     assert_equal 'Billing', REXML::XPath.first(xml, '//n2:LandingPage').text
   end
-  
+
+  def test_not_adds_brand_name_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {}))
+
+    assert_nil REXML::XPath.first(xml, '//n2:BrandName')
+  end
+
+  def test_adds_brand_name_if_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:brand_name => 'Acme'}))
+    assert_equal 'Acme', REXML::XPath.first(xml, '//n2:BrandName').text
+  end
+
   def test_get_phone_number_from_address_if_contact_phone_not_sent
     response = successful_details_response.sub(%r{<ContactPhone>416-618-9984</ContactPhone>\n}, '')
     @gateway.expects(:ssl_post).returns(response)
     response = @gateway.details_for('EC-2OPN7UJGFWK9OYFV')
     assert address = response.address
     assert_equal '123-456-7890', address['phone']
+  end
+
+  def test_structure_correct
+    all_options_enabled = {
+        :allow_guest_checkout => true,
+        :max_amount => 50,
+        :locale => 'AU',
+        :page_style => 'test-gray',
+        :header_image => 'https://example.com/my_business',
+        :header_background_color => 'CAFE00',
+        :header_border_color => 'CAFE00',
+        :background_color => 'CAFE00',
+        :email => 'joe@example.com',
+        :billing_agreement => {:type => 'MerchantInitiatedBilling', :description => '9.99 per month for a year'},
+        :allow_note => true,
+        :subtotal => 35,
+        :shipping => 10,
+        :handling => 0,
+        :tax => 5,
+        :items => [{:name => 'item one',
+                    :number => 'number 1',
+                    :quantity => 3,
+                    :amount => 35,
+                    :description => 'one description',
+                    :url => 'http://example.com/number_1'}],
+        :address => {:name => 'John Doe',
+                     :address1 => 'Apartment 1',
+                     :address2 => '1 Road St',
+                     :city => 'First City',
+                     :state => 'NSW',
+                     :country => 'AU',
+                     :zip => '2000',
+                     :phone => '555 5555'},
+        :callback_url => "http://example.com/update_callback",
+        :callback_timeout => 2,
+        :callback_version => '53.0',
+        :shipping_options => [{:default => true,
+                               :name => "first one",
+                               :amount => 10}]
+    }
+
+    doc = Nokogiri::XML(@gateway.send(:build_setup_request, 'Sale', 10, all_options_enabled))
+    #Strip back to the SetExpressCheckoutRequestDetails element - this is where the base component xsd starts
+    xml = doc.xpath('//base:SetExpressCheckoutRequestDetails', 'base' => 'urn:ebay:apis:eBLBaseComponents').first
+    sub_doc = Nokogiri::XML::Document.new
+    sub_doc.root = xml
+
+    schema = Nokogiri::XML::Schema(File.read(File.join(File.dirname(__FILE__), '..', '..', 'schema', 'paypal', 'eBLBaseComponents.xsd')))
+    assert_equal [], schema.validate(sub_doc)
   end
   
   private

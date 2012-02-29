@@ -126,6 +126,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'EMail', options[:email] unless options[:email].blank?
           xml.tag! 'Phone', address[:phone] unless address[:phone].blank?
           xml.tag! 'CustCode', options[:customer] if !options[:customer].blank? && tag == 'BillTo'
+          xml.tag! 'PONum', options[:po_number] if !options[:po_number].blank? && tag == 'BillTo'
           
           xml.tag! 'Address' do
             xml.tag! 'Street', address[:address1] unless address[:address1].blank?

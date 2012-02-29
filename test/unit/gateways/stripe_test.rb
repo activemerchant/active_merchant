@@ -123,6 +123,14 @@ class StripeTest < Test::Unit::TestCase
     end
   end
 
+  def test_metadata_header
+    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+      headers && headers['X-Stripe-Client-User-Metadata'] == {:ip => '1.1.1.1'}.to_json
+    }.returns(successful_purchase_response)
+
+    @gateway.purchase(@amount, @credit_card, @options.merge(:ip => '1.1.1.1'))
+  end
+
   private
 
   # Place raw successful response from gateway here
