@@ -8,7 +8,7 @@
 # If the login is numeric, ensure that you place quotes around it.
 # Leading zeros will be lost when YAML parses the file if you don't.
 #
-# Paste any required PEM certificates after the pem key.  
+# Paste any required PEM certificates after the pem key.
 #
 authorize_net:
   login: X
@@ -24,7 +24,7 @@ beanstream:
   user: username
   password: password
   secure_profile_api_key: API Access Passcode
-  
+
 beanstream_interac:
   login: merchant id
   user: username
@@ -42,7 +42,7 @@ braintree_blue:
   merchant_id: X
   public_key: Y
   private_key: Z
-  
+
 braintree_blue_with_processing_rules:
   merchant_id: X
   public_key: Y
@@ -56,7 +56,7 @@ card_save:
 card_stream:
   login: X
   password: Y
-  
+
 cyber_source:
   login: X
   password: Y
@@ -67,7 +67,7 @@ data_cash:
 
 direc_pay:
   login: 200904281000001
-  
+
 efsnet:
   login: X
   password: Y
@@ -93,7 +93,7 @@ eway_managed:
 
 # Working credentials, no need to replace
 exact:
-  login: "A00427-01" 
+  login: "A00427-01"
   password: testus
 
 federated_canada:
@@ -103,7 +103,7 @@ federated_canada:
 first_pay:
   login:
   password:
-    
+
 garanti:
   login: "PROVAUT"
   terminal_id: 111995
@@ -129,7 +129,7 @@ inspire:
 
 jetpay:
   login: TESTTERMINAL
-      
+
 iridium:
     login: LOGIN
     password: PASSWORD
@@ -145,28 +145,33 @@ merchant_esolutions:
   password: "gvQzgKXOTEoDzpzJzROrQQzoKLaEqxjf"
 
 merchant_ware:
- login: 
- password: 
- name: 
+ login:
+ password:
+ name:
 
 modern_payments:
   login: login
   password: password
-  
+
 # Working credentials, no need to replace
 moneris:
   login: store1
   password: yesguy
-  
+
+#Working credentials, no need to replace
+nab_transact:
+  login: ABC0001
+  password: changeit
+
 netaxept:
   login: LOGIN
   password: PASSWORD
 
 # Working credentials, no need to replace
-# Contact Netbilling for login info to the admin area  
+# Contact Netbilling for login info to the admin area
 netbilling:
   login: '104901072025'
-  
+
 net_registry:
   login: X
   password: Y
@@ -174,7 +179,7 @@ net_registry:
 nmi:
   login: demo
   password: password
-  
+
 ogone:
   login: LOGIN
   user: USER
@@ -194,12 +199,12 @@ orbital_gateway:
   login: LOGIN
   password: PASSWORD
   merchant_id: MERCHANTID
-  
+
 payflow:
   login: LOGIN
   password: PASSWORD
   partner: PayPal
-  
+
 payflow_uk:
   login: LOGIN
   password: PASSWORD
@@ -209,7 +214,7 @@ payflow_uk:
 pay_junction:
   login: 'pj-ql-01'
   password: 'pj-ql-01p'
-  
+
 payment_express:
   login: LOGIN
   password: PASSWORD
@@ -230,63 +235,63 @@ paypal_signature:
 pay_secure:
   login: LOGIN
   password: PASSWORD
-    
+
 plugnpay:
   login: LOGIN
   password: PASSWORD
-  
+
 sage_pay:
   login: LOGIN
-  
+
 # Working credentials, no need to replace
 psigate:
   login: teststore
   password: psigate1234
- 
+
 psl_card:
   login: LOGIN
 
 # PSL doesn't want the test data made public
 psl_maestro:
-  number: 
-  month: 
-  year: 
-  verification_value: 
-  issue_number: 
+  number:
+  month:
+  year:
+  verification_value:
+  issue_number:
 
-psl_maestro_address: 
-  address1: 
-  address2: 
-  city: 
-  state: 
-  zip: 
+psl_maestro_address:
+  address1:
+  address2:
+  city:
+  state:
+  zip:
 
 psl_solo:
-  number: 
-  month: 
-  year: 
-  verification_value: 
-  issue_number: 
+  number:
+  month:
+  year:
+  verification_value:
+  issue_number:
 
 psl_solo_address:
-  address1: 
-  city: 
-  state: 
-  zip: 
+  address1:
+  city:
+  state:
+  zip:
 
 psl_visa:
-  number: 
-  month: 
-  year: 
-  verification_value: 
+  number:
+  month:
+  year:
+  verification_value:
 
 psl_visa_address:
-  address1: 
-  address2: 
-  address3: 
-  city: 
+  address1:
+  address2:
+  address3:
+  city:
   zip:
-    
+
 psl_visa_debit:
   first_name:
   last_name:
@@ -315,15 +320,15 @@ quickpay_with_api_key:
   password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
   apikey: "3WrEgfY995CnetPlp7R7XG6J5aq83K4k7B4Z3jsLd1vz53x1w6h42M81u7H62Sb4"
   version: 4
-  
+
 quantum:
   login: X
   password: Y
-    
+
 realex:
-  login: X 
+  login: X
   password: Y
-    
+
 realex_with_account:
   login: X
   password: Y
@@ -331,63 +336,63 @@ realex_with_account:
 
 # Realex doesn't provide public testing data
 # Fill in the card numbers with the Realex test
-# data.  
+# data.
 realex_visa:
-  number: 
+  number:
   month: '6'
   year: '2020'
   verification_value: '123'
 
 realex_visa_declined:
-  number: 
+  number:
   month: '6'
   year: '2020'
   verification_value: '123'
 
 realex_visa_referral_a:
-  number: 
+  number:
   month: '6'
   year: '2020'
   verification_value: '123'
-  
+
 realex_visa_referral_b:
-  number: 
+  number:
   month: '6'
   year: '2020'
   verification_value: '123'
-  
+
 realex_visa_coms_error:
-  number: 
+  number:
   month: '6'
   year: '2020'
   verification_value: '123'
-  
+
 realex_mastercard:
-  number: 
+  number:
   month: '6'
   year: '2020'
   verification_value: '123'
 
 realex_mastercard_declined:
-  number: 
+  number:
   month: '6'
   year: '2020'
   verification_value: '123'
 
 realex_mastercard_referral_a:
-  number: 
+  number:
   month: '6'
   year: '2020'
   verification_value: '123'
 
 realex_mastercard_referral_b:
-  number: 
+  number:
   month: '6'
   year: '2020'
   verification_value: '123'
 
 realex_mastercard_coms_error:
-  number: 
+  number:
   month: '6'
   year: '2020'
   verification_value: '123'
@@ -423,10 +428,10 @@ secure_pay_au:
 #  Replace with your serial numbers for the skipjack test environment
 skipjack:
   login: X
-  password: Y 
+  password: Y
 
 stripe:
-  login: 
+  login:
 
 trans_first:
   login: LOGIN
@@ -437,7 +442,7 @@ transax:
   password: password
 
 # Working credentials, no need to replace
-trust_commerce: 
+trust_commerce:
   login: 'TestMerchant'
   password: 'password'
 
@@ -454,7 +459,7 @@ usa_epay_advanced:
 valitor:
   login: WebsiteID
   password: SecurityNumber
-  
+
 # Working credentials, no need to replace
 verify:
   login: 'demo'
@@ -464,7 +469,7 @@ viaklix:
   login: LOGIN
   password: PASSWORD
   user: USER
-  
+
 # Working test credentials, no need to replace
 wirecard:
   login: 56500
