@@ -124,6 +124,12 @@ module ActiveMerchant #:nodoc:
       # * <tt>:merchant_customer_id</tt> -- Merchant assigned ID for the customer (CONDITIONAL)
       # * <tt>:payment_profile</tt> -- A hash containing the elements of the new payment profile (optional)
       #
+      # * <tt>:profile</tt> -- A hash containing profile information (Required.  Include either <tt>:email</tt>, <tt>:merchant_customer_id</tt>, or <tt>:description</tt>)
+      # * <tt>profile[:email]</tt> -- The customer's email address
+      # * <tt>profile[:merchant_customer_id]</tt> - Arbitrary unique id set by the merchant (not authnet)
+      # * <tt>profile[:description]</tt> - Description of the customer or customer profile
+      # * <tt>profile[:payment_profiles]</tt> - Payment profiles for the customer profile (more options in the API documentation)
+      #
       # ==== Payment Profile
       #
       # * <tt>:payment</tt> -- A hash containing information on payment. Either :credit_card or :bank_account (optional)
@@ -413,6 +419,10 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>:bank_routing_number_masked</tt> -- The last four gidits of the routing number to be refunded (CONDITIONAL - must be used with :bank_account_number_masked)
       # * <tt>:bank_account_number_masked</tt> -- The last four digis of the bank account number to be refunded, Ex. XXXX1234 (CONDITIONAL - must be used with :bank_routing_number_masked)
+      #
+      # * <tt>:tax</tt> - A hash containing tax information for the refund (OPTIONAL - <tt>:amount</tt>, <tt>:name</tt> (31 characters), <tt>:description</tt> (255 characters))
+      # * <tt>:duty</tt> - A hash containting duty information for the refund (OPTIONAL - <tt>:amount</tt>, <tt>:name</tt> (31 characters), <tt>:description</tt> (255 characters))
+      # * <tt>:shipping</tt> - A hash containing shipping information for the refund (OPTIONAL - <tt>:amount</tt>, <tt>:name</tt> (31 characters), <tt>:description</tt> (255 characters))
       def create_customer_profile_transaction_for_refund(options)
         requires!(options, :transaction)
         options[:transaction][:type] = :refund
@@ -650,7 +660,7 @@ module ActiveMerchant #:nodoc:
                 tag_unless_blank(xml,'customerShippingAddressId', transaction[:customer_shipping_address_id])
                 xml.tag!('transId', transaction[:trans_id])
               when :refund
-                #TODO - add support for all the other options fields
+                #TODO - add lineItems and extraOptions fields 
                 xml.tag!('amount', transaction[:amount])
                 tag_unless_blank(xml, 'customerProfileId', transaction[:customer_profile_id])
                 tag_unless_blank(xml, 'customerPaymentProfileId', transaction[:customer_payment_profile_id])
@@ -659,6 +669,9 @@ module ActiveMerchant #:nodoc:
                 tag_unless_blank(xml, 'bankRoutingNumberMasked', transaction[:bank_routing_number_masked])
                 tag_unless_blank(xml, 'bankAccountNumberMasked', transaction[:bank_account_number_masked])
                 xml.tag!('transId', transaction[:trans_id])
+                add_tax(xml, transaction[:tax]) if transaction[:tax]
+                add_duty(xml, transaction[:duty]) if transaction[:duty]
+                add_shipping(xml, transaction[:shipping]) if transaction[:shipping]
               when :prior_auth_capture
                 xml.tag!('amount', transaction[:amount])
                 xml.tag!('transId', transaction[:trans_id])
@@ -673,7 +686,31 @@ module ActiveMerchant #:nodoc:
           end
         end
       end
+
+      def add_tax(xml, tax)
+        xml.tag!('tax') do
+          xml.tag!('amount', tax[:amount]) if tax[:amount]
+          xml.tag!('name', tax[:name]) if tax[:name]
+          xml.tag!('description', tax[:description]) if tax[:description]
+        end
+      end
+
+      def add_duty(xml, duty)
+        xml.tag!('duty') do
+          xml.tag!('amount', duty[:amount]) if duty[:amount]
+          xml.tag!('name', duty[:name]) if duty[:name]
+          xml.tag!('description', duty[:description]) if duty[:description]
+        end
+      end
       
+      def add_shipping(xml, shipping)
+        xml.tag!('shipping') do
+          xml.tag!('amount', shipping[:amount]) if shipping[:amount]
+          xml.tag!('name', shipping[:name]) if shipping[:name]
+          xml.tag!('description', shipping[:description]) if shipping[:description]
+        end
+      end
+
       def add_order(xml, order)
         xml.tag!('order') do
           xml.tag!('invoiceNumber', order[:invoice_number]) if order[:invoice_number]
