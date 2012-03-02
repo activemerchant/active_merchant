@@ -1,29 +1,7 @@
 require 'test_helper'
 
 class LitleTest < Test::Unit::TestCase
-  # * <tt>:order_id</tt> - The order number
-  # * <tt>:ip</tt> - The IP address of the customer making the purchase
-  # * <tt>:customer</tt> - The name, customer number, or other information that identifies the customer
-  # * <tt>:invoice</tt> - The invoice number
-  # * <tt>:merchant</tt> - The name or description of the merchant offering the product
-  # * <tt>:description</tt> - A description of the transaction
-  # * <tt>:email</tt> - The email address of the customer
-  # * <tt>:currency</tt> - The currency of the transaction.  Only important when you are using a currency that is not the default with a gateway that supports multiple currencies.
-  # * <tt>:billing_address</tt> - A hash containing the billing address of the customer.
-  # * <tt>:shipping_address</tt> - A hash containing the shipping address of the customer.
-  #
-  # The <tt>:billing_address</tt>, and <tt>:shipping_address</tt> hashes can have the following keys:
-  #
-  # * <tt>:name</tt> - The full name of the customer.
-  # * <tt>:company</tt> - The company name of the customer.
-  # * <tt>:address1</tt> - The primary street address of the customer.
-  # * <tt>:address2</tt> - Additional line of address information.
-  # * <tt>:city</tt> - The city of the customer.
-  # * <tt>:state</tt> - The state of the customer.  The 2 digit code for US and Canadian addresses. The full name of the state or province for foreign addresses.
-  # * <tt>:country</tt> - The [ISO 3166-1-alpha-2 code](http://www.iso.org/iso/country_codes/iso_3166_code_lists/english_country_names_and_code_elements.htm) for the customer.
-  # * <tt>:zip</tt> - The zip or postal code of the customer.
-  # * <tt>:phone</tt> - The phone number of the customer.
-  # money (int in cents), creditcard, options = {}
+
   def setup
     @gateway = LitleGateway.new
     @gateway.configuration = {

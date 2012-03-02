@@ -4,7 +4,33 @@ require 'LitleOnline'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class LitleGateway < Gateway
-
+      #Specific to Litle options:
+      # * <tt>:merchant_id</tt> - Merchant Id assigned by Litle
+      #Standard Active Merchant options
+      # * <tt>:order_id</tt> - The order number
+      # * <tt>:ip</tt> - The IP address of the customer making the purchase
+      # * <tt>:customer</tt> - The name, customer number, or other information that identifies the customer
+      # * <tt>:invoice</tt> - The invoice number
+      # * <tt>:merchant</tt> - The name or description of the merchant offering the product
+      # * <tt>:description</tt> - A description of the transaction
+      # * <tt>:email</tt> - The email address of the customer
+      # * <tt>:currency</tt> - The currency of the transaction.  Only important when you are using a currency that is not the default with a gateway that supports multiple currencies.
+      # * <tt>:billing_address</tt> - A hash containing the billing address of the customer.
+      # * <tt>:shipping_address</tt> - A hash containing the shipping address of the customer.
+      #
+      # The <tt>:billing_address</tt>, and <tt>:shipping_address</tt> hashes can have the following keys:
+      #
+      # * <tt>:name</tt> - The full name of the customer.
+      # * <tt>:company</tt> - The company name of the customer.
+      # * <tt>:address1</tt> - The primary street address of the customer.
+      # * <tt>:address2</tt> - Additional line of address information.
+      # * <tt>:city</tt> - The city of the customer.
+      # * <tt>:state</tt> - The state of the customer.  The 2 digit code for US and Canadian addresses. The full name of the state or province for foreign addresses.
+      # * <tt>:country</tt> - The [ISO 3166-1-alpha-2 code](http://www.iso.org/iso/country_codes/iso_3166_code_lists/english_country_names_and_code_elements.htm) for the customer.
+      # * <tt>:zip</tt> - The zip or postal code of the customer.
+      # * <tt>:phone</tt> - The phone number of the customer.
+      # money (int in cents), creditcard, options = {}
+      #
       TEST_URL = 'https://cert.litle.com/vap/communicator/online'
       LIVE_URL = 'https://payments.litle.com/vap/communicator/online'
 
@@ -22,13 +48,10 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'USD'
 
-      attr_accessor :configuration
-
       attr_accessor :order_id
 
       def initialize
         @litle = LitleOnlineRequest.new
-        @configuration = Configuration.new.config
         @order_id = 'undefined'
       end
 
@@ -47,8 +70,6 @@ module ActiveMerchant #:nodoc:
         else
           resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret})
         end
-        return resp
-
       end
 
       def purchase(money, creditcard, options = {})
@@ -65,7 +86,6 @@ module ActiveMerchant #:nodoc:
           resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret}
           )
         end
-        return resp
       end
 
       def capture(money, authorization, options = {})
@@ -76,7 +96,6 @@ module ActiveMerchant #:nodoc:
         else
           resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret})
         end
-        return resp
       end
 
       def void(identification, options = {})
@@ -87,7 +106,6 @@ module ActiveMerchant #:nodoc:
         else
           resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret})
         end
-        return resp
       end
 
       def credit(money, identification, options = {})
@@ -98,7 +116,6 @@ module ActiveMerchant #:nodoc:
         else
           resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret})
         end
-        return resp
       end
 
       def store(creditcard, options = {})
@@ -109,11 +126,10 @@ module ActiveMerchant #:nodoc:
         else
           resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret})
         end
-        return resp
       end
 
       private
-      @@card_type = {
+      CARD_TYPE = {
         'visa' => 'VI',
         'master' => 'MC',
         'american_express' => 'AX',
@@ -122,7 +138,7 @@ module ActiveMerchant #:nodoc:
         'diners_club' => 'DI'
       }
 
-      @@avs_response_code = {
+      AVS_RESPONSE_CODE = {
         '00' => 'Y',
         '01' => 'X',
         '02' => 'D',
@@ -141,14 +157,14 @@ module ActiveMerchant #:nodoc:
       }
 
       def createCreditCardHash(money, creditcard, options)
-        ccType = @@card_type[creditcard.type]
+        ccType = CARD_TYPE[creditcard.type]
 
-        expDateYr = creditcard.year.to_s()[2..3]
+        expDateYr = creditcard.year.to_s[2..3]
 
-        if( creditcard.month.to_s().length == 1 )
-          expDateMo = '0' + creditcard.month.to_s()
+        if( creditcard.month.to_s.length == 1 )
+          expDateMo = '0' + creditcard.month.to_s
         else
-          expDateMo = creditcard.month.to_s()
+          expDateMo = creditcard.month.to_s
         end
 
         expDate = expDateMo + expDateYr
@@ -162,13 +178,11 @@ module ActiveMerchant #:nodoc:
 
         hash = createHash(money, options)
         hash['card'] = card_info
-        return hash
       end
 
       def createCaptureHash(money, authorization, options)
         hash = createHash(money, options)
         hash['litleTxnId'] = authorization
-        return hash
       end
 
       def createCreditHash(money, identification, options)
@@ -176,29 +190,21 @@ module ActiveMerchant #:nodoc:
         hash['litleTxnId'] = identification
         hash['orderSource'] = nil
         hash['orderId'] = nil
-        return hash
       end
 
       def createTokenHash(creditcard, options)
         hash = createHash(0, options)
         hash['accountNumber'] = creditcard.number
-        return hash
       end
 
       def createVoidHash(identification, options)
         hash = createHash(nil, options)
         hash['litleTxnId'] = identification
-        return hash
       end
 
       def createHash(money, options)
         currency = options[:currency]
-        if( !currency.nil? )
-          merchantId = @configuration['currency_merchant_map'][currency]
-        end
-        if(merchantId.nil?)
-          merchantId = @configuration['currency_merchant_map']['DEFAULT']
-        end
+        merchant_id = options[:merchant_id]
 
         fraudCheckType = {}
         if !options[:ip].nil?
@@ -258,8 +264,6 @@ module ActiveMerchant #:nodoc:
         if( !money.nil? && money.to_s.length > 0 )
           hash.merge!({'amount' => money})
         end
-
-        return hash
       end
 
       def fraud_result(authorizationResponse)
@@ -272,10 +276,10 @@ module ActiveMerchant #:nodoc:
             end
           end
           if fraudResult.respond_to?('avsResult')
-            avs_to_pass = @@avs_response_code[fraudResult.avsResult]
+            avs_to_pass = AVS_RESPONSE_CODE[fraudResult.avsResult]
           end
         end
-        return {'cvv'=>cvv_to_pass, 'avs'=>avs_to_pass}
+        {'cvv'=>cvv_to_pass, 'avs'=>avs_to_pass}
       end
 
     end
