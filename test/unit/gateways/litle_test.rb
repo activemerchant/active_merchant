@@ -4,14 +4,14 @@ class LitleTest < Test::Unit::TestCase
 
   def setup
     @gateway = LitleGateway.new
-    @gateway.configuration = {
-      'currency_merchant_map' =>
-      {
-      'DEFAULT'=>'101',
-      'USD'=>'101',
-      'EUR'=>'102'
-      }
-    }
+#    @gateway.configuration = {
+#      'currency_merchant_map' =>
+#      {
+#      'DEFAULT'=>'101',
+#      'USD'=>'101',
+#      'EUR'=>'102'
+#      }
+#    }
   end
 
   def test_create_credit_card_hash
@@ -71,47 +71,48 @@ class LitleTest < Test::Unit::TestCase
       :email=>email,
       :currency=>currency,
       :billing_address=>billing_address,
-      :shipping_address=>shipping_address
+      :shipping_address=>shipping_address,
+      :merchant_id=>'101'
     }
 
-    hashFromGateway = @gateway.send(:create_credit_card_hash, money, creditcard, options)
+    hash_from_gateway = @gateway.send(:create_credit_card_hash, money, creditcard, options)
 
-    assert_equal 1000, hashFromGateway['amount']
-    assert_equal 'VI', hashFromGateway['card']['type']
-    assert_equal '4242424242424242', hashFromGateway['card']['number']
-    assert_equal '0910', hashFromGateway['card']['expDate']
-    assert_equal '969', hashFromGateway['card']['cardValidationNum']
+    assert_equal 1000, hash_from_gateway['amount']
+    assert_equal 'VI', hash_from_gateway['card']['type']
+    assert_equal '4242424242424242', hash_from_gateway['card']['number']
+    assert_equal '0910', hash_from_gateway['card']['expDate']
+    assert_equal '969', hash_from_gateway['card']['cardValidationNum']
     #billing address
-    assert_equal 'Steve Smith', hashFromGateway['billToAddress']['name']
-    assert_equal 'testCompany', hashFromGateway['billToAddress']['companyName']
-    assert_equal '900 random st', hashFromGateway['billToAddress']['addressLine1']
-    assert_equal 'floor 10', hashFromGateway['billToAddress']['addressLine2']
-    assert_equal 'lowell', hashFromGateway['billToAddress']['city']
-    assert_equal 'ma', hashFromGateway['billToAddress']['state']
-    assert_equal '12345', hashFromGateway['billToAddress']['zip']
-    assert_equal 'usa', hashFromGateway['billToAddress']['country']
-    assert_equal 'abc@xyz.com', hashFromGateway['billToAddress']['email']
-    assert_equal '1234567890', hashFromGateway['billToAddress']['phone']
+    assert_equal 'Steve Smith', hash_from_gateway['billToAddress']['name']
+    assert_equal 'testCompany', hash_from_gateway['billToAddress']['companyName']
+    assert_equal '900 random st', hash_from_gateway['billToAddress']['addressLine1']
+    assert_equal 'floor 10', hash_from_gateway['billToAddress']['addressLine2']
+    assert_equal 'lowell', hash_from_gateway['billToAddress']['city']
+    assert_equal 'ma', hash_from_gateway['billToAddress']['state']
+    assert_equal '12345', hash_from_gateway['billToAddress']['zip']
+    assert_equal 'usa', hash_from_gateway['billToAddress']['country']
+    assert_equal 'abc@xyz.com', hash_from_gateway['billToAddress']['email']
+    assert_equal '1234567890', hash_from_gateway['billToAddress']['phone']
     #shipping address
-    assert_equal 'Steve Smith', hashFromGateway['shipToAddress']['name']
-    assert_nil hashFromGateway['shipToAddress']['company']
-    assert_equal '500 nnnn st', hashFromGateway['shipToAddress']['addressLine1']
-    assert_equal '', hashFromGateway['shipToAddress']['addressLine2']
-    assert_equal 'lowell', hashFromGateway['shipToAddress']['city']
-    assert_equal 'ma', hashFromGateway['shipToAddress']['state']
-    assert_equal '12345', hashFromGateway['shipToAddress']['zip']
-    assert_equal 'usa', hashFromGateway['shipToAddress']['country']
-    assert_equal 'abc@xyz.com', hashFromGateway['shipToAddress']['email']
-    assert_equal '1234567890', hashFromGateway['shipToAddress']['phone']
+    assert_equal 'Steve Smith', hash_from_gateway['shipToAddress']['name']
+    assert_nil hash_from_gateway['shipToAddress']['company']
+    assert_equal '500 nnnn st', hash_from_gateway['shipToAddress']['addressLine1']
+    assert_equal '', hash_from_gateway['shipToAddress']['addressLine2']
+    assert_equal 'lowell', hash_from_gateway['shipToAddress']['city']
+    assert_equal 'ma', hash_from_gateway['shipToAddress']['state']
+    assert_equal '12345', hash_from_gateway['shipToAddress']['zip']
+    assert_equal 'usa', hash_from_gateway['shipToAddress']['country']
+    assert_equal 'abc@xyz.com', hash_from_gateway['shipToAddress']['email']
+    assert_equal '1234567890', hash_from_gateway['shipToAddress']['phone']
 
-    assert_equal '1234', hashFromGateway['orderId']
-    assert_equal '4000', hashFromGateway['customerId']
-    assert_equal 'ABC', hashFromGateway['reportGroup']  #The option :merchant is used for Litle's Report Group
-    assert_equal '101', hashFromGateway['merchantId'] #The option :currency is used to select the Litle Merchant Id
+    assert_equal '1234', hash_from_gateway['orderId']
+    assert_equal '4000', hash_from_gateway['customerId']
+    assert_equal 'ABC', hash_from_gateway['reportGroup']  #The option :merchant is used for Litle's Report Group
+    assert_equal '101', hash_from_gateway['merchantId']
 
-    assert_equal '1000', hashFromGateway['enhancedData']['invoiceReferenceNumber']
-    assert_equal '192.168.0.1', hashFromGateway['fraudCheckType']['customerIpAddress']
-    assert_equal 'cool stuff', hashFromGateway['enhancedData']['customerReference']
+    assert_equal '1000', hash_from_gateway['enhancedData']['invoiceReferenceNumber']
+    assert_equal '192.168.0.1', hash_from_gateway['fraudCheckType']['customerIpAddress']
+    assert_equal 'cool stuff', hash_from_gateway['enhancedData']['customerReference']
   end
 
   def test_createHash_money_not_nil
@@ -161,10 +162,11 @@ class LitleTest < Test::Unit::TestCase
       :email=>email,
       :currency=>currency,
       :billing_address=>billing_address,
-      :shipping_address=>shipping_address
+      :shipping_address=>shipping_address,
+      :merchant_id=>'101'
     }
 
-    hashFromGateway = @gateway.send(:createHash, money, options)
+    hashFromGateway = @gateway.send(:create_hash, money, options)
 
     assert_equal 1000, hashFromGateway['amount']
     #billing address
@@ -193,27 +195,27 @@ class LitleTest < Test::Unit::TestCase
     assert_equal '1234', hashFromGateway['orderId']
     assert_equal '4000', hashFromGateway['customerId']
     assert_equal 'ABC', hashFromGateway['reportGroup']  #The option :merchant is used for Litle's Report Group
-    assert_equal '101', hashFromGateway['merchantId'] #The option :currency is used to select the Litle Merchant Id
+    assert_equal '101', hashFromGateway['merchantId']
 
     assert_equal '1000', hashFromGateway['enhancedData']['invoiceReferenceNumber']
     assert_equal '192.168.0.1', hashFromGateway['fraudCheckType']['customerIpAddress']
     assert_equal 'cool stuff', hashFromGateway['enhancedData']['customerReference']
   end
 
-  def test_createHash_money_nil
+  def test_create_hash_money_nil
     # define all inputs
     money = nil
     
-    hashFromGateway = @gateway.send(:createHash, money, {})
+    hashFromGateway = @gateway.send(:create_hash, money, {})
 
     assert_nil hashFromGateway['amount']
   end
   
-  def test_createHash_money_empty_string
+  def test_create_hash_money_empty_string
     # define all inputs
     money = ''
     
-    hashFromGateway = @gateway.send(:createHash, money, {})
+    hashFromGateway = @gateway.send(:create_hash, money, {})
 
     assert_nil hashFromGateway['amount']
   end
@@ -340,7 +342,7 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_create_credit_hash
-    hashFromGateway = @gateway.send(:createCreditHash, 1000, '123456789012345678', {})
+    hashFromGateway = @gateway.send(:create_credit_hash, 1000, '123456789012345678', {})
     assert_equal '123456789012345678', hashFromGateway['litleTxnId']
     assert_equal nil, hashFromGateway['orderSource']
     assert_equal nil, hashFromGateway['orderId']
@@ -352,7 +354,7 @@ class LitleTest < Test::Unit::TestCase
     :year       => '2010',
     :type       => 'diners_club'
     )
-    hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {'currency'=>'USD'})
+    hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {:currency=>'USD',:merchant_id=>'101'})
     assert_equal '101', hashFromGateway['merchantId']
   end
 
@@ -362,7 +364,7 @@ class LitleTest < Test::Unit::TestCase
     :year       => '2010',
     :type       => 'diners_club'
     )
-    hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {})
+    hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {:merchant_id=>'101'})
     assert_equal '101', hashFromGateway['merchantId']
   end
 
@@ -372,7 +374,7 @@ class LitleTest < Test::Unit::TestCase
     :year       => '2010',
     :type       => 'diners_club'
     )
-    hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {:currency=>'EUR'})
+    hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {:currency=>'EUR',:merchant_id=>'102'})
     assert_equal '102', hashFromGateway['merchantId']
   end
 
@@ -658,7 +660,7 @@ class LitleTest < Test::Unit::TestCase
   def test_store_pass1
     storeResponseObj = Hashit.new({'response' => '801', 'message' => 'successful', 'litleToken'=>'1111222233334444'})
     retObj = Hashit.new({'response'=>'0','registerTokenResponse'=>storeResponseObj})
-    LitleOnlineRequest.any_instance.expects(:registerTokenRequest).returns(retObj)
+    LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
     creditcard = CreditCard.new(
     :number => '4242424242424242'
     )
@@ -670,7 +672,7 @@ class LitleTest < Test::Unit::TestCase
   def test_store_pass2
     storeResponseObj = Hashit.new({'response' => '802', 'message' => 'already registered', 'litleToken'=>'1111222233334444'})
     retObj = Hashit.new({'response'=>'0','registerTokenResponse'=>storeResponseObj})
-    LitleOnlineRequest.any_instance.expects(:registerTokenRequest).returns(retObj)
+    LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
     creditcard = CreditCard.new(
     :number => '4242424242424242'
     )
@@ -682,7 +684,7 @@ class LitleTest < Test::Unit::TestCase
   def test_store_fail
     storeResponseObj = Hashit.new({'response' => '803', 'message' => 'fail', 'litleToken'=>'1111222233334444'})
     retObj = Hashit.new({'response'=>'0','registerTokenResponse'=>storeResponseObj})
-    LitleOnlineRequest.any_instance.expects(:registerTokenRequest).returns(retObj)
+    LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
     creditcard = CreditCard.new(
     :number => '4242424242424242'
     )
@@ -693,7 +695,7 @@ class LitleTest < Test::Unit::TestCase
 
   def test_store_fail_schema
     retObj = Hashit.new({'response'=>'1','message'=>'Error validating xml data against the schema'})
-    LitleOnlineRequest.any_instance.expects(:registerTokenRequest).returns(retObj)
+    LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
     creditcard = CreditCard.new(
     :number => '4242424242424242'
     )

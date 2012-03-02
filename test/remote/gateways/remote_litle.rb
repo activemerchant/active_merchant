@@ -56,7 +56,15 @@ class RemoteLitleTest < Test::Unit::TestCase
       :email=>email,
       :currency=>currency,
       :billing_address=>billing_address,
-      :shipping_address=>shipping_address
+      :shipping_address=>shipping_address,
+      :merchant_id=>'101',
+      :user=>'PHXMLTEST',
+      :password=>'nosuchpassword',
+      :version=>'8.10',
+      :url=>'https://www.testlitle.com/sandbox/communicator/online',
+      :proxy_addr=>'smoothproxy',
+      :proxy_port=>'8080',
+      :report_group=>'Default Report Group'
     }
 
   end
@@ -72,7 +80,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
 
-    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert capture = @gateway.capture(@amount, authorization.authorization, @options)
     assert_success capture
     assert_equal 'Approved', capture.message
   end

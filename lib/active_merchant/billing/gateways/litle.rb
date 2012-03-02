@@ -6,6 +6,12 @@ module ActiveMerchant #:nodoc:
     class LitleGateway < Gateway
       #Specific to Litle options:
       # * <tt>:merchant_id</tt> - Merchant Id assigned by Litle
+      # * <tt>:user</tt> - Username assigned by Litle
+      # * <tt>:password</tt> - Password assigned by Litle
+      # * <tt>:version</tt> - The version of the api you are using (eg, '8.10')
+      # * <tt>:proxy_addr</tt> - Proxy address - nil if not needed
+      # * <tt>:proxy_port</tt> - Proxy port - nil if not needed
+      # * <tt>:url</tt> - URL assigned by Litle (for testing, use the sandbox)
       #Standard Active Merchant options
       # * <tt>:order_id</tt> - The order number
       # * <tt>:ip</tt> - The IP address of the customer making the purchase
@@ -31,7 +37,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:phone</tt> - The phone number of the customer.
       # money (int in cents), creditcard, options = {}
       #
-      TEST_URL = 'https://cert.litle.com/vap/communicator/online'
+      TEST_URL = 'https://www.testlitle.com/sandbox/communicator/online'
       LIVE_URL = 'https://payments.litle.com/vap/communicator/online'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
@@ -56,8 +62,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, creditcard, options = {})
-        toPass = create_credit_card_hash(money, creditcard, options)
-        ret = @litle.authorization(toPass)  # passing the hash.
+        to_pass = create_credit_card_hash(money, creditcard, options)
+        ret = @litle.authorization(to_pass)  # passing the hash.
         if ret.response == "0"
           resp = Response.new((ret.authorizationResponse.response == '000'),
           ret.authorizationResponse.message,
@@ -70,11 +76,12 @@ module ActiveMerchant #:nodoc:
         else
           resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret})
         end
+        resp
       end
 
       def purchase(money, creditcard, options = {})
-        toPass = create_credit_card_hash(money, creditcard, options)
-        ret = @litle.sale(toPass)  # passing the hash.
+        to_pass = create_credit_card_hash(money, creditcard, options)
+        ret = @litle.sale(to_pass)  # passing the hash.
         if ret.response == "0"
           resp = Response.new((ret.saleResponse.response == '000'), ret.saleResponse.message,{:litleOnlineResponse=>ret},          
             {
@@ -89,43 +96,47 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        toPass = create_capture_hash(money, authorization, options)
-        ret = @litle.capture(toPass)  # passing the hash.
+        to_pass = create_capture_hash(money, authorization, options)
+        ret = @litle.capture(to_pass)  # passing the hash.
         if ret.response == "0"
           resp = Response.new((ret.captureResponse.response == '000'), ret.captureResponse.message,{:litleOnlineResponse=>ret})
         else
           resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret})
         end
+        resp
       end
 
       def void(identification, options = {})
-        toPass = create_void_hash(identification, options)
-        ret = @litle.void(toPass)  # passing the hash.
+        to_pass = create_void_hash(identification, options)
+        ret = @litle.void(to_pass)  # passing the hash.
         if ret.response == "0"
           resp = Response.new((ret.voidResponse.response == '000'), ret.voidResponse.message,{:litleOnlineResponse=>ret})
         else
           resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret})
         end
+        resp
       end
 
       def credit(money, identification, options = {})
-        toPass = create_credit_hash(money, identification, options)
-        ret = @litle.credit(toPass)  # passing the hash.
+        to_pass = create_credit_hash(money, identification, options)
+        ret = @litle.credit(to_pass)  # passing the hash.
         if ret.response == "0"
           resp = Response.new((ret.creditResponse.response == '000'), ret.creditResponse.message,{:litleOnlineResponse=>ret})
         else
           resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret})
         end
+        resp
       end
 
       def store(creditcard, options = {})
-        toPass = create_token_hash(creditcard, options)
-        ret = @litle.register_token_request(toPass)  # passing the hash.
+        to_pass = create_token_hash(creditcard, options)
+        ret = @litle.register_token_request(to_pass)  # passing the hash.
         if ret.response == "0"
           resp = Response.new((ret.registerTokenResponse.response == '801' or ret.registerTokenResponse.response == '802'), ret.registerTokenResponse.message,{:litleOnlineResponse=>ret})
         else
           resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret})
         end
+        resp
       end
 
       private
@@ -178,11 +189,13 @@ module ActiveMerchant #:nodoc:
 
         hash = create_hash(money, options)
         hash['card'] = card_info
+        hash
       end
 
       def create_capture_hash(money, authorization, options)
         hash = create_hash(money, options)
         hash['litleTxnId'] = authorization
+        hash
       end
 
       def create_credit_hash(money, identification, options)
@@ -190,21 +203,28 @@ module ActiveMerchant #:nodoc:
         hash['litleTxnId'] = identification
         hash['orderSource'] = nil
         hash['orderId'] = nil
+        hash
       end
 
       def create_token_hash(creditcard, options)
         hash = create_hash(0, options)
         hash['accountNumber'] = creditcard.number
+        hash
       end
 
       def create_void_hash(identification, options)
         hash = create_hash(nil, options)
         hash['litleTxnId'] = identification
+        hash
       end
 
       def create_hash(money, options)
         currency = options[:currency]
         merchant_id = options[:merchant_id]
+        user=options[:user]
+        password=options[:password]
+        version=options[:version]
+        url=options[:url]
         fraud_check_type = {}
         if !options[:ip].nil?
           fraud_check_type['customerIpAddress'] = options[:ip]
@@ -257,12 +277,19 @@ module ActiveMerchant #:nodoc:
           'merchantId' => merchant_id,
           'orderSource' => 'ecommerce',
           'enhancedData' => enhanced_data,
-          'fraudCheckType' => fraud_check_type
+          'fraudCheckType' => fraud_check_type,
+          'user' => user,
+          'password' => password,
+          'version' => version,
+          'url' => url,
+          'proxy_addr' => options[:proxy_addr],
+          'proxy_port' => options[:proxy_port]
         }
 
         if( !money.nil? && money.to_s.length > 0 )
           hash.merge!({'amount' => money})
         end
+        hash
       end
 
       def fraud_result(authorization_response)
@@ -275,7 +302,7 @@ module ActiveMerchant #:nodoc:
             end
           end
           if fraud_result.respond_to?('avsResult')
-            avs_to_pass = @@avs_response_code[fraud_result.avsResult]
+            avs_to_pass = AVS_RESPONSE_CODE[fraud_result.avsResult]
           end
         end
         {'cvv'=>cvv_to_pass, 'avs'=>avs_to_pass}
