@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, creditcard, options = {})
-        toPass = createCreditCardHash(money, creditcard, options)
+        toPass = create_credit_card_hash(money, creditcard, options)
         ret = @litle.authorization(toPass)  # passing the hash.
         if ret.response == "0"
           resp = Response.new((ret.authorizationResponse.response == '000'),
@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, creditcard, options = {})
-        toPass = createCreditCardHash(money, creditcard, options)
+        toPass = create_credit_card_hash(money, creditcard, options)
         ret = @litle.sale(toPass)  # passing the hash.
         if ret.response == "0"
           resp = Response.new((ret.saleResponse.response == '000'), ret.saleResponse.message,{:litleOnlineResponse=>ret},          
@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        toPass = createCaptureHash(money, authorization, options)
+        toPass = create_capture_hash(money, authorization, options)
         ret = @litle.capture(toPass)  # passing the hash.
         if ret.response == "0"
           resp = Response.new((ret.captureResponse.response == '000'), ret.captureResponse.message,{:litleOnlineResponse=>ret})
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(identification, options = {})
-        toPass = createVoidHash(identification, options)
+        toPass = create_void_hash(identification, options)
         ret = @litle.void(toPass)  # passing the hash.
         if ret.response == "0"
           resp = Response.new((ret.voidResponse.response == '000'), ret.voidResponse.message,{:litleOnlineResponse=>ret})
@@ -109,7 +109,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, identification, options = {})
-        toPass = createCreditHash(money, identification, options)
+        toPass = create_credit_hash(money, identification, options)
         ret = @litle.credit(toPass)  # passing the hash.
         if ret.response == "0"
           resp = Response.new((ret.creditResponse.response == '000'), ret.creditResponse.message,{:litleOnlineResponse=>ret})
@@ -119,8 +119,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(creditcard, options = {})
-        toPass = createTokenHash(creditcard, options)
-        ret = @litle.registerTokenRequest(toPass)  # passing the hash.
+        toPass = create_token_hash(creditcard, options)
+        ret = @litle.register_token_request(toPass)  # passing the hash.
         if ret.response == "0"
           resp = Response.new((ret.registerTokenResponse.response == '801' or ret.registerTokenResponse.response == '802'), ret.registerTokenResponse.message,{:litleOnlineResponse=>ret})
         else
@@ -156,72 +156,71 @@ module ActiveMerchant #:nodoc:
         '40' => 'E'
       }
 
-      def createCreditCardHash(money, creditcard, options)
-        ccType = CARD_TYPE[creditcard.type]
+      def create_credit_card_hash(money, creditcard, options)
+        cc_type = CARD_TYPE[creditcard.type]
 
-        expDateYr = creditcard.year.to_s[2..3]
+        exp_date_yr = creditcard.year.to_s()[2..3]
 
-        if( creditcard.month.to_s.length == 1 )
-          expDateMo = '0' + creditcard.month.to_s
+        if( creditcard.month.to_s().length == 1 )
+          exp_date_mo = '0' + creditcard.month.to_s()
         else
-          expDateMo = creditcard.month.to_s
+          exp_date_mo = creditcard.month.to_s()
         end
 
-        expDate = expDateMo + expDateYr
+        exp_date = exp_date_mo + exp_date_yr
 
         card_info = {
-          'type' => ccType,
+          'type' => cc_type,
           'number' => creditcard.number,
-          'expDate' => expDate,
+          'expDate' => exp_date,
           'cardValidationNum' => creditcard.verification_value
         }
 
-        hash = createHash(money, options)
+        hash = create_hash(money, options)
         hash['card'] = card_info
       end
 
-      def createCaptureHash(money, authorization, options)
-        hash = createHash(money, options)
+      def create_capture_hash(money, authorization, options)
+        hash = create_hash(money, options)
         hash['litleTxnId'] = authorization
       end
 
-      def createCreditHash(money, identification, options)
-        hash = createHash(money, options)
+      def create_credit_hash(money, identification, options)
+        hash = create_hash(money, options)
         hash['litleTxnId'] = identification
         hash['orderSource'] = nil
         hash['orderId'] = nil
       end
 
-      def createTokenHash(creditcard, options)
-        hash = createHash(0, options)
+      def create_token_hash(creditcard, options)
+        hash = create_hash(0, options)
         hash['accountNumber'] = creditcard.number
       end
 
-      def createVoidHash(identification, options)
-        hash = createHash(nil, options)
+      def create_void_hash(identification, options)
+        hash = create_hash(nil, options)
         hash['litleTxnId'] = identification
       end
 
-      def createHash(money, options)
+      def create_hash(money, options)
         currency = options[:currency]
         merchant_id = options[:merchant_id]
-
-        fraudCheckType = {}
+        fraud_check_type = {}
         if !options[:ip].nil?
-          fraudCheckType['customerIpAddress'] = options[:ip]
+          fraud_check_type['customerIpAddress'] = options[:ip]
         end
 
-        enhancedData = {}
+        enhanced_data = {}
         if !options[:invoice].nil?
-          enhancedData['invoiceReferenceNumber'] = options[:invoice]
+          enhanced_data['invoiceReferenceNumber'] = options[:invoice]
         end
 
         if !options[:description].nil?
-          enhancedData['customerReference'] = options[:description]
+          enhanced_data['customerReference'] = options[:description]
         end
 
         if !options[:billing_address].nil?
-          billToAddress = {
+          bill_to_address = {
             'name' => options[:billing_address][:name],
             'companyName' => options[:billing_address][:company],
             'addressLine1' => options[:billing_address][:address1],
@@ -235,7 +234,7 @@ module ActiveMerchant #:nodoc:
           }
         end
         if !options[:shipping_address].nil?
-          shipToAddress = {
+          ship_to_address = {
             'name' => options[:shipping_address][:name],
             'companyName' => options[:shipping_address][:company],
             'addressLine1' => options[:shipping_address][:address1],
@@ -250,15 +249,15 @@ module ActiveMerchant #:nodoc:
         end
 
         hash = {
-          'billToAddress' => billToAddress,
-          'shipToAddress' => shipToAddress,
+          'billToAddress' => bill_to_address,
+          'shipToAddress' => ship_to_address,
           'orderId' => (options[:order_id] or @order_id),
           'customerId' => options[:customer],
-          'reportGroup' => (options[:merchant] or merchantId),
-          'merchantId' => merchantId,
+          'reportGroup' => (options[:merchant] or merchant_id),
+          'merchantId' => merchant_id,
           'orderSource' => 'ecommerce',
-          'enhancedData' => enhancedData,
-          'fraudCheckType' => fraudCheckType
+          'enhancedData' => enhanced_data,
+          'fraudCheckType' => fraud_check_type
         }
 
         if( !money.nil? && money.to_s.length > 0 )
@@ -266,17 +265,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def fraud_result(authorizationResponse)
-        if authorizationResponse.respond_to?('fraudResult')
-          fraudResult = authorizationResponse.fraudResult
-          if fraudResult.respond_to?('cardValidationResult')
-            cvv_to_pass = fraudResult.cardValidationResult
+      def fraud_result(authorization_response)
+        if authorization_response.respond_to?('fraudResult')
+          fraud_result = authorization_response.fraudResult
+          if fraud_result.respond_to?('cardValidationResult')
+            cvv_to_pass = fraud_result.cardValidationResult
             if(cvv_to_pass == "")
               cvv_to_pass = "P"
             end
           end
-          if fraudResult.respond_to?('avsResult')
-            avs_to_pass = AVS_RESPONSE_CODE[fraudResult.avsResult]
+          if fraud_result.respond_to?('avsResult')
+            avs_to_pass = @@avs_response_code[fraud_result.avsResult]
           end
         end
         {'cvv'=>cvv_to_pass, 'avs'=>avs_to_pass}

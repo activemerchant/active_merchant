@@ -14,7 +14,7 @@ class LitleTest < Test::Unit::TestCase
     }
   end
 
-  def test_createCreditCardHash
+  def test_create_credit_card_hash
     # define all inputs
     money = 1000
 
@@ -74,7 +74,7 @@ class LitleTest < Test::Unit::TestCase
       :shipping_address=>shipping_address
     }
 
-    hashFromGateway = @gateway.send(:createCreditCardHash, money, creditcard, options)
+    hashFromGateway = @gateway.send(:create_credit_card_hash, money, creditcard, options)
 
     assert_equal 1000, hashFromGateway['amount']
     assert_equal 'VI', hashFromGateway['card']['type']
@@ -224,7 +224,7 @@ class LitleTest < Test::Unit::TestCase
     :year       => '2010',
     :type       => 'american_express'
     )
-    hashFromGateway = @gateway.send(:createCreditCardHash, 0, creditcard, {})
+    hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {})
     assert_equal 'AX', hashFromGateway['card']['type']
     assert_nil hashFromGateway['billToAddress']
     assert_nil hashFromGateway['shipToAddress']
@@ -236,7 +236,7 @@ class LitleTest < Test::Unit::TestCase
     :year       => '2010',
     :type       => 'discover'
     )
-    hashFromGateway = @gateway.send(:createCreditCardHash, 0, creditcard, {})
+    hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {})
     assert_equal 'DI', hashFromGateway['card']['type']
   end
 
@@ -246,7 +246,7 @@ class LitleTest < Test::Unit::TestCase
     :year       => '2010',
     :type       => 'master'
     )
-    hashFromGateway = @gateway.send(:createCreditCardHash, 0,creditcard,{})
+    hashFromGateway = @gateway.send(:create_credit_card_hash, 0,creditcard,{})
     assert_equal 'MC', hashFromGateway['card']['type']
   end
 
@@ -256,7 +256,7 @@ class LitleTest < Test::Unit::TestCase
     :year       => '2010',
     :type       => 'jcb'
     )
-    hashFromGateway = @gateway.send(:createCreditCardHash, 0, creditcard, {})
+    hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {})
     assert_equal 'DI', hashFromGateway['card']['type']
   end
 
@@ -266,7 +266,7 @@ class LitleTest < Test::Unit::TestCase
     :year       => '2010',
     :type       => 'diners_club'
     )
-    hashFromGateway = @gateway.send(:createCreditCardHash, 0, creditcard, {})
+    hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {})
     assert_equal 'DI', hashFromGateway['card']['type']
   end
 
@@ -276,7 +276,7 @@ class LitleTest < Test::Unit::TestCase
     :year       => '2010',
     :type       => 'diners_club'
     )
-    hashFromGateway = @gateway.send(:createCreditCardHash, 0, creditcard, {})
+    hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {})
     assert_equal '1110', hashFromGateway['card']['expDate']
   end
 
@@ -311,7 +311,7 @@ class LitleTest < Test::Unit::TestCase
       :phone     => nil
     }
 
-    hashFromGateway = @gateway.send(:createCreditCardHash, 0, creditcard,
+    hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard,
     {:shipping_address=>shipping_address,:billing_address=>billing_address})
 
     #billing address
@@ -352,7 +352,7 @@ class LitleTest < Test::Unit::TestCase
     :year       => '2010',
     :type       => 'diners_club'
     )
-    hashFromGateway = @gateway.send(:createCreditCardHash, 0, creditcard, {'currency'=>'USD'})
+    hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {'currency'=>'USD'})
     assert_equal '101', hashFromGateway['merchantId']
   end
 
@@ -362,7 +362,7 @@ class LitleTest < Test::Unit::TestCase
     :year       => '2010',
     :type       => 'diners_club'
     )
-    hashFromGateway = @gateway.send(:createCreditCardHash, 0, creditcard, {})
+    hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {})
     assert_equal '101', hashFromGateway['merchantId']
   end
 
@@ -372,7 +372,7 @@ class LitleTest < Test::Unit::TestCase
     :year       => '2010',
     :type       => 'diners_club'
     )
-    hashFromGateway = @gateway.send(:createCreditCardHash, 0, creditcard, {:currency=>'EUR'})
+    hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {:currency=>'EUR'})
     assert_equal '102', hashFromGateway['merchantId']
   end
 
