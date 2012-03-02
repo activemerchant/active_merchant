@@ -182,7 +182,7 @@ class SagePayFormHelperTest < Test::Unit::TestCase
 
   def test_crypt_field_salt
     random = 'ExpectSomePartOfThisSalt'
-    ActiveSupport::SecureRandom.expects(:base64).returns(random)
+    SecureRandom.expects(:base64).returns(random)
 
     with_crypt_plaintext do |plain|
       salt = plain.split('&').first

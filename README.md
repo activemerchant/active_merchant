@@ -91,6 +91,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [BluePay](http://www.bluepay.com/) - US
 * [Braintree](http://www.braintreepaymentsolutions.com) - US
 * [CardStream](http://www.cardstream.com/) - GB
+* [CertoDirect](http://www.certodirect.com/) - BE, BG, CZ, DK, DE, EE, IE, EL, ES, FR, IT, CY, LV, LT, LU, HU, MT, NL, AT, PL, PT, RO, SI, SK, FI, SE, UK
 * [CyberSource](http://www.cybersource.com) - US
 * [DataCash](http://www.datacash.com/) - GB
 * [Efsnet](http://www.concordefsnet.com/) - US
@@ -110,6 +111,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [MerchantWare](http://merchantwarehouse.com/merchantware) - US
 * [Modern Payments](http://www.modpay.com) - US
 * [Moneris](http://www.moneris.com/) - CA
+* [NABTransact](http://www.nab.com.au/nabtransact/) - AU
 * [Netaxept](http://www.betalingsterminal.no/Netthandel-forside) - NO, DK, SE, FI
 * [NetRegistry](http://www.netregistry.com.au) - AU
 * [NELiX TransaX Gateway](http://www.nelixtransax.com) - US
@@ -156,6 +158,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 ## Supported Offsite Payment Gateways
 
 * [2 Checkout](http://www.2checkout.com)
+* [Authorize.Net SIM](http://developer.authorize.net/api/sim/) - US
 * [Banca Sella GestPay](https://www.sella.it/banca/ecommerce/gestpay/gestpay.jsp)
 * [Chronopay](http://www.chronopay.com)
 * [Direct-eBanking / sofortueberweisung.de by Payment-Networks AG](https://www.payment-network.com/deb_com_en/merchantarea/home) - DE, AT, CH, BE, UK, NL
@@ -177,5 +180,8 @@ The source code is hosted at [GitHub](http://github.com/Shopify/active_merchant)
 
 Please see the [ActiveMerchant Guide to Contributing](http://github.com/Shopify/active_merchant/wikis/contributing) for
 information on adding a new gateway to ActiveMerchant.
+
+Please don't touch the CHANGELOG in your pull requests, we'll add the appropriate CHANGELOG entries
+at release time.
 
 [![Build Status](https://secure.travis-ci.org/Shopify/active_merchant.png)](http://travis-ci.org/Shopify/active_merchant)

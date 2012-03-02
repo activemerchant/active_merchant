@@ -240,6 +240,16 @@ class CreditCardTest < Test::Unit::TestCase
     ccn = CreditCard.new(:number => "1")
     assert_equal "1", ccn.last_digits
   end
+  
+  def test_should_return_first_four_digits_of_card_number
+    ccn = CreditCard.new(:number => "4779139500118580")
+    assert_equal "477913", ccn.first_digits
+  end
+  
+  def test_should_return_first_bogus_digit_of_card_number
+    ccn = CreditCard.new(:number => "1")
+    assert_equal "1", ccn.first_digits
+  end
 
   def test_should_be_true_when_credit_card_has_a_first_name
     c = CreditCard.new
