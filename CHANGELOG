@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.21.0 (March 7, 2012)
+
 * Stripe: Add support for passing IP [collision]
 * Merchant e-Solutions: pass expiration date when purchasing with a stored credit card [chrisyoung]
 * Braintree: Fix passing custom processor ids to old accounts [maxsilver]
@@ -12,7 +14,6 @@
 * Authorize.Net CIM: Add option for setting a custom delimiter [bmorton]
 * Authorize.Net CIM: Add 3.1 response fields [bmorton]
 * Authorize.Net CIM: Misc fixes and doc improvements [bmorton]
-* Moneris: Add AVS/CVV support [odorcicd]
 * Authorize.Net CIM: Fix error when order is blank [KeeperPat]
 * Beanstream: Add recurring payments support [castiglione]
 * Make ePay password optional [ePay]
