@@ -543,7 +543,7 @@ module ActiveMerchant #:nodoc:
       # will be returned in the response.
       #
       # ==== Options
-      # * <tt>:method</tt> -- credit_card or check
+      # * <tt>:payment_method</tt> -- credit_card or check
       # * <tt>:command</tt> -- sale, credit, void, creditvoid, authonly, capture, postauth, check, checkcredit; defaults to sale; only required for run_transaction when other than sale
       # * <tt>:reference_number</tt> -- for the original transaction; obtained by sale or authonly
       # * <tt>:authorization_code</tt> -- required for postauth; obtained offline
