@@ -1252,7 +1252,9 @@ module ActiveMerchant #:nodoc:
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::Check)
           build_tag soap, :string, 'Account', payment_method[:method].account_number
           build_tag soap, :string, 'Routing', payment_method[:method].routing_number
-          build_tag soap, :string, 'AccountType', payment_method[:method].account_type.capitalize
+          unless payment_method[:method].account_type.nil?
+            build_tag soap, :string, 'AccountType', payment_method[:method].account_type.capitalize
+          end
           build_tag soap, :string, 'DriversLicense', options[:drivers_license]
           build_tag soap, :string, 'DriversLicenseState', options[:drivers_license_state]
           build_tag soap, :string, 'RecordType', options[:record_type]
