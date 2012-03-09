@@ -9,8 +9,8 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
 
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
       :number => '4000100011112224',
-      :month => 12,
-      :year => 12,
+      :month => 9,
+      :year => 14,
       :brand => 'visa',
       :verification_value => '123',
       :first_name => "Fred",
@@ -19,8 +19,8 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
 
     @bad_credit_card = ActiveMerchant::Billing::CreditCard.new(
       :number => '4000300011112220',
-      :month => 12,
-      :year => 12,
+      :month => 9,
+      :year => 14,
       :brand => 'visa',
       :verification_value => '999',
       :first_name => "Fred",
@@ -234,6 +234,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
 
     update_payment_options = @add_payment_options[:payment_method].merge(:method_id => payment_method_id,
                                                                          :name => "Updated Card.")
+
     response = @gateway.update_customer_payment_method(update_payment_options)
     assert response.params['update_customer_payment_method_return']
   end
@@ -273,6 +274,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     @options.merge!(@run_transaction_options)
     response = @gateway.run_transaction(@options)
     assert response.params['run_transaction_return']
+    assert response.success?
   end
 
   def test_run_transaction_check
