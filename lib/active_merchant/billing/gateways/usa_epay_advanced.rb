@@ -338,10 +338,11 @@ module ActiveMerchant #:nodoc:
         commit(__method__, request)
       end
 
-      # Update a customer by replacing all of the customer details..
+      # Update a customer by replacing all of the customer details.
       #
-      # Use quickUpdateCustomer to just update a few attributes.
-      #
+      # ==== Required
+      # * <tt>:customer_number</tt> -- customer to update
+      # 
       # ==== Options
       #  * Same as add_customer
       #
@@ -542,7 +543,7 @@ module ActiveMerchant #:nodoc:
       # will be returned in the response.
       #
       # ==== Options
-      # * <tt>:method</tt> -- credit_card or check
+      # * <tt>:payment_method</tt> -- credit_card or check
       # * <tt>:command</tt> -- sale, credit, void, creditvoid, authonly, capture, postauth, check, checkcredit; defaults to sale; only required for run_transaction when other than sale
       # * <tt>:reference_number</tt> -- for the original transaction; obtained by sale or authonly
       # * <tt>:authorization_code</tt> -- required for postauth; obtained offline
@@ -1242,8 +1243,8 @@ module ActiveMerchant #:nodoc:
         case
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::CreditCard)
           build_tag soap, :string, 'CardNumber', payment_method[:method].number
-          build_tag soap, :string, 'CardExpiration',
-            "#{"%02d" % payment_method[:method].month}#{payment_method[:method].year}"
+          build_tag soap, :string, 'CardExpiration', 
+            "#{"%02d" % payment_method[:method].month}#{payment_method[:method].year.to_s[-2..-1]}"
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
             build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
@@ -1324,8 +1325,7 @@ module ActiveMerchant #:nodoc:
       def build_credit_card_data(soap, options)
         soap.CreditCardData 'xsi:type' => "ns1:CreditCardData" do |soap|
           build_tag soap, :string, 'CardNumber', options[:payment_method].number
-          build_tag soap, :string, 'CardExpiration',
-            "#{"%02d" % options[:payment_method].month}#{options[:payment_method].year}"
+          build_tag soap, :string, 'CardExpiration', build_card_expiration(options)
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
             build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
@@ -1335,6 +1335,14 @@ module ActiveMerchant #:nodoc:
           CREDIT_CARD_DATA_OPTIONS.each do |k,v|
             build_tag soap, v[0], v[1], options[k]
           end
+        end
+      end
+
+      def build_card_expiration(options)
+        month = options[:payment_method].month
+        year  = options[:payment_method].year
+        unless month.nil? || year.nil?
+          "#{"%02d" % month}#{year.to_s[-2..-1]}"
         end
       end
 
