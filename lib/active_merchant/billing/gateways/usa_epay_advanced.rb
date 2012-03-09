@@ -1242,8 +1242,8 @@ module ActiveMerchant #:nodoc:
         case
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::CreditCard)
           build_tag soap, :string, 'CardNumber', payment_method[:method].number
-          build_tag soap, :string, 'CardExpiration',
-            "#{"%02d" % payment_method[:method].month}#{payment_method[:method].year}"
+          build_tag soap, :string, 'CardExpiration', 
+            "#{"%02d" % payment_method[:method].month}#{payment_method[:method].year.to_s[-2..-1]}"
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
             build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
@@ -1322,8 +1322,8 @@ module ActiveMerchant #:nodoc:
       def build_credit_card_data(soap, options)
         soap.CreditCardData 'xsi:type' => "ns1:CreditCardData" do |soap|
           build_tag soap, :string, 'CardNumber', options[:payment_method].number
-          build_tag soap, :string, 'CardExpiration',
-            "#{"%02d" % options[:payment_method].month}#{options[:payment_method].year}"
+          build_tag soap, :string, 'CardExpiration', 
+            "#{"%02d" % options[:payment_method].month}#{options[:payment_method].year.to_s[-2..-1]}"
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
             build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
