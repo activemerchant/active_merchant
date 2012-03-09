@@ -342,7 +342,7 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Required
       # * <tt>:customer_number</tt> -- customer to update
-      # 
+      #
       # ==== Options
       #  * Same as add_customer
       #
@@ -1243,7 +1243,7 @@ module ActiveMerchant #:nodoc:
         case
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::CreditCard)
           build_tag soap, :string, 'CardNumber', payment_method[:method].number
-          build_tag soap, :string, 'CardExpiration', 
+          build_tag soap, :string, 'CardExpiration',
             "#{"%02d" % payment_method[:method].month}#{payment_method[:method].year.to_s[-2..-1]}"
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
@@ -1471,7 +1471,8 @@ module ActiveMerchant #:nodoc:
           when :get_customer_payment_methods
             p['item']
           when :get_transaction_custom
-            p['item'].inject({}) { |map, field| map[field['field']] = field['value']; map }
+            items = p['item'].kind_of?(Array) ? p['item'] : [p['item']]
+            items.inject({}) { |hash, item| hash[item['field']] = item['value']; hash }
           else
             p
           end

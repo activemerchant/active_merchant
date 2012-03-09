@@ -12,6 +12,7 @@
 * Braintree Blue: #store adds cards to existing customers [ntalbott]
 * USA ePay Advanced: Fix check handling [nearapogee]
 * USA ePay Advanced: Fix credit card expiration handling [nearapogee]
+* USA ePay Advanced: Fix handling of custom transaction responses for single items [nearapogee]
 
 == Version 1.42.2 (November 13th, 2013)
 
