@@ -338,10 +338,11 @@ module ActiveMerchant #:nodoc:
         commit(__method__, request)
       end
 
-      # Update a customer by replacing all of the customer details..
+      # Update a customer by replacing all of the customer details.
       #
-      # Use quickUpdateCustomer to just update a few attributes.
-      #
+      # ==== Required
+      # * <tt>:customer_number</tt> -- customer to update
+      # 
       # ==== Options
       #  * Same as add_customer
       #
