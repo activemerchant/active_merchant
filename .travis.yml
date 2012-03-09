@@ -7,4 +7,6 @@ rvm:
 script: "bundle exec rake test:units"
 
 notifications:
-  disabled: true
+  email:
+    - integrations-team@shopify.com
+    - nathaniel@talbott.ws

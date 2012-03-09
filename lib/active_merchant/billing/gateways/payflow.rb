@@ -94,6 +94,10 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'Description', options[:description] unless options[:description].blank?
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
               xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
+              xml.tag! 'TaxAmt', options[:taxamt] unless options[:taxamt].blank?
+              xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
+              xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
+              xml.tag! 'DiscountAmt', options[:discountamt] unless options[:discountamt].blank?
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
@@ -122,6 +126,10 @@ module ActiveMerchant #:nodoc:
               # Comment and Comment2 will show up in manager.paypal.com as Comment1 and Comment2
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
               xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
+              xml.tag! 'TaxAmt', options[:taxamt] unless options[:taxamt].blank?
+              xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
+              xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
+              xml.tag! 'DiscountAmt', options[:discountamt] unless options[:discountamt].blank?
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
@@ -161,8 +169,8 @@ module ActiveMerchant #:nodoc:
       end
       
       def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
+        year  = sprintf("%.4i", creditcard.year.to_s.sub(/^0+/, ''))
+        month = sprintf("%.2i", creditcard.month.to_s.sub(/^0+/, ''))
 
         "#{year}#{month}"
       end

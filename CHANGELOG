@@ -1,5 +1,58 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.21.0 (March 7, 2012)
+
+* Stripe: Add support for passing IP [collision]
+* Merchant e-Solutions: pass expiration date when purchasing with a stored credit card [chrisyoung]
+* Braintree: Fix passing custom processor ids to old accounts [maxsilver]
+* Authorize.net CIM: Add validation mode option to create_customer_profile_request [jwood]
+* eWay Managed: Include transaction number in response params [jamsi]
+* Fix various hash ordering issues exposed by Ruby 1.8 [ntalbott]
+* Authorize.Net CIM: Add WEB echeck type [deathbob]
+* Move Braintree from the gemspec to the Gemfile [ntalbott]
+* Add CertoDirect gateway [hron]
+* Authorize.Net CIM: Add option for setting a custom delimiter [bmorton]
+* Authorize.Net CIM: Add 3.1 response fields [bmorton]
+* Authorize.Net CIM: Misc fixes and doc improvements [bmorton]
+* Authorize.Net CIM: Fix error when order is blank [KeeperPat]
+* Beanstream: Add recurring payments support [castiglione]
+* Make ePay password optional [ePay]
+* Quickpay: skip testmode if transaction provided [brentmc79]
+* Payflow: add additional fields [thorstadt]
+* Authorize.Net CIM: Add get_customer_profile_ids [howaboutwe]
+* PayPal Express: Add support for BrandName and Custom fields [exviva]
+* Payflow: Handle dates with leading zeros [jcoleman]
+* Authorize.Net CIM: Add CCV code support & improve tests [tgarnett]
+* Add Authorize.Net SIM integration [courtland & rdp]
+* Secure Pay AU: Handle periodic payments [tommeier]
+* Viaklix: Add discover as a supported card type [waelchatila]
+* Improvements to testing infrastructure for integrations [jduff]
+* Add NAB Transact (AU) Gateway [tommeier]
+
+== Version 1.20.4 (February 22, 2012)
+
+* Fix json dependency
+
+== Version 1.20.3 (February 7, 2012)
+
+* Various fixes to support Ruby 1.9 [wisq]
+* SkipJack: Fix partial capture [jduff]
+* Optimal Payments: submit region when outside North America [jduff]
+* USA ePay: Add void and refund support [duff/ntalbott]
+* Add first digits to credit card [codyfauser]
+* Orbital: fixes to authentication and order id [Soleone]
+* Stripe: fixes to purchase method [duff/ntalbott]
+
+== Version 1.20.2 (January 16, 2012)
+
+* Remove authorize/capture support for Stripe [gdb]
+
+== Version 1.20.1 (December 22, 2011)
+
+* PayflowExpressUk: Fix parsing street2 from response [odorcicd]
+* AuthorizeNet: Support tracking id [odorcicd]
+* SagePay Form: Map billing address to shipping address [jduff]
+
 == Version 1.20.0 (November 14, 2011)
 
 * Add support for USA ePay Advanced SOAP interface [matthewcalebsmith/jduff]

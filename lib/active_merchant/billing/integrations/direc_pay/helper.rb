@@ -173,15 +173,15 @@ module ActiveMerchant #:nodoc:
           end
           
           def encode_value(value)
-            encoded = ActiveSupport::Base64.encode64s(value)
+            encoded = Base64.strict_encode64(value)
             string_to_encode = encoded[0, 1] + "T" + encoded[1, encoded.length]
-            ActiveSupport::Base64.encode64s(string_to_encode)
+            Base64.strict_encode64(string_to_encode)
           end
           
           def decode_value(value)
-            decoded = ActiveSupport::Base64.decode64(value)
+            decoded = Base64.decode64(value)
             string_to_decode = decoded[0, 1] + decoded[2, decoded.length]
-            ActiveSupport::Base64.decode64(string_to_decode)
+            Base64.decode64(string_to_decode)
           end
           
           def phone_code_for_country(country)

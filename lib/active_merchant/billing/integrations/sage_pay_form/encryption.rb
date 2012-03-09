@@ -4,11 +4,11 @@ module ActiveMerchant #:nodoc:
       module SagePayForm
         module Encryption
           def sage_encrypt(plaintext, key)
-            ActiveSupport::Base64.encode64s(sage_encrypt_xor(plaintext, key))
+            Base64.strict_encode64(sage_encrypt_xor(plaintext, key))
           end
 
           def sage_decrypt(ciphertext, key)
-            sage_encrypt_xor(ActiveSupport::Base64.decode64(ciphertext), key)
+            sage_encrypt_xor(Base64.decode64(ciphertext), key)
           end
           
           def sage_encrypt_salt(min, max)
@@ -21,8 +21,8 @@ module ActiveMerchant #:nodoc:
           def sage_encrypt_xor(data, key)
             raise 'No key provided' if key.blank?
             
-            key *= (data.length.to_f / key.length.to_f).ceil
-            key = key[0, data.length]
+            key *= (data.bytesize.to_f / key.bytesize.to_f).ceil
+            key = key[0, data.bytesize]
 
             data.bytes.zip(key.bytes).map { |b1, b2| (b1 ^ b2).chr }.join
           end

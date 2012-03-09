@@ -246,13 +246,16 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'firstName', CGI.escape(addr[:name].split(' ').first) # TODO: parse properly
             xml.tag! 'lastName' , CGI.escape(addr[:name].split(' ').last )
           end
-          xml.tag! 'street' , CGI.escape(addr[:address1]) if addr[:address1] && !addr[:address1].empty?
-          xml.tag! 'street2', CGI.escape(addr[:address2]) if addr[:address2] && !addr[:address2].empty?
-          xml.tag! 'city'   , CGI.escape(addr[:city]    ) if addr[:city]     && !addr[:city].empty?
-          xml.tag! 'state'  , CGI.escape(addr[:state]   ) if addr[:state]    && !addr[:state].empty?
-          xml.tag! 'country', CGI.escape(addr[:country] ) if addr[:country]  && !addr[:country].empty?
+          xml.tag! 'street' , CGI.escape(addr[:address1]) if addr[:address1].present?
+          xml.tag! 'street2', CGI.escape(addr[:address2]) if addr[:address2].present?
+          xml.tag! 'city'   , CGI.escape(addr[:city]    ) if addr[:city].present?
+          if addr[:state].present?
+            state_tag = %w(US CA).include?(addr[:country]) ? 'state' : 'region'
+            xml.tag! state_tag, CGI.escape(addr[:state])
+          end
+          xml.tag! 'country', CGI.escape(addr[:country] ) if addr[:country].present?
           xml.tag! 'zip'    , CGI.escape(addr[:zip]     ) # this one's actually required
-          xml.tag! 'phone'  , CGI.escape(addr[:phone]   ) if addr[:phone]    && !addr[:phone].empty?
+          xml.tag! 'phone'  , CGI.escape(addr[:phone]   ) if addr[:phone].present?
           #xml.tag! 'email'        , ''
         end
       end

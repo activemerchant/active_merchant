@@ -24,6 +24,7 @@ beanstream:
   user: username
   password: password
   secure_profile_api_key: API Access Passcode
+  recurring_api_key: API Access Passcode
   
 beanstream_interac:
   login: merchant id
@@ -56,7 +57,11 @@ card_save:
 card_stream:
   login: X
   password: Y
-  
+
+certo_direct:
+  login: 1
+  password: vP6OwK3
+
 cyber_source:
   login: X
   password: Y
@@ -127,6 +132,11 @@ inspire:
   login: demo
   password: password
 
+itransact:
+  login: API_ACCESS_USERNAME
+  password: API_ACCESS_KEY
+  gateway_id: GATEWAY_ID
+
 jetpay:
   login: TESTTERMINAL
       
@@ -157,6 +167,11 @@ modern_payments:
 moneris:
   login: store1
   password: yesguy
+
+#Working credentials, no need to replace
+nab_transact:
+  login: ABC0001
+  password: changeit
   
 netaxept:
   login: LOGIN
