@@ -422,6 +422,9 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     response = @gateway.get_transaction_custom(:reference_number => reference_number,
                                                :fields => ['Response.StatusCode', 'Response.Status'])
     assert response.params['get_transaction_custom_return']
+    response = @gateway.get_transaction_custom(:reference_number => reference_number, 
+                                               :fields => ['Response.StatusCode'])
+    assert response.params['get_transaction_custom_return']
   end
 
   def test_get_check_trace
