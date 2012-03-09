@@ -132,6 +132,11 @@ inspire:
   login: demo
   password: password
 
+itransact:
+  login: API_ACCESS_USERNAME
+  password: API_ACCESS_KEY
+  gateway_id: GATEWAY_ID
+
 jetpay:
   login: TESTTERMINAL
       
