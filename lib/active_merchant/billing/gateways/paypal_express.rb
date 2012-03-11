@@ -121,7 +121,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:cpp-payflow-color', options[:background_color] unless options[:background_color].blank?
               if options[:allow_guest_checkout]
                 xml.tag! 'n2:SolutionType', 'Sole'
-                xml.tag! 'n2:LandingPage', 'Billing'
+                xml.tag! 'n2:LandingPage', options[:landing_page] || 'Billing'
               end
               xml.tag! 'n2:BuyerEmail', options[:email] unless options[:email].blank?
 
