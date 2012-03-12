@@ -18,6 +18,7 @@ module ActiveMerchant #:nodoc:
     # * Switch
     # * Solo
     # * Dankort
+    # * Visa/Dankort
     # * Maestro
     # * Forbrugsforeningen
     # * Laser
@@ -81,6 +82,7 @@ module ActiveMerchant #:nodoc:
       # * +'switch'+
       # * +'solo'+
       # * +'dankort'+
+      # * +'visa_dankort'+
       # * +'maestro'+
       # * +'forbrugsforeningen'+
       # * +'laser'+

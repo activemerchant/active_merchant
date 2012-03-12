@@ -25,6 +25,20 @@ class RemoteEpayTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_authorization_dankort_visa
+    card = credit_card('4444444444444000')
+    card.type = 'visa_dankort'
+    assert response = @gateway.authorize(@amount, card , @options)
+    assert_equal "1", response.params['accept']
+    assert_not_nil response.params['tid']
+    assert_not_nil response.params['cur']
+    assert_not_nil response.params['amount']
+    assert_not_nil response.params['orderid']
+    assert !response.authorization.blank?
+    assert_success response
+    assert response.test?
+  end
+
   def test_failed_authorization
     assert response = @gateway.authorize(@amount, @credit_card_declined, @options)
     assert_equal '1', response.params['decline']

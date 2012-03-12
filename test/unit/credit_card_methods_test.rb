@@ -78,8 +78,8 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 'dankort', CreditCard.type?('5019717010103742')
   end
   
-  def test_should_detect_visa_dankort_as_visa
-    assert_equal 'visa', CreditCard.type?('4571100000000000')
+  def test_should_be_visa_dankort_card_type
+    assert_equal 'visa_dankort', CreditCard.type?('4571100000000000')
   end
   
   def test_should_detect_electron_dk_as_visa
