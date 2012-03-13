@@ -33,6 +33,7 @@ module ActiveMerchant #:nodoc:
       # [<tt>:notify_url</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
       # [<tt>:comment</tt>] (opt) Comment field which will be reported to Payflow backend (at manager.paypal.com) as Comment1
       # [<tt>:comment2</tt>] (opt) Comment field which will be reported to Payflow backend (at manager.paypal.com) as Comment2
+      # [<tt>:discount</tt>] (opt) Total discounts in cents
       #
       # ==Line Items
       # Support for order line items is available, but has to be enabled on the PayFlow backend. This is what I was told by Todd Sieber at Technical Support:
@@ -169,7 +170,7 @@ module ActiveMerchant #:nodoc:
             items = options[:items] || []
             items.each_with_index do |item, index|
               xml.tag! 'ExtData', 'Name' => "L_DESC#{index}", 'Value' => item[:description]
-              xml.tag! 'ExtData', 'Name' => "L_AMT#{index}", 'Value' => amount(item[:amount])
+              xml.tag! 'ExtData', 'Name' => "L_COST#{}{index}", 'Value' => amount(item[:amount])
               xml.tag! 'ExtData', 'Name' => "L_QTY#{index}", 'Value' => item[:quantity] || '1'
               xml.tag! 'ExtData', 'Name' => "L_NAME#{index}", 'Value' => item[:name]
               # Note: An ItemURL is supported in Paypal Express (different API), but not PayFlow Express, as far as I can tell.
@@ -180,7 +181,9 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'ExtData', 'Name' => "ITEMAMT", 'Value' => amount(money)
             end
 
+            xml.tag! 'DiscountAmt', amount(options[:discount]) if options[:discount]
             xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
+
           end
 
           xml.tag! 'Tender' do

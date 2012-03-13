@@ -57,24 +57,61 @@ class RemotePayflowExpressTest < Test::Unit::TestCase
       :email=>"test6@test.com",
       :order_id=>"#1092",
       :currency=>"USD",
-      :disable_review=>true,
-      :subtotal=>25.18.to_money,
-      :items=> [
-        {:name=>"test4",
-          :description=>"test4",
-          :quantity=>2,
-          :amount=>13.99.to_money,
-          :url=>"http://localhost:3000/products/test4"},
-        {:name=>"Discount",
-          :quantity=>1,
-          :amount=>-2.80.to_money}],
-      :shipping=>0,
-      :handling=>0,
-      :tax=>0,
-      :no_shipping=>true,
-      :locale=>"US"}
-      response = @gateway.setup_authorization(amount, options)
-      assert response.success?
+      :subtotal=>2798,
+      :items => [
+        {:name => "test4",
+          :description => "test4",
+          :quantity=>2 ,
+          :amount=> 1399 ,
+          :url=>"http://localhost:3000/products/test4"}],
+      :discount=>280,
+      :no_shipping=>true}
+    response = @gateway.setup_authorization(amount, options)
+    assert response.success?
+  end
+
+  def test_setup_authorization_with_discount_taxes_additional
+    amount = 2818
+    options = {:ip=>"127.0.0.1",
+      :return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1",
+      :cancel_return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1",
+      :customer=>"test6@test.com",
+      :email=>"test6@test.com",
+      :order_id=>"#1092",
+      :currency=>"USD",
+      :subtotal=>2798,
+      :items => [
+        {:name => "test4",
+          :description => "test4",
+          :quantity=>2 ,
+          :amount=> 1399 ,
+          :url=>"http://localhost:3000/products/test4"}],
+      :discount=>280,
+      :no_shipping=>true}
+    response = @gateway.setup_authorization(amount, options)
+    assert response.success?
+  end
+
+  def test_setup_authorization_with_discount_taxes_and_shipping_addtiional
+    amount = 3618
+    options = {:ip=>"127.0.0.1",
+      :return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1",
+      :cancel_return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1",
+      :customer=>"test6@test.com",
+      :email=>"test6@test.com",
+      :order_id=>"#1092",
+      :currency=>"USD",
+      :subtotal=>2798,
+      :items => [
+        {:name => "test4",
+          :description => "test4",
+          :quantity=>2 ,
+          :amount=> 1399 ,
+          :url=>"http://localhost:3000/products/test4"}],
+      :discount=>280,
+      :no_shipping=>false}
+    response = @gateway.setup_authorization(amount, options)
+    assert response.success?
   end
 end
 
@@ -93,23 +130,63 @@ class RemotePayflowExpressUkTest < Test::Unit::TestCase
       :email=>"test6@test.com",
       :order_id=>"#1092",
       :currency=>"GBP",
-      :disable_review=>true,
-      :subtotal=>25.18.to_money,
+      :subtotal=>2798,
       :items=> [
         {:name=>"test4",
           :description=>"test4",
           :quantity=>2,
-          :amount=>13.99.to_money,
+          :amount=>1399,
           :url=>"http://localhost:3000/products/test4"},
-        {:name=>"Discount",
-          :quantity=>1,
-          :amount=>-2.80.to_money}],
-      :shipping=>0,
-      :handling=>0,
-      :tax=>0,
-      :no_shipping=>true,
-      :locale=>"CA"}
-      response = @gateway.setup_authorization(amount, options)
-      assert response.success?
+        ],
+      :discount=>280,
+      :no_shipping=>true}
+    response = @gateway.setup_authorization(amount, options)
+    assert response.success?
+  end
+
+  def test_setup_authorization_with_discount_taxes_additional
+    amount = 2818
+    options = {:ip=>"127.0.0.1",
+      :return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1",
+      :cancel_return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1",
+      :customer=>"test6@test.com",
+      :email=>"test6@test.com",
+      :order_id=>"#1092",
+      :currency=>"GBP",
+      :subtotal=>2798,
+      :items=> [
+        {:name=>"test4",
+          :description=>"test4",
+          :quantity=>2,
+          :amount=>1399,
+          :url=>"http://localhost:3000/products/test4"},
+        ],
+      :discount=>280,
+      :no_shipping=>true}
+    response = @gateway.setup_authorization(amount, options)
+    assert response.success?
+  end
+
+  def test_setup_authorization_with_discount_taxes_and_shipping_addtiional
+    amount = 3618
+    options = {:ip=>"127.0.0.1",
+      :return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1",
+      :cancel_return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1",
+      :customer=>"test6@test.com",
+      :email=>"test6@test.com",
+      :order_id=>"#1092",
+      :currency=>"GBP",
+      :subtotal=>2798,
+      :items=> [
+        {:name=>"test4",
+          :description=>"test4",
+          :quantity=>2,
+          :amount=>1399,
+          :url=>"http://localhost:3000/products/test4"},
+        ],
+      :discount=>280,
+      :no_shipping=>false}
+    response = @gateway.setup_authorization(amount, options)
+    assert response.success?
   end
 end
