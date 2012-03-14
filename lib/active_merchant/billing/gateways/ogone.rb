@@ -9,14 +9,19 @@ module ActiveMerchant #:nodoc:
     # communication between Ogone systems and your e-commerce website.
     #
     # This implementation follows the specification provided in the DirectLink integration
-    # guide version 4.2.0 (26 October 2011), available here:
+    # guide version 4.2.1 (8 February 2012), available here:
     # https://secure.ogone.com/ncol/Ogone_DirectLink_EN.pdf
     #
     # It also features aliases, which allow to store/unstore credit cards, as specified in
-    # the Alias Manager Option guide version 3.2.0 (26 October 2011) available here:
+    # the Alias Manager Option guide version 3.2.1 (8 February 2012) available here:
     # https://secure.ogone.com/ncol/Ogone_Alias_EN.pdf
     #
-    # It was last tested on Release 4.89 of Ogone DirectLink + AliasManager (26 October 2011).
+    # It also implements the 3-D Secure feature, as specified in the DirectLink with
+    # 3-D Secure guide version 3.0 (8 February 2012) available here:
+    # https://secure.ogone.com/ncol/Ogone_DirectLink-3-D_EN.pdf
+    #
+    # It was last tested on Release 4.90 of Ogone DirectLink + AliasManager + Direct Link 3D
+    # (8 February 2012).
     #
     # For any questions or comments, please contact one of the following:
     # - Nicolas Jacobeus (nj@belighted.com),
@@ -63,6 +68,27 @@ module ActiveMerchant #:nodoc:
     #   # You can use the alias instead of the credit card for subsequent orders
     #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2")
     #
+    # == 3-D Secure feature
+    #
+    #   To use the 3-D Secure feature, simply add :d3d => true in the options hash:
+    #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2", :d3d => true)
+    #
+    #   Specific 3-D Secure request options are (please refer to the documentation for more infos about these options):
+    #     :win_3ds         => :main_window (default), :pop_up or :pop_ix.
+    #     :http_accept     => "*/*" (default), or any other HTTP_ACCEPT header value.
+    #     :http_user_agent => The cardholder's User-Agent string
+    #     :accept_url      => URL of the web page to show the customer when the payment is authorized.
+    #                         (or waiting to be authorized).
+    #     :decline_url     => URL of the web page to show the customer when the acquirer rejects the authorization
+    #                         more than the maximum permitted number of authorization attempts (10 by default, but can
+    #                         be changed in the "Global transaction parameters" tab, "Payment retry" section of the
+    #                         Technical Information page).
+    #     :exception_url   => URL of the web page to show the customer when the payment result is uncertain.
+    #     :paramplus       => Field to submit the miscellaneous parameters and their values that you wish to be
+    #                         returned in the post sale request or final redirection.
+    #     :complus         => Field to submit a value you wish to be returned in the post sale request or output.
+    #     :language        => Customer's language, for example: "en_EN"
+    #
     class OgoneGateway < Gateway
 
       URLS = {
@@ -79,6 +105,13 @@ module ActiveMerchant #:nodoc:
                       'NO' => 'R' }
 
       SUCCESS_MESSAGE = "The transaction was successful"
+
+      THREE_D_SECURE_DISPLAY_WAYS = { :main_window => 'MAINW',  # display the identification page in the main window
+                                                                # (default value).
+                                      :pop_up      => 'POPUP',  # display the identification page in a pop-up window
+                                                                # and return to the main window at the end.
+                                      :pop_ix      => 'POPIX' } # display the identification page in a pop-up window
+                                                                # and remain in the pop-up window.
 
       OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE   = "Signature usage will be required from a future release of ActiveMerchant's Ogone Gateway. Please update your Ogone account to use it."
       OGONE_LOW_ENCRYPTION_DEPRECATION_MESSAGE = "SHA512 signature encryptor will be required from a future release of ActiveMerchant's Ogone Gateway. Please update your Ogone account to use it."
@@ -193,8 +226,26 @@ module ActiveMerchant #:nodoc:
         else
           add_alias(post, options[:store])
           add_eci(post, options[:eci] || '7')
+          add_d3d(post, options) if options[:d3d]
           add_creditcard(post, payment_source)
         end
+      end
+
+      def add_d3d(post, options)
+        add_pair post, 'FLAG3D', 'Y'
+        win_3ds = THREE_D_SECURE_DISPLAY_WAYS.key?(options[:win_3ds]) ?
+          THREE_D_SECURE_DISPLAY_WAYS[options[:win_3ds]] :
+          THREE_D_SECURE_DISPLAY_WAYS[:main_window]
+        add_pair post, 'WIN3DS', win_3ds
+
+        add_pair post, 'HTTP_ACCEPT',     options[:http_accept] || "*/*"
+        add_pair post, 'HTTP_USER_AGENT', options[:http_user_agent] if options[:http_user_agent]
+        add_pair post, 'ACCEPTURL',       options[:accept_url]      if options[:accept_url]
+        add_pair post, 'DECLINEURL',      options[:decline_url]     if options[:decline_url]
+        add_pair post, 'EXCEPTIONURL',    options[:exception_url]   if options[:exception_url]
+        add_pair post, 'PARAMPLUS',       options[:paramplus]       if options[:paramplus]
+        add_pair post, 'COMPLUS',         options[:complus]         if options[:complus]
+        add_pair post, 'LANGUAGE',        options[:language]        if options[:language]
       end
 
       def add_eci(post, eci)
@@ -242,7 +293,15 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         xml_root = REXML::Document.new(body).root
-        convert_attributes_to_hash(xml_root.attributes)
+        response = convert_attributes_to_hash(xml_root.attributes)
+
+        # Add HTML_ANSWER element (3-D Secure specific to the response's params)
+        # Note: HTML_ANSWER is not an attribute so we add it "by hand" to the response
+        if html_answer = REXML::XPath.first(xml_root, "//HTML_ANSWER")
+          response["HTML_ANSWER"] = html_answer.text
+        end
+
+        response
       end
 
       def commit(action, parameters)

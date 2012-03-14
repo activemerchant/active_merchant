@@ -8,6 +8,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     @amount = 100
     @credit_card     = credit_card('4000100011112224')
     @declined_card   = credit_card('1111111111111111')
+    @credit_card_d3d = credit_card('4000000000000002', :verification_value => '111')
     @options = {
       :order_id => generate_unique_id[0...30],
       :billing_address => address,
@@ -61,6 +62,15 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  end
+
+  # NOTE: You have to contact Ogone to make sure your test account allow 3D Secure transactions before running this test
+  def test_successful_purchase_with_3d_secure
+    assert response = @gateway.purchase(@amount, @credit_card_d3d, @options.merge(:d3d => true))
+    assert_success response
+    assert_equal '46', response.params["STATUS"]
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+    assert response.params["HTML_ANSWER"]
   end
 
   def test_successful_with_non_numeric_order_id
