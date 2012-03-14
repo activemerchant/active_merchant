@@ -175,11 +175,7 @@ module ActiveMerchant #:nodoc:
           :test => @options[:test] || test?,
           :authorization => response[:ref_num],
           :cvv_result => response[:cvv2_result_code],
-          :avs_result => {
-            :street_match => response[:avs_result_code].to_s[0,1],
-            :postal_match => response[:avs_result_code].to_s[1,1],
-            :code => response[:avs_result_code].to_s[2,1]
-          }
+          :avs_result => { :code => response[:avs_result_code] }
         )
       end
 
