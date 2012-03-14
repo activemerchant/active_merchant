@@ -178,9 +178,8 @@ module ActiveMerchant #:nodoc:
             end
             if items.any?
               xml.tag! 'ExtData', 'Name' => 'CURRENCY', 'Value' => options[:currency] || currency(money)
-              xml.tag! 'ExtData', 'Name' => "ITEMAMT", 'Value' => amount(money)
+              xml.tag! 'ExtData', 'Name' => "ITEMAMT", 'Value' => amount(options[:subtotal])
             end
-
             xml.tag! 'DiscountAmt', amount(options[:discount]) if options[:discount]
             xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
 
