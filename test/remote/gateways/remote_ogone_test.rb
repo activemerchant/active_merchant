@@ -22,6 +22,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
     assert_equal '7', response.params['ECI']
     assert_equal @options[:currency], response.params["currency"]
+    assert_equal @options[:order_id], reponse.order_id
   end
 
   def test_successful_purchase_with_utf8_encoding_1
@@ -155,7 +156,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   def test_successful_store_generated_alias
     assert response = @gateway.store(@credit_card)
     assert_success response
-    assert purchase = @gateway.purchase(@amount, response.params['ALIAS'])
+    assert purchase = @gateway.purchase(@amount, response.billing_id)
     assert_success purchase
   end
 

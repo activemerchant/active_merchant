@@ -20,7 +20,8 @@ module ActiveMerchant #:nodoc:
     # It was last tested on Release 4.89 of Ogone DirectLink + AliasManager (26 October 2011).
     #
     # For any questions or comments, please contact one of the following:
-    # - Nicolas Jacobeus (nj@belighted.com),
+    # - Joel Cogen (joel.cogen@belighted.com)
+    # - Nicolas Jacobeus (nicolas.jacobeus@belighted.com),
     # - Sébastien Grosjean (public@zencocoon.com),
     # - Rémy Coutable (remy@jilion.com).
     #
@@ -53,6 +54,7 @@ module ActiveMerchant #:nodoc:
     #   puts response.success?      # Check whether the transaction was successful
     #   puts response.message       # Retrieve the message returned by Ogone
     #   puts response.authorization # Retrieve the unique transaction ID returned by Ogone
+    #   puts response.order_id      # Retrieve the order ID
     #
     # == Alias feature
     #
@@ -63,6 +65,13 @@ module ActiveMerchant #:nodoc:
     #
     #   # You can use the alias instead of the credit card for subsequent orders
     #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2")
+    #
+    #   # You can also create an alias without making a purchase using store
+    #   gateway.store(creditcard, :billing_id => "myawesomecustomer")
+    #
+    #   # When using store, you can also let Ogone generate the alias for you
+    #   response = gateway.store(creditcard)
+    #   puts response.billing_id  # Retrieve the generated alias
     #
     class OgoneGateway < Gateway
 
