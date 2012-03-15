@@ -1,6 +1,5 @@
 # coding: utf-8
 require 'rexml/document'
-require File.dirname(__FILE__) + '/ogone_response'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -348,6 +347,16 @@ module ActiveMerchant #:nodoc:
           response_hash[key] = value
         end
         response_hash
+      end
+    end
+
+    class OgoneResponse < Response
+      def order_id
+        @params['orderID']
+      end
+
+      def billing_id
+        @params['ALIAS']
       end
     end
   end
