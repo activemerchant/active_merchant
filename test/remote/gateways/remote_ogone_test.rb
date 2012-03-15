@@ -146,7 +146,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
   end
   
   def test_successful_store
-    assert response = @gateway.store(@credit_card, :store => 'test_alias')
+    assert response = @gateway.store(@credit_card, :billing_id => 'test_alias')
     assert_success response
     assert purchase = @gateway.purchase(@amount, 'test_alias')
     assert_success purchase
@@ -186,11 +186,11 @@ class RemoteOgoneTest < Test::Unit::TestCase
 
   def test_reference_transactions
     # Setting an alias
-    assert response = @gateway.purchase(@amount, credit_card('4000100011112224'), @options.merge(:store => "awesomeman", :order_id=>Time.now.to_i.to_s+"1"))
+    assert response = @gateway.purchase(@amount, credit_card('4000100011112224'), @options.merge(:billing_id => "awesomeman", :order_id=>Time.now.to_i.to_s+"1"))
     assert_success response
     assert_equal '7', response.params['ECI']
     # Updating an alias
-    assert response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(:store => "awesomeman", :order_id=>Time.now.to_i.to_s+"2"))
+    assert response = @gateway.purchase(@amount, credit_card('4111111111111111'), @options.merge(:billing_id => "awesomeman", :order_id=>Time.now.to_i.to_s+"2"))
     assert_success response
     assert_equal '7', response.params['ECI']
     # Using an alias (i.e. don't provide the credit card)

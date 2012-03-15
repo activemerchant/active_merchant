@@ -12,6 +12,7 @@ class OgoneTest < Test::Unit::TestCase
     @credit_card = credit_card
     @amount = 100
     @identification = "3014726"
+    @billing_id = "myalias"
     @options = {
       :order_id => '1',
       :billing_address => address,
@@ -122,6 +123,28 @@ class OgoneTest < Test::Unit::TestCase
     assert_success response
     assert_equal '3049652;RFD', response.authorization
     assert response.test?
+  end
+
+  def test_successful_store
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ECI', '7')
+    @gateway.expects(:ssl_post).times(2).returns(successful_purchase_response)
+    assert response = @gateway.store(@credit_card, :billing_id => @billing_id)
+    assert_success response
+    assert_equal '3014726;RES', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_store_with_deprecated_store_option
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ECI', '7')
+    @gateway.expects(:ssl_post).times(2).returns(successful_purchase_response)
+    assert_deprecation_warning(OgoneGateway::OGONE_STORE_OPTION_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.store(@credit_card, :store => @billing_id)
+      assert_success response
+      assert_equal '3014726;RES', response.authorization
+      assert response.test?
+    end
   end
 
   def test_unsuccessful_request
