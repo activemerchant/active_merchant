@@ -192,7 +192,9 @@ module ActiveMerchant #:nodoc:
         else
           return {
             'accept' => '0',
-            'errortext' => 'No Location header returned.'
+            'errortext' => 'ePay did not respond as expected. Please try again.',
+            'response_code' => response.code,
+            'response_message' => response.message
           }
         end
 
