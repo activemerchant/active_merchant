@@ -1,5 +1,6 @@
 # coding: utf-8
 require 'rexml/document'
+require File.dirname(__FILE__) + '/ogone_response'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -273,7 +274,7 @@ module ActiveMerchant #:nodoc:
           :avs_result    => { :code => AVS_MAPPING[response["AAVCheck"]] },
           :cvv_result    => CVV_MAPPING[response["CVCCheck"]]
         }
-        Response.new(successful?(response), message_from(response), response, options)
+        OgoneResponse.new(successful?(response), message_from(response), response, options)
       end
 
       def successful?(response)
