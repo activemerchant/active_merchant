@@ -12,6 +12,7 @@ class OgoneTest < Test::Unit::TestCase
     @credit_card = credit_card
     @amount = 100
     @identification = "3014726"
+    @billing_id = "myalias"
     @options = {
       :order_id => '1',
       :billing_address => address,
@@ -124,6 +125,29 @@ class OgoneTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_store
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ECI', '7')
+    @gateway.expects(:ssl_post).times(2).returns(successful_purchase_response)
+    assert response = @gateway.store(@credit_card, :billing_id => @billing_id)
+    assert_success response
+    assert_equal '3014726;RES', response.authorization
+    assert_equal '2', response.billing_id
+    assert response.test?
+  end
+
+  def test_deprecated_store_option
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ECI', '7')
+    @gateway.expects(:ssl_post).times(2).returns(successful_purchase_response)
+    assert_deprecation_warning(OgoneGateway::OGONE_STORE_OPTION_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.store(@credit_card, :store => @billing_id)
+      assert_success response
+      assert_equal '3014726;RES', response.authorization
+      assert response.test?
+    end
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -184,6 +208,18 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     response = @gateway.purchase(@amount, @credit_card)
     assert_equal 'P', response.cvv_result['code']
+  end
+
+  def test_billing_id
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_equal '2', response.billing_id
+  end
+
+  def test_order_id
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_equal '1233680882919266242708828', response.order_id
   end
 
   def test_production_mode
@@ -298,7 +334,8 @@ class OgoneTest < Test::Unit::TestCase
         amount="1"
         currency="EUR"
         PM="CreditCard"
-        BRAND="VISA">
+        BRAND="VISA"
+        ALIAS="2">
       </ncresponse>
     END
   end
@@ -322,7 +359,8 @@ class OgoneTest < Test::Unit::TestCase
         amount="1"
         currency="EUR"
         PM="CreditCard"
-        BRAND="VISA">
+        BRAND="VISA"
+        ALIAS="2">
       </ncresponse>
     END
   end
@@ -341,7 +379,8 @@ class OgoneTest < Test::Unit::TestCase
       amount=""
       currency="EUR"
       PM=""
-      BRAND="">
+      BRAND=""
+      ALIAS="2">
       </ncresponse>
     END
   end
@@ -359,7 +398,8 @@ class OgoneTest < Test::Unit::TestCase
       ACCEPTANCE=""
       STATUS="91"
       amount="1"
-      currency="EUR">
+      currency="EUR"
+      ALIAS="2">
       </ncresponse>
     END
   end
@@ -377,7 +417,8 @@ class OgoneTest < Test::Unit::TestCase
     ACCEPTANCE=""
     STATUS="61"
     amount="1"
-    currency="EUR">
+    currency="EUR"
+    ALIAS="2">
     </ncresponse>
     END
   end
@@ -395,7 +436,8 @@ class OgoneTest < Test::Unit::TestCase
     ACCEPTANCE=""
     STATUS="81"
     amount="1"
-    currency="EUR">
+    currency="EUR"
+    ALIAS="2">
     </ncresponse>
     END
   end
@@ -419,7 +461,8 @@ class OgoneTest < Test::Unit::TestCase
     amount="1"
     currency="EUR"
     PM="CreditCard"
-    BRAND="VISA">
+    BRAND="VISA"
+    ALIAS="2">
     </ncresponse>
     END
   end
@@ -438,7 +481,8 @@ class OgoneTest < Test::Unit::TestCase
     amount=""
     currency="EUR"
     PM=""
-    BRAND="">
+    BRAND=""
+    ALIAS="2">
     </ncresponse>
     END
   end
