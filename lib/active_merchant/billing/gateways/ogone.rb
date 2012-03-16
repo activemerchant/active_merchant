@@ -19,7 +19,8 @@ module ActiveMerchant #:nodoc:
     # It was last tested on Release 4.89 of Ogone DirectLink + AliasManager (26 October 2011).
     #
     # For any questions or comments, please contact one of the following:
-    # - Nicolas Jacobeus (nj@belighted.com),
+    # - Joel Cogen (joel.cogen@belighted.com)
+    # - Nicolas Jacobeus (nicolas.jacobeus@belighted.com),
     # - Sébastien Grosjean (public@zencocoon.com),
     # - Rémy Coutable (remy@jilion.com).
     #
@@ -52,16 +53,24 @@ module ActiveMerchant #:nodoc:
     #   puts response.success?      # Check whether the transaction was successful
     #   puts response.message       # Retrieve the message returned by Ogone
     #   puts response.authorization # Retrieve the unique transaction ID returned by Ogone
+    #   puts response.order_id      # Retrieve the order ID
     #
     # == Alias feature
     #
-    #   To use the alias feature, simply add :store in the options hash:
+    #   To use the alias feature, simply add :billing_id in the options hash:
     #
     #   # Associate the alias to that credit card
-    #   gateway.purchase(1000, creditcard, :order_id => "1", :store => "myawesomecustomer")
+    #   gateway.purchase(1000, creditcard, :order_id => "1", :billing_id => "myawesomecustomer")
     #
     #   # You can use the alias instead of the credit card for subsequent orders
     #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2")
+    #
+    #   # You can also create an alias without making a purchase using store
+    #   gateway.store(creditcard, :billing_id => "myawesomecustomer")
+    #
+    #   # When using store, you can also let Ogone generate the alias for you
+    #   response = gateway.store(creditcard)
+    #   puts response.billing_id  # Retrieve the generated alias
     #
     class OgoneGateway < Gateway
 
@@ -82,6 +91,7 @@ module ActiveMerchant #:nodoc:
 
       OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE   = "Signature usage will be required from a future release of ActiveMerchant's Ogone Gateway. Please update your Ogone account to use it."
       OGONE_LOW_ENCRYPTION_DEPRECATION_MESSAGE = "SHA512 signature encryptor will be required from a future release of ActiveMerchant's Ogone Gateway. Please update your Ogone account to use it."
+      OGONE_STORE_OPTION_DEPRECATION_MESSAGE   = "The 'store' option has been renamed to 'billing_id', and its usage is deprecated."
 
       self.supported_countries = ['BE', 'DE', 'FR', 'NL', 'AT', 'CH']
       # also supports Airplus and UATP
@@ -151,6 +161,14 @@ module ActiveMerchant #:nodoc:
       def refund(money, reference, options = {})
         perform_reference_credit(money, reference, options)
       end
+      
+      # Store a credit card by creating an Ogone Alias
+      def store(payment_source, options = {})
+        options.merge!(:alias_operation => 'BYOGONE') unless options.has_key?(:billing_id) || options.has_key?(:store)
+        response = authorize(1, payment_source, options)
+        void(response.authorization) if response.success?
+        response
+      end
 
       def test?
         @options[:test] || super
@@ -188,10 +206,14 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_source(post, payment_source, options)
         if payment_source.is_a?(String)
-          add_alias(post, payment_source)
+          add_alias(post, payment_source, options[:alias_operation])
           add_eci(post, options[:eci] || '9')
         else
-          add_alias(post, options[:store])
+          if options.has_key?(:store)
+            deprecated OGONE_STORE_OPTION_DEPRECATION_MESSAGE
+            options[:billing_id] ||= options[:store]
+          end
+          add_alias(post, options[:billing_id], options[:alias_operation])
           add_eci(post, options[:eci] || '7')
           add_creditcard(post, payment_source)
         end
@@ -201,8 +223,9 @@ module ActiveMerchant #:nodoc:
         add_pair post, 'ECI', eci.to_s
       end
 
-      def add_alias(post, _alias)
+      def add_alias(post, _alias, alias_operation = nil)
         add_pair post, 'ALIAS', _alias
+        add_pair post, 'ALIASOPERATION', alias_operation unless alias_operation.nil?
       end
 
       def add_authorization(post, authorization)
@@ -259,7 +282,7 @@ module ActiveMerchant #:nodoc:
           :avs_result    => { :code => AVS_MAPPING[response["AAVCheck"]] },
           :cvv_result    => CVV_MAPPING[response["CVCCheck"]]
         }
-        Response.new(successful?(response), message_from(response), response, options)
+        OgoneResponse.new(successful?(response), message_from(response), response, options)
       end
 
       def successful?(response)
@@ -324,6 +347,16 @@ module ActiveMerchant #:nodoc:
           response_hash[key] = value
         end
         response_hash
+      end
+    end
+
+    class OgoneResponse < Response
+      def order_id
+        @params['orderID']
+      end
+
+      def billing_id
+        @params['ALIAS']
       end
     end
   end
