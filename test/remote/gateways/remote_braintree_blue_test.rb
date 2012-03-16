@@ -65,6 +65,39 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal customer_vault_id, response.params["braintree_transaction"]["customer_details"]["id"]
   end
 
+  def test_successful_validate_on_store
+    card = credit_card('4111111111111111', :verification_value => '101')
+    assert response = @gateway.store(card, :verify_card => true)
+    assert_success response
+    assert_equal 'OK', response.message
+  end
+
+  def test_successful_validate_on_store_with_verification_merchant_account
+    card = credit_card('4111111111111111', :verification_value => '101')
+    assert response = @gateway.store(card, :verify_card => true, :verification_merchant_account_id => 'sandbox_credit_card_non_default')
+    assert_success response
+    assert_equal 'OK', response.message
+  end
+
+  def test_failed_validate_on_store
+    card = credit_card('4000111111111115', :verification_value => '200')
+    assert response = @gateway.store(card, :verify_card => true)
+    assert_failure response
+    assert_equal '', response.message
+  end
+
+  def test_successful_store_with_no_validate
+    card = credit_card('4000111111111115', :verification_value => '200')
+    assert response = @gateway.store(@credit_card, :verify_card => false)
+    assert_success response
+    assert_equal 'OK', response.message
+  end
+
+  def test_successful_store_with_invalid_card
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert_equal 'OK', response.message
+  end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
