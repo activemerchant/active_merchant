@@ -1,10 +1,12 @@
 require File.dirname(__FILE__) + '/paypal/paypal_common_api'
+require File.dirname(__FILE__) + '/paypal/paypal_recurring_api'
 require File.dirname(__FILE__) + '/paypal_express'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaypalGateway < Gateway
       include PaypalCommonAPI
+      include PaypalRecurringApi
       
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.supported_countries = ['US']
