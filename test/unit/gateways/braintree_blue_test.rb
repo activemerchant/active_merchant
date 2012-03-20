@@ -85,6 +85,58 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.authorize(100, credit_card("41111111111111111111"))
   end
 
+  def test_store_with_verify_card_true
+    customer_attributes = {
+      :credit_cards => [],
+      :email => 'email',
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :id => "123"
+    }
+    result = Braintree::SuccessfulResult.new(:customer => mock(customer_attributes))
+    Braintree::Customer.expects(:create).with do |params|
+      params[:credit_card][:options].has_key?(:verify_card)
+      assert_equal true, params[:credit_card][:options][:verify_card]
+      params
+    end.returns(result)
+    
+    @gateway.store(credit_card("41111111111111111111"), :verify_card => true)
+  end
+
+  def test_store_with_verify_card_false
+    customer_attributes = {
+      :credit_cards => [],
+      :email => 'email',
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :id => "123"
+    }
+    result = Braintree::SuccessfulResult.new(:customer => mock(customer_attributes))
+    Braintree::Customer.expects(:create).with do |params|
+      params[:credit_card][:options].has_key?(:verify_card)
+      assert_equal false, params[:credit_card][:options][:verify_card]
+      params
+    end.returns(result)
+    
+    @gateway.store(credit_card("41111111111111111111"), :verify_card => false)
+  end
+
+  def test_merge_credit_card_options_ignores_bad_option
+    params = {:first_name => 'John', :credit_card => {:cvv => '123'}}
+    options = {:verify_card => true, :bogus => 'ignore me'}
+    merged_params = @gateway.send(:merge_credit_card_options, params, options)
+    expected_params = {:first_name => 'John', :credit_card => {:cvv => '123', :options => {:verify_card => true}}}
+    assert_equal expected_params, merged_params
+  end
+
+  def test_merge_credit_card_options_handles_nil_credit_card
+    params = {:first_name => 'John'}
+    options = {:verify_card => true, :bogus => 'ignore me'}
+    merged_params = @gateway.send(:merge_credit_card_options, params, options)
+    expected_params = {:first_name => 'John', :credit_card => {:options => {:verify_card => true}}}
+    assert_equal expected_params, merged_params
+  end
+
   private
 
   def braintree_result(options = {})
