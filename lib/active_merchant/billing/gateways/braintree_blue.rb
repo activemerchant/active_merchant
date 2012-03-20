@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
 
       def store(creditcard, options = {})
         commit do
-          result = Braintree::Customer.create(
+          parameters = {
             :first_name => creditcard.first_name,
             :last_name => creditcard.last_name,
             :email => options[:email],
@@ -84,7 +84,8 @@ module ActiveMerchant #:nodoc:
               :expiration_month => creditcard.month.to_s.rjust(2, "0"),
               :expiration_year => creditcard.year.to_s
             }
-          )
+          }
+          result = Braintree::Customer.create(merge_credit_card_options(parameters, options))
           Response.new(result.success?, message_from_result(result),
             {
               :braintree_customer => (customer_hash(result.customer) if result.success?),
@@ -130,6 +131,16 @@ module ActiveMerchant #:nodoc:
       alias_method :delete, :unstore
 
       private
+
+      def merge_credit_card_options(parameters, options)
+        valid_options = {}
+        options.each do |key, value|
+          valid_options[key] = value if [:verify_card, :verification_merchant_account_id].include?(key)
+        end
+        parameters[:credit_card] ||= {}
+        parameters[:credit_card].merge!(:options => valid_options)
+        parameters
+      end
 
       def map_address(address)
         return {} if address.nil?
