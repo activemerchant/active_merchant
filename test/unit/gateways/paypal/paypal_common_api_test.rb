@@ -73,4 +73,18 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     assert_equal 'Sale', REXML::XPath.first(request, '//n2:PaymentAction').text
     assert_nil REXML::XPath.first(request, '//n2:PaymentRequestID')
   end
+
+  def test_build_request_wrapper_plain
+    result = @gateway.send(:build_request_wrapper, 'Action') do |xml|
+      xml.tag! 'foo', 'bar'
+    end
+    assert_equal 'bar', REXML::XPath.first(REXML::Document.new(result), '//ActionReq/ActionRequest/foo').text
+  end
+
+  def test_build_request_wrapper_with_request_details
+    result = @gateway.send(:build_request_wrapper, 'Action', :request_details => true) do |xml|
+       xml.tag! 'n2:TransactionID', 'baz'
+    end
+    assert_equal 'baz', REXML::XPath.first(REXML::Document.new(result), '//ActionReq/ActionRequest/n2:ActionRequestDetails/n2:TransactionID').text
+  end
 end
