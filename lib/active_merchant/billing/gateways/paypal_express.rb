@@ -71,24 +71,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:PaymentAction', action
               xml.tag! 'n2:Token', options[:token]
               xml.tag! 'n2:PayerID', options[:payer_id]
-              xml.tag! 'n2:PaymentDetails' do
-                xml.tag! 'n2:OrderTotal', localized_amount(money, currency_code), 'currencyID' => currency_code
-                
-                # All of the values must be included together and add up to the order total
-                if [:subtotal, :shipping, :handling, :tax].all?{ |o| options.has_key?(o) }
-                  xml.tag! 'n2:ItemTotal', localized_amount(options[:subtotal], currency_code), 'currencyID' => currency_code
-                  xml.tag! 'n2:ShippingTotal', localized_amount(options[:shipping], currency_code),'currencyID' => currency_code
-                  xml.tag! 'n2:HandlingTotal', localized_amount(options[:handling], currency_code),'currencyID' => currency_code
-                  xml.tag! 'n2:TaxTotal', localized_amount(options[:tax], currency_code), 'currencyID' => currency_code
-                end
-                
-                xml.tag! 'n2:NotifyURL', options[:notify_url]
-                xml.tag! 'n2:ButtonSource', application_id.to_s.slice(0,32) unless application_id.blank?
-                xml.tag! 'n2:InvoiceID', options[:order_id]
-                xml.tag! 'n2:OrderDescription', options[:description]
-
-                add_items_xml(xml, options, currency_code) if options[:items]
-              end
+              add_payment_details(xml, money, currency_code, options)
             end
           end
         end
@@ -98,6 +81,10 @@ module ActiveMerchant #:nodoc:
 
       def build_setup_request(action, money, options)
         currency_code = options[:currency] || currency(money)
+        options[:payment_action] = action
+        options[:express_request] = true
+        options[:shipping_address] ||= options[:address]
+        money = 100 if amount(money).to_f.zero?
         
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'SetExpressCheckoutReq', 'xmlns' => PAYPAL_NAMESPACE do
@@ -137,28 +124,8 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'n2:AllowNote', options[:allow_note] ? '1' : '0'
               end
               xml.tag! 'n2:CallbackURL', options[:callback_url] unless options[:callback_url].blank?
-
-              xml.tag! 'n2:PaymentDetails' do
-                xml.tag! 'n2:OrderTotal', amount(money).to_f.zero? ? localized_amount(100, currency_code) : localized_amount(money, currency_code), 'currencyID' => currency_code
-                # All of the values must be included together and add up to the order total
-                if [:subtotal, :shipping, :handling, :tax].all? { |o| options.has_key?(o) }
-                  xml.tag! 'n2:ItemTotal', localized_amount(options[:subtotal], currency_code), 'currencyID' => currency_code
-                  xml.tag! 'n2:ShippingTotal', localized_amount(options[:shipping], currency_code), 'currencyID' => currency_code
-                  xml.tag! 'n2:HandlingTotal', localized_amount(options[:handling], currency_code), 'currencyID' => currency_code
-                  xml.tag! 'n2:TaxTotal', localized_amount(options[:tax], currency_code), 'currencyID' => currency_code
-                end
-
-                xml.tag! 'n2:OrderDescription', options[:description]
-                xml.tag! 'n2:InvoiceID', options[:order_id]
-
-                add_address(xml, 'n2:ShipToAddress', options[:shipping_address] || options[:address])
-
-                add_items_xml(xml, options, currency_code) if options[:items]
-
-                xml.tag! 'n2:PaymentAction', action
-                xml.tag! 'n2:Custom', options[:custom] unless options[:custom].blank?
-              end
-
+              
+              add_payment_details(xml, money, currency_code, options)
               if options[:shipping_options]
                 options[:shipping_options].each do |shipping_option|
                   xml.tag! 'n2:FlatRateShippingOptions' do
@@ -206,24 +173,6 @@ module ActiveMerchant #:nodoc:
 
       def build_response(success, message, response, options = {})
         PaypalExpressResponse.new(success, message, response, options)
-      end
-
-      private
-
-      def add_items_xml(xml, options, currency_code)
-        options[:items].each do |item|
-          xml.tag! 'n2:PaymentDetailsItem' do
-            xml.tag! 'n2:Name', item[:name]
-            xml.tag! 'n2:Number', item[:number]
-            xml.tag! 'n2:Quantity', item[:quantity]
-            if item[:amount]
-              xml.tag! 'n2:Amount', localized_amount(item[:amount], currency_code), 'currencyID' => currency_code
-            end
-            xml.tag! 'n2:Description', item[:description]
-            xml.tag! 'n2:ItemURL', item[:url]
-            xml.tag! 'n2:ItemCategory', item[:category] if item[:category]
-          end
-        end
       end
     end
   end

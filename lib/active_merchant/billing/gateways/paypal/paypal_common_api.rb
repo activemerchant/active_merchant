@@ -118,6 +118,17 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+      def build_request_wrapper(action)
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.tag! action + 'Req', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! action + 'Request', 'xmlns:n2' => EBAY_NAMESPACE do
+            xml.tag! 'n2:Version', API_VERSION
+            yield(xml)
+          end
+        end
+        xml.target!
+      end
+
       def build_reauthorize_request(money, authorization, options)
         xml = Builder::XmlMarkup.new
         
@@ -316,6 +327,73 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:Phone', address[:phone] unless address[:phone].blank?
           xml.tag! 'n2:PostalCode', address[:zip]
         end
+      end
+      
+      def add_payment_details_items_xml(xml, options, currency_code)
+        options[:items].each do |item|
+          xml.tag! 'n2:PaymentDetailsItem' do
+            xml.tag! 'n2:Name', item[:name]
+            xml.tag! 'n2:Number', item[:number]
+            xml.tag! 'n2:Quantity', item[:quantity]
+            if item[:amount]
+              xml.tag! 'n2:Amount', localized_amount(item[:amount], currency_code), 'currencyID' => currency_code
+            end
+            xml.tag! 'n2:Description', item[:description]
+            xml.tag! 'n2:ItemURL', item[:url]
+            xml.tag! 'n2:ItemCategory', item[:category] if item[:category]
+          end
+        end
+      end
+      
+      def add_payment_details(xml, money, currency_code, options = {})
+        xml.tag! 'n2:PaymentDetails' do
+          xml.tag! 'n2:OrderTotal', localized_amount(money, currency_code), 'currencyID' => currency_code
+          
+          # All of the values must be included together and add up to the order total
+          if [:subtotal, :shipping, :handling, :tax].all?{ |o| options.has_key?(o) }
+            xml.tag! 'n2:ItemTotal', localized_amount(options[:subtotal], currency_code), 'currencyID' => currency_code
+            xml.tag! 'n2:ShippingTotal', localized_amount(options[:shipping], currency_code),'currencyID' => currency_code
+            xml.tag! 'n2:HandlingTotal', localized_amount(options[:handling], currency_code),'currencyID' => currency_code
+            xml.tag! 'n2:TaxTotal', localized_amount(options[:tax], currency_code), 'currencyID' => currency_code
+          end
+
+          xml.tag! 'n2:InsuranceTotal', localized_amount(options[:insurance_total], currency_code),'currencyID' => currency_code unless options[:insurance_total].blank?
+          xml.tag! 'n2:ShippingDiscount', localized_amount(options[:shipping_discount], currency_code),'currencyID' => currency_code unless options[:shipping_discount].blank?
+          xml.tag! 'n2:InsuranceOptionOffered', options[:insurance_option_offered] if options.has_key?(:insurance_option_offered)
+
+          xml.tag! 'n2:OrderDescription', options[:description] unless options[:description].blank?
+          
+          # Custom field Character length and limitations: 256 single-byte alphanumeric characters
+          xml.tag! 'n2:Custom', options[:custom] unless options[:custom].blank? 
+
+          xml.tag! 'n2:InvoiceID', options[:order_id] unless options[:order_id].blank?
+          xml.tag! 'n2:ButtonSource', application_id.to_s.slice(0,32) unless application_id.blank? 
+
+          # The notify URL applies only to DoExpressCheckoutPayment. 
+          # This value is ignored when set in SetExpressCheckout or GetExpressCheckoutDetails
+          xml.tag! 'n2:NotifyURL', options[:notify_url] unless options[:notify_url].blank? 
+                    
+          add_address(xml, 'n2:ShipToAddress', options[:shipping_address]) unless options[:shipping_address].blank?
+          
+          add_payment_details_items_xml(xml, options, currency_code) unless options[:items].blank?
+
+          add_express_only_payment_details(xml, options) if options[:express_request]
+
+          # Any value other than Y – This is not a recurring transaction
+          # To pass Y in this field, you must have established a billing agreement with 
+          # the buyer specifying the amount, frequency, and duration of the recurring payment.
+          # requires version 80.0 of the API
+          xml.tag! 'n2:Recurring', options[:recurring] unless options[:recurring].blank? 
+        end
+      end
+
+      def add_express_only_payment_details(xml, options = {})
+        %w{NoteText SoftDescriptor TransactionId AllowedPaymentMethodType 
+           PaymentRequestID PaymentAction}.each do |optional_text_field|
+          field_as_symbol = optional_text_field.underscore.to_sym
+          xml.tag! 'n2:' + optional_text_field, options[field_as_symbol] unless options[field_as_symbol].blank?
+        end
+        xml
       end
       
       def endpoint_url
