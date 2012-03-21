@@ -3,7 +3,11 @@ require 'nokogiri'
 
 class PaypalExpressTest < Test::Unit::TestCase
   def setup
-    @gateway = Class.new{ include PaypalCommonApi }
+    @gateway = Class.new do 
+      include PaypalCommonApi
+      def currency; 'USD'; end
+      def localized_amount(num); num; end
+    end
 
     @address = { :address1 => '1234 My Street',
                  :address2 => 'Apt 1',
@@ -57,4 +61,9 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'Sale', REXML::XPath.first(request, '//n2:PaymentAction').text
     assert_nil REXML::XPath.first(request, '//n2:PaymentRequestID')
   end
+  def test_build_get_transaction_details
+    request = REXML::Document.new(@gateway.send(:build_get_transaction_details, '123'))
+    assert_equal '123', REXML::XPath.first(request, '//GetTransactionDetailsReq/GetTransactionDetailsRequest/TransactionID').text
+  end
+
 end

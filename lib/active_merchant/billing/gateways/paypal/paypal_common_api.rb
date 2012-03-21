@@ -117,6 +117,10 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
+      def transaction_details(transaction_id)
+        commit 'GetTransactionDetails', build_get_transaction_details(transaction_id)
+      end
+
       private
       def build_request_wrapper(action, options = {})
         xml = Builder::XmlMarkup.new :indent => 2
@@ -219,6 +223,12 @@ module ActiveMerchant #:nodoc:
         end
         
         xml.target!
+      end
+
+      def build_get_transaction_details(transaction_id)
+        build_request_wrapper('GetTransactionDetails') do |xml|
+          xml.tag! 'TransactionID', transaction_id
+        end
       end
 
       def parse(action, xml)
