@@ -127,4 +127,11 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     assert_equal 'Accept', REXML::XPath.first(request, '//ManagePendingTransactionStatusReq/ManagePendingTransactionStatusRequest/Action').text
   end
 
+  def test_build_reference_transaction_request
+    assert_raise ArgumentError do
+      @gateway.reference_transaction(100)
+    end
+    @gateway.reference_transaction(100, :reference_id => 'id')
+  end
+
 end

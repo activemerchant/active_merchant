@@ -116,6 +116,11 @@ module ActiveMerchant #:nodoc:
         deprecated Gateway::CREDIT_DEPRECATION_MESSAGE
         refund(money, identification, options)
       end
+      
+      def reference_transaction(money, options = {})
+        requires!(options, :reference_id)
+        commit 'DoReferenceTransaction', build_reference_transaction_request(money, options)
+      end
 
       def transaction_details(transaction_id)
         commit 'GetTransactionDetails', build_get_transaction_details(transaction_id)
@@ -269,6 +274,16 @@ module ActiveMerchant #:nodoc:
         build_request_wrapper('ManagePendingTransactionStatus') do |xml|
           xml.tag! 'TransactionID', transaction_id
           xml.tag! 'Action', action
+        end
+      end
+      
+      def build_reference_transaction_request(money, options)
+        currency_code = options[:currency] || currency(money)
+        optional_fields = %w{n2:ReferenceID n2:PaymentAction n2:PaymentType}
+        build_request_wrapper('DoReferenceTransaction', :request_details => true) do |xml|
+          add_optional_fields(xml, optional_fields, options)
+          add_payment_details(xml, money, currency_code, options)
+          xml.tag! 'n2:IPAddress', options[:ip] unless options[:ip].blank?
         end
       end
 
