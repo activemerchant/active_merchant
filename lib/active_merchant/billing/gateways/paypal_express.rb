@@ -42,11 +42,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def reference_transaction(money, options = {})
-        requires!(options, :reference_id, :payment_type, :invoice_id, :description, :ip)
         # I am not sure why it's set like this for express gateway
         # but I don't want to break the existing behavior
         money = 100 if amount(money).to_f.zero?
-        commit 'DoReferenceTransaction', build_reference_transaction_request('Sale', money, options)
+        # this requires are incorrect. The only required field is the
+        # reference_id
+        requires!(options, :reference_id, :payment_type, :invoice_id, :description, :ip)
+        options[:payment_action] ||= 'Sale'
+        super(money, options)
       end
 
       private
@@ -145,17 +148,6 @@ module ActiveMerchant #:nodoc:
         end
 
         xml.target!
-      end
-
-      def build_reference_transaction_request(action, money, options)
-        currency_code = options[:currency] || currency(money)
-        build_request_wrapper('DoReferenceTransaction', :request_details => true) do |xml|
-          xml.tag! 'n2:ReferenceID', options[:reference_id]
-          xml.tag! 'n2:PaymentAction', action
-          xml.tag! 'n2:PaymentType', options[:payment_type] || 'Any'
-          add_payment_details(xml, money, currency_code, options)
-          xml.tag! 'n2:IPAddress', options[:ip]
-        end
       end
 
       def build_response(success, message, response, options = {})
