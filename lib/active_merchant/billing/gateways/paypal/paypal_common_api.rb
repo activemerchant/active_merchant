@@ -118,12 +118,18 @@ module ActiveMerchant #:nodoc:
       end
 
       private
-      def build_request_wrapper(action)
+      def build_request_wrapper(action, options = {})
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! action + 'Req', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! action + 'Request', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
-            yield(xml)
+            if options[:request_details]
+              xml.tag! 'n2:' + action + 'RequestDetails' do
+                yield(xml)
+              end
+            else
+              yield(xml)
+            end
           end
         end
         xml.target!
