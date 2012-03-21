@@ -117,16 +117,71 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
+      def transaction_details(transaction_id)
+        commit 'GetTransactionDetails', build_get_transaction_details(transaction_id)
+      end
+
+      # ==== Parameters:
+      # * <tt>:return_all_currencies</tt> -- Either '1' or '0'
+      #     0 – Return only the balance for the primary currency holding.
+      #     1 – Return the balance for each currency holding.
+      #
+      def balance(return_all_currencies = false)
+        clean_currency_argument = case return_all_currencies
+                                  when 1, '1' , true; '1'
+                                  else
+                                    '0'
+                                  end
+        commit 'GetBalance', build_get_balance(clean_currency_argument)
+      end
+
+      # DoAuthorization takes the transaction_id returned when you call
+      # DoExpressCheckoutPayment with a PaymentAction of 'Order'.
+      # When you did that, you created an order authorization subject to settlement 
+      # with PayPal DoAuthorization and DoCapture
+      # 
+      # ==== Parameters:
+      # * <tt>:transaction_id</tt> -- The ID returned by DoExpressCheckoutPayment with a PaymentAction of 'Order'.
+      # * <tt>:money</tt> -- The amount of money to be authorized for this purchase.
+      # 
+      def authorize_transaction(transaction_id, money, options = {})
+        commit 'DoAuthorization', build_do_authorize(transaction_id, money, options)
+      end
+
+      # The ManagePendingTransactionStatus API operation accepts or denys a 
+      # pending transaction held by Fraud Management Filters.
+      #
+      # ==== Parameters:
+      # * <tt>:transaction_id</tt> -- The ID of the transaction held by Fraud Management Filters.
+      # * <tt>:action</tt> -- Either 'Accept' or 'Deny'
+      # 
+      def manage_pending_transaction(transaction_id, action)
+        commit 'ManagePendingTransactionStatus', build_manage_pending_transaction_status(transaction_id, action)
+      end
+
       private
-      def build_request_wrapper(action)
+      def build_request_wrapper(action, options = {})
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! action + 'Req', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! action + 'Request', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
-            yield(xml)
+            if options[:request_details]
+              xml.tag! 'n2:' + action + 'RequestDetails' do
+                yield(xml)
+              end
+            else
+              yield(xml)
+            end
           end
         end
         xml.target!
+      end
+
+      def build_do_authorize(transaction_id, money, options = {})
+        build_request_wrapper('DoAuthorization') do |xml|
+          xml.tag! 'TransactionID', transaction_id
+          xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
+        end
       end
 
       def build_reauthorize_request(money, authorization, options)
@@ -213,6 +268,25 @@ module ActiveMerchant #:nodoc:
         end
         
         xml.target!
+      end
+
+      def build_manage_pending_transaction_status(transaction_id, action)
+        build_request_wrapper('ManagePendingTransactionStatus') do |xml|
+          xml.tag! 'TransactionID', transaction_id
+          xml.tag! 'Action', action
+        end
+      end
+
+      def build_get_transaction_details(transaction_id)
+        build_request_wrapper('GetTransactionDetails') do |xml|
+          xml.tag! 'TransactionID', transaction_id
+        end
+      end
+
+      def build_get_balance(return_all_currencies)
+        build_request_wrapper('GetBalance') do |xml|
+          xml.tag! 'ReturnAllCurrencies', return_all_currencies unless return_all_currencies.nil?
+        end
       end
 
       def parse(action, xml)
