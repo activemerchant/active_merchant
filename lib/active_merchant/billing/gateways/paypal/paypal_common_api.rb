@@ -415,10 +415,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_express_only_payment_details(xml, options = {})
-        %w{NoteText SoftDescriptor TransactionId AllowedPaymentMethodType 
-           PaymentRequestID PaymentAction}.each do |optional_text_field|
-          field_as_symbol = optional_text_field.underscore.to_sym
-          xml.tag! 'n2:' + optional_text_field, options[field_as_symbol] unless options[field_as_symbol].blank?
+        add_optional_fields(xml, 
+                            %w{n2:NoteText          n2:SoftDescriptor 
+                               n2:TransactionId     n2:AllowedPaymentMethodType 
+                               n2:PaymentRequestID  n2:PaymentAction}, 
+                            options)
+      end
+
+      def add_optional_fields(xml, optional_fields, options = {})
+        optional_fields.each do |optional_text_field|
+          if optional_text_field =~ /(\w+:)(\w+)/
+            ns = $1
+            field = $2
+            field_as_symbol = field.underscore.to_sym
+          else
+            ns = ''
+            field = optional_text_field
+            field_as_symbol = optional_text_field.underscore.to_sym
+          end
+          xml.tag! ns + field, options[field_as_symbol] unless options[field_as_symbol].blank?
         end
         xml
       end
