@@ -71,4 +71,20 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal '1', REXML::XPath.first(request, '//GetBalanceReq/GetBalanceRequest/ReturnAllCurrencies').text
   end
 
+  def test_transaction_search_requires
+    assert_raise ArgumentError do
+      @gateway.transaction_search()
+    end
+  end
+  def test_build_transaction_search_request
+    options = {:start_date => Date.strptime('02/21/2012', '%m/%d/%Y'),
+      :end_date => Date.strptime('03/21/2012', '%m/%d/%Y'),
+      :receiver => 'foo@example.com',
+      :first_name => 'Robert'}
+    request = REXML::Document.new(@gateway.send(:build_transaction_search, options))
+    assert_equal '2012-02-21T05:00:00Z', REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/StartDate').text
+    assert_equal '2012-03-21T04:00:00Z', REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/EndDate').text
+    assert_equal 'foo@example.com', REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/Receiver').text
+  end
+
 end

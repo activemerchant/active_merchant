@@ -121,10 +121,16 @@ module ActiveMerchant #:nodoc:
         commit 'GetTransactionDetails', build_get_transaction_details(transaction_id)
       end
 
+      def transaction_search(options)
+        requires!(options, :start_date)
+        commit 'TransactionSearch', build_transaction_search(options)
+      end
+
       # the possible values are '1' or '0'
       def balance(return_all_currencies = nil)
         commit 'GetBalance', build_get_balance(return_all_currencies)
       end
+
 
       private
       def build_request_wrapper(action, options = {})
@@ -228,6 +234,22 @@ module ActiveMerchant #:nodoc:
         end
         
         xml.target!
+      end
+
+      def build_transaction_search(options)
+        currency_code = options[:currency_code]
+        currency_code ||= currency(options[:amount]) if options[:amount]
+        build_request_wrapper('TransactionSearch') do |xml|
+          xml.tag! 'StartDate', date_to_iso(options[:start_date])
+          xml.tag! 'EndDate', date_to_iso(options[:end_date]) unless options[:end_date].blank?
+          add_optional_fields(xml, 
+                              %w{Payer ReceiptID Receiver
+                                 TransactionID InvoiceID CardNumber
+                                 AuctionItemNumber TransactionClass
+                                 CurrencyCode Status}, 
+                              options)
+          xml.tag! 'Amount', localized_amount(options[:amount], currency_code), 'currencyID' => currency_code  unless options[:amount].blank?
+        end
       end
 
       def build_get_transaction_details(transaction_id)
@@ -468,6 +490,10 @@ module ActiveMerchant #:nodoc:
       
       def message_from(response)
         response[:message] || response[:ack]
+      end
+
+      def date_to_iso(date)
+        (date.is_a?(Date) ? date.to_time : date).utc.iso8601
       end
     end
   end
