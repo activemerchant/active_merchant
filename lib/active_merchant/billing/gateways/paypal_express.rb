@@ -43,7 +43,9 @@ module ActiveMerchant #:nodoc:
 
       def reference_transaction(money, options = {})
         requires!(options, :reference_id, :payment_type, :invoice_id, :description, :ip)
-
+        # I am not sure why it's set like this for express gateway
+        # but I don't want to break the existing behavior
+        money = 100 if amount(money).to_f.zero?
         commit 'DoReferenceTransaction', build_reference_transaction_request('Sale', money, options)
       end
 
@@ -147,10 +149,6 @@ module ActiveMerchant #:nodoc:
       
       def build_reference_transaction_request(action, money, options)
         currency_code = options[:currency] || currency(money)
-        
-        # I am not sure why it's set like this for express gateway
-        # but I don't want to break the existing behavior
-        money = 100 if amount(money).to_f.zero?
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'DoReferenceTransactionReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'DoReferenceTransactionRequest', 'xmlns:n2' => EBAY_NAMESPACE do
