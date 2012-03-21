@@ -366,7 +366,7 @@ module ActiveMerchant #:nodoc:
           # Custom field Character length and limitations: 256 single-byte alphanumeric characters
           xml.tag! 'n2:Custom', options[:custom] unless options[:custom].blank? 
 
-          xml.tag! 'n2:InvoiceID', options[:order_id] unless options[:order_id].blank?
+          xml.tag! 'n2:InvoiceID', (options[:order_id] || options[:invoice_id]) unless (options[:order_id] || options[:invoice_id]).blank?
           xml.tag! 'n2:ButtonSource', application_id.to_s.slice(0,32) unless application_id.blank? 
 
           # The notify URL applies only to DoExpressCheckoutPayment. 

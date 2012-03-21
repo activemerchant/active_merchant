@@ -147,7 +147,10 @@ module ActiveMerchant #:nodoc:
       
       def build_reference_transaction_request(action, money, options)
         currency_code = options[:currency] || currency(money)
-
+        
+        # I am not sure why it's set like this for express gateway
+        # but I don't want to break the existing behavior
+        money = 100 if amount(money).to_f.zero?
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'DoReferenceTransactionReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'DoReferenceTransactionRequest', 'xmlns:n2' => EBAY_NAMESPACE do
@@ -156,13 +159,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:ReferenceID', options[:reference_id]
               xml.tag! 'n2:PaymentAction', action
               xml.tag! 'n2:PaymentType', options[:payment_type] || 'Any'
-              xml.tag! 'n2:PaymentDetails' do
-                xml.tag! 'n2:OrderTotal', amount(money).to_f.zero? ? localized_amount(100, currency_code) : localized_amount(money, currency_code), 'currencyID' => currency_code
-                xml.tag! 'n2:OrderDescription', options[:description]
-                xml.tag! 'n2:InvoiceID', options[:invoice_id]
-                xml.tag! 'n2:ButtonSource', 'ActiveMerchant'
-                xml.tag! 'n2:NotifyURL', ''
-              end
+              add_payment_details(xml, money, currency_code, options)
               xml.tag! 'n2:IPAddress', options[:ip]
             end
           end
