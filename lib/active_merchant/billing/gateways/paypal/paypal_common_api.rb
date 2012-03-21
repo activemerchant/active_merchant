@@ -135,6 +135,9 @@ module ActiveMerchant #:nodoc:
         commit 'DoAuthorization', build_do_authorize(transaction_id, money, options)
       end
 
+      def manage_pending_transaction(transaction_id, action)
+        commit 'ManagePendingTransactionStatus', build_manage_pending_transaction_status(transaction_id, action)
+      end
       private
       def build_request_wrapper(action, options = {})
         xml = Builder::XmlMarkup.new :indent => 2
@@ -259,6 +262,13 @@ module ActiveMerchant #:nodoc:
                                  CurrencyCode Status}, 
                               options)
           xml.tag! 'Amount', localized_amount(options[:amount], currency_code), 'currencyID' => currency_code  unless options[:amount].blank?
+        end
+      end
+
+      def build_manage_pending_transaction_status(transaction_id, action)
+        build_request_wrapper('ManagePendingTransactionStatus') do |xml|
+          xml.tag! 'TransactionID', transaction_id
+          xml.tag! 'Action', action
         end
       end
 

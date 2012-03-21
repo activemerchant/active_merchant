@@ -108,4 +108,11 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal '1.00', REXML::XPath.first(request, '//DoAuthorizationReq/DoAuthorizationRequest/Amount').text
   end
 
+  
+  def test_build_manage_pending_transaction_status_request
+    request = REXML::Document.new(@gateway.send(:build_manage_pending_transaction_status,123, 'Accept'))
+    assert_equal '123', REXML::XPath.first(request, '//ManagePendingTransactionStatusReq/ManagePendingTransactionStatusRequest/TransactionID').text
+    assert_equal 'Accept', REXML::XPath.first(request, '//ManagePendingTransactionStatusReq/ManagePendingTransactionStatusRequest/Action').text
+  end
+
 end
