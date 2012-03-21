@@ -146,24 +146,16 @@ module ActiveMerchant #:nodoc:
 
         xml.target!
       end
-      
+
       def build_reference_transaction_request(action, money, options)
         currency_code = options[:currency] || currency(money)
-        xml = Builder::XmlMarkup.new :indent => 2
-        xml.tag! 'DoReferenceTransactionReq', 'xmlns' => PAYPAL_NAMESPACE do
-          xml.tag! 'DoReferenceTransactionRequest', 'xmlns:n2' => EBAY_NAMESPACE do
-            xml.tag! 'n2:Version', API_VERSION
-            xml.tag! 'n2:DoReferenceTransactionRequestDetails' do
-              xml.tag! 'n2:ReferenceID', options[:reference_id]
-              xml.tag! 'n2:PaymentAction', action
-              xml.tag! 'n2:PaymentType', options[:payment_type] || 'Any'
-              add_payment_details(xml, money, currency_code, options)
-              xml.tag! 'n2:IPAddress', options[:ip]
-            end
-          end
+        build_request_wrapper('DoReferenceTransaction', :request_details => true) do |xml|
+          xml.tag! 'n2:ReferenceID', options[:reference_id]
+          xml.tag! 'n2:PaymentAction', action
+          xml.tag! 'n2:PaymentType', options[:payment_type] || 'Any'
+          add_payment_details(xml, money, currency_code, options)
+          xml.tag! 'n2:IPAddress', options[:ip]
         end
-
-        xml.target!
       end
 
       def build_response(success, message, response, options = {})
