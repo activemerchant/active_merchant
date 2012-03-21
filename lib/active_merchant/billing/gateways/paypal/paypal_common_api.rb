@@ -116,8 +116,58 @@ module ActiveMerchant #:nodoc:
         deprecated Gateway::CREDIT_DEPRECATION_MESSAGE
         refund(money, identification, options)
       end
+      
+      def reference_transaction(money, options = {})
+        requires!(options, :reference_id)
+        commit 'DoReferenceTransaction', build_reference_transaction_request(money, options)
+      end
 
+      def transaction_details(transaction_id)
+        commit 'GetTransactionDetails', build_get_transaction_details(transaction_id)
+      end
+
+      def transaction_search(options)
+        requires!(options, :start_date)
+        commit 'TransactionSearch', build_transaction_search(options)
+      end
+
+      # the possible values are '1' or '0'
+      def balance(return_all_currencies = nil)
+        commit 'GetBalance', build_get_balance(return_all_currencies)
+      end
+
+      def authorize_transaction(transaction_id, money, options = {})
+        commit 'DoAuthorization', build_do_authorize(transaction_id, money, options)
+      end
+
+      def manage_pending_transaction(transaction_id, action)
+        commit 'ManagePendingTransactionStatus', build_manage_pending_transaction_status(transaction_id, action)
+      end
       private
+      def build_request_wrapper(action, options = {})
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.tag! action + 'Req', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! action + 'Request', 'xmlns:n2' => EBAY_NAMESPACE do
+            xml.tag! 'n2:Version', API_VERSION
+            if options[:request_details]
+              xml.tag! 'n2:' + action + 'RequestDetails' do
+                yield(xml)
+              end
+            else
+              yield(xml)
+            end
+          end
+        end
+        xml.target!
+      end
+
+      def build_do_authorize(transaction_id, money, options = {})
+        build_request_wrapper('DoAuthorization') do |xml|
+          xml.tag! 'TransactionID', transaction_id
+          xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
+        end
+      end
+
       def build_reauthorize_request(money, authorization, options)
         xml = Builder::XmlMarkup.new
         
@@ -202,6 +252,51 @@ module ActiveMerchant #:nodoc:
         end
         
         xml.target!
+      end
+
+      def build_transaction_search(options)
+        currency_code = options[:currency_code]
+        currency_code ||= currency(options[:amount]) if options[:amount]
+        build_request_wrapper('TransactionSearch') do |xml|
+          xml.tag! 'StartDate', date_to_iso(options[:start_date])
+          xml.tag! 'EndDate', date_to_iso(options[:end_date]) unless options[:end_date].blank?
+          add_optional_fields(xml, 
+                              %w{Payer ReceiptID Receiver
+                                 TransactionID InvoiceID CardNumber
+                                 AuctionItemNumber TransactionClass
+                                 CurrencyCode Status}, 
+                              options)
+          xml.tag! 'Amount', localized_amount(options[:amount], currency_code), 'currencyID' => currency_code  unless options[:amount].blank?
+        end
+      end
+
+      def build_manage_pending_transaction_status(transaction_id, action)
+        build_request_wrapper('ManagePendingTransactionStatus') do |xml|
+          xml.tag! 'TransactionID', transaction_id
+          xml.tag! 'Action', action
+        end
+      end
+      
+      def build_reference_transaction_request(money, options)
+        currency_code = options[:currency] || currency(money)
+        optional_fields = %w{n2:ReferenceID n2:PaymentAction n2:PaymentType}
+        build_request_wrapper('DoReferenceTransaction', :request_details => true) do |xml|
+          add_optional_fields(xml, optional_fields, options)
+          add_payment_details(xml, money, currency_code, options)
+          xml.tag! 'n2:IPAddress', options[:ip] unless options[:ip].blank?
+        end
+      end
+
+      def build_get_transaction_details(transaction_id)
+        build_request_wrapper('GetTransactionDetails') do |xml|
+          xml.tag! 'TransactionID', transaction_id
+        end
+      end
+
+      def build_get_balance(return_all_currencies)
+        build_request_wrapper('GetBalance') do |xml|
+          xml.tag! 'ReturnAllCurrencies', return_all_currencies unless return_all_currencies.nil?
+        end
       end
 
       def parse(action, xml)
@@ -313,9 +408,91 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:CityName', address[:city]
           xml.tag! 'n2:StateOrProvince', address[:state].blank? ? 'N/A' : address[:state]
           xml.tag! 'n2:Country', address[:country]
-          xml.tag! 'n2:Phone', address[:phone]
+          xml.tag! 'n2:Phone', address[:phone] unless address[:phone].blank?
           xml.tag! 'n2:PostalCode', address[:zip]
         end
+      end
+      
+      def add_payment_details_items_xml(xml, options, currency_code)
+        options[:items].each do |item|
+          xml.tag! 'n2:PaymentDetailsItem' do
+            xml.tag! 'n2:Name', item[:name]
+            xml.tag! 'n2:Number', item[:number]
+            xml.tag! 'n2:Quantity', item[:quantity]
+            if item[:amount]
+              xml.tag! 'n2:Amount', localized_amount(item[:amount], currency_code), 'currencyID' => currency_code
+            end
+            xml.tag! 'n2:Description', item[:description]
+            xml.tag! 'n2:ItemURL', item[:url]
+            xml.tag! 'n2:ItemCategory', item[:category] if item[:category]
+          end
+        end
+      end
+      
+      def add_payment_details(xml, money, currency_code, options = {})
+        xml.tag! 'n2:PaymentDetails' do
+          xml.tag! 'n2:OrderTotal', localized_amount(money, currency_code), 'currencyID' => currency_code
+          
+          # All of the values must be included together and add up to the order total
+          if [:subtotal, :shipping, :handling, :tax].all?{ |o| options.has_key?(o) }
+            xml.tag! 'n2:ItemTotal', localized_amount(options[:subtotal], currency_code), 'currencyID' => currency_code
+            xml.tag! 'n2:ShippingTotal', localized_amount(options[:shipping], currency_code),'currencyID' => currency_code
+            xml.tag! 'n2:HandlingTotal', localized_amount(options[:handling], currency_code),'currencyID' => currency_code
+            xml.tag! 'n2:TaxTotal', localized_amount(options[:tax], currency_code), 'currencyID' => currency_code
+          end
+
+          xml.tag! 'n2:InsuranceTotal', localized_amount(options[:insurance_total], currency_code),'currencyID' => currency_code unless options[:insurance_total].blank?
+          xml.tag! 'n2:ShippingDiscount', localized_amount(options[:shipping_discount], currency_code),'currencyID' => currency_code unless options[:shipping_discount].blank?
+          xml.tag! 'n2:InsuranceOptionOffered', options[:insurance_option_offered] if options.has_key?(:insurance_option_offered)
+
+          xml.tag! 'n2:OrderDescription', options[:description] unless options[:description].blank?
+          
+          # Custom field Character length and limitations: 256 single-byte alphanumeric characters
+          xml.tag! 'n2:Custom', options[:custom] unless options[:custom].blank? 
+
+          xml.tag! 'n2:InvoiceID', (options[:order_id] || options[:invoice_id]) unless (options[:order_id] || options[:invoice_id]).blank?
+          xml.tag! 'n2:ButtonSource', application_id.to_s.slice(0,32) unless application_id.blank? 
+
+          # The notify URL applies only to DoExpressCheckoutPayment. 
+          # This value is ignored when set in SetExpressCheckout or GetExpressCheckoutDetails
+          xml.tag! 'n2:NotifyURL', options[:notify_url] unless options[:notify_url].blank? 
+                    
+          add_address(xml, 'n2:ShipToAddress', options[:shipping_address]) unless options[:shipping_address].blank?
+          
+          add_payment_details_items_xml(xml, options, currency_code) unless options[:items].blank?
+
+          add_express_only_payment_details(xml, options) if options[:express_request]
+
+          # Any value other than Y – This is not a recurring transaction
+          # To pass Y in this field, you must have established a billing agreement with 
+          # the buyer specifying the amount, frequency, and duration of the recurring payment.
+          # requires version 80.0 of the API
+          xml.tag! 'n2:Recurring', options[:recurring] unless options[:recurring].blank? 
+        end
+      end
+
+      def add_express_only_payment_details(xml, options = {})
+        add_optional_fields(xml, 
+                            %w{n2:NoteText          n2:SoftDescriptor 
+                               n2:TransactionId     n2:AllowedPaymentMethodType 
+                               n2:PaymentRequestID  n2:PaymentAction}, 
+                            options)
+      end
+
+      def add_optional_fields(xml, optional_fields, options = {})
+        optional_fields.each do |optional_text_field|
+          if optional_text_field =~ /(\w+:)(\w+)/
+            ns = $1
+            field = $2
+            field_as_symbol = field.underscore.to_sym
+          else
+            ns = ''
+            field = optional_text_field
+            field_as_symbol = optional_text_field.underscore.to_sym
+          end
+          xml.tag! ns + field, options[field_as_symbol] unless options[field_as_symbol].blank?
+        end
+        xml
       end
       
       def endpoint_url
@@ -348,6 +525,10 @@ module ActiveMerchant #:nodoc:
       
       def message_from(response)
         response[:message] || response[:ack]
+      end
+
+      def date_to_iso(date)
+        (date.is_a?(Date) ? date.to_time : date).utc.iso8601
       end
     end
   end

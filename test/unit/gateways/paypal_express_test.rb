@@ -329,9 +329,11 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_build_reference_transaction_test
-    xml = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 'Sale', 2000, {
+    PaypalExpressGateway.application_id = 'ActiveMerchant_FOO'
+    xml = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 2000, {
       :reference_id => "ref_id", 
       :payment_type => 'Any', 
+      :payment_action => 'Sale',
       :invoice_id   => 'invoice_id',
       :description  => 'Description',
       :ip           => '127.0.0.1' }))
@@ -343,16 +345,16 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal '20.00', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:PaymentDetails/n2:OrderTotal').text
     assert_equal 'Description', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:PaymentDetails/n2:OrderDescription').text
     assert_equal 'invoice_id', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:PaymentDetails/n2:InvoiceID').text
-    assert_equal 'ActiveMerchant', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:PaymentDetails/n2:ButtonSource').text
+    assert_equal 'ActiveMerchant_FOO', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:PaymentDetails/n2:ButtonSource').text
     assert_equal '127.0.0.1', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:IPAddress').text
   end
 
   def test_reference_transaction
     @gateway.expects(:ssl_post).returns(successful_reference_transaction_response)
     
-    response = @gateway.reference_transaction(2000,  {
+    response = @gateway.reference_transaction(2000, {
       :reference_id => "ref_id", 
-      :payment_type => 'Any', 
+      :payment_type => 'Any',
       :invoice_id   => 'invoice_id',
       :description  => 'Description',
       :ip           => '127.0.0.1' })
@@ -360,6 +362,19 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal "Success", response.params['ack']
     assert_equal "Success", response.message
     assert_equal "9R43552341412482K", response.authorization
+  end
+
+  def test_reference_transaction_payment_action_defaults_to_sale
+    @gateway.expects(:commit).with('DoReferenceTransaction', :xml)
+    passed_in_options = {
+      :reference_id => "ref_id", 
+      :payment_type => 'Any',
+      :invoice_id   => 'invoice_id',
+      :description  => 'Description',
+      :ip           => '127.0.0.1' }
+    expected_options = passed_in_options.dup.merge(:payment_action => 'Sale')
+    @gateway.expects(:build_reference_transaction_request).with(2000, expected_options).returns(:xml)
+    @gateway.reference_transaction(2000, passed_in_options)
   end
 
   def test_reference_transaction_requires_fields
