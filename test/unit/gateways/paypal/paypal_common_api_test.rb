@@ -1,13 +1,25 @@
 require 'test_helper'
+require 'active_merchant/billing/gateway'
+require 'active_merchant/billing/gateways/paypal/paypal_common_api'
 require 'nokogiri'
 
-class PaypalExpressTest < Test::Unit::TestCase
+class CommonPaypalGateway < ActiveMerchant::Billing::Gateway
+  include ActiveMerchant::Billing::PaypalCommonAPI
+  def currency(code); 'USD'; end
+  def localized_amount(num, code); num; end
+  def commit(a, b); end
+end
+class PaypalCommonApiTest < Test::Unit::TestCase
   def setup
-    @gateway = Class.new do 
-      include PaypalCommonApi
-      def currency; 'USD'; end
-      def localized_amount(num); num; end
-    end
+    Base.mode = :test
+    CommonPaypalGateway.pem_file = nil
+
+    @gateway = CommonPaypalGateway.new(
+      :login => 'cody', 
+      :password => 'test',
+      :pem => 'PEM'
+    )
+
 
     @address = { :address1 => '1234 My Street',
                  :address2 => 'Apt 1',
