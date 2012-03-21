@@ -117,8 +117,93 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
+      # ==== For full documentation see {Paypal API Reference:}[https://cms.paypal.com/us/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_api_soap_r_DoReferenceTransaction]
+      # ==== Parameter:
+      # * <tt>:money</tt> -- (Required) The amount of this new transaction,
+      # required fo the payment details portion of this request
+      #
+      # ==== Options:
+      # * <tt>:reference_id</tt> -- (Required) A transaction ID from a previous purchase, such as a credit card charge using the DoDirectPayment API, or a billing agreement ID.
+      # * <tt>:payment_action</tt> -- (Optional) How you want to obtain payment. It is one of the following values:
+      #
+      #     Authorization – This payment is a basic authorization subject to settlement with PayPal Authorization and Capture.
+      #     Sale – This is a final sale for which you are requesting payment.
+      #
+      # * <tt>:ip_address</tt> -- (Optional) IP address of the buyer’s browser.
+      # Note: PayPal records this IP addresses as a means to detect possible fraud.
+      # * <tt>:req_confirm_shipping</tt> -- Whether you require that the buyer’s shipping address on file with PayPal be a confirmed address. You must have permission from PayPal to not require a confirmed address. It is one of the following values:
+      #
+      #     0 – You do not require that the buyer’s shipping address be a confirmed address.
+      #     1 – You require that the buyer’s shipping address be a confirmed address.
+      #     
+      # * <tt>:merchant_session_id</tt> -- (Optional) Your buyer session identification token.
+      # * <tt>:return_fmf_details</tt> -- (Optional) Flag to indicate whether you want the results returned by Fraud Management Filters. By default, you do not receive this information. It is one of the following values:
+      #
+      #     0 – Do not receive FMF details (default)
+      #     1 – Receive FMF details
+      #
+      # * <tt>:soft_descriptor</tt> -- (Optional) Per transaction description of the payment that is passed to the consumer’s credit card statement. If the API request provides a value for the soft descriptor field, the full descriptor displayed on the buyer’s statement has the following format:
+      #
+      #     <PP * | PAYPAL *><Merchant descriptor as set in the Payment Receiving Preferences><1 space><soft descriptor>
+      #     The soft descriptor can contain only the following characters:
+      #     
+      #     Alphanumeric characters
+      #     - (dash)
+      #     * (asterisk)
+      #     . (period)
+      #     {space}
+      # 
+      def reference_transaction(money, options = {})
+        requires!(options, :reference_id)
+        commit 'DoReferenceTransaction', build_reference_transaction_request(money, options)
+      end
+
       def transaction_details(transaction_id)
         commit 'GetTransactionDetails', build_get_transaction_details(transaction_id)
+      end
+
+      # ==== For full documentation see {PayPal API Reference}[https://cms.paypal.com/us/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_api_soap_r_TransactionSearch]
+      # ==== Options:
+      # * <tt>:payer </tt> -- (Optional) Search by the buyer’s email address.
+      # * <tt>:receipt_id </tt> -- (Optional) Search by the PayPal Account Optional receipt ID.
+      # * <tt>:receiver </tt> -- (Optional) Search by the receiver’s email address. If the merchant account has only one email address, this is the primary email. It can also be a non-primary email address.
+      # * <tt>:transaction_id</tt> -- (Optional) Search by the transaction ID. The returned results are from the merchant’s transaction records.
+      # * <tt>:invoice_id</tt> -- (Optional) Search by invoice identification key, as set by you for the original transaction. This field searches the records for items the merchant sells, not the items purchased.
+      # * <tt>:card_number </tt> -- (Optional) Search by credit card number, as set by you for the original transaction. This field searches the records for items the merchant sells, not the items purchased.
+      # * <tt>:auction_item_number </tt> -- (Optional) Search by auction item number of the purchased goods.
+      # * <tt>:transaction_class </tt> -- (Optional) Search by classification of transaction. Some kinds of possible classes of transactions are not searchable with this field. You cannot search for bank transfer withdrawals, for example. It is one of the following values:
+      #     All – All transaction classifications
+      #     Sent – Only payments sent
+      #     Received – Only payments received
+      #     MassPay – Only mass payments
+      #     MoneyRequest – Only money requests
+      #     FundsAdded – Only funds added to balance
+      #     FundsWithdrawn – Only funds withdrawn from balance
+      #     Referral – Only transactions involving referrals
+      #     Fee – Only transactions involving fees
+      #     Subscription – Only transactions involving subscriptions
+      #     Dividend – Only transactions involving dividends
+      #     Billpay – Only transactions involving BillPay Transactions
+      #     Refund – Only transactions involving funds
+      #     CurrencyConversions – Only transactions involving currency conversions
+      #     BalanceTransfer – Only transactions involving balance transfers
+      #     Reversal – Only transactions involving BillPay reversals
+      #     Shipping – Only transactions involving UPS shipping fees
+      #     BalanceAffecting – Only transactions that affect the account balance
+      #     ECheck – Only transactions involving eCheck
+      # 
+      # * <tt>:currency_code </tt> -- (Optional) Search by currency code.
+      # * <tt>:status</tt> -- (Optional) Search by transaction status. It is one of the following values:
+      #     One of:
+      #     Pending – The payment is pending. The specific reason the payment is pending is returned by the GetTransactionDetails API PendingReason field.
+      #     Processing – The payment is being processed.
+      #     Success – The payment has been completed and the funds have been added successfully to your account balance.
+      #     Denied – You denied the payment. This happens only if the payment was previously pending.
+      #     Reversed – A payment was reversed due to a chargeback or other type of reversal. The funds have been removed from your account balance and returned to the buyer.
+      #   
+      def transaction_search(options)
+        requires!(options, :start_date)
+        commit 'TransactionSearch', build_transaction_search(options)
       end
 
       # ==== Parameters:
@@ -276,12 +361,42 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'Action', action
         end
       end
+      
+      def build_reference_transaction_request(money, options)
+        opts = options.dup
+        opts[:ip_address] ||= opts[:ip]
+        currency_code = opts[:currency] || currency(money)
+        reference_transaction_optional_fields = %w{ n2:ReferenceID n2:PaymentAction 
+                                                    n2:PaymentType n2:IPAddress
+                                                    n2:ReqConfirmShipping n2:MerchantSessionId
+                                                    n2:ReturnFMFDetails n2:SoftDescriptor }
+        build_request_wrapper('DoReferenceTransaction', :request_details => true) do |xml|
+          add_optional_fields(xml, reference_transaction_optional_fields, opts)
+          add_payment_details(xml, money, currency_code, opts)
+        end
+      end
 
       def build_get_transaction_details(transaction_id)
         build_request_wrapper('GetTransactionDetails') do |xml|
           xml.tag! 'TransactionID', transaction_id
         end
       end
+
+      def build_transaction_search(options)
+        currency_code = options[:currency_code]
+        currency_code ||= currency(options[:amount]) if options[:amount]
+        transaction_search_optional_fields = %w{ Payer ReceiptID Receiver
+                                                 TransactionID InvoiceID CardNumber
+                                                 AuctionItemNumber TransactionClass
+                                                 CurrencyCode Status }
+        build_request_wrapper('TransactionSearch') do |xml|
+          xml.tag! 'StartDate', date_to_iso(options[:start_date])
+          xml.tag! 'EndDate', date_to_iso(options[:end_date]) unless options[:end_date].blank?
+          add_optional_fields(xml, transaction_search_optional_fields, options)
+          xml.tag! 'Amount', localized_amount(options[:amount], currency_code), 'currencyID' => currency_code  unless options[:amount].blank?
+        end
+      end
+
 
       def build_get_balance(return_all_currencies)
         build_request_wrapper('GetBalance') do |xml|
@@ -462,10 +577,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_express_only_payment_details(xml, options = {})
-        %w{NoteText SoftDescriptor TransactionId AllowedPaymentMethodType 
-           PaymentRequestID PaymentAction}.each do |optional_text_field|
-          field_as_symbol = optional_text_field.underscore.to_sym
-          xml.tag! 'n2:' + optional_text_field, options[field_as_symbol] unless options[field_as_symbol].blank?
+        add_optional_fields(xml, 
+                            %w{n2:NoteText          n2:SoftDescriptor 
+                               n2:TransactionId     n2:AllowedPaymentMethodType 
+                               n2:PaymentRequestID  n2:PaymentAction}, 
+                            options)
+      end
+
+      def add_optional_fields(xml, optional_fields, options = {})
+        optional_fields.each do |optional_text_field|
+          if optional_text_field =~ /(\w+:)(\w+)/
+            ns = $1
+            field = $2
+            field_as_symbol = field.underscore.to_sym
+          else
+            ns = ''
+            field = optional_text_field
+            field_as_symbol = optional_text_field.underscore.to_sym
+          end
+          xml.tag! ns + field, options[field_as_symbol] unless options[field_as_symbol].blank?
         end
         xml
       end
@@ -500,6 +630,10 @@ module ActiveMerchant #:nodoc:
       
       def message_from(response)
         response[:message] || response[:ack]
+      end
+
+      def date_to_iso(date)
+        (date.is_a?(Date) ? date.to_time : date).utc.iso8601
       end
     end
   end
