@@ -121,6 +121,11 @@ module ActiveMerchant #:nodoc:
         commit 'GetTransactionDetails', build_get_transaction_details(transaction_id)
       end
 
+      # the possible values are '1' or '0'
+      def balance(return_all_currencies = nil)
+        commit 'GetBalance', build_get_balance(return_all_currencies)
+      end
+
       private
       def build_request_wrapper(action, options = {})
         xml = Builder::XmlMarkup.new :indent => 2
@@ -228,6 +233,12 @@ module ActiveMerchant #:nodoc:
       def build_get_transaction_details(transaction_id)
         build_request_wrapper('GetTransactionDetails') do |xml|
           xml.tag! 'TransactionID', transaction_id
+        end
+      end
+
+      def build_get_balance(return_all_currencies)
+        build_request_wrapper('GetBalance') do |xml|
+          xml.tag! 'ReturnAllCurrencies', return_all_currencies unless return_all_currencies.nil?
         end
       end
 

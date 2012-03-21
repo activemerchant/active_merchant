@@ -66,4 +66,9 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal '123', REXML::XPath.first(request, '//GetTransactionDetailsReq/GetTransactionDetailsRequest/TransactionID').text
   end
 
+  def test_build_get_balance
+    request = REXML::Document.new(@gateway.send(:build_get_balance, '1'))
+    assert_equal '1', REXML::XPath.first(request, '//GetBalanceReq/GetBalanceRequest/ReturnAllCurrencies').text
+  end
+
 end
