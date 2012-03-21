@@ -131,6 +131,9 @@ module ActiveMerchant #:nodoc:
         commit 'GetBalance', build_get_balance(return_all_currencies)
       end
 
+      def authorize_transaction(transaction_id, money, options = {})
+        commit 'DoAuthorization', build_do_authorize(transaction_id, money, options)
+      end
 
       private
       def build_request_wrapper(action, options = {})
@@ -148,6 +151,13 @@ module ActiveMerchant #:nodoc:
           end
         end
         xml.target!
+      end
+
+      def build_do_authorize(transaction_id, money, options = {})
+        build_request_wrapper('DoAuthorization') do |xml|
+          xml.tag! 'TransactionID', transaction_id
+          xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
+        end
       end
 
       def build_reauthorize_request(money, authorization, options)

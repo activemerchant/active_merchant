@@ -102,4 +102,10 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'foo@example.com', REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/Receiver').text
   end
 
+  def test_build_do_authorize_request
+    request = REXML::Document.new(@gateway.send(:build_do_authorize,123, 100, :currency => 'USD'))
+    assert_equal '123', REXML::XPath.first(request, '//DoAuthorizationReq/DoAuthorizationRequest/TransactionID').text
+    assert_equal '1.00', REXML::XPath.first(request, '//DoAuthorizationReq/DoAuthorizationRequest/Amount').text
+  end
+
 end
