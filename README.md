@@ -111,6 +111,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [MerchantWare](http://merchantwarehouse.com/merchantware) - US
 * [Modern Payments](http://www.modpay.com) - US
 * [Moneris](http://www.moneris.com/) - CA
+* [Moneris US](http://www.monerisusa.com/) - US
 * [NABTransact](http://www.nab.com.au/nabtransact/) - AU
 * [Netaxept](http://www.betalingsterminal.no/Netthandel-forside) - NO, DK, SE, FI
 * [NetRegistry](http://www.netregistry.com.au) - AU
