@@ -63,16 +63,24 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login, :password)
 
-        headers = {'X-PP-AUTHORIZATION' => options.delete(:auth_signature), 'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'} if options[:auth_signature]
+        # need URL in use to calculate auth header, so continue w/ setup first
+        auth_signature_options = options.delete(:auth_signature)
+
         @options = {
           :pem => pem_file,
           :signature => signature,
-          :headers => headers || {}
+          :headers => {}
         }.update(options)
-
 
         if @options[:pem].blank? && @options[:signature].blank?
           raise ArgumentError, "An API Certificate or API Signature is required to make requests to PayPal"
+        end
+
+        if auth_signature_options
+          @options[:headers].merge!({
+            'X-PP-AUTHORIZATION' => calculate_auth_header(@options[:login], @options[:password], auth_signature_options),
+            'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'
+          })
         end
 
         super
@@ -361,6 +369,39 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         response[:message] || response[:ack]
       end
+
+      def calculate_auth_header(login, password, auth_options)
+        # someone has done the work for us...
+        return auth_options unless auth_options.is_a?(Hash)
+
+        # lazy person...
+        requires!(auth_options, :token, :secret)
+
+        timestamp = Time.now.to_i
+
+        params = ActiveSupport::OrderedHash.new
+        params[:oauth_consumer_key] = login
+        params[:oauth_signature_method] = "HMAC-SHA1"
+        params[:oauth_timestamp] = timestamp.to_s
+        params[:oauth_token] = auth_options[:token]
+        params[:oauth_version] = '1.0'
+
+        # calculate the signature
+        key = [password, encode(auth_options[:secret])].join('&')
+
+        signatureBase = ["POST", encode(endpoint_url), encode(params.to_query)].join('&')
+        
+        digest = OpenSSL::HMAC.digest(OpenSSL::Digest::Digest.new("sha1"), key, signatureBase)
+
+        # this is the format of X-PP-AUTHORIZATION header for PayPal Transactions
+        "timestamp=%s,token=%s,signature=%s" % [timestamp, auth_options[:token], Base64.encode64(digest)]
+      end
+
+      # adjusted the internals of CGI#escape so it also escapes dots, dashes and adds escaped chars as lowercase
+      def encode(str)
+        str.gsub(/[^a-zA-Z0-9_]/n){ sprintf("%%%02x", $&.unpack("C")[0]) }
+      end
+
     end
   end
 end

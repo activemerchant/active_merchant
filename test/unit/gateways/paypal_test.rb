@@ -20,9 +20,23 @@ class PaypalTest < Test::Unit::TestCase
     assert_raise(ArgumentError){ @gateway.purchase(@amount, @credit_card, :billing_address => address)}
   end
   
-  def test_successful_purchase_with_auth_signature
+  def test_successful_purchase_with_pre_calculated_auth_signature
     @gateway = PaypalGateway.new(:login => 'cody', :password => 'test', :pem => 'PEM', :auth_signature => 123)
     expected_header = {'X-PP-AUTHORIZATION' => 123, 'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'}
+    @gateway.expects(:ssl_post).with(anything, anything, expected_header).returns(successful_purchase_response)
+    @gateway.expects(:add_credentials).never
+ 
+    assert @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_successful_purchase_with_auth_signature_being_calculated
+    Time.stubs(:now).returns("1332482681")
+    @gateway = PaypalGateway.new(:login => 'cody', :password => 'test', :pem => 'PEM', :auth_signature => {:token => "123", :secret => "456"})
+    expected_header = {
+      # calculated w/ PayPal's Java SDK
+      'X-PP-AUTHORIZATION' => "timestamp=1332482681,token=123,signature=Ztgcxc7Srnd4fDT0t/8nLVCzUiQ=\n",
+      'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'
+    }
     @gateway.expects(:ssl_post).with(anything, anything, expected_header).returns(successful_purchase_response)
     @gateway.expects(:add_credentials).never
  
