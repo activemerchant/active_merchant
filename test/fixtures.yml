@@ -168,6 +168,10 @@ moneris:
   login: store1
   password: yesguy
 
+moneris_us:
+  login: monusqa002
+  password: qatoken
+
 #Working credentials, no need to replace
 nab_transact:
   login: ABC0001
