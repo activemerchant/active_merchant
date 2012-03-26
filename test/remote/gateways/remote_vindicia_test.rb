@@ -20,7 +20,7 @@ class RemoteVindiciaTest < Test::Unit::TestCase
       :shipping_address => address,
       :line_items => { 
         :name => 'Test Product',
-        :sku => 'CHANGE TO A VALID PRODUCT SKU'
+        :sku => 'CHANGE TO A VALID PRODUCT SKU',
         :price => 5,
         :quantity => 1
       }
@@ -76,10 +76,9 @@ class RemoteVindiciaTest < Test::Unit::TestCase
   end
 
   def test_recurrence_setup
-    @gateway.instance_variable_set(:@recurring, true)
     @options.merge!(:product_sku => @recurring_product_sku)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.recurring(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'OK', response.message
   end

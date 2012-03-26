@@ -39,9 +39,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:password</tt> -- Vindicia SOAP password (REQUIRED)
       # * <tt>:api_version</tt> -- Vindicia API Version - defaults to 3.6 (OPTIONAL)
       # * <tt>:account_id</tt> -- Account Id which all transactions will be run against. (REQUIRED)
-      # * <tt>:recurring</tt> -- Should a subscription be set-up after the transaction is run. (OPTIONAL)
-      # * <tt>:transaction_prefix</tt> -- Prefix to order id for one-time transactions - defaults to 'X' (OPTIONAL)
-      # * <tt>:autobill_prefix</tt> -- Prefix to order id for subscriptions - defaults to 'A' (OPTIONAL)
+      # * <tt>:transaction_prefix</tt> -- Prefix to order id for one-time transactions - defaults to 'X' (OPTIONAL
       # * <tt>:min_chargeback_probability</tt> -- Minimum score for chargebacks - defaults to 65 (OPTIONAL) 
       # * <tt>:cvn_success</tt> -- Array of valid CVN Check return values - defaults to [M, P] (OPTIONAL)
       # * <tt>:avs_success</tt> -- Array of valid AVS Check return values - defaults to [X, Y, A, W, Z] (OPTIONAL)
@@ -65,9 +63,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :account_id)
         @account_id = options[:account_id]
 
-        @recurring = options[:recurring] || false
         @transaction_prefix = options[:transaction_prefix] || "X"
-        @autobill_prefix = options[:autobill_prefix] || "A"
 
         @min_chargeback_probability = options[:min_chargeback_probability] || 65
         @cvn_success = options[:cvn_success] || %w{M P} 
@@ -131,25 +127,7 @@ module ActiveMerchant #:nodoc:
           return fail(response)
         end
 
-        if @recurring
-          # Setting up a recurring AutoBill requires an associated product
-          requires!(options, :product_sku)
-          autobill_response = check_subscription(authorize_subscription(options.merge(:product_sku => options[:product_sku])))
-
-          if autobill_response.success?
-            autobill_response
-          else
-            # If the AutoBill fails to set-up, void the transaction and return it as the response
-            void_response = void(identification, options)
-            if void_response.success?
-              return fail(response) 
-            else
-              return void_response
-            end
-          end
-        else
-          success(response, identification)
-        end
+        success(response, identification)
       end
 
       # Void a previous transaction
@@ -167,10 +145,49 @@ module ActiveMerchant #:nodoc:
           }] 
         }))
 
-        if response[:return][:returnCode] == '200' && response[:qtyFail].to_i == 0
+        if response[:return][:returnCode] == '200' && response[:qtyFail].to_i == 0          
           success(response, identification)
         else
           fail(response)
+        end
+      end
+
+      # Perform a purchase, which is essentially an authorization and capture in a single operation.
+      #
+      # ==== Parameters
+      #
+      # * <tt>money</tt> -- The amount to be purchased as an Integer value in cents.
+      # * <tt>creditcard</tt> -- The CreditCard details for the transaction.
+      # * <tt>options</tt> -- A hash of parameters.
+      #
+      # ==== Options
+      #
+      # * <tt>:product_sku</tt> -- The subscription product's sku
+      # * <tt>:autobill_prefix</tt> -- Prefix to order id for subscriptions - defaults to 'A' (OPTIONAL)
+      def recurring(money, creditcard, options={})
+        options[:recurring] = true
+        @autobill_prefix = options[:autobill_prefix] || "A"
+
+        response = authorize(money, creditcard, options)
+        return response if !response.success? || response.fraud_review?
+
+        capture_resp = capture(money, response.authorization, options)
+        return capture_resp if !response.success?
+
+        # Setting up a recurring AutoBill requires an associated product
+        requires!(options, :product_sku)
+        autobill_response = check_subscription(authorize_subscription(options.merge(:product_sku => options[:product_sku])))
+
+        if autobill_response.success?
+          autobill_response
+        else
+          # If the AutoBill fails to set-up, void the transaction and return it as the response
+          void_response = void(capture_resp.authorization, options)
+          if void_response.success?
+            return autobill_response
+          else
+            return void_response
+          end
         end
       end
 
@@ -240,7 +257,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :line_items)
         parameters[:transactionItems] = options[:line_items]
 
-        if @recurring
+        if options[:recurring]
           parameters[:nameValues] = [{:name => 'merchantAutoBillIdentifier', :value => autobill_id(options[:order_id])}]
         end
       end
@@ -253,7 +270,7 @@ module ActiveMerchant #:nodoc:
           :nameValues => [{ :name => 'CVN', :value => creditcard.verification_value }],
           :billingAddress => convert_am_address_to_vindicia(options[:billing_address] || options[:address]),
           :customerSpecifiedType => creditcard.type.capitalize,
-          :active => @recurring 
+          :active => options[:recurring] ? true : false
         }
       end
 
