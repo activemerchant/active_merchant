@@ -1,6 +1,12 @@
 module ActiveMerchant
   module Billing
     class DataCashGateway < Gateway
+
+      # Custom response class so we can pass through response/request XML
+      class DataCashResponse < Response
+        attr_accessor :request, :response
+      end
+
       self.default_currency = 'GBP'
       self.supported_countries = ['GB']
 
@@ -45,6 +51,7 @@ module ActiveMerchant
       #
       # * <tt>:login</tt> -- The Datacash account login.
       # * <tt>:password</tt> -- The Datacash account password.
+      # * <tt>:url</tt> -- The URL to post to. Defaults to the TEST_URL or LIVE_URL.
       # * <tt>:test => +true+ or +false+</tt> -- Use the test or live Datacash url.
       #     
       def initialize(options = {})
@@ -160,7 +167,7 @@ module ActiveMerchant
       # Create the xml document for a 'cancel' or 'fulfill' transaction.
       # 
       # Final XML should look like:
-      # <Request>
+      # <Request version="2">
       #  <Authentication>
       #    <client>99000001</client>
       #    <password>******</password>
@@ -192,7 +199,7 @@ module ActiveMerchant
 
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, version_options do
           add_authentication(xml)
           
           xml.tag! :Transaction do
@@ -217,7 +224,7 @@ module ActiveMerchant
       # 
       # Final XML should look like:
       # 
-      # <Request>
+      # <Request version="2">
       #  <Authentication>
       #    <client>99000000</client>
       #    <password>*******</password>
@@ -226,6 +233,7 @@ module ActiveMerchant
       #    <TxnDetails>
       #      <merchantreference>123456</merchantreference>
       #      <amount currency="EUR">10.00</amount>
+      #      <capturemethod>ecomm</capturemethod>
       #    </TxnDetails>
       #    <CardTxn>
       #      <Card>
@@ -277,7 +285,7 @@ module ActiveMerchant
       def build_purchase_or_authorization_request_with_credit_card_request(type, money, credit_card, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, version_options do
           add_authentication(xml)
           
           xml.tag! :Transaction do
@@ -291,6 +299,9 @@ module ActiveMerchant
             xml.tag! :TxnDetails do
               xml.tag! :merchantreference, format_reference_number(options[:order_id])
               xml.tag! :amount, amount(money), :currency => options[:currency] || currency(money)
+              unless options[:set_up_continuous_authority]
+                xml.tag! :capturemethod, 'ecomm'
+              end
             end
           end
         end
@@ -302,7 +313,7 @@ module ActiveMerchant
       # 
       # Final XML should look like:
       # 
-      # <Request> 
+      # <Request version="2"> 
       #   <Transaction> 
       #     <ContAuthTxn type="historic" /> 
       #     <TxnDetails> 
@@ -337,7 +348,7 @@ module ActiveMerchant
 
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, version_options do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :ContAuthTxn, :type => 'historic'
@@ -359,7 +370,7 @@ module ActiveMerchant
       # 
       # Final XML should look like:
       #
-      # <Request> 
+      # <Request version="2"> 
       #   <Authentication> 
       #     <client>99000001</client> 
       #     <password>*******</password> 
@@ -378,7 +389,7 @@ module ActiveMerchant
       def build_transaction_refund_request(money, reference)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, version_options do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :HistoricTxn do
@@ -399,7 +410,7 @@ module ActiveMerchant
       # 
       # Final XML should look like:
       #
-      # <Request> 
+      # <Request version="2"> 
       #   <Authentication> 
       #     <client>99000001</client> 
       #     <password>*****</password> 
@@ -422,7 +433,7 @@ module ActiveMerchant
       def build_refund_request(money, credit_card, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, version_options do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :CardTxn do
@@ -528,15 +539,21 @@ module ActiveMerchant
       #   -request: The XML data that is to be sent to Datacash
       #   
       # Returns:
-      #   - ActiveMerchant::Billing::Response object
+      #   - ActiveMerchant::Billing::DataCashGateway::DataCashResponse object
       #   
       def commit(request)
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request))      
+        url = @options[:url] || (test? ? TEST_URL : LIVE_URL)
+        response = ssl_post(url, request, { 'Content-Type' => 'text/xml' })
+        parsed = parse(response)
 
-        Response.new(response[:status] == DATACASH_SUCCESS, response[:reason], response,
+        data_cash_response = DataCashResponse.new(parsed[:status] == DATACASH_SUCCESS, parsed[:reason], parsed,
           :test => test?,
-          :authorization => "#{response[:datacash_reference]};#{response[:authcode]};#{response[:ca_reference]}"
+          :authorization => "#{parsed[:datacash_reference]};#{parsed[:authcode]};#{parsed[:ca_reference]}"
         )
+        data_cash_response.response = response
+        data_cash_response.request = request
+
+        data_cash_response
       end
 
       # Returns a date string in the format Datacash expects
@@ -586,6 +603,14 @@ module ActiveMerchant
           node.elements.each{|e| parse_element(response, e) }
         else
           response[node.name.underscore.to_sym] = node.text
+        end
+      end
+
+      def version_options(options = {})
+        if @options[:version]
+          { :version => @options[:version] }.merge(options)
+        else
+          options
         end
       end
 

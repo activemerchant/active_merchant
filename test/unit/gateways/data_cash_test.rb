@@ -33,28 +33,50 @@ class DataCashTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of Response, response
+    assert_instance_of ActiveMerchant::Billing::DataCashGateway::DataCashResponse, response
     assert_success response
     assert response.test?
     assert_equal 'The transaction was successful', response.message
     assert_equal '4400200050664928;123456789;', response.authorization
   end
 
+  def test_url
+    @gateway.options[:url] = "https://another_test_url.com"
+    @gateway.expects(:ssl_post).with("https://another_test_url.com", anything, { 'Content-Type' => 'text/xml' }).returns(successful_purchase_response)
+
+    @gateway.credit(@amount, @credit_card, @options)
+  end
+
+  def test_version
+    @gateway.options[:version] = "3"
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/version="3"/), anything).returns(successful_purchase_response)
+
+    @gateway.credit(@amount, @credit_card, @options)
+  end
+
+  def test_custom_response_class
+    @gateway.expects(:ssl_post).with(anything, anything, anything).returns(successful_purchase_response)
+    response = @gateway.credit(@amount, @credit_card, @options)
+
+    assert_match /Request/, response.request
+    assert_match /Response/, response.response
+  end
+
   def test_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>refund<\/method>/)).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>refund<\/method>/), anything).returns(successful_purchase_response)
 
     @gateway.credit(@amount, @credit_card, @options)
   end
 
   def test_deprecated_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>txn_refund<\/method>/)).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>txn_refund<\/method>/), anything).returns(successful_purchase_response)
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
       @gateway.credit(@amount, "transaction_id", @options)
     end
   end
 
   def test_refund
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>txn_refund<\/method>/)).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>txn_refund<\/method>/), anything).returns(successful_purchase_response)
 
     @gateway.refund(@amount, "transaction_id", @options)
   end
@@ -63,7 +85,7 @@ class DataCashTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
     
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of Response, response
+    assert_instance_of ActiveMerchant::Billing::DataCashGateway::DataCashResponse, response
     assert_failure response
     assert response.test?
     assert_equal 'Invalid reference number', response.message
@@ -73,7 +95,7 @@ class DataCashTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
     
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of Response, response
+    assert_instance_of ActiveMerchant::Billing::DataCashGateway::DataCashResponse, response
     assert_failure response
     assert response.test?
     assert_equal 'Invalid reference number', response.message
@@ -97,7 +119,7 @@ class DataCashTest < Test::Unit::TestCase
   
   def test_purchase_does_not_raise_exception_with_missing_billing_address
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert @gateway.authorize(100, @credit_card, {:order_id => generate_unique_id }).is_a?(ActiveMerchant::Billing::Response)
+    assert @gateway.authorize(100, @credit_card, {:order_id => generate_unique_id }).is_a?(ActiveMerchant::Billing::DataCashGateway::DataCashResponse)
   end
   
   def test_continuous_authority_purchase_with_missing_continuous_authority_reference
@@ -110,7 +132,7 @@ class DataCashTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     
     response = @gateway.purchase(@amount, '4400200050664928;123456789;10000000', @options)
-    assert_instance_of Response, response
+    assert_instance_of ActiveMerchant::Billing::DataCashGateway::DataCashResponse, response
     assert_success response
     assert response.test?
     assert_equal 'The transaction was successful', response.message
