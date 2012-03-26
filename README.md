@@ -164,6 +164,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Chronopay](http://www.chronopay.com)
 * [Direct-eBanking / sofortueberweisung.de by Payment-Networks AG](https://www.payment-network.com/deb_com_en/merchantarea/home) - DE, AT, CH, BE, UK, NL
 * [DirecPay](http://www.timesofmoney.com/direcpay/jsp/home.jsp)
+* [Dotpay](http://dotpay.pl)
 * [Dwolla](https://www.dwolla.com/default.aspx)
 * [HiTRUST](http://www.hitrust.com.hk/)
 * [Moneybookers](http://www.moneybookers.com)
