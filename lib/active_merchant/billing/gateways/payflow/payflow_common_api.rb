@@ -112,6 +112,9 @@ module ActiveMerchant #:nodoc:
           unless money.nil?
             xml.tag! 'Invoice' do
               xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
+              xml.tag! 'Description', options[:description] unless options[:description].blank?
+              xml.tag! 'Comment', options[:comment] unless options[:comment].nil?
+              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].nil?
             end
           end
         end
