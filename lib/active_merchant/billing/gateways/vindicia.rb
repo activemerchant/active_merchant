@@ -152,7 +152,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # Perform a purchase, which is essentially an authorization and capture in a single operation.
+      # Perform a recurring billing, which is essentially a purchase and autobill setup in a single operation.
       #
       # ==== Parameters
       #
