@@ -192,4 +192,12 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert_equal 19, number.length
     assert_equal 'switch', CreditCard.type?(number)
   end
+
+  def test_visa_dankort_returns_true_when_card_is_visa_dankort
+    assert CreditCard.visa_dankort?('4571029326925773')
+  end
+
+  def test_visa_dankort_returns_false_when_card_is_not_visa_dankort
+    assert_false CreditCard.visa_dankort?('4012888888881881')
+  end
 end
