@@ -11,7 +11,7 @@ class DotpayHelperTest < Test::Unit::TestCase
   def test_basic_helper_fields
     assert_field 'id', '42655'
     assert_field 'lang', 'PL'
-    assert_field 'order', 'order-500'
+    assert_field 'description', 'order-500'
     assert_field 'currency', 'PLN'
   end
   

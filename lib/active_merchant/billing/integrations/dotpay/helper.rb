@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
           mapping :description,     'description'
           mapping :lang,            'lang'
           mapping :onlinetransfer,  'onlinetransfer'
-          mapping :order,           'order'
+          mapping :order,           'description'
           mapping :p_email,         'p_email'
           mapping :p_info,          'p_info'
           mapping :tax,             'tax'
