@@ -13,7 +13,13 @@ class VindiciaTest < Test::Unit::TestCase
     
     @options = { 
       :order_id => '1',
-      :billing_address => address
+      :billing_address => address,
+      :line_items => { 
+        :name => 'Test Product',
+        :sku => 'TEST_PRODUCT',
+        :price => 5,
+        :quantity => 1
+      }
     }
   end
   
@@ -69,13 +75,11 @@ class VindiciaTest < Test::Unit::TestCase
   end
 
   def test_successful_recurring_setup
-    @gateway.instance_variable_set(:@recurring, true)
-
     @gateway.expects(:ssl_post).times(3).returns(successful_authorize_response, 
                                                  successful_capture_response,
                                                  successful_update_response)
     
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:product_sku => "TEST_SKU"))
+    assert response = @gateway.recurring(@amount, @credit_card, @options.merge(:product_sku => "TEST_SKU"))
     assert_instance_of Response, response 
     assert_success response
     
@@ -84,14 +88,12 @@ class VindiciaTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_recurring_setup
-    @gateway.instance_variable_set(:@recurring, true)
-
     @gateway.expects(:ssl_post).times(4).returns(successful_authorize_response, 
                                                  successful_capture_response,
                                                  unsuccessful_update_response,
                                                  successful_void_response)
     
-    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:product_sku => "TEST_SKU"))
+    assert response = @gateway.recurring(@amount, @credit_card, @options.merge(:product_sku => "TEST_SKU"))
     assert_failure response
     assert response.test?
   end
