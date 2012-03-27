@@ -1,5 +1,100 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.21.0 (March 7, 2012)
+
+* Stripe: Add support for passing IP [collision]
+* Merchant e-Solutions: pass expiration date when purchasing with a stored credit card [chrisyoung]
+* Braintree: Fix passing custom processor ids to old accounts [maxsilver]
+* Authorize.net CIM: Add validation mode option to create_customer_profile_request [jwood]
+* eWay Managed: Include transaction number in response params [jamsi]
+* Fix various hash ordering issues exposed by Ruby 1.8 [ntalbott]
+* Authorize.Net CIM: Add WEB echeck type [deathbob]
+* Move Braintree from the gemspec to the Gemfile [ntalbott]
+* Add CertoDirect gateway [hron]
+* Authorize.Net CIM: Add option for setting a custom delimiter [bmorton]
+* Authorize.Net CIM: Add 3.1 response fields [bmorton]
+* Authorize.Net CIM: Misc fixes and doc improvements [bmorton]
+* Authorize.Net CIM: Fix error when order is blank [KeeperPat]
+* Beanstream: Add recurring payments support [castiglione]
+* Make ePay password optional [ePay]
+* Quickpay: skip testmode if transaction provided [brentmc79]
+* Payflow: add additional fields [thorstadt]
+* Authorize.Net CIM: Add get_customer_profile_ids [howaboutwe]
+* PayPal Express: Add support for BrandName and Custom fields [exviva]
+* Payflow: Handle dates with leading zeros [jcoleman]
+* Authorize.Net CIM: Add CCV code support & improve tests [tgarnett]
+* Add Authorize.Net SIM integration [courtland & rdp]
+* Secure Pay AU: Handle periodic payments [tommeier]
+* Viaklix: Add discover as a supported card type [waelchatila]
+* Improvements to testing infrastructure for integrations [jduff]
+* Add NAB Transact (AU) Gateway [tommeier]
+
+== Version 1.20.4 (February 22, 2012)
+
+* Fix json dependency
+
+== Version 1.20.3 (February 7, 2012)
+
+* Various fixes to support Ruby 1.9 [wisq]
+* SkipJack: Fix partial capture [jduff]
+* Optimal Payments: submit region when outside North America [jduff]
+* USA ePay: Add void and refund support [duff/ntalbott]
+* Add first digits to credit card [codyfauser]
+* Orbital: fixes to authentication and order id [Soleone]
+* Stripe: fixes to purchase method [duff/ntalbott]
+
+== Version 1.20.2 (January 16, 2012)
+
+* Remove authorize/capture support for Stripe [gdb]
+
+== Version 1.20.1 (December 22, 2011)
+
+* PayflowExpressUk: Fix parsing street2 from response [odorcicd]
+* AuthorizeNet: Support tracking id [odorcicd]
+* SagePay Form: Map billing address to shipping address [jduff]
+
+== Version 1.20.0 (November 14, 2011)
+
+* Add support for USA ePay Advanced SOAP interface [matthewcalebsmith/jduff]
+* Beanstram: fix purchase with Secure Profile [pitr/jduff]
+* Orbital: various fixes [Soleone]
+* Add Samuari gateway by Fee Fighters [jkrall/odorcicd]
+* Lock money gem to 3.7.1 or less since newer versions break in 1.9 [jduff]
+* Braintree: handle gateway rejected transactions gracefully [braintreeps/jduff]
+* Ogone: support different signature encryptors, custom currency and eci [ZenCocoon/rymai/jduff]
+* Payflow Link: use secure token [jduff]
+* Added refund method to Exact, Pay Junction and Skip Jack gateways [jduff]
+* Elavon: added test url [kylekeesling/jduff]
+* Fix redundent errors when credit card is expired [castiglione/jduff]
+* Two Checkout: update service url [vampirechicken/jduff]
+
+== Version 1.18.1 (September 23, 2011)
+
+* Braintree: allow setting merchant_account_id on initialize [jduff]
+* Realex: only send letters and numbers in shipping code field [Soleone]
+
+== Version 1.18.0 (September 23, 2011)
+
+* NoChex: Update the URL that payment requests are posted to [caseywhalen/jduff]
+* QBMS: fixed test mode check [Soleone]
+* Realex: encode avs info with shipping address [Soleone]
+* Add Dwolla offsite gateway [armsteadj1/jduff]
+* Eway: pass email, customer, description and options to store [moklett/tobi]
+* New dependency: active_utils gem [odorcicd]
+* Optimal Payments: fix test mode check [jduff]
+
+== Version 1.17.0 (August 23, 2011)
+
+* Add Payflow Link integration [jduff]
+* Add CardSave gateway [MrJaba/jduff]]
+* Quickpay: Support protocal version 4 and fraud parameters [anderslemke/jduff]
+* Authorize.net: Add status_recurring [mm1/jduff]
+* Paypal Express: Support specifying :items with purchase [sivabudh/jduff]
+* ePay: Add Sweden and Norway to supported countries [ePay/jduff]
+* Brainreee: Support passing merchant_account_id parameter [braintreeps/jduff]
+* Paypal Express: Remove deprecated Address field in favor of ShipToAddress[jduff]
+* Add Optimal Payments gateway [jamie/jduff]
+* Documentation improvements [dasch/nhemsley/jstorimer/jduff]
 * Authorize.Net: Pass through first name, last name, and zip for refunds. [ntalbott]
 
 == Version 1.16.0 (July 18, 2011)

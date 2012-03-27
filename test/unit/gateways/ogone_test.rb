@@ -3,34 +3,40 @@ require 'test_helper'
 class OgoneTest < Test::Unit::TestCase
 
   def setup
-    @credentials = { :login => 'merchant id',
+    @credentials = { :login => 'pspid',
                      :user => 'username',
                      :password => 'password',
-                     :signature => 'mynicesig' }
+                     :signature => 'mynicesig',
+                     :signature_encryptor => 'sha512' }
     @gateway = OgoneGateway.new(@credentials)
     @credit_card = credit_card
     @amount = 100
     @identification = "3014726"
+    @billing_id = "myalias"
     @options = {
       :order_id => '1',
       :billing_address => address,
       :description => 'Store Purchase'
     }
+    @parameters = {
+      'orderID' => '1',
+      'amount' => '100',
+      'currency' => 'EUR',
+      'CARDNO' => '4111111111111111',
+      'PSPID' => 'MrPSPID',
+      'Operation' => 'RES',
+      'ALIAS' => '2',
+      'CN' => 'Client Name'
+    }
   end
-  
+
   def teardown
     Base.mode = :test
   end
 
-  def test_successful_authorize
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success response
-    assert_equal '3014726;RES', response.authorization
-    assert response.test?
-  end
-
   def test_successful_purchase
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ECI', '7')
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -44,6 +50,36 @@ class OgoneTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal '3014726;SAL', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_custom_eci
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ECI', '4')
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:eci => 4))
+    assert_success response
+    assert_equal '3014726;SAL', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorize
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ECI', '7')
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal '3014726;RES', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorize_with_custom_eci
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ECI', '4')
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(:eci => 4))
+    assert_success response
+    assert_equal '3014726;RES', response.authorization
     assert response.test?
   end
 
@@ -63,12 +99,14 @@ class OgoneTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_referenced_credit
+  def test_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_referenced_credit_response)
-    assert response = @gateway.credit(@amount, "3049652")
-    assert_success response
-    assert_equal '3049652;RFD', response.authorization
-    assert response.test?
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.credit(@amount, "3049652;SAL")
+      assert_success response
+      assert_equal '3049652;RFD', response.authorization
+      assert response.test?
+    end
   end
 
   def test_successful_unreferenced_credit
@@ -87,22 +125,45 @@ class OgoneTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_store
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ECI', '7')
+    @gateway.expects(:ssl_post).times(2).returns(successful_purchase_response)
+    assert response = @gateway.store(@credit_card, :billing_id => @billing_id)
+    assert_success response
+    assert_equal '3014726;RES', response.authorization
+    assert_equal '2', response.billing_id
+    assert response.test?
+  end
+
+  def test_deprecated_store_option
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ECI', '7')
+    @gateway.expects(:ssl_post).times(2).returns(successful_purchase_response)
+    assert_deprecation_warning(OgoneGateway::OGONE_STORE_OPTION_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.store(@credit_card, :store => @billing_id)
+      assert_success response
+      assert_equal '3014726;RES', response.authorization
+      assert response.test?
+    end
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
   end
-  
+
   def test_create_readable_error_message_upon_failure
     @gateway.expects(:ssl_post).returns(test_failed_authorization_due_to_unknown_order_number)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
-    
+
     assert_equal "Unknown order", response.message
   end
-  
+
   def test_supported_countries
     assert_equal ['BE', 'DE', 'FR', 'NL', 'AT', 'CH'], OgoneGateway.supported_countries
   end
@@ -113,6 +174,28 @@ class OgoneTest < Test::Unit::TestCase
 
   def test_default_currency
     assert_equal 'EUR', OgoneGateway.default_currency
+
+    gateway = OgoneGateway.new(@credentials)
+    gateway.expects(:add_pair).at_least(1)
+    gateway.expects(:add_pair).with(anything, 'currency', 'EUR')
+    gateway.expects(:ssl_post).returns(successful_purchase_response)
+    gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_custom_currency_at_gateway_level
+    gateway = OgoneGateway.new(@credentials.merge(:currency => 'USD'))
+    gateway.expects(:add_pair).at_least(1)
+    gateway.expects(:add_pair).with(anything, 'currency', 'USD')
+    gateway.expects(:ssl_post).returns(successful_purchase_response)
+    gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_local_custom_currency_overwrite_gateway_level
+    gateway = OgoneGateway.new(@credentials.merge(:currency => 'USD'))
+    gateway.expects(:add_pair).at_least(1)
+    gateway.expects(:add_pair).with(anything, 'currency', 'EUR')
+    gateway.expects(:ssl_post).returns(successful_purchase_response)
+    gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'EUR'))
   end
 
   def test_avs_result
@@ -126,7 +209,19 @@ class OgoneTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card)
     assert_equal 'P', response.cvv_result['code']
   end
-  
+
+  def test_billing_id
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_equal '2', response.billing_id
+  end
+
+  def test_order_id
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_equal '1233680882919266242708828', response.order_id
+  end
+
   def test_production_mode
     Base.mode = :production
     gateway = OgoneGateway.new(@credentials)
@@ -139,23 +234,71 @@ class OgoneTest < Test::Unit::TestCase
     gateway = OgoneGateway.new(@credentials)
     assert gateway.test?
   end
-  
+
   def test_format_error_message_with_slash_separator
     @gateway.expects(:ssl_post).returns('<ncresponse NCERRORPLUS="unknown order/1/i/67.192.100.64" STATUS="0" />')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal "Unknown order", response.message
   end
-  
+
   def test_format_error_message_with_pipe_separator
     @gateway.expects(:ssl_post).returns('<ncresponse NCERRORPLUS=" no card no|no exp date|no brand" STATUS="0" />')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal "No card no, no exp date, no brand", response.message
   end
-  
+
   def test_format_error_message_with_no_separator
     @gateway.expects(:ssl_post).returns('<ncresponse NCERRORPLUS=" unknown order " STATUS="0" />')
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal "Unknown order", response.message
+  end
+
+  def test_without_signature
+    gateway = OgoneGateway.new(@credentials.merge(:signature => nil))
+    gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert_deprecation_warning(OgoneGateway::OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE, gateway) do
+      gateway.purchase(@amount, @credit_card, @options)
+    end
+  end
+
+  def test_signature_for_accounts_created_before_10_may_20101
+    gateway = OgoneGateway.new(@credentials.merge(:signature_encryptor => nil))
+    assert_deprecation_warning(OgoneGateway::OGONE_LOW_ENCRYPTION_DEPRECATION_MESSAGE, gateway) do
+      assert signature = gateway.send(:add_signature, @parameters)
+      assert_equal Digest::SHA1.hexdigest("1100EUR4111111111111111MrPSPIDRES2mynicesig").upcase, signature
+    end
+  end
+
+  def test_signature_for_accounts_with_signature_encryptor_to_sha1
+    gateway = OgoneGateway.new(@credentials.merge(:signature_encryptor => 'sha1'))
+
+    assert_deprecation_warning(OgoneGateway::OGONE_LOW_ENCRYPTION_DEPRECATION_MESSAGE, gateway) do
+      assert signature = gateway.send(:add_signature, @parameters)
+      assert_equal Digest::SHA1.hexdigest(string_to_digest).upcase, signature
+    end
+  end
+
+  def test_signature_for_accounts_with_signature_encryptor_to_sha256
+    gateway = OgoneGateway.new(@credentials.merge(:signature_encryptor => 'sha256'))
+
+    assert_deprecation_warning(OgoneGateway::OGONE_LOW_ENCRYPTION_DEPRECATION_MESSAGE, gateway) do
+      assert signature = gateway.send(:add_signature, @parameters)
+      assert_equal Digest::SHA256.hexdigest(string_to_digest).upcase, signature
+    end
+  end
+
+  def test_signature_for_accounts_with_signature_encryptor_to_sha512
+    gateway = OgoneGateway.new(@credentials.merge(:signature_encryptor => 'sha512'))
+    assert signature = gateway.send(:add_signature, @parameters)
+    assert_equal Digest::SHA512.hexdigest(string_to_digest).upcase, signature
+  end
+
+  def test_accessing_params_attribute_of_response
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'test123', response.params['ACCEPTANCE']
+    assert response.test?
   end
 
   def test_response_params_is_hash
@@ -163,8 +306,14 @@ class OgoneTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Hash, response.params
   end
-  
+
   private
+
+  def string_to_digest
+    "ALIAS=2mynicesigAMOUNT=100mynicesigCARDNO=4111111111111111mynicesig"+
+    "CN=Client NamemynicesigCURRENCY=EURmynicesigOPERATION=RESmynicesig"+
+    "ORDERID=1mynicesigPSPID=MrPSPIDmynicesig"
+  end
 
   def successful_authorize_response
     <<-END
@@ -185,7 +334,8 @@ class OgoneTest < Test::Unit::TestCase
         amount="1"
         currency="EUR"
         PM="CreditCard"
-        BRAND="VISA">
+        BRAND="VISA"
+        ALIAS="2">
       </ncresponse>
     END
   end
@@ -209,7 +359,8 @@ class OgoneTest < Test::Unit::TestCase
         amount="1"
         currency="EUR"
         PM="CreditCard"
-        BRAND="VISA">
+        BRAND="VISA"
+        ALIAS="2">
       </ncresponse>
     END
   end
@@ -228,7 +379,8 @@ class OgoneTest < Test::Unit::TestCase
       amount=""
       currency="EUR"
       PM=""
-      BRAND="">
+      BRAND=""
+      ALIAS="2">
       </ncresponse>
     END
   end
@@ -246,7 +398,8 @@ class OgoneTest < Test::Unit::TestCase
       ACCEPTANCE=""
       STATUS="91"
       amount="1"
-      currency="EUR">
+      currency="EUR"
+      ALIAS="2">
       </ncresponse>
     END
   end
@@ -264,7 +417,8 @@ class OgoneTest < Test::Unit::TestCase
     ACCEPTANCE=""
     STATUS="61"
     amount="1"
-    currency="EUR">
+    currency="EUR"
+    ALIAS="2">
     </ncresponse>
     END
   end
@@ -282,7 +436,8 @@ class OgoneTest < Test::Unit::TestCase
     ACCEPTANCE=""
     STATUS="81"
     amount="1"
-    currency="EUR">
+    currency="EUR"
+    ALIAS="2">
     </ncresponse>
     END
   end
@@ -306,11 +461,12 @@ class OgoneTest < Test::Unit::TestCase
     amount="1"
     currency="EUR"
     PM="CreditCard"
-    BRAND="VISA">
+    BRAND="VISA"
+    ALIAS="2">
     </ncresponse>
     END
   end
-  
+
   def test_failed_authorization_due_to_unknown_order_number
     <<-END
     <?xml version="1.0"?>
@@ -325,8 +481,9 @@ class OgoneTest < Test::Unit::TestCase
     amount=""
     currency="EUR"
     PM=""
-    BRAND="">
-    </ncresponse>    
+    BRAND=""
+    ALIAS="2">
+    </ncresponse>
     END
   end
 

@@ -1,24 +1,24 @@
 source :rubygems
-
-gem 'activesupport', '>= 2.3.11'
-gem 'money'
-gem 'braintree', '>= 2.0.0'
-gem 'json', :platforms => :ruby_18
+gemspec
 
 gem 'vindicia-api', :git => 'git@github.com:agoragames/vindicia-api.git', :branch => 'only_builder'
 
 group :test do
-  gem 'rails', '>= 2.3.11'
-  gem 'i18n'
-  gem 'mocha'
-  gem 'rake'
   gem 'json-jruby', :platforms => :jruby
   gem 'jruby-openssl', :platforms => :jruby
+
+  # gateway-specific dependencies, keeping these gems out of the gemspec
+  gem 'samurai', '>= 0.2.25'
+  gem 'braintree', '>= 2.0.0'
 end
 
 group :remote_test do
   gem 'mechanize'
   gem 'launchy'
   gem 'mongrel', '1.2.0.pre2', :platforms => :ruby
+
+  # gateway-specific dependencies, keeping these gems out of the gemspec
+  gem 'samurai', '>= 0.2.25'
+  gem 'braintree', '>= 2.0.0'
 end
 

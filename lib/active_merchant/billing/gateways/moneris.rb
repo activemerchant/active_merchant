@@ -78,6 +78,10 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         commit 'refund', crediting_params(authorization, :amount => amount(money))
       end
+
+      def test?
+        @options[:test] || super
+      end
     private # :nodoc: all
     
       def expdate(creditcard)

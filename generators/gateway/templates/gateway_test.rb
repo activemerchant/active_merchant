@@ -44,6 +44,6 @@ class <%= class_name %>Test < Test::Unit::TestCase
   end
   
   # Place raw failed response from gateway here
-  def failed_purcahse_response
+  def failed_purchase_response
   end
 end

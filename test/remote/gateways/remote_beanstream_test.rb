@@ -47,6 +47,10 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
       :tax2 => 100,
       :custom => 'reference one'
     }
+
+    @recurring_options = @options.merge(
+      :interval => { :unit => :months, :length => 1 },
+      :occurences => 5)
   end
   
   def test_successful_visa_purchase
@@ -114,14 +118,14 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_success void
   end
   
-  def test_successful_purchase_and_credit_and_void_credit
+  def test_successful_purchase_and_refund_and_void_refund
     assert purchase = @gateway.purchase(@amount, @visa, @options)
     assert_success purchase
     
-    assert credit = @gateway.credit(@amount, purchase.authorization)
+    assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success purchase
     
-    assert void = @gateway.void(credit.authorization)
+    assert void = @gateway.void(refund.authorization)
     assert_success void
   end
   
@@ -132,14 +136,41 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
   
-  def test_successful_check_purchase_and_credit
+  def test_successful_check_purchase_and_refund
     assert purchase = @gateway.purchase(@amount, @check, @options)
     assert_success purchase
     
-    assert credit = @gateway.credit(@amount, purchase.authorization)
+    assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success credit
   end
   
+  def test_successful_recurring
+    assert response = @gateway.recurring(@amount, @visa, @recurring_options)
+    assert_success response
+    assert response.test?
+    assert_false response.authorization.blank?
+  end
+  
+  def test_successful_update_recurring
+    assert response = @gateway.recurring(@amount, @visa, @recurring_options)
+    assert_success response
+    assert response.test?
+    assert_false response.authorization.blank?
+    
+    assert response = @gateway.update_recurring(@amount + 500, @visa, @recurring_options.merge(:account_id => response.params["rbAccountId"]))
+    assert_success response
+  end
+  
+  def test_successful_cancel_recurring
+    assert response = @gateway.recurring(@amount, @visa, @recurring_options)
+    assert_success response
+    assert response.test?
+    assert_false response.authorization.blank?
+    
+    assert response = @gateway.cancel_recurring(:account_id => response.params["rbAccountId"])
+    assert_success response
+  end
+
   def test_invalid_login
     gateway = BeanstreamGateway.new(
                 :merchant_id => '',

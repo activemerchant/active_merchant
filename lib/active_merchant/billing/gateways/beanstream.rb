@@ -19,7 +19,6 @@ module ActiveMerchant #:nodoc:
     # To learn more about storing credit cards with the Beanstream gateway, please read the BEAN_Payment_Profiles.pdf (I had to phone BeanStream to request it.)
     # 
     # == Notes 
-    # * Recurring billing is not yet implemented.
     # * Adding of order products information is not implemented.
     # * Ensure that country and province data is provided as a code such as "CA", "US", "QC".
     # * login is the Beanstream merchant ID, username and password should be enabled in your Beanstream account and passed in using the <tt>:user</tt> and <tt>:password</tt> options.
@@ -95,6 +94,35 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
       
+      def recurring(money, source, options = {})
+        post = {}
+        add_amount(post, money)
+        add_invoice(post, options)
+        add_credit_card(post, source)
+        add_address(post, options)
+        add_transaction_type(post, purchase_action(source))
+        add_recurring_type(post, options)
+        commit(post)
+      end
+      
+      def update_recurring(amount, source, options = {})
+        post = {}
+        add_recurring_amount(post, amount)
+        add_recurring_invoice(post, options)
+        add_credit_card(post, source)
+        add_address(post, options)
+        add_recurring_operation_type(post, :update)
+        add_recurring_service(post, options)
+        recurring_commit(post)
+      end
+      
+      def cancel_recurring(options = {})
+        post = {}
+        add_recurring_operation_type(post, :cancel)
+        add_recurring_service(post, options)
+        recurring_commit(post)
+      end
+
       def interac
         @interac ||= BeanstreamInteracGateway.new(@options)
       end

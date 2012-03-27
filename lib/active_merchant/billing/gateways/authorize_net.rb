@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
     # 
     # Automated Recurring Billing (ARB) is an optional service for submitting and managing recurring, or subscription-based, transactions.
     # 
-    # To use recurring, update_recurring, and cancel_recurring ARB must be enabled for your account.
+    # To use recurring, update_recurring, cancel_recurring and status_recurring ARB must be enabled for your account.
     # 
     # Information about ARB is available on the {Authorize.Net website}[http://www.authorize.net/solutions/merchantsolutions/merchantservices/automatedrecurringbilling/].
     # Information about the ARB API is available at the {Authorize.Net Integration Center}[http://developer.authorize.net/]
@@ -55,7 +55,8 @@ module ActiveMerchant #:nodoc:
       RECURRING_ACTIONS = {
         :create => 'ARBCreateSubscription',
         :update => 'ARBUpdateSubscription',
-        :cancel => 'ARBCancelSubscription'
+        :cancel => 'ARBCancelSubscription',
+        :status => 'ARBGetSubscriptionStatus'
       }
 
       # Creates a new AuthorizeNetGateway
@@ -242,6 +243,19 @@ module ActiveMerchant #:nodoc:
         recurring_commit(:cancel, request)
       end
 
+      # Get Subscription Status of a recurring payment.
+      #
+      # This transaction gets the status of an existing Automated Recurring Billing (ARB) subscription. Your account must have ARB enabled.
+      #
+      # ==== Parameters
+      #
+      # * <tt>subscription_id</tt> -- A string containing the +subscription_id+ of the recurring payment already in place
+      #   for a given credit card. (REQUIRED)
+      def status_recurring(subscription_id)
+        request = build_recurring_request(:status, :subscription_id => subscription_id)
+        recurring_commit(:status, request)
+      end
+
       private
       
       def commit(action, money, parameters)
@@ -306,6 +320,7 @@ module ActiveMerchant #:nodoc:
         post[:delim_data]     = "TRUE"
         post[:delim_char]     = ","
         post[:encap_char]     = "$"
+        post[:solution_ID]    = application_id if application_id.present? && application_id != "ActiveMerchant"
 
         request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
         request
@@ -450,6 +465,13 @@ module ActiveMerchant #:nodoc:
 
       # Builds body for ARBCancelSubscriptionRequest
       def build_arb_cancel_subscription_request(xml, options)
+        xml.tag!('subscriptionId', options[:subscription_id])
+
+        xml.target!
+      end
+
+      # Builds body for ARBGetSubscriptionStatusRequest
+      def build_arb_status_subscription_request(xml, options)
         xml.tag!('subscriptionId', options[:subscription_id])
 
         xml.target!

@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       
       SUCCESS_MESSAGE = 'The transaction was successful.'
       
-      MONETARY_CHANGE_STATUSES = ['AUTHORIZE', 'AUTHORIZE ADDITIONAL', 'CREDIT', 'SPLITSETTLE']
+      MONETARY_CHANGE_STATUSES = ['SETTLE', 'AUTHORIZE', 'AUTHORIZE ADDITIONAL', 'CREDIT', 'SPLITSETTLE']
 
       CARD_CODE_ERRORS = %w( N S "" )
 
@@ -236,12 +236,17 @@ module ActiveMerchant #:nodoc:
         commit(:change_status, nil, post)
       end
 
-      def credit(money, identification, options = {})
+      def refund(money, identification, options = {})
         post = {}
         add_status_action(post, 'CREDIT')
         add_forced_settlement(post, options)
         add_transaction_id(post, identification)
         commit(:change_status, money, post)
+      end
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
 
       def status(order_id)

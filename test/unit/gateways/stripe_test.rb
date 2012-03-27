@@ -29,30 +29,14 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_authorize
-    @gateway.expects(:ssl_request).returns(successful_authorize_response)
-
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_instance_of Response, response
-    assert_success response
-    assert response
-
-    # Replace with authorization number from the successful response
-    assert_equal 'ch_test_charge', response.authorization
-    assert response.test?
+  def test_authorize
+    @gateway.expects(:ssl_request).never
+    assert_raises(RuntimeError) { @gateway.authorize(@amount, @credit_card, @options) }
   end
 
-  def test_successful_capture
-    @gateway.expects(:ssl_request).returns(successful_purchase_response)
-
-    assert response = @gateway.capture(nil, 'ch_test_charge')
-    assert_instance_of Response, response
-    assert_success response
-    assert response
-
-    # Replace with authorization number from the successful response
-    assert_equal 'ch_test_charge', response.authorization
-    assert response.test?
+  def test_capture
+    @gateway.expects(:ssl_request).never
+    assert_raises(RuntimeError) { @gateway.capture(nil, 'ch_test_charge') }
   end
 
   def test_successful_void
@@ -139,6 +123,14 @@ class StripeTest < Test::Unit::TestCase
     end
   end
 
+  def test_metadata_header
+    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+      headers && headers['X-Stripe-Client-User-Metadata'] == {:ip => '1.1.1.1'}.to_json
+    }.returns(successful_purchase_response)
+
+    @gateway.purchase(@amount, @credit_card, @options.merge(:ip => '1.1.1.1'))
+  end
+
   private
 
   # Place raw successful response from gateway here
@@ -179,31 +171,6 @@ class StripeTest < Test::Unit::TestCase
   "object": "charge",
   "paid": true,
   "refunded": true,
-  "card": {
-    "country": "US",
-    "exp_month": 9,
-    "exp_year": #{Time.now.year + 1},
-    "last4": "4242",
-    "object": "card",
-    "type": "Visa"
-  }
-}
-    RESPONSE
-  end
-
-  def successful_authorize_response
-    <<-RESPONSE
-{
-  "amount": 400,
-  "created": 1309131571,
-  "currency": "usd",
-  "description": "Test Purchase",
-  "id": "ch_test_charge",
-  "livemode": false,
-  "object": "charge",
-  "paid": true,
-  "refunded": true,
-  "uncaptured": true,
   "card": {
     "country": "US",
     "exp_month": 9,

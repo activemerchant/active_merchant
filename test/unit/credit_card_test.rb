@@ -153,6 +153,12 @@ class CreditCardTest < Test::Unit::TestCase
     assert_valid @visa
   end
 
+  def test_expired_card_should_have_one_error_on_year
+    @visa.year = Time.now.year - 1
+    assert_not_valid @visa
+    assert_equal 1, @visa.errors['year'].length
+    assert /expired/ =~ @visa.errors['year'].first
+  end
 
   def test_should_be_valid_with_start_month_and_year_as_string
     @solo.start_month = '2'
@@ -233,6 +239,16 @@ class CreditCardTest < Test::Unit::TestCase
   def test_bogus_last_digits
     ccn = CreditCard.new(:number => "1")
     assert_equal "1", ccn.last_digits
+  end
+  
+  def test_should_return_first_four_digits_of_card_number
+    ccn = CreditCard.new(:number => "4779139500118580")
+    assert_equal "477913", ccn.first_digits
+  end
+  
+  def test_should_return_first_bogus_digit_of_card_number
+    ccn = CreditCard.new(:number => "1")
+    assert_equal "1", ccn.first_digits
   end
 
   def test_should_be_true_when_credit_card_has_a_first_name

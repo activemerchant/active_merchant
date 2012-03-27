@@ -18,10 +18,11 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :merchant_id, :public_key, :private_key)
         @options = options
+        @merchant_account_id = options[:merchant_account_id]
         Braintree::Configuration.merchant_id = options[:merchant_id]
         Braintree::Configuration.public_key = options[:public_key]
         Braintree::Configuration.private_key = options[:private_key]
-        Braintree::Configuration.environment = test? ? :sandbox : :production
+        Braintree::Configuration.environment = (options[:environment] || (test? ? :sandbox : :production)).to_sym
         Braintree::Configuration.logger.level = Logger::ERROR if Braintree::Configuration.logger
         Braintree::Configuration.custom_user_agent = "ActiveMerchant #{ActiveMerchant::VERSION}"
         super
@@ -73,7 +74,7 @@ module ActiveMerchant #:nodoc:
 
       def store(creditcard, options = {})
         commit do
-          result = Braintree::Customer.create(
+          parameters = {
             :first_name => creditcard.first_name,
             :last_name => creditcard.last_name,
             :email => options[:email],
@@ -83,7 +84,8 @@ module ActiveMerchant #:nodoc:
               :expiration_month => creditcard.month.to_s.rjust(2, "0"),
               :expiration_year => creditcard.year.to_s
             }
-          )
+          }
+          result = Braintree::Customer.create(merge_credit_card_options(parameters, options))
           Response.new(result.success?, message_from_result(result),
             {
               :braintree_customer => (customer_hash(result.customer) if result.success?),
@@ -130,6 +132,16 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def merge_credit_card_options(parameters, options)
+        valid_options = {}
+        options.each do |key, value|
+          valid_options[key] = value if [:verify_card, :verification_merchant_account_id].include?(key)
+        end
+        parameters[:credit_card] ||= {}
+        parameters[:credit_card].merge!(:options => valid_options)
+        parameters
+      end
+
       def map_address(address)
         return {} if address.nil?
         {
@@ -175,7 +187,11 @@ module ActiveMerchant #:nodoc:
               :postal_match => result.transaction.avs_postal_code_response_code
             }
             response_options[:cvv_result] = result.transaction.cvv_response_code
-            message = "#{result.transaction.processor_response_code} #{result.transaction.processor_response_text}"
+            if result.transaction.status == "gateway_rejected"
+              message = "Transaction declined - gateway rejected"
+            else
+              message = "#{result.transaction.processor_response_code} #{result.transaction.processor_response_text}"
+            end
           else
             message = message_from_result(result)
           end
@@ -276,8 +292,8 @@ module ActiveMerchant #:nodoc:
             :submit_for_settlement => options[:submit_for_settlement]
           }
         }
-        if options.has_key?(:merchant_account_id)
-          parameters[:merchant_account_id] = options[:merchant_account_id]
+        if merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
+          parameters[:merchant_account_id] = merchant_account_id
         end
         if credit_card_or_vault_id.is_a?(String) || credit_card_or_vault_id.is_a?(Integer)
           parameters[:customer_id] = credit_card_or_vault_id

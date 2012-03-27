@@ -197,7 +197,7 @@ module ActiveMerchant
 
           if shipping_address
             xml.tag! 'address', 'type' => 'shipping' do
-              xml.tag! 'code', shipping_address[:zip]
+              xml.tag! 'code', format_shipping_zip_code(shipping_address[:zip])
               xml.tag! 'country', shipping_address[:country]
             end
           end
@@ -245,6 +245,10 @@ module ActiveMerchant
 
       def avs_input_code(address)
         address.values_at(:zip, :address1).map{ |v| extract_digits(v) }.join('|')
+      end
+
+      def format_shipping_zip_code(zip)
+        zip.to_s.gsub(/\W/, '')
       end
 
       def extract_digits(string)

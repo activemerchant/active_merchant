@@ -24,6 +24,7 @@ beanstream:
   user: username
   password: password
   secure_profile_api_key: API Access Passcode
+  recurring_api_key: API Access Passcode
   
 beanstream_interac:
   login: merchant id
@@ -42,11 +43,25 @@ braintree_blue:
   merchant_id: X
   public_key: Y
   private_key: Z
+  
+braintree_blue_with_processing_rules:
+  merchant_id: X
+  public_key: Y
+  private_key: Z
+
+#Username/Password given in sign up email. Not MMS credentials
+card_save:
+  login: merchant_id
+  password: password
 
 card_stream:
   login: X
   password: Y
-  
+
+certo_direct:
+  login: 1
+  password: vP6OwK3
+
 cyber_source:
   login: X
   password: Y
@@ -117,6 +132,11 @@ inspire:
   login: demo
   password: password
 
+itransact:
+  login: API_ACCESS_USERNAME
+  password: API_ACCESS_KEY
+  gateway_id: GATEWAY_ID
+
 jetpay:
   login: TESTTERMINAL
       
@@ -147,6 +167,15 @@ modern_payments:
 moneris:
   login: store1
   password: yesguy
+
+moneris_us:
+  login: monusqa002
+  password: qatoken
+
+#Working credentials, no need to replace
+nab_transact:
+  login: ABC0001
+  password: changeit
   
 netaxept:
   login: LOGIN
@@ -293,9 +322,18 @@ psl_visa_debit_address:
   state:
   zip:
 
+# Quickpay offers a test account.
+# To log in to the manager, use demo@quickpay.net and test234
 quickpay:
-  login: 89898989
-  password: "n5KrR5e2538awi9hUk6728LHTQ6E4uG1z4IFSb2pPN9j76DqJ2vA4698X315M1cd"
+  login: 89898978
+  password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
+# To get the right apikey, log in to the manager.
+# Go to Indstillinger > API adgang and make sure you have the right key in the fixture.
+quickpay_with_api_key:
+  login: 89898978
+  password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
+  apikey: "3WrEgfY995CnetPlp7R7XG6J5aq83K4k7B4Z3jsLd1vz53x1w6h42M81u7H62Sb4"
+  version: 4
   
 quantum:
   login: X
@@ -373,6 +411,11 @@ realex_mastercard_coms_error:
   year: '2020'
   verification_value: '123'
 
+samurai:
+  login: 'a1ebafb6da5238fb8a3ac9f6'
+  password: 'ae1aa640f6b735c4730fbb56'
+  processor_token: '5a0e1ca1e5a11a2997bbf912'
+
 sage:
   login: login
   password: password
@@ -420,6 +463,12 @@ trust_commerce:
 # Working credentials, no need to replace
 usa_epay:
   login: 'yCaWGYQsSVR0S48B6AKMK07RQhaxHvGu'
+
+# Get credentials here: https://www.usaepay.com/developer/login
+usa_epay_advanced:
+  login: X
+  password: Y
+  software_id: Z
 
 valitor:
   login: WebsiteID

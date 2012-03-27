@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
         base.cattr_accessor :signature
       end
       
-      API_VERSION = '62.0'
+      API_VERSION = '72'
       
       URLS = {
         :test => { :certificate => 'https://api.sandbox.paypal.com/2.0/',
@@ -63,10 +63,13 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login, :password)
         
+        headers = {'X-PP-AUTHORIZATION' => options.delete(:auth_signature), 'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'} if options[:auth_signature]
         @options = {
           :pem => pem_file,
-          :signature => signature
+          :signature => signature,
+          :headers => headers || {}
         }.update(options)
+
         
         if @options[:pem].blank? && @options[:signature].blank?
           raise ArgumentError, "An API Certificate or API Signature is required to make requests to PayPal" 
@@ -280,7 +283,7 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
         xml.tag! 'env:Envelope', ENVELOPE_NAMESPACES do
           xml.tag! 'env:Header' do
-            add_credentials(xml)
+            add_credentials(xml) unless @options[:headers] && @options[:headers]['X-PP-AUTHORIZATION']
           end
           
           xml.tag! 'env:Body' do
@@ -310,8 +313,8 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:CityName', address[:city]
           xml.tag! 'n2:StateOrProvince', address[:state].blank? ? 'N/A' : address[:state]
           xml.tag! 'n2:Country', address[:country]
-          xml.tag! 'n2:PostalCode', address[:zip]
           xml.tag! 'n2:Phone', address[:phone]
+          xml.tag! 'n2:PostalCode', address[:zip]
         end
       end
       
@@ -320,7 +323,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, request)
-        response = parse(action, ssl_post(endpoint_url, build_request(request)))
+        response = parse(action, ssl_post(endpoint_url, build_request(request), @options[:headers]))
        
         build_response(successful?(response), message_from(response), response,
     	    :test => test?,

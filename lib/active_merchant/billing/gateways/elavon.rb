@@ -30,7 +30,8 @@ module ActiveMerchant #:nodoc:
     #   puts response.authorization # Retrieve the unique transaction ID returned by Elavon
     #
     class ElavonGateway < ViaklixGateway
-      self.test_url = self.live_url = 'https://www.myvirtualmerchant.com/VirtualMerchant/process.do'
+      self.test_url = 'https://demo.myvirtualmerchant.com/VirtualMerchantDemo/process.do'
+      self.live_url = 'https://www.myvirtualmerchant.com/VirtualMerchant/process.do'
 
       self.display_name = 'Elavon MyVirtualMerchant'
       self.supported_countries = ['US', 'CA']

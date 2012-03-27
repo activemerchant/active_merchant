@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'test_helper'
 
 class SagePayFormHelperTest < Test::Unit::TestCase
@@ -86,6 +88,56 @@ class SagePayFormHelperTest < Test::Unit::TestCase
     end
   end
   
+  def test_shipping_address_falls_back_to_billing_address
+    @helper.billing_address(
+      :address1 => '1 My Street',
+      :address2 => '',
+      :city => 'Chicago',
+      :state => 'IL',
+      :zip => '60606',
+      :country  => 'US'
+    )
+   
+    @helper.form_fields
+    assert_equal 19, @helper.fields.size
+    assert_field 'DeliveryAddress1', '1 My Street'
+    assert_field 'DeliveryCity', 'Chicago'
+    assert_field 'DeliveryState', 'IL'
+    assert_field 'DeliveryPostCode', '60606'
+    assert_field 'DeliveryCountry', 'US'
+
+    with_crypt_plaintext do |plain|
+      assert plain.include?('&DeliveryState=IL')
+    end
+  end
+  
+  def test_set_shipping_address_wont_be_overridden_by_billing_address
+    @helper.billing_address(
+      :address1 => '1 My Street',
+      :address2 => '',
+      :city => 'Chicago',
+      :state => 'IL',
+      :zip => '60606',
+      :country  => 'US'
+    )
+    @helper.shipping_address(
+      :address1 => '1 Shipping Street',
+      :address2 => '',
+      :city => 'Chicago Shipping',
+      :state => 'NY',
+      :zip => '123123',
+      :country  => 'US'
+    )
+   
+    @helper.form_fields
+    assert_equal 18, @helper.fields.size
+    assert_field 'DeliveryAddress1', '1 Shipping Street'
+    assert_field 'DeliveryCity', 'Chicago Shipping'
+    assert_field 'DeliveryState', 'NY'
+    assert_field 'DeliveryPostCode', '123123'
+    assert_field 'DeliveryCountry', 'US'
+  end
+  
   def test_unknown_address_mapping
     @helper.billing_address :farm => 'CA'
     assert_equal 5, @helper.fields.size
@@ -113,25 +165,37 @@ class SagePayFormHelperTest < Test::Unit::TestCase
     assert_not_nil params['Crypt']
   end
 
-  def test_crypt_field
-    if defined?(RUBY_ENGINE) && RUBY_ENGINE !~ /rbx|jruby/ # srand behaviour is incompatible on Rubinius/JRuby
-      assert_crypt 'FgEOFyoVEQ1JOC4LHV5AZz0tDBYcTRsbCws5SEwBAhUGGxEAHB4XEFI7GCFfcF9cMAAXT0xeRFk=', 'SomeSeed', 42
-      assert_crypt 'AQcFFCoVEQ1JOC4LHV5AZz0tDBYcTRsbCws5SEwBAhUGGxEAHB4XEFI7GCFfcF9cMAAXT0xeRFk=', 'DiffSeed', 42
-      assert_crypt 'FgEOFyoVEQ1JLyYKDF9GDnBAU0JfMwEbHQslBgAMZ2ABSDUXFxQbGzsWCAodVA9cNwoGAFRFRFk=', 'SomeSeed', 1337
+  def test_unicode_fields
+    @helper.customer :first_name => 'Tobias', :last_name => "Lütke", :email => 'cody@example.com'
+    params = @helper.form_fields
 
-      assert_crypt 'Fg8PBj8FGgobByQLKlReViYaEDMrEVI/CgAvCgtlSnAqCgZPFgIQDB1DflVJF3FGNxwGHBoJSTw8Km0kFF5HXTFTVlxJQA==',             'SaltFunctionSelectsARandomSeedLength', 42
-      assert_crypt 'Fg8PBj8FGgobByQLKlReViYaEDMrERoNAAMYABxVfhUGGxEAHB4XEFI7GCFfcF9cMAAXT0xeRFlJOC4LHV5AZz0tDBYcTRsbCws5SEwBAg==', 'SaltFunctionSelectsARandomSeedLength', 1234
+    assert_equal '2.23', params['VPSProtocol']
+    assert_equal 'PAYMENT', params['TxType']
+    assert_equal 'cody@example.com', params['Vendor']
+    assert_not_nil params['Crypt']
+  end
+
+  def test_crypt_field_is_base64
+    crypt = @helper.form_fields['Crypt']
+    assert_match /^[A-Za-z0-9\+\/]+=*$/, crypt
+  end
+
+  def test_crypt_field_salt
+    random = 'ExpectSomePartOfThisSalt'
+    SecureRandom.expects(:base64).returns(random)
+
+    with_crypt_plaintext do |plain|
+      salt = plain.split('&').first
+      assert random.start_with?(salt)
     end
   end
 
-  private
-  
-  def assert_crypt(value, sr_seed, rand_seed)
-    SecureRandom.expects(:base64).returns(sr_seed)
-    srand(rand_seed)
-
-    assert_equal value, @helper.dup.form_fields['Crypt']
+  def test_crypt_field_is_salted_uniq
+    crypts = (1..5).map { @helper.dup.form_fields['Crypt'] }
+    assert_equal 5, crypts.uniq.count
   end
+
+  private
 
   def with_crypt_plaintext
     crypt = @helper.dup.form_fields['Crypt']

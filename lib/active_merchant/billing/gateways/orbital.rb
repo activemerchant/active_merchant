@@ -78,10 +78,9 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        unless options[:ip_authentication] == true
-          requires!(options, :login, :password, :merchant_id)
-          @options = options
-        end
+        requires!(options, :merchant_id)
+        requires!(options, :login, :password) unless options[:ip_authentication]
+        @options = options
         super
       end
       
@@ -122,8 +121,8 @@ module ActiveMerchant #:nodoc:
       end
       
       # setting money to nil will perform a full void
-      def void(money, authorization, options = {})
-        order = build_void_request_xml(money, authorization, options)
+      def void(authorization, options = {})
+        order = build_void_request_xml(authorization, options)
         commit(order)
       end
     
@@ -167,6 +166,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! :CurrencyCode, currency_code(currency)
         xml.tag! :CurrencyExponent, '2' # Will need updating to support currencies such as the Yen.
         
+        xml.tag! :CardSecValInd, 1 if creditcard.verification_value? && %w( visa discover ).include?(creditcard.brand)
         xml.tag! :CardSecVal,  creditcard.verification_value if creditcard.verification_value?
       end
       
@@ -223,11 +223,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        if response[:message_type] == "R"
+        if response[:message_type].nil? || response[:message_type] == "R"
           response[:proc_status] == SUCCESS
         else
           response[:proc_status] == SUCCESS &&
-          response[:resp_code] == APPROVED 
+            response[:resp_code] == APPROVED
         end
       end
       
@@ -241,22 +241,18 @@ module ActiveMerchant #:nodoc:
 
       def build_new_order_xml(action, money, parameters = {})
         requires!(parameters, :order_id)
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
+        xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :NewOrder do
-            xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
-            xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
-            xml.tag! :IndustryType, "EC" # E-Commerce transaction 
+            add_xml_credentials(xml)
+            xml.tag! :IndustryType, parameters[:industry_type] || "EC"
             xml.tag! :MessageType, action
-            xml.tag! :BIN, '000002' # PNS Tampa
-            xml.tag! :MerchantID, @options[:merchant_id]
-            xml.tag! :TerminalID, parameters[:terminal_id] || '001'            
+            add_bin_merchant_and_terminal(xml, parameters)
             
             yield xml if block_given?
             
             xml.tag! :Comments, parameters[:comments] if parameters[:comments]
-            xml.tag! :OrderID, parameters[:order_id].to_s[0...22]
+            xml.tag! :OrderID, format_order_id(parameters[:order_id])
             xml.tag! :Amount, amount(money)
             
             # Append Transaction Reference Number at the end for Refund transactions
@@ -271,39 +267,29 @@ module ActiveMerchant #:nodoc:
       
       def build_mark_for_capture_xml(money, authorization, parameters = {})
         tx_ref_num, order_id = authorization.split(';')
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
+        xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :MarkForCapture do
-            xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
-            xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
+            add_xml_credentials(xml)
             xml.tag! :OrderID, order_id
             xml.tag! :Amount, amount(money)
-            xml.tag! :BIN, '000002' # PNS Tampa
-            xml.tag! :MerchantID, @options[:merchant_id]
-            xml.tag! :TerminalID, parameters[:terminal_id] || '001'
+            add_bin_merchant_and_terminal(xml, parameters)
             xml.tag! :TxRefNum, tx_ref_num
           end
         end
         xml.target!
       end
       
-      def build_void_request_xml(money, authorization, parameters = {})
-        requires!(parameters, :transaction_index)
+      def build_void_request_xml(authorization, parameters = {})
         tx_ref_num, order_id = authorization.split(';')
-        xml = Builder::XmlMarkup.new(:indent => 2)
-        xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
+        xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :Reversal do
-            xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
-            xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
+            add_xml_credentials(xml)
             xml.tag! :TxRefNum, tx_ref_num
             xml.tag! :TxRefIdx, parameters[:transaction_index]
-            xml.tag! :AdjustedAmt, amount(money)
             xml.tag! :OrderID, order_id
-            xml.tag! :BIN, '000002' # PNS Tampa
-            xml.tag! :MerchantID, @options[:merchant_id]
-            xml.tag! :TerminalID, parameters[:terminal_id] || '001'
+            add_bin_merchant_and_terminal(xml, parameters)
           end
         end
         xml.target!
@@ -315,6 +301,43 @@ module ActiveMerchant #:nodoc:
       
       def expiry_date(credit_card)
         "#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}"
+      end
+
+      def bin
+        @options[:bin] || (salem_mid? ? '000001' : '000002')
+      end
+
+      def xml_envelope
+        xml = Builder::XmlMarkup.new(:indent => 2)
+        xml.instruct!(:xml, :version => '1.0', :encoding => 'UTF-8')
+        xml
+      end
+
+      def add_xml_credentials(xml)
+        xml.tag! :OrbitalConnectionUsername, @options[:login] unless ip_authentication?
+        xml.tag! :OrbitalConnectionPassword, @options[:password] unless ip_authentication?
+      end
+
+      def add_bin_merchant_and_terminal(xml, parameters)
+        xml.tag! :BIN, bin
+        xml.tag! :MerchantID, @options[:merchant_id]
+        xml.tag! :TerminalID, parameters[:terminal_id] || '001'
+      end
+
+      def salem_mid?
+        @options[:merchant_id].length == 6
+      end
+
+      # The valid characters include:
+      #
+      # 1. all letters and digits
+      # 2. - , $ @ & and a space character, though the space character cannot be the leading character
+      # 3. PINless Debit transactions can only use uppercase and lowercase alpha (A-Z, a-z) and numeric (0-9)
+      def format_order_id(order_id)
+        illegal_characters = /[^,$@\- \w]/
+        order_id = order_id.to_s.gsub(/\./, '-')
+        order_id.gsub!(illegal_characters, '')
+        order_id[0...22]
       end
     end
   end
