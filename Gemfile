@@ -1,6 +1,8 @@
 source :rubygems
 gemspec
 
+gem 'vindicia-api', :git => 'git@github.com:agoragames/vindicia-api.git', :branch => 'only_builder'
+
 group :test do
   gem 'json-jruby', :platforms => :jruby
   gem 'jruby-openssl', :platforms => :jruby

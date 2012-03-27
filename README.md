@@ -153,6 +153,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [USA ePay](http://www.usaepay.com/) - US
 * [Verifi](http://www.verifi.com/) - US
 * [ViaKLIX](http://viaklix.com) - US
+* [Vindicia](http://vindicia.com) - US, CA, GB, AU, MX, BR, DE, KR, CN, HK
 * [Wirecard](http://www.wirecard.com) - DE
 * [WorldPay](http://www.worldpay.com) - AU, HK, GB, US
 
