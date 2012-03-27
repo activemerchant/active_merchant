@@ -99,6 +99,34 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'OK', response.message
   end
 
+  def test_successful_store_with_billing_address
+    billing_address = {
+      :address1 => "1 E Main St",
+      :address2 => "Suite 403",
+      :city => "Chicago",
+      :state => "Illinois",
+      :zip => "60622",
+      :country_name => "US"
+    }
+    credit_card = credit_card('5105105105105100')
+    assert response = @gateway.store(credit_card, :billing_address => billing_address)
+    assert_success response
+    assert_equal 'OK', response.message
+
+    vault_id = response.params['customer_vault_id']
+    purchase_response = @gateway.purchase(@amount, vault_id)
+    response_billing_details = {
+      "country_name"=>nil,
+      "region"=>"Illinois",
+      "company"=>nil,
+      "postal_code"=>"60622",
+      "extended_address"=>"Suite 403",
+      "street_address"=>"1 E Main St",
+      "locality"=>"Chicago"
+    }
+    assert_equal purchase_response.params['braintree_transaction']['billing_details'], response_billing_details
+  end
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
