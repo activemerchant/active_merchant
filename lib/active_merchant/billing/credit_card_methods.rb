@@ -3,7 +3,8 @@ module ActiveMerchant #:nodoc:
     # Convenience methods that can be included into a custom Credit Card object, such as an ActiveRecord based Credit Card object.
     module CreditCardMethods
       CARD_COMPANIES = { 
-        'visa'               => /^4\d{12}(\d{3})?$/,
+        'visa_dankort'       => /^45711\d{11}$/,
+        'visa'               => /^4(?!5711)\d{12}(\d{3})?$/,
         'master'             => /^(5[1-5]\d{4}|677189)\d{10}$/,
         'discover'           => /^(6011|65\d{2}|64[4-9]\d)\d{12}|(62\d{14})$/,
         'american_express'   => /^3[47]\d{13}$/,
