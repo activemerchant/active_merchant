@@ -270,7 +270,7 @@ module ActiveMerchant #:nodoc:
           :nameValues => [{ :name => 'CVN', :value => creditcard.verification_value }],
           :billingAddress => convert_am_address_to_vindicia(options[:billing_address] || options[:address]),
           :customerSpecifiedType => creditcard.type.capitalize,
-          :active => options[:recurring] ? true : false
+          :active => !!options[:recurring]
         }
       end
 
