@@ -29,6 +29,15 @@ class EpayTest < Test::Unit::TestCase
                  response.message
   end
 
+  def test_failed_response_on_purchase
+    @gateway.expects(:raw_ssl_request).returns(Net::HTTPBadRequest.new(1.0, 400,'Bad Request'))
+
+    assert response = @gateway.authorize(100, @credit_card)
+    assert_equal 400, response.params['response_code']
+    assert_equal 'Bad Request', response.params['response_message']
+    assert_equal 'ePay did not respond as expected. Please try again.', response.message
+  end
+
   def test_successful_capture
     @gateway.expects(:soap_post).returns(REXML::Document.new(valid_capture_response))
 
