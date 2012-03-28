@@ -416,6 +416,16 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'Billing', REXML::XPath.first(xml, '//n2:LandingPage').text
   end
 
+  def test_build_setup_request_money_defaults_money_to_100
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', nil, {}))
+    assert_equal '1.00', REXML::XPath.first(xml, '//n2:OrderTotal').text
+  end
+
+  def test_build_reference_transaction_request_defaults_money_to_100
+    xml = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 'Sale', nil, {}))
+    assert_equal '1.00', REXML::XPath.first(xml, '//n2:OrderTotal').text
+  end
+
   def test_not_adds_brand_name_if_not_specified
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {}))
 
