@@ -486,6 +486,8 @@ module ActiveMerchant #:nodoc:
           add_merchant_authentication(xml)
           # Merchant-assigned reference ID for the request
           xml.tag!('refId', options[:ref_id]) if options[:ref_id]
+          # Order options
+          add_order(xml, options[:order]) if options[:order]
           send("build_#{action}_request", xml, options)
         end
       end
