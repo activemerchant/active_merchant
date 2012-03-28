@@ -679,6 +679,7 @@ module ActiveMerchant #:nodoc:
                 tag_unless_blank(xml, 'cardCode', transaction[:card_code])
             end
             add_order(xml, transaction[:order]) if transaction[:order].present?
+            xml.tag!('cardCode', transaction[:verification_value]) if transaction[:verification_value]
           end
         end
       end
