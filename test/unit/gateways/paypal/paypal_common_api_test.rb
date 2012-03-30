@@ -73,4 +73,58 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     assert_equal 'Sale', REXML::XPath.first(request, '//n2:PaymentAction').text
     assert_nil REXML::XPath.first(request, '//n2:PaymentRequestID')
   end
+
+  def test_build_request_wrapper_plain
+    result = @gateway.send(:build_request_wrapper, 'Action') do |xml|
+      xml.tag! 'foo', 'bar'
+    end
+    assert_equal 'bar', REXML::XPath.first(REXML::Document.new(result), '//ActionReq/ActionRequest/foo').text
+  end
+
+  def test_build_request_wrapper_with_request_details
+    result = @gateway.send(:build_request_wrapper, 'Action', :request_details => true) do |xml|
+       xml.tag! 'n2:TransactionID', 'baz'
+    end
+    assert_equal 'baz', REXML::XPath.first(REXML::Document.new(result), '//ActionReq/ActionRequest/n2:ActionRequestDetails/n2:TransactionID').text
+  end
+
+  def test_build_get_transaction_details
+    request = REXML::Document.new(@gateway.send(:build_get_transaction_details, '123'))
+    assert_equal '123', REXML::XPath.first(request, '//GetTransactionDetailsReq/GetTransactionDetailsRequest/TransactionID').text
+  end
+
+  def test_build_get_balance
+    request = REXML::Document.new(@gateway.send(:build_get_balance, '1'))
+    assert_equal '1', REXML::XPath.first(request, '//GetBalanceReq/GetBalanceRequest/ReturnAllCurrencies').text
+  end
+
+  def test_balance_cleans_up_currencies_values_like_1
+    @gateway.stubs(:commit)
+    [1, '1', true].each do |values_like_1|
+      @gateway.expects(:build_get_balance).with('1')
+      @gateway.balance(values_like_1)
+    end
+  end
+
+  def test_balance_cleans_up_currencies_values_like_0
+    @gateway.stubs(:commit)
+    [0, '0', false, nil, :foo].each do |values_like_0|
+      @gateway.expects(:build_get_balance).with('0')
+      @gateway.balance(values_like_0)
+    end
+  end
+
+  def test_build_do_authorize_request
+    request = REXML::Document.new(@gateway.send(:build_do_authorize,123, 100, :currency => 'USD'))
+    assert_equal '123', REXML::XPath.first(request, '//DoAuthorizationReq/DoAuthorizationRequest/TransactionID').text
+    assert_equal '1.00', REXML::XPath.first(request, '//DoAuthorizationReq/DoAuthorizationRequest/Amount').text
+  end
+
+  
+  def test_build_manage_pending_transaction_status_request
+    request = REXML::Document.new(@gateway.send(:build_manage_pending_transaction_status,123, 'Accept'))
+    assert_equal '123', REXML::XPath.first(request, '//ManagePendingTransactionStatusReq/ManagePendingTransactionStatusRequest/TransactionID').text
+    assert_equal 'Accept', REXML::XPath.first(request, '//ManagePendingTransactionStatusReq/ManagePendingTransactionStatusRequest/Action').text
+  end
+
 end
