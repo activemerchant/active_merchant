@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add Litle gateway [GregDrake]
+
 == Version 1.22.0 (May 17, 2012)
 
 * Remove version restriction for money gem [ylansegal]

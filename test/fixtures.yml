@@ -149,6 +149,18 @@ linkpoint:
   pem: |
     PASTE YOUR PEM FILE HERE
 
+litle:
+  currency: USD
+  merchant: 'Default Report Group'
+  merchant_id: 101
+  user: ACTIVE
+  password: MERCHANT
+  version: '8.10'
+  url: https://www.testlitle.com/sandbox/communicator/online
+  proxy_addr: smoothproxy
+  proxy_port: '8080'
+  report_group: Default Report Group
+
 # Working test credentials, no need to replace
 merchant_esolutions:
   login: "94100008043900000004"
