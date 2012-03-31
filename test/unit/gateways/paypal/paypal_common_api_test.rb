@@ -127,4 +127,38 @@ class PaypalCommonApiTest < Test::Unit::TestCase
     assert_equal 'Accept', REXML::XPath.first(request, '//ManagePendingTransactionStatusReq/ManagePendingTransactionStatusRequest/Action').text
   end
 
+  def test_transaction_search_requires
+    assert_raise ArgumentError do
+      @gateway.transaction_search()
+    end
+  end
+
+  def test_build_transaction_search_request
+    options = {:start_date => Date.strptime('02/21/2012', '%m/%d/%Y'),
+      :end_date => Date.strptime('03/21/2012', '%m/%d/%Y'),
+      :receiver => 'foo@example.com',
+      :first_name => 'Robert'}
+    request = REXML::Document.new(@gateway.send(:build_transaction_search, options))
+    assert_equal '2012-02-21T05:00:00Z', REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/StartDate').text
+    assert_equal '2012-03-21T04:00:00Z', REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/EndDate').text
+    assert_equal 'foo@example.com', REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/Receiver').text
+  end
+
+  def test_build_reference_transaction_request
+    assert_raise ArgumentError do
+      @gateway.reference_transaction(100)
+    end
+    @gateway.reference_transaction(100, :reference_id => 'id')
+  end
+
+  def test_build_reference_transaction_gets_ip
+    request = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 
+                                                100, 
+                                                :reference_id => 'id', 
+                                                :ip => '127.0.0.1'))
+    assert_equal '100', REXML::XPath.first(request, '//n2:PaymentDetails/n2:OrderTotal').text
+    assert_equal 'id', REXML::XPath.first(request, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:ReferenceID').text
+    assert_equal '127.0.0.1', REXML::XPath.first(request, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:IPAddress').text
+  end
+
 end
