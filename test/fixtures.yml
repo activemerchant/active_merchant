@@ -10,6 +10,13 @@
 #
 # Paste any required PEM certificates after the pem key.  
 #
+
+anz_egate:
+  merchant_id: merchant id
+  access_code: access code
+  username: ama username
+  password: ama password
+
 authorize_net:
   login: X
   password: Y
