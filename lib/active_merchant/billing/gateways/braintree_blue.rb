@@ -100,24 +100,25 @@ module ActiveMerchant #:nodoc:
         customer_update_result = commit do
           braintree_credit_card = Braintree::Customer.find(vault_id).credit_cards.detect { |cc| cc.default? }
           return Response.new(false, 'Braintree::NotFoundError') if braintree_credit_card.nil?
-          result = Braintree::Customer.update(vault_id,
-            :first_name => creditcard.first_name,
-            :last_name => creditcard.last_name,
-            :email => options[:email]
-          )
-          Response.new(result.success?, message_from_result(result),
-            :braintree_customer => (customer_hash(Braintree::Customer.find(vault_id)) if result.success?)
-          )
-        end
-        return customer_update_result unless customer_update_result.success?
-        credit_card_update_result = commit do
-          result = Braintree::CreditCard.update(braintree_credit_card.token,
+
+          options.merge!(:update_existing_token => braintree_credit_card.token)
+          credit_card_params = merge_credit_card_options({
+            :credit_card => {
               :number => creditcard.number,
               :expiration_month => creditcard.month.to_s.rjust(2, "0"),
               :expiration_year => creditcard.year.to_s
+            }
+          }, options)[:credit_card]
+
+          result = Braintree::Customer.update(vault_id,
+            :first_name => creditcard.first_name,
+            :last_name => creditcard.last_name,
+            :email => options[:email],
+            :credit_card => credit_card_params
           )
           Response.new(result.success?, message_from_result(result),
-            :braintree_customer => (customer_hash(Braintree::Customer.find(vault_id)) if result.success?)
+            :braintree_customer => (customer_hash(Braintree::Customer.find(vault_id)) if result.success?),
+            :customer_vault_id => (result.customer.id if result.success?)
           )
         end
       end
@@ -135,7 +136,7 @@ module ActiveMerchant #:nodoc:
       def merge_credit_card_options(parameters, options)
         valid_options = {}
         options.each do |key, value|
-          valid_options[key] = value if [:verify_card, :verification_merchant_account_id].include?(key)
+          valid_options[key] = value if [:update_existing_token, :verify_card, :verification_merchant_account_id].include?(key)
         end
 
         parameters[:credit_card] ||= {}
@@ -166,6 +167,8 @@ module ActiveMerchant #:nodoc:
       def message_from_result(result)
         if result.success?
           "OK"
+        elsif result.errors.size == 0 && result.credit_card_verification
+          "Processor declined: #{result.credit_card_verification.processor_response_text} (#{result.credit_card_verification.processor_response_code})"
         else
           result.errors.map { |e| "#{e.message} (#{e.code})" }.join(" ")
         end
@@ -220,7 +223,8 @@ module ActiveMerchant #:nodoc:
         credit_cards = customer.credit_cards.map do |cc|
           {
             "bin" => cc.bin,
-            "expiration_date" => cc.expiration_date
+            "expiration_date" => cc.expiration_date,
+            "token" => cc.token
           }
         end
 
@@ -228,7 +232,8 @@ module ActiveMerchant #:nodoc:
           "email" => customer.email,
           "first_name" => customer.first_name,
           "last_name" => customer.last_name,
-          "credit_cards" => credit_cards
+          "credit_cards" => credit_cards,
+          "id" => customer.id
         }
       end
 
