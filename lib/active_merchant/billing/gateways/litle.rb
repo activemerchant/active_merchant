@@ -54,11 +54,10 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'USD'
 
-      attr_accessor :order_id
-
-      def initialize
+      def initialize(options = {})
         @litle = LitleOnlineRequest.new
-        @order_id = 'undefined'
+        requires!(options, :merchant_id, :user, :password, :version, :url)
+        @options = options
       end
 
       def authorize(money, creditcard, options = {})
@@ -219,27 +218,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def create_hash(money, options)
-        currency = options[:currency]
-        merchant_id = options[:merchant_id]
-        user=options[:user]
-        password=options[:password]
-        version=options[:version]
-        url=options[:url]
         fraud_check_type = {}
-        if !options[:ip].nil?
+        if options[:ip]
           fraud_check_type['customerIpAddress'] = options[:ip]
         end
 
         enhanced_data = {}
-        if !options[:invoice].nil?
+        if options[:invoice]
           enhanced_data['invoiceReferenceNumber'] = options[:invoice]
         end
 
-        if !options[:description].nil?
+        if options[:description]
           enhanced_data['customerReference'] = options[:description]
         end
 
-        if !options[:billing_address].nil?
+        if options[:billing_address]
           bill_to_address = {
             'name' => options[:billing_address][:name],
             'companyName' => options[:billing_address][:company],
@@ -253,7 +246,7 @@ module ActiveMerchant #:nodoc:
             'phone' => options[:billing_address][:phone]
           }
         end
-        if !options[:shipping_address].nil?
+        if options[:shipping_address]
           ship_to_address = {
             'name' => options[:shipping_address][:name],
             'companyName' => options[:shipping_address][:company],
@@ -271,19 +264,19 @@ module ActiveMerchant #:nodoc:
         hash = {
           'billToAddress' => bill_to_address,
           'shipToAddress' => ship_to_address,
-          'orderId' => (options[:order_id] or @order_id),
+          'orderId' => (options[:order_id] or @options[:order_id]),
           'customerId' => options[:customer],
-          'reportGroup' => (options[:merchant] or merchant_id),
-          'merchantId' => merchant_id,
+          'reportGroup' => (options[:merchant] or @options[:merchant]),
+          'merchantId' => (options[:merchant_id] or @options[:merchant_id]),
           'orderSource' => 'ecommerce',
           'enhancedData' => enhanced_data,
           'fraudCheckType' => fraud_check_type,
-          'user' => user,
-          'password' => password,
-          'version' => version,
-          'url' => url,
-          'proxy_addr' => options[:proxy_addr],
-          'proxy_port' => options[:proxy_port]
+          'user' => (options[:user] or @options[:user]),
+          'password' => (options[:password] or @options[:password]),
+          'version' => (options[:version] or @options[:version]),
+          'url' => (options[:url] or @options[:url]),
+          'proxy_addr' => (options[:proxy_addr] or @options[:proxy_addr]),
+          'proxy_port' => (options[:proxy_port] or @options[:proxy_port])
         }
 
         if( !money.nil? && money.to_s.length > 0 )

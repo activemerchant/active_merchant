@@ -3,17 +3,9 @@ require 'test_helper'
 class LitleTest < Test::Unit::TestCase
 
   def setup
-    @gateway = LitleGateway.new
-#    @gateway.configuration = {
-#      'currency_merchant_map' =>
-#      {
-#      'DEFAULT'=>'101',
-#      'USD'=>'101',
-#      'EUR'=>'102'
-#      }
-#    }
+    @gateway = LitleGateway.new({:merchant_id=>'101', :user=>'active', :password=>'merchant', :version=>'8.10', :url=>'https://www.testlitle.com/sandbox/communicator/online'})
   end
-
+  
   def test_create_credit_card_hash
     # define all inputs
     money = 1000
@@ -703,7 +695,7 @@ class LitleTest < Test::Unit::TestCase
     assert_equal false, responseFrom.success?
     assert_equal 'Error validating xml data against the schema', responseFrom.message
   end
-
+  
   class Hashit
     def initialize(hash)
       @original = hash
