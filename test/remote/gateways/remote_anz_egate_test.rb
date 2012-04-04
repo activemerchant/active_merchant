@@ -7,6 +7,9 @@ class RemoteAnzEgateTest < Test::Unit::TestCase
     
     @amount = 100
     
+    # ANZ eGate returns success/error codes via the cents value
+    @invalid_amount = 101
+    
     @credit_card = credit_card('5123456789012346', :month => 5, :year => 2013)
     @invalid_credit_card = credit_card('1234567812345678', :month => Time.now.month, :year => Time.now.year)
 
@@ -26,7 +29,7 @@ class RemoteAnzEgateTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_purchase
-    assert response = @gateway.purchase(101, @credit_card, @options)
+    assert response = @gateway.purchase(@invalid_amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Declined', response.message
   end

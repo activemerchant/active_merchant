@@ -5,11 +5,12 @@ module ActiveMerchant #:nodoc:
       VIRTUAL_PAYMENT_CLIENT_API_VERION = 1
       
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['US']
+      self.supported_countries = ['AU']
       
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
-
+      
+      # Money format
       self.money_format = :cents
       
       # The homepage URL of the gateway
@@ -18,7 +19,6 @@ module ActiveMerchant #:nodoc:
       # The name of the gateway
       self.display_name = 'ANZ eGate'
 
-            
       def initialize(options = {})
         requires!(options, :merchant_id, :access_code)
         @options = options
@@ -35,19 +35,22 @@ module ActiveMerchant #:nodoc:
              
         commit('pay', post)
       end                       
-    
+      
+      # credit and query both require your merchant account
+      # to have the AMA feature enabled, and a user account
+      # created which can access the AMA features.
       def credit(money, identification, options = {})
         requires!(options, :username, :password, :order_id)
-        params = {}
-        add_transaction_id(params, options)
-        add_identification(params, identification)
-        add_username_password(params, options)
-        add_amount(params, money)
-        commit('refund', params)
+        post = {}
+        add_transaction_id(post, options)
+        add_identification(post, identification)
+        add_username_password(post, options)
+        add_amount(post, money)
+        commit('refund', post)
       end
       
       def query(options = {})
-        requires!(options, :order_id)
+        requires!(options, :username, :password, :order_id)
         post = {}
         add_transaction_id(post, options)
         add_username_password(post, options)
@@ -55,12 +58,6 @@ module ActiveMerchant #:nodoc:
       end
     
       private                       
-      
-      def add_customer_data(post, options)
-      end
-
-      def add_address(post, creditcard, options)      
-      end
 
       def add_invoice(post, options)
         return post.merge!(:vpc_TicketNo  => options[:invoice], 
@@ -88,8 +85,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_identification(post, identification)
-        return post.merge!(:vpc_TransactionNo => identification,
-                           :vpc_TransNo => identification)
+        return post.merge!(:vpc_TransNo => identification)
       end
 
       def post_data(action, parameters)
