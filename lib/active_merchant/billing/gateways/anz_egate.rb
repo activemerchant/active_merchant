@@ -49,14 +49,6 @@ module ActiveMerchant #:nodoc:
         commit('refund', post)
       end
       
-      def query(options = {})
-        requires!(options, :username, :password, :order_id)
-        post = {}
-        add_transaction_id(post, options)
-        add_username_password(post, options)
-        commit('queryDR', post)
-      end
-    
       private                       
 
       def add_invoice(post, options)

@@ -89,34 +89,4 @@ class RemoteAnzEgateTest < Test::Unit::TestCase
     assert_failure refund
     assert_match %r{E5000: Username and/or password for (.*?) is invalid.}, refund.message
   end
-
-  def test_query
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-
-    options = { 
-      :order_id => @options[:order_id],
-      :username => fixtures(:anz_egate)[:username],
-      :password => fixtures(:anz_egate)[:password]
-    }
-
-    query = @gateway.query(options)
-    assert_success query
-    assert_equal 'Y', query.params['vpc_DRExists']
-  end
-
-  def test_query_does_not_exist
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-
-    options = { 
-      :order_id => 'DOESNOTEXIST',
-      :username => fixtures(:anz_egate)[:username],
-      :password => fixtures(:anz_egate)[:password]
-    }
-
-    query = @gateway.query(options)
-    assert_failure query
-    assert_equal 'N', query.params["vpc_DRExists"]
-  end
 end
