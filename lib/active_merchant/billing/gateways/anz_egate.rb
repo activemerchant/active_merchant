@@ -60,15 +60,15 @@ module ActiveMerchant #:nodoc:
       private                       
 
       def add_invoice(post, options)
-        return post.merge!(:vpc_TicketNo  => options[:invoice], 
-                           :vpc_OrderInfo => options[:invoice])
+        post.merge!(:vpc_TicketNo  => options[:invoice], 
+                    :vpc_OrderInfo => options[:invoice])
       end
       
       def add_creditcard(post, creditcard)
         expiry = "#{creditcard.year.to_s[-2,2]}#{sprintf("%.2i", creditcard.month)}"
-        return post.merge!(:vpc_CardNum => creditcard.number,
-                           :vpc_CardSecurityCode => creditcard.verification_value,
-                           :vpc_CardExp => "#{expiry}")
+        post.merge!(:vpc_CardNum => creditcard.number,
+                    :vpc_CardSecurityCode => creditcard.verification_value,
+                    :vpc_CardExp => "#{expiry}")
       end
 
       def add_amount(post, money)
@@ -76,23 +76,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_transaction_id(post, options)
-        return post.merge!(:vpc_MerchTxnRef => options[:order_id])
+        post.merge!(:vpc_MerchTxnRef => options[:order_id])
       end
 
       def add_username_password(post, options)
-        return post.merge!(:vpc_User     => options[:username],
-                           :vpc_Password => options[:password])
+        post.merge!(:vpc_User     => options[:username],
+                    :vpc_Password => options[:password])
       end
 
       def add_identification(post, identification)
-        return post.merge!(:vpc_TransNo => identification)
+        post.merge!(:vpc_TransNo => identification)
       end
 
       def post_data(action, parameters)
-        return parameters.merge(:vpc_Version      => VIRTUAL_PAYMENT_CLIENT_API_VERION,
-                                :vpc_AccessCode   => @options[:access_code],
-                                :vpc_Merchant     => @options[:merchant_id],
-                                :vpc_Command      => action).to_query
+        parameters.merge(:vpc_Version      => VIRTUAL_PAYMENT_CLIENT_API_VERION,
+                         :vpc_AccessCode   => @options[:access_code],
+                         :vpc_Merchant     => @options[:merchant_id],
+                         :vpc_Command      => action).to_query
       end
 
       def parse(body)
