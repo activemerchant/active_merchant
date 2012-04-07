@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Add Litle gateway [GregDrake]
+* PaymentExpress gateway: add support for BillingId and DpsBillingId for token [mikel]
 
 == Version 1.22.0 (May 17, 2012)
 
@@ -668,7 +669,7 @@
 * Fix errors on base of CreditCard [josh.bassett]
 * Update product to use Rubigen instead of stolen Rails generator [cody]
 * Mimic directory structure of unit tests in remote tests [cody]
-* Restructure the location of the remote tests [cody] 
+* Restructure the location of the remote tests [cody]
 * Ensure DataCash order_id is limited to 30 characters [cody]
 * Return the pretty messages from PayJunction based on the return code [cody]
 * make CreditCard.require_verification_value = true the default [cody]
@@ -734,7 +735,7 @@
 * Enhance credit card error messages [manfred]
 * Use HashWithIndifferentAccess for CreditCard for compatibility with Rails applications [michael.j.mangino]
 * Fix nil exception when no response reason text is found in Authorize.net [cody]
-* Add support for PayJunction [Matt Sanders] 
+* Add support for PayJunction [Matt Sanders]
 * Change billing_address to shipping_address in PayPal Integration helper, as billing_address was incorrect.  Addresses passed to billing_address for the PayPal helper will no longer be added to the form. This will break existing code, as the address will not be passed.
 * Remove switch patterns from card detection that were eliminated on July 1, 2007 [cody]
 * Format the issue number in Payflow requests to always be 2 digits [cody]
@@ -772,7 +773,7 @@
 * Update and test PslCardGateway [cody]
 * Add Laser card type [cody]
 * Update Nochex documentation [cody]
-* Sanitize the Realex order_id [cody] 
+* Sanitize the Realex order_id [cody]
 * Add support for Irish Realex payment gateway [John Ward, cody]
 * Move credit_card helper method to the test_helper [cody]
 * Update PayflowExpressResponse to match the interface of the PayflowExpressResponse.  Add :no_shipping and :address_override options to PayflowExpress [cody]
@@ -830,7 +831,7 @@
 * Update DataCash tests and format merchant reference number to meet DataCash's requirements [MoneySpyder, cody]
 * Add Datacash gateway [MoneySpyder, cody]
 * VERIFY_PEER on all SSL requests [cody]
-* Add support for 2Checkout [cody] 
+* Add support for 2Checkout [cody]
 
 == Version 1.0.3
 
@@ -861,7 +862,7 @@
 * Moneris now uses the same layout as the authorized.net plugin
 * Added authorized.net
 * Changed default to :test mode. Set to production with ActiveMerchant::Billing::Base.gateway_mode = :production
-* More refactoring 
+* More refactoring
 * Refactored a bit so that there is space for billing and shipping area. None of the shipping aids are fleshed out yet. Needs more work.
 * Added Moneris support
 * Credit card in memory object resembling a AR object
