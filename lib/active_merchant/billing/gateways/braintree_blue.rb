@@ -146,15 +146,24 @@ module ActiveMerchant #:nodoc:
 
       def map_address(address)
         return {} if address.nil?
-        {
+        mapped = {
           :street_address => address[:address1],
           :extended_address => address[:address2],
           :company => address[:company],
           :locality => address[:city],
           :region => address[:state],
           :postal_code => address[:zip],
-          :country_name => address[:country]
         }
+        if(address[:country] || address[:country_code_alpha2])
+          mapped[:country_code_alpha2] = (address[:country] || address[:country_code_alpha2])
+        elsif address[:country_name]
+          mapped[:country_name] = address[:country_name]
+        elsif address[:country_code_alpha3]
+          mapped[:country_code_alpha3] = address[:country_code_alpha3]
+        elsif address[:country_code_numeric]
+          mapped[:country_code_numeric] = address[:country_code_numeric]
+        end
+        mapped
       end
 
       def commit(&block)

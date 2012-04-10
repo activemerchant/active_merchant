@@ -185,7 +185,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
           :locality => "Chicago",
           :region => "Illinois",
           :postal_code => "60622",
-          :country_name => "US"
+          :country_code_alpha2 => "US"
         },
         :options => {}
       }
@@ -203,6 +203,33 @@ class BraintreeBlueTest < Test::Unit::TestCase
       }
     }
     assert_equal expected_params, @gateway.send(:merge_credit_card_options, params, options)
+  end
+
+  def test_address_country_handling
+    Braintree::Transaction.expects(:sale).with do |params|
+      (params[:billing][:country_code_alpha2] == "US")
+    end.returns(braintree_result)
+    @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:country => "US"})
+
+    Braintree::Transaction.expects(:sale).with do |params|
+      (params[:billing][:country_code_alpha2] == "US")
+    end.returns(braintree_result)
+    @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:country_code_alpha2 => "US"})
+
+    Braintree::Transaction.expects(:sale).with do |params|
+      (params[:billing][:country_name] == "United States of America")
+    end.returns(braintree_result)
+    @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:country_name => "United States of America"})
+
+    Braintree::Transaction.expects(:sale).with do |params|
+      (params[:billing][:country_code_alpha3] == "USA")
+    end.returns(braintree_result)
+    @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:country_code_alpha3 => "USA"})
+
+    Braintree::Transaction.expects(:sale).with do |params|
+      (params[:billing][:country_code_numeric] == 840)
+    end.returns(braintree_result)
+    @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:country_code_numeric => 840})
   end
 
   private
