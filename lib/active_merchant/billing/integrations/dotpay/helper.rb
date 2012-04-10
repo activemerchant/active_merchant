@@ -17,6 +17,7 @@ module ActiveMerchant #:nodoc:
           end
 
           mapping :account,         'id'
+          mapping :amount,          'amount'
 
           mapping :billing_address, :street => 'street',
                                     :street_n1 => 'street_n1',

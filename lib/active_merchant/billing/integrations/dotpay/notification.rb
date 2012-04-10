@@ -5,13 +5,6 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Dotpay
         class Notification < ActiveMerchant::Billing::Integrations::Notification
-          def initialize(data, options = {})
-            if options[:pin].nil?
-              raise ArgumentError, "You need to provide the notification PIN as the option :pin to verify that the notification originated from Dotpay"
-            end
-            super
-          end
-
           def complete?
             status == 'OK' && %w(2 4 5).include?(t_status)
           end
@@ -25,8 +18,16 @@ module ActiveMerchant #:nodoc:
             params['amount']
           end
 
+          def pin=(value)
+            @options[:pin] = value
+          end
+
           def status
             params['status']
+          end
+
+          def test?
+            params['t_id'].match('.*-TST\d+') ? true : false
           end
 
           PAYMENT_HOOK_FIELDS = [
