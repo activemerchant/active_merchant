@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       TEST_URL = 'https://secure2.mde.epdq.co.uk:11500'
       LIVE_URL = 'https://secure2.epdq.co.uk:11500'
 
-      self.supported_countries = ['UK']
+      self.supported_countries = ['GB']
       self.default_currency = 'GBP'
       self.supported_cardtypes = [:visa, :master, :maestro, :switch ]
       self.money_format = :cents
