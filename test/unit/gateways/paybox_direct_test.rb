@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'test_helper'
 
 class PayboxDirectTest < Test::Unit::TestCase
@@ -30,6 +32,7 @@ class PayboxDirectTest < Test::Unit::TestCase
     # Replace with authorization number from the successful response
     assert_equal response.params['numappel'].to_s + response.params['numtrans'], response.authorization
     assert_equal 'XXXXXX', response.params['autorisation']
+    assert_equal "The transaction was approved", response.message
     assert response.test?
   end
 
@@ -52,6 +55,7 @@ class PayboxDirectTest < Test::Unit::TestCase
     
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+    assert_equal "Demande trait?e avec succ?s ✔漢", response.message
     assert response.test?
   end
 
@@ -64,11 +68,11 @@ class PayboxDirectTest < Test::Unit::TestCase
   
   # Place raw successful response from gateway here
   def successful_purchase_response
-    'NUMTRANS=0720248861&NUMAPPEL=0713790302&NUMQUESTION=0000790217&SITE=1999888&RANG=99&AUTORISATION=XXXXXX&CODEREPONSE=00000&COMMENTAIRE=Demande trait?e avec succ?s'
+    'NUMTRANS=0720248861&NUMAPPEL=0713790302&NUMQUESTION=0000790217&SITE=1999888&RANG=99&AUTORISATION=XXXXXX&CODEREPONSE=00000&COMMENTAIRE=Demande trait?e avec succ?s ✔漢'
   end
   
   # Place raw failed response from gateway here
   def failed_purchase_response
-    'NUMTRANS=0000000000&NUMAPPEL=0000000000&NUMQUESTION=0000000000&SITE=1999888&RANG=99&AUTORISATION=&CODEREPONSE=00014'
+    'NUMTRANS=0000000000&NUMAPPEL=0000000000&NUMQUESTION=0000000000&SITE=1999888&RANG=99&AUTORISATION=&CODEREPONSE=00014&COMMENTAIRE=Demande trait?e avec succ?s ✔漢'
   end
 end
