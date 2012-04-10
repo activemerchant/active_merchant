@@ -1,5 +1,30 @@
 = ActiveMerchant CHANGELOG
 
+* Remove version restriction for money gem [ylansegal]
+* Add iTransact XML gateway [motske]
+* PayPal Express Gateway: add options[:landing_page] [markus]
+* USA ePay: Fix handling of AVS [duff]
+* Ogone: Add store method to create an alias without making a purchase [joelcogen]
+* Spelling fix: purcahse -> purchase [mnoack]
+* ePay: Added more useful results for authorization errors [Dennis O'Connor]
+* Add Robokassa integration [nashby]
+* PayPal Gateway: Add recurring API [dscataglini]
+* Braintree: Add support for :verify_card option on store [brentmc79]
+* Moneris: cannot void a preauthorization [eddanger]
+* Add Moneris US gateway [eddanger]
+* Add Dotpay integration [kacperix]
+* Payflow: Add description, comment and comment2 tags [ksnyder]
+* Dotpay: Fix field mapping [kacperix]
+* Authorize.Net CIM: Optionally add 'order' details to transactions [pote]
+* Braintree: Allow including billing address when storing a customer [brentmc79]
+* PayPal Gateway: Refactored PaymentDetails & PaymentDetailsItem common code [dscataglini]
+* Viaklix/Elavon: Separate "demo accounts" from "test transactions" [mltsy]
+* PayPal Gateway: Add transaction_details, balance, authorize_transaction, and manage_pending_transaction API calls [dscataglini]
+* PayPal Gateway: Add support for TransactionSearch & DoReferenceTransaction [dscataglini]
+* Cybersource: Add recurring payment support [jaredmoory]
+* Tidy up gateway lists [ashokak]
+* Paybox: remove Iconv usage [ntalbott]
+
 == Version 1.21.0 (March 7, 2012)
 
 * Stripe: Add support for passing IP [collision]
@@ -28,6 +53,13 @@
 * Viaklix: Add discover as a supported card type [waelchatila]
 * Improvements to testing infrastructure for integrations [jduff]
 * Add NAB Transact (AU) Gateway [tommeier]
+* PayPal Express: Add Support for Reference Transactions using BAIDs [kenmazaika]
+* Authorize.Net CIM: Add support for optional refund fields [nilmethod]
+* SecurePayTech: Fix EnableCSC parameter so CVV codes are checked. [tlconnor]
+* SecurePayTech: Add remote tests for CSC checking. [tlconnor]
+* Samurai: Add option to retain payment methods once stored [brentmc79]
+* PayPal Express Gateway: Add support for Digital Goods / Micropayments [kenmazaika]
+
 
 == Version 1.20.4 (February 22, 2012)
 
