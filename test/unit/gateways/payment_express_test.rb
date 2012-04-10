@@ -102,7 +102,7 @@ class PaymentExpressTest < Test::Unit::TestCase
     @gateway = PaymentExpressGateway.new(
       :login => 'LOGIN',
       :password => 'PASSWORD',
-      :use_billing_id_for_token => true
+      :use_custom_payment_token => true
     )
 
     @gateway.expects(:ssl_post).returns( successful_store_response({:billing_id => 'TEST1234'}) )

@@ -21,11 +21,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.paymentexpress.com/'
       self.display_name = 'PaymentExpress'
       
-      # Use "BillingId" for the Token type.  If set to false, then the token will be sent
-      # as the DPS specified "DpsBillingId".  This is per the documentation at
-      # http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#Tokenbilling
-      attr_accessor :use_billing_id_for_token
-      alias :use_billing_id_for_token? :use_billing_id_for_token
+      attr_reader :use_custom_payment_token
+      alias :use_custom_payment_token? :use_custom_payment_token
 
       URL = 'https://sec.paymentexpress.com/pxpost.aspx'
       
@@ -41,8 +38,12 @@ module ActiveMerchant #:nodoc:
       
       # We require the DPS gateway username and password when the object is created.
       def initialize(options = {})
-        # A DPS username and password must exist 
+        # A DPS username and password must exist
         requires!(options, :login, :password)
+        # Use "BillingId" for the Token type.  If set to false, then the token will be sent
+        # as the DPS specified "DpsBillingId".  This is per the documentation at
+        # http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#Tokenbilling
+        @use_custom_payment_token = !!options[:use_custom_payment_token]
         # Make the options an instance variable
         @options = options
         super
@@ -107,14 +108,14 @@ module ActiveMerchant #:nodoc:
       # Firstly, pass in a `:billing_id` as an option in the hash of this store method.  No
       # validation is done on this BillingId by PaymentExpress so you must ensure that it is unique.
       #
-      # Secondly, you will need to pass in the option `{:use_billing_id_for_token => true}` when
+      # Secondly, you will need to pass in the option `{:use_custom_payment_token => true}` when
       # initializing your gateway instance, like so:
       #
       #     gateway = ActiveMerchant::Billing::PaymentExpressGateway.new(
       #       :login    => 'USERNAME',
-      #       :password => 'PASSWORD'
+      #       :password => 'PASSWORD',
+      #       :use_custom_payment_token => true
       #     )
-      #     gateway.use_billing_id_for_token = true
       #
       # see: http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#Tokenbilling
       #
@@ -183,7 +184,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_billing_token(xml, token)
-        if use_billing_id_for_token?
+        if use_custom_payment_token?
           xml.add_element("BillingId").text = token
         else
           xml.add_element("DpsBillingId").text = token
