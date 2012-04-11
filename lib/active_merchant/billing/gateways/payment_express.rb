@@ -108,6 +108,8 @@ module ActiveMerchant #:nodoc:
       # Firstly, pass in a `:billing_id` as an option in the hash of this store method.  No
       # validation is done on this BillingId by PaymentExpress so you must ensure that it is unique.
       #
+      #     gateway.store(credit_card, {:billing_id => 'YourUniqueBillingId'})
+      #
       # Secondly, you will need to pass in the option `{:use_custom_payment_token => true}` when
       # initializing your gateway instance, like so:
       #
