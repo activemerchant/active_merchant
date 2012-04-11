@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc:
                   xml.tag! 'PayPeriod', get_pay_period(options)
                   xml.tag! 'Term', options[:payments] unless options[:payments].nil?
                   xml.tag! 'Comment', options[:comment] unless options[:comment].nil?
-                
+                  xml.tag! 'RetryNumDays', options[:retry_num_days] unless options[:retry_num_days].nil?
                 
                   if initial_tx = options[:initial_transaction]
                     requires!(initial_tx, [:type, :authorization, :purchase])
