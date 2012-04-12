@@ -11,7 +11,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
 
     @options = {
       :order_id => '1',
-      :billing_address => address(:country => "United States of America"),
+      :billing_address => address(:country_name => "United States of America"),
       :description => 'Store Purchase'
     }
   end
@@ -106,7 +106,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       :city => "Chicago",
       :state => "Illinois",
       :zip => "60622",
-      :country_name => "US"
+      :country_name => "United States of America"
     }
     credit_card = credit_card('5105105105105100')
     assert response = @gateway.store(credit_card, :billing_address => billing_address)
@@ -116,7 +116,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     vault_id = response.params['customer_vault_id']
     purchase_response = @gateway.purchase(@amount, vault_id)
     response_billing_details = {
-      "country_name"=>nil,
+      "country_name"=>"United States of America",
       "region"=>"Illinois",
       "company"=>nil,
       "postal_code"=>"60622",
@@ -229,7 +229,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       :city => 'Chicago',
       :state => 'IL',
       :zip => '60622',
-      :country => 'United States of America'
+      :country_name => 'United States of America'
     }
     shipping_address = {
       :address1 => '1 W Main St',
@@ -238,7 +238,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
       :city => 'Bartlett',
       :state => 'Illinois',
       :zip => '60103',
-      :country => 'Mexico'
+      :country_name => 'Mexico'
     }
     assert response = @gateway.purchase(@amount, @credit_card,
       :billing_address => billing_address,
