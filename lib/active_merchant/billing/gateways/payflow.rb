@@ -207,8 +207,13 @@ module ActiveMerchant #:nodoc:
                     xml.tag! 'OptionalTrans', TRANSACTIONS[initial_tx[:type]]
                     xml.tag! 'OptionalTransAmt', amount(initial_tx[:amount]) unless initial_tx[:amount].blank?
                   end
-                
-                  xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1 )
+                  
+                  if action == :add
+                    xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1 )
+                  else
+                    xml.tag! 'Start', format_rp_date(options[:starting_at]) unless options[:starting_at].nil?
+                  end
+                  
                   xml.tag! 'EMail', options[:email] unless options[:email].nil?
                   
                   billing_address = options[:billing_address] || options[:address]
