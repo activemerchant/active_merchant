@@ -54,7 +54,8 @@ module ActiveMerchant #:nodoc:
           # One possible scenario is that our web application was down. In this case paypal tries several 
           # times an hour to inform us about the notification
           def received_at
-            Time.parse params['payment_date']
+            parsed_time_fields = DateTime._strptime(params['payment_date'], "%H:%M:%S %b %d, %Y %z")
+            Time.mktime(*parsed_time_fields.values_at(:year, :mon, :mday, :hour, :min, :sec, :zone))
           end
 
           # Status of transaction. List of possible values:
