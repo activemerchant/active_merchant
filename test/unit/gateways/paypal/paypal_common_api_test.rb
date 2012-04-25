@@ -134,13 +134,13 @@ class PaypalCommonApiTest < Test::Unit::TestCase
   end
 
   def test_build_transaction_search_request
-    options = { :start_date => Time.new(2012,2,21,0,0,0, "-05:00"),
-                :end_date => Time.new(2012,3,21,0,0,0, "-04:00"),
-                :receiver => 'foo@example.com',
-                :first_name => 'Robert'}
+    options = {:start_date => Date.strptime('02/21/2012', '%m/%d/%Y'),
+      :end_date => Date.strptime('03/21/2012', '%m/%d/%Y'),
+      :receiver => 'foo@example.com',
+      :first_name => 'Robert'}
     request = REXML::Document.new(@gateway.send(:build_transaction_search, options))
-    assert_equal '2012-02-21T05:00:00Z', REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/StartDate').text
-    assert_equal '2012-03-21T04:00:00Z', REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/EndDate').text
+    assert_match %r{^2012-02-21T\d{2}:00:00Z$}, REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/StartDate').text
+    assert_match %r{^2012-03-21T\d{2}:00:00Z$}, REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/EndDate').text
     assert_equal 'foo@example.com', REXML::XPath.first(request, '//TransactionSearchReq/TransactionSearchRequest/Receiver').text
   end
 
