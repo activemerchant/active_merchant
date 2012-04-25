@@ -52,6 +52,20 @@ module ActiveMerchant #:nodoc:
             add_field(mappings[:customer][:phone], params[:phone])
             add_field('card_holder_name', "#{params[:first_name]} #{params[:last_name]}")
           end
+          
+          def line_item(params = {})
+            max_existing_line_item_id = form_fields.keys.map do |key| 
+              match = key.to_s.match(/li_(\d+)_/)
+              if match
+                match[1]
+              end
+            end.reject(&:nil?).max.to_i
+            
+            line_item_id = max_existing_line_item_id + 1
+            params.each do |key, value|
+              add_field("li_#{line_item_id}_#{key}", value)
+            end
+          end
         end
       end
     end
