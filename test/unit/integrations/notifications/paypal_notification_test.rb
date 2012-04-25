@@ -71,15 +71,12 @@ class PaypalNotificationTest < Test::Unit::TestCase
   end
   
   def test_nil_notification
-    notification = Paypal::Notification.new(nil)
-    
     Paypal::Notification.any_instance.stubs(:ssl_post).returns('INVALID')
     assert !@paypal.acknowledge
   end
 
   def test_received_at_time_parsing
-    paid_at = "15/04/2005 15:23:54 -0400"
-    assert_equal paid_at, @paypal.received_at.strftime("%d/%m/%Y %H:%M:%S %z")
+    assert_match %r{15/04/2005 15:23:54 [\-+]\d{4}}, @paypal.received_at.strftime("%d/%m/%Y %H:%M:%S %z")
   end
   
   private
