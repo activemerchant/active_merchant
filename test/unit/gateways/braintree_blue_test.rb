@@ -86,14 +86,14 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_store_with_verify_card_true
-    customer_attributes = {
+    customer = mock(
       :credit_cards => [],
       :email => 'email',
       :first_name => 'John',
-      :last_name => 'Smith',
-      :id => "123"
-    }
-    result = Braintree::SuccessfulResult.new(:customer => mock(customer_attributes))
+      :last_name => 'Smith'
+    )
+    customer.stubs(:id).returns('123')
+    result = Braintree::SuccessfulResult.new(:customer => customer)
     Braintree::Customer.expects(:create).with do |params|
       params[:credit_card][:options].has_key?(:verify_card)
       assert_equal true, params[:credit_card][:options][:verify_card]
@@ -104,14 +104,14 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_store_with_verify_card_false
-    customer_attributes = {
+    customer = mock(
       :credit_cards => [],
       :email => 'email',
       :first_name => 'John',
-      :last_name => 'Smith',
-      :id => "123"
-    }
-    result = Braintree::SuccessfulResult.new(:customer => mock(customer_attributes))
+      :last_name => 'Smith'
+    )
+    customer.stubs(:id).returns('123')
+    result = Braintree::SuccessfulResult.new(:customer => customer)
     Braintree::Customer.expects(:create).with do |params|
       params[:credit_card][:options].has_key?(:verify_card)
       assert_equal false, params[:credit_card][:options][:verify_card]
@@ -126,8 +126,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       :credit_cards => [],
       :email => 'email',
       :first_name => 'John',
-      :last_name => 'Smith',
-      :id => "123"
+      :last_name => 'Smith'
     }
     billing_address = {
       :address1 => "1 E Main St",
@@ -137,7 +136,9 @@ class BraintreeBlueTest < Test::Unit::TestCase
       :zip => "60622",
       :country_name => "US"
     }
-    result = Braintree::SuccessfulResult.new(:customer => mock(customer_attributes))
+    customer = mock(customer_attributes)
+    customer.stubs(:id).returns('123')
+    result = Braintree::SuccessfulResult.new(:customer => customer)
     Braintree::Customer.expects(:create).with do |params|
       assert_not_nil params[:credit_card][:billing_address]
       [:street_address, :extended_address, :locality, :region, :postal_code, :country_name].each do |billing_attribute|
