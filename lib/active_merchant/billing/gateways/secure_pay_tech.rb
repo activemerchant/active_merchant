@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
         post[:CardHolderName] = creditcard.name
         
         if creditcard.verification_value?
-          post[:EnableCSC] = 1
+          post[:EnableCSC] = true
           post[:CSC] = creditcard.verification_value
         end
 

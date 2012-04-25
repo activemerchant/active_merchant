@@ -2,6 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module BeanstreamCore
       URL = 'https://www.beanstream.com/scripts/process_transaction.asp'
+      RECURRING_URL = 'https://www.beanstream.com/scripts/recurring_billing.asp'
       SECURE_PROFILE_URL = 'https://www.beanstream.com/scripts/payment_profile.asp'
       SP_SERVICE_VERSION = '1.1'
 
@@ -37,6 +38,27 @@ module ActiveMerchant #:nodoc:
         '9' => 'I'
       }
       
+      PERIODS = {
+        :days   => 'D',
+        :weeks  => 'W',
+        :months => 'M',
+        :years  => 'Y'
+      }
+
+      PERIODICITIES = {
+        :daily     => [:days, 1],
+        :weekly    => [:weeks, 1],
+        :biweekly  => [:weeks, 2],
+        :monthly   => [:months, 1],
+        :bimonthly => [:months, 2],
+        :yearly    => [:years, 1]
+      }
+
+      RECURRING_OPERATION = {
+        :update => 'M',
+        :cancel => 'C'
+      }
+
       def self.included(base)
         base.default_currency = 'CAD'
 
@@ -207,11 +229,66 @@ module ActiveMerchant #:nodoc:
         post[:status] = options[:status]
       end
       
+      def add_recurring_amount(post, money)
+        post[:amount] = amount(money)
+      end
+
+      def add_recurring_invoice(post, options)
+        post[:rbApplyTax1] = options[:apply_tax1]
+      end
+
+      def add_recurring_operation_type(post, operation)
+        post[:operationType] = RECURRING_OPERATION[operation]
+      end
+
+      def add_recurring_service(post, options)
+        post[:serviceVersion] = '1.0'
+        post[:merchantId]     = @options[:login]
+        post[:passCode]       = @options[:recurring_api_key]
+        post[:rbAccountId]    = options[:account_id]
+      end
+
+      def add_recurring_type(post, options)
+        # XXX requires!
+        post[:trnRecurring] = 1
+        period, increment = interval(options)
+        post[:rbBillingPeriod] = PERIODS[period]
+        post[:rbBillingIncrement] = increment
+
+        if options.include? :start_date
+          post[:rbCharge] = 0
+          post[:rbFirstBilling] = options[:start_date].strftime('%m%d%Y')
+        end
+
+        if count = options[:occurrences] || options[:payments]
+          post[:rbExpiry] = (options[:start_date] || Date.current).advance(period => count).strftime('%m%d%Y')
+        end
+      end
+
+      def interval(options)
+        if options.include? :periodicity
+          requires!(options, [:periodicity, *PERIODICITIES.keys])
+          PERIODICITIES[options[:periodicity]]
+        elsif options.include? :interval
+          interval = options[:interval]
+          if interval.respond_to? :parts
+            parts = interval.parts
+            raise ArgumentError.new("Cannot recur with mixed interval (#{interval}). Use only one of: days, weeks, months or years") if parts.length > 1
+            parts.first
+          elsif interval.kind_of? Hash
+            requires!(interval, :unit)
+            unit, length = interval.values_at(:unit, :length)
+            length ||= 1
+            [unit, length]
+          end
+        end
+      end
+
       def parse(body)
         results = {}
         if !body.nil?
           body.split(/&/).each do |pair|
-            key,val = pair.split(/=/)
+            key, val = pair.split(/=/)
             results[key.to_sym] = val.nil? ? nil : CGI.unescape(val)
           end
         end
@@ -225,11 +302,22 @@ module ActiveMerchant #:nodoc:
         
         results
       end
-      
+
+      def recurring_parse(data)
+        REXML::Document.new(data).root.elements.to_a.inject({}) do |response, element|
+          response[element.name.to_sym] = element.text
+          response
+        end
+      end
+
       def commit(params, use_profile_api = false)
         post(post_data(params,use_profile_api),use_profile_api)
       end
       
+      def recurring_commit(params)
+        recurring_post(post_data(params, false))
+      end
+
       def post(data, use_profile_api=nil)
         response = parse(ssl_post((use_profile_api ? SECURE_PROFILE_URL : URL), data))
         response[:customer_vault_id] = response[:customerCode] if response[:customerCode]
@@ -240,7 +328,12 @@ module ActiveMerchant #:nodoc:
           :avs_result => { :code => (AVS_CODES.include? response[:avsId]) ? AVS_CODES[response[:avsId]] : response[:avsId] }
         )
       end
-            
+      
+      def recurring_post(data)
+        response = recurring_parse(ssl_post(RECURRING_URL, data))
+        build_response(recurring_success?(response), recurring_message_from(response), response)
+      end
+
       def authorization_from(response)
         "#{response[:trnId]};#{response[:trnAmount]};#{response[:trnType]}"
       end
@@ -249,10 +342,18 @@ module ActiveMerchant #:nodoc:
         response[:messageText] || response[:responseMessage]
       end
 
+      def recurring_message_from(response)
+        response[:message]
+      end
+
       def success?(response)
         response[:responseType] == 'R' || response[:trnApproved] == '1' || response[:responseCode] == '1'
       end
       
+      def recurring_success?(response)
+        response[:code] == '1'
+      end
+
       def add_source(post, source)
         if source.is_a?(String) or source.is_a?(Integer)
           post[:customerCode] = source
@@ -280,6 +381,7 @@ module ActiveMerchant #:nodoc:
         
         params.reject{|k, v| v.blank?}.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
+
     end
   end
 end

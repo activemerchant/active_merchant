@@ -46,7 +46,9 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_success response
     assert response.authorization
     
-    void = @gateway.void(response.authorization)
+    # Moneris cannot void a preauthorization
+    # You must capture the auth transaction with an amount of $0.00
+    void = @gateway.capture(0, response.authorization)
     assert_success void
   end
   

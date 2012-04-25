@@ -59,6 +59,7 @@ module ActiveMerchant #:nodoc:
         add_creditcard(form, creditcard)        
         add_address(form, options)   
         add_customer_data(form, options)
+        add_test_mode(form, options)
         commit(:authorize, money, form)
       end
       
@@ -77,6 +78,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(form, options)
         add_creditcard(form, options[:credit_card])
         add_customer_data(form, options)
+        add_test_mode(form, options)
         commit(:capture, money, form)
       end
       

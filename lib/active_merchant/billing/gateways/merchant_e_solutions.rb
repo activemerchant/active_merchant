@@ -90,6 +90,7 @@ module ActiveMerchant #:nodoc:
 				if creditcard_or_card_id.is_a?(String)  
 					# using stored card
 					post[:card_id] = creditcard_or_card_id
+					post[:card_exp_date] = options[:expiration_date] if options[:expiration_date]
 				else
 					# card info is provided
 					add_creditcard(post, creditcard_or_card_id, options)

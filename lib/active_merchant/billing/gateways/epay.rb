@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
       # login: merchant number
       # password: referrer url (for authorize authentication)
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, :login)
         @options = options
         super
       end
@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
 
       def do_authorize(params)
         headers = {}
-        headers['Referer'] = options[:password] if options[:password]
+        headers['Referer'] = (options[:password] || "activemerchant.org")
 
         response = raw_ssl_request(:post, 'https://' + API_HOST + '/auth/default.aspx', authorize_post_data(params), headers)
 
@@ -192,7 +192,9 @@ module ActiveMerchant #:nodoc:
         else
           return {
             'accept' => '0',
-            'errortext' => 'No Location header returned.'
+            'errortext' => 'ePay did not respond as expected. Please try again.',
+            'response_code' => response.code,
+            'response_message' => response.message
           }
         end
 

@@ -1,26 +1,7 @@
 require 'test_helper'
 
 class ActionViewHelperTest < Test::Unit::TestCase
-  include ActiveMerchant::Billing::Integrations::ActionViewHelper
-  include ActionView::Helpers::FormHelper
-  include ActionView::Helpers::FormTagHelper
-  include ActionView::Helpers::UrlHelper
-  include ActionView::Helpers::TagHelper
-  include ActionView::Helpers::CaptureHelper
-  include ActionView::Helpers::TextHelper
-
-  attr_accessor :output_buffer
-
-  def setup
-    @controller = Class.new do
-      attr_reader :url_for_options
-      def url_for(options, *parameters_for_method_reference)
-        @url_for_options = options
-      end      
-    end
-    @controller = @controller.new
-    @output_buffer = ''
-  end
+  include ActionViewHelperTestHelper
 
   def test_basic_payment_service
     payment_service_for('order-1','test', :service => :bogus){}
