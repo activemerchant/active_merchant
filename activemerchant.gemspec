@@ -27,7 +27,7 @@ Gem::Specification.new do |s|
   s.add_dependency('nokogiri')
 
   s.add_development_dependency('rake')
-  s.add_development_dependency('mocha', '~> 0.10.0')
+  s.add_development_dependency('mocha', '~> 0.11.3')
   s.add_development_dependency('rails', '>= 2.3.11')
   s.add_development_dependency('rubigen')
   s.signing_key = ENV['GEM_PRIVATE_KEY']
