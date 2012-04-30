@@ -32,8 +32,8 @@ beanstream_interac:
   password: password
 
 blue_pay:
-  login: X
-  password: Y
+  login: '100096218902'
+  password: 'MBUVE4G1BACMFM4W3XQHUUL2SMQRP.LW'
 
 braintree_orange:
   login: demo
