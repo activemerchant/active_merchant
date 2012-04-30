@@ -110,6 +110,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [LinkPoint](http://www.linkpoint.com/) - US
 * [Merchant e-Solutions](http://merchante-solutions.com/) - US
 * [MerchantWare](http://merchantwarehouse.com/merchantware) - US
+* [MasterCard Internet Gateway Service (MiGS)](http://mastercard.com/mastercardsps) - AU, AE, BD, BN, EG, HK, ID, IN, JO, KW, LB, LK, MU, MV, MY, NZ, OM, PH, QA, SA, SG, TT, VN
 * [Modern Payments](http://www.modpay.com) - US
 * [Moneris](http://www.moneris.com/) - CA
 * [Moneris US](http://www.monerisusa.com/) - US
@@ -154,6 +155,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [USA ePay](http://www.usaepay.com/) - US
 * [Verifi](http://www.verifi.com/) - US
 * [ViaKLIX](http://viaklix.com) - US
+* [Vindica](http://www.vindicia.com/) - US, CA, UK, AU, MX, BR, DE, KR, CN, HK
 * [Wirecard](http://www.wirecard.com) - DE
 * [WorldPay](http://www.worldpay.com) - AU, HK, UK, US
 
@@ -167,6 +169,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Direct-eBanking / sofortueberweisung.de by Payment-Networks AG](https://www.payment-network.com/deb_com_en/merchantarea/home) - DE, AT, CH, BE, UK, NL
 * [Dotpay](http://dotpay.pl)
 * [Dwolla](https://www.dwolla.com/default.aspx)
+* [ePay](http://www.epay.dk/epay-payment-solutions/)
 * [HiTRUST](http://www.hitrust.com.hk/)
 * [Moneybookers](http://www.moneybookers.com)
 * [Nochex](http://www.nochex.com)

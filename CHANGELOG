@@ -24,6 +24,21 @@
 * Cybersource: Add recurring payment support [jaredmoory]
 * Tidy up gateway lists [ashokak]
 * Paybox: remove Iconv usage [ntalbott]
+* Dotpay: Add amount mapping, pin setter, and support for test? [kacperix]
+* Braintree Blue: Make address country map to alpha2 [ntalbott]
+* Use GB as the alpha2 country code for the UK [ntalbott]
+* Realex: Handle XML response with unescaped ampersand [ntalbott]
+* Add Vindicia gateway [steved555]
+* Payment Express: use %w[] for country list [parndt]
+* Braintree Blue: Match remote test up with change to :country [braintreeps]
+* PayPal Integration: Fix received_at method time parsing [subbarao]
+* Add MiGS Gateway [mnoack, nagash]
+* Quickpay integration: Fix payment_service_for helper [TheMaster]
+* Braintree Blue gateway: Improve update method [brentmc79]
+* 2checkout integration: Add mode mapping & line items helper [AlexanderZaytsev]
+* USA ePay Advanced gateway: Fix expiration date format. [cctalbott]
+* Add ePay integration [ePay]
+* 2checkout integration: Add support for single page payment routine [AlexanderZaytsev]
 
 == Version 1.21.0 (March 7, 2012)
 
