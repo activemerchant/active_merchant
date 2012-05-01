@@ -8,6 +8,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     @amount = 100
     @credit_card     = credit_card('4000100011112224')
     @declined_card   = credit_card('1111111111111111')
+    @credit_card_d3d = credit_card('4000000000000002', :verification_value => '111')
     @options = {
       :order_id => generate_unique_id[0...30],
       :billing_address => address,
@@ -22,7 +23,7 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
     assert_equal '7', response.params['ECI']
     assert_equal @options[:currency], response.params["currency"]
-    assert_equal @options[:order_id], reponse.order_id
+    assert_equal @options[:order_id], response.order_id
   end
 
   def test_successful_purchase_with_utf8_encoding_1
@@ -62,6 +63,15 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+  end
+
+  # NOTE: You have to contact Ogone to make sure your test account allow 3D Secure transactions before running this test
+  def test_successful_purchase_with_3d_secure
+    assert response = @gateway.purchase(@amount, @credit_card_d3d, @options.merge(:d3d => true))
+    assert_success response
+    assert_equal '46', response.params["STATUS"]
+    assert_equal OgoneGateway::SUCCESS_MESSAGE, response.message
+    assert response.params["HTML_ANSWER"]
   end
 
   def test_successful_with_non_numeric_order_id
@@ -145,14 +155,28 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_equal OgoneGateway::SUCCESS_MESSAGE, auth.message
     assert_success void
   end
-  
+
   def test_successful_store
     assert response = @gateway.store(@credit_card, :billing_id => 'test_alias')
     assert_success response
     assert purchase = @gateway.purchase(@amount, 'test_alias')
     assert_success purchase
   end
-  
+
+  def test_successful_store_generated_alias
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert purchase = @gateway.purchase(@amount, response.billing_id)
+    assert_success purchase
+  end
+
+  def test_successful_store
+    assert response = @gateway.store(@credit_card, :billing_id => 'test_alias')
+    assert_success response
+    assert purchase = @gateway.purchase(@amount, 'test_alias')
+    assert_success purchase
+  end
+
   def test_successful_store_generated_alias
     assert response = @gateway.store(@credit_card)
     assert_success response
