@@ -43,14 +43,6 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal 'Your card number is invalid', response.message
   end
 
-  def test_authorize
-    assert_raises(RuntimeError) { @gateway.authorize(@amount, @credit_card, @options) }
-  end
-
-  def test_capture
-    assert_raises(RuntimeError) { @gateway.authorize(@amount, @credit_card, @options) }
-  end
-
   def test_successful_void
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response

@@ -58,14 +58,6 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'charges', post, meta)
       end
 
-      def authorize(money, creditcard, options = {})
-        raise "Stripe does not support separate authorization and capture"
-      end
-
-      def capture(money, identification, options = {})
-        raise "Stripe does not support separate authorization and capture"
-      end
-
       def void(identification, options = {})
         commit(:post, "charges/#{CGI.escape(identification)}/refund", {})
       end
@@ -215,7 +207,7 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           success ? "Transaction approved" : response["error"]["message"],
           response,
-          :test => !response["livemode"],
+          :test => response.has_key?("livemode") ? !response["livemode"] : false,
           :authorization => response["id"],
           :avs_result => { :code => avs_code },
           :cvv_result => cvc_code
