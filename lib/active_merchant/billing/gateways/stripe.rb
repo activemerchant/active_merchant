@@ -207,7 +207,7 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           success ? "Transaction approved" : response["error"]["message"],
           response,
-          :test => !response["livemode"],
+          :test => response.has_key?("livemode") ? !response["livemode"] : false,
           :authorization => response["id"],
           :avs_result => { :code => avs_code },
           :cvv_result => cvc_code
