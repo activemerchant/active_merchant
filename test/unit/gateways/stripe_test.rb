@@ -29,16 +29,6 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_authorize
-    @gateway.expects(:ssl_request).never
-    assert_raises(RuntimeError) { @gateway.authorize(@amount, @credit_card, @options) }
-  end
-
-  def test_capture
-    @gateway.expects(:ssl_request).never
-    assert_raises(RuntimeError) { @gateway.capture(nil, 'ch_test_charge') }
-  end
-
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_purchase_response(true))
 
