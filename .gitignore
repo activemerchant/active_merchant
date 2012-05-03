@@ -10,3 +10,15 @@ vendor/cache
 # ignore Gemfile.lock because we support multiple versions of Rails and don't want to ship locked version requirements
 Gemfile.lock
 .yardoc
+
+test/fixtures.yml
+
+test/before_exp.log
+
+test/before_pp.log
+
+test/after_exp.log
+
+test/after_pp.log
+
+test/fixtures.yml.bak
