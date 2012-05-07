@@ -177,6 +177,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Robokassa](http://robokassa.ru/)
 * [SagePay Form](http://www.sagepay.com/products_services/sage_pay_go/integration/form)
 * [Valitor](http://www.valitor.is/) - IS
+* [Verkkomaksut](http://www.verkkomaksut.fi) - FI
 * [WorldPay](http://www.worldpay.com)
 
 ## Contributing
