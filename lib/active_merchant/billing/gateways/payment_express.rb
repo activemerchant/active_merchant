@@ -20,9 +20,6 @@ module ActiveMerchant #:nodoc:
       
       self.homepage_url = 'http://www.paymentexpress.com/'
       self.display_name = 'PaymentExpress'
-      
-      attr_reader :use_custom_payment_token
-      alias :use_custom_payment_token? :use_custom_payment_token
 
       URL = 'https://sec.paymentexpress.com/pxpost.aspx'
       
@@ -37,13 +34,14 @@ module ActiveMerchant #:nodoc:
       }
       
       # We require the DPS gateway username and password when the object is created.
+      #
+      # The PaymentExpress gateway also supports a :use_custom_payment_token boolean option.
+      # If set to true the gateway will use BillingId for the Token type.  If set to false,
+      # then the token will be sent as the DPS specified "DpsBillingId".  This is per the documentation at
+      # http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#Tokenbilling
       def initialize(options = {})
         # A DPS username and password must exist
         requires!(options, :login, :password)
-        # Use "BillingId" for the Token type.  If set to false, then the token will be sent
-        # as the DPS specified "DpsBillingId".  This is per the documentation at
-        # http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#Tokenbilling
-        @use_custom_payment_token = !!options[:use_custom_payment_token]
         # Make the options an instance variable
         @options = options
         super
@@ -126,8 +124,12 @@ module ActiveMerchant #:nodoc:
         request  = build_token_request(credit_card, options)
         commit(:validate, request)
       end
-      
+    
       private
+
+      def use_custom_payment_token?
+        @options[:use_custom_payment_token]
+      end
       
       def build_purchase_or_authorization_request(money, payment_source, options)
         result = new_transaction      
@@ -184,7 +186,7 @@ module ActiveMerchant #:nodoc:
           xml.add_element("IssueNumber").text = credit_card.issue_number unless credit_card.issue_number.blank?
         end
       end
-      
+
       def add_billing_token(xml, token)
         if use_custom_payment_token?
           xml.add_element("BillingId").text = token
