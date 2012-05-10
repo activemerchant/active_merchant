@@ -1,9 +1,9 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-        
+
     class UsaEpayTransactionGateway < Gateway
     	URL = 'https://www.usaepay.com/gate.php'
-      
+
       self.supported_cardtypes = [:visa, :master, :american_express]
       self.supported_countries = ['US']
       self.homepage_url = 'http://www.usaepay.com/'
@@ -12,61 +12,73 @@ module ActiveMerchant #:nodoc:
       TRANSACTIONS = {
         :authorization => 'authonly',
         :purchase => 'sale',
-        :capture => 'capture'
+        :capture => 'capture',
+        :refund => 'refund',
+        :void => 'void'
       }
 
       def initialize(options = {})
         requires!(options, :login)
         @options = options
         super
-      end  
-      
+      end
+
       def authorize(money, credit_card, options = {})
         post = {}
-        
+
         add_amount(post, money)
         add_invoice(post, options)
-        add_credit_card(post, credit_card)        
-        add_address(post, credit_card, options)        
+        add_credit_card(post, credit_card)
+        add_address(post, credit_card, options)
         add_customer_data(post, options)
-        
+
         commit(:authorization, post)
       end
-      
+
       def purchase(money, credit_card, options = {})
         post = {}
-        
+
         add_amount(post, money)
         add_invoice(post, options)
-        add_credit_card(post, credit_card)        
-        add_address(post, credit_card, options)   
+        add_credit_card(post, credit_card)
+        add_address(post, credit_card, options)
         add_customer_data(post, options)
-             
+
         commit(:purchase, post)
-      end                       
-    
+      end
+
       def capture(money, authorization, options = {})
-        post = {
-          :refNum => authorization
-        }
-        
+        post = { :refNum => authorization }
+
         add_amount(post, money)
         commit(:capture, post)
       end
-       
-      private                       
-    
+
+      def refund(money, authorization, options = {})
+        post = { :refNum => authorization }
+
+        add_amount(post, money)
+        commit(:refund, post)
+      end
+
+      def void(authorization, options = {})
+        post = { :refNum => authorization }
+        commit(:void, post)
+      end
+
+      private
+
       def add_amount(post, money)
         post[:amount] = amount(money)
       end
-      
+
       def expdate(credit_card)
         year  = format(credit_card.year, :two_digits)
         month = format(credit_card.month, :two_digits)
 
         "#{month}#{year}"
       end
-      
+
       def add_customer_data(post, options)
         address = options[:billing_address] || options[:address] || {}
         post[:street] = address[:address1]
@@ -76,19 +88,19 @@ module ActiveMerchant #:nodoc:
           post[:custemail] = options[:email]
           post[:custreceipt] = 'No'
         end
-        
+
         if options.has_key? :customer
           post[:custid] = options[:customer]
         end
-        
+
         if options.has_key? :ip
           post[:ip] = options[:ip]
-        end        
+        end
       end
 
       def add_address(post, credit_card, options)
         billing_address = options[:billing_address] || options[:address]
-        
+
         add_address_for_type(:billing, post, credit_card, billing_address) if billing_address
         add_address_for_type(:shipping, post, credit_card, options[:shipping_address]) if options[:shipping_address]
       end
@@ -107,8 +119,8 @@ module ActiveMerchant #:nodoc:
         post[address_key(prefix, 'country')] = address[:country] unless address[:country].blank?
         post[address_key(prefix, 'phone')] = address[:phone] unless address[:phone].blank?
       end
-      
-      def address_key_prefix(type)  
+
+      def address_key_prefix(type)
         case type
         when :shipping then 'ship'
         when :billing then 'bill'
@@ -118,18 +130,18 @@ module ActiveMerchant #:nodoc:
       def address_key(prefix, key)
         "#{prefix}#{key}".to_sym
       end
-      
+
       def add_invoice(post, options)
         post[:invoice] = options[:order_id]
       end
-      
-      def add_credit_card(post, credit_card)      
+
+      def add_credit_card(post, credit_card)
         post[:card]  = credit_card.number
         post[:cvv2] = credit_card.verification_value if credit_card.verification_value?
         post[:expir]  = expdate(credit_card)
         post[:name] = credit_card.name
       end
-      
+
       def parse(body)
         fields = {}
         for line in body.split('&')
@@ -152,23 +164,19 @@ module ActiveMerchant #:nodoc:
           :error_code => fields['UMerrorcode'],
           :acs_url => fields['UMacsurl'],
           :payload => fields['UMpayload']
-        }.delete_if{|k, v| v.nil?}         
-      end     
+        }.delete_if{|k, v| v.nil?}
+      end
 
-      
+
       def commit(action, parameters)
         response = parse( ssl_post(URL, post_data(action, parameters)) )
-        
-        Response.new(response[:status] == 'Approved', message_from(response), response, 
+
+        Response.new(response[:status] == 'Approved', message_from(response), response,
           :test => @options[:test] || test?,
           :authorization => response[:ref_num],
           :cvv_result => response[:cvv2_result_code],
-          :avs_result => { 
-            :street_match => response[:avs_result_code].to_s[0,1],
-            :postal_match => response[:avs_result_code].to_s[1,1],
-            :code => response[:avs_result_code].to_s[2,1]
-          }
-        )        
+          :avs_result => { :code => response[:avs_result_code] }
+        )
       end
 
       def message_from(response)
@@ -179,7 +187,7 @@ module ActiveMerchant #:nodoc:
           return response[:error]
         end
       end
-      
+
       def post_data(action, parameters = {})
         parameters[:command]  = TRANSACTIONS[action]
         parameters[:key] = @options[:login]

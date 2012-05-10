@@ -219,7 +219,7 @@ module ActiveMerchant #:nodoc:
         cert_data   = OpenSSL::X509::Certificate.new(cert_file).to_s
         cert_data   = cert_data.sub(/-----BEGIN CERTIFICATE-----/, '')
         cert_data   = cert_data.sub(/-----END CERTIFICATE-----/, '')
-        fingerprint = ActiveSupport::Base64.decode64(cert_data)
+        fingerprint = Base64.decode64(cert_data)
         fingerprint = Digest::SHA1.hexdigest(fingerprint)
         return fingerprint.upcase
       end
@@ -227,12 +227,12 @@ module ActiveMerchant #:nodoc:
       def sign_message(private_key_data, password, data)
         private_key  = OpenSSL::PKey::RSA.new(private_key_data, password)
         signature = private_key.sign(OpenSSL::Digest::SHA1.new, data.gsub('\s', ''))
-        return ActiveSupport::Base64.encode64(signature).gsub(/\n/, '')
+        return Base64.encode64(signature).gsub(/\n/, '')
       end
 
       def verify_message(cert_file, data, signature)
         public_key = OpenSSL::X509::Certificate.new(cert_file).public_key
-        return public_key.verify(OpenSSL::Digest::SHA1.new, ActiveSupport::Base64.decode64(signature), data)
+        return public_key.verify(OpenSSL::Digest::SHA1.new, Base64.decode64(signature), data)
       end
 
       def status_response_verified?(response)

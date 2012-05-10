@@ -111,7 +111,10 @@ module ActiveMerchant #:nodoc:
         
           unless money.nil?
             xml.tag! 'Invoice' do
-              xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
+              xml.tag!('TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money))
+              xml.tag!('Description', options[:description]) unless options[:description].blank?
+              xml.tag!('Comment', options[:comment]) unless options[:comment].blank?
+              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
             end
           end
         end
@@ -126,6 +129,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'EMail', options[:email] unless options[:email].blank?
           xml.tag! 'Phone', address[:phone] unless address[:phone].blank?
           xml.tag! 'CustCode', options[:customer] if !options[:customer].blank? && tag == 'BillTo'
+          xml.tag! 'PONum', options[:po_number] if !options[:po_number].blank? && tag == 'BillTo'
           
           xml.tag! 'Address' do
             xml.tag! 'Street', address[:address1] unless address[:address1].blank?

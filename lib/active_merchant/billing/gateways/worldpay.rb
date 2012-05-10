@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_method, options = {})
         response = MultiResponse.new
         response << authorize(money, payment_method, options)
-        response << capture(money, response.authorization, :authorization_validated => true) if response.success?
+        response << capture(money, response.authorization, options.merge(:authorization_validated => true)) if response.success?
         response
       end
 

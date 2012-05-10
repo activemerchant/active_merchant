@@ -11,7 +11,8 @@ class BaseTest < Test::Unit::TestCase
   
   def test_should_return_a_new_gateway_specified_by_symbol_name
     assert_equal BogusGateway,         Base.gateway(:bogus)
-    assert_equal MonerisGateway,       Base.gateway(:moneris) 
+    assert_equal MonerisGateway,       Base.gateway(:moneris)
+    assert_equal MonerisUsGateway,     Base.gateway(:moneris_us)
     assert_equal AuthorizeNetGateway,  Base.gateway(:authorize_net)
     assert_equal UsaEpayGateway,       Base.gateway(:usa_epay)
     assert_equal LinkpointGateway,     Base.gateway(:linkpoint)

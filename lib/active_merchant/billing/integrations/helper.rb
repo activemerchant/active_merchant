@@ -14,8 +14,9 @@ module ActiveMerchant #:nodoc:
         self.application_id = 'ActiveMerchant'
 
         def initialize(order, account, options = {})
-          options.assert_valid_keys([:amount, :currency, :test, :credential2, :credential3, :credential4, :country, :account_name])
+          options.assert_valid_keys([:amount, :currency, :test, :credential2, :credential3, :credential4, :country, :account_name, :transaction_type])
           @fields          = {}
+          @raw_html_fields = []
           @test            = options[:test]
           self.order       = order
           self.account     = account
@@ -41,6 +42,17 @@ module ActiveMerchant #:nodoc:
             field = mappings[subkey][k]
             add_field(field, v) unless field.blank?
           end
+        end
+
+        # Add a field that has characters that CGI::escape would mangle. Allows
+        # for multiple fields with the same name (e.g., to support line items).
+        def add_raw_html_field(name, value)
+          return if name.blank? || value.blank?
+          @raw_html_fields << [name, value]
+        end
+        
+        def raw_html_fields
+          @raw_html_fields
         end
 
         def billing_address(params = {})

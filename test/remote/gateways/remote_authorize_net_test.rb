@@ -145,4 +145,15 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response.test?
     assert_equal 'E00018', response.params['code']
   end
+
+  def test_successful_purchase_with_solution_id
+    ActiveMerchant::Billing::AuthorizeNetGateway.application_id = 'A1000000'
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  ensure
+    ActiveMerchant::Billing::AuthorizeNetGateway.application_id = nil
+  end
 end

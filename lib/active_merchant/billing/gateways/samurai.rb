@@ -76,6 +76,7 @@ module ActiveMerchant #:nodoc:
           :zip          => address[:zip],
           :sandbox      => test?
         })
+        result.retain if options[:retain] && result.is_sensitive_data_valid && result.payment_method_token
 
         Response.new(result.is_sensitive_data_valid,
                      message_from_result(result),

@@ -193,11 +193,13 @@ module ActiveMerchant
     end
         
     def load_fixtures
-      file = File.exists?(LOCAL_CREDENTIALS) ? LOCAL_CREDENTIALS : DEFAULT_CREDENTIALS
-      yaml_data = YAML.load(File.read(file))
-      symbolize_keys(yaml_data)
-    
-      yaml_data
+      [DEFAULT_CREDENTIALS, LOCAL_CREDENTIALS].inject({}) do |credentials, file_name|
+        if File.exists?(file_name)
+          yaml_data = YAML.load(File.read(file_name))
+          credentials.merge!(symbolize_keys(yaml_data))
+        end
+        credentials
+      end
     end
     
     def symbolize_keys(hash)
@@ -214,4 +216,34 @@ Test::Unit::TestCase.class_eval do
   include ActiveMerchant::Assertions
   include ActiveMerchant::Utils
   include ActiveMerchant::Fixtures
+end
+
+module ActionViewHelperTestHelper
+
+  def self.included(base)
+    base.send(:include, ActiveMerchant::Billing::Integrations::ActionViewHelper)
+    base.send(:include, ActionView::Helpers::FormHelper)
+    base.send(:include, ActionView::Helpers::FormTagHelper)
+    base.send(:include, ActionView::Helpers::UrlHelper)
+    base.send(:include, ActionView::Helpers::TagHelper)
+    base.send(:include, ActionView::Helpers::CaptureHelper)
+    base.send(:include, ActionView::Helpers::TextHelper)
+    base.send(:attr_accessor, :output_buffer)
+  end
+
+  def setup
+    @controller = Class.new do
+      attr_reader :url_for_options
+      def url_for(options, *parameters_for_method_reference)
+        @url_for_options = options
+      end
+    end
+    @controller = @controller.new
+    @output_buffer = ''
+  end
+
+  protected
+  def protect_against_forgery?
+    false
+  end
 end

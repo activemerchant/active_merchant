@@ -116,7 +116,7 @@ class SamuraiTest < Test::Unit::TestCase
     card_to_store = {
       :card_number  => "4242424242424242",
       :expiry_month => "09",
-      :expiry_year  => "2012",
+      :expiry_year  => (Time.now.year + 1).to_s,
       :cvv          => "123",
       :first_name   => "Longbob",
       :last_name    => "Longsen",
@@ -132,6 +132,42 @@ class SamuraiTest < Test::Unit::TestCase
     response = @gateway.store(@successful_credit_card)
     assert_instance_of Response, response
     assert_success response
+  end
+
+  def test_successful_retain
+    card_to_store = valid_credit_card
+    payment_method = successful_create_payment_method_response
+    Samurai::PaymentMethod.expects(:create).
+                           with(card_to_store).
+                           returns(payment_method)
+    payment_method.expects(:retain)
+    response = @gateway.store(@successful_credit_card, :retain => true)
+    assert_instance_of Response, response
+    assert_success response
+  end
+
+  def test_no_retain_on_failed_store
+    card_to_store = valid_credit_card
+    payment_method = successful_create_payment_method_response
+    payment_method.is_sensitive_data_valid = false
+    payment_method.payment_method_token = nil
+    Samurai::PaymentMethod.expects(:create).
+                           with(card_to_store).
+                           returns(payment_method)
+    payment_method.expects(:retain).never
+    response = @gateway.store(@successful_credit_card, :retain => true)
+  end
+
+  def test_no_retain_options
+    card_to_store = valid_credit_card
+    payment_method = successful_create_payment_method_response
+    Samurai::PaymentMethod.expects(:create).
+                           with(card_to_store).
+                           returns(payment_method).
+                           twice
+    payment_method.expects(:retain).never
+    response = @gateway.store(@successful_credit_card, :retain => false)
+    response = @gateway.store(@successful_credit_card)
   end
 
   def test_passing_optional_processor_options
@@ -158,6 +194,22 @@ class SamuraiTest < Test::Unit::TestCase
   end
 
   private
+
+  def valid_credit_card
+    {
+      :card_number  => "4242424242424242",
+      :expiry_month => "09",
+      :expiry_year  => (Time.now.year + 1).to_s,
+      :cvv          => "123",
+      :first_name   => "Longbob",
+      :last_name    => "Longsen",
+      :address_1    => nil,
+      :address_2    => nil,
+      :city         => nil,
+      :zip          => nil,
+      :sandbox      => true
+    }
+  end
 
   def successful_purchase_response
     successful_response("Purchase")
