@@ -231,9 +231,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def validate_essential_attributes #:nodoc:
+        validate_name
+        validate_expiration_date
+      end
+
+      def validate_name #:nodoc:
         errors.add :first_name, "cannot be empty"      if @first_name.blank?
         errors.add :last_name,  "cannot be empty"      if @last_name.blank?
-
+      end
+      
+      def validate_expiration_date #:nodoc:
         if @month.to_i.zero? || @year.to_i.zero?
           errors.add :month, "is required"  if @month.to_i.zero?
           errors.add :year,  "is required"  if @year.to_i.zero?
@@ -243,7 +250,7 @@ module ActiveMerchant #:nodoc:
           errors.add :year,       "is not a valid year"  unless expired? || valid_expiry_year?(@year)
         end
       end
-
+      
       def validate_switch_or_solo_attributes #:nodoc:
         if %w[switch solo].include?(type)
           unless valid_month?(@start_month) && valid_start_year?(@start_year) || valid_issue_number?(@issue_number)
