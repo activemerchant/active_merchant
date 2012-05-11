@@ -67,11 +67,11 @@ class RemotePayflowExpressTest < Test::Unit::TestCase
       :discount=>280,
       :no_shipping=>true}
     response = @gateway.setup_authorization(amount, options)
-    assert response.success?
+    assert response.success?, response.message
   end
 
   def test_setup_authorization_with_discount_taxes_additional
-    amount = 2818
+    amount = 2518
     options = {:ip=>"127.0.0.1",
       :return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1",
       :cancel_return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1",
@@ -89,11 +89,11 @@ class RemotePayflowExpressTest < Test::Unit::TestCase
       :discount=>280,
       :no_shipping=>true}
     response = @gateway.setup_authorization(amount, options)
-    assert response.success?
+    assert response.success?, response.message
   end
 
   def test_setup_authorization_with_discount_taxes_and_shipping_addtiional
-    amount = 3618
+    amount = 2518
     options = {:ip=>"127.0.0.1",
       :return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1",
       :cancel_return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1",
@@ -111,7 +111,7 @@ class RemotePayflowExpressTest < Test::Unit::TestCase
       :discount=>280,
       :no_shipping=>false}
     response = @gateway.setup_authorization(amount, options)
-    assert response.success?
+    assert response.success?, response.message
   end
 end
 
@@ -141,11 +141,11 @@ class RemotePayflowExpressUkTest < Test::Unit::TestCase
       :discount=>280,
       :no_shipping=>true}
     response = @gateway.setup_authorization(amount, options)
-    assert response.success?
+    assert response.success?, response.message
   end
 
   def test_setup_authorization_with_discount_taxes_additional
-    amount = 2818
+    amount = 2518
     options = {:ip=>"127.0.0.1",
       :return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1",
       :cancel_return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1",
@@ -164,11 +164,11 @@ class RemotePayflowExpressUkTest < Test::Unit::TestCase
       :discount=>280,
       :no_shipping=>true}
     response = @gateway.setup_authorization(amount, options)
-    assert response.success?
+    assert response.success?, response.message
   end
 
   def test_setup_authorization_with_discount_taxes_and_shipping_addtiional
-    amount = 3618
+    amount = 2518
     options = {:ip=>"127.0.0.1",
       :return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?buyer_accepts_marketing=true&utm_nooverride=1",
       :cancel_return_url=>"http://localhost:3000/orders/1/8e06ea26f8add7608671d433f13c2193/commit_paypal?utm_nooverride=1",
@@ -187,6 +187,6 @@ class RemotePayflowExpressUkTest < Test::Unit::TestCase
       :discount=>280,
       :no_shipping=>false}
     response = @gateway.setup_authorization(amount, options)
-    assert response.success?
+    assert response.success?, response.message
   end
 end

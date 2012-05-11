@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
             items = options[:items] || []
             items.each_with_index do |item, index|
               xml.tag! 'ExtData', 'Name' => "L_DESC#{index}", 'Value' => item[:description]
-              xml.tag! 'ExtData', 'Name' => "L_COST#{}{index}", 'Value' => amount(item[:amount])
+              xml.tag! 'ExtData', 'Name' => "L_COST#{index}", 'Value' => amount(item[:amount])
               xml.tag! 'ExtData', 'Name' => "L_QTY#{index}", 'Value' => item[:quantity] || '1'
               xml.tag! 'ExtData', 'Name' => "L_NAME#{index}", 'Value' => item[:name]
               # Note: An ItemURL is supported in Paypal Express (different API), but not PayFlow Express, as far as I can tell.
@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
             end
             if items.any?
               xml.tag! 'ExtData', 'Name' => 'CURRENCY', 'Value' => options[:currency] || currency(money)
-              xml.tag! 'ExtData', 'Name' => "ITEMAMT", 'Value' => amount(options[:subtotal])
+              xml.tag! 'ExtData', 'Name' => "ITEMAMT", 'Value' => amount(options[:subtotal] || money)
             end
             xml.tag! 'DiscountAmt', amount(options[:discount]) if options[:discount]
             xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
