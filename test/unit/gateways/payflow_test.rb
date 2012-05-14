@@ -165,6 +165,18 @@ class PayflowTest < Test::Unit::TestCase
     end
   end
   
+  def test_recurring_add_action_missing_parameters
+    assert_raises ArgumentError do
+      response = @gateway.recurring(@amount, @credit_card)
+    end
+  end
+  
+  def test_recurring_modify_action_missing_parameters
+    assert_raises ArgumentError do
+      response = @gateway.recurring(@amount, nil)
+    end
+  end
+  
   def test_successful_recurring_action
     @gateway.stubs(:ssl_post).returns(successful_recurring_response)
     
@@ -173,6 +185,56 @@ class PayflowTest < Test::Unit::TestCase
     assert_instance_of PayflowResponse, response
     assert_success response
     assert_equal 'RT0000000009', response.profile_id
+    assert response.test?
+    assert_equal "R7960E739F80", response.authorization
+  end
+
+  def test_successful_recurring_modify_action
+    @gateway.stubs(:ssl_post).returns(successful_recurring_response)
+    
+    response = @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :periodicity => :monthly)
+    
+    assert_instance_of PayflowResponse, response
+    assert_success response
+    assert_equal 'RT0000000009', response.profile_id
+    assert response.test?
+    assert_equal "R7960E739F80", response.authorization
+  end  
+
+  def test_successful_recurring_modify_action_with_retry_num_days
+    @gateway.stubs(:ssl_post).returns(successful_recurring_response)
+    
+    response = @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :retry_num_days => 3, :periodicity => :monthly)
+    
+    assert_instance_of PayflowResponse, response
+    assert_success response
+    assert_equal 'RT0000000009', response.profile_id
+    assert response.test?
+    assert_equal "R7960E739F80", response.authorization
+  end
+  
+  def test_falied_recurring_modify_action_with_starting_at_in_the_past
+    @gateway.stubs(:ssl_post).returns(start_date_error_recurring_response)
+    
+    response = @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :starting_at => Date.yesterday, :periodicity => :monthly)
+    
+    assert_instance_of PayflowResponse, response
+    assert_success response
+    assert_equal 'RT0000000009', response.profile_id
+    assert_equal 'Field format error: START or NEXTPAYMENTDATE older than last payment date', response.message
+    assert response.test?
+    assert_equal "R7960E739F80", response.authorization
+  end
+  
+  def test_falied_recurring_modify_action_with_starting_at_missing_and_changed_periodicity
+    @gateway.stubs(:ssl_post).returns(start_date_missing_recurring_response)
+    
+    response = @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :periodicity => :yearly)
+    
+    assert_instance_of PayflowResponse, response
+    assert_success response
+    assert_equal 'RT0000000009', response.profile_id
+    assert_equal 'Field format error: START field missing', response.message
     assert response.test?
     assert_equal "R7960E739F80", response.authorization
   end
@@ -238,6 +300,32 @@ class PayflowTest < Test::Unit::TestCase
   <ProfileId>RT0000000009</ProfileId>
 </ResponseData>
   XML
+  end
+  
+  def start_date_error_recurring_response
+      <<-XML
+  <ResponseData>
+    <Result>0</Result>
+    <Message>Field format error: START or NEXTPAYMENTDATE older than last payment date</Message>
+    <Partner>paypal</Partner>
+    <RPRef>R7960E739F80</RPRef>
+    <Vendor>ActiveMerchant</Vendor>
+    <ProfileId>RT0000000009</ProfileId>
+  </ResponseData>
+    XML
+  end
+  
+  def start_date_missing_recurring_response
+      <<-XML
+  <ResponseData>
+    <Result>0</Result>
+    <Message>Field format error: START field missing</Message>
+    <Partner>paypal</Partner>
+    <RPRef>R7960E739F80</RPRef>
+    <Vendor>ActiveMerchant</Vendor>
+    <ProfileId>RT0000000009</ProfileId>
+  </ResponseData>
+    XML
   end
   
   def successful_payment_history_recurring_response
