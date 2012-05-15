@@ -1166,7 +1166,7 @@ module ActiveMerchant #:nodoc:
         soap.tag! "ns1:captureTransaction" do |soap|
           build_token soap, options
           build_tag soap, :integer, 'RefNum', options[:reference_number]
-          build_tag soap, :double, 'RefNum', amount(options[:amount])
+          build_tag soap, :double, 'Amount', amount(options[:amount])
         end
       end
 
