@@ -59,13 +59,54 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_phone_number
     response = stub_comms do
-      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => {:phone => '123-456-7890'})
+      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(:phone => '123-456-7890'))
     end.check_request do |endpoint, data, headers|
       assert_match(/1234567890/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
+
+  #   <AVSzip>K1C2N6</AVSzip>
+  #   <AVSaddress1>1234 My Street</AVSaddress1>
+  #   <AVSaddress2>Apt 1</AVSaddress2>
+  #   <AVScity>Ottawa</AVScity>
+  #   <AVSstate>ON</AVSstate>
+  #   <AVSphoneNum>5555555555</AVSphoneNum>
+  #   <AVSname>Longbob Longsen</AVSname>
+  #   <AVScountryCode>CA</AVScountryCode>
+  def test_send_address_details_for_united_states
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<AVSzip>K1C2N6/, data)
+      assert_match(/<AVSaddress1>1234 My Street/, data)
+      assert_match(/<AVSaddress2>Apt 1/, data)
+      assert_match(/<AVScity>Ottawa/, data)
+      assert_match(/<AVSstate>ON/, data)
+      assert_match(/<AVSphoneNum>5555555555/, data)
+      assert_match(/<AVSname>Longbob Longsen/, data)
+      assert_match(/<AVScountryCode>CA/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_dont_send_address_details_for_germany
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(:country => 'DE'))
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(/<AVSzip>K1C2N6/, data)
+      assert_no_match(/<AVSaddress1>1234 My Street/, data)
+      assert_no_match(/<AVSaddress2>Apt 1/, data)
+      assert_no_match(/<AVScity>Ottawa/, data)
+      assert_no_match(/<AVSstate>ON/, data)
+      assert_no_match(/<AVSphoneNum>5555555555/, data)
+      assert_match(/<AVSname>Longbob Longsen/, data)
+      assert_match(/<AVScountryCode>DE/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response    
+  end
   
+
   private
   
   # Place raw successful response from gateway here
