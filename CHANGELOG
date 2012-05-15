@@ -52,6 +52,7 @@
 * Payflow Express gateway: Better amount handling [jduff]
 * Barclays gateway: Allow American Express [duff]
 * Ogone gateway: Remove duplicated method [ntalbott]
+* Cybersource gateway: Add retrieve method to pull details on a stored card [fabiokr]
 
 == Version 1.21.0 (March 7, 2012)
 
