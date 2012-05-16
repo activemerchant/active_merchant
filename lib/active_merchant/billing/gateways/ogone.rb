@@ -203,14 +203,6 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      # Store a credit card by creating an Ogone Alias
-      def store(payment_source, options = {})
-        options.merge!(:alias_operation => 'BYOGONE') unless options.has_key?(:billing_id) || options.has_key?(:store)
-        response = authorize(1, payment_source, options)
-        void(response.authorization) if response.success?
-        response
-      end
-
       def test?
         @options[:test] || super
       end
@@ -223,7 +215,7 @@ module ActiveMerchant #:nodoc:
 
       def reference_transaction?(identifier)
         return false unless identifier.is_a?(String)
-        reference, action = identifier.split(";")
+        _, action = identifier.split(";")
         !action.nil?
       end
 
