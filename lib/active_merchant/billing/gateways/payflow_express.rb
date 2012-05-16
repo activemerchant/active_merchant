@@ -33,6 +33,7 @@ module ActiveMerchant #:nodoc:
       # [<tt>:notify_url</tt>] (opt) Your URL for receiving Instant Payment Notification (IPN) about this transaction.
       # [<tt>:comment</tt>] (opt) Comment field which will be reported to Payflow backend (at manager.paypal.com) as Comment1
       # [<tt>:comment2</tt>] (opt) Comment field which will be reported to Payflow backend (at manager.paypal.com) as Comment2
+      # [<tt>:discount</tt>] (opt) Total discounts in cents
       #
       # ==Line Items
       # Support for order line items is available, but has to be enabled on the PayFlow backend. This is what I was told by Todd Sieber at Technical Support:
@@ -177,10 +178,11 @@ module ActiveMerchant #:nodoc:
             end
             if items.any?
               xml.tag! 'ExtData', 'Name' => 'CURRENCY', 'Value' => options[:currency] || currency(money)
-              xml.tag! 'ExtData', 'Name' => "ITEMAMT", 'Value' => amount(money)
+              xml.tag! 'ExtData', 'Name' => "ITEMAMT", 'Value' => amount(options[:subtotal] || money)
             end
-
+            xml.tag! 'DiscountAmt', amount(options[:discount]) if options[:discount]
             xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
+
           end
 
           xml.tag! 'Tender' do
