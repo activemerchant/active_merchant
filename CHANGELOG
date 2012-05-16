@@ -39,6 +39,19 @@
 * USA ePay Advanced gateway: Fix expiration date format. [cctalbott]
 * Add ePay integration [ePay]
 * 2checkout integration: Add support for single page payment routine [AlexanderZaytsev]
+* Ogone: Add support for 3D Secure [rymai, ZenCocoon]
+* Stripe gateway: Remove authorize and capture methods since they are not supported [jduff]
+* Stripe gateway: default test to false if no livemode parameter is specified [jduff]
+* Paybox Direct gateway: 'card absent' and 'do not honour' should be considered failures, not fraudulent [jduff]
+* Add Verkkomaksut integration [akonan]
+* Remove trailing spaces from generator templates [akonan]
+* Payflow gateway: Allow modification of RetryNumDays [jrust]
+* Payflow gateway: Don't auto-set start_date on modification [jrust]
+* Bluepay gateway: Add ACH & recurring support [jslingerland]
+* Orbital gateway: Don't send AVS address details for any country besides US, CA, GB and UK [Soleone]
+* Payflow Express gateway: Better amount handling [jduff]
+* Barclays gateway: Allow American Express [duff]
+* Ogone gateway: Remove duplicated method [ntalbott]
 
 == Version 1.21.0 (March 7, 2012)
 
