@@ -4,7 +4,7 @@ require 'LitleOnline'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class LitleGateway < Gateway
-      #Specific to Litle options:
+      # Specific to Litle options:
       # * <tt>:merchant_id</tt> - Merchant Id assigned by Litle
       # * <tt>:user</tt> - Username assigned by Litle
       # * <tt>:password</tt> - Password assigned by Litle
@@ -12,7 +12,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>:proxy_addr</tt> - Proxy address - nil if not needed
       # * <tt>:proxy_port</tt> - Proxy port - nil if not needed
       # * <tt>:url</tt> - URL assigned by Litle (for testing, use the sandbox)
-      #Standard Active Merchant options
+      #
+      # Standard Active Merchant options
       # * <tt>:order_id</tt> - The order number
       # * <tt>:ip</tt> - The IP address of the customer making the purchase
       # * <tt>:customer</tt> - The name, customer number, or other information that identifies the customer
@@ -35,8 +36,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:country</tt> - The [ISO 3166-1-alpha-2 code](http://www.iso.org/iso/country_codes/iso_3166_code_lists/english_country_names_and_code_elements.htm) for the customer.
       # * <tt>:zip</tt> - The zip or postal code of the customer.
       # * <tt>:phone</tt> - The phone number of the customer.
-      # money (int in cents), creditcard, options = {}
-      #
+
       TEST_URL = 'https://www.testlitle.com/sandbox/communicator/online'
       LIVE_URL = 'https://payments.litle.com/vap/communicator/online'
 
@@ -62,83 +62,36 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard, options = {})
         to_pass = create_credit_card_hash(money, creditcard, options)
-        ret = @litle.authorization(to_pass)  # passing the hash.
-        if ret.response == "0"
-          resp = Response.new((ret.authorizationResponse.response == '000'),
-          ret.authorizationResponse.message,
-          {:litleOnlineResponse=>ret} ,
-          {:authorization => ret.authorizationResponse.litleTxnId,
-            :avs_result => {:code=>fraud_result(ret.authorizationResponse)['avs']},
-            :cvv_result => fraud_result(ret.authorizationResponse)['cvv']
-          }
-          )
-        else
-          resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret})
-        end
-        resp
+        build_response(:authorization, @litle.authorization(to_pass))
       end
 
       def purchase(money, creditcard, options = {})
         to_pass = create_credit_card_hash(money, creditcard, options)
-        ret = @litle.sale(to_pass)  # passing the hash.
-        if ret.response == "0"
-          resp = Response.new((ret.saleResponse.response == '000'), ret.saleResponse.message,{:litleOnlineResponse=>ret},          
-            {
-            :avs_result => {:code=>fraud_result(ret.saleResponse)['avs']},
-            :cvv_result => fraud_result(ret.saleResponse)['cvv']
-          }
-          )
-        else
-          resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret}
-          )
-        end
+        build_response(:sale, @litle.sale(to_pass))
       end
 
       def capture(money, authorization, options = {})
         to_pass = create_capture_hash(money, authorization, options)
-        ret = @litle.capture(to_pass)  # passing the hash.
-        if ret.response == "0"
-          resp = Response.new((ret.captureResponse.response == '000'), ret.captureResponse.message,{:litleOnlineResponse=>ret})
-        else
-          resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret})
-        end
-        resp
+        build_response(:capture, @litle.capture(to_pass))
       end
 
       def void(identification, options = {})
         to_pass = create_void_hash(identification, options)
-        ret = @litle.void(to_pass)  # passing the hash.
-        if ret.response == "0"
-          resp = Response.new((ret.voidResponse.response == '000'), ret.voidResponse.message,{:litleOnlineResponse=>ret})
-        else
-          resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret})
-        end
-        resp
+        build_response(:void, @litle.void(to_pass))
       end
 
       def credit(money, identification, options = {})
         to_pass = create_credit_hash(money, identification, options)
-        ret = @litle.credit(to_pass)  # passing the hash.
-        if ret.response == "0"
-          resp = Response.new((ret.creditResponse.response == '000'), ret.creditResponse.message,{:litleOnlineResponse=>ret})
-        else
-          resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret})
-        end
-        resp
+        build_response(:credit, @litle.credit(to_pass))
       end
 
       def store(creditcard, options = {})
         to_pass = create_token_hash(creditcard, options)
-        ret = @litle.register_token_request(to_pass)  # passing the hash.
-        if ret.response == "0"
-          resp = Response.new((ret.registerTokenResponse.response == '801' or ret.registerTokenResponse.response == '802'), ret.registerTokenResponse.message,{:litleOnlineResponse=>ret})
-        else
-          resp = Response.new((false), ret.message,{:litleOnlineResponse=>ret})
-        end
-        resp
+        build_response(:registerToken, @litle.register_token_request(to_pass), %w(801 802))
       end
 
       private
+
       CARD_TYPE = {
         'visa' => 'VI',
         'master' => 'MC',
@@ -165,6 +118,22 @@ module ActiveMerchant #:nodoc:
         '34' => 'I',
         '40' => 'E'
       }
+
+      def build_response(kind, litle_response, valid_responses=%w(000))
+        if litle_response.response == "0"
+          detail = litle_response.send("#{kind}Response")
+          Response.new(
+            (valid_responses.include?(detail.response)),
+            detail.message,
+            {:litleOnlineResponse => litle_response},
+            :authorization => detail.litleTxnId,
+            :avs_result => {:code => fraud_result(detail)['avs']},
+            :cvv_result => fraud_result(detail)['cvv']
+          )
+        else
+          Response.new(false, litle_response.message, :litleOnlineResponse => litle_response)
+        end
+      end
 
       def create_credit_card_hash(money, creditcard, options)
         cc_type = CARD_TYPE[creditcard.type]
@@ -301,7 +270,6 @@ module ActiveMerchant #:nodoc:
         end
         {'cvv'=>cvv_to_pass, 'avs'=>avs_to_pass}
       end
-
     end
   end
 end
