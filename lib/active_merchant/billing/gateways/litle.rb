@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
 
       def initialize(options = {})
-        @litle = LitleOnlineRequest.new
+        @litle = LitleOnline::LitleOnlineRequest.new
         requires!(options, :merchant_id, :user, :password, :version, :url)
         @options = options
       end

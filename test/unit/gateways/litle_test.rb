@@ -378,7 +378,7 @@ class LitleTest < Test::Unit::TestCase
       'litleToken'=>'1111222233334444'
     })
     retObj = Hashit.new({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
-    LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
 
     creditcard = CreditCard.new(
     :month      => '11',
@@ -402,7 +402,7 @@ class LitleTest < Test::Unit::TestCase
       'fraudResult' => fraudResult
     })
     retObj = Hashit.new({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
-    LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
 
     creditcard = CreditCard.new(
     :month      => '11',
@@ -427,7 +427,7 @@ class LitleTest < Test::Unit::TestCase
       'fraudResult' => fraudResult
     })
     retObj = Hashit.new({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
-    LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
 
     creditcard = CreditCard.new(
     :month      => '11',
@@ -449,7 +449,7 @@ class LitleTest < Test::Unit::TestCase
       'fraudResult' => fraudResult
     })
     retObj = Hashit.new({'response'=>'0','saleResponse'=>saleResponseObj})
-    LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
 
     creditcard = CreditCard.new(
     :month      => '11',
@@ -474,7 +474,7 @@ class LitleTest < Test::Unit::TestCase
       'fraudResult' => fraudResult
     })
     retObj = Hashit.new({'response'=>'0','saleResponse'=>saleResponseObj})
-    LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
 
     creditcard = CreditCard.new(
     :month      => '11',
@@ -491,7 +491,7 @@ class LitleTest < Test::Unit::TestCase
   def test_auth_fail
     authorizationResponseObj = Hashit.new({'response' => '111', 'message' => 'fail', 'litleTxnId' => '1234', 'litleToken'=>'1111222233334444'})
     retObj = Hashit.new({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
-    LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
 
     creditcard = CreditCard.new(
     :month      => '11',
@@ -506,7 +506,7 @@ class LitleTest < Test::Unit::TestCase
 
   def test_auth_fail_schema
     retObj = Hashit.new({'response'=>'1','message'=>'Error validating xml data against the schema'})
-    LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
 
     creditcard = CreditCard.new(
     :month      => '11',
@@ -521,7 +521,7 @@ class LitleTest < Test::Unit::TestCase
   def test_purchase_pass
     purchaseResponseObj = Hashit.new({'response' => '000', 'message' => 'successful', 'litleTxnId'=>'123456789012345678'})
     retObj = Hashit.new({'response'=>'0','saleResponse'=>purchaseResponseObj})
-    LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
 
     creditcard = CreditCard.new(
     :month      => '11',
@@ -536,7 +536,7 @@ class LitleTest < Test::Unit::TestCase
   def test_purchase_fail
     purchaseResponseObj = Hashit.new({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
     retObj = Hashit.new({'response'=>'0','saleResponse'=>purchaseResponseObj})
-    LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
 
     creditcard = CreditCard.new(
     :month      => '11',
@@ -550,7 +550,7 @@ class LitleTest < Test::Unit::TestCase
 
   def test_purchase_fail_schema
     retObj = Hashit.new({'response'=>'1','message'=>'Error validating xml data against the schema'})
-    LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
 
     creditcard = CreditCard.new(
     :month      => '11',
@@ -565,7 +565,7 @@ class LitleTest < Test::Unit::TestCase
   def test_capture_pass
     captureResponseObj = Hashit.new({'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'})
     retObj = Hashit.new({'response'=>'0','captureResponse'=>captureResponseObj})
-    LitleOnlineRequest.any_instance.expects(:capture).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:capture).returns(retObj)
     authorization = "1234"
     responseFrom = @gateway.capture(0, authorization)
     assert_equal true, responseFrom.success?
@@ -575,7 +575,7 @@ class LitleTest < Test::Unit::TestCase
   def test_capture_fail
     captureResponseObj = Hashit.new({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
     retObj = Hashit.new({'response'=>'0','captureResponse'=>captureResponseObj})
-    LitleOnlineRequest.any_instance.expects(:capture).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:capture).returns(retObj)
     authorization = "1234"
     responseFrom = @gateway.capture(0, authorization)
     assert_equal false, responseFrom.success?
@@ -584,7 +584,7 @@ class LitleTest < Test::Unit::TestCase
 
   def test_capture_fail_schema
     retObj = Hashit.new({'response'=>'1','message'=>'Error validating xml data against the schema'})
-    LitleOnlineRequest.any_instance.expects(:capture).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:capture).returns(retObj)
     authorization = '1234'
     responseFrom = @gateway.authorize(0, authorization)
     assert_equal false, responseFrom.success?
@@ -594,7 +594,7 @@ class LitleTest < Test::Unit::TestCase
   def test_void_pass
     voidResponseObj = Hashit.new({'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'})
     retObj = Hashit.new({'response'=>'0','voidResponse'=>voidResponseObj})
-    LitleOnlineRequest.any_instance.expects(:void).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:void).returns(retObj)
     identification = "1234"
     responseFrom = @gateway.void(identification)
     assert_equal true, responseFrom.success?
@@ -604,7 +604,7 @@ class LitleTest < Test::Unit::TestCase
   def test_void_fail
     voidResponseObj = Hashit.new({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
     retObj = Hashit.new({'response'=>'0','voidResponse'=>voidResponseObj})
-    LitleOnlineRequest.any_instance.expects(:void).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:void).returns(retObj)
     identification = "1234"
     responseFrom = @gateway.void(identification)
     assert_equal false, responseFrom.success?
@@ -613,7 +613,7 @@ class LitleTest < Test::Unit::TestCase
 
   def test_void_fail_schema
     retObj = Hashit.new({'response'=>'1','message'=>'Error validating xml data against the schema'})
-    LitleOnlineRequest.any_instance.expects(:void).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:void).returns(retObj)
     identification = "1234"
     responseFrom = @gateway.void(identification)
     assert_equal false, responseFrom.success?
@@ -623,7 +623,7 @@ class LitleTest < Test::Unit::TestCase
   def test_credit_pass
     creditResponseObj = Hashit.new({'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'})
     retObj = Hashit.new({'response'=>'0','creditResponse'=>creditResponseObj})
-    LitleOnlineRequest.any_instance.expects(:credit).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:credit).returns(retObj)
     identification = "1234"
     responseFrom = @gateway.credit(0, identification)
     assert_equal true, responseFrom.success?
@@ -633,7 +633,7 @@ class LitleTest < Test::Unit::TestCase
   def test_credit_fail
     creditResponseObj = Hashit.new({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
     retObj = Hashit.new({'response'=>'0','creditResponse'=>creditResponseObj})
-    LitleOnlineRequest.any_instance.expects(:credit).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:credit).returns(retObj)
     identification = "1234"
     responseFrom = @gateway.credit(0, identification)
     assert_equal false, responseFrom.success?
@@ -642,7 +642,7 @@ class LitleTest < Test::Unit::TestCase
 
   def test_capture_fail_schema
     retObj = Hashit.new({'response'=>'1','message'=>'Error validating xml data against the schema'})
-    LitleOnlineRequest.any_instance.expects(:credit).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:credit).returns(retObj)
     identification = '1234'
     responseFrom = @gateway.credit(0, identification)
     assert_equal false, responseFrom.success?
@@ -652,7 +652,7 @@ class LitleTest < Test::Unit::TestCase
   def test_store_pass1
     storeResponseObj = Hashit.new({'response' => '801', 'message' => 'successful', 'litleToken'=>'1111222233334444'})
     retObj = Hashit.new({'response'=>'0','registerTokenResponse'=>storeResponseObj})
-    LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
     creditcard = CreditCard.new(
     :number => '4242424242424242'
     )
@@ -664,7 +664,7 @@ class LitleTest < Test::Unit::TestCase
   def test_store_pass2
     storeResponseObj = Hashit.new({'response' => '802', 'message' => 'already registered', 'litleToken'=>'1111222233334444'})
     retObj = Hashit.new({'response'=>'0','registerTokenResponse'=>storeResponseObj})
-    LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
     creditcard = CreditCard.new(
     :number => '4242424242424242'
     )
@@ -676,7 +676,7 @@ class LitleTest < Test::Unit::TestCase
   def test_store_fail
     storeResponseObj = Hashit.new({'response' => '803', 'message' => 'fail', 'litleToken'=>'1111222233334444'})
     retObj = Hashit.new({'response'=>'0','registerTokenResponse'=>storeResponseObj})
-    LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
     creditcard = CreditCard.new(
     :number => '4242424242424242'
     )
@@ -687,7 +687,7 @@ class LitleTest < Test::Unit::TestCase
 
   def test_store_fail_schema
     retObj = Hashit.new({'response'=>'1','message'=>'Error validating xml data against the schema'})
-    LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
+    LitleOnline::LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
     creditcard = CreditCard.new(
     :number => '4242424242424242'
     )
