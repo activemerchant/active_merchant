@@ -4,9 +4,9 @@ module ActiveMerchant #:nodoc:
       TEST_URL = 'https://secure2.mde.epdq.co.uk:11500'
       LIVE_URL = 'https://secure2.epdq.co.uk:11500'
 
-      self.supported_countries = ['UK']
+      self.supported_countries = ['GB']
       self.default_currency = 'GBP'
-      self.supported_cardtypes = [:visa, :master, :maestro, :switch ]
+      self.supported_cardtypes = [:visa, :master, :american_express, :maestro, :switch ]
       self.money_format = :cents
       self.homepage_url = 'http://www.barclaycard.co.uk/business/accepting-payments/epdq-mpi/'
       self.display_name = 'Barclays ePDQ'

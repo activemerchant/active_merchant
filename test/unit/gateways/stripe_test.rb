@@ -29,16 +29,6 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_authorize
-    @gateway.expects(:ssl_request).never
-    assert_raises(RuntimeError) { @gateway.authorize(@amount, @credit_card, @options) }
-  end
-
-  def test_capture
-    @gateway.expects(:ssl_request).never
-    assert_raises(RuntimeError) { @gateway.capture(nil, 'ch_test_charge') }
-  end
-
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_purchase_response(true))
 
@@ -63,12 +53,23 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_request_always_uses_live_mode_to_determine_test_request
+    @gateway.expects(:ssl_request).returns(successful_partially_refunded_response(:livemode => true))
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
+    assert_instance_of Response, response
+    assert_success response
+
+    assert !response.test?
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert response.test?
+    # unsuccessful request defaults to live
+    assert !response.test?
   end
 
   def test_invalid_raw_response
@@ -158,7 +159,8 @@ class StripeTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_partially_refunded_response
+  def successful_partially_refunded_response(options = {})
+    options = {:livemode=>false}.merge!(options)
     <<-RESPONSE
 {
   "amount": 400,
@@ -167,7 +169,7 @@ class StripeTest < Test::Unit::TestCase
   "currency": "usd",
   "description": "Test Purchase",
   "id": "ch_test_charge",
-  "livemode": false,
+  "livemode": #{options[:livemode]},
   "object": "charge",
   "paid": true,
   "refunded": true,

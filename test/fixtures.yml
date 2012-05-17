@@ -32,8 +32,8 @@ beanstream_interac:
   password: password
 
 blue_pay:
-  login: X
-  password: Y
+  login: '100096218902'
+  password: 'MBUVE4G1BACMFM4W3XQHUUL2SMQRP.LW'
 
 braintree_orange:
   login: demo
@@ -170,6 +170,22 @@ merchant_ware:
  login: 
  password: 
  name: 
+
+# Working credentials, no need to replace
+migs_purchase: # MiGS gateway for purchase mode
+  login: TESTANZTEST3
+  password: '6447E199'
+  secure_hash: '76AF3392002D202A60D0AB5F9D81653C'
+  advanced_login: noack_ama
+  advanced_password: test1234
+
+# Working credentials, no need to replace
+migs_capture: # MiGS gateway for auth/capture mode
+  login: TESTANZTEST2
+  password: '8ED23813'
+  secure_hash: '5816DF2E29819E43EA7C1F6E0DC2F1B5'
+  advanced_login: noack_ama
+  advanced_password: test1234
 
 modern_payments:
   login: login
@@ -495,6 +511,10 @@ viaklix:
   login: LOGIN
   password: PASSWORD
   user: USER
+
+vindicia:
+  login: LOGIN
+  password: PASSWORD
   
 # Working test credentials, no need to replace
 wirecard:

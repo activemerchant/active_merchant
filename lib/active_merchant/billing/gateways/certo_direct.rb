@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = [
         "BE", "BG", "CZ", "DK", "DE", "EE", "IE", "EL", "ES", "FR",
         "IT", "CY", "LV", "LT", "LU", "HU", "MT", "NL", "AT", "PL",
-        "PT", "RO", "SI", "SK", "FI", "SE", "UK"
+        "PT", "RO", "SI", "SK", "FI", "SE", "GB"
       ]
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
