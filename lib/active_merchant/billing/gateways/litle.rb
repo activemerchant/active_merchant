@@ -276,7 +276,8 @@ module ActiveMerchant #:nodoc:
           'version' => (options[:version] or @options[:version]),
           'url' => (options[:url] or @options[:url]),
           'proxy_addr' => (options[:proxy_addr] or @options[:proxy_addr]),
-          'proxy_port' => (options[:proxy_port] or @options[:proxy_port])
+          'proxy_port' => (options[:proxy_port] or @options[:proxy_port]),
+          'id' => (options[:id] or options[:order_id] or @options[:order_id])
         }
 
         if( !money.nil? && money.to_s.length > 0 )

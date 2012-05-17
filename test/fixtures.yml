@@ -150,7 +150,7 @@ linkpoint:
     PASTE YOUR PEM FILE HERE
 
 litle:
-  currency: USD,
+  currency: USD
   merchant: 'Default Report Group'
   merchant_id: 101
   user: ACTIVE

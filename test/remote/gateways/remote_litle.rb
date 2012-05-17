@@ -198,7 +198,7 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_success store_response
     assert_equal 'Account number was successfully registered', store_response.message
     assert_equal '445711', store_response.params['litleOnlineResponse'].registerTokenResponse.bin
-    assert_equal 'VI', store_response.params['litleOnlineResponse'].registerTokenResponse.type
+    assert_equal 'VI', store_response.params['litleOnlineResponse'].registerTokenResponse['type'] #type is on Object in 1.8.7 - later versions can use .registerTokenResponse.type
     assert_equal '801', store_response.params['litleOnlineResponse'].registerTokenResponse.response
     assert_equal '1111222233330123', store_response.params['litleOnlineResponse'].registerTokenResponse.litleToken
   end
