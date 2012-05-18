@@ -94,7 +94,7 @@ class CreditCardTest < Test::Unit::TestCase
     @visa.type = nil
 
     assert_not_valid @visa
-    assert @visa.errors[:type].include?('is required')
+    assert !@visa.errors[:type].include?('is required')
     assert_attribute_not_valid @visa, :number
   end
 

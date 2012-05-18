@@ -237,7 +237,7 @@ module ActiveMerchant #:nodoc:
           errors.add :number, :invalid
         end
 
-        unless errors[:number] || errors[:type]
+        if errors[:number].empty? && errors[:type].empty?
           errors.add :type, :incorrect unless CreditCard.matching_type?(number, type)
         end
       end
