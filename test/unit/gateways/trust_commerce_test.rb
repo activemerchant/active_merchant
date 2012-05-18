@@ -4,7 +4,8 @@ class TrustCommerceTest < Test::Unit::TestCase
   def setup
     @gateway = TrustCommerceGateway.new(
       :login => 'TestMerchant',
-      :password => 'password'
+      :password => 'password',
+      :vault_password => "test"
     )
     # Force SSL post
     @gateway.stubs(:tclink?).returns(false)
@@ -86,11 +87,11 @@ class TrustCommerceTest < Test::Unit::TestCase
 
   def test_successful_transaction_query
     @gateway.expects(:ssl_post).returns(successful_transaction_query_response)
-    assert response = @gateway.get_transaction_data()
-    assert_instance_of TransactionResponse, response
+    assert response = @gateway.query_transaction(:vault_password => "asdfasdf")
+    assert_instance_of QueryResponse, response
     assert_success response
     assert response.test?
-    assert_equal response.transactions.count, 1
+    assert_equal response.entries.count, 1
   end
   
   private
