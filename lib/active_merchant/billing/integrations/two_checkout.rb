@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
         autoload 'Notification', File.dirname(__FILE__) + '/two_checkout/notification'
        
         mattr_accessor :payment_routine
-        self.payment_routine = :multi_page
+        self.payment_routine = :single_page
         
         def self.service_url
           case self.payment_routine

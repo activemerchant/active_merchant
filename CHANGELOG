@@ -2,6 +2,8 @@
 
 * Add Litle gateway [GregDrake]
 * PaymentExpress gateway: add support for BillingId and DpsBillingId for token [mikel]
+* 2checkout integration: Add ability to auto settle [craigchristenson]
+* 2checkout integration: Switch default mode to single page [craigchristenson]
 
 == Version 1.22.0 (May 17, 2012)
 
