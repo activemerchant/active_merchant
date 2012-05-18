@@ -13,7 +13,6 @@ class TwoCheckoutHelperTest < Test::Unit::TestCase
  
   def test_basic_helper_fields
     assert_field 'sid', 'cody@example.com'
-
     assert_field 'total', '5.00'
     assert_field 'cart_order_id', 'order-500'
   end
@@ -34,6 +33,17 @@ class TwoCheckoutHelperTest < Test::Unit::TestCase
     
     assert_field 'li_2_description', 'Test Product'
     assert_field 'li_2_price', '15.0'
+  end
+
+  def test_c_prod_fields
+    @helper.c_prod :prod => "1,1", :name => 'Example Product Name'
+    @helper.c_prod :description => 'Example Product Description', :price => '15.0'
+    
+    assert_field 'c_prod_1', '1,1'
+    assert_field 'c_name_1', 'Example Product Name'
+    
+    assert_field 'c_description_2', 'Example Product Description'
+    assert_field 'c_price_2', '15.0'
   end
   
   def test_address_mapping
