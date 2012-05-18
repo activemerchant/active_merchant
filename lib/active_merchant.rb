@@ -31,6 +31,8 @@ require 'active_support/core_ext/class/attribute_accessors'
 require 'active_support/core_ext/class/delegating_attributes'
 require 'active_support/core_ext/module/attribute_accessors'
 
+require 'active_model'
+
 begin
   require 'active_support/base64'
 
@@ -52,6 +54,7 @@ require 'builder'
 require 'cgi'
 require 'rexml/document'
 
+require 'active_merchant/common'
 require 'active_utils'
 require 'active_merchant/billing'
 require 'active_merchant/version'

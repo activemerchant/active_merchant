@@ -1,6 +1,7 @@
 require 'time'
 require 'date'
 require 'active_merchant/billing/expiry_date'
+require 'active_merchant/common/mass_assignment'
 require 'active_model'
 
 module ActiveMerchant #:nodoc:
