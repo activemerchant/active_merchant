@@ -7,12 +7,16 @@ module ActiveMerchant #:nodoc:
     # You may use Check in place of CreditCard with any gateway that supports it. Currently, only
     # +BraintreeGateway+ supports the Check object.
     class Check
-      include Validateable
+      include ActiveModel::Validations
+      include ActiveModel::MassAssignmentSecurity
+      include MassAssignment
       
       attr_accessor :first_name, :last_name, :routing_number, :account_number, :account_holder_type, :account_type, :number
       
       # Used for Canadian bank accounts
       attr_accessor :institution_number, :transit_number
+      
+      validate :validate
       
       def name
         @name ||= "#{@first_name} #{@last_name}".strip
@@ -29,15 +33,15 @@ module ActiveMerchant #:nodoc:
       
       def validate
         [:name, :routing_number, :account_number].each do |attr|
-          errors.add(attr, "cannot be empty") if self.send(attr).blank?
+          errors.add(attr, :empty) if self.send(attr).blank?
         end
         
-        errors.add(:routing_number, "is invalid") unless valid_routing_number?
+        errors.add(:routing_number, :invalid) unless valid_routing_number?
         
-        errors.add(:account_holder_type, "must be personal or business") if
+        errors.add(:account_holder_type, :must_be_personal_or_business) if
             !account_holder_type.blank? && !%w[business personal].include?(account_holder_type.to_s)
         
-        errors.add(:account_type, "must be checking or savings") if
+        errors.add(:account_type, :must_be_checking_or_savings) if
             !account_type.blank? && !%w[checking savings].include?(account_type.to_s)
       end
       

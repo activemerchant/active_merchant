@@ -26,8 +26,8 @@ end
 
 begin
   gem 'actionpack'
-rescue LoadError
-  raise StandardError, "The view tests need ActionPack installed as gem to run"
+rescue LoadError => e
+  raise e, "The view tests need ActionPack installed as gem to run"
 end
 
 require 'action_controller'
@@ -123,6 +123,18 @@ module ActiveMerchant
     def assert_deprecation_warning(message, target)
       target.expects(:deprecated).with(message)
       yield
+    end
+    
+    def assert_attribute_valid(validateable, attribute)
+      clean_backtrace do
+        assert validateable.errors[attribute].empty?, "Attribute #{attribute} expected to be valid"
+      end
+    end
+    
+    def assert_attribute_not_valid(validateable, attribute)
+      clean_backtrace do
+        assert validateable.errors[attribute].any?, "Attribute #{attribute} expected not to be valid"
+      end
     end
     
     private

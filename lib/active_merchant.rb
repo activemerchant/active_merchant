@@ -31,6 +31,8 @@ require 'active_support/core_ext/class/attribute_accessors'
 require 'active_support/core_ext/class/delegating_attributes'
 require 'active_support/core_ext/module/attribute_accessors'
 
+require 'active_model'
+
 begin
   require 'active_support/base64'
 
@@ -52,6 +54,7 @@ require 'builder'
 require 'cgi'
 require 'rexml/document'
 
+require 'active_merchant/common'
 require 'active_utils'
 require 'active_merchant/billing'
 require 'active_merchant/version'
@@ -61,3 +64,6 @@ module ActiveMerchant #:nodoc:
     autoload :Integrations, 'active_merchant/billing/integrations'
   end
 end
+
+require 'active_support/i18n'
+I18n.load_path << File.dirname(__FILE__) + '/active_merchant/locale/en.yml'
