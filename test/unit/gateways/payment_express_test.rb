@@ -47,6 +47,14 @@ class PaymentExpressTest < Test::Unit::TestCase
      assert_equal '00000004011a2478', response.authorization
   end
   
+  def test_purchase_request_should_include_cvc2_presence
+     @gateway.expects(:commit).with do |type, request|
+       type == :purchase && request.to_s =~ %r{<Cvc2Presence>1<\/Cvc2Presence>}
+     end
+
+     @gateway.purchase(@amount, @visa, @options)
+  end
+
   def test_successful_solo_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
 

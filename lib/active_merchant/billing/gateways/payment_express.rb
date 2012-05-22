@@ -137,6 +137,7 @@ module ActiveMerchant #:nodoc:
         
         if credit_card.verification_value?
           xml.add_element("Cvc2").text = credit_card.verification_value
+          xml.add_element("Cvc2Presence").text = "1"
         end
         
         if requires_start_date_or_issue_number?(credit_card)
