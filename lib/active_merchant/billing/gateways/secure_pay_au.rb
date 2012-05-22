@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, credit_card_or_stored_id, options = {})
-        if credit_card_or_stored_id.is_a?(ActiveMerchant::Billing::CreditCard)
+        if credit_card_or_stored_id.respond_to?(:number)
           requires!(options, :order_id)
           commit :purchase, build_purchase_request(money, credit_card_or_stored_id, options)
         else

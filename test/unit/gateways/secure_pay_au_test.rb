@@ -58,6 +58,18 @@ class SecurePayAuTest < Test::Unit::TestCase
     assert_equal "CARD EXPIRED", response.message
   end
 
+  def test_purchase_with_stored_id_calls_commit_periodic
+    @gateway.expects(:commit_periodic)
+
+    @gateway.purchase(@amount, "123", @options)
+  end
+
+  def test_purchase_with_creditcard_calls_commit_with_purchase
+    @gateway.expects(:commit).with(:purchase, anything)
+
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+
   def test_successful_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
 
