@@ -103,6 +103,19 @@ class PaypalTest < Test::Unit::TestCase
     assert_equal '1.00', response.params['gross_amount']
     assert_equal 'USD', response.params['gross_amount_currency_id']
   end
+
+  def test_successful_incomplete_captures
+    auth = @gateway.authorize(100, @creditcard, @params)
+    assert_success auth
+    response = @gateway.capture(60, auth.authorization, {:complete_type => "NotComplete"})
+    assert_success response
+    assert response.params['transaction_id']
+    assert_equal '0.60', response.params['gross_amount']
+    response_2 = @gateway.capture(40, auth.authorization)
+    assert_success response_2
+    assert response_2.params['transaction_id']
+    assert_equal '0.40', response_2.params['gross_amount']
+  end
   
   # NOTE THIS SETTING: http://skitch.com/jimmybaker/nysus/payment-receiving-preferences-paypal
   # PayPal doesn't return the InvoiceID in the response, so I am unable to check for it. Looking at the transaction
