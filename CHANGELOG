@@ -4,6 +4,9 @@
 * PaymentExpress gateway: add support for BillingId and DpsBillingId for token [mikel]
 * 2checkout integration: Add ability to auto settle [craigchristenson]
 * 2checkout integration: Switch default mode to single page [craigchristenson]
+* Cybersource: Revert - Add retrieve method to pull details on a
+stored card [jduff]
+* Cybersource: Revet - Add recurring payment support [jduff]
 
 == Version 1.22.0 (May 17, 2012)
 
@@ -59,6 +62,7 @@
 * Payflow Express gateway: Better amount handling [jduff]
 * Barclays gateway: Allow American Express [duff]
 * Ogone gateway: Remove duplicated method [ntalbott]
+* Cybersource gateway: Add retrieve method to pull details on a stored card [fabiokr]
 
 == Version 1.21.0 (March 7, 2012)
 
