@@ -126,7 +126,8 @@ module ActiveMerchant #:nodoc:
       def build_reference_request(money, reference)
         xml = Builder::XmlMarkup.new
 
-        transaction_id, order_id, preauth_id, original_amount = reference.split("*")
+        transaction_id, order_id, preauth_id, original_amount = reference.split('*')
+
         xml.tag! 'amount', (money ? amount(money) : original_amount)
         xml.tag! 'currency', options[:currency] || currency(money)
         xml.tag! 'txnID', transaction_id
