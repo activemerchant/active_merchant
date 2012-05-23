@@ -2,6 +2,16 @@ require 'test_helper'
 
 class RemoteSecurePayAuTest < Test::Unit::TestCase
 
+  class MyCreditCard
+    include ActiveMerchant::Billing::CreditCardMethods
+    include ActiveMerchant::Validateable
+    attr_accessor :number, :month, :year, :first_name, :last_name, :verification_value, :type
+
+    def verification_value?
+      !@verification_value.blank?
+    end
+  end
+
   def setup
     @gateway = SecurePayAuGateway.new(fixtures(:secure_pay_au))
 
@@ -17,6 +27,22 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_custom_credit_card_class
+    options = {
+      :number => 4242424242424242,
+      :month => 9,
+      :year => Time.now.year + 1,
+      :first_name => 'Longbob',
+      :last_name => 'Longsen',
+      :verification_value => '123',
+      :type => 'visa'
+    }
+    credit_card = MyCreditCard.new(options)
+    assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
   end
