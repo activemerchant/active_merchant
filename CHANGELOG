@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.23.0 (May 23, 2012)
+
 * Add Litle gateway [GregDrake]
 * PaymentExpress gateway: add support for BillingId and DpsBillingId for token [mikel]
 * 2checkout integration: Add ability to auto settle [craigchristenson]
