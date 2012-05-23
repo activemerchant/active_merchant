@@ -6,7 +6,11 @@
 * 2checkout integration: Switch default mode to single page [craigchristenson]
 * Cybersource: Revert - Add retrieve method to pull details on a
 stored card [jduff]
-* Cybersource: Revet - Add recurring payment support [jduff]
+* Cybersource: Revert - Add recurring payment support [jduff]
+* PaymentExpress: add Cvc2Presence flag when submitting verification
+value [jduff]
+* SecurePayAU: fix CreditCard check [jduff]
+* Barclays: fix order capture [csaunders/ntalbott/jduff]
 
 == Version 1.22.0 (May 17, 2012)
 
