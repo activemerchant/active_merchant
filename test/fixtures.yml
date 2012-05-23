@@ -464,8 +464,8 @@ secure_pay_tech:
   password: d557591484cb2cd12bba445aba420d2c69cd6a88
 
 secure_pay_au:
-  login:
-  password:
+  login: ABC0030
+  password: abc123
 
 #  Replace with your serial numbers for the skipjack test environment
 skipjack:
