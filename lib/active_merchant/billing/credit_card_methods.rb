@@ -83,6 +83,10 @@ module ActiveMerchant #:nodoc:
 
           return nil
         end
+
+        def visa_dankort?(number)
+          number =~ /^4571\d{12}$/
+        end
         
         def first_digits(number)
           number.to_s.slice(0,6) 
