@@ -86,6 +86,12 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
       :amount => 10000
     }
 
+    @run_transaction_check_options = {
+      :payment_method => @check,
+      :command => 'check',
+      :amount => 10000
+    }
+
     @run_sale_options = {
       :payment_method => @credit_card,
       :amount => 5000
@@ -275,6 +281,13 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
 
   def test_run_transaction
     @options.merge!(@run_transaction_options)
+    response = @gateway.run_transaction(@options)
+    assert response.params['run_transaction_return']
+    assert response.success?
+  end
+
+  def test_run_transaction_check
+    @options.merge!(@run_transaction_check_options)
     response = @gateway.run_transaction(@options)
     assert response.params['run_transaction_return']
     assert response.success?
