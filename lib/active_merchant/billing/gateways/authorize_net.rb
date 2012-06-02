@@ -177,6 +177,30 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
+      # Reverse a transaction.
+      #
+      # Attempt to void the transaction.  If that fails, because the transaction has been settled, refund it.
+      #
+      # ==== Parameters
+      #
+      # * <tt>money</tt> -- The amount to be credited to the customer as an Integer value in cents.
+      # * <tt>identification</tt> -- The ID of the original transaction against which the reversal is being issued.
+      # * <tt>options</tt> -- A hash of parameters.
+      #
+      # ==== Options
+      #
+      # * <tt>:card_number</tt> -- The credit card number the refund is being issued to. (REQUIRED)
+      # * <tt>:first_name</tt> -- The first name of the account being refunded.
+      # * <tt>:last_name</tt> -- The last name of the account being refunded.
+      # * <tt>:zip</tt> -- The postal code of the account being refunded.
+      def reverse(money, identification, options = {})
+        void_response = void(identification, options)
+
+        return void_response if void_response.success?
+
+        refund(money, identification, options)
+      end
+
       # Create a recurring payment.
       #
       # This transaction creates a new Automated Recurring Billing (ARB) subscription. Your account must have ARB enabled.

@@ -41,6 +41,25 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal '508141794', response.authorization
   end
 
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+
+    assert response = @gateway.void('508141795')
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141796', response.authorization
+  end
+
+  def test_successful_reverse
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    @gateway.expects(:ssl_post).returns(failed_void_response)
+
+    assert response = @gateway.reverse(@amount, '508141795', :card_number => @credit_card.number)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141797', response.authorization
+  end
+
   def test_add_address_outsite_north_america
     result = {}
 
@@ -309,6 +328,18 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def failed_authorization_response
     '$2$,$1$,$1$,$This transaction was declined.$,$advE7f$,$Y$,$508141794$,$5b3fe66005f3da0ebe51$,$$,$1.00$,$CC$,$auth_only$,$$,$Longbob$,$Longsen$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$2860A297E0FE804BCB9EF8738599645C$,$P$,$2$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
+  end
+
+  def successful_void_response
+    '$1$,$1$,$1$,$This transaction has been approved.$,$xxx$,$P$,$508141796$,$$,$$,$0.00$,$CC$,$void$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$9F92C24C21E956E195A61B8F74CC8F62$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$XXXX1111$,$Visa$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
+  end
+
+  def failed_void_response
+    '$3$,$2$,$16$,$The transaction cannot be found.$,$$,$P$,$0$,$$,$$,$0.00$,$CC$,$void$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$F78CEDA63CEF500FB122F402BB603498$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$Visa$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
+  end
+
+  def successful_refund_response
+    '$1$,$1$,$1$,$This transaction has been approved.$,$$,$P$,$508141797$,$$,$$,$0.01$,$CC$,$credit$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$BFC43CB4A170D55D279619C740FA28D1$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$XXXX1111$,$Visa$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
   end
 
   def fraud_review_response
