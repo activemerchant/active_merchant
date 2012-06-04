@@ -60,6 +60,11 @@ module ActiveMerchant #:nodoc:
         handle_result(transaction.void)
       end
 
+      def reverse(transaction_id, options = {})
+        transaction = Samurai::Transaction.find(transaction_id)
+        handle_result(transaction.reverse)
+      end
+
       def store(creditcard, options = {})
         address = options[:billing_address] || options[:address] || {}
 

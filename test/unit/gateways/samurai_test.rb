@@ -112,6 +112,19 @@ class SamuraiTest < Test::Unit::TestCase
     assert_equal "reference_id", response.authorization
   end
 
+  def test_successful_reverse
+    Samurai::Transaction.expects(:find).
+                         with(@successful_authorization_id).
+                         returns(transaction = successful_authorize_response)
+
+    transaction.expects(:reverse).returns(successful_reverse_response)
+
+    response = @gateway.reverse(@successful_authorization_id)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal "reference_id", response.authorization
+  end
+
   def test_successful_store
     card_to_store = {
       :card_number  => "4242424242424242",
@@ -229,6 +242,10 @@ class SamuraiTest < Test::Unit::TestCase
 
   def successful_void_response
     successful_response("Void")
+  end
+
+  def successful_reverse_response
+    successful_response("Reverse")
   end
 
   def successful_store_result
