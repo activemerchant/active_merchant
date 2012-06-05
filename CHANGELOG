@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * PayPal gateway: Support for incomplete captures [mbulat]
+* Moneris gateway: Add support for vault [kenzie]
 
 == Version 1.23.0 (May 23, 2012)
 
