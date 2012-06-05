@@ -79,6 +79,40 @@ module ActiveMerchant #:nodoc:
         commit 'refund', crediting_params(authorization, :amount => amount(money))
       end
 
+
+      def store(credit_card, options = {})
+        post = {}
+        post[:pan] = credit_card.number
+        post[:expdate] = expdate(credit_card)
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        commit('res_add_cc', post)
+      end
+
+      def unstore(data_key)
+        post = {}
+        post[:data_key] = data_key
+        commit('res_delete', post)
+      end
+
+      def vault_update(data_key, credit_card, options = {})
+        post = {}
+        post[:pan] = credit_card.number
+        post[:expdate] = expdate(credit_card)
+        post[:data_key] = data_key
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        commit('res_update_cc', post)
+      end
+
+      def vault_purchase(data_key, money, options = {})
+        post = {}
+        post[:data_key] = data_key
+        post[:order_id] = options[:order_id]
+        post[:amount] = amount(money)
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        commit('res_purchase_cc', post)
+      end
+
+
       def test?
         @options[:test] || super
       end
@@ -205,7 +239,11 @@ module ActiveMerchant #:nodoc:
           "transact"           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
           "Batchcloseall"      => [],
           "opentotals"         => [:ecr_number],
-          "batchclose"         => [:ecr_number]
+          "batchclose"         => [:ecr_number],
+          "res_add_cc"         => [:pan, :expdate, :crypt_type],
+          "res_delete"         => [:data_key],
+          "res_update_cc"      => [:data_key, :pan, :expdate, :crypt_type],
+          "res_purchase_cc"    => [:data_key, :order_id, :amount, :crypt_type]
         }
       end
     end

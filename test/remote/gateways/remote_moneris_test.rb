@@ -81,4 +81,37 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Declined', response.message
   end
+
+  def test_successful_store
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert_equal "Successfully registered cc details", response.message
+    assert response.params["data_key"].present?
+    @data_key = response.params["data_key"]
+  end
+
+  def test_successful_unstore
+    test_successful_store
+    assert response = @gateway.unstore(@data_key)
+    assert_success response
+    assert_equal "Successfully deleted cc details", response.message
+    assert response.params["data_key"].present?
+  end
+
+  def test_vault_update
+    test_successful_store
+    assert response = @gateway.vault_update(@data_key, @credit_card)
+    assert_success response
+    assert_equal "Successfully updated cc details", response.message
+    assert response.params["data_key"].present?
+  end
+
+  def test_successful_vault_purchase
+    test_successful_store
+    assert response = @gateway.vault_purchase(@data_key, 100, {:order_id => generate_unique_id})
+    assert_success response
+    assert_equal "Approved", response.message
+    assert_false response.authorization.blank?
+  end
+
 end
