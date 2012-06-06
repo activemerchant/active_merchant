@@ -98,9 +98,9 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert response.params["data_key"].present?
   end
 
-  def test_vault_update
+  def test_update
     test_successful_store
-    assert response = @gateway.vault_update(@data_key, @credit_card)
+    assert response = @gateway.update(@data_key, @credit_card)
     assert_success response
     assert_equal "Successfully updated cc details", response.message
     assert response.params["data_key"].present?

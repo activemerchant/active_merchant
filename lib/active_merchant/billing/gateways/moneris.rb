@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
         commit('res_delete', post)
       end
 
-      def vault_update(data_key, credit_card, options = {})
+      def update(data_key, credit_card, options = {})
         post = {}
         post[:pan] = credit_card.number
         post[:expdate] = expdate(credit_card)

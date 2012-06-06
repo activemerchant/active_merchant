@@ -129,17 +129,17 @@ class MonerisTest < Test::Unit::TestCase
     assert response.params["data_key"].present?
   end
 
-  def test_vault_update
-    @gateway.expects(:ssl_post).returns(successful_vault_update_response)
+  def test_update
+    @gateway.expects(:ssl_post).returns(successful_update_response)
     test_successful_store
-    assert response = @gateway.vault_update(@data_key, @credit_card)
+    assert response = @gateway.update(@data_key, @credit_card)
     assert_success response
     assert_equal "Successfully updated cc details", response.message
     assert response.params["data_key"].present?
   end
 
   def test_successful_vault_purchase
-    @gateway.expects(:ssl_post).returns(successful_vault_purchase_response)
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
     test_successful_store
     assert response = @gateway.vault_purchase(@data_key, 100, {:order_id => generate_unique_id})
     assert_success response
@@ -228,7 +228,7 @@ class MonerisTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_vault_update_response
+  def successful_update_response
     <<-RESPONSE
 <?xml version="1.0"?>
 <response>
@@ -237,21 +237,6 @@ class MonerisTest < Test::Unit::TestCase
     <ResponseCode>027</ResponseCode>
     <Complete>true</Complete>
     <Message>Successfully updated cc details * =</Message>
-  </receipt>
-</response>
-    RESPONSE
-  end
-
-  def successful_vault_purchase_response
-    <<-RESPONSE
-<?xml version="1.0"?>
-<response>
-  <receipt>
-    <ReceiptId>1026.1</ReceiptId>
-    <ResponseCode>027</ResponseCode>
-    <Complete>true</Complete>
-    <Message>Approved * =</Message>
-    <TransID>58-0_3</TransID>
   </receipt>
 </response>
     RESPONSE
