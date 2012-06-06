@@ -31,18 +31,34 @@ module ActiveMerchant #:nodoc:
       # captured at a later date.
       # 
       # Pass in +order_id+ and optionally a +customer+ parameter.
-      def authorize(money, creditcard, options = {})
-        debit_commit 'preauth', money, creditcard, options        
+      def authorize(money, creditcard_or_datakey, options = {})
+        requires!(options, :order_id)
+        post = {}
+        add_payment_source(post, creditcard_or_datakey)
+        post[:amount]     = amount(money)
+        post[:order_id]   = options[:order_id]
+        post[:cust_id]    = options[:customer]
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        action = (post[:data_key].blank?) ? 'preauth' : 'res_preauth_cc'
+        commit(action, post)
       end
       
-      # This action verifies funding on a customer's card, and readies them for 
+      # This action verifies funding on a customer's card and readies them for
       # deposit in a merchant's account.
       # 
       # Pass in <tt>order_id</tt> and optionally a <tt>customer</tt> parameter
-      def purchase(money, creditcard, options = {})
-        debit_commit 'purchase', money, creditcard, options
+      def purchase(money, creditcard_or_datakey, options = {})
+        requires!(options, :order_id)
+        post = {}
+        add_payment_source(post, creditcard_or_datakey)
+        post[:amount]     = amount(money)
+        post[:order_id]   = options[:order_id]
+        post[:cust_id]    = options[:customer]
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        action = (post[:data_key].blank?) ? 'purchase' : 'res_purchase_cc'
+        commit(action, post)
       end
-     
+
       # This method retrieves locked funds from a customer's account (from a 
       # PreAuth) and prepares them for deposit in a merchant's account.
       # 
@@ -79,7 +95,6 @@ module ActiveMerchant #:nodoc:
         commit 'refund', crediting_params(authorization, :amount => amount(money))
       end
 
-
       def store(credit_card, options = {})
         post = {}
         post[:pan] = credit_card.number
@@ -103,40 +118,23 @@ module ActiveMerchant #:nodoc:
         commit('res_update_cc', post)
       end
 
-      def vault_purchase(data_key, money, options = {})
-        post = {}
-        post[:data_key] = data_key
-        post[:order_id] = options[:order_id]
-        post[:amount] = amount(money)
-        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        commit('res_purchase_cc', post)
-      end
-
-
       def test?
         @options[:test] || super
       end
+
     private # :nodoc: all
     
       def expdate(creditcard)
         sprintf("%.4i", creditcard.year)[-2..-1] + sprintf("%.2i", creditcard.month)
       end
-      
-      def debit_commit(commit_type, money, creditcard, options)
-        requires!(options, :order_id)
-        commit(commit_type, debit_params(money, creditcard, options))
-      end
-      
-      # Common params used amongst the +purchase+ and +authorization+ methods
-      def debit_params(money, creditcard, options = {})
-        {
-          :order_id   => options[:order_id],
-          :cust_id    => options[:customer],
-          :amount     => amount(money),
-          :pan        => creditcard.number,
-          :expdate    => expdate(creditcard),
-          :crypt_type => options[:crypt_type] || @options[:crypt_type]
-        }
+
+      def add_payment_source(post, source)
+        if source.is_a?(String)
+          post[:data_key]   = source
+        else
+          post[:pan]        = source.number
+          post[:expdate]    = expdate(source)
+        end
       end
       
       # Common params used amongst the +credit+, +void+ and +capture+ methods
@@ -243,7 +241,8 @@ module ActiveMerchant #:nodoc:
           "res_add_cc"         => [:pan, :expdate, :crypt_type],
           "res_delete"         => [:data_key],
           "res_update_cc"      => [:data_key, :pan, :expdate, :crypt_type],
-          "res_purchase_cc"    => [:data_key, :order_id, :amount, :crypt_type]
+          "res_purchase_cc"    => [:data_key, :order_id, :cust_id, :amount, :crypt_type],
+          "res_preauth_cc"     => [:data_key, :order_id, :cust_id, :amount, :crypt_type]
         }
       end
     end

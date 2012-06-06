@@ -11,7 +11,7 @@ class MonerisTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
-    @options = { :order_id => '1', :billing_address => address }
+    @options = { :order_id => '1', :customer => '1' }
   end
 
   def test_successful_purchase
@@ -52,7 +52,6 @@ class MonerisTest < Test::Unit::TestCase
   end                                                           
   
   def test_purchase_is_valid_xml
-
    params = { 
      :order_id => "order1",
      :amount => "1.01",
@@ -67,7 +66,6 @@ class MonerisTest < Test::Unit::TestCase
   end  
 
   def test_purchase_is_valid_xml
-
    params = {
      :order_id => "order1",
      :amount => "1.01",
@@ -82,7 +80,6 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def test_capture_is_valid_xml
- 
    params = { 
      :order_id => "order1",
      :amount => "1.01",
@@ -138,13 +135,29 @@ class MonerisTest < Test::Unit::TestCase
     assert response.params["data_key"].present?
   end
 
-  def test_successful_vault_purchase
+  def test_successful_purchase_with_vault
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     test_successful_store
-    assert response = @gateway.vault_purchase(@data_key, 100, {:order_id => generate_unique_id})
+    assert response = @gateway.purchase(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
     assert_success response
     assert_equal "Approved", response.message
     assert response.authorization.present?
+  end
+
+  def test_successful_authorization_with_vault
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    test_successful_store
+    assert response = @gateway.authorize(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
+    assert_success response
+    assert_equal "Approved", response.message
+    assert response.authorization.present?
+  end
+
+  def test_failed_authorization_with_vault
+    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    test_successful_store
+    assert response = @gateway.authorize(100, @data_key, @options)
+    assert_failure response
   end
 
   private
