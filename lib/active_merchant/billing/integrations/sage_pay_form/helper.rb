@@ -107,6 +107,8 @@ module ActiveMerchant #:nodoc:
               exact = /^[A-Z]{3}$/
             when /State$/
               exact = /^[A-Z]{2}$/
+            when 'Description'
+              value = value.truncate(100)
             else
               reject = /&+/
             end
