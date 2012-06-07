@@ -81,6 +81,17 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def add_metadata(options)
+        xml = Builder::XmlMarkup.new
+        if options[:merchant_name] || options[:merchant_location]
+          xml.tag! 'metadata' do
+            xml.tag! 'meta', :name => 'ca_name', :value => options[:merchant_name] if options[:merchant_name]
+            xml.tag! 'meta', :name => 'ca_location', :value => options[:merchant_location] if options[:merchant_location]
+          end
+        end
+        xml.target!
+      end
+
       def build_purchase_request(money, credit_card, options)
         xml = Builder::XmlMarkup.new
         xml.tag! 'amount', amount(money)
@@ -93,6 +104,8 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'cvv', credit_card.verification_value if credit_card.verification_value?
         end
 
+        xml << add_metadata(options)
+        
         xml.target!
       end
 
