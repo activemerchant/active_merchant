@@ -110,6 +110,16 @@ class SagePayFormHelperTest < Test::Unit::TestCase
       assert plain.include?('&DeliveryState=IL')
     end
   end
+
+  def test_description_should_truncate
+    description = 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut la'
+    assert_equal 101, description.size
+    @helper.add_field('Description', description)
+
+    with_crypt_plaintext do |plain|
+      assert plain.include?('Description=Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt u...')
+    end
+  end
   
   def test_set_shipping_address_wont_be_overridden_by_billing_address
     @helper.billing_address(
