@@ -256,15 +256,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def fraud_result(authorization_response)
-        if authorization_response.respond_to?('fraudResult')
+        if authorization_response.respond_to?(:fraudResult)
           fraud_result = authorization_response.fraudResult
-          if fraud_result.respond_to?('cardValidationResult')
+          if fraud_result.respond_to?(:cardValidationResult)
             cvv_to_pass = fraud_result.cardValidationResult
             if(cvv_to_pass == "")
               cvv_to_pass = "P"
             end
           end
-          if fraud_result.respond_to?('avsResult')
+          if fraud_result.respond_to?(:avsResult)
             avs_to_pass = AVS_RESPONSE_CODE[fraud_result.avsResult]
           end
         end

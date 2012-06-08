@@ -4,32 +4,16 @@ class LitleTest < Test::Unit::TestCase
 
   def setup
     @gateway = LitleGateway.new({:merchant_id=>'101', :user=>'active', :password=>'merchant', :version=>'8.10', :url=>'https://www.testlitle.com/sandbox/communicator/online'})
-  end
-  
-  def test_create_credit_card_hash
-    # define all inputs
-    money = 1000
-
-    creditcard = CreditCard.new(
-    :first_name => 'Steve',
-    :last_name  => 'Smith',
-    :month      => '9',
-    :year       => '2010',
-    :type       => 'visa',
-    :number     => '4242424242424242',
-    :verification_value => '969'
-    )
-
-    order_id = '1234'
-    ip = '192.168.0.1'
-    customer = '4000'
-    invoice = '1000'
-    merchant = 'ABC'
-    description = 'cool stuff'
-    email = 'abc@xyz.com'
-    currency = 'USD'
-
-    billing_address = {
+    @credit_card_options = {
+      :first_name => 'Steve',
+      :last_name  => 'Smith',
+      :month      => '9',
+      :year       => '2010',
+      :brand      => 'visa',
+      :number     => '4242424242424242',
+      :verification_value => '969'
+    }
+    @billing_address = {
       :name      => 'Steve Smith',
       :company   => 'testCompany',
       :address1  => '900 random st',
@@ -41,7 +25,7 @@ class LitleTest < Test::Unit::TestCase
       :phone     => '1234567890'
     }
 
-    shipping_address = {
+    @shipping_address = {
       :name      => 'Steve Smith',
       :company   => '',
       :address1  => '500 nnnn st',
@@ -53,6 +37,29 @@ class LitleTest < Test::Unit::TestCase
       :phone     => '1234567890'
     }
 
+    @response_options = {
+      'response' => '000',
+      'message' => 'successful',
+      'litleTxnId' => '1234',
+      'litleToken'=>'1111222233334444'
+    }
+  end
+  
+  def test_create_credit_card_hash
+    # define all inputs
+    money = 1000
+
+    creditcard = CreditCard.new(@credit_card_options)
+
+    order_id = '1234'
+    ip = '192.168.0.1'
+    customer = '4000'
+    invoice = '1000'
+    merchant = 'ABC'
+    description = 'cool stuff'
+    email = 'abc@xyz.com'
+    currency = 'USD'
+
     options = {
       :order_id=>order_id,
       :ip=>ip,
@@ -62,8 +69,8 @@ class LitleTest < Test::Unit::TestCase
       :description=>description,
       :email=>email,
       :currency=>currency,
-      :billing_address=>billing_address,
-      :shipping_address=>shipping_address,
+      :billing_address=>@billing_address,
+      :shipping_address=>@shipping_address,
       :merchant_id=>'101'
     }
 
@@ -120,30 +127,6 @@ class LitleTest < Test::Unit::TestCase
     email = 'abc@xyz.com'
     currency = 'USD'
 
-    billing_address = {
-      :name      => 'Steve Smith',
-      :company   => 'testCompany',
-      :address1  => '900 random st',
-      :address2  => 'floor 10',
-      :city      => 'lowell',
-      :state     => 'ma',
-      :country   => 'usa',
-      :zip       => '12345',
-      :phone     => '1234567890'
-    }
-
-    shipping_address = {
-      :name      => 'Steve Smith',
-      :company   => '',
-      :address1  => '500 nnnn st',
-      :address2  => '',
-      :city      => 'lowell',
-      :state     => 'ma',
-      :country   => 'usa',
-      :zip       => '12345',
-      :phone     => '1234567890'
-    }
-
     options = {
       :order_id=>order_id,
       :ip=>ip,
@@ -153,8 +136,8 @@ class LitleTest < Test::Unit::TestCase
       :description=>description,
       :email=>email,
       :currency=>currency,
-      :billing_address=>billing_address,
-      :shipping_address=>shipping_address,
+      :billing_address=>@billing_address,
+      :shipping_address=>@shipping_address,
       :merchant_id=>'101'
     }
 
@@ -213,11 +196,7 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_recognize_ax_and_some_empties
-    creditcard = CreditCard.new(
-    :month       => '9',
-    :year       => '2010',
-    :type       => 'american_express'
-    )
+    creditcard = CreditCard.new(@credit_card_options.merge(:brand => 'american_express'))
     hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {})
     assert_equal 'AX', hashFromGateway['card']['type']
     assert_nil hashFromGateway['billToAddress']
@@ -225,111 +204,47 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_recognize_di
-    creditcard = CreditCard.new(
-    :month      => '9',
-    :year       => '2010',
-    :type       => 'discover'
-    )
+    creditcard = CreditCard.new(@credit_card_options.merge(:brand => 'discover'))
     hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {})
     assert_equal 'DI', hashFromGateway['card']['type']
   end
 
   def test_recognize_mastercard
-    creditcard = CreditCard.new(
-    :month      => '9',
-    :year       => '2010',
-    :type       => 'master'
-    )
+    creditcard = CreditCard.new(@credit_card_options.merge(:brand => 'master'))
     hashFromGateway = @gateway.send(:create_credit_card_hash, 0,creditcard,{})
     assert_equal 'MC', hashFromGateway['card']['type']
   end
 
   def test_recognize_jcb
-    creditcard = CreditCard.new(
-    :month      => '9',
-    :year       => '2010',
-    :type       => 'jcb'
-    )
+    creditcard = CreditCard.new(@credit_card_options.merge(:brand => 'jcb'))
     hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {})
     assert_equal 'DI', hashFromGateway['card']['type']
   end
 
   def test_recognize_diners
-    creditcard = CreditCard.new(
-    :month      => '9',
-    :year       => '2010',
-    :type       => 'diners_club'
-    )
+    creditcard = CreditCard.new(@credit_card_options.merge(:brand => 'diners_club'))
     hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {})
     assert_equal 'DI', hashFromGateway['card']['type']
   end
 
   def test_two_digit_month
-    creditcard = CreditCard.new(
-    :month      => '11',
-    :year       => '2010',
-    :type       => 'diners_club'
-    )
+    creditcard = CreditCard.new(@credit_card_options.merge(:month => '11'))
     hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {})
     assert_equal '1110', hashFromGateway['card']['expDate']
   end
 
   def test_nils_in_both_addresses
-    creditcard = CreditCard.new(
-    :month      => '9',
-    :year       => '2010',
-    :type       => 'visa'
-    )
-
-    billing_address = {
-      :name      => nil,
-      :company   => nil,
-      :address1  => nil,
-      :address2  => nil,
-      :city      => nil,
-      :state     => nil,
-      :country   => nil,
-      :zip       => nil,
-      :phone     => nil
-    }
-
-    shipping_address = {
-      :name      => nil,
-      :company   => nil,
-      :address1  => nil,
-      :address2  => nil,
-      :city      => nil,
-      :state     => nil,
-      :country   => nil,
-      :zip       => nil,
-      :phone     => nil
-    }
+    creditcard = CreditCard.new(@credit_card_options)
 
     hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard,
-    {:shipping_address=>shipping_address,:billing_address=>billing_address})
+    {:shipping_address=>{},:billing_address=>{}})
 
-    #billing address
-    assert_nil hashFromGateway['billToAddress']['name']
-    assert_nil hashFromGateway['billToAddress']['companyName']
-    assert_nil hashFromGateway['billToAddress']['addressLine1']
-    assert_nil hashFromGateway['billToAddress']['addressLine2']
-    assert_nil hashFromGateway['billToAddress']['city']
-    assert_nil hashFromGateway['billToAddress']['state']
-    assert_nil hashFromGateway['billToAddress']['zip']
-    assert_nil hashFromGateway['billToAddress']['country']
-    assert_nil hashFromGateway['billToAddress']['email']
-    assert_nil hashFromGateway['billToAddress']['phone']
-    #shipping address
-    assert_nil hashFromGateway['shipToAddress']['name']
-    assert_nil hashFromGateway['shipToAddress']['company']
-    assert_nil hashFromGateway['shipToAddress']['addressLine1']
-    assert_nil hashFromGateway['shipToAddress']['addressLine2']
-    assert_nil hashFromGateway['shipToAddress']['city']
-    assert_nil hashFromGateway['shipToAddress']['state']
-    assert_nil hashFromGateway['shipToAddress']['zip']
-    assert_nil hashFromGateway['shipToAddress']['country']
-    assert_nil hashFromGateway['shipToAddress']['email']
-    assert_nil hashFromGateway['shipToAddress']['phone']
+    %w(name companyName company addressLine1 addressLine2 city state zip country email phone).each do |att|
+      #billing address
+      assert_nil hashFromGateway['billToAddress'][att]
+      #shipping address
+      assert_nil hashFromGateway['shipToAddress'][att]
+    end
 
   end
 
@@ -341,50 +256,29 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_currency_USD
-    creditcard = CreditCard.new(
-    :month      => '11',
-    :year       => '2010',
-    :type       => 'diners_club'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
     hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {:currency=>'USD',:merchant_id=>'101'})
     assert_equal '101', hashFromGateway['merchantId']
   end
 
   def test_currency_DEFAULT
-    creditcard = CreditCard.new(
-    :month      => '11',
-    :year       => '2010',
-    :type       => 'diners_club'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
     hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {:merchant_id=>'101'})
     assert_equal '101', hashFromGateway['merchantId']
   end
 
   def test_currency_EUR
-    creditcard = CreditCard.new(
-    :month      => '11',
-    :year       => '2010',
-    :type       => 'diners_club'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
     hashFromGateway = @gateway.send(:create_credit_card_hash, 0, creditcard, {:currency=>'EUR',:merchant_id=>'102'})
     assert_equal '102', hashFromGateway['merchantId']
   end
 
   def test_auth_pass
-    authorizationResponseObj = Hashit.new({
-      'response' => '000',
-      'message' => 'successful',
-      'litleTxnId' => '1234',
-      'litleToken'=>'1111222233334444'
-    })
-    retObj = Hashit.new({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
+    authorizationResponseObj = stub(@response_options)
+    retObj = stub({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
 
-    creditcard = CreditCard.new(
-    :month      => '11',
-    :year       => '2010',
-    :type       => 'diners_club'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.authorize(0, creditcard)
     assert_equal true, responseFrom.success?
     assert_equal 'successful', responseFrom.message
@@ -393,22 +287,12 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_avs
-    fraudResult = Hashit.new({'avsResult'=>'01'})
-    authorizationResponseObj = Hashit.new({
-      'response' => '000',
-      'message' => 'successful',
-      'litleTxnId' => '1234',
-      'litleToken'=>'1111222233334444',
-      'fraudResult' => fraudResult
-    })
-    retObj = Hashit.new({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
+    fraudResult = stub({'avsResult'=>'01'})
+    authorizationResponseObj = stub(@response_options.merge('fraudResult' => fraudResult))
+    retObj = stub({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
 
-    creditcard = CreditCard.new(
-    :month      => '11',
-    :year       => '2010',
-    :type       => 'diners_club'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.authorize(0, creditcard)
     assert_equal true, responseFrom.success?
     assert_equal 'X', responseFrom.avs_result['code']
@@ -418,22 +302,12 @@ class LitleTest < Test::Unit::TestCase
   end
   
   def test_cvv
-    fraudResult = Hashit.new({'cardValidationResult'=>'M'})
-    authorizationResponseObj = Hashit.new({
-      'response' => '000',
-      'message' => 'successful',
-      'litleTxnId' => '1234',
-      'litleToken'=>'1111222233334444',
-      'fraudResult' => fraudResult
-    })
-    retObj = Hashit.new({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
+    fraudResult = stub({'cardValidationResult'=>'M'})
+    authorizationResponseObj = stub(@response_options.merge('fraudResult' => fraudResult))
+    retObj = stub({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
 
-    creditcard = CreditCard.new(
-    :month      => '11',
-    :year       => '2010',
-    :type       => 'diners_club'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.authorize(0, creditcard)
     assert_equal true, responseFrom.success?
     assert_equal 'M', responseFrom.cvv_result['code']
@@ -441,21 +315,12 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_sale_avs
-    fraudResult = Hashit.new({'avsResult'=>'10'})
-    saleResponseObj = Hashit.new({
-      'response' => '000',
-      'message' => 'successful',
-      'litleTxnId' => '1234',
-      'fraudResult' => fraudResult
-    })
-    retObj = Hashit.new({'response'=>'0','saleResponse'=>saleResponseObj})
+    fraudResult = stub({'avsResult'=>'10'})
+    saleResponseObj = stub(@response_options.merge('fraudResult' => fraudResult))
+    retObj = stub({'response'=>'0','saleResponse'=>saleResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
 
-    creditcard = CreditCard.new(
-    :month      => '11',
-    :year       => '2010',
-    :type       => 'diners_club'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.purchase(0, creditcard)
     assert_equal true, responseFrom.success?
     assert_equal 'Z', responseFrom.avs_result['code']
@@ -465,22 +330,12 @@ class LitleTest < Test::Unit::TestCase
   end
   
   def test_sale_cvv
-    fraudResult = Hashit.new({'cardValidationResult'=>''})
-    saleResponseObj = Hashit.new({
-      'response' => '000',
-      'message' => 'successful',
-      'litleTxnId' => '1234',
-      'litleToken'=>'1111222233334444',
-      'fraudResult' => fraudResult
-    })
-    retObj = Hashit.new({'response'=>'0','saleResponse'=>saleResponseObj})
+    fraudResult = stub({'cardValidationResult'=>''})
+    saleResponseObj = stub(@response_options.merge('fraudResult' => fraudResult))
+    retObj = stub({'response'=>'0','saleResponse'=>saleResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
 
-    creditcard = CreditCard.new(
-    :month      => '11',
-    :year       => '2010',
-    :type       => 'diners_club'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.purchase(0, creditcard)
     assert_equal true, responseFrom.success?
     assert_equal 'P', responseFrom.cvv_result['code']
@@ -489,15 +344,11 @@ class LitleTest < Test::Unit::TestCase
 
     
   def test_auth_fail
-    authorizationResponseObj = Hashit.new({'response' => '111', 'message' => 'fail', 'litleTxnId' => '1234', 'litleToken'=>'1111222233334444'})
-    retObj = Hashit.new({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
+    authorizationResponseObj = stub({'response' => '111', 'message' => 'fail', 'litleTxnId' => '1234', 'litleToken'=>'1111222233334444'})
+    retObj = stub({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
 
-    creditcard = CreditCard.new(
-    :month      => '11',
-    :year       => '2010',
-    :type       => 'diners_club'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.authorize(0, creditcard)
     assert_equal false, responseFrom.success?
     assert_equal '1234', responseFrom.authorization
@@ -505,66 +356,50 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_auth_fail_schema
-    retObj = Hashit.new({'response'=>'1','message'=>'Error validating xml data against the schema'})
+    retObj = stub({'response'=>'1','message'=>'Error validating xml data against the schema'})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
 
-    creditcard = CreditCard.new(
-    :month      => '11',
-    :year       => '2010',
-    :type       => 'diners_club'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.authorize(0, creditcard)
     assert_equal false, responseFrom.success?
     assert_equal 'Error validating xml data against the schema', responseFrom.message
   end
 
   def test_purchase_pass
-    purchaseResponseObj = Hashit.new({'response' => '000', 'message' => 'successful', 'litleTxnId'=>'123456789012345678'})
-    retObj = Hashit.new({'response'=>'0','saleResponse'=>purchaseResponseObj})
+    purchaseResponseObj = stub({'response' => '000', 'message' => 'successful', 'litleTxnId'=>'123456789012345678'})
+    retObj = stub({'response'=>'0','saleResponse'=>purchaseResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
 
-    creditcard = CreditCard.new(
-    :month      => '11',
-    :year       => '2010',
-    :type       => 'diners_club'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.purchase(0, creditcard)
     assert_equal true, responseFrom.success?
     assert_equal '123456789012345678', responseFrom.params['litleOnlineResponse'].saleResponse.litleTxnId
   end
 
   def test_purchase_fail
-    purchaseResponseObj = Hashit.new({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
-    retObj = Hashit.new({'response'=>'0','saleResponse'=>purchaseResponseObj})
+    purchaseResponseObj = stub({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
+    retObj = stub({'response'=>'0','saleResponse'=>purchaseResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
 
-    creditcard = CreditCard.new(
-    :month      => '11',
-    :year       => '2010',
-    :type       => 'diners_club'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.purchase(0, creditcard)
     assert_equal false, responseFrom.success?
     assert_equal '123456789012345678', responseFrom.params['litleOnlineResponse'].saleResponse.litleTxnId
   end
 
   def test_purchase_fail_schema
-    retObj = Hashit.new({'response'=>'1','message'=>'Error validating xml data against the schema'})
+    retObj = stub({'response'=>'1','message'=>'Error validating xml data against the schema'})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
 
-    creditcard = CreditCard.new(
-    :month      => '11',
-    :year       => '2010',
-    :type       => 'diners_club'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.purchase(0, creditcard)
     assert_equal false, responseFrom.success?
     assert_equal 'Error validating xml data against the schema', responseFrom.message
   end
 
   def test_capture_pass
-    captureResponseObj = Hashit.new({'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'})
-    retObj = Hashit.new({'response'=>'0','captureResponse'=>captureResponseObj})
+    captureResponseObj = stub({'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'})
+    retObj = stub({'response'=>'0','captureResponse'=>captureResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:capture).returns(retObj)
     authorization = "1234"
     responseFrom = @gateway.capture(0, authorization)
@@ -573,8 +408,8 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_capture_fail
-    captureResponseObj = Hashit.new({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
-    retObj = Hashit.new({'response'=>'0','captureResponse'=>captureResponseObj})
+    captureResponseObj = stub({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
+    retObj = stub({'response'=>'0','captureResponse'=>captureResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:capture).returns(retObj)
     authorization = "1234"
     responseFrom = @gateway.capture(0, authorization)
@@ -583,7 +418,7 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_capture_fail_schema
-    retObj = Hashit.new({'response'=>'1','message'=>'Error validating xml data against the schema'})
+    retObj = stub({'response'=>'1','message'=>'Error validating xml data against the schema'})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:capture).returns(retObj)
     authorization = '1234'
     responseFrom = @gateway.authorize(0, authorization)
@@ -592,8 +427,8 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_void_pass
-    voidResponseObj = Hashit.new({'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'})
-    retObj = Hashit.new({'response'=>'0','voidResponse'=>voidResponseObj})
+    voidResponseObj = stub({'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'})
+    retObj = stub({'response'=>'0','voidResponse'=>voidResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:void).returns(retObj)
     identification = "1234"
     responseFrom = @gateway.void(identification)
@@ -602,8 +437,8 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_void_fail
-    voidResponseObj = Hashit.new({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
-    retObj = Hashit.new({'response'=>'0','voidResponse'=>voidResponseObj})
+    voidResponseObj = stub({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
+    retObj = stub({'response'=>'0','voidResponse'=>voidResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:void).returns(retObj)
     identification = "1234"
     responseFrom = @gateway.void(identification)
@@ -612,7 +447,7 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_void_fail_schema
-    retObj = Hashit.new({'response'=>'1','message'=>'Error validating xml data against the schema'})
+    retObj = stub({'response'=>'1','message'=>'Error validating xml data against the schema'})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:void).returns(retObj)
     identification = "1234"
     responseFrom = @gateway.void(identification)
@@ -621,8 +456,8 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_credit_pass
-    creditResponseObj = Hashit.new({'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'})
-    retObj = Hashit.new({'response'=>'0','creditResponse'=>creditResponseObj})
+    creditResponseObj = stub({'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'})
+    retObj = stub({'response'=>'0','creditResponse'=>creditResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:credit).returns(retObj)
     identification = "1234"
     responseFrom = @gateway.credit(0, identification)
@@ -631,8 +466,8 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_credit_fail
-    creditResponseObj = Hashit.new({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
-    retObj = Hashit.new({'response'=>'0','creditResponse'=>creditResponseObj})
+    creditResponseObj = stub({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
+    retObj = stub({'response'=>'0','creditResponse'=>creditResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:credit).returns(retObj)
     identification = "1234"
     responseFrom = @gateway.credit(0, identification)
@@ -641,7 +476,7 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_capture_fail_schema
-    retObj = Hashit.new({'response'=>'1','message'=>'Error validating xml data against the schema'})
+    retObj = stub({'response'=>'1','message'=>'Error validating xml data against the schema'})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:credit).returns(retObj)
     identification = '1234'
     responseFrom = @gateway.credit(0, identification)
@@ -650,64 +485,46 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_store_pass1
-    storeResponseObj = Hashit.new({'response' => '801', 'message' => 'successful', 'litleToken'=>'1111222233334444'})
-    retObj = Hashit.new({'response'=>'0','registerTokenResponse'=>storeResponseObj})
+    storeResponseObj = stub({'response' => '801', 'message' => 'successful', 'litleToken'=>'1111222233334444', 'litleTxnId'=>nil})
+    retObj = stub({'response'=>'0','registerTokenResponse'=>storeResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
-    creditcard = CreditCard.new(
-    :number => '4242424242424242'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
+
     responseFrom = @gateway.store(creditcard,{})
     assert_equal true, responseFrom.success?
     assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse'].registerTokenResponse.litleToken
   end
 
   def test_store_pass2
-    storeResponseObj = Hashit.new({'response' => '802', 'message' => 'already registered', 'litleToken'=>'1111222233334444'})
-    retObj = Hashit.new({'response'=>'0','registerTokenResponse'=>storeResponseObj})
+    storeResponseObj = stub({'response' => '802', 'message' => 'already registered', 'litleToken'=>'1111222233334444', 'litleTxnId'=>nil})
+    retObj = stub({'response'=>'0','registerTokenResponse'=>storeResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
-    creditcard = CreditCard.new(
-    :number => '4242424242424242'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
+
     responseFrom = @gateway.store(creditcard,{})
     assert_equal true, responseFrom.success?
     assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse'].registerTokenResponse.litleToken
   end
 
   def test_store_fail
-    storeResponseObj = Hashit.new({'response' => '803', 'message' => 'fail', 'litleToken'=>'1111222233334444'})
-    retObj = Hashit.new({'response'=>'0','registerTokenResponse'=>storeResponseObj})
+    storeResponseObj = stub({'response' => '803', 'message' => 'fail', 'litleToken'=>'1111222233334444', 'litleTxnId'=>nil})
+    retObj = stub({'response'=>'0','registerTokenResponse'=>storeResponseObj})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
-    creditcard = CreditCard.new(
-    :number => '4242424242424242'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
+
     responseFrom = @gateway.store(creditcard,{})
     assert_equal false, responseFrom.success?
     assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse'].registerTokenResponse.litleToken
   end
 
   def test_store_fail_schema
-    retObj = Hashit.new({'response'=>'1','message'=>'Error validating xml data against the schema'})
+    retObj = stub({'response'=>'1','message'=>'Error validating xml data against the schema'})
     LitleOnline::LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
-    creditcard = CreditCard.new(
-    :number => '4242424242424242'
-    )
+    creditcard = CreditCard.new(@credit_card_options)
+
     responseFrom = @gateway.store(creditcard,{})
     assert_equal false, responseFrom.success?
     assert_equal 'Error validating xml data against the schema', responseFrom.message
-  end
-  
-  class Hashit
-    def initialize(hash)
-      @original = hash
-      hash.each do |k,v|
-        self.instance_variable_set("@#{k}", v)  ## create and initialize an instance variable for this key/value pair
-        self.class.send(:define_method, k, proc{self.instance_variable_get("@#{k}")})  ## create the getter that returns the instance variable
-        self.class.send(:define_method, "#{k}=", proc{|v| self.instance_variable_set("@#{k}", v)})  ## create the setter that sets the instance variable
-      end
-    end
-    def to_hash
-      return @original
-    end
   end
 
 end
