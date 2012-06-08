@@ -362,10 +362,10 @@ class CreditCardTest < Test::Unit::TestCase
   end
   
   def test_brand_is_aliased_as_type
-    assert_deprecation_warning("Support for type is deprecated and will be removed from a future release of ActiveMerchant. Please use brand instead.", CreditCard) do
+    assert_deprecation_warning("CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead.", CreditCard) do
       assert_equal @visa.type, @visa.brand
     end
-    assert_deprecation_warning("Support for type is deprecated and will be removed from a future release of ActiveMerchant. Please use brand instead.", CreditCard) do
+    assert_deprecation_warning("CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead.", CreditCard) do
       assert_equal @solo.type, @solo.brand
     end
   end

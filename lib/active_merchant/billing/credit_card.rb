@@ -113,12 +113,12 @@ module ActiveMerchant #:nodoc:
       attr_accessor :verification_value
 
       def type
-        self.class.deprecated "Support for type is deprecated and will be removed from a future release of ActiveMerchant. Please use brand instead."
+        self.class.deprecated "CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead."
         brand
       end
 
       def type=(value)
-        self.class.deprecated "Support for type is deprecated and will be removed from a future release of ActiveMerchant. Please use brand instead."
+        self.class.deprecated "CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead."
         self.brand = value
       end
 

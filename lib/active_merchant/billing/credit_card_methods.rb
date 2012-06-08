@@ -85,7 +85,7 @@ module ActiveMerchant #:nodoc:
         end
 
         def type?(number)
-          deprecated "Support for type? is deprecated and will be removed from a future release of ActiveMerchant. Please use brand? instead."
+          deprecated "CreditCard#type? is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand? instead."
           brand?(number)
         end
         
@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
         end
 
         def matching_type?(number, brand)
-          deprecated "Support for matching_type? is deprecated and will be removed from a future release of ActiveMerchant. Please use matching_brand? instead."
+          deprecated "CreditCard#matching_type? is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#matching_brand? instead."
           matching_brand?(number, brand)
         end
 
