@@ -200,10 +200,15 @@ moneris_us:
   login: monusqa002
   password: qatoken
 
-#Working credentials, no need to replace
+# Working credentials, no need to replace
 nab_transact:
   login: ABC0001
   password: changeit
+
+# Working credentials, no need to replace
+nab_transact_card_acceptor:
+  login: XYZ0010
+  password: abcd1234
   
 netaxept:
   login: LOGIN
