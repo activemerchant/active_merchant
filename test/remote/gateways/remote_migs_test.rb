@@ -8,10 +8,10 @@ class RemoteMigsTest < Test::Unit::TestCase
 
     @amount = 100
     @declined_amount = 105
-    @visa   = credit_card('4005550000000001', :month => 5, :year => 2013, :type => 'visa')
-    @master = credit_card('5123456789012346', :month => 5, :year => 2013, :type => 'master')
-    @amex   = credit_card('371449635311004',  :month => 5, :year => 2013, :type => 'american_express')
-    @diners = credit_card('30123456789019',   :month => 5, :year => 2013, :type => 'diners_club')
+    @visa   = credit_card('4005550000000001', :month => 5, :year => 2013, :brand => 'visa')
+    @master = credit_card('5123456789012346', :month => 5, :year => 2013, :brand => 'master')
+    @amex   = credit_card('371449635311004',  :month => 5, :year => 2013, :brand => 'american_express')
+    @diners = credit_card('30123456789019',   :month => 5, :year => 2013, :brand => 'diners_club')
     @credit_card = @visa
 
     @options = {

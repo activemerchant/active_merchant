@@ -256,8 +256,8 @@ class PayflowTest < Test::Unit::TestCase
   def test_format_issue_number
     xml = Builder::XmlMarkup.new
     credit_card = credit_card("5641820000000005",
-      :type         => "switch",
-      :issue_number => 1
+      :brand         => "switch",
+      :issue_number  => 1
     )
     
     @gateway.send(:add_credit_card, xml, credit_card)

@@ -8,7 +8,7 @@ class InspiregatewayTest < Test::Unit::TestCase
       :password => 'PASSWORD'
     )
     @credit_card = credit_card('4242424242424242',
-                    :type => 'visa'
+                    :brand => 'visa'
                   )
     @amount = 100
     @options = { :billing_address => address }

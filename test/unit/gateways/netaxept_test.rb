@@ -95,7 +95,7 @@ class NetaxeptTest < Test::Unit::TestCase
     @gateway.expects(:ssl_get ).returns(successful_purchase_response[2]).in_sequence(s)
     @gateway.expects(:ssl_get ).returns(successful_purchase_response[3]).in_sequence(s)
     
-    assert_success @gateway.purchase(@amount, credit_card('1', :type => 'master'), @options)
+    assert_success @gateway.purchase(@amount, credit_card('1', :brand => 'master'), @options)
   end
   
   def test_handles_amex_card_type
@@ -109,12 +109,12 @@ class NetaxeptTest < Test::Unit::TestCase
     @gateway.expects(:ssl_get ).returns(successful_purchase_response[2]).in_sequence(s)
     @gateway.expects(:ssl_get ).returns(successful_purchase_response[3]).in_sequence(s)
     
-    assert_success @gateway.purchase(@amount, credit_card('1', :type => 'american_express'), @options)
+    assert_success @gateway.purchase(@amount, credit_card('1', :brand => 'american_express'), @options)
   end
   
   def test_invalid_card_type
     assert_raise(ArgumentError) do
-      @gateway.purchase(@amount, credit_card('1', :type => 'discover'), @options)
+      @gateway.purchase(@amount, credit_card('1', :brand => 'discover'), @options)
     end
   end
   
@@ -153,7 +153,7 @@ class NetaxeptTest < Test::Unit::TestCase
   end
 
   def test_uses_credit_card_brand_instead_of_credit_card_type
-    brand = @credit_card.type
+    brand = @credit_card.brand
     @credit_card.expects(:type).never
     @credit_card.expects(:brand).at_least_once.returns(brand)
 

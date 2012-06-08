@@ -228,8 +228,8 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'month'      , @credit_card.month
             xml.tag! 'year'       , @credit_card.year
           end
-          if type = card_type(@credit_card.type)
-            xml.tag! 'cardType'     , type
+          if brand = card_type(@credit_card.brand)
+            xml.tag! 'cardType'     , brand
           end
           if @credit_card.verification_value
             xml.tag! 'cvdIndicator' , '1' # Value Provided

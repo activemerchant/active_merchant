@@ -18,7 +18,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
       :verification_value => 4887,
       :first_name => 'Tekin',
       :last_name => 'Suleyman',
-      :type => 'american_express'
+      :brand => 'american_express'
     )
 
     @maestro = CreditCard.new(
@@ -31,7 +31,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
       :verification_value => 123,
       :first_name => 'Tekin',
       :last_name => 'Suleyman',
-      :type => 'maestro'
+      :brand => 'maestro'
     )
 
     @visa = CreditCard.new(
@@ -41,7 +41,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
       :verification_value => 123,
       :first_name => 'Tekin',
       :last_name => 'Suleyman',
-      :type => 'visa'
+      :brand => 'visa'
     )
 
     @solo = CreditCard.new(
@@ -54,7 +54,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
       :verification_value => 227,
       :first_name => 'Tekin',
       :last_name => 'Suleyman',
-      :type => 'solo'
+      :brand => 'solo'
     )
 
     @mastercard = CreditCard.new(
@@ -64,7 +64,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
       :verification_value => 419,
       :first_name => 'Tekin',
       :last_name => 'Suleyman',
-      :type => 'master'
+      :brand => 'master'
     )
     
     @electron = CreditCard.new(
@@ -74,7 +74,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
       :verification_value => 123,
       :first_name => 'Tekin',
       :last_name => 'Suleyman',
-      :type => 'electron'
+      :brand => 'electron'
     )
 
     @declined_card = CreditCard.new(
@@ -83,7 +83,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
       :year => next_year,
       :first_name => 'Tekin',
       :last_name => 'Suleyman',
-      :type => 'visa'
+      :brand => 'visa'
     )
 
     @options = { 

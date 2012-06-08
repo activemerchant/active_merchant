@@ -148,7 +148,7 @@ module ActiveMerchant
         :first_name => 'Longbob',
         :last_name => 'Longsen',
         :verification_value => '123',
-        :type => 'visa'
+        :brand => 'visa'
       }.update(options)
 
       Billing::CreditCard.new(defaults)

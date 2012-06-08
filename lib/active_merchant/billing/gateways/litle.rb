@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def create_credit_card_hash(money, creditcard, options)
-        cc_type = CARD_TYPE[creditcard.type]
+        cc_type = CARD_TYPE[creditcard.brand]
 
         exp_date_yr = creditcard.year.to_s()[2..3]
 

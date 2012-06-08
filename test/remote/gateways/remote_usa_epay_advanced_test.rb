@@ -20,7 +20,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
       :number => '4000100011112224',
       :month => 12,
       :year => 12,
-      :type => 'visa',
+      :brand => 'visa',
       :verification_value => '123',
       :first_name => "Fred",
       :last_name => "Flintstone"
@@ -30,7 +30,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
       :number => '4000300011112220',
       :month => 12,
       :year => 12,
-      :type => 'visa',
+      :brand => 'visa',
       :verification_value => '999',
       :first_name => "Fred",
       :last_name => "Flintstone"

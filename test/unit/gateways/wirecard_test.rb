@@ -7,7 +7,7 @@ class WirecardTest < Test::Unit::TestCase
     @gateway = WirecardGateway.new(:login => '', :password => '', :signature => '')
     @credit_card = credit_card('4200000000000000')
     @declined_card = credit_card('4000300011112220')
-    @unsupported_card = credit_card('4200000000000000', :type => :maestro)
+    @unsupported_card = credit_card('4200000000000000', :brand => :maestro)
     
     @amount = 111
 

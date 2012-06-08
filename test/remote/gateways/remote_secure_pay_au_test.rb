@@ -5,7 +5,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
   class MyCreditCard
     include ActiveMerchant::Billing::CreditCardMethods
     include ActiveMerchant::Validateable
-    attr_accessor :number, :month, :year, :first_name, :last_name, :verification_value, :type
+    attr_accessor :number, :month, :year, :first_name, :last_name, :verification_value, :brand
 
     def verification_value?
       !@verification_value.blank?
@@ -39,7 +39,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
       :first_name => 'Longbob',
       :last_name => 'Longsen',
       :verification_value => '123',
-      :type => 'visa'
+      :brand => 'visa'
     }
     credit_card = MyCreditCard.new(options)
     assert response = @gateway.purchase(@amount, credit_card, @options)

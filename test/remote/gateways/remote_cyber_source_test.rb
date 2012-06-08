@@ -6,8 +6,8 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     @gateway = CyberSourceGateway.new(fixtures(:cyber_source))
 
-    @credit_card = credit_card('4111111111111111', :type => 'visa')
-    @declined_card = credit_card('801111111111111', :type => 'visa')
+    @credit_card = credit_card('4111111111111111', :brand => 'visa')
+    @declined_card = credit_card('801111111111111', :brand => 'visa')
     
     @amount = 100
     
