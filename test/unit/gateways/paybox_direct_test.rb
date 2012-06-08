@@ -59,12 +59,12 @@ class PayboxDirectTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_fraudulent_request
+  def test_keep_the_card_code_not_considered_fraudulent
     @gateway.expects(:ssl_post).returns(purchase_response("00104"))
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert response.fraud_review?
+    assert !response.fraud_review?
   end
 
   def test_do_not_honour_code_not_considered_fraudulent
