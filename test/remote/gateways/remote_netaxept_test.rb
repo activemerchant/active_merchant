@@ -75,7 +75,7 @@ class RemoteNetaxeptTest < Test::Unit::TestCase
   end
 
   def test_successful_amex_purchase
-    credit_card = credit_card('378282246310005', :type => 'american_express')
+    credit_card = credit_card('378282246310005', :brand => 'american_express')
     assert credit_card.valid?, credit_card.errors.inspect
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response
@@ -83,7 +83,7 @@ class RemoteNetaxeptTest < Test::Unit::TestCase
   end
 
   def test_successful_master_purchase
-    credit_card = credit_card('5413000000000000', :type => 'master')
+    credit_card = credit_card('5413000000000000', :brand => 'master')
     assert credit_card.valid?, credit_card.errors.inspect
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_success response

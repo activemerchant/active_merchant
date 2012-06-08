@@ -30,7 +30,7 @@ class GatewayTest < Test::Unit::TestCase
   end
   
   def test_invalid_type
-    credit_card = stub(:type => "visa")    
+    credit_card = stub(:brand => "visa")    
     assert_equal "visa", Gateway.card_brand(credit_card)
   end
   

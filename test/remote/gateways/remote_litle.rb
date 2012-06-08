@@ -14,7 +14,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         :last_name  => 'Smith',
         :month      => '01',
         :year       => '2012',
-        :type       => 'visa',
+        :brand      => 'visa',
         :number     => '4457010000000009',
         :verification_value => '349'
       ), {
@@ -42,7 +42,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         :last_name  => 'Green',
         :month      => '06',
         :year       => '2012',
-        :type       => 'visa',
+        :brand      => 'visa',
         :number     => '4457010100000008',
         :verification_value => '992'
       ), {
@@ -69,7 +69,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         :last_name  => 'Smith',
         :month      => '01',
         :year       => '2012',
-        :type       => 'visa',
+        :brand      => 'visa',
         :number     => '4457010000000009',
         :verification_value => '349'
       ), {
@@ -97,7 +97,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         :last_name  => 'Green',
         :month      => '06',
         :year       => '2012',
-        :type       => 'visa',
+        :brand      => 'visa',
         :number     => '4457010100000008',
         :verification_value => '992'
       ), {
@@ -124,7 +124,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         :last_name  => 'Smith',
         :month      => '01',
         :year       => '2012',
-        :type       => 'visa',
+        :brand      => 'visa',
         :number     => '4457010000000009',
         :verification_value => '349'
       ), {
@@ -187,7 +187,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         :last_name  => 'Smith',
         :month      => '01',
         :year       => '2012',
-        :type       => 'visa',
+        :brand      => 'visa',
         :number     => '4457119922390123',
         :verification_value => '349'
       ), 
@@ -210,7 +210,7 @@ class RemoteLitleTest < Test::Unit::TestCase
         :last_name  => 'Smith',
         :month      => '01',
         :year       => '2012',
-        :type       => 'visa',
+        :brand      => 'visa',
         :number     => '4457119999999999',
         :verification_value => '349'
       ), 

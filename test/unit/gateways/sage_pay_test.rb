@@ -6,7 +6,7 @@ class SagePayTest < Test::Unit::TestCase
       :login => 'X'
     )
 
-    @credit_card = credit_card('4242424242424242', :type => 'visa')
+    @credit_card = credit_card('4242424242424242', :brand => 'visa')
     @options = { 
       :billing_address => { 
         :name => 'Tekin Suleyman',

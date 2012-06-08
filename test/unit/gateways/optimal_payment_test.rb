@@ -40,7 +40,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
       :year => Time.now.year + 1,
       :first_name => 'Longbob',
       :last_name => 'Longsen',
-      :type => 'visa'
+      :brand => 'visa'
     )
     @gateway.instance_variable_set('@credit_card', credit_card)
     assert_match minimal_request, @gateway.cc_auth_request(@amount, options)

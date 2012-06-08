@@ -11,7 +11,7 @@ class PaymentExpressTest < Test::Unit::TestCase
     @visa = credit_card
     
     @solo = credit_card("6334900000000005",
-              :type   => "solo",
+              :brand   => "solo",
               :issue_number => '01'
             )
 

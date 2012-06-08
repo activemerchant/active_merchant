@@ -32,7 +32,7 @@ class RealexTest < Test::Unit::TestCase
       :year => 2008,
       :first_name => 'Longbob',
       :last_name => 'Longsen',
-      :type => 'visa'
+      :brand => 'visa'
     )
     
     @options = {
