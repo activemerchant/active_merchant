@@ -99,6 +99,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [ePay](http://www.epay.dk/) - DK, SE, NO
 * [eWAY](http://www.eway.com.au/) - AU
 * [E-xact](http://www.e-xact.com) - CA, US
+* [Fat Zebra](https://www.fatzebra.com.au) - AU
 * [Federated Canada](http://www.federatedcanada.com/) - CA
 * [FirstPay](http://www.first-pay.com) - US
 * [Garanti Sanal POS](https://ccpos.garanti.com.tr/ccRaporlar/garanti/ccReports) - US, TR
