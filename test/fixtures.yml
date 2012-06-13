@@ -101,6 +101,10 @@ exact:
   login: "A00427-01" 
   password: testus
 
+fat_zebra:
+  username: TEST
+  token: TEST
+
 federated_canada:
   login: demo
   password: password
