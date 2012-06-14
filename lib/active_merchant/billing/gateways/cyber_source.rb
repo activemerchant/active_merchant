@@ -143,12 +143,18 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
-      # Creates or updates a cybersource customer profile, aka a subscription with type "on-demand"
+      # Creates a cybersource customer profile, aka a subscription with type "on-demand"
       # to charge the card while creating a profile, pass options[:setup_fee] => money
       def store(creditcard, options = {})
         requires!(options, :order_id)
         setup_address_hash(options)
         commit(build_create_subscription_request(creditcard, options), options)
+      end
+
+      def update(reference, creditcard, options = {})
+        requires!(options, :order_id)
+        setup_address_hash(options)
+        commit(build_update_subscription_request(reference, creditcard, options), options)
       end
 
       # CyberSource requires that you provide line item information for tax calculations
@@ -274,6 +280,21 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
+      def build_update_subscription_request(identification, creditcard, options)
+        reference_code, subscription_id, request_token = identification.split(";")
+
+        options[:subscription] = (options[:subscription] || {}).merge(:subscription_id => subscription_id)
+
+        xml = Builder::XmlMarkup.new :indent => 2
+        add_address(xml, creditcard, options[:billing_address], options) unless options[:billing_address].blank?
+        add_purchase_data(xml, options[:setup_fee], true, options) unless options[:setup_fee].blank?
+        add_creditcard(xml, creditcard) if creditcard
+        add_subscription(xml, options, creditcard)
+        add_subscription_update_service(xml, options)
+        add_business_rules_data(xml)
+        xml.target!
+      end
+
       def add_business_rules_data(xml)
         xml.tag! 'businessRules' do
           xml.tag!('ignoreAVSResult', 'true') if @options[:ignore_avs]
@@ -383,6 +404,10 @@ module ActiveMerchant #:nodoc:
 
       def add_subscription_create_service(xml, options)
         xml.tag! 'paySubscriptionCreateService', {'run' => 'true'}
+      end
+
+      def add_subscription_update_service(xml, options)
+        xml.tag! 'paySubscriptionUpdateService', {'run' => 'true'}
       end
 
       def add_subscription(xml, options, creditcard = nil)
