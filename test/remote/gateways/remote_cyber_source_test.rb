@@ -59,6 +59,19 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
+  def test_successful_subscription_authorization
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+
+    assert response = @gateway.authorize(@amount, response.authorization, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+
   def test_unsuccessful_authorization
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert response.test?
@@ -122,6 +135,18 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_subscription_purchase
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+
+    assert response = @gateway.purchase(@amount, response.authorization, @options)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?

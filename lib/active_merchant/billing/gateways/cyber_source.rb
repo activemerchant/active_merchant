@@ -106,10 +106,10 @@ module ActiveMerchant #:nodoc:
       # Request an authorization for an amount from CyberSource 
       #
       # You must supply an :order_id in the options hash 
-      def authorize(money, creditcard, options = {})
+      def authorize(money, creditcard_or_reference, options = {})
         requires!(options,  :order_id, :email)
         setup_address_hash(options)
-        commit(build_auth_request(money, creditcard, options), options )
+        commit(build_auth_request(money, creditcard_or_reference, options), options )
       end
       
       def auth_reversal(money, identification, options = {})
@@ -124,10 +124,10 @@ module ActiveMerchant #:nodoc:
 
       # Purchase is an auth followed by a capture
       # You must supply an order_id in the options hash  
-      def purchase(money, creditcard, options = {})
+      def purchase(money, creditcard_or_reference, options = {})
         requires!(options, :order_id, :email)
         setup_address_hash(options)
-        commit(build_purchase_request(money, creditcard, options), options)
+        commit(build_purchase_request(money, creditcard_or_reference, options), options)
       end
       
       def void(identification, options = {})
@@ -207,11 +207,9 @@ module ActiveMerchant #:nodoc:
         options[:shipping_address] = options[:shipping_address] || {}
       end
       
-      def build_auth_request(money, creditcard, options)
+      def build_auth_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
-        add_address(xml, creditcard, options[:billing_address], options)
-        add_purchase_data(xml, money, true, options)
-        add_creditcard(xml, creditcard)
+        add_creditcard_or_subscription(xml, money, creditcard_or_reference, options)
         add_auth_service(xml)
         add_business_rules_data(xml)
         xml.target!
@@ -239,11 +237,9 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end 
 
-      def build_purchase_request(money, creditcard, options)
+      def build_purchase_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
-        add_address(xml, creditcard, options[:billing_address], options)
-        add_purchase_data(xml, money, true, options)
-        add_creditcard(xml, creditcard)
+        add_creditcard_or_subscription(xml, money, creditcard_or_reference, options)
         add_purchase_service(xml, options)
         add_business_rules_data(xml)
         xml.target!
@@ -467,6 +463,17 @@ module ActiveMerchant #:nodoc:
       def add_creditcard_payment_method(xml)
         xml.tag! 'subscription' do
           xml.tag! 'paymentMethod', "credit card"
+        end
+      end
+
+      def add_creditcard_or_subscription(xml, money, creditcard_or_reference, options)
+        if creditcard_or_reference.is_a?(String)
+          add_purchase_data(xml, money, true, options)
+          add_subscription(xml, options, creditcard_or_reference)
+        else
+          add_address(xml, creditcard_or_reference, options[:billing_address], options)
+          add_purchase_data(xml, money, true, options)
+          add_creditcard(xml, creditcard_or_reference)
         end
       end
       
