@@ -294,39 +294,27 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_update_subscription_request(reference, creditcard, options)
-        reference_code, subscription_id, request_token = reference.split(";")
-
-        options[:subscription] = (options[:subscription] || {}).merge(:subscription_id => subscription_id)
-
         xml = Builder::XmlMarkup.new :indent => 2
         add_address(xml, creditcard, options[:billing_address], options) unless options[:billing_address].blank?
         add_purchase_data(xml, options[:setup_fee], true, options) unless options[:setup_fee].blank?
         add_creditcard(xml, creditcard)    if creditcard
         add_creditcard_payment_method(xml) if creditcard
-        add_subscription(xml, options)
+        add_subscription(xml, options, reference)
         add_subscription_update_service(xml, options)
         add_business_rules_data(xml)
         xml.target!
       end
 
       def build_delete_subscription_request(reference, options)
-        reference_code, subscription_id, request_token = reference.split(";")
-
-        options[:subscription] = (options[:subscription] || {}).merge(:subscription_id => subscription_id)
-
         xml = Builder::XmlMarkup.new :indent => 2
-        add_subscription(xml, options)
+        add_subscription(xml, options, reference)
         add_subscription_delete_service(xml, options)
         xml.target!
       end
 
       def build_retrieve_subscription_request(reference, options)
-        reference_code, subscription_id, request_token = reference.split(";")
-
-        options[:subscription] = (options[:subscription] || {}).merge(:subscription_id => subscription_id)
-
         xml = Builder::XmlMarkup.new :indent => 2
-        add_subscription(xml, options)
+        add_subscription(xml, options, reference)
         add_subscription_retrieve_service(xml, options)
         xml.target!
       end
@@ -454,9 +442,15 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'paySubscriptionRetrieveService', {'run' => 'true'}
       end
 
-      def add_subscription(xml, options)
+      def add_subscription(xml, options, reference = nil)
+        options[:subscription] ||= {}
+
         xml.tag! 'recurringSubscriptionInfo' do
-          xml.tag! 'subscriptionID',    options[:subscription][:subscription_id]
+          if reference
+            reference_code, subscription_id, request_token = reference.split(";")
+            xml.tag! 'subscriptionID',  subscription_id
+          end
+
           xml.tag! 'status',            options[:subscription][:status]                         if options[:subscription][:status]
           xml.tag! 'amount',            options[:subscription][:amount]                         if options[:subscription][:amount]
           xml.tag! 'numberOfPayments',  options[:subscription][:occurrences]                    if options[:subscription][:occurrences]
