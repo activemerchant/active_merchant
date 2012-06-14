@@ -285,30 +285,32 @@ module ActiveMerchant #:nodoc:
         add_address(xml, creditcard, options[:billing_address], options)
         add_purchase_data(xml, options[:setup_fee] || 0, true, options)
         add_creditcard(xml, creditcard)
-        add_subscription(xml, options, creditcard)
+        add_creditcard_payment_method(xml)
+        add_subscription(xml, options)
         add_purchase_service(xml, options) if options[:setup_fee]
         add_subscription_create_service(xml, options)
         add_business_rules_data(xml)
         xml.target!
       end
 
-      def build_update_subscription_request(identification, creditcard, options)
-        reference_code, subscription_id, request_token = identification.split(";")
+      def build_update_subscription_request(reference, creditcard, options)
+        reference_code, subscription_id, request_token = reference.split(";")
 
         options[:subscription] = (options[:subscription] || {}).merge(:subscription_id => subscription_id)
 
         xml = Builder::XmlMarkup.new :indent => 2
         add_address(xml, creditcard, options[:billing_address], options) unless options[:billing_address].blank?
         add_purchase_data(xml, options[:setup_fee], true, options) unless options[:setup_fee].blank?
-        add_creditcard(xml, creditcard) if creditcard
-        add_subscription(xml, options, creditcard)
+        add_creditcard(xml, creditcard)    if creditcard
+        add_creditcard_payment_method(xml) if creditcard
+        add_subscription(xml, options)
         add_subscription_update_service(xml, options)
         add_business_rules_data(xml)
         xml.target!
       end
 
-      def build_delete_subscription_request(identification, options)
-        reference_code, subscription_id, request_token = identification.split(";")
+      def build_delete_subscription_request(reference, options)
+        reference_code, subscription_id, request_token = reference.split(";")
 
         options[:subscription] = (options[:subscription] || {}).merge(:subscription_id => subscription_id)
 
@@ -318,8 +320,8 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_retrieve_subscription_request(identification, options)
-        reference_code, subscription_id, request_token = identification.split(";")
+      def build_retrieve_subscription_request(reference, options)
+        reference_code, subscription_id, request_token = reference.split(";")
 
         options[:subscription] = (options[:subscription] || {}).merge(:subscription_id => subscription_id)
 
@@ -452,13 +454,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'paySubscriptionRetrieveService', {'run' => 'true'}
       end
 
-      def add_subscription(xml, options, creditcard = nil)
-        if creditcard
-          xml.tag! 'subscription' do
-            xml.tag! 'paymentMethod', "credit card"
-          end
-        end
-
+      def add_subscription(xml, options)
         xml.tag! 'recurringSubscriptionInfo' do
           xml.tag! 'subscriptionID',    options[:subscription][:subscription_id]
           xml.tag! 'status',            options[:subscription][:status]                         if options[:subscription][:status]
@@ -471,6 +467,12 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'approvalRequired',  options[:subscription][:approval_required] || false
           xml.tag! 'event',             options[:subscription][:event]                          if options[:subscription][:event]
           xml.tag! 'billPayment',       options[:subscription][:bill_payment]                   if options[:subscription][:bill_payment]
+        end
+      end
+
+      def add_creditcard_payment_method(xml)
+        xml.tag! 'subscription' do
+          xml.tag! 'paymentMethod', "credit card"
         end
       end
       
