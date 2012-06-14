@@ -43,6 +43,21 @@ class CyberSourceTest < Test::Unit::TestCase
                  ],
           :currency => 'USD'
     }
+
+    @subscription_options = {
+      :order_id => generate_unique_id,
+      :email => 'someguy1232@fakeemail.net',
+      :credit_card => @credit_card,
+      :setup_fee => 100,
+      :billing_address => address,
+      :subscription => {
+        :frequency => "weekly",
+        :start_date => Date.today.next_week,
+        :occurrences => 4,
+        :automatic_renew => true,
+        :amount => 100
+      }
+    }
   end
   
   def test_successful_purchase
@@ -112,6 +127,13 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_equal 'USD', CyberSourceGateway.default_currency
   end
   
+  def test_successful_store_request
+    @gateway.stubs(:ssl_post).returns(successful_create_subscription_response)
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert response.success?
+    assert response.test?
+  end
+
   def test_avs_result
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     
@@ -183,6 +205,13 @@ class CyberSourceTest < Test::Unit::TestCase
     XML
   end
 
+  def successful_create_subscription_response
+    <<-XML
+    <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap:Header>
+    <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-8747786"><wsu:Created>2008-10-14T20:36:38.467Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.32"><c:merchantReferenceCode>949c7098db10a846595ade653f7d259e</c:merchantReferenceCode><c:requestID>2240165983980008402433</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>AhjzbwSP5cIxVhZHObgEUAU2LoPM+TpAfJAwQyXRR8hAdjiAmAAA6QCH</c:requestToken><c:paySubscriptionCreateReply><c:reasonCode>100</c:reasonCode><c:subscriptionID>2240165983980008402433</c:subscriptionID></c:paySubscriptionCreateReply></c:replyMessage></soap:Body></soap:Envelope>
+    XML
+  end
 
   def successful_capture_response
     <<-XML

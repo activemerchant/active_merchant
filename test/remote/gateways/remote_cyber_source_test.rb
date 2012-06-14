@@ -36,6 +36,19 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       :ignore_cvv => 'true'
     }
 
+    @subscription_options = {
+      :order_id => generate_unique_id,
+      :email => 'someguy1232@fakeemail.net',
+      :credit_card => @credit_card,
+      :billing_address => address,
+      :subscription => {
+        :frequency => "weekly",
+        :start_date => Date.today.next_week,
+        :occurrences => 4,
+        :auto_renew => true,
+        :amount => 100
+      }
+    }
   end
   
   def test_successful_authorization
@@ -155,7 +168,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_match /wsse:InvalidSecurity/, response.body
   end
   
-  def test_successful_credit
+  def test_successful_refund
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Successful transaction', response.message
     assert_success response
@@ -165,4 +178,19 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_success response
     assert response.test?       
   end
+
+  def test_successful_create_subscription
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_create_subscription_with_setup_fee
+    assert response = @gateway.store(@credit_card, @subscription_options.merge(:setup_fee => 100))
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
 end
