@@ -143,27 +143,28 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
-      # Creates a cybersource customer profile, aka a subscription with type "on-demand"
-      # to charge the card while creating a profile, pass options[:setup_fee] => money
+      # Stores a customer subscription/profile with type "on-demand".
+      # To charge the card while creating a profile, pass options[:setup_fee] => money
       def store(creditcard, options = {})
         requires!(options, :order_id)
         setup_address_hash(options)
         commit(build_create_subscription_request(creditcard, options), options)
       end
 
+      # Updates a customer subscription/profile
       def update(reference, creditcard, options = {})
         requires!(options, :order_id)
         setup_address_hash(options)
         commit(build_update_subscription_request(reference, creditcard, options), options)
       end
 
-      # removes a customer subscription/profile
+      # Removes a customer subscription/profile
       def unstore(reference, options = {})
         requires!(options, :order_id)
         commit(build_delete_subscription_request(reference, options), options)
       end
 
-      # retrieves a customer subscription/profile
+      # Retrieves a customer subscription/profile
       def retrieve(reference, options = {})
         requires!(options, :order_id)
         commit(build_retrieve_subscription_request(reference, options), options)
