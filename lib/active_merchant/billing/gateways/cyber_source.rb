@@ -157,6 +157,12 @@ module ActiveMerchant #:nodoc:
         commit(build_update_subscription_request(reference, creditcard, options), options)
       end
 
+      # removes a customer subscription/profile
+      def unstore(reference, options = {})
+        requires!(options, :order_id)
+        commit(build_delete_subscription_request(reference, options), options)
+      end
+
       # CyberSource requires that you provide line item information for tax calculations
       # If you do not have prices for each item or want to simplify the situation then pass in one fake line item that costs the subtotal of the order
       #
@@ -295,6 +301,17 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
+      def build_delete_subscription_request(identification, options)
+        reference_code, subscription_id, request_token = identification.split(";")
+
+        options[:subscription] = (options[:subscription] || {}).merge(:subscription_id => subscription_id)
+
+        xml = Builder::XmlMarkup.new :indent => 2
+        add_subscription(xml, options)
+        add_subscription_delete_service(xml, options)
+        xml.target!
+      end
+
       def add_business_rules_data(xml)
         xml.tag! 'businessRules' do
           xml.tag!('ignoreAVSResult', 'true') if @options[:ignore_avs]
@@ -408,6 +425,10 @@ module ActiveMerchant #:nodoc:
 
       def add_subscription_update_service(xml, options)
         xml.tag! 'paySubscriptionUpdateService', {'run' => 'true'}
+      end
+
+      def add_subscription_delete_service(xml, options)
+        xml.tag! 'paySubscriptionDeleteService', {'run' => 'true'}
       end
 
       def add_subscription(xml, options, creditcard = nil)

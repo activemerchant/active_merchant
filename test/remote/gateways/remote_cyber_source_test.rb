@@ -205,4 +205,14 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_delete_subscription
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert response.success?
+    assert response.test?
+
+    assert response = @gateway.unstore(response.authorization, :order_id => generate_unique_id)
+    assert response.success?
+    assert response.test?
+  end
+
 end
