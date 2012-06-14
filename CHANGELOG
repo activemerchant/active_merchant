@@ -9,6 +9,7 @@
 * Paybox Direct: treat all response codes besides '00000' as failures
 [Soleone]
 * Deprecate CreditCard#type method in favor of CreditCard#brand [jduff]
+* Cybersource gateway: Add subscriptions support [fabiokr, jaredmoody]
 
 == Version 1.23.0 (May 23, 2012)
 
