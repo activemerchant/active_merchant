@@ -27,13 +27,13 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      # To create a charge on a card or a token, call
+      # To create a purchase on a credit card use:
       #
-      #   purchase(money, card_hash_or_token, { ... })
+      #   purchase(money, creditcard , { ... })
       #
-      # To create a charge on a customer, call
+      # To charge a tokenized card
       #
-      #   purchase(money, nil, { :customer => id, ... })
+      #   purchase(money, {:token => "abzy87u", :cvv => "123"}, { ... }})
       def purchase(money, creditcard, options = {})
         post = {}
 
@@ -69,10 +69,12 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+      # Add the money details to the request
       def add_amount(post, money, options)
         post[:amount] = money
       end
 
+      # Add the credit card details to the request
       def add_creditcard(post, creditcard, options = {})
         if creditcard.respond_to?(:number)
           post[:card_number] = creditcard.number
@@ -99,7 +101,7 @@ module ActiveMerchant #:nodoc:
           end
 
           raw_response = e.response.body
-          response = response_error(raw_response)
+          response = parse(raw_response)
         rescue JSON::ParserError
           response = json_error(raw_response)
         end
@@ -118,12 +120,7 @@ module ActiveMerchant #:nodoc:
           :id => response["response"]["id"])
       end
 
-      def response_error(data)
-        puts data.inspect
-        {}
-      end
-
-      # Parse the returned JSON
+      # Parse the returned JSON, if parse errors are raised then return a detailed error.
       def parse(response)
         begin
           JSON.parse(response)
