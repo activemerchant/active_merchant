@@ -21,6 +21,15 @@ class EwayTest < Test::Unit::TestCase
       },
       :description => 'purchased items'
     } 
+
+    @options_without_address = @options.reject { |k,v| k == :billing_address }
+
+  end
+
+  def test_purchase_without_billing_address
+    assert_raise(ArgumentError) do
+      @gateway.purchase(@amount, @credit_card, @options_without_address)
+    end
   end
   
   def test_successful_purchase
@@ -114,5 +123,3 @@ class EwayTest < Test::Unit::TestCase
     XML
   end
 end
-
-
