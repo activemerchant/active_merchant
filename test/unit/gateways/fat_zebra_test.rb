@@ -24,7 +24,7 @@ class FatZebraTest < Test::Unit::TestCase
     assert_success response
 
     # Replace with authorization number from the successful response
-    assert_equal '55355', response.authorization
+    assert_equal '001-P-12345AA', response.authorization
     assert response.test?
   end
 

@@ -38,7 +38,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
   def test_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     
-    assert response = @gateway.refund(@amount, purchase.params["response"]["id"], rand(1000000).to_s)
+    assert response = @gateway.refund(@amount, purchase.authorization, rand(1000000).to_s)
     assert_success response
     assert_match /Approved/, response.message
   end
@@ -60,7 +60,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
 
   def test_purchase_with_token
     assert card = @gateway.store(@credit_card)
-    assert purchase = @gateway.purchase(@amount, {:cvv => 123, :token => card.params["response"]["token"]}, @options)
+    assert purchase = @gateway.purchase(@amount, {:cvv => 123, :token => card.authorization}, @options)
     assert_success purchase
   end
 

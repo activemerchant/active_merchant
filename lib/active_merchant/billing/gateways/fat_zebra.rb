@@ -116,8 +116,7 @@ module ActiveMerchant #:nodoc:
           message,
           response,
           :test => response.has_key?("test") ? response["test"] : false,
-          :authorization => response["response"]["authorization"],
-          :id => response["response"]["id"])
+          :authorization => response["response"]["id"] || response["response"]["token"])
       end
 
       # Parse the returned JSON, if parse errors are raised then return a detailed error.
