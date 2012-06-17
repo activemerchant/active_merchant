@@ -23,7 +23,6 @@ class FatZebraTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    # Replace with authorization number from the successful response
     assert_equal '001-P-12345AA', response.authorization
     assert response.test?
   end
@@ -75,6 +74,23 @@ class FatZebraTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_refund
+    @gateway.expects(:ssl_request).returns(successful_refund_response)
+
+    assert response = @gateway.refund(100, "TEST", "Test refund")
+    assert_success response
+    assert_equal '003-R-7MNIUMY6', response.authorization
+    assert response.test?
+  end
+
+  def test_unsuccessful_refund
+    @gateway.expects(:ssl_request).returns(unsuccessful_refund_response)
+
+    assert response = @gateway.refund(100, "TEST", "Test refund")
+    assert_failure response
+    assert response.test?
+  end
+
   private
 
   # Place raw successful response from gateway here
@@ -114,6 +130,52 @@ class FatZebraTest < Test::Unit::TestCase
       },
       :test => true,
       :errors => [] 
+    }.to_json
+  end
+
+  def successful_refund_response
+    {
+      :successful => true,
+      :response => {
+        :authorization => "1339973263",
+        :id => "003-R-7MNIUMY6",
+        :amount => -10,
+        :refunded => "Approved",
+        :message => "08 Approved",
+        :card_holder => "Harry Smith",
+        :card_number => "XXXXXXXXXXXX4444",
+        :card_expiry => "2013-05-31",
+        :card_type => "MasterCard",
+        :transaction_id => "003-R-7MNIUMY6",
+        :successful => true
+      },
+      :errors => [
+
+      ],
+      :test => true
+    }.to_json
+  end
+
+  def unsuccessful_refund_response
+    {
+      :successful => false,
+      :response => {
+        :authorization => nil,
+        :id => nil,
+        :amount => nil,
+        :refunded => nil,
+        :message => nil,
+        :card_holder => "Matthew Savage",
+        :card_number => "XXXXXXXXXXXX4444",
+        :card_expiry => "2013-05-31",
+        :card_type => "MasterCard",
+        :transaction_id => nil,
+        :successful => false
+      },
+      :errors => [
+        "Reference can't be blank"
+      ],
+      :test => true
     }.to_json
   end
 
