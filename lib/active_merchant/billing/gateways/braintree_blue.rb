@@ -105,6 +105,7 @@ module ActiveMerchant #:nodoc:
           credit_card_params = merge_credit_card_options({
             :credit_card => {
               :number => creditcard.number,
+              :cvv => creditcard.verification_value,
               :expiration_month => creditcard.month.to_s.rjust(2, "0"),
               :expiration_year => creditcard.year.to_s
             }

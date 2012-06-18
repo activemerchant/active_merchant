@@ -150,6 +150,36 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.store(credit_card("41111111111111111111"), :billing_address => billing_address)
   end
 
+  def test_update_with_cvv
+    stored_credit_card = mock(:token => "token", :default? => true)
+    customer = mock(:credit_cards => [stored_credit_card], :id => '123')
+    Braintree::Customer.stubs(:find).with('vault_id').returns(customer)
+    BraintreeBlueGateway.any_instance.stubs(:customer_hash)
+
+    result = Braintree::SuccessfulResult.new(:customer => customer)
+    Braintree::Customer.expects(:update).with do |vault, params|
+      assert_equal "567", params[:credit_card][:cvv]
+      [vault, params]
+    end.returns(result)
+
+    @gateway.update('vault_id', credit_card("41111111111111111111", :verification_value => "567"))
+  end
+
+  def test_update_with_verify_card_true
+    stored_credit_card = mock(:token => "token", :default? => true)
+    customer = mock(:credit_cards => [stored_credit_card], :id => '123')
+    Braintree::Customer.stubs(:find).with('vault_id').returns(customer)
+    BraintreeBlueGateway.any_instance.stubs(:customer_hash)
+
+    result = Braintree::SuccessfulResult.new(:customer => customer)
+    Braintree::Customer.expects(:update).with do |vault, params|
+      assert_equal true, params[:credit_card][:options][:verify_card]
+      [vault, params]
+    end.returns(result)
+
+    @gateway.update('vault_id', credit_card("41111111111111111111"), :verify_card => true)
+  end
+
   def test_merge_credit_card_options_ignores_bad_option
     params = {:first_name => 'John', :credit_card => {:cvv => '123'}}
     options = {:verify_card => true, :bogus => 'ignore me'}
