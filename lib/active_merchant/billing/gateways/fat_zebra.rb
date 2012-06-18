@@ -143,7 +143,7 @@ module ActiveMerchant #:nodoc:
       # Builds the auth and U-A headers for the request
       def headers
         {
-          "Authorization" => "Basic " + Base64.encode64(@username.to_s + ":" + @token.to_s).strip,
+          "Authorization" => "Basic " + Base64.strict_encode64(@username.to_s + ":" + @token.to_s).strip,
           "User-Agent" => "Fat Zebra v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
         }
       end 
