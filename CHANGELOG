@@ -11,6 +11,7 @@
 * Deprecate CreditCard#type method in favor of CreditCard#brand [jduff]
 * Cybersource gateway: Add subscriptions support [fabiokr, jaredmoody]
 * eWay gateway: Improved docs, and more accurate required parameters [juggler]
+* Braintree Blue gateway: Always pass CVV on card update [shayfrendt]
 
 == Version 1.23.0 (May 23, 2012)
 
