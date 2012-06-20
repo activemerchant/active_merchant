@@ -10,6 +10,46 @@ raise "Need braintree gem 2.x.y. Run `gem install braintree --version '~>2.0'` t
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    # For more information on the Braintree Gateway please visit their
+    # {Developer Portal}[https://www.braintreepayments.com/developers]
+    #
+    # ==== About this implementation
+    #
+    # This implementation leverages the Braintree-authored ruby gem:
+    # https://github.com/braintree/braintree_ruby
+    #
+    # ==== Debugging Information
+    #
+    # Setting an ActiveMerchant +wiredump_device+ will automatically
+    # configure the Braintree logger (via the Braintree gem's
+    # configuration) when the BraintreeBlueGateway is instantiated.
+    # Additionally, the log level will be set to +DEBUG+.  Therefore,
+    # all you have to do is set the +wiredump_device+ and you'll
+    # get your debug output from your HTTP interactions with the
+    # remote gateway. (Don't enable this in production.)
+    #
+    # For example:
+    #
+    #     ActiveMerchant::Billing::BraintreeBlueGateway.wiredump_device = Logger.new(STDOUT)
+    #     # => #<Logger:0x107d385f8 ...>
+    #
+    #     Braintree::Configuration.logger
+    #     # => (some other logger, created by default by the gem)
+    #
+    #     Braintree::Configuration.logger.level
+    #     # => 1 (INFO)
+    #
+    #     ActiveMerchant::Billing::BraintreeBlueGateway.new(:merchant_id => 'x', :public_key => 'x', :private_key => 'x')
+    #
+    #     Braintree::Configuration.logger
+    #     # => #<Logger:0x107d385f8 ...>
+    #
+    #     Braintree::Configuration.logger.level
+    #     # => 0 (DEBUG)
+    #
+    #  Alternatively, you can avoid setting the +wiredump_device+
+    #  and set +Braintree::Configuration.logger+ and/or
+    #  +Braintree::Configuration.logger.level+ directly.
     class BraintreeBlueGateway < Gateway
       include BraintreeCommon
 
@@ -23,8 +63,11 @@ module ActiveMerchant #:nodoc:
         Braintree::Configuration.public_key = options[:public_key]
         Braintree::Configuration.private_key = options[:private_key]
         Braintree::Configuration.environment = (options[:environment] || (test? ? :sandbox : :production)).to_sym
-        Braintree::Configuration.logger.level = Logger::ERROR if Braintree::Configuration.logger
         Braintree::Configuration.custom_user_agent = "ActiveMerchant #{ActiveMerchant::VERSION}"
+        if wiredump_device
+          Braintree::Configuration.logger = wiredump_device
+          Braintree::Configuration.logger.level = Logger::DEBUG
+        end
         super
       end
 
