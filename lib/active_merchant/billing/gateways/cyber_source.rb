@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
       #
       # You must supply an :order_id in the options hash 
       def authorize(money, creditcard_or_reference, options = {})
-        requires!(options,  :order_id, :email)
+        requires!(options,  :order_id)
         setup_address_hash(options)
         commit(build_auth_request(money, creditcard_or_reference, options), options )
       end
@@ -125,7 +125,7 @@ module ActiveMerchant #:nodoc:
       # Purchase is an auth followed by a capture
       # You must supply an order_id in the options hash  
       def purchase(money, creditcard_or_reference, options = {})
-        requires!(options, :order_id, :email)
+        requires!(options, :order_id)
         setup_address_hash(options)
         commit(build_purchase_request(money, creditcard_or_reference, options), options)
       end
@@ -350,7 +350,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_address(xml, creditcard, address, options, shipTo = false)      
+      def add_address(xml, creditcard, address, options, shipTo = false)
+        requires!(options, :email)
+
         xml.tag! shipTo ? 'shipTo' : 'billTo' do
           xml.tag! 'firstName',             creditcard.first_name
           xml.tag! 'lastName',              creditcard.last_name 
@@ -363,7 +365,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'company',               address[:company]                 unless address[:company].blank?
           xml.tag! 'companyTaxID',          address[:companyTaxID]            unless address[:company_tax_id].blank?
           xml.tag! 'phoneNumber',           address[:phone_number]            unless address[:phone_number].blank?
-          xml.tag! 'email',                 options[:email]                   unless options[:email].blank?
+          xml.tag! 'email',                 options[:email]
           xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
           xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?
         end 
