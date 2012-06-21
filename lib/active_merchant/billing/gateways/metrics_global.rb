@@ -46,8 +46,8 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Options
       #
-      # * <tt>:login</tt> -- The Authorize.Net API Login ID (REQUIRED)
-      # * <tt>:password</tt> -- The Authorize.Net Transaction Key. (REQUIRED)
+      # * <tt>:login</tt> -- The username required to access the Metrics Global control panel. (REQUIRED)
+      # * <tt>:password</tt> -- The password required to access the Metrics Global control panel. (REQUIRED)
       # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test server. 
       #   Otherwise, perform transactions against the production server.
       def initialize(options = {})
@@ -255,7 +255,6 @@ module ActiveMerchant #:nodoc:
       
       # x_duplicate_window won't be sent by default, because sending it changes the response.
       # "If this field is present in the request with or without a value, an enhanced duplicate transaction response will be sent."
-      # (as of 2008-12-30) http://www.authorize.net/support/AIM_guide_SCC.pdf
       def add_duplicate_window(post)
         unless duplicate_window.nil?
           post[:duplicate_window] = duplicate_window
