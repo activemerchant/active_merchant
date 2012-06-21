@@ -65,7 +65,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
 
-    assert response = @gateway.authorize(@amount, response.authorization, @options)
+    assert response = @gateway.authorize(@amount, response.authorization, :order_id => generate_unique_id)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
@@ -146,7 +146,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
 
-    assert response = @gateway.purchase(@amount, response.authorization, @options)
+    assert response = @gateway.purchase(@amount, response.authorization, :order_id => generate_unique_id)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?

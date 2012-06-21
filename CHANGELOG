@@ -15,6 +15,7 @@
 * Add Fat Zebra gateway [amasses]
 * Braintree Blue gateway: Add support for wiredump_device [moklett]
 * Add Metrics Global gateway [DanKnox]
+* Cybersource gateway: Do not require email address for subscription operations [fabiokr]
 
 == Version 1.23.0 (May 23, 2012)
 
