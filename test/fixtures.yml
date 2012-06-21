@@ -171,6 +171,10 @@ merchant_ware:
  password: 
  name: 
 
+metrics_global:
+  login: 'demo'
+  password: 'password'
+
 # Working credentials, no need to replace
 migs_purchase: # MiGS gateway for purchase mode
   login: TESTANZTEST3
