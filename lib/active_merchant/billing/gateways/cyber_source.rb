@@ -354,8 +354,8 @@ module ActiveMerchant #:nodoc:
         requires!(options, :email)
 
         xml.tag! shipTo ? 'shipTo' : 'billTo' do
-          xml.tag! 'firstName',             creditcard.first_name
-          xml.tag! 'lastName',              creditcard.last_name 
+          xml.tag! 'firstName',             creditcard.first_name             if creditcard
+          xml.tag! 'lastName',              creditcard.last_name              if creditcard
           xml.tag! 'street1',               address[:address1]
           xml.tag! 'street2',               address[:address2]                unless address[:address2].blank?
           xml.tag! 'city',                  address[:city]
