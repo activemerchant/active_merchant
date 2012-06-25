@@ -1,4 +1,3 @@
-require 'rubygems'
 require 'LitleOnline'
 
 module ActiveMerchant #:nodoc:

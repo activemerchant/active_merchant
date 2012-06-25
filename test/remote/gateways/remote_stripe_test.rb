@@ -1,6 +1,3 @@
-require 'rubygems'
-require 'json'
-
 require 'test_helper'
 
 class RemoteStripeTest < Test::Unit::TestCase

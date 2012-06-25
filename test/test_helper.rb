@@ -13,6 +13,7 @@ require 'test/unit'
 require 'money'
 require 'mocha'
 require 'yaml'
+require 'json'
 require 'active_merchant'
 require 'comm_stub'
 
