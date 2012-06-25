@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Add PayGate XML gateway [rubyisbeautiful]
+* Add PayWay gateway [BenZhang]
 
 == Version 1.25.0 (July 3, 2012)
 
