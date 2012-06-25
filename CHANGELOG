@@ -17,6 +17,7 @@
 * Add Metrics Global gateway [DanKnox]
 * Cybersource gateway: Do not require email address for subscription operations [fabiokr]
 * Cybersource gateway: Fix passing only an address when updating a subscription [fabiokr]
+* Wirecard gateway: Fix for missing address; general cleanup [ntalbott]
 
 == Version 1.23.0 (May 23, 2012)
 
