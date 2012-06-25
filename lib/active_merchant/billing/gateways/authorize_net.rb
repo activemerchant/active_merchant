@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Options
       #
-      # * <tt>:card_number</tt> -- The credit card number the refund is being issued to. (REQUIRED)
+      # * <tt>:card_number</tt> -- The credit card number the refund is being issued to.  (REQUIRED) . Pass only the last four digits of the credit card number.
       # * <tt>:first_name</tt> -- The first name of the account being refunded.
       # * <tt>:last_name</tt> -- The last name of the account being refunded.
       # * <tt>:zip</tt> -- The postal code of the account being refunded.
