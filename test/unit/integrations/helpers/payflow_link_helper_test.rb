@@ -6,7 +6,7 @@ class PayflowLinkHelperTest < Test::Unit::TestCase
   def setup
     @helper = PayflowLink::Helper.new(1121, 'myaccount', :amount => 500, 
                                       :currency => 'CAD', :credential3 => 'PayPal', 
-                                      :credential2 => "password", :test => true)
+                                      :credential2 => "password", :test => true, :credential4 => '')
     @url = 'http://example.com'
   end
 
