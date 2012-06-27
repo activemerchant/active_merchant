@@ -1,12 +1,12 @@
 require 'test_helper'
 
-class PayflowLinkHelperTest < Test::Unit::TestCase
+class PaypalPaymentsAdvancedHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
   
   def setup
-    @helper = PayflowLink::Helper.new(1121, 'myaccount', :amount => 500, 
-                                      :currency => 'CAD', :credential3 => 'PayPal', 
-                                      :credential2 => "password", :test => true, :credential4 => '')
+    @helper = PaypalPaymentsAdvanced::Helper.new(1121, 'myaccount', :amount => 500, 
+                                      :currency => 'CAD', :credential2 => "password", 
+                                      :test => true)
     @url = 'http://example.com'
   end
 
@@ -164,8 +164,8 @@ class PayflowLinkHelperTest < Test::Unit::TestCase
 
   def test_transaction_type
     helper = PayflowLink::Helper.new(1121, 'myaccount', :amount => 500,
-                                      :currency => 'CAD', :credential3 => 'PayPal',
-                                      :credential2 => "password", :test => true, :transaction_type => 'A')
+                                      :currency => 'CAD', :credential2 => "password",
+                                      :test => true, :transaction_type => 'A')
     helper.expects(:ssl_post).with { |url, data|
       params = parse_params(data)
       assert_equal 'A', params["trxtype[1]"]
