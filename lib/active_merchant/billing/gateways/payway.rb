@@ -95,31 +95,22 @@ module ActiveMerchant
         @options[:merchant] ||= 'TEST'
         @options[:pem]        = File.read(options[:pem])
         
-        @post = {}
-        @transaction = {}
-        
         super
       end
       
       # Build the string and send it
-      def process(action, amount, credit_card)
-        @transaction.merge!({
-          :type         => action,
-          :amount       => amount,
-          :credit_card  => credit_card
-        })
+      def process(action, amount, credit_card, options)
+        post = {}
         
-        build_card
-        build_order
-        build_customer
+        build_card(post, credit_card)
+        build_order(post, action, amount)
+        build_customer(post, action, options)
         
-        send_post
+        send_post(post)
       end
       
       def authorize(amount, credit_card, options = {})
-        requires!(options, :order_number)
-        
-        @transaction.merge!({ :order_number => options[:order_number] })
+        requires!(options, :order_number)    
         
         process(:authorize, amount, credit_card)
       end
@@ -127,58 +118,41 @@ module ActiveMerchant
       def capture(amount, credit_card, options = {})
         requires!(options, :order_number, :original_order_number)
         
-        @transaction.merge!({ 
-          :order_number           => options[:order_number],
-          :original_order_number  => options[:original_order_number]
-        })
-        
-        process(:capture, amount, credit_card)
+        process(:capture, amount, credit_card, options)
       end
       
       def purchase(amount, credit_card, options = {})
         requires!(options, :order_number)
         
-        @transaction.merge!({ :order_number => options[:order_number] })
-        
-        process(:purchase, amount, credit_card)
+        process(:purchase, amount, credit_card, options)
       end
       
       def register(customer_ref_no, credit_card)
         
-        @transaction.merge!( :customer_reference_number => customer_ref_no )
-        
-        process(:register, 0, credit_card)
+        process(:register, 0, credit_card, :customer_ref_no => customer_ref_no)
       end
       
       def credit(amount, credit_card, options = {})
         requires!(options, :order_number, :original_order_number)
-        
-        
-        @transaction.merge!({ 
-          :order_number           => options[:order_number],
-          :original_order_number  => options[:original_order_number]
-        })
         
         process(:credit, amount, credit_card)
       end
       
       def status(options = {})
         requires!(options, :order_number)
-        @transaction = transaction
-        @transaction[:type] = TRANSACTIONS[:status]
         
-        build_order
+        post = {}
+        build_order(post, :status)
         
-        send_post
+        send_post(post)
       end
       
       private
         
         # Adds credit card details to the post hash
-        def build_card
-          card = @transaction[:credit_card]
+        def build_card(post, card)
           if card.is_a? ActiveMerchant::Billing::CreditCard
-            @post.merge!({
+            post.merge!({
               'card.cardHolderName' => "#{card.first_name} #{card.last_name}",
               'card.PAN'            => card.number,
               'card.CVN'            => card.verification_value,
@@ -187,56 +161,45 @@ module ActiveMerchant
               'card.currency'       => @options[:currency]
             })
           else
-            @post['customer.customerReferenceNumber'] = card
+            post['customer.customerReferenceNumber'] = card
           end          
         end
         
         # Adds the order arguments to the post hash
-        def build_order
-          if @transaction[:type] == :register
-            @post.merge!({
-              'order.type'          => TRANSACTIONS[@transaction[:type]],
+        def build_order(post, action, amount)
+          if action == :register
+            post.merge!({
+              'order.type'          => TRANSACTIONS[action],
             })
           else
-            @post.merge!({
+            post.merge!({
               'order.ECI'           => @options[:eci],
-              'order.amount'        => @transaction[:amount],
-              'order.type'          => TRANSACTIONS[@transaction[:type]]
+              'order.amount'        => amount,
+              'order.type'          => TRANSACTIONS[action]
             })
-          end          
-          
-          if @transaction[:original_order_number].present?
-            @post['order.originalOrderNumber'] = @transaction[:original_order_number]
-          end
+          end                        
         end
         
         # Adds the customer arguments to the post hash
-        def build_customer
-          @post.merge!({
-            'customer.username'   => @options[:username],
-            'customer.password'   => @options[:password],
-            'customer.merchant'   => @options[:merchant]
+        def build_customer(post, action, options)
+          post.merge!({
+            'customer.username'    => @options[:username],
+            'customer.password'    => @options[:password],
+            'customer.merchant'    => @options[:merchant],
+            'customer.orderNumber' => options[:order_number]
           })
-          if @transaction[:type] == :register
-            @post['customer.customerReferenceNumber'] = @transaction[:customer_reference_number]
-          else
-            @post['customer.orderNumber'] = "#{@transaction[:order_number]} - #{Time.new.to_i.to_s}"
-          end
+          post['customer.originalOrderNumber'] = options[:original_order_number] if options[:original_order_number].present?
         end
         
         # Creates the request and returns the sumarised result
-        def send_post
-          @request = @post.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join("&")
+        def send_post(post)
+          request = post.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join("&")
           
-          @response = ssl_post(URL, @request)
+          response = ssl_post(URL, request)
           
-          result = process_response
-        end
-        
-        def process_response
           params = {}
 
-          CGI.parse(@response).each_pair do |key, value|
+          CGI.parse(response).each_pair do |key, value|
             actual_key = key.split(".").last
             params[actual_key.underscore.to_sym] = value[0]
           end
@@ -246,8 +209,8 @@ module ActiveMerchant
           success = params[:summary_code].to_s == "0"
           options = { :test => @options[:merchant].to_s == "TEST" }
           
-          result = Response.new(success, msg, params, options)
-        end
+          Response.new(success, msg, params, options)
+        end      
     end
   end
 end
