@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
 
         data = ssl_post url, post_data(xml)
         response = parse(data)
-        response[:original_request] = post_data(xml)
+        # response[:original_request] = post_data(xml)
         message = message_from(response)
         
         Response.new(success?(response), message, response, 
