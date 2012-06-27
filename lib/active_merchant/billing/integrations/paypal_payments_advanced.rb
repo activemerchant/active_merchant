@@ -3,7 +3,7 @@ module ActiveMerchant
     module Integrations
       module PaypalPaymentsAdvanced
         autoload :Helper, 'active_merchant/billing/integrations/paypal_payments_advanced/helper.rb'
-        autoload :Notification, 'active_merchant/billing/integrations/paypal_payments_advanced/notification.rb'
+        autoload :Notification, 'active_merchant/billing/integrations/payflow_link/notification.rb'
 
         mattr_accessor :service_url
         self.service_url = 'https://payflowlink.paypal.com'
@@ -13,7 +13,7 @@ module ActiveMerchant
         end
 
         def self.return(query_string, options = {})
-          ActiveMerchant::Billing::Integrations::Return.new(query_string)
+          Return.new(query_string)
         end
       end
     end

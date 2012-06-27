@@ -2,8 +2,7 @@ module ActiveMerchant
   module Billing
     module Integrations
       module PaypalPaymentsAdvanced
-        class Helper < ActiveMerchant::Billing::Integrations::PayflowLink::Helper
-          include PostsData
+        class Helper < PayflowLink::Helper
 
           def initialize(order, account, options)
             super
