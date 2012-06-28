@@ -2,11 +2,10 @@ require 'test_helper'
 
 class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   def setup
-    Base.gateway_mode = :test
     @gateway = UsaEpayTransactionGateway.new(fixtures(:usa_epay))
     @creditcard = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
-    @options = { :billing_address => address }
+    @options = { :billing_address => address(:zip => "27614", :state => "NC") }
     @amount = 100
   end
 
@@ -16,10 +15,19 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_extra_details
+    assert response = @gateway.purchase(@amount, @creditcard, @options.merge(:order_id => generate_unique_id, :description => "socool"))
+    assert_equal 'Success', response.message
+    assert_success response
+  end
+
   def test_unsuccessful_purchase
-    assert response = @gateway.purchase(@amount, @declined_card, @options)
-    assert_equal 'Card Declined (00)', response.message
+    # For some reason this will fail with "You have tried this card too
+    # many times, please contact merchant" unless a unique order id is
+    # passed.
+    assert response = @gateway.purchase(@amount, @declined_card, @options.merge(:order_id => generate_unique_id))
     assert_failure response
+    assert_match(/declined/i, response.message)
   end
 
   def test_authorize_and_capture
@@ -48,7 +56,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   def test_unsuccessful_refund
     assert refund = @gateway.refund(@amount - 20, "unknown_authorization")
     assert_failure refund
-    assert_match /Unable to find original transaction/, refund.message
+    assert_match(/Unable to find original transaction/, refund.message)
   end
 
   def test_successful_void
@@ -62,7 +70,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   def test_unsuccessful_void
     assert void = @gateway.void("unknown_authorization")
     assert_failure void
-    assert_match /Unable to locate transaction/, void.message
+    assert_match(/Unable to locate transaction/, void.message)
   end
 
   def test_invalid_key

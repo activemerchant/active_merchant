@@ -133,6 +133,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         post[:invoice] = options[:order_id]
+        post[:description] = options[:description]
       end
 
       def add_credit_card(post, credit_card)
@@ -167,12 +168,11 @@ module ActiveMerchant #:nodoc:
         }.delete_if{|k, v| v.nil?}
       end
 
-
       def commit(action, parameters)
         response = parse( ssl_post(URL, post_data(action, parameters)) )
 
         Response.new(response[:status] == 'Approved', message_from(response), response,
-          :test => @options[:test] || test?,
+          :test => test?,
           :authorization => response[:ref_num],
           :cvv_result => response[:cvv2_result_code],
           :avs_result => { :code => response[:avs_result_code] }
@@ -192,9 +192,13 @@ module ActiveMerchant #:nodoc:
         parameters[:command]  = TRANSACTIONS[action]
         parameters[:key] = @options[:login]
         parameters[:software] = 'Active Merchant'
-        parameters[:testmode] = @options[:test] ? 1 : 0
+        parameters[:testmode] = (@options[:test] ? 1 : 0)
 
         parameters.collect { |key, value| "UM#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+      end
+
+      def test?
+        @options[:test] || super
       end
     end
   end
