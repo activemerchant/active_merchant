@@ -288,6 +288,13 @@ paypal_signature:
   password: PASSWORD
   signature: SIGNATURE
 
+# PayWay doesn't want the test data made publci
+payway:
+  username: 
+  password:
+  pem: 
+  merchant: TEST
+
 pay_secure:
   login: LOGIN
   password: PASSWORD
