@@ -293,7 +293,6 @@ paypal_signature:
   password: PASSWORD
   signature: SIGNATURE
 
-# PayWay doesn't want the test data made public
 payway:
   username:
   password:

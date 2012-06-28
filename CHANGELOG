@@ -2,6 +2,7 @@
 
 * Add PayGate XML gateway [rubyisbeautiful]
 * Add PayWay gateway [BenZhang]
+* PayWay gateway: tweaks to make more ActiveMerchant like [ntalbott]
 
 == Version 1.25.0 (July 3, 2012)
 
