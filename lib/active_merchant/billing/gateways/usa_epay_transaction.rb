@@ -133,6 +133,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         post[:invoice] = options[:order_id]
+        post[:description] = options[:description] if options.has_key? :description
       end
 
       def add_credit_card(post, credit_card)
