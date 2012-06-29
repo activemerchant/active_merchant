@@ -39,6 +39,8 @@ module ActiveMerchant #:nodoc:
       TEST_URL = 'https://www.testlitle.com/sandbox/communicator/online'
       LIVE_URL = 'https://payments.litle.com/vap/communicator/online'
 
+      LITLE_SCHEMA_VERSION = '8.10'
+
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']
 
@@ -55,7 +57,13 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         @litle = LitleOnline::LitleOnlineRequest.new
-        requires!(options, :merchant_id, :user, :password, :version, :url)
+
+        options[:version]  ||= LITLE_SCHEMA_VERSION
+        options[:merchant] ||= 'Default Report Group'
+        options[:user]     ||= options[:login]
+
+        requires!(options, :merchant_id, :user, :password, :merchant, :version)
+
         @options = options
       end
 
@@ -117,6 +125,12 @@ module ActiveMerchant #:nodoc:
         '34' => 'I',
         '40' => 'E'
       }
+
+      def url
+        return @options[:url] if @options[:url].present?
+
+        test? ? TEST_URL : LIVE_URL
+      end
 
       def build_response(kind, litle_response, valid_responses=%w(000))
         if litle_response.response == "0"
@@ -232,20 +246,20 @@ module ActiveMerchant #:nodoc:
         hash = {
           'billToAddress' => bill_to_address,
           'shipToAddress' => ship_to_address,
-          'orderId' => (options[:order_id] or @options[:order_id]),
+          'orderId' => (options[:order_id] || @options[:order_id]),
           'customerId' => options[:customer],
-          'reportGroup' => (options[:merchant] or @options[:merchant]),
-          'merchantId' => (options[:merchant_id] or @options[:merchant_id]),
+          'reportGroup' => (options[:merchant] || @options[:merchant]),
+          'merchantId' => (options[:merchant_id] || @options[:merchant_id]),
           'orderSource' => 'ecommerce',
           'enhancedData' => enhanced_data,
           'fraudCheckType' => fraud_check_type,
-          'user' => (options[:user] or @options[:user]),
-          'password' => (options[:password] or @options[:password]),
-          'version' => (options[:version] or @options[:version]),
-          'url' => (options[:url] or @options[:url]),
-          'proxy_addr' => (options[:proxy_addr] or @options[:proxy_addr]),
-          'proxy_port' => (options[:proxy_port] or @options[:proxy_port]),
-          'id' => (options[:id] or options[:order_id] or @options[:order_id])
+          'user' => (options[:user] || @options[:user]),
+          'password' => (options[:password] || @options[:password]),
+          'version' => (options[:version] || @options[:version]),
+          'url' => (options[:url] || url),
+          'proxy_addr' => (options[:proxy_addr] || @options[:proxy_addr]),
+          'proxy_port' => (options[:proxy_port] || @options[:proxy_port]),
+          'id' => (options[:id] || options[:order_id] || @options[:order_id])
         }
 
         if( !money.nil? && money.to_s.length > 0 )
