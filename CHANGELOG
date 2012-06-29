@@ -19,6 +19,7 @@
 * Cybersource gateway: Fix passing only an address when updating a subscription [fabiokr]
 * Wirecard gateway: Fix for missing address; general cleanup [ntalbott]
 * Authorize.Net gateway: Document ability to just pass the last four to #refund [neerajdotname]
+* Add EasyPay integration [nashby]
 
 == Version 1.23.0 (May 23, 2012)
 
