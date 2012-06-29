@@ -82,9 +82,7 @@ module ActiveMerchant #:nodoc:
       TEST_ID           = '10011021600'
       TEST_PWD          = 'test'
 
-
       API_VERSION = '4.0'
-
 
       DECLINE_CODES = {
         # Credit Card Errors - These RESULT_CODEs are returned if the transaction cannot be authorised due to a problem with the card.  The TRANSACTION_STATUS will be 2
@@ -141,7 +139,6 @@ module ActiveMerchant #:nodoc:
         6 => 'Replied to Client'
       }
 
-
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US', 'ZA']
       
@@ -160,25 +157,21 @@ module ActiveMerchant #:nodoc:
       # PayGate accepts only lowest denomination
       self.money_format = :cents
 
-
       def test?
-        @options[:test] || Base.gateway_mode == :test
+        @options[:test] || (Base.gateway_mode == :test)
       end
 
-      
       def initialize(options = {})
         requires!(options, :login, :password)
         @options = options
         super
-      end  
-
+      end
 
       def purchase(money, creditcard, options = {})
         action = 'authtx'
         authorization  = authorise(money, creditcard, options)
         response       = capture(money, authorization.authorization, options)
       end
-
 
       def authorise(money, creditcard, options = {})
         action = 'authtx'
@@ -189,24 +182,20 @@ module ActiveMerchant #:nodoc:
       end
       alias_method :authorize, :authorise
 
-
       def capture(money, authorization, options = {})
         action = 'settletx'
 
         options.merge!(:money => money, :authorization => authorization)
         request = build_request(action, options)
-        commit('settletx', money, request)
+        commit(action, money, request)
       end
-
 
       def successful?(response)
         SUCCESS_CODES.include?(response[:res])
       end
 
 
-
       private
-
 
       def build_request(action, options={})
         xml = Builder::XmlMarkup.new
@@ -230,7 +219,6 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-
       def build_authorisation(xml, money, creditcard, options={})
         xml.tag! 'authtx', {
             'cref',  options[:invoice],
@@ -244,13 +232,11 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-
       def build_capture(xml, money, authorization, options={})
         xml.tag! 'settletx', {
             'tid',  authorization
         }
       end
-
 
       def parse(action, body)
         hash  = {}
@@ -268,7 +254,6 @@ module ActiveMerchant #:nodoc:
         return hash
       end     
 
-
       def commit(action, money, request)
         response = parse(action, ssl_post(test? ? TEST_URL : LIVE_URL, request))
         Response.new(successful?(response), message_from(response), response,
@@ -277,19 +262,10 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-
       def message_from(response)
         msg = response[:rdesc]
         msg ||= response[:edesc]
       end
-
-
-      def post_data(action, parameters = {})
-      end
-
-
-
-
 
     end
   end
