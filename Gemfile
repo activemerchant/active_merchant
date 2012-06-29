@@ -9,7 +9,7 @@ group :test do
   gem 'samurai', '>= 0.2.25'
   gem 'braintree', '>= 2.0.0'
   gem 'vindicia-api', :git => 'git://github.com/agoragames/vindicia-api.git', :ref => "4e78744c79cb97448ff46c21301f53b346db4c91"
-  gem 'LitleOnline', '>= 8.12.4'
+  gem 'LitleOnline', '>= 8.13.2'
 end
 
 group :remote_test do
@@ -21,6 +21,6 @@ group :remote_test do
   gem 'samurai', '>= 0.2.25'
   gem 'braintree', '>= 2.0.0'
   gem 'vindicia-api', :git => 'git://github.com/agoragames/vindicia-api.git', :ref => "4e78744c79cb97448ff46c21301f53b346db4c91"
-  gem 'LitleOnline', '>= 8.12.4'
+  gem 'LitleOnline', '>= 8.13.2'
 end
 
