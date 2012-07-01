@@ -10,26 +10,26 @@ class BarclaysEpdqTest < Test::Unit::TestCase
 
     @credit_card = credit_card
     @amount = 100
-    
+
     @options = {
       :billing_address => address
     }
   end
-  
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    
+
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    
+
     # Replace with authorization number from the successful response
-    assert_equal '4d45da6a-5e11-3000-002b-00144ff2e45c', response.authorization
+    assert_equal "150127237", response.authorization
     assert response.test?
   end
 
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
-    
+
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
@@ -196,7 +196,7 @@ class BarclaysEpdqTest < Test::Unit::TestCase
 </EngineDocList>
 )
   end
-  
+
   def failed_purchase_response
     %(<?xml version="1.0" encoding="UTF-8"?>
 <EngineDocList>

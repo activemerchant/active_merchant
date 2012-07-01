@@ -1,6 +1,3 @@
-require 'rubygems'
-require 'json'
-
 require 'test_helper'
 
 class RemoteStripeTest < Test::Unit::TestCase
@@ -14,7 +11,8 @@ class RemoteStripeTest < Test::Unit::TestCase
     @new_credit_card = credit_card('5105105105105100')
 
     @options = {
-      :description => 'ActiveMerchant Test Purchase'
+      :description => 'ActiveMerchant Test Purchase',
+      :email => 'wow@example.com'
     }
   end
 
@@ -25,18 +23,21 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response.params["paid"]
   end
 
+  def test_purchase_description
+    assert response = @gateway.purchase(@amount, @credit_card, { :description => "TheDescription", :email => "email@example.com" })
+    assert_equal "TheDescription", response.params["description"], "Use the description if it's specified."
+
+    assert response = @gateway.purchase(@amount, @credit_card, { :email => "email@example.com" })
+    assert_equal "email@example.com", response.params["description"], "Use the email if no description is specified."
+
+    assert response = @gateway.purchase(@amount, @credit_card, { })
+    assert_nil response.params["description"], "No description or email specified."
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'Your card number is invalid', response.message
-  end
-
-  def test_authorize
-    assert_raises(RuntimeError) { @gateway.authorize(@amount, @credit_card, @options) }
-  end
-
-  def test_capture
-    assert_raises(RuntimeError) { @gateway.authorize(@amount, @credit_card, @options) }
   end
 
   def test_successful_void
@@ -68,10 +69,11 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    assert response = @gateway.store(@credit_card, {:description => "Active Merchant Test Customer"})
+    assert response = @gateway.store(@credit_card, {:description => "Active Merchant Test Customer", :email => "email@example.com"})
     assert_success response
     assert_equal "customer", response.params["object"]
     assert_equal "Active Merchant Test Customer", response.params["description"]
+    assert_equal "email@example.com", response.params["email"]
     assert_equal @credit_card.last_digits, response.params["active_card"]["last4"]
   end
 

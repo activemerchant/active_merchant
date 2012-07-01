@@ -78,6 +78,9 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal 'new email address', response.params['profile']['email']
   end
 
+  # NOTE - prior_auth_capture should be used to complete an auth_only request
+  # (not capture_only as that will leak the authorization), so don't use this
+  # test as a template.
   def test_successful_create_customer_profile_transaction_auth_only_and_then_capture_only_requests
     assert response = @gateway.create_customer_profile(@options)
     @customer_profile_id = response.authorization
@@ -96,7 +99,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response.test?
     assert_success response
-    assert_nil response.authorization
+    assert_equal response.authorization, response.params['direct_response']['transaction_id']
     assert_equal "This transaction has been approved.", response.params['direct_response']['message']
     assert response.params['direct_response']['approval_code'] =~ /\w{6}/
     assert_equal "auth_only", response.params['direct_response']['transaction_type']
@@ -119,7 +122,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response.test?
     assert_success response
-    assert_nil response.authorization
+    assert_equal response.authorization, response.params['direct_response']['transaction_id']
     assert_equal "This transaction has been approved.", response.params['direct_response']['message']
     assert_equal approval_code, response.params['direct_response']['approval_code']
     assert_equal "capture_only", response.params['direct_response']['transaction_type']
@@ -149,7 +152,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response.test?
     assert_success response
-    assert_nil response.authorization
+    assert_equal response.authorization, response.params['direct_response']['transaction_id']
     assert_equal "This transaction has been approved.", response.params['direct_response']['message']
     assert response.params['direct_response']['approval_code'] =~ /\w{6}/
     assert_equal "auth_capture", response.params['direct_response']['transaction_type']
@@ -454,7 +457,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response.test?
     assert_success response
-    assert_nil response.authorization
+    assert_equal response.authorization, response.params['direct_response']['transaction_id']
     assert_equal "This transaction has been approved.", response.params['direct_response']['message']
   end
 
@@ -511,7 +514,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     )
     assert_instance_of Response, response
     assert_success response
-    assert_nil response.authorization
+    assert_equal response.authorization, response.params['direct_response']['transaction_id']
     assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
   end
 
@@ -534,6 +537,28 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     # saying "The referenced transaction does not meet the criteria for issuing a credit.".
     assert_failure response
     assert_equal 'The referenced transaction does not meet the criteria for issuing a credit.', response.params['direct_response']['message']
+  end
+
+  def test_should_create_customer_profile_transaction_auth_capture_and_then_refund_using_profile_ids_request_with_empty_order
+    response = get_and_validate_auth_capture_response
+
+    assert response = @gateway.create_customer_profile_transaction(
+      :transaction => {
+        :type => :refund,
+        :amount => 1,
+        :customer_profile_id => @customer_profile_id,
+        :customer_payment_profile_id => @customer_payment_profile_id,
+        :trans_id => response.params['direct_response']['transaction_id'],
+        :order => {}
+      }
+    )
+    assert_instance_of Response, response
+    # You can't test refunds in TEST MODE.  If you authorize or capture
+    # a transaction, and the transaction is not yet settled by the payment
+    # gateway, you cannot issue a refund. You get an error message
+    # saying "The referenced transaction does not meet the criteria for issuing a credit.".
+    assert_failure response
+    assert_equal 'The referenced transaction does not meet the criteria for issuing a credit.', response.message
   end
 
   def test_should_create_customer_profile_transaction_auth_capture_and_then_refund_using_masked_credit_card_request
@@ -568,7 +593,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     )
     assert_instance_of Response, response
     assert_success response
-    assert_nil response.authorization
+    assert_equal response.authorization, response.params['direct_response']['transaction_id']
     assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
     return response
   end
@@ -638,7 +663,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response.test?
     assert_success response
-    assert_nil response.authorization
+    assert_equal response.authorization, response.params['direct_response']['transaction_id']
     assert_equal "This transaction has been approved.", response.params['direct_response']['message']
     assert response.params['direct_response']['approval_code'] =~ /\w{6}/
     assert_equal "auth_capture", response.params['direct_response']['transaction_type']
@@ -673,7 +698,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
 
     assert response.test?
     assert_success response
-    assert_nil response.authorization
+    assert_equal response.authorization, response.params['direct_response']['transaction_id']
     assert response.params['direct_response']['approval_code'] =~ /\w{6}/
     assert_equal "auth_only", response.params['direct_response']['transaction_type']
     assert_equal "100.00", response.params['direct_response']['amount']

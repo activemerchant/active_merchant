@@ -11,7 +11,7 @@ class MonerisTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
-    @options = { :order_id => '1', :billing_address => address }
+    @options = { :order_id => '1', :customer => '1' }
   end
 
   def test_successful_purchase
@@ -52,7 +52,6 @@ class MonerisTest < Test::Unit::TestCase
   end                                                           
   
   def test_purchase_is_valid_xml
-
    params = { 
      :order_id => "order1",
      :amount => "1.01",
@@ -67,7 +66,6 @@ class MonerisTest < Test::Unit::TestCase
   end  
 
   def test_purchase_is_valid_xml
-
    params = {
      :order_id => "order1",
      :amount => "1.01",
@@ -82,7 +80,6 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def test_capture_is_valid_xml
- 
    params = { 
      :order_id => "order1",
      :amount => "1.01",
@@ -109,8 +106,62 @@ class MonerisTest < Test::Unit::TestCase
       assert_raise(ArgumentError) { @gateway.void(invalid_transaction_param) }
     end
   end
-  
-  private  
+
+
+ def test_successful_store
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert_equal "Successfully registered cc details", response.message
+    assert response.params["data_key"].present?
+    @data_key = response.params["data_key"]
+  end
+
+  def test_successful_unstore
+    @gateway.expects(:ssl_post).returns(successful_unstore_response)
+    test_successful_store
+    assert response = @gateway.unstore(@data_key)
+    assert_success response
+    assert_equal "Successfully deleted cc details", response.message
+    assert response.params["data_key"].present?
+  end
+
+  def test_update
+    @gateway.expects(:ssl_post).returns(successful_update_response)
+    test_successful_store
+    assert response = @gateway.update(@data_key, @credit_card)
+    assert_success response
+    assert_equal "Successfully updated cc details", response.message
+    assert response.params["data_key"].present?
+  end
+
+  def test_successful_purchase_with_vault
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    test_successful_store
+    assert response = @gateway.purchase(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
+    assert_success response
+    assert_equal "Approved", response.message
+    assert response.authorization.present?
+  end
+
+  def test_successful_authorization_with_vault
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    test_successful_store
+    assert response = @gateway.authorize(100, @data_key, {:order_id => generate_unique_id, :customer => generate_unique_id})
+    assert_success response
+    assert_equal "Approved", response.message
+    assert response.authorization.present?
+  end
+
+  def test_failed_authorization_with_vault
+    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    test_successful_store
+    assert response = @gateway.authorize(100, @data_key, @options)
+    assert_failure response
+  end
+
+  private
+
   def successful_purchase_response
     <<-RESPONSE
 <?xml version="1.0"?>
@@ -160,6 +211,50 @@ class MonerisTest < Test::Unit::TestCase
     
     RESPONSE
   end  
+
+
+  def successful_store_response
+    <<-RESPONSE
+<?xml version="1.0"?>
+<response>
+  <receipt>
+    <DataKey>1234567890</DataKey>
+    <ResponseCode>027</ResponseCode>
+    <Complete>true</Complete>
+    <Message>Successfully registered cc details * =</Message>
+  </receipt>
+</response>
+    RESPONSE
+  end
+
+  def successful_unstore_response
+    <<-RESPONSE
+<?xml version="1.0"?>
+<response>
+  <receipt>
+    <DataKey>1234567890</DataKey>
+    <ResponseCode>027</ResponseCode>
+    <Complete>true</Complete>
+    <Message>Successfully deleted cc details * =</Message>
+  </receipt>
+</response>
+    RESPONSE
+  end
+
+  def successful_update_response
+    <<-RESPONSE
+<?xml version="1.0"?>
+<response>
+  <receipt>
+    <DataKey>1234567890</DataKey>
+    <ResponseCode>027</ResponseCode>
+    <Complete>true</Complete>
+    <Message>Successfully updated cc details * =</Message>
+  </receipt>
+</response>
+    RESPONSE
+  end
+
 
   def xml_purchase_fixture
    '<request><store_id>store1</store_id><api_token>yesguy</api_token><purchase><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></purchase></request>'

@@ -6,7 +6,7 @@ class PayflowLinkHelperTest < Test::Unit::TestCase
   def setup
     @helper = PayflowLink::Helper.new(1121, 'myaccount', :amount => 500, 
                                       :currency => 'CAD', :credential3 => 'PayPal', 
-                                      :credential2 => "password", :test => true)
+                                      :credential2 => "password", :test => true, :credential4 => '')
     @url = 'http://example.com'
   end
 
@@ -160,6 +160,18 @@ class PayflowLinkHelperTest < Test::Unit::TestCase
     }.returns("RESPMSG=APPROVED&SECURETOKEN=aaa&SECURETOKENID=yyy")
 
     @helper.form_fields
+  end
+
+  def test_transaction_type
+    helper = PayflowLink::Helper.new(1121, 'myaccount', :amount => 500,
+                                      :currency => 'CAD', :credential3 => 'PayPal',
+                                      :credential2 => "password", :test => true, :transaction_type => 'A')
+    helper.expects(:ssl_post).with { |url, data|
+      params = parse_params(data)
+      assert_equal 'A', params["trxtype[1]"]
+      true
+    }.returns("RESPMSG=APPROVED&SECURETOKEN=aaa&SECURETOKENID=yyy")
+    helper.form_fields
   end
 
   private

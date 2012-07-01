@@ -94,6 +94,10 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'Description', options[:description] unless options[:description].blank?
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
               xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
+              xml.tag! 'TaxAmt', options[:taxamt] unless options[:taxamt].blank?
+              xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
+              xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
+              xml.tag! 'DiscountAmt', options[:discountamt] unless options[:discountamt].blank?
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
@@ -122,6 +126,10 @@ module ActiveMerchant #:nodoc:
               # Comment and Comment2 will show up in manager.paypal.com as Comment1 and Comment2
               xml.tag! 'Comment', options[:comment] unless options[:comment].blank?
               xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
+              xml.tag! 'TaxAmt', options[:taxamt] unless options[:taxamt].blank?
+              xml.tag! 'FreightAmt', options[:freightamt] unless options[:freightamt].blank?
+              xml.tag! 'DutyAmt', options[:dutyamt] unless options[:dutyamt].blank?
+              xml.tag! 'DiscountAmt', options[:discountamt] unless options[:discountamt].blank?
 
               billing_address = options[:billing_address] || options[:address]
               add_address(xml, 'BillTo', billing_address, options) if billing_address
@@ -161,8 +169,8 @@ module ActiveMerchant #:nodoc:
       end
       
       def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
+        year  = sprintf("%.4i", creditcard.year.to_s.sub(/^0+/, ''))
+        month = sprintf("%.2i", creditcard.month.to_s.sub(/^0+/, ''))
 
         "#{year}#{month}"
       end
@@ -190,7 +198,7 @@ module ActiveMerchant #:nodoc:
                   xml.tag! 'PayPeriod', get_pay_period(options)
                   xml.tag! 'Term', options[:payments] unless options[:payments].nil?
                   xml.tag! 'Comment', options[:comment] unless options[:comment].nil?
-                
+                  xml.tag! 'RetryNumDays', options[:retry_num_days] unless options[:retry_num_days].nil?
                 
                   if initial_tx = options[:initial_transaction]
                     requires!(initial_tx, [:type, :authorization, :purchase])
@@ -199,8 +207,13 @@ module ActiveMerchant #:nodoc:
                     xml.tag! 'OptionalTrans', TRANSACTIONS[initial_tx[:type]]
                     xml.tag! 'OptionalTransAmt', amount(initial_tx[:amount]) unless initial_tx[:amount].blank?
                   end
-                
-                  xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1 )
+                  
+                  if action == :add
+                    xml.tag! 'Start', format_rp_date(options[:starting_at] || Date.today + 1 )
+                  else
+                    xml.tag! 'Start', format_rp_date(options[:starting_at]) unless options[:starting_at].nil?
+                  end
+                  
                   xml.tag! 'EMail', options[:email] unless options[:email].nil?
                   
                   billing_address = options[:billing_address] || options[:address]

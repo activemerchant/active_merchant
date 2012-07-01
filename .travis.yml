@@ -1,10 +1,13 @@
 rvm:
   - 1.8.7
   - 1.9.2
+  - 1.9.3
   - rbx
   - ree
 
 script: "bundle exec rake test:units"
 
 notifications:
-  disabled: true
+  email:
+    - integrations-team@shopify.com
+    - nathaniel@talbott.ws

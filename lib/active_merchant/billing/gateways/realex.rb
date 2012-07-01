@@ -1,4 +1,4 @@
-require 'rexml/document'
+require 'nokogiri'
 require 'digest/sha1'
 
 module ActiveMerchant
@@ -101,9 +101,8 @@ module ActiveMerchant
       def parse(xml)
         response = {}
 
-        xml = REXML::Document.new(xml)
-        xml.elements.each('//response/*') do |node|
-
+        doc = Nokogiri::XML(xml)
+        doc.xpath('//response/*').each do |node|
           if (node.elements.size == 0)
             response[node.name.downcase.to_sym] = normalize(node.text)
           else
@@ -112,8 +111,7 @@ module ActiveMerchant
               response[name.to_sym] = normalize(childnode.text)
             end
           end
-
-        end unless xml.root.nil?
+        end unless doc.root.nil?
 
         response
       end

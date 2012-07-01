@@ -7,7 +7,7 @@ class EwayTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card('4646464646464646')
-    
+
     @options = {
       :order_id => '1230123',
       :email => 'bob@testbob.com',
@@ -20,58 +20,65 @@ class EwayTest < Test::Unit::TestCase
         :zip      => '12345'
       },
       :description => 'purchased items'
-    } 
+    }
   end
-  
+
+  def test_purchase_without_billing_address
+    @options.delete(:billing_address)
+    assert_raise(ArgumentError) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-  
+
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
     assert_equal '123456', response.authorization
   end
-  
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
-  
+
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
   end
-         
+
   def test_amount_style
    assert_equal '1034', @gateway.send(:amount, 1034)
-                                                      
+
    assert_raise(ArgumentError) do
      @gateway.send(:amount, '10.34')
    end
   end
-  
+
   def test_ensure_does_not_respond_to_authorize
     assert !@gateway.respond_to?(:authorize)
   end
-  
+
   def test_ensure_does_not_respond_to_capture
     assert !@gateway.respond_to?(:capture) || @gateway.method(:capture).owner != @gateway.class
   end
-  
+
   def test_test_url_without_cvn
     assert_equal EwayGateway::TEST_URL, @gateway.send(:gateway_url, false, true)
   end
-  
+
   def test_test_url_with_cvn
     assert_equal EwayGateway::TEST_CVN_URL, @gateway.send(:gateway_url, true, true)
   end
-  
+
   def test_live_url_without_cvn
     assert_equal EwayGateway::LIVE_URL, @gateway.send(:gateway_url, false, false)
   end
-  
+
   def test_live_url_with_cvn
     assert_equal EwayGateway::LIVE_CVN_URL, @gateway.send(:gateway_url, true, false)
   end
-  
+
   def test_add_address
     post = {}
     @gateway.send(:add_address, post, @options)
@@ -96,7 +103,7 @@ class EwayTest < Test::Unit::TestCase
 </ewayResponse>
     XML
   end
-  
+
   def failed_purchase_response
     <<-XML
 <?xml version="1.0"?>
@@ -114,5 +121,3 @@ class EwayTest < Test::Unit::TestCase
     XML
   end
 end
-
-

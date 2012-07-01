@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
         def add_credit_card(post, credit_card)     
           
           post[:cn] = credit_card.number
-          post[:ct] = credit_card.type
+          post[:ct] = credit_card.brand
           post[:ex] = format_date(credit_card.month, credit_card.year)
           post[:cc] = credit_card.verification_value if credit_card.verification_value?
           

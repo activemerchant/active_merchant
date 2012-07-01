@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
       
       APPROVED = '0'
       
-      self.supported_cardtypes = [:visa, :master, :american_express]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.supported_countries = ['US']
       self.display_name = 'ViaKLIX'
       self.homepage_url = 'http://viaklix.com'
@@ -43,6 +43,7 @@ module ActiveMerchant #:nodoc:
         add_creditcard(form, creditcard)        
         add_address(form, options)   
         add_customer_data(form, options)
+        add_test_mode(form, options)
         commit(:purchase, money, form)
       end
       
@@ -58,10 +59,15 @@ module ActiveMerchant #:nodoc:
         add_creditcard(form, creditcard)        
         add_address(form, options)   
         add_customer_data(form, options)
+        add_test_mode(form, options)
         commit(:credit, money, form)
       end
       
       private
+      def add_test_mode(form, options)
+        form[:test_mode] = 'TRUE' if options[:test_mode]
+      end
+      
       def add_customer_data(form, options)
         form[:email] = options[:email].to_s.slice(0, 100) unless options[:email].blank?
         form[:customer_code] = options[:customer].to_s.slice(0, 10) unless options[:customer].blank?
@@ -129,8 +135,7 @@ module ActiveMerchant #:nodoc:
           'merchant_id'   => @options[:login],
           'pin'           => @options[:password],
           'show_form'     => 'false',
-          'test_mode'     => test? ? 'TRUE' : 'FALSE',
-          'result_format' => 'ASCII',          
+          'result_format' => 'ASCII'          
         }
         
         result['user_id'] = @options[:user] unless @options[:user].blank?

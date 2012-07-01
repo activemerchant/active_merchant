@@ -6,8 +6,8 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     @gateway = CyberSourceGateway.new(fixtures(:cyber_source))
 
-    @credit_card = credit_card('4111111111111111', :type => 'visa')
-    @declined_card = credit_card('801111111111111', :type => 'visa')
+    @credit_card = credit_card('4111111111111111', :brand => 'visa')
+    @declined_card = credit_card('801111111111111', :brand => 'visa')
     
     @amount = 100
     
@@ -36,10 +36,36 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       :ignore_cvv => 'true'
     }
 
+    @subscription_options = {
+      :order_id => generate_unique_id,
+      :email => 'someguy1232@fakeemail.net',
+      :credit_card => @credit_card,
+      :billing_address => address,
+      :subscription => {
+        :frequency => "weekly",
+        :start_date => Date.today.next_week,
+        :occurrences => 4,
+        :auto_renew => true,
+        :amount => 100
+      }
+    }
   end
   
   def test_successful_authorization
     assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_subscription_authorization
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+
+    assert response = @gateway.authorize(@amount, response.authorization, :order_id => generate_unique_id)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
@@ -114,6 +140,18 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_subscription_purchase
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+
+    assert response = @gateway.purchase(@amount, response.authorization, :order_id => generate_unique_id)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_equal 'Invalid account number', response.message
@@ -155,7 +193,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_match /wsse:InvalidSecurity/, response.body
   end
   
-  def test_successful_credit
+  def test_successful_refund
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Successful transaction', response.message
     assert_success response
@@ -165,4 +203,64 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_success response
     assert response.test?       
   end
+
+  def test_successful_create_subscription
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_create_subscription_with_setup_fee
+    assert response = @gateway.store(@credit_card, @subscription_options.merge(:setup_fee => 100))
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_update_subscription_creditcard
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+
+    assert response = @gateway.update(response.authorization, @credit_card, {:order_id => generate_unique_id, :setup_fee => 100})
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_update_subscription_billing_address
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+
+    assert response = @gateway.update(response.authorization, nil, 
+      {:order_id => generate_unique_id, :setup_fee => 100, billing_address: address, email: 'someguy1232@fakeemail.net'})
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_delete_subscription
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert response.success?
+    assert response.test?
+
+    assert response = @gateway.unstore(response.authorization, :order_id => generate_unique_id)
+    assert response.success?
+    assert response.test?
+  end
+
+  def test_successful_retrieve_subscription
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert response.success?
+    assert response.test?
+
+    assert response = @gateway.retrieve(response.authorization, :order_id => generate_unique_id)
+    assert response.success?
+    assert response.test?
+  end
+
 end

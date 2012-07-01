@@ -10,7 +10,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
               :month => '12',
               :year => '2009',
               :verification_value => '4887',
-              :type => :american_express
+              :brand => :american_express
             )
 
     @uk_maestro = credit_card('675940410531100173',
@@ -18,7 +18,7 @@ class RemoteCardStreamTest < Test::Unit::TestCase
                     :year => '2008',
                     :issue_number => '0',
                     :verification_value => '134',
-                    :type => :switch
+                    :brand => :switch
                   )
     
     @solo = credit_card('676740340572345678',
@@ -26,14 +26,14 @@ class RemoteCardStreamTest < Test::Unit::TestCase
               :year => '2008',
               :issue_number => '1',
               :verification_value => '773',
-              :type => :solo
+              :brand => :solo
             )
 
     @mastercard = credit_card('5301250070000191',
                     :month => '12',
                     :year => '2009',
                     :verification_value => '419',
-                    :type => :master
+                    :brand => :master
                   )
 
     @declined_card = credit_card('4000300011112220',

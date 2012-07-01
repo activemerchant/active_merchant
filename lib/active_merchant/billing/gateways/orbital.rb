@@ -77,10 +77,11 @@ module ActiveMerchant #:nodoc:
         "EUR" => '978'
       }
 
+      AVS_SUPPORTED_COUNTRIES = ['US', 'CA', 'UK', 'GB']
+
       def initialize(options = {})
-        unless options[:ip_authentication] == true
-          requires!(options, :login, :password, :merchant_id)
-        end
+        requires!(options, :merchant_id)
+        requires!(options, :login, :password) unless options[:ip_authentication]
         @options = options
         super
       end
@@ -149,12 +150,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, creditcard, options)      
         if address = options[:billing_address] || options[:address]
-          xml.tag! :AVSzip, address[:zip]
-          xml.tag! :AVSaddress1, address[:address1]
-          xml.tag! :AVSaddress2, address[:address2]
-          xml.tag! :AVScity, address[:city]
-          xml.tag! :AVSstate, address[:state]
-          xml.tag! :AVSphoneNum, address[:phone] ? address[:phone].scan(/\d/).join.to_s : nil
+          add_avs_details(xml, address)
           xml.tag! :AVSname, creditcard.name
           xml.tag! :AVScountryCode, address[:country]
         end
@@ -178,6 +174,18 @@ module ActiveMerchant #:nodoc:
         xml.tag! :CurrencyExponent, '2' # Will need updating to support currencies such as the Yen.
       end
       
+      def add_avs_details(xml, address)
+        return unless AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s)
+
+        xml.tag! :AVSzip, address[:zip]
+        xml.tag! :AVSaddress1, address[:address1]
+        xml.tag! :AVSaddress2, address[:address2]
+        xml.tag! :AVScity, address[:city]
+        xml.tag! :AVSstate, address[:state]
+        xml.tag! :AVSphoneNum, address[:phone] ? address[:phone].scan(/\d/).join.to_s : nil
+      end
+
+
       def parse(body)
         response = {}
         xml = REXML::Document.new(body)
@@ -253,7 +261,7 @@ module ActiveMerchant #:nodoc:
             yield xml if block_given?
             
             xml.tag! :Comments, parameters[:comments] if parameters[:comments]
-            xml.tag! :OrderID, parameters[:order_id].to_s[0...22]
+            xml.tag! :OrderID, format_order_id(parameters[:order_id])
             xml.tag! :Amount, amount(money)
             
             # Append Transaction Reference Number at the end for Refund transactions
@@ -305,7 +313,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def bin
-        @options[:bin] || '000001' # default is Salem Global
+        @options[:bin] || (salem_mid? ? '000001' : '000002')
       end
 
       def xml_envelope
@@ -323,6 +331,22 @@ module ActiveMerchant #:nodoc:
         xml.tag! :BIN, bin
         xml.tag! :MerchantID, @options[:merchant_id]
         xml.tag! :TerminalID, parameters[:terminal_id] || '001'
+      end
+
+      def salem_mid?
+        @options[:merchant_id].length == 6
+      end
+
+      # The valid characters include:
+      #
+      # 1. all letters and digits
+      # 2. - , $ @ & and a space character, though the space character cannot be the leading character
+      # 3. PINless Debit transactions can only use uppercase and lowercase alpha (A-Z, a-z) and numeric (0-9)
+      def format_order_id(order_id)
+        illegal_characters = /[^,$@\- \w]/
+        order_id = order_id.to_s.gsub(/\./, '-')
+        order_id.gsub!(illegal_characters, '')
+        order_id[0...22]
       end
     end
   end

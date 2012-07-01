@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
         'dankort'            => /^5019\d{12}$/,
         'maestro'            => /^(5[06-8]|6\d)\d{10,17}$/,
         'forbrugsforeningen' => /^600722\d{10}$/,
-        'laser'              => /^(6304|6706|6771|6709)\d{8}(\d{4}|\d{6,7})?$/
+        'laser'              => /^(6304|6706|6709|6771(?!89))\d{8}(\d{4}|\d{6,7})?$/
       }
     
       def self.included(base)
@@ -38,8 +38,8 @@ module ActiveMerchant #:nodoc:
       end
       
       module ClassMethods
-        # Returns true if it validates. Optionally, you can pass a card type as an argument and 
-        # make sure it is of the correct type.
+        # Returns true if it validates. Optionally, you can pass a card brand as an argument and 
+        # make sure it is of the correct brand.
         #
         # References:
         # - http://perl.about.com/compute/perl/library/nosearch/P073000.htm
@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
           CARD_COMPANIES
         end
         
-        # Returns a string containing the type of card from the list of known information below.
+        # Returns a string containing the brand of card from the list of known information below.
         # Need to check the cards in a particular order, as there is some overlap of the allowable ranges
         #--
         # TODO Refactor this method. We basically need to tighten up the Maestro Regexp. 
@@ -67,12 +67,12 @@ module ActiveMerchant #:nodoc:
         # Right now the Maestro regexp overlaps with the MasterCard regexp (IIRC). If we can tighten 
         # things up, we can boil this whole thing down to something like... 
         # 
-        #   def type?(number)
+        #   def brand?(number)
         #     return 'visa' if valid_test_mode_card_number?(number)
-        #     card_companies.find([nil]) { |type, regexp| number =~ regexp }.first.dup
+        #     card_companies.find([nil]) { |brand, regexp| number =~ regexp }.first.dup
         #   end
         # 
-        def type?(number)
+        def brand?(number)
           return 'bogus' if valid_test_mode_card_number?(number)
 
           card_companies.reject { |c,p| c == 'maestro' }.each do |company, pattern|
@@ -83,6 +83,15 @@ module ActiveMerchant #:nodoc:
 
           return nil
         end
+
+        def type?(number)
+          deprecated "CreditCard#type? is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand? instead."
+          brand?(number)
+        end
+        
+        def first_digits(number)
+          number.to_s.slice(0,6) 
+        end
         
         def last_digits(number)     
           number.to_s.length <= 4 ? number : number.to_s.slice(-4..-1) 
@@ -92,9 +101,18 @@ module ActiveMerchant #:nodoc:
           "XXXX-XXXX-XXXX-#{last_digits(number)}"
         end
         
-        # Checks to see if the calculated type matches the specified type
-        def matching_type?(number, type)
-          type?(number) == type
+        # Checks to see if the calculated brand matches the specified brand
+        def matching_brand?(number, brand)
+          brand?(number) == brand
+        end
+
+        def matching_type?(number, brand)
+          deprecated "CreditCard#matching_type? is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#matching_brand? instead."
+          matching_brand?(number, brand)
+        end
+
+        def deprecated(message)
+          warn(Kernel.caller[1] + message)
         end
         
         private

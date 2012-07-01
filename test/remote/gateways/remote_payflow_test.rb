@@ -7,7 +7,7 @@ class RemotePayflowTest < Test::Unit::TestCase
     @gateway = PayflowGateway.new(fixtures(:payflow))
     
     @credit_card = credit_card('5105105105105100',
-      :type => 'master'
+      :brand => 'master'
     )
 
     @options = { :billing_address => address,
@@ -190,7 +190,7 @@ class RemotePayflowTest < Test::Unit::TestCase
     response = @gateway.recurring(1000, @credit_card, 
       :periodicity => :monthly,
       :initial_transaction => {
-        :type => :authorization
+        :brand => :authorization
       }
     )
     
@@ -203,7 +203,7 @@ class RemotePayflowTest < Test::Unit::TestCase
     response = @gateway.recurring(1000, @credit_card, 
       :periodicity => :monthly,
       :initial_transaction => {
-        :type => :purchase,
+        :brand => :purchase,
         :amount => 500
       }
     )

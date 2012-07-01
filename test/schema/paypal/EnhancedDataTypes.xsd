@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="urn:ebay:apis:EnhancedDataTypes" elementFormDefault="qualified" attributeFormDefault="unqualified" xmlns:ns="urn:ebay:apis:EnhancedDataTypes" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:complexType name="EnhancedCheckoutDataType">
+	</xs:complexType>
+	<xs:complexType name="EnhancedPaymentDataType">
+	</xs:complexType>
+	<xs:complexType name="EnhancedItemDataType">
+	</xs:complexType>
+	<xs:complexType name="EnhancedPaymentInfoType">
+	</xs:complexType>
+	<xs:element name="EnhancedInitiateRecoupRequestDetails" type="ns:EnhancedInitiateRecoupRequestDetailsType"/>
+	<xs:element name="EnhancedCompleteRecoupRequestDetails" type="ns:EnhancedCompleteRecoupRequestDetailsType"/>
+	<xs:element name="EnhancedCompleteRecoupResponseDetails" type="ns:EnhancedCompleteRecoupResponseDetailsType"/>
+	<xs:element name="EnhancedCancelRecoupRequestDetails" type="ns:EnhancedCancelRecoupRequestDetailsType"/>
+	<xs:complexType name="EnhancedInitiateRecoupRequestDetailsType">
+	</xs:complexType>
+	<xs:complexType name="EnhancedCompleteRecoupRequestDetailsType">
+	</xs:complexType>
+	<xs:complexType name="EnhancedCompleteRecoupResponseDetailsType">
+	</xs:complexType>
+	<xs:complexType name="EnhancedCancelRecoupRequestDetailsType">
+	</xs:complexType>
+	<xs:complexType name="EnhancedPayerInfoType">
+	</xs:complexType>
+</xs:schema>

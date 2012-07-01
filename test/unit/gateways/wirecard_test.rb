@@ -2,13 +2,13 @@ require 'test_helper'
 
 class WirecardTest < Test::Unit::TestCase
   TEST_AUTHORIZATION_GUWID = 'C822580121385121429927'
-  
+
   def setup
     @gateway = WirecardGateway.new(:login => '', :password => '', :signature => '')
     @credit_card = credit_card('4200000000000000')
     @declined_card = credit_card('4000300011112220')
-    @unsupported_card = credit_card('4200000000000000', :type => :maestro)
-    
+    @unsupported_card = credit_card('4200000000000000', :brand => :maestro)
+
     @amount = 111
 
     @options = {
@@ -17,7 +17,7 @@ class WirecardTest < Test::Unit::TestCase
       :description => 'Wirecard Purchase',
       :email => 'soleone@example.com'
     }
-    
+
     @address_without_state = {
       :name     => 'Jim Smith',
       :address1 => '1234 My Street',
@@ -47,7 +47,7 @@ class WirecardTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
     assert_false response.authorization
-    assert response.message[/credit card number not allowed in demo mode/i]  
+    assert response.message[/credit card number not allowed in demo mode/i]
   end
 
   def test_successful_authorization_and_capture
@@ -55,7 +55,7 @@ class WirecardTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal TEST_AUTHORIZATION_GUWID, response.authorization
-    
+
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     assert response = @gateway.capture(@amount, response.authorization, @options)
     assert_success response
@@ -68,14 +68,22 @@ class WirecardTest < Test::Unit::TestCase
     assert response = @gateway.capture(@amount, "1234567890123456789012", @options)
 
     assert_failure response
-    assert response.message["Could not find referenced transaction for GuWID 1234567890123456789012."]  
+    assert response.message["Could not find referenced transaction for GuWID 1234567890123456789012."]
   end
 
-  def test_doesnt_raise_an_error_if_no_state_is_provided_in_address
+  def test_no_error_if_no_state_is_provided_in_address
     options = @options.merge(:billing_address => @address_without_state)
     @gateway.expects(:ssl_post).returns(unauthorized_capture_response)
     assert_nothing_raised do
       @gateway.authorize(@amount, @credit_card, options)
+    end
+  end
+
+  def test_no_error_if_no_address_provided
+    @options.delete(:billing_address)
+    @gateway.expects(:ssl_post).returns(unauthorized_capture_response)
+    assert_nothing_raised do
+      @gateway.authorize(@amount, @credit_card, @options)
     end
   end
 
@@ -155,7 +163,7 @@ class WirecardTest < Test::Unit::TestCase
     </WIRECARD_BXML>
     XML
   end
-  
+
   # Capture failure
   def unauthorized_capture_response
     <<-XML
@@ -187,7 +195,7 @@ class WirecardTest < Test::Unit::TestCase
     </WIRECARD_BXML>
     XML
   end
-  
+
   # Purchase success
   def successful_purchase_response
     <<-XML
@@ -215,7 +223,7 @@ class WirecardTest < Test::Unit::TestCase
     </WIRECARD_BXML>
     XML
   end
-  
+
   # Purchase failure
   def wrong_creditcard_purchase_response
     <<-XML

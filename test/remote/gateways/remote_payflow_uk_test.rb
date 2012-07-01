@@ -14,11 +14,11 @@ class RemotePayflowUkTest < Test::Unit::TestCase
       :first_name => 'Cody',
       :last_name => 'Fauser',
       :verification_value => '000',
-      :type => 'master'
+      :brand => 'master'
     )
     
     @solo = CreditCard.new(
-      :type   => "solo",
+      :brand  => "solo",
       :number => "6334900000000005",
       :month  => Time.now.month,
       :year   => Time.now.year + 1,
@@ -28,7 +28,7 @@ class RemotePayflowUkTest < Test::Unit::TestCase
     )
     
     @switch = CreditCard.new(
-       :type                => "switch",
+       :brand               => "switch",
        :number              => "5641820000000005",
        :verification_value => "000",
        :month               => 1,

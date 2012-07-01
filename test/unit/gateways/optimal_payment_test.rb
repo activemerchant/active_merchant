@@ -40,7 +40,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
       :year => Time.now.year + 1,
       :first_name => 'Longbob',
       :last_name => 'Longsen',
-      :type => 'visa'
+      :brand => 'visa'
     )
     @gateway.instance_variable_set('@credit_card', credit_card)
     assert_match minimal_request, @gateway.cc_auth_request(@amount, options)
@@ -56,6 +56,33 @@ class OptimalPaymentTest < Test::Unit::TestCase
     # Replace with authorization number from the successful response
     assert_equal '126740505', response.authorization
     assert response.test?
+  end
+
+  def test_purchase_from_canada_includes_state_field
+    @options[:billing_address][:country] = "CA"
+    @gateway.expects(:ssl_post).with do |url, data|
+      data =~ /state/ && data !~ /region/
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_purchase_from_us_includes_state_field
+    @options[:billing_address][:country] = "US"
+    @gateway.expects(:ssl_post).with do |url, data|
+      data =~ /state/ && data !~ /region/
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_purchase_from_any_other_country_includes_region_field
+    @options[:billing_address][:country] = "GB"
+    @gateway.expects(:ssl_post).with do |url, data|
+      data =~ /region/ && data !~ /state/
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
   end
 
   def test_successful_void
