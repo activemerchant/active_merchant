@@ -1,5 +1,25 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.25.0 (July 3, 2012)
+
+* eWAY gateway: Add support for Diners Club cards [Soleone]
+* Orbital gateway: Never send country code for orders outside of US, CA and GB [Soleone]
+* Add EasyPay integration [nashby]
+* Updating LitleOnline requirement to 8.13.2 to take advantage of better validation and get bugfix for Username [GregDrake]
+* USAepay gateway: Add description support [ntalbott]
+* Add Paypal Payments Advanced integration [csaunders]
+* Authorize.Net gateway: Improve #refund docs [neerajdotname]
+* Wirecard gateway: Fix for missing address hash [ntalbott]
+* Clean up requires of RubyGems and JSON gems. Rename remote Litle test to match naming conventions [codyfauser]
+* Cybersource gateway: Fix updating address only [fabiokr]
+* Cybersource gateway: Move email requirement [fabiokr]
+* Add the Metrics Global gateway [DanKnox]
+* Braintree Blue gateway: Support wiredump_device [moklett]
+* Add Fat Zebra gateway [amasses]
+* Braintree Blue gateway: Always pass CVV on update [shayfrendt]
+* eWAY gateway: Update docs. Require address [juggler]
+* Cybersource gateway: Add support for subscriptions [fabiokr]
+
 == Version 1.24.0 (June 8, 2012)
 
 * PayPal gateway: Support for incomplete captures [mbulat]
