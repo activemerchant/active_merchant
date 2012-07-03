@@ -3,6 +3,8 @@ module ActiveMerchant #:nodoc:
     # Bogus Gateway
     class BogusGateway < Gateway
       AUTHORIZATION = '53433'
+      CUSTOMER_PROFILE_ID = '53433'
+      CUSTOMER_PAYMENT_PROFILE_ID = '1234'
       
       SUCCESS_MESSAGE = "Bogus Gateway: Forced success"
       FAILURE_MESSAGE = "Bogus Gateway: Forced failure"
@@ -125,6 +127,25 @@ module ActiveMerchant #:nodoc:
           Response.new(false, FAILURE_MESSAGE, {:error => FAILURE_MESSAGE },:test => true)
         else
           raise Error, UNSTORE_ERROR_MESSAGE
+        end
+      end
+
+      def create_customer_profile(options)
+        Response.new(true, SUCCESS_MESSAGE, options, { :customer_profile_id => CUSTOMER_PROFILE_ID, :test => true, :authorization => AUTHORIZATION } )
+      end
+
+      def create_customer_payment_profile(options)
+        Response.new(true, SUCCESS_MESSAGE, {:customer_payment_profile_id => CUSTOMER_PAYMENT_PROFILE_ID }, :test => true )
+      end
+
+      def create_customer_profile_transaction(options)
+        case options.fetch(:transaction).fetch(:customer_payment_profile_id)
+        when '1'
+          Response.new(true, SUCCESS_MESSAGE, {:direct_response => {:transaction_id => CUSTOMER_PROFILE_ID } } , :test => true )
+        when '2'
+          Response.new(false, FAILURE_MESSAGE, {}, :test => true)
+        else
+          raise Error, ERROR_MESSAGE
         end
       end
 

@@ -10,6 +10,10 @@ class BogusTest < Test::Unit::TestCase
     @creditcard = credit_card('1')
 
     @response = ActiveMerchant::Billing::Response.new(true, "Transaction successful", :transid => BogusGateway::AUTHORIZATION)
+
+    @profile = { :email => 'Up to 255 Characters' }
+    @customer_profile_id = '53433'
+    @customer_payment_profile_id = '1'
   end
 
   def test_authorize
@@ -98,5 +102,52 @@ class BogusTest < Test::Unit::TestCase
   
   def test_supported_card_types
     assert_equal [:bogus], BogusGateway.supported_cardtypes
+  end
+
+  def test_create_customer_profile
+    options = {:profile => @profile }
+    assert response = @gateway.create_customer_profile(options)
+    
+    assert_success response
+    assert response.test?
+    
+    assert_equal @customer_profile_id, response.authorization
+    assert_equal 'Bogus Gateway: Forced success', response.message
+  end
+
+  def test_create_customer_payment_profile
+    payment_profile = {:payment => {:credit_card => credit_card } }
+
+    assert response = @gateway.create_customer_payment_profile(
+      :customer_profile_id => @customer_profile_id,
+      :payment_profile => payment_profile
+    )
+
+    assert_success response
+    assert_nil response.authorization
+    assert customer_payment_profile_id = response.params['customer_payment_profile_id']
+    assert customer_payment_profile_id =~ /\d+/, "The customerPaymentProfileId should be numeric. It was #{customer_payment_profile_id}"
+  end
+
+  def test_create_customer_profile_transaction
+    # success
+    options = { :transaction => { :customer_profile_id => @customer_profile_id, :customer_payment_profile_id => '1' } }
+    assert response = @gateway.create_customer_profile_transaction(options)
+
+    assert_success response
+    assert_equal response.authorization, response.params['direct_response']['transaction_id']
+    
+    # error
+    options = { :transaction => { :customer_profile_id => @customer_profile_id, :customer_payment_profile_id => '2' } }
+    assert response = @gateway.create_customer_profile_transaction(options)
+
+    assert_failure response
+    
+    # exception
+    options = { :transaction => { :customer_profile_id => @customer_profile_id, :customer_payment_profile_id => 'not a number' } }
+
+    assert_raises(ActiveMerchant::Billing::Error) do
+      @gateway.create_customer_profile_transaction(options)
+    end
   end
 end
