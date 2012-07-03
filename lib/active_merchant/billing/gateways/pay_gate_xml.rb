@@ -190,12 +190,13 @@ module ActiveMerchant #:nodoc:
         commit(action, money, request)
       end
 
-      def successful?(response)
-        SUCCESS_CODES.include?(response[:res])
-      end
 
 
       private
+
+      def successful?(response)
+        SUCCESS_CODES.include?(response[:res])
+      end
 
       def build_request(action, options={})
         xml = Builder::XmlMarkup.new
@@ -221,20 +222,20 @@ module ActiveMerchant #:nodoc:
 
       def build_authorisation(xml, money, creditcard, options={})
         xml.tag! 'authtx', {
-            'cref',  options[:invoice],
-            'cname', options[:customer],
-            'cc',    creditcard.number,
-            'exp',   "#{format(creditcard.month, :two_digits)}#{format(creditcard.year, :four_digits)}",
-            'budp',  0,
-            'amt',   amount(money),
-            'cur',   options[:currency] || currency(money),
-            'cvv',   creditcard.verification_value
+          :cref  => options[:invoice],
+          :cname => options[:customer],
+          :cc    => creditcard.number,
+          :exp   => "#{format(creditcard.month, :two_digits)}#{format(creditcard.year, :four_digits)}",
+          :budp  => 0,
+          :amt   => amount(money),
+          :cur   => options[:currency] || currency(money),
+          :cvv   => creditcard.verification_value
         }
       end
 
       def build_capture(xml, money, authorization, options={})
         xml.tag! 'settletx', {
-            'tid',  authorization
+            :tid  => authorization
         }
       end
 
