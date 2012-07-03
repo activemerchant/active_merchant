@@ -101,7 +101,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_no_match(/<AVSstate>ON/, data)
       assert_no_match(/<AVSphoneNum>5555555555/, data)
       assert_match(/<AVSname>Longbob Longsen/, data)
-      assert_match(/<AVScountryCode>DE/, data)
+      assert_match(/<AVScountryCode><\/AVScountryCode>/, data)
     end.respond_with(successful_purchase_response)
     assert_success response    
   end

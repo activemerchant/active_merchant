@@ -152,7 +152,6 @@ module ActiveMerchant #:nodoc:
         if address = options[:billing_address] || options[:address]
           add_avs_details(xml, address)
           xml.tag! :AVSname, creditcard.name
-          xml.tag! :AVScountryCode, address[:country]
         end
       end
 
@@ -175,14 +174,18 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_avs_details(xml, address)
-        return unless AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s)
-
-        xml.tag! :AVSzip, address[:zip]
-        xml.tag! :AVSaddress1, address[:address1]
-        xml.tag! :AVSaddress2, address[:address2]
-        xml.tag! :AVScity, address[:city]
-        xml.tag! :AVSstate, address[:state]
-        xml.tag! :AVSphoneNum, address[:phone] ? address[:phone].scan(/\d/).join.to_s : nil
+        if AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s)
+          xml.tag! :AVSzip, address[:zip]
+          xml.tag! :AVSaddress1, address[:address1]
+          xml.tag! :AVSaddress2, address[:address2]
+          xml.tag! :AVScity, address[:city]
+          xml.tag! :AVSstate, address[:state]
+          xml.tag! :AVSphoneNum, address[:phone] ? address[:phone].scan(/\d/).join.to_s : nil
+          country_code = address[:country]
+        else
+          country_code = ''
+        end
+        xml.tag! :AVScountryCode, country_code
       end
 
 
