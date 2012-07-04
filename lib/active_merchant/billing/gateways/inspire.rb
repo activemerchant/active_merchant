@@ -123,14 +123,14 @@ module ActiveMerchant #:nodoc:
       
       def add_payment_source(params, source, options={})
         case determine_funding_source(source)
-        when :vault       then add_customer_vault_id(params, source)
+        when :vault       then add_customer_vault_id(params, options)
         when :credit_card then add_creditcard(params, source, options)
         when :check       then add_check(params, source)
         end
       end
       
-      def add_customer_vault_id(params,vault_id)
-        params[:customer_vault_id] = vault_id
+      def add_customer_vault_id(params, options)
+        params[:customer_vault_id] = options[:customer_vault_id]
       end
       
       def add_creditcard(post, creditcard,options)
