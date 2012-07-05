@@ -25,10 +25,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_method, options = {})
-        response = MultiResponse.new
-        response << authorize(money, payment_method, options)
-        response << capture(money, response.authorization, options.merge(:authorization_validated => true)) if response.success?
-        response
+        MultiResponse.new.tap do |r|
+          r.process{authorize(money, payment_method, options)}
+          r.process{capture(money, r.authorization, options.merge(:authorization_validated => true))}
+        end
       end
 
       def authorize(money, payment_method, options = {})
@@ -37,30 +37,30 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        response = MultiResponse.new
-        response << inquire(authorization, options) unless options[:authorization_validated]
-        response << commit('capture', build_capture_request(money, authorization, options)) if response.success?
-        response
+        MultiResponse.new.tap do |r|
+          r.process{inquire(authorization, options)} unless options[:authorization_validated]
+          r.process{commit('capture', build_capture_request(money, authorization, options))}
+        end
       end
 
       def void(authorization, options = {})
-        response = MultiResponse.new
-        response << inquire(authorization, options)
-        response << commit('cancel', build_void_request(authorization, options)) if response.success?
-        response        
+        MultiResponse.new.tap do |r|
+          r.process{inquire(authorization, options)}
+          r.process{commit('cancel', build_void_request(authorization, options))}
+        end
       end
 
       def refund(money, authorization, options = {})
-        response = MultiResponse.new
-        response << inquire(authorization, options)
-        response << commit('refund', build_refund_request(money, authorization, options)) if response.success?
-        response        
+        MultiResponse.new.tap do |r|
+          r.process{inquire(authorization, options)}
+          r.process{commit('refund', build_refund_request(money, authorization, options))}
+        end
       end
 
       private
 
       def inquire(authorization, options={})
-        commit 'inquiry', build_order_inquiry_request(authorization, options)
+        commit('inquiry', build_order_inquiry_request(authorization, options))
       end
 
       def build_request
@@ -246,34 +246,6 @@ module ActiveMerchant #:nodoc:
       def encoded_credentials
         credentials = "#{@options[:login]}:#{@options[:password]}"
         "Basic #{[credentials].pack('m').strip}"
-      end
-
-      class MultiResponse < Response
-        attr_reader :responses
-
-        def initialize
-          @responses = []
-        end
-
-        def <<(response)
-          if response.is_a?(MultiResponse)
-            response.responses.each{|r| @responses << r}
-          else
-            @responses << response
-          end
-        end
-
-        def success?
-          @responses.all?{|r| r.success?}
-        end
-
-        %w(params message test authorization avs_result cvv_result test? fraud_review?).each do |m|
-          class_eval %(
-            def #{m}
-              @responses.last.#{m}
-            end
-          )
-        end
       end
     end
   end
