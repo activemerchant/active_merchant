@@ -2,7 +2,9 @@
 
 * Add PayGate XML gateway [rubyisbeautiful]
 * Add PayWay gateway [BenZhang]
-* PayWay gateway: tweaks to make more ActiveMerchant like [ntalbott]
+* PayWay gateway: Tweaks to make more ActiveMerchant like [ntalbott]
+* Netbilling gateway: Fix error handling [ntalbott]
+* Netbilling gateway: Add refund/credit/void support [zenom, ntalbott]
 
 == Version 1.25.0 (July 3, 2012)
 
