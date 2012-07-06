@@ -62,4 +62,33 @@ class RemoteNetbillingTest < Test::Unit::TestCase
     assert_match(/missing/i, response.message)
     assert_failure response
   end
+
+  def test_successful_refund
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization.present?
+    assert_equal NetbillingGateway::SUCCESS_MESSAGE, response.message
+
+    assert refund_response = @gateway.refund(@amount, response.authorization)
+    assert_success refund_response
+    assert_equal NetbillingGateway::SUCCESS_MESSAGE, response.message
+  end
+
+  def test_successful_credit
+    assert response = @gateway.credit(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal NetbillingGateway::SUCCESS_MESSAGE, response.message
+  end
+
+  def test_successful_void
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization.present?
+    assert_equal NetbillingGateway::SUCCESS_MESSAGE, response.message
+
+    # The test environment doesn't support void
+    assert void_response = @gateway.void(response.authorization)
+    assert_failure void_response
+    assert_match(/error/i, void_response.message)
+  end
 end

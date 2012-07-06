@@ -4,11 +4,12 @@ module ActiveMerchant #:nodoc:
       URL = 'https://secure.netbilling.com:1402/gw/sas/direct3.1'
 
       TRANSACTIONS = {
-        :authorization       => 'A',
-        :purchase            => 'S',
-        :referenced_credit   => 'R',
-        :unreferenced_credit => 'C',
-        :capture             => 'D'
+        :authorization => 'A',
+        :purchase      => 'S',
+        :refund        => 'R',
+        :credit        => 'C',
+        :capture       => 'D',
+        :void          => 'U'
       }
 
       SUCCESS_CODES = [ '1', 'T' ]
@@ -35,7 +36,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, credit_card, options)
         add_customer_data(post, options)
 
-        commit(:authorization, money, post)
+        commit(:authorization, post)
       end
 
       def purchase(money, credit_card, options = {})
@@ -46,13 +47,37 @@ module ActiveMerchant #:nodoc:
         add_address(post, credit_card, options)
         add_customer_data(post, options)
 
-        commit(:purchase, money, post)
+        commit(:purchase, post)
       end
 
       def capture(money, authorization, options = {})
         post = {}
         add_reference(post, authorization)
-        commit(:capture, money, post)
+        commit(:capture, post)
+      end
+
+      def refund(money, source, options = {})
+        post = {}
+        add_amount(post, money)
+        add_reference(post, source)
+        commit(:refund, post)
+      end
+
+      def credit(money, credit_card, options = {})
+        post = {}
+        add_amount(post, money)
+        add_invoice(post, options)
+        add_credit_card(post, credit_card)
+        add_address(post, credit_card, options)
+        add_customer_data(post, options)
+
+        commit(:credit, post)
+      end
+
+      def void(source, options = {})
+        post = {}
+        add_reference(post, source)
+        commit(:void, post)
       end
 
       def test?
@@ -117,7 +142,7 @@ module ActiveMerchant #:nodoc:
         results
       end
 
-      def commit(action, money, parameters)
+      def commit(action, parameters)
         response = parse(ssl_post(URL, post_data(action, parameters)))
 
         Response.new(success?(response), message_from(response), response,
@@ -127,8 +152,8 @@ module ActiveMerchant #:nodoc:
           :cvv_result => response[:cvv2_code]
         )
       rescue ActiveMerchant::ResponseError => e
-        raise unless(e.response.code =~ /^6\d\d$/)
-        return Response.new(false, e.response.message, {:status_code => e.response.code}, {})
+        raise unless(e.response.code =~ /^[67]\d\d$/)
+        return Response.new(false, e.response.message, {:status_code => e.response.code}, :test => test?)
       end
 
       def test_response?(response)
