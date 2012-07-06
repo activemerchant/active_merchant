@@ -133,18 +133,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_response(kind, litle_response, valid_responses=%w(000))
-        if litle_response.response == "0"
-          detail = litle_response.send("#{kind}Response")
+        response = Hash.from_xml(litle_response.raw_xml.to_s)['litleOnlineResponse']
+
+        if response['response'] == "0"
+          detail = response["#{kind}Response"]
+          fraud = fraud_result(detail)
           Response.new(
-            (valid_responses.include?(detail.response)),
-            detail.message,
-            {:litleOnlineResponse => litle_response},
-            :authorization => detail.litleTxnId,
-            :avs_result => {:code => fraud_result(detail)['avs']},
-            :cvv_result => fraud_result(detail)['cvv']
+            valid_responses.include?(detail['response']),
+            detail['message'],
+            {:litleOnlineResponse => response},
+            :authorization => detail['litleTxnId'],
+            :avs_result => {:code => fraud['avs']},
+            :cvv_result => fraud['cvv']
           )
         else
-          Response.new(false, litle_response.message, :litleOnlineResponse => litle_response)
+          Response.new(false, response['message'], :litleOnlineResponse => response)
         end
       end
 
@@ -269,17 +272,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def fraud_result(authorization_response)
-        if authorization_response.respond_to?(:fraudResult)
-          fraud_result = authorization_response.fraudResult
-          if fraud_result.respond_to?(:cardValidationResult)
-            cvv_to_pass = fraud_result.cardValidationResult
-            if(cvv_to_pass == "")
-              cvv_to_pass = "P"
-            end
+        if result = authorization_response['fraudResult']
+          if result.key?('cardValidationResult')
+            cvv_to_pass = result['cardValidationResult'].blank? ? "P" : result['cardValidationResult']
           end
-          if fraud_result.respond_to?(:avsResult)
-            avs_to_pass = AVS_RESPONSE_CODE[fraud_result.avsResult]
-          end
+
+          avs_to_pass = AVS_RESPONSE_CODE[result['avsResult']] unless result['avsResult'].blank?
         end
         {'cvv'=>cvv_to_pass, 'avs'=>avs_to_pass}
       end

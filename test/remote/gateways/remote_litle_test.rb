@@ -1,6 +1,5 @@
 require 'test_helper'
 
-
 class RemoteLitleTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
@@ -102,13 +101,13 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', capture_response.message
     
     #Credit against the Capture
-    capture_litle_txn_id = capture_response.params['litleOnlineResponse'].captureResponse.litleTxnId
+    capture_litle_txn_id = capture_response.params['litleOnlineResponse']['captureResponse']['litleTxnId']
     assert credit_response = @gateway.credit(10010, capture_litle_txn_id)
     assert_success credit_response
     assert_equal 'Approved', credit_response.message
     
     #Void that credit
-    credit_litle_txn_id = credit_response.params['litleOnlineResponse'].creditResponse.litleTxnId
+    credit_litle_txn_id = credit_response.params['litleOnlineResponse']['creditResponse']['litleTxnId']
     assert void_response = @gateway.void(credit_litle_txn_id)
     assert_success void_response
     assert_equal 'Approved', void_response.message
@@ -138,10 +137,10 @@ class RemoteLitleTest < Test::Unit::TestCase
 
     assert_success store_response
     assert_equal 'Account number was successfully registered', store_response.message
-    assert_equal '445711', store_response.params['litleOnlineResponse'].registerTokenResponse.bin
-    assert_equal 'VI', store_response.params['litleOnlineResponse'].registerTokenResponse['type'] #type is on Object in 1.8.7 - later versions can use .registerTokenResponse.type
-    assert_equal '801', store_response.params['litleOnlineResponse'].registerTokenResponse.response
-    assert_equal '1111222233330123', store_response.params['litleOnlineResponse'].registerTokenResponse.litleToken
+    assert_equal '445711', store_response.params['litleOnlineResponse']['registerTokenResponse']['bin']
+    assert_equal 'VI', store_response.params['litleOnlineResponse']['registerTokenResponse']['type'] #type is on Object in 1.8.7 - later versions can use .registerTokenResponse.type
+    assert_equal '801', store_response.params['litleOnlineResponse']['registerTokenResponse']['response']
+    assert_equal '1111222233330123', store_response.params['litleOnlineResponse']['registerTokenResponse']['litleToken']
   end
   
   def test_store_unsuccessful
@@ -150,7 +149,7 @@ class RemoteLitleTest < Test::Unit::TestCase
 
     assert_failure store_response
     assert_equal 'Credit card number was invalid', store_response.message
-    assert_equal '820', store_response.params['litleOnlineResponse'].registerTokenResponse.response
+    assert_equal '820', store_response.params['litleOnlineResponse']['registerTokenResponse']['response']
   end
 
 end
