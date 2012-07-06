@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add PayGate XML gateway [rubyisbeautiful]
+
 == Version 1.25.0 (July 3, 2012)
 
 * eWAY gateway: Add support for Diners Club cards [Soleone]
@@ -19,7 +21,6 @@
 * Braintree Blue gateway: Always pass CVV on update [shayfrendt]
 * eWAY gateway: Update docs. Require address [juggler]
 * Cybersource gateway: Add support for subscriptions [fabiokr]
-* Add PayGate XML gateway [rubyisbeautiful]
 
 == Version 1.24.0 (June 8, 2012)
 
