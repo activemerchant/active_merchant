@@ -1,5 +1,10 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.26.0 (July 6, 2012)
+
+* Orbital gateway: fix broken requests by ensuring the order of XML elements matches their DTD [Soleone]
+* CyberSource gateway: clean up formatting [ntalbott]
+* Netbilling gateway: Add refund/credit/void support [ntalbott]
 * Add PayGate XML gateway [rubyisbeautiful]
 * Add PayWay gateway [BenZhang]
 * PayWay gateway: Tweaks to make more ActiveMerchant like [ntalbott]
