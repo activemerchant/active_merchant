@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add First Data integration [courtland]
+
 == Version 1.26.0 (July 6, 2012)
 
 * Orbital gateway: fix broken requests by ensuring the order of XML elements matches their DTD [Soleone]
