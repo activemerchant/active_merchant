@@ -39,6 +39,8 @@ module ActiveMerchant #:nodoc:
       TEST_URL = 'https://www.testlitle.com/sandbox/communicator/online'
       LIVE_URL = 'https://payments.litle.com/vap/communicator/online'
 
+      LITLE_SCHEMA_VERSION = '8.10'
+
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']
 
@@ -55,7 +57,13 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         @litle = LitleOnline::LitleOnlineRequest.new
-        requires!(options, :merchant_id, :user, :password, :version, :url)
+
+        options[:version]  ||= LITLE_SCHEMA_VERSION
+        options[:merchant] ||= 'Default Report Group'
+        options[:user]     ||= options[:login]
+
+        requires!(options, :merchant_id, :user, :password, :merchant, :version)
+
         @options = options
       end
 
@@ -118,19 +126,28 @@ module ActiveMerchant #:nodoc:
         '40' => 'E'
       }
 
+      def url
+        return @options[:url] if @options[:url].present?
+
+        test? ? TEST_URL : LIVE_URL
+      end
+
       def build_response(kind, litle_response, valid_responses=%w(000))
-        if litle_response.response == "0"
-          detail = litle_response.send("#{kind}Response")
+        response = Hash.from_xml(litle_response.raw_xml.to_s)['litleOnlineResponse']
+
+        if response['response'] == "0"
+          detail = response["#{kind}Response"]
+          fraud = fraud_result(detail)
           Response.new(
-            (valid_responses.include?(detail.response)),
-            detail.message,
-            {:litleOnlineResponse => litle_response},
-            :authorization => detail.litleTxnId,
-            :avs_result => {:code => fraud_result(detail)['avs']},
-            :cvv_result => fraud_result(detail)['cvv']
+            valid_responses.include?(detail['response']),
+            detail['message'],
+            {:litleOnlineResponse => response},
+            :authorization => detail['litleTxnId'],
+            :avs_result => {:code => fraud['avs']},
+            :cvv_result => fraud['cvv']
           )
         else
-          Response.new(false, litle_response.message, :litleOnlineResponse => litle_response)
+          Response.new(false, response['message'], :litleOnlineResponse => response)
         end
       end
 
@@ -232,20 +249,20 @@ module ActiveMerchant #:nodoc:
         hash = {
           'billToAddress' => bill_to_address,
           'shipToAddress' => ship_to_address,
-          'orderId' => (options[:order_id] or @options[:order_id]),
+          'orderId' => (options[:order_id] || @options[:order_id]),
           'customerId' => options[:customer],
-          'reportGroup' => (options[:merchant] or @options[:merchant]),
-          'merchantId' => (options[:merchant_id] or @options[:merchant_id]),
+          'reportGroup' => (options[:merchant] || @options[:merchant]),
+          'merchantId' => (options[:merchant_id] || @options[:merchant_id]),
           'orderSource' => 'ecommerce',
           'enhancedData' => enhanced_data,
           'fraudCheckType' => fraud_check_type,
-          'user' => (options[:user] or @options[:user]),
-          'password' => (options[:password] or @options[:password]),
-          'version' => (options[:version] or @options[:version]),
-          'url' => (options[:url] or @options[:url]),
-          'proxy_addr' => (options[:proxy_addr] or @options[:proxy_addr]),
-          'proxy_port' => (options[:proxy_port] or @options[:proxy_port]),
-          'id' => (options[:id] or options[:order_id] or @options[:order_id])
+          'user' => (options[:user] || @options[:user]),
+          'password' => (options[:password] || @options[:password]),
+          'version' => (options[:version] || @options[:version]),
+          'url' => (options[:url] || url),
+          'proxy_addr' => (options[:proxy_addr] || @options[:proxy_addr]),
+          'proxy_port' => (options[:proxy_port] || @options[:proxy_port]),
+          'id' => (options[:id] || options[:order_id] || @options[:order_id])
         }
 
         if( !money.nil? && money.to_s.length > 0 )
@@ -255,17 +272,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def fraud_result(authorization_response)
-        if authorization_response.respond_to?(:fraudResult)
-          fraud_result = authorization_response.fraudResult
-          if fraud_result.respond_to?(:cardValidationResult)
-            cvv_to_pass = fraud_result.cardValidationResult
-            if(cvv_to_pass == "")
-              cvv_to_pass = "P"
-            end
+        if result = authorization_response['fraudResult']
+          if result.key?('cardValidationResult')
+            cvv_to_pass = result['cardValidationResult'].blank? ? "P" : result['cardValidationResult']
           end
-          if fraud_result.respond_to?(:avsResult)
-            avs_to_pass = AVS_RESPONSE_CODE[fraud_result.avsResult]
-          end
+
+          avs_to_pass = AVS_RESPONSE_CODE[result['avsResult']] unless result['avsResult'].blank?
         end
         {'cvv'=>cvv_to_pass, 'avs'=>avs_to_pass}
       end
