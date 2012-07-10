@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'nokogiri'
 
 class OrbitalGatewayTest < Test::Unit::TestCase
   include CommStub
@@ -106,6 +107,29 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response    
   end
   
+  def test_american_requests_adhere_to_xml_schema
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address)
+    end.check_request do |endpoint, data, headers|
+      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI54.xsd")
+      doc = Nokogiri::XML(data)
+      xsd = Nokogiri::XML::Schema(schema_file)
+      assert xsd.valid?(doc), "Request does not adhere to DTD"
+    end.respond_with(successful_purchase_response)
+    assert_success response   
+  end
+
+  def test_german_requests_adhere_to_xml_schema
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(:country => 'DE'))
+    end.check_request do |endpoint, data, headers|
+      schema_file = File.read("#{File.dirname(__FILE__)}/../../schema/orbital/Request_PTI54.xsd")
+      doc = Nokogiri::XML(data)
+      xsd = Nokogiri::XML::Schema(schema_file)
+      assert xsd.valid?(doc), "Request does not adhere to DTD"
+    end.respond_with(successful_purchase_response)
+    assert_success response   
+  end
 
   private
   
