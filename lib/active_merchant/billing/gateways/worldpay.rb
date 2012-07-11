@@ -57,6 +57,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def test?
+        @options[:test] || super  
+      end
+
       private
 
       def inquire(authorization, options={})
