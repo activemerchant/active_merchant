@@ -210,6 +210,24 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_request_respects_test_mode_on_gateway_instance
+    ActiveMerchant::Billing::Base.mode = :production
+
+    @gateway = WorldpayGateway.new(
+      :login => 'testlogin',
+      :password => 'testpassword',
+      :test => true
+    )
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_equal WorldpayGateway::TEST_URL, endpoint
+    end.respond_with(successful_authorize_response, successful_capture_response)
+
+    ActiveMerchant::Billing::Base.mode = :test
+  end
+
   def assert_tag_with_attributes(tag, attributes, string)
     assert(m = %r(<#{tag}([^>]+)/>).match(string))
     attributes.each do |attribute, value|
