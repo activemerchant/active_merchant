@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Add First Data integration [courtland]
+* Add WebPay integration [nashby]
 
 == Version 1.26.0 (July 6, 2012)
 
