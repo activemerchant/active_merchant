@@ -37,8 +37,8 @@ module ActiveMerchant #:nodoc:
       # Return the matching integration module
       # You can then get the notification from the module
       # * <tt>bogus</tt>: Bogus - Does nothing (for testing)
-      # * <tt>chronopay</tt>: Chronopay - Does nothing (for testing)
-      # * <tt>paypal</tt>: Chronopay - Does nothing (for testing)
+      # * <tt>chronopay</tt>: Chronopay
+      # * <tt>paypal</tt>: Paypal
       #
       #   chronopay = ActiveMerchant::Billing::Base.integration('chronopay')
       #   notification = chronopay.notification(raw_post)
