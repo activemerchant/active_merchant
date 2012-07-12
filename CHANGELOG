@@ -8,6 +8,7 @@
 * Add Paxum integration [Mehonoshin]
 * Add Balanced gateway [mjallday]
 * Plug'n Pay gateway: Add tests for partial capture [csaunders]
+* Braintree Blue gateway: Add credit card details to responses [dougbradbury]
 
 == Version 1.26.0 (July 6, 2012)
 

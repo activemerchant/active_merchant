@@ -16,11 +16,29 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     }
   end
 
+  def test_credit_card_details_on_store
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert_equal '5100', response.params["braintree_customer"]["credit_cards"].first["last_4"]
+    assert_equal('510510******5100', response.params["braintree_customer"]["credit_cards"].first["masked_number"])
+    assert_equal('5100', response.params["braintree_customer"]["credit_cards"].first["last_4"])
+    assert_equal('MasterCard', response.params["braintree_customer"]["credit_cards"].first["card_type"])
+    assert_equal('510510', response.params["braintree_customer"]["credit_cards"].first["bin"])
+  end
+
   def test_successful_authorize
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal '1000 Approved', response.message
     assert_equal 'authorized', response.params["braintree_transaction"]["status"]
+  end
+
+  def test_masked_card_number
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal('510510******5100', response.params["braintree_transaction"]["credit_card_details"]["masked_number"])
+    assert_equal('5100', response.params["braintree_transaction"]["credit_card_details"]["last_4"])
+    assert_equal('MasterCard', response.params["braintree_transaction"]["credit_card_details"]["card_type"])
+    assert_equal('510510', response.params["braintree_transaction"]["credit_card_details"]["bin"])
   end
 
   def test_successful_authorize_with_order_id
