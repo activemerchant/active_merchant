@@ -7,6 +7,7 @@
 * Payflow Pro gateway: Add MaxFailPayments support [gregwinn]
 * Add Paxum integration [Mehonoshin]
 * Add Balanced gateway [mjallday]
+* Plug'n Pay gateway: Add tests for partial capture [csaunders]
 
 == Version 1.26.0 (July 6, 2012)
 
