@@ -35,6 +35,19 @@ class PlugnpayTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_capture_partial_amount
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/mode=reauth/), anything).returns("")
+    @gateway.expects(:parse).returns({})
+    @gateway.capture(@amount - 1, @credit_card, @options)
+  end
+
+  def test_capture_full_amount
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/mode=reauth/), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/mode=mark/), anything).returns("")
+    @gateway.expects(:parse).twice.returns({'auth_msg' => 'Blah blah blah Transaction may not be reauthorized'}, {})
+    @gateway.capture(@amount, @credit_card, @options)
+  end
+  
   def test_credit
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/card_number=#{@credit_card.number}/), anything).returns("")
     @gateway.expects(:parse).returns({})

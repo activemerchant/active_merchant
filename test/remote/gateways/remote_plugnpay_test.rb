@@ -44,6 +44,15 @@ class PlugnpayTest < Test::Unit::TestCase
     assert_success capture
     assert_equal 'Success', capture.message
   end
+
+  def test_authorization_and_partial_capture
+    assert authorization = @gateway.authorize(@amount, @good_credit_card, @options)
+    assert_success authorization
+    
+    assert capture = @gateway.capture(@amount - 1, authorization.authorization)
+    assert_success capture
+    assert_equal 'Success', capture.message
+  end
   
   def test_authorization_and_void
     assert authorization = @gateway.authorize(@amount, @good_credit_card, @options)
