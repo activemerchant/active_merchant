@@ -173,6 +173,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [PayPal Website Payments Standard](https://www.paypal.com/cgi-bin/webscr?cmd#_wp-standard-overview-outside)
 * [Robokassa](http://robokassa.ru/)
 * [SagePay Form](http://www.sagepay.com/products_services/sage_pay_go/integration/form)
+* [Suomen Maksuturva](https://www.maksuturva.fi/services/vendor_services/integration_guidelines.html)
 * [Valitor](http://www.valitor.is/) - IS
 * [WorldPay](http://www.worldpay.com)
 
