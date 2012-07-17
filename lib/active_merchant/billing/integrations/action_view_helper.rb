@@ -39,16 +39,17 @@ module ActiveMerchant #:nodoc:
         #    <% service.cancel_return_url 'http://mystore.com' %>
         #  <% end %>
         #
-        def payment_service_for(order, account, options = {}, &proc)          
+        def payment_service_for(order, account, options = {}, &proc)
           raise ArgumentError, "Missing block" unless block_given?
 
           integration_module = ActiveMerchant::Billing::Integrations.const_get(options.delete(:service).to_s.camelize)
-
-          result = []
-          result << form_tag(integration_module.service_url, options.delete(:html) || {})
-          
           service_class = integration_module.const_get('Helper')
+
+          form_options = options.delete(:html) || {}
           service = service_class.new(order, account, options)
+          form_options[:method] = service.form_method
+          result = []
+          result << form_tag(integration_module.service_url, form_options)
 
           result << capture(service, &proc)
 
