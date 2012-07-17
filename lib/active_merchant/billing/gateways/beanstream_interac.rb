@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
     
     class BeanstreamInteracGateway < Gateway
       include BeanstreamCore
-      
+
       # Confirm a transaction posted back from the bank to Beanstream.
       # Confirming a transaction does not require any credentials,
       # and in an application with many merchants sharing a funded

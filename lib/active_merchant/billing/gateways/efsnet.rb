@@ -9,8 +9,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.concordefsnet.com/'
       self.display_name = 'Efsnet'
      
-      TEST_URL = 'https://testefsnet.concordebiz.com/efsnet.dll'
-      LIVE_URL = 'https://efsnet.concordebiz.com/efsnet.dll'
+      self.test_url = 'https://testefsnet.concordebiz.com/efsnet.dll'
+      self.live_url = 'https://efsnet.concordebiz.com/efsnet.dll'
       
       # login is your Store ID
       # password is your Store Key
@@ -150,7 +150,7 @@ module ActiveMerchant #:nodoc:
 
   
       def commit(action, parameters)  
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, post_data(action, parameters), 'Content-Type' => 'text/xml'))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(action, parameters), 'Content-Type' => 'text/xml'))
 
         Response.new(success?(response), message_from(response[:result_message]), response,
           :test => test?,

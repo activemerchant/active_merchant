@@ -39,8 +39,8 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
 
     class PsigateGateway < Gateway
-      TEST_URL  = 'https://dev.psigate.com:7989/Messenger/XMLMessenger'
-      LIVE_URL  = 'https://secure.psigate.com:7934/Messenger/XMLMessenger'
+      self.test_url  = 'https://dev.psigate.com:7989/Messenger/XMLMessenger'
+      self.live_url  = 'https://secure.psigate.com:7934/Messenger/XMLMessenger'
       
       self.supported_cardtypes = [:visa, :master, :american_express]
       self.supported_countries = ['CA']
@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
       private                       
     
       def commit(money, creditcard, options = {}) 
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, post_data(money, creditcard, options)))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(money, creditcard, options)))
 
         Response.new(successful?(response), message_from(response), response, 
           :test => test?, 

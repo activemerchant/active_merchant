@@ -41,12 +41,12 @@ module ActiveMerchant #:nodoc:
       
       SUCCESS, APPROVED = '0', '00'
       
-      class_attribute :primary_test_url, :secondary_test_url, :primary_live_url, :secondary_live_url
+      class_attribute :secondary_test_url, :secondary_live_url
       
-      self.primary_test_url = "https://orbitalvar1.paymentech.net/authorize"
+      self.test_url = "https://orbitalvar1.paymentech.net/authorize"
       self.secondary_test_url = "https://orbitalvar2.paymentech.net/authorize"
       
-      self.primary_live_url = "https://orbital1.paymentech.net/authorize"
+      self.live_url = "https://orbital1.paymentech.net/authorize"
       self.secondary_live_url = "https://orbital2.paymentech.net/authorize"
       
       self.supported_countries = ["US", "CA"]
@@ -223,7 +223,7 @@ module ActiveMerchant #:nodoc:
       
       def remote_url
         unless $!.class == ActiveMerchant::ConnectionError
-          self.test? ? self.primary_test_url : self.primary_live_url
+          self.test? ? self.test_url : self.live_url
         else
           self.test? ? self.secondary_test_url : self.secondary_live_url
         end

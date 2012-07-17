@@ -12,6 +12,7 @@ require 'rake'
 require 'rake/testtask'
 require 'rubygems/package_task'
 require 'support/gateway_support'
+require 'support/ssl_verify' 
 require 'support/outbound_hosts'
 
 desc "Run the unit test suite"
@@ -87,5 +88,9 @@ namespace :gateways do
   task :hosts do
     OutboundHosts.list
   end
-  
+ 
+  desc 'Test that gateways allow SSL verify_peer'
+  task :ssl_verify do
+    SSLVerify.new.test_gateways
+  end 
 end

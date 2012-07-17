@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
     # 1. TransactionStatus is not implemented
     #
     class ItransactGateway < Gateway
-      URL = 'https://secure.paymentclearing.com/cgi-bin/rc/xmltrans2.cgi'
+      self.live_url = self.test_url = 'https://secure.paymentclearing.com/cgi-bin/rc/xmltrans2.cgi'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']
@@ -386,7 +386,7 @@ module ActiveMerchant #:nodoc:
       def commit(payload)
         # Set the Content-Type header -- otherwise the URL decoding messes up
         # the Base64 encoded payload signature!
-        response = parse(ssl_post(URL, post_data(payload), 'Content-Type' => 'text/xml'))
+        response = parse(ssl_post(self.live_url, post_data(payload), 'Content-Type' => 'text/xml'))
 
         Response.new(successful?(response), response[:error_message], response,
           :test => test?,

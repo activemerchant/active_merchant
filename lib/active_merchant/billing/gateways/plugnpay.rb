@@ -6,8 +6,7 @@ module ActiveMerchant
         self.required_fields = [ :publisher_name, :publisher_password,
           :card_amount, :card_name, :card_number, :card_exp, :orderID ]
       end
-
-      URL = 'https://pay1.plugnpay.com/payment/pnpremote.cgi'
+      self.live_url = self.test_url = 'https://pay1.plugnpay.com/payment/pnpremote.cgi'
 
       CARD_CODE_MESSAGES = {
         "M" => "Card verification number matched",
@@ -175,8 +174,7 @@ module ActiveMerchant
 
       private
       def commit(action, post)
-        response = parse( ssl_post(URL, post_data(action, post)) )
-
+        response = parse( ssl_post(self.live_url, post_data(action, post)) )
         success = SUCCESS_CODES.include?(response[:finalstatus])
         message = success ? 'Success' : message_from(response)
 

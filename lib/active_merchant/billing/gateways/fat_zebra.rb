@@ -3,8 +3,8 @@ require 'json'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FatZebraGateway < Gateway
-      LIVE_URL    = "https://gateway.fatzebra.com.au/v1.0"
-      SANDBOX_URL = "https://gateway.sandbox.fatzebra.com.au/v1.0"
+      self.live_url    = "https://gateway.fatzebra.com.au/v1.0"
+      self.test_url = "https://gateway.sandbox.fatzebra.com.au/v1.0"
 
       self.supported_countries = ['AU']
       self.default_currency = 'AUD'
@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
 
       # Build the URL based on the AM mode and the URI
       def get_url(uri)
-        base = test? ? SANDBOX_URL : LIVE_URL
+        base = test? ? self.test_url : self.live_url
         base + "/" + uri
       end
 

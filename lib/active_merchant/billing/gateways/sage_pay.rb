@@ -3,10 +3,12 @@ module ActiveMerchant #:nodoc:
     class SagePayGateway < Gateway  
       cattr_accessor :simulate
       self.simulate = false
-      
-      TEST_URL = 'https://test.sagepay.com/gateway/service'
-      LIVE_URL = 'https://live.sagepay.com/gateway/service'
-      SIMULATOR_URL = 'https://test.sagepay.com/Simulator'
+
+      class_attribute :simulator_url
+
+      self.test_url = 'https://test.sagepay.com/gateway/service'
+      self.live_url = 'https://live.sagepay.com/gateway/service'
+      self.simulator_url = 'https://test.sagepay.com/Simulator'
       
       APPROVED = 'OK'
     
@@ -265,12 +267,12 @@ module ActiveMerchant #:nodoc:
       
       def build_url(action)
         endpoint = [ :purchase, :authorization ].include?(action) ? "vspdirect-register" : TRANSACTIONS[action].downcase
-        "#{test? ? TEST_URL : LIVE_URL}/#{endpoint}.vsp"
+        "#{test? ? self.test_url : self.live_url}/#{endpoint}.vsp"
       end
       
       def build_simulator_url(action)
         endpoint = [ :purchase, :authorization ].include?(action) ? "VSPDirectGateway.asp" : "VSPServerGateway.asp?Service=Vendor#{TRANSACTIONS[action].capitalize}Tx"
-        "#{SIMULATOR_URL}/#{endpoint}"
+        "#{self.simulator_url}/#{endpoint}"
       end
 
       def message_from(response)

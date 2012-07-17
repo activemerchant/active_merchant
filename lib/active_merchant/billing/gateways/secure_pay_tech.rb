@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
         self.required_fields = [ :OrderReference, :CardNumber, :CardExpiry, :CardHolderName, :CardType, :MerchantID, :MerchantKey, :Amount, :Currency ]
       end
 
-      URL = 'https://tx.securepaytech.com/web/HttpPostPurchase'
+      self.live_url = self.test_url = 'https://tx.securepaytech.com/web/HttpPostPurchase'
 
       PAYMENT_GATEWAY_RESPONSES = {
         1 => "Transaction OK",
@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
       end    
       
       def commit(action, post)
-        response = parse( ssl_post(URL, post_data(action, post) ) )
+        response = parse( ssl_post(self.live_url, post_data(action, post) ) )
 
         Response.new(response[:result_code] == 1, message_from(response), response, 
           :test => test?, 

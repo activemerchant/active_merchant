@@ -36,8 +36,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>:zip</tt> - The zip or postal code of the customer.
       # * <tt>:phone</tt> - The phone number of the customer.
 
-      TEST_URL = 'https://www.testlitle.com/sandbox/communicator/online'
-      LIVE_URL = 'https://payments.litle.com/vap/communicator/online'
+      self.test_url = 'https://www.testlitle.com/sandbox/communicator/online'
+      self.live_url = 'https://payments.litle.com/vap/communicator/online'
 
       LITLE_SCHEMA_VERSION = '8.10'
 
@@ -129,7 +129,7 @@ module ActiveMerchant #:nodoc:
       def url
         return @options[:url] if @options[:url].present?
 
-        test? ? TEST_URL : LIVE_URL
+        test? ? self.test_url : self.live_url
       end
 
       def build_response(kind, litle_response, valid_responses=%w(000))

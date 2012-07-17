@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayGateway < Gateway
-      TEST_URL = 'https://secure-test.wp3.rbsworldpay.com/jsp/merchant/xml/paymentService.jsp'
-      LIVE_URL = 'https://secure.wp3.rbsworldpay.com/jsp/merchant/xml/paymentService.jsp'
+      self.test_url = 'https://secure-test.wp3.rbsworldpay.com/jsp/merchant/xml/paymentService.jsp'
+      self.live_url = 'https://secure.wp3.rbsworldpay.com/jsp/merchant/xml/paymentService.jsp'
 
       self.default_currency = 'GBP'
       self.money_format = :cents
@@ -209,7 +209,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, request)
-        xmr = ssl_post((test? ? TEST_URL : LIVE_URL),
+        xmr = ssl_post((test? ? self.test_url : self.live_url),
           request,
           'Content-Type' => 'text/xml',
           'Authorization' => encoded_credentials)

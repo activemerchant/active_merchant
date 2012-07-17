@@ -127,11 +127,8 @@ module ActiveMerchant #:nodoc:
       # 
       cattr_accessor :pem_file
       
-      TEST_URL  = 'https://staging.linkpt.net:1129/'
-      LIVE_URL  = 'https://secure.linkpt.net:1129/'
-      
-      # We don't have the certificate to verify LinkPoint
-      self.ssl_strict = false
+      self.test_url  = 'https://staging.linkpt.net:1129/'
+      self.live_url  = 'https://secure.linkpt.net:1129/'
       
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
@@ -253,7 +250,7 @@ module ActiveMerchant #:nodoc:
       private
       # Commit the transaction by posting the XML file to the LinkPoint server
       def commit(money, creditcard, options = {})
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, post_data(money, creditcard, options)))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(money, creditcard, options)))
         
         Response.new(successful?(response), response[:message], response, 
           :test => test?,

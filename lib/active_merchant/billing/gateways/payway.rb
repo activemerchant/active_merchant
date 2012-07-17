@@ -1,7 +1,7 @@
 module ActiveMerchant
   module Billing
     class PaywayGateway < Gateway
-      URL = 'https://ccapi.client.qvalent.com/payway/ccapi'
+      self.live_url = self.test_url = 'https://ccapi.client.qvalent.com/payway/ccapi'
 
       self.supported_countries = [ 'AU' ]
       self.supported_cardtypes = [ :visa, :master, :diners_club, :american_express, :bankcard ]
@@ -183,7 +183,7 @@ module ActiveMerchant
         post.merge!('order.type' => TRANSACTIONS[action])
 
         request = post.map { |k, v| "#{k}=#{CGI.escape(v.to_s)}" }.join("&")
-        response = ssl_post(URL, request)
+        response = ssl_post(self.live_url, request)
 
         params = {}
         CGI.parse(response).each_pair do |key, value|

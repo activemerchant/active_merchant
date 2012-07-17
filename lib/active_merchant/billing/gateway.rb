@@ -93,6 +93,12 @@ module ActiveMerchant #:nodoc:
       class_attribute :homepage_url
       class_attribute :display_name
 
+      class_attribute :test_url, :live_url
+
+      class_attribute :abstract_class
+
+      self.abstract_class = false
+
       # The application making the calls to the gateway
       # Useful for things like the PayPal build notation (BN) id fields
       superclass_delegating_accessor :application_id

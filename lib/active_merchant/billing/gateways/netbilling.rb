@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class NetbillingGateway < Gateway
-      URL = 'https://secure.netbilling.com:1402/gw/sas/direct3.1'
+      self.live_url = self.test_url = 'https://secure.netbilling.com:1402/gw/sas/direct3.1'
 
       TRANSACTIONS = {
         :authorization => 'A',
@@ -143,7 +143,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
-        response = parse(ssl_post(URL, post_data(action, parameters)))
+        response = parse(ssl_post(self.live_url, post_data(action, parameters)))
 
         Response.new(success?(response), message_from(response), response,
           :test => test_response?(response),

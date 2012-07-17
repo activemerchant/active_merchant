@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class OptimalPaymentGateway < Gateway
-      TEST_URL = 'https://webservices.test.optimalpayments.com/creditcardWS/CreditCardServlet/v1'
-      LIVE_URL = 'https://webservices.optimalpayments.com/creditcardWS/CreditCardServlet/v1'
+      self.test_url = 'https://webservices.test.optimalpayments.com/creditcardWS/CreditCardServlet/v1'
+      self.live_url = 'https://webservices.optimalpayments.com/creditcardWS/CreditCardServlet/v1'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['CA', 'US', 'GB']
@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
           raise 'Unknown Action'
         end
         txnRequest = URI.encode(xml)
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, "txnMode=#{action}&txnRequest=#{txnRequest}"))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, "txnMode=#{action}&txnRequest=#{txnRequest}"))
 
         Response.new(successful?(response), message_from(response), hash_from_xml(response),
           :test          => test?,

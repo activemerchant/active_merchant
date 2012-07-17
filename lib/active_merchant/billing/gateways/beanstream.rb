@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
     #   )
     class BeanstreamGateway < Gateway
       include BeanstreamCore
-      
+ 
       def authorize(money, source, options = {})
         post = {}
         add_amount(post, money)

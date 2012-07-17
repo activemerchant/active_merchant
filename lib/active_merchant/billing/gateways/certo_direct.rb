@@ -1,8 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CertoDirectGateway < Gateway
-      class_attribute :gateway_url
-      self.gateway_url = "https://secure.certodirect.com/gateway/process/v2"
+      self.live_url = self.test_url = "https://secure.certodirect.com/gateway/process/v2"
 
       self.supported_countries = [
         "BE", "BG", "CZ", "DK", "DE", "EE", "IE", "EL", "ES", "FR",
@@ -111,7 +110,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(request_xml)
         begin
-          response = Hash.from_xml(ssl_post(gateway_url, request_xml, headers))
+          response = Hash.from_xml(ssl_post(self.live_url, request_xml, headers))
           Response.new(success?(response),
                        message(response),
                        response,

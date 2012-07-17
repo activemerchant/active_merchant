@@ -64,10 +64,11 @@ module ActiveMerchant #:nodoc:
     class UsaEpayAdvancedGateway < Gateway
       API_VERSION = "1.4"
       
-      class_attribute :test_url, :live_url
-
       TEST_URL_BASE = 'https://sandbox.usaepay.com/soap/gate/' #:nodoc:
       LIVE_URL_BASE = 'https://www.usaepay.com/soap/gate/' #:nodoc:
+
+      self.test_url = TEST_URL_BASE
+      self.live_url = LIVE_URL_BASE
 
       FAILURE_MESSAGE = "Default Failure" #:nodoc:
       
