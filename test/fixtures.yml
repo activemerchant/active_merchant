@@ -303,6 +303,10 @@ plugnpay:
   login: LOGIN
   password: PASSWORD
 
+pxpay:
+  login: LOGIN
+  password: PASSWORD 
+
 sage_pay:
   login: LOGIN
 
