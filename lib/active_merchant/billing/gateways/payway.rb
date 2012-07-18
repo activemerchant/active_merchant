@@ -136,6 +136,7 @@ module ActiveMerchant
 
         post = {}
         add_payment_method(post, credit_card)
+        add_payment_method(post, options[:billing_id])
         commit(:store, post)
       end
 

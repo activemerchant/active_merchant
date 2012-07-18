@@ -3,6 +3,7 @@
 * Add First Data integration [courtland]
 * Add WebPay integration [nashby]
 * Add Suomen Maksuturva integration [akonan]
+* Payway gateway: Fix card storage [BenZhang]
 
 == Version 1.26.0 (July 6, 2012)
 
