@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
     # below and the rest of active_merchant's documentation, as well as Trust Commerce's user and developer documentation.
     
     class TrustCommerceGateway < Gateway
-      URL = 'https://vault.trustcommerce.com/trans/'
+      self.live_url = self.test_url = 'https://vault.trustcommerce.com/trans/'
       
       SUCCESS_TYPES = ["approved", "accepted"]
       
@@ -380,7 +380,7 @@ module ActiveMerchant #:nodoc:
         data = if tclink?
           TCLink.send(parameters)
         else
-          parse( ssl_post(URL, post_data(parameters)) )
+          parse( ssl_post(self.live_url, post_data(parameters)) )
         end
         
         # to be considered successful, transaction status must be either "approved" or "accepted"

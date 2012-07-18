@@ -17,8 +17,8 @@ module ActiveMerchant
       self.display_name = 'DataCash'
 
       # Datacash server URLs
-      TEST_URL = 'https://testserver.datacash.com/Transaction'
-      LIVE_URL = 'https://mars.transaction.datacash.com/Transaction'
+      self.test_url = 'https://testserver.datacash.com/Transaction'
+      self.live_url = 'https://mars.transaction.datacash.com/Transaction'
 
       # Different Card Transaction Types
       AUTH_TYPE = 'auth'
@@ -531,7 +531,7 @@ module ActiveMerchant
       #   - ActiveMerchant::Billing::Response object
       #   
       def commit(request)
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request))      
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, request))      
 
         Response.new(response[:status] == DATACASH_SUCCESS, response[:reason], response,
           :test => test?,

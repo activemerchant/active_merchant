@@ -4,7 +4,7 @@ require 'digest/md5'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class QuickpayGateway < Gateway
-      URL = 'https://secure.quickpay.dk/api'
+      self.live_url = self.test_url = 'https://secure.quickpay.dk/api'
 
       self.default_currency = 'DKK'
       self.money_format = :cents
@@ -232,7 +232,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, params)
-        response = parse(ssl_post(URL, post_data(action, params)))
+        response = parse(ssl_post(self.live_url, post_data(action, params)))
 
         Response.new(successful?(response), message_from(response), response,
           :test => test?,

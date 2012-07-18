@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
 
     class UsaEpayTransactionGateway < Gateway
-    	URL = 'https://www.usaepay.com/gate.php'
+      self.test_url = self.live_url = 'https://www.usaepay.com/gate.php'
 
       self.supported_cardtypes = [:visa, :master, :american_express]
       self.supported_countries = ['US']

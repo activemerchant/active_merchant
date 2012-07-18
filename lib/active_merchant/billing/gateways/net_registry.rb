@@ -22,7 +22,7 @@ module ActiveMerchant
     # response will contain a 'receipt' parameter
     # (response.params['receipt']) if a receipt was issued by the gateway.
     class NetRegistryGateway < Gateway
-      URL = 'https://4tknox.au.com/cgi-bin/themerchant.au.com/ecom/external2.pl'
+      self.live_url = self.test_url = 'https://4tknox.au.com/cgi-bin/themerchant.au.com/ecom/external2.pl'
       
       FILTERED_PARAMS = [ 'card_no', 'card_expiry', 'receipt_array' ]
       
@@ -137,7 +137,7 @@ module ActiveMerchant
       # omitted if nil.
       def commit(action, params)
         # get gateway response
-        response = parse( ssl_post(URL, post_data(action, params)) )
+        response = parse( ssl_post(self.live_url, post_data(action, params)) )
         
         Response.new(response['status'] == 'approved', message_from(response), response,          
           :authorization => authorization_from(response, action)

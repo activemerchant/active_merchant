@@ -6,8 +6,8 @@ module ActiveMerchant #:nodoc:
     class SkipJackGateway < Gateway
       API_VERSION = '?.?'
       
-      LIVE_HOST = "https://www.skipjackic.com" 
-      TEST_HOST = "https://developer.skipjackic.com"
+      self.live_url = "https://www.skipjackic.com" 
+      self.test_url = "https://developer.skipjackic.com"
       
       BASIC_PATH = "/scripts/evolvcc.dll"
       ADVANCED_PATH = "/evolvcc/evolvcc.aspx"
@@ -280,7 +280,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def url_for(action)
-        result = test? ? TEST_HOST : LIVE_HOST
+        result = test? ? self.test_url : self.live_url
         result += advanced? && action == :authorization ? ADVANCED_PATH : BASIC_PATH
         result += "?#{ACTIONS[action]}"
       end

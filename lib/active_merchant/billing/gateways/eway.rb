@@ -64,8 +64,8 @@ module ActiveMerchant #:nodoc:
     # below and the rest of active_merchant's documentation.
 
     class EwayGateway < Gateway 
-      TEST_URL     = 'https://www.eway.com.au/gateway/xmltest/testpage.asp'
-      LIVE_URL     = 'https://www.eway.com.au/gateway/xmlpayment.asp'
+      self.test_url = 'https://www.eway.com.au/gateway/xmltest/testpage.asp'
+      self.live_url = 'https://www.eway.com.au/gateway/xmlpayment.asp'
       
       TEST_CVN_URL = 'https://www.eway.com.au/gateway_cvn/xmltest/testpage.asp'
       LIVE_CVN_URL = 'https://www.eway.com.au/gateway_cvn/xmlpayment.asp'
@@ -277,7 +277,7 @@ module ActiveMerchant #:nodoc:
         if cvn
           test ? TEST_CVN_URL : LIVE_CVN_URL
         else
-          test ? TEST_URL : LIVE_URL
+          test ? self.test_url : self.live_url
         end
       end
       

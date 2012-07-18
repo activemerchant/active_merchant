@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BarclaysEpdqGateway < Gateway
-      TEST_URL = 'https://secure2.mde.epdq.co.uk:11500'
-      LIVE_URL = 'https://secure2.epdq.co.uk:11500'
+      self.test_url = 'https://secure2.mde.epdq.co.uk:11500'
+      self.live_url = 'https://secure2.epdq.co.uk:11500'
 
       self.supported_countries = ['GB']
       self.default_currency = 'GBP'
@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
       end     
       
       def commit(document)
-        url = (test? ? TEST_URL : LIVE_URL)
+        url = (test? ? self.test_url : self.live_url)
         data = ssl_post(url, document.to_xml)
         parse(data)
       end

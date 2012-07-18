@@ -64,7 +64,7 @@ class EwayTest < Test::Unit::TestCase
   end
 
   def test_test_url_without_cvn
-    assert_equal EwayGateway::TEST_URL, @gateway.send(:gateway_url, false, true)
+    assert_equal EwayGateway.test_url, @gateway.send(:gateway_url, false, true)
   end
 
   def test_test_url_with_cvn
@@ -72,7 +72,7 @@ class EwayTest < Test::Unit::TestCase
   end
 
   def test_live_url_without_cvn
-    assert_equal EwayGateway::LIVE_URL, @gateway.send(:gateway_url, false, false)
+    assert_equal EwayGateway.live_url, @gateway.send(:gateway_url, false, false)
   end
 
   def test_live_url_with_cvn

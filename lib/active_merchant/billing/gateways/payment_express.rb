@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.paymentexpress.com/'
       self.display_name = 'PaymentExpress'
 
-      URL = 'https://sec.paymentexpress.com/pxpost.aspx'
+      self.live_url = self.test_url = 'https://sec.paymentexpress.com/pxpost.aspx'
       
       APPROVED = '1'
       
@@ -236,7 +236,7 @@ module ActiveMerchant #:nodoc:
         add_transaction_type(request, action)
         
         # Parse the XML response
-        response = parse( ssl_post(URL, request.to_s) )
+        response = parse( ssl_post(self.live_url, request.to_s) )
         
         # Return a response
         PaymentExpressResponse.new(response[:success] == APPROVED, response[:card_holder_help_text], response,

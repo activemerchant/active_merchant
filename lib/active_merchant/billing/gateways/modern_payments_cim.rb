@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class ModernPaymentsCimGateway < Gateway #:nodoc:
-      TEST_URL = "https://secure.modpay.com/netservices/test/ModpayTest.asmx"
-      LIVE_URL = 'https://secure.modpay.com/ws/modpay.asmx'
+      self.test_url = "https://secure.modpay.com/netservices/test/ModpayTest.asmx"
+      self.live_url = 'https://secure.modpay.com/ws/modpay.asmx'
       
       LIVE_XMLNS = "https://secure.modpay.com/ws/"
       TEST_XMLNS = "https://secure.modpay.com/netservices/test/"
@@ -141,9 +141,9 @@ module ActiveMerchant #:nodoc:
       
       def url(action)
         if test? && action == 'AuthorizeCreditCardPayment'
-          TEST_URL
+          self.test_url
         else
-          LIVE_URL
+          self.live_url
         end
       end
       

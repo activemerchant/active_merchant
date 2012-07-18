@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class <%= class_name %>Gateway < Gateway
-      TEST_URL = 'https://example.com/test'
-      LIVE_URL = 'https://example.com/live'
+      self.test_url = 'https://example.com/test'
+      self.live_url = 'https://example.com/live'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']

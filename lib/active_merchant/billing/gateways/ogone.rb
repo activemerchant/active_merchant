@@ -105,6 +105,9 @@ module ActiveMerchant #:nodoc:
         :maintenance => 'https://secure.ogone.com/ncol/%s/maintenancedirect.asp'
       }
 
+      self.live_url = URLS[:production][:order]
+      self.test_url = URLS[:test][:order]
+
       CVV_MAPPING = { 'OK' => 'M',
                       'KO' => 'N',
                       'NO' => 'P' }

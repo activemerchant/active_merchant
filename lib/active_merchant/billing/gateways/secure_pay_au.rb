@@ -6,8 +6,9 @@ module ActiveMerchant #:nodoc:
       API_VERSION = 'xml-4.2'
       PERIODIC_API_VERSION = 'spxml-3.0'
 
-      TEST_URL = 'https://www.securepay.com.au/test/payment'
-      LIVE_URL = 'https://www.securepay.com.au/xmlapi/payment'
+      self.test_url = 'https://www.securepay.com.au/test/payment'
+      self.live_url = 'https://www.securepay.com.au/xmlapi/payment'
+
       TEST_PERIODIC_URL = "https://test.securepay.com.au/xmlapi/periodic"
       LIVE_PERIODIC_URL = "https://api.securepay.com.au/xmlapi/periodic"
 
@@ -169,7 +170,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, request)
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, build_request(action, request)))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request)))
 
         Response.new(success?(response), message_from(response), response,
           :test => test?,

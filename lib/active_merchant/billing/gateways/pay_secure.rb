@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaySecureGateway < Gateway
-      URL = 'https://clearance.commsecure.com.au/cgi-bin/PSDirect'
+      self.live_url = self.test_url = 'https://clearance.commsecure.com.au/cgi-bin/PSDirect'
       
       self.money_format = :cents
 
@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
       end
        
       def commit(action, money, parameters)
-        response = parse( ssl_post(URL, post_data(action, parameters)) )
+        response = parse( ssl_post(self.live_url, post_data(action, parameters)) )
         
         Response.new(successful?(response), message_from(response), response, 
           :test => test_response?(response), 

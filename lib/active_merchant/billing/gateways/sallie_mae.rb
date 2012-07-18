@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SallieMaeGateway < Gateway
-      URL = 'https://trans.salliemae.com/cgi-bin/process.cgi'
+      self.live_url = self.test_url = 'https://trans.salliemae.com/cgi-bin/process.cgi'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']
@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
-      # The homepage URL of the gateway
+      # The homepage self.live_url of the gateway
       self.homepage_url = 'http://www.salliemae.com/'
 
       # The name of the gateway
@@ -120,7 +120,7 @@ module ActiveMerchant #:nodoc:
           parameters[:action] = "ns_quicksale_cc"
         end
 
-        response = parse(ssl_post(URL, parameters.to_post_data) || "")
+        response = parse(ssl_post(self.live_url, parameters.to_post_data) || "")
         Response.new(successful?(response), message_from(response), response,
           :test => test?,
           :authorization => response["refcode"]

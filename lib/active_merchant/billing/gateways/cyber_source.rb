@@ -24,8 +24,8 @@ module ActiveMerchant #:nodoc:
     #   calculating tax/VAT.
     # * All transactions use dollar values.
     class CyberSourceGateway < Gateway
-      TEST_URL = 'https://ics2wstest.ic3.com/commerce/1.x/transactionProcessor'
-      LIVE_URL = 'https://ics2ws.ic3.com/commerce/1.x/transactionProcessor'
+      self.test_url = 'https://ics2wstest.ic3.com/commerce/1.x/transactionProcessor'
+      self.live_url = 'https://ics2ws.ic3.com/commerce/1.x/transactionProcessor'
 
       XSD_VERSION = "1.69"
 
@@ -523,7 +523,7 @@ module ActiveMerchant #:nodoc:
       # Contact CyberSource, make the SOAP request, and parse the reply into a
       # Response object
       def commit(request, options)
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, build_request(request, options)))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(request, options)))
 
         success = response[:decision] == "ACCEPT"
         message = @@response_codes[('r' + response[:reasonCode]).to_sym] rescue response[:message]

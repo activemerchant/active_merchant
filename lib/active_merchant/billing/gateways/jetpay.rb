@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class JetpayGateway < Gateway
-      TEST_URL = 'https://test1.jetpay.com/jetpay'
-      LIVE_URL = 'https://gateway17.jetpay.com/jetpay'
+      self.test_url = 'https://test1.jetpay.com/jetpay'
+      self.live_url = 'https://gateway17.jetpay.com/jetpay'
       
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']
@@ -167,7 +167,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def commit(money, request)
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, request))
         
         success = success?(response)
         Response.new(success, 

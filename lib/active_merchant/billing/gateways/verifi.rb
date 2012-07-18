@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
           :company, :address1, :address2, :city, :state, :zip, :country, :phone ]   
       end
 
-      URL = 'https://secure.verifi.com/gw/api/transact.php'
+      self.live_url = self.test_url = 'https://secure.verifi.com/gw/api/transact.php'
             
       RESPONSE_CODE_MESSAGES = {
         "100" => "Transaction was Approved", 
@@ -200,7 +200,7 @@ module ActiveMerchant #:nodoc:
       def commit(trx_type, money, post)
         post[:amount] = amount(money)
         
-        response = parse( ssl_post(URL, post_data(trx_type, post)) )
+        response = parse( ssl_post(self.live_url, post_data(trx_type, post)) )
                          
         Response.new(response[:response].to_i == SUCCESS, message_from(response), response,
           :test => test?,
