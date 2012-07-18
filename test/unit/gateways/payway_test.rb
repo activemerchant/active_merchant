@@ -210,7 +210,7 @@ class PaywayTest < Test::Unit::TestCase
   def test_store
     @gateway.stubs(:ssl_post).returns(successful_response_store)
 
-    response = @gateway.store(@credit_card, :billing_id => 84517)
+    response = @gateway.store(@credit_card, :customer_reference_number => 84517)
 
     assert_instance_of Response, response
     assert_success response
