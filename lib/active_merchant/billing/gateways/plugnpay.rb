@@ -84,8 +84,7 @@ module ActiveMerchant
       TRANSACTIONS = {
         :authorization => 'auth',
         :purchase => 'auth',
-        :mark => 'mark',
-        :capture => 'reauth',
+        :capture => 'mark',
         :void => 'void',
         :refund => 'return',
         :credit => 'newreturn'
@@ -141,11 +140,6 @@ module ActiveMerchant
         add_customer_data(post, options)
          
         response = commit(:capture, post)
-        if !response.success? && response.params['auth_msg'] =~ /Transaction may not be reauthorized/
-          commit(:mark, post)
-        else
-          response
-        end
       end
       
       def void(authorization, options = {})
