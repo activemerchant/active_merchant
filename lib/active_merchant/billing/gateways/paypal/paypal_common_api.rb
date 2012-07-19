@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login, :password)
         
-        headers = {'X-PP-AUTHORIZATION' => options.delete(:auth_signature), 'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'} if options[:auth_signature]
+        headers = {'X-PAYPAL-AUTHORIZATION' => options.delete(:auth_signature), 'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'} if options[:auth_signature]
         @options = {
           :pem => pem_file,
           :signature => signature,
@@ -483,7 +483,7 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
         xml.tag! 'env:Envelope', ENVELOPE_NAMESPACES do
           xml.tag! 'env:Header' do
-            add_credentials(xml) unless @options[:headers] && @options[:headers]['X-PP-AUTHORIZATION']
+            add_credentials(xml) unless @options[:headers] && @options[:headers]['X-PAYPAL-AUTHORIZATION']
           end
           
           xml.tag! 'env:Body' do

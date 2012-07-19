@@ -63,7 +63,7 @@ class PaypalTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_auth_signature
     @gateway = PaypalGateway.new(:login => 'cody', :password => 'test', :pem => 'PEM', :auth_signature => 123)
-    expected_header = {'X-PP-AUTHORIZATION' => 123, 'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'}
+    expected_header = {'X-PAYPAL-AUTHORIZATION' => 123, 'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'}
     @gateway.expects(:ssl_post).with(anything, anything, expected_header).returns(successful_purchase_response)
     @gateway.expects(:add_credentials).never
  
