@@ -483,7 +483,7 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
         xml.tag! 'env:Envelope', ENVELOPE_NAMESPACES do
           xml.tag! 'env:Header' do
-            add_credentials(xml) unless @options[:headers] && @options[:headers]['X-PAYPAL-AUTHORIZATION']
+            add_credentials(xml) unless @options[:headers] && @options[:headers]['X-PP-AUTHORIZATION']
           end
           
           xml.tag! 'env:Body' do
