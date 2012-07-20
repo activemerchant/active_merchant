@@ -2,7 +2,6 @@ require 'test_helper'
 
 class RemoteBalancedTest < Test::Unit::TestCase
 
-
   def setup
     @gateway = BalancedGateway.new(fixtures(:balanced))
 
@@ -37,29 +36,73 @@ class RemoteBalancedTest < Test::Unit::TestCase
     assert response.message.index('Processor did not accept this card.') != nil
   end
 
-  #def test_authorize_and_capture
-  #  amount = @amount
-  #  assert auth = @gateway.authorize(amount, @credit_card, @options)
-  #  assert_success auth
-  #  assert_equal 'Success', auth.message
-  #  assert auth.authorization
-  #  assert capture = @gateway.capture(amount, auth.authorization)
-  #  assert_success capture
-  #end
-  #
-  #def test_failed_capture
-  #  assert response = @gateway.capture(@amount, '')
-  #  assert_failure response
-  #  assert_equal 'REPLACE WITH GATEWAY FAILURE MESSAGE', response.message
-  #end
-  #
-  #def test_invalid_login
-  #  gateway = BalancedGateway.new(
-  #              :login => '',
-  #              :password => ''
-  #            )
-  #  assert response = gateway.purchase(@amount, @credit_card, @options)
-  #  assert_failure response
-  #  assert_equal 'REPLACE WITH FAILURE MESSAGE', response.message
-  #end
+  def test_authorize_and_capture
+    amount = @amount
+    assert auth = @gateway.authorize(amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Transaction approved', auth.message
+    assert auth.authorization
+    assert capture = @gateway.capture(amount, auth.authorization)
+    assert_success capture
+    assert_equal amount, capture.params['amount']
+    assert_equal auth.authorization, capture.params['hold']['uri']
+  end
+
+  def test_authorize_and_capture_partial
+    amount = @amount
+    assert auth = @gateway.authorize(amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Transaction approved', auth.message
+    assert auth.authorization
+    assert capture = @gateway.capture(amount / 2, auth.authorization)
+    assert_success capture
+    assert_equal amount / 2, capture.params['amount']
+    assert_equal auth.authorization, capture.params['hold']['uri']
+  end
+
+  def test_failed_capture
+    assert response = @gateway.capture(@amount, '')
+    assert_failure response
+    assert response.message.index('Missing required field') != nil
+  end
+
+  def test_void_authorization
+    amount = @amount
+    assert auth = @gateway.authorize(amount, @credit_card, @options)
+    assert_success auth
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert void.params['is_void']
+  end
+
+  def test_refund_purchase
+    assert debit = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success debit
+    assert refund = @gateway.refund(debit.authorization)
+    assert_success refund
+    assert_equal @amount, refund.params['amount']
+  end
+
+  def test_refund_partial_purchase
+    assert debit = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success debit
+    assert refund = @gateway.refund(debit.authorization, {
+                                        :amount => @amount / 2
+    })
+    assert_success refund
+    assert_equal @amount / 2, refund.params['amount']
+  end
+
+  def test_invalid_login
+    begin
+      BalancedGateway.new(
+        :login => ''
+      )
+    rescue Balanced::BalancedError => ex
+      msg = ex.message
+    else
+      msg = nil
+    end
+    assert_equal 'Invalid login credentials supplied', msg
+  end
 end

@@ -3,8 +3,19 @@ require 'test_helper'
 class BalancedTest < Test::Unit::TestCase
   def setup
     @marketplace_uri = '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO'
+
+    marketplace_uris = {
+      'uri' => @marketplace_uri,
+      'holds_uri' => @marketplace_uri + '/holds',
+      'debits_uri' => @marketplace_uri + '/debits',
+      'cards_uri' => @marketplace_uri + '/cards',
+      'accounts_uri' => @marketplace_uri + '/accounts',
+      'refunds_uri' => @marketplace_uri + '/refunds',
+    }
+
     @gateway = BalancedGateway.new(
                  :login => 'e1c5ad38d1c711e1b36c026ba7e239a9',
+                 :marketplace => marketplace_uris
                )
 
     @credit_card = credit_card
@@ -15,6 +26,7 @@ class BalancedTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Shopify Purchase'
     }
+
   end
 
   def test_successful_purchase

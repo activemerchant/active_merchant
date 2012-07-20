@@ -16,7 +16,6 @@ authorize_net:
 
 balanced:
   login: 'e1c5ad38d1c711e1b36c026ba7e239a9'
-  client_id: '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO'
 
 barclays_epdq:
   login: test

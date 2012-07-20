@@ -2,14 +2,37 @@ require 'json'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+
+    # For more information on Balanced visit https://www.balancedpayments.com
+    #
+    # Instantiate a instance of BalancedGateway by passing through your
+    # Balanced API key secret.
+    #
+    # ==== To obtain an API key of your own
+    #
+    # 1. Visit https://www.balancedpayments.com
+    # 2. Click "Get started"
+    # 3. The next screen will give you a test API key of your own
+    # 4. When you're ready to generate a production API key click the "Go
+    #    live" button on the Balanced dashboard and fill in your marketplace
+    #    details.
+    #
     module Balanced
-      class Conflict < Exception
+      class BalancedError < StandardError
+        attr_reader :response
+
+        def initialize(response, msg=nil)
+          @response = response
+          super(msg || response['description'])
+        end
+
+      end
+      class CardDeclined < BalancedError
 
       end
     end
     class BalancedGateway < Gateway
-      TEST_URL = 'https://api.balancedpayments.com'
-      LIVE_URL = 'https://api.balancedpayments.com'
+      TEST_URL = LIVE_URL = 'https://api.balancedpayments.com'
 
       AVS_CODE_TRANSLATOR = {
           # TODO
@@ -26,7 +49,6 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Balanced'
       self.money_format = :cents
 
-
       # Creates a new BalancedGateway
       #
       # The gateway requires that a valid api_key be passed in the +options+
@@ -38,7 +60,8 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login)
         @api_key = options[:login]
-        options[:mock_loader] || load_marketplace()
+        marketplace = options[:marketplace] || load_marketplace()
+        set_from_marketplace(marketplace)
         super
       end
 
@@ -56,16 +79,18 @@ module ActiveMerchant #:nodoc:
       # mandatory parameter :email. You may also pass :account_uri which will
       # save one call to the Balanced API
       def authorize(money, creditcard, options = {})
+        requires!(options[:email]) unless options[:account_uri]
         post = {}
         post[:amount] = money
+        post[:description] = options[:description] if options[:description]
 
         create_or_find_account(post, options)
         add_creditcard(post, creditcard, options)
         add_address(creditcard, options)
 
-        uri = @holds_uri
-
-        create_transaction(:post, uri, post)
+        create_transaction(:post, @holds_uri, post)
+      rescue Balanced::BalancedError => ex
+        return failed_response(ex.response)
       end
 
       # Perform a purchase, which is an authorization and capture in a single
@@ -89,14 +114,15 @@ module ActiveMerchant #:nodoc:
         #    through to the debit
         post = {}
         post[:amount] = money
+        post[:description] = options[:description] if options[:description]
 
         create_or_find_account(post, options)
         add_creditcard(post, creditcard, options)
         add_address(creditcard, options)
 
-        uri = @debits_uri
-
-        create_transaction(:post, uri, post)
+        create_transaction(:post, @debits_uri, post)
+      rescue Balanced::BalancedError => ex
+        return failed_response(ex.response)
       end
 
       # Captures the funds from an authorized transaction (Hold).
@@ -109,10 +135,12 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {}
         post[:amount] = money if money
-
-        create_transaction(:post, authorization, post)
+        post[:hold_uri] = authorization
+        post[:description] = options[:description] if options[:description]
+        create_transaction(:post, @debits_uri, post)
+      rescue Balanced::BalancedError => ex
+        return failed_response(ex.response)
       end
-
 
       # Void a previous authorization (Hold)
       #
@@ -121,25 +149,64 @@ module ActiveMerchant #:nodoc:
       # * <tt>authorization</tt> - The uri of the authorization returned from
       # an authorize request.
       def void(authorization)
-        create_transaction(:post, authorization, {})
+        create_transaction(:put, authorization, {
+            :is_void => true
+        })
+      rescue Balanced::BalancedError => ex
+        return failed_response(ex.response)
+      end
+
+
+      # Refund a transaction.
+      #
+      # Returns the money debited from a card to the card from the
+      # marketplace's escrow balance.
+      #
+      # ==== Parameters
+      #
+      # * <tt>debit_uri</tt> -- The uri of the original transaction against
+      #   which the refund is being issued.
+      # * <tt>options</tt> -- A hash of parameters. Includes `:amount` if you
+      #   want to performa a partial refund. This value will default to the
+      #   total amount of the debit that has not been refunded so far.
+      def refund(debit_uri, options = {})
+        requires!(debit_uri)
+        post = {}
+        post[:debit_uri] = debit_uri
+        post[:amount] = options[:amount] if options[:amount]
+        post[:description] = options[:description] if options[:description]
+        create_transaction(:post, @refunds_uri, post)
+      rescue Balanced::BalancedError => ex
+        return failed_response(ex.response)
       end
 
       private
 
+      # Load URIs for this marketplace by inspecting the marketplace object
+      # returned from the uri. http://en.wikipedia.org/wiki/HATEOAS
       def load_marketplace()
         response = http_request(:get, '/v1/marketplaces')
-        marketplace = response['items'][0]
+        if is_error(response)
+          raise Balanced::BalancedError.new(response,
+                'Invalid login credentials supplied')
+        end
+        response['items'][0]
+      end
+
+      def set_from_marketplace(marketplace)
 
         @marketplace_uri = marketplace['uri']
         @holds_uri = marketplace['holds_uri']
         @debits_uri = marketplace['debits_uri']
         @cards_uri = marketplace['cards_uri']
         @accounts_uri = marketplace['accounts_uri']
+        @refunds_uri = marketplace['refunds_uri']
+
       end
 
       def create_or_find_account(post, options)
         email_address = options[:email]
-        account_uri= nil
+        account_uri = nil
 
         if options.has_key? :account_uri
           account_uri = options[:account_uri]
@@ -156,7 +223,7 @@ module ActiveMerchant #:nodoc:
             # lookup account from Balanced, account_uri should be in the
             # exception in a dictionary called additional
             account_uri = response['extras']['account_uri']
-            end
+          end
         end
 
         post[:account_uri] = account_uri
@@ -186,7 +253,9 @@ module ActiveMerchant #:nodoc:
           add_address(card, options)
 
           response = http_request(:post, @cards_uri, card)
-
+          if is_error(response)
+            raise Balanced::CardDeclined, response
+          end
           card_uri = response['uri']
 
           # associate this card with the account
@@ -202,7 +271,7 @@ module ActiveMerchant #:nodoc:
         data = {
             :card_uri => card_uri
         }
-        response = http_request(:put, account_uri, data)
+        http_request(:put, account_uri, data)
       end
 
       def http_request(method, url, parameters={}, meta={})
@@ -210,24 +279,23 @@ module ActiveMerchant #:nodoc:
           if method == :get
             raw_response = ssl_get(LIVE_URL + url, headers(meta))
           else
-
             raw_response = ssl_request(method,
                                        LIVE_URL + url,
                                        post_data(parameters),
                                        headers(meta))
           end
-          response = parse(raw_response)
+          parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
-          response = response_error(raw_response)
-        rescue JSON::ParserError   => ex
-          response = json_error(raw_response)
+          response_error(raw_response)
+        rescue JSON::ParserError => ex
+          json_error(raw_response)
         end
       end
 
       def create_transaction(method, url, parameters, meta={})
         response = http_request(method, url, parameters, meta)
-        success = !response.key?("status_code")
+        success = !is_error(response)
 
         avs_code = AVS_CODE_TRANSLATOR[response['avs_result']]
         security_code = CVC_CODE_TRANSLATOR[response['avs_result']]
@@ -239,6 +307,18 @@ module ActiveMerchant #:nodoc:
                      :authorization => response["uri"],
                      :avs_result => {:code => avs_code},
                      :cvv_result => security_code,
+        )
+      end
+
+      def failed_response(response)
+        is_test = false
+        if @marketplace_uri
+          is_test = @marketplace_uri.index("TEST") ? true : false
+        end
+        Response.new(false,
+                     response["description"],
+                     response,
+                     :test => is_test
         )
       end
 
@@ -255,7 +335,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def json_error(raw_response)
-        msg = 'Invalid response received from the Balanced API.  Please
+        msg = 'Invalid response received from the Balanced API. Please
 contact support@balancedpayments.com if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
         {
@@ -263,6 +343,10 @@ contact support@balancedpayments.com if you continue to receive this message.'
                 "message" => msg
             }
         }
+      end
+
+      def is_error(response)
+        return response.key?('status_code')
       end
 
       def post_data(params)
@@ -284,13 +368,13 @@ contact support@balancedpayments.com if you continue to receive this message.'
 
       def headers(meta={})
         @@ua ||= JSON.dump({
-             :bindings_version => ActiveMerchant::VERSION,
-             :lang => 'ruby',
-             :lang_version => "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
-             :platform => RUBY_PLATFORM,
-             :publisher => 'active_merchant',
-             :uname => (RUBY_PLATFORM =~ /linux|darwin/i ? `uname -a 2>/dev/null`.strip : nil)
-         })
+           :bindings_version => ActiveMerchant::VERSION,
+           :lang => 'ruby',
+           :lang_version => "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
+           :platform => RUBY_PLATFORM,
+           :publisher => 'active_merchant',
+           :uname => (RUBY_PLATFORM =~ /linux|darwin/i ? `uname -a 2>/dev/null`.strip : nil)
+        })
 
         {
             "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":").strip,
@@ -301,4 +385,3 @@ contact support@balancedpayments.com if you continue to receive this message.'
     end
   end
 end
-
