@@ -9,6 +9,7 @@
 * Add Balanced gateway [mjallday]
 * Plug'n Pay gateway: Add tests for partial capture [csaunders]
 * Braintree Blue gateway: Add credit card details to responses [dougbradbury]
+* PayPal gateway: Support for 'Full' refund type [kurenn]
 
 == Version 1.26.0 (July 6, 2012)
 
