@@ -86,6 +86,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 
 * [Authorize.Net](http://www.authorize.net/) - US
 * [Authorize.Net CIM](http://www.authorize.net/) - US
+* [Balanced](https://www.balancedpayments.com/) - US
 * [Barclays ePDQ](http://www.barclaycard.co.uk/business/accepting-payments/epdq-mpi/) - UK
 * [Beanstream.com](http://www.beanstream.com/) - CA
 * [BluePay](http://www.bluepay.com/) - US

@@ -6,6 +6,7 @@
 * Payway gateway: Fix card storage [BenZhang]
 * Payflow Pro gateway: Add MaxFailPayments support [gregwinn]
 * Add Paxum integration [Mehonoshin]
+* Add Balanced gateway [mjallday]
 
 == Version 1.26.0 (July 6, 2012)
 

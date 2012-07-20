@@ -14,6 +14,10 @@ authorize_net:
   login: X
   password: Y
 
+# Working credentials, no need to replace
+balanced:
+  login: 'e1c5ad38d1c711e1b36c026ba7e239a9'
+
 barclays_epdq:
   login: test
   password: test
