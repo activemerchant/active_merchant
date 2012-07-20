@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login, :password)
         
-        headers = {'X-PP-AUTHORIZATION' => options.delete(:auth_signature), 'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'} if options[:auth_signature]
+        headers = {'X-PAYPAL-AUTHORIZATION' => options.delete(:auth_signature), 'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'} if options[:auth_signature]
         @options = {
           :pem => pem_file,
           :signature => signature,
