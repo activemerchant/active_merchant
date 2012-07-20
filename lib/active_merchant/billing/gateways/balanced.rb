@@ -180,6 +180,20 @@ module ActiveMerchant #:nodoc:
         return failed_response(ex.response)
       end
 
+      def store(creditcard, options = {})
+        requires!(options[:email])
+        post = {}
+        account_uri = create_or_find_account(post, options)
+        if creditcard.respond_to?(:number)
+          add_creditcard(post, creditcard, options)
+        else
+          associate_card_to_account(account_uri, creditcard)
+        end
+        return account_uri
+      rescue Balanced::BalancedError => ex
+        return failed_response(ex.response)
+      end
+
       private
 
       # Load URIs for this marketplace by inspecting the marketplace object
@@ -227,7 +241,7 @@ module ActiveMerchant #:nodoc:
         end
 
         post[:account_uri] = account_uri
-
+        account_uri
       end
 
       def add_address(creditcard, options)
@@ -241,14 +255,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_creditcard(post, creditcard, options)
-        if creditcard.respond_to?(:number)
+      def add_creditcard(post, credit_card, options)
+        if credit_card.respond_to?(:number)
           card = {}
-          card[:card_number] = creditcard.number
-          card[:expiration_month] = creditcard.month
-          card[:expiration_year] = creditcard.year
-          card[:security_code] = creditcard.verification_value if creditcard.verification_value?
-          card[:name] = creditcard.name if creditcard.name
+          card[:card_number] = credit_card.number
+          card[:expiration_month] = credit_card.month
+          card[:expiration_year] = credit_card.year
+          card[:security_code] = credit_card.verification_value if credit_card.verification_value?
+          card[:name] = credit_card.name if credit_card.name
 
           add_address(card, options)
 
@@ -262,8 +276,8 @@ module ActiveMerchant #:nodoc:
           associate_card_to_account(post[:account_uri], card_uri)
 
           post[:card_uri] = card_uri
-        elsif creditcard.kind_of?(String)
-          post[:card_uri] = creditcard
+        elsif credit_card.kind_of?(String)
+          post[:card_uri] = credit_card
         end
       end
 

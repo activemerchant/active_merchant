@@ -189,7 +189,55 @@ class BalancedTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
     assert response.test?
+  end
 
+  def test_refund_purchase
+    @gateway.expects(:ssl_request).times(1).returns(
+        successful_refund_response
+    )
+
+    debit_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/debits/WD2Nkre6GkWAV1A52YgLWEkh'
+    refund_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/refunds/RF3GhhG5I3AgrjjXsdkRFQDA'
+    assert refund = @gateway.refund(debit_uri)
+    assert_instance_of Response, refund
+    assert_success refund
+    assert refund.test?
+    assert_equal refund.authorization, refund_uri
+  end
+
+  def test_refund_purchase_failure
+    @gateway.expects(:ssl_request).times(1).returns(
+        failed_refund_response
+    )
+
+    debit_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/debits/WD2Nkre6GkWAV1A52YgLWEkh'
+    assert refund = @gateway.refund(debit_uri)
+    assert_instance_of Response, refund
+    assert_failure refund
+    assert refund.test?
+  end
+
+  def test_store
+    @gateway.expects(:ssl_request).times(3).returns(
+        successful_account_response  # create account
+    ).then.returns(
+        successful_card_response     # create card
+    ).then.returns(
+        successful_account_response  # associate card to account
+    )
+
+    assert response = @gateway.store(@credit_card, {
+        :email=>'john.buyer@example.org'
+    })
+    assert_instance_of String, response
+  end
+
+  def test_ensure_does_not_respond_to_credit
+    assert !@gateway.respond_to?(:credit)
+  end
+
+  def test_ensure_does_not_respond_to_unstore
+    assert !@gateway.respond_to?(:unstore)
   end
 
   private
@@ -495,6 +543,70 @@ class BalancedTest < Test::Unit::TestCase
   "extras": {},
   "request_id": "OHM7ba062c4d1ee11e1a63d026ba7e5e72e",
   "description": "Invalid field [amount] - 0 must be >= 50 Your request id is OHM7ba062c4d1ee11e1a63d026ba7e5e72e."
+}
+    RESPONSE
+  end
+
+  def successful_refund_response
+    <<-RESPONSE
+{
+  "account": {
+    "holds_uri": "/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/accounts/AC5quPICW5qEHXac1KnjKGYu/holds",
+    "name": null,
+    "roles": [
+      "buyer"
+    ],
+    "created_at": "2012-06-08T02:00:18.233961Z",
+    "uri": "/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/accounts/AC5quPICW5qEHXac1KnjKGYu",
+    "bank_accounts_uri": "/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/accounts/AC5quPICW5qEHXac1KnjKGYu/bank_accounts",
+    "refunds_uri": "/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/accounts/AC5quPICW5qEHXac1KnjKGYu/refunds",
+    "meta": {},
+    "debits_uri": "/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/accounts/AC5quPICW5qEHXac1KnjKGYu/debits",
+    "transactions_uri": "/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/accounts/AC5quPICW5qEHXac1KnjKGYu/transactions",
+    "email_address": "will@example.org",
+    "id": "AC5quPICW5qEHXac1KnjKGYu",
+    "credits_uri": "/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/accounts/AC5quPICW5qEHXac1KnjKGYu/credits",
+    "cards_uri": "/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/accounts/AC5quPICW5qEHXac1KnjKGYu/cards"
+  },
+  "fee": -5,
+  "description": null,
+  "amount": 150,
+  "created_at": "2012-07-20T19:16:56.921554Z",
+  "uri": "/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/refunds/RF3GhhG5I3AgrjjXsdkRFQDA",
+  "transaction_number": "RF589-096-4953",
+  "meta": {},
+  "debit": {
+    "hold_uri": "/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/holds/HL2N2aMGzHdZ5xRocCqiLxKp",
+    "fee": 5,
+    "description": null,
+    "source_uri": "/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/accounts/AC5quPICW5qEHXac1KnjKGYu/cards/CC6gGmoZ21ApTyng82GY6RsZ",
+    "created_at": "2012-07-20T19:16:08.077620Z",
+    "transaction_number": "W543-770-7869",
+    "uri": "/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/debits/WD2Nkre6GkWAV1A52YgLWEkh",
+    "refunds_uri": "/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/debits/WD2Nkre6GkWAV1A52YgLWEkh/refunds",
+    "amount": 150,
+    "meta": {},
+    "appears_on_statement_as": "example.com",
+    "id": "WD2Nkre6GkWAV1A52YgLWEkh",
+    "available_at": "2012-07-20T19:16:07.990758Z"
+  },
+  "appears_on_statement_as": "example.com",
+  "id": "RF3GhhG5I3AgrjjXsdkRFQDA"
+}
+    RESPONSE
+  end
+
+  def failed_refund_response
+    <<-RESPONSE
+{
+  "status": "Bad Request",
+  "category_code": "request",
+  "additional": null,
+  "status_code": 400,
+  "category_type": "request",
+  "extras": {},
+  "request_id": "OHM6b91d56ed29f11e18991026ba7e239a9",
+  "description": "Invalid field [amount] - 170 must be <= 150 Your request id is OHM6b91d56ed29f11e18991026ba7e239a9."
 }
     RESPONSE
   end

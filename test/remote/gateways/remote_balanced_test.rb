@@ -87,10 +87,18 @@ class RemoteBalancedTest < Test::Unit::TestCase
     assert debit = @gateway.purchase(@amount, @credit_card, @options)
     assert_success debit
     assert refund = @gateway.refund(debit.authorization, {
-                                        :amount => @amount / 2
+        :amount => @amount / 2
     })
     assert_success refund
     assert_equal @amount / 2, refund.params['amount']
+  end
+
+  def test_store
+    new_email_address = '%d@example.org' % Time.now
+    assert account_uri = @gateway.store(@credit_card, {
+        :email => new_email_address
+    })
+    assert_instance_of String, account_uri
   end
 
   def test_invalid_login
