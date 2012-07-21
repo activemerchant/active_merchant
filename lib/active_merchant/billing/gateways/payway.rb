@@ -132,11 +132,11 @@ module ActiveMerchant
       end
 
       def store(credit_card, options={})
-        requires!(options, :customer_reference_number)
+        requires!(options, :billing_id)
 
         post = {}
         add_payment_method(post, credit_card)
-        add_payment_method(post, options[:customer_reference_number])
+        add_payment_method(post, options[:billing_id])
         commit(:store, post)
       end
 
