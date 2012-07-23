@@ -59,6 +59,14 @@ module ActiveMerchant #:nodoc:
         end
         commit(request, options.merge(:request_type => :recurring))
       end
+
+		def reactivate_recurring(money, credit_card, options = {})
+			options[:name] = credit_card.name if options[:name].blank? && credit_card
+			request = build_recurring_request(:reactivate, money, options) do |xml|
+	          add_credit_card(xml, credit_card) if credit_card
+	        end
+	        commit(request, options.merge(:request_type => :recurring))
+		end
       
       def cancel_recurring(profile_id)
         request = build_recurring_request(:cancel, 0, :profile_id => profile_id)
