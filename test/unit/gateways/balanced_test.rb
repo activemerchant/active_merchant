@@ -226,10 +226,12 @@ class BalancedTest < Test::Unit::TestCase
         successful_account_response  # associate card to account
     )
 
+    card_uri = '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO/cards/CC6r6kLUcxW3MxG3AmZoiuTf'
     assert response = @gateway.store(@credit_card, {
         :email=>'john.buyer@example.org'
     })
     assert_instance_of String, response
+    assert_equal card_uri, response
   end
 
   def test_ensure_does_not_respond_to_credit

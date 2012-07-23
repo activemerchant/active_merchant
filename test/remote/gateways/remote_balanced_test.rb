@@ -95,10 +95,10 @@ class RemoteBalancedTest < Test::Unit::TestCase
 
   def test_store
     new_email_address = '%d@example.org' % Time.now
-    assert account_uri = @gateway.store(@credit_card, {
+    assert card_uri = @gateway.store(@credit_card, {
         :email => new_email_address
     })
-    assert_instance_of String, account_uri
+    assert_instance_of String, card_uri
   end
 
   def test_invalid_login

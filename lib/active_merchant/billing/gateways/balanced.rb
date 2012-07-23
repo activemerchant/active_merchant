@@ -4,6 +4,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
 
     # For more information on Balanced visit https://www.balancedpayments.com
+    # or visit #balanced on irc.freenode.net
     #
     # Instantiate a instance of BalancedGateway by passing through your
     # Balanced API key secret.
@@ -16,6 +17,44 @@ module ActiveMerchant #:nodoc:
     # 4. When you're ready to generate a production API key click the "Go
     #    live" button on the Balanced dashboard and fill in your marketplace
     #    details.
+    #
+    # ==== Overview
+    #
+    # Balanced provides a RESTful API, all entities within Balanced are
+    # represented by their respective URIs, these are returned in the
+    # `authorization` parameter of the Active Merchant Response object.
+    #
+    # All Response objects will contain a hash property called `params` which
+    # holds the raw JSON dictionary returned by Balanced. You can find
+    # properties about the operation performed and the object that represents
+    # it within this hash.
+    #
+    # All operations within Balanced are tied to an account, as such, when you
+    # perform an `authorization` or a `capture` with a new credit card you
+    # must ensure you also pass the `:email` property within the `options`
+    # parameter.
+    #
+    # For more details about Balanced's API visit:
+    # https://www.balancedpayments.com/docs
+    #
+    # ==== Terminology & Transaction Flow
+    #
+    # * An `authorization` operation will return a Hold URI. An `authorization`
+    #   within Balanced is valid for 7 days from creation, you can see the
+    #   exact date of the expiry on the Response object by inspecting the
+    #   property `response.params['expires_at']`. The resulting Hold may be
+    #   `capture`d or `void`ed at any time before the `expires_at` date for
+    #   any amount up to the full amount of the original `authorization`.
+    # * A `capture` operation will return a Debit URI. You must pass the URI of
+    #   the previously performed `authorization`
+    # * A `purchase` will create a Hold and Debit in a single operation and
+    #   return the URI of the resulting Debit.
+    # * A `void` operation must be performed on an existing `authorization`
+    #   and will result in releasing the funds reserved by the
+    #   `authorization`.
+    # * The `refund` operation must be performed on a previously captured
+    #   Debit URI. You may refund any fraction of the original amount of the
+    #   debit up to the original total.
     #
     module Balanced
       class BalancedError < StandardError
@@ -32,6 +71,8 @@ module ActiveMerchant #:nodoc:
       end
     end
     class BalancedGateway < Gateway
+      VERSION = '1.0.0'
+
       TEST_URL = LIVE_URL = 'https://api.balancedpayments.com'
 
       AVS_CODE_TRANSLATOR = {
@@ -61,32 +102,47 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login)
         @api_key = options[:login]
         marketplace = options[:marketplace] || load_marketplace()
-        set_from_marketplace(marketplace)
+        initialize_marketplace(marketplace)
         super
       end
 
       # Performs an authorization (Hold in Balanced nonclementure), which
       # reserves the funds on the customer's credit card, but does not charge
-      # the card. An authorization is valid for 7 days
+      # the card. An authorization is valid for 7 days.
+      #
+      # If you pass a previously tokenized `credit_card` URI the only other
+      # parameter required is `money`. If you pass `credit_card` as a hash of
+      # credit card information you must also pass `options` with a `:email`
+      # entry.
       #
       # ==== Parameters
       #
       # * <tt>money</tt> -- The amount to be authorized as an Integer value in cents.
-      # * <tt>creditcard</tt> -- The CreditCard details for the transaction
-      # or card_uri of a card that was previously tokenized and associated
-      # with a Balanced account.
-      # * <tt>options</tt> -- A hash of optional parameters with one
-      # mandatory parameter :email. You may also pass :account_uri which will
-      # save one call to the Balanced API
-      def authorize(money, creditcard, options = {})
-        requires!(options[:email]) unless options[:account_uri]
+      # * <tt>credit_card</tt> -- A hash of credit card details for this
+      #   transaction or the URI of a card previously stored in Balanced.
+      # * <tt>options</tt> -- A hash of optional parameters.
+      #
+      # ==== Options
+      #
+      # If you are passing a new credit card you must pass one of these two
+      # parameters
+      #
+      # * <tt>email</tt> -- the email address of user associated with this
+      #   purchase.
+      # * <tt>account_uri</tt> -- `account_uri` is the URI of an existing
+      #   Balanced account.
+      def authorize(money, credit_card, options = {})
+        if credit_card.respond_to?('number')
+          requires!(options, :email) unless options[:account_uri]
+        end
+
         post = {}
         post[:amount] = money
         post[:description] = options[:description] if options[:description]
 
         create_or_find_account(post, options)
-        add_creditcard(post, creditcard, options)
-        add_address(creditcard, options)
+        add_credit_card(post, credit_card, options)
+        add_address(credit_card, options)
 
         create_transaction(:post, @holds_uri, post)
       rescue Balanced::BalancedError => ex
@@ -99,26 +155,31 @@ module ActiveMerchant #:nodoc:
       # ==== Parameters
       #
       # * <tt>money</tt> -- The amount to be purchased as an Integer value in cents.
-      # * <tt>creditcard</tt> -- The CreditCard details for the transaction
-      # or card_uri of a card that was previously tokenized and associated
-      # with a Balanced account.
-      # * <tt>options</tt> -- A hash of optional parameters with one
-      # mandatory parameter :email.
-      def purchase(money, creditcard, options = {})
+      # * <tt>credit_card</tt> -- A hash of credit card details for this
+      #   transaction or the URI of a card previously stored in Balanced.
+      # * <tt>options</tt> -- A hash of optional parameters.
+      #
+      # ==== Options
+      #
+      # If you are passing a new credit card you must pass one of these two
+      # parameters
+      #
+      # * <tt>email</tt> -- the email address of user associated with this
+      #   purchase.
+      # * <tt>account_uri</tt> -- `account_uri` is the URI of an existing
+      #   Balanced account.
+      def purchase(money, credit_card, options = {})
+        if credit_card.respond_to?('number')
+          requires!(options, :email) unless options[:account_uri]
+        end
 
-        # 1. an account may or may not exist, check if account_uri in the
-        #    options. if account_uri not present then lookup or create
-        #    account from email address.
-        # 2. creditcard may be a card dict or a card_uri (card_uri if already
-        #    tokenized). if card dict then we must tokenize before we pass it
-        #    through to the debit
         post = {}
         post[:amount] = money
         post[:description] = options[:description] if options[:description]
 
         create_or_find_account(post, options)
-        add_creditcard(post, creditcard, options)
-        add_address(creditcard, options)
+        add_credit_card(post, credit_card, options)
+        add_address(credit_card, options)
 
         create_transaction(:post, @debits_uri, post)
       rescue Balanced::BalancedError => ex
@@ -129,14 +190,22 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * <tt>money</tt> -- The amount to be captured as an Integer value in cents.
+      # * <tt>money</tt> -- The amount to be captured as an Integer value in
+      #   cents. If omitted the full amount of the original authorization
+      #   transaction will be captured.
       # * <tt>authorization</tt> -- The uri of an authorization returned from
-      # an authorize request.
+      #   an authorize request.
+      #
+      # ==== Options
+      #
+      # * <tt>description</tt> -- A string that will be displayed on the
+      #   Balanced dashboard
       def capture(money, authorization, options = {})
         post = {}
-        post[:amount] = money if money
         post[:hold_uri] = authorization
+        post[:amount] = money if money
         post[:description] = options[:description] if options[:description]
+
         create_transaction(:post, @debits_uri, post)
       rescue Balanced::BalancedError => ex
         return failed_response(ex.response)
@@ -146,12 +215,13 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      # * <tt>authorization</tt> - The uri of the authorization returned from
-      # an authorize request.
+      # * <tt>authorization</tt> -- The uri of the authorization returned from
+      #   an `authorize` request.
       def void(authorization)
-        create_transaction(:put, authorization, {
-            :is_void => true
-        })
+        post = {}
+        post[:is_void] = true
+
+        create_transaction(:put, authorization, post)
       rescue Balanced::BalancedError => ex
         return failed_response(ex.response)
       end
@@ -166,9 +236,13 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>debit_uri</tt> -- The uri of the original transaction against
       #   which the refund is being issued.
-      # * <tt>options</tt> -- A hash of parameters. Includes `:amount` if you
-      #   want to performa a partial refund. This value will default to the
-      #   total amount of the debit that has not been refunded so far.
+      # * <tt>options</tt> -- A hash of parameters.
+      #
+      # ==== Options
+      #
+      # * <tt>`:amount`<tt> -- specify an amount if you want to perform a
+      #   partial refund. This value will default to the total amount of the
+      #   debit that has not been refunded so far.
       def refund(debit_uri, options = {})
         requires!(debit_uri)
         post = {}
@@ -180,16 +254,21 @@ module ActiveMerchant #:nodoc:
         return failed_response(ex.response)
       end
 
-      def store(creditcard, options = {})
-        requires!(options[:email])
+      # Stores a card and email address
+      #
+      # ==== Parameters
+      #
+      # * <tt>credit_card</tt> --
+      def store(credit_card, options = {})
+        requires!(options, :email)
         post = {}
         account_uri = create_or_find_account(post, options)
-        if creditcard.respond_to?(:number)
-          add_creditcard(post, creditcard, options)
+        if credit_card.respond_to?(:number)
+          return add_credit_card(post, credit_card, options)
         else
-          associate_card_to_account(account_uri, creditcard)
+          associate_card_to_account(account_uri, credit_card)
+          return credit_card
         end
-        return account_uri
       rescue Balanced::BalancedError => ex
         return failed_response(ex.response)
       end
@@ -207,7 +286,7 @@ module ActiveMerchant #:nodoc:
         response['items'][0]
       end
 
-      def set_from_marketplace(marketplace)
+      def initialize_marketplace(marketplace)
 
         @marketplace_uri = marketplace['uri']
         @holds_uri = marketplace['holds_uri']
@@ -219,7 +298,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def create_or_find_account(post, options)
-        email_address = options[:email]
         account_uri = nil
 
         if options.has_key? :account_uri
@@ -227,35 +305,37 @@ module ActiveMerchant #:nodoc:
         end
 
         if account_uri == nil
+          post[:email_address] = options[:email]
+
           # create an account
-          response = http_request(:post, @accounts_uri, {
-              :email_address => email_address
-          })
+          response = http_request(:post, @accounts_uri, post)
+
           if response.has_key? 'uri'
             account_uri = response['uri']
-          else
+          elsif is_error(response)
             # lookup account from Balanced, account_uri should be in the
-            # exception in a dictionary called additional
+            # exception in a dictionary called extras
             account_uri = response['extras']['account_uri']
           end
         end
 
         post[:account_uri] = account_uri
+
         account_uri
       end
 
-      def add_address(creditcard, options)
-        return unless creditcard.kind_of?(Hash)
+      def add_address(credit_card, options)
+        return unless credit_card.kind_of?(Hash)
         if address = options[:billing_address] || options[:address]
-          creditcard[:street_address] = address[:address1] if address[:address1]
-          creditcard[:street_address] += ' ' + address[:address2] if address[:address2]
-          creditcard[:country] = address[:country] if address[:country]
-          creditcard[:postal_code] = address[:zip] if address[:zip]
-          creditcard[:region] = address[:state] if address[:state]
+          credit_card[:street_address] = address[:address1] if address[:address1]
+          credit_card[:street_address] += ' ' + address[:address2] if address[:address2]
+          credit_card[:country] = address[:country] if address[:country]
+          credit_card[:postal_code] = address[:zip] if address[:zip]
+          credit_card[:region] = address[:state] if address[:state]
         end
       end
 
-      def add_creditcard(post, credit_card, options)
+      def add_credit_card(post, credit_card, options)
         if credit_card.respond_to?(:number)
           card = {}
           card[:card_number] = credit_card.number
@@ -279,6 +359,8 @@ module ActiveMerchant #:nodoc:
         elsif credit_card.kind_of?(String)
           post[:card_uri] = credit_card
         end
+
+        post[:card_uri]
       end
 
       def associate_card_to_account(account_uri, card_uri)
@@ -329,6 +411,7 @@ module ActiveMerchant #:nodoc:
         if @marketplace_uri
           is_test = @marketplace_uri.index("TEST") ? true : false
         end
+
         Response.new(false,
                      response["description"],
                      response,
@@ -385,6 +468,7 @@ contact support@balancedpayments.com if you continue to receive this message.'
            :bindings_version => ActiveMerchant::VERSION,
            :lang => 'ruby',
            :lang_version => "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
+           :lib_version => BalancedGateway::VERSION,
            :platform => RUBY_PLATFORM,
            :publisher => 'active_merchant',
            :uname => (RUBY_PLATFORM =~ /linux|darwin/i ? `uname -a 2>/dev/null`.strip : nil)
