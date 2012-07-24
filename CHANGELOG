@@ -5,6 +5,7 @@
 * Add Suomen Maksuturva integration [akonan]
 * Payway gateway: Fix card storage [BenZhang]
 * Payflow Pro gateway: Add MaxFailPayments support [gregwinn]
+* Add Paxum integration [Mehonoshin]
 
 == Version 1.26.0 (July 6, 2012)
 
