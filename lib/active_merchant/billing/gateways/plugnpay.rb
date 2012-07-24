@@ -139,7 +139,7 @@ module ActiveMerchant
         add_amount(post, money, options)
         add_customer_data(post, options)
          
-        commit(:capture, post)
+        response = commit(:capture, post)
       end
       
       def void(authorization, options = {})
