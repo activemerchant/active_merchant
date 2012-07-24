@@ -71,6 +71,10 @@ module ActiveMerchant #:nodoc:
           @test_mode ||= ActiveMerchant::Billing::Base.integration_mode == :test || @test
         end
 
+        def form_method
+          "POST"
+        end
+
         private
         
         def add_address(key, params)
