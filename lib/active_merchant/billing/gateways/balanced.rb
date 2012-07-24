@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
     # ==== Terminology & Transaction Flow
     #
     # * An `authorization` operation will return a Hold URI. An `authorization`
-    #   within Balanced is valid for 7 days from creation, you can see the
+    #   within Balanced is valid until the `expires_at` property. You can see the
     #   exact date of the expiry on the Response object by inspecting the
     #   property `response.params['expires_at']`. The resulting Hold may be
     #   `capture`d or `void`ed at any time before the `expires_at` date for
@@ -108,7 +108,10 @@ module ActiveMerchant #:nodoc:
 
       # Performs an authorization (Hold in Balanced nonclementure), which
       # reserves the funds on the customer's credit card, but does not charge
-      # the card. An authorization is valid for 7 days.
+      # the card. An authorization is valid until the `expires_at` field in
+      # the params Hash passes. See `response.params['expires_at']`. The exact
+      # amount of time until an authorization expires depends on the card
+      # issuer.
       #
       # If you pass a previously tokenized `credit_card` URI the only other
       # parameter required is `money`. If you pass `credit_card` as a hash of
@@ -138,7 +141,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:amount] = money
-        post[:description] = options[:description] if options[:description]
+        post[:description] = options[:description]
 
         create_or_find_account(post, options)
         add_credit_card(post, credit_card, options)
@@ -175,7 +178,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:amount] = money
-        post[:description] = options[:description] if options[:description]
+        post[:description] = options[:description]
 
         create_or_find_account(post, options)
         add_credit_card(post, credit_card, options)
@@ -226,7 +229,6 @@ module ActiveMerchant #:nodoc:
         return failed_response(ex.response)
       end
 
-
       # Refund a transaction.
       #
       # Returns the money debited from a card to the card from the
@@ -248,7 +250,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:debit_uri] = debit_uri
         post[:amount] = options[:amount] if options[:amount]
-        post[:description] = options[:description] if options[:description]
+        post[:description] = options[:description]
         create_transaction(:post, @refunds_uri, post)
       rescue Balanced::BalancedError => ex
         return failed_response(ex.response)
@@ -263,7 +265,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :email)
         post = {}
         account_uri = create_or_find_account(post, options)
-        if credit_card.respond_to?(:number)
+        if credit_card.respond_to? :number
           return add_credit_card(post, credit_card, options)
         else
           associate_card_to_account(account_uri, credit_card)
@@ -329,14 +331,13 @@ module ActiveMerchant #:nodoc:
         if address = options[:billing_address] || options[:address]
           credit_card[:street_address] = address[:address1] if address[:address1]
           credit_card[:street_address] += ' ' + address[:address2] if address[:address2]
-          credit_card[:country] = address[:country] if address[:country]
           credit_card[:postal_code] = address[:zip] if address[:zip]
-          credit_card[:region] = address[:state] if address[:state]
+          credit_card[:country] = address[:country] if address[:country]
         end
       end
 
       def add_credit_card(post, credit_card, options)
-        if credit_card.respond_to?(:number)
+        if credit_card.respond_to? :number
           card = {}
           card[:card_number] = credit_card.number
           card[:expiration_month] = credit_card.month
@@ -470,8 +471,7 @@ contact support@balancedpayments.com if you continue to receive this message.'
            :lang_version => "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
            :lib_version => BalancedGateway::VERSION,
            :platform => RUBY_PLATFORM,
-           :publisher => 'active_merchant',
-           :uname => (RUBY_PLATFORM =~ /linux|darwin/i ? `uname -a 2>/dev/null`.strip : nil)
+           :publisher => 'active_merchant'
         })
 
         {
