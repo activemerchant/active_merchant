@@ -108,7 +108,18 @@ module ActiveMerchant #:nodoc:
         commit 'DoVoid', build_void_request(authorization, options)
       end
       
-      def refund(identification, money = nil, options = {})
+      # Performs a refund:
+      # 
+      #  For a full refund 
+      #  gateway.refund nil, 'G39883289DH238'
+      #
+      #  Note: If you are going to perform a full refund it is important to pass nil as money,
+      #        the transacation id and no refund_type in the options hash
+      #
+      #  For a partial refund
+      #  gateway.refund 100, 'UBU83983N920', {:refund_type => 'Partial'}
+      #
+      def refund(money, identification, options = {})
         commit 'RefundTransaction', build_refund_request(money, identification, options)
       end
 
