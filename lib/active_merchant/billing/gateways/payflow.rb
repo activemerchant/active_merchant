@@ -59,6 +59,14 @@ module ActiveMerchant #:nodoc:
         end
         commit(request, options.merge(:request_type => :recurring))
       end
+
+		def reactivate_recurring(money, credit_card, options = {})
+			options[:name] = credit_card.name if options[:name].blank? && credit_card
+			request = build_recurring_request(:reactivate, money, options) do |xml|
+	          add_credit_card(xml, credit_card) if credit_card
+	        end
+	        commit(request, options.merge(:request_type => :recurring))
+		end
       
       def cancel_recurring(profile_id)
         request = build_recurring_request(:cancel, 0, :profile_id => profile_id)
@@ -199,6 +207,7 @@ module ActiveMerchant #:nodoc:
                   xml.tag! 'Term', options[:payments] unless options[:payments].nil?
                   xml.tag! 'Comment', options[:comment] unless options[:comment].nil?
                   xml.tag! 'RetryNumDays', options[:retry_num_days] unless options[:retry_num_days].nil?
+				  xml.tag! 'MaxFailPayments', options[:max_fail_payments] unless options[:max_fail_payments].nil?
                 
                   if initial_tx = options[:initial_transaction]
                     requires!(initial_tx, [:type, :authorization, :purchase])
