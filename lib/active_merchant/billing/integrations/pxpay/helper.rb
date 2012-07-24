@@ -47,9 +47,8 @@ module ActiveMerchant #:nodoc:
           mapping :return_url, 'UrlSuccess'
           mapping :cancel_return_url, 'UrlFail'
           mapping :currency, 'CurrencyInput'
-          mapping :order, 'TxnId'
           mapping :order_info, 'MerchantReference'
-
+          mapping :order, 'TxnId'
           mapping :customer, :email => 'EmailAddress'
           
           # Set the billing address. Call like service.billing_address {:city =>
@@ -72,7 +71,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def generate_request
-            xml = REXML::Document.new(data)
+            xml = REXML::Document.new()
             root = xml.add_element('GenerateRequest')
 
             @fields.each do | k, v |
@@ -85,23 +84,17 @@ module ActiveMerchant #:nodoc:
           def request_secure_redirect
             request = generate_request
 
-            puts "\n\n\n\n==================\n request = #{request}\n\n"
-            
             response = ssl_post(Pxpay.token_url, request)
             xml = REXML::Document.new(response)
             root = REXML::XPath.first(xml, "//Request")
             valid = root.attributes["valid"]
             redirect = root.elements["URI"].text
 
-            puts "\n\n========response=#{response}\n\n"
-
             # example positive response:
-            # <Request valid="1"><URI>https://sec.paymentexpress.com/pxpay/pxpay.aspx?userid=ShopifyHPP_Dev&amp;request=v5tNZ1LSuZd3dYrY3f3h-pNhz-6qcWPHvnOcYGkPRSmOrdsPspKvmNTDsVQ_ZZ3X1o9hbDapcC5XYhvLVzBfiDsHPN8kazVEu-8ba7V90mkYf2FsNqlwLlds3lTmY-OwYPP07fSoZdIL7BaxxxPNEjLKmufh3IHI4fWVnvFxd5apr4ZABaTpGZDEzLbkwSELvWixjmHNYPXCKGUu3cIsHb_EYpT1m0s6W7iYWo9bUkCPa13WKAyrEvELqIQXazQQqtveEa0xECVOfCemaRQuVLaLxfNYmCs-noLhmyOgmmlhKB2kfWnztf99j1qQoYH_C8</URI></Request
+            # <Request valid="1"><URI>https://sec.paymentexpress.com/pxpay/pxpay.aspx?userid=ShopifyHPP_Dev&amp;request=REQUEST_TOKEN</URI></Request>
             
             # example negative response:
             # <Request valid="0"><URI>Invalid TxnType</URI></Request>
-
-            puts "redirect is #{redirect}"
 
             {:valid => valid, :redirect => redirect}
           end
@@ -119,6 +112,10 @@ module ActiveMerchant #:nodoc:
             CGI.parse(url.query)
           end
           
+          def form_method
+            "GET"
+          end
+
           # Note that you should call #invoice and #setup_hash as well, for the
           # response_url to actually work.
           def initialize(order, account, options = {})
