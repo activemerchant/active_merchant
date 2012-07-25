@@ -1,9 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module BeanstreamCore
-      self.live_url = 'https://www.beanstream.com/scripts/process_transaction.asp'
-      self.recurring_url = 'https://www.beanstream.com/scripts/recurring_billing.asp'
-      self.profile_url = 'https://www.beanstream.com/scripts/payment_profile.asp'
       SP_SERVICE_VERSION = '1.1'
 
       TRANSACTIONS = {
@@ -71,6 +68,9 @@ module ActiveMerchant #:nodoc:
         # The homepage URL of the gateway
         base.homepage_url = 'http://www.beanstream.com/'
         base.live_url = 'https://www.beanstream.com/scripts/process_transaction.asp'
+
+        base.recurring_url = 'https://www.beanstream.com/scripts/recurring_billing.asp'
+        base.profile_url = 'https://www.beanstream.com/scripts/payment_profile.asp'
 
         # The name of the gateway
         base.display_name = 'Beanstream.com'

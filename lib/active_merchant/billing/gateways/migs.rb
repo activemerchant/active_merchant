@@ -9,8 +9,10 @@ module ActiveMerchant #:nodoc:
 
       API_VERSION = 1
 
-      SERVER_HOSTED_URL = 'https://migs.mastercard.com.au/vpcpay'
-      MERCHANT_HOSTED_URL = 'https://migs.mastercard.com.au/vpcdps'
+      self.server_hosted_url = 'https://migs.mastercard.com.au/vpcpay'
+      self.merchant_hosted_url = 'https://migs.mastercard.com.au/vpcdps'
+
+      self.live_url = self.server_hosted_url
 
       # MiGS is supported throughout Asia Pacific, Middle East and Africa
       # MiGS is used in Australia (AU) by ANZ (eGate), CBA (CommWeb) and more

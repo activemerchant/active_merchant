@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       
       self.test_url = 'https://test.sagepay.com/gateway/service'
       self.live_url = 'https://live.sagepay.com/gateway/service'
-      SIMULATOR_URL = 'https://test.sagepay.com/Simulator'
+      self.simulator_url = 'https://test.sagepay.com/Simulator'
       
       APPROVED = 'OK'
     
@@ -270,7 +270,7 @@ module ActiveMerchant #:nodoc:
       
       def build_simulator_url(action)
         endpoint = [ :purchase, :authorization ].include?(action) ? "VSPDirectGateway.asp" : "VSPServerGateway.asp?Service=Vendor#{TRANSACTIONS[action].capitalize}Tx"
-        "#{SIMULATOR_URL}/#{endpoint}"
+        "#{self.simulator_url}/#{endpoint}"
       end
 
       def message_from(response)

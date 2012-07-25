@@ -8,10 +8,10 @@ module ActiveMerchant #:nodoc:
       API_VERSION = 'xml-4.2'
       PERIODIC_API_VERSION = "spxml-4.2"
 
-      TEST_URL = 'https://transact.nab.com.au/test/xmlapi/payment'
-      LIVE_URL = 'https://transact.nab.com.au/live/xmlapi/payment'
-      TEST_PERIODIC_URL = "https://transact.nab.com.au/xmlapidemo/periodic"
-      LIVE_PERIODIC_URL = "https://transact.nab.com.au/xmlapi/periodic"
+      self.test_url = 'https://transact.nab.com.au/test/xmlapi/payment'
+      self.live_url = 'https://transact.nab.com.au/live/xmlapi/payment'
+      self.test_periodic_url = "https://transact.nab.com.au/xmlapidemo/periodic"
+      self.live_periodic_url = "https://transact.nab.com.au/xmlapi/periodic"
 
       self.supported_countries = ['AU']
 
@@ -192,7 +192,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, request)
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, build_request(action, request)))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request)))
 
         Response.new(success?(response), message_from(response), response,
           :test => test?,
@@ -201,7 +201,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit_periodic(request)
-        response = parse(ssl_post(test? ? TEST_PERIODIC_URL : LIVE_PERIODIC_URL, build_periodic_request(request)))
+        response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, build_periodic_request(request)))
         Response.new(success?(response), message_from(response), response,
           :test => test?,
           :authorization => authorization_from(response)

@@ -222,7 +222,7 @@ class WorldpayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_equal WorldpayGateway::TEST_URL, endpoint
+      assert_equal WorldpayGateway.test_url, endpoint
     end.respond_with(successful_authorize_response, successful_capture_response)
 
     ActiveMerchant::Billing::Base.mode = :test

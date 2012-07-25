@@ -3,7 +3,7 @@ require 'json'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class StripeGateway < Gateway
-      LIVE_URL = 'https://api.stripe.com/v1/'
+      self.live_url = 'https://api.stripe.com/v1/'
 
       AVS_CODE_TRANSLATOR = {
         'line1: pass, zip: pass' => 'Y',
@@ -191,7 +191,7 @@ module ActiveMerchant #:nodoc:
         raw_response = response = nil
         success = false
         begin
-          raw_response = ssl_request(method, LIVE_URL + url, post_data(parameters), headers(meta))
+          raw_response = ssl_request(method, self.live_url + url, post_data(parameters), headers(meta))
           response = parse(raw_response)
           success = !response.key?("error")
         rescue ResponseError => e

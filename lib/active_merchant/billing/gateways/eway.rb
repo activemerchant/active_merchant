@@ -67,8 +67,8 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://www.eway.com.au/gateway/xmltest/testpage.asp'
       self.live_url = 'https://www.eway.com.au/gateway/xmlpayment.asp'
       
-      TEST_CVN_URL = 'https://www.eway.com.au/gateway_cvn/xmltest/testpage.asp'
-      LIVE_CVN_URL = 'https://www.eway.com.au/gateway_cvn/xmlpayment.asp'
+      self.test_cvn_url = 'https://www.eway.com.au/gateway_cvn/xmltest/testpage.asp'
+      self.live_cvn_url = 'https://www.eway.com.au/gateway_cvn/xmlpayment.asp'
       
       MESSAGES = {
         "00" => "Transaction Approved",
@@ -275,7 +275,7 @@ module ActiveMerchant #:nodoc:
       
       def gateway_url(cvn, test)
         if cvn
-          test ? TEST_CVN_URL : LIVE_CVN_URL
+          test ? self.test_cvn_url : self.live_cvn_url
         else
           test ? self.test_url : self.live_url
         end

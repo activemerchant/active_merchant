@@ -47,6 +47,10 @@ module ActiveMerchant #:nodoc:
         commit 'DoReferenceTransaction', build_reference_transaction_request('Sale', money, options)
       end
 
+      def urls
+        [self.live_url, self.test_url, self.test_redirect_url]
+      end
+
       private
       def build_get_details_request(token)
         xml = Builder::XmlMarkup.new :indent => 2
