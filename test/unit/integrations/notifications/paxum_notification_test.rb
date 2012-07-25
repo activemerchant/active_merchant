@@ -4,20 +4,20 @@ class PaxumNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @robokassa = Paxum::Notification.new(http_raw_data, :secret => 'secret')
+    @paxum = Paxum::Notification.new(http_raw_data, :secret => 'secret')
   end
 
   def test_acknowledgement
-    assert @robokassa.acknowledge
+    assert @paxum.acknowledge
   end
 
   def test_respond_to_acknowledge
-    assert @robokassa.respond_to?(:acknowledge)
+    assert @paxum.respond_to?(:acknowledge)
   end
 
   def test_wrong_signature
-    @robokassa = Robokassa::Notification.new(http_raw_data_with_wrong_signature, :secret => 'secret')
-    assert !@robokassa.acknowledge
+    @paxum = Robokassa::Notification.new(http_raw_data_with_wrong_signature, :secret => 'secret')
+    assert !@paxum.acknowledge
   end
 
   private
