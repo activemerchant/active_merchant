@@ -61,13 +61,6 @@ module ActiveMerchant #:nodoc:
 
       TEST_URL = LIVE_URL = 'https://api.balancedpayments.com'
 
-      AVS_CODE_TRANSLATOR = {
-          # TODO
-      }
-      CVC_CODE_TRANSLATOR = {
-          # TODO
-      }
-
       # The countries the gateway supports merchants from as 2 digit ISO
       # country codes
       self.supported_countries = ['US']
@@ -384,16 +377,11 @@ module ActiveMerchant #:nodoc:
         response = http_request(method, url, parameters, meta)
         success = !error?(response)
 
-        avs_code = AVS_CODE_TRANSLATOR[response['avs_result']]
-        security_code = CVC_CODE_TRANSLATOR[response['avs_result']]
-
         Response.new(success,
                      (success ? "Transaction approved" : response["description"]),
                      response,
                      :test => (@marketplace_uri.index("TEST") ? true : false),
-                     :authorization => response["uri"],
-                     :avs_result => {:code => avs_code},
-                     :cvv_result => security_code
+                     :authorization => response["uri"]
         )
       end
 
