@@ -1,3 +1,5 @@
+require File.dirname(__FILE__) + '/authorize_net'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SecurePayGateway < AuthorizeNetGateway

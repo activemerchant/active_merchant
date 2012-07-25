@@ -1,6 +1,9 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module BeanstreamCore
+      RECURRING_URL = 'https://www.beanstream.com/scripts/recurring_billing.asp'
+      SECURE_PROFILE_URL = 'https://www.beanstream.com/scripts/payment_profile.asp'
+
       SP_SERVICE_VERSION = '1.1'
 
       TRANSACTIONS = {
@@ -68,9 +71,6 @@ module ActiveMerchant #:nodoc:
         # The homepage URL of the gateway
         base.homepage_url = 'http://www.beanstream.com/'
         base.live_url = 'https://www.beanstream.com/scripts/process_transaction.asp'
-
-        base.recurring_url = 'https://www.beanstream.com/scripts/recurring_billing.asp'
-        base.profile_url = 'https://www.beanstream.com/scripts/payment_profile.asp'
 
         # The name of the gateway
         base.display_name = 'Beanstream.com'
@@ -320,7 +320,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post(data, use_profile_api=nil)
-        response = parse(ssl_post((use_profile_api ? self.profile_url : self.live_url), data))
+        response = parse(ssl_post((use_profile_api ? SECURE_PROFILE_URL : self.live_url), data))
         response[:customer_vault_id] = response[:customerCode] if response[:customerCode]
         build_response(success?(response), message_from(response), response,
           :test => test? || response[:authCode] == "TEST",
@@ -331,7 +331,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def recurring_post(data)
-        response = recurring_parse(ssl_post(self.recurring_url, data))
+        response = recurring_parse(ssl_post(RECURRING_URL, data))
         build_response(recurring_success?(response), recurring_message_from(response), response)
       end
 

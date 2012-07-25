@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
-      # The homepage self.live_url of the gateway
+      # The homepage URL of the gateway
       self.homepage_url = 'http://www.salliemae.com/'
 
       # The name of the gateway

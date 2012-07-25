@@ -1,6 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PayboxDirectGateway < Gateway
+      class_attribute :test_url_backup, :live_url_backup
+
       self.test_url   = 'https://preprod-ppps.paybox.com/PPPS.php'
       self.live_url   = 'https://ppps.paybox.com/PPPS.php'
       self.test_url_backup = 'https://ppps1.paybox.com/PPPS.php'

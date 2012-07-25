@@ -66,7 +66,8 @@ module ActiveMerchant #:nodoc:
     class EwayGateway < Gateway 
       self.test_url = 'https://www.eway.com.au/gateway/xmltest/testpage.asp'
       self.live_url = 'https://www.eway.com.au/gateway/xmlpayment.asp'
-      
+
+      class_attribute :test_cvn_url, :live_cvn_url
       self.test_cvn_url = 'https://www.eway.com.au/gateway_cvn/xmltest/testpage.asp'
       self.live_cvn_url = 'https://www.eway.com.au/gateway_cvn/xmlpayment.asp'
       

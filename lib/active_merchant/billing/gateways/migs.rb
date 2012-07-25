@@ -9,6 +9,8 @@ module ActiveMerchant #:nodoc:
 
       API_VERSION = 1
 
+      class_attribute :server_hosted_url, :merchant_hosted_url
+
       self.server_hosted_url = 'https://migs.mastercard.com.au/vpcpay'
       self.merchant_hosted_url = 'https://migs.mastercard.com.au/vpcdps'
 
@@ -156,7 +158,7 @@ module ActiveMerchant #:nodoc:
 
         add_secure_hash(post)
 
-        SERVER_HOSTED_URL + '?' + post_data(post)
+        self.server_hosted_url + '?' + post_data(post)
       end
 
       # Parses a response from purchase_offsite_url once user is redirected back
@@ -210,7 +212,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(post)
-        data = ssl_post MERCHANT_HOSTED_URL, post_data(post)
+        data = ssl_post self.merchant_hosted_url, post_data(post)
         response_hash = parse(data)
         response_object(response_hash)
       end

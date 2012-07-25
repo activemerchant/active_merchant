@@ -3,7 +3,9 @@ module ActiveMerchant #:nodoc:
     class SagePayGateway < Gateway  
       cattr_accessor :simulate
       self.simulate = false
-      
+
+      class_attribute :simulator_url
+
       self.test_url = 'https://test.sagepay.com/gateway/service'
       self.live_url = 'https://live.sagepay.com/gateway/service'
       self.simulator_url = 'https://test.sagepay.com/Simulator'

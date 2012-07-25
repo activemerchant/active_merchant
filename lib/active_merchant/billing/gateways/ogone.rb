@@ -105,9 +105,6 @@ module ActiveMerchant #:nodoc:
         :maintenance => 'https://secure.ogone.com/ncol/%s/maintenancedirect.asp'
       }
 
-      self.live_url = URLS[:production][:order]
-      self.test_url = URLS[:test][:order]
-
       CVV_MAPPING = { 'OK' => 'M',
                       'KO' => 'N',
                       'NO' => 'P' }
@@ -128,6 +125,9 @@ module ActiveMerchant #:nodoc:
       OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE   = "Signature usage will be required from a future release of ActiveMerchant's Ogone Gateway. Please update your Ogone account to use it."
       OGONE_LOW_ENCRYPTION_DEPRECATION_MESSAGE = "SHA512 signature encryptor will be required from a future release of ActiveMerchant's Ogone Gateway. Please update your Ogone account to use it."
       OGONE_STORE_OPTION_DEPRECATION_MESSAGE   = "The 'store' option has been renamed to 'billing_id', and its usage is deprecated."
+
+      self.test_url = URLS[:order] % "test"
+      self.live_url = URLS[:order] % "prod"
 
       self.supported_countries = ['BE', 'DE', 'FR', 'NL', 'AT', 'CH']
       # also supports Airplus and UATP

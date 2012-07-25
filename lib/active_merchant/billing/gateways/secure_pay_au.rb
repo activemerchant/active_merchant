@@ -6,6 +6,8 @@ module ActiveMerchant #:nodoc:
       API_VERSION = 'xml-4.2'
       PERIODIC_API_VERSION = 'spxml-3.0'
 
+      class_attribute :test_periodic_url, :live_periodic_url
+
       self.test_url = 'https://www.securepay.com.au/test/payment'
       self.live_url = 'https://www.securepay.com.au/xmlapi/payment'
 
