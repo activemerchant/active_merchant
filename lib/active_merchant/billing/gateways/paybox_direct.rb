@@ -1,11 +1,10 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PayboxDirectGateway < Gateway
-      class_attribute :test_url_backup, :live_url_backup
+      class_attribute :live_url_backup
 
       self.test_url   = 'https://preprod-ppps.paybox.com/PPPS.php'
       self.live_url   = 'https://ppps.paybox.com/PPPS.php'
-      self.test_url_backup = 'https://ppps1.paybox.com/PPPS.php'
       self.live_url_backup = 'https://ppps1.paybox.com/PPPS.php'
 
       # Payment API Version
@@ -145,7 +144,7 @@ module ActiveMerchant #:nodoc:
         parameters[:devise] = CURRENCY_CODES[options[:currency] || currency(money)]
         request_data = post_data(action,parameters)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request_data))
-        response = parse(ssl_post(test? ? self.test_url_backup : self.live_url_backup, request_data)) if service_unavailable?(response)
+        response = parse(ssl_post(self.live_url_backup, request_data)) if service_unavailable?(response) && !test?
         Response.new(success?(response), message_from(response), response.merge(
           :timestamp => parameters[:dateq]),
           :test => test?,
