@@ -10,38 +10,45 @@ class SSLVerify
   def test_gateways
     success, failed, missing, errored = [], [], [], []
 
-    puts GatewaySupport.new.gateways.map { |g| URI.parse(g.live_url).host if g.live_url }.compact.uniq.sort.join(', ')
+    puts "Verifying #{@gateways.count} SSL certificates\n\n"
 
-    GatewaySupport.new.each_gateway do |g|
+    @gateways.each do |g|
       if !g.live_url
         missing << g
         next
       end
       uri = URI.parse(g.live_url)
-      puts uri.host + ', '
-      result = ssl_verify_peer?(uri)
+      result,message = ssl_verify_peer?(uri)
       case result
       when :success
         print "."
         success << g
       when :fail
         print "F"
-        failed << g
+        failed << {:gateway => g, :message => message}
       when :error
         print "E"
-        errored << g
+        errored << {:gateway => g, :message => message}
       end
     end
 
     puts "\n\n\nFailed Gateways:"
     failed.each do |f|
-      puts f.name
+      puts f[:gateway].name + " - " + f[:message]
     end
 
     puts "\n\nError Gateways:"
     errored.each do |e|
-      puts e.name
+      puts e[:gateway].name + ' - ' + e[:message]
     end
+
+    if missing.size > 0
+      puts "\n\nGateways missing live_url:"
+      missing.each do |m|
+        puts m.name
+      end
+    end
+
   end
 
   def try_host(http, path)
@@ -63,10 +70,10 @@ class SSLVerify
     end
 
     return :success
-  rescue OpenSSL::SSL::SSLError
-    return :fail
-  rescue Net::HTTPBadResponse, Errno::ETIMEDOUT, EOFError, SocketError, Errno::ECONNREFUSED
-    return :error
+  rescue OpenSSL::SSL::SSLError => ex
+    return :fail, ex.inspect
+  rescue Net::HTTPBadResponse, Errno::ETIMEDOUT, EOFError, SocketError, Errno::ECONNREFUSED => ex
+    return :error, ex.inspect
   end
 
 end

@@ -17,6 +17,7 @@ class GatewaySupport #:nodoc:
       begin
         gateway_class = ('ActiveMerchant::Billing::' + gateway_name.camelize).constantize
       rescue NameError
+        puts "Could not load gateway " + gateway_name.camelize + " from " + f + "."
       end
     end
     @gateways = Gateway.implementations.sort_by(&:name)
