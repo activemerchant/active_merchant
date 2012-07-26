@@ -17,6 +17,7 @@ class SSLVerify
         missing << g
         next
       end
+
       uri = URI.parse(g.live_url)
       result,message = ssl_verify_peer?(uri)
       case result
@@ -62,6 +63,8 @@ class SSLVerify
     http.use_ssl = true
     http.ca_file = File.dirname(__FILE__) + '/certs/cacert.pem'
     http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+    http.open_timeout = 60
+    http.read_timeout = 60
 
     if uri.path.blank?
       try_host(http, "/")
@@ -72,7 +75,7 @@ class SSLVerify
     return :success
   rescue OpenSSL::SSL::SSLError => ex
     return :fail, ex.inspect
-  rescue Net::HTTPBadResponse, Errno::ETIMEDOUT, EOFError, SocketError, Errno::ECONNREFUSED => ex
+  rescue Net::HTTPBadResponse, Errno::ETIMEDOUT, EOFError, SocketError, Errno::ECONNREFUSED, Timeout::Error => ex
     return :error, ex.inspect
   end
 
