@@ -130,9 +130,6 @@ module ActiveMerchant #:nodoc:
       self.test_url  = 'https://staging.linkpt.net:1129/'
       self.live_url  = 'https://secure.linkpt.net:1129/'
       
-      # We don't have the certificate to verify LinkPoint
-      self.ssl_strict = false
-      
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
       self.homepage_url = 'http://www.linkpoint.com/'
