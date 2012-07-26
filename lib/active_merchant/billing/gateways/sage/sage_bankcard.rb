@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SageBankcardGateway < Gateway #:nodoc:
       include SageCore
-      self.url = 'https://www.sagepayments.net/cgi-bin/eftBankcard.dll?transaction'
+      self.live_url = 'https://www.sagepayments.net/cgi-bin/eftBankcard.dll?transaction'
       self.source = 'bankcard'
           
       # Credit cards supported by Sage

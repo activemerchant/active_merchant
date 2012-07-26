@@ -11,8 +11,6 @@ module ActiveMerchant #:nodoc:
     class BeanstreamInteracGateway < Gateway
       include BeanstreamCore
 
-      class_attribute :recurring_url, :profile_url
-
       # Confirm a transaction posted back from the bank to Beanstream.
       # Confirming a transaction does not require any credentials,
       # and in an application with many merchants sharing a funded

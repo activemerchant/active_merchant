@@ -64,8 +64,6 @@ module ActiveMerchant #:nodoc:
     class BeanstreamGateway < Gateway
       include BeanstreamCore
  
-      class_attribute :recurring_url, :profile_url
-
       def authorize(money, source, options = {})
         post = {}
         add_amount(post, money)

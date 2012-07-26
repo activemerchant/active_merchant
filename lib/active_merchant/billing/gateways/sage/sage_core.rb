@@ -2,7 +2,6 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module SageCore #:nodoc:
       def self.included(base)
-        base.cattr_accessor :url
         base.cattr_accessor :source
         base.supported_countries = ['US', 'CA']
         base.homepage_url = 'http://www.sagepayments.com'
@@ -86,7 +85,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def commit(action, params)
-        response = parse(ssl_post(url, post_data(action, params)))
+        response = parse(ssl_post(self.live_url, post_data(action, params)))
         
         Response.new(success?(response), response[:message], response, 
           :test => test?, 
