@@ -34,12 +34,12 @@ class SSLVerify
 
     puts "\n\n\nFailed Gateways:"
     failed.each do |f|
-      puts f[:gateway].name + " - " + f[:message]
+      puts "#{f[:gateway].name} - #{f[:message]}"
     end
 
     puts "\n\nError Gateways:"
     errored.each do |e|
-      puts e[:gateway].name + ' - ' + e[:message]
+      puts "#{e[:gateway].name} - #{e[:message]}"
     end
 
     if missing.size > 0
