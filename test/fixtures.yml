@@ -18,6 +18,9 @@ authorize_net:
 balanced:
   login: 'e1c5ad38d1c711e1b36c026ba7e239a9'
 
+banwire:
+  login: "desarrollo"
+
 barclays_epdq:
   login: test
   password: test
@@ -305,7 +308,7 @@ plugnpay:
 
 pxpay:
   login: LOGIN
-  password: PASSWORD 
+  password: PASSWORD
 
 sage_pay:
   login: LOGIN
