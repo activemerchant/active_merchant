@@ -2,11 +2,6 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # This module is included in both PaypalGateway and PaypalExpressGateway
     module PaypalCommonAPI
-      def self.included(base)
-        base.default_currency = 'USD'
-        base.cattr_accessor :pem_file
-        base.cattr_accessor :signature
-      end
       
       API_VERSION = '72'
       
@@ -44,6 +39,14 @@ module ActiveMerchant #:nodoc:
       
       FRAUD_REVIEW_CODE = "11610"
       
+      def self.included(base)
+        base.default_currency = 'USD'
+        base.cattr_accessor :pem_file
+        base.cattr_accessor :signature
+        base.live_url = URLS[:live][:signature]
+        base.test_url = URLS[:test][:signature]
+      end
+
       # The gateway must be configured with either your PayPal PEM file
       # or your PayPal API Signature.  Only one is required.
       #

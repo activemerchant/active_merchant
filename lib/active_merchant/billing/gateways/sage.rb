@@ -7,6 +7,8 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = SageBankcardGateway.supported_countries
       self.supported_cardtypes = SageBankcardGateway.supported_cardtypes
 
+      self.abstract_class = true
+
       # Creates a new SageGateway
       # 
       # The gateway requires that a valid login and password be passed

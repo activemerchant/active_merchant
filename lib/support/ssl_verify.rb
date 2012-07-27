@@ -14,7 +14,7 @@ class SSLVerify
 
     @gateways.each do |g|
       if !g.live_url
-        missing << g
+        missing << g unless g.abstract_class
         next
       end
 

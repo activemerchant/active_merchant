@@ -7,6 +7,8 @@ module ActiveMerchant #:nodoc:
       ##
       # This is the base gateway for processors who use the smartPS processing system
 
+      self.abstract_class = true
+
       def initialize(options = {})
         requires!(options, :login, :password)
         @options = options
