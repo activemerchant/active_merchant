@@ -8,7 +8,7 @@ class SSLVerify
   end
 
   def test_gateways
-    success, failed, missing, errored = [], [], [], []
+    success, failed, missing, errored, disabled = [], [], [], [], []
 
     puts "Verifying #{@gateways.count} SSL certificates\n\n"
 
@@ -16,6 +16,10 @@ class SSLVerify
       if !g.live_url
         missing << g
         next
+      end
+
+      if !g.ssl_strict
+        disabled << g
       end
 
       uri = URI.parse(g.live_url)
@@ -50,11 +54,18 @@ class SSLVerify
       end
     end
 
+    if disabled.size > 0
+      puts "\n\nGateways with ssl_strict=false:"
+      disabled.each do |d|
+        puts d.name
+      end
+    end
+
   end
 
   def try_host(http, path)
     http.get(path)
-  rescue Net::HTTPBadResponse
+  rescue Net::HTTPBadResponse, EOFError, SocketError
     http.post(path, "")
   end
 
