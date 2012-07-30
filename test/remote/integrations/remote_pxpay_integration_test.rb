@@ -10,7 +10,7 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
     @output_buffer = ""
     @options = fixtures(:pxpay)
 
-    @helper = Pxpay::Helper.new('50', @options[:login], :amount => "120.99", :currency => 'USD', :credential2 => @options[:password])
+    @helper = Pxpay::Helper.new('500', @options[:login], :amount => "120.99", :currency => 'USD', :credential2 => @options[:password])
   end
 
   def test_valid_credentials_returns_secure_token
@@ -18,8 +18,6 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
     @helper.cancel_return_url "http://t/pxpay/cancel_url"
 
     response = @helper.request_secure_redirect
-
-    puts response
 
     assert_equal "1", response[:valid]
     assert !response[:redirect].blank?
@@ -36,11 +34,10 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
   end
 
   def test_entire_payment
+    @order_id = Digest::MD5.hexdigest("#{Time.now}+#{rand}")[0,6]
 
     # generate form to redirect customer to pxpay gateway
-    generate_valid_redirect_form
-
-    puts @output_buffer
+    generate_valid_redirect_form @order_id
 
     # submit generated form and ensure we're redirected to the CC info page
     agent = Mechanize.new { |a|
@@ -48,10 +45,7 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
     }
 
     page = Mechanize::Page.new(nil,{'content-type'=>'text/html'}, @output_buffer, nil, agent)
-
     gateway_page = agent.submit page.forms.first
-
-    puts gateway_page.body
 
     # entire valid test CC credentials and submit form
 
@@ -65,7 +59,50 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
       form.Cvc2 = '123'
     end.submit
 
-    puts confirm_page.body
+    # pull out redirected URL params
+    return_url = confirm_page.link_with(:text => 'Click Here to Proceed to the Next step').href
+
+    assert !return_url.empty?
+
+    param_string = return_url.sub(/.*\?/, "")
+
+    sleep 1
+
+    notification = Pxpay.notification(param_string, :credential1 => @options[:login], :credential2 => @options[:password])
+
+    assert notification.acknowledge
+    assert_match "Completed", notification.status
+    assert_match "157.00", notification.gross
+    assert_false notification.transaction_id.blank?
+    assert_match @order_id, notification.item_id
+  end
+
+  def test_failed_payment
+
+    @order_id = Digest::MD5.hexdigest("#{Time.now}+#{rand}")[0,6]
+
+    # generate form to redirect customer to pxpay gateway
+    generate_valid_redirect_form @order_id
+
+    # submit generated form and ensure we're redirected to the CC info page
+    agent = Mechanize.new { |a|
+      a.user_agent_alias = 'Mac Safari'
+    }
+
+    page = Mechanize::Page.new(nil,{'content-type'=>'text/html'}, @output_buffer, nil, agent)
+    gateway_page = agent.submit page.forms.first
+
+    # entire valid test CC credentials and submit form
+
+    assert gateway_page.forms.size > 0
+
+    confirm_page = gateway_page.form_with(:name => 'PmtEnt') do |form|
+      form.CardNum = '4111111111111112'
+      form.ExMnth = '12'
+      form.ExYr = '10'
+      form.NmeCard = 'Firstname Lastname'
+      form.Cvc2 = '123'
+    end.submit
 
     # pull out redirected URL params
     return_url = confirm_page.link_with(:text => 'Click Here to Proceed to the Next step').href
@@ -74,17 +111,19 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
 
     param_string = return_url.sub(/.*\?/, "")
 
-    puts "\n\nparam_string = #{param_string}\n"
+    sleep 1
 
-    return_handler = Pxpay.return(param_string, :account => @options[:login], :credential2 => @options[:password])
+    notification = Pxpay.notification(param_string, :credential1 => @options[:login], :credential2 => @options[:password])
 
-    assert return_handler
+    assert notification.acknowledge
+    assert_match "Failed", notification.status
+    assert_match @order_id, notification.item_id
   end
 
   private
 
-  def generate_valid_redirect_form
-    payment_service_for('1', @options[:login], :service => :pxpay,  :amount => "157.0") do |service|
+  def generate_valid_redirect_form(order_id)
+    payment_service_for(order_id, @options[:login], :service => :pxpay,  :amount => "157.0") do |service|
             
       # You must set :credential2 to your pxpay key
        

@@ -127,12 +127,6 @@ class PxpayModuleTest < Test::Unit::TestCase
 
   end
 
-  def test_payment_key_required()
-  end
-
-  def test_currency_required()
-  end
-
   def check_inclusion(these_lines)
     for line in these_lines do
       assert @output_buffer.include?(line), ['unable to find ', line, ' ', 'in \n', @output_buffer].join(' ')
