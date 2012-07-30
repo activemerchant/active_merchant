@@ -50,25 +50,10 @@ module ActiveMerchant #:nodoc:
           mapping :order_info, 'MerchantReference'
           mapping :order, 'TxnId'
           mapping :customer, :email => 'EmailAddress'
-          
-          # Set the billing address. Call like service.billing_address {:city =>
-          # 'provo, :state => 'UT'}...
-          def billing_address(options)
-            raise 'must use address1 and address2' if options[:address]
 
-            # these fields are not required
-            add_field 'TxnData1', (options[:address1].to_s + ' ' + options[:address2].to_s).strip
-            add_field 'TxnData2', options[:city]
-            add_field 'TxnData3', options[:country]
-          end
-          
-          # Adds a custom field which you submit to Authorize.Net. These fields
-          # are all passed back to you verbatim when it does its relay
-          # (callback) to you note that if you call it twice with the same name,
-          # this function only uses keeps the second value you called it with.          
-          def add_custom_field(name, value)
-            add_field 'Opt', "#{name}=#{value}"
-          end
+          mapping :custom1, 'TxnData1'
+          mapping :custom2, 'TxnData2'
+          mapping :custom3, 'TxnData3'
 
           def generate_request
             xml = REXML::Document.new()
