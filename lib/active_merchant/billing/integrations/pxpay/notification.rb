@@ -10,51 +10,66 @@ module ActiveMerchant #:nodoc:
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           include PostsData
 
+          attr_reader :raw
+
           def initialize(query_string, options={})
             super
 
             raise "missing result parameter from pxpay redirect" if @params["result"].empty?
-            raise "missing pxpay api credentials in options" unless @options.has_key?(:account) && @options.has_key?(:credential2)
+            raise "missing pxpay api credentials in options" unless @options.has_key?(:credential1) && @options.has_key?(:credential2)
 
-            decrypt_transaction_result(@params["result"].first)
+            decrypt_transaction_result(@params["result"])
           end
 
           # was the notification a validly formed request?
-          def valid?
+          def acknowledge
             @valid == '1'
           end
 
           def status
-            success?
+            return 'Failed' unless success?
+            if @fields['TxnType'] == 'Purchase'
+              return 'Completed'
+            else
+              raise 'Notification is for a successful Auth which is not supported'
+            end
           end
 
           # for field definitions see
           # http://www.paymentexpress.com/Technical_Resources/Ecommerce_Hosted/PxPay
 
           def success?
-            @params['Success'] == '1'
+            @fields['Success'] == '1'
           end
 
           def gross
-            @params['AmountSettlement']
+            @fields['AmountSettlement']
           end
 
           def currency
-            @params['CurrencySettlement']
+            @fields['CurrencySettlement']
+          end
+
+          def account
+            @params['userid']
+          end
+
+          def item_id
+            @fields['TxnId']
           end
 
           def currency_input
-            @params['CurrencyInput']
+            @fields['CurrencyInput']
           end
 
           def auth_code
             @fields['AuthCode']
           end
-          
+
           def card_type
             @fields['CardName']
           end
-          
+
           def card_holder_name
             @fields['CardHolderName']
           end
@@ -80,7 +95,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def transaction_id
-            @fields['DpsBillingId']
+            @fields['DpsTxnRef']
           end
 
           def settlement_date
@@ -106,37 +121,32 @@ module ActiveMerchant #:nodoc:
             settlement_date
           end
 
-          # They don't pass merchant email back to us -- unimplemented -- always
-          # returns nil
-          def receiver_email
-            nil
-          end 
-
           # Was this a test transaction?
           def test?
             nil
           end
 
           private
-          
+
+          def decrypt_response(request_string)
+            ssl_post(Pxpay.token_url, request_string)
+          end
+
           def decrypt_transaction_result(encrypted_result)
             request_xml = REXML::Document.new()
             root = request_xml.add_element('ProcessResponse')
 
-            # TODO retrieve the credentials another way?
-            #root.add_element('PxPayUserId').text = @options[:username]
-            #root.add_element('PxPayKey').text = @options[:credential2]
+            root.add_element('PxPayUserId').text = @options[:credential1]
+            root.add_element('PxPayKey').text = @options[:credential2]
             root.add_element('Response').text = encrypted_result
 
-            response_string = ssl_post(Pxpay.token_url, request_xml.to_s)
+            @raw = decrypt_response(request_xml.to_s)
 
-            puts "\n\n\nresponse_string!\n\n#{response_string}\n"
-
-            response_xml = REXML::Document.new(response_string)
+            response_xml = REXML::Document.new(@raw)
             root = REXML::XPath.first(response_xml)
             @valid = root.attributes["valid"]
-
-            root.elements.each { |e| @params[e.name] = e.text }
+            @fields = {}
+            root.elements.each { |e| @fields[e.name] = e.text }
           end
 
         end
