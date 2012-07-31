@@ -6,13 +6,16 @@ module ActiveMerchant #:nodoc:
       # # Example:
       #
 
-      module Pxpay 
+      module Pxpay
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           include PostsData
 
           attr_reader :raw
 
           def initialize(query_string, options={})
+            # PxPay appends ?result=...&userid=... to whatever return_url was specified, even if that URL ended with a ?query.
+            # So switch the first ? if present to a &
+            query_string[/\?/] = '&' if query_string[/\?/]
             super
 
             raise "missing result parameter from pxpay redirect" if @params["result"].empty?
@@ -28,11 +31,12 @@ module ActiveMerchant #:nodoc:
 
           def status
             return 'Failed' unless success?
-            if @fields['TxnType'] == 'Purchase'
-              return 'Completed'
-            else
-              raise 'Notification is for a successful Auth which is not supported'
-            end
+            return 'Completed' if complete?
+            raise 'Notification is for a successful Auth which is not supported'
+          end
+
+          def complete?
+            @fields['TxnType'] == 'Purchase' && success?
           end
 
           # for field definitions see

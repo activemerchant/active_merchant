@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
           mapping :return_url, 'UrlSuccess'
           mapping :cancel_return_url, 'UrlFail'
           mapping :currency, 'CurrencyInput'
-          mapping :order_info, 'MerchantReference'
+          mapping :description, 'MerchantReference'
           mapping :order, 'TxnId'
           mapping :customer, :email => 'EmailAddress'
 
@@ -105,9 +105,6 @@ module ActiveMerchant #:nodoc:
           # response_url to actually work.
           def initialize(order, account, options = {})
             super
-            raise 'missing parameter' unless order and account and options[:amount]
-            raise 'error -- amount with no digits!' unless options[:amount].to_s =~ /\d/
-
             add_field 'AmountInput', "%.2f" % options[:amount].to_f.round(2)
           	add_field 'EnableAddBillCard', '0'
             add_field 'TxnType', 'Purchase'
