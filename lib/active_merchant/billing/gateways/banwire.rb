@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       URL = 'https://banwire.com/api.pago_pro'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['MX', 'USD']
+      self.supported_countries = ['MX']
 
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :american_express]
