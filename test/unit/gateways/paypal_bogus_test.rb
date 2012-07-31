@@ -12,8 +12,8 @@ class PaypalBogusTest < Test::Unit::TestCase
 
   def test_setup_authorization
     assert_raise(ArgumentError) { @gateway.setup_authorization 1000 }
-    assert @gateway.setup_authorization(1000, { cancel_return_url: @cancel_return_url, 
-                                                return_url: @return_url }).success?
+    assert @gateway.setup_authorization(1000, { :cancel_return_url => @cancel_return_url, 
+                                                :return_url => @return_url }).success?
   end
 
   def test_redirect_url_for
@@ -22,8 +22,8 @@ class PaypalBogusTest < Test::Unit::TestCase
 
   def authorize
     assert_raise(ArgumentError) { @gateway.authorize 1000 }
-    assert !@gateway.authorize(1000, { token: '1', payer_id: '42' }).success?
-    assert @gateway.authorize(1000, { token: '2', payer_id: '42' }).success?
+    assert !@gateway.authorize(1000, { :token => '1', :payer_id => '42' }).success?
+    assert @gateway.authorize(1000, { :token => '2', :payer_id => '42' }).success?
   end
 
 end
