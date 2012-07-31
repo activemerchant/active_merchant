@@ -11,13 +11,13 @@ module ActiveMerchant #:nodoc:
       def setup_authorization money, options = {}
         requires!(options, :return_url, :cancel_return_url)
        
-        PaypalExpressResponse.new true, SUCCESS_MESSAGE, { :Token => AUTHORIZATION }, test: true
+        PaypalExpressResponse.new true, SUCCESS_MESSAGE, { :Token => AUTHORIZATION }, :test => true
       end
 
       def setup_purchase money, options = {}
         requires!(options, :return_url, :cancel_return_url)
        
-        PaypalExpressResponse.new true, SUCCESS_MESSAGE, { :Token => AUTHORIZATION }, test: true
+        PaypalExpressResponse.new true, SUCCESS_MESSAGE, { :Token => AUTHORIZATION }, :test => true
       end
 
       def authorize money, options = {}
