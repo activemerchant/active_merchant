@@ -21,8 +21,8 @@ module ActiveMerchant #:nodoc:
         #   service.currency 'USD'
         #   service.description 'Order 123 for MyStore'
         #
-        #   Must specify both a return_url and return_cancel URL or PxPay will show an error instead of
-        #   capturing credit card details.
+        #   # Must specify both a return_url and return_cancel_url or PxPay will show an error instead of
+        #   # capturing credit card details.
         #
         #   service.return_url "http://t/pxpay/payment_received_notification_sub_step"
         #   service.return_cancel_url "http://t/pxpay/payment_cancelled"

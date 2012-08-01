@@ -17,7 +17,7 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
     @helper.return_url "http://t/pxpay/return_url"
     @helper.cancel_return_url "http://t/pxpay/cancel_url"
 
-    response = @helper.request_secure_redirect
+    response = @helper.send :request_secure_redirect
 
     assert_equal "1", response[:valid]
     assert !response[:redirect].blank?
@@ -27,7 +27,7 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
     @helper.return_url "http://t/pxpay/return_url"
     @helper.cancel_return_url "http://t/pxpay/cancel_url"
 
-    response = @helper.request_secure_redirect
+    response = @helper.send :request_secure_redirect
 
     url = URI.parse(response[:redirect])
     assert_equal Pxpay.service_url, "#{url.scheme}://#{url.host}#{url.path}"
@@ -71,6 +71,7 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
     notification = Pxpay.notification(param_string, :credential1 => @options[:login], :credential2 => @options[:password])
 
     assert notification.acknowledge
+    assert notification.complete?
     assert_match "Completed", notification.status
     assert_match "157.00", notification.gross
     assert_false notification.transaction_id.blank?
@@ -115,6 +116,7 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
 
     notification = Pxpay.notification(param_string, :credential1 => @options[:login], :credential2 => @options[:password])
 
+    assert_false notification.complete?
     assert notification.acknowledge
     assert_match "Failed", notification.status
     assert_match @order_id, notification.item_id
