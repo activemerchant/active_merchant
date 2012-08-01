@@ -21,11 +21,10 @@ module ActiveMerchant #:nodoc:
         #   service.currency 'USD'
         #   service.description 'Order 123 for MyStore'
         #
-        #   # Must specify both a return_url and return_cancel_url or PxPay will show an error instead of
+        #   # Must specify both a return_url or PxPay will show an error instead of
         #   # capturing credit card details.
         #
         #   service.return_url "http://t/pxpay/payment_received_notification_sub_step"
-        #   service.return_cancel_url "http://t/pxpay/payment_cancelled"
         #
         #   # These fields will be copied verbatim to the Notification
         #   service.custom1 'custom text 1'
@@ -38,8 +37,6 @@ module ActiveMerchant #:nodoc:
           include PostsData
           mapping :account, 'PxPayUserId'
           mapping :credential2, 'PxPayKey'
-          mapping :return_url, 'UrlSuccess'
-          mapping :cancel_return_url, 'UrlFail'
           mapping :currency, 'CurrencyInput'
           mapping :description, 'MerchantReference'
           mapping :order, 'TxnId'
@@ -54,6 +51,11 @@ module ActiveMerchant #:nodoc:
             add_field 'AmountInput', "%.2f" % options[:amount].to_f.round(2)
             add_field 'EnableAddBillCard', '0'
             add_field 'TxnType', 'Purchase'
+          end
+
+          def return_url(url)
+            add_field 'UrlSuccess', url
+            add_field 'UrlFail', url
           end
 
           def form_fields

@@ -52,7 +52,6 @@ class PxpayModuleTest < Test::Unit::TestCase
                        :phone => '3'
 
       service.return_url "http://example.com/pxpay/return_url"
-      service.cancel_return_url "http://example.com/pxpay/cancel_url"
 
       service.credential2 @key
 
@@ -67,7 +66,7 @@ class PxpayModuleTest < Test::Unit::TestCase
     assert_match /<EnableAddBillCard>0</, request
     assert_match /<EmailAddress>g@g.com</, request
     assert_match /<UrlSuccess>http:\/\/example.com\/pxpay\/return_url</, request
-    assert_match /<UrlFail>http:\/\/example.com\/pxpay\/cancel_url</, request
+    assert_match /<UrlFail>http:\/\/example.com\/pxpay\/return_url</, request
   end
 
   def test_xml_escaping_fields
