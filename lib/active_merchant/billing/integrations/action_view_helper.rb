@@ -44,11 +44,11 @@ module ActiveMerchant #:nodoc:
 
           integration_module = ActiveMerchant::Billing::Integrations.const_get(options.delete(:service).to_s.camelize)
           service_class = integration_module.const_get('Helper')
+          
           form_options = options.delete(:html) || {}
           service = service_class.new(order, account, options)
-
-          result = []
           form_options[:method] = service.form_method
+          result = []
           result << form_tag(integration_module.service_url, form_options)
 
           result << capture(service, &proc)

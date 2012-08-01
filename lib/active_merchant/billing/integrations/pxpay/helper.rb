@@ -6,40 +6,34 @@ module ActiveMerchant #:nodoc:
       module Pxpay
         # An example. Note the username as a parameter and transaction key you
         # will want to use later. The amount that you pass in will be *rounded*,
-        # so preferably pass in X.2 decimal so that no rounding occurs. It is
-        # rounded because if it looks like 00.000 Authorize.Net fails the
-        # transaction as incorrectly formatted.
-        # 
-        #  payment_service_for('order_id', 'pxpay user ID', :service => :pxpay,  :amount => 157.0) do |service|
-        # 
-        #    # You must set :credential2 to your pxpay key
-        #    
-        #    service.customer_id 8
-        #    service.customer :first_name => 'g',
-        #                       :last_name => 'g',
-        #                       :email => 'g@g.com',
-        #                       :phone => '3'
-        #   service.billing_address :zip => 'g',
-        #                   :country => 'United States of America',
-        #                   :address => 'g'
-        # 
-        #   service.ship_to_address :first_name => 'g',
-        #                            :last_name => 'g',
-        #                            :city => '',
-        #                            :address => 'g',
-        #                            :address2 => '',
-        #                            :state => address.state,
-        #                            :country => 'United States of America',
-        #                            :zip => 'g'
-        # 
-        #   service.invoice "516428355" # your invoice number
-        #   # The end-user is presented with the HTML produced by the notify_url.
+        # so preferably pass in X.2 decimal so that no rounding occurs.  You need
+        # to set :credential2 to your PxPay secret key.
+        #
+        # PxPay accounts have Failproof Notification enabled by default which means
+        # in addition to the user being redirected to your return_url, the return_url will
+        # be accessed by the PxPay servers directly, immediately after transaction success.
+        #
+        #  payment_service_for('order_id', 'pxpay_user_ID', :service => :pxpay,  :amount => 157.0) do |service|
+        #
+        #   service.credential2 'pxpay_secret_key'
+        #   service.customer :email => 'customer@email.com'
+        #
+        #   service.currency 'USD'
+        #   service.description 'Order 123 for MyStore'
+        #
+        #   Must specify both a return_url and return_cancel URL or PxPay will show an error instead of
+        #   capturing credit card details.
+        #
         #   service.return_url "http://t/pxpay/payment_received_notification_sub_step"
         #   service.return_cancel_url "http://t/pxpay/payment_cancelled"
-        #   service.payment_header 'My store name'
+        #
+        #   # These fields will be copied verbatim to the Notification
+        #   service.custom1 'custom text 1'
+        #   service.custom2 ''
+        #   service.custom3 ''
         #   # See the helper.rb file for various custom fields
         # end
-         
+
         class Helper < ActiveMerchant::Billing::Integrations::Helper
           include PostsData
           mapping :account, 'PxPayUserId'
@@ -55,6 +49,31 @@ module ActiveMerchant #:nodoc:
           mapping :custom2, 'TxnData2'
           mapping :custom3, 'TxnData3'
 
+          def initialize(order, account, options = {})
+            super
+            add_field 'AmountInput', "%.2f" % options[:amount].to_f.round(2)
+          	add_field 'EnableAddBillCard', '0'
+            add_field 'TxnType', 'Purchase'
+          end
+
+          def form_fields
+            # if either return URLs are blank PxPay will generate a token but redirect user to error page.
+            raise "error - must specify return_url" if @fields['UrlSuccess'].blank?
+            raise "error - must specify cancel_return_url" if @fields['UrlFail'].blank?
+
+            result = request_secure_redirect
+            raise "error - failed to get token - message was #{result[:redirect]}" unless result[:valid] == "1"
+     
+            url = URI.parse(result[:redirect])
+
+            CGI.parse(url.query)
+          end
+          
+          def form_method
+            "GET"
+          end
+
+          private
           def generate_request
             xml = REXML::Document.new()
             root = xml.add_element('GenerateRequest')
@@ -83,33 +102,6 @@ module ActiveMerchant #:nodoc:
 
             {:valid => valid, :redirect => redirect}
           end
-
-          def form_fields
-            # if either return URLs are blank PxPay will generate a token but redirect user to error page.
-            raise "error - must specify return_url" if @fields['UrlSuccess'].blank?
-            raise "error - must specify cancel_return_url" if @fields['UrlFail'].blank?
-
-            result = request_secure_redirect
-            raise "error - failed to get token - message was #{result[:redirect]}" unless result[:valid] == "1"
-     
-            url = URI.parse(result[:redirect])
-
-            CGI.parse(url.query)
-          end
-          
-          def form_method
-            "GET"
-          end
-
-          # Note that you should call #invoice and #setup_hash as well, for the
-          # response_url to actually work.
-          def initialize(order, account, options = {})
-            super
-            add_field 'AmountInput', "%.2f" % options[:amount].to_f.round(2)
-          	add_field 'EnableAddBillCard', '0'
-            add_field 'TxnType', 'Purchase'
-          end
-
         end
       end
     end

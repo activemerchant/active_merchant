@@ -7,7 +7,7 @@ class PxPayNotificationTest < Test::Unit::TestCase
   end
 
   def test_successful_transaction_notification
-    Pxpay::Notification.any_instance.expects(:decrypt_response).returns(successful_xml_response)
+    Pxpay::Notification.any_instance.expects(:ssl_post).returns(successful_xml_response)
     notification = Pxpay::Notification.new(http_post_data, :credential1 => 'user', :credential2 => 'key')
 
     assert notification.acknowledge
@@ -18,7 +18,7 @@ class PxPayNotificationTest < Test::Unit::TestCase
   end
 
   def test_failed_transaction_notification
-    Pxpay::Notification.any_instance.expects(:decrypt_response).returns(failed_xml_response)
+    Pxpay::Notification.any_instance.expects(:ssl_post).returns(failed_xml_response)
     notification = Pxpay::Notification.new(http_post_data, :credential1 => 'user', :credential2 => 'key')
 
     assert notification.acknowledge

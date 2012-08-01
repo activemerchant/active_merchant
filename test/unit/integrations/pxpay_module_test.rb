@@ -17,17 +17,17 @@ class PxpayModuleTest < Test::Unit::TestCase
   def test_notification_method
     Pxpay::Notification.any_instance.stubs(:decrypt_transaction_result)
 
-    assert_instance_of Pxpay::Notification, Pxpay.notification('name=cody&result=token', :account => '', :credential2 => '')
+    assert_instance_of Pxpay::Notification, Pxpay.notification('name=cody&result=token', :credential1 => '', :credential2 => '')
   end
 
   def test_should_round_numbers
     Pxpay::Helper.any_instance.stubs(:form_fields).returns({})
 
     request = ""
-    payment_service_for('44',@username, :service => :pxpay,  :amount => "157.003"){ |service| request = service.generate_request}
+    payment_service_for('44',@username, :service => :pxpay,  :amount => "157.003"){ |service| request = service.send :generate_request}
     assert request !~ /AmountInput>157.003</
 
-    payment_service_for('44',@username, :service => :pxpay,  :amount => "157.005"){ |service| request = service.generate_request}
+    payment_service_for('44',@username, :service => :pxpay,  :amount => "157.005"){ |service| request = service.send :generate_request}
     assert request =~ /AmountInput>157.01</
   end
 
@@ -35,7 +35,7 @@ class PxpayModuleTest < Test::Unit::TestCase
     Pxpay::Helper.any_instance.stubs(:form_fields).returns({})
 
     request = ""
-    payment_service_for('44',@username, :service => :pxpay,  :amount => "157"){ |service| request = service.generate_request}
+    payment_service_for('44',@username, :service => :pxpay,  :amount => "157"){ |service| request = service.send :generate_request}
     assert request =~ /AmountInput>157.00</
   end
 
@@ -56,7 +56,7 @@ class PxpayModuleTest < Test::Unit::TestCase
 
       service.credential2 @key
 
-      request = service.generate_request
+      request = service.send :generate_request
     }
 
     assert_match /<TxnId>44</, request

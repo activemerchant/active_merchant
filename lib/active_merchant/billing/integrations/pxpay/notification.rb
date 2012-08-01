@@ -119,8 +119,7 @@ module ActiveMerchant #:nodoc:
             [@fields['TxnData1'],@fields['TxnData2'],@fields['TxnData3']]
           end
 
-          # When was this payment was received by the client. --unimplemented --
-          # always returns nil
+          # When was this payment was received by the client.
           def received_at
             settlement_date
           end
@@ -132,10 +131,6 @@ module ActiveMerchant #:nodoc:
 
           private
 
-          def decrypt_response(request_string)
-            ssl_post(Pxpay.token_url, request_string)
-          end
-
           def decrypt_transaction_result(encrypted_result)
             request_xml = REXML::Document.new()
             root = request_xml.add_element('ProcessResponse')
@@ -144,7 +139,7 @@ module ActiveMerchant #:nodoc:
             root.add_element('PxPayKey').text = @options[:credential2]
             root.add_element('Response').text = encrypted_result
 
-            @raw = decrypt_response(request_xml.to_s)
+            @raw = ssl_post(Pxpay.token_url, request_xml.to_s)
 
             response_xml = REXML::Document.new(@raw)
             root = REXML::XPath.first(response_xml)
