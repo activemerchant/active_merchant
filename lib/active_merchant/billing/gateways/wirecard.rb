@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
         # Pending Status also means Acknowledged (as stated in their specification)
         success = response[:FunctionResult] == "ACK" || response[:FunctionResult] == "PENDING"
         message = response[:Message]
-        authorization = (success && action == :authorization) ? response[:GuWID] : nil
+        authorization = response[:GuWID]
 
         Response.new(success, message, response,
           :test => test?,
