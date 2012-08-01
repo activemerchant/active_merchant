@@ -66,8 +66,6 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
 
     param_string = return_url.sub(/.*\?/, "")
 
-    sleep 1
-
     notification = Pxpay.notification(param_string, :credential1 => @options[:login], :credential2 => @options[:password])
 
     assert notification.acknowledge
@@ -112,8 +110,6 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
 
     param_string = return_url.sub(/.*\?/, "")
 
-    sleep 1
-
     notification = Pxpay.notification(param_string, :credential1 => @options[:login], :credential2 => @options[:password])
 
     assert_false notification.complete?
@@ -126,9 +122,7 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
 
   def generate_valid_redirect_form(order_id)
     payment_service_for(order_id, @options[:login], :service => :pxpay,  :amount => "157.0") do |service|
-            
       # You must set :credential2 to your pxpay key
-       
       service.credential2 @options[:password]
 
       service.customer_id 8
@@ -136,25 +130,12 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
                        :last_name => 'g',
                        :email => 'g@g.com',
                        :phone => '3'
-      
-      service.billing_address :zip => 'g',
-                      :country => 'United States of America',
-                      :address1 => 'g',
-                      :address2 => 'g'
-      
-      service.ship_to_address :first_name => 'g',
-                               :last_name => 'g',
-                               :city => '',
-                               :address => 'g',
-                               :address2 => '',
-                               :country => 'United States of America',
-                               :zip => 'g'
-      
-      service.invoice "516428355" # your invoice number
+
+      service.description "Order Description"
+
       # The end-user is presented with the HTML produced by the notify_url.
       service.return_url "http://t/pxpay/payment_received_notification_sub_step"
       service.cancel_return_url "http://t/pxpay/payment_cancelled"
-      service.payment_header 'My store name'
       service.currency 'USD'
     end
   end

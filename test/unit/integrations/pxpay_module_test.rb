@@ -108,7 +108,7 @@ class PxpayModuleTest < Test::Unit::TestCase
     end
   end
 
-  def test_created_form_is_valid()
+  def test_created_form_is_valid
     Pxpay::Helper.any_instance.stubs(:ssl_post).returns('<Request valid="1"><URI>https://sec.paymentexpress.com/pxpay/pxpay.aspx?userid=ShopifyHPP_Dev&amp;request=REQUEST_TOKEN</URI></Request>')
 
     payment_service_for('44',@username, :service => :pxpay, :amount => 157.0){|service|
@@ -124,14 +124,5 @@ class PxpayModuleTest < Test::Unit::TestCase
     form = page.forms.first
 
     assert_match /GET/i, form.method
-
   end
-
-  def check_inclusion(these_lines)
-    for line in these_lines do
-      assert @output_buffer.include?(line), ['unable to find ', line, ' ', 'in \n', @output_buffer].join(' ')
-    end
-  end
-
-
 end

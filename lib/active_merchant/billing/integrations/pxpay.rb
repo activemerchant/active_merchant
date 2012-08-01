@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
         TOKEN_URL = 'https://sec.paymentexpress.com/pxpay/pxaccess.aspx'
 
         LIVE_URL = 'https://sec.paymentexpress.com/pxpay/pxpay.aspx'
-            
+
         def self.token_url
           TOKEN_URL
         end
@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
         def self.notification(post, options={})
           Notification.new(post, options)
         end
-        
+
         def self.return(query_string, options={})
           Return.new(query_string, options)
         end

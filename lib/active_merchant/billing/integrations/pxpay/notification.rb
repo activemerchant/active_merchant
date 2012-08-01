@@ -2,7 +2,7 @@ require 'net/http'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
-      
+
       # # Example:
       #
 
@@ -132,7 +132,7 @@ module ActiveMerchant #:nodoc:
           private
 
           def decrypt_transaction_result(encrypted_result)
-            request_xml = REXML::Document.new()
+            request_xml = REXML::Document.new
             root = request_xml.add_element('ProcessResponse')
 
             root.add_element('PxPayUserId').text = @options[:credential1]

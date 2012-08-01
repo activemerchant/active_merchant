@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
           def initialize(order, account, options = {})
             super
             add_field 'AmountInput', "%.2f" % options[:amount].to_f.round(2)
-          	add_field 'EnableAddBillCard', '0'
+            add_field 'EnableAddBillCard', '0'
             add_field 'TxnType', 'Purchase'
           end
 
@@ -63,19 +63,19 @@ module ActiveMerchant #:nodoc:
 
             result = request_secure_redirect
             raise "error - failed to get token - message was #{result[:redirect]}" unless result[:valid] == "1"
-     
+
             url = URI.parse(result[:redirect])
 
             CGI.parse(url.query)
           end
-          
+
           def form_method
             "GET"
           end
 
           private
           def generate_request
-            xml = REXML::Document.new()
+            xml = REXML::Document.new
             root = xml.add_element('GenerateRequest')
 
             @fields.each do | k, v |
@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
 
             # example positive response:
             # <Request valid="1"><URI>https://sec.paymentexpress.com/pxpay/pxpay.aspx?userid=ShopifyHPP_Dev&amp;request=REQUEST_TOKEN</URI></Request>
-            
+
             # example negative response:
             # <Request valid="0"><URI>Invalid TxnType</URI></Request>
 
