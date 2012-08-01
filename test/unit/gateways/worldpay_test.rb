@@ -64,7 +64,8 @@ class WorldpayTest < Test::Unit::TestCase
   def test_purchase_does_not_run_inquiry
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.respond_with(successful_authorize_response)
+    end.respond_with(successful_capture_response)
+
     assert_success response
     assert_equal %w(authorize capture), response.responses.collect{|e| e.params["action"]}
   end
