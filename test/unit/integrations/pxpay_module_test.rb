@@ -109,7 +109,7 @@ class PxpayModuleTest < Test::Unit::TestCase
   end
 
   def test_created_form_is_valid
-    Pxpay::Helper.any_instance.stubs(:ssl_post).returns('<Request valid="1"><URI>https://sec.paymentexpress.com/pxpay/pxpay.aspx?userid=ShopifyHPP_Dev&amp;request=REQUEST_TOKEN</URI></Request>')
+    Pxpay::Helper.any_instance.stubs(:ssl_post).returns('<Request valid="1"><URI>https://sec.paymentexpress.com/pxpay/pxpay.aspx?userid=PXPAY_USER&amp;request=REQUEST_TOKEN</URI></Request>')
 
     payment_service_for('44',@username, :service => :pxpay, :amount => 157.0){|service|
        service.credential2 @key

@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
             redirect = root.elements["URI"].text
 
             # example positive response:
-            # <Request valid="1"><URI>https://sec.paymentexpress.com/pxpay/pxpay.aspx?userid=ShopifyHPP_Dev&amp;request=REQUEST_TOKEN</URI></Request>
+            # <Request valid="1"><URI>https://sec.paymentexpress.com/pxpay/pxpay.aspx?userid=PxpayUser&amp;request=REQUEST_TOKEN</URI></Request>
 
             # example negative response:
             # <Request valid="0"><URI>Invalid TxnType</URI></Request>
