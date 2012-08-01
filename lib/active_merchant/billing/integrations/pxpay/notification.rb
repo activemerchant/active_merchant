@@ -39,6 +39,10 @@ module ActiveMerchant #:nodoc:
             @fields['TxnType'] == 'Purchase' && success?
           end
 
+          def cancelled?
+            !success?
+          end
+
           # for field definitions see
           # http://www.paymentexpress.com/Technical_Resources/Ecommerce_Hosted/PxPay
 
@@ -111,7 +115,7 @@ module ActiveMerchant #:nodoc:
             @fields['TxnMac']
           end
 
-          def response_text
+          def message
             @fields['ResponseText']
           end
 
