@@ -66,6 +66,10 @@ module ActiveMerchant #:nodoc:
         commit(:void, post)
       end
 
+      def test?
+        @options[:test] || super
+      end
+
       private
 
       def add_amount(post, money)
@@ -195,10 +199,6 @@ module ActiveMerchant #:nodoc:
         parameters[:testmode] = (@options[:test] ? 1 : 0)
 
         parameters.collect { |key, value| "UM#{key}=#{CGI.escape(value.to_s)}" }.join("&")
-      end
-
-      def test?
-        @options[:test] || super
       end
     end
   end
