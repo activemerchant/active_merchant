@@ -1,6 +1,5 @@
 require 'test_helper'
 require 'remote/integrations/remote_integration_helper'
-require 'nokogiri'
 
 class RemotePxpayIntegrationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations

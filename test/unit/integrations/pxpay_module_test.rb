@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'nokogiri'
 require 'mechanize'
 
 class PxpayModuleTest < Test::Unit::TestCase
