@@ -24,7 +24,18 @@ class PxPayNotificationTest < Test::Unit::TestCase
     assert notification.acknowledge
     assert_match "Failed", notification.status
     assert_match "100", notification.item_id
+  end
 
+  def test_exception_without_credentials
+    assert_raise ArgumentError do
+      notification = Pxpay::Notification.new(http_post_data)
+    end
+  end
+
+  def test_exception_without_http_params
+    assert_raise ArgumentError do
+      notification = Pxpay::Notification.new("", :credential1 => 'user', :credential2 => 'pass')
+    end
   end
 
   private

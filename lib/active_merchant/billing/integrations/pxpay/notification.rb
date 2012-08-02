@@ -1,4 +1,3 @@
-require 'net/http'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
@@ -9,6 +8,7 @@ module ActiveMerchant #:nodoc:
       module Pxpay
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           include PostsData
+          include RequiresParameters
 
           attr_reader :raw
 
@@ -21,8 +21,8 @@ module ActiveMerchant #:nodoc:
             @encrypted_params = @params
             @params = {}
 
-            raise "missing result parameter from pxpay redirect" if @encrypted_params["result"].empty?
-            raise "missing pxpay api credentials in options" unless @options.has_key?(:credential1) && @options.has_key?(:credential2)
+            requires! @encrypted_params, "result"
+            requires! @options, :credential1, :credential2
 
             decrypt_transaction_result(@encrypted_params["result"])
           end
