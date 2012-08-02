@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def message
-            @message || @notification.message
+            @notification.message
           end
         end
       end
