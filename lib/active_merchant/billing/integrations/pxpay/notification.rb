@@ -2,15 +2,10 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
 
-      # # Example:
-      #
-
       module Pxpay
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           include PostsData
           include RequiresParameters
-
-          attr_reader :raw
 
           def initialize(query_string, options={})
             # PxPay appends ?result=...&userid=... to whatever return_url was specified, even if that URL ended with a ?query.
@@ -35,7 +30,7 @@ module ActiveMerchant #:nodoc:
           def status
             return 'Failed' unless success?
             return 'Completed' if complete?
-            raise 'Notification is for a successful Auth which is not supported'
+            'Error'
           end
 
           def complete?
@@ -98,7 +93,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def order_id
-            @params['TxnId']
+            item_id
           end
 
           def payer_email

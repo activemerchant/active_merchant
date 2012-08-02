@@ -19,7 +19,7 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
     response = @helper.send :request_secure_redirect
 
     assert_equal "1", response[:valid]
-    assert !response[:redirect].blank?
+    assert response[:redirect].present?
   end
 
   def test_redirect_url_matches_expected
@@ -71,7 +71,7 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
     assert notification.complete?
     assert_match "Completed", notification.status
     assert_match "157.00", notification.gross
-    assert_false notification.transaction_id.blank?
+    assert notification.transaction_id.present?
     assert_match @order_id, notification.item_id
   end
 
