@@ -13,12 +13,11 @@ module ActiveMerchant #:nodoc:
         # in addition to the user being redirected to your return_url, the return_url will
         # be accessed by the PxPay servers directly, immediately after transaction success.
         #
-        #  payment_service_for('order_id', 'pxpay_user_ID', :service => :pxpay,  :amount => 157.0) do |service|
+        #  payment_service_for('order_id', 'pxpay_user_ID', :service => :pxpay, 
+        #                       :amount => 157.0, :currency => 'USD', :credential2 => 'pxpay_key') do |service|
         #
-        #   service.credential2 'pxpay_secret_key'
         #   service.customer :email => 'customer@email.com'
         #
-        #   service.currency 'USD'
         #   service.description 'Order 123 for MyStore'
         #
         #   # Must specify both a return_url or PxPay will show an error instead of
