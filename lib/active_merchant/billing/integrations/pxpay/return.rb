@@ -3,9 +3,8 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Pxpay
         class Return < ActiveMerchant::Billing::Integrations::Return
-
           def initialize(query_string, options={})
-              @notification = Notification.new(query_string, options)
+            @notification = Notification.new(query_string, options)
           end
 
           def success?
