@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'mechanize'
 
 class PxpayModuleTest < Test::Unit::TestCase
   include CommStub
@@ -115,12 +114,6 @@ class PxpayModuleTest < Test::Unit::TestCase
        service.cancel_return_url "http://store.shopify.com/cancel"
     }
 
-    agent = Mechanize.new { |a| a.user_agent_alias = 'Mac Safari' }
-
-    page = Mechanize::Page.new(nil, {'content-type'=>'text/html'}, @output_buffer, nil, agent)
-
-    form = page.forms.first
-
-    assert_match /GET/i, form.method
+    assert_match /method=\"GET\"/i, @output_buffer
   end
 end
