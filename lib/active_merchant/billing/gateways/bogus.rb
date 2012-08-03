@@ -41,7 +41,19 @@ module ActiveMerchant #:nodoc:
           raise Error, ERROR_MESSAGE
         end
       end
- 
+
+      def direct_entry_debit(money, bsb, account_number, account_name, options = {})
+        money = amount(money)
+        case bsb.to_s
+        when '1', AUTHORIZATION
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
+        when '2'
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE },:test => true)
+        else
+          raise Error, ERROR_MESSAGE
+        end
+      end
+
       def recurring(money, credit_card_or_reference, options = {})
         money = amount(money)
         case normalize(credit_card_or_reference)
