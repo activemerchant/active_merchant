@@ -39,7 +39,8 @@ module ActiveMerchant #:nodoc:
         :authorization => 10,
         :capture => 11,
         :void => 6,
-        :refund => 4
+        :refund => 4,
+        :direct_entry_debit => 15
       }
 
       PERIODIC_ACTIONS = {
@@ -74,6 +75,25 @@ module ActiveMerchant #:nodoc:
           options[:billing_id] = credit_card_or_stored_id.to_s
           commit_periodic(build_periodic_item(:trigger, money, nil, options))
         end
+      end
+
+      def direct_entry_debit(money, bsb, account_number, account_name, options = {})
+        requires!(options, :order_id)
+
+        xml = Builder::XmlMarkup.new
+
+        xml.tag! 'amount', amount(money)
+        xml.tag! 'currency', options[:currency] || currency(money)
+        xml.tag! 'purchaseOrderNo', options[:order_id].to_s.gsub(/[ ']/, '')
+
+        xml.tag! 'DirectEntryInfo' do
+          xml.tag! 'bsbNumber', bsb
+          xml.tag! 'accountNumber', account_number
+          xml.tag! 'accountName', account_name
+          xml.tag! 'ddaAck', options[:dda_ack] ? 'Yes' : 'No' if options.include?(:dda_ack)
+        end
+
+        commit :direct_entry_debit,  xml.target!
       end
 
       def authorize(money, credit_card, options = {})
