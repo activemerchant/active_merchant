@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
           def request_signature_string
             [
               @fields[mappings[:account]],
-              secret,
+              @secret,
               @fields[mappings[:order]],
               @fields[mappings[:amount]]
             ].join

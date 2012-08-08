@@ -5,6 +5,14 @@ module ActiveMerchant #:nodoc:
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           include Common
 
+          def initialize(data, options)
+            if options[:credential2].nil?
+              raise ArgumentError, "You need to provide the md5 secret as the option :credential2 to verify that the notification originated from EasyPay"
+            end
+
+            super
+          end
+
           def self.recognizes?(params)
             params.has_key?('order_mer_code') && params.has_key?('sum')
           end
@@ -30,11 +38,11 @@ module ActiveMerchant #:nodoc:
           end
 
           def status
-            'success'
+            'Completed'
           end
 
           def secret
-            @options[:secret]
+            @options[:credential2]
           end
 
           def acknowledge

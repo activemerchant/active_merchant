@@ -6,8 +6,8 @@ module ActiveMerchant #:nodoc:
           include Common
 
           def initialize(order, account, options = {})
-            @md5secret = options.delete(:secret)
             super
+            @secret = options[:credential2]
           end
 
           def form_fields
@@ -16,10 +16,6 @@ module ActiveMerchant #:nodoc:
 
           def params
             @fields
-          end
-
-          def secret
-            @md5secret
           end
 
           mapping :account, 'EP_MerNo'
