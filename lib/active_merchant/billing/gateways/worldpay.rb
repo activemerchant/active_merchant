@@ -1,13 +1,13 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayGateway < Gateway
-      self.test_url = 'https://secure-test.wp3.rbsworldpay.com/jsp/merchant/xml/paymentService.jsp'
-      self.live_url = 'https://secure.wp3.rbsworldpay.com/jsp/merchant/xml/paymentService.jsp'
+      self.test_url = 'https://secure-test.worldpay.com/jsp/merchant/xml/paymentService.jsp'
+      self.live_url = 'https://secure.worldpay.com/jsp/merchant/xml/paymentService.jsp'
 
       self.default_currency = 'GBP'
       self.money_format = :cents
       self.supported_countries = ['HK', 'US', 'GB', 'AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :laser]
       self.homepage_url = 'http://www.worldpay.com/'
       self.display_name = 'WorldPay'
 
