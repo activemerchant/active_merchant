@@ -4,7 +4,7 @@ class EasyPayNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @easypay = EasyPay::Notification.new(http_raw_data, :secret => 'dh48djklhgl5893j')
+    @easypay = EasyPay::Notification.new(http_raw_data, :credential2 => 'dh48djklhgl5893j')
   end
 
   def test_accessors
@@ -17,6 +17,16 @@ class EasyPayNotificationTest < Test::Unit::TestCase
     assert_equal BigDecimal.new("100"), @easypay.amount
   end
 
+  def test_credential2_required
+    assert_raises ArgumentError do
+      EasyPay::Notification.new(http_raw_data, {})
+    end
+
+    assert_nothing_raised do
+      EasyPay::Notification.new(http_raw_data, :credential2 => 'secret')
+    end
+  end
+
   def test_respond_to_acknowledge
     assert @easypay.respond_to?(:acknowledge)
   end
@@ -26,7 +36,7 @@ class EasyPayNotificationTest < Test::Unit::TestCase
   end
 
   def test_wrong_signature
-    @easypay = EasyPay::Notification.new(http_raw_data_with_wrong_signature, :secret => 'dh48djklhgl5893j')
+    @easypay = EasyPay::Notification.new(http_raw_data_with_wrong_signature, :credential2 => 'dh48djklhgl5893j')
     assert !@easypay.acknowledge
   end
 

@@ -3,6 +3,7 @@
 * Add Banwire gateway [acolin]
 * Authorize.Net CIM gateway: Move cardCode after order to comply with the XSD [davetron5000]
 * Add WebMoney integration [Mehonoshin]
+* EasyPay: Make symmetric with other integrations [nashby]
 
 == Version 1.27.0 (August 10, 2012)
 

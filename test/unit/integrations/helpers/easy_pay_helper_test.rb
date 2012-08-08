@@ -4,7 +4,7 @@ class EasyPayHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @helper = EasyPay::Helper.new(123, 'test_account', :amount => 500, :secret => 'secret')
+    @helper = EasyPay::Helper.new(123, 'test_account', :amount => 500, :credential2 => 'secret')
   end
 
   def test_basic_helper_fields
