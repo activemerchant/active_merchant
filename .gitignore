@@ -1,4 +1,5 @@
 .yardoc
+.DS_Store
 pkg
 
 # ignore Gemfile.lock because we support multiple versions of Rails and
