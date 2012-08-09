@@ -52,6 +52,14 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_order_id_format_for_capture
+    response = stub_comms do
+      @gateway.capture(101, credit_card, :order_id => "#1001.1")
+    end.check_request do |endpoint, data, headers|
+      assert_match /<OrderID>1001-1<\/OrderID>/, data
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
 
   def test_expiry_date
     year = (DateTime.now + 1.year).strftime("%y")
