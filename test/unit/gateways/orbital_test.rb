@@ -200,7 +200,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/<CustomerProfileAction>R/, data)
       assert_match(/<CustomerRefNum>ABC/, data)
-      assert_not_match(/<CustomerName>Longbob Longsen/, data)
+      assert_no_match(/<CustomerName>Longbob Longsen/, data)
     end.respond_with(successful_profile_response)
     assert_success response
   end
@@ -211,7 +211,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/<CustomerProfileAction>D/, data)
       assert_match(/<CustomerRefNum>ABC/, data)
-      assert_not_match(/<CustomerName>Longbob Longsen/, data)
+      assert_no_match(/<CustomerName>Longbob Longsen/, data)
     end.respond_with(successful_profile_response)
     assert_success response
   end
