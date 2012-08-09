@@ -41,20 +41,13 @@ module ActiveMerchant #:nodoc:
 
       SUCCESS, APPROVED = '0', '00'
 
-      class_attribute :secondary_test_url, :secondary_live_url, :customer_profiles
+      class_attribute :secondary_test_url, :secondary_live_url
 
       self.test_url = "https://orbitalvar1.paymentech.net/authorize"
       self.secondary_test_url = "https://orbitalvar2.paymentech.net/authorize"
 
       self.live_url = "https://orbital1.paymentech.net/authorize"
       self.secondary_live_url = "https://orbital2.paymentech.net/authorize"
-
-      # Orbital offers storing Customer Profiles which can later be used to
-      # process transactions using the :customer_ref_num.
-      #
-      # By default authorizations and purchases will create a customer profile.
-      # If your Chase MID doesn't support this feature, you can set customer_profiles to false
-      self.customer_profiles = true
 
       self.supported_countries = ["US", "CA"]
       self.default_currency = "CA"
@@ -79,7 +72,7 @@ module ActiveMerchant #:nodoc:
         order = build_new_order_xml('A', money, options) do |xml|
           add_creditcard(xml, creditcard, options[:currency]) unless creditcard.nil? && options[:profile_txn]
           add_address(xml, creditcard, options)
-          add_customer_data(xml, options) if self.customer_profiles
+          add_customer_data(xml, options) if @options[:customer_profiles]
         end
         commit(order)
       end
@@ -89,7 +82,7 @@ module ActiveMerchant #:nodoc:
         order = build_new_order_xml('AC', money, options) do |xml|
           add_creditcard(xml, creditcard, options[:currency]) unless creditcard.nil? && options[:profile_txn]
           add_address(xml, creditcard, options)
-          add_customer_data(xml, options) if self.customer_profiles
+          add_customer_data(xml, options) if @options[:customer_profiles]
         end
         commit(order)
       end
@@ -103,7 +96,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         order = build_new_order_xml('R', money, options.merge(:authorization => authorization)) do |xml|
           add_refund(xml, options[:currency])
-          xml.tag! :CustomerRefNum, options[:customer_ref_num] if self.customer_profiles && options[:profile_txn]
+          xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
         end
         commit(order)
       end

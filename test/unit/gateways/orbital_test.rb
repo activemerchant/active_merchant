@@ -75,6 +75,40 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_dont_send_customer_data_by_default
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(/<CustomerRefNum>K1C2N6/, data)
+      assert_no_match(/<CustomerProfileFromOrderInd>1234 My Street/, data)
+      assert_no_match(/<CustomerProfileOrderOverrideInd>Apt 1/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_send_customer_data_when_customer_profiles_is_enabled
+    @gateway.options[:customer_profiles] = true
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<CustomerProfileFromOrderInd>A/, data)
+      assert_match(/<CustomerProfileOrderOverrideInd>NO/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_send_customer_data_when_customer_ref_is_provided
+    @gateway.options[:customer_profiles] = true
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1, :customer_ref_num => 'ABC')
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<CustomerRefNum>ABC/, data)
+      assert_match(/<CustomerProfileFromOrderInd>S/, data)
+      assert_match(/<CustomerProfileOrderOverrideInd>NO/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   #   <AVSzip>K1C2N6</AVSzip>
   #   <AVSaddress1>1234 My Street</AVSaddress1>
   #   <AVSaddress2>Apt 1</AVSaddress2>
