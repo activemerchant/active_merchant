@@ -220,6 +220,15 @@ module ActiveMerchant #:nodoc:
         xml.tag! :CurrencyCode, currency_code(currency)
         xml.tag! :CurrencyExponent, '2' # Will need updating to support currencies such as the Yen.
 
+        # If you are trying to collect a Card Verification Number
+        # (CardSecVal) for a Visa or Discover transaction, pass one of these values:
+        #   1 Value is Present
+        #   2 Value on card but illegible
+        #   9 Cardholder states data not available
+        # If the transaction is not a Visa or Discover transaction:
+        #   Null-fill this attribute OR
+        #   Do not submit the attribute at all.
+        # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
         if %w( visa discover ).include?(creditcard.brand)
           xml.tag! :CardSecValInd, creditcard.verification_value? ? '1' : '9'
         end
