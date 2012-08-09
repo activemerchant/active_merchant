@@ -7,6 +7,7 @@
 * Add Paysbuy integration [divineforest]
 * Bogus gateway: Use last digit for pass/fail [mipearson]
 * Elavon gateway: Separate from Viaklix, implement refund & void [duff]
+* Orbital gateway: Update to API version 5.6 and add support for profile requests [rbarazi]
 
 == Version 1.27.0 (August 10, 2012)
 
