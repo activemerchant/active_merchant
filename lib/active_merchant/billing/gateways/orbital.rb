@@ -271,8 +271,7 @@ module ActiveMerchant #:nodoc:
 
         Response.class_eval { attr_accessor :order }
         Response.new(success?(response), message_from(response), response,
-          # {:authorization => response[:tx_ref_num],
-          {:authorization => "#{response[:tx_ref_num]};#{response[:order_id]}",
+          {:authorization => response[:tx_ref_num],
            :test => self.test?,
            :avs_result => {:code => response[:avs_resp_code]},
            :cvv_result => response[:cvv2_resp_code]
@@ -331,8 +330,7 @@ module ActiveMerchant #:nodoc:
 
             # Append Transaction Reference Number at the end for Refund transactions
             if action == "R"
-              tx_ref_num, _ = parameters[:authorization].split(';')
-              xml.tag! :TxRefNum, tx_ref_num
+              xml.tag! :TxRefNum, parameters[:authorization]
             end
           end
         end
@@ -350,30 +348,28 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_mark_for_capture_xml(money, authorization, parameters = {})
-        tx_ref_num, order_id = authorization.split(';')
         xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :MarkForCapture do
             add_xml_credentials(xml)
-            xml.tag! :OrderID, order_id
+            xml.tag! :OrderID, format_order_id(parameters[:order_id])
             xml.tag! :Amount, amount(money)
             add_bin_merchant_and_terminal(xml, parameters)
-            xml.tag! :TxRefNum, tx_ref_num
+            xml.tag! :TxRefNum, authorization
           end
         end
         xml.target!
       end
 
       def build_void_request_xml(money, authorization, parameters = {})
-        tx_ref_num, order_id = authorization.split(';')
         xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :Reversal do
             add_xml_credentials(xml)
-            xml.tag! :TxRefNum, tx_ref_num
+            xml.tag! :TxRefNum, authorization
             xml.tag! :TxRefIdx, parameters[:transaction_index]
             xml.tag! :AdjustedAmt, amount(money)
-            xml.tag! :OrderID, order_id
+            xml.tag! :OrderID, format_order_id(parameters[:order_id])
             add_bin_merchant_and_terminal(xml, parameters)
           end
         end
