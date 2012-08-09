@@ -269,14 +269,13 @@ module ActiveMerchant #:nodoc:
         # Failover URL will be used in the event of a connection error
         begin response = request.call; rescue ConnectionError; retry end
 
-        Response.class_eval { attr_accessor :order }
         Response.new(success?(response), message_from(response), response,
           {:authorization => response[:tx_ref_num],
            :test => self.test?,
            :avs_result => {:code => response[:avs_resp_code]},
            :cvv_result => response[:cvv2_resp_code]
           }
-        ).tap { |response| response.order = order }
+        )
       end
 
       def remote_url
