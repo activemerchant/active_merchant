@@ -1,13 +1,13 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayGateway < Gateway
-      self.test_url = 'https://secure-test.wp3.rbsworldpay.com/jsp/merchant/xml/paymentService.jsp'
-      self.live_url = 'https://secure.wp3.rbsworldpay.com/jsp/merchant/xml/paymentService.jsp'
+      self.test_url = 'https://secure-test.worldpay.com/jsp/merchant/xml/paymentService.jsp'
+      self.live_url = 'https://secure.worldpay.com/jsp/merchant/xml/paymentService.jsp'
 
       self.default_currency = 'GBP'
       self.money_format = :cents
       self.supported_countries = ['HK', 'US', 'GB', 'AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :laser]
       self.homepage_url = 'http://www.worldpay.com/'
       self.display_name = 'WorldPay'
 
@@ -33,27 +33,27 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment_method, options = {})
         requires!(options, :order_id)
-        commit 'authorize', build_authorization_request(money, payment_method, options)
+        authorize_request(money, payment_method, options)
       end
 
       def capture(money, authorization, options = {})
         MultiResponse.new.tap do |r|
-          r.process{inquire(authorization, options)} unless options[:authorization_validated]
-          r.process{commit('capture', build_capture_request(money, authorization, options))}
+          r.process{inquire_request(authorization, options, "AUTHORISED")} unless options[:authorization_validated]
+          r.process{capture_request(money, authorization, options)}
         end
       end
 
       def void(authorization, options = {})
         MultiResponse.new.tap do |r|
-          r.process{inquire(authorization, options)}
-          r.process{commit('cancel', build_void_request(authorization, options))}
+          r.process{inquire_request(authorization, options, "AUTHORISED")}
+          r.process{cancel_request(authorization, options)}
         end
       end
 
       def refund(money, authorization, options = {})
         MultiResponse.new.tap do |r|
-          r.process{inquire(authorization, options)}
-          r.process{commit('refund', build_refund_request(money, authorization, options))}
+          r.process{inquire_request(authorization, options, "CAPTURED")}
+          r.process{refund_request(money, authorization, options)}
         end
       end
 
@@ -63,8 +63,24 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def inquire(authorization, options={})
-        commit('inquiry', build_order_inquiry_request(authorization, options))
+      def authorize_request(money, payment_method, options)
+        commit('authorize', build_authorization_request(money, payment_method, options), "AUTHORISED")
+      end
+
+      def capture_request(money, authorization, options)
+        commit('capture', build_capture_request(money, authorization, options), :ok)
+      end
+
+      def cancel_request(authorization, options)
+        commit('cancel', build_void_request(authorization, options), :ok)
+      end
+
+      def inquire_request(authorization, options, success_criteria)
+        commit('inquiry', build_order_inquiry_request(authorization, options), success_criteria)
+      end
+
+      def refund_request(money, authorization, options)
+        commit('inquiry', build_refund_request(money, authorization, options), :ok)
       end
 
       def build_request
@@ -208,7 +224,7 @@ module ActiveMerchant #:nodoc:
         raw
       end
 
-      def commit(action, request)
+      def commit(action, request, success_criteria)
         xmr = ssl_post((test? ? self.test_url : self.live_url),
           request,
           'Content-Type' => 'text/xml',
@@ -217,12 +233,11 @@ module ActiveMerchant #:nodoc:
         raw = parse(action, xmr)
 
         Response.new(
-          success_from(raw),
+          success_from(raw, success_criteria),
           message_from(raw),
           raw,
           :authorization => authorization_from(raw),
           :test => test?)
-
       rescue ActiveMerchant::ResponseError => e
         if e.response.code.to_s == "401"
           return Response.new(false, "Invalid credentials", {}, :test => test?)
@@ -231,8 +246,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def success_from(raw)
-        (raw[:last_event] == "AUTHORISED" ||
+      def success_from(raw, success_criteria)
+        (raw[:last_event] == success_criteria ||
           raw[:ok].present?)
       end
 
