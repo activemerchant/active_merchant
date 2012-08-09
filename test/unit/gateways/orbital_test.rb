@@ -198,9 +198,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.retrieve_customer_profile(@customer_ref_num)
     end.check_request do |endpoint, data, headers|
+      assert_no_match(/<CustomerName>Longbob Longsen/, data)
       assert_match(/<CustomerProfileAction>R/, data)
       assert_match(/<CustomerRefNum>ABC/, data)
-      assert_no_match(/<CustomerName>Longbob Longsen/, data)
     end.respond_with(successful_profile_response)
     assert_success response
   end
@@ -209,9 +209,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.delete_customer_profile(@customer_ref_num)
     end.check_request do |endpoint, data, headers|
+      assert_no_match(/<CustomerName>Longbob Longsen/, data)
       assert_match(/<CustomerProfileAction>D/, data)
       assert_match(/<CustomerRefNum>ABC/, data)
-      assert_no_match(/<CustomerName>Longbob Longsen/, data)
     end.respond_with(successful_profile_response)
     assert_success response
   end
