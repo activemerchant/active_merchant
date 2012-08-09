@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
       self.secondary_live_url = "https://orbital2.paymentech.net/authorize"
 
       self.supported_countries = ["US", "CA"]
-      self.default_currency = "CA"
+      self.default_currency = "CAD"
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
       self.display_name = 'Orbital Paymentech'
@@ -59,6 +59,25 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
 
       AVS_SUPPORTED_COUNTRIES = ['US', 'CA', 'UK', 'GB']
+
+      CURRENCY_CODES = {
+        "AUD" => '036',
+        "CAD" => '124',
+        "CZK" => '203',
+        "DKK" => '208',
+        "HKD" => '344',
+        "ICK" => '352',
+        "JPY" => '392',
+        "MXN" => '484',
+        "NZD" => '554',
+        "NOK" => '578',
+        "SGD" => '702',
+        "SEK" => '752',
+        "CHF" => '756',
+        "GBP" => '826',
+        "USD" => '840',
+        "EUR" => '978'
+      }
 
       def initialize(options = {})
         requires!(options, :merchant_id)
@@ -378,7 +397,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def currency_code(currency)
-        Country.find(currency || self.default_currency).code(:numeric).to_s
+        CURRENCY_CODES[(currency || self.default_currency)].to_s
       end
 
       def expiry_date(credit_card)
