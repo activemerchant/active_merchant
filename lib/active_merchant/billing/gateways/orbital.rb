@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
     # Company will automatically be affiliated.
 
     class OrbitalGateway < Gateway
-      API_VERSION = "4.9"
+      API_VERSION = "5.6"
 
       POST_HEADERS = {
         "MIME-Version" => "1.0",
