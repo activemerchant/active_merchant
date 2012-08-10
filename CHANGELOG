@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.27.0 (August 10, 2012)
+
 * Add First Data integration [courtland]
 * Add WebPay integration [nashby]
 * Add Suomen Maksuturva integration [akonan]
@@ -10,6 +12,10 @@
 * Plug'n Pay gateway: Add tests for partial capture [csaunders]
 * Braintree Blue gateway: Add credit card details to responses [dougbradbury]
 * PayPal gateway: Support for 'Full' refund type [kurenn]
+* Worldpay: fix refund [jduff/omh]
+* Add PxPay offsite integration [boourns]
+* Wirecard: always capture 'authorization' transaction [ntalbott]
+* Add rake task to verify ssl certs [boourns]
 
 == Version 1.26.0 (July 6, 2012)
 
