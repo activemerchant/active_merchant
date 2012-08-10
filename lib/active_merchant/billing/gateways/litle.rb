@@ -1,5 +1,3 @@
-require 'LitleOnline'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class LitleGateway < Gateway
@@ -56,6 +54,12 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
 
       def initialize(options = {})
+        begin
+          require 'LitleOnline'
+        rescue LoadError
+          raise "Could not load the LitleOnline gem (>= 08.13.2).  Use `gem install LitleOnline` to install it."
+        end
+
         @litle = LitleOnline::LitleOnlineRequest.new
 
         options[:version]  ||= LITLE_SCHEMA_VERSION
