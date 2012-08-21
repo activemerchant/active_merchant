@@ -55,6 +55,38 @@ class ElavonTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+
+    assert response = @gateway.void('123')
+    assert_success response
+    assert_equal 'APPROVAL', response.message
+  end
+
+  def test_unsuccessful_void
+    @gateway.expects(:ssl_post).returns(failed_void_response)
+
+    assert response = @gateway.void('123')
+    assert_failure response
+    assert_equal 'The transaction ID is invalid for this transaction type', response.message
+  end
+
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    assert response = @gateway.refund(123, '456')
+    assert_success response
+    assert_equal 'APPROVAL', response.message
+  end
+
+  def test_unsuccessful_refund
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+
+    assert response = @gateway.refund(123, '456')
+    assert_failure response
+    assert_equal 'The refund amount exceeds the original transaction amount.', response.message
+  end
+
   def test_invalid_login
     @gateway.expects(:ssl_post).returns(invalid_login_response)
 
@@ -102,10 +134,77 @@ class ElavonTest < Test::Unit::TestCase
     ssl_txn_time=08/07/2009 09:54:18 PM"
   end
 
+  def successful_refund_response
+    "ssl_card_number=42*****2222
+    ssl_exp_date=
+    ssl_amount=1.00
+    ssl_customer_code=
+    ssl_invoice_number=
+    ssl_description=
+    ssl_company=
+    ssl_first_name=
+    ssl_last_name=
+    ssl_avs_address=
+    ssl_address2=
+    ssl_city=
+    ssl_state=
+    ssl_avs_zip=
+    ssl_country=
+    ssl_phone=
+    ssl_email=
+    ssl_result=0
+    ssl_result_message=APPROVAL
+    ssl_txn_id=AA49315-C3D2B7BA-237C-1168-405A-CD5CAF928B0C
+    ssl_approval_code=
+    ssl_cvv2_response=
+    ssl_avs_response=
+    ssl_account_balance=0.00
+    ssl_txn_time=08/21/2012 05:43:46 PM"
+  end
+
+  def successful_void_response
+    "ssl_card_number=42*****2222
+    ssl_exp_date=0913
+    ssl_amount=1.00
+    ssl_invoice_number=
+    ssl_description=
+    ssl_company=
+    ssl_first_name=
+    ssl_last_name=
+    ssl_avs_address=
+    ssl_address2=
+    ssl_city=
+    ssl_state=
+    ssl_avs_zip=
+    ssl_country=
+    ssl_phone=
+    ssl_email=
+    ssl_result=0
+    ssl_result_message=APPROVAL
+    ssl_txn_id=AA49315-F04216E3-E556-E2E0-ADE9-4186A5F69105
+    ssl_approval_code=
+    ssl_cvv2_response=
+    ssl_avs_response=
+    ssl_account_balance=1.00
+    ssl_txn_time=08/21/2012 05:37:19 PM"
+  end
+
   def failed_purchase_response
     "errorCode=5000
     errorName=Credit Card Number Invalid
     errorMessage=The Credit Card Number supplied in the authorization request appears to be invalid."
+  end
+
+  def failed_refund_response
+    "errorCode=5091
+    errorName=Invalid Refund Amount
+    errorMessage=The refund amount exceeds the original transaction amount."
+  end
+
+  def failed_void_response
+    "errorCode=5040
+    errorName=Invalid Transaction ID
+    errorMessage=The transaction ID is invalid for this transaction type"
   end
 
   def invalid_login_response
