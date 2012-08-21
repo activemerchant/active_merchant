@@ -37,6 +37,7 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'APPROVAL', auth.message
     assert auth.authorization
+
     assert capture = @gateway.capture(@amount, auth.authorization, :credit_card => @credit_card)
     assert_success capture
   end
@@ -62,5 +63,23 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert credit = @gateway.credit(@amount, @credit_card, @options)
     assert_success credit
     assert credit.authorization
+  end
+
+  def test_purchase_and_successful_refund
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert refund.authorization
+  end
+
+  def test_purchase_and_failed_refund
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount + 5, purchase.authorization)
+    assert_failure refund
+    assert_equal 'The refund amount exceeds the original transaction amount.', refund.message
   end
 end
