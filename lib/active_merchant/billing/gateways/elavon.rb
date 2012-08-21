@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
       self.actions = {
         :purchase => 'CCSALE',
         :credit => 'CCCREDIT',
+        :refund => 'CCRETURN',
         :authorize => 'CCAUTHONLY',
         :capture => 'CCFORCE'
       }
@@ -104,7 +105,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :credit_card)
 
         form = {}
-        add_reference(form, authorization)
+        add_approval_code(form, authorization)
         add_invoice(form, options)
         add_creditcard(form, options[:credit_card])
         add_customer_data(form, options)
@@ -112,11 +113,33 @@ module ActiveMerchant #:nodoc:
         commit(:capture, money, form)
       end
 
-      # Make a credit to a card (Void can only be done from the virtual terminal)
-      # Viaklix does not support credits by reference. You must pass in the credit card
+      # Refund a transaction.
+      #
+      # This transaction indicates to the gateway that
+      # money should flow from the merchant to the customer.
+      #
+      # ==== Parameters
+      #
+      # * <tt>money</tt> -- The amount to be credited to the customer as an Integer value in cents.
+      # * <tt>identification</tt> -- The ID of the original transaction against which the refund is being issued.
+      # * <tt>options</tt> -- A hash of parameters.
+      def refund(money, identification, options = {})
+        form = {}
+        add_txn_id(form, identification)
+        add_test_mode(form, options)
+        commit(:refund, money, form)
+      end
+
+      # Make a credit to a card.  Use the refund method if you'd like to credit using
+      # previous transaction
+      #
+      # ==== Parameters
+      # * <tt>money</tt> - The amount to be credited as an Integer value in cents.
+      # * <tt>creditcard</tt> - The credit card to be credited.
+      # * <tt>options</tt>
       def credit(money, creditcard, options = {})
         if creditcard.is_a?(String)
-          raise ArgumentError, "Reference credits are not supported. Please supply the original credit card"
+          raise ArgumentError, "Reference credits are not supported. Please supply the original credit card or use the #refund method."
         end
 
         form = {}
@@ -135,12 +158,16 @@ module ActiveMerchant #:nodoc:
         form[:description] = options[:description].to_s.slice(0, 255)
       end
 
-      def add_reference(form, authorization)
-        form[:approval_code] = authorization
+      def add_approval_code(form, authorization)
+        form[:approval_code] = authorization.split(';').first
+      end
+
+      def add_txn_id(form, authorization)
+        form[:txn_id] = authorization.split(';').last
       end
 
       def authorization_from(response)
-        response['approval_code']
+        [response['approval_code'], response['txn_id']].join(';')
       end
 
       def add_creditcard(form, creditcard)
