@@ -6,6 +6,7 @@
 * EasyPay: Make symmetric with other integrations [nashby]
 * Add Paysbuy integration [divineforest]
 * Bogus gateway: Use last digit for pass/fail [mipearson]
+* Elavon gateway: Separate from Viaklix, implement refund & void [duff]
 
 == Version 1.27.0 (August 10, 2012)
 

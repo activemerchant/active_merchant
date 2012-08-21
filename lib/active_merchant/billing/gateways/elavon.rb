@@ -46,7 +46,8 @@ module ActiveMerchant #:nodoc:
         :credit => 'CCCREDIT',
         :refund => 'CCRETURN',
         :authorize => 'CCAUTHONLY',
-        :capture => 'CCFORCE'
+        :capture => 'CCFORCE',
+        :void => 'CCVOID'
       }
 
       # Initialize the Gateway
@@ -128,6 +129,18 @@ module ActiveMerchant #:nodoc:
         add_txn_id(form, identification)
         add_test_mode(form, options)
         commit(:refund, money, form)
+      end
+
+      # Void a previous transaction
+      #
+      # ==== Parameters
+      #
+      # * <tt>authorization</tt> - The authorization returned from the previous request.
+      def void(identification, options = {})
+        form = {}
+        add_txn_id(form, identification)
+        add_test_mode(form, options)
+        commit(:void, nil, form)
       end
 
       # Make a credit to a card.  Use the refund method if you'd like to credit using
