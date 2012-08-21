@@ -68,7 +68,7 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_success purchase
     assert purchase.authorization
 
-    assert refund = @gateway.refund(@amount, purchase.authorization, credit_card: @credit_card)
+    assert refund = @gateway.refund(@amount, purchase.authorization, :credit_card => @credit_card)
     assert_success refund
   end
 

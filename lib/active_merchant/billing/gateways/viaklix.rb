@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
       def credit(money, credit_card, options = {})
         deprecated CREDIT_DEPRECATION_MESSAGE
         raise ArgumentError, "Reference credits are not supported. Please supply the original credit card" if credit_card.is_a?(String)
-        refund(money, "", credit_card: credit_card)
+        refund(money, "", :credit_card => credit_card)
       end
 
       private
