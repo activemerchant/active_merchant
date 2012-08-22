@@ -191,9 +191,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def locale_code(country_code)
-        return country_code unless NON_STANDARD_LOCALE_CODES.keys.include?(country_code)
-
-        NON_STANDARD_LOCALE_CODES[country_code]
+        NON_STANDARD_LOCALE_CODES[country_code] || country_code
       end
     end
   end
