@@ -7,12 +7,16 @@ module ActiveMerchant #:nodoc:
       PERIODIC_API_VERSION = 'spxml-3.0'
 
       class_attribute :test_periodic_url, :live_periodic_url
+      class_attribute :test_direct_entry_url, :live_direct_entry_url
 
       self.test_url = 'https://www.securepay.com.au/test/payment'
       self.live_url = 'https://www.securepay.com.au/xmlapi/payment'
 
       self.test_periodic_url = 'https://test.securepay.com.au/xmlapi/periodic'
       self.live_periodic_url = 'https://api.securepay.com.au/xmlapi/periodic'
+
+      self.test_direct_entry_url = 'https://test.securepay.com.au/xmlapi/directentry'
+      self.live_direct_entry_url = 'https://api.securepay.com.au/xmlapi/directentry'
 
       self.supported_countries = ['AU']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
@@ -39,7 +43,8 @@ module ActiveMerchant #:nodoc:
         :authorization => 10,
         :capture => 11,
         :void => 6,
-        :refund => 4
+        :refund => 4,
+        :direct_entry_debit => 15
       }
 
       PERIODIC_ACTIONS = {
@@ -74,6 +79,25 @@ module ActiveMerchant #:nodoc:
           options[:billing_id] = credit_card_or_stored_id.to_s
           commit_periodic(build_periodic_item(:trigger, money, nil, options))
         end
+      end
+
+      def direct_entry_debit(money, bsb, account_number, account_name, options = {})
+        requires!(options, :order_id)
+
+        xml = Builder::XmlMarkup.new
+
+        xml.tag! 'amount', amount(money)
+        xml.tag! 'currency', options[:currency] || currency(money)
+        xml.tag! 'purchaseOrderNo', options[:order_id].to_s.gsub(/[ ']/, '')
+
+        xml.tag! 'DirectEntryInfo' do
+          xml.tag! 'bsbNumber', bsb
+          xml.tag! 'accountNumber', account_number
+          xml.tag! 'accountName', account_name
+          xml.tag! 'ddaAck', options[:dda_ack] ? 'Yes' : 'No' if options.include?(:dda_ack)
+        end
+
+        commit_direct_entry :direct_entry_debit,  xml.target!
       end
 
       def authorize(money, credit_card, options = {})
@@ -171,12 +195,24 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def commit(action, request)
-        response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request)))
-
+      def build_response response
         Response.new(success?(response), message_from(response), response,
           :test => test?,
           :authorization => authorization_from(response)
+        )
+      end
+
+      def commit(action, request)
+        build_response(
+          parse(
+            ssl_post(test? ? self.test_url : self.live_url, build_request(action, request))
+          )
+        )
+      end
+
+      def commit_direct_entry(action, request)
+        build_response(
+          parse(ssl_post(test? ? self.test_direct_entry_url : self.live_direct_entry_url, build_request(action, request)))
         )
       end
 
@@ -228,13 +264,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit_periodic(request)
-        my_request = build_periodic_request(request)
-        #puts my_request
-        response = parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, my_request))
-
-        Response.new(success?(response), message_from(response), response,
-          :test => test?,
-          :authorization => authorization_from(response)
+        build_response(
+          parse(ssl_post(test? ? self.test_periodic_url : self.live_periodic_url, build_periodic_request(request)))
         )
       end
 
