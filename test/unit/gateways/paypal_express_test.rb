@@ -296,6 +296,18 @@ class PaypalExpressTest < Test::Unit::TestCase
     
     assert_equal 'GB', REXML::XPath.first(xml, '//n2:LocaleCode').text
   end
+
+  def test_handle_non_standard_locale_code
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :locale => 'IL' }))
+    
+    assert_equal 'he_IL', REXML::XPath.first(xml, '//n2:LocaleCode').text
+  end
+
+  def test_does_not_include_locale_in_request_unless_provided_in_options
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { :locale => nil }))
+    
+    assert_nil REXML::XPath.first(xml, '//n2:LocaleCode')
+  end
   
   def test_supported_countries
     assert_equal ['US'], PaypalExpressGateway.supported_countries

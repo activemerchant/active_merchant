@@ -7,7 +7,23 @@ module ActiveMerchant #:nodoc:
     class PaypalExpressGateway < Gateway
       include PaypalCommonAPI
       include PaypalExpressCommon
-      
+
+      NON_STANDARD_LOCALE_CODES = {
+        'DK' => 'da_DK',
+        'IL' => 'he_IL',
+        'ID' => 'id_ID',
+        'JP' => 'jp_JP',
+        'NO' => 'no_NO',
+        'BR' => 'pt_BR',
+        'RU' => 'ru_RU',
+        'SE' => 'sv_SE',
+        'TH' => 'th_TH',
+        'TR' => 'tr_TR',
+        'CN' => 'zh_CN',
+        'HK' => 'zh_HK',
+        'TW' => 'zh_TW'
+      }
+
       self.test_redirect_url = 'https://www.sandbox.paypal.com/cgi-bin/webscr'
       self.supported_countries = ['US']
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside'
@@ -97,7 +113,7 @@ module ActiveMerchant #:nodoc:
               end
               xml.tag! 'n2:NoShipping', options[:no_shipping] ? '1' : '0'
               xml.tag! 'n2:AddressOverride', options[:address_override] ? '1' : '0'
-              xml.tag! 'n2:LocaleCode', options[:locale] unless options[:locale].blank?
+              xml.tag! 'n2:LocaleCode', locale_code(options[:locale]) unless options[:locale].blank?
               xml.tag! 'n2:BrandName', options[:brand_name] unless options[:brand_name].blank?
               # Customization of the payment page
               xml.tag! 'n2:PageStyle', options[:page_style] unless options[:page_style].blank?
@@ -172,6 +188,10 @@ module ActiveMerchant #:nodoc:
 
       def with_money_default(money)
         amount(money).to_f.zero? ? 100 : money
+      end
+
+      def locale_code(country_code)
+        NON_STANDARD_LOCALE_CODES[country_code] || country_code
       end
     end
   end
