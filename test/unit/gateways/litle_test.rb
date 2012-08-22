@@ -527,4 +527,27 @@ class LitleTest < Test::Unit::TestCase
     assert_equal 'Error validating xml data against the schema', responseFrom.message
   end
 
+  def test_in_production_with_test_param_sends_request_to_test_server
+    begin
+      ActiveMerchant::Billing::Base.mode = :production
+      @gateway = LitleGateway.new(
+                   :merchant_id => 'login',
+                   :login => 'login',
+                   :password => 'password',
+                   :test => true
+                 )
+      purchaseResponseObj = {'response' => '000', 'message' => 'successful', 'litleTxnId'=>'123456789012345678'}
+      retObj = {'response'=>'0','saleResponse'=>purchaseResponseObj}
+      LitleOnline::Communications.expects(:http_post).with(anything,has_entry('url', 'https://www.testlitle.com/sandbox/communicator/online')).returns(retObj.to_xml(:root => 'litleOnlineResponse'))
+
+      creditcard = CreditCard.new(@credit_card_options)
+      assert response = @gateway.purchase(@amount, credit_card)
+      assert_instance_of Response, response
+      assert_success response
+      assert response.test?, response.inspect
+    ensure
+      ActiveMerchant::Billing::Base.mode = :test
+    end
+  end
+
 end
