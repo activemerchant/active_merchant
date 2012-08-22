@@ -101,6 +101,10 @@ module ActiveMerchant #:nodoc:
         build_response(:registerToken, @litle.register_token_request(to_pass), %w(801 802))
       end
 
+      def test?
+        super || @options[:test]
+      end
+
       private
 
       CARD_TYPE = {
@@ -148,10 +152,11 @@ module ActiveMerchant #:nodoc:
             {:litleOnlineResponse => response},
             :authorization => detail['litleTxnId'],
             :avs_result => {:code => fraud['avs']},
-            :cvv_result => fraud['cvv']
+            :cvv_result => fraud['cvv'],
+            :test => test?
           )
         else
-          Response.new(false, response['message'], :litleOnlineResponse => response)
+          Response.new(false, response['message'], :litleOnlineResponse => response, :test => test?)
         end
       end
 
