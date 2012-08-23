@@ -187,6 +187,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Suomen Maksuturva](https://www.maksuturva.fi/services/vendor_services/integration_guidelines.html)
 * [Valitor](http://www.valitor.is/) - IS
 * [Verkkomaksut](http://www.verkkomaksut.fi) - FI
+* [WebMoney](http://www.webmoney.ru) - RU
 * [WebPay](http://webpay.by/)
 * [WorldPay](http://www.worldpay.com)
 
