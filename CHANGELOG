@@ -1,5 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.28.0 (August 10, 2012)
+
+* PayPal Express: support non standard locale codes [Soleone]
+* Litle: allow setting test mode per transaction [jduff]
 * Add Banwire gateway [acolin]
 * Authorize.Net CIM gateway: Move cardCode after order to comply with the XSD [davetron5000]
 * Add WebMoney integration [Mehonoshin]
