@@ -19,7 +19,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(50, credit_card, :order_id => '1')
     assert_instance_of Response, response
     assert_success response
-    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416', response.authorization
+    assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
   end
 
   def test_unauthenticated_response
@@ -55,7 +55,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_order_id_format_for_capture
     response = stub_comms do
-      @gateway.capture(101, credit_card, :order_id => "#1001.1")
+      @gateway.capture(101, "4A5398CF9B87744GG84A1D30F2F2321C66249416;1001.1", :order_id => "#1001.1")
     end.check_request do |endpoint, data, headers|
       assert_match /<OrderID>1001-1<\/OrderID>/, data
     end.respond_with(successful_purchase_response)

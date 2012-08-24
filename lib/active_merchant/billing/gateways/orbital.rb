@@ -179,6 +179,14 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def authorization_string(*args)
+        args.compact.join(";")
+      end
+
+      def split_authorization(authorization)
+        authorization.split(';')
+      end
+
       def add_customer_data(xml, options)
         if options[:profile_txn]
           xml.tag! :CustomerRefNum, options[:customer_ref_num]
@@ -291,10 +299,11 @@ module ActiveMerchant #:nodoc:
         begin response = request.call; rescue ConnectionError; retry end
 
         Response.new(success?(response), message_from(response), response,
-          {:authorization => response[:tx_ref_num],
-           :test => self.test?,
-           :avs_result => {:code => response[:avs_resp_code]},
-           :cvv_result => response[:cvv2_resp_code]
+          {
+             :authorization => authorization_string(response[:tx_ref_num], response[:order_id]),
+             :test => self.test?,
+             :avs_result => {:code => response[:avs_resp_code]},
+             :cvv_result => response[:cvv2_resp_code]
           }
         )
       end
@@ -350,7 +359,8 @@ module ActiveMerchant #:nodoc:
 
             # Append Transaction Reference Number at the end for Refund transactions
             if action == "R"
-              xml.tag! :TxRefNum, parameters[:authorization]
+              tx_ref_num, _ = split_authorization(parameters[:authorization])
+              xml.tag! :TxRefNum, tx_ref_num
             end
           end
         end
@@ -368,28 +378,30 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_mark_for_capture_xml(money, authorization, parameters = {})
+        tx_ref_num, order_id = split_authorization(authorization)
         xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :MarkForCapture do
             add_xml_credentials(xml)
-            xml.tag! :OrderID, format_order_id(parameters[:order_id])
+            xml.tag! :OrderID, format_order_id(order_id)
             xml.tag! :Amount, amount(money)
             add_bin_merchant_and_terminal(xml, parameters)
-            xml.tag! :TxRefNum, authorization
+            xml.tag! :TxRefNum, tx_ref_num
           end
         end
         xml.target!
       end
 
       def build_void_request_xml(money, authorization, parameters = {})
+        tx_ref_num, order_id = split_authorization(authorization)
         xml = xml_envelope
         xml.tag! :Request do
           xml.tag! :Reversal do
             add_xml_credentials(xml)
-            xml.tag! :TxRefNum, authorization
+            xml.tag! :TxRefNum, tx_ref_number
             xml.tag! :TxRefIdx, parameters[:transaction_index]
             xml.tag! :AdjustedAmt, amount(money)
-            xml.tag! :OrderID, format_order_id(parameters[:order_id])
+            xml.tag! :OrderID, format_order_id(order_id || parameters[:order_id])
             add_bin_merchant_and_terminal(xml, parameters)
           end
         end
