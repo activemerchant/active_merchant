@@ -122,6 +122,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {:trans_id => authorization}
         add_customer_data(post, options)
+        add_invoice(post, options)
         commit('PRIOR_AUTH_CAPTURE', money, post)
       end
 
