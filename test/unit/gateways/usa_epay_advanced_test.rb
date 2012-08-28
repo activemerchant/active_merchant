@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'test_helper'
 require 'logger'
 
@@ -773,7 +774,8 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
   def successful_get_account_details
     <<-XML
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:getAccountDetailsResponse><getAccountDetailsReturn xsi:type="ns1:AccountDetails"><CardholderAuthentication xsi:type="xsd:string">Disabled</CardholderAuthentication><CheckPlatform xsi:type="xsd:string">TestBed</CheckPlatform><CreditCardPlatform xsi:type="xsd:string">Test Bed</CreditCardPlatform><DebitCardSupport xsi:type="xsd:boolean">false</DebitCardSupport><DirectPayPlatform xsi:type="xsd:string">Disabled</DirectPayPlatform><Industry xsi:type="xsd:string">eCommerce</Industry><SupportedCurrencies SOAP-ENC:arrayType="ns1:CurrencyObject[0]" xsi:type="ns1:CurrencyObjectArray"/></getAccountDetailsReturn></ns1:getAccountDetailsResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:getAccountDetailsResponse><getAccountDetailsReturn xsi:type="ns1:AccountDetails"><CardholderAuthentication xsi:type="xsd:string">Disabled</CardholderAuthentication>
+<CheckPlatform xsi:type="xsd:string">TestBed</CheckPlatform><CreditCardPlatform xsi:type="xsd:string">Test Bed</CreditCardPlatform><DebitCardSupport xsi:type="xsd:boolean">false</DebitCardSupport><DirectPayPlatform xsi:type="xsd:string">Disabled</DirectPayPlatform><Industry xsi:type="xsd:string">eCommerce</Industry><SupportedCurrencies SOAP-ENC:arrayType="ns1:CurrencyObject[0]" xsi:type="ns1:CurrencyObjectArray"/></getAccountDetailsReturn></ns1:getAccountDetailsResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
     XML
   end
   
