@@ -392,7 +392,7 @@ module ActiveMerchant #:nodoc:
         if shipping_address = options[:shipping_address] 
 
           params[:shipping] = {}
-          params[:shipping][:name]      = shipping_address[:name] || creditcard ? creditcard.name : nil
+          params[:shipping][:name]      = shipping_address[:name] || (creditcard ? creditcard.name : nil)
           params[:shipping][:address1]  = shipping_address[:address1] unless shipping_address[:address1].blank?
           params[:shipping][:address2]  = shipping_address[:address2] unless shipping_address[:address2].blank?
           params[:shipping][:city]      = shipping_address[:city]     unless shipping_address[:city].blank?
