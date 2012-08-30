@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Authorize.Net gateway: Support description and order_id for capture [ntalbott]
+* Add Mercury gateway [adr1anx, opendining]
 
 == Version 1.28.0 (August 10, 2012)
 

@@ -176,6 +176,11 @@ merchant_ware:
  password:
  name:
 
+# Working credentials, no need to replace
+mercury:
+  login: '595901'
+  password: 'xyz'
+
 metrics_global:
   login: 'demo'
   password: 'password'
