@@ -269,7 +269,8 @@ module ActiveMerchant #:nodoc:
         url = test? ? self.test_url : self.live_url
         data = ssl_post url, post_data(action, parameters)
 
-        response = parse(data)
+        response          = parse(data)
+        response[:action] = action
 
         message = message_from(response)
 
