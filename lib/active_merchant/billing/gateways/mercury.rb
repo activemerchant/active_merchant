@@ -233,7 +233,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'AcctNo', credit_card.number
             xml.tag! 'ExpDate', expdate(credit_card)
           end
-          xml.tag! 'CardType', CARD_CODES[credit_card.type] if credit_card.type
+          xml.tag! 'CardType', CARD_CODES[credit_card.brand] if credit_card.brand
           xml.tag! 'CVVData', credit_card.verification_value if credit_card.verification_value
         end
       end

@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class MercuryTest < Test::Unit::TestCase
+class MercuryPrepaidTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
     
