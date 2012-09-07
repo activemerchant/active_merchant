@@ -7,6 +7,12 @@ class WebmoneyNotificationTest < Test::Unit::TestCase
     @webmoney = Webmoney::Notification.new(http_raw_data, :secret => 'qert1234qee')
   end
 
+  def test_accessors
+    assert_equal "1.00", @webmoney.gross
+    assert_equal "123",  @webmoney.item_id
+    assert_equal BigDecimal.new("1"), @webmoney.amount
+  end
+
   def test_acknowledgement
     assert @webmoney.acknowledge
   end
