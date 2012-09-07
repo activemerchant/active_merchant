@@ -9,8 +9,20 @@ module ActiveMerchant #:nodoc:
             (params.has_key?('LMI_PAYMENT_NO') && params.has_key?('LMI_PAYMENT_AMOUNT'))
           end
 
+          def amount
+            BigDecimal.new(gross)
+          end
+
           def key_present?
             params["LMI_HASH"].present?
+          end
+
+          def item_id
+            params['LMI_PAYMENT_NO']
+          end
+
+          def gross
+            params['LMI_PAYMENT_AMOUNT']
           end
 
           def security_key
