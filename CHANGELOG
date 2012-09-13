@@ -5,6 +5,7 @@
 * Webmoney integration: Add gross, item_id, and amount accessors to notification [fr33z3]
 * Fix running tests under ActiveSupport 2.3.14 [ntalbott]
 * SagePay Form integration: Remove dependency on ActiveSupport's String#truncate [ntalbott]
+* Elavon gateway: Add support for the sales tax parameter [stevestmartin]
 
 == Version 1.28.0 (August 10, 2012)
 
