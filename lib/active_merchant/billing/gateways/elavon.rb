@@ -209,7 +209,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_salestax(form, options)
-        form[:salestax] = options[:sales_tax].presence || 0
+        form[:salestax] = options[:tax].presence || 0
       end
 
       def expdate(creditcard)
