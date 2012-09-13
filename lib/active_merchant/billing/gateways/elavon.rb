@@ -69,7 +69,8 @@ module ActiveMerchant #:nodoc:
 
       # Make a purchase
       def purchase(money, creditcard, options = {})
-        form = options[:form] || {}
+        form = {}
+        add_salestax(form, options)
         add_invoice(form, options)
         add_creditcard(form, creditcard)
         add_address(form, options)
@@ -86,7 +87,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>options</tt>
       #   * <tt>:billing_address</tt> - The billing address for the cardholder.
       def authorize(money, creditcard, options = {})
-        form = options[:form] || {}
+        form = {}
+        add_salestax(form, options)
         add_invoice(form, options)
         add_creditcard(form, creditcard)
         add_address(form, options)
@@ -105,7 +107,8 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         requires!(options, :credit_card)
 
-        form = options[:form] || {}
+        form = {}
+        add_salestax(form, options)
         add_approval_code(form, authorization)
         add_invoice(form, options)
         add_creditcard(form, options[:credit_card])
@@ -125,7 +128,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>identification</tt> -- The ID of the original transaction against which the refund is being issued.
       # * <tt>options</tt> -- A hash of parameters.
       def refund(money, identification, options = {})
-        form = options[:form] || {}
+        form = {}
         add_txn_id(form, identification)
         add_test_mode(form, options)
         commit(:refund, money, form)
@@ -137,7 +140,7 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>authorization</tt> - The authorization returned from the previous request.
       def void(identification, options = {})
-        form = options[:form] || {}
+        form = {}
         add_txn_id(form, identification)
         add_test_mode(form, options)
         commit(:void, nil, form)
@@ -155,7 +158,7 @@ module ActiveMerchant #:nodoc:
           raise ArgumentError, "Reference credits are not supported. Please supply the original credit card or use the #refund method."
         end
 
-        form = options[:form] || {}
+        form = {}
         add_invoice(form, options)
         add_creditcard(form, creditcard)
         add_address(form, options)
@@ -203,6 +206,10 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(form, options)
         form[:email] = options[:email].to_s.slice(0, 100) unless options[:email].blank?
         form[:customer_code] = options[:customer].to_s.slice(0, 10) unless options[:customer].blank?
+      end
+
+      def add_salestax(form, options)
+        form[:salestax] = options[:sales_tax].presence || 0
       end
 
       def expdate(creditcard)
