@@ -202,6 +202,9 @@ commit 'ManageRecurringPaymentsProfileStatus', build_manage_profile_request(prof
               if options.has_key?(:start_date)
                 xml.tag! 'n2:BillingStartDate', (options[:start_date].is_a?(Date) ? options[:start_date].to_time : options[:start_date]).utc.iso8601
               end
+              if options.has_key?(:outstanding_balance)
+                xml.tag! 'n2:OutstandingBalance', amount(options[:outstanding_balance]), 'currencyID' => options[:currency] || 'USD'
+              end
             end
           end
         end
