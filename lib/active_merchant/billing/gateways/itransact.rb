@@ -217,7 +217,11 @@ module ActiveMerchant #:nodoc:
       #    :test_mode => true
       #  )
       #
-      def void(money, authorization, options = {})
+      def void(*args)
+	raise ArgumentException("Void accepts 1-3 arguments.  #{args.size} provided") if args.size < 1 or args.size > 3
+	options = {}
+	options = args.pop if args.last.is_a?(Hash)
+	authorization = args.pop
         payload = Nokogiri::XML::Builder.new do |xml|
           xml.VoidTransaction {
             xml.OperationXID(authorization)
@@ -232,7 +236,7 @@ module ActiveMerchant #:nodoc:
       # This will reverse a previously run transaction which *has* settled.
       #
       # ==== Parameters
-      # * <tt>money</tt> - The amount to be credited. Should be <tt>nil</tt> or an Integer amount in cents
+      # * <tt>money</tt> - The amount to be credited. Should be an Integer amount in cents
       # * <tt>authorization</tt> - The authorization returned from the previous capture or purchase request
       # * <tt>options</tt> - A Hash of options, all are optional
       #
@@ -245,7 +249,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:test_mode</tt> - <tt>true</tt> or <tt>false</tt>. Runs the transaction with the 'TestMode' element set to 'TRUE' or 'FALSE'.
       #
       # ==== Examples
-      #  response = gateway.credit(nil, '9999999999',
+      #  response = gateway.refund(555, '9999999999',
       #    :vendor_data => [{'repId' => '1234567'}, {'customerId' => '9886'}],
       #    :send_customer_email => true,
       #    :send_merchant_email => true,
@@ -253,9 +257,9 @@ module ActiveMerchant #:nodoc:
       #    :test_mode => true
       #  )
       #
-      def credit(money, authorization, options = {})
+      def refund(money, authorization, options = {})
         payload = Nokogiri::XML::Builder.new do |xml|
-          xml.TranCreditTransaction {
+          xml.TranCredTransaction {
             xml.OperationXID(authorization)
             add_invoice(xml, money, options)
             add_transaction_control(xml, options)

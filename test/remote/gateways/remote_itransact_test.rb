@@ -60,14 +60,25 @@ class RemoteItransactTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_credit
-    assert credit = @gateway.void(nil, '9999999999')
-    assert_success credit
+  def test_void
+    assert void = @gateway.void(nil, '9999999999')
+    assert_success void
   end
 
-  def test_credit_partial
-    assert credit = @gateway.void(5.55, '9999999999')
-    assert_success credit
+  def test_void_partial
+    assert void = @gateway.void(5.55, '9999999999')
+    assert_success void
+  end
+
+# As of Sep 19, 2012, iTransact REQUIRES the total amount for the refund.
+#  def test_refund
+#    assert refund = @gateway.refund(nil, '9999999999')
+#    assert_success refund
+#  end
+
+  def test_refund_partial
+    assert refund = @gateway.refund(555, '9999999999') # $5.55 in cents
+    assert_success refund
   end
 
   def test_invalid_login
