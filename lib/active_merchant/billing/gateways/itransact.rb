@@ -218,10 +218,10 @@ module ActiveMerchant #:nodoc:
       #  )
       #
       def void(*args)
-	raise ArgumentException("Void accepts 1-3 arguments.  #{args.size} provided") if args.size < 1 or args.size > 3
-	options = {}
-	options = args.pop if args.last.is_a?(Hash)
-	authorization = args.pop
+        raise ArgumentException("Void accepts 1-3 arguments.  #{args.size} provided") if args.size < 1 or args.size > 3
+        options = {}
+        options = args.pop if args.last.respond_to?(:has_key?) # last arg is options if it's hash-like
+        authorization = args.pop # always have this.
         payload = Nokogiri::XML::Builder.new do |xml|
           xml.VoidTransaction {
             xml.OperationXID(authorization)
