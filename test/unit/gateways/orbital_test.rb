@@ -224,10 +224,6 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
   
-  def test_retry_limit
-    
-  end
-
   private
 
   # Place raw successful response from gateway here
