@@ -56,17 +56,12 @@ class RemoteItransactTest < Test::Unit::TestCase
     assert_success response
     assert_nil response.message
     assert response.authorization
-    assert capture = @gateway.void(nil, response.authorization)
+    assert capture = @gateway.void(response.authorization)
     assert_success capture
   end
 
   def test_void
-    assert void = @gateway.void(nil, '9999999999')
-    assert_success void
-  end
-
-  def test_void_partial
-    assert void = @gateway.void(5.55, '9999999999')
+    assert void = @gateway.void('9999999999')
     assert_success void
   end
 

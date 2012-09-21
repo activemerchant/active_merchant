@@ -196,7 +196,6 @@ module ActiveMerchant #:nodoc:
       # This will reverse a previously run transaction which *has* *not* settled.
       #
       # ==== Parameters
-      # * <tt>money</tt> - This parameter is ignored -- the PaymentClearing gateway does not allow partial voids.
       # * <tt>authorization</tt> - The authorization returned from the previous capture or purchase request
       # * <tt>options</tt> - A Hash of options, all are optional
       #
@@ -209,7 +208,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:test_mode</tt> - <tt>true</tt> or <tt>false</tt>. Runs the transaction with the 'TestMode' element set to 'TRUE' or 'FALSE'.
       #
       # ==== Examples
-      #  response = gateway.void(nil, '9999999999',
+      #  response = gateway.void('9999999999',
       #    :vendor_data => [{'repId' => '1234567'}, {'customerId' => '9886'}],
       #    :send_customer_email => true,
       #    :send_merchant_email => true,
@@ -217,11 +216,7 @@ module ActiveMerchant #:nodoc:
       #    :test_mode => true
       #  )
       #
-      def void(*args)
-        raise ArgumentException("Void accepts 1-3 arguments.  #{args.size} provided") if args.size < 1 or args.size > 3
-        options = {}
-        options = args.pop if args.last.respond_to?(:has_key?) # last arg is options if it's hash-like
-        authorization = args.pop # always have this.
+      def void(authorization, options = {})
         payload = Nokogiri::XML::Builder.new do |xml|
           xml.VoidTransaction {
             xml.OperationXID(authorization)
