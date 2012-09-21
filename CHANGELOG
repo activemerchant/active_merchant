@@ -23,6 +23,7 @@
 * Add A1Agregator integration [england]
 * Refactored handling of #test? and @options [ntalbott]
 * Realex gateway: Realex gateway: Fix billing address format [ntalbott]
+* Orbital gateway: handle custom AVS response codes [jonm-okc]
 
 == Version 1.28.0 (August 10, 2012)
 
