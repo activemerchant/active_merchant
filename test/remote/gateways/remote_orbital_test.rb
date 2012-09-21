@@ -3,7 +3,7 @@ require "test_helper.rb"
 class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
-    @gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital))
+    @gateway = ActiveMerchant::Billing::OrbitalGateway.new(fixtures(:orbital_gateway))
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
