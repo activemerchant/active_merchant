@@ -1,4 +1,5 @@
 require File.dirname(__FILE__) + '/orbital/orbital_soft_descriptors.rb'
+require File.dirname(__FILE__) + '/orbital/orbital_avs_result.rb'
 require "rexml/document"
 
 module ActiveMerchant #:nodoc:
@@ -302,7 +303,7 @@ module ActiveMerchant #:nodoc:
           {
              :authorization => authorization_string(response[:tx_ref_num], response[:order_id]),
              :test => self.test?,
-             :avs_result => {:code => response[:avs_resp_code]},
+             :avs_result => OrbitalAVSResult.new(response[:avs_resp_code]),
              :cvv_result => response[:cvv2_resp_code]
           }
         )
