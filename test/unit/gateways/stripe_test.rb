@@ -103,6 +103,7 @@ class StripeTest < Test::Unit::TestCase
     assert_equal @options[:billing_address][:address1], post[:card][:address_line1]
     assert_equal @options[:billing_address][:address2], post[:card][:address_line2]
     assert_equal @options[:billing_address][:country], post[:card][:address_country]
+    assert_equal @options[:billing_address][:city], post[:card][:address_city]
   end
 
   def test_ensure_does_not_respond_to_credit
