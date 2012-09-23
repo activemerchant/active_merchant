@@ -8,6 +8,7 @@
 * Elavon gateway: Add support for the sales tax parameter [stevestmartin]
 * Add WebPay gateway [keikubo]
 * iTransact gateway: make void API consistent [frobcode]
+* Stripe gateway: Pass city in add_address [npverni]
 
 == Version 1.28.0 (August 10, 2012)
 
