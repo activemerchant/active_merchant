@@ -130,7 +130,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
     str = <<-XML
 <ccAuthRequestV1 xmlns>
   <merchantAccount>
-    <accountNum></accountNum>
+    <accountNum/>
     <storeID>login</storeID>
     <storePwd>password</storePwd>
   </merchantAccount>
@@ -160,14 +160,14 @@ class OptimalPaymentTest < Test::Unit::TestCase
   </billingDetails>
 </ccAuthRequestV1>
     XML
-    Regexp.new(Regexp.escape(str).sub('xmlns', '[^>]+'))
+    Regexp.new(Regexp.escape(str).sub('xmlns', '[^>]+').sub('\\/>', '(/>|></[^>]+>)'))
   end
 
   def minimal_request
     str = <<-XML
 <ccAuthRequestV1 xmlns>
   <merchantAccount>
-    <accountNum></accountNum>
+    <accountNum/>
     <storeID>login</storeID>
     <storePwd>password</storePwd>
   </merchantAccount>
@@ -187,7 +187,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
   </billingDetails>
 </ccAuthRequestV1>
     XML
-    Regexp.new(Regexp.escape(str).sub('xmlns', '[^>]+'))
+    Regexp.new(Regexp.escape(str).sub('xmlns', '[^>]+').sub('\\/>', '(/>|></[^>]+>)'))
   end
 
   # Place raw successful response from gateway here
