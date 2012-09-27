@@ -6,13 +6,13 @@ module ActiveMerchant #:nodoc:
       module SagePayForm
         class Helper < ActiveMerchant::Billing::Integrations::Helper
           include Encryption
-          
+
           mapping :credential2, 'EncryptKey'
-          
+
           mapping :account, 'Vendor'
           mapping :amount, 'Amount'
           mapping :currency, 'Currency'
-        
+
           mapping :order, 'VendorTxCode'
 
           mapping :customer,
@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
             crypt_skip << 'CustomerEMail' unless fields['SendEmail']
             key = fields['EncryptKey']
             @crypt ||= create_crypt_field(fields.except(*crypt_skip), key)
-            
+
             {
               'VPSProtocol' => '2.23',
               'TxType' => 'PAYMENT',
@@ -89,7 +89,7 @@ module ActiveMerchant #:nodoc:
 
           def sanitize(key, value)
             reject = exact = nil
-            
+
             case key
             when /URL$/
               # allow all
@@ -108,11 +108,11 @@ module ActiveMerchant #:nodoc:
             when /State$/
               exact = /^[A-Z]{2}$/
             when 'Description'
-              value = value.truncate(100)
+              value = value[0...100]
             else
               reject = /&+/
             end
-            
+
             if exact
               raise ArgumentError, "Invalid value for #{key}: #{value.inspect}" unless value =~ exact
               value
