@@ -70,6 +70,7 @@ module ActiveMerchant #:nodoc:
       # Make a purchase
       def purchase(money, creditcard, options = {})
         form = {}
+        add_salestax(form, options)
         add_invoice(form, options)
         add_creditcard(form, creditcard)
         add_address(form, options)
@@ -87,6 +88,7 @@ module ActiveMerchant #:nodoc:
       #   * <tt>:billing_address</tt> - The billing address for the cardholder.
       def authorize(money, creditcard, options = {})
         form = {}
+        add_salestax(form, options)
         add_invoice(form, options)
         add_creditcard(form, creditcard)
         add_address(form, options)
@@ -106,6 +108,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :credit_card)
 
         form = {}
+        add_salestax(form, options)
         add_approval_code(form, authorization)
         add_invoice(form, options)
         add_creditcard(form, options[:credit_card])
@@ -203,6 +206,10 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(form, options)
         form[:email] = options[:email].to_s.slice(0, 100) unless options[:email].blank?
         form[:customer_code] = options[:customer].to_s.slice(0, 10) unless options[:customer].blank?
+      end
+
+      def add_salestax(form, options)
+        form[:salestax] = options[:tax]
       end
 
       def expdate(creditcard)
