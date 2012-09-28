@@ -13,8 +13,6 @@ group :remote_test do
 end
 
 group :test, :remote_test do
-  gem 'rails', '~> 3.1.8'
-
   # gateway-specific dependencies, keeping these gems out of the gemspec
   gem 'samurai', '>= 0.2.25'
   gem 'braintree', '>= 2.0.0'
