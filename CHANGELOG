@@ -20,6 +20,7 @@
 * HDFC gateway: Pass phone number in UDF3 [ntalbott]
 * HDFC gateway: Fix unescaped '&' entity in XML [ntalbott]
 * HDFC gateway: More robust entity fixing [ntalbott]
+* Add A1Agregator integration [england]
 
 == Version 1.28.0 (August 10, 2012)
 
