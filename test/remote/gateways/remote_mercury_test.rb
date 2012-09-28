@@ -54,7 +54,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert_equal '1.00', visa_capture.params['authorize']
   end
 
-  def test_mastercard_pre_auth_and_capture_with_void_sale_swipe
+  def test_mastercard_pre_auth_and_capture_with_refund
     order_id = 501
     assert mc_response = @gateway.authorize(200, @mc, @options.merge(:order_id => order_id))
     assert_success mc_response
@@ -64,11 +64,11 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert_success mc_capture
     assert_equal '2.00', mc_capture.params['authorize']
 
-    assert void_response = @gateway.void(200, mc_capture.authorization, :credit_card => @mc)
+    assert refund_response = @gateway.refund(200, mc_capture.authorization, :credit_card => @mc)
 
-    assert_success void_response
-    assert_equal '2.00', void_response.params['purchase']
-    assert_equal 'VoidSale', void_response.params['tran_code']
+    assert_success refund_response
+    assert_equal '2.00', refund_response.params['purchase']
+    assert_equal 'VoidSale', refund_response.params['tran_code']
   end
 
   def test_visa_pre_auth_and_capture_manual
@@ -108,7 +108,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert_equal '2.01', response.params['purchase']
   end
 
-  def test_discover_pre_auth_and_capture_and_adjust_manual
+  def test_discover_pre_auth_and_capture
     order_id = 506
     assert response = @gateway.authorize(225, @discover, @options_with_billing.merge(:order_id => order_id))
     assert_success response
@@ -117,23 +117,6 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert capture = @gateway.capture(225, response.authorization, :credit_card => @discover)
     assert_success capture
     assert_equal '2.25', capture.params['authorize']
-
-    assert adjustment = @gateway.adjust(225, capture.authorization, @options.merge(:tip => 175, :credit_card => @discover))
-    assert_success adjustment
-    assert_equal '4.00', adjustment.params['authorize']
-  end
-
-  def test_visa_return_void_return_swipe
-    order_id = 507
-    assert response = @gateway.credit(375, @visa, @options.merge(:order_id => order_id))
-    assert_success response
-    assert_equal '3.75', response.params['purchase']
-
-    assert void_response = @gateway.void(375, response.authorization, :void => 'VoidReturn', :credit_card => @visa)
-
-    assert_success void_response
-    assert_equal '3.75', void_response.params['purchase']
-    assert_equal 'VoidReturn', void_response.params['tran_code']
   end
 
   def test_mastercard_return_manual
@@ -208,7 +191,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert capture = @gateway.capture(2000, response.authorization, :credit_card => @visa_partial_card)
     assert_success capture
 
-    assert reverse = @gateway.void(2000, capture.authorization, :credit_card => @visa_partial_card)
+    assert reverse = @gateway.refund(2000, capture.authorization, :credit_card => @visa_partial_card)
     assert_success reverse
   end
 
@@ -220,9 +203,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert capture = @gateway.capture(2000, response.authorization, :credit_card => @discover)
     assert_success capture
 
-    assert reverse = @gateway.void(2000,
-      capture.authorization,
-      :credit_card => @discover)
+    assert reverse = @gateway.refund(2000, capture.authorization, :credit_card => @discover)
     assert_success reverse
   end
 end

@@ -46,18 +46,18 @@ class MercuryTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_void
+  def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
 
-    @gateway.expects(:ssl_post).returns(successful_void_response)
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    assert void_response = @gateway.void(@amount, response.authorization, :credit_card => @credit_card)
+    assert refund_response = @gateway.refund(@amount, response.authorization, :credit_card => @credit_card)
 
-    assert_instance_of Response, void_response
-    assert_success void_response
-    assert void_response.test?
+    assert_instance_of Response, refund_response
+    assert_success refund_response
+    assert refund_response.test?
   end
 
   private
@@ -115,7 +115,7 @@ class MercuryTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_void_response
+  def successful_refund_response
     <<-RESPONSE
 <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><CreditTransactionResponse xmlns="http://www.mercurypay.com"><CreditTransactionResult>&lt;?xml version="1.0"?&gt;
 &lt;RStream&gt;

@@ -40,14 +40,6 @@ module ActiveMerchant #:nodoc:
         commit('PreAuth', request)
       end
 
-      def void(money, authorization, options = {})
-        requires!(options, :credit_card)
-
-        options[:void] ||= 'VoidSale'
-        request = build_authorized_request(options[:void], money, authorization, options[:credit_card], options)
-        commit(options[:void], request)
-      end
-
       def capture(money, authorization, options = {})
         requires!(options, :credit_card)
         options[:authorized] ||= money
@@ -55,11 +47,11 @@ module ActiveMerchant #:nodoc:
         commit('PreAuthCapture', request)
       end
 
-      def adjust(money, authorization, options = {})
+      def refund(money, authorization, options = {})
         requires!(options, :credit_card)
 
-        request = build_authorized_request('Adjust', money, authorization, options[:credit_card], options)
-        commit('Adjust', request)
+        request = build_authorized_request('VoidSale', money, authorization, options[:credit_card], options)
+        commit(options[:void], request)
       end
 
       def test?
@@ -202,11 +194,6 @@ module ActiveMerchant #:nodoc:
           else
             response[node.name.underscore.to_sym] = node.text
           end
-        end
-
-        # have to handle batch functions
-        xml.elements.each("//BatchSummary/*") do |node|
-          response[node.name.underscore.to_sym] = node.text
         end
       end
 
