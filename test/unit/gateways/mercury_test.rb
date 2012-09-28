@@ -7,27 +7,13 @@ class MercuryTest < Test::Unit::TestCase
     @gateway = MercuryGateway.new(fixtures(:mercury))
 
     @amount = 100
-    @credit_card = CreditCard.new(
-      :brand               => "master",
-      :number              => "5499990123456781", # Use a generated CC from the paypal Sandbox
-      :verification_value  => "123",
-      :month               => 8,
-      :year                => 2013,
-      :first_name          => 'Fred',
-      :last_name           => 'Brooks'
-    )
+    @credit_card = credit_card(brand: "master", number: "5499990123456781")
     @declined_card = credit_card('4000300011112220')
 
     @options = {
       :order_id => '1',
-      :invoice => '123',
-      :merchant => '999',
-      :billing_address => {
-        :address1 => '4 Corporate Square',
-        :zip => '30329'
-      }
+      :invoice => '123'
     }
-
   end
 
   def test_successful_purchase
