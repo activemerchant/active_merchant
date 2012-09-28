@@ -161,8 +161,18 @@ module ActiveMerchant #:nodoc:
         private
 
           def signature
-            implicated_params = params.reject { |key| key == 'check' }
-            Digest::MD5.hexdigest(implicated_params.values.join + @options[:secret])
+            data = "#{params['tid']}\
+#{params['name']}\
+#{params['comment']}\
+#{params['partner_id']}\
+#{params['service_id']}\
+#{params['order_id']}\
+#{params['type']}\
+#{params['partner_income']}\
+#{params['system_income']}\
+#{params['test']}\
+#{@options[:secret]}"
+            Digest::MD5.hexdigest(data)
           end
 
           def guess_notification_type
