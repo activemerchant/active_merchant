@@ -1,6 +1,9 @@
 source :rubygems
 gemspec
 
+gem 'activesupport', '3.2.8'
+gem 'rails', '3.2.8'
+
 group :test do
   gem 'json-jruby', :platforms => :jruby
   gem 'jruby-openssl', :platforms => :jruby
