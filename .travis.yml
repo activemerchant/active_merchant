@@ -5,6 +5,12 @@ rvm:
   - rbx
   - ree
 
+gemfiles:
+  - Gemfile
+  - Gemfile_rails31
+  - Gemfile_rails30
+  - Gemfile_rails23
+
 script: "bundle exec rake test:units"
 
 notifications:
