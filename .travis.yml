@@ -5,7 +5,7 @@ rvm:
   - rbx
   - ree
 
-gemfiles:
+gemfile:
   - Gemfile
   - Gemfile_rails31
   - Gemfile_rails30
