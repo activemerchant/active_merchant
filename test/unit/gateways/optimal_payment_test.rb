@@ -124,6 +124,20 @@ class OptimalPaymentTest < Test::Unit::TestCase
     end
   end
 
+  def test_avs_result_in_response
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response.avs_result['code']
+  end
+
+  def test_cvv_result_in_response
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response.cvv_result['code']
+  end
+
   private
 
   def full_request

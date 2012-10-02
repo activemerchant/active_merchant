@@ -95,7 +95,9 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful?(response), message_from(response), hash_from_xml(response),
           :test          => test?,
-          :authorization => authorization_from(response)
+          :authorization => authorization_from(response),
+          :avs_result => { :code => avs_result_from(response) },
+          :cvv_result => cvv_result_from(response)
         )
       end
 
@@ -114,6 +116,14 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         REXML::XPath.first(response, '//confirmationNumber').text rescue nil
+      end
+
+      def avs_result_from(response)
+        REXML::XPath.first(response, '//avsResponse').text rescue nil
+      end
+
+      def cvv_result_from(response)
+        REXML::XPath.first(response, '//cvdResponse').text rescue nil
       end
 
       def hash_from_xml(response)
