@@ -126,6 +126,10 @@ first_pay:
   login:
   password:
 
+firstdata_e4:
+  login:
+  password:
+
 garanti:
   login: "PROVAUT"
   terminal_id: 111995
