@@ -76,9 +76,12 @@ module ActiveMerchant #:nodoc:
         map
       end
 
+      def self.messages
+        CODES
+      end
 
       def initialize(code)
-        @code = code.to_s.strip.upcase if code
+        @code = code.to_s.strip.upcase unless code.blank?
         if @code
           @message      = CODES[@code]
           @postal_match = ORBITAL_POSTAL_MATCH_CODE[@code]
