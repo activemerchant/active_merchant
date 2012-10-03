@@ -12,13 +12,13 @@ Gem::Specification.new do |s|
   s.email = 'tobi@leetsoft.com'
   s.homepage = 'http://activemerchant.org/'
   s.rubyforge_project = 'activemerchant'
-  
+
   s.files = Dir['CHANGELOG', 'README.md', 'MIT-LICENSE', 'CONTRIBUTORS', 'gem-public_cert.pem', 'lib/**/*', 'vendor/**/*']
   s.require_path = 'lib'
-  
+
   s.has_rdoc = true if Gem::VERSION < '1.7.0'
-  
-  s.add_dependency('activesupport', '>= 2.3.11')
+
+  s.add_dependency('activesupport', '>= 2.3.14')
   s.add_dependency('i18n')
   s.add_dependency('money')
   s.add_dependency('builder', '>= 2.0.0')
@@ -28,7 +28,7 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency('rake')
   s.add_development_dependency('mocha', '~> 0.11.3')
-  s.add_development_dependency('rails', '>= 2.3.11')
+  s.add_development_dependency('rails', '>= 2.3.14')
   s.add_development_dependency('rubigen')
   s.signing_key = ENV['GEM_PRIVATE_KEY']
   s.cert_chain  = ['gem-public_cert.pem']

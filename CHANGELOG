@@ -2,6 +2,16 @@
 
 * Authorize.Net gateway: Support description and order_id for capture [ntalbott]
 * Add Mercury gateway [adr1anx, opendining]
+* Webmoney integration: Add gross, item_id, and amount accessors to notification [fr33z3]
+* Fix running tests under ActiveSupport 2.3.14 [ntalbott]
+* SagePay Form integration: Remove dependency on ActiveSupport's String#truncate [ntalbott]
+* Elavon gateway: Add support for the sales tax parameter [stevestmartin]
+* Add WebPay gateway [keikubo]
+* iTransact gateway: make void API consistent [frobcode]
+* Stripe gateway: Pass city in add_address [npverni]
+* Paypal gateway: Add option to change the outstanding balance of a recurring billing profile [mattwhite]
+* Mercury gateway: Fix authorizations API [ntalbott]
+* Mercury gateway: Support refund properly [ntalbott]
 
 == Version 1.28.0 (August 10, 2012)
 

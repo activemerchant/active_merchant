@@ -64,7 +64,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
       data =~ /state/ && data !~ /region/
     end.returns(successful_purchase_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert @gateway.purchase(@amount, @credit_card, @options)
   end
 
   def test_purchase_from_us_includes_state_field
@@ -73,7 +73,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
       data =~ /state/ && data !~ /region/
     end.returns(successful_purchase_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert @gateway.purchase(@amount, @credit_card, @options)
   end
 
   def test_purchase_from_any_other_country_includes_region_field
@@ -82,7 +82,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
       data =~ /region/ && data !~ /state/
     end.returns(successful_purchase_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert @gateway.purchase(@amount, @credit_card, @options)
   end
 
   def test_successful_void
@@ -130,7 +130,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
     str = <<-XML
 <ccAuthRequestV1 xmlns>
   <merchantAccount>
-    <accountNum></accountNum>
+    <accountNum/>
     <storeID>login</storeID>
     <storePwd>password</storePwd>
   </merchantAccount>
@@ -160,14 +160,14 @@ class OptimalPaymentTest < Test::Unit::TestCase
   </billingDetails>
 </ccAuthRequestV1>
     XML
-    Regexp.new(Regexp.escape(str).sub('xmlns', '[^>]+'))
+    Regexp.new(Regexp.escape(str).sub('xmlns', '[^>]+').sub('/>', '(/>|></[^>]+>)'))
   end
 
   def minimal_request
     str = <<-XML
 <ccAuthRequestV1 xmlns>
   <merchantAccount>
-    <accountNum></accountNum>
+    <accountNum/>
     <storeID>login</storeID>
     <storePwd>password</storePwd>
   </merchantAccount>
@@ -187,7 +187,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
   </billingDetails>
 </ccAuthRequestV1>
     XML
-    Regexp.new(Regexp.escape(str).sub('xmlns', '[^>]+'))
+    Regexp.new(Regexp.escape(str).sub('xmlns', '[^>]+').sub('/>', '(/>|></[^>]+>)'))
   end
 
   # Place raw successful response from gateway here

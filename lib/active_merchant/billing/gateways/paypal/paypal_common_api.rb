@@ -509,10 +509,10 @@ module ActiveMerchant #:nodoc:
       def add_credentials(xml)
         xml.tag! 'RequesterCredentials', CREDENTIALS_NAMESPACES do
           xml.tag! 'n1:Credentials' do
-            xml.tag! 'Username', @options[:login]
-            xml.tag! 'Password', @options[:password]
-            xml.tag! 'Subject', @options[:subject]
-            xml.tag! 'Signature', @options[:signature] unless @options[:signature].blank?
+            xml.tag! 'n1:Username', @options[:login]
+            xml.tag! 'n1:Password', @options[:password]
+            xml.tag! 'n1:Subject', @options[:subject]
+            xml.tag! 'n1:Signature', @options[:signature] unless @options[:signature].blank?
           end
         end
       end

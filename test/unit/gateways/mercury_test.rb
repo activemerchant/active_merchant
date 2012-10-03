@@ -1,44 +1,41 @@
 require 'test_helper'
 
 class MercuryTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     Base.gateway_mode = :test
 
     @gateway = MercuryGateway.new(fixtures(:mercury))
 
     @amount = 100
-    @credit_card = CreditCard.new(
-      :brand               => "master",
-      :number              => "5499990123456781", # Use a generated CC from the paypal Sandbox
-      :verification_value  => "123",
-      :month               => 8,
-      :year                => 2013,
-      :first_name          => 'Fred',
-      :last_name           => 'Brooks'
-    )
+    @credit_card = credit_card("5499990123456781", :brand => "master")
     @declined_card = credit_card('4000300011112220')
 
     @options = {
-      :order_id => '1',
-      :invoice => '123',
-      :merchant => '999',
-      :billing_address => {
-        :address1 => '4 Corporate Square',
-        :zip => '30329'
-      }
+      :order_id => '1'
     }
-
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/InvoiceNo>1</, data)
+    end.respond_with(successful_purchase_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal '000011', response.authorization
+    assert_equal '1;0194;000011;KbMCC0742510421  ;|17|410100700000', response.authorization
     assert response.test?
+  end
+
+  def test_order_id_must_be_numeric
+    e = assert_raise(ArgumentError) do
+      @gateway.purchase(@amount, @credit_card, :order_id => "a")
+    end
+    assert_match(/not numeric/, e.message)
   end
 
   def test_unsuccessful_request
@@ -49,19 +46,18 @@ class MercuryTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_voidsale
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
 
-    @gateway.expects(:ssl_post).returns(successful_voidsale_response)
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    assert void_response = @gateway.void(@amount, response.authorization, @credit_card,
-      @options.merge(:order_id => response.params['ref_no'], :invoice => response.params['invoice_no']))
+    assert refund_response = @gateway.refund(@amount, response.authorization, :credit_card => @credit_card)
 
-    assert_instance_of Response, void_response
-    assert_success void_response
-    assert void_response.test?
+    assert_instance_of Response, refund_response
+    assert_success refund_response
+    assert refund_response.test?
   end
 
   private
@@ -119,7 +115,7 @@ class MercuryTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_voidsale_response
+  def successful_refund_response
     <<-RESPONSE
 <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><CreditTransactionResponse xmlns="http://www.mercurypay.com"><CreditTransactionResult>&lt;?xml version="1.0"?&gt;
 &lt;RStream&gt;

@@ -1,8 +1,8 @@
 require 'test_helper'
 
-class StripeTest < Test::Unit::TestCase
+class WebpayTest < Test::Unit::TestCase
   def setup
-    @gateway = StripeGateway.new(:login => 'login')
+    @gateway = WebpayGateway.new(:login => 'login')
 
     @credit_card = credit_card()
     @amount = 400
@@ -74,7 +74,7 @@ class StripeTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match /^Invalid response received from the Stripe API/, response.message
+    assert_match /^Invalid response received from the WebPay API/, response.message
   end
 
   def test_add_customer
@@ -103,7 +103,6 @@ class StripeTest < Test::Unit::TestCase
     assert_equal @options[:billing_address][:address1], post[:card][:address_line1]
     assert_equal @options[:billing_address][:address2], post[:card][:address_line2]
     assert_equal @options[:billing_address][:country], post[:card][:address_country]
-    assert_equal @options[:billing_address][:city], post[:card][:address_city]
   end
 
   def test_ensure_does_not_respond_to_credit
@@ -112,7 +111,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_gateway_without_credentials
     assert_raises ArgumentError do
-      StripeGateway.new
+      WebpayGateway.new
     end
   end
 
@@ -124,7 +123,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_metadata_header
     @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
-      headers && headers['X-Stripe-Client-User-Metadata'] == {:ip => '1.1.1.1'}.to_json
+      headers && headers['X-Webpay-Client-User-Metadata'] == {:ip => '1.1.1.1'}.to_json
     }.returns(successful_purchase_response)
 
     @gateway.purchase(@amount, @credit_card, @options.merge(:ip => '1.1.1.1'))
@@ -138,7 +137,7 @@ class StripeTest < Test::Unit::TestCase
 {
   "amount": 400,
   "created": 1309131571,
-  "currency": "usd",
+  "currency": "jpy",
   "description": "Test Purchase",
   "id": "ch_test_charge",
   "livemode": false,
@@ -146,7 +145,7 @@ class StripeTest < Test::Unit::TestCase
   "paid": true,
   "refunded": #{refunded},
   "card": {
-    "country": "US",
+    "country": "JP",
     "exp_month": 9,
     "exp_year": #{Time.now.year + 1},
     "last4": "4242",
@@ -164,7 +163,7 @@ class StripeTest < Test::Unit::TestCase
   "amount": 400,
   "amount_refunded": 200,
   "created": 1309131571,
-  "currency": "usd",
+  "currency": "jpy",
   "description": "Test Purchase",
   "id": "ch_test_charge",
   "livemode": #{options[:livemode]},
@@ -172,7 +171,7 @@ class StripeTest < Test::Unit::TestCase
   "paid": true,
   "refunded": true,
   "card": {
-    "country": "US",
+    "country": "JP",
     "exp_month": 9,
     "exp_year": #{Time.now.year + 1},
     "last4": "4242",

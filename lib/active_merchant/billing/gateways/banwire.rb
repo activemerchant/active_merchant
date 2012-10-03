@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, creditcard, options)
         post[:address] = options[:billing_address][:address1]
-        post[:post_code] = options[:billing_address][:zipcode]
+        post[:post_code] = options[:billing_address][:zip]
       end
 
       def add_creditcard(post, creditcard)

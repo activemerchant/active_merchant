@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class BanwireTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = BanwireGateway.new(
                  :login => 'desarrollo',
@@ -27,7 +29,7 @@ class BanwireTest < Test::Unit::TestCase
     @amex_options = {
         :order_id => '2',
         :email => 'test@email.com',
-        :billing_address => address(:address1 => 'Horacio', :zipcode => 11560),
+        :billing_address => address(:address1 => 'Horacio', :zip => 11560),
         :description  => 'Store purchase amex'
     }
   end
@@ -52,9 +54,12 @@ class BanwireTest < Test::Unit::TestCase
 
   #American Express requires address and zipcode
   def test_successful_amex_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_amex_response)
+    response = stub_comms do
+      @gateway.purchase(@amount, @amex_credit_card, @amex_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/post_code=11560/, data)
+    end.respond_with(successful_purchase_amex_response)
 
-    assert response = @gateway.purchase(@amount, @amex_credit_card, @amex_options)
     assert_success response
 
     assert_equal 'test12345', response.authorization
