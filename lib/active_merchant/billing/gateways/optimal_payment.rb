@@ -115,15 +115,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        REXML::XPath.first(response, '//confirmationNumber').text rescue nil
+        get_text_from_document(response, '//confirmationNumber')
       end
 
       def avs_result_from(response)
-        REXML::XPath.first(response, '//avsResponse').text rescue nil
+        get_text_from_document(response, '//avsResponse')
       end
 
       def cvv_result_from(response)
-        REXML::XPath.first(response, '//cvdResponse').text rescue nil
+        get_text_from_document(response, '//cvdResponse')
       end
 
       def hash_from_xml(response)
@@ -151,6 +151,11 @@ module ActiveMerchant #:nodoc:
           yield xml
         end
         xml.target!
+      end
+
+      def get_text_from_document(document, node)
+        node = REXML::XPath.first(document, node)
+        node && node.text
       end
 
       def cc_auth_request(money, opts)
