@@ -14,6 +14,11 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://www.fatzebra.com.au/'
       self.display_name = 'Fat Zebra'
     
+      # Determine if we are in test mode or not
+      def test?
+        @options[:test] || super
+      end
+
       # Setup a new instance of the gateway.
       #
       # The options hash should include :username and :token
@@ -24,6 +29,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :token)
         @username = options[:username]
         @token    = options[:token]
+        @options  = options 
         super
       end
 
