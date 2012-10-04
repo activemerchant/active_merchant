@@ -99,7 +99,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       assert_equal true, params[:credit_card][:options][:verify_card]
       params
     end.returns(result)
-    
+
     @gateway.store(credit_card("41111111111111111111"), :verify_card => true)
   end
 
@@ -117,7 +117,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       assert_equal false, params[:credit_card][:options][:verify_card]
       params
     end.returns(result)
-    
+
     @gateway.store(credit_card("41111111111111111111"), :verify_card => false)
   end
 
@@ -146,7 +146,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       end
       params
     end.returns(result)
-    
+
     @gateway.store(credit_card("41111111111111111111"), :billing_address => billing_address)
   end
 
@@ -261,6 +261,27 @@ class BraintreeBlueTest < Test::Unit::TestCase
       (params[:billing][:country_code_numeric] == 840)
     end.returns(braintree_result)
     @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:country_code_numeric => 840})
+  end
+
+  def test_passes_recurring_flag
+    @gateway = BraintreeBlueGateway.new(
+      :merchant_id => 'test',
+      :merchant_account_id => 'present',
+      :public_key => 'test',
+      :private_key => 'test'
+    )
+
+    Braintree::Transaction.expects(:sale).
+      with(has_entries(:recurring => true)).
+      returns(braintree_result)
+
+    @gateway.purchase(100, credit_card("41111111111111111111"), :recurring => true)
+
+    Braintree::Transaction.expects(:sale).
+      with(Not(has_entries(:recurring => true))).
+      returns(braintree_result)
+
+    @gateway.purchase(100, credit_card("41111111111111111111"))
   end
 
   def test_configured_logger_has_a_default

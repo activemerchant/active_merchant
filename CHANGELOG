@@ -12,6 +12,7 @@
 * Paypal gateway: Add option to change the outstanding balance of a recurring billing profile [mattwhite]
 * Mercury gateway: Fix authorizations API [ntalbott]
 * Mercury gateway: Support refund properly [ntalbott]
+* Braintree Blue gateway: Add support for the recurring flag [ntalbott]
 
 == Version 1.28.0 (August 10, 2012)
 
