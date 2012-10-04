@@ -93,7 +93,7 @@ module ActiveMerchant #:nodoc:
       def refund(*args)
         # legacy signature: #refund(transaction_id, options = {})
         # new signature: #refund(money, transaction_id, options = {})
-        money, transaction_id, options = extract_refund_args(args)
+        money, transaction_id, _ = extract_refund_args(args)
         money = amount(money).to_s if money
 
         commit do
@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
 
       def update(vault_id, creditcard, options = {})
         braintree_credit_card = nil
-        customer_update_result = commit do
+        commit do
           braintree_credit_card = Braintree::Customer.find(vault_id).credit_cards.detect { |cc| cc.default? }
           return Response.new(false, 'Braintree::NotFoundError') if braintree_credit_card.nil?
 
@@ -362,9 +362,15 @@ module ActiveMerchant #:nodoc:
             :submit_for_settlement => options[:submit_for_settlement]
           }
         }
+
         if merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
           parameters[:merchant_account_id] = merchant_account_id
         end
+
+        if options[:recurring]
+          parameters[:recurring] = true
+        end
+
         if credit_card_or_vault_id.is_a?(String) || credit_card_or_vault_id.is_a?(Integer)
           parameters[:customer_id] = credit_card_or_vault_id
         else
