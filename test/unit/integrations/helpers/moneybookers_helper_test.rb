@@ -83,19 +83,15 @@ class MoneybookersHelperTest < Test::Unit::TestCase
   end
 
   def test_language
-    # Sweden
-    @helper = Moneybookers::Helper.new('order-500', 'cody@example.com', :amount => 500, :currency => 'USD', :country => 'SE')
-    assert_field 'language', 'SV'
 
-    # Denmark
     @helper = Moneybookers::Helper.new('order-500', 'cody@example.com', :amount => 500, :currency => 'USD', :country => 'DK')
     assert_field 'language', 'DA'
 
-    # Regular country with supported language
+    # Country with supported language (non-mapped)
     @helper = Moneybookers::Helper.new('order-500', 'cody@example.com', :amount => 500, :currency => 'USD', :country => 'PL')
     assert_field 'language', 'PL'
 
-    # Regular country with unsupported language
+    # Country with unsupported language
     @helper = Moneybookers::Helper.new('order-500', 'cody@example.com', :amount => 500, :currency => 'USD', :country => 'CA')
     assert_field 'language', 'EN'
   end
