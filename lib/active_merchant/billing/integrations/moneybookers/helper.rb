@@ -27,23 +27,16 @@ module ActiveMerchant #:nodoc:
           mapping :cancel_return_url, 'cancel_url'
           mapping :description, 'detail1_text'
 
-          MAPPED_LOCALE_CODES = {
-            'SE' => 'SV', #Sweden to Swedish
-            'DK' => 'DA', #Denmark to Danish
-            'FI' => 'FI', #The rest are the same... do they need the mapping?
-            'DE' => 'DE', 
-            'ES' => 'ES', 
-            'FR' => 'FR', 
-            'IT' => 'IT',
-            'PL' => 'PL', 
-            'GR' => 'GR', 
-            'RO' => 'RO', 
-            'RU' => 'RU', 
-            'TR' => 'TR', 
-            'CN' => 'CN', 
-            'CZ' => 'CZ', 
-            'NL' => 'NL'
+          MAPPED_COUNTRY_CODES = {
+            'SE' => 'SV', 
+            'DK' => 'DA'
           }
+
+          SUPPORTED_COUNTRY_CODES = [
+            'FI', 'DE', 'ES', 'FR', 
+            'IT','PL', 'GR', 'RO', 
+            'RU', 'TR', 'CN', 'CZ', 'NL'
+          ]
           
           def initialize(order, account, options = {})
             super
@@ -72,7 +65,8 @@ module ActiveMerchant #:nodoc:
           end
 
           def locale_code(country_code)
-            MAPPED_LOCALE_CODES[country_code] || 'EN'
+            return country_code if SUPPORTED_COUNTRY_CODES.include?(country_code)
+            MAPPED_COUNTRY_CODES[country_code] || 'EN'
           end
         end
       end
