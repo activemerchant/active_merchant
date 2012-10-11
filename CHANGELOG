@@ -13,6 +13,7 @@
 * Mercury gateway: Fix authorizations API [ntalbott]
 * Mercury gateway: Support refund properly [ntalbott]
 * Braintree Blue gateway: Add support for the recurring flag [ntalbott]
+* Add HDFC gateway [ntalbott]
 
 == Version 1.28.0 (August 10, 2012)
 
