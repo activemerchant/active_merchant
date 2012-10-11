@@ -152,6 +152,10 @@ itransact:
 jetpay:
   login: TESTTERMINAL
 
+hdfc:
+  login: LOGIN
+  password: PASSWORD
+
 iridium:
     login: LOGIN
     password: PASSWORD
