@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment_source, options = {})
         request = build_purchase_or_authorization_request(money, payment_source, options)
         
-        request.add_element("ClientType").text = "Recurring"
+        request.add_element("ClientType").text = "MOTO"
         
         commit(:purchase, request)      
       end
