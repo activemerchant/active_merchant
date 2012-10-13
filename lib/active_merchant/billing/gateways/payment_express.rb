@@ -215,7 +215,7 @@ module ActiveMerchant #:nodoc:
       
       def add_invoice(xml, options)
         xml.add_element("TxnId").text = options[:order_id].to_s.slice(0, 16) unless options[:order_id].blank?
-        xml.add_element("MerchantReference").text = options[:description] unless options[:description].blank?
+        xml.add_element("MerchantReference").text = options[:description].to_s.slice(0, 64) unless options[:description].blank?
       end
       
       def add_address_verification_data(xml, options)
