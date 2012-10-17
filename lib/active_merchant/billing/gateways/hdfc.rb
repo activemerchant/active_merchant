@@ -25,6 +25,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
+
         commit("purchase", post)
       end
 
@@ -69,6 +70,7 @@ module ActiveMerchant #:nodoc:
         post[:currencycode] = CURRENCY_CODES[options[:currency] || currency(amount)]
         post[:trackid] = escape(options[:order_id], 40) if options[:order_id]
         post[:udf1] = escape(options[:description]) if options[:description]
+        post[:eci] = options[:eci] if options[:eci]
       end
 
       def add_customer_data(post, options)
