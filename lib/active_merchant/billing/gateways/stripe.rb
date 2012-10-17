@@ -106,7 +106,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        post.update(options.select{|k,v| [:description,:email,:ip,:user_agent,:referrer,:external_id].include? k})
+        metadata_options = [:description,:email,:ip,:user_agent,:referrer,:external_id]
+        post.update(options.slice(*metadata_options))
         
         post[:payment_user_agent] = "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
       end
