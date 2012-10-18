@@ -16,6 +16,8 @@
 * Add HDFC gateway [ntalbott]
 * HDFC gateway: Add more supported currencies [ntalbott]
 * HDFC gateway: Add support for passing ECI value [ntalbott]
+* HDFC gateway: Allow setting test mode via options [ntalbott]
+* HDFC gateway: Pass phone number in UDF3 [ntalbott]
 
 == Version 1.28.0 (August 10, 2012)
 
