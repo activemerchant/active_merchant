@@ -59,11 +59,16 @@ module ActiveMerchant #:nodoc:
       private
 
       CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}")}
-      CURRENCY_CODES["INR"] = "356"
-      CURRENCY_CODES["USD"] = "840"
-      CURRENCY_CODES["GBP"] = "826"
-      CURRENCY_CODES["EUR"] = "978"
+      CURRENCY_CODES["AED"] = "784"
       CURRENCY_CODES["AUD"] = "036"
+      CURRENCY_CODES["CAD"] = "124"
+      CURRENCY_CODES["EUR"] = "978"
+      CURRENCY_CODES["GBP"] = "826"
+      CURRENCY_CODES["INR"] = "356"
+      CURRENCY_CODES["OMR"] = "512"
+      CURRENCY_CODES["QAR"] = "634"
+      CURRENCY_CODES["SGD"] = "702"
+      CURRENCY_CODES["USD"] = "840"
 
       def add_invoice(post, amount, options)
         post[:amt] = amount(amount)
