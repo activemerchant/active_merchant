@@ -191,6 +191,10 @@ EOA
         end
         string.gsub(/[^A-Za-z0-9 \-_@\.\n]/, '')
       end
+
+      def test?
+        @options[:test] || super
+      end
     end
   end
 end
