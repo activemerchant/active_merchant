@@ -126,6 +126,14 @@ class HdfcTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_passing_phone_number
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, :billing_address => address)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/udf3>555555-5555</, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_passing_eci
     stub_comms do
       @gateway.purchase(@amount, @credit_card, :eci => 22)
