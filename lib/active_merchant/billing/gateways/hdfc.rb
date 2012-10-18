@@ -76,6 +76,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:udf2] = escape(options[:email]) if options[:email]
         if address = (options[:billing_address] || options[:address])
+          post[:udf3] = escape(address[:phone])
           post[:udf4] = escape(<<EOA)
 #{address[:name]}
 #{address[:company]}
