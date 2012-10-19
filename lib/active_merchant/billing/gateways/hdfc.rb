@@ -182,7 +182,7 @@ EOA
         if succeeded
           "Succeeded"
         else
-          (response[:error_text] || response[:result]).split("-").last
+          (response[:error_text] || response[:result] || "Unable to read error message").split("-").last
         end
       end
 
