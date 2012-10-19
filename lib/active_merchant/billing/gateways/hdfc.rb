@@ -56,6 +56,10 @@ module ActiveMerchant #:nodoc:
         commit("refund", post)
       end
 
+      def test?
+        @options[:test] || super
+      end
+
       private
 
       CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency for HDFC: #{k}")}
@@ -196,10 +200,6 @@ EOA
           string = string[0...max_length]
         end
         string.gsub(/[^A-Za-z0-9 \-_@\.\n]/, '')
-      end
-
-      def test?
-        @options[:test] || super
       end
     end
   end
