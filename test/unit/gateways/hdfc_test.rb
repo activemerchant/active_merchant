@@ -150,6 +150,15 @@ class HdfcTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_empty_response_fails
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(empty_purchase_response)
+
+    assert_failure response
+    assert_equal "Unable to read error message", response.message
+  end
+
   private
 
   def successful_purchase_response
@@ -194,6 +203,11 @@ class HdfcTest < Test::Unit::TestCase
       <error_code_tag>GW00160</error_code_tag>
       <error_service_tag>null</error_service_tag>
       <result>!ERROR!-GW00160-Invalid Brand.</result>
+    )
+  end
+
+  def empty_purchase_response
+    %(
     )
   end
 end
