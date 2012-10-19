@@ -196,6 +196,7 @@ EOA
       end
 
       def escape(string, max_length=250)
+        return "" unless string
         if max_length
           string = string[0...max_length]
         end
