@@ -119,7 +119,7 @@ module ActiveMerchant #:nodoc:
         post[:clearingtype] = "cc"
         post[:firstname] = creditcard.first_name
         post[:lastname] = creditcard.last_name
-        post[:cardtype] = case creditcard.type
+        post[:cardtype] = case creditcard.brand
         when 'visa' then 'V'
         when 'master' then 'M'
         when 'diners_club' then 'D'
