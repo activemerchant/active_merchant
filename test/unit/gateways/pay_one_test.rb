@@ -14,6 +14,17 @@ class PayOneTest < Test::Unit::TestCase
     }
   end
 
+  def test_successful_authorize
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal '19779424', response.authorization
+    assert response.test?
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -34,6 +45,18 @@ class PayOneTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_capture
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.capture(@amount, '19779424', @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    # Replace with authorization number from the successful response
+    assert_equal '19779424', response.authorization
+    assert response.test?
+  end
+
   private
 
   # Place raw successful response from gateway here
@@ -41,7 +64,7 @@ class PayOneTest < Test::Unit::TestCase
     <<-RESPONSE
 status=APPROVED
 txid=19779424
-userid=6202532
+userid=1
 clearing_bankcode=10070024
 clearing_bankaccount=130066402
 clearing_bankcountry=
