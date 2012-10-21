@@ -58,12 +58,6 @@ module ActiveMerchant #:nodoc:
         commit('capture', money, post)
       end
 
-      def create_access( offer_id, credit_card, options = {} )
-        post = {}
-        add_creditcard_or_userid(post, credit_card, options)
-        commit('createaccess', nil, post)
-      end
-
       private
 
       def add_invoice_details( post, options )
