@@ -2,6 +2,8 @@ require 'test_helper'
 
 class WirecardTest < Test::Unit::TestCase
   TEST_AUTHORIZATION_GUWID = 'C822580121385121429927'
+  TEST_PURCHASE_GUWID = 'C865402121385575982910'
+  TEST_CAPTURE_GUWID = 'C833707121385268439116'
 
   def setup
     @gateway = WirecardGateway.new(:login => '', :password => '', :signature => '')
@@ -39,6 +41,16 @@ class WirecardTest < Test::Unit::TestCase
     assert_equal TEST_AUTHORIZATION_GUWID, response.authorization
   end
 
+  def test_successful_purchase
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+
+    assert_success response
+    assert response.test?
+    assert_equal TEST_PURCHASE_GUWID, response.authorization
+  end
+
   def test_wrong_credit_card_authorization
     @gateway.expects(:ssl_post).returns(wrong_creditcard_authorization_response)
     assert response = @gateway.authorize(@amount, @declined_card, @options)
@@ -46,7 +58,7 @@ class WirecardTest < Test::Unit::TestCase
 
     assert_failure response
     assert response.test?
-    assert_false response.authorization
+    assert_equal TEST_AUTHORIZATION_GUWID, response.authorization
     assert response.message[/credit card number not allowed in demo mode/i]
   end
 
@@ -68,6 +80,7 @@ class WirecardTest < Test::Unit::TestCase
     assert response = @gateway.capture(@amount, "1234567890123456789012", @options)
 
     assert_failure response
+    assert_equal TEST_CAPTURE_GUWID, response.authorization
     assert response.message["Could not find referenced transaction for GuWID 1234567890123456789012."]
   end
 
@@ -177,7 +190,7 @@ class WirecardTest < Test::Unit::TestCase
             <CC_TRANSACTION>
               <TransactionID>a2783d471ccc98825b8c498f1a62ce8f</TransactionID>
               <PROCESSING_STATUS>
-                <GuWID>C865683121385576058270</GuWID>
+                <GuWID>C833707121385268439116</GuWID>
                 <AuthorizationCode></AuthorizationCode>
                 <StatusType>INFO</StatusType>
                 <FunctionResult>NOK</FunctionResult>

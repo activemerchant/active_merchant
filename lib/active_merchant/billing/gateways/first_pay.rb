@@ -7,8 +7,8 @@ module ActiveMerchant #:nodoc:
       end
 
       # both URLs are IP restricted
-      TEST_URL = 'https://apgcert.first-pay.com/AcqENGIN/SecureCapture'
-      LIVE_URL = 'https://acqengin.first-pay.com/AcqENGIN/SecureCapture'
+      self.test_url = 'https://apgcert.first-pay.com/AcqENGIN/SecureCapture'
+      self.live_url = 'https://acqengin.first-pay.com/AcqENGIN/SecureCapture'
       
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']
@@ -119,7 +119,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def commit(action, money, post)
-        response = parse( ssl_post(test? ? TEST_URL : LIVE_URL, post_data(action, post, money)) )
+        response = parse( ssl_post(test? ? self.test_url : self.live_url, post_data(action, post, money)) )
                 
         Response.new(response[:response] == 'CAPTURED', response[:message], response,
           :test => test?,

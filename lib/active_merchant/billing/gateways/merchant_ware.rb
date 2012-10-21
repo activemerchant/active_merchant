@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MerchantWareGateway < Gateway
-      URL = 'https://ps1.merchantware.net/MerchantWARE/ws/RetailTransaction/TXRetail.asmx'
+      self.live_url = self.test_url = 'https://ps1.merchantware.net/MerchantWARE/ws/RetailTransaction/TXRetail.asmx'
       
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -261,7 +261,7 @@ module ActiveMerchant #:nodoc:
             
       def commit(action, request)
         begin
-          data = ssl_post(URL, request, 
+          data = ssl_post(self.live_url, request, 
                    "Content-Type" => 'text/xml; charset=utf-8',
                    "SOAPAction"   => "http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail/#{ACTIONS[action]}"
                  )

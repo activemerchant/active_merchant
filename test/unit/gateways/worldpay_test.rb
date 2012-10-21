@@ -64,9 +64,17 @@ class WorldpayTest < Test::Unit::TestCase
   def test_purchase_does_not_run_inquiry
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
-    end.respond_with(successful_authorize_response)
+    end.respond_with(successful_capture_response)
+
     assert_success response
     assert_equal %w(authorize capture), response.responses.collect{|e| e.params["action"]}
+  end
+
+  def test_successful_refund
+    response = stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options)
+    end.respond_with(successful_refund_inquiry_response, successful_refund_response)
+    assert_success response
   end
 
   def test_capture
@@ -210,6 +218,24 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_request_respects_test_mode_on_gateway_instance
+    ActiveMerchant::Billing::Base.mode = :production
+
+    @gateway = WorldpayGateway.new(
+      :login => 'testlogin',
+      :password => 'testpassword',
+      :test => true
+    )
+
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_equal WorldpayGateway.test_url, endpoint
+    end.respond_with(successful_authorize_response, successful_capture_response)
+
+    ActiveMerchant::Billing::Base.mode = :test
+  end
+
   def assert_tag_with_attributes(tag, attributes, string)
     assert(m = %r(<#{tag}([^>]+)/>).match(string))
     attributes.each do |attribute, value|
@@ -301,6 +327,50 @@ class WorldpayTest < Test::Unit::TestCase
       </payment>
       <date dayOfMonth="20" month="04" year="2011" hour="22" minute="24" second="0"/>
     </orderStatus>
+  </reply>
+</paymentService>
+    RESPONSE
+  end
+
+  def successful_refund_inquiry_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE paymentService PUBLIC "-//Bibit//DTD Bibit PaymentService v1//EN"
+                                "http://dtd.bibit.com/paymentService_v1.dtd">
+<paymentService version="1.4" merchantCode="SPREEDLY">
+  <reply>
+    <orderStatus orderCode="d192c159d5730d339c03fa1a8dc796eb">
+      <payment>
+        <paymentMethod>VISA-SSL</paymentMethod>
+        <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+        <lastEvent>CAPTURED</lastEvent>
+        <CVCResultCode description="UNKNOWN"/>
+        <AVSResultCode description="NOT SUPPLIED BY SHOPPER"/>
+        <balance accountType="IN_PROCESS_AUTHORISED">
+          <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+        </balance>
+        <cardNumber>4111********1111</cardNumber>
+        <riskScore value="1"/>
+      </payment>
+      <date dayOfMonth="20" month="04" year="2011" hour="22" minute="24" second="0"/>
+    </orderStatus>
+  </reply>
+</paymentService>
+    RESPONSE
+  end
+
+  def successful_refund_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN" 
+                                "http://dtd.worldpay.com/paymentService_v1.dtd">
+<paymentService version="1.4" merchantCode="SPREEDLY">
+  <reply>
+    <ok>
+      <refundReceived orderCode="1">
+        <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
+      </refundReceived>
+    </ok>
   </reply>
 </paymentService>
     RESPONSE

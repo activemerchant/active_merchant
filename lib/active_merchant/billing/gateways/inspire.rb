@@ -2,7 +2,7 @@ require File.join(File.dirname(__FILE__), '..', 'check.rb')
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class InspireGateway < Gateway
-      URL = 'https://secure.inspiregateway.net/api/transact.php'
+      self.live_url = self.test_url = 'https://secure.inspiregateway.net/api/transact.php'
     
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express]
@@ -167,7 +167,7 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters)
         parameters[:amount]  = amount(money) if money
         
-        response = parse( ssl_post(URL, post_data(action,parameters)) )
+        response = parse( ssl_post(self.live_url, post_data(action,parameters)) )
 
         Response.new(response["response"] == "1", message_from(response), response, 
           :authorization => response["transactionid"],

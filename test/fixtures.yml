@@ -14,6 +14,13 @@ authorize_net:
   login: X
   password: Y
 
+# Working credentials, no need to replace
+balanced:
+  login: 'e1c5ad38d1c711e1b36c026ba7e239a9'
+
+banwire:
+  login: "desarrollo"
+
 barclays_epdq:
   login: test
   password: test
@@ -145,6 +152,10 @@ itransact:
 jetpay:
   login: TESTTERMINAL
 
+hdfc:
+  login: LOGIN
+  password: PASSWORD
+
 iridium:
     login: LOGIN
     password: PASSWORD
@@ -155,16 +166,9 @@ linkpoint:
     PASTE YOUR PEM FILE HERE
 
 litle:
-  currency: USD
-  merchant: 'Default Report Group'
-  merchant_id: 101
-  user: ACTIVE
+  login: ACTIVE
   password: MERCHANT
-  version: '8.10'
-  url: https://www.testlitle.com/sandbox/communicator/online
-  proxy_addr: smoothproxy
-  proxy_port: '8080'
-  report_group: Default Report Group
+  merchant_id: 101
 
 # Working test credentials, no need to replace
 merchant_esolutions:
@@ -175,6 +179,11 @@ merchant_ware:
  login:
  password:
  name:
+
+# Working credentials, no need to replace
+mercury:
+  login: '595901'
+  password: 'xyz'
 
 metrics_global:
   login: 'demo'
@@ -256,6 +265,11 @@ orbital_gateway:
   password: PASSWORD
   merchant_id: MERCHANTID
 
+# Working credentials, no need to replace
+pay_gate_xml:
+  login: '10011021600'
+  password: 'test'
+
 payflow:
   login: LOGIN
   password: PASSWORD
@@ -288,11 +302,20 @@ paypal_signature:
   password: PASSWORD
   signature: SIGNATURE
 
+payway:
+  username:
+  password:
+  pem:
+
 pay_secure:
   login: LOGIN
   password: PASSWORD
 
 plugnpay:
+  login: LOGIN
+  password: PASSWORD
+
+pxpay:
   login: LOGIN
   password: PASSWORD
 
@@ -530,13 +553,13 @@ vindicia:
   login: LOGIN
   password: PASSWORD
 
+webpay:
+  login: "vtUQeOtUnYr7PGCLQ96Ul4zqpDUO4sOE"
+
 # Working test credentials, no need to replace
 wirecard:
   login: 56500
   password: TestXAPTER
-
-world_pay:
-  login: 211616
 
 world_pay_gateway:
   login: LOGIN

@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FederatedCanadaGateway < Gateway
       # Same URL for both test and live, testing is done by using the test username (demo) and password (password).
-      URL = 'https://secure.federatedgateway.com/api/transact.php'
+      self.live_url = self.test_url = 'https://secure.federatedgateway.com/api/transact.php'
 
       APPROVED, DECLINED, ERROR = 1, 2, 3
 
@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
       
       def commit(action, money, parameters)
         parameters[:amount] = amount(money)
-        data = ssl_post(URL, post_data(action, parameters))
+        data = ssl_post(self.live_url, post_data(action, parameters))
         response = parse(data)
         message = message_from(response)
         test_mode = test?

@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
     class AuthorizeNetGateway < Gateway
       API_VERSION = '3.1'
 
-      class_attribute :test_url, :live_url, :arb_test_url, :arb_live_url
+      class_attribute :arb_test_url, :arb_live_url
 
       self.test_url = "https://test.authorize.net/gateway/transact.dll"
       self.live_url = "https://secure.authorize.net/gateway/transact.dll"
@@ -122,6 +122,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {:trans_id => authorization}
         add_customer_data(post, options)
+        add_invoice(post, options)
         commit('PRIOR_AUTH_CAPTURE', money, post)
       end
 
@@ -268,7 +269,8 @@ module ActiveMerchant #:nodoc:
         url = test? ? self.test_url : self.live_url
         data = ssl_post url, post_data(action, parameters)
 
-        response = parse(data)
+        response          = parse(data)
+        response[:action] = action
 
         message = message_from(response)
 

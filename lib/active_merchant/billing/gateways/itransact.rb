@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
     # 1. TransactionStatus is not implemented
     #
     class ItransactGateway < Gateway
-      URL = 'https://secure.paymentclearing.com/cgi-bin/rc/xmltrans2.cgi'
+      self.live_url = self.test_url = 'https://secure.paymentclearing.com/cgi-bin/rc/xmltrans2.cgi'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']
@@ -196,7 +196,6 @@ module ActiveMerchant #:nodoc:
       # This will reverse a previously run transaction which *has* *not* settled.
       #
       # ==== Parameters
-      # * <tt>money</tt> - This parameter is ignored -- the PaymentClearing gateway does not allow partial voids.
       # * <tt>authorization</tt> - The authorization returned from the previous capture or purchase request
       # * <tt>options</tt> - A Hash of options, all are optional
       #
@@ -209,7 +208,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:test_mode</tt> - <tt>true</tt> or <tt>false</tt>. Runs the transaction with the 'TestMode' element set to 'TRUE' or 'FALSE'.
       #
       # ==== Examples
-      #  response = gateway.void(nil, '9999999999',
+      #  response = gateway.void('9999999999',
       #    :vendor_data => [{'repId' => '1234567'}, {'customerId' => '9886'}],
       #    :send_customer_email => true,
       #    :send_merchant_email => true,
@@ -217,7 +216,7 @@ module ActiveMerchant #:nodoc:
       #    :test_mode => true
       #  )
       #
-      def void(money, authorization, options = {})
+      def void(authorization, options = {})
         payload = Nokogiri::XML::Builder.new do |xml|
           xml.VoidTransaction {
             xml.OperationXID(authorization)
@@ -232,7 +231,7 @@ module ActiveMerchant #:nodoc:
       # This will reverse a previously run transaction which *has* settled.
       #
       # ==== Parameters
-      # * <tt>money</tt> - The amount to be credited. Should be <tt>nil</tt> or an Integer amount in cents
+      # * <tt>money</tt> - The amount to be credited. Should be an Integer amount in cents
       # * <tt>authorization</tt> - The authorization returned from the previous capture or purchase request
       # * <tt>options</tt> - A Hash of options, all are optional
       #
@@ -245,7 +244,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:test_mode</tt> - <tt>true</tt> or <tt>false</tt>. Runs the transaction with the 'TestMode' element set to 'TRUE' or 'FALSE'.
       #
       # ==== Examples
-      #  response = gateway.credit(nil, '9999999999',
+      #  response = gateway.refund(555, '9999999999',
       #    :vendor_data => [{'repId' => '1234567'}, {'customerId' => '9886'}],
       #    :send_customer_email => true,
       #    :send_merchant_email => true,
@@ -253,9 +252,9 @@ module ActiveMerchant #:nodoc:
       #    :test_mode => true
       #  )
       #
-      def credit(money, authorization, options = {})
+      def refund(money, authorization, options = {})
         payload = Nokogiri::XML::Builder.new do |xml|
-          xml.TranCreditTransaction {
+          xml.TranCredTransaction {
             xml.OperationXID(authorization)
             add_invoice(xml, money, options)
             add_transaction_control(xml, options)
@@ -386,7 +385,7 @@ module ActiveMerchant #:nodoc:
       def commit(payload)
         # Set the Content-Type header -- otherwise the URL decoding messes up
         # the Base64 encoded payload signature!
-        response = parse(ssl_post(URL, post_data(payload), 'Content-Type' => 'text/xml'))
+        response = parse(ssl_post(self.live_url, post_data(payload), 'Content-Type' => 'text/xml'))
 
         Response.new(successful?(response), response[:error_message], response,
           :test => test?,

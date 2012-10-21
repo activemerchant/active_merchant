@@ -4,10 +4,10 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WirecardGateway < Gateway
       # Test server location
-      TEST_URL = 'https://c3-test.wirecard.com/secure/ssl-gateway'
+      self.test_url = 'https://c3-test.wirecard.com/secure/ssl-gateway'
 
       # Live server location
-      LIVE_URL = 'https://c3.wirecard.com/secure/ssl-gateway'
+      self.live_url = 'https://c3.wirecard.com/secure/ssl-gateway'
 
       # The Namespaces are not really needed, because it just tells the System, that there's actually no namespace used.
       # It's just specified here for completeness.
@@ -109,11 +109,11 @@ module ActiveMerchant #:nodoc:
         headers = { 'Content-Type' => 'text/xml',
                     'Authorization' => encoded_credentials }
 
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request, headers))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, request, headers))
         # Pending Status also means Acknowledged (as stated in their specification)
         success = response[:FunctionResult] == "ACK" || response[:FunctionResult] == "PENDING"
         message = response[:Message]
-        authorization = (success && action == :authorization) ? response[:GuWID] : nil
+        authorization = response[:GuWID]
 
         Response.new(success, message, response,
           :test => test?,

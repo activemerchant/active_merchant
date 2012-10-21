@@ -3,8 +3,8 @@ require 'digest/md5'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class NetaxeptGateway < Gateway
-      TEST_URL = 'https://epayment-test.bbs.no/'
-      LIVE_URL = 'https://epayment.bbs.no/'
+      self.test_url = 'https://epayment-test.bbs.no/'
+      self.live_url = 'https://epayment.bbs.no/'
       
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['NO', 'DK', 'SE', 'FI']
@@ -199,7 +199,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def url
-        (test? ? TEST_URL : LIVE_URL)
+        (test? ? self.test_url : self.live_url)
       end
       
       def generate_transaction_id(options)
@@ -211,7 +211,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def build_url(base, parameters=nil)
-        url = "#{test? ? TEST_URL : LIVE_URL}"
+        url = "#{test? ? self.test_url : self.live_url}"
         url << base
         if parameters
           url << '?'

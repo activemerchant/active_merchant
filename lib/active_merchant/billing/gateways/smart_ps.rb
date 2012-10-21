@@ -7,6 +7,8 @@ module ActiveMerchant #:nodoc:
       ##
       # This is the base gateway for processors who use the smartPS processing system
 
+      self.abstract_class = true
+
       def initialize(options = {})
         requires!(options, :login, :password)
         @options = options
@@ -218,7 +220,7 @@ module ActiveMerchant #:nodoc:
       
       def commit(action, money, parameters)
         parameters[:amount]  = amount(money) if money
-        response = parse( ssl_post(api_url, post_data(action,parameters)) )
+        response = parse( ssl_post(self.live_url, post_data(action,parameters)) )
         Response.new(response["response"] == "1", message_from(response), response, 
           :authorization => response["transactionid"],
           :test => test?,

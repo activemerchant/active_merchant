@@ -280,37 +280,37 @@ class OgoneTest < Test::Unit::TestCase
   end
 
   def test_without_signature
-    gateway = OgoneGateway.new(@credentials.merge(:signature => nil))
+    gateway = OgoneGateway.new(@credentials.merge(:signature => nil, :signature_encryptor => nil))
     gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert_deprecation_warning(OgoneGateway::OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE, gateway) do
+      gateway.purchase(@amount, @credit_card, @options)
+    end
+
+    gateway = OgoneGateway.new(@credentials.merge(:signature => nil, :signature_encryptor => "none"))
+    gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert_no_deprecation_warning(@gateway) do
       gateway.purchase(@amount, @credit_card, @options)
     end
   end
 
   def test_signature_for_accounts_created_before_10_may_20101
     gateway = OgoneGateway.new(@credentials.merge(:signature_encryptor => nil))
-    assert_deprecation_warning(OgoneGateway::OGONE_LOW_ENCRYPTION_DEPRECATION_MESSAGE, gateway) do
-      assert signature = gateway.send(:add_signature, @parameters)
-      assert_equal Digest::SHA1.hexdigest("1100EUR4111111111111111MrPSPIDRES2mynicesig").upcase, signature
-    end
+    assert signature = gateway.send(:add_signature, @parameters)
+    assert_equal Digest::SHA1.hexdigest("1100EUR4111111111111111MrPSPIDRES2mynicesig").upcase, signature
   end
 
   def test_signature_for_accounts_with_signature_encryptor_to_sha1
     gateway = OgoneGateway.new(@credentials.merge(:signature_encryptor => 'sha1'))
 
-    assert_deprecation_warning(OgoneGateway::OGONE_LOW_ENCRYPTION_DEPRECATION_MESSAGE, gateway) do
-      assert signature = gateway.send(:add_signature, @parameters)
-      assert_equal Digest::SHA1.hexdigest(string_to_digest).upcase, signature
-    end
+    assert signature = gateway.send(:add_signature, @parameters)
+    assert_equal Digest::SHA1.hexdigest(string_to_digest).upcase, signature
   end
 
   def test_signature_for_accounts_with_signature_encryptor_to_sha256
     gateway = OgoneGateway.new(@credentials.merge(:signature_encryptor => 'sha256'))
 
-    assert_deprecation_warning(OgoneGateway::OGONE_LOW_ENCRYPTION_DEPRECATION_MESSAGE, gateway) do
-      assert signature = gateway.send(:add_signature, @parameters)
-      assert_equal Digest::SHA256.hexdigest(string_to_digest).upcase, signature
-    end
+    assert signature = gateway.send(:add_signature, @parameters)
+    assert_equal Digest::SHA256.hexdigest(string_to_digest).upcase, signature
   end
 
   def test_signature_for_accounts_with_signature_encryptor_to_sha512

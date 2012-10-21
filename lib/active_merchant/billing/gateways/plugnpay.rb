@@ -1,15 +1,13 @@
 module ActiveMerchant
   module Billing
-        
     class PlugnpayGateway < Gateway
       class PlugnpayPostData < PostData
         # Fields that will be sent even if they are blank
-        self.required_fields = [ :publisher_name, :publisher_password, 
+        self.required_fields = [ :publisher_name, :publisher_password,
           :card_amount, :card_name, :card_number, :card_exp, :orderID ]
-      end                                                  
-                                                           
-      URL = 'https://pay1.plugnpay.com/payment/pnpremote.cgi'
-                                                        
+      end
+      self.live_url = self.test_url = 'https://pay1.plugnpay.com/payment/pnpremote.cgi'
+
       CARD_CODE_MESSAGES = {
         "M" => "Card verification number matched",
         "N" => "Card verification number didn't match",
@@ -19,7 +17,7 @@ module ActiveMerchant
       }
 
       CARD_CODE_ERRORS = %w( N S )
-      
+
       AVS_MESSAGES = {
         "A" => "Street address matches billing information, zip/postal code does not",
         "B" => "Address information not provided for address verification check",
@@ -35,9 +33,9 @@ module ActiveMerchant
         "Y" => "Street address and 5-digit zip/postal code matches billing information",
         "Z" => "5-digit zip/postal code matches billing information, street address does not",
       }
-      
+
       AVS_ERRORS = %w( A E N R W Z )
-      
+
       PAYMENT_GATEWAY_RESPONSES = {
         "P01" => "AVS Mismatch Failure",
         "P02" => "CVV2 Mismatch Failure",
@@ -80,7 +78,7 @@ module ActiveMerchant
         "P98" => "Missing merchant/publisher name",
         "P99" => "Currently Blank"
       }
-      
+
       TRANSACTIONS = {
         :authorization => 'auth',
         :purchase => 'auth',
@@ -89,10 +87,10 @@ module ActiveMerchant
         :refund => 'return',
         :credit => 'newreturn'
       }
-     
+
       SUCCESS_CODES = [ 'pending', 'success' ]
       FAILURE_CODES = [ 'badcard', 'fraud' ]
-     
+
       self.default_currency = 'USD'
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -104,65 +102,65 @@ module ActiveMerchant
         @options = options
         super
       end
-      
+
       def purchase(money, creditcard, options = {})
         post = PlugnpayPostData.new
-        
+
         add_amount(post, money, options)
         add_creditcard(post, creditcard)
         add_addresses(post, options)
         add_invoice_data(post, options)
         add_customer_data(post, options)
-         
+
         post[:authtype] = 'authpostauth'
         commit(:authorization, post)
-      end  
-      
+      end
+
       def authorize(money, creditcard, options = {})
         post = PlugnpayPostData.new
-        
+
         add_amount(post, money, options)
-        add_creditcard(post, creditcard)        
+        add_creditcard(post, creditcard)
         add_addresses(post, options)
-        add_invoice_data(post, options)        
+        add_invoice_data(post, options)
         add_customer_data(post, options)
-        
+
         post[:authtype] = 'authonly'
         commit(:authorization, post)
-      end                  
+      end
 
       def capture(money, authorization, options = {})
         post = PlugnpayPostData.new
-        
+
         post[:orderID] = authorization
-        
+
         add_amount(post, money, options)
         add_customer_data(post, options)
-         
+
         commit(:capture, post)
       end
-      
+
       def void(authorization, options = {})
         post = PlugnpayPostData.new
-        
+
         post[:orderID] = authorization
         post[:txn_type] = 'auth'
-        
+
         commit(:void, post)
       end
-      
+
       def credit(money, identification_or_creditcard, options = {})
         post = PlugnpayPostData.new
         add_amount(post, money, options)
-       
+
         if identification_or_creditcard.is_a?(String)
           deprecated CREDIT_DEPRECATION_MESSAGE
           refund(money, identification_or_creditcard, options)
         else
-          add_creditcard(post, identification_or_creditcard)        
-          add_addresses(post, options)   
-          add_customer_data(post, options) 
-          
+          add_creditcard(post, identification_or_creditcard)
+          add_addresses(post, options)
+          add_customer_data(post, options)
+
           commit(:credit, post)
         end
       end
@@ -173,35 +171,34 @@ module ActiveMerchant
         post[:orderID] = reference
         commit(:refund, post)
       end
-      
-      private                                 
+
+      private
       def commit(action, post)
-        response = parse( ssl_post(URL, post_data(action, post)) )
-        
+        response = parse( ssl_post(self.live_url, post_data(action, post)) )
         success = SUCCESS_CODES.include?(response[:finalstatus])
         message = success ? 'Success' : message_from(response)
-            
-        Response.new(success, message, response, 
-          :test => test?, 
+
+        Response.new(success, message, response,
+          :test => test?,
           :authorization => response[:orderid],
           :avs_result => { :code => response[:avs_code] },
           :cvv_result => response[:cvvresp]
         )
       end
-                                               
+
       def parse(body)
         body = CGI.unescape(body)
         results = {}
         body.split('&').collect { |e| e.split('=') }.each do |key,value|
           results[key.downcase.to_sym] = normalize(value.to_s.strip)
         end
-        
+
         results.delete(:publisher_password)
         results[:avs_message] = AVS_MESSAGES[results[:avs_code]] if results[:avs_code]
         results[:card_code_message] = CARD_CODE_MESSAGES[results[:cvvresp]] if results[:cvvresp]
-        
+
         results
-      end     
+      end
 
       def post_data(action, post)
         post[:mode]               = TRANSACTIONS[action]
@@ -209,33 +206,33 @@ module ActiveMerchant
         post[:app_level]          = 0
         post[:publisher_name]     = @options[:login]
         post[:publisher_password] = @options[:password]
-      
+
         post.to_s
       end
-      
-      def add_creditcard(post, creditcard)      
+
+      def add_creditcard(post, creditcard)
         post[:card_number]  = creditcard.number
         post[:card_cvv]     = creditcard.verification_value
         post[:card_exp]     = expdate(creditcard)
         post[:card_name]    = creditcard.name.slice(0..38)
       end
-      
+
       def add_customer_data(post, options)
         post[:email] = options[:email]
         post[:dontsndmail]        = 'yes' unless options[:send_email_confirmation]
         post[:ipaddress] = options[:ip]
       end
-      
+
       def add_invoice_data(post, options)
         post[:shipping] = amount(options[:shipping]) unless options[:shipping].blank?
-        post[:tax] = amount(options[:tax]) unless options[:tax].blank?  
+        post[:tax] = amount(options[:tax]) unless options[:tax].blank?
       end
 
-      def add_addresses(post, options)      
+      def add_addresses(post, options)
         if address = options[:billing_address] || options[:address]
           post[:card_address1] = address[:address1]
-          post[:card_zip]      = address[:zip]     
-          post[:card_city]     = address[:city]    
+          post[:card_zip]      = address[:zip]
+          post[:card_city]     = address[:city]
           post[:card_country]  = address[:country]
           post[:phone]         = address[:phone]
 
@@ -243,35 +240,35 @@ module ActiveMerchant
           when 'US', 'CA'
             post[:card_state] = address[:state]
           else
-            post[:card_state] = 'ZZ' 
+            post[:card_state] = 'ZZ'
             post[:card_prov]  = address[:state]
           end
         end
-        
+
         if shipping_address = options[:shipping_address] || address
           post[:shipname] = shipping_address[:name]
           post[:address1] = shipping_address[:address1]
           post[:address2] = shipping_address[:address2]
           post[:city] = shipping_address[:city]
-          
+
           case shipping_address[:country]
           when 'US', 'CA'
             post[:state] = shipping_address[:state]
           else
-            post[:state] = 'ZZ' 
+            post[:state] = 'ZZ'
             post[:province]  = shipping_address[:state]
           end
-          
+
           post[:country] = shipping_address[:country]
           post[:zip] = shipping_address[:zip]
-        end        
+        end
       end
-      
+
       def add_amount(post, money, options)
         post[:card_amount] = amount(money)
         post[:currency] = options[:currency] || currency(money)
       end
-    
+
       # Make a ruby type out of the response string
       def normalize(field)
         case field
@@ -280,13 +277,13 @@ module ActiveMerchant
         when ""       then nil
         when "null"   then nil
         else field
-        end        
-      end          
-      
+        end
+      end
+
       def message_from(results)
         PAYMENT_GATEWAY_RESPONSES[results[:resp_code]]
       end
-        
+
       def expdate(creditcard)
         year  = sprintf("%.4i", creditcard.year)
         month = sprintf("%.2i", creditcard.month)

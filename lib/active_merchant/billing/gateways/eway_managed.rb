@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class EwayManagedGateway < Gateway
-      TEST_URL = 'https://www.eway.com.au/gateway/ManagedPaymentService/test/managedCreditCardPayment.asmx'
-      LIVE_URL = 'https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx'
+      self.test_url = 'https://www.eway.com.au/gateway/ManagedPaymentService/test/managedCreditCardPayment.asmx'
+      self.live_url = 'https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx'
       
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['AU']
@@ -194,7 +194,7 @@ private
       
       def commit(action, post)
         raw = begin
-          ssl_post(test? ? TEST_URL : LIVE_URL, soap_request(post, action), 'Content-Type' => 'application/soap+xml; charset=utf-8')
+          ssl_post(test? ? self.test_url : self.live_url, soap_request(post, action), 'Content-Type' => 'application/soap+xml; charset=utf-8')
         rescue ResponseError => e
           e.response.body
         end

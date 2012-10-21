@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SageVirtualCheckGateway < Gateway #:nodoc:
       include SageCore
-      self.url = 'https://www.sagepayments.net/cgi-bin/eftVirtualCheck.dll?transaction'
+      self.live_url = 'https://www.sagepayments.net/cgi-bin/eftVirtualCheck.dll?transaction'
       self.source = 'virtual_check'
       
       def purchase(money, credit_card, options = {})

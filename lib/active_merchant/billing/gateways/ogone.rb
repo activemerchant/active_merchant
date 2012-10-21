@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
     #               :user                      => "my_ogone_user_id",
     #               :password                  => "my_ogone_pswd",
     #               :signature                 => "my_ogone_sha_signature", # Only if you configured your Ogone environment so.
-    #               :signature_encryptor       => "sha512", # Can be "sha1" (default), "sha256" or "sha512".
+    #               :signature_encryptor       => "sha512", # Can be "none" (default), "sha1", "sha256" or "sha512".
     #                                                       # Must be the same as the one configured in your Ogone account.
     #            )
     #
@@ -122,9 +122,11 @@ module ActiveMerchant #:nodoc:
                                       :pop_ix      => 'POPIX' } # display the identification page in a pop-up window
                                                                 # and remain in the pop-up window.
 
-      OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE   = "Signature usage will be required from a future release of ActiveMerchant's Ogone Gateway. Please update your Ogone account to use it."
-      OGONE_LOW_ENCRYPTION_DEPRECATION_MESSAGE = "SHA512 signature encryptor will be required from a future release of ActiveMerchant's Ogone Gateway. Please update your Ogone account to use it."
+      OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE   = "Signature usage will be the default for a future release of ActiveMerchant. You should either begin using it, or update your configuration to explicitly disable it (signature_encryptor: none)"
       OGONE_STORE_OPTION_DEPRECATION_MESSAGE   = "The 'store' option has been renamed to 'billing_id', and its usage is deprecated."
+
+      self.test_url = URLS[:order] % "test"
+      self.live_url = URLS[:order] % "prod"
 
       self.supported_countries = ['BE', 'DE', 'FR', 'NL', 'AT', 'CH']
       # also supports Airplus and UATP
@@ -370,12 +372,15 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         add_pair parameters, 'Operation', action
-        @options[:signature] ? add_signature(parameters) : deprecated(OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE)
+        add_signature(parameters)
         parameters.to_query
       end
 
       def add_signature(parameters)
-        deprecated(OGONE_LOW_ENCRYPTION_DEPRECATION_MESSAGE) unless @options[:signature_encryptor] == 'sha512'
+        if @options[:signature].blank?
+           deprecated(OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE) unless(@options[:signature_encryptor] == "none")
+           return
+        end
 
         sha_encryptor = case @options[:signature_encryptor]
                         when 'sha256'

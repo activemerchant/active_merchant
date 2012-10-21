@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class EpayGateway < Gateway
       API_HOST = 'ssl.ditonlinebetalingssystem.dk'
-      SOAP_URL = 'https://' + API_HOST + '/remote/payment'
+      self.live_url = 'https://' + API_HOST + '/remote/payment'
 
       self.default_currency = 'DKK'
       self.money_format = :cents
@@ -236,7 +236,7 @@ module ActiveMerchant #:nodoc:
           'Content-Type' => 'text/xml; charset=utf-8',
           'Host' => API_HOST,
           'Content-Length' => data.size.to_s,
-          'SOAPAction' => SOAP_URL + '/' + soap_call
+          'SOAPAction' => self.live_url + '/' + soap_call
         }
       end
 
@@ -247,7 +247,7 @@ module ActiveMerchant #:nodoc:
                                       'xmlns:xsd' => 'http://www.w3.org/2001/XMLSchema',
                                       'xmlns:soap' => 'http://schemas.xmlsoap.org/soap/envelope/' } do
             xml.tag! 'soap:Body' do
-              xml.tag! soap_call, { 'xmlns' => SOAP_URL } do
+              xml.tag! soap_call, { 'xmlns' => self.live_url } do
                 xml.tag! 'merchantnumber', @options[:login]
                 xml.tag! 'transactionid', params[:transaction]
                 xml.tag! 'amount', params[:amount].to_s if soap_call != 'delete'

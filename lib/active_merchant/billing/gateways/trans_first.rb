@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class TransFirstGateway < Gateway
-      URL = 'https://webservices.primerchants.com/creditcard.asmx/CCSale'
+      self.live_url = self.test_url = 'https://webservices.primerchants.com/creditcard.asmx/CCSale'
 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def commit(params) 
-        response = parse( ssl_post(URL, post_data(params)) )
+        response = parse( ssl_post(self.live_url, post_data(params)) )
 
         Response.new(response[:status] == "Authorized", message_from(response), response, 
           :test => test?, 

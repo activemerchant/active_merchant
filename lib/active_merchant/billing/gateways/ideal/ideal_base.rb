@@ -6,10 +6,12 @@ module ActiveMerchant #:nodoc:
     # - does not support multiple subID per merchant
     # - language is fixed to 'nl'
     class IdealBaseGateway < Gateway
-      class_attribute :test_url, :live_url, :server_pem, :pem_password, :default_expiration_period
+      class_attribute :server_pem, :pem_password, :default_expiration_period
       self.default_expiration_period = 'PT10M'
       self.default_currency = 'EUR'
       self.pem_password = true
+
+      self.abstract_class = true
 
       # These constants will never change for most users
       AUTHENTICATION_TYPE = 'SHA1_RSA'

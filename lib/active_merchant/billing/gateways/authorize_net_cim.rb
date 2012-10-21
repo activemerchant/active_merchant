@@ -27,9 +27,6 @@ module ActiveMerchant #:nodoc:
     # 4. Type in the answer to the secret question configured on setup
     # 5. Click Submit
     class AuthorizeNetCimGateway < Gateway
-    
-      class_attribute :test_url, :live_url
-
       self.test_url = 'https://apitest.authorize.net/xml/v1/request.api'
       self.live_url = 'https://api.authorize.net/xml/v1/request.api'
       
@@ -676,9 +673,11 @@ module ActiveMerchant #:nodoc:
                 xml.tag!('customerProfileId', transaction[:customer_profile_id])
                 xml.tag!('customerPaymentProfileId', transaction[:customer_payment_profile_id])
                 xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
-                tag_unless_blank(xml, 'cardCode', transaction[:card_code])
             end
             add_order(xml, transaction[:order]) if transaction[:order].present?
+            unless [:void,:refund,:prior_auth_capture].include?(transaction[:type])
+              tag_unless_blank(xml, 'cardCode', transaction[:card_code])
+            end
           end
         end
       end

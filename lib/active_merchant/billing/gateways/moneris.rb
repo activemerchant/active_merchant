@@ -10,8 +10,8 @@ module ActiveMerchant #:nodoc:
     # Response Values", available at Moneris' {eSelect Plus Documentation 
     # Centre}[https://www3.moneris.com/connect/en/documents/index.html].
     class MonerisGateway < Gateway
-      TEST_URL = 'https://esqa.moneris.com/gateway2/servlet/MpgRequest'
-      LIVE_URL = 'https://www3.moneris.com/gateway2/servlet/MpgRequest'
+      self.test_url = 'https://esqa.moneris.com/gateway2/servlet/MpgRequest'
+      self.live_url = 'https://www3.moneris.com/gateway2/servlet/MpgRequest'
       
       self.supported_countries = ['CA']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover]
@@ -157,7 +157,7 @@ module ActiveMerchant #:nodoc:
       end
   
       def commit(action, parameters = {})
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, post_data(action, parameters)))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(action, parameters)))
 
         Response.new(successful?(response), message_from(response[:message]), response,
           :test          => test?,

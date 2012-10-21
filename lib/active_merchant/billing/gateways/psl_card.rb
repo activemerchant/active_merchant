@@ -29,9 +29,9 @@ module ActiveMerchant
       cattr_accessor :location
       self.location = 826
       
-      # PslCard server URL - The url is the same whether testing or live - use
+      # PslCard server self.live_url - The url is the same whether testing or live - use
       # the test account when testing...
-      URL = 'https://pslcard3.paymentsolutionsltd.com/secure/transact.asp?'
+      self.live_url = self.test_url = 'https://pslcard3.paymentsolutionsltd.com/secure/transact.asp?'
       
       # eCommerce sale transaction, details keyed by merchant or cardholder
       MESSAGE_TYPE = 'ESALE_KEYED' 
@@ -265,7 +265,7 @@ module ActiveMerchant
       #   - ActiveMerchant::Billing::Response object
       #
       def commit(request)
-        response = parse( ssl_post(URL, post_data(request)) )
+        response = parse( ssl_post(self.live_url, post_data(request)) )
         
         Response.new(response[:ResponseCode] == APPROVED, response[:Message], response, 
           :test => test?, 

@@ -45,18 +45,18 @@ credit card details.
 
 	require 'rubygems'
 	require 'active_merchant'
-	
+
 	# Use the TrustCommerce test servers
 	ActiveMerchant::Billing::Base.mode = :test
 
 	gateway = ActiveMerchant::Billing::TrustCommerceGateway.new(
 	            :login => 'TestMerchant',
 	            :password => 'password')
-	
+
 	# ActiveMerchant accepts all amounts as Integer values in cents
 	amount = 1000  # $10.00
-	
-	# The card verification value is also known as CVV2, CVC2, or CID 
+
+	# The card verification value is also known as CVV2, CVC2, or CID
 	credit_card = ActiveMerchant::Billing::CreditCard.new(
 	                :first_name         => 'Bob',
 	                :last_name          => 'Bobsen',
@@ -64,16 +64,16 @@ credit card details.
 	                :month              => '8',
 	                :year               => '2012',
 	                :verification_value => '123')
-	
+
 	# Validating the card automatically detects the card type
 	if credit_card.valid?
 	  # Capture $10 from the credit card
 	  response = gateway.purchase(amount, credit_card)
-	
+
 	  if response.success?
 	    puts "Successfully charged $#{sprintf("%.2f", amount / 100)} to the credit card #{credit_card.display_number}"
 	  else
-	    raise StandardError, response.message 
+	    raise StandardError, response.message
 	  end
 	end
 
@@ -86,6 +86,8 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 
 * [Authorize.Net](http://www.authorize.net/) - US
 * [Authorize.Net CIM](http://www.authorize.net/) - US
+* [Balanced](https://www.balancedpayments.com/) - US
+* [Banwire](https://www.banwire.com/) - MX
 * [Barclays ePDQ](http://www.barclaycard.co.uk/business/accepting-payments/epdq-mpi/) - UK
 * [Beanstream.com](http://www.beanstream.com/) - CA
 * [BluePay](http://www.bluepay.com/) - US
@@ -103,6 +105,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Federated Canada](http://www.federatedcanada.com/) - CA
 * [FirstPay](http://www.first-pay.com) - US
 * [Garanti Sanal POS](https://ccpos.garanti.com.tr/ccRaporlar/garanti/ccReports) - US, TR
+* [HDFC](http://www.hdfcbank.com/sme/sme-details/merchant-services/guzh6m0i) - IN
 * [Inspire](http://www.inspiregateway.com) - US
 * [InstaPay](http://www.instapayllc.com) - US
 * [Iridium](http://www.iridiumcorp.co.uk/) - UK, ES
@@ -112,6 +115,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Litle](http://www.litle.com/) - US
 * [Merchant e-Solutions](http://merchante-solutions.com/) - US
 * [MerchantWare](http://merchantwarehouse.com/merchantware) - US
+* [Mercury](http://www.mercurypay.com) - US
 * [MasterCard Internet Gateway Service (MiGS)](http://mastercard.com/mastercardsps) - AU, AE, BD, BN, EG, HK, ID, IN, JO, KW, LB, LK, MU, MV, MY, NZ, OM, PH, QA, SA, SG, TT, VN
 * [Modern Payments](http://www.modpay.com) - US
 * [Moneris](http://www.moneris.com/) - CA
@@ -124,8 +128,9 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [NMI](http://nmi.com/) - US
 * [Ogone DirectLink](http://www.ogone.com) - BE, DE, FR, NL, AT, CH
 * [Optimal Payments](http://www.optimalpayments.com/) - CA, US, UK
-* [Orbital Paymentech](http://chasepaymentech.com/) - CA, US
+* [Orbital Paymentech](http://chasepaymentech.com/) - CA, US, UK, GB
 * [PayBox Direct](http://www.paybox.com) - FR
+* [PayGate PayXML](http://paygate.co.za/) - US, ZA
 * [PayJunction](http://www.payjunction.com/) - US
 * [PaymentExpress](http://www.paymentexpress.com/) - AU, MY, NZ, SG, ZA, UK, US
 * [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside) - US, CA, SG, AU
@@ -135,6 +140,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside) - US
 * [PayPal Website Payments Pro (US)](https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - US
 * [PaySecure](http://www.commsecure.com.au/paysecure.shtml) - AU
+* [PayWay](https://www.payway.com.au) - AU
 * [Plug'n Pay](http://www.plugnpay.com/) - US
 * [Psigate](http://www.psigate.com/) - CA
 * [PSL Payment Solutions](http://www.paymentsolutionsltd.com/) - UK
@@ -158,6 +164,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Verifi](http://www.verifi.com/) - US
 * [ViaKLIX](http://viaklix.com) - US
 * [Vindica](http://www.vindicia.com/) - US, CA, UK, AU, MX, BR, DE, KR, CN, HK
+* [WebPay](https://webpay.jp/) - JP
 * [Wirecard](http://www.wirecard.com) - DE
 * [WorldPay](http://www.worldpay.com) - AU, HK, UK, US
 
@@ -172,14 +179,20 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Dotpay](http://dotpay.pl)
 * [Dwolla](https://www.dwolla.com/default.aspx)
 * [ePay](http://www.epay.dk/epay-payment-solutions/)
+* [First Data](https://firstdata.zendesk.com/entries/407522-first-data-global-gateway-e4sm-payment-pages-integration-manual)
 * [HiTRUST](http://www.hitrust.com.hk/)
 * [Moneybookers](http://www.moneybookers.com)
 * [Nochex](http://www.nochex.com)
+* [Paxum](https://www.paxum.com/)
 * [PayPal Website Payments Standard](https://www.paypal.com/cgi-bin/webscr?cmd#_wp-standard-overview-outside)
+* [Paysbuy](https://www.paysbuy.com/) - TH
 * [Robokassa](http://robokassa.ru/)
 * [SagePay Form](http://www.sagepay.com/products_services/sage_pay_go/integration/form)
+* [Suomen Maksuturva](https://www.maksuturva.fi/services/vendor_services/integration_guidelines.html)
 * [Valitor](http://www.valitor.is/) - IS
 * [Verkkomaksut](http://www.verkkomaksut.fi) - FI
+* [WebMoney](http://www.webmoney.ru) - RU
+* [WebPay](http://webpay.by/)
 * [WorldPay](http://www.worldpay.com)
 
 ## Contributing

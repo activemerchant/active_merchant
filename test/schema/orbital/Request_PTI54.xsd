@@ -1,0 +1,951 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:element name="Request">
+		<xs:annotation>
+			<xs:documentation>Top level element for all XML request transaction types</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:choice>
+				<xs:element name="AccountUpdater" type="accountUpdaterType"/>
+				<xs:element name="Inquiry" type="inquiryType"/>
+				<xs:element name="NewOrder" type="newOrderType"/>
+				<xs:element name="EndOfDay" type="endOfDayType"/>
+				<xs:element name="FlexCache" type="flexCacheType"/>
+				<xs:element name="Profile" type="profileType"/>
+				<xs:element name="Reversal" type="reversalType"/>
+				<xs:element name="MarkForCapture" type="markForCaptureType"/>
+				<xs:element name="SafetechFraudAnalysis" type="safetechFraudAnalysisType"/>
+			</xs:choice>
+		</xs:complexType>
+	</xs:element>
+
+	<xs:complexType name="baseElementsType">
+		<xs:sequence>
+			<xs:element name="IndustryType" type="valid-industry-types"/>
+			<xs:element name="CardBrand" type="valid-card-brands" minOccurs="0"/>
+			<xs:element name="AccountNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="Exp" type="xs:string" minOccurs="0"/>
+			<xs:element name="CurrencyCode" type="xs:string" minOccurs="0"/>
+			<xs:element name="CurrencyExponent" type="xs:string" minOccurs="0"/>
+			<xs:element name="CardSecValInd" type="xs:string" minOccurs="0"/>
+			<xs:element name="CardSecVal" type="xs:string" minOccurs="0"/>
+			<xs:element name="BCRtNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="CheckDDA" type="xs:string" minOccurs="0"/>
+			<xs:element name="BankAccountType" type="xs:string" minOccurs="0"/>
+			<xs:element name="ECPAuthMethod" type="xs:string" minOccurs="0"/>
+			<xs:element name="BankPmtDelv" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSzip" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSaddress1" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSaddress2" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVScity" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSstate" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSphoneNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSname" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVScountryCode" type="valid-country-codes" minOccurs="0"/>
+			<xs:element name="AVSDestzip" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestaddress1" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestaddress2" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestcity" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDeststate" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestphoneNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestname" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestcountryCode" type="valid-country-codes" minOccurs="0"/>
+			<xs:element name="UseCustomerRefNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="AuthenticationECIInd" type="valid-eci-types" minOccurs="0"/>
+			<xs:element name="CAVV" type="xs:string" minOccurs="0"/>
+			<xs:element name="XID" type="xs:string" minOccurs="0"/>
+			<xs:element name="AAV" type="xs:string" minOccurs="0"/>
+			<xs:element name="OrderID" type="xs:string"/>
+			<xs:element name="Amount" type="xs:string" minOccurs="0"/>
+			<xs:element name="Comments" type="xs:string" minOccurs="0"/>
+			<xs:element name="EUDDCountryCode" type="xs:string" minOccurs="0"/>
+			<xs:element name="EUDDBankSortCode" type="xs:string" minOccurs="0"/>
+			<xs:element name="EUDDRibCode" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerIP" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerEmail" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLShippingCost" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLTNCVersion" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerRegistrationDate" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerTypeFlag" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLItemCategory" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLPreapprovalInvitationNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLMerchantPromotionalCode" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerBirthDate" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerSSN" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerAnnualIncome" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerResidenceStatus" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerCheckingAccount" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerSavingsAccount" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLProductDeliveryType" type="xs:string" minOccurs="0"/>
+			<xs:element name="BillerReferenceNumber" type="xs:string" minOccurs="0"/>
+			<xs:element name="UseStoredAAVInd" type="xs:string" minOccurs="0"/>
+			<xs:element name="ECPCheckSerialNumber" type="xs:string" minOccurs="0"/>
+			<xs:element name="ECPTerminalCity" type="xs:string" minOccurs="0"/>
+			<xs:element name="ECPTerminalState" type="xs:string" minOccurs="0"/>
+			<xs:element name="ECPImageReferenceNumber" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerAni" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSPhoneType" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestPhoneType" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerEmail" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerIpAddress" type="xs:string" minOccurs="0"/>
+			<xs:element name="EmailAddressSubtype" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerBrowserName" type="xs:string" minOccurs="0"/>
+			<xs:element name="ShippingMethod" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="fraudAnalysisType">
+		<xs:sequence>
+			<xs:element name="FraudScoreIndicator" type="xs:string" minOccurs="0"/>
+			<xs:element name="RulesTrigger" type="xs:string" minOccurs="0"/>
+			<xs:element name="SafetechMerchantID" type="xs:string" minOccurs="0"/>
+			<xs:element name="KaptchaSessionID" type="xs:string" minOccurs="0"/>
+			<xs:element name="WebsiteShortName" type="xs:string" minOccurs="0"/>
+			<xs:element name="CashValueOfFencibleItems" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerDOB" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerGender" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerDriverLicense" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerID" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerIDCreationTime" type="xs:string" minOccurs="0"/>
+			<xs:element name="KTTVersionNumber" type="xs:string" minOccurs="0"/>
+			<xs:element name="KTTDataLength" type="xs:string" minOccurs="0"/>
+			<xs:element name="KTTDataString" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="safetechFraudAnalysisType">
+		<xs:sequence>
+			<xs:element name="OrbitalConnectionUsername" type="xs:string" minOccurs="0"/>
+			<xs:element name="OrbitalConnectionPassword" type="xs:string" minOccurs="0"/>
+			<xs:element name="BIN" type="valid-routing-bins"/>
+			<xs:element name="MerchantID" type="xs:string"/>
+			<xs:element name="TerminalID" type="terminal-type"/>
+			<xs:element name="BaseElements" type="baseElementsType" minOccurs="1"/>
+			<xs:element name="FraudAnalysis" type="fraudAnalysisType" minOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:complexType name="newOrderType">
+		<xs:sequence>
+			<xs:element name="OrbitalConnectionUsername" type="xs:string" minOccurs="0"/>
+			<xs:element name="OrbitalConnectionPassword" type="xs:string" minOccurs="0"/>
+			<xs:element name="IndustryType" type="valid-industry-types"/>
+			<xs:element name="MessageType" type="valid-trans-types"/>
+			<xs:element name="BIN" type="valid-routing-bins"/>
+			<xs:element name="MerchantID" type="xs:string"/>
+			<xs:element name="TerminalID" type="terminal-type"/>
+			<xs:element name="CardBrand" type="valid-card-brands" minOccurs="0"/>
+			<xs:element name="AccountNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="Exp" type="xs:string" minOccurs="0"/>
+			<xs:element name="CurrencyCode" type="xs:string" minOccurs="0"/>
+			<xs:element name="CurrencyExponent" type="xs:string" minOccurs="0"/>
+			<xs:element name="CardSecValInd" type="xs:string" minOccurs="0"/>
+			<xs:element name="CardSecVal" type="xs:string" minOccurs="0"/>
+			<xs:element name="DebitCardIssueNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="DebitCardStartDate" type="xs:string" minOccurs="0"/>
+			<xs:element name="BCRtNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="CheckDDA" type="xs:string" minOccurs="0"/>
+			<xs:element name="BankAccountType" type="xs:string" minOccurs="0"/>
+			<xs:element name="ECPAuthMethod" type="xs:string" minOccurs="0"/>
+			<xs:element name="BankPmtDelv" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSzip" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSaddress1" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSaddress2" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVScity" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSstate" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSphoneNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSname" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVScountryCode" type="valid-country-codes" minOccurs="0"/>
+			<xs:element name="AVSDestzip" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestaddress1" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestaddress2" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestcity" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDeststate" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestphoneNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestname" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestcountryCode" type="valid-country-codes" minOccurs="0"/>
+			<xs:element name="CustomerProfileFromOrderInd" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerRefNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerProfileOrderOverrideInd" type="xs:string" minOccurs="0"/>
+			<xs:element name="Status" type="xs:string" minOccurs="0"/>
+			<xs:element name="AuthenticationECIInd" type="valid-eci-types" minOccurs="0"/>
+			<xs:element name="CAVV" type="xs:string" minOccurs="0"/>
+			<xs:element name="XID" type="xs:string" minOccurs="0"/>
+			<xs:element name="PriorAuthID" type="vallid-prior-auth" minOccurs="0"/>
+			<xs:element name="OrderID" type="xs:string"/>
+			<xs:element name="Amount" type="xs:string" minOccurs="0"/>
+			<xs:element name="Comments" type="xs:string" minOccurs="0"/>
+			<xs:element name="ShippingRef" type="xs:string" minOccurs="0"/>
+			<xs:element name="TaxInd" type="valid-tax-inds" minOccurs="0"/>
+			<xs:element name="Tax" type="xs:string" minOccurs="0"/>
+			<xs:element name="AMEXTranAdvAddn1" type="xs:string" minOccurs="0"/>
+			<xs:element name="AMEXTranAdvAddn2" type="xs:string" minOccurs="0"/>
+			<xs:element name="AMEXTranAdvAddn3" type="xs:string" minOccurs="0"/>
+			<xs:element name="AMEXTranAdvAddn4" type="xs:string" minOccurs="0"/>
+			<xs:element name="AAV" type="xs:string" minOccurs="0"/>
+			<xs:element name="SDMerchantName" type="xs:string" minOccurs="0"/>
+			<xs:element name="SDProductDescription" type="xs:string" minOccurs="0"/>
+			<xs:element name="SDMerchantCity" type="xs:string" minOccurs="0"/>
+			<xs:element name="SDMerchantPhone" type="xs:string" minOccurs="0"/>
+			<xs:element name="SDMerchantURL" type="xs:string" minOccurs="0"/>
+			<xs:element name="SDMerchantEmail" type="xs:string" minOccurs="0"/>
+			<xs:element name="RecurringInd" type="recurring-ind-types" minOccurs="0"/>
+			<xs:element name="EUDDCountryCode" type="xs:string" minOccurs="0"/>
+			<xs:element name="EUDDBankSortCode" type="xs:string" minOccurs="0"/>
+			<xs:element name="EUDDRibCode" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerIP" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerEmail" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLShippingCost" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLTNCVersion" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerRegistrationDate" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerTypeFlag" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLItemCategory" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLPreapprovalInvitationNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLMerchantPromotionalCode" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerBirthDate" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerSSN" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerAnnualIncome" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerResidenceStatus" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerCheckingAccount" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLCustomerSavingsAccount" type="xs:string" minOccurs="0"/>
+			<xs:element name="BMLProductDeliveryType" type="xs:string" minOccurs="0"/>
+			<xs:element name="BillerReferenceNumber" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBType" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBOrderIdGenerationMethod" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBRecurringStartDate" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBRecurringEndDate" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBRecurringNoEndDateFlag" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBRecurringMaxBillings" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBRecurringFrequency" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBDeferredBillDate" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBMicroPaymentMaxDollarValue" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBMicroPaymentMaxBillingDays" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBMicroPaymentMaxTransactions" type="xs:string" minOccurs="0"/>
+			<xs:element name="TxRefNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="PCOrderNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="PCDestZip" type="xs:string" minOccurs="0"/>
+			<xs:element name="PCDestName" type="xs:string" minOccurs="0"/>
+			<xs:element name="PCDestAddress1" type="xs:string" minOccurs="0"/>
+			<xs:element name="PCDestAddress2" type="xs:string" minOccurs="0"/>
+			<xs:element name="PCDestCity" type="xs:string" minOccurs="0"/>
+			<xs:element name="PCDestState" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3FreightAmt" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DutyAmt" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DestCountryCd" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3ShipFromZip" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DiscAmt" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3VATtaxAmt" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3VATtaxRate" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3AltTaxInd" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3AltTaxAmt" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3LineItemCount" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3LineItemArray" type="PC3LineItemArray" minOccurs="0"/>
+			<xs:element name="PartialAuthInd" type="xs:string" minOccurs="0"/>
+			<xs:element name="AccountUpdaterEligibility" type="xs:string" minOccurs="0"/>
+			<xs:element name="UseStoredAAVInd" type="xs:string" minOccurs="0"/>
+			<xs:element name="ECPActionCode" type="xs:string" minOccurs="0"/>
+			<xs:element name="ECPCheckSerialNumber" type="xs:string" minOccurs="0"/>
+			<xs:element name="ECPTerminalCity" type="xs:string" minOccurs="0"/>
+			<xs:element name="ECPTerminalState" type="xs:string" minOccurs="0"/>
+			<xs:element name="ECPImageReferenceNumber" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerAni" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSPhoneType" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestPhoneType" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerEmail" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerIpAddress" type="xs:string" minOccurs="0"/>
+			<xs:element name="EmailAddressSubtype" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerBrowserName" type="xs:string" minOccurs="0"/>
+			<xs:element name="ShippingMethod" type="xs:string" minOccurs="0"/>
+			<xs:element name="FraudAnalysis" type="fraudAnalysisType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PC3LineItemArray">
+		<xs:sequence>
+			<xs:element name="PC3LineItem" type="PC3LineItemType" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PC3LineItemType">
+		<xs:sequence>
+			<xs:element name="PC3DtlIndex" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DtlDesc" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DtlProdCd" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DtlQty" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DtlUOM" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DtlTaxAmt" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DtlTaxRate" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3Dtllinetot" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DtlDisc" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DtlCommCd" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DtlUnitCost" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DtlGrossNet" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DtlTaxType" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DtlDiscInd" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DtlDebitInd" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="markForCaptureType">
+		<xs:sequence>
+			<xs:element name="OrbitalConnectionUsername" type="xs:string" minOccurs="0"/>
+			<xs:element name="OrbitalConnectionPassword" type="xs:string" minOccurs="0"/>
+			<xs:element name="OrderID" type="xs:string"/>
+			<xs:element name="Amount" type="xs:string" minOccurs="0"/>
+			<xs:element name="TaxInd" type="valid-tax-inds" minOccurs="0"/>
+			<xs:element name="Tax" type="xs:string" minOccurs="0"/>
+			<xs:element name="BIN" type="valid-routing-bins"/>
+			<xs:element name="MerchantID" type="xs:string"/>
+			<xs:element name="TerminalID" type="terminal-type"/>
+			<xs:element name="TxRefNum" type="xs:string"/>
+			<xs:element name="PCOrderNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="PCDestZip" type="xs:string" minOccurs="0"/>
+			<xs:element name="PCDestName" type="xs:string" minOccurs="0"/>
+			<xs:element name="PCDestAddress1" type="xs:string" minOccurs="0"/>
+			<xs:element name="PCDestAddress2" type="xs:string" minOccurs="0"/>
+			<xs:element name="PCDestCity" type="xs:string" minOccurs="0"/>
+			<xs:element name="PCDestState" type="xs:string" minOccurs="0"/>
+			<xs:element name="AMEXTranAdvAddn1" type="xs:string" minOccurs="0"/>
+			<xs:element name="AMEXTranAdvAddn2" type="xs:string" minOccurs="0"/>
+			<xs:element name="AMEXTranAdvAddn3" type="xs:string" minOccurs="0"/>
+			<xs:element name="AMEXTranAdvAddn4" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3FreightAmt" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DutyAmt" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DestCountryCd" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3ShipFromZip" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3DiscAmt" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3VATtaxAmt" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3VATtaxRate" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3AltTaxInd" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3AltTaxID" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3AltTaxAmt" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3LineItemCount" type="xs:string" minOccurs="0"/>
+			<xs:element name="PC3LineItemArray" type="PC3LineItemArray" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="reversalType">
+		<xs:sequence>
+			<xs:element name="OrbitalConnectionUsername" type="xs:string" minOccurs="0"/>
+			<xs:element name="OrbitalConnectionPassword" type="xs:string" minOccurs="0"/>
+			<xs:element name="TxRefNum" type="xs:string"/>
+			<xs:element name="TxRefIdx" type="xs:string" minOccurs="0"/>
+			<xs:element name="AdjustedAmt" type="xs:string" minOccurs="0"/>
+			<xs:element name="OrderID" type="xs:string"/>
+			<xs:element name="BIN" type="valid-routing-bins"/>
+			<xs:element name="MerchantID" type="xs:string"/>
+			<xs:element name="TerminalID" type="terminal-type"/>
+			<xs:element name="ReversalRetryNumber" type="xs:string" minOccurs="0"/>
+			<xs:element name="OnlineReversalInd" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="endOfDayType">
+		<xs:sequence>
+			<xs:element name="OrbitalConnectionUsername" type="xs:string" minOccurs="0"/>
+			<xs:element name="OrbitalConnectionPassword" type="xs:string" minOccurs="0"/>
+			<xs:element name="BIN" type="valid-routing-bins"/>
+			<xs:element name="MerchantID" type="xs:string"/>
+			<xs:element name="TerminalID" type="terminal-type"/>
+			<xs:element ref="SettleRejectHoldingBin" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="inquiryType">
+		<xs:sequence>
+			<xs:element name="OrbitalConnectionUsername" type="xs:string" minOccurs="0"/>
+			<xs:element name="OrbitalConnectionPassword" type="xs:string" minOccurs="0"/>
+			<xs:element name="BIN" type="valid-routing-bins"/>
+			<xs:element name="MerchantID" type="xs:string"/>
+			<xs:element name="TerminalID" type="terminal-type"/>
+			<xs:element name="OrderID" type="xs:string" minOccurs="0"/>
+			<xs:element name="InquiryRetryNumber" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="accountUpdaterType">
+		<xs:sequence>
+			<xs:element name="OrbitalConnectionUsername" type="xs:string" minOccurs="0"/>
+			<xs:element name="OrbitalConnectionPassword" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerBin" type="valid-routing-bins"/>
+			<xs:element name="CustomerMerchantID" type="xs:string"/>
+			<xs:element name="CustomerRefNum" type="xs:string" />
+			<xs:element name="CustomerProfileAction" type="xs:string" minOccurs="0"/>
+			<xs:element name="ScheduledDate" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="profileType">
+		<xs:sequence>
+			<xs:element name="OrbitalConnectionUsername" type="xs:string" minOccurs="0"/>
+			<xs:element name="OrbitalConnectionPassword" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerBin" type="valid-routing-bins"/>
+			<xs:element name="CustomerMerchantID" type="xs:string"/>
+			<xs:element name="CustomerName" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerRefNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerAddress1" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerAddress2" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerCity" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerState" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerZIP" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerEmail" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerPhone" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerCountryCode" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerProfileAction" type="profile-action-types"/>
+			<xs:element name="CustomerProfileOrderOverrideInd" type="valid-profileOrderOverideInds" minOccurs="0"/>
+			<xs:element name="CustomerProfileFromOrderInd" type="valid-profileFromOrderInd" minOccurs="0"/>
+			<xs:element name="OrderDefaultDescription" type="xs:string" minOccurs="0"/>
+			<xs:element name="OrderDefaultAmount" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerAccountType" type="valid-customer-account-types" minOccurs="0"/>
+			<xs:element name="Status" type="xs:string" minOccurs="0"/>
+			<xs:element name="CCAccountNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="CCExpireDate" type="xs:string" minOccurs="0"/>
+			<xs:element name="ECPAccountDDA" type="xs:string" minOccurs="0"/>
+			<xs:element name="ECPAccountType" type="xs:string" minOccurs="0"/>
+			<xs:element name="ECPAccountRT" type="xs:string" minOccurs="0"/>
+			<xs:element name="ECPBankPmtDlv" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBType" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBOrderIdGenerationMethod" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBRecurringStartDate" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBRecurringEndDate" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBRecurringNoEndDateFlag" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBRecurringMaxBillings" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBRecurringFrequency" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBDeferredBillDate" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBMicroPaymentMaxDollarValue" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBMicroPaymentMaxBillingDays" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBMicroPaymentMaxTransactions" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBCancelDate" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBRestoreBillingDate" type="xs:string" minOccurs="0"/>
+			<xs:element name="MBRemoveFlag" type="xs:string" minOccurs="0"/>
+			<xs:element name="EUDDCountryCode" type="xs:string" minOccurs="0"/>
+			<xs:element name="EUDDBankSortCode" type="xs:string" minOccurs="0"/>
+			<xs:element name="EUDDRibCode" type="xs:string" minOccurs="0"/>
+			<xs:element name="SDMerchantName" type="xs:string" minOccurs="0"/>
+			<xs:element name="SDProductDescription" type="xs:string" minOccurs="0"/>
+			<xs:element name="SDMerchantCity" type="xs:string" minOccurs="0"/>
+			<xs:element name="SDMerchantPhone" type="xs:string" minOccurs="0"/>
+			<xs:element name="SDMerchantURL" type="xs:string" minOccurs="0"/>
+			<xs:element name="SDMerchantEmail" type="xs:string" minOccurs="0"/>
+			<xs:element name="BillerReferenceNumber" type="xs:string" minOccurs="0"/>
+			<xs:element name="AccountUpdaterEligibility" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="flexCacheType">
+		<xs:sequence>
+			<xs:element name="OrbitalConnectionUsername" type="xs:string" minOccurs="0"/>
+			<xs:element name="OrbitalConnectionPassword" type="xs:string" minOccurs="0"/>
+			<xs:element name="BIN" type="valid-routing-bins"/>
+			<xs:element name="MerchantID" type="xs:string"/>
+			<xs:element name="TerminalID" type="terminal-type"/>
+			<xs:element name="AccountNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="OrderID" type="xs:string"/>
+			<xs:element name="Amount" type="xs:string" minOccurs="0"/>
+			<xs:element name="CardSecVal" type="xs:string" minOccurs="0"/>
+			<xs:element name="Comments" type="xs:string" minOccurs="0"/>
+			<xs:element name="ShippingRef" type="xs:string" minOccurs="0"/>
+			<xs:element name="IndustryType" type="valid-industry-types"/>
+			<xs:element name="FlexAutoAuthInd" type="yes-or-no"/>
+			<xs:element name="FlexPartialRedemptionInd" type="yes-or-no"/>
+			<xs:element name="FlexAction" type="flex-action-types"/>
+			<xs:element name="StartAccountNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="ActivationCount" type="xs:string" minOccurs="0"/>
+			<xs:element name="TxRefNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="FlexEmployeeNumber" type="xs:string" minOccurs="0"/>
+			<xs:element name="PriorAuthID" type="vallid-prior-auth" minOccurs="0"/>			
+			<xs:element name="AVSzip" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSaddress1" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSaddress2" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVScity" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSstate" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSphoneNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSname" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVScountryCode" type="valid-country-codes" minOccurs="0"/>
+			<xs:element name="AVSDestzip" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestaddress1" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestaddress2" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestcity" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDeststate" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestphoneNum" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestname" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestcountryCode" type="valid-country-codes" minOccurs="0"/>			
+			<xs:element name="CustomerAni" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSPhoneType" type="xs:string" minOccurs="0"/>
+			<xs:element name="AVSDestPhoneType" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerEmail" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerIpAddress" type="xs:string" minOccurs="0"/>
+			<xs:element name="EmailAddressSubtype" type="xs:string" minOccurs="0"/>
+			<xs:element name="CustomerBrowserName" type="xs:string" minOccurs="0"/>
+			<xs:element name="ShippingMethod" type="xs:string" minOccurs="0"/>
+			<xs:element name="FraudAnalysis" type="fraudAnalysisType" minOccurs="0"/>			
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="terminal-type">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="3"/>
+			<xs:minLength value="1"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="valid-trans-types">
+		<xs:annotation>
+			<xs:documentation>New order Transaction Types</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="20"/>
+			<xs:enumeration value="A">
+				<xs:annotation>
+					<xs:documentation>Auth Only No Capture</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="AC">
+				<xs:annotation>
+					<xs:documentation>Auth and Capture</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="F">
+				<xs:annotation>
+					<xs:documentation>Force Auth No Capture and no online authorization</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="FR">
+				<xs:annotation>
+					<xs:documentation>Force Auth No Capture and no online authorization</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="FC">
+				<xs:annotation>
+					<xs:documentation>Force Auth and Capture no online authorization</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="R">
+				<xs:annotation>
+					<xs:documentation>Refund and Capture no online authorization</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="valid-industry-types">
+		<xs:annotation>
+			<xs:documentation>New order Industry Types</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="20"/>
+			<xs:enumeration value="EC">
+				<xs:annotation>
+					<xs:documentation>Ecommerce transaction</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="RC">
+				<xs:annotation>
+					<xs:documentation>Recurring Payment transaction</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="MO">
+				<xs:annotation>
+					<xs:documentation>Mail Order Telephone Order transaction</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="IV">
+				<xs:annotation>
+					<xs:documentation>Interactive Voice Response</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="IN">
+				<xs:annotation>
+					<xs:documentation>Interactive Voice Response</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="valid-tax-inds">
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="1"/>
+					<xs:enumeration value="0">
+						<xs:annotation>
+							<xs:documentation>Tax not provided</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="1">
+						<xs:annotation>
+							<xs:documentation>Tax included</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="2">
+						<xs:annotation>
+							<xs:documentation>Non-taxable transaction</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value=""/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+	<xs:simpleType name="valid-routing-bins">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="6"/>
+			<xs:enumeration value="000001">
+				<xs:annotation>
+					<xs:documentation>Stratus</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="000002">
+				<xs:annotation>
+					<xs:documentation>Tandam</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="valid-profileOrderOverideInds">
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="2"/>
+					<xs:enumeration value="NO">
+						<xs:annotation>
+							<xs:documentation>No mapping to order data</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="OI">
+						<xs:annotation>
+							<xs:documentation>Use customer reference for OrderID</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="OA">
+						<xs:annotation>
+							<xs:documentation>Use customer reference for both Order Id and Order Description</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="OD">
+						<xs:annotation>
+							<xs:documentation>Use customer reference for Order Description</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value=""/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+	<xs:simpleType name="valid-profileFromOrderInd">
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="1"/>
+					<xs:enumeration value="A">
+						<xs:annotation>
+							<xs:documentation>Auto Generate the CustomerRefNum</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="O">
+						<xs:annotation>
+							<xs:documentation>Use OrderID as the CustomerRefNum</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="S">
+						<xs:annotation>
+							<xs:documentation>Use CustomerRefNum Element</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="D">
+						<xs:annotation>
+							<xs:documentation>Use the description as the CustomerRefNum</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="I">
+						<xs:annotation>
+							<xs:documentation>Ignore.  We will Ignore this entry if it's passed in the XML</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value=""/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+	<xs:simpleType name="valid-card-brands">
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="2"/>
+					<xs:enumeration value="AX">
+						<xs:annotation>
+							<xs:documentation>American Express</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="CB">
+						<xs:annotation>
+							<xs:documentation>Carte Blanche</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="DC">
+						<xs:annotation>
+							<xs:documentation>Diners Club</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="DI">
+						<xs:annotation>
+							<xs:documentation>Discover</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="GC">
+						<xs:annotation>
+							<xs:documentation>GE Twinpay Credit</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="GE">
+						<xs:annotation>
+							<xs:documentation>GECC Private Label Credit</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="JC">
+						<xs:annotation>
+							<xs:documentation>JCB</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="MC">
+						<xs:annotation>
+							<xs:documentation>Mastercard</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="VI">
+						<xs:annotation>
+							<xs:documentation>Visa</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="GD">
+						<xs:annotation>
+							<xs:documentation>GE Twinpay Debit</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="SW">
+						<xs:annotation>
+							<xs:documentation>Switch / Solo</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="EC">
+						<xs:annotation>
+							<xs:documentation>Electronic Check</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="FC">
+						<xs:annotation>
+							<xs:documentation>Flex Cache</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="ED">
+						<xs:annotation>
+							<xs:documentation>European Direct Debit </xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="BL">
+						<xs:annotation>
+							<xs:documentation>Bill Me Later </xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="DP">
+						<xs:annotation>
+							<xs:documentation>PINLess Debit </xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="IM">
+						<xs:annotation>
+							<xs:documentation>International Maestro</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value=""/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+	<xs:simpleType name="valid-customer-account-types">
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="2"/>
+					<xs:enumeration value="CC">
+						<xs:annotation>
+							<xs:documentation>Credit Card</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="SW">
+						<xs:annotation>
+							<xs:documentation>Swith/Solo</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="EC">
+						<xs:annotation>
+							<xs:documentation>Electronic Check</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="DP">
+        				<xs:annotation>
+          					<xs:documentation>PINLess Debit</xs:documentation>
+        				</xs:annotation>
+      				</xs:enumeration>
+      				<xs:enumeration value="ED">
+        				<xs:annotation>
+          					<xs:documentation>European Direct Debit</xs:documentation>
+        				</xs:annotation>
+      				</xs:enumeration>
+					<xs:enumeration value="IM">
+						<xs:annotation>
+							<xs:documentation>International Maestro</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value=""/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+	<xs:simpleType name="valid-country-codes">
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="2"/>
+					<xs:enumeration value="US">
+						<xs:annotation>
+							<xs:documentation>United States</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="CA">
+						<xs:annotation>
+							<xs:documentation>Canada</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="GB">
+						<xs:annotation>
+							<xs:documentation>Germany</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="UK">
+						<xs:annotation>
+							<xs:documentation>Great Britain</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value=""/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+	<xs:simpleType name="yes-or-no">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="1"/>
+			<xs:enumeration value="Y">
+				<xs:annotation>
+					<xs:documentation>Yes</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="y">
+				<xs:annotation>
+					<xs:documentation>Yes</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="N">
+				<xs:annotation>
+					<xs:documentation>No</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+			<xs:enumeration value="n">
+				<xs:annotation>
+					<xs:documentation>No</xs:documentation>
+				</xs:annotation>
+			</xs:enumeration>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="flex-action-types">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="30"/>
+			<xs:pattern value="([Bb][Aa][Ll][Aa][Nn][Cc][Ee][Ii][Nn][Qq][Uu][Ii][Rr][Yy])"/>
+			<xs:pattern value="([Aa][Dd][Dd][Vv][Aa][Ll][Uu][Ee])"/>
+			<xs:pattern value="([Rr][Ee][Ff][Uu][Nn][Dd])"/>
+			<xs:pattern value="([Aa][Uu][Tt][Hh])"/>
+			<xs:pattern value="([Aa][Cc][Tt][Ii][Vv][Aa][Tt][Ee])"/>
+			<xs:pattern value="([Dd][Ee][Aa][Cc][Tt][Ii][Vv][Aa][Tt][Ee])"/>
+			<xs:pattern value="([Rr][Ee][Aa][Cc][Tt][Ii][Vv][Aa][Tt][Ee])"/>
+			<xs:pattern value="([Rr][Ee][Dd][Ee][Mm][Pp][Tt][Ii][Oo][Nn][Cc][Oo][Mm][Pp][Ll][Ee][Tt][Ii][Oo][Nn])"/>
+			<xs:pattern value="([Rr][Ee][Dd][Ee][Mm][Pp][Tt][Ii][Oo][Nn])"/>
+			<xs:pattern value="([Vv][Oo][Ii][Dd])"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="valid-eci-types">
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="1"/>
+					<xs:enumeration value="5">
+						<xs:annotation>
+							<xs:documentation>Authenticated</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="6">
+						<xs:annotation>
+							<xs:documentation>Attempted</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value=""/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+	<xs:simpleType name="recurring-ind-types">
+		<xs:union>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="2"/>
+					<xs:enumeration value="RF">
+						<xs:annotation>
+							<xs:documentation>First Recurring Transaction</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="RS">
+						<xs:annotation>
+							<xs:documentation>Subsequent Recurring Transactions</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value=""/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:union>
+	</xs:simpleType>
+	<xs:element name="SettleRejectHoldingBin">
+		<xs:complexType/>
+	</xs:element>
+	<xs:simpleType name="profile-action-types">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="1"/>
+			<xs:enumeration value="C"/>
+			<xs:enumeration value="R"/>
+			<xs:enumeration value="U"/>
+			<xs:enumeration value="D"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="vallid-prior-auth">
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="6"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>

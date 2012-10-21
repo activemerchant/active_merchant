@@ -11,7 +11,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     @payment = {
       :credit_card => @credit_card
     }
-    @profile = { 
+    @profile = {
       :merchant_customer_id => 'Up to 20 chars', # Optional
       :description => 'Up to 255 Characters', # Optional
       :email => 'Up to 255 Characters', # Optional
@@ -21,8 +21,8 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
         :payment => @payment
       },
       :ship_to_list => {
-        :first_name => 'John', 
-        :last_name => 'Doe', 
+        :first_name => 'John',
+        :last_name => 'Doe',
         :company => 'Widgets, Inc',
         :address1 => '1234 Fake Street',
         :city => 'Anytown',
@@ -146,6 +146,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
           :description => 'Test Order Description',
           :purchase_order_number => '4321'
         },
+        :card_code => '900', # authorize.net says this is a matching CVV
         :amount => @amount
       }
     )
@@ -161,7 +162,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal response.params['direct_response']['order_description'], 'Test Order Description'
     assert_equal response.params['direct_response']['purchase_order_number'], '4321'
   end
-  
+
   def test_successful_create_customer_payment_profile_request
     payment_profile = @options[:profile].delete(:payment_profiles)
     assert response = @gateway.create_customer_profile(@options)
@@ -264,7 +265,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_nil response.authorization
     assert customer_payment_profile_id = response.params['customer_payment_profile_id']
     assert customer_payment_profile_id =~ /\d+/, "The customerPaymentProfileId should be numeric. It was #{customer_payment_profile_id}"
-    
+
     assert response = @gateway.get_customer_profile(:customer_profile_id => @customer_profile_id)
     assert_equal 2, response.params['profile']['payment_profiles'].size
     assert_equal 'XXXX4242', response.params['profile']['payment_profiles'][0]['payment']['credit_card']['card_number']
@@ -393,7 +394,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     # Show that fields that were left out of the update were cleared
     assert_nil response.params['payment_profile']['customer_type']
   end
-  
+
   def test_successful_update_customer_shipping_address_request
     # Create a new Customer Profile with Shipping Address
     assert response = @gateway.create_customer_profile(@options)

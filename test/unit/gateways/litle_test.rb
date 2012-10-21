@@ -274,23 +274,23 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_auth_pass
-    authorizationResponseObj = stub(@response_options)
-    retObj = stub({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
+    authorizationResponseObj = @response_options
+    retObj = {'response'=>'0','authorizationResponse'=>authorizationResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
 
     creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.authorize(0, creditcard)
     assert_equal true, responseFrom.success?
     assert_equal 'successful', responseFrom.message
     assert_equal '1234', responseFrom.authorization
-    assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse'].authorizationResponse.litleToken
+    assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse']['authorizationResponse']['litleToken']
   end
 
   def test_avs
-    fraudResult = stub({'avsResult'=>'01'})
-    authorizationResponseObj = stub(@response_options.merge('fraudResult' => fraudResult))
-    retObj = stub({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
+    fraudResult = {'avsResult'=>'01'}
+    authorizationResponseObj = @response_options.merge('fraudResult' => fraudResult)
+    retObj = {'response'=>'0','authorizationResponse'=>authorizationResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
 
     creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.authorize(0, creditcard)
@@ -302,10 +302,10 @@ class LitleTest < Test::Unit::TestCase
   end
   
   def test_cvv
-    fraudResult = stub({'cardValidationResult'=>'M'})
-    authorizationResponseObj = stub(@response_options.merge('fraudResult' => fraudResult))
-    retObj = stub({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
+    fraudResult = {'cardValidationResult'=>'M'}
+    authorizationResponseObj = @response_options.merge('fraudResult' => fraudResult)
+    retObj = {'response'=>'0','authorizationResponse'=>authorizationResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
 
     creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.authorize(0, creditcard)
@@ -315,10 +315,10 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_sale_avs
-    fraudResult = stub({'avsResult'=>'10'})
-    saleResponseObj = stub(@response_options.merge('fraudResult' => fraudResult))
-    retObj = stub({'response'=>'0','saleResponse'=>saleResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
+    fraudResult = {'avsResult'=>'10'}
+    saleResponseObj = @response_options.merge('fraudResult' => fraudResult)
+    retObj = {'response'=>'0','saleResponse'=>saleResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
 
     creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.purchase(0, creditcard)
@@ -330,10 +330,10 @@ class LitleTest < Test::Unit::TestCase
   end
   
   def test_sale_cvv
-    fraudResult = stub({'cardValidationResult'=>''})
-    saleResponseObj = stub(@response_options.merge('fraudResult' => fraudResult))
-    retObj = stub({'response'=>'0','saleResponse'=>saleResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
+    fraudResult = {'cardValidationResult'=>''}
+    saleResponseObj = @response_options.merge('fraudResult' => fraudResult)
+    retObj = {'response'=>'0','saleResponse'=>saleResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
 
     creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.purchase(0, creditcard)
@@ -344,20 +344,20 @@ class LitleTest < Test::Unit::TestCase
 
     
   def test_auth_fail
-    authorizationResponseObj = stub({'response' => '111', 'message' => 'fail', 'litleTxnId' => '1234', 'litleToken'=>'1111222233334444'})
-    retObj = stub({'response'=>'0','authorizationResponse'=>authorizationResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
+    authorizationResponseObj = {'response' => '111', 'message' => 'fail', 'litleTxnId' => '1234', 'litleToken'=>'1111222233334444'}
+    retObj = {'response'=>'0','authorizationResponse'=>authorizationResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
 
     creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.authorize(0, creditcard)
     assert_equal false, responseFrom.success?
     assert_equal '1234', responseFrom.authorization
-    assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse'].authorizationResponse.litleToken
+    assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse']['authorizationResponse']['litleToken']
   end
 
   def test_auth_fail_schema
-    retObj = stub({'response'=>'1','message'=>'Error validating xml data against the schema'})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:authorization).returns(retObj)
+    retObj = {'response'=>'1','message'=>'Error validating xml data against the schema'}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
 
     creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.authorize(0, creditcard)
@@ -366,30 +366,30 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_purchase_pass
-    purchaseResponseObj = stub({'response' => '000', 'message' => 'successful', 'litleTxnId'=>'123456789012345678'})
-    retObj = stub({'response'=>'0','saleResponse'=>purchaseResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
+    purchaseResponseObj = {'response' => '000', 'message' => 'successful', 'litleTxnId'=>'123456789012345678'}
+    retObj = {'response'=>'0','saleResponse'=>purchaseResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
 
     creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.purchase(0, creditcard)
     assert_equal true, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.params['litleOnlineResponse'].saleResponse.litleTxnId
+    assert_equal '123456789012345678', responseFrom.authorization
   end
 
   def test_purchase_fail
-    purchaseResponseObj = stub({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
-    retObj = stub({'response'=>'0','saleResponse'=>purchaseResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
+    purchaseResponseObj = {'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'}
+    retObj = {'response'=>'0','saleResponse'=>purchaseResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
 
     creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.purchase(0, creditcard)
     assert_equal false, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.params['litleOnlineResponse'].saleResponse.litleTxnId
+    assert_equal '123456789012345678', responseFrom.authorization
   end
 
   def test_purchase_fail_schema
-    retObj = stub({'response'=>'1','message'=>'Error validating xml data against the schema'})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:sale).returns(retObj)
+    retObj = {'response'=>'1','message'=>'Error validating xml data against the schema'}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
 
     creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.purchase(0, creditcard)
@@ -398,28 +398,28 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_capture_pass
-    captureResponseObj = stub({'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'})
-    retObj = stub({'response'=>'0','captureResponse'=>captureResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:capture).returns(retObj)
+    captureResponseObj = {'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'}
+    retObj = {'response'=>'0','captureResponse'=>captureResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     authorization = "1234"
     responseFrom = @gateway.capture(0, authorization)
     assert_equal true, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.params['litleOnlineResponse'].captureResponse.litleTxnId
+    assert_equal '123456789012345678', responseFrom.authorization
   end
 
   def test_capture_fail
-    captureResponseObj = stub({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
-    retObj = stub({'response'=>'0','captureResponse'=>captureResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:capture).returns(retObj)
+    captureResponseObj = {'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'}
+    retObj = {'response'=>'0','captureResponse'=>captureResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     authorization = "1234"
     responseFrom = @gateway.capture(0, authorization)
     assert_equal false, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.params['litleOnlineResponse'].captureResponse.litleTxnId
+    assert_equal '123456789012345678', responseFrom.authorization
   end
 
   def test_capture_fail_schema
-    retObj = stub({'response'=>'1','message'=>'Error validating xml data against the schema'})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:capture).returns(retObj)
+    retObj = {'response'=>'1','message'=>'Error validating xml data against the schema'}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     authorization = '1234'
     responseFrom = @gateway.authorize(0, authorization)
     assert_equal false, responseFrom.success?
@@ -427,28 +427,28 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_void_pass
-    voidResponseObj = stub({'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'})
-    retObj = stub({'response'=>'0','voidResponse'=>voidResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:void).returns(retObj)
+    voidResponseObj = {'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'}
+    retObj = {'response'=>'0','voidResponse'=>voidResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     identification = "1234"
     responseFrom = @gateway.void(identification)
     assert_equal true, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.params['litleOnlineResponse'].voidResponse.litleTxnId
+    assert_equal '123456789012345678', responseFrom.authorization
   end
 
   def test_void_fail
-    voidResponseObj = stub({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
-    retObj = stub({'response'=>'0','voidResponse'=>voidResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:void).returns(retObj)
+    voidResponseObj = {'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'}
+    retObj = {'response'=>'0','voidResponse'=>voidResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     identification = "1234"
     responseFrom = @gateway.void(identification)
     assert_equal false, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.params['litleOnlineResponse'].voidResponse.litleTxnId
+    assert_equal '123456789012345678', responseFrom.authorization
   end
 
   def test_void_fail_schema
-    retObj = stub({'response'=>'1','message'=>'Error validating xml data against the schema'})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:void).returns(retObj)
+    retObj = {'response'=>'1','message'=>'Error validating xml data against the schema'}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     identification = "1234"
     responseFrom = @gateway.void(identification)
     assert_equal false, responseFrom.success?
@@ -456,28 +456,28 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_credit_pass
-    creditResponseObj = stub({'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'})
-    retObj = stub({'response'=>'0','creditResponse'=>creditResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:credit).returns(retObj)
+    creditResponseObj = {'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'}
+    retObj = {'response'=>'0','creditResponse'=>creditResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     identification = "1234"
     responseFrom = @gateway.credit(0, identification)
     assert_equal true, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.params['litleOnlineResponse'].creditResponse.litleTxnId
+    assert_equal '123456789012345678', responseFrom.authorization
   end
 
   def test_credit_fail
-    creditResponseObj = stub({'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'})
-    retObj = stub({'response'=>'0','creditResponse'=>creditResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:credit).returns(retObj)
+    creditResponseObj = {'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'}
+    retObj = {'response'=>'0','creditResponse'=>creditResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     identification = "1234"
     responseFrom = @gateway.credit(0, identification)
     assert_equal false, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.params['litleOnlineResponse'].creditResponse.litleTxnId
+    assert_equal '123456789012345678', responseFrom.authorization
   end
 
   def test_capture_fail_schema
-    retObj = stub({'response'=>'1','message'=>'Error validating xml data against the schema'})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:credit).returns(retObj)
+    retObj = {'response'=>'1','message'=>'Error validating xml data against the schema'}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     identification = '1234'
     responseFrom = @gateway.credit(0, identification)
     assert_equal false, responseFrom.success?
@@ -485,46 +485,69 @@ class LitleTest < Test::Unit::TestCase
   end
 
   def test_store_pass1
-    storeResponseObj = stub({'response' => '801', 'message' => 'successful', 'litleToken'=>'1111222233334444', 'litleTxnId'=>nil})
-    retObj = stub({'response'=>'0','registerTokenResponse'=>storeResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
+    storeResponseObj = {'response' => '801', 'message' => 'successful', 'litleToken'=>'1111222233334444', 'litleTxnId'=>nil}
+    retObj = {'response'=>'0','registerTokenResponse'=>storeResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     creditcard = CreditCard.new(@credit_card_options)
 
     responseFrom = @gateway.store(creditcard,{})
     assert_equal true, responseFrom.success?
-    assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse'].registerTokenResponse.litleToken
+    assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse']['registerTokenResponse']['litleToken']
   end
 
   def test_store_pass2
-    storeResponseObj = stub({'response' => '802', 'message' => 'already registered', 'litleToken'=>'1111222233334444', 'litleTxnId'=>nil})
-    retObj = stub({'response'=>'0','registerTokenResponse'=>storeResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
+    storeResponseObj = {'response' => '802', 'message' => 'already registered', 'litleToken'=>'1111222233334444', 'litleTxnId'=>nil}
+    retObj = {'response'=>'0','registerTokenResponse'=>storeResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     creditcard = CreditCard.new(@credit_card_options)
 
     responseFrom = @gateway.store(creditcard,{})
     assert_equal true, responseFrom.success?
-    assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse'].registerTokenResponse.litleToken
+    assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse']['registerTokenResponse']['litleToken']
   end
 
   def test_store_fail
-    storeResponseObj = stub({'response' => '803', 'message' => 'fail', 'litleToken'=>'1111222233334444', 'litleTxnId'=>nil})
-    retObj = stub({'response'=>'0','registerTokenResponse'=>storeResponseObj})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
+    storeResponseObj = {'response' => '803', 'message' => 'fail', 'litleToken'=>'1111222233334444', 'litleTxnId'=>nil}
+    retObj = {'response'=>'0','registerTokenResponse'=>storeResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     creditcard = CreditCard.new(@credit_card_options)
 
     responseFrom = @gateway.store(creditcard,{})
     assert_equal false, responseFrom.success?
-    assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse'].registerTokenResponse.litleToken
+    assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse']['registerTokenResponse']['litleToken']
   end
 
   def test_store_fail_schema
-    retObj = stub({'response'=>'1','message'=>'Error validating xml data against the schema'})
-    LitleOnline::LitleOnlineRequest.any_instance.expects(:register_token_request).returns(retObj)
+    retObj = {'response'=>'1','message'=>'Error validating xml data against the schema'}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     creditcard = CreditCard.new(@credit_card_options)
 
     responseFrom = @gateway.store(creditcard,{})
     assert_equal false, responseFrom.success?
     assert_equal 'Error validating xml data against the schema', responseFrom.message
+  end
+
+  def test_in_production_with_test_param_sends_request_to_test_server
+    begin
+      ActiveMerchant::Billing::Base.mode = :production
+      @gateway = LitleGateway.new(
+                   :merchant_id => 'login',
+                   :login => 'login',
+                   :password => 'password',
+                   :test => true
+                 )
+      purchaseResponseObj = {'response' => '000', 'message' => 'successful', 'litleTxnId'=>'123456789012345678'}
+      retObj = {'response'=>'0','saleResponse'=>purchaseResponseObj}
+      LitleOnline::Communications.expects(:http_post).with(anything,has_entry('url', 'https://www.testlitle.com/sandbox/communicator/online')).returns(retObj.to_xml(:root => 'litleOnlineResponse'))
+
+      creditcard = CreditCard.new(@credit_card_options)
+      assert response = @gateway.purchase(@amount, credit_card)
+      assert_instance_of Response, response
+      assert_success response
+      assert response.test?, response.inspect
+    ensure
+      ActiveMerchant::Billing::Base.mode = :test
+    end
   end
 
 end

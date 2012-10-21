@@ -1,13 +1,13 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayGateway < Gateway
-      TEST_URL = 'https://secure-test.wp3.rbsworldpay.com/jsp/merchant/xml/paymentService.jsp'
-      LIVE_URL = 'https://secure.wp3.rbsworldpay.com/jsp/merchant/xml/paymentService.jsp'
+      self.test_url = 'https://secure-test.worldpay.com/jsp/merchant/xml/paymentService.jsp'
+      self.live_url = 'https://secure.worldpay.com/jsp/merchant/xml/paymentService.jsp'
 
       self.default_currency = 'GBP'
       self.money_format = :cents
       self.supported_countries = ['HK', 'US', 'GB', 'AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :laser]
       self.homepage_url = 'http://www.worldpay.com/'
       self.display_name = 'WorldPay'
 
@@ -25,42 +25,62 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_method, options = {})
-        response = MultiResponse.new
-        response << authorize(money, payment_method, options)
-        response << capture(money, response.authorization, options.merge(:authorization_validated => true)) if response.success?
-        response
+        MultiResponse.new.tap do |r|
+          r.process{authorize(money, payment_method, options)}
+          r.process{capture(money, r.authorization, options.merge(:authorization_validated => true))}
+        end
       end
 
       def authorize(money, payment_method, options = {})
         requires!(options, :order_id)
-        commit 'authorize', build_authorization_request(money, payment_method, options)
+        authorize_request(money, payment_method, options)
       end
 
       def capture(money, authorization, options = {})
-        response = MultiResponse.new
-        response << inquire(authorization, options) unless options[:authorization_validated]
-        response << commit('capture', build_capture_request(money, authorization, options)) if response.success?
-        response
+        MultiResponse.new.tap do |r|
+          r.process{inquire_request(authorization, options, "AUTHORISED")} unless options[:authorization_validated]
+          r.process{capture_request(money, authorization, options)}
+        end
       end
 
       def void(authorization, options = {})
-        response = MultiResponse.new
-        response << inquire(authorization, options)
-        response << commit('cancel', build_void_request(authorization, options)) if response.success?
-        response        
+        MultiResponse.new.tap do |r|
+          r.process{inquire_request(authorization, options, "AUTHORISED")}
+          r.process{cancel_request(authorization, options)}
+        end
       end
 
       def refund(money, authorization, options = {})
-        response = MultiResponse.new
-        response << inquire(authorization, options)
-        response << commit('refund', build_refund_request(money, authorization, options)) if response.success?
-        response        
+        MultiResponse.new.tap do |r|
+          r.process{inquire_request(authorization, options, "CAPTURED")}
+          r.process{refund_request(money, authorization, options)}
+        end
+      end
+
+      def test?
+        @options[:test] || super  
       end
 
       private
 
-      def inquire(authorization, options={})
-        commit 'inquiry', build_order_inquiry_request(authorization, options)
+      def authorize_request(money, payment_method, options)
+        commit('authorize', build_authorization_request(money, payment_method, options), "AUTHORISED")
+      end
+
+      def capture_request(money, authorization, options)
+        commit('capture', build_capture_request(money, authorization, options), :ok)
+      end
+
+      def cancel_request(authorization, options)
+        commit('cancel', build_void_request(authorization, options), :ok)
+      end
+
+      def inquire_request(authorization, options, success_criteria)
+        commit('inquiry', build_order_inquiry_request(authorization, options), success_criteria)
+      end
+
+      def refund_request(money, authorization, options)
+        commit('inquiry', build_refund_request(money, authorization, options), :ok)
       end
 
       def build_request
@@ -204,8 +224,8 @@ module ActiveMerchant #:nodoc:
         raw
       end
 
-      def commit(action, request)
-        xmr = ssl_post((test? ? TEST_URL : LIVE_URL),
+      def commit(action, request, success_criteria)
+        xmr = ssl_post((test? ? self.test_url : self.live_url),
           request,
           'Content-Type' => 'text/xml',
           'Authorization' => encoded_credentials)
@@ -213,12 +233,11 @@ module ActiveMerchant #:nodoc:
         raw = parse(action, xmr)
 
         Response.new(
-          success_from(raw),
+          success_from(raw, success_criteria),
           message_from(raw),
           raw,
           :authorization => authorization_from(raw),
           :test => test?)
-
       rescue ActiveMerchant::ResponseError => e
         if e.response.code.to_s == "401"
           return Response.new(false, "Invalid credentials", {}, :test => test?)
@@ -227,8 +246,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def success_from(raw)
-        (raw[:last_event] == "AUTHORISED" ||
+      def success_from(raw, success_criteria)
+        (raw[:last_event] == success_criteria ||
           raw[:ok].present?)
       end
 
@@ -246,34 +265,6 @@ module ActiveMerchant #:nodoc:
       def encoded_credentials
         credentials = "#{@options[:login]}:#{@options[:password]}"
         "Basic #{[credentials].pack('m').strip}"
-      end
-
-      class MultiResponse < Response
-        attr_reader :responses
-
-        def initialize
-          @responses = []
-        end
-
-        def <<(response)
-          if response.is_a?(MultiResponse)
-            response.responses.each{|r| @responses << r}
-          else
-            @responses << response
-          end
-        end
-
-        def success?
-          @responses.all?{|r| r.success?}
-        end
-
-        %w(params message test authorization avs_result cvv_result test? fraud_review?).each do |m|
-          class_eval %(
-            def #{m}
-              @responses.last.#{m}
-            end
-          )
-        end
       end
     end
   end
