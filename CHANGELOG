@@ -26,6 +26,7 @@
 * Orbital gateway: handle custom AVS response codes [jonm-okc]
 * Orbital gateway: Fix infinite connection retry [jonm-okc, ntalbott]
 * PayPal integration: Add support for MassPay IPN notifications [damonmorgan]
+* Orbital gateway: Fix status of void result [jonm-okc]
 
 == Version 1.28.0 (August 10, 2012)
 
