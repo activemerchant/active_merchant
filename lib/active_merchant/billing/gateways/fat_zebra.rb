@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'https://www.fatzebra.com.au/'
       self.display_name = 'Fat Zebra'
-    
+
       # Setup a new instance of the gateway.
       #
       # The options hash should include :username and :token
@@ -146,7 +146,7 @@ module ActiveMerchant #:nodoc:
           "Authorization" => "Basic " + Base64.strict_encode64(@username.to_s + ":" + @token.to_s).strip,
           "User-Agent" => "Fat Zebra v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
         }
-      end 
+      end
     end
   end
 end
