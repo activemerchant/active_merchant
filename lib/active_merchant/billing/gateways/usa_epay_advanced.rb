@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # ==== USA ePay Advanced SOAP Interface
     #
-    # This class encapuslates USA ePay's Advanced SOAP Interface. The Advanced Soap Interface allows 
+    # This class encapuslates USA ePay's Advanced SOAP Interface. The Advanced Soap Interface allows
     # standard transactions, storing customer information, and recurring billing. Storing sensitive
     # information on USA ePay's servers can help with PCI DSS compliance, since customer and card data
     # do not need to be stored locally.
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
     #
     class UsaEpayAdvancedGateway < Gateway
       API_VERSION = "1.4"
-      
+
       TEST_URL_BASE = 'https://sandbox.usaepay.com/soap/gate/' #:nodoc:
       LIVE_URL_BASE = 'https://www.usaepay.com/soap/gate/' #:nodoc:
 
@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
       self.live_url = LIVE_URL_BASE
 
       FAILURE_MESSAGE = "Default Failure" #:nodoc:
-      
+
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
       self.homepage_url = 'http://www.usaepay.com/'
@@ -154,7 +154,7 @@ module ActiveMerchant #:nodoc:
         :currency => [:string, 'Currency'],
         :non_tax => [:boolean, 'NonTax'],
       } #:nodoc:
-      
+
       TRANSACTION_DETAIL_MONEY_OPTIONS = {
         :amount => [:double, 'Amount'],
         :tax => [:double, 'Tax'],
@@ -251,7 +251,7 @@ module ActiveMerchant #:nodoc:
 
       # Standard Gateway Methods ======================================
 
-      # Make a purchase with a credit card. (Authorize and 
+      # Make a purchase with a credit card. (Authorize and
       # capture for settlement.)
       #
       # Note: See run_transaction for additional options.
@@ -302,7 +302,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:data</tt> -- base64 data about customer
       # * <tt>:url</tt> -- customer website
       # * <tt>:billing_address</tt> -- usual options
-      # * <tt>:payment_methods</tt> -- array of payment method hashes. 
+      # * <tt>:payment_methods</tt> -- array of payment method hashes.
       #   * <tt>:method</tt> -- credit_card or check
       #   * <tt>:name</tt> -- optional name/label for the method
       #   * <tt>:sort</tt> -- optional integer value specifying the backup sort order, 0 is default
@@ -531,7 +531,7 @@ module ActiveMerchant #:nodoc:
       # Run a transaction.
       #
       # Note: run_sale, run_auth_only, run_credit, run_check_sale, run_check_credit
-      # methods are also available. Each takes the same options as 
+      # methods are also available. Each takes the same options as
       # run_transaction, but the :command option is not required.
       #
       # Recurring Note: If recurring options are included USA ePay will create a
@@ -589,7 +589,7 @@ module ActiveMerchant #:nodoc:
       end
 
       TRANSACTION_METHODS = [
-        :run_sale, :run_auth_only, :run_credit, 
+        :run_sale, :run_auth_only, :run_credit,
         :run_check_sale, :run_check_credit
       ] #:nodoc:
 
@@ -639,7 +639,7 @@ module ActiveMerchant #:nodoc:
         request = build_request(__method__, options)
         commit(__method__, request)
       end
-    
+
       # Void a transaction.
       #
       # Note: Can only be voided before being settled.
@@ -656,7 +656,7 @@ module ActiveMerchant #:nodoc:
         request = build_request(__method__, options)
         commit(__method__, request)
       end
-    
+
       # Refund transaction.
       #
       # Note: Required after a transaction has been settled. Refunds
@@ -675,7 +675,7 @@ module ActiveMerchant #:nodoc:
         request = build_request(__method__, options)
         commit(__method__, request)
       end
-    
+
       # Override transaction flagged for mananager approval.
       #
       # Note: Checks only!
@@ -812,7 +812,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Check status of a transaction (custom).
-      # 
+      #
       # ==== Required
       # * <tt>:reference_number</tt>
       # * <tt>:fields</tt> -- string array of fields to retrieve
@@ -937,7 +937,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Builders ======================================================
-      
+
       private
 
       # Build soap header, etc.
@@ -1062,7 +1062,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Transactions ==================================================
-      
+
       def build_run_transaction(soap, options)
         soap.tag! 'ns1:runTransaction' do |soap|
           build_token soap, options
@@ -1213,7 +1213,7 @@ module ActiveMerchant #:nodoc:
       def build_customer_payments(soap, options)
         if options[:payment_methods]
           length = options[:payment_methods].length
-          soap.PaymentMethods 'SOAP-ENC:arrayType' => "ns1:PaymentMethod[#{length}]", 
+          soap.PaymentMethods 'SOAP-ENC:arrayType' => "ns1:PaymentMethod[#{length}]",
             'xsi:type' =>"ns1:PaymentMethodArray" do |soap|
             build_customer_payment_methods soap, options
           end
@@ -1239,7 +1239,7 @@ module ActiveMerchant #:nodoc:
         case
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::CreditCard)
           build_tag soap, :string, 'CardNumber', payment_method[:method].number
-          build_tag soap, :string, 'CardExpiration', 
+          build_tag soap, :string, 'CardExpiration',
             "#{"%02d" % payment_method[:method].month}#{payment_method[:method].year}"
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
@@ -1319,7 +1319,7 @@ module ActiveMerchant #:nodoc:
       def build_credit_card_data(soap, options)
         soap.CreditCardData 'xsi:type' => "ns1:CreditCardData" do |soap|
           build_tag soap, :string, 'CardNumber', options[:payment_method].number
-          build_tag soap, :string, 'CardExpiration', 
+          build_tag soap, :string, 'CardExpiration',
             "#{"%02d" % options[:payment_method].month}#{options[:payment_method].year}"
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
@@ -1397,7 +1397,7 @@ module ActiveMerchant #:nodoc:
 
       def build_line_items(soap, options) # TODO
       end
-      
+
       def build_custom_fields(soap, options) # TODO
       end
 
@@ -1444,7 +1444,7 @@ module ActiveMerchant #:nodoc:
         fault = (!response) || (response.length < 1) || response.has_key?('faultcode')
         return [response, success, response['faultstring'], authorization, avs, cvv] if fault
 
-        if response.respond_to?(:[]) && p = response["#{action}_return"] 
+        if response.respond_to?(:[]) && p = response["#{action}_return"]
           if p.respond_to?(:key?) && p.key?('result_code')
             success = p['result_code'] == 'A' ? true : false
             authorization = p['ref_num']
@@ -1481,8 +1481,8 @@ module ActiveMerchant #:nodoc:
                 response[key] = [response[key], value]
               end
             else
-              response[key] = parse_element(e) 
-            end 
+              response[key] = parse_element(e)
+            end
           end
         else
           response = node.text

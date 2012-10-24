@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
           mapping :order, 'transaction_id'
           mapping :amount, 'amount'
           mapping :currency, 'currency'
-          
+
           mapping :customer,
             :first_name => 'firstname',
             :last_name  => 'lastname',
@@ -28,16 +28,16 @@ module ActiveMerchant #:nodoc:
           mapping :description, 'detail1_text'
 
           MAPPED_COUNTRY_CODES = {
-            'SE' => 'SV', 
+            'SE' => 'SV',
             'DK' => 'DA'
           }
 
           SUPPORTED_COUNTRY_CODES = [
-            'FI', 'DE', 'ES', 'FR', 
-            'IT','PL', 'GR', 'RO', 
+            'FI', 'DE', 'ES', 'FR',
+            'IT','PL', 'GR', 'RO',
             'RU', 'TR', 'CN', 'CZ', 'NL'
           ]
-          
+
           def initialize(order, account, options = {})
             super
             add_tracking_token
@@ -46,18 +46,18 @@ module ActiveMerchant #:nodoc:
           end
 
           private
-          
+
           def add_tracking_token
             return if application_id.blank? || application_id == 'ActiveMerchant'
 
             add_field('merchant_fields', 'platform')
             add_field('platform', application_id)
           end
-          
+
           def add_default_parameters
             add_field('hide_login', 1)
           end
-          
+
           def add_seller_details(options)
             add_field('recipient_description', options[:account_name]) if options[:account_name]
             add_field('country', lookup_country_code(options[:country], :alpha3)) if options[:country]

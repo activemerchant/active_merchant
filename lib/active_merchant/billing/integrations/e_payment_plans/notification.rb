@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
           end
 
           # Acknowledge the transaction to EPaymentPlans. This method has to be called after a new
-          # apc arrives. EPaymentPlans will verify that all the information we received are correct 
+          # apc arrives. EPaymentPlans will verify that all the information we received are correct
           # and will return ok or a fail.
           #
           # Example:

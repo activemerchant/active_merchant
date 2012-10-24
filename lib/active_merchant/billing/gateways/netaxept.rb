@@ -5,29 +5,29 @@ module ActiveMerchant #:nodoc:
     class NetaxeptGateway < Gateway
       self.test_url = 'https://epayment-test.bbs.no/'
       self.live_url = 'https://epayment.bbs.no/'
-      
+
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['NO', 'DK', 'SE', 'FI']
-      
+
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :american_express]
-      
+
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.betalingsterminal.no/Netthandel-forside/'
-      
+
       # The name of the gateway
       self.display_name = 'BBS Netaxept'
-      
+
       self.money_format = :cents
-      
+
       self.default_currency = 'NOK'
-      
+
       def initialize(options = {})
         requires!(options, :login, :password)
         @options = options
         super
-      end  
-      
+      end
+
       def purchase(money, creditcard, options = {})
         requires!(options, :order_id)
 
@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
         add_order(post, money, options)
         add_creditcard(post, creditcard)
         commit('Sale', post)
-      end                       
+      end
 
       def authorize(money, creditcard, options = {})
         requires!(options, :order_id)
@@ -80,31 +80,31 @@ module ActiveMerchant #:nodoc:
         @options[:test] || Base.gateway_mode == :test
       end
 
-    
+
       private
-      
+
       def add_credentials(post, options)
         post[:merchantId] = @options[:login]
         post[:token] = @options[:password]
       end
-      
+
       def add_authorization(post, authorization, money=nil)
         post[:transactionId] = authorization
         post[:transactionAmount] = amount(money) if money
       end
-      
+
       def add_transaction(post, options)
         post[:transactionId] = generate_transaction_id(options)
         post[:serviceType] = 'M'
         post[:redirectUrl] = 'http://example.com'
       end
-      
+
       def add_order(post, money, options)
         post[:orderNumber] = options[:order_id]
         post[:amount] = amount(money)
         post[:currencyCode] = (options[:currency] || currency(money))
       end
-      
+
       CARD_TYPE_PREFIXES = {
         'visa' => 'v',
         'master' => 'm',
@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
         post[:creditcard][:"#{prefix}y"] = format(creditcard.year, :two_digits)
         post[:creditcard][:"#{prefix}c"] = creditcard.verification_value
       end
-      
+
       def commit(action, parameters, setup=true)
         parameters[:action] = action
 
@@ -138,27 +138,27 @@ module ActiveMerchant #:nodoc:
           commit_transaction(response, parameters)
           response[:success] = true
         end
-        
+
         Response.new(response[:success], response[:message], response, :test => test?, :authorization => response[:authorization])
       end
-      
+
       def commit_transaction_setup(response, parameters)
         response[:setup] = parse(ssl_get(build_url("REST/Setup.aspx", pick(parameters, :merchantId, :token, :serviceType, :amount, :currencyCode, :redirectUrl, :orderNumber, :transactionId))))
         process(response, :setup)
       end
-      
+
       def commit_payment_details(response, parameters)
         data = encode(parameters[:creditcard].merge(:BBSePay_transaction => response[:setup]['SetupString']))
         response[:paymentDetails] = parse(ssl_post(build_url("terminal/default.aspx"), data), false)
         process(response, :paymentDetails)
       end
-      
+
       def commit_process_setup(response, parameters)
         result = ssl_get(build_url("REST/ProcessSetup.aspx", pick(parameters, :merchantId, :token, :transactionId).merge(:transactionString => response[:paymentDetails][:result])))
         response[:processSetup] = parse(result)
         process(response, :processSetup)
       end
-      
+
       def commit_transaction(response, parameters)
         result = ssl_get(build_url("REST/#{parameters[:action]}.aspx", pick(parameters, :merchantId, :token, :transactionId, :transactionAmount)))
         response[:action] = parse(result)
@@ -172,11 +172,11 @@ module ActiveMerchant #:nodoc:
         else
           message = (response[step]['ResponseText'] || response[step]['ResponseCode'])
           response[:message] = (message || response[:message])
-          
+
           response[:authorization] = response[step]['TransactionId']
         end
       end
-      
+
       def parse(result, expects_xml=true)
         if expects_xml || /^</ =~ result
           doc = REXML::Document.new(result)
@@ -185,7 +185,7 @@ module ActiveMerchant #:nodoc:
           {:result => result}
         end
       end
-      
+
       def extract_xml(element)
         if element.has_elements?
           hash = {}
@@ -197,19 +197,19 @@ module ActiveMerchant #:nodoc:
           element.text
         end
       end
-      
+
       def url
         (test? ? self.test_url : self.live_url)
       end
-      
+
       def generate_transaction_id(options)
         Digest::MD5.hexdigest("#{options.inspect}+#{Time.now}+#{rand}")
       end
-      
+
       def pick(hash, *keys)
         keys.inject({}){|h,key| h[key] = hash[key] if hash[key]; h}
       end
-      
+
       def build_url(base, parameters=nil)
         url = "#{test? ? self.test_url : self.live_url}"
         url << base
@@ -219,11 +219,11 @@ module ActiveMerchant #:nodoc:
         end
         url
       end
-      
+
       def encode(hash)
         hash.collect{|(k,v)| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"}.join('&')
       end
-      
+
       class Response < Billing::Response
         attr_reader :error_detail
         def initialize(success, message, raw, options)

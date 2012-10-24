@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def test?
-        @options[:test] || super  
+        @options[:test] || super
       end
 
       private

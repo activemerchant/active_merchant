@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
           def sage_decrypt(ciphertext, key)
             sage_encrypt_xor(Base64.decode64(ciphertext), key)
           end
-          
+
           def sage_encrypt_salt(min, max)
             length = rand(max - min + 1) + min
             SecureRandom.base64(length + 4)[0, length]
@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
 
           def sage_encrypt_xor(data, key)
             raise 'No key provided' if key.blank?
-            
+
             key *= (data.bytesize.to_f / key.bytesize.to_f).ceil
             key = key[0, data.bytesize]
 

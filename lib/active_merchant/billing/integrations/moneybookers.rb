@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
 
         mattr_accessor :production_url
         self.production_url = 'https://www.moneybookers.com/app/payment.pl'
-        
+
         def self.service_url
           self.production_url
         end

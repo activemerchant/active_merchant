@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       # * <tt>options</tt> - A Hash of options
-      # 
+      #
       # ==== Options Hash
       # * <tt>:login</tt> - A String containing your PaymentClearing assigned API Access Username
       # * <tt>:password</tt> - A String containing your PaymentClearing assigned API Access Key

@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
         8 => "Bad or malformed request",
         9 => "Invalid card number"
       }
-  
+
       self.default_currency = 'NZD'
       self.supported_countries = ['NZ']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
@@ -29,31 +29,31 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login, :password)
         @options = options
         super
-      end  
-      
+      end
+
       def purchase(money, creditcard, options = {})
         post = SecurePayTechPostData.new
 
         add_invoice(post, money, options)
-        add_creditcard(post, creditcard)        
-             
+        add_creditcard(post, creditcard)
+
         commit(:purchase, post)
-      end                       
-    
-      private                       
-      
+      end
+
+      private
+
       def add_invoice(post, money, options)
         post[:Amount] = amount(money)
         post[:Currency] = options[:currency] || currency(money)
 
         post[:OrderReference] = options[:order_id]
       end
-      
+
       def add_creditcard(post, creditcard)
         post[:CardNumber] = creditcard.number
         post[:CardExpiry] = expdate(creditcard)
         post[:CardHolderName] = creditcard.name
-        
+
         if creditcard.verification_value?
           post[:EnableCSC] = true
           post[:CSC] = creditcard.verification_value
@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
         # SPT will autodetect this
         post[:CardType] = 0
       end
-      
+
       def parse(body)
         response = CGI.unescape(body).split(',')
 
@@ -80,13 +80,13 @@ module ActiveMerchant #:nodoc:
         end
 
         result
-      end    
-      
+      end
+
       def commit(action, post)
         response = parse( ssl_post(self.live_url, post_data(action, post) ) )
 
-        Response.new(response[:result_code] == 1, message_from(response), response, 
-          :test => test?, 
+        Response.new(response[:result_code] == 1, message_from(response), response,
+          :test => test?,
           :authorization => response[:merchant_transaction_reference]
         )
       end
@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
       def message_from(result)
         PAYMENT_GATEWAY_RESPONSES[result[:result_code]]
       end
-      
+
       def post_data(action, post)
         post[:MerchantID] = @options[:login]
         post[:MerchantKey] = @options[:password]

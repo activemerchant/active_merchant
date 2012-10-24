@@ -4,12 +4,12 @@ module ActiveMerchant #:nodoc:
       class Return
         attr_accessor :params
         attr_reader :notification
-      
+
         def initialize(query_string, options = {})
           @params  = parse(query_string)
           @options = options
         end
-      
+
         # Successful by default. Overridden in the child class
         def success?
           true
@@ -21,12 +21,12 @@ module ActiveMerchant #:nodoc:
         end
 
         def message
-          
+
         end
-        
+
         def parse(query_string)
           return {} if query_string.blank?
-          
+
           query_string.split('&').inject({}) do |memo, chunk|
             next if chunk.empty?
             key, value = chunk.split('=', 2)
@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
             memo[CGI.unescape(key)] = value
             memo
           end
-        end 
+        end
       end
     end
   end

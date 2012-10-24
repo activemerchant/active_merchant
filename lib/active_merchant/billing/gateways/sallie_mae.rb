@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
         @options = options
         super
       end
-      
+
       def test?
         @options[:login] == "TEST0"
       end

@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
         class_attribute :mappings
         class_attribute :country_format
         self.country_format = :alpha2
-        
+
         # The application making the calls to the gateway
         # Useful for things like the PayPal build notation (BN) id fields
         class_attribute :application_id
@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
           return if name.blank? || value.blank?
           @raw_html_fields << [name, value]
         end
-        
+
         def raw_html_fields
           @raw_html_fields
         end
@@ -58,11 +58,11 @@ module ActiveMerchant #:nodoc:
         def billing_address(params = {})
           add_address(:billing_address, params)
         end
-        
+
         def shipping_address(params = {})
           add_address(:shipping_address, params)
         end
-        
+
         def form_fields
           @fields
         end
@@ -76,15 +76,15 @@ module ActiveMerchant #:nodoc:
         end
 
         private
-        
+
         def add_address(key, params)
           return if mappings[key].nil?
-          
+
           code = lookup_country_code(params.delete(:country))
-          add_field(mappings[key][:country], code) 
+          add_field(mappings[key][:country], code)
           add_fields(key, params)
         end
-        
+
         def lookup_country_code(name_or_code, format = country_format)
           country = Country.find(name_or_code)
           country.code(format).to_s
@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
 
         def method_missing(method_id, *args)
           method_id = method_id.to_s.gsub(/=$/, '').to_sym
-          # Return and do nothing if the mapping was not found. This allows 
+          # Return and do nothing if the mapping was not found. This allows
           # For easy substitution of the different integrations
           return if mappings[method_id].nil?
 

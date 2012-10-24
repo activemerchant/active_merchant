@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:cycles</tt> -- Limit to certain # of cycles (OPTIONAL)
       # * <tt>:start_date</tt> -- When does the charging starts (REQUIRED)
       # * <tt>:description</tt> -- The description to appear in the profile (REQUIRED)
-      
+
       def recurring(amount, credit_card, options = {})
         options[:credit_card] = credit_card
         options[:amount] = amount
@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
       # Update a recurring payment's details.
       #
       # This transaction updates an existing Recurring Billing Profile
-      # and the subscription must have already been created previously 
+      # and the subscription must have already been created previously
       # by calling +recurring()+. The ability to change certain
       # details about a recurring payment is dependent on transaction history
       # and the type of plan you're subscribed with paypal. Web Payment Pro

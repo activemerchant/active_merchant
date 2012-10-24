@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
       def display_number
         self.class.mask(number)
       end
-      
+
       def first_digits
         self.class.first_digits(number)
       end
