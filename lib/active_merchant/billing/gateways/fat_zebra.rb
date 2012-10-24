@@ -68,6 +68,38 @@ module ActiveMerchant #:nodoc:
         commit(:post, "credit_cards", post)
       end
 
+      def build_customer(first_name, last_name, reference, email, ip_address = nil)
+        {
+          :first_name => first_name,
+          :last_name => last_name,
+          :reference => reference,
+          :email => email,
+          :ip_address => ip_address
+        }
+      end
+
+      # Stores a customer with a credit card
+      #
+      # Returns a token
+      def create_customer(customer_hash, credit_card)
+        post = {}
+        post.merge!(customer_hash)
+        post[:card] = {}
+
+        if credit_card.respond_to?(:number)
+          post[:card][:card_number] = credit_card.number
+          post[:card][:expiry_date] = "#{credit_card.month}/#{credit_card.year}"
+          post[:card][:cvv] = credit_card.verification_value if credit_card.verification_value?
+          post[:card][:card_holder] = credit_card.name if credit_card.name
+        else
+          post[:card][:card_token] = credit_card[:token]
+          post[:card][:cvv] = credit_card[:cvv]
+        end
+
+        commit(:post, 'customers', post)
+      end
+
+
       private
       # Add the money details to the request
       def add_amount(post, money, options)
@@ -82,8 +114,8 @@ module ActiveMerchant #:nodoc:
           post[:cvv] = creditcard.verification_value if creditcard.verification_value?
           post[:card_holder] = creditcard.name if creditcard.name
         else
-            post[:card_token] = creditcard[:token]
-            post[:cvv] = creditcard[:cvv]
+          post[:card_token] = creditcard[:token]
+          post[:cvv] = creditcard[:cvv]
         end
       end
 
@@ -94,7 +126,11 @@ module ActiveMerchant #:nodoc:
         begin
           raw_response = ssl_request(method, get_url(uri), parameters.to_json, headers)
           response = parse(raw_response)
-          success = response["successful"] && (response["response"]["successful"] || response["response"]["token"])
+          success = response["successful"] && (
+            response["response"]["successful"] ||
+            response["response"]["token"] ||
+            response["response"]["card_token"])
+
         rescue ResponseError => e
           if e.response.code == "401"
             return Response.new(false, "Invalid Login")
@@ -112,7 +148,7 @@ module ActiveMerchant #:nodoc:
           message = response["errors"].empty? ? "Unknown Error" : response["errors"].join(", ")
         end
 
-        Response.new(success,
+        Response.new(!!success,
           message,
           response,
           :test => response.has_key?("test") ? response["test"] : false,
