@@ -93,7 +93,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_purchase
     response = stub_comms(method_to_stub=:ssl_request) do
-      updated_options = @options.merge({:description => "a test customer",:ip => "127.127.127.127", :user_agent => "some browser", :external_id => "42", :email => "foo@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
+      updated_options = @options.merge({:description => "a test customer",:browser_ip => "127.127.127.127", :user_agent => "some browser", :order_id => "42", :email => "foo@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
       @gateway.purchase(@amount,@credit_card,updated_options)
     end.check_request do |method,endpoint, data, headers|
       assert_match(/description=a\+test\+customer/, data)
@@ -107,10 +107,10 @@ class StripeTest < Test::Unit::TestCase
 
   def test_add_customer_data
     post = {}
-    response = @gateway.send(:add_customer_data, post, {:description => "a test customer",:ip => "127.127.127.127", :user_agent => "some browser", :external_id => "42", :email => "foo@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
+    response = @gateway.send(:add_customer_data, post, {:description => "a test customer",:browser_ip => "127.127.127.127", :user_agent => "some browser", :order_id => "42", :email => "foo@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
     
     assert_equal "a test customer", post[:description]
-    assert_equal "127.127.127.127", post[:ip]
+    assert_equal "127.127.127.127", post[:browser_ip]
     assert_equal "some browser", post[:user_agent]
     assert_equal "http://www.shopify.com", post[:referrer]
     assert_equal "42", post[:external_id]
