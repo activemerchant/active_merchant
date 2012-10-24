@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
           # <tt>expire – customer’s access to restricted zone membership has been expired;</tt>::
           # <tt>refund – request to refund has been received;</tt>::
           # <tt>chargeback – request to chargeback has been received.</tt>::
-          # 
+          #
           # This implementation of Chronopay does not support subscriptions.
           # The status codes used are matched to the status codes that Paypal
           # sends.  See Paypal::Notification#status for more details
@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
           end
 
           # Unique ID of Merchant’s web-site
-          def site_id 
+          def site_id
             params['site_id']
           end
 
@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
           end
 
           # Date of transaction in MM/DD/YYYY format
-          def date 
+          def date
             params['date']
           end
 
@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
             params['country']
           end
 
-          # The customer's city     
+          # The customer's city
           def city
             params['city']
           end

@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
-      module SagePayForm 
+      module SagePayForm
         autoload :Helper,       File.dirname(__FILE__) + '/sage_pay_form/helper.rb'
         autoload :Return,       File.dirname(__FILE__) + '/sage_pay_form/return.rb'
         autoload :Notification, File.dirname(__FILE__) + '/sage_pay_form/notification.rb'
@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
           mode = ActiveMerchant::Billing::Base.integration_mode
           case mode
           when :production
-            self.production_url    
+            self.production_url
           when :test
             self.test_url
           when :simulate

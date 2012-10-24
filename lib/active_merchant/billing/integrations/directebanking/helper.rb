@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
             :user_variable_4,
             :user_variable_5
           ]
-          
+
           SIGNATURE_IGNORE_AT_METHOD_CREATION_FIELDS = [
             :user_id,
             :amount,
@@ -46,9 +46,9 @@ module ActiveMerchant #:nodoc:
             :user_variable_2,
             :user_variable_3
           ]
-          
+
           SIGNATURE_FIELDS.each do |key|
-            if !SIGNATURE_IGNORE_AT_METHOD_CREATION_FIELDS.include?(key) 
+            if !SIGNATURE_IGNORE_AT_METHOD_CREATION_FIELDS.include?(key)
               mapping "#{key}".to_sym, "#{key.to_s}"
             end
           end
@@ -70,16 +70,16 @@ module ActiveMerchant #:nodoc:
           def generate_signature
             Digest::SHA1.hexdigest(generate_signature_string)
           end
-          
+
           def form_fields
             @fields.merge('hash' => generate_signature)
           end
-            
+
           mapping :account, 'user_id'
           mapping :amount, 'amount'
           mapping :currency, 'currency_id'
           mapping :description, 'reason_1'
-          
+
           mapping :return_url, 'user_variable_1'
           mapping :cancel_return_url, 'user_variable_2'
           mapping :notify_url, 'user_variable_3'

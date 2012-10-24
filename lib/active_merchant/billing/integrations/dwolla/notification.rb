@@ -38,7 +38,7 @@ module ActiveMerchant #:nodoc:
             params['TestMode']
           end
 
-          def acknowledge      
+          def acknowledge
             true
           end
  private

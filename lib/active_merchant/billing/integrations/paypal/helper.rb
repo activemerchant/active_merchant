@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
                                  'QC' => 'Quebec',
                                  'SK' => 'Saskatchewan',
                                  'YT' => 'Yukon'
-                               } 
+                               }
           # See https://www.paypal.com/IntegrationCenter/ic_std-variable-reference.html for details on the following options.
           mapping :order, [ 'item_number', 'custom' ]
 
@@ -58,31 +58,31 @@ module ActiveMerchant #:nodoc:
                                       :state   => 'state',
                                       :zip     => 'zip',
                                       :country => 'country'
-          
+
           def shipping_address(params = {})
 
             # Get the country code in the correct format
             # Use what we were given if we can't find anything
             country_code = lookup_country_code(params.delete(:country))
             add_field(mappings[:shipping_address][:country], country_code)
-            
+
             if params.has_key?(:phone)
               phone = params.delete(:phone).to_s
-          
+
               # Whipe all non digits
               phone.gsub!(/\D+/, '')
-              
+
               if ['US', 'CA'].include?(country_code) && phone =~ /(\d{3})(\d{3})(\d{4})$/
-                add_field('night_phone_a', $1) 
-                add_field('night_phone_b', $2) 
-                add_field('night_phone_c', $3) 
+                add_field('night_phone_a', $1)
+                add_field('night_phone_b', $2)
+                add_field('night_phone_c', $3)
               else
-                add_field('night_phone_b', phone)                
+                add_field('night_phone_b', phone)
               end
             end
-              
+
             province_code = params.delete(:state)
-                       
+
             case country_code
             when 'CA'
               add_field(mappings[:shipping_address][:state], CANADIAN_PROVINCES[province_code.upcase]) unless province_code.nil?
@@ -91,14 +91,14 @@ module ActiveMerchant #:nodoc:
             else
               add_field(mappings[:shipping_address][:state], province_code.blank? ? 'N/A' : province_code)
             end
-              
-            # Everything else 
+
+            # Everything else
             params.each do |k, v|
               field = mappings[:shipping_address][k]
               add_field(field, v) unless field.nil?
             end
           end
-          
+
           mapping :tax, 'tax'
           mapping :shipping, 'shipping'
           mapping :cmd, 'cmd'

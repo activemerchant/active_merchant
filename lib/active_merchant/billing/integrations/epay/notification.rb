@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
 					
           def complete?
             Integer(transaction_id) > 0
-          end 
+          end
 
           def item_id
             params['orderid']
@@ -88,18 +88,18 @@ module ActiveMerchant #:nodoc:
 
           def generate_md5string
 						md5string = String.new
-						for line in @raw.split('&')    
+						for line in @raw.split('&')
 							key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
 							md5string += params[key] if key != 'hash'
 						end
 						return md5string + @options[:credential3]
           end
-          
+
           def generate_md5hash
             Digest::MD5.hexdigest(generate_md5string)
           end
-          
-          def acknowledge      
+
+          def acknowledge
             generate_md5hash == params['hash']
           end
 					

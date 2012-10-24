@@ -11,19 +11,19 @@ module ActiveMerchant #:nodoc:
             add_field('orderid', format_order_number(order))
 						@fields = Hash[@fields.sort]
           end
-              
+
           def md5secret(value)
             @md5secret = value
           end
-          
+
           def form_fields
             @fields.merge('hash' => generate_md5hash)
           end
-            
+
           def generate_md5string
 						@fields.sort.each.map { |key, value| key != 'hash' ? value.to_s : ''} * "" + @md5secret
           end
-          
+
           def generate_md5hash
             Digest::MD5.hexdigest(generate_md5string)
           end
@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
           mapping :billing_address, {}
           mapping :tax, ''
           mapping :shipping, ''
-        
+
 				end
       end
     end

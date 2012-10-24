@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           def complete?
             status == 'Completed'
-          end 
+          end
 
           def account
             params['instId']
@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
           def gross
             params['authAmount']
           end
-          
+
           def currency
             params['authCurrency']
           end
@@ -46,39 +46,39 @@ module ActiveMerchant #:nodoc:
           def status
             params['transStatus'] == 'Y' ? 'Completed' : 'Cancelled'
           end
-          
+
           def name
             params['name']
           end
-          
+
           def address
             params['address']
           end
-          
+
           def postcode
             params['postcode']
           end
-          
+
           def country
             params['country']
           end
-          
+
           def phone_number
             params['tel']
           end
-          
+
           def fax_number
             params['fax']
           end
-          
+
           def email_address
             params['email']
           end
-          
+
           def card_type
             params['cardType']
           end
-          
+
           # WorldPay extended fraud checks returned as a 4 character string
           #   1st char: Credit card CVV check
           #   2nd char: Postcode AVS check
@@ -109,13 +109,13 @@ module ActiveMerchant #:nodoc:
           def acknowledge
             return true
           end
-          
+
           # WorldPay supports the passing of custom parameters through to the callback script
           def custom_params
             return @custom_params ||= read_custom_params
           end
-          
-          
+
+
           private
 
           # Take the posted data and move the relevant data into a hash
@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
               params[key] = value
             end
           end
-          
+
           # Read the custom params into a hash
           def read_custom_params
             custom = {}
@@ -137,7 +137,7 @@ module ActiveMerchant #:nodoc:
             end
             custom
           end
-          
+
           # Convert a AVS value to a symbol - see above for more about AVS
           def avs_value_to_symbol(value)
             case value.to_s

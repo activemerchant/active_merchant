@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BraintreeGateway < Gateway
       include BraintreeCommon
-      
+
       self.abstract_class = true
 
       def self.new(options={})

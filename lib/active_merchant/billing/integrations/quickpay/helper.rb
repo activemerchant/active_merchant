@@ -14,19 +14,19 @@ module ActiveMerchant #:nodoc:
             add_field('testmode', test? ? 1 : 0)
             add_field('ordernumber', format_order_number(order))
           end
-              
+
           def md5secret(value)
             @md5secret = value
           end
-          
+
           def form_fields
             @fields.merge('md5check' => generate_md5check)
           end
-            
+
           def generate_md5string
             MD5_CHECK_FIELDS.map {|key| @fields[key.to_s]} * "" + @md5secret
           end
-          
+
           def generate_md5check
             Digest::MD5.hexdigest(generate_md5string)
           end
@@ -35,9 +35,9 @@ module ActiveMerchant #:nodoc:
           def format_order_number(number)
             number.to_s.gsub(/[^\w_]/, '').rjust(4, "0")[0...20]
           end
-          
+
           MD5_CHECK_FIELDS = [
-            :protocol, :msgtype, :merchant, :language, :ordernumber, 
+            :protocol, :msgtype, :merchant, :language, :ordernumber,
             :amount, :currency, :continueurl, :cancelurl, :callbackurl,
             :autocapture, :cardtypelock, :description, :ipaddress, :testmode
           ]
@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
           mapping :language, 'language'
           mapping :amount, 'amount'
           mapping :currency, 'currency'
-          
+
           mapping :return_url, 'continueurl'
           mapping :cancel_return_url, 'cancelurl'
           mapping :notify_url, 'callbackurl'

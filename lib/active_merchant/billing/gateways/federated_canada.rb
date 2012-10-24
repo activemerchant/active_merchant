@@ -101,7 +101,7 @@ module ActiveMerchant #:nodoc:
         post[:orderid] = options[:order_id]
         post[:orderdescription] = options[:description]
       end
-      
+
       def add_creditcard(post, creditcard)
         post[:ccnumber] = creditcard.number
         post[:ccexp] = expdate(creditcard)
@@ -121,7 +121,7 @@ module ActiveMerchant #:nodoc:
           memo
         end
       end
-      
+
       def commit(action, money, parameters)
         parameters[:amount] = amount(money)
         data = ssl_post(self.live_url, post_data(action, parameters))
@@ -129,7 +129,7 @@ module ActiveMerchant #:nodoc:
         message = message_from(response)
         test_mode = test?
 
-        Response.new(success?(response), message, response, 
+        Response.new(success?(response), message, response,
           :test => test?,
           :authorization => response['transactionid'],
           :avs_result => {:code =>  response['avsresponse']},

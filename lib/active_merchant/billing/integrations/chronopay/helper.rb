@@ -22,17 +22,17 @@ module ActiveMerchant #:nodoc:
             'CN1' => %w( CN ),
             'NL'  => %w( NL )
           }
-          
+
           LANG_FOR_COUNTRY = COUNTRIES_FOR_LANG.inject(Hash.new("EN")) do |memo, (lang, countries)|
             countries.each do |code|
               memo[code] = lang
             end
             memo
           end
-          
+
 
           self.country_format = :alpha3
-          
+
           def initialize(order, account, options = {})
             super
             add_field('cb_type', 'p')
@@ -73,18 +73,18 @@ module ActiveMerchant #:nodoc:
             # The appropriate format for Chronopay is the alpha 3 country code
             country_code = lookup_country_code(mapping.delete(:country))
             add_field(mappings[:billing_address][:country], country_code)
-            
+
             countries_with_supported_states = ['USA', 'CAN']
             if !countries_with_supported_states.include?(country_code)
               mapping.delete(:state)
               add_field(mappings[:billing_address][:state], 'XX')
-            end  
+            end
             mapping.each do |k, v|
               field = mappings[:billing_address][k]
               add_field(field, v) unless field.nil?
-            end 
+            end
             add_field('language', checkout_language_from_country(country_code))
-          end        
+          end
 
           # card_no
           # exp_month
@@ -102,10 +102,10 @@ module ActiveMerchant #:nodoc:
           # cs2
           # cs3
           # decline_url
-          
-          
+
+
           private
-          
+
           def checkout_language_from_country(country_code)
             country    = Country.find(country_code)
             short_code = country.code(:alpha2).to_s

@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
 
           def complete?
             status == 'Completed'
-          end 
+          end
 
           # Id of the order we passed to Nochex
           def item_id
@@ -25,8 +25,8 @@ module ActiveMerchant #:nodoc:
           def currency
             'GBP'
           end
-  
-          # When was this payment received by the client. 
+
+          # When was this payment received by the client.
           def received_at
             # U.K. Format: 27/09/2006 22:30:54
             return if params['transaction_date'].blank?
@@ -37,10 +37,10 @@ module ActiveMerchant #:nodoc:
           def payer_email
             params['from_email']
           end
-         
+
           def receiver_email
             params['to_email']
-          end 
+          end
 
           def security_key
             params['security_key']
@@ -60,16 +60,16 @@ module ActiveMerchant #:nodoc:
             'Completed'
           end
 
-          # Acknowledge the transaction to Nochex. This method has to be called after a new 
-          # apc arrives. Nochex will verify that all the information we received are correct and will return a 
+          # Acknowledge the transaction to Nochex. This method has to be called after a new
+          # apc arrives. Nochex will verify that all the information we received are correct and will return a
           # ok or a fail. This is very similar to the PayPal IPN scheme.
-          # 
+          #
           # Example:
-          # 
+          #
           #   def nochex_ipn
           #     notify = NochexNotification.new(request.raw_post)
           #
-          #     if notify.acknowledge 
+          #     if notify.acknowledge
           #       ... process order ... if notify.complete?
           #     else
           #       ... log possible hacking attempt ...
@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
           def acknowledge
              payload =  raw
 
-             response = ssl_post(Nochex.notification_confirmation_url, payload, 
+             response = ssl_post(Nochex.notification_confirmation_url, payload,
                'Content-Length' => "#{payload.size}",
                'User-Agent'     => "Active Merchant -- http://activemerchant.org",
                'Content-Type'   => "application/x-www-form-urlencoded"

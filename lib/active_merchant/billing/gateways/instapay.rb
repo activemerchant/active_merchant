@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
 
       # The name of the gateway
       self.display_name = 'InstaPay'
-      
+
       SUCCESS         = "Accepted"
       SUCCESS_MESSAGE = "The transaction has been approved"
 
@@ -47,24 +47,24 @@ module ActiveMerchant #:nodoc:
 
         commit('ns_quicksale_cc', post)
       end
-      
+
       def capture(money, authorization, options = {})
         post = {}
         add_amount(post, money)
-        add_reference(post, authorization)        
+        add_reference(post, authorization)
         commit('ns_quicksale_cc', post)
       end
 
       private
-      
+
       def add_amount(post, money)
         post[:amount] = amount(money)
       end
-      
+
       def add_reference(post, reference)
         post[:postonly] = reference
       end
-        
+
       def add_customer_data(post, options)
         post[:ci_email]       = options[:email]
         post["ci_IP Address"] = options[:ip]
@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
           post[:ci_shipcity]    = address[:city]
           post[:ci_shipstate]   = address[:state]
           post[:ci_shipzip]     = address[:zip]
-          post[:ci_shipcountry] = address[:country]  
+          post[:ci_shipcountry] = address[:country]
         end
       end
 
@@ -108,10 +108,10 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         results = {}
         fields = body.split("\r\n")
-        
-        response = fields[1].split('=')        
+
+        response = fields[1].split('=')
         response_data = response[1].split(':')
-        
+
         if response[0] == SUCCESS
           results[:success] = true
           results[:message] = SUCCESS_MESSAGE

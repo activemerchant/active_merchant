@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
           ENCRYPTION_PATH = "/CryptHTTPS/Encrypt.asp"
           DECRYPTION_PATH = "/CryptHTTPS/Decrypt.asp"
           DELIMITER = '*P1*'
-          
+
           CURRENCY_MAPPING = {
             'EUR' => '242',
             'ITL' => '18',
@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
             'JPY' => '71',
             'HKD' => '103'
           }
-          
+
           def parse_response(response)
             case response
             when /#cryptstring#(.*)#\/cryptstring#/, /#decryptstring#(.*)#\/decryptstring#/
@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
               raise StandardError, "No response was received by GestPay"
             end
           end
-          
+
           def ssl_get(url, path)
             uri = URI.parse(url)
             site = Net::HTTP.new(uri.host, uri.port)

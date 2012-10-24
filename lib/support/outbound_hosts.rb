@@ -2,7 +2,7 @@ require 'uri'
 require 'set'
 
 class OutboundHosts
-  def self.list    
+  def self.list
     uris = Set.new
 
     Dir['lib/**/*.rb'].each do |file|
@@ -10,7 +10,7 @@ class OutboundHosts
 
       content.each_line do |line|
         next if line =~ /homepage_url/
-    
+
         if line =~ /("|')(https:\/\/.*)("|')/
           uri = URI.parse($2)
           uris << [uri.host, uri.port]

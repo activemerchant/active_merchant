@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
           # amount
           mapping :account, 'email'
           mapping :amount, 'amount'
-        
+
           # Set the field status = test for testing with accounts:
           # Account             Password
           # test1@nochex.com    123456
@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
           # def initialize(order, account, options = {})
           #  super
           #  add_field('status', 'test')
-          # end 
+          # end
 
           # Need to format the amount to have 2 decimal places
           def amount=(money)
@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
             end
             add_field mappings[:amount], sprintf("%.2f", cents.to_f/100)
           end
-          
+
           # Optional Parameters
           # ordernumber
           mapping :order, 'ordernumber'
@@ -47,15 +47,15 @@ module ActiveMerchant #:nodoc:
                                     :state    => 'county',
                                     :zip      => 'postcode'
 
-          # responderurl 
+          # responderurl
           mapping :notify_url, 'responderurl'
 
           # returnurl
           mapping :return_url, 'returnurl'
-          
+
           # cancelurl
           mapping :cancel_return_url, 'cancelurl'
-          
+
           # description
           mapping :description, 'description'
 

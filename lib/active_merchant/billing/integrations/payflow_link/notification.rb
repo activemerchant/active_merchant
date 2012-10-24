@@ -5,15 +5,15 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module PayflowLink
         class Notification < ActiveMerchant::Billing::Integrations::Notification
-          
+
           # Was the transaction complete?
           def complete?
             status == "Completed"
           end
 
-          # When was this payment received by the client. 
-          # sometimes it can happen that we get the notification much later. 
-          # One possible scenario is that our web application was down. In this case paypal tries several 
+          # When was this payment received by the client.
+          # sometimes it can happen that we get the notification much later.
+          # One possible scenario is that our web application was down. In this case paypal tries several
           # times an hour to inform us about the notification
           def received_at
             DateTime.parse(params['TRANSTIME']) if params['TRANSTIME']
@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
             params['PNREF']
           end
 
-          # What type of transaction are we dealing with? 
+          # What type of transaction are we dealing with?
           def type
             params['TYPE']
           end
@@ -49,21 +49,21 @@ module ActiveMerchant #:nodoc:
             params['RESULT'] == '0' ? 'Completed' : 'Failed'
           end
 
-          # This is the item number which we submitted to paypal 
+          # This is the item number which we submitted to paypal
           def item_id
             params['USER1']
           end
 
-          # This is the invoice which you passed to paypal 
+          # This is the invoice which you passed to paypal
           def invoice
             params['INVNUM']
-          end   
+          end
 
           # Was this a test transaction?
           def test?
             params['USER2'] == 'true'
           end
-          
+
           def account
             params["ACCT"]
           end

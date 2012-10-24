@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
-      module Valitor 
+      module Valitor
         autoload :Return, 'active_merchant/billing/integrations/valitor/return.rb'
         autoload :Helper, 'active_merchant/billing/integrations/valitor/helper.rb'
         autoload :Notification, 'active_merchant/billing/integrations/valitor/notification.rb'
@@ -9,9 +9,9 @@ module ActiveMerchant #:nodoc:
         mattr_accessor :test_url
         self.test_url = 'https://testvefverslun.valitor.is/1_1/'
 
-        mattr_accessor :production_url 
+        mattr_accessor :production_url
         self.production_url = 'https://vefverslun.valitor.is/1_1/'
-        
+
         def self.test?
           (ActiveMerchant::Billing::Base.integration_mode == :test)
         end

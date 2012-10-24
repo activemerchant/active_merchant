@@ -10,9 +10,9 @@ module ActiveMerchant #:nodoc:
 
             if ActiveMerchant::Billing::Base.integration_mode == :test || options[:test]
               add_field('test', 'true')
-            end 
+            end
           end
-          
+
           # Replace with the real mapping
           mapping :account, 'destinationid'
           mapping :credential2, 'key'
@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
           mapping :amount, 'amount'
           mapping :tax, 'tax'
           mapping :shipping, 'shipping'
-          mapping :order, 'orderid'          
+          mapping :order, 'orderid'
         end
       end
     end

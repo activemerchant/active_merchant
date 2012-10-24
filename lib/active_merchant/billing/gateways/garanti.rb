@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc:
 
       def normalize(text)
         return unless text
-        
+
         if ActiveSupport::Inflector.method(:transliterate).arity == -2
           ActiveSupport::Inflector.transliterate(text,'')
         elsif RUBY_VERSION >= '1.9'

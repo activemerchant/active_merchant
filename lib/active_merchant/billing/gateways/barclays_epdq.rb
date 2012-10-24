@@ -10,13 +10,13 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
       self.homepage_url = 'http://www.barclaycard.co.uk/business/accepting-payments/epdq-mpi/'
       self.display_name = 'Barclays ePDQ'
-      
+
       def initialize(options = {})
         requires!(options, :login, :password, :client_id)
         @options = options
         super
-      end  
-      
+      end
+
       def authorize(money, creditcard, options = {})
         document = Document.new(self, @options) do
           add_order_form(options[:order_id]) do
@@ -29,7 +29,7 @@ module ActiveMerchant #:nodoc:
 
         commit(document)
       end
-      
+
       def purchase(money, creditcard, options = {})
         # disable fraud checks if this is a repeat order:
         if options[:payment_number] && (options[:payment_number] > 1)
@@ -46,9 +46,9 @@ module ActiveMerchant #:nodoc:
           end
         end
         commit(document)
-      end                       
-    
-      # authorization is your unique order ID, not the authorization 
+      end
+
+      # authorization is your unique order ID, not the authorization
       # code returned by ePDQ
       def capture(money, authorization, options = {})
         document = Document.new(self, @options) do
@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
         commit(document)
       end
 
-      # authorization is your unique order ID, not the authorization 
+      # authorization is your unique order ID, not the authorization
       # code returned by ePDQ
       def credit(money, creditcard_or_authorization, options = {})
         if creditcard_or_authorization.is_a?(String)
@@ -85,7 +85,7 @@ module ActiveMerchant #:nodoc:
         commit(document)
       end
 
-      private                       
+      private
       def credit_new_order(money, creditcard, options)
         document = Document.new(self, @options) do
           add_order_form do
@@ -106,10 +106,10 @@ module ActiveMerchant #:nodoc:
             add_transaction(:Credit, money)
           end
         end
-        
+
         commit(document)
       end
-      
+
       def parse(body)
         parser = Parser.new(body)
         response = parser.parse
@@ -121,8 +121,8 @@ module ActiveMerchant #:nodoc:
           :order_id => response[:order_id],
           :raw_response => response[:raw_response]
         )
-      end     
-      
+      end
+
       def commit(document)
         url = (test? ? self.test_url : self.live_url)
         data = ssl_post(url, document.to_xml)
@@ -150,7 +150,7 @@ module ActiveMerchant #:nodoc:
             success = find(doc, "//Transaction/AuthCode").present?
           end
 
-          {       
+          {
             :success => success,
             :message => message,
             :transaction_id => find(doc, "//Transaction/Id"),
@@ -169,7 +169,7 @@ module ActiveMerchant #:nodoc:
       class Document
         attr_reader :type, :xml
 
-        PAYMENT_INTERVALS = { 
+        PAYMENT_INTERVALS = {
           :days => 'D',
           :months => 'M'
         }
@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
           :switch => 9,
           :maestro => 10,
         }
-      
+
         def initialize(gateway, options = {}, document_options = {}, &block)
           @gateway = gateway
           @options = options
@@ -206,7 +206,7 @@ module ActiveMerchant #:nodoc:
               end
               xml.Instructions do
                 if @document_options[:no_fraud]
-                  xml.Pipeline "PaymentNoFraud" 
+                  xml.Pipeline "PaymentNoFraud"
                 else
                   xml.Pipeline "Payment"
                 end
@@ -294,9 +294,9 @@ module ActiveMerchant #:nodoc:
         # date must be formatted MM/YY
         def format_expiry_date(creditcard)
           month_str = "%02d" % creditcard.month
-          if match = creditcard.year.to_s.match(/^\d{2}(\d{2})$/) 
+          if match = creditcard.year.to_s.match(/^\d{2}(\d{2})$/)
             year_str = "%02d" % match[1].to_i
-          else 
+          else
             year_str = "%02d" % creditcard.year
           end
           "#{month_str}/#{year_str}"

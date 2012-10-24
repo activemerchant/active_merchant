@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(AU CA CN FI GB ID IN IT MY NO NZ PH PL SE SG TH VN)
       self.homepage_url = 'https://www.x.com/community/ppx/xspaces/digital_goods'
       self.display_name = 'PayPal Express Checkout for Digital Goods'
-      
+
       def redirect_url_for(token, options = {})
         "#{redirect_url}?token=#{token}&useraction=commit"
       end

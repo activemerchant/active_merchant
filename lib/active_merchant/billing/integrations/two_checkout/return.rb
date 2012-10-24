@@ -6,9 +6,9 @@ module ActiveMerchant #:nodoc:
           def success?
             params['credit_card_processed'] == 'Y'
           end
-          
+
           def message
-            
+
           end
 	      end
       end

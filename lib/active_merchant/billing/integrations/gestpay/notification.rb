@@ -6,10 +6,10 @@ module ActiveMerchant #:nodoc:
       module Gestpay
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           include Common
-          
+
           def complete?
             status == 'Completed'
-          end 
+          end
 
           # The important param
           def item_id
@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
           def gross
             params['PAY1_AMOUNT']
           end
-          
+
           def currency
             # Ruby 1.9 compat
             method = CURRENCY_MAPPING.respond_to?(:key) ? :key : :index
@@ -47,19 +47,19 @@ module ActiveMerchant #:nodoc:
           def acknowledge
             true
           end
-          
+
           private
           # Take the posted data and move the relevant data into a hash
           def parse(query_string)
             @raw = query_string
-            
+
             return if query_string.blank?
             encrypted_params = parse_delimited_string(query_string)
-            
+
             return if encrypted_params['a'].blank? || encrypted_params['b'].blank?
             @params = decrypt_data(encrypted_params['a'], encrypted_params['b'])
           end
-          
+
           def parse_delimited_string(string, delimiter = '&', unencode_cgi = false)
             result = {}
             for line in string.split(delimiter)
@@ -68,13 +68,13 @@ module ActiveMerchant #:nodoc:
             end
             result
           end
-          
+
           def decrypt_data(shop_login, encrypted_string)
             response = ssl_get(Gestpay.service_url, decryption_query_string(shop_login, encrypted_string))
             encoded_response = parse_response(response)
             parse_delimited_string(encoded_response, DELIMITER, true)
           end
-        
+
           def decryption_query_string(shop_login, encrypted_string)
             "#{DECRYPTION_PATH}?a=" + CGI.escape(shop_login) + "&b=" + encrypted_string + "&c=" + CGI.escape(VERSION)
           end
