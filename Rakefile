@@ -94,3 +94,12 @@ namespace :gateways do
     SSLVerify.new.test_gateways
   end 
 end
+desc "Strip trailing whitespace for rb files in lib"
+task :strip_whitespace do
+  Dir["lib/**/*.rb"].each do |name|
+    body = File.read(name)
+    File.open(name, "w") do |file|
+      file.write body.gsub(/ +\n/, "\n")
+    end
+  end
+end
