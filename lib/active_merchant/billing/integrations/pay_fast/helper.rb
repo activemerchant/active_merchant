@@ -10,6 +10,7 @@ module ActiveMerchant #:nodoc:
             add_field('merchant_id', account)
             add_field('merchant_key', options.delete(:credential2))
             add_field('m_payment_id', order)
+            add_field('item_name', 'Store Purchase')
           end
 
           def form_fields
