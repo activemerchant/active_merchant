@@ -105,19 +105,6 @@ class StripeTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_add_customer_data
-    post = {}
-    response = @gateway.send(:add_customer_data, post, {:description => "a test customer",:browser_ip => "127.127.127.127", :user_agent => "some browser", :order_id => "42", :email => "foo@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
-    
-    assert_equal "a test customer", post[:description]
-    assert_equal "127.127.127.127", post[:browser_ip]
-    assert_equal "some browser", post[:user_agent]
-    assert_equal "http://www.shopify.com", post[:referrer]
-    assert_equal "42", post[:external_id]
-    assert_equal "foo@wonderfullyfakedomain.com", post[:email]
-    assert_equal "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}", post[:payment_user_agent]
-  end
-
   def test_add_address
     post = {:card => {}}
     @gateway.send(:add_address, post, @options)
