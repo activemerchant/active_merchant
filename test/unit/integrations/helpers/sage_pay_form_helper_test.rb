@@ -213,6 +213,34 @@ class SagePayFormHelperTest < Test::Unit::TestCase
     assert_equal 5, crypts.uniq.count
   end
 
+  def test_ireland_addresses_use_default_0000_post_code
+    @helper.billing_address(
+      :address1 => '1 My Street',
+      :address2 => '',
+      :city => 'Dublin',
+      :country  => 'IE'
+    )
+    @helper.shipping_address(
+      :address1 => '1 Shipping Street',
+      :address2 => '',
+      :city => 'Dublin Shipping',
+      :country  => 'IE'
+    )
+
+    @helper.form_fields
+    assert_equal 16, @helper.fields.size
+
+    assert_field 'BillingAddress1', '1 My Street'
+    assert_field 'BillingCity', 'Dublin'
+    assert_field 'BillingPostCode', '0000'
+    assert_field 'BillingCountry', 'IE'
+
+    assert_field 'DeliveryAddress1', '1 Shipping Street'
+    assert_field 'DeliveryCity', 'Dublin Shipping'
+    assert_field 'DeliveryPostCode', '0000'
+    assert_field 'DeliveryCountry', 'IE'
+  end
+
   private
 
   def with_crypt_plaintext
