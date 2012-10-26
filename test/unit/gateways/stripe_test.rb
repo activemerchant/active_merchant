@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class StripeTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = StripeGateway.new(:login => 'login')
 
@@ -89,10 +91,18 @@ class StripeTest < Test::Unit::TestCase
     assert !post[:customer]
   end
 
-  def test_add_customer_data
-    post = {}
-    @gateway.send(:add_customer_data, post, {:description => "a test customer"})
-    assert_equal "a test customer", post[:description]
+  def test_client_data_submitted_with_purchase
+    response = stub_comms(method_to_stub=:ssl_request) do
+      updated_options = @options.merge({:description => "a test customer",:browser_ip => "127.127.127.127", :user_agent => "some browser", :order_id => "42", :email => "foo@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
+      @gateway.purchase(@amount,@credit_card,updated_options)
+    end.check_request do |method,endpoint, data, headers|
+      assert_match(/description=a\+test\+customer/, data)
+      assert_match(/ip=127\.127\.127\.127/, data)
+      assert_match(/user_agent=some\+browser/, data)
+      assert_match(/external_id=42/, data)
+      assert_match(/referrer=http\%3A\%2F\%2Fwww\.shopify\.com/, data)
+      assert_match(/payment_user_agent=Stripe\%2Fv1\+ActiveMerchantBindings\%2F1\.28\.0/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_add_address

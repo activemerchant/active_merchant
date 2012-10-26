@@ -48,6 +48,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         add_creditcard(post, creditcard, options)
         add_customer(post, options)
+        add_customer_data(post,options)
         post[:description] = options[:description] || options[:email]
         add_flags(post, options)
 
@@ -105,8 +106,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        post[:description] = options[:description]
-        post[:email] = options[:email]
+        metadata_options = [:description,:email,:browser_ip,:user_agent,:referrer]
+        post.update(options.slice(*metadata_options))
+
+        post[:external_id] = options[:order_id]
+        post[:payment_user_agent] = "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
       end
 
       def add_address(post, options)
