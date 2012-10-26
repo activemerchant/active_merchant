@@ -16,6 +16,10 @@ module ActiveMerchant #:nodoc:
         #
         #     def paypal_ipn
         #       notify = Paypal::Notification.new(request.raw_post)
+        #
+        #       if notify.masspay?
+        #         masspay_items = notify.items
+        #       end
         #   
         #       order = Order.find(notify.item_id)
         #     
@@ -43,10 +47,20 @@ module ActiveMerchant #:nodoc:
         #   end
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           include PostsData
+
+          def initialize(post, options = {})
+            super
+            extend MassPayNotification if masspay?
+          end
           
           # Was the transaction complete?
           def complete?
             status == "Completed"
+          end
+
+          # Is it a masspay notification?
+          def masspay?
+            type == "masspay"
           end
 
           # When was this payment received by the client. 
@@ -148,6 +162,56 @@ module ActiveMerchant #:nodoc:
 
             response == "VERIFIED"
           end
+        end
+
+        module MassPayNotification
+          # Mass pay returns a collection of MassPay Items, so inspect items to get the values
+          def transaction_id
+          end
+
+          # Mass pay returns a collection of MassPay Items, so inspect items to get the values
+          def gross
+          end
+
+          # Mass pay returns a collection of MassPay Items, so inspect items to get the values
+          def fee
+          end
+
+          # Mass pay returns a collection of MassPay Items, so inspect items to get the values
+          def currency
+          end
+
+          # Mass pay returns a collection of MassPay Items, so inspect items to get the values
+          def item_id
+          end
+
+          # Mass pay returns a collection of MassPay Items, so inspect items to get the values
+          def account
+          end
+
+          # Collection of notification items returned for MassPay transactions
+          def items
+            @items ||= (1..number_of_mass_pay_items).map do |item_number|
+              MassPayItem.new(
+                params["masspay_txn_id_#{item_number}"],
+                params["mc_gross_#{item_number}"],
+                params["mc_fee_#{item_number}"],
+                params["mc_currency_#{item_number}"],
+                params["unique_id_#{item_number}"],
+                params["receiver_email_#{item_number}"],
+                params["status_#{item_number}"]
+              )
+            end
+          end
+
+          private
+
+          def number_of_mass_pay_items
+            @number_of_mass_pay_items ||= params.keys.select { |k| k.start_with? 'masspay_txn_id' }.size
+          end
+        end
+
+        class MassPayItem < Struct.new(:transaction_id, :gross, :fee, :currency, :item_id, :account, :status)
         end
       end
     end
