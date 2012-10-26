@@ -5,6 +5,7 @@ module ActiveMerchant #:nodoc:
       # Documentation:
       # https://www.payfast.co.za/s/std/integration-guide
       module PayFast
+        autoload :Return, File.dirname(__FILE__) + '/pay_fast/return.rb'
         autoload :Helper, File.dirname(__FILE__) + '/pay_fast/helper.rb'
         autoload :Notification, File.dirname(__FILE__) + '/pay_fast/notification.rb'
         autoload :Common, File.dirname(__FILE__) + '/pay_fast/common.rb'
