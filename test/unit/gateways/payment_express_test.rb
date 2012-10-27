@@ -147,8 +147,64 @@ class PaymentExpressTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @visa, @options)
     assert_nil response.cvv_result['code']
   end
-  
+
+  def test_purchase_truncates_order_id_to_16_chars
+    gateway_expects_ssl_post_with_txn_id_truncated_to_16_chars
+    @gateway.purchase(@amount, @visa, {:order_id => "16chars---------EXTRA"})
+  end
+
+  def test_authorize_truncates_order_id_to_16_chars
+    gateway_expects_ssl_post_with_txn_id_truncated_to_16_chars
+    @gateway.authorize(@amount, @visa, {:order_id => "16chars---------EXTRA"})
+  end
+
+  def test_capture_truncates_order_id_to_16_chars
+    gateway_expects_ssl_post_with_txn_id_truncated_to_16_chars
+    @gateway.capture(@amount, 'identification', {:order_id => "16chars---------EXTRA"})
+  end
+
+  def test_refund_truncates_order_id_to_16_chars
+    gateway_expects_ssl_post_with_txn_id_truncated_to_16_chars
+    @gateway.capture(@amount, 'identification', {:order_id => "16chars---------EXTRA"})
+  end
+
+  def test_purchase_truncates_description_to_64_chars
+    gateway_expects_ssl_post_with_merchant_reference_truncated_to_64_chars
+    @gateway.purchase(@amount, @visa, {:description => "64chars---------------------------------------------------------EXTRA"})
+  end
+
+  def test_authorize_truncates_description_to_64_chars
+    gateway_expects_ssl_post_with_merchant_reference_truncated_to_64_chars
+    @gateway.authorize(@amount, @visa, {:description => "64chars---------------------------------------------------------EXTRA"})
+  end
+
+  def test_capture_truncates_description_to_64_chars
+    gateway_expects_ssl_post_with_merchant_reference_truncated_to_64_chars
+    @gateway.capture(@amount, 'identification', {:description => "64chars---------------------------------------------------------EXTRA"})
+  end
+
+  def test_refund_truncates_description_to_64_chars
+    gateway_expects_ssl_post_with_merchant_reference_truncated_to_64_chars
+    @gateway.refund(@amount, 'identification', {:description => "64chars---------------------------------------------------------EXTRA"})
+  end
+
   private
+
+  def gateway_expects_ssl_post_with_txn_id_truncated_to_16_chars
+    @gateway.expects(:ssl_post).with do |url, xml|
+      doc = REXML::Document.new(xml)
+      # Expectation: this block should return true
+      doc.root.get_text("TxnId") == "16chars---------"
+    end
+  end
+
+  def gateway_expects_ssl_post_with_merchant_reference_truncated_to_64_chars
+    @gateway.expects(:ssl_post).with do |url, xml|
+      doc = REXML::Document.new(xml)
+      # Expectation: this block should return true
+      doc.root.get_text("MerchantReference") == "64chars---------------------------------------------------------"
+    end
+  end
 
   def billing_id_token_purchase(options = {})
     "<Txn><BillingId>#{options[:billing_id]}</BillingId><Amount>1.00</Amount><InputCurrency>NZD</InputCurrency><TxnId>aaa050be9488e8e4</TxnId><MerchantReference>Store purchase</MerchantReference><EnableAvsData>1</EnableAvsData><AvsAction>1</AvsAction><AvsStreetAddress>1234 My Street</AvsStreetAddress><AvsPostCode>K1C2N6</AvsPostCode><PostUsername>LOGIN</PostUsername><PostPassword>PASSWORD</PostPassword><TxnType>Purchase</TxnType></Txn>"
