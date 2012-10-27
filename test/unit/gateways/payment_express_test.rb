@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class PaymentExpressTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
         
     @gateway = PaymentExpressGateway.new(
@@ -147,8 +149,140 @@ class PaymentExpressTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @visa, @options)
     assert_nil response.cvv_result['code']
   end
-  
+
+  def test_expect_no_optional_fields_by_default
+    perform_each_transaction_type_with_request_body_assertions do |body|
+      assert_no_match(/<ClientType>/, body)
+      assert_no_match(/<TxnData1>/, body)
+      assert_no_match(/<TxnData2>/, body)
+      assert_no_match(/<TxnData3>/, body)
+    end
+  end
+
+  def test_pass_optional_txn_data
+    options = {
+      :txn_data1 => "Transaction Data 1",
+      :txn_data2 => "Transaction Data 2",
+      :txn_data3 => "Transaction Data 3"
+    }
+
+    perform_each_transaction_type_with_request_body_assertions(options) do |body|
+      assert_match(/<TxnData1>Transaction Data 1<\/TxnData1>/, body)
+      assert_match(/<TxnData2>Transaction Data 2<\/TxnData2>/, body)
+      assert_match(/<TxnData3>Transaction Data 3<\/TxnData3>/, body)
+    end
+  end
+
+  def test_pass_optional_txn_data_truncated_to_255_chars
+    options = {
+      :txn_data1 => "Transaction Data 1-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA",
+      :txn_data2 => "Transaction Data 2-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA",
+      :txn_data3 => "Transaction Data 3-01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345-EXTRA"
+    }
+
+    truncated_addendum = "01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345"
+
+    perform_each_transaction_type_with_request_body_assertions(options) do |body|
+      assert_match(/<TxnData1>Transaction Data 1-#{truncated_addendum}<\/TxnData1>/, body)
+      assert_match(/<TxnData2>Transaction Data 2-#{truncated_addendum}<\/TxnData2>/, body)
+      assert_match(/<TxnData3>Transaction Data 3-#{truncated_addendum}<\/TxnData3>/, body)
+    end
+  end
+
+  def test_pass_client_type_as_symbol_for_web
+    options = {:client_type => :web}
+
+    perform_each_transaction_type_with_request_body_assertions(options) do |body|
+      assert_match(/<ClientType>Web<\/ClientType>/, body)
+    end
+  end
+
+  def test_pass_client_type_as_symbol_for_ivr
+    options = {:client_type => :ivr}
+
+    perform_each_transaction_type_with_request_body_assertions(options) do |body|
+      assert_match(/<ClientType>IVR<\/ClientType>/, body)
+    end
+  end
+
+  def test_pass_client_type_as_symbol_for_moto
+    options = {:client_type => :moto}
+
+    perform_each_transaction_type_with_request_body_assertions(options) do |body|
+      assert_match(/<ClientType>MOTO<\/ClientType>/, body)
+    end
+  end
+
+  def test_pass_client_type_as_symbol_for_unattended
+    options = {:client_type => :unattended}
+
+    perform_each_transaction_type_with_request_body_assertions(options) do |body|
+      assert_match(/<ClientType>Unattended<\/ClientType>/, body)
+    end
+  end
+
+  def test_pass_client_type_as_symbol_for_internet
+    options = {:client_type => :internet}
+
+    perform_each_transaction_type_with_request_body_assertions(options) do |body|
+      assert_match(/<ClientType>Internet<\/ClientType>/, body)
+    end
+  end
+
+  def test_pass_client_type_as_symbol_for_recurring
+    options = {:client_type => :recurring}
+
+    perform_each_transaction_type_with_request_body_assertions(options) do |body|
+      assert_match(/<ClientType>Recurring<\/ClientType>/, body)
+    end
+  end
+
+  def test_pass_client_type_as_symbol_for_unknown_type_omits_element
+    options = {:client_type => :unknown}
+
+    perform_each_transaction_type_with_request_body_assertions(options) do |body|
+      assert_no_match(/<ClientType>/, body)
+    end
+  end
+
   private
+
+  def perform_each_transaction_type_with_request_body_assertions(options = {})
+    # purchase
+    stub_comms do
+      @gateway.purchase(@amount, @visa, options)
+    end.check_request do |endpoint, data, headers|
+      yield data
+    end.respond_with(successful_authorization_response)
+
+    # authorize
+    stub_comms do
+      @gateway.authorize(@amount, @visa, options)
+    end.check_request do |endpoint, data, headers|
+      yield data
+    end.respond_with(successful_authorization_response)
+
+    # capture
+    stub_comms do
+      @gateway.capture(@amount, 'identification', options)
+    end.check_request do |endpoint, data, headers|
+      yield data
+    end.respond_with(successful_authorization_response)
+
+    # refund
+    stub_comms do
+      @gateway.refund(@amount, 'identification', {:description => "description"}.merge(options))
+    end.check_request do |endpoint, data, headers|
+      yield data
+    end.respond_with(successful_authorization_response)
+
+    # store
+    stub_comms do
+      @gateway.store(@visa, options)
+    end.check_request do |endpoint, data, headers|
+      yield data
+    end.respond_with(successful_store_response)
+  end
 
   def billing_id_token_purchase(options = {})
     "<Txn><BillingId>#{options[:billing_id]}</BillingId><Amount>1.00</Amount><InputCurrency>NZD</InputCurrency><TxnId>aaa050be9488e8e4</TxnId><MerchantReference>Store purchase</MerchantReference><EnableAvsData>1</EnableAvsData><AvsAction>1</AvsAction><AvsStreetAddress>1234 My Street</AvsStreetAddress><AvsPostCode>K1C2N6</AvsPostCode><PostUsername>LOGIN</PostUsername><PostPassword>PASSWORD</PostPassword><TxnType>Purchase</TxnType></Txn>"
