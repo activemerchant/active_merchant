@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class PaymentExpressTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
         
     @gateway = PaymentExpressGateway.new(
@@ -148,6 +150,70 @@ class PaymentExpressTest < Test::Unit::TestCase
     assert_nil response.cvv_result['code']
   end
   
+  def test_purchase_truncates_order_id_to_16_chars
+    stub_comms do
+      @gateway.purchase(@amount, @visa, {:order_id => "16chars---------EXTRA"})
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_authorize_truncates_order_id_to_16_chars
+    stub_comms do
+      @gateway.authorize(@amount, @visa, {:order_id => "16chars---------EXTRA"})
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_capture_truncates_order_id_to_16_chars
+    stub_comms do
+      @gateway.capture(@amount, 'identification', {:order_id => "16chars---------EXTRA"})
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_refund_truncates_order_id_to_16_chars
+    stub_comms do
+      @gateway.refund(@amount, 'identification', {:description => 'refund', :order_id => "16chars---------EXTRA"})
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<TxnId>16chars---------<\/TxnId>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_purchase_truncates_description_to_64_chars
+    stub_comms do
+      @gateway.purchase(@amount, @visa, {:description => "64chars---------------------------------------------------------EXTRA"})
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<MerchantReference>64chars---------------------------------------------------------<\/MerchantReference>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_authorize_truncates_description_to_64_chars
+    stub_comms do
+      @gateway.authorize(@amount, @visa, {:description => "64chars---------------------------------------------------------EXTRA"})
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<MerchantReference>64chars---------------------------------------------------------<\/MerchantReference>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_capture_truncates_description_to_64_chars
+    stub_comms do
+      @gateway.capture(@amount, 'identification', {:description => "64chars---------------------------------------------------------EXTRA"})
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<MerchantReference>64chars---------------------------------------------------------<\/MerchantReference>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_refund_truncates_description_to_64_chars
+    stub_comms do
+      @gateway.refund(@amount, 'identification', {:description => "64chars---------------------------------------------------------EXTRA"})
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<MerchantReference>64chars---------------------------------------------------------<\/MerchantReference>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
   private
 
   def billing_id_token_purchase(options = {})
