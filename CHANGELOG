@@ -34,6 +34,7 @@
 * Wirecard: Add optional CommerceType element [timtait]
 * Add Borgun gateway [markabe]
 * [POSSIBLE BREAKAGE] NAB Transact: Allow timeout customization [duff]
+* Wirecard: Add card store and purchase/authorize by reference [speric]
 
 == Version 1.43.2 (May 12, 2014)
 
