@@ -65,15 +65,22 @@ class WirecardTest < Test::Unit::TestCase
 
   def test_successful_reference_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-    assert_equal TEST_PURCHASE_GUWID, purchase.authorization
+    assert response = @gateway.purchase(@amount, '12345', @options)
+    assert_instance_of Response, response
 
-    @gateway.expects(:ssl_post).returns(successful_reference_purchase_response)
-    reference_purchase = @gateway.purchase(@amount, purchase.authorization, @options)
-    assert_success reference_purchase
-    assert reference_purchase.test?
-    assert reference_purchase.message[/this is a demo/i]
+    assert_success response
+    assert response.test?
+    assert_equal TEST_PURCHASE_GUWID, response.authorization
+  end
+
+  def test_successful_reference_authorization
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    assert response = @gateway.authorize(@amount, '12345', @options)
+    assert_instance_of Response, response
+
+    assert_success response
+    assert response.test?
+    assert_equal TEST_AUTHORIZATION_GUWID, response.authorization
   end
 
   def test_wrong_credit_card_authorization
@@ -223,7 +230,71 @@ class WirecardTest < Test::Unit::TestCase
     assert_match /B/, response.avs_result["code"]
   end
 
+  def test_store_sets_recurring_transaction_type_to_initial
+    stub_comms do
+      @gateway.store(@credit_card)
+    end.check_request do |endpoint, body, headers|
+      assert_xml_element_text(body, "//RECURRING_TRANSACTION/Type", "Initial")
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_store_sets_amount_to_100_by_default
+    stub_comms do
+      @gateway.store(@credit_card)
+    end.check_request do |endpoint, body, headers|
+      assert_xml_element_text(body, "//CC_TRANSACTION/Amount", "100")
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_store_sets_amount_to_amount_from_options
+    stub_comms do
+      @gateway.store(@credit_card, :amount => 120)
+    end.check_request do |endpoint, body, headers|
+      assert_xml_element_text(body, "//CC_TRANSACTION/Amount", "120")
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_authorization_using_reference_sets_proper_elements
+    stub_comms do
+      @gateway.authorize(@amount, '45678', @options)
+    end.check_request do |endpoint, body, headers|
+      assert_xml_element_text(body, "//GuWID", '45678')
+      assert_no_match(/<CREDIT_CARD_DATA>/, body)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_purchase_using_reference_sets_proper_elements
+    stub_comms do
+      @gateway.purchase(@amount, '87654', @options)
+    end.check_request do |endpoint, body, headers|
+      assert_xml_element_text(body, "//GuWID", '87654')
+      assert_no_match(/<CREDIT_CARD_DATA>/, body)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_authorization_with_recurring_transaction_type_initial
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options.merge(:recurring => "Initial"))
+    end.check_request do |endpoint, body, headers|
+      assert_xml_element_text(body, "//RECURRING_TRANSACTION/Type", 'Initial')
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_purchase_using_with_recurring_transaction_type_initial
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(:recurring => "Initial"))
+    end.check_request do |endpoint, body, headers|
+      assert_xml_element_text(body, "//RECURRING_TRANSACTION/Type", 'Initial')
+    end.respond_with(successful_authorization_response)
+  end
+
   private
+
+  def assert_xml_element_text(xml, xpath, expected_text)
+    root = REXML::Document.new(xml).root
+    actual_text = root ? root.get_text(xpath).to_s : nil
+    assert_equal expected_text, actual_text, %{Expected to find the text "#{expected_text}" within the XML element with path "#{xpath}", but instead found the text "#{actual_text}" in the following XML:\n#{xml}}
+  end
 
   # Authorization success
   def successful_authorization_response
@@ -351,33 +422,6 @@ class WirecardTest < Test::Unit::TestCase
                 <StatusType>INFO</StatusType>
                 <FunctionResult>ACK</FunctionResult>
                 <TimeStamp>2008-06-19 08:09:19</TimeStamp>
-              </PROCESSING_STATUS>
-            </CC_TRANSACTION>
-          </FNC_CC_PURCHASE>
-        </W_JOB>
-      </W_RESPONSE>
-    </WIRECARD_BXML>
-    XML
-  end
-
-  def successful_reference_purchase_response
-    <<-XML
-    <?xml version="1.0" encoding="UTF-8"?>
-    <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
-      <W_RESPONSE>
-        <W_JOB>
-          <JobID></JobID>
-          <FNC_CC_PURCHASE>
-            <FunctionID></FunctionID>
-            <CC_TRANSACTION>
-              <TransactionID>E0BCBF30B82D0131000000000000E4CF</TransactionID>
-              <PROCESSING_STATUS>
-                <GuWID>C868749139989024436148</GuWID>
-                <AuthorizationCode>194071</AuthorizationCode>
-                <Info>THIS IS A DEMO TRANSACTION USING CREDIT CARD NUMBER 420000****0000. NO REAL MONEY WILL BE TRANSFERED.</Info>
-                <StatusType>INFO</StatusType>
-                <FunctionResult>PENDING</FunctionResult>
-                <TimeStamp>2014-05-12 12:24:04</TimeStamp>
               </PROCESSING_STATUS>
             </CC_TRANSACTION>
           </FNC_CC_PURCHASE>
