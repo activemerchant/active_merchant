@@ -159,6 +159,29 @@ class HdfcTest < Test::Unit::TestCase
     assert_equal "Unable to read error message", response.message
   end
 
+  def test_handling_bad_xml
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(%(
+      <result>CAPTURED</result>
+      <auth>999999</auth>
+      <ref>227615274218</ref>
+      <avr>N</avr>
+      <postdate>1002</postdate>
+      <tranid>849768440022761</tranid>
+      <payid>-1</payid>
+      <udf2></udf2>
+      <udf5></udf5>
+      <amt>1.00</amt>
+      <unescaped>&</unescaped>
+      <escaped>&amp;</escaped>
+    ))
+
+    assert_success response
+    assert_equal "&", response.params["unescaped"]
+    assert_equal "&", response.params["escaped"]
+  end
+
   private
 
   def successful_purchase_response
