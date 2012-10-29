@@ -174,12 +174,12 @@ class HdfcTest < Test::Unit::TestCase
       <udf5></udf5>
       <amt>1.00</amt>
       <unescaped>&</unescaped>
-      <escaped>&amp;</escaped>
+      <escaped>&amp;&quot;&apos;&lt;&gt;</escaped>
     ))
 
     assert_success response
     assert_equal "&", response.params["unescaped"]
-    assert_equal "&", response.params["escaped"]
+    assert_equal "&\"'<>", response.params["escaped"]
   end
 
   private

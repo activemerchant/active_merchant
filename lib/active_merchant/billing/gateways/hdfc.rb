@@ -132,7 +132,7 @@ EOA
       end
 
       def fix_xml(xml)
-        xml.gsub(/&(?!amp;)/, "&amp;")
+        xml.gsub(/&(?!(?:amp|quot|apos|lt|gt);)/, "&amp;")
       end
 
       ACTIONS = {
