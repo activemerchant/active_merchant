@@ -148,7 +148,7 @@ module ActiveMerchant #:nodoc:
         options[:order_id] ||= generate_unique_id
 
         xml.tag! "FNC_CC_#{options[:action].to_s.upcase}" do
-          xml.tag! 'FunctionID', options[:description]
+          xml.tag! 'FunctionID', options[:description].to_s.slice(0,32)
           xml.tag! 'CC_TRANSACTION' do
             xml.tag! 'TransactionID', options[:order_id]
             case options[:action]

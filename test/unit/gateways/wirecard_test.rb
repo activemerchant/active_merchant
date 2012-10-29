@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class WirecardTest < Test::Unit::TestCase
+  include CommStub
+
   TEST_AUTHORIZATION_GUWID = 'C822580121385121429927'
   TEST_PURCHASE_GUWID = 'C865402121385575982910'
   TEST_CAPTURE_GUWID = 'C833707121385268439116'
@@ -98,6 +100,26 @@ class WirecardTest < Test::Unit::TestCase
     assert_nothing_raised do
       @gateway.authorize(@amount, @credit_card, @options)
     end
+  end
+
+  def test_description_trucated_to_32_chars_in_authorize
+    options = {:description => "32chars-------------------------EXTRA"}
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<FunctionID>32chars-------------------------<\/FunctionID>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_description_trucated_to_32_chars_in_purchase
+    options = {:description => "32chars-------------------------EXTRA"}
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<FunctionID>32chars-------------------------<\/FunctionID>/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   private
