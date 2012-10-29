@@ -114,7 +114,7 @@ EOA
       def parse(xml)
         response = {}
 
-        doc = Nokogiri::XML.fragment(xml)
+        doc = Nokogiri::XML.fragment(fix_xml(xml))
         doc.children.each do |node|
           if node.text?
             next
@@ -129,6 +129,10 @@ EOA
         end
 
         response
+      end
+
+      def fix_xml(xml)
+        xml.gsub(/&(?!amp;)/, "&amp;")
       end
 
       ACTIONS = {
