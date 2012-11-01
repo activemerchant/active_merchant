@@ -87,9 +87,15 @@ module ActiveMerchant #:nodoc:
         commit(money, nil, options)
       end
 
+      def void(authorization, options = {})
+        requires!(options, :trans_ref_number)
+        options.update({ :CardAction => "9", :order_id => authorization })
+        commit(nil, nil, options)
+      end
+
       private
 
-      def commit(money, creditcard, options = {})
+      def commit(money, creditcard, options = {}) 
         response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(money, creditcard, options)))
 
         Response.new(successful?(response), message_from(response), response,
@@ -142,6 +148,7 @@ module ActiveMerchant #:nodoc:
           :Phone => options[:phone],
           :Fax => options[:fax],
           :Email => options[:email],
+          :TransRefNumber => options[:trans_ref_number],
 
           # Credit Card paramaters
           :PaymentType => "CC",
