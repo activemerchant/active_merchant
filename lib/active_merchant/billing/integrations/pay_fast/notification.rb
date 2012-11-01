@@ -45,13 +45,16 @@ module ActiveMerchant #:nodoc:
 
           # Was the transaction complete?
           def complete?
-            status == "COMPLETE"
+            status == "Completed"
           end
 
           # Status of transaction. List of possible values:
           # <tt>COMPLETE</tt>::
           def status
-            params['payment_status']
+            if params['payment_status'] == "COMPLETE"
+              "Completed"
+            else
+              "Failed"
           end
 
           # Id of this transaction (uniq PayFast transaction id)
