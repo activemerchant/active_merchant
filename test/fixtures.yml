@@ -319,6 +319,10 @@ pxpay:
   login: LOGIN
   password: PASSWORD
 
+redsys:
+  login: MERCHANT CODE
+  secret_key: SECRET KEY
+
 sage_pay:
   login: LOGIN
 
