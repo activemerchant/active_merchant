@@ -99,6 +99,11 @@ module ActiveMerchant #:nodoc:
             @params  = ActiveSupport::OrderedHash.new
           end
 
+          #gateway doesnt seem to send us any currency information
+          def currency
+            nil
+          end
+
           # Acknowledge the transaction to PayFast. This method has to be called after a new
           # ITN arrives. PayFast will verify that all the information we received are correct and will return a
           # VERIFIED or INVALID status.
