@@ -45,6 +45,14 @@ module ActiveMerchant #:nodoc:
           return true if ActiveMerchant::Billing::Base.integration_mode == :test || production_ips.blank?
           production_ips.include?(ip)
         end
+
+        def test?
+          false
+        end
+
+        def currency
+          nil
+        end
         
         private
 
