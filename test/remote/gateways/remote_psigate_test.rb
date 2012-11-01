@@ -47,4 +47,12 @@ class PsigateRemoteTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @creditcard, @options.update(:test_result => 'D'))
     assert_failure response
   end
+
+  def test_successful_void
+    assert authorization = @gateway.authorize(@amount, @creditcard, @options)
+    assert_success authorization
+
+    assert void = @gateway.void(authorization.authorization, { :trans_ref_number => authorization.params['transrefnumber'] })
+    assert_success void
+  end
 end
