@@ -55,6 +55,7 @@ module ActiveMerchant #:nodoc:
               "Completed"
             else
               "Failed"
+            end
           end
 
           # Id of this transaction (uniq PayFast transaction id)
