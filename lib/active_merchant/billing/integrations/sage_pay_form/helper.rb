@@ -64,6 +64,9 @@ module ActiveMerchant #:nodoc:
 
             fields['FailureURL'] ||= fields['SuccessURL']
 
+            fields['BillingPostCode'] ||= "0000" if fields['BillingCountry'] == "IE"
+            fields['DeliveryPostCode'] ||= "0000" if fields['DeliveryCountry'] == "IE"
+
             crypt_skip = ['Vendor', 'EncryptKey', 'SendEmail']
             crypt_skip << 'BillingState'  unless fields['BillingCountry']  == 'US'
             crypt_skip << 'DeliveryState' unless fields['DeliveryCountry'] == 'US'
