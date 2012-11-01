@@ -24,11 +24,10 @@ module ActiveMerchant #:nodoc:
     #
     #   # Create a credit card
     #   creditcard = ActiveMerchant::Billing::CreditCard.new(
-    #     :type       => 'visa',
     #     :number     => '4792587766554414',
     #     :month      => 10,
     #     :year       => 2015,
-    #     :cvv        => '123'
+    #     :verification_value => '123'
     #     :first_name => 'Bob',
     #     :last_name  => 'Bobsen'
     #   )
@@ -69,7 +68,7 @@ module ActiveMerchant #:nodoc:
       self.money_format        = :cents
 
       # Not all card types may be actived by the bank!
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :diners_club]
 
       # Homepage URL of the gateway for reference
       self.homepage_url        = "http://www.redsys.es/"
@@ -196,7 +195,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard, options = {})
         requires!(options, :order_id)
-        commit :authorize, money do |data|
+        commit :authorize, money, options do |data|
           add_creditcard(data, creditcard)
         end
       end
@@ -205,19 +204,21 @@ module ActiveMerchant #:nodoc:
         commit :capture, money, options.update(:order_id => order_id)
       end
 
-      def void(order_id, options = {})
-        commit :cancel, nil, options.update(:order_id => order_id)
+      # The void request must include the amount to cancel
+      # which must be the same as the original authorization amount.
+      def void(money, order_id, options = {})
+        commit :cancel, money, options.update(:order_id => order_id)
       end
 
       def purchase(money, creditcard, options = {})
         requires!(options, :order_id)
-        commit :purchase, money do |data|
+        commit :purchase, money, options do |data|
           add_creditcard(data, creditcard)
         end
       end
 
       def refund(money, order_id, options = {})
-        commit :cancel, money, options.update(:order_id => order_id)
+        commit :refund, money, options.update(:order_id => order_id)
       end
 
       def test?
@@ -239,18 +240,18 @@ module ActiveMerchant #:nodoc:
         data[:order_id] = order_id
       end
 
-      def add_currency(data, currency)
-        data[:currency] = currenct_code(currency || self.class.default_currency)
+      def add_currency(data, money, options)
+        data[:currency] = currency_code(options[:currency] || currency(money))
       end
 
       def add_creditcard(data, card)
         name  = [card.first_name, card.last_name].join(' ').slice(0, 60)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
+        year  = sprintf("%.4i", card.year)
+        month = sprintf("%.2i", card.month)
         data[:card] = {
           :name => name,
           :pan  => card.number,
-          :expiry_date => "#{month}#{year[2..3]}",
+          :date => "#{year[2..3]}#{month}",
           :cvv  => card.verification_value
         }
       end
@@ -278,20 +279,23 @@ module ActiveMerchant #:nodoc:
 
 
       def commit(action, money, options = {})
-        data = {:action => transaction_code(action)}
-
+        data = {
+          :action   => transaction_code(action),
+        }
+        add_currency(data, money, options)
         add_amount(data, money)
-        add_currency(data, options[:currency])
         add_order_id(data, options[:order_id])
-
         yield(data) if block_given?
-
         add_signature(action, data)
-        xml = build_xml_request(data)
 
-        headers = {}
-        headers['Content-Type'] = 'application/x-www-form-urlencoded'
-        parse(ssl_post(url, "entrada=#{CGI.escape(xml.to_s)}", headers))
+        post_and_parse(build_xml_request(data).to_s)
+      end
+
+      def post_and_parse(xml)
+        headers = {
+          'Content-Type' => 'application/x-www-form-urlencoded'
+        }
+        parse(ssl_post(url, "entrada=#{CGI.escape(xml)}", headers))
       end
 
       def build_xml_request(data)
@@ -311,7 +315,7 @@ module ActiveMerchant #:nodoc:
           if data[:card]
             xml.DS_MERCHANT_TITULAR    data[:card][:name]
             xml.DS_MERCHANT_PAN        data[:card][:pan]
-            xml.DS_MERCHANT_EXPIRYDATE data[:card][:expiry_data]
+            xml.DS_MERCHANT_EXPIRYDATE data[:card][:date]
             xml.DS_MERCHANT_CVV2       data[:card][:cvv]
           end
         end
@@ -322,8 +326,9 @@ module ActiveMerchant #:nodoc:
         params  = {}
         success = false
         message = ""
+        options = @options.merge(:test => test?)
         xml     = REXML::Document.new(data)
-        code    = REXML::XPath.first(xml, "//RETORNOXML/CODE").text
+        code    = REXML::XPath.first(xml, "//RETORNOXML/CODIGO").text
         if code == "0"
           op = REXML::XPath.first(xml, "//RETORNOXML/OPERACION")
           op.elements.each do |element|
@@ -332,32 +337,33 @@ module ActiveMerchant #:nodoc:
 
           # Check the data we received
           if validate_signature(params)
-            message = response_text(reply[:ds_response])
-            @options[:authorization] = params[:ds_order]
+            message = response_text(params[:ds_response])
+            options[:authorization] = params[:ds_order]
             success = is_success_response?(params[:ds_response])
           else
             message = "Response failed validation check"
           end
         else
-          # Something very wrong with the request!
-          message = "Fatal error with code: #{code}"
+          # Something kind of programmer error with the request!
+          message = "#{code} ERROR"
         end
 
-        Response.new(success, message, params, @options)
+        Response.new(success, message, params, options)
       end
 
       def validate_signature(data)
         str = data[:ds_amount] +
               data[:ds_order].to_s +
-              @options[:merchant] +
+              data[:ds_merchantcode] +
               data[:ds_currency] +
               data[:ds_response] +
               data[:ds_cardnumber].to_s +
-              data[:ds_transaction_type].to_s +
+              data[:ds_transactiontype].to_s +
               data[:ds_securepayment].to_s +
               @options[:secret_key]
 
-        data[:ds_signature].to_s.downcase == Digest::SHA1.hexdigest(str)
+        sig = Digest::SHA1.hexdigest(str)
+        data[:ds_signature].to_s.downcase == sig
       end
 
 

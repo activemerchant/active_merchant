@@ -149,6 +149,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Quickpay](http://quickpay.dk/) - DK, SE
 * [Rabobank Nederland](http://www.rabobank.nl/) - NL
 * [Realex](http://www.realexpayments.com/) - IE, UK
+* [Redsys](http://www.redsys.es) - ES
 * [SagePay](http://www.sagepay.com) - UK
 * [Sage Payment Solutions](http://www.sagepayments.com) - US, CA
 * [Sallie Mae](http://www.salliemae.com) - US
