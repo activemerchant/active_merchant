@@ -1,43 +1,39 @@
-#  This class implements the Psigate gateway for the ActiveMerchant module.
-#  Psigate = http://www.psigate.com/ The class  is currently set up to use
-#  the psigate test server while rails is in testing or developement mode.
-#  The real server will be used while in production mode.
-#
-#  Modifications by Sean O'Hara ( sohara at sohara dot com )
-#
-#  Usage for a PreAuth (authorize) is as follows:
-#
-#  twenty = 2000
-#  gateway = PsigateGateway.new(
-#    :login => 'teststore',
-#    :password => 'psigate1234'
-#  )
-#
-#  creditcard = CreditCard.new(
-#    :number => '4242424242424242',
-#    :month => 8,
-#    :year => 2006,
-#    :first_name => 'Longbob',
-#    :last_name => 'Longsen'
-#  )
-#  response = @gateway.authorize(twenty, creditcard,
-#     :order_id =>  1234,
-#     :billing_address => {
-#  	    :address1 => '123 fairweather Lane',
-#  	    :address2 => 'Apt B',
-#  	    :city => 'New York',
-#  	    :state => 'NY',
-#  	    :country => 'U.S.A.',
-#  	    :zip => '10010'
-#    },
-#    :email => 'jack@yahoo.com'
-#  )
-
 require 'rexml/document'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-
+    # This class implements the Psigate gateway for the ActiveMerchant module.
+    #
+    # Modifications by Sean O'Hara ( sohara at sohara dot com )
+    #
+    # Usage for a PreAuth (authorize) is as follows:
+    #
+    # gateway = PsigateGateway.new(
+    #   :login => 'teststore',
+    #   :password => 'psigate1234'
+    # )
+    #
+    # creditcard = CreditCard.new(
+    #   :number => '4242424242424242',
+    #   :month => 8,
+    #   :year => 2006,
+    #   :first_name => 'Longbob',
+    #   :last_name => 'Longsen'
+    # )
+    #
+    # twenty = 2000
+    # response = @gateway.authorize(twenty, creditcard,
+    #    :order_id =>  1234,
+    #    :billing_address => {
+    #      :address1 => '123 fairweather Lane',
+    #      :address2 => 'Apt B',
+    #      :city => 'New York',
+    #      :state => 'NY',
+    #      :country => 'U.S.A.',
+    #      :zip => '10010'
+    #   },
+    #   :email => 'jack@yahoo.com'
+    # )
     class PsigateGateway < Gateway
       self.test_url  = 'https://dev.psigate.com:7989/Messenger/XMLMessenger'
       self.live_url  = 'https://secure.psigate.com:7934/Messenger/XMLMessenger'
@@ -55,49 +51,56 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      # Psigate PreAuth
       def authorize(money, creditcard, options = {})
         requires!(options, :order_id)
-        options.update({ :CardAction => "1" })
+        options[:CardAction] = "1"
         commit(money, creditcard, options)
       end
 
-      # Psigate Sale
       def purchase(money, creditcard, options = {})
         requires!(options, :order_id)
-        options.update({ :CardAction => "0" })
+        options[:CardAction] = "0"
         commit(money, creditcard, options)
       end
 
-      # Psigate PostAuth
       def capture(money, authorization, options = {})
-        options.update({ :CardAction => "2", :order_id => authorization })
+        options[:CardAction] = "2"
+        options[:order_id], options[:trans_ref_number] = split_authorization(authorization)
         commit(money, nil, options)
       end
 
-
-      # Psigate Credit
       def credit(money, authorization, options = {})
         deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
 
       def refund(money, authorization, options = {})
-        options.update({ :CardAction => "3", :order_id => authorization })
+        options[:CardAction] = "3"
+        options[:order_id], options[:trans_ref_number] = split_authorization(authorization)
         commit(money, nil, options)
+      end
+
+      def void(authorization, options = {})
+        options[:CardAction] = "9"
+        options[:order_id], options[:trans_ref_number] = split_authorization(authorization)
+        commit(nil, nil, options)
       end
 
       private
 
       def commit(money, creditcard, options = {})
-        response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(money, creditcard, options)))
+        response = parse(ssl_post(url, post_data(money, creditcard, options)))
 
         Response.new(successful?(response), message_from(response), response,
           :test => test?,
-          :authorization => response[:orderid],
+          :authorization => build_authorization(response) ,
           :avs_result => { :code => response[:avsresult] },
           :cvv_result => response[:cardidresult]
         )
+      end
+
+      def url
+        (test? ? self.test_url : self.live_url)
       end
 
       def successful?(response)
@@ -109,9 +112,7 @@ module ActiveMerchant #:nodoc:
 
         xml = REXML::Document.new(xml)
         xml.elements.each('//Result/*') do |node|
-
           response[node.name.downcase.to_sym] = normalize(node.text)
-
         end unless xml.root.nil?
 
         response
@@ -120,20 +121,18 @@ module ActiveMerchant #:nodoc:
       def post_data(money, creditcard, options)
         xml = REXML::Document.new
         xml << REXML::XMLDecl.new
-        root  = xml.add_element("Order")
+        root = xml.add_element("Order")
 
-        for key, value in parameters(money, creditcard, options)
+        parameters(money, creditcard, options).each do |key, value|
           root.add_element(key.to_s).text = value if value
         end
 
         xml.to_s
       end
 
-      # Set up the parameters hash just once so we don't have to do it
-      # for every action.
       def parameters(money, creditcard, options = {})
         params = {
-          # General order paramters
+          # General order parameters
           :StoreID => @options[:login],
           :Passphrase => @options[:password],
           :TestResult => options[:test_result],
@@ -142,12 +141,13 @@ module ActiveMerchant #:nodoc:
           :Phone => options[:phone],
           :Fax => options[:fax],
           :Email => options[:email],
+          :TransRefNumber => options[:trans_ref_number],
 
-          # Credit Card paramaters
+          # Credit Card parameters
           :PaymentType => "CC",
           :CardAction => options[:CardAction],
 
-          # Financial paramters
+          # Financial parameters
           :CustomerIP => options[:ip],
           :SubTotal => amount(money),
           :Tax1 => options[:tax1],
@@ -158,7 +158,7 @@ module ActiveMerchant #:nodoc:
         if creditcard
           exp_month = sprintf("%.2i", creditcard.month) unless creditcard.month.blank?
           exp_year = creditcard.year.to_s[2,2] unless creditcard.year.blank?
-          card_id_code = creditcard.verification_value.blank? ? nil : "1"
+          card_id_code = (creditcard.verification_value.blank? ? nil : "1")
 
           params.update(
             :CardNumber => creditcard.number,
@@ -169,7 +169,7 @@ module ActiveMerchant #:nodoc:
           )
         end
 
-        if address = options[:billing_address] || options[:address]
+        if(address = (options[:billing_address] || options[:address]))
           params[:Bname] = address[:name] || creditcard.name
           params[:Baddress1]    = address[:address1] unless address[:address1].blank?
           params[:Baddress2]    = address[:address2] unless address[:address2].blank?
@@ -191,7 +191,7 @@ module ActiveMerchant #:nodoc:
           params[:Scompany]     = address[:company]  unless address[:company].blank?
         end
 
-        return params
+        params
       end
 
       def message_from(response)
@@ -212,6 +212,15 @@ module ActiveMerchant #:nodoc:
         when "null"   then nil
         else field
         end
+      end
+
+      def split_authorization(authorization)
+        order_id, trans_ref_number = authorization.split(';')
+        [order_id, trans_ref_number]
+      end
+
+      def build_authorization(response)
+        [response[:orderid], response[:transrefnumber]].join(";")
       end
     end
   end
