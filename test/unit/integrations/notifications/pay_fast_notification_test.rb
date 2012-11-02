@@ -10,7 +10,7 @@ class PayFastNotificationTest < Test::Unit::TestCase
   def test_accessors
     assert @pay_fast.complete?
     assert_equal "46591", @pay_fast.transaction_id
-    assert_equal "COMPLETE", @pay_fast.status
+    assert_equal "Completed", @pay_fast.status
     assert_equal "Name", @pay_fast.item_name
     assert_equal "123.00", @pay_fast.gross
     assert_equal "-2.80", @pay_fast.fee
@@ -38,18 +38,19 @@ class PayFastNotificationTest < Test::Unit::TestCase
   end
 
   def test_payment_successful_status
-    notification = PayFast::Notification.new('payment_status=COMPLETED')
-    assert_equal 'COMPLETED', notification.status
+    notification = PayFast::Notification.new('payment_status=COMPLETE')
+    assert_equal 'Completed', notification.status
   end
 
+  #does payfast ever return pending?
   def test_payment_pending_status
     notification = PayFast::Notification.new('payment_status=PENDING')
-    assert_equal 'PENDING', notification.status
+    assert_equal 'Failed', notification.status
   end
 
   def test_payment_failure_status
     notification = PayFast::Notification.new('payment_status=FAILED')
-    assert_equal 'FAILED', notification.status
+    assert_equal 'Failed', notification.status
   end
 
   def test_respond_to_acknowledge
