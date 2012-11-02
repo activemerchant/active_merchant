@@ -92,7 +92,10 @@ module ActiveMerchant #:nodoc:
           def merchant_id
             params['merchant_id']
           end
-
+          
+          def currency
+            nil
+          end
           # Generated hash depends on params order so use OrderedHash instead of Hash
           def empty!
             super
