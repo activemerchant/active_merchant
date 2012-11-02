@@ -31,6 +31,7 @@
 * Cybersource gateway: Add support for subscription credit [fabiokr]
 * Use Thor for generators [ntalbott]
 * Psigate gateway: Add void support [samuelreh]
+* Add Liqpay integration [beorc]
 
 == Version 1.28.0 (August 10, 2012)
 
