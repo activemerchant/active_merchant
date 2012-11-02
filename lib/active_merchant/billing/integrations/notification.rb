@@ -49,10 +49,6 @@ module ActiveMerchant #:nodoc:
         def test?
           false
         end
-
-        def currency
-          nil
-        end
         
         private
 
