@@ -20,7 +20,7 @@ module ActiveMerchant
     # same order id
     class RealexGateway < Gateway
       self.live_url = self.test_url = 'https://epage.payandshop.com/epage-remote.cgi'
-                  
+
       CARD_MAPPING = {
         'master'            => 'MC',
         'visa'              => 'VISA',
@@ -45,7 +45,6 @@ module ActiveMerchant
       def initialize(options = {})
         requires!(options, :login, :password)
         options[:refund_hash] = Digest::SHA1.hexdigest(options[:rebate_secret]) if options.has_key?(:rebate_secret)
-        @options = options
         super
       end
 
@@ -81,10 +80,10 @@ module ActiveMerchant
       def void(authorization, options = {})
         request = build_void_request(authorization, options)
         commit(request)
-      end     
-      
-      private           
-      def commit(request)        
+      end
+
+      private
+      def commit(request)
         response = parse(ssl_post(self.live_url, request))
 
         Response.new(response[:result] == "00", message_from(response), response,

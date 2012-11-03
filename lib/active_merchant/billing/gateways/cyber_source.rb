@@ -107,13 +107,7 @@ module ActiveMerchant #:nodoc:
       #                       if CVV would have failed
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
-      end
-
-      # Should run against the test servers or not?
-      def test?
-        @options[:test] || Base.gateway_mode == :test
       end
 
       # Request an authorization for an amount from CyberSource

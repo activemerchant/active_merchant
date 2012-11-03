@@ -14,7 +14,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
       end
 
@@ -52,10 +51,6 @@ module ActiveMerchant #:nodoc:
 
         request = build_authorized_request('VoidSale', money, authorization, options[:credit_card], options)
         commit(options[:void], request)
-      end
-
-      def test?
-        @options[:test] || Base.gateway_mode == :test
       end
 
       private

@@ -17,16 +17,13 @@ module ActiveMerchant #:nodoc:
         end
 
         requires!(options, :login, :password, :processor_token)
-        @options = options
         Samurai.options = {
           :merchant_key       => options[:login],
           :merchant_password  => options[:password],
           :processor_token    => options[:processor_token]
         }
-      end
 
-      def test?
-        @options[:test] || super
+        super
       end
 
       def authorize(money, credit_card_or_vault_id, options = {})

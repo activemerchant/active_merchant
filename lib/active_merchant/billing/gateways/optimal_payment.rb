@@ -18,7 +18,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         #requires!(options, :login, :password)
-        @options = options
         super
       end
 
@@ -49,11 +48,7 @@ module ActiveMerchant #:nodoc:
         commit('ccSettlement', money, options)
       end
 
-      def test?
-        super || @options[:test]
-      end
-
-    private
+      private
 
       def parse_card_or_auth(card_or_auth, options)
         if card_or_auth.respond_to?(:number)
