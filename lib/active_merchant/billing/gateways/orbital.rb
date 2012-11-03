@@ -42,13 +42,15 @@ module ActiveMerchant #:nodoc:
 
       SUCCESS, APPROVED = '0', '00'
 
-      class_attribute :secondary_test_url, :secondary_live_url
+      class_attribute :secondary_test_url, :secondary_live_url, :retry_limit
 
       self.test_url = "https://orbitalvar1.paymentech.net/authorize"
       self.secondary_test_url = "https://orbitalvar2.paymentech.net/authorize"
 
       self.live_url = "https://orbital1.paymentech.net/authorize"
       self.secondary_live_url = "https://orbital2.paymentech.net/authorize"
+
+      self.retry_limit = 3
 
       self.supported_countries = ["US", "CA"]
       self.default_currency = "CAD"
@@ -296,7 +298,14 @@ module ActiveMerchant #:nodoc:
         request = lambda {return parse(ssl_post(remote_url, order, headers))}
 
         # Failover URL will be used in the event of a connection error
-        begin response = request.call; rescue ConnectionError; retry end
+        retry_count = 0
+        begin
+          response = request.call
+        rescue ConnectionError => e
+          raise e if retry_count >= self.retry_limit
+          retry_count += 1
+          retry
+        end
 
         Response.new(success?(response), message_from(response), response,
           {
