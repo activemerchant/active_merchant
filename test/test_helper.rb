@@ -131,6 +131,64 @@ module ActiveMerchant
       yield
     end
 
+    # This module provides a no-op +ssl_post+ method that instead
+    # captures the post data for later inspection.
+    #
+    # See +capture_post_data+ for an example of its use.
+    module PostDataCapturer
+      attr_reader :post_data
+      def ssl_post(endpoint, data, headers = {})
+        @post_data = data
+      end
+    end
+
+    # This test helper replaces the +ssl_post+ method on the passed
+    # gateway with the one from the PostDataCapturer module, yields
+    # that gateway to the block, then returns the post data that
+    # was captured.
+    #
+    #     xml = capture_post_data(@gateway) do |gateway|
+    #       gateway.purchase(@amount, @visa)
+    #     end
+    #
+    # When used in conjunction with some of the other custom
+    # assertions, such as +assert_xml_element+, you can verify contents
+    # of the data being posted to the remote gateway.
+    #
+    #     @amount = 1000
+    #     xml = capture_post_data(@gateway) do |gateway|
+    #       gateway.purchase(@amount, @visa)
+    #     end
+    #     assert_xml_element(xml, 'Amount')
+    #     assert_xml_element_text(xml, 'Amount', '1000')
+    def capture_post_data(gateway, &block)
+      gateway.extend(PostDataCapturer) # Replace ssl_post, this instance only
+      yield gateway
+      return gateway.post_data
+    end
+
+    # Assert that an element identified by +xpath+ does not appear
+    # within the given +xml+
+    def assert_no_xml_element(xml, xpath)
+      elements = REXML::Document.new(xml).root.get_elements(xpath)
+      assert elements.empty?, %{Expected no XML element with path "#{xpath}", but found #{elements.size} in the following XML:\n#{xml}}
+    end
+
+    # Assert that an element identified by +xpath+ appears
+    # within the given +xml+
+    def assert_xml_element(xml, xpath)
+      elements = REXML::Document.new(xml).root.get_elements(xpath)
+      assert !elements.empty?, %{Expected to find an XML element with path "#{xpath}", but found none in the following XML:\n#{xml}}
+    end
+
+    # Assert that an element identified by +xpath+ within +xml+
+    # contains text that matches +text+
+    def assert_xml_element_text(xml, xpath, text)
+      root = REXML::Document.new(xml).root
+      actual_text = root.get_text(xpath).to_s
+      assert_equal text, actual_text, %{Expected to find the text "#{text}" within the XML element with path "#{xpath}", but instead found the text "#{actual_text}" in the following XML:\n#{xml}}
+    end
+
     private
     def clean_backtrace(&block)
       yield
