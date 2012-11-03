@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
 
         requires!(options, :merchant_id, :user, :password, :merchant, :version)
 
-        @options = options
+        super
       end
 
       def authorize(money, creditcard, options = {})
@@ -99,10 +99,6 @@ module ActiveMerchant #:nodoc:
       def store(creditcard, options = {})
         to_pass = create_token_hash(creditcard, options)
         build_response(:registerToken, @litle.register_token_request(to_pass), %w(801 802))
-      end
-
-      def test?
-        super || @options[:test]
       end
 
       private

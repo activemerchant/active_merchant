@@ -16,7 +16,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options={})
         requires!(options, :login, :password)
-        @options = options
         super
       end
 
@@ -54,10 +53,6 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
 
         commit("refund", post)
-      end
-
-      def test?
-        @options[:test] || super
       end
 
       private

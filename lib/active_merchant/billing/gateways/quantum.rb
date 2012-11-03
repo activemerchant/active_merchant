@@ -37,13 +37,7 @@ module ActiveMerchant #:nodoc:
       #
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
-      end
-
-      # Should run against the test servers or not?
-      def test?
-        @options[:test] || Base.gateway_mode == :test
       end
 
       # Request an authorization for an amount from CyberSource
@@ -268,11 +262,11 @@ module ActiveMerchant #:nodoc:
         end
         return reply
       end
-      
+
       def authorization_for(reply)
         "#{reply[:TransactionID]};#{reply[:CreditCardNumber]}"
       end
-      
+
       def authorization_parts_from(authorization)
         authorization.split(/;/)
       end

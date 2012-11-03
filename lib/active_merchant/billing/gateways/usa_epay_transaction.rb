@@ -19,7 +19,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login)
-        @options = options
         super
       end
 
@@ -64,10 +63,6 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         post = { :refNum => authorization }
         commit(:void, post)
-      end
-
-      def test?
-        @options[:test] || super
       end
 
       private

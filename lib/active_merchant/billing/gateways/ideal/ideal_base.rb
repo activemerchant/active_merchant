@@ -19,14 +19,10 @@ module ActiveMerchant #:nodoc:
       SUB_ID = '0'
       API_VERSION = '1.1.0'
 
-      attr_reader :url
-
       def initialize(options = {})
         requires!(options, :login, :password, :pem)
-        @options = options
 
-        @options[:pem_password] = options[:password]
-        @url = test? ? test_url : live_url
+        options[:pem_password] = options[:password]
         super
       end
 
@@ -49,11 +45,12 @@ module ActiveMerchant #:nodoc:
         commit(build_directory_request)
       end
 
-      def test?
-        @options[:test] || Base.gateway_mode == :test
+      private
+
+      def url
+        (test? ? test_url : live_url)
       end
 
-      private
       def token
         if @token.nil?
           @token = create_fingerprint(@options[:pem])

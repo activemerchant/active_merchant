@@ -125,11 +125,12 @@ module ActiveMerchant #:nodoc:
       # See the documentation for the gateway you will be using to make sure there are no other
       # required options.
       def initialize(options = {})
+        @options = options
       end
 
       # Are we running in test mode?
       def test?
-        Base.gateway_mode == :test
+        (@options[:test] || Base.test?)
       end
 
       private # :nodoc: all

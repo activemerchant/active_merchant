@@ -26,7 +26,6 @@ module ActiveMerchant #:nodoc:
       #   Otherwise, perform transactions against the production server.
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
       end
 

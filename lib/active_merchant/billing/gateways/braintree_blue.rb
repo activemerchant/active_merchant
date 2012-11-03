@@ -57,18 +57,20 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :merchant_id, :public_key, :private_key)
-        @options = options
         @merchant_account_id = options[:merchant_account_id]
+
+        super
+
         Braintree::Configuration.merchant_id = options[:merchant_id]
         Braintree::Configuration.public_key = options[:public_key]
         Braintree::Configuration.private_key = options[:private_key]
         Braintree::Configuration.environment = (options[:environment] || (test? ? :sandbox : :production)).to_sym
         Braintree::Configuration.custom_user_agent = "ActiveMerchant #{ActiveMerchant::VERSION}"
+
         if wiredump_device
           Braintree::Configuration.logger = wiredump_device
           Braintree::Configuration.logger.level = Logger::DEBUG
         end
-        super
       end
 
       def authorize(money, credit_card_or_vault_id, options = {})

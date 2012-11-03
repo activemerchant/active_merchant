@@ -138,7 +138,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login, :user, :password)
-        @options = options
         super
       end
 
@@ -203,10 +202,6 @@ module ActiveMerchant #:nodoc:
         response = authorize(1, payment_source, options)
         void(response.authorization) if response.success?
         response
-      end
-
-      def test?
-        @options[:test] || super
       end
 
       private

@@ -60,7 +60,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
       end
 
@@ -107,10 +106,6 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_reference(post, identification)
         commit('refund', money, post)
-      end
-
-      def test?
-        @options[:test] || Base.gateway_mode == :test
       end
 
       private
