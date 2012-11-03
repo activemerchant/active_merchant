@@ -139,13 +139,11 @@ def test_production_mode
     gw = RedsysGateway.new(
       :terminal => 1,
       :merchant => '1234',
-      :secret_key => '12345',
+      :secret_key => '12345'
     )
     assert !gw.test?
     assert_equal gw.send(:url), RedsysGateway.live_url
   end
-
-
 
   private
 
