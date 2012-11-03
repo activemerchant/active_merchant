@@ -132,6 +132,8 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match(/<AVScountryCode>CA/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
+    assert_equal 'Y', response.avs_result['street_match']
+    assert_equal 'Y', response.avs_result['postal_match']
   end
 
   def test_dont_send_address_details_for_germany
