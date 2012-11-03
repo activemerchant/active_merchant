@@ -93,7 +93,7 @@ module ActiveMerchant #:nodoc:
           add_address(xml, creditcard, options)
           add_customer_data(xml, options) if @options[:customer_profiles]
         end
-        commit(order)
+        commit(order, :authorize)
       end
 
       # AC – Authorization and Capture
@@ -103,12 +103,12 @@ module ActiveMerchant #:nodoc:
           add_address(xml, creditcard, options)
           add_customer_data(xml, options) if @options[:customer_profiles]
         end
-        commit(order)
+        commit(order, :purchase)
       end
 
       # MFC - Mark For Capture
       def capture(money, authorization, options = {})
-        commit(build_mark_for_capture_xml(money, authorization, options))
+        commit(build_mark_for_capture_xml(money, authorization, options), :capture)
       end
 
       # R – Refund request
@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
           add_refund(xml, options[:currency])
           xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
         end
-        commit(order)
+        commit(order, :refund)
       end
 
       def credit(money, authorization, options= {})
@@ -128,7 +128,7 @@ module ActiveMerchant #:nodoc:
       # setting money to nil will perform a full void
       def void(money, authorization, options = {})
         order = build_void_request_xml(money, authorization, options)
-        commit(order)
+        commit(order, :void)
       end
 
 
@@ -156,25 +156,25 @@ module ActiveMerchant #:nodoc:
       def add_customer_profile(creditcard, options = {})
         options.merge!(:customer_profile_action => 'C')
         order = build_customer_request_xml(creditcard, options)
-        commit(order)
+        commit(order, :add_customer_profile)
       end
 
       def update_customer_profile(creditcard, options = {})
         options.merge!(:customer_profile_action => 'U')
         order = build_customer_request_xml(creditcard, options)
-        commit(order)
+        commit(order, :update_customer_profile)
       end
 
       def retrieve_customer_profile(customer_ref_num)
         options = {:customer_profile_action => 'R', :customer_ref_num => customer_ref_num}
         order = build_customer_request_xml(nil, options)
-        commit(order)
+        commit(order, :retrieve_customer_profile)
       end
 
       def delete_customer_profile(customer_ref_num)
         options = {:customer_profile_action => 'D', :customer_ref_num => customer_ref_num}
         order = build_customer_request_xml(nil, options)
-        commit(order)
+        commit(order, :delete_customer_profile)
       end
 
       private
@@ -291,7 +291,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit(order)
+      def commit(order, message_type)
         headers = POST_HEADERS.merge("Content-length" => order.size.to_s)
         request = lambda{|url| parse(ssl_post(url, order, headers))}
 
@@ -302,7 +302,7 @@ module ActiveMerchant #:nodoc:
           request.call(remote_url(:secondary))
         end
 
-        Response.new(success?(response), message_from(response), response,
+        Response.new(success?(response, message_type), message_from(response), response,
           {
              :authorization => authorization_string(response[:tx_ref_num], response[:order_id]),
              :test => self.test?,
@@ -320,8 +320,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def success?(response)
-        if response[:message_type] == "R"
+      def success?(response, message_type)
+        if [:refund, :void].include?(message_type)
           response[:proc_status] == SUCCESS
         elsif response[:customer_profile_action]
           response[:profile_proc_status] == SUCCESS
