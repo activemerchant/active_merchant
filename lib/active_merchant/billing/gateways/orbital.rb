@@ -293,10 +293,14 @@ module ActiveMerchant #:nodoc:
 
       def commit(order)
         headers = POST_HEADERS.merge("Content-length" => order.size.to_s)
-        request = lambda {return parse(ssl_post(remote_url, order, headers))}
+        request = lambda{|url| parse(ssl_post(url, order, headers))}
 
-        # Failover URL will be used in the event of a connection error
-        begin response = request.call; rescue ConnectionError; retry end
+        # Failover URL will be attempted in the event of a connection error
+        response = begin
+          request.call(remote_url)
+        rescue ConnectionError
+          request.call(remote_url(:secondary))
+        end
 
         Response.new(success?(response), message_from(response), response,
           {
@@ -308,8 +312,8 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def remote_url
-        unless $!.class == ActiveMerchant::ConnectionError
+      def remote_url(url=:primary)
+        if url == :primary
           self.test? ? self.test_url : self.live_url
         else
           self.test? ? self.secondary_test_url : self.secondary_live_url

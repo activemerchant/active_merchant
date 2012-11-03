@@ -218,6 +218,14 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_attempts_seconday_url
+    @gateway.expects(:ssl_post).with(OrbitalGateway.test_url, anything, anything).raises(ActiveMerchant::ConnectionError)
+    @gateway.expects(:ssl_post).with(OrbitalGateway.secondary_test_url, anything, anything).returns(successful_purchase_response)
+
+    response = @gateway.purchase(50, credit_card, :order_id => '1')
+    assert_success response
+  end
+
   private
 
   # Place raw successful response from gateway here
