@@ -21,6 +21,8 @@
 * HDFC gateway: Fix unescaped '&' entity in XML [ntalbott]
 * HDFC gateway: More robust entity fixing [ntalbott]
 * Add A1Agregator integration [england]
+* Refactored handling of #test? and @options [ntalbott]
+* Realex gateway: Realex gateway: Fix billing address format [ntalbott]
 
 == Version 1.28.0 (August 10, 2012)
 

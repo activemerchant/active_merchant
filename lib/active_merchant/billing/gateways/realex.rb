@@ -187,7 +187,7 @@ module ActiveMerchant
 
           if billing_address
             xml.tag! 'address', 'type' => 'billing' do
-              xml.tag! 'code', avs_input_code( billing_address )
+              xml.tag! 'code', format_shipping_zip_code(billing_address[:zip])
               xml.tag! 'country', billing_address[:country]
             end
           end
@@ -240,17 +240,8 @@ module ActiveMerchant
         end
       end
 
-      def avs_input_code(address)
-        address.values_at(:zip, :address1).map{ |v| extract_digits(v) }.join('|')
-      end
-
       def format_shipping_zip_code(zip)
         zip.to_s.gsub(/\W/, '')
-      end
-
-      def extract_digits(string)
-        return "" if string.nil?
-        string.gsub(/[\D]/,'')
       end
 
       def new_timestamp
