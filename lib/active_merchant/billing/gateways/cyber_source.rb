@@ -141,8 +141,12 @@ module ActiveMerchant #:nodoc:
         commit(build_void_request(identification, options), options)
       end
 
-      def refund(money, identification, options = {})
-        commit(build_credit_request(money, identification, options), options)
+      # Refunds referencing an existing purchase or a subscription (stand alone credit).
+      # For a stand alone credit, identification_or_reference has to be the subscription
+      # reference and you also need to pass in options[:stand_alone] = true, as well
+      # as an options[:order_id].
+      def refund(money, identification_or_reference, options = {})
+        commit(build_credit_request(money, identification_or_reference, options), options)
       end
 
       def credit(money, identification, options = {})
@@ -275,13 +279,19 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_credit_request(money, identification, options)
-        order_id, request_id, request_token = identification.split(";")
-        options[:order_id] = order_id
-
+      def build_credit_request(money, identification_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
+
         add_purchase_data(xml, money, true, options)
-        add_credit_service(xml, request_id, request_token)
+
+        if options[:stand_alone]
+          requires!(options, :order_id)
+          add_subscription(xml, options, identification_or_reference)
+          add_credit_service(xml)
+        else
+          options[:order_id], request_id, request_token = identification_or_reference.split(";")
+          add_credit_service(xml, request_id, request_token)
+        end
 
         xml.target!
       end
@@ -429,10 +439,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_credit_service(xml, request_id, request_token)
+      def add_credit_service(xml, request_id = nil, request_token = nil)
         xml.tag! 'ccCreditService', {'run' => 'true'} do
-          xml.tag! 'captureRequestID', request_id
-          xml.tag! 'captureRequestToken', request_token
+          xml.tag! 'captureRequestID', request_id if request_id
+          xml.tag! 'captureRequestToken', request_token if request_token
         end
       end
 
