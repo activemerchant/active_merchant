@@ -30,6 +30,6 @@ class PayFastHelperTest < Test::Unit::TestCase
   end
 
   def test_request_generated_signature
-    assert_equal '60117d6d87ef8fb297e9811479d892e6', @helper.generate_signature(:request)
+    assert_equal '45aa67464a46c9cf837257365866b247', @helper.generate_signature(:request)
   end
 end
