@@ -10,7 +10,6 @@ module ActiveMerchant #:nodoc:
             add_field('merchant_id', account)
             add_field('merchant_key', options.delete(:credential2))
             add_field('m_payment_id', order)
-            add_field('item_name', 'Store Purchase')
           end
 
           def form_fields
@@ -24,7 +23,7 @@ module ActiveMerchant #:nodoc:
           mapping :merchant_id, 'merchant_id'
           mapping :merchant_key, 'merchant_key'
           mapping :return_url, 'return_url'
-          mapping :cancel_url, 'cancel_url'
+          mapping :cancel_return_url, 'cancel_url'
           mapping :notify_url, 'notify_url'
           mapping :name_first, 'name_first'
           mapping :name_last, 'name_last'
@@ -32,7 +31,12 @@ module ActiveMerchant #:nodoc:
           mapping :payment_id, 'm_payment_id'
           mapping :amount, 'amount'
           mapping :item_name, 'item_name'
-          mapping :item_description, 'item_description'
+          mapping :description, 'item_name'
+          
+          mapping :customer, :first_name => 'name_first',
+                             :last_name  => 'name_last',
+                             :email      => 'email_address',
+                             :phone      => 'phone'
 
           5.times { |i| mapping :"custom_str#{i}", "custom_str#{i}" }
           5.times { |i| mapping :"custom_int#{i}", "custom_int#{i}" }
