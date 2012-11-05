@@ -57,13 +57,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login, :password)
         # unfortunately Wirecard also requires a BusinessCaseSignature in the XML request
         requires!(options, :signature)
-        @options = options
         super
-      end
-
-      # Should run against the test servers or not?
-      def test?
-        @options[:test] || super
       end
 
       # Authorization

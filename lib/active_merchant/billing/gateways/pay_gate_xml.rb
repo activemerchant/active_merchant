@@ -157,7 +157,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
       end
 
@@ -180,10 +179,6 @@ module ActiveMerchant #:nodoc:
 
         options.merge!(:money => money, :authorization => authorization)
         commit(action, build_request(action, options))
-      end
-
-      def test?
-        @options[:test] || (Base.gateway_mode == :test)
       end
 
       private

@@ -5,11 +5,11 @@ module ActiveMerchant #:nodoc:
     # This gateway accepts the following arguments:
     #   :login    => your PayJunction username
     #   :password => your PayJunction pass
-    # 
+    #
     # Example use:
     #
     #   gateway = ActiveMerchant::Billing::Base.gateway(:pay_junction).new(
-    #               :login => "my_account", 
+    #               :login => "my_account",
     #               :password => "my_pass"
     #            )
     #
@@ -51,14 +51,14 @@ module ActiveMerchant #:nodoc:
     # Test Transactions
     #
     # See the source for initialize() for test account information. Note that
-    # PayJunction does not allow test transactions on your account, so if the 
+    # PayJunction does not allow test transactions on your account, so if the
     # gateway is running in :test mode your transaction will be run against
     # PayJunction's global test account and will not show up in your account.
     #
-    # Transactions ran on this account go through a test processor, so there is no 
-    # need to void or otherwise cancel transactions. However, for further safety, 
-    # please use the special card numbers 4433221111223344 or 4444333322221111 and 
-    # keep transaction amounts below $4.00 when testing.  
+    # Transactions ran on this account go through a test processor, so there is no
+    # need to void or otherwise cancel transactions. However, for further safety,
+    # please use the special card numbers 4433221111223344 or 4444333322221111 and
+    # keep transaction amounts below $4.00 when testing.
     #
     # Also note, transactions ran for an amount between $0.00 and $1.99 will likely
     # result in denial. To demonstrate approvals, use amounts between $2.00 and $4.00.
@@ -67,12 +67,12 @@ module ActiveMerchant #:nodoc:
     # PayJunction Web Login with username 'pj-cm-01' and password 'pj-cm-01p'
     #
     # Usage Details
-    # 
+    #
     # Below is a map of values accepted by PayJunction and how you should submit
     # each to ActiveMerchant
     #
     # PayJunction Field       ActiveMerchant Use
-    # 
+    #
     # dc_logon                provide as :login value to gateway instantation
     # dc_password             provide as :password value to gateway instantiation
     #
@@ -106,12 +106,12 @@ module ActiveMerchant #:nodoc:
 
       TEST_LOGIN = 'pj-ql-01'
       TEST_PASSWORD = 'pj-ql-01p'
-      
+
       SUCCESS_CODES = ["00", "85"]
       SUCCESS_MESSAGE = 'The transaction was approved.'
-      
+
       FAILURE_MESSAGE = 'The transaction was declined.'
-      
+
       DECLINE_CODES = {
         "AE"  => 'Address verification failed because address did not match.',
         'ZE'  => 'Address verification failed because zip did not match.',
@@ -143,13 +143,13 @@ module ActiveMerchant #:nodoc:
         '15'  => 'Declined because there is no such issuer.',
         '96'  => 'Declined because of a system error.',
         'N7'  => 'Declined because of a CVV2/CVC2 mismatch.',
-        'M4'  => 'Declined.', 
+        'M4'  => 'Declined.',
         "FE"  => "There was a format error with your Trinity Gateway Service (API) request.",
         "LE"  => "Could not log you in (problem with dc_logon and/or dc_password).",
         'NL'  => 'Aborted because of a system error, please try again later. ',
         'AB'  => 'Aborted because of an upstream system error, please try again later.'
       }
-      
+
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.supported_countries = ['US']
       self.homepage_url = 'http://www.payjunction.com/'
@@ -157,31 +157,30 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
       end
-      
+
       # The first half of the preauth(authorize)/postauth(capture) model.
       # Checks to make sure funds are available for a transaction, and returns a
       # transaction_id that can be used later to postauthorize (capture) the funds.
       def authorize(money, payment_source, options = {})
         parameters = {
           :transaction_amount => amount(money),
-        }                                                             
-        
+        }
+
         add_payment_source(parameters, payment_source)
         add_address(parameters, options)
         add_optional_fields(parameters, options)
         commit('AUTHORIZATION', parameters)
       end
-      
+
       # A simple sale, capturing funds immediately.
       # Execute authorization and capture in a single step.
-      def purchase(money, payment_source, options = {})        
+      def purchase(money, payment_source, options = {})
         parameters = {
           :transaction_amount => amount(money),
-        }                                                             
-        
+        }
+
         add_payment_source(parameters, payment_source)
         add_address(parameters, options)
         add_optional_fields(parameters, options)
@@ -195,14 +194,14 @@ module ActiveMerchant #:nodoc:
           :transaction_id => authorization,
           :posture => 'capture'
         }
-        
-        add_optional_fields(parameters, options)                                          
+
+        add_optional_fields(parameters, options)
         commit('update', parameters)
       end
-      
+
       # Return money to a card that was previously billed.
       # _authorization_ should be the transaction id of the transaction we are returning.
-      def refund(money, authorization, options = {})  
+      def refund(money, authorization, options = {})
         parameters = {
           :transaction_amount => amount(money),
           :transaction_id => authorization
@@ -228,7 +227,7 @@ module ActiveMerchant #:nodoc:
         commit('update', parameters)
       end
 
-      # Set up a sale that will be made on a regular basis for the same amount 
+      # Set up a sale that will be made on a regular basis for the same amount
       # (ex. $20 a month for 12 months)
       #
       # The parameter :periodicity should be specified as either :monthly, :weekly, or :daily
@@ -236,12 +235,12 @@ module ActiveMerchant #:nodoc:
       #
       #   gateway.recurring('2000', creditcard, :periodicity => :monthly, :payments => 12)
       #
-      # The optional parameter :starting_at takes a date or time argument or a string in 
-      # YYYYMMDD format and can be used to specify when the first charge will be made. 
-      # If omitted the first charge will be immediate.      
-      def recurring(money, payment_source, options = {})        
+      # The optional parameter :starting_at takes a date or time argument or a string in
+      # YYYYMMDD format and can be used to specify when the first charge will be made.
+      # If omitted the first charge will be immediate.
+      def recurring(money, payment_source, options = {})
         requires!(options, [:periodicity, :monthly, :weekly, :daily], :payments)
-      
+
         periodic_type = case options[:periodicity]
         when :monthly
           'month'
@@ -250,7 +249,7 @@ module ActiveMerchant #:nodoc:
         when :daily
           'day'
         end
-        
+
         if options[:starting_at].nil?
           start_date = Time.now.strftime('%Y-%m-%d')
         elsif options[:starting_at].is_a?(String)
@@ -259,7 +258,7 @@ module ActiveMerchant #:nodoc:
         else
           start_date = options[:starting_at].strftime('%Y-%m-%d')
         end
-        
+
         parameters = {
           :transaction_amount => amount(money),
           :schedule_periodic_type => periodic_type,
@@ -268,23 +267,23 @@ module ActiveMerchant #:nodoc:
           :schedule_periodic_number => 1,
           :schedule_start => start_date
         }
-        
+
         add_payment_source(parameters, payment_source)
         add_optional_fields(parameters, options)
-        add_address(parameters, options)                                   
+        add_address(parameters, options)
         commit('AUTHORIZATION_CAPTURE', parameters)
       end
-      
+
       def test?
-        test_login? || @options[:test] || super
+        (test_login? || super)
       end
 
       private
-      
+
       def test_login?
         @options[:login] == TEST_LOGIN && @options[:password] == TEST_PASSWORD
       end
-      
+
       # add fields depending on payment source selected (cc or transaction id)
       def add_payment_source(params, source)
         if source.is_a?(String)
@@ -293,54 +292,54 @@ module ActiveMerchant #:nodoc:
           add_creditcard(params, source)
         end
       end
-      
+
       # add fields for credit card
       def add_creditcard(params, creditcard)
         params[:name]                 = creditcard.name
         params[:number]               = creditcard.number
         params[:expiration_month]     = creditcard.month
-        params[:expiration_year]      = creditcard.year 
+        params[:expiration_year]      = creditcard.year
         params[:verification_number]  = creditcard.verification_value if creditcard.verification_value?
       end
-      
+
       # add field for "instant" transaction, using previous transaction id
       def add_billing_id(params, billingid)
         params[:transaction_id] = billingid
       end
-      
+
       # add address fields if present
       def add_address(params, options)
         address = options[:billing_address] || options[:address]
-        
-        if address          
+
+        if address
           params[:address]  = address[:address1] unless address[:address1].blank?
           params[:city]      = address[:city]     unless address[:city].blank?
           params[:state]     = address[:state]    unless address[:state].blank?
           params[:zipcode]   = address[:zip]      unless address[:zip].blank?
           params[:country]   = address[:country]  unless address[:country].blank?
-        end     
+        end
       end
-      
+
       def add_optional_fields(params, options)
         params[:notes] = options[:description] unless options[:description].blank?
         params[:invoice] = options[:order_id].to_s.gsub(/[^-\/\w.,']/, '') unless options[:order_id].blank?
       end
-      
+
       def commit(action, parameters)
         url = test? ? self.test_url : self.live_url
 
         response = parse( ssl_post(url, post_data(action, parameters)) )
-        
-        Response.new(successful?(response), message_from(response), response, 
-          :test => test?, 
+
+        Response.new(successful?(response), message_from(response), response,
+          :test => test?,
           :authorization => response[:transaction_id] || parameters[:transaction_id]
         )
       end
-      
+
       def successful?(response)
         SUCCESS_CODES.include?(response[:response_code]) || response[:query_status] == true
       end
-      
+
       def message_from(response)
         if successful?(response)
           SUCCESS_MESSAGE
@@ -348,7 +347,7 @@ module ActiveMerchant #:nodoc:
           DECLINE_CODES[response[:response_code]] || FAILURE_MESSAGE
         end
       end
-      
+
       def post_data(action, params)
         if test?
           # test requests must use global test account
@@ -360,18 +359,18 @@ module ActiveMerchant #:nodoc:
         end
         params[:version] = API_VERSION
         params[:transaction_type] = action
-        
+
         params.reject{|k,v| v.blank?}.collect{ |k, v| "dc_#{k.to_s}=#{CGI.escape(v.to_s)}" }.join("&")
       end
-      
+
       def parse(body)
         # PayJunction uses the Field Separator ASCII character to separate key/val
         # pairs in the response. The <FS> character's octal value is 034.
         #
         # Sample response:
-        # 
-        # transaction_id=44752<FS>response_code=M4<FS>response_message=Declined (INV TEST CARD).  
-        
+        #
+        # transaction_id=44752<FS>response_code=M4<FS>response_message=Declined (INV TEST CARD).
+
         pairs = body.chomp.split("\034")
         response = {}
         pairs.each do |pair|
@@ -380,7 +379,7 @@ module ActiveMerchant #:nodoc:
         end
         response
       end
-      
+
       # Make a ruby type out of the response string
       def normalize(field)
         case field
@@ -389,9 +388,9 @@ module ActiveMerchant #:nodoc:
         when ""       then nil
         when "null"   then nil
         else field
-        end        
+        end
       end
-      
+
     end
   end
 end

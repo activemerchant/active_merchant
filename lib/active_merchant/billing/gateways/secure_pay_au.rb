@@ -58,12 +58,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
-      end
-
-      def test?
-        @options[:test] || super
       end
 
       def purchase(money, credit_card_or_stored_id, options = {})

@@ -38,8 +38,6 @@ module ActiveMerchant #:nodoc:
       #
       def initialize(options = {})
         requires!(options, :login, :ticket)
-        test_mode = options[:test] || false
-        @options = options
         super
       end
 
@@ -113,10 +111,6 @@ module ActiveMerchant #:nodoc:
       # Query the merchant account status
       def query
         commit(:query, nil, {})
-      end
-
-      def test?
-        @options[:test] || super  
       end
 
       private

@@ -10,7 +10,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login)
-        @options = options
         super
       end
 

@@ -57,6 +57,15 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_authorize_and_void
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(:order_id => '2'))
+    assert_success auth
+    assert_equal 'Approved', auth.message
+    assert auth.authorization
+    assert void = @gateway.void(nil, auth.authorization, :order_id => '2')
+    assert_success void
+  end
+
   def test_refund
     amount = @amount
     assert response = @gateway.purchase(amount, @credit_card, @options)

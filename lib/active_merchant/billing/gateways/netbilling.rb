@@ -24,7 +24,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login)
-        @options = options
         super
       end
 
@@ -81,10 +80,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def test?
-        @options[:login] == TEST_LOGIN || super
+        (@options[:login] == TEST_LOGIN || super)
       end
 
       private
+
       def add_amount(post, money)
         post[:amount] = amount(money)
       end

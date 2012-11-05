@@ -20,7 +20,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
       end
 
@@ -55,10 +54,6 @@ module ActiveMerchant #:nodoc:
           r.process{inquire_request(authorization, options, "CAPTURED")}
           r.process{refund_request(money, authorization, options)}
         end
-      end
-
-      def test?
-        @options[:test] || super  
       end
 
       private

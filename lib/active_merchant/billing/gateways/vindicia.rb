@@ -47,6 +47,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:avs_success</tt> -- Array of valid AVS Check return values - defaults to [X, Y, A, W, Z] (OPTIONAL)
       def initialize(options = {})
         requires!(options, :login, :password)
+        super
 
         config = lambda do |config|
           config.login = options[:login]
@@ -71,7 +72,6 @@ module ActiveMerchant #:nodoc:
         @cvn_success = options[:cvn_success] || %w{M P}
         @avs_success = options[:avs_success] || %w{X Y A W Z}
 
-        @options = options
         @allowed_authorization_statuses = %w{Authorized}
       end
 

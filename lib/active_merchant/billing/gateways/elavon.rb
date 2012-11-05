@@ -63,7 +63,6 @@ module ActiveMerchant #:nodoc:
       # * <tt>:test => +true+ or +false+</tt> -- Force test transactions
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
       end
 

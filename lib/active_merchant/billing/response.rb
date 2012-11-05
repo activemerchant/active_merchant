@@ -1,6 +1,5 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-
     class Error < ActiveMerchantError #:nodoc:
     end
 
@@ -24,8 +23,20 @@ module ActiveMerchant #:nodoc:
         @test = options[:test] || false
         @authorization = options[:authorization]
         @fraud_review = options[:fraud_review]
-        @avs_result = AVSResult.new(options[:avs_result]).to_hash
-        @cvv_result = CVVResult.new(options[:cvv_result]).to_hash
+
+        avs_result_builder = if options[:avs_result].kind_of?(Hash)
+          AVSResult.new(options[:avs_result])
+        else
+          options[:avs_result] || {}
+        end
+        @avs_result = avs_result_builder.to_hash
+
+        cvv_result_builder = if options[:cvv_result].kind_of?(String)
+          CVVResult.new(options[:cvv_result])
+        else
+          options[:cvv_result] || {}
+        end
+        @cvv_result = cvv_result_builder.to_hash
       end
     end
 

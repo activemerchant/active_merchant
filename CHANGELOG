@@ -20,6 +20,13 @@
 * HDFC gateway: Pass phone number in UDF3 [ntalbott]
 * HDFC gateway: Fix unescaped '&' entity in XML [ntalbott]
 * HDFC gateway: More robust entity fixing [ntalbott]
+* Add A1Agregator integration [england]
+* Refactored handling of #test? and @options [ntalbott]
+* Realex gateway: Realex gateway: Fix billing address format [ntalbott]
+* Orbital gateway: handle custom AVS response codes [jonm-okc]
+* Orbital gateway: Fix infinite connection retry [jonm-okc, ntalbott]
+* PayPal integration: Add support for MassPay IPN notifications [damonmorgan]
+* Orbital gateway: Fix status of void result [jonm-okc]
 
 == Version 1.28.0 (August 10, 2012)
 

@@ -171,6 +171,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 ## Supported Offsite Payment Gateways
 
 * [2 Checkout](http://www.2checkout.com)
+* [A1Agregator](http://a1agregator.ru/) - RU
 * [Authorize.Net SIM](http://developer.authorize.net/api/sim/) - US
 * [Banca Sella GestPay](https://www.sella.it/banca/ecommerce/gestpay/gestpay.jsp)
 * [Chronopay](http://www.chronopay.com)
