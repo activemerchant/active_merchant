@@ -50,6 +50,18 @@ class PsigateTest < Test::Unit::TestCase
     @gateway.expects(:parse).returns({})
     @gateway.refund(@amount, "transaction_id", @options)
   end
+
+  def test_void
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OrderID>transaction_id<\//), anything).returns("")
+    @gateway.expects(:parse).returns({})
+    @gateway.void("transaction_id", @options.merge({:trans_ref_number => 1}))
+  end
+
+  def test_void_without_trans_ref_number
+    assert_raise(ArgumentError) do
+      @gateway.void("transaction_id", @options)
+    end
+  end
   
   def test_amount_style
     assert_equal '10.34', @gateway.send(:amount, 1034)
