@@ -87,14 +87,20 @@ module ActiveMerchant #:nodoc:
         commit(money, nil, options)
       end
 
+      def void(authorization, options = {})
+        options.update({ :CardAction => "9", :order_id => authorization })
+        commit(nil, nil, options)
+      end
+
       private
 
       def commit(money, creditcard, options = {})
+        options[:order_id], options[:trans_ref_number] = split_authorization(options[:order_id])
         response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(money, creditcard, options)))
 
         Response.new(successful?(response), message_from(response), response,
           :test => test?,
-          :authorization => response[:orderid],
+          :authorization => build_authorization(response) ,
           :avs_result => { :code => response[:avsresult] },
           :cvv_result => response[:cardidresult]
         )
@@ -142,6 +148,7 @@ module ActiveMerchant #:nodoc:
           :Phone => options[:phone],
           :Fax => options[:fax],
           :Email => options[:email],
+          :TransRefNumber => options[:trans_ref_number],
 
           # Credit Card paramaters
           :PaymentType => "CC",
@@ -212,6 +219,16 @@ module ActiveMerchant #:nodoc:
         when "null"   then nil
         else field
         end
+      end
+
+      def split_authorization(authorization)
+        authorization.split(';')
+      end
+
+      def build_authorization(response)
+        string = response[:orderid]
+        string << ";#{response[:transrefnumber]}" if response[:transrefnumber]
+        string
       end
     end
   end
