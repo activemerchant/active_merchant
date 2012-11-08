@@ -29,6 +29,7 @@
 * Orbital gateway: Fix status of void result [jonm-okc]
 * Add Redsys gateway [samlown]
 * Cybersource gateway: Add support for subscription credit [fabiokr]
+* Use Thor for generators [ntalbott]
 
 == Version 1.28.0 (August 10, 2012)
 
