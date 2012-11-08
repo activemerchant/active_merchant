@@ -1,5 +1,5 @@
-require File.dirname(__FILE__) + '/<%= name %>/helper.rb'
-require File.dirname(__FILE__) + '/<%= name %>/notification.rb'
+require File.dirname(__FILE__) + '/<%= identifier %>/helper.rb'
+require File.dirname(__FILE__) + '/<%= identifier %>/notification.rb'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
