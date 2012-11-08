@@ -9,7 +9,7 @@ class PsigateTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
-    @options = { :order_id => 1, :billing_address => address }
+    @options = { :order_id => "1", :billing_address => address }
   end
   
   def test_successful_authorization
@@ -18,7 +18,7 @@ class PsigateTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
-    assert_equal '1000', response.authorization
+    assert_equal '1000;1bdde305d7658367', response.authorization
   end
   
   def test_successful_purchase
@@ -27,7 +27,7 @@ class PsigateTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
-    assert_equal '1000', response.authorization
+    assert_equal '1000;1bdde305da3ee234', response.authorization
   end
   
   def test_failed_purchase
@@ -54,15 +54,9 @@ class PsigateTest < Test::Unit::TestCase
   def test_void
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OrderID>transaction_id<\//), anything).returns("")
     @gateway.expects(:parse).returns({})
-    @gateway.void("transaction_id", @options.merge({:trans_ref_number => 1}))
+    @gateway.void("transaction_id;1", @options)
   end
 
-  def test_void_without_trans_ref_number
-    assert_raise(ArgumentError) do
-      @gateway.void("transaction_id", @options)
-    end
-  end
-  
   def test_amount_style
     assert_equal '10.34', @gateway.send(:amount, 1034)
   

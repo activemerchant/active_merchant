@@ -18,13 +18,13 @@ class PsigateRemoteTest < Test::Unit::TestCase
   def test_successful_authorization
     assert response = @gateway.authorize(@amount, @creditcard, @options)
     assert_success response
-    assert_equal @options[:order_id], response.authorization
+    assert_equal "#{@options[:order_id]};#{response.params['transrefnumber']}", response.authorization
   end
   
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @creditcard, @options)
     assert_success response
-    assert_equal @options[:order_id], response.authorization
+    assert_equal "#{@options[:order_id]};#{response.params['transrefnumber']}", response.authorization
   end
   
   def test_successful_authorization_and_capture
@@ -52,7 +52,7 @@ class PsigateRemoteTest < Test::Unit::TestCase
     assert authorization = @gateway.authorize(@amount, @creditcard, @options)
     assert_success authorization
 
-    assert void = @gateway.void(authorization.authorization, { :trans_ref_number => authorization.params['transrefnumber'] })
+    assert void = @gateway.void(authorization.authorization)
     assert_success void
   end
 end
