@@ -1,14 +1,11 @@
 require 'test_helper'
 
-class LiqpayModuleTest < Test::Unit::TestCase
+class LiqpayReturnTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
-  def test_helper_method
-    assert_instance_of Liqpay::Helper, Liqpay.helper(123, 'test')
-  end
-
-  def test_notification_method
-    assert_instance_of Liqpay::Notification, Liqpay.notification(http_post_data)
+  def test_return
+    r = Liqpay::Return.new(http_post_data)
+    assert r.success?
   end
 
   private

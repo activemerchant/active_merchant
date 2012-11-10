@@ -10,6 +10,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def initialize(post, options = {})
+            raise ArgumentError if post.blank?
             super
             @params.merge!(Hash.from_xml(Base64.decode64(xml))["response"])
           end
@@ -71,7 +72,6 @@ module ActiveMerchant #:nodoc:
           end
 
           def generate_signature_string
-            # ['', version, @options[:secret], action_name, sender_phone, account, gross, currency, item_id, transaction_id, status, code, ''].flatten.compact.join('|')
             "#{@options[:secret]}#{Base64.decode64(xml)}#{@options[:secret]}"
           end
 
@@ -80,7 +80,6 @@ module ActiveMerchant #:nodoc:
           end
 
           def acknowledge
-            # puts "Check: #{security_key.inspect}, #{generate_signature.inspect}"
             security_key == generate_signature
           end
         end
