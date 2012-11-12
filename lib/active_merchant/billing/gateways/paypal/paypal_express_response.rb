@@ -44,6 +44,13 @@ module ActiveMerchant #:nodoc:
            'phone'      => (contact_phone || address['Phone'])
         }
       end
+      
+      def shipping
+        shipping = (@params['UserSelectedOptions']||{})
+        {  'amount'   => shipping['ShippingOptionAmount'],
+           'name'     => shipping['ShippingOptionName']
+        }
+      end
     end
   end
 end

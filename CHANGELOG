@@ -32,6 +32,7 @@
 * Use Thor for generators [ntalbott]
 * Psigate gateway: Add void support [samuelreh]
 * Add Liqpay integration [beorc]
+* Paypal Express gateway: Add shipping accessor to response [v-fedorov]
 
 == Version 1.28.0 (August 10, 2012)
 
