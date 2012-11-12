@@ -106,7 +106,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        metadata_options = [:description,:email,:browser_ip,:user_agent,:referrer]
+        metadata_options = [:description,:browser_ip,:user_agent,:referrer]
         post.update(options.slice(*metadata_options))
 
         post[:external_id] = options[:order_id]
