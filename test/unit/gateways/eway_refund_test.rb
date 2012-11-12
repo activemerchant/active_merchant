@@ -2,7 +2,7 @@ require 'test_helper'
 
 class EwayRefundTest < Test::Unit::TestCase
   def setup
-    @gateway = EwayGateway.new(
+    @gateway = EwayRefundGateway.new(
       :login => '87654321',
       :password => '12321312'
     )
@@ -38,10 +38,10 @@ class EwayRefundTest < Test::Unit::TestCase
     assert_equal '123456', response.authorization
   end
 
-  def test_failed_purchase
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+  def test_failed_refund
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    assert response = @gateway.purchase(@amount, @reference, @options)
+    assert response = @gateway.refund(@amount, @reference, @options)
     assert_instance_of Response, response
     assert_failure response
   end
@@ -55,15 +55,15 @@ class EwayRefundTest < Test::Unit::TestCase
   end
 
   def test_test_url
-    assert_equal EwayGateway.test_url, @gateway.send(:gateway_url, false, true)
+    assert_equal EwayRefundGateway.test_url, @gateway.send(:gateway_url, true)
   end
 
   def test_live_url
-    assert_equal EwayGateway.live_url, @gateway.send(:gateway_url, false, false)
+    assert_equal EwayRefundGateway.live_url, @gateway.send(:gateway_url, false)
   end
 
   private
-  def successful_purchase_response
+  def successful_refund_response
     <<-XML
 <?xml version="1.0"?>
 <ewayResponse>
@@ -80,7 +80,7 @@ class EwayRefundTest < Test::Unit::TestCase
     XML
   end
 
-  def failed_purchase_response
+  def failed_refund_response
     <<-XML
 <?xml version="1.0"?>
 <ewayResponse>
