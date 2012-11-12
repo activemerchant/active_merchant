@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
     # This should be enough to get you started with eWay and active_merchant. For further information, review the methods
     # below and the rest of active_merchant's documentation.
 
-    class EwayGateway < Gateway
+    class EwayRefundGateway < Gateway
       self.test_url = 'https://www.eway.com.au/gateway/xmltest/refund_test.asp'
       self.live_url = 'https://www.eway.com.au/gateway/xmlpaymentrefund.asp'
 
