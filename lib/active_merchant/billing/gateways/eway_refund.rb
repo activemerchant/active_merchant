@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
 
       def add_expiry(post, options)
         post[:CardExpiryMonth]  = sprintf("%.2i", options[:month])
-        post[:CardExpiryYear] = sprintf("%.4i", options[:year])[-2..-1]
+        post[:CardExpiryYear] = sprintf("%.2i", options[:year])[-2..-1]
       end
 
       def add_other(post)
