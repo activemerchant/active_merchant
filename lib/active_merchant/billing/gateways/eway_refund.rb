@@ -11,37 +11,21 @@ module ActiveMerchant #:nodoc:
     #
     #   tendollar = 1000
     #
-    # The transaction result is based on the cent value of the transaction. $10.15 will return a failed transaction
-    # with a response code of "15 – No Issuer", while $10.00 will return "00 – Transaction Approved."
+    # The transaction result is based on the cent value of the transaction.
     #
-    # Next, create a credit card object using a eWay approved test card number (4444333322221111).
+    # Setup options, month and year must be the expiry date of the credit card used in the previous transaction
+    # options = {
+    #   :month => 6
+    #   :year => 2014
+    # }
     #
-    #   creditcard = ActiveMerchant::Billing::CreditCard.new(
-    #     :number => '4444333322221111',
-    #     :month => 8,
-    #     :year => 2006,
-    #     :first_name => 'Longbob',
-    #     :last_name => 'Longsen',
-    #     :verification_value => '123'
-    #   )
-    #   options = {
-    #     :order_id => '1230123',
-    #     :email => 'bob@testbob.com',
-    #     :address => { :address1 => '47 Bobway',
-    #                   :city => 'Bobville',
-    #                   :state => 'WA',
-    #                   :country => 'Australia',
-    #                   :zip => '2000'
-    #                 },
-    #     :description => 'purchased items'
-    #   }
     #
     # To finish setting up, create the active_merchant object you will be using, with the eWay gateway. If you have a
     # functional eWay account, replace :login with your Customer ID and :password with XML Refund Password.
     #
-    #   gateway = ActiveMerchant::Billing::Base.gateway(:eway).new(:login => '87654321', :password => '******')
+    #   gateway = ActiveMerchant::Billing::Base.gateway(:eway_refund).new(:login => '87654321', :password => '******')
     #
-    # Now we are ready to process our transaction
+    # Now we are ready to process our transaction, reference is the eway transaction number
     #
     #   response = gateway.refund(tendollar, reference, options)
     #
@@ -56,11 +40,7 @@ module ActiveMerchant #:nodoc:
     #
     #   response.message
     #
-    # 3) Retrieve and store the unique transaction ID returned by eWway, for use in referencing the transaction in the future.
-    #
-    #   response.authorization
-    #
-    # This should be enough to get you started with eWay and active_merchant. For further information, review the methods
+    # This should be enough to get you started with eWay Refund and active_merchant. For further information, review the methods
     # below and the rest of active_merchant's documentation.
 
     class EwayRefundGateway < Gateway
