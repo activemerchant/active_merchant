@@ -97,6 +97,10 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal '23456', address['zip']
     assert_equal 'US', address['country']
     assert_equal '416-618-9984', address['phone']
+    assert shipping = response.shipping
+    assert_equal '2.95', shipping['amount']
+    assert_equal 'default', shipping['name']
+
   end
   
   def test_authorization
@@ -643,6 +647,13 @@ class PaypalExpressTest < Test::Unit::TestCase
           <OrderURL xsi:type="xs:string"/>
           <SoftDescriptor xsi:type="xs:string"/>
         </PaymentDetails>
+        <UserSelectedOptions xsi:type=\"ebl:UserSelectedOptionType\">
+          <ShippingCalculationMode xsi:type=\"xs:string\">Callback</ShippingCalculationMode>
+          <InsuranceOptionSelected xsi:type=\"xs:string\">false</InsuranceOptionSelected>
+          <ShippingOptionIsDefault xsi:type=\"xs:string\">true</ShippingOptionIsDefault>
+          <ShippingOptionAmount xsi:type=\"cc:BasicAmountType\" currencyID=\"USD\">2.95</ShippingOptionAmount>
+          <ShippingOptionName xsi:type=\"xs:string\">default</ShippingOptionName>
+        </UserSelectedOptions>
         <CheckoutStatus xsi:type="xs:string">PaymentActionNotInitiated</CheckoutStatus>
       </GetExpressCheckoutDetailsResponseDetails>
     </GetExpressCheckoutDetailsResponse>
