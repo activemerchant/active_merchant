@@ -16,3 +16,5 @@ group :test, :remote_test do
   gem 'vindicia-api', :git => 'git://github.com/agoragames/vindicia-api.git', :ref => "4e78744c79cb97448ff46c21301f53b346db4c91"
   gem 'LitleOnline', '>= 8.13.2'
 end
+
+gem 'money', '5.0.0', :platforms => [:ruby_18]
