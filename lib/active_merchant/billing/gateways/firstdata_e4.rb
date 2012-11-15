@@ -49,9 +49,9 @@ module ActiveMerchant #:nodoc:
       end
 
       # Void is not supported, because we would have to put the amount in the authorization string.
-      #def void(authorization, options = {})
-      #  commit(:void, build_capture_or_credit_request(money_from_authorization(authorization), authorization, options))
-      #end
+      def void(authorization, options = {})
+        commit(:void, build_capture_or_credit_request(money_from_authorization(authorization), authorization, options))
+      end
 
       def credit(money, authorization, options = {})
         deprecated CREDIT_DEPRECATION_MESSAGE
@@ -154,9 +154,7 @@ module ActiveMerchant #:nodoc:
         url = test? ? self.test_url : self.live_url
         begin
           req = build_request(action, request)
-          #response = parse(ssl_post(url, build_request(action, request), POST_HEADERS))
-          raw_response = ssl_post(url, req, POST_HEADERS)
-          response = parse(raw_response) 
+          response = parse(ssl_post(url, build_request(action, request), POST_HEADERS))
         rescue ResponseError => e
           response = parse_error(e.response)
         end
@@ -175,10 +173,17 @@ module ActiveMerchant #:nodoc:
       
       def authorization_from(response)
         if response[:authorization_num] && response[:transaction_tag]
-           "#{response[:authorization_num]};#{response[:transaction_tag]}"
+           [response[:authorization_num],
+             response[:transaction_tag],
+             (response[:dollar_amount].to_f*100).to_i ].join(";")
         else
            ''
         end
+      end
+
+      def money_from_authorization(auth)
+        vals = auth.split(/;/, 3)
+        amount = vals[2].to_i # return the # of cents, no need to divide
       end
       
       def message_from(response)

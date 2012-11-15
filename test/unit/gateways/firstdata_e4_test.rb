@@ -19,16 +19,22 @@ class FirstdataE4Test < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'ET1700;106625152', response.authorization
+    assert_equal 'ET1700;106625152;4738', response.authorization
     assert response.test?
     assert_equal 'Transaction Normal - Approved', response.message
     
     ExactGateway::SENSITIVE_FIELDS.each{ |f| assert !response.params.has_key?(f.to_s) }
   end
+
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+    assert_response = @gateway.void(@authorization, @options)
+    assert_success response
+  end
   
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
-    assert response = @gateway.refund(@amount, "123")
+    assert response = @gateway.refund(@amount, @authorization)
     assert_success response
   end
 
@@ -380,5 +386,96 @@ response: !ruby/object:Net::HTTPBadRequest
   socket: 
     RESPONSE
     YAML.load(yamlexcep)
+  end
+
+  def successful_void_response
+    <<-RESPONSE
+    <?xml version="1.0" encoding="UTF-8"?>
+  <TransactionResult>
+    <ExactID>AD1234-56</ExactID>
+    <Password></Password>
+    <Transaction_Type>33</Transaction_Type>
+    <DollarAmount>11.45</DollarAmount>
+    <SurchargeAmount></SurchargeAmount>
+    <Card_Number>############1111</Card_Number>
+    <Transaction_Tag>987123</Transaction_Tag>
+    <Track1></Track1>
+    <Track2></Track2>
+    <PAN></PAN>
+    <Authorization_Num>ET112112</Authorization_Num>
+    <Expiry_Date>0913</Expiry_Date>
+    <CardHoldersName>Fred Burfle</CardHoldersName>
+    <VerificationStr1></VerificationStr1>
+    <VerificationStr2></VerificationStr2>
+    <CVD_Presence_Ind>0</CVD_Presence_Ind>
+    <ZipCode></ZipCode>
+    <Tax1Amount></Tax1Amount>
+    <Tax1Number></Tax1Number>
+    <Tax2Amount></Tax2Amount>
+    <Tax2Number></Tax2Number>
+    <Secure_AuthRequired></Secure_AuthRequired>
+    <Secure_AuthResult></Secure_AuthResult>
+    <Ecommerce_Flag></Ecommerce_Flag>
+    <XID></XID>
+    <CAVV></CAVV>
+    <CAVV_Algorithm></CAVV_Algorithm>
+    <Reference_No></Reference_No>
+    <Customer_Ref></Customer_Ref>
+    <Reference_3></Reference_3>
+    <Language></Language>
+    <Client_IP>1.1.1.10</Client_IP>
+    <Client_Email></Client_Email>
+    <LogonMessage></LogonMessage>
+    <Error_Number>0</Error_Number>
+    <Error_Description> </Error_Description>
+    <Transaction_Error>false</Transaction_Error>
+    <Transaction_Approved>true</Transaction_Approved>
+    <EXact_Resp_Code>00</EXact_Resp_Code>
+    <EXact_Message>Transaction Normal</EXact_Message>
+    <Bank_Resp_Code>100</Bank_Resp_Code>
+    <Bank_Message>Approved</Bank_Message>
+    <Bank_Resp_Code_2></Bank_Resp_Code_2>
+    <SequenceNo>000166</SequenceNo>
+    <AVS></AVS>
+    <CVV2>I</CVV2>
+    <Retrieval_Ref_No>2046743</Retrieval_Ref_No>
+    <CAVV_Response></CAVV_Response>
+    <Currency>USD</Currency>
+    <AmountRequested></AmountRequested>
+    <PartialRedemption>false</PartialRedemption>
+    <MerchantName>FreshBooks DEMO0785</MerchantName>
+    <MerchantAddress>35 Golden Ave</MerchantAddress>
+    <MerchantCity>Toronto</MerchantCity>
+    <MerchantProvince>Ontario</MerchantProvince>
+    <MerchantCountry>Canada</MerchantCountry>
+    <MerchantPostal>M6R 2J5</MerchantPostal>
+    <MerchantURL></MerchantURL>
+<CTR>=========== TRANSACTION RECORD ==========
+FreshBooks DEMO0785
+35 Golden Ave
+Toronto, ON M6R 2J5
+Canada
+
+
+TYPE: Void
+
+ACCT: Visa  $ 47.38 USD
+
+CARD NUMBER : ############1111
+DATE/TIME   : 15 Nov 12 08:20:36
+REFERENCE # :  000166 M
+AUTHOR. #   : ET112112
+TRANS. REF. : 
+
+Approved - Thank You 100
+
+
+Please retain this copy for your records.
+
+Cardholder will pay above amount to card
+issuer pursuant to cardholder agreement.
+=========================================</CTR>
+    </TransactionResult>
+RESPONSE
   end
 end

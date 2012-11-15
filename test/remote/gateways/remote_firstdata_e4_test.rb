@@ -52,6 +52,14 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_success credit
   end
   
+  def test_purchase_and_void
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert purchase.authorization
+    assert void = @gateway.void(purchase.authorization)
+    assert_success void
+  end
+  
   def test_authorize_and_capture
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
