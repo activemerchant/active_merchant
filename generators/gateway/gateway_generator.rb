@@ -20,6 +20,6 @@ class GatewayGenerator < ActiveMerchantGenerator
   end
 
   def remote_gateway_test_file
-    "lib/active_merchant/billing/gateways/remote_#{identifier}_test.rb"
+    "test/remote/gateways/remote_#{identifier}_test.rb"
   end
 end
