@@ -14,7 +14,7 @@ class QuickpayNotificationTest < Test::Unit::TestCase
     assert_equal "1353061158", @quickpay.item_id
     assert_equal "1.23", @quickpay.gross
     assert_equal "DKK", @quickpay.currency
-    assert_equal Time.parse("2012-11-16 11:19:36"), @quickpay.received_at
+    assert_equal Time.parse("2012-11-16 10:19:36+00:00"), @quickpay.received_at
   end
 
   def test_compositions
