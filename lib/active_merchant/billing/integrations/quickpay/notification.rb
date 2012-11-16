@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           def complete?
             status == '000'
-          end 
+          end
 
           def item_id
             params['ordernumber']
@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def received_at
-            Time.parse("20#{params['time']}")
+            Time.parse(params['time'])
           end
 
           def gross
@@ -29,10 +29,6 @@ module ActiveMerchant #:nodoc:
             params['amount'].to_i
           end
 
-          def test?
-            params['testmode'] == 'Yes'
-          end
-
           def status
             params['qpstat']
           end
@@ -40,9 +36,9 @@ module ActiveMerchant #:nodoc:
           def currency
             params['currency']
           end
-          
+
           # Provide access to raw fields from quickpay
-          %w(msgtype ordernumber state chstat chstatmsg qpstat qpstatmsg merchant merchantemail cardtype cardnumber).each do |attr|
+          %w(msgtype ordernumber state chstat chstatmsg qpstat qpstatmsg merchant merchantemail cardtype cardnumber splitpayment fraudprobability fraudremarks fraudreport fee).each do |attr|
             define_method(attr) do
               params[attr]
             end
@@ -50,21 +46,22 @@ module ActiveMerchant #:nodoc:
 
           MD5_CHECK_FIELDS = [
             :msgtype, :ordernumber, :amount, :currency, :time, :state,
-            :chstat, :chstatmsg, :qpstat, :qpstatmsg, :merchant, :merchantemail,
-            :transaction, :cardtype, :cardnumber, :testmode
+            :qpstat, :qpstatmsg, :chstat, :chstatmsg, :merchant, :merchantemail,
+            :transaction, :cardtype, :cardnumber, :splitpayment, :fraudprobability,
+            :fraudremarks, :fraudreport, :fee
           ]
 
           def generate_md5string
-            MD5_CHECK_FIELDS.map { |key| params[key.to_s] } * "" + @options[:credential2]
+            MD5_CHECK_FIELDS.map { |key| params[key.to_s] } * "" + @options[:credential2].to_s
           end
-          
+
           def generate_md5check
             Digest::MD5.hexdigest(generate_md5string)
           end
-          
+
           # Quickpay doesn't do acknowledgements of callback notifications
           # Instead it uses and MD5 hash of all parameters
-          def acknowledge      
+          def acknowledge
             generate_md5check == params['md5check']
           end
         end
