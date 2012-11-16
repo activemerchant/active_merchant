@@ -130,7 +130,7 @@ module ActiveMerchant #:nodoc:
       # Using the API-key, requires that you use version 4+. Specify :version => 4/5/6 in options.
       def initialize(options = {})
         requires!(options, :login, :password)
-        @protocol = options.delete(:version) || 6 # default to protocol version 6
+        @protocol = options.delete(:version) || 3 # default to protocol version 3
         super
       end
 
