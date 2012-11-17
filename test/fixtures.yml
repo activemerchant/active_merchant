@@ -226,6 +226,9 @@ iats_payments:
   password: TEST88
   region: na
 
+global_collect:
+  merchant_id: MERCHANT_ID
+
 # login: merchant number
 # password: password for the PEM secret key
 # pem: public certificate and PEM secret key
@@ -769,3 +772,4 @@ wirecard_checkout_page:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
