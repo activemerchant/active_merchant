@@ -4,6 +4,7 @@
 * PaymentExpress: Add support for optional fields: ClientType and TxnData [moklett]
 * PaymentExpress: Limit MerchantReference/description to 64 chars [moklett]
 * Wirecard: description must be no more than 32 characters [moklett]
+* Litle: Add support for passing a token to the authorize and purchase methods [forest]
 
 == Version 1.29.3 (December 7, 2012)
 
