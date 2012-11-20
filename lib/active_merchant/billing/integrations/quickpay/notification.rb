@@ -18,7 +18,10 @@ module ActiveMerchant #:nodoc:
           end
 
           def received_at
-            Time.parse(params['time'])
+            time = params['time']
+            # If time only contains 12 integers then it's pre v4 format
+            time = "20#{params['time']}" if /[0-9]{12}/.match(params['time'])
+            Time.parse(time)
           end
 
           def gross
