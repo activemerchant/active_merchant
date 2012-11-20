@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class RemoteQuickpayV4Test < Test::Unit::TestCase
+class RemoteQuickpayV6Test < Test::Unit::TestCase
   # These test assumes that you have not added your development IP in
   # the Quickpay Manager.
   def setup
