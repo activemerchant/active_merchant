@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
 
           def received_at
             time = params['time']
-            # If time only contains 12 integers then it's pre v4 format
+            # If time only contains 12 integers then it's pre v5 format
             time = "20#{params['time']}" if /[0-9]{12}/.match(params['time'])
             Time.parse(time)
           end
