@@ -13,6 +13,7 @@ class FirstdataE4Test < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store Purchase'
     }
+    @authorization = "ET1700;106625152;4738"
   end
   
   def test_successful_purchase
@@ -28,7 +29,7 @@ class FirstdataE4Test < Test::Unit::TestCase
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
-    assert_response = @gateway.void(@authorization, @options)
+    assert response = @gateway.void(@authorization, @options)
     assert_success response
   end
   
