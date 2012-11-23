@@ -62,8 +62,8 @@ credit card details.
 	                :last_name          => 'Bobsen',
 	                :number             => '4242424242424242',
 	                :month              => '8',
-	                :year               => '2012',
-	                :verification_value => '123')
+	                :year               => Time.now.year+1,
+                        :verification_value => '000')
 
 	# Validating the card automatically detects the card type
 	if credit_card.valid?
