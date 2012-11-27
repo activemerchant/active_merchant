@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add eWay Rapid 3.0 gateway [ntalbott]
+
 == Version 1.29.0 (November 30, 2012)
 
 * Authorize.Net gateway: Support description and order_id for capture [ntalbott]
