@@ -100,6 +100,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Elavon MyVirtualMerchant](http://www.elavon.com) - US, CA
 * [ePay](http://www.epay.dk/) - DK, SE, NO
 * [eWAY](http://www.eway.com.au/) - AU
+* [eWay Rapid 3.0](http://www.eway.com.au/) - AU
 * [E-xact](http://www.e-xact.com) - CA, US
 * [Fat Zebra](https://www.fatzebra.com.au) - AU
 * [Federated Canada](http://www.federatedcanada.com/) - CA
