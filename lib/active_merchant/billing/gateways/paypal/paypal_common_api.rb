@@ -397,7 +397,7 @@ module ActiveMerchant #:nodoc:
         transaction_search_optional_fields = %w{ Payer ReceiptID Receiver
                                                  TransactionID InvoiceID CardNumber
                                                  AuctionItemNumber TransactionClass
-                                                 CurrencyCode Status }
+                                                 CurrencyCode Status ProfileID }
         build_request_wrapper('TransactionSearch') do |xml|
           xml.tag! 'StartDate', date_to_iso(options[:start_date])
           xml.tag! 'EndDate', date_to_iso(options[:end_date]) unless options[:end_date].blank?
