@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_method, options = {})
-        MultiResponse.new.tap do |r|
+        MultiResponse.run do |r|
           r.process{authorize(money, payment_method, options)}
           r.process{capture(money, r.authorization, options.merge(:authorization_validated => true))}
         end
@@ -36,21 +36,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        MultiResponse.new.tap do |r|
+        MultiResponse.run do |r|
           r.process{inquire_request(authorization, options, "AUTHORISED")} unless options[:authorization_validated]
           r.process{capture_request(money, authorization, options)}
         end
       end
 
       def void(authorization, options = {})
-        MultiResponse.new.tap do |r|
+        MultiResponse.run do |r|
           r.process{inquire_request(authorization, options, "AUTHORISED")}
           r.process{cancel_request(authorization, options)}
         end
       end
 
       def refund(money, authorization, options = {})
-        MultiResponse.new.tap do |r|
+        MultiResponse.run do |r|
           r.process{inquire_request(authorization, options, "CAPTURED")}
           r.process{refund_request(money, authorization, options)}
         end
