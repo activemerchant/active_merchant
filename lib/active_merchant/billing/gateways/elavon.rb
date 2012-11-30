@@ -208,7 +208,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_salestax(form, options)
-        form[:salestax] = options[:tax]
+        form[:salestax] = options[:tax] if options[:tax].present?
       end
 
       def expdate(creditcard)
