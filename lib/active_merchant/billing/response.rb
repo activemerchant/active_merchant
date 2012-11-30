@@ -41,6 +41,10 @@ module ActiveMerchant #:nodoc:
     end
 
     class MultiResponse < Response
+      def self.run(&block)
+        new.tap(&block)
+      end
+
       attr_reader :responses
 
       def initialize
@@ -66,7 +70,7 @@ module ActiveMerchant #:nodoc:
       %w(params message test authorization avs_result cvv_result test? fraud_review?).each do |m|
         class_eval %(
           def #{m}
-            @responses.last.#{m}
+            (@responses.empty? ? nil : @responses.last.#{m})
           end
         )
       end
