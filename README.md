@@ -210,3 +210,5 @@ Please don't touch the CHANGELOG in your pull requests, we'll add the appropriat
 at release time.
 
 [![Build Status](https://secure.travis-ci.org/Shopify/active_merchant.png)](http://travis-ci.org/Shopify/active_merchant)
+
+[![Code Climate](https://codeclimate.com/badge.png)](https://codeclimate.com/github/Shopify/active_merchant)
