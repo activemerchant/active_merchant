@@ -76,7 +76,7 @@ class StripeTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match /^Invalid response received from the Stripe API/, response.message
+    assert_match(/^Invalid response received from the Stripe API/, response.message)
   end
 
   def test_add_customer
@@ -92,16 +92,16 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_client_data_submitted_with_purchase
-    response = stub_comms(method_to_stub=:ssl_request) do
+    stub_comms(:ssl_request) do
       updated_options = @options.merge({:description => "a test customer",:browser_ip => "127.127.127.127", :user_agent => "some browser", :order_id => "42", :email => "foo@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
       @gateway.purchase(@amount,@credit_card,updated_options)
-    end.check_request do |method,endpoint, data, headers|
+    end.check_request do |method, endpoint, data, headers|
       assert_match(/description=a\+test\+customer/, data)
       assert_match(/ip=127\.127\.127\.127/, data)
       assert_match(/user_agent=some\+browser/, data)
       assert_match(/external_id=42/, data)
       assert_match(/referrer=http\%3A\%2F\%2Fwww\.shopify\.com/, data)
-      assert_match(/payment_user_agent=Stripe\%2Fv1\+ActiveMerchantBindings\%2F1\.28\.0/, data)
+      assert_match(/payment_user_agent=Stripe\%2Fv1\+ActiveMerchantBindings\%2F\d+\.\d+\.\d+/, data)
     end.respond_with(successful_purchase_response)
   end
 
