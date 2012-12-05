@@ -1,6 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.29.1 (December 5, 2012)
+
 * Add eWay Rapid 3.0 gateway [ntalbott]
+* Fix AVS responses missing attributes [jduff]
 
 == Version 1.29.0 (November 30, 2012)
 
