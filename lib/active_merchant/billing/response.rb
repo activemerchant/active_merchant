@@ -24,19 +24,17 @@ module ActiveMerchant #:nodoc:
         @authorization = options[:authorization]
         @fraud_review = options[:fraud_review]
 
-        avs_result_builder = if options[:avs_result].kind_of?(Hash)
-          AVSResult.new(options[:avs_result])
+        @avs_result = if options[:avs_result].kind_of?(AVSResult)
+          options[:avs_result].to_hash
         else
-          options[:avs_result] || {}
+          AVSResult.new(options[:avs_result]).to_hash
         end
-        @avs_result = avs_result_builder.to_hash
 
-        cvv_result_builder = if options[:cvv_result].kind_of?(String)
-          CVVResult.new(options[:cvv_result])
+        @cvv_result = if options[:cvv_result].kind_of?(CVVResult)
+          options[:cvv_result].to_hash
         else
-          options[:cvv_result] || {}
+          CVVResult.new(options[:cvv_result]).to_hash
         end
-        @cvv_result = cvv_result_builder.to_hash
       end
     end
 
