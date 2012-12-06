@@ -3,7 +3,7 @@ require 'test_helper'
 class MonerisTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
-    
+
     @gateway = MonerisGateway.new(
       :login => 'store1',
       :password => 'yesguy'
@@ -12,6 +12,12 @@ class MonerisTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4242424242424242')
     @options = { :order_id => '1', :customer => '1' }
+  end
+
+  def test_default_options
+    assert_equal 7, @gateway.options[:crypt_type]
+    assert_equal "store1", @gateway.options[:login]
+    assert_equal "yesguy", @gateway.options[:password]
   end
 
   def test_successful_purchase
