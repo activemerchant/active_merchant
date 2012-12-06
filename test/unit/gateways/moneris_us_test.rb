@@ -3,7 +3,7 @@ require 'test_helper'
 class MonerisUsTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
-    
+
     @gateway = MonerisUsGateway.new(
       :login => 'monusqa002',
       :password => 'qatoken'
@@ -14,9 +14,15 @@ class MonerisUsTest < Test::Unit::TestCase
     @options = { :order_id => '1', :billing_address => address }
   end
 
+  def test_default_options
+    assert_equal 7, @gateway.options[:crypt_type]
+    assert_equal "monusqa002", @gateway.options[:login]
+    assert_equal "qatoken", @gateway.options[:password]
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    
+
     assert response = @gateway.authorize(100, @credit_card, @options)
     assert_success response
     assert_equal '58-0_3;1026.1', response.authorization
