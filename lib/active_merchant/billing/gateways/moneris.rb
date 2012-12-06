@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
       # password is your API Token
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = { :crypt_type => 7 }.update(options)
+        options = { :crypt_type => 7 }.merge(options)
         super
       end
 
