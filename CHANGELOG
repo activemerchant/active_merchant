@@ -1,5 +1,12 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.29.3
+
+== Version 1.29.2 (December 7, 2012)
+
+* Moneris: fix issue with the default options not being merged [jduff]
+* Sage Pay: Make 0000 default post code for everyone if missing [BlakeMesdag]
+
 == Version 1.29.1 (December 5, 2012)
 
 * Add eWay Rapid 3.0 gateway [ntalbott]
