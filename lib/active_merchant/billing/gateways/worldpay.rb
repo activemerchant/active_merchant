@@ -38,6 +38,10 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         MultiResponse.run do |r|
           r.process{inquire_request(authorization, options, "AUTHORISED")} unless options[:authorization_validated]
+          if r.params
+            authorization_currency = r.params['amount_currency_code']
+            options = options.merge(:currency => authorization_currency) if authorization_currency.present?
+          end
           r.process{capture_request(money, authorization, options)}
         end
       end
@@ -148,10 +152,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(xml, money, options)
-        xml.tag! 'amount',
-          :value => amount(money),
-          'currencyCode' => (options[:currency] || currency(money)),
-          'exponent' => 2
+        currency = options[:currency] || currency(money)
+        amount   = localized_amount(money, currency)
+
+        xml.tag! 'amount', :value => amount, 'currencyCode' => currency, 'exponent' => 2
       end
 
       def add_payment_method(xml, amount, payment_method, options)
@@ -260,6 +264,13 @@ module ActiveMerchant #:nodoc:
       def encoded_credentials
         credentials = "#{@options[:login]}:#{@options[:password]}"
         "Basic #{[credentials].pack('m').strip}"
+      end
+
+      def localized_amount(money, currency)
+        amount = amount(money)
+        return amount unless CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
+        
+        amount.to_i / 100 * 100
       end
     end
   end

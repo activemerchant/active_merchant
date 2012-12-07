@@ -73,6 +73,31 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_equal "USD", result.params['amount_currency_code']
   end
 
+  def test_authorize_currency_without_fractional_units
+    assert_success(result = @gateway.authorize(1200, @credit_card, @options.merge(:currency => 'HUF')))
+    assert_equal "HUF", result.params['amount_currency_code']
+    assert_equal "12", result.params['amount_value']
+  end
+
+  def test_authorize_currency_without_fractional_units_and_fractions_in_amount
+    assert_success(result = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'HUF')))
+    assert_equal "HUF", result.params['amount_currency_code']
+    assert_equal "12", result.params['amount_value']
+  end
+
+  def test_authorize_and_capture_currency_without_fractional_units_and_fractions_in_amount
+    assert_success(auth = @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'HUF')))
+    assert_equal "12", auth.params['amount_value']
+
+    assert_success(result = @gateway.capture(1234, auth.authorization))
+    assert_equal "12", result.params['amount_value']
+  end
+
+  def test_purchase_currency_without_fractional_units_and_fractions_in_amount
+    assert_success(result = @gateway.purchase(1234, @credit_card, @options.merge(:currency => 'HUF')))
+    assert_equal "12", result.params['amount_value']
+  end
+
   def test_reference_transaction
     assert_success(original = @gateway.authorize(100, @credit_card, @options))
     assert_success(@gateway.authorize(200, original.authorization, :order_id => generate_unique_id))
