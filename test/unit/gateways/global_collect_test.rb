@@ -23,6 +23,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match %r(<ACTION>INSERT_ORDERWITHPAYMENT</ACTION>), data
       assert_match %r(<ORDERID>#{order_id}</ORDERID>), data
+      assert_match %r(<ORDERTYPE>1</ORDERTYPE>), data
       assert_match %r(<AMOUNT>100</AMOUNT>), data
       assert_match %r(<CURRENCYCODE>CAD</CURRENCYCODE>), data
       assert_match %r(<EXPIRYDATE>#{"%.2i%.2i" % [@credit_card.month, @credit_card.year % 100]}</EXPIRYDATE>), data
@@ -128,6 +129,31 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
       @gateway.credit(@amount, "transaction_id", @options)
     end
+  end
+
+  def multiple_initial_purchase
+    # should just call authorize
+    @gateway.expects(:authorize).with(@amount, @credit_card, @options.merge(:order_type => 4))
+    @gateway.multiple_initial_purchase(@amount, @credit_card, @options)
+  end
+
+  def multiple_append_purchase
+    # should just call authorize
+    @options[:effort_id] = '2'
+    response = stub_comms do
+      @gateway.multiple_append_purchase(@amount, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<ACTION>DO_PAYMENT</ACTION>), data
+      assert_match %r(<ORDERID>#{order_id}</ORDERID>), data
+      assert_match %r(<EFFORTID>2</EFFORTID>), data
+      assert_match %r(<AMOUNT>100</AMOUNT>), data
+      assert_match %r(<CURRENCYCODE>CAD</CURRENCYCODE>), data
+    end
+
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal "Success", response.message
+    assert response.test?
   end
 
   private

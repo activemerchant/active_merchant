@@ -105,6 +105,23 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_equal 'NO MERCHANTID ACTION INSERT_ORDERWITHPAYMENT (130) IS NOT ALLOWED', response.message
   end
 
+  def test_multiple_variable_recurring_payments
+    assert first = @gateway.multiple_initial_purchase(@amount, @credit_card, @options)
+    assert_success first
+
+    order_status = fetch_status
+    assert_equal '1', order_status['EFFORTID']
+    assert_equal '800', order_status['STATUSID']
+
+    @options[:effort_id] = 2
+    assert second = @gateway.multiple_append_purchase(@amount, @options)
+    assert_success second
+
+    order_status = fetch_status
+    assert_equal '2', order_status['EFFORTID']
+    assert_equal '800', order_status['STATUSID']
+  end
+
   private
   def fetch_status
     @gateway.status(@order_id).params['STATUS']

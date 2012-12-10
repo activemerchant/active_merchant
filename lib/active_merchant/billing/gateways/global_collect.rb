@@ -32,6 +32,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         requires!(options, :order_id)
         order_id = format_order_id(options[:order_id])
+        order_type = options.fetch(:order_type, '1')
 
         requires!(options, :billing_address)
         requires!(options[:billing_address], :country)
@@ -41,6 +42,7 @@ module ActiveMerchant #:nodoc:
         post = {
           'ORDER' => {
             'ORDERID' => order_id,
+            'ORDERTYPE' => order_type,
             'MERCHANTREFERENCE' => order_id,
             'COUNTRYCODE' => country,
             'LANGUAGECODE' => 'en'
@@ -124,6 +126,26 @@ module ActiveMerchant #:nodoc:
       def credit(money, authorization, options = {})
         deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
+      end
+
+      # variable recurring orders
+
+      # create a new order with ORDERTYPE=4
+      def multiple_initial_purchase money, creditcard, options={}
+        options = options.merge({:order_type => 4})
+        authorize(money, creditcard, options)
+      end
+
+      # Create an additional payment on an existing order
+      # Only available on variable recurring (ORDERTYPE=4) orders
+      def multiple_append_purchase money, options={}
+        requires!(options, :order_id, :effort_id)
+        order_id = format_order_id(options[:order_id])
+        effort_id = options[:effort_id]
+        post = { 'PAYMENT' => { 'ORDERID' => order_id, 'EFFORTID' => effort_id } }
+        add_amount(post['PAYMENT'], money, options)
+        response = commit('DO_PAYMENT', post)
+        build_response response, "#{order_id}||#{effort_id}"
       end
 
       private
