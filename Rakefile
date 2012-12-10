@@ -18,6 +18,8 @@ require 'support/outbound_hosts'
 desc "Run the unit test suite"
 task :default => 'test:units'
 
+task :test => 'test:units'
+
 namespace :test do
 
   Rake::TestTask.new(:units) do |t|
