@@ -100,7 +100,9 @@ class BraintreeBlueTest < Test::Unit::TestCase
       params
     end.returns(result)
 
-    @gateway.store(credit_card("41111111111111111111"), :verify_card => true)
+    response = @gateway.store(credit_card("41111111111111111111"), :verify_card => true)
+    assert_equal "123", response.params["customer_vault_id"]
+    assert_equal response.params["customer_vault_id"], response.authorization
   end
 
   def test_store_with_verify_card_false
@@ -118,7 +120,9 @@ class BraintreeBlueTest < Test::Unit::TestCase
       params
     end.returns(result)
 
-    @gateway.store(credit_card("41111111111111111111"), :verify_card => false)
+    response = @gateway.store(credit_card("41111111111111111111"), :verify_card => false)
+    assert_equal "123", response.params["customer_vault_id"]
+    assert_equal response.params["customer_vault_id"], response.authorization
   end
 
   def test_store_with_billing_address_options

@@ -135,7 +135,8 @@ module ActiveMerchant #:nodoc:
             {
               :braintree_customer => (customer_hash(result.customer) if result.success?),
               :customer_vault_id => (result.customer.id if result.success?)
-            }
+            },
+            :authorization => (result.customer.id if result.success?)
           )
         end
       end

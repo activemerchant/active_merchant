@@ -24,6 +24,8 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal('5100', response.params["braintree_customer"]["credit_cards"].first["last_4"])
     assert_equal('MasterCard', response.params["braintree_customer"]["credit_cards"].first["card_type"])
     assert_equal('510510', response.params["braintree_customer"]["credit_cards"].first["bin"])
+    assert_match %r{^\d+$}, response.params["customer_vault_id"]
+    assert_equal response.params["customer_vault_id"], response.authorization
   end
 
   def test_successful_authorize
