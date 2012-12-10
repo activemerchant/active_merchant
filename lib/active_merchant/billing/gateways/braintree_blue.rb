@@ -68,8 +68,10 @@ module ActiveMerchant #:nodoc:
         Braintree::Configuration.custom_user_agent = "ActiveMerchant #{ActiveMerchant::VERSION}"
 
         if wiredump_device
-          Braintree::Configuration.logger = wiredump_device
+          Braintree::Configuration.logger = ((Logger === wiredump_device) ? wiredump_device : Logger.new(wiredump_device))
           Braintree::Configuration.logger.level = Logger::DEBUG
+        else
+          Braintree::Configuration.logger.level = Logger::WARN
         end
       end
 
