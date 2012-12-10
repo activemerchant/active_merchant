@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class BraintreeBlueTest < Test::Unit::TestCase
-
   def setup
     @gateway = BraintreeBlueGateway.new(
       :merchant_id => 'test',
@@ -295,8 +294,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert Braintree::Configuration.logger.is_a?(Logger)
   end
 
-  def test_configured_logger_has_a_default_log_level_defined_by_braintree_gem
-    assert_equal Logger::INFO, Braintree::Configuration.logger.level
+  def test_configured_logger_has_a_default_log_level_defined_by_active_merchant
+    assert_equal Logger::WARN, Braintree::Configuration.logger.level
   end
 
   def test_configured_logger_respects_any_custom_log_level_set_without_overwriting_it
@@ -311,7 +310,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
         :private_key => 'test'
       )
 
-      assert_equal Logger::DEBUG, Braintree::Configuration.logger.level
+      assert_equal Logger::WARN, Braintree::Configuration.logger.level
     end
   end
 

@@ -62,7 +62,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'OK', response.message
     customer_vault_id = response.params["customer_vault_id"]
-    assert_match /\A\d{6,7}\z/, customer_vault_id
+    assert_match(/\A\d{6,7}\z/, customer_vault_id)
 
     assert response = @gateway.purchase(@amount, customer_vault_id)
     assert_success response
@@ -108,7 +108,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
 
   def test_successful_store_with_no_validate
     card = credit_card('4000111111111115', :verification_value => '200')
-    assert response = @gateway.store(@credit_card, :verify_card => false)
+    assert response = @gateway.store(card, :verify_card => false)
     assert_success response
     assert_equal 'OK', response.message
   end
@@ -224,7 +224,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     )
     assert_success response
     assert_equal '1000 Approved', response.message
-    assert_match /\A\d{6,7}\z/, response.params["customer_vault_id"]
+    assert_match(/\A\d{6,7}\z/, response.params["customer_vault_id"])
     assert_equal '510510', response.params["braintree_transaction"]["vault_customer"]["credit_cards"][0]["bin"]
     assert_equal '510510', Braintree::Customer.find(response.params["customer_vault_id"]).credit_cards[0].bin
   end
@@ -350,7 +350,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card)
     assert_success response
     assert_equal 'OK', response.message
-    assert_match /\A\d{6,7}\z/, response.params["customer_vault_id"]
+    assert_match(/\A\d{6,7}\z/, response.params["customer_vault_id"])
   end
 
   def test_failed_add_to_vault
@@ -410,7 +410,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'OK', response.message
     customer_vault_id = response.params["customer_vault_id"]
-    assert_match /\A\d{6,7}\z/, customer_vault_id
+    assert_match(/\A\d{6,7}\z/, customer_vault_id)
     assert_equal "old@example.com", response.params["braintree_customer"]["email"]
     assert_equal "Old First", response.params["braintree_customer"]["first_name"]
     assert_equal "Old Last", response.params["braintree_customer"]["last_name"]
