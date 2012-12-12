@@ -6,6 +6,7 @@
 * Wirecard: description must be no more than 32 characters [moklett]
 * Litle: Add support for passing a token to the authorize and purchase methods [forest]
 * PayPal Common: Allow searching for transactions by ProfileID [aq1018]
+* Add Spreedly Core gateway [duff]
 
 == Version 1.29.3 (December 7, 2012)
 
