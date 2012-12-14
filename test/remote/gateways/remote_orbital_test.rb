@@ -62,7 +62,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'Approved', auth.message
     assert auth.authorization
-    assert void = @gateway.void(nil, auth.authorization, :order_id => '2')
+    assert void = @gateway.void(auth.authorization, :order_id => '2')
     assert_success void
   end
 
