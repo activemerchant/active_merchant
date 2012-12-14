@@ -52,4 +52,22 @@ class EwayTest < Test::Unit::TestCase
     assert_equal false, response.success?
     assert response.test?
   end
+
+  def test_successful_refund
+    assert response = @gateway.purchase(100, @credit_card_success, @params)
+    assert_success response
+
+    assert response = @gateway.refund(40, response.authorization)
+    assert_success response
+    assert_equal 'Transaction Approved', response.message
+  end
+
+  def test_failed_refund
+    assert response = @gateway.purchase(100, @credit_card_success, @params)
+    assert_success response
+
+    assert response = @gateway.refund(200, response.authorization)
+    assert_failure response
+    assert_match /Error.*Your refund could not be processed./, response.message
+  end
 end
