@@ -2,11 +2,8 @@ require 'test_helper'
 
 class EwayTest < Test::Unit::TestCase
   def setup
-    Base.gateway_mode = :test
     @gateway = EwayGateway.new(fixtures(:eway))
-
     @credit_card_success = credit_card('4444333322221111')
-
     @credit_card_fail = credit_card('1234567812345678',
       :month => Time.now.month,
       :year => Time.now.year

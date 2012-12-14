@@ -63,22 +63,6 @@ class EwayTest < Test::Unit::TestCase
     assert !@gateway.respond_to?(:capture) || @gateway.method(:capture).owner != @gateway.class
   end
 
-  def test_test_url_without_cvn
-    assert_equal EwayGateway.test_url, @gateway.send(:gateway_url, false, true)
-  end
-
-  def test_test_url_with_cvn
-    assert_equal EwayGateway.test_cvn_url, @gateway.send(:gateway_url, true, true)
-  end
-
-  def test_live_url_without_cvn
-    assert_equal EwayGateway.live_url, @gateway.send(:gateway_url, false, false)
-  end
-
-  def test_live_url_with_cvn
-    assert_equal EwayGateway.live_cvn_url, @gateway.send(:gateway_url, true, false)
-  end
-
   def test_add_address
     post = {}
     @gateway.send(:add_address, post, @options)
@@ -89,35 +73,35 @@ class EwayTest < Test::Unit::TestCase
   private
   def successful_purchase_response
     <<-XML
-<?xml version="1.0"?>
-<ewayResponse>
-  <ewayTrxnStatus>True</ewayTrxnStatus>
-  <ewayTrxnNumber>11292</ewayTrxnNumber>
-  <ewayTrxnReference/>
-  <ewayTrxnOption1/>
-  <ewayTrxnOption2/>
-  <ewayTrxnOption3/>
-  <ewayAuthCode>123456</ewayAuthCode>
-  <ewayReturnAmount>100</ewayReturnAmount>
-  <ewayTrxnError>00,Transaction Approved(Test CVN Gateway)</ewayTrxnError>
-</ewayResponse>
+      <?xml version="1.0"?>
+      <ewayResponse>
+        <ewayTrxnStatus>True</ewayTrxnStatus>
+        <ewayTrxnNumber>11292</ewayTrxnNumber>
+        <ewayTrxnReference/>
+        <ewayTrxnOption1/>
+        <ewayTrxnOption2/>
+        <ewayTrxnOption3/>
+        <ewayAuthCode>123456</ewayAuthCode>
+        <ewayReturnAmount>100</ewayReturnAmount>
+        <ewayTrxnError>00,Transaction Approved(Test CVN Gateway)</ewayTrxnError>
+      </ewayResponse>
     XML
   end
 
   def failed_purchase_response
     <<-XML
-<?xml version="1.0"?>
-<ewayResponse>
-  <ewayTrxnStatus>False</ewayTrxnStatus>
-  <ewayTrxnNumber>11290</ewayTrxnNumber>
-  <ewayTrxnReference/>
-  <ewayTrxnOption1/>
-  <ewayTrxnOption2/>
-  <ewayTrxnOption3/>
-  <ewayAuthCode/>
-  <ewayReturnAmount>100</ewayReturnAmount>
-  <ewayTrxnError>eWAY Error: Invalid Expiry Date. Your credit card has not been billed for this transaction.(Test CVN Gateway)</ewayTrxnError>
-</ewayResponse>
+      <?xml version="1.0"?>
+      <ewayResponse>
+        <ewayTrxnStatus>False</ewayTrxnStatus>
+        <ewayTrxnNumber>11290</ewayTrxnNumber>
+        <ewayTrxnReference/>
+        <ewayTrxnOption1/>
+        <ewayTrxnOption2/>
+        <ewayTrxnOption3/>
+        <ewayAuthCode/>
+        <ewayReturnAmount>100</ewayReturnAmount>
+        <ewayTrxnError>eWAY Error: Invalid Expiry Date. Your credit card has not been billed for this transaction.(Test CVN Gateway)</ewayTrxnError>
+      </ewayResponse>
     XML
   end
 end
