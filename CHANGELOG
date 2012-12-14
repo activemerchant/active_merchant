@@ -17,6 +17,7 @@
 * Authorize.Net CIM: Add support for extraOptions to createCustomerProfileTransaction [tpiekos]
 * Add NETPAY gateway [samlown]
 * Balanced gateway: Add amount to the refund method signature [ntalbott]
+* Orbital gateway: Fix void method signature [aprofeit, ntalbott]
 
 == Version 1.29.3 (December 7, 2012)
 

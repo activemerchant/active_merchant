@@ -62,8 +62,20 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'Approved', auth.message
     assert auth.authorization
-    assert void = @gateway.void(nil, auth.authorization, :order_id => '2')
+    assert void = @gateway.void(auth.authorization, :order_id => '2')
     assert_success void
+  end
+
+  def test_deprecated_void
+    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(:order_id => '2'))
+    assert_success auth
+    assert_equal 'Approved', auth.message
+    assert auth.authorization
+
+    assert_deprecation_warning("Calling the void method with an amount parameter is deprecated and will be removed in a future version.", @gateway) do
+      assert void = @gateway.void(@amount, auth.authorization, :order_id => '2')
+      assert_success void
+    end
   end
 
   def test_refund
@@ -169,7 +181,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_void_transactions
     [3000, 105500, 2900].each do |amount|
       assert auth_response = @gateway.authorize(amount, @credit_card, @options)
-      assert void_response = @gateway.void(nil, auth_response.authorization, @options.merge(:transaction_index => 1))
+      assert void_response = @gateway.void(auth_response.authorization, @options.merge(:transaction_index => 1))
 
       # Makes it easier to fill in cert sheet if you print these to the command line
       # puts "TxRefNum => " + void_response.params["tx_ref_num"]
