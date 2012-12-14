@@ -36,7 +36,7 @@ class EwayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
-    assert_equal '123456', response.authorization
+    assert_equal '11292', response.authorization
   end
 
   def test_failed_purchase

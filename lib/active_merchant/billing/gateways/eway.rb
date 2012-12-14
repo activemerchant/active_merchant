@@ -206,7 +206,7 @@ module ActiveMerchant #:nodoc:
         response = parse( ssl_post(gateway_url(parameters[:CVN], test?), post_data(parameters)) )
 
         Response.new(success?(response), message_from(response[:ewaytrxnerror]), response,
-          :authorization => response[:ewayauthcode],
+          :authorization => response[:ewaytrxnnumber],
           :test => /\(Test( CVN)? Gateway\)/ === response[:ewaytrxnerror]
         )
       end
