@@ -7,6 +7,8 @@
 * Litle: Add support for passing a token to the authorize and purchase methods [forest]
 * PayPal Common: Allow searching for transactions by ProfileID [aq1018]
 * Add Spreedly Core gateway [duff]
+* eWay Gateway: Return proper value for authorization [duff]
+* eWay Gateway: Add support for refunds [duff]
 
 == Version 1.29.3 (December 7, 2012)
 

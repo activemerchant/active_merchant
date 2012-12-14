@@ -15,9 +15,9 @@ module ActiveMerchant #:nodoc:
 
       # Public: Create a new Eway Gateway.
       # options - A hash of options:
-      #           :login            - Your Customer ID.
-      #           :refund_password  - Your XML Refund Password that you
-      #                               specified on the Eway site. (optional)
+      #           :login     - Your Customer ID.
+      #           :password  - Your XML Refund Password that you
+      #                        specified on the Eway site. (optional)
       def initialize(options = {})
         requires!(options, :login)
         super
@@ -33,13 +33,26 @@ module ActiveMerchant #:nodoc:
         add_invoice_data(post, options)
         add_non_optional_data(post)
         add_amount(post, money)
-
         post[:CustomerEmail] = options[:email]
+
         commit(purchase_url(post[:CVN]), money, post)
       end
 
-      private
+      def refund(money, authorization, options={})
+        post = {}
 
+        add_customer_id(post)
+        add_amount(post, money)
+        add_non_optional_data(post)
+        post[:OriginalTrxnNumber] = authorization
+        post[:RefundPassword] = @options[:password]
+        post[:CardExpiryMonth] = nil
+        post[:CardExpiryYear] = nil
+
+        commit(refund_url, money, post)
+      end
+
+      private
       def requires_address!(options)
         raise ArgumentError.new("Missing eWay required parameters: address or billing_address") unless (options.has_key?(:address) or options.has_key?(:billing_address))
       end
@@ -74,6 +87,7 @@ module ActiveMerchant #:nodoc:
       def add_amount(post, money)
         post[:TotalAmount] = amount(money)
       end
+
       def add_non_optional_data(post)
         post[:Option1] = nil
         post[:Option2] = nil
@@ -82,7 +96,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(url, money, parameters)
-        response = parse(ssl_post(url, post_data(parameters)))
+        raw_response = ssl_post(url, post_data(parameters))
+        response = parse(raw_response)
 
         Response.new(success?(response),
           message_from(response[:ewaytrxnerror]),

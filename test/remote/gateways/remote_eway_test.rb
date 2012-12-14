@@ -6,7 +6,7 @@ class EwayTest < Test::Unit::TestCase
     @credit_card_success = credit_card('4444333322221111')
     @credit_card_fail = credit_card('1234567812345678',
       :month => Time.now.month,
-      :year => Time.now.year
+      :year => Time.now.year-1
     )
 
     @params = {
@@ -49,7 +49,25 @@ class EwayTest < Test::Unit::TestCase
 
   def test_purchase_error
     assert response = @gateway.purchase(100, @credit_card_fail, @params)
-    assert_equal false, response.success?
+    assert_failure response
     assert response.test?
+  end
+
+  def test_successful_refund
+    assert response = @gateway.purchase(100, @credit_card_success, @params)
+    assert_success response
+
+    assert response = @gateway.refund(40, response.authorization)
+    assert_success response
+    assert_equal 'Transaction Approved', response.message
+  end
+
+  def test_failed_refund
+    assert response = @gateway.purchase(100, @credit_card_success, @params)
+    assert_success response
+
+    assert response = @gateway.refund(200, response.authorization)
+    assert_failure response
+    assert_match /Error.*Your refund could not be processed./, response.message
   end
 end

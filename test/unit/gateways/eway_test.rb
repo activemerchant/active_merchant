@@ -47,6 +47,26 @@ class EwayTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    assert response = @gateway.refund(40, purchase.authorization)
+    assert_success response
+    assert_equal '40', response.params['ewayreturnamount']
+  end
+
+  def test_failed_refund
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+    assert response = @gateway.refund(200, purchase.authorization)
+    assert_failure response
+    assert_equal '200', response.params['ewayreturnamount']
+  end
+
   def test_amount_style
    assert_equal '1034', @gateway.send(:amount, 1034)
 
@@ -101,6 +121,36 @@ class EwayTest < Test::Unit::TestCase
         <ewayAuthCode/>
         <ewayReturnAmount>100</ewayReturnAmount>
         <ewayTrxnError>eWAY Error: Invalid Expiry Date. Your credit card has not been billed for this transaction.(Test CVN Gateway)</ewayTrxnError>
+      </ewayResponse>
+    XML
+  end
+
+  def successful_refund_response
+    <<-XML
+      <ewayResponse>
+        <ewayTrxnStatus>True</ewayTrxnStatus>
+        <ewayTrxnNumber>9953564</ewayTrxnNumber>
+        <ewayTrxnOption1/>
+        <ewayTrxnOption2/>
+        <ewayTrxnOption3/>
+        <ewayAuthCode>254313</ewayAuthCode>
+        <ewayReturnAmount>40</ewayReturnAmount>
+        <ewayTrxnError>00,Transaction Approved (Sandbox)</ewayTrxnError>
+      </ewayResponse>
+    XML
+  end
+
+  def failed_refund_response
+    <<-XML
+      <ewayResponse>
+        <ewayTrxnStatus>False</ewayTrxnStatus>
+        <ewayTrxnNumber/>
+        <ewayTrxnOption1/>
+        <ewayTrxnOption2/>
+        <ewayTrxnOption3/>
+        <ewayAuthCode/>
+        <ewayReturnAmount>200</ewayReturnAmount>
+        <ewayTrxnError>Error: You are requesting an amount greater than the remaining amount to be refunded. Your refund could not be processed.</ewayTrxnError>
       </ewayResponse>
     XML
   end
