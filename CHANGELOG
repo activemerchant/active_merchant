@@ -13,6 +13,7 @@
 * Banwire gateway: Handle JSON::ParserError [duff]
 * Balanced gateway: Fix unspecified marketplace [duff]
 * QBMS gateway: Allow partial addresses [duff]
+* Authorize.Net CIM: Allow omitting card expiration date [shanebonham]
 
 == Version 1.29.3 (December 7, 2012)
 
