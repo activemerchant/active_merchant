@@ -468,7 +468,11 @@ module ActiveMerchant #:nodoc:
       private
 
       def expdate(credit_card)
-        sprintf('%04d-%02d', credit_card.year, credit_card.month)
+        if credit_card.year.present? && credit_card.month.present?
+          sprintf('%04d-%02d', credit_card.year, credit_card.month)
+        else
+          'XXXX'
+        end
       end
 
       def build_request(action, options = {})
