@@ -18,9 +18,9 @@ module ActiveMerchant #:nodoc:
       # The syntax of the helper is as follows:
       # 
       #   <% payment_service_for 'order id', 'axcess_user_login',
-      #                                 :password => 'axcess_user_password',
-      #                                 :sender => 'axcess_sender',
-      #                                 :channel => 'axcess_channel',
+      #                                 :credential2 => 'axcess_user_password',
+      #                                 :credential3 => 'axcess_sender',
+      #                                 :credential4 => 'axcess_channel',
       #                                 :amount => 50.00,
       #                                 :service => :axcess,
       #                                 :html => { :id => 'axcess-form' } do |service| %>
@@ -37,6 +37,7 @@ module ActiveMerchant #:nodoc:
       #      <% service.currency 'GBP' %>
       #
       #      <% service.notify_url url_for(:action => 'notify', :only_path => false) %>
+      #      <% service.return_url url_for(:action => 'done', :only_path => false) %>
       #    <% end %>
       #   
       # The notify_url is the URL that the Axcess will sent the response too.  You can 
@@ -46,16 +47,28 @@ module ActiveMerchant #:nodoc:
       #     include ActiveMerchant::Billing::Integrations
       #   
       #     def notify
-      #       notification =  Nochex::Notification.new(request.raw_post)
+      #       notification =  Axcess::Notification.new(request.raw_post)
       #       
       #       begin
-      #         # Acknowledge notification with Nochex
-      #         raise StandardError, 'Illegal Notification' unless notification.acknowledge
-      #           # Process the payment  
+      #         if notification.cancel? then
+      #           send_data(CANCEL_URL, :type => "text/plain") and return
+      #         else
+      #           # Acknowledge notification with Axcess
+      #           raise StandardError, 'Illegal Notification' unless notification.acknowledge(AXCESS_SECRET)
+      #             # Process the payment  
+      #             if notification.complete? then
+      #              # payment ok => some update code
+      #               send_data(notification.params['return_url'], :type => "text/plain") and return
+      #             else
+      #               # some error occured
+      #               # notification.message contains full message
+      #               send_data(notification.params['cancel_url'], :type => "text/plain") and return
+      #             end
+      #         end
       #       rescue => e
       #           logger.warn("Illegal notification received: #{e.message}")
       #       ensure
-      #           head(:ok)
+      #           send_data(CANCEL_URL, :type => "text/plain")
       #       end
       #     end
       #   end

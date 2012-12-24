@@ -5,29 +5,31 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Axcess
         class Notification < ActiveMerchant::Billing::Integrations::Notification
+          include PostsData
+          
           def complete?
-            params['']
+            params['PROCESSING.RESULT'] == 'ACK'
+          end
+
+          def cancel?
+            params['FRONTEND.REQUEST.CANCELLED']=='true'
           end
 
           def item_id
-            params['']
+            params['IDENTIFICATION.TRANSACTIONID']
           end
 
           def transaction_id
-            params['']
+            params['IDENTIFICATION.UNIQUEID']
           end
 
           # When was this payment received by the client.
           def received_at
-            params['']
+            params['PROCESSING.TIMESTAMP']
           end
 
           def payer_email
-            params['']
-          end
-
-          def receiver_email
-            params['']
+            params['CONTACT.EMAIL']
           end
 
           def security_key
@@ -36,16 +38,20 @@ module ActiveMerchant #:nodoc:
 
           # the money amount we received in X.2 decimal.
           def gross
-            params['']
+            params['CLEARING.AMOUNT']
           end
 
           # Was this a test transaction?
           def test?
-            params[''] == 'test'
+            params['TRANSACTION.MODE'] != 'LIVE'
           end
 
           def status
-            params['']
+            params['PROCESSING.STATUS']
+          end
+
+          def message
+            params['PROCESSING.RETURN']
           end
 
           # Acknowledge the transaction to Axcess. This method has to be called after a new
@@ -62,35 +68,18 @@ module ActiveMerchant #:nodoc:
           #     else
           #       ... log possible hacking attempt ...
           #     end
-          def acknowledge
-            payload = raw
-
-            uri = URI.parse(Axcess.notification_confirmation_url)
-
-            request = Net::HTTP::Post.new(uri.path)
-
-            request['Content-Length'] = "#{payload.size}"
-            request['User-Agent'] = "Active Merchant -- http://home.leetsoft.com/am"
-            request['Content-Type'] = "application/x-www-form-urlencoded"
-
-            http = Net::HTTP.new(uri.host, uri.port)
-            http.verify_mode    = OpenSSL::SSL::VERIFY_NONE unless @ssl_strict
-            http.use_ssl        = true
-
-            response = http.request(request, payload)
-
-            # Replace with the appropriate codes
-            raise StandardError.new("Faulty Axcess result: #{response.body}") unless ["AUTHORISED", "DECLINED"].include?(response.body)
-            response.body == "AUTHORISED"
+          def acknowledge(secret)
+            require 'digest/md5'
+            Digest::MD5.hexdigest("#{params['PAYMENT.CODE']}|#{params['IDENTIFICATION.TRANSACTIONID']}|#{params['IDENTIFICATION.UNIQUEID']}|#{params['PROCESSING.RETURN.CODE']}|#{params['CLEARING.AMOUNT']}|#{params['CLEARING.CURRENCY']}|#{params['PROCESSING.RISK_SCORE']}|#{params['TRANSACTION.MODE']}|#{secret}") == params['HASH']
           end
  private
 
           # Take the posted data and move the relevant data into a hash
           def parse(post)
-            @raw = post
-            for line in post.split('&')
-              key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
-              params[key] = value
+            @raw = post.to_s
+            for line in @raw.split('&')    
+              key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
+              params[key] = CGI.unescape(value)
             end
           end
         end
