@@ -91,8 +91,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>:login</tt> -- The Balanced API Secret (REQUIRED)
       def initialize(options = {})
         requires!(options, :login)
-        initialize_marketplace(options[:marketplace] || load_marketplace)
         super
+        initialize_marketplace(options[:marketplace] || load_marketplace)
       end
 
       # Performs an authorization (Hold in Balanced nonclementure), which
