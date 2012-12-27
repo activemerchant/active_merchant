@@ -41,6 +41,7 @@ class BanwireTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal 'test12345', response.authorization
+    assert_nil response.message
     assert response.test?
   end
 
@@ -50,6 +51,14 @@ class BanwireTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
+  end
+
+  def test_invalid_json
+    @gateway.expects(:ssl_post).returns(invalid_json_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match /Invalid response received from the Banwire API/, response.message
   end
 
   #American Express requires address and zipcode
@@ -71,6 +80,7 @@ class BanwireTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_purchase_amex_response)
 
     assert response = @gateway.purchase(@amount, @amex_credit_card, @amex_options)
+    assert_match /requeridos para pagos con AMEX/, response.message
     assert_failure response
     assert response.test?
   end
@@ -98,6 +108,12 @@ class BanwireTest < Test::Unit::TestCase
   def successful_purchase_amex_response
     <<-RESPONSE
     {"user":"desarrollo","id":"20120731153834","referencia":"12345","date":"31-07-2012 15:38:34","card":"99999","response":"ok","code_auth":"test12345","monto":0.5,"client":"Banwire Test Card"}
+    RESPONSE
+  end
+
+  def invalid_json_response
+    <<-RESPONSE
+    {"user":"desarrollo"
     RESPONSE
   end
 end
