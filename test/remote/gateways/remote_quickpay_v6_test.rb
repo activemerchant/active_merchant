@@ -1,10 +1,10 @@
 require 'test_helper'
 
-class RemoteQuickpayV4Test < Test::Unit::TestCase
+class RemoteQuickpayV6Test < Test::Unit::TestCase
   # These test assumes that you have not added your development IP in
   # the Quickpay Manager.
   def setup
-    @gateway = QuickpayGateway.new(fixtures(:quickpay_with_api_key).merge(:version => 4))
+    @gateway = QuickpayGateway.new(fixtures(:quickpay_with_api_key))
 
     @amount = 100
     @options = {
