@@ -49,11 +49,12 @@ module ActiveMerchant #:nodoc:
         commit('PreAuth', post)
       end
 
-      def cancel(authorization, options = {})
+      def cancel(money, authorization, options = {})
         post = {}
         add_order_id(post, authorization)
+        add_amount(post, money, options)
 
-        commit('Void', post)
+        commit('Reverse', post)
       end
 
       def capture(money, authorization, options = {})
@@ -76,6 +77,8 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options = {})
         post = {}
+        add_order_id(post, authorization)
+        add_amount(post, money, options)
 
         commit('Credit', post)
       end
@@ -93,7 +96,6 @@ module ActiveMerchant #:nodoc:
         post['ResourceName'] = action
         post['ContentType']  = 'Transaction'
         post['Mode']         = 'P'
-        #post['TerminalId']   = '00000001'
       end
 
       def add_order_id(post, order_id)

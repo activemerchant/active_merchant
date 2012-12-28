@@ -30,6 +30,14 @@ class RemoteNetpayTest < Test::Unit::TestCase
   #  assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
   #end
 
+  def test_successful_purchase_and_refund
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+    assert_equal 'Aprobada', refund.message
+  end
+
   def test_authorize_and_capture
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
@@ -46,7 +54,7 @@ class RemoteNetpayTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(amount, @credit_card, @options)
     assert_success auth
     assert_equal 'Aprobada', auth.message
-    assert cancel = @gateway.cancel(auth.authorization)
+    assert cancel = @gateway.cancel(amount, auth.authorization)
     assert_success cancel
     assert_equal 'Aprobada', cancel.message
   end
