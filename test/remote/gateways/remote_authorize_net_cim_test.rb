@@ -369,7 +369,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     # The value before updating
     assert_equal "XXXX4242", response.params['payment_profile']['payment']['credit_card']['card_number'], "The card number should contain the last 4 digits of the card we passed in 4242"
 
-    #Update the payment profile
+    # Update the payment profile
     assert response = @gateway.update_customer_payment_profile(
       :customer_profile_id => @customer_profile_id,
       :payment_profile => {
@@ -393,6 +393,31 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal "XXXX1234", response.params['payment_profile']['payment']['credit_card']['card_number'], "The card number should contain the last 4 digits of the card we passed in: 1234"
     # Show that fields that were left out of the update were cleared
     assert_nil response.params['payment_profile']['customer_type']
+
+    new_billing_address = response.params['payment_profile']['bill_to']
+    new_billing_address.update(:first_name => 'Frank', :last_name => 'Brown')
+    masked_credit_card = ActiveMerchant::Billing::CreditCard.new(:number => response.params['payment_profile']['payment']['credit_card']['card_number'])
+
+    # Update only the billing address with a masked card and expiration date
+    assert response = @gateway.update_customer_payment_profile(
+      :customer_profile_id => @customer_profile_id,
+      :payment_profile => {
+        :customer_payment_profile_id => customer_payment_profile_id,
+        :bill_to => new_billing_address,
+        :payment => {
+          :credit_card => masked_credit_card
+        }
+      }
+    )
+
+    # Get the updated payment profile
+    assert response = @gateway.get_customer_payment_profile(
+      :customer_profile_id => @customer_profile_id,
+      :customer_payment_profile_id => customer_payment_profile_id
+    )
+
+    # Show that the billing address on the payment profile was updated
+    assert_equal "Frank", response.params['payment_profile']['bill_to']['first_name'], "The billing address should contain the first name we passed in: Frank"
   end
 
   def test_successful_update_customer_shipping_address_request
