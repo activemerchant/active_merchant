@@ -12,6 +12,7 @@
 * Quickpay: Add support for protocols 5 & 6 [twarberg]
 * Banwire gateway: Handle JSON::ParserError [duff]
 * Balanced gateway: Fix unspecified marketplace [duff]
+* QBMS gateway: Allow partial addresses [duff]
 
 == Version 1.29.3 (December 7, 2012)
 
