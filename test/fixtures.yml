@@ -583,3 +583,8 @@ wirecard:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+merchant_warrior:
+  merchant_uuid: '50c5b9f0b52ea'
+  api_key: '8fr3ajm7'
+  api_passphrase: 'cymvlwgc'
