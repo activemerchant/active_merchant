@@ -189,6 +189,11 @@ merchant_ware:
  password:
  name:
 
+merchant_warrior:
+  merchant_uuid: '50c5b9f0b52ea'
+  api_key: '8fr3ajm7'
+  api_passphrase: 'cymvlwgc'
+
 # Working credentials, no need to replace
 mercury:
   login: '595901'
@@ -591,3 +596,4 @@ wirecard:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
