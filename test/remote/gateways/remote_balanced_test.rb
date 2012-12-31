@@ -27,13 +27,13 @@ class RemoteBalancedTest < Test::Unit::TestCase
   def test_invalid_card
     assert response = @gateway.purchase(@amount, @invalid_card, @options)
     assert_failure response
-    assert response.message.index('Processor did not accept this card.') != nil
+    assert_match /Customer call bank/, response.message
   end
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert response.message.index('Processor did not accept this card.') != nil
+    assert_match /Account Frozen/, response.message
   end
 
   def test_authorize_and_capture

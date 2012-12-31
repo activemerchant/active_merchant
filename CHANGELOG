@@ -9,6 +9,10 @@
 * Add Spreedly Core gateway [duff]
 * eWay Gateway: Return proper value for authorization [duff]
 * eWay Gateway: Add support for refunds [duff]
+* Quickpay: Add support for protocols 5 & 6 [twarberg]
+* Banwire gateway: Handle JSON::ParserError [duff]
+* Balanced gateway: Fix unspecified marketplace [duff]
+* QBMS gateway: Allow partial addresses [duff]
 
 == Version 1.29.3 (December 7, 2012)
 

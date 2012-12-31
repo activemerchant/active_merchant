@@ -126,6 +126,7 @@ module ActiveMerchant #:nodoc:
         parameters[:trans_request_id] ||= SecureRandom.hex(10)
 
         req = build_request(type, money, parameters)
+
         data = ssl_post(url, req, "Content-Type" => "application/x-qbmsxml")
         response = parse(type, data)
         message = (response[:status_message] || '').strip
@@ -260,8 +261,8 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, parameters)
         if address = parameters[:billing_address] || parameters[:address]
-          xml.tag!("CreditCardAddress", address[:address1][0...30])
-          xml.tag!("CreditCardPostalCode", address[:zip][0...9])
+          xml.tag!("CreditCardAddress", (address[:address1] || "")[0...30])
+          xml.tag!("CreditCardPostalCode", (address[:zip] || "")[0...9])
         end
       end
 

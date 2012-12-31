@@ -93,8 +93,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>:login</tt> -- The Authorize.Net API Login ID (REQUIRED)
       # * <tt>:password</tt> -- The Authorize.Net Transaction Key. (REQUIRED)
       # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test server.
-      # * <tt>:delimiter</tt> -- The delimiter used in the direct response.  Default is ',' (comma).
       #   Otherwise, perform transactions against the production server.
+      # * <tt>:delimiter</tt> -- The delimiter used in the direct response.  Default is ',' (comma).
       def initialize(options = {})
         requires!(options, :login, :password)
         super
