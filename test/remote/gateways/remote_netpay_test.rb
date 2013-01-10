@@ -6,8 +6,8 @@ class RemoteNetpayTest < Test::Unit::TestCase
   def setup
     @gateway = NetpayGateway.new(fixtures(:netpay))
 
-    NetpayGateway.wiredump_device = File.open(File.join('/tmp', "netpay.log"), "a+")
-    NetpayGateway.wiredump_device.sync = true
+    #NetpayGateway.wiredump_device = File.open(File.join('/tmp', "netpay.log"), "a+")
+    #NetpayGateway.wiredump_device.sync = true
 
     @amount = 2000
     @credit_card = credit_card('5454545454545454')
