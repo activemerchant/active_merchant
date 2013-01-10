@@ -14,6 +14,7 @@
 * Balanced gateway: Fix unspecified marketplace [duff]
 * QBMS gateway: Allow partial addresses [duff]
 * Authorize.Net CIM: Allow omitting card expiration date [shanebonham]
+* Authorize.Net CIM: Add support for extraOptions to createCustomerProfileTransaction [tpiekos]
 
 == Version 1.29.3 (December 7, 2012)
 
