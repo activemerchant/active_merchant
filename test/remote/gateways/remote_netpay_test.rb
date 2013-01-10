@@ -24,11 +24,22 @@ class RemoteNetpayTest < Test::Unit::TestCase
     assert_equal 'Aprobada', response.message
   end
 
-  #def test_unsuccessful_purchase
-  #  assert response = @gateway.purchase(@amount, @declined_card, @options)
-  #  assert_failure response
-  #  assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
-  #end
+  def test_unsuccessful_purchase
+    # We have to force a decline using the mode option
+    opts = @options.clone
+    opts[:mode] = 'D'
+    assert response = @gateway.purchase(@amount, @declined_card, opts)
+    assert_failure response
+    assert_match /Declinada/, response.message
+  end
+
+  def test_successful_purchase_and_cancel
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert cancel = @gateway.cancel(@amount, purchase.authorization)
+    assert_success cancel
+    assert_equal 'Aprobada', cancel.message
+  end
 
   def test_successful_purchase_and_refund
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
@@ -38,26 +49,6 @@ class RemoteNetpayTest < Test::Unit::TestCase
     assert_equal 'Aprobada', refund.message
   end
 
-  def test_authorize_and_capture
-    amount = @amount
-    assert auth = @gateway.authorize(amount, @credit_card, @options)
-    assert_success auth
-    assert_equal 'Aprobada', auth.message
-    assert auth.authorization
-    assert capture = @gateway.capture(amount, auth.authorization)
-    assert_success capture
-    assert_equal 'Aprobada', capture.message
-  end
-
-  def test_authorize_and_cancel
-    amount = @amount
-    assert auth = @gateway.authorize(amount, @credit_card, @options)
-    assert_success auth
-    assert_equal 'Aprobada', auth.message
-    assert cancel = @gateway.cancel(amount, auth.authorization)
-    assert_success cancel
-    assert_equal 'Aprobada', cancel.message
-  end
 
   #def test_failed_capture
   #  assert response = @gateway.capture(@amount, '')

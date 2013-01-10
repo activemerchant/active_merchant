@@ -9,10 +9,33 @@ module ActiveMerchant #:nodoc:
     # The gateway sends requests as HTTP POST and receives the response details
     # in the HTTP header, making the process really rather simple.
     #
+    # While their production gateway does support Auth and Capture methods,
+    # they were not available in the testing environment and have not been
+    # included in this library. Expect a future version to support this.
+    #
+    # Purchases can be cancelled (`#cancel`) only with 24 hours of the
+    # transaction. After this time, a refund should be performed instead.
+    #
+    # In addition to the regular ActiveMerchant transaction options, NETPAY
+    # also supports a `:mode` parameter. This allows testing to be peformed
+    # in production and force specific results.
+    #
+    #  * 'P' - Production
+    #  * 'A' - Approved
+    #  * 'D' - Declined
+    #  * 'R' - Random (Approved or Declined)
+    #  * 'T' - Test
+    #
+    # For example:
+    #
+    #     response = @gateway.purchase(1000, card, :mode => 'D')
+    #     response.success  # false
+    #
+    #
     #
     class NetpayGateway < Gateway
       self.test_url = 'http://200.57.87.243:8855'
-      self.live_url = 'https://example.com/live'
+      self.live_url = 'https://suite.netpay.com.mx/acquirerprd'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['MX']
@@ -20,7 +43,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'MXN'
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.netpay.com.mx'
@@ -32,6 +55,7 @@ module ActiveMerchant #:nodoc:
         "MXN" => '484'
       }
 
+      # The header keys that we will provide in the response params hash
       RESPONSE_KEYS = ['ResponseMsg', 'ResponseText', 'ResponseCode', 'TimeIn', 'TimeOut', 'AuthCode', 'OrderId', 'CardTypeName', 'MerchantId', 'IssuerAuthDate']
 
       def initialize(options = {})
@@ -39,32 +63,16 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, creditcard, options = {})
-        post = {}
-        add_invoice(post, options)
-        add_creditcard(post, creditcard)
-        add_customer_data(post, options)
-        add_amount(post, money, options)
-
-        commit('PreAuth', post)
-      end
-
+      # Cancel an auth/purchase within first 24 hours
       def cancel(money, authorization, options = {})
         post = {}
         add_order_id(post, authorization)
         add_amount(post, money, options)
 
-        commit('Reverse', post)
+        commit('Refund', post, options)
       end
 
-      def capture(money, authorization, options = {})
-        post = {}
-        add_order_id(post, authorization)
-        add_amount(post, money, options)
-
-        commit('PostAuth', post)
-      end
-
+      # Make a purchase.
       def purchase(money, creditcard, options = {})
         post = {}
         add_invoice(post, options)
@@ -72,15 +80,16 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_amount(post, money, options)
 
-        commit('Auth', post)
+        commit('Auth', post, options)
       end
 
+      # Perform a Credit transaction.
       def refund(money, authorization, options = {})
         post = {}
         add_order_id(post, authorization)
         add_amount(post, money, options)
 
-        commit('Credit', post)
+        commit('Credit', post, options)
       end
 
 
@@ -92,10 +101,10 @@ module ActiveMerchant #:nodoc:
         post['Password']    = @options[:password]
       end
 
-      def add_action(post, action)
+      def add_action(post, action, options)
         post['ResourceName'] = action
         post['ContentType']  = 'Transaction'
-        post['Mode']         = 'P'
+        post['Mode']         = options[:mode] || 'P'
       end
 
       def add_order_id(post, order_id)
@@ -143,9 +152,9 @@ module ActiveMerchant #:nodoc:
         Response.new(success, message, params, options)
       end
 
-      def commit(action, parameters)
+      def commit(action, parameters, options)
         add_login_data(parameters)
-        add_action(parameters, action)
+        add_action(parameters, action, options)
 
         post = parameters.collect{|key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
         parse ssl_post(url, post)
