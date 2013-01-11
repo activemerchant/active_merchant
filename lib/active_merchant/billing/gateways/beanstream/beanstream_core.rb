@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
         base.supported_countries = ['CA']
 
         # The card types supported by the payment gateway
-        base.supported_cardtypes = [:visa, :master, :american_express]
+        base.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
 
         # The homepage URL of the gateway
         base.homepage_url = 'http://www.beanstream.com/'
