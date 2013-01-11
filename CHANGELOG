@@ -18,6 +18,7 @@
 * Add NETPAY gateway [samlown]
 * Balanced gateway: Add amount to the refund method signature [ntalbott]
 * Orbital gateway: Fix void method signature [aprofeit, ntalbott]
+* Eway Managed: Add 'query_customer' API as #retrieve [cdaloisio]
 
 == Version 1.29.3 (December 7, 2012)
 

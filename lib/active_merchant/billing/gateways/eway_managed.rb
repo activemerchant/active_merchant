@@ -89,7 +89,18 @@ module ActiveMerchant #:nodoc:
         commit("ProcessPayment", post)
       end
 
-      # TODO: eWay API also provides QueryCustomer
+      # Get customer's stored credit card details given by billing_id
+      #
+      # ==== Parameters
+      #
+      # * <tt>billing_id</tt> -- The eWay provided card/customer token to charge (managedCustomerID)
+      def retrieve(billing_id)
+        post = {}
+        post[:managedCustomerID] = billing_id.to_s
+
+        commit("QueryCustomer", post)
+      end
+
       # TODO: eWay API also provides QueryPayment
 
       private
@@ -146,25 +157,29 @@ module ActiveMerchant #:nodoc:
             # Successful payment
             reply=parse_purchase(root)
           else
-            if root = REXML::XPath.first(xml, '//CreateCustomerResult') then
-              reply[:message]='OK'
-              reply[:CreateCustomerResult]=root.text
-              reply[:success]=true
+            if root = REXML::XPath.first(xml, '//QueryCustomerResult') then
+              reply=parse_query_customer(root)
             else
-              if root = REXML::XPath.first(xml, '//UpdateCustomerResult') then
-                if root.text.downcase == 'true' then
-                  reply[:message]='OK'
-                  reply[:success]=true
-                else
-                  # ERROR: This state should never occur. If there is a problem,
-                  #        a soap:Fault will be returned. The presence of this
-                  #        element always means a success.
-                  raise StandardError, "Unexpected \"false\" in UpdateCustomerResult"
-                end
+              if root = REXML::XPath.first(xml, '//CreateCustomerResult') then
+                reply[:message]='OK'
+                reply[:CreateCustomerResult]=root.text
+                reply[:success]=true
               else
-                # ERROR: This state should never occur currently. We have handled
-                #        responses for all the methods which we support.
-                raise StandardError, "Unexpected response"
+                if root = REXML::XPath.first(xml, '//UpdateCustomerResult') then
+                  if root.text.downcase == 'true' then
+                    reply[:message]='OK'
+                    reply[:success]=true
+                  else
+                    # ERROR: This state should never occur. If there is a problem,
+                    #        a soap:Fault will be returned. The presence of this
+                    #        element always means a success.
+                    raise StandardError, "Unexpected \"false\" in UpdateCustomerResult"
+                  end
+                else
+                  # ERROR: This state should never occur currently. We have handled
+                  #        responses for all the methods which we support.
+                  raise StandardError, "Unexpected response"
+                end
               end
             end
           end
@@ -188,6 +203,17 @@ module ActiveMerchant #:nodoc:
         reply
       end
 
+      def parse_query_customer(node)
+        reply={}
+        reply[:message]='OK'
+        reply[:success]=true
+        reply[:CCNumber]=REXML::XPath.first(node, '//CCNumber').text
+        reply[:CCName]=REXML::XPath.first(node, '//CCName').text
+        reply[:CCExpiryMonth]=REXML::XPath.first(node, '//CCExpiryMonth').text
+        reply[:CCExpiryYear]=REXML::XPath.first(node, '//CCExpiryYear').text
+        reply
+      end
+
       def commit(action, post)
         raw = begin
           ssl_post(test? ? self.test_url : self.live_url, soap_request(post, action), 'Content-Type' => 'application/soap+xml; charset=utf-8')
@@ -206,11 +232,15 @@ module ActiveMerchant #:nodoc:
       def soap_request(arguments, action)
         # eWay demands all fields be sent, but contain an empty string if blank
         post = case action
-        when 'ProcessPayment'
-          default_payment_fields.merge(arguments)
-        else
-          default_customer_fields.merge(arguments)
-        end
+                when 'QueryCustomer'
+                  arguments
+                when 'ProcessPayment'
+                  default_payment_fields.merge(arguments)
+                when 'CreateCustomer'
+                  default_customer_fields.merge(arguments)
+                when 'UpdateCustomer'
+                  default_customer_fields.merge(arguments)
+               end
 
         xml = Builder::XmlMarkup.new :indent => 2
           xml.instruct!
