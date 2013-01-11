@@ -9,12 +9,14 @@ module ActiveMerchant #:nodoc:
     # The gateway sends requests as HTTP POST and receives the response details
     # in the HTTP header, making the process really rather simple.
     #
-    # While their production gateway does support Auth and Capture methods,
-    # they were not available in the testing environment and have not been
-    # included in this library. Expect a future version to support this.
+    # Support for calls to the authorize and capture methods have been included
+    # as per the Netpay manuals, however, your millage may vary with these
+    # methods. At the time of writing (January 2013) they were not fully
+    # supported by the production or test gateways. This situation is
+    # expected to change within a few weeks/months.
     #
-    # Purchases can be cancelled (`#cancel`) only with 24 hours of the
-    # transaction. After this time, a refund should be performed instead.
+    # Purchases can be cancelled (`#void`) only within 24 hours of the
+    # transaction. After this, a refund should be performed instead.
     #
     # In addition to the regular ActiveMerchant transaction options, NETPAY
     # also supports a `:mode` parameter. This allows testing to be peformed
@@ -63,8 +65,28 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      # Send an authorization request
+      def authorize(money, creditcard, options = {})
+        post = {}
+        add_invoice(post, options)
+        add_creditcard(post, creditcard)
+        add_customer_data(post, options)
+        add_amount(post, money, options)
+
+        commit('PreAuth', post, options)
+      end
+
+      # Capture an authorization
+      def capture(money, authorization, options = {})
+        post = {}
+        add_order_id(post, authorization)
+        add_amount(post, money, options)
+
+        commit('PostAuth', post, options)
+      end
+
       # Cancel an auth/purchase within first 24 hours
-      def cancel(money, authorization, options = {})
+      def void(money, authorization, options = {})
         post = {}
         add_order_id(post, authorization)
         add_amount(post, money, options)
@@ -89,9 +111,9 @@ module ActiveMerchant #:nodoc:
         add_order_id(post, authorization)
         add_amount(post, money, options)
 
+        #commit('Refund', post, options)
         commit('Credit', post, options)
       end
-
 
       private
 

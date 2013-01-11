@@ -77,7 +77,47 @@ class NetpayTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_cancel
+
+  def test_successful_authorize
+    @gateway.expects(:ssl_post).with(
+      anything,
+      all_of(
+        includes("StoreId=12345"),
+        includes("UserName=login"),
+        includes("Password=password"),
+        includes("ResourceName=PreAuth"),
+        includes("Total=10.00"),
+        includes("CardNumber=#{@credit_card.number}"),
+        includes("ExpDate=" + CGI.escape("09/#{@credit_card.year.to_s[-2..-1]}")),
+        includes("CustomerName=#{CGI.escape(@credit_card.name)}"),
+        includes("CVV2=#{@credit_card.verification_value}"),
+        includes("Comments=#{CGI.escape(@options[:description])}"),
+        includes("CurrencyCode=484")
+      )
+    ).returns(successful_response)
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of ActiveMerchant::Billing::Response, response
+    assert_success response
+    assert_equal @order_id, response.authorization
+    assert response.test?
+  end
+
+  def test_successful_capture
+    @gateway.expects(:ssl_post).with(
+      anything,
+      all_of(
+        includes('ResourceName=PostAuth'),
+        includes("Total=10.00"),
+        includes("OrderId=#{@order_id}")
+      )
+    ).returns(successful_response)
+    assert response = @gateway.capture(@amount, @order_id)
+    assert_success response
+  end
+
+
+  def test_successful_void
     @gateway.expects(:ssl_post).with(
       anything,
       all_of(
@@ -86,7 +126,7 @@ class NetpayTest < Test::Unit::TestCase
         includes("OrderId=#{@order_id}")
       )
     ).returns(successful_response)
-    assert response = @gateway.cancel(@amount, @order_id)
+    assert response = @gateway.void(@amount, @order_id)
     assert_success response
   end
 

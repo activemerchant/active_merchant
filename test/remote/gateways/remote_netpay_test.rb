@@ -33,12 +33,12 @@ class RemoteNetpayTest < Test::Unit::TestCase
     assert_match /Declinada/, response.message
   end
 
-  def test_successful_purchase_and_cancel
+  def test_successful_purchase_and_void
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
-    assert cancel = @gateway.cancel(@amount, purchase.authorization)
-    assert_success cancel
-    assert_equal 'Aprobada', cancel.message
+    assert void = @gateway.void(@amount, purchase.authorization)
+    assert_success void
+    assert_equal 'Aprobada', void.message
   end
 
   def test_successful_purchase_and_refund
@@ -48,6 +48,32 @@ class RemoteNetpayTest < Test::Unit::TestCase
     assert_success refund
     assert_equal 'Aprobada', refund.message
   end
+
+  # Netpay are currently adding support for authorize and capture.
+  # When this is complete, the following remote calls should work.
+  #
+  #def test_successful_authorize
+  #  assert response = @gateway.authorize(@amount, @credit_card, @options)
+  #  assert_success response
+  #  assert_equal 'Aprobada', response.message
+  #end
+
+  #def test_unsuccessful_authorize
+  #  # We have to force a decline using the mode option
+  #  opts = @options.clone
+  #  opts[:mode] = 'D'
+  #  assert response = @gateway.authorize(@amount, @declined_card, opts)
+  #  assert_failure response
+  #  assert_match /Declinada/, response.message
+  #end
+
+  #def test_successful_authorize_and_capture
+  #  assert purchase = @gateway.authorize(@amount, @credit_card, @options)
+  #  assert_success purchase
+  #  assert capture = @gateway.capture(@amount, purchase.authorization)
+  #  assert_success capture
+  #  assert_equal 'Aprobada', capture.message
+  #end
 
 
   #def test_failed_capture
