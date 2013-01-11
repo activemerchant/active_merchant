@@ -603,8 +603,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_create_customer_profile_transaction_request(xml, options)
+        options[:extra_options] ||= {}
+        options[:extra_options].merge!('x_test_request' => 'TRUE') if @options[:test]
+
         add_transaction(xml, options[:transaction])
-        xml.tag!('extraOptions', "x_test_request=TRUE") if @options[:test]
+        tag_unless_blank(xml, 'extraOptions', format_extra_options(options[:extra_options]))
 
         xml.target!
       end
@@ -656,7 +659,7 @@ module ActiveMerchant #:nodoc:
                 tag_unless_blank(xml,'customerShippingAddressId', transaction[:customer_shipping_address_id])
                 xml.tag!('transId', transaction[:trans_id])
               when :refund
-                #TODO - add lineItems and extraOptions fields
+                #TODO - add lineItems field
                 xml.tag!('amount', transaction[:amount])
                 tag_unless_blank(xml, 'customerProfileId', transaction[:customer_profile_id])
                 tag_unless_blank(xml, 'customerPaymentProfileId', transaction[:customer_payment_profile_id])
@@ -851,6 +854,10 @@ module ActiveMerchant #:nodoc:
 
       def tag_unless_blank(xml, tag_name, data)
         xml.tag!(tag_name, data) unless data.blank? || data.nil?
+      end
+
+      def format_extra_options(options)
+        options.map{ |k, v| "#{k}=#{v}" }.join(',') unless options.nil?
       end
 
       def parse_direct_response(params)
