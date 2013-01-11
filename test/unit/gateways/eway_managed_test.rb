@@ -235,6 +235,26 @@ class EwayManagedTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_query_customer
+    @gateway.expects(:ssl_post).returns(successful_query_customer_response)
+
+    assert response = @gateway.query_customer(@valid_customer_id)
+    assert_instance_of EwayManagedGateway::EwayResponse, response
+    assert_equal "OK", response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_expected_query_customer_response
+    @gateway.expects(:ssl_post).with { |endpoint, data, headers|
+      # Compare the actual and expected XML documents, by converting them to Hashes first
+      expected = Hash.from_xml(expected_query_customer_request)
+      actual = Hash.from_xml(data)
+      expected == actual
+    }.returns(successful_query_customer_response)
+    @gateway.query_customer(@valid_customer_id)
+  end
+
   def test_default_currency
     assert_equal 'AUD', EwayManagedGateway.default_currency
   end
@@ -291,7 +311,26 @@ class EwayManagedTest < Test::Unit::TestCase
 </soap12:Envelope>
     XML
   end
-  
+
+  # Documented here: https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx?op=QueryCustomer
+  def successful_query_customer_response
+    <<-XML
+    <?xml version="1.0" encoding="utf-8"?>
+    <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+      <soap12:Body>
+        <QueryCustomerResponse xmlns="https://www.eway.com.au/gateway/managedpayment">
+        <QueryCustomerResult>
+          <CCName>#{@credit_card.first_name} #{@credit_card.last_name}</CCName>
+          <CCNumber>#{@credit_card.number}</CCNumber>
+          <CCExpiryMonth>#{sprintf("%.2i", @credit_card.month)}</CCExpiryMonth>
+          <CCExpiryYear>#{sprintf("%.4i", @credit_card.year)[-2..-1]}</CCExpiryYear>
+        </QueryCustomerResult>
+        </QueryCustomerResponse>
+      </soap12:Body>
+    </soap12:Envelope>
+    XML
+  end
+
   # Documented here: https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx?op=CreateCustomer
   def expected_store_request
     <<-XML
@@ -356,5 +395,26 @@ class EwayManagedTest < Test::Unit::TestCase
 </soap12:Envelope>
       XML
     end
+
+    # Documented here: https://www.eway.com.au/gateway/ManagedPaymentService/managedCreditCardPayment.asmx?op=QueryCustomer
+  def expected_query_customer_request
+    <<-XML
+  <?xml version="1.0" encoding="utf-8"?>
+  <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+    <soap12:Header>
+      <eWAYHeader xmlns="https://www.eway.com.au/gateway/managedpayment">
+        <eWAYCustomerID>login</eWAYCustomerID>
+        <Username>username</Username>
+        <Password>password</Password>
+      </eWAYHeader>
+    </soap12:Header>
+    <soap12:Body>
+      <QueryCustomer xmlns="https://www.eway.com.au/gateway/managedpayment">
+        <managedCustomerID>#{@valid_customer_id}</managedCustomerID>
+      </QueryCustomer>
+    </soap12:Body>
+  </soap12:Envelope>
+    XML
+  end
 
 end

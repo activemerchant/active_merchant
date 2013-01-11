@@ -63,5 +63,12 @@ class RemoteEwayManagedTest < Test::Unit::TestCase
   ensure
     @credit_card.number = original_number
   end
+
+  def test_query_customer
+    assert response = @gateway.query_customer(@valid_customer_id)
+    assert_success response
+    assert_equal "OK", response.message
+    assert response.test?
+  end
   
 end
