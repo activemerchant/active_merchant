@@ -126,6 +126,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [NELiX TransaX Gateway](http://www.nelixtransax.com) - US
 * [Netaxept](http://www.betalingsterminal.no/Netthandel-forside) - NO, DK, SE, FI
 * [NETbilling](http://www.netbilling.com) - US
+* [NetPay](http://www.netpay.com.mx) - MX
 * [NetRegistry](http://www.netregistry.com.au) - AU
 * [NMI](http://nmi.com/) - US
 * [Ogone DirectLink](http://www.ogone.com) - BE, DE, FR, NL, AT, CH
