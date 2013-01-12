@@ -246,6 +246,11 @@ netaxept:
 netbilling:
   login: '104901072025'
 
+netpay:
+  store_id: 14
+  login: POS
+  password: plaza2020
+
 net_registry:
   login: X
   password: Y
