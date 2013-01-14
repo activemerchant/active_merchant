@@ -4,11 +4,13 @@ Active Merchant is an extraction from the e-commerce system [Shopify](http://www
 Shopify's requirements for a simple and unified API to access dozens of different payment
 gateways with very different internal APIs was the chief principle in designing the library.
 
-Active Merchant has been in production use since June 2006 and is now used in most modern
-Ruby applications which deal with financial transactions.
-
 It was developed for usage in Ruby on Rails web applications and integrates seamlessly
-as a plugin but it also works excellently as a stand alone library.
+as a Rails plugin, but it also works excellently as a stand alone Ruby library.
+
+Active Merchant has been in production use since June 2006 and is now used in most modern
+Ruby applications which deal with financial transactions. It is maintained by the
+[Shopify](http://www.shopify.com) and [Spreedly](https://spreedly.com) teams, with much help
+from an ever-growing set of contributors.
 
 See {file:GettingStarted.md} if you want to learn more about using Active Merchant in your
 applications.
@@ -21,22 +23,15 @@ You can check out the latest source from git:
 
     git clone git://github.com/Shopify/active_merchant.git
 
-### As a Rails plugin
-
-ActiveMerchant includes an init.rb file. This means that Rails will automatically load ActiveMerchant on startup. Run
-the following command from the root directory of your Rails project to install ActiveMerchant as a Rails plugin:
-
-    script/plugin install git://github.com/Shopify/active_merchant.git
-
 ### From RubyGems
 
-Installation from RubyGems
+Installation from RubyGems:
 
     gem install activemerchant
 
-Alternatively, add the following to your Gemfile
+Or, if you're using Bundler, just add the following to your Gemfile:
 
-    gem 'activemerchant', :require => 'active_merchant'
+    gem 'activemerchant'
 
 ## Usage
 
