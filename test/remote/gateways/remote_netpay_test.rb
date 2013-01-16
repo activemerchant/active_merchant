@@ -31,7 +31,7 @@ class RemoteNetpayTest < Test::Unit::TestCase
   def test_successful_purchase_and_void
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
-    assert void = @gateway.void(@amount, purchase.authorization)
+    assert void = @gateway.void(purchase.authorization)
     assert_success void
     assert_equal 'Aprobada', void.message
   end
