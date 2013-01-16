@@ -76,17 +76,19 @@ module ActiveMerchant #:nodoc:
       # Capture an authorization
       def capture(money, authorization, options = {})
         post = {}
-        add_order_id(post, authorization)
+        add_order_id(post, order_id_from(authorization))
         add_amount(post, money, options)
 
         commit('PostAuth', post, options)
       end
 
       # Cancel an auth/purchase within first 24 hours
-      def void(money, authorization, options = {})
+      def void(authorization, options = {})
         post = {}
-        add_order_id(post, authorization)
-        add_amount(post, money, options)
+        order_id, amount, currency = split_authorization(authorization)
+        add_order_id(post, order_id)
+        post['Total'] = (options[:amount] || amount)
+        post['CurrencyCode'] = currency
 
         commit('Refund', post, options)
       end
@@ -105,7 +107,7 @@ module ActiveMerchant #:nodoc:
       # Perform a Credit transaction.
       def refund(money, authorization, options = {})
         post = {}
-        add_order_id(post, authorization)
+        add_order_id(post, order_id_from(authorization))
         add_amount(post, money, options)
 
         #commit('Refund', post, options)
@@ -150,6 +152,19 @@ module ActiveMerchant #:nodoc:
         post['CVV2']         = creditcard.verification_value unless creditcard.verification_value.nil?
       end
 
+      def build_authorization(request_params, response_params)
+        [response_params['OrderId'], request_params['Total'], request_params['CurrencyCode']].join('|')
+      end
+
+      def split_authorization(authorization)
+        order_id, amount, currency = authorization.split("|")
+        [order_id, amount, currency]
+      end
+
+      def order_id_from(authorization)
+        split_authorization(authorization).first
+      end
+
       def expdate(credit_card)
         year  = sprintf("%.4i", credit_card.year)
         month = sprintf("%.2i", credit_card.month)
@@ -161,14 +176,15 @@ module ActiveMerchant #:nodoc:
         test? ? test_url : live_url
       end
 
-      def parse(response)
-        params = params_from_response(response)
+      def parse(response, request_params)
+        response_params = params_from_response(response)
 
-        success = (params['ResponseCode'] == '00')
-        message = params['ResponseText'] || params['ResponseMsg']
-        options = @options.merge(:test => test?, :authorization => params['OrderId'])
+        success = (response_params['ResponseCode'] == '00')
+        message = response_params['ResponseText'] || response_params['ResponseMsg']
+        options = @options.merge(:test => test?,
+                                 :authorization => build_authorization(request_params, response_params))
 
-        Response.new(success, message, params, options)
+        Response.new(success, message, response_params, options)
       end
 
       def commit(action, parameters, options)
@@ -176,7 +192,7 @@ module ActiveMerchant #:nodoc:
         add_action(parameters, action, options)
 
         post = parameters.collect{|key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
-        parse ssl_post(url, post)
+        parse(ssl_post(url, post), parameters)
       end
 
       # Override the regular handle response so we can access the headers

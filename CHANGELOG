@@ -19,6 +19,7 @@
 * Balanced gateway: Add amount to the refund method signature [ntalbott]
 * Orbital gateway: Fix void method signature [aprofeit, ntalbott]
 * Eway Managed: Add 'query_customer' API as #retrieve [cdaloisio]
+* NetPay: Fix the signature for void [duff]
 
 == Version 1.29.3 (December 7, 2012)
 

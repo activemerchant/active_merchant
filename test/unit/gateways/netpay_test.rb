@@ -52,8 +52,7 @@ class NetpayTest < Test::Unit::TestCase
     assert_instance_of ActiveMerchant::Billing::Response, response
     assert_success response
 
-    # Replace with authorization number from the successful response
-    assert_equal @order_id, response.authorization
+    assert_equal "#{@order_id}|10.00|484", response.authorization
     assert response.test?
   end
 
@@ -99,7 +98,7 @@ class NetpayTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of ActiveMerchant::Billing::Response, response
     assert_success response
-    assert_equal @order_id, response.authorization
+    assert_equal "#{@order_id}|10.00|484", response.authorization
     assert response.test?
   end
 
@@ -112,10 +111,9 @@ class NetpayTest < Test::Unit::TestCase
         includes("OrderId=#{@order_id}")
       )
     ).returns(successful_response)
-    assert response = @gateway.capture(@amount, @order_id)
+    assert response = @gateway.capture(@amount, "#{@order_id}|10.00|484")
     assert_success response
   end
-
 
   def test_successful_void
     @gateway.expects(:ssl_post).with(
@@ -123,10 +121,11 @@ class NetpayTest < Test::Unit::TestCase
       all_of(
         includes('ResourceName=Refund'),
         includes("Total=10.00"),
-        includes("OrderId=#{@order_id}")
+        includes("OrderId=#{@order_id}"),
+        includes("CurrencyCode=484")
       )
     ).returns(successful_response)
-    assert response = @gateway.void(@amount, @order_id)
+    assert response = @gateway.void("#{@order_id}|10.00|484")
     assert_success response
   end
 
@@ -139,7 +138,7 @@ class NetpayTest < Test::Unit::TestCase
         includes("OrderId=#{@order_id}")
       )
     ).returns(successful_response)
-    assert response = @gateway.refund(@amount, @order_id)
+    assert response = @gateway.refund(@amount, "#{@order_id}|10.00|484")
     assert_success response
   end
 
