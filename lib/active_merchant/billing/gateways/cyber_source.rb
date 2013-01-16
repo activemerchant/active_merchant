@@ -13,6 +13,8 @@ module ActiveMerchant #:nodoc:
     # names.
     #
     # Important Notes
+    # * For checks you can only perform you cannot authorize then capture
+    # * 
     # * AVS and CVV only work against the production server.  You will always
     #   get back X for AVS and no response for CVV against the test server.
     # * Nexus is the list of states or provinces where you have a physical
@@ -131,10 +133,12 @@ module ActiveMerchant #:nodoc:
 
       # Purchase is an auth followed by a capture
       # You must supply an order_id in the options hash
-      def purchase(money, creditcard_or_reference, options = {})
+      def purchase(money, creditcard_or_check_or_reference, options = {})
         requires!(options, :order_id)
         setup_address_hash(options)
-        commit(build_purchase_request(money, creditcard_or_reference, options), options)
+        output = build_purchase_request(money, creditcard_or_check_or_reference, options)
+        puts output
+        commit(output, options)
       end
 
       def void(identification, options = {})
@@ -222,7 +226,7 @@ module ActiveMerchant #:nodoc:
 
       def build_auth_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
-        add_creditcard_or_subscription(xml, money, creditcard_or_reference, options)
+        add_creditcard_or_check_or_subscription(xml, money, creditcard_or_reference, options)
         add_auth_service(xml)
         add_business_rules_data(xml)
         xml.target!
@@ -250,11 +254,13 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_purchase_request(money, creditcard_or_reference, options)
+      def build_purchase_request(money, creditcard_or_check_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
-        add_creditcard_or_subscription(xml, money, creditcard_or_reference, options)
-        add_purchase_service(xml, options)
-        add_business_rules_data(xml)
+        add_creditcard_or_check_or_subscription(xml, money, creditcard_or_check_or_reference, options)
+        unless creditcard_or_check_or_reference.is_a? Check
+          add_purchase_service(xml, options)
+          add_business_rules_data(xml)
+        end
         xml.target!
       end
 
@@ -372,12 +378,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_address(xml, creditcard, address, options, shipTo = false)
+      def add_address(xml, creditcard_or_check, address, options, shipTo = false)
         requires!(options, :email)
 
         xml.tag! shipTo ? 'shipTo' : 'billTo' do
-          xml.tag! 'firstName',             creditcard.first_name             if creditcard
-          xml.tag! 'lastName',              creditcard.last_name              if creditcard
+          xml.tag! 'firstName',             creditcard_or_check.first_name             if creditcard_or_check
+          xml.tag! 'lastName',              creditcard_or_check.last_name              if creditcard_or_check
           xml.tag! 'street1',               address[:address1]
           xml.tag! 'street2',               address[:address2]                unless address[:address2].blank?
           xml.tag! 'city',                  address[:city]
@@ -400,6 +406,14 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'expirationYear', format(creditcard.year, :four_digits)
           xml.tag!('cvNumber', creditcard.verification_value) unless (@options[:ignore_cvv] || creditcard.verification_value.blank? )
           xml.tag! 'cardType', @@credit_card_codes[card_brand(creditcard).to_sym]
+        end
+      end
+
+      def add_check(xml, check)
+        xml.tag! 'check' do
+          xml.tag! 'accountNumber', check.account_number
+          xml.tag! 'accountType', check.account_type[0]
+          xml.tag! 'bankTransitNumber', check.routing_number
         end
       end
 
@@ -447,6 +461,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_echeck_service(xml)
+        xml.tag! 'ecDebitService', {'run' => 'true'}
+      end
+
       def add_subscription_create_service(xml, options)
         xml.tag! 'paySubscriptionCreateService', {'run' => 'true'}
       end
@@ -491,14 +509,19 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_creditcard_or_subscription(xml, money, creditcard_or_reference, options)
-        if creditcard_or_reference.is_a?(String)
+      def add_creditcard_or_check_or_subscription(xml, money, creditcard_or_check_or_reference, options)
+        if creditcard_or_check_or_reference.is_a?(String)
           add_purchase_data(xml, money, true, options)
           add_subscription(xml, options, creditcard_or_reference)
-        else
-          add_address(xml, creditcard_or_reference, options[:billing_address], options)
+        elsif creditcard_or_check_or_reference.is_a?(Check)
+          add_address(xml, creditcard_or_check_or_reference, options[:billing_address], options)
           add_purchase_data(xml, money, true, options)
-          add_creditcard(xml, creditcard_or_reference)
+          add_check(xml, creditcard_or_check_or_reference)
+          add_echeck_service(xml)
+        else
+          add_address(xml, creditcard_or_check_or_reference, options[:billing_address], options)
+          add_purchase_data(xml, money, true, options)
+          add_creditcard(xml, creditcard_or_check_or_reference)
         end
       end
 
