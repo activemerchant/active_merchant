@@ -20,6 +20,7 @@
 * Orbital gateway: Fix void method signature [aprofeit, ntalbott]
 * Eway Managed: Add 'query_customer' API as #retrieve [cdaloisio]
 * NetPay: Fix the signature for void [duff]
+* Cybersource: Add check support [bowmande]
 
 == Version 1.29.3 (December 7, 2012)
 
