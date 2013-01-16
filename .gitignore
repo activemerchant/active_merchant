@@ -6,3 +6,5 @@ pkg
 Gemfile.lock
 Gemfile*.lock
 .rbx/
+
+.bundle/config
