@@ -102,15 +102,6 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
-  def test_connection_error_failover
-    begin
-      assert_equal @gateway.test_url, @gateway.send(:remote_url)
-      raise ActiveMerchant::ConnectionError
-    rescue ActiveMerchant::ConnectionError
-      assert_equal @gateway.secondary_test_url, @gateway.send(:remote_url)
-    end
-  end
-
   # == Certification Tests
 
   # ==== Section A
