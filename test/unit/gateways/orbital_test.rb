@@ -31,6 +31,26 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal "AUTH DECLINED                   12001", response.message
   end
 
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+
+    assert response = @gateway.void("identifier")
+    assert_instance_of Response, response
+    assert_success response
+    assert_nil response.message
+  end
+
+  def test_deprecated_void
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+
+    assert_deprecation_warning("Calling the void method with an amount parameter is deprecated and will be removed in a future version.", @gateway) do
+      assert response = @gateway.void(@amount, "identifier")
+      assert_instance_of Response, response
+      assert_success response
+      assert_nil response.message
+    end
+  end
+
   def test_order_id_required
     assert_raise(ArgumentError) do
       @gateway.purchase('101', credit_card)
@@ -240,5 +260,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def successful_profile_response
     %q{<?xml version="1.0" encoding="UTF-8"?><Response><ProfileResp><CustomerBin>000001</CustomerBin><CustomerMerchantID>700000000000</CustomerMerchantID><CustomerName>Longbob Longsen</CustomerName><CustomerRefNum>ABC</CustomerRefNum><CustomerProfileAction>CREATE</CustomerProfileAction><ProfileProcStatus>0</ProfileProcStatus><CustomerProfileMessage>Profile Request Processed</CustomerProfileMessage><CustomerAccountType>CC</CustomerAccountType><Status>A</Status><CCAccountNum>4111111111111111</CCAccountNum><RespTime/></ProfileResp></Response>}
+  end
+
+  def successful_void_response
+    %q{<?xml version="1.0" encoding="UTF-8"?><Response><ReversalResp><MerchantID>700000208761</MerchantID><TerminalID>001</TerminalID><OrderID>2</OrderID><TxRefNum>50FB1C41FEC9D016FF0BEBAD0884B174AD0853B0</TxRefNum><TxRefIdx>1</TxRefIdx><OutstandingAmt>0</OutstandingAmt><ProcStatus>0</ProcStatus><StatusMsg></StatusMsg><RespTime>01192013172049</RespTime></ReversalResp></Response>}
   end
 end

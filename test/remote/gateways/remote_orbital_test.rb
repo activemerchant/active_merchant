@@ -66,18 +66,6 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success void
   end
 
-  def test_deprecated_void
-    assert auth = @gateway.authorize(@amount, @credit_card, @options.merge(:order_id => '2'))
-    assert_success auth
-    assert_equal 'Approved', auth.message
-    assert auth.authorization
-
-    assert_deprecation_warning("Calling the void method with an amount parameter is deprecated and will be removed in a future version.", @gateway) do
-      assert void = @gateway.void(@amount, auth.authorization, :order_id => '2')
-      assert_success void
-    end
-  end
-
   def test_refund
     amount = @amount
     assert response = @gateway.purchase(amount, @credit_card, @options)
