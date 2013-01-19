@@ -125,9 +125,8 @@ module ActiveMerchant #:nodoc:
         refund(money, authorization, options)
       end
 
-      # setting money to nil will perform a full void
-      def void(money, authorization, options = {})
-        order = build_void_request_xml(money, authorization, options)
+      def void(authorization, options = {})
+        order = build_void_request_xml(authorization, options)
         commit(order, :void)
       end
 
@@ -396,7 +395,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_void_request_xml(money, authorization, parameters = {})
+      def build_void_request_xml(authorization, parameters = {})
         tx_ref_num, order_id = split_authorization(authorization)
         xml = xml_envelope
         xml.tag! :Request do
@@ -404,7 +403,7 @@ module ActiveMerchant #:nodoc:
             add_xml_credentials(xml)
             xml.tag! :TxRefNum, tx_ref_num
             xml.tag! :TxRefIdx, parameters[:transaction_index]
-            xml.tag! :AdjustedAmt, amount(money)
+            xml.tag! :AdjustedAmt, nil # setting adjusted amount to nil will void entire amount
             xml.tag! :OrderID, format_order_id(order_id || parameters[:order_id])
             add_bin_merchant_and_terminal(xml, parameters)
           end
