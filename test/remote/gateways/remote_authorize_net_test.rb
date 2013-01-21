@@ -88,7 +88,8 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card)
 
     assert_equal Response, response.class
-    assert_equal ["avs_result_code",
+    assert_equal ["action",
+                  "avs_result_code",
                   "card_code",
                   "response_code",
                   "response_reason_code",
@@ -109,7 +110,8 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card)
 
     assert_equal Response, response.class
-    assert_equal ["avs_result_code",
+    assert_equal ["action",
+                  "avs_result_code",
                   "card_code",
                   "response_code",
                   "response_reason_code",
