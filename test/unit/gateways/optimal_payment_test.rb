@@ -124,6 +124,28 @@ class OptimalPaymentTest < Test::Unit::TestCase
     end
   end
 
+  def test_avs_result_in_response
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response.avs_result['code']
+  end
+
+  def test_cvv_result_in_response
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response.cvv_result['code']
+  end
+
+  def test_avs_results_not_in_response
+    @gateway.expects(:ssl_post).returns(successful_purchase_response_without_avs_results)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert !response.avs_result['code']
+    assert !response.cvv_result['code']
+  end
+
   private
 
   def full_request
@@ -201,6 +223,33 @@ class OptimalPaymentTest < Test::Unit::TestCase
   <authCode>112232</authCode>
   <avsResponse>B</avsResponse>
   <cvdResponse>M</cvdResponse>
+  <detail>
+    <tag>InternalResponseCode</tag>
+    <value>0</value>
+  </detail>
+  <detail>
+    <tag>SubErrorCode</tag>
+    <value>0</value>
+  </detail>
+  <detail>
+    <tag>InternalResponseDescription</tag>
+    <value>no_error</value>
+  </detail>
+  <txnTime>2009-01-08T17:00:45.210-05:00</txnTime>
+  <duplicateFound>false</duplicateFound>
+</ccTxnResponseV1>
+    XML
+  end
+
+  # Place raw successful response from gateway here
+  def successful_purchase_response_without_avs_results
+    <<-XML
+<ccTxnResponseV1 xmlns="http://www.optimalpayments.com/creditcard/xmlschema/v1">
+  <confirmationNumber>126740505</confirmationNumber>
+  <decision>ACCEPTED</decision>
+  <code>0</code>
+  <description>No Error</description>
+  <authCode>112232</authCode>
   <detail>
     <tag>InternalResponseCode</tag>
     <value>0</value>
