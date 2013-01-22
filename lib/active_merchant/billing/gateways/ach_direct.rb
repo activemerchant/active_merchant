@@ -132,7 +132,7 @@ module ActiveMerchant #:nodoc:
         # post[:delim_char] = ","
         # post[:encap_char] = "$"
  
-        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+        request = post.merge(parameters).collect { |key, value| "#{key}=#{value.to_s.gsub /[^[:ascii:]]/, ''}" }.join("&")
         request += "&endofdata"
       end
   
