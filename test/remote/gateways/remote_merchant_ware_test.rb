@@ -77,21 +77,12 @@ class RemoteMerchantWareTest < Test::Unit::TestCase
     assert_not_nil credit.authorization
   end
 
-  def test_purchase_and_void
-    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-
-    assert void = @gateway.void(purchase.authorization)
-    assert_success void
-  end
-
-  # seems as though only purchases can be voided
-  def test_authorization_and_failed_void
+  def test_authorization_and_void
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
 
     assert void = @gateway.void(authorization.authorization)
-    assert_failure void
+    assert_success void
   end
 
   def test_failed_capture
