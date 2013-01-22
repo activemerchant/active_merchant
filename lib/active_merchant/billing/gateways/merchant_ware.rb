@@ -1,10 +1,10 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MerchantWareGateway < Gateway
-      class_attribute :v4_live_url, :v4_test_url
+      class_attribute :v4_live_url
 
       self.live_url = self.test_url = 'https://ps1.merchantware.net/MerchantWARE/ws/RetailTransaction/TXRetail.asmx'
-      self.v4_live_url = self.v4_test_url = 'https://ps1.merchantware.net/Merchantware/ws/RetailTransaction/v4/Credit.asmx'
+      self.v4_live_url = 'https://ps1.merchantware.net/Merchantware/ws/RetailTransaction/v4/Credit.asmx'
 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -286,11 +286,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def soap_action(action, v4 = false)
-        v4 ? "http://schemas.merchantwarehouse.com/merchantware/40/Credit/#{ACTIONS[action]}" : "http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail/#{ACTIONS[action]}"
+        v4 ? "#{TX_NAMESPACE_V4}#{ACTIONS[action]}" : "#{TX_NAMESPACE}/#{ACTIONS[action]}"
       end
 
       def url(v4 = false)
-        test? ? (v4 ? v4_test_url : test_url) : (v4 ? v4_live_url : live_url)
+        v4 ? v4_live_url : live_url
       end
 
       def commit(action, request, v4 = false)
