@@ -286,8 +286,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def soap_action(action, v4 = false)
-        v4 ? "http://schemas.merchantwarehouse.com/merchantware/40/Credit/#{ACTIONS[action]}"
-           : "http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail/#{ACTIONS[action]}"
+        v4 ? "http://schemas.merchantwarehouse.com/merchantware/40/Credit/#{ACTIONS[action]}" : "http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail/#{ACTIONS[action]}"
       end
 
       def url(v4 = false)
