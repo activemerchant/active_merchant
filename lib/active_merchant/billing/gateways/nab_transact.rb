@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
       #Transactions currently accepted by NAB Transact XML API
       TRANSACTIONS = {
         :purchase => 0,         #Standard Payment
-        :credit => 4,           #Refund
+        :refund => 4,           #Refund
         :void => 6,             #Client Reversal (Void)
         :authorization => 10,   #Preauthorise
         :capture => 11          #Preauthorise Complete (Advice)
@@ -64,6 +64,10 @@ module ActiveMerchant #:nodoc:
           options[:billing_id] = credit_card_or_stored_id.to_s
           commit_periodic build_periodic_item(:trigger, money, nil, options)
         end
+      end
+
+      def refund(money, authorization, options = {})
+        commit :refund, build_reference_request(money, authorization)
       end
 
       def store(creditcard, options = {})
@@ -104,10 +108,23 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
+      def build_reference_request(money, reference)
+        xml = Builder::XmlMarkup.new
+
+        transaction_id, order_id, preauth_id, original_amount = reference.split('*')
+
+        xml.tag! 'amount', (money ? amount(money) : original_amount)
+        xml.tag! 'currency', options[:currency] || currency(money)
+        xml.tag! 'txnID', transaction_id
+        xml.tag! 'purchaseOrderNo', order_id
+        xml.tag! 'preauthID', preauth_id
+
+        xml.target!
+      end
+
       #Generate payment request XML
       # - API is set to allow multiple Txn's but currentlu only allows one
       # - txnSource = 23 - (XML)
-
       def build_request(action, body)
         xml = Builder::XmlMarkup.new
         xml.instruct!
@@ -210,7 +227,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response[:txn_id]
+        [response[:txn_id], response[:purchase_order_no], response[:preauth_id], response[:amount]].join('*')
       end
 
       def message_from(response)
