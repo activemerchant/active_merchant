@@ -28,6 +28,7 @@
 * SagePay: Add support for GiftAidPayment [duff]
 * Wirecard: Add support for partial captures [richardblair]
 * Add Pin gateway [madpilot]
+* Balanced: Added support for on_behalf_of_uri to capture [cwise]
 
 == Version 1.29.3 (December 7, 2012)
 

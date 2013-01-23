@@ -197,6 +197,7 @@ module ActiveMerchant #:nodoc:
         post[:hold_uri] = authorization
         post[:amount] = money if money
         post[:description] = options[:description] if options[:description]
+        post[:on_behalf_of_uri] = options[:on_behalf_of_uri] if options[:on_behalf_of_uri]
 
         create_transaction(:post, @debits_uri, post)
       rescue Error => ex
