@@ -22,6 +22,7 @@
 * NetPay: Fix the signature for void [duff]
 * Cybersource: Add check support [bowmande]
 * Moneris: Use a capture of $0 for void [ntalbott]
+* PayPal Express integration: Fix received_at time zone [ntalbott]
 
 == Version 1.29.3 (December 7, 2012)
 
