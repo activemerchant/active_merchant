@@ -24,7 +24,7 @@ class NabTransactTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal '009887', response.authorization
+    assert_equal '009887*test**200', response.authorization
     assert response.test?
   end
 

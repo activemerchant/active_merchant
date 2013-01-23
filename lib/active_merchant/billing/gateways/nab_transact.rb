@@ -67,10 +67,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        # order_id must be the same as the order_id supplied when doing the
-        # purchase or capture.
-        requires!(options, :order_id)
-        commit :refund, build_refund_request(money, authorization, options)
+        commit :refund, build_reference_request(money, authorization)
       end
 
       def store(creditcard, options = {})
@@ -111,12 +108,16 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_refund_request(money, authorization, options = {})
+      def build_reference_request(money, reference)
         xml = Builder::XmlMarkup.new
 
+        transaction_id, order_id, preauth_id, original_amount = reference.split('*')
+
         xml.tag! 'amount', (money ? amount(money) : original_amount)
-        xml.tag! 'txnID', authorization
-        xml.tag! 'purchaseOrderNo', options[:order_id]
+        xml.tag! 'currency', options[:currency] || currency(money)
+        xml.tag! 'txnID', transaction_id
+        xml.tag! 'purchaseOrderNo', order_id
+        xml.tag! 'preauthID', preauth_id
 
         xml.target!
       end
@@ -226,7 +227,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response[:txn_id]
+        [response[:txn_id], response[:purchase_order_no], response[:preauth_id], response[:amount]].join('*')
       end
 
       def message_from(response)

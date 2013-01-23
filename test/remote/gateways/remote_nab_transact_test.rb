@@ -82,7 +82,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     authorization = response.authorization
-    assert response = @gateway.refund(@amount, authorization, :order_id => @options[:order_id])
+    assert response = @gateway.refund(@amount, authorization)
     assert_success response
     assert_equal 'Approved', response.message
   end
@@ -91,7 +91,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     authorization = response.authorization
-    assert response = @gateway.refund(@amount+1, authorization, :order_id => @options[:order_id])
+    assert response = @gateway.refund(@amount+1, authorization)
     assert_failure response
     assert_equal 'Only $2.0 available for refund', response.message
   end
