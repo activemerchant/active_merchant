@@ -27,6 +27,7 @@
 * Stripe: Add support for application_fee [duff]
 * SagePay: Add support for GiftAidPayment [duff]
 * Wirecard: Add support for partial captures [richardblair]
+* Add Pin gateway [madpilot]
 
 == Version 1.29.3 (December 7, 2012)
 

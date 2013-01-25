@@ -139,6 +139,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [PayPal Website Payments Pro (US)](https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - US
 * [PaySecure](http://www.commsecure.com.au/paysecure.shtml) - AU
 * [PayWay](https://www.payway.com.au) - AU
+* [Pin](http://www.pin.net.au/) - AU
 * [Plug'n Pay](http://www.plugnpay.com/) - US
 * [Psigate](http://www.psigate.com/) - CA
 * [PSL Payment Solutions](http://www.paymentsolutionsltd.com/) - UK

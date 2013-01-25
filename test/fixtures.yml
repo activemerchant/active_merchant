@@ -325,6 +325,9 @@ pay_secure:
   login: LOGIN
   password: PASSWORD
 
+pin:
+  api_key: "I_mo9BUUUXIwXF-avcs3LA"
+
 plugnpay:
   login: LOGIN
   password: PASSWORD
