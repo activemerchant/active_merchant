@@ -50,6 +50,7 @@ module ActiveMerchant #:nodoc:
         add_customer(post, options)
         add_customer_data(post,options)
         post[:description] = options[:description] || options[:email]
+        post[:application_fee] = options[:application_fee] if options[:application_fee]
         add_flags(post, options)
 
         meta = generate_meta(options)
