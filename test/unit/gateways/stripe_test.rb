@@ -91,6 +91,14 @@ class StripeTest < Test::Unit::TestCase
     assert !post[:customer]
   end
 
+  def test_application_fee_is_submitted
+    stub_comms(:ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({:application_fee => 144}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/application_fee=144/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_client_data_submitted_with_purchase
     stub_comms(:ssl_request) do
       updated_options = @options.merge({:description => "a test customer",:browser_ip => "127.127.127.127", :user_agent => "some browser", :order_id => "42", :email => "foo@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
