@@ -29,6 +29,12 @@ class FirstdataE4Test < Test::Unit::TestCase
     ExactGateway::SENSITIVE_FIELDS.each{|f| assert !response.params.has_key?(f.to_s)}
   end
 
+  def test_successful_purchase_with_token
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, '8938737759041111;visa;Longbob;Longsen;9;2014')
+    assert_success response
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
     assert response = @gateway.void(@authorization, @options)
@@ -39,6 +45,21 @@ class FirstdataE4Test < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_refund_response)
     assert response = @gateway.refund(@amount, @authorization)
     assert_success response
+  end
+
+  def test_successful_store
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal '8938737759041111', response.params['transarmor_token']
+    assert_equal '8938737759041111;visa;Longbob;Longsen;9;2014', response.authorization
+  end
+
+  def test_failed_store_without_transarmor_support
+    @gateway.expects(:ssl_post).returns(successful_purchase_response_without_transarmor)
+    assert_raise StandardError do
+      @gateway.store(@credit_card, @options)
+    end
   end
 
   def test_failed_purchase
@@ -125,9 +146,6 @@ class FirstdataE4Test < Test::Unit::TestCase
     <Language></Language>
     <Client_IP>1.1.1.10</Client_IP>
     <Client_Email></Client_Email>
-    <LogonMessage></LogonMessage>
-    <Error_Number>0</Error_Number>
-    <Error_Description> </Error_Description>
     <Transaction_Error>false</Transaction_Error>
     <Transaction_Approved>true</Transaction_Approved>
     <EXact_Resp_Code>00</EXact_Resp_Code>
@@ -150,6 +168,95 @@ class FirstdataE4Test < Test::Unit::TestCase
     <MerchantCountry>Canada</MerchantCountry>
     <MerchantPostal>L7Z 3K8</MerchantPostal>
     <MerchantURL></MerchantURL>
+    <TransarmorToken>8938737759041111</TransarmorToken>
+    <CTR>=========== TRANSACTION RECORD ==========
+Friendly Inc DEMO0983
+123 King St
+Toronto, ON L7Z 3K8
+Canada
+
+
+TYPE: Purchase
+
+ACCT: Visa  $ 47.38 USD
+
+CARD NUMBER : ############1111
+DATE/TIME   : 28 Sep 12 07:54:48
+REFERENCE # :  000040 M
+AUTHOR. #   : ET120454
+TRANS. REF. : 77
+
+    Approved - Thank You 100
+
+
+Please retain this copy for your records.
+
+Cardholder will pay above amount to card
+issuer pursuant to cardholder agreement.
+=========================================</CTR>
+  </TransactionResult>
+    RESPONSE
+  end
+  def successful_purchase_response_without_transarmor
+    <<-RESPONSE
+  <?xml version="1.0" encoding="UTF-8"?>
+  <TransactionResult>
+    <ExactID>AD1234-56</ExactID>
+    <Password></Password>
+    <Transaction_Type>00</Transaction_Type>
+    <DollarAmount>47.38</DollarAmount>
+    <SurchargeAmount></SurchargeAmount>
+    <Card_Number>############1111</Card_Number>
+    <Transaction_Tag>106625152</Transaction_Tag>
+    <Track1></Track1>
+    <Track2></Track2>
+    <PAN></PAN>
+    <Authorization_Num>ET1700</Authorization_Num>
+    <Expiry_Date>0913</Expiry_Date>
+    <CardHoldersName>Fred Burfle</CardHoldersName>
+    <VerificationStr1></VerificationStr1>
+    <VerificationStr2>773</VerificationStr2>
+    <CVD_Presence_Ind>0</CVD_Presence_Ind>
+    <ZipCode></ZipCode>
+    <Tax1Amount></Tax1Amount>
+    <Tax1Number></Tax1Number>
+    <Tax2Amount></Tax2Amount>
+    <Tax2Number></Tax2Number>
+    <Secure_AuthRequired></Secure_AuthRequired>
+    <Secure_AuthResult></Secure_AuthResult>
+    <Ecommerce_Flag></Ecommerce_Flag>
+    <XID></XID>
+    <CAVV></CAVV>
+    <CAVV_Algorithm></CAVV_Algorithm>
+    <Reference_No>77</Reference_No>
+    <Customer_Ref></Customer_Ref>
+    <Reference_3></Reference_3>
+    <Language></Language>
+    <Client_IP>1.1.1.10</Client_IP>
+    <Client_Email></Client_Email>
+    <Transaction_Error>false</Transaction_Error>
+    <Transaction_Approved>true</Transaction_Approved>
+    <EXact_Resp_Code>00</EXact_Resp_Code>
+    <EXact_Message>Transaction Normal</EXact_Message>
+    <Bank_Resp_Code>100</Bank_Resp_Code>
+    <Bank_Message>Approved</Bank_Message>
+    <Bank_Resp_Code_2></Bank_Resp_Code_2>
+    <SequenceNo>000040</SequenceNo>
+    <AVS>U</AVS>
+    <CVV2>M</CVV2>
+    <Retrieval_Ref_No>3146117</Retrieval_Ref_No>
+    <CAVV_Response></CAVV_Response>
+    <Currency>USD</Currency>
+    <AmountRequested></AmountRequested>
+    <PartialRedemption>false</PartialRedemption>
+    <MerchantName>Friendly Inc DEMO0983</MerchantName>
+    <MerchantAddress>123 King St</MerchantAddress>
+    <MerchantCity>Toronto</MerchantCity>
+    <MerchantProvince>Ontario</MerchantProvince>
+    <MerchantCountry>Canada</MerchantCountry>
+    <MerchantPostal>L7Z 3K8</MerchantPostal>
+    <MerchantURL></MerchantURL>
+    <TransarmorToken></TransarmorToken>
     <CTR>=========== TRANSACTION RECORD ==========
 Friendly Inc DEMO0983
 123 King St
@@ -215,9 +322,6 @@ issuer pursuant to cardholder agreement.
     <Language></Language>
     <Client_IP>1.1.1.10</Client_IP>
     <Client_Email></Client_Email>
-    <LogonMessage></LogonMessage>
-    <Error_Number>0</Error_Number>
-    <Error_Description> </Error_Description>
     <Transaction_Error>false</Transaction_Error>
     <Transaction_Approved>true</Transaction_Approved>
     <EXact_Resp_Code>00</EXact_Resp_Code>
