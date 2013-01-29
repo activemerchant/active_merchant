@@ -29,6 +29,12 @@ class FirstdataE4Test < Test::Unit::TestCase
     ExactGateway::SENSITIVE_FIELDS.each{|f| assert !response.params.has_key?(f.to_s)}
   end
 
+  def test_successful_purchase_with_token
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, transarmor_token: '8938737759041111')
+    assert_success response
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
     assert response = @gateway.void(@authorization, @options)
@@ -39,6 +45,13 @@ class FirstdataE4Test < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_refund_response)
     assert response = @gateway.refund(@amount, @authorization)
     assert_success response
+  end
+
+  def test_successful_store
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal '8938737759041111', response.params['transarmor_token']
   end
 
   def test_failed_purchase
@@ -125,9 +138,6 @@ class FirstdataE4Test < Test::Unit::TestCase
     <Language></Language>
     <Client_IP>1.1.1.10</Client_IP>
     <Client_Email></Client_Email>
-    <LogonMessage></LogonMessage>
-    <Error_Number>0</Error_Number>
-    <Error_Description> </Error_Description>
     <Transaction_Error>false</Transaction_Error>
     <Transaction_Approved>true</Transaction_Approved>
     <EXact_Resp_Code>00</EXact_Resp_Code>
@@ -150,6 +160,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     <MerchantCountry>Canada</MerchantCountry>
     <MerchantPostal>L7Z 3K8</MerchantPostal>
     <MerchantURL></MerchantURL>
+    <TransarmorToken>8938737759041111</TransarmorToken>
     <CTR>=========== TRANSACTION RECORD ==========
 Friendly Inc DEMO0983
 123 King St
@@ -215,9 +226,6 @@ issuer pursuant to cardholder agreement.
     <Language></Language>
     <Client_IP>1.1.1.10</Client_IP>
     <Client_Email></Client_Email>
-    <LogonMessage></LogonMessage>
-    <Error_Number>0</Error_Number>
-    <Error_Description> </Error_Description>
     <Transaction_Error>false</Transaction_Error>
     <Transaction_Approved>true</Transaction_Approved>
     <EXact_Resp_Code>00</EXact_Resp_Code>

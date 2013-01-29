@@ -1,15 +1,17 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FirstdataE4Gateway < Gateway
-      self.test_url = "https://api.demo.globalgatewaye4.firstdata.com/transaction"
-      self.live_url = "https://api.globalgatewaye4.firstdata.com/transaction"
+      # TransArmor support requires v11 or lower
+      self.test_url = "https://api.demo.globalgatewaye4.firstdata.com/transaction/v11"
+      self.live_url = "https://api.globalgatewaye4.firstdata.com/transaction/v11"
 
       TRANSACTIONS = {
         :sale          => "00",
         :authorization => "01",
         :capture       => "32",
         :void          => "33",
-        :credit        => "34"
+        :credit        => "34",
+        :store         => "05"
       }
 
       POST_HEADERS = {
@@ -54,6 +56,32 @@ module ActiveMerchant #:nodoc:
         commit(:credit, build_capture_or_credit_request(money, authorization, options))
       end
 
+      # Tokenize a credit card with TransArmor
+      #
+      # Token is returned in +params['transarmor_token']+. If this string is
+      # empty, contact First Data to enable this feature for your account.
+      #
+      # When using the token in later calls to +authorize+ or +purchase+,
+      # the token should be passed in as the +:transarmor_token+ option.
+      # A CreditCard instance still needs to be passed in, containing the
+      # original name, expiration, and brand.
+      #
+      # === Example
+      #
+      #   # Generate token
+      #   result = gateway.store(credit_card)
+      #   if result.success?
+      #     my_record.update_attributes(transarmor_token: result.params['transarmor_token'])
+      #   end
+      #
+      #   # Use token
+      #   result = gateway.purchase(1000, credit_card, transarmor_token: my_record.transarmor_token)
+      #
+      # https://firstdata.zendesk.com/entries/21303361-transarmor-tokenization
+      def store(credit_card, options = {})
+        commit(:store, build_store_request(credit_card, options))
+      end
+
       private
 
       def build_request(action, body)
@@ -73,7 +101,11 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new
 
         add_amount(xml, money)
-        add_credit_card(xml, credit_card)
+        if options[:transarmor_token]
+          add_credit_card_token(xml, credit_card, options[:transarmor_token])
+        else
+          add_credit_card(xml, credit_card)
+        end
         add_customer_data(xml, options)
         add_invoice(xml, options)
 
@@ -85,6 +117,15 @@ module ActiveMerchant #:nodoc:
 
         add_identification(xml, identification)
         add_amount(xml, money)
+        add_customer_data(xml, options)
+
+        xml.target!
+      end
+
+      def build_store_request(credit_card, options)
+        xml = Builder::XmlMarkup.new
+
+        add_credit_card(xml, credit_card)
         add_customer_data(xml, options)
 
         xml.target!
@@ -120,6 +161,13 @@ module ActiveMerchant #:nodoc:
           xml.tag! "CVD_Presence_Ind", "1"
           xml.tag! "VerificationStr2", credit_card.verification_value
         end
+      end
+
+      def add_credit_card_token(xml, credit_card, token)
+        xml.tag! "TransarmorToken", token
+        xml.tag! "Expiry_Date", expdate(credit_card)
+        xml.tag! "CardHoldersName", credit_card.name
+        xml.tag! "CardType", credit_card.brand
       end
 
       def add_customer_data(xml, options)
@@ -183,7 +231,7 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         if(response[:faultcode] && response[:faultstring])
           response[:faultstring]
-        elsif(response[:error_number] != "0")
+        elsif(response[:error_number] && response[:error_number] != "0")
           response[:error_description]
         else
           result = (response[:exact_message] || "")
