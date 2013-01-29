@@ -9,7 +9,7 @@ class MonerisTest < Test::Unit::TestCase
       :password => 'yesguy'
     )
 
-    @amount = 100
+    @amount = 1010
     @credit_card = credit_card('4242424242424242')
     @options = { :order_id => '1', :customer => '1' }
   end
@@ -165,6 +165,13 @@ class MonerisTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_cvv_results
+    @gateway.expects(:ssl_post).returns(successful_cvv_match_response)
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "M", response.cvv_result["code"]
+  end
+
   private
 
   def successful_purchase_response
@@ -260,6 +267,34 @@ class MonerisTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_cvv_match_response
+    <<-RESPONSE
+<?xml version="1.0" standalone="yes"?>
+<response>
+  <receipt>
+    <ReceiptId>94bde3c9d0390c8dd4642d04b2b920c1</ReceiptId>
+    <ReferenceNum>660110910010021200</ReferenceNum>
+    <ResponseCode>027</ResponseCode>
+    <ISO>01</ISO>
+    <AuthCode>742519</AuthCode>
+    <TransTime>16:27:13</TransTime>
+    <TransDate>2013-01-29</TransDate>
+    <TransType>01</TransType>
+    <Complete>true</Complete>
+    <Message>APPROVED           *                    =</Message>
+    <TransAmount>10.10</TransAmount>
+    <CardType>V</CardType>
+    <TransID>16097-0_8</TransID>
+    <TimedOut>false</TimedOut>
+    <BankTotals>null</BankTotals>
+    <Ticket>null</Ticket>
+    <CorporateCard>false</CorporateCard>
+    <CvdResultCode>1M</CvdResultCode>
+    <CavvResultCode>2</CavvResultCode>
+  </receipt>
+</response>
+    RESPONSE
+  end
 
   def xml_purchase_fixture
    '<request><store_id>store1</store_id><api_token>yesguy</api_token><purchase><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></purchase></request>'

@@ -34,11 +34,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard_or_datakey, options = {})
         requires!(options, :order_id)
         post = {}
-        add_payment_source(post, creditcard_or_datakey)
-        post[:amount]     = amount(money)
-        post[:order_id]   = options[:order_id]
-        post[:cust_id]    = options[:customer]
-        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        build_authorize_or_purchase_request(post, money, creditcard_or_datakey, options)
         action = (post[:data_key].blank?) ? 'preauth' : 'res_preauth_cc'
         commit(action, post)
       end
@@ -50,11 +46,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, creditcard_or_datakey, options = {})
         requires!(options, :order_id)
         post = {}
-        add_payment_source(post, creditcard_or_datakey)
-        post[:amount]     = amount(money)
-        post[:order_id]   = options[:order_id]
-        post[:cust_id]    = options[:customer]
-        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        build_authorize_or_purchase_request(post, money, creditcard_or_datakey, options)
         action = (post[:data_key].blank?) ? 'purchase' : 'res_purchase_cc'
         commit(action, post)
       end
@@ -118,6 +110,15 @@ module ActiveMerchant #:nodoc:
 
       private # :nodoc: all
 
+      def build_authorize_or_purchase_request(post, money, creditcard_or_datakey, options)
+        add_payment_source(post, creditcard_or_datakey)
+        post[:billing_address] = options[:billing_address] || options[:address]
+        post[:amount]     = amount(money)
+        post[:order_id]   = options[:order_id]
+        post[:cust_id]    = options[:customer]
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+      end
+
       def expdate(creditcard)
         sprintf("%.4i", creditcard.year)[-2..-1] + sprintf("%.2i", creditcard.month)
       end
@@ -128,6 +129,7 @@ module ActiveMerchant #:nodoc:
         else
           post[:pan]        = source.number
           post[:expdate]    = expdate(source)
+          post[:cvv]        = source.verification_value
         end
       end
 
@@ -155,7 +157,8 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful?(response), message_from(response[:message]), response,
           :test          => test?,
-          :authorization => authorization_from(response)
+          :authorization => authorization_from(response),
+          :cvv_result    => response[:cvd_result_code].last() if response[:cvd_result_code]
         )
       end
 
@@ -199,7 +202,15 @@ module ActiveMerchant #:nodoc:
           transaction.add_element(key.to_s).text = parameters[key] unless parameters[key].blank?
         end
 
+        add_cvd_info(transaction, parameters) if parameters[:cvv]
+
         xml.to_s
+      end
+
+      def add_cvd_info(transaction, parameters)
+        cvd_info = transaction.add_element('cvd_info')
+        cvd_info.add_element('cvd_indicator').text = '1'
+        cvd_info.add_element('cvd_value').text = parameters[:cvv]
       end
 
       def message_from(message)

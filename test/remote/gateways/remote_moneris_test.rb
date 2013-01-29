@@ -5,7 +5,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = MonerisGateway.new(fixtures(:moneris))
-    @amount = 100
+    @amount = 1010
     @credit_card = credit_card('4242424242424242')
     @options = {
       :order_id => generate_unique_id,
@@ -108,4 +108,9 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_cvv_results
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "M", response.cvv_result["code"]
+  end
 end
