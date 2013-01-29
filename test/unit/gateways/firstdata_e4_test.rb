@@ -31,7 +31,7 @@ class FirstdataE4Test < Test::Unit::TestCase
 
   def test_successful_purchase_with_token
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert response = @gateway.purchase(@amount, @credit_card, transarmor_token: '8938737759041111')
+    assert response = @gateway.purchase(@amount, @credit_card, :transarmor_token => '8938737759041111')
     assert_success response
   end
 

@@ -71,11 +71,11 @@ module ActiveMerchant #:nodoc:
       #   # Generate token
       #   result = gateway.store(credit_card)
       #   if result.success?
-      #     my_record.update_attributes(transarmor_token: result.params['transarmor_token'])
+      #     my_record.update_attributes(:transarmor_token => result.params['transarmor_token'])
       #   end
       #
       #   # Use token
-      #   result = gateway.purchase(1000, credit_card, transarmor_token: my_record.transarmor_token)
+      #   result = gateway.purchase(1000, credit_card, :transarmor_token => my_record.transarmor_token)
       #
       # https://firstdata.zendesk.com/entries/21303361-transarmor-tokenization
       def store(credit_card, options = {})
