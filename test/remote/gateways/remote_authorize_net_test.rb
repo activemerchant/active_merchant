@@ -158,4 +158,18 @@ class AuthorizeNetTest < Test::Unit::TestCase
   ensure
     ActiveMerchant::Billing::AuthorizeNetGateway.application_id = nil
   end
+
+  def test_bad_currency
+    @options[:currency] = "XYZ"
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'The supplied currency code is either invalid, not supported, not allowed for this merchant or doesn\'t have an exchange rate', response.message
+  end
+
+  def test_usd_currency
+    @options[:currency] = "USD"
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization
+  end
 end
