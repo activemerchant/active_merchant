@@ -158,6 +158,7 @@ module ActiveMerchant #:nodoc:
               add_address(xml, options[:billing_address])
             when :capture_authorization
               xml.tag! 'GuWID', options[:authorization]
+              add_amount(xml, money, options) if money
             end
           end
         end
@@ -165,12 +166,16 @@ module ActiveMerchant #:nodoc:
 
       # Includes the payment (amount, currency, country) to the transaction-xml
       def add_invoice(xml, money, options)
-        xml.tag! 'Amount', amount(money)
-        xml.tag! 'Currency', options[:currency] || currency(money)
+        add_amount(xml, money, options)
         xml.tag! 'CountryCode', options[:billing_address][:country]
         xml.tag! 'RECURRING_TRANSACTION' do
           xml.tag! 'Type', options[:recurring] || 'Single'
         end
+      end
+
+      def add_amount(xml, money, options)
+        xml.tag! 'Amount', amount(money)
+        xml.tag! 'Currency', options[:currency] || currency(money)
       end
 
       # Includes the credit-card data to the transaction-xml

@@ -77,6 +77,17 @@ class WirecardTest < Test::Unit::TestCase
     assert response.message[/this is a demo/i]
   end
 
+  def test_capture_with_amount
+    capture = stub_comms do
+      @gateway.capture((@amount - 1), "auth")
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{<Amount>#{@amount - 1}</Amount>}i, data)
+      assert_match(%r{<Currency>EUR</Currency>}i, data)
+    end.respond_with(successful_capture_response)
+
+    assert_success capture
+  end
+
   def test_unauthorized_capture
     @gateway.expects(:ssl_post).returns(unauthorized_capture_response)
     assert response = @gateway.capture(@amount, "1234567890123456789012", @options)
