@@ -41,7 +41,9 @@ module ActiveMerchant #:nodoc:
       RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT = 0, 2, 3
       AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE  = 5, 6, 38
 
-      self.supported_countries = ['US']
+      self.default_currency = 'USD'
+
+      self.supported_countries = ['US', 'CA', 'UK']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net'
@@ -85,6 +87,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>options</tt> -- A hash of optional parameters.
       def authorize(money, creditcard, options = {})
         post = {}
+        add_currency_code(post, money, options)
         add_invoice(post, options)
         add_creditcard(post, creditcard)
         add_address(post, options)
@@ -103,6 +106,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>options</tt> -- A hash of optional parameters.
       def purchase(money, creditcard, options = {})
         post = {}
+        add_currency_code(post, money, options)
         add_invoice(post, options)
         add_creditcard(post, creditcard)
         add_address(post, options)
@@ -326,6 +330,10 @@ module ActiveMerchant #:nodoc:
 
         request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
         request
+      end
+
+      def add_currency_code(post, money, options)
+        post[:currency_code] = options[:currency] || currency(money)
       end
 
       def add_invoice(post, options)
