@@ -288,7 +288,7 @@ module ActiveMerchant #:nodoc:
         results = {}
         if !body.nil?
           body.split(/&/).each do |pair|
-            key, val = pair.split(/=/)
+            key, val = pair.split(/\=/)
             results[key.to_sym] = val.nil? ? nil : CGI.unescape(val)
           end
         end
