@@ -151,7 +151,6 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'FunctionID', options[:description].to_s.slice(0,32)
           xml.tag! 'CC_TRANSACTION' do
             xml.tag! 'TransactionID', options[:order_id]
-            #It is possible for preauthorization and capture to have a GuWID
             case options[:action]
             when :preauthorization, :purchase
               add_invoice(xml, money, options)
