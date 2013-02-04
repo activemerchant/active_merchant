@@ -25,6 +25,7 @@
 * PayPal Express integration: Fix received_at time zone [ntalbott]
 * NAB Transact: Add refund capability [nagash]
 * Stripe: Add support for application_fee [duff]
+* SagePay: Add support for GiftAidPayment [duff]
 
 == Version 1.29.3 (December 7, 2012)
 

@@ -65,6 +65,7 @@ module ActiveMerchant #:nodoc:
         add_credit_card(post, credit_card)
         add_address(post, options)
         add_customer_data(post, options)
+        add_optional_data(post, options)
 
         commit(:purchase, post)
       end
@@ -79,6 +80,7 @@ module ActiveMerchant #:nodoc:
         add_credit_card(post, credit_card)
         add_address(post, options)
         add_customer_data(post, options)
+        add_optional_data(post, options)
 
         commit(:authorization, post)
       end
@@ -154,6 +156,10 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :CustomerEMail, options[:email][0,255]) unless options[:email].blank?
         add_pair(post, :BillingPhone, options[:phone].gsub(/[^0-9+]/, '')[0,20]) unless options[:phone].blank?
         add_pair(post, :ClientIPAddress, options[:ip])
+      end
+
+      def add_optional_data(post, options)
+        add_pair(post, :GiftAidPayment, options[:gift_aid_payment]) unless options[:gift_aid_payment].blank?
       end
 
       def add_address(post, options)
