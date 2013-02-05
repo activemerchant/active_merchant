@@ -203,7 +203,7 @@ class LitleTest < Test::Unit::TestCase
     # define all inputs
     money = 1000
     options = {
-        order_source: 'recurring'
+        :order_source => 'recurring'
     }
 
     hashFromGateway = @gateway.send(:create_hash, money, options)
