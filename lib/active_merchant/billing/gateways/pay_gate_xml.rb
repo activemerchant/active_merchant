@@ -161,7 +161,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, creditcard, options = {})
-        MultiResponse.new.tap do |r|
+        MultiResponse.run do |r|
           r.process{authorize(money, creditcard, options)}
           r.process{capture(money, r.authorization, options)}
         end

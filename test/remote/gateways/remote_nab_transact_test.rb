@@ -28,11 +28,11 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Approved', response.message
   end
-  
+
   # Unfortunately there is no "real" way to test the dynamic card acceptor,
   # however the "Integration Guide - XML API for Payments" documentation states:
   #   If enabled on your NAB Transact account, the Dynamic Card Acceptor details
-  #   will be accepted via metadata tags added to your XML request. Note that 
+  #   will be accepted via metadata tags added to your XML request. Note that
   #   permission for this feature must be enabled on your account or you will
   #   receive a response of “555 – Permission denied”.
   #
@@ -76,6 +76,24 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'Invalid Credit Card Number', response.message
+  end
+
+  def test_successful_refund
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    authorization = response.authorization
+    assert response = @gateway.refund(@amount, authorization)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_failed_refund
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    authorization = response.authorization
+    assert response = @gateway.refund(@amount+1, authorization)
+    assert_failure response
+    assert_equal 'Only $2.0 available for refund', response.message
   end
 
   def test_invalid_login

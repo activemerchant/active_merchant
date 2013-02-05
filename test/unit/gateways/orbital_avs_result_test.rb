@@ -25,6 +25,18 @@ class OrbitalAVSResultTest < Test::Unit::TestCase
     assert_nil result.message
   end
 
+  def test_response_with_orbital_avs
+    response = Response.new(true, 'message', {}, :avs_result => OrbitalGateway::AVSResult.new('A'))
+
+    assert_equal 'A', response.avs_result['code']
+  end
+
+  def test_response_with_orbital_avs_nil
+    response = Response.new(true, 'message', {}, :avs_result => OrbitalGateway::AVSResult.new(nil))
+
+    assert response.avs_result.has_key?('code')
+  end
+
   # Helper functions
 
   def check_match_results(code, street_match, postal_match)

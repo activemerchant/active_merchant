@@ -142,11 +142,17 @@ module ActiveMerchant #:nodoc:
         if response['response'] == "0"
           detail = response["#{kind}Response"]
           fraud = fraud_result(detail)
+          authorization = case kind
+          when :registerToken
+            response['registerTokenResponse']['litleToken']
+          else
+            detail['litleTxnId']
+          end
           Response.new(
             valid_responses.include?(detail['response']),
             detail['message'],
             {:litleOnlineResponse => response},
-            :authorization => detail['litleTxnId'],
+            :authorization => authorization,
             :avs_result => {:code => fraud['avs']},
             :cvv_result => fraud['cvv'],
             :test => test?

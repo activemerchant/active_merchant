@@ -140,6 +140,7 @@ module ActiveMerchant #:nodoc:
         add_amount(result, money, options)
         add_invoice(result, options)
         add_address_verification_data(result, options)
+        add_optional_elements(result, options)
         result
       end
 
@@ -149,6 +150,7 @@ module ActiveMerchant #:nodoc:
         add_amount(result, money, options)
         add_invoice(result, options)
         add_reference(result, identification)
+        add_optional_elements(result, options)
         result
       end
 
@@ -157,6 +159,7 @@ module ActiveMerchant #:nodoc:
         add_credit_card(result, credit_card)
         add_amount(result, 100, options) #need to make an auth request for $1
         add_token_request(result, options)
+        add_optional_elements(result, options)
         result
       end
 
@@ -209,7 +212,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(xml, options)
         xml.add_element("TxnId").text = options[:order_id].to_s.slice(0, 16) unless options[:order_id].blank?
-        xml.add_element("MerchantReference").text = options[:description] unless options[:description].blank?
+        xml.add_element("MerchantReference").text = options[:description].to_s.slice(0, 64) unless options[:description].blank?
       end
 
       def add_address_verification_data(xml, options)
@@ -221,6 +224,52 @@ module ActiveMerchant #:nodoc:
 
         xml.add_element("AvsStreetAddress").text = address[:address1]
         xml.add_element("AvsPostCode").text = address[:zip]
+      end
+
+      # The options hash may contain optional data which will be passed
+      # through the the specialized optional fields at PaymentExpress
+      # as follows:
+      #
+      #     {
+      #       :client_type => :web, # Possible values are: :web, :ivr, :moto, :unattended, :internet, or :recurring
+      #       :txn_data1 => "String up to 255 characters",
+      #       :txn_data2 => "String up to 255 characters",
+      #       :txn_data3 => "String up to 255 characters"
+      #     }
+      #
+      # +:client_type+, while not documented for PxPost, will be sent as
+      # the +ClientType+ XML element as described in the documentation for
+      # the PaymentExpress WebService: http://www.paymentexpress.com/Technical_Resources/Ecommerce_NonHosted/WebService#clientType
+      # (PaymentExpress have confirmed that this value works the same in PxPost).
+      # The value sent for +:client_type+ will be normalized and sent
+      # as one of the explicit values allowed by PxPost:
+      #
+      #     :web        => "Web"
+      #     :ivr        => "IVR"
+      #     :moto       => "MOTO"
+      #     :unattended => "Unattended"
+      #     :internet   => "Internet"
+      #     :recurring  => "Recurring"
+      #
+      # If you set the +:client_type+ to any value not listed above,
+      # the ClientType element WILL NOT BE INCLUDED at all in the
+      # POST data.
+      #
+      # +:txn_data1+, +:txn_data2+, and +:txn_data3+ will be sent as
+      # +TxnData1+, +TxnData2+, and +TxnData3+, respectively, and are
+      # free form fields of the merchant's choosing, as documented here:
+      # http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#txndata
+      #
+      # These optional elements are added to all transaction types:
+      # +purchase+, +authorize+, +capture+, +refund+, +store+
+      def add_optional_elements(xml, options)
+        if client_type = normalized_client_type(options[:client_type])
+          xml.add_element("ClientType").text = client_type
+        end
+
+        xml.add_element("TxnData1").text = options[:txn_data1].to_s.slice(0,255) unless options[:txn_data1].blank?
+        xml.add_element("TxnData2").text = options[:txn_data2].to_s.slice(0,255) unless options[:txn_data2].blank?
+        xml.add_element("TxnData3").text = options[:txn_data3].to_s.slice(0,255) unless options[:txn_data3].blank?
       end
 
       def new_transaction
@@ -265,6 +314,18 @@ module ActiveMerchant #:nodoc:
 
       def format_date(month, year)
         "#{format(month, :two_digits)}#{format(year, :two_digits)}"
+      end
+
+      def normalized_client_type(client_type_from_options)
+        case client_type_from_options.to_s.downcase
+          when 'web'        then "Web"
+          when 'ivr'        then "IVR"
+          when 'moto'       then "MOTO"
+          when 'unattended' then "Unattended"
+          when 'internet'   then "Internet"
+          when 'recurring'  then "Recurring"
+          else nil
+        end
       end
     end
 

@@ -177,6 +177,7 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         parameters[:account_id] = @options[:login]
+        parameters[:site_tag] = @options[:site_tag] if @options[:site_tag].present?
         parameters[:pay_type] = 'C'
         parameters[:tran_type] = TRANSACTIONS[action]
 

@@ -62,7 +62,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'Approved', auth.message
     assert auth.authorization
-    assert void = @gateway.void(nil, auth.authorization, :order_id => '2')
+    assert void = @gateway.void(auth.authorization, :order_id => '2')
     assert_success void
   end
 
@@ -90,15 +90,6 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
-  def test_connection_error_failover
-    begin
-      assert_equal @gateway.test_url, @gateway.send(:remote_url)
-      raise ActiveMerchant::ConnectionError
-    rescue ActiveMerchant::ConnectionError
-      assert_equal @gateway.secondary_test_url, @gateway.send(:remote_url)
-    end
-  end
-
   # == Certification Tests
 
   # ==== Section A
@@ -108,6 +99,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       card = credit_card(@cards[suite[:card]], :verification_value => suite[:CVD])
       @options[:address].merge!(:zip => suite[:AVSzip])
       assert response = @gateway.authorize(amount, card, @options)
+      assert_kind_of Response, response
 
       # Makes it easier to fill in cert sheet if you print these to the command line
       # puts "Auth/Resp Code => " + (response.params["auth_code"] || response.params["resp_code"])
@@ -125,6 +117,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       card = credit_card(@cards[suite[:card]], :verification_value => suite[:CVD])
       options = @options; options[:address].merge!(:zip => suite[:AVSzip])
       assert response = @gateway.purchase(amount, card, options)
+      assert_kind_of Response, response
 
       # Makes it easier to fill in cert sheet if you print these to the command line
       # puts "Auth/Resp Code => " + (response.params["auth_code"] || response.params["resp_code"])
@@ -142,6 +135,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       card = credit_card(@cards[suite[0]])
       assert auth_response = @gateway.authorize(amount, card, @options)
       assert capt_response = @gateway.capture(amount, auth_response.authorization)
+      assert_kind_of Response, capt_response
 
       # Makes it easier to fill in cert sheet if you print these to the command line
       # puts "Auth/Resp Code => " + (auth_response.params["auth_code"] || auth_response.params["resp_code"])
@@ -157,6 +151,7 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
       card = credit_card(@cards[suite[0]])
       assert purchase_response = @gateway.purchase(amount, card, @options)
       assert refund_response = @gateway.refund(amount, purchase_response.authorization, @options)
+      assert_kind_of Response, refund_response
 
       # Makes it easier to fill in cert sheet if you print these to the command line
       # puts "Auth/Resp Code => " + (purchase_response.params["auth_code"] || purchase_response.params["resp_code"])
@@ -169,7 +164,8 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
   def test_void_transactions
     [3000, 105500, 2900].each do |amount|
       assert auth_response = @gateway.authorize(amount, @credit_card, @options)
-      assert void_response = @gateway.void(nil, auth_response.authorization, @options.merge(:transaction_index => 1))
+      assert void_response = @gateway.void(auth_response.authorization, @options.merge(:transaction_index => 1))
+      assert_kind_of Response, void_response
 
       # Makes it easier to fill in cert sheet if you print these to the command line
       # puts "TxRefNum => " + void_response.params["tx_ref_num"]

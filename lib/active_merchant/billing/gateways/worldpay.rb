@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_method, options = {})
-        MultiResponse.new.tap do |r|
+        MultiResponse.run do |r|
           r.process{authorize(money, payment_method, options)}
           r.process{capture(money, r.authorization, options.merge(:authorization_validated => true))}
         end
@@ -36,21 +36,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        MultiResponse.new.tap do |r|
+        MultiResponse.run do |r|
           r.process{inquire_request(authorization, options, "AUTHORISED")} unless options[:authorization_validated]
+          if r.params
+            authorization_currency = r.params['amount_currency_code']
+            options = options.merge(:currency => authorization_currency) if authorization_currency.present?
+          end
           r.process{capture_request(money, authorization, options)}
         end
       end
 
       def void(authorization, options = {})
-        MultiResponse.new.tap do |r|
+        MultiResponse.run do |r|
           r.process{inquire_request(authorization, options, "AUTHORISED")}
           r.process{cancel_request(authorization, options)}
         end
       end
 
       def refund(money, authorization, options = {})
-        MultiResponse.new.tap do |r|
+        MultiResponse.run do |r|
           r.process{inquire_request(authorization, options, "CAPTURED")}
           r.process{refund_request(money, authorization, options)}
         end
@@ -148,10 +152,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(xml, money, options)
-        xml.tag! 'amount',
-          :value => amount(money),
-          'currencyCode' => (options[:currency] || currency(money)),
-          'exponent' => 2
+        currency = options[:currency] || currency(money)
+        amount   = localized_amount(money, currency)
+
+        xml.tag! 'amount', :value => amount, 'currencyCode' => currency, 'exponent' => 2
       end
 
       def add_payment_method(xml, amount, payment_method, options)
@@ -260,6 +264,13 @@ module ActiveMerchant #:nodoc:
       def encoded_credentials
         credentials = "#{@options[:login]}:#{@options[:password]}"
         "Basic #{[credentials].pack('m').strip}"
+      end
+
+      def localized_amount(money, currency)
+        amount = amount(money)
+        return amount unless CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
+        
+        amount.to_i / 100 * 100
       end
     end
   end

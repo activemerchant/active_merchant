@@ -93,8 +93,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>:login</tt> -- The Authorize.Net API Login ID (REQUIRED)
       # * <tt>:password</tt> -- The Authorize.Net Transaction Key. (REQUIRED)
       # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test server.
-      # * <tt>:delimiter</tt> -- The delimiter used in the direct response.  Default is ',' (comma).
       #   Otherwise, perform transactions against the production server.
+      # * <tt>:delimiter</tt> -- The delimiter used in the direct response.  Default is ',' (comma).
       def initialize(options = {})
         requires!(options, :login, :password)
         super
@@ -468,7 +468,11 @@ module ActiveMerchant #:nodoc:
       private
 
       def expdate(credit_card)
-        sprintf('%04d-%02d', credit_card.year, credit_card.month)
+        if credit_card.year.present? && credit_card.month.present?
+          sprintf('%04d-%02d', credit_card.year, credit_card.month)
+        else
+          'XXXX'
+        end
       end
 
       def build_request(action, options = {})
@@ -599,8 +603,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_create_customer_profile_transaction_request(xml, options)
+        options[:extra_options] ||= {}
+        options[:extra_options].merge!('x_test_request' => 'TRUE') if @options[:test]
+
         add_transaction(xml, options[:transaction])
-        xml.tag!('extraOptions', "x_test_request=TRUE") if @options[:test]
+        tag_unless_blank(xml, 'extraOptions', format_extra_options(options[:extra_options]))
 
         xml.target!
       end
@@ -652,7 +659,7 @@ module ActiveMerchant #:nodoc:
                 tag_unless_blank(xml,'customerShippingAddressId', transaction[:customer_shipping_address_id])
                 xml.tag!('transId', transaction[:trans_id])
               when :refund
-                #TODO - add lineItems and extraOptions fields
+                #TODO - add lineItems field
                 xml.tag!('amount', transaction[:amount])
                 tag_unless_blank(xml, 'customerProfileId', transaction[:customer_profile_id])
                 tag_unless_blank(xml, 'customerPaymentProfileId', transaction[:customer_payment_profile_id])
@@ -847,6 +854,10 @@ module ActiveMerchant #:nodoc:
 
       def tag_unless_blank(xml, tag_name, data)
         xml.tag!(tag_name, data) unless data.blank? || data.nil?
+      end
+
+      def format_extra_options(options)
+        options.map{ |k, v| "#{k}=#{v}" }.join(',') unless options.nil?
       end
 
       def parse_direct_response(params)

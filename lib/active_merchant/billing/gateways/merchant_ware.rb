@@ -1,7 +1,10 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MerchantWareGateway < Gateway
+      class_attribute :v4_live_url
+
       self.live_url = self.test_url = 'https://ps1.merchantware.net/MerchantWARE/ws/RetailTransaction/TXRetail.asmx'
+      self.v4_live_url = 'https://ps1.merchantware.net/Merchantware/ws/RetailTransaction/v4/Credit.asmx'
 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -12,13 +15,19 @@ module ActiveMerchant #:nodoc:
                          "xmlns:xsd"  => "http://www.w3.org/2001/XMLSchema",
                          "xmlns:env" => "http://schemas.xmlsoap.org/soap/envelope/"
                        }
+      ENV_NAMESPACES_V4 = { "xmlns:xsi"  => "http://www.w3.org/2001/XMLSchema-instance",
+                            "xmlns:xsd"  => "http://www.w3.org/2001/XMLSchema",
+                            "xmlns:soap" => "http://schemas.xmlsoap.org/soap/envelope/"
+                          }
+
       TX_NAMESPACE = "http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail"
+      TX_NAMESPACE_V4 = "http://schemas.merchantwarehouse.com/merchantware/40/Credit/"
 
       ACTIONS = {
         :purchase  => "IssueKeyedSale",
         :authorize => "IssueKeyedPreAuth",
         :capture   => "IssuePostAuth",
-        :void      => "IssueVoid",
+        :void      => "VoidPreAuthorization",
         :credit    => "IssueKeyedRefund",
         :reference_credit => "IssueRefundByReference"
       }
@@ -80,11 +89,10 @@ module ActiveMerchant #:nodoc:
       # * <tt>authorization</tt> - The authorization string returned from the initial authorization or purchase.
       def void(authorization, options = {})
         reference, options[:order_id] = split_reference(authorization)
-
-        request = soap_request(:void) do |xml|
-          add_reference(xml, reference)
+        request = v4_soap_request(:void) do |xml|
+          add_reference_token(xml, reference)
         end
-        commit(:void, request)
+        commit(:void, request, true)
       end
 
       # Refund an amount back a cardholder
@@ -108,7 +116,6 @@ module ActiveMerchant #:nodoc:
         perform_reference_credit(money, reference, options)
       end
 
-
       private
 
       def soap_request(action)
@@ -118,6 +125,22 @@ module ActiveMerchant #:nodoc:
           xml.tag! "env:Body" do
             xml.tag! ACTIONS[action], "xmlns" => TX_NAMESPACE do
               add_credentials(xml)
+              yield xml
+            end
+          end
+        end
+        xml.target!
+      end
+
+      def v4_soap_request(action)
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.instruct!
+        xml.tag! "soap:Envelope", ENV_NAMESPACES_V4 do
+          xml.tag! "soap:Body" do
+            xml.tag! ACTIONS[:void], "xmlns" => TX_NAMESPACE_V4 do
+              xml.tag! "merchantName", @options[:name]
+              xml.tag! "merchantSiteId", @options[:login]
+              xml.tag! "merchantKey", @options[:password]
               yield xml
             end
           end
@@ -195,6 +218,10 @@ module ActiveMerchant #:nodoc:
         xml.tag! "strReferenceCode", reference
       end
 
+      def add_reference_token(xml, reference)
+        xml.tag! "token", reference
+      end
+
       def add_address(xml, options)
         if address = options[:billing_address] || options[:address]
           xml.tag! "strAVSStreetAddress", address[:address1]
@@ -258,11 +285,19 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def commit(action, request)
+      def soap_action(action, v4 = false)
+        v4 ? "#{TX_NAMESPACE_V4}#{ACTIONS[action]}" : "#{TX_NAMESPACE}/#{ACTIONS[action]}"
+      end
+
+      def url(v4 = false)
+        v4 ? v4_live_url : live_url
+      end
+
+      def commit(action, request, v4 = false)
         begin
-          data = ssl_post(self.live_url, request,
+          data = ssl_post(url(v4), request,
                    "Content-Type" => 'text/xml; charset=utf-8',
-                   "SOAPAction"   => "http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail/#{ACTIONS[action]}"
+                   "SOAPAction"   => soap_action(action, v4)
                  )
           response = parse(action, data)
         rescue ActiveMerchant::ResponseError => e

@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
       # password is your API Token
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = { :crypt_type => 7 }.update(options)
+        options = { :crypt_type => 7 }.merge(options)
         super
       end
 
@@ -70,15 +70,13 @@ module ActiveMerchant #:nodoc:
         commit 'completion', crediting_params(authorization, :comp_amount => amount(money))
       end
 
-      # Voiding requires the original transaction ID and order ID of some open
-      # transaction. Closed transactions must be refunded. Note that the only
-      # methods which may be voided are +capture+ and +purchase+.
+      # Voiding cancels an open authorization.
       #
       # Concatenate your transaction number and order_id by using a semicolon
       # (';'). This is to keep the Moneris interface consistent with other
       # gateways. (See +capture+ for details.)
       def void(authorization, options = {})
-        commit 'purchasecorrection', crediting_params(authorization)
+        capture(0, authorization, options)
       end
 
       # Performs a refund. This method requires that the original transaction

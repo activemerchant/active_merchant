@@ -10,48 +10,48 @@ class MerchantWareTest < Test::Unit::TestCase
 
     @credit_card = credit_card
     @amount = 100
-    
-    @options = { 
+
+    @options = {
       :order_id => '1',
       :billing_address => address
     }
   end
-  
+
   def test_successful_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    
+
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
-    
+
     assert_equal '4706382;1', response.authorization
     assert_equal "APPROVED", response.message
     assert response.test?
   end
-  
+
   def test_soap_fault_during_authorization
     response_500 = stub(:code => "500", :message => "Internal Server Error", :body => fault_authorization_response)
     @gateway.expects(:ssl_post).raises(ActiveMerchant::ResponseError.new(response_500))
-    
+
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
     assert response.test?
-    
+
     assert_nil response.authorization
     assert_equal "Server was unable to process request. ---> strPAN should be at least 13 to at most 19 characters in size. Parameter name: strPAN", response.message
     assert_equal response_500.code, response.params["http_code"]
     assert_equal response_500.message, response.params["http_message"]
   end
-    
+
   def test_failed_authorization
     @gateway.expects(:ssl_post).returns(failed_authorization_response)
-    
+
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
     assert response.test?
-    
+
     assert_nil response.authorization
     assert_equal "transaction type not supported by version", response.message
     assert_equal "FAILED", response.params["status"]
@@ -63,7 +63,7 @@ class MerchantWareTest < Test::Unit::TestCase
     @gateway.expects(:parse).returns({})
     @gateway.credit(@amount, @credit_card, @options)
   end
-  
+
   def test_deprecated_credit
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<strReferenceCode>transaction_id<\//), anything).returns("")
     @gateway.expects(:parse).returns({})
@@ -71,43 +71,43 @@ class MerchantWareTest < Test::Unit::TestCase
       @gateway.credit(@amount, "transaction_id", @options)
     end
   end
-  
+
   def test_refund
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<strReferenceCode>transaction_id<\//), anything).returns("")
     @gateway.expects(:parse).returns({})
     @gateway.refund(@amount, "transaction_id", @options)
   end
-  
+
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
-    
+
     assert response = @gateway.void("1")
     assert_instance_of Response, response
     assert_failure response
     assert response.test?
-    
+
     assert_nil response.authorization
     assert_equal "decline", response.message
     assert_equal "DECLINED", response.params["status"]
     assert_equal "1012", response.params["failure_code"]
   end
-  
+
   def test_avs_result
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    
+
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal 'N', response.avs_result['code']
   end
-  
+
   def test_cvv_result
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    
+
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal 'M', response.cvv_result['code']
   end
-  
+
   private
-  
+
   def successful_authorization_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -134,7 +134,7 @@ class MerchantWareTest < Test::Unit::TestCase
 </soap:Envelope>
     XML
   end
-  
+
   def fault_authorization_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -150,7 +150,7 @@ Parameter name: strPAN</faultstring>
 </soap:Envelope>
     XML
   end
-  
+
   def failed_authorization_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -177,14 +177,14 @@ Parameter name: strPAN</faultstring>
 </soap:Envelope>
     XML
   end
-  
+
   def failed_void_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <soap:Body>
-    <IssueVoidResponse xmlns="http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail">
-      <IssueVoidResult>
+    <VoidPreAuthorizationResponse xmlns="http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail">
+      <VoidPreAuthorizationResult>
         <ReferenceID>4707277</ReferenceID>
         <OrderNumber/>
         <TXDate>7/3/2009 3:28:38 AM</TXDate>
@@ -198,11 +198,11 @@ Parameter name: strPAN</faultstring>
         <AVSResponse/>
         <CVResponse/>
         <POSEntryType>0</POSEntryType>
-      </IssueVoidResult>
-    </IssueVoidResponse>
+      </VoidPreAuthorizationResult>
+    </VoidPreAuthorizationResponse>
   </soap:Body>
 </soap:Envelope>
     XML
   end
-    
+
 end

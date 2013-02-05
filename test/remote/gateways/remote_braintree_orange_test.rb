@@ -44,7 +44,14 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card)
     assert_equal 'Customer Added', response.message
     assert_success response
-    assert_not_nil response.params["customer_vault_id"]
+    assert_match %r{^\d+$}, response.params["customer_vault_id"]
+    assert_equal response.params["customer_vault_id"], response.authorization
+  end
+
+  def test_failed_add_to_vault_with_store_method
+    assert response = @gateway.store(credit_card('411111111111111a'))
+    assert_failure response
+    assert_match %r{Invalid Credit Card Number}i, response.message
   end
 
   def test_successful_add_to_vault_and_use

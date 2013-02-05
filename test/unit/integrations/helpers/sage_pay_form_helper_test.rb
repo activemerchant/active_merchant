@@ -213,7 +213,7 @@ class SagePayFormHelperTest < Test::Unit::TestCase
     assert_equal 5, crypts.uniq.count
   end
 
-  def test_ireland_addresses_use_default_0000_post_code
+  def test_not_including_post_code_uses_0000_default
     @helper.billing_address(
       :address1 => '1 My Street',
       :address2 => '',

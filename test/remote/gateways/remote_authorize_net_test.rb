@@ -88,7 +88,8 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card)
 
     assert_equal Response, response.class
-    assert_equal ["avs_result_code",
+    assert_equal ["action",
+                  "avs_result_code",
                   "card_code",
                   "response_code",
                   "response_reason_code",
@@ -109,7 +110,8 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card)
 
     assert_equal Response, response.class
-    assert_equal ["avs_result_code",
+    assert_equal ["action",
+                  "avs_result_code",
                   "card_code",
                   "response_code",
                   "response_reason_code",
@@ -155,5 +157,19 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response.authorization
   ensure
     ActiveMerchant::Billing::AuthorizeNetGateway.application_id = nil
+  end
+
+  def test_bad_currency
+    @options[:currency] = "XYZ"
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'The supplied currency code is either invalid, not supported, not allowed for this merchant or doesn\'t have an exchange rate', response.message
+  end
+
+  def test_usd_currency
+    @options[:currency] = "USD"
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization
   end
 end
