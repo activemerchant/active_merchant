@@ -281,6 +281,12 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert response.success?
   end
 
+  def test_removes_fractional_amounts_with_twd_currency
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 150, {:currency => 'TWD'}))
+
+    assert_equal '1', REXML::XPath.first(xml, '//n2:OrderTotal').text
+  end
+
   def test_does_not_add_allow_note_if_not_specified
     xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, { }))
 

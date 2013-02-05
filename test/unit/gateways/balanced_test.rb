@@ -198,7 +198,7 @@ class BalancedTest < Test::Unit::TestCase
 
     debit_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/debits/WD2Nkre6GkWAV1A52YgLWEkh'
     refund_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/refunds/RF3GhhG5I3AgrjjXsdkRFQDA'
-    assert refund = @gateway.refund(debit_uri)
+    assert refund = @gateway.refund(@amount, debit_uri)
     assert_instance_of Response, refund
     assert_success refund
     assert refund.test?
@@ -211,10 +211,32 @@ class BalancedTest < Test::Unit::TestCase
     )
 
     debit_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/debits/WD2Nkre6GkWAV1A52YgLWEkh'
-    assert refund = @gateway.refund(debit_uri)
+    assert refund = @gateway.refund(@amount, debit_uri)
     assert_instance_of Response, refund
     assert_failure refund
     assert refund.test?
+  end
+
+  def test_deprecated_refund_purchase
+    assert_deprecation_warning("Calling the refund method without an amount parameter is deprecated and will be removed in a future version.", @gateway) do
+      @gateway.expects(:ssl_request).times(1).returns(
+          successful_refund_response
+      )
+
+      debit_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/debits/WD2Nkre6GkWAV1A52YgLWEkh'
+      refund_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/refunds/RF3GhhG5I3AgrjjXsdkRFQDA'
+      assert refund = @gateway.refund(debit_uri)
+      assert_instance_of Response, refund
+      assert_success refund
+      assert refund.test?
+      assert_equal refund.authorization, refund_uri
+    end
+  end
+
+  def test_refund_with_nil_debit_uri
+    assert refund = @gateway.refund(nil, nil)
+    assert_instance_of Response, refund
+    assert_failure refund
   end
 
   def test_store

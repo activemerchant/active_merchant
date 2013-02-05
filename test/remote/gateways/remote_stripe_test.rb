@@ -37,7 +37,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Your card number is invalid', response.message
+    assert_match /card number.* invalid/, response.message
   end
 
   def test_successful_void
@@ -97,6 +97,14 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal "Invalid API Key provided: active_merchant_test", response.message
+  end
+
+  def test_application_fee_for_stripe_connect
+    assert response = @gateway.purchase(@amount, @credit_card, { :application_fee => 12 })
+    assert response.params['fee_details'], 'This test will only work if your gateway login is a Stripe Connect access_token.'
+    assert response.params['fee_details'].any? do |fee|
+      (fee['type'] == 'application_fee') && (fee['amount'] == 12)
+    end
   end
 
 end

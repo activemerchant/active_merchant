@@ -46,6 +46,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
   def test_expdate_formatting
     assert_equal '2009-09', @gateway.send(:expdate, credit_card('4111111111111111', :month => "9", :year => "2009"))
     assert_equal '2013-11', @gateway.send(:expdate, credit_card('4111111111111111', :month => "11", :year => "2013"))
+    assert_equal 'XXXX', @gateway.send(:expdate, credit_card('XXXX1234', :month => nil, :year => nil))
   end
   
   def test_should_create_customer_profile_request

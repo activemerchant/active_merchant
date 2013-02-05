@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
       def display_number
         self.class.mask(number)
       end
-      
+
       def first_digits
         self.class.first_digits(number)
       end
@@ -207,6 +207,10 @@ module ActiveMerchant #:nodoc:
 
       def self.requires_verification_value?
         require_verification_value
+      end
+
+      def check?
+        false
       end
 
       private

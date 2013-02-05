@@ -2,74 +2,161 @@ require 'rexml/document'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    # First, make sure you have everything setup correctly and all of your dependencies in place with:
-    #
-    #   require 'rubygems'
-    #   require 'active_merchant'
-    #
-    # ActiveMerchant expects the amounts to be given as an Integer in cents. In this case, $10 US becomes 1000.
-    #
-    #   tendollar = 1000
-    #
-    # The transaction result is based on the cent value of the transaction. $10.15 will return a failed transaction
-    # with a response code of "15 – No Issuer", while $10.00 will return "00 – Transaction Approved."
-    #
-    # Next, create a credit card object using a eWay approved test card number (4444333322221111).
-    #
-    #   creditcard = ActiveMerchant::Billing::CreditCard.new(
-    #     :number => '4444333322221111',
-    #     :month => 8,
-    #     :year => 2006,
-    #     :first_name => 'Longbob',
-    #     :last_name => 'Longsen',
-    #     :verification_value => '123'
-    #   )
-    #   options = {
-    #     :order_id => '1230123',
-    #     :email => 'bob@testbob.com',
-    #     :address => { :address1 => '47 Bobway',
-    #                   :city => 'Bobville',
-    #                   :state => 'WA',
-    #                   :country => 'Australia',
-    #                   :zip => '2000'
-    #                 },
-    #     :description => 'purchased items'
-    #   }
-    #
-    # To finish setting up, create the active_merchant object you will be using, with the eWay gateway. If you have a
-    # functional eWay account, replace :login with your Customer ID.
-    #
-    #   gateway = ActiveMerchant::Billing::Base.gateway(:eway).new(:login => '87654321')
-    #
-    # Now we are ready to process our transaction
-    #
-    #   response = gateway.purchase(tendollar, creditcard, options)
-    #
-    # Sending a transaction to eWay with active_merchant returns a Response object, which consistently allows you to:
-    #
-    # 1) Check whether the transaction was successful
-    #
-    #   response.success?
-    #
-    # 2) Retrieve any message returned by eWay, either a "transaction was successful" note or an explanation of why the
-    # transaction was rejected.
-    #
-    #   response.message
-    #
-    # 3) Retrieve and store the unique transaction ID returned by eWway, for use in referencing the transaction in the future.
-    #
-    #   response.authorization
-    #
-    # This should be enough to get you started with eWay and active_merchant. For further information, review the methods
-    # below and the rest of active_merchant's documentation.
-
+    # Public: For more information on the Eway Gateway please visit their
+    # {Developers Area}[http://www.eway.com.au/developers/api/direct-payments]
     class EwayGateway < Gateway
-      self.test_url = 'https://www.eway.com.au/gateway/xmltest/testpage.asp'
-      self.live_url = 'https://www.eway.com.au/gateway/xmlpayment.asp'
+      self.live_url = 'https://www.eway.com.au'
 
-      class_attribute :test_cvn_url, :live_cvn_url
-      self.test_cvn_url = 'https://www.eway.com.au/gateway_cvn/xmltest/testpage.asp'
-      self.live_cvn_url = 'https://www.eway.com.au/gateway_cvn/xmlpayment.asp'
+      self.money_format = :cents
+      self.supported_countries = ['AU']
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.homepage_url = 'http://www.eway.com.au/'
+      self.display_name = 'eWAY'
+
+      # Public: Create a new Eway Gateway.
+      # options - A hash of options:
+      #           :login     - Your Customer ID.
+      #           :password  - Your XML Refund Password that you
+      #                        specified on the Eway site. (optional)
+      def initialize(options = {})
+        requires!(options, :login)
+        super
+      end
+
+      def purchase(money, creditcard, options = {})
+        requires_address!(options)
+
+        post = {}
+        add_creditcard(post, creditcard)
+        add_address(post, options)
+        add_customer_id(post)
+        add_invoice_data(post, options)
+        add_non_optional_data(post)
+        add_amount(post, money)
+        post[:CustomerEmail] = options[:email]
+
+        commit(purchase_url(post[:CVN]), money, post)
+      end
+
+      def refund(money, authorization, options={})
+        post = {}
+
+        add_customer_id(post)
+        add_amount(post, money)
+        add_non_optional_data(post)
+        post[:OriginalTrxnNumber] = authorization
+        post[:RefundPassword] = @options[:password]
+        post[:CardExpiryMonth] = nil
+        post[:CardExpiryYear] = nil
+
+        commit(refund_url, money, post)
+      end
+
+      private
+      def requires_address!(options)
+        raise ArgumentError.new("Missing eWay required parameters: address or billing_address") unless (options.has_key?(:address) or options.has_key?(:billing_address))
+      end
+
+      def add_creditcard(post, creditcard)
+        post[:CardNumber]  = creditcard.number
+        post[:CardExpiryMonth]  = sprintf("%.2i", creditcard.month)
+        post[:CardExpiryYear] = sprintf("%.4i", creditcard.year)[-2..-1]
+        post[:CustomerFirstName] = creditcard.first_name
+        post[:CustomerLastName]  = creditcard.last_name
+        post[:CardHoldersName] = creditcard.name
+
+        post[:CVN] = creditcard.verification_value if creditcard.verification_value?
+      end
+
+      def add_address(post, options)
+        if address = options[:billing_address] || options[:address]
+          post[:CustomerAddress]    = [ address[:address1], address[:address2], address[:city], address[:state], address[:country] ].compact.join(', ')
+          post[:CustomerPostcode]   = address[:zip]
+        end
+      end
+
+      def add_customer_id(post)
+        post[:CustomerID] = @options[:login]
+      end
+
+      def add_invoice_data(post, options)
+        post[:CustomerInvoiceRef] = options[:order_id]
+        post[:CustomerInvoiceDescription] = options[:description]
+      end
+
+      def add_amount(post, money)
+        post[:TotalAmount] = amount(money)
+      end
+
+      def add_non_optional_data(post)
+        post[:Option1] = nil
+        post[:Option2] = nil
+        post[:Option3] = nil
+        post[:TrxnNumber] = nil
+      end
+
+      def commit(url, money, parameters)
+        raw_response = ssl_post(url, post_data(parameters))
+        response = parse(raw_response)
+
+        Response.new(success?(response),
+          message_from(response[:ewaytrxnerror]),
+          response,
+          :authorization => response[:ewaytrxnnumber],
+          :test => test?
+        )
+      end
+
+      def success?(response)
+        response[:ewaytrxnstatus] == "True"
+      end
+
+      def parse(xml)
+        response = {}
+        xml = REXML::Document.new(xml)
+        xml.elements.each('//ewayResponse/*') do |node|
+          response[node.name.downcase.to_sym] = normalize(node.text)
+        end unless xml.root.nil?
+
+        response
+      end
+
+      def post_data(parameters = {})
+        xml   = REXML::Document.new
+        root  = xml.add_element("ewaygateway")
+
+        parameters.each do |key, value|
+          root.add_element("eway#{key}").text = value
+        end
+        xml.to_s
+      end
+
+      def message_from(message)
+        return '' if message.blank?
+        MESSAGES[message[0,2]] || message
+      end
+
+      # Make a ruby type out of the response string
+      def normalize(field)
+        case field
+        when "true"   then true
+        when "false"  then false
+        when ""       then nil
+        when "null"   then nil
+        else field
+        end
+      end
+
+      def purchase_url(cvn)
+        suffix = test? ? 'xmltest/testpage.asp' : 'xmlpayment.asp'
+        gateway_part = cvn ? 'gateway_cvn' : 'gateway'
+        "#{live_url}/#{gateway_part}/#{suffix}"
+      end
+
+      def refund_url
+        suffix = test? ? 'xmltest/refund_test.asp' : 'xmlpaymentrefund.asp'
+        "#{live_url}/gateway/#{suffix}"
+      end
 
       MESSAGES = {
         "00" => "Transaction Approved",
@@ -133,150 +220,6 @@ module ActiveMerchant #:nodoc:
         "94" => "Duplicate Transaction",
         "96" => "System Error"
       }
-
-      self.money_format = :cents
-      self.supported_countries = ['AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
-      self.homepage_url = 'http://www.eway.com.au/'
-      self.display_name = 'eWAY'
-
-      def initialize(options = {})
-        requires!(options, :login)
-        super
-      end
-
-      # ewayCustomerEmail, ewayCustomerAddress, ewayCustomerPostcode
-      def purchase(money, creditcard, options = {})
-        requires_address!(options)
-
-        post = {}
-        add_creditcard(post, creditcard)
-        add_address(post, options)
-        add_customer_data(post, options)
-        add_invoice_data(post, options)
-        # The request fails if all of the fields aren't present
-        add_optional_data(post)
-
-        commit(money, post)
-      end
-
-      private
-
-      def requires_address!(options)
-        raise ArgumentError.new("Missing eWay required parameters: address or billing_address") unless (options.has_key?(:address) or options.has_key?(:billing_address))
-      end
-
-      def add_creditcard(post, creditcard)
-        post[:CardNumber]  = creditcard.number
-        post[:CardExpiryMonth]  = sprintf("%.2i", creditcard.month)
-        post[:CardExpiryYear] = sprintf("%.4i", creditcard.year)[-2..-1]
-        post[:CustomerFirstName] = creditcard.first_name
-        post[:CustomerLastName]  = creditcard.last_name
-        post[:CardHoldersName] = creditcard.name
-
-        post[:CVN] = creditcard.verification_value if creditcard.verification_value?
-      end
-
-      def add_address(post, options)
-        if address = options[:billing_address] || options[:address]
-          post[:CustomerAddress]    = [ address[:address1], address[:address2], address[:city], address[:state], address[:country] ].compact.join(', ')
-          post[:CustomerPostcode]   = address[:zip]
-        end
-      end
-
-      def add_customer_data(post, options)
-        post[:CustomerEmail] = options[:email]
-      end
-
-      def add_invoice_data(post, options)
-        post[:CustomerInvoiceRef] = options[:order_id]
-        post[:CustomerInvoiceDescription] = options[:description]
-      end
-
-      def add_optional_data(post)
-        post[:TrxnNumber] = nil
-        post[:Option1] = nil
-        post[:Option2] = nil
-        post[:Option3] = nil
-      end
-
-      def commit(money, parameters)
-        parameters[:TotalAmount] = amount(money)
-
-        response = parse( ssl_post(gateway_url(parameters[:CVN], test?), post_data(parameters)) )
-
-        Response.new(success?(response), message_from(response[:ewaytrxnerror]), response,
-          :authorization => response[:ewayauthcode],
-          :test => /\(Test( CVN)? Gateway\)/ === response[:ewaytrxnerror]
-        )
-      end
-
-      def success?(response)
-        response[:ewaytrxnstatus] == "True"
-      end
-
-      # Parse eway response xml into a convinient hash
-      def parse(xml)
-        #  "<?xml version=\"1.0\"?>".
-        #  <ewayResponse>
-        #  <ewayTrxnError></ewayTrxnError>
-        #  <ewayTrxnStatus>True</ewayTrxnStatus>
-        #  <ewayTrxnNumber>10002</ewayTrxnNumber>
-        #  <ewayTrxnOption1></ewayTrxnOption1>
-        #  <ewayTrxnOption2></ewayTrxnOption2>
-        #  <ewayTrxnOption3></ewayTrxnOption3>
-        #  <ewayReturnAmount>10</ewayReturnAmount>
-        #  <ewayAuthCode>123456</ewayAuthCode>
-        #  <ewayTrxnReference>987654321</ewayTrxnReference>
-        #  </ewayResponse>
-
-        response = {}
-        xml = REXML::Document.new(xml)
-        xml.elements.each('//ewayResponse/*') do |node|
-
-          response[node.name.downcase.to_sym] = normalize(node.text)
-
-        end unless xml.root.nil?
-
-        response
-      end
-
-      def post_data(parameters = {})
-        parameters[:CustomerID] = @options[:login]
-
-        xml   = REXML::Document.new
-        root  = xml.add_element("ewaygateway")
-
-        parameters.each do |key, value|
-          root.add_element("eway#{key}").text = value
-        end
-        xml.to_s
-      end
-
-      def message_from(message)
-        return '' if message.blank?
-        MESSAGES[message[0,2]] || message
-      end
-
-      # Make a ruby type out of the response string
-      def normalize(field)
-        case field
-        when "true"   then true
-        when "false"  then false
-        when ""       then nil
-        when "null"   then nil
-        else field
-        end
-      end
-
-      def gateway_url(cvn, test)
-        if cvn
-          test ? self.test_cvn_url : self.live_cvn_url
-        else
-          test ? self.test_url : self.live_url
-        end
-      end
-
     end
   end
 end

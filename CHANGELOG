@@ -1,5 +1,51 @@
 = ActiveMerchant CHANGELOG
 
+* Add FirstData Global Gateway e4 [frobcode]
+* PaymentExpress: Add support for optional fields: ClientType and TxnData [moklett]
+* PaymentExpress: Limit MerchantReference/description to 64 chars [moklett]
+* Wirecard: description must be no more than 32 characters [moklett]
+* Litle: Add support for passing a token to the authorize and purchase methods [forest]
+* PayPal Common: Allow searching for transactions by ProfileID [aq1018]
+* Add Spreedly Core gateway [duff]
+* eWay Gateway: Return proper value for authorization [duff]
+* eWay Gateway: Add support for refunds [duff]
+* Quickpay: Add support for protocols 5 & 6 [twarberg]
+* Banwire gateway: Handle JSON::ParserError [duff]
+* Balanced gateway: Fix unspecified marketplace [duff]
+* QBMS gateway: Allow partial addresses [duff]
+* Authorize.Net CIM: Allow omitting card expiration date [shanebonham]
+* Authorize.Net CIM: Add support for extraOptions to createCustomerProfileTransaction [tpiekos]
+* Add NETPAY gateway [samlown]
+* Balanced gateway: Add amount to the refund method signature [ntalbott]
+* Orbital gateway: Fix void method signature [aprofeit, ntalbott]
+* Eway Managed: Add 'query_customer' API as #retrieve [cdaloisio]
+* NetPay: Fix the signature for void [duff]
+* Cybersource: Add check support [bowmande]
+* Moneris: Use a capture of $0 for void [ntalbott]
+* PayPal Express integration: Fix received_at time zone [ntalbott]
+* NAB Transact: Add refund capability [nagash]
+* Stripe: Add support for application_fee [duff]
+* SagePay: Add support for GiftAidPayment [duff]
+* Wirecard: Add support for partial captures [richardblair]
+
+== Version 1.29.3 (December 7, 2012)
+
+* Braintree Blue: Better wiredump_device support [ntalbott]
+* Braintree: Store sets vault id as authorization [ntalbott]
+* WorldPay: Fix currencies without fractions like JPY and HUF by rounding down amount [Soleone]
+
+== Version 1.29.2 (December 7, 2012)
+
+* Moneris: fix issue with the default options not being merged [jduff]
+* Sage Pay: Make 0000 default post code for everyone if missing [BlakeMesdag]
+
+== Version 1.29.1 (December 5, 2012)
+
+* Add eWay Rapid 3.0 gateway [ntalbott]
+* Fix AVS responses missing attributes [jduff]
+
+== Version 1.29.0 (November 30, 2012)
+
 * Authorize.Net gateway: Support description and order_id for capture [ntalbott]
 * Add Mercury gateway [adr1anx, opendining]
 * Webmoney integration: Add gross, item_id, and amount accessors to notification [fr33z3]

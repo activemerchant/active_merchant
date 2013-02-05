@@ -27,13 +27,13 @@ class RemoteBalancedTest < Test::Unit::TestCase
   def test_invalid_card
     assert response = @gateway.purchase(@amount, @invalid_card, @options)
     assert_failure response
-    assert response.message.index('Processor did not accept this card.') != nil
+    assert_match /Customer call bank/, response.message
   end
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert response.message.index('Processor did not accept this card.') != nil
+    assert_match /Account Frozen/, response.message
   end
 
   def test_authorize_and_capture
@@ -78,7 +78,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
   def test_refund_purchase
     assert debit = @gateway.purchase(@amount, @credit_card, @options)
     assert_success debit
-    assert refund = @gateway.refund(debit.authorization)
+    assert refund = @gateway.refund(nil, debit.authorization)
     assert_success refund
     assert_equal @amount, refund.params['amount']
   end
@@ -86,9 +86,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
   def test_refund_partial_purchase
     assert debit = @gateway.purchase(@amount, @credit_card, @options)
     assert_success debit
-    assert refund = @gateway.refund(debit.authorization, {
-        :amount => @amount / 2
-    })
+    assert refund = @gateway.refund(@amount / 2, debit.authorization)
     assert_success refund
     assert_equal @amount / 2, refund.params['amount']
   end
