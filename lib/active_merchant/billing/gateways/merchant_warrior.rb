@@ -105,11 +105,11 @@ module ActiveMerchant #:nodoc:
                     'cardExpiryYear' => year})
       end
 
-      private
-
       def token(card_id, card_key)
-        "#{card_id};#{card_id};#{key_replace}"
+        "#{card_id};#{card_key};#{card_replace_key}"
       end
+
+      private
 
       def card_replace_key
         seed = "--#{rand(10000)}--#{Time.now}--";

@@ -32,8 +32,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
         :address1 => '123 test st',
         :zip => '4000'
       },
-      :transaction_product => 'TestProduct',
-      :credit_amount => @success_amount
+      :transaction_product => 'TestProduct'
     }
 
   end
@@ -46,7 +45,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     auth_code = response.params["auth_code"]
 
     assert_success response
-    assert response = @gateway.capture(@success_amount, transaction_id, @success_amount)
+    assert response = @gateway.capture(@success_amount, transaction_id)
     assert_success response
   end
 
@@ -68,14 +67,14 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@success_amount, @credit_card, @options)
     transaction_id = response.params["transaction_id"]
 
-    assert response = @gateway.credit(@success_amount, transaction_id, @options)
+    assert response = @gateway.refund(@success_amount, transaction_id)
     assert_instance_of Response, response
     assert_equal 'Transaction approved', response.params["response_message"]
     assert_success response
   end
 
   def test_unsuccessful_credit
-    assert response = @gateway.credit(@success_amount, 'invalid-transaction-id', @options)
+    assert response = @gateway.refund(@success_amount, 'invalid-transaction-id')
     assert_instance_of Response, response
     assert_equal 'MW - 011:Invalid transactionID', response.params["response_message"]
     assert_failure response
@@ -89,7 +88,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     auth_code = response.params["auth_code"]
     assert_success response
 
-    assert response = @gateway.capture(150, transaction_id, 160)
+    assert response = @gateway.capture(150, transaction_id)
     assert_equal "MW - 002:Field 'transactionAmount' is invalid", response.params["response_message"]
     assert_failure response
   end
@@ -101,6 +100,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert_equal 'Operation successful', response.params["response_message"]
     assert_success response
     @token = @gateway.token(response.params["card_id"], response.params["card_key"])
+    puts @token.inspect
     assert response = @gateway.purchase(@token_success_amount, @token, @options)
     assert_equal 'Transaction approved', response.params["response_message"]
   end
@@ -122,7 +122,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     auth_code = response.params["auth_code"]
     assert_success response
 
-    assert response = @gateway.capture(@token_success_amount, transaction_id, @token_success_amount)
+    assert response = @gateway.capture(@token_success_amount, transaction_id)
     assert_success response
   end
 
