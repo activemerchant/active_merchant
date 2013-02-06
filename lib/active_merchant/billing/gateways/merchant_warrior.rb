@@ -36,10 +36,6 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def test?
-        @options[:test] || super
-      end
-
       def authorize(money, credit_card_or_token, options = {})
         post = {}
         add_product(post, options)
@@ -49,9 +45,10 @@ module ActiveMerchant #:nodoc:
           add_creditcard(post, credit_card_or_token)
           commit('processAuth', money, post)
         else
-          post.merge!('cardID' => credit_card_or_token[:card_id])
-          post.merge!('cardKey' => credit_card_or_token[:card_key])
-          post.merge!('cardKeyReplace' => credit_card_or_token[:key_replace])
+          card_id, card_key, key_replace = credit_card_or_token.split(";")
+          post.merge!('cardID' => card_id)
+          post.merge!('cardKey' => card_key)
+          post.merge!('cardKeyReplace' => key_replace)
           post.merge!('hash' => verification_hash(money))
           post.merge!('transactionAmount' => sprintf("%.2f",money))
           post.merge!('transactionCurrency' => currency(money))
@@ -69,9 +66,10 @@ module ActiveMerchant #:nodoc:
           add_creditcard(post, credit_card_or_token)
           commit('processCard', money, post)
         else
-          post.merge!('cardID' => credit_card_or_token[:card_id])
-          post.merge!('cardKey' => credit_card_or_token[:card_key])
-          post.merge!('cardKeyReplace' => credit_card_or_token[:key_replace])
+          card_id, card_key, key_replace = credit_card_or_token.split(";")
+          post.merge!('cardID' => card_id)
+          post.merge!('cardKey' => card_key)
+          post.merge!('cardKeyReplace' => key_replace)
           post.merge!('hash' => verification_hash(money))
           post.merge!('transactionAmount' => money.to_s)
           post.merge!('transactionCurrency' => currency(money))
@@ -80,21 +78,20 @@ module ActiveMerchant #:nodoc:
 
       end
 
-      def capture(money, transaction_id, capture_amount)
+      def capture(money, identification)
         post = {}
-        post.merge!('transactionID' => transaction_id)
+        post.merge!('transactionID' => identification)
         post.merge!('transactionAmount' => money.to_s)
-        post.merge!('captureAmount' => capture_amount.to_s)
+        post.merge!('captureAmount' => money.to_s)
         post.merge!('hash' => verification_hash(money))
         post.merge!('transactionCurrency' => currency(money))
         commit('processCapture', money, post)
       end
 
-      def credit(money, identification, options = {})
-        requires!(options, :credit_amount)
+      def refund(money, identification)
         commit('refundCard', money, {
                  'transactionID' => identification,
-                 'refundAmount' => options[:credit_amount]
+                 'refundAmount' => money
                })
       end
 
@@ -108,15 +105,11 @@ module ActiveMerchant #:nodoc:
                     'cardExpiryYear' => year})
       end
 
-      def token(card_id, card_key)
-        {
-          :card_id => card_id,
-          :card_key => card_key,
-          :key_replace => card_replace_key
-        }
-      end
-
       private
+
+      def token(card_id, card_key)
+        "#{card_id};#{card_id};#{key_replace}"
+      end
 
       def card_replace_key
         seed = "--#{rand(10000)}--#{Time.now}--";

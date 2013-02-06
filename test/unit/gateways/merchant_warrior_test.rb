@@ -24,8 +24,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
         :address1 => '123 test st',
         :zip => '4000'
       },
-      :transaction_product => 'TestProduct',
-      :credit_amount => @success_amount
+      :transaction_product => 'TestProduct'
     }
 
   end
@@ -53,8 +52,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_successful_credit
     @gateway.expects(:ssl_post).returns(successful_credit_response)
 
-    assert response = @gateway.credit(@success_amount, @transaction_id,
-                                      @options)
+    assert response = @gateway.refund(@success_amount, @transaction_id)
     assert_instance_of Response, response
     assert_equal 'Transaction approved', response.params["response_message"]
     assert_success response
@@ -65,8 +63,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_unsuccessful_credit
     @gateway.expects(:ssl_post).returns(failed_credit_response)
 
-    assert response = @gateway.credit(@success_amount, @transaction_id,
-                                      @options)
+    assert response = @gateway.refund(@success_amount, @transaction_id)
     assert_instance_of Response, response
     assert_equal 'MW -016:transactionID has already been reversed', response.params["response_message"]
     assert_failure response
