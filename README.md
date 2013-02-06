@@ -112,6 +112,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Litle](http://www.litle.com/) - US
 * [Merchant e-Solutions](http://merchante-solutions.com/) - US
 * [MerchantWare](http://merchantwarehouse.com/merchantware) - US
+* [Merchant Warrior] (http://merchantwarrior.com) - AU
 * [Mercury](http://www.mercurypay.com) - US
 * [MasterCard Internet Gateway Service (MiGS)](http://mastercard.com/mastercardsps) - AU, AE, BD, BN, EG, HK, ID, IN, JO, KW, LB, LK, MU, MV, MY, NZ, OM, PH, QA, SA, SG, TT, VN
 * [Modern Payments](http://www.modpay.com) - US
