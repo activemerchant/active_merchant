@@ -33,8 +33,7 @@ class PayflowLinkHelperTest < Test::Unit::TestCase
     @helper.expects(:ssl_post).with { |url, data|
       params = parse_params(data)
 
-      assert_equal 'my order', params["description[8]"]
-      true
+      'my order' == params["description[8]"]
     }.returns("RESPMSG=APPROVED&SECURETOKEN=aaa&SECURETOKENID=yyy")
 
     @helper.form_fields
@@ -45,8 +44,7 @@ class PayflowLinkHelperTest < Test::Unit::TestCase
     @helper.expects(:ssl_post).with { |url, data|
       params = parse_params(data)
 
-      assert_equal 'my order', params["description[8]"]
-      true
+      'my order' == params["description[8]"]
     }.returns("RESPMSG=APPROVED&SECURETOKEN=aaa&SECURETOKENID=yyy")
 
     @helper.form_fields
