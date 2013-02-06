@@ -289,7 +289,7 @@ module ActiveMerchant #:nodoc:
           'customerId' => options[:customer],
           'reportGroup' => (options[:merchant] || @options[:merchant]),
           'merchantId' => (options[:merchant_id] || @options[:merchant_id]),
-          'orderSource' => 'ecommerce',
+          'orderSource' => (options[:order_source] || 'ecommerce'),
           'enhancedData' => enhanced_data,
           'fraudCheckType' => fraud_check_type,
           'user' => (options[:user] || @options[:user]),

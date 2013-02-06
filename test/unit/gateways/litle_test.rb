@@ -188,6 +188,29 @@ class LitleTest < Test::Unit::TestCase
     assert_equal 'cool stuff', hashFromGateway['enhancedData']['customerReference']
   end
 
+  def test_create_hash_with_default_order_source
+    # define all inputs
+    money = 1000
+    options = {
+    }
+
+    hashFromGateway = @gateway.send(:create_hash, money, options)
+
+    assert_equal 'ecommerce', hashFromGateway['orderSource']
+  end
+
+  def test_create_hash_with_custom_order_source
+    # define all inputs
+    money = 1000
+    options = {
+        :order_source => 'recurring'
+    }
+
+    hashFromGateway = @gateway.send(:create_hash, money, options)
+
+    assert_equal 'recurring', hashFromGateway['orderSource']
+  end
+
   def test_create_hash_money_nil
     # define all inputs
     money = nil
