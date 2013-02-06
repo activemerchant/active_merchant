@@ -29,7 +29,7 @@ class PaypalPaymentsAdvancedHelperTest < Test::Unit::TestCase
   end
 
   def test_description
-    @helper.description = "my order"
+    @helper.description "my order"
     @helper.expects(:ssl_post).with { |url, data|
       params = parse_params(data)
 
