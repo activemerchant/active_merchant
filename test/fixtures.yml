@@ -588,3 +588,6 @@ wirecard:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+pin:
+  api_key: "I_mo9BUUUXIwXF-avcs3LA"
