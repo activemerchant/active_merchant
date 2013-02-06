@@ -29,7 +29,19 @@ class PayflowLinkHelperTest < Test::Unit::TestCase
   end
 
   def test_description
-    @helper.description = "my order"
+    @helper.description "my order"
+    @helper.expects(:ssl_post).with { |url, data|
+      params = parse_params(data)
+
+      assert_equal 'my order', params["description[8]"]
+      true
+    }.returns("RESPMSG=APPROVED&SECURETOKEN=aaa&SECURETOKENID=yyy")
+
+    @helper.form_fields
+  end
+
+  def test_description_cleaned
+    @helper.description "#my order#"
     @helper.expects(:ssl_post).with { |url, data|
       params = parse_params(data)
 

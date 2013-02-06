@@ -20,7 +20,6 @@ module ActiveMerchant #:nodoc:
           mapping :credential2, 'pwd'
           mapping :credential3, 'partner'
           mapping :order, 'user1'
-          mapping :description, 'description'
 
           mapping :amount, 'amt'
 
@@ -34,6 +33,10 @@ module ActiveMerchant #:nodoc:
                                      :name    => 'name'
 
           mapping :customer, :name => 'name'
+
+          def description(value)
+            add_field('description', "#{value}".gsub("#", ""))
+          end
 
           def customer(params = {})
             add_field(mappings[:customer][:name], [params.delete(:first_name), params.delete(:last_name)].compact.join(' '))
