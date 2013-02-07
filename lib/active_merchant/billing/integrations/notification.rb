@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
         attr_accessor :raw
         
         # set this to an array in the subclass, to specify which IPs are allowed to send requests
-        class_inheritable_accessor :production_ips
+        class_attribute :production_ips
 
         def initialize(post, options = {})
           @options = options
@@ -44,6 +44,10 @@ module ActiveMerchant #:nodoc:
         def valid_sender?(ip)
           return true if ActiveMerchant::Billing::Base.integration_mode == :test || production_ips.blank?
           production_ips.include?(ip)
+        end
+
+        def test?
+          false
         end
         
         private

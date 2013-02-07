@@ -3,9 +3,7 @@ require File.join(File.dirname(__FILE__),'smart_ps.rb')
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class TransaxGateway < SmartPs
-      def api_url 
-        'https://secure.nelixtransax.net/api/transact.php'
-      end
+      self.live_url = self.test_url = 'https://secure.nelixtransax.net/api/transact.php'
       
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']

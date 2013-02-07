@@ -81,11 +81,23 @@ class QuickpayTest < Test::Unit::TestCase
   end
   
   def test_supported_countries
-    assert_equal ['DK'], QuickpayGateway.supported_countries
+    assert_equal ['DK', 'SE'], QuickpayGateway.supported_countries
   end
   
   def test_supported_card_types
     assert_equal  [ :dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro ], QuickpayGateway.supported_cardtypes
+  end
+
+  def test_add_testmode_does_not_add_testmode_if_transaction_id_present
+    post_hash = {:transaction => "12345"}
+    @gateway.send(:add_testmode, post_hash)
+    assert_equal nil, post_hash[:testmode]
+  end
+  
+  def test_add_testmode_adds_a_testmode_param_if_transaction_id_not_present
+    post_hash = {}
+    @gateway.send(:add_testmode, post_hash)
+    assert_equal '1', post_hash[:testmode]
   end
   
   private

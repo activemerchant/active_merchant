@@ -24,7 +24,7 @@ class SallieMaeTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_request
-    @gateway.expects(:ssl_post).returns(failed_purcahse_response)
+    @gateway.expects(:ssl_post).returns(failed_purchase_response)
     
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -47,7 +47,7 @@ class SallieMaeTest < Test::Unit::TestCase
   end
   
   # Place raw failed response from gateway here
-  def failed_purcahse_response
+  def failed_purchase_response
     "Status=Declined"
   end
 end

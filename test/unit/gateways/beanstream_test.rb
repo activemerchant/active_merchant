@@ -38,6 +38,10 @@ class BeanstreamTest < Test::Unit::TestCase
       :tax2 => 100,
       :custom => 'reference one'
     }
+
+    @recurring_options = @options.merge(
+      :interval => { :unit => :months, :length => 1 },
+      :occurrences => 5)
   end
   
   def test_successful_purchase
@@ -88,6 +92,24 @@ class BeanstreamTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_check
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+    assert_equal '10000028;15.00;P', response.authorization
+  end
+
+  def test_successful_purchase_with_vault
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    vault = rand(100000)+10001
+
+    assert response = @gateway.purchase(@amount, vault, @options)
+    assert_success response
+    assert_equal '10000028;15.00;P', response.authorization
+  end
+
   
   # Testing Non-American countries
   
@@ -115,7 +137,42 @@ class BeanstreamTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options)
   end
   
-  
+  def test_successful_recurring
+    @gateway.expects(:ssl_post).returns(successful_recurring_response)
+
+    assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_update_recurring
+    @gateway.expects(:ssl_post).returns(successful_recurring_response)
+
+    assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
+    assert_success response
+    assert_equal 'Approved', response.message
+
+    @gateway.expects(:ssl_post).returns(successful_update_recurring_response)
+
+    assert response = @gateway.update_recurring(@amount, @credit_card, @recurring_options.merge(:account_id => response.params["rbAccountId"]))
+    assert_success response
+    assert_equal "Request successful", response.message
+  end
+
+  def test_successful_cancel_recurring
+    @gateway.expects(:ssl_post).returns(successful_recurring_response)
+
+    assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
+    assert_success response
+    assert_equal 'Approved', response.message
+
+    @gateway.expects(:ssl_post).returns(successful_cancel_recurring_response)
+
+    assert response = @gateway.cancel_recurring(:account_id => response.params["rbAccountId"])
+    assert_success response
+    assert_equal "Request successful", response.message
+  end
+
   private
     
   def successful_purchase_response
@@ -135,10 +192,28 @@ class BeanstreamTest < Test::Unit::TestCase
   end
   
   def brazilian_address_params_without_zip_and_state
-    { :shipProvince => '--', :shipPostalCode => '000000', :ordProvince => '--', :ordPostalCode => '000000', :ordCountry => 'BR', :trnCardOwner => 'Longbob Longsen', :shipCity => 'Rio de Janeiro', :ordAddress1 => '1234 Levesque St.', :ordShippingPrice => '1.00', :deliveryEstimate => nil, :shipName => 'xiaobo zzz', :trnCardNumber => '4242424242424242', :trnAmount => '10.00', :trnType => 'P', :ordAddress2 => 'Apt B', :ordTax1Price => '1.00', :shipEmailAddress => 'xiaobozzz@example.com', :trnExpMonth => '09', :ordCity => 'Rio de Janeiro', :shipPhoneNumber => '555-555-5555', :ordName => 'xiaobo zzz', :trnExpYear => '11', :trnOrderNumber => '1234', :shipCountry => 'BR', :ordTax2Price => '1.00', :shipAddress1 => '1234 Levesque St.', :ordEmailAddress => 'xiaobozzz@example.com', :trnCardCvd => '123', :trnComments => nil, :shippingMethod => nil, :ref1 => 'reference one', :shipAddress2 => 'Apt B', :ordPhoneNumber => '555-555-5555', :ordItemPrice => '8.00' }
+    { :shipProvince => '--', :shipPostalCode => '000000', :ordProvince => '--', :ordPostalCode => '000000', :ordCountry => 'BR', :trnCardOwner => 'Longbob Longsen', :shipCity => 'Rio de Janeiro', :ordAddress1 => '1234 Levesque St.', :ordShippingPrice => '1.00', :deliveryEstimate => nil, :shipName => 'xiaobo zzz', :trnCardNumber => '4242424242424242', :trnAmount => '10.00', :trnType => 'P', :ordAddress2 => 'Apt B', :ordTax1Price => '1.00', :shipEmailAddress => 'xiaobozzz@example.com', :trnExpMonth => '09', :ordCity => 'Rio de Janeiro', :shipPhoneNumber => '555-555-5555', :ordName => 'xiaobo zzz', :trnExpYear => next_year, :trnOrderNumber => '1234', :shipCountry => 'BR', :ordTax2Price => '1.00', :shipAddress1 => '1234 Levesque St.', :ordEmailAddress => 'xiaobozzz@example.com', :trnCardCvd => '123', :trnComments => nil, :shippingMethod => nil, :ref1 => 'reference one', :shipAddress2 => 'Apt B', :ordPhoneNumber => '555-555-5555', :ordItemPrice => '8.00' }
   end
 
   def german_address_params_without_state
-    { :shipProvince => '--', :shipPostalCode => '12345', :ordProvince => '--', :ordPostalCode => '12345', :ordCountry => 'DE', :trnCardOwner => 'Longbob Longsen', :shipCity => 'Berlin', :ordAddress1 => '1234 Levesque St.', :ordShippingPrice => '1.00', :deliveryEstimate => nil, :shipName => 'xiaobo zzz', :trnCardNumber => '4242424242424242', :trnAmount => '10.00', :trnType => 'P', :ordAddress2 => 'Apt B', :ordTax1Price => '1.00', :shipEmailAddress => 'xiaobozzz@example.com', :trnExpMonth => '09', :ordCity => 'Berlin', :shipPhoneNumber => '555-555-5555', :ordName => 'xiaobo zzz', :trnExpYear => '11', :trnOrderNumber => '1234', :shipCountry => 'DE', :ordTax2Price => '1.00', :shipAddress1 => '1234 Levesque St.', :ordEmailAddress => 'xiaobozzz@example.com', :trnCardCvd => '123', :trnComments => nil, :shippingMethod => nil, :ref1 => 'reference one', :shipAddress2 => 'Apt B', :ordPhoneNumber => '555-555-5555', :ordItemPrice => '8.00' }
+    { :shipProvince => '--', :shipPostalCode => '12345', :ordProvince => '--', :ordPostalCode => '12345', :ordCountry => 'DE', :trnCardOwner => 'Longbob Longsen', :shipCity => 'Berlin', :ordAddress1 => '1234 Levesque St.', :ordShippingPrice => '1.00', :deliveryEstimate => nil, :shipName => 'xiaobo zzz', :trnCardNumber => '4242424242424242', :trnAmount => '10.00', :trnType => 'P', :ordAddress2 => 'Apt B', :ordTax1Price => '1.00', :shipEmailAddress => 'xiaobozzz@example.com', :trnExpMonth => '09', :ordCity => 'Berlin', :shipPhoneNumber => '555-555-5555', :ordName => 'xiaobo zzz', :trnExpYear => next_year, :trnOrderNumber => '1234', :shipCountry => 'DE', :ordTax2Price => '1.00', :shipAddress1 => '1234 Levesque St.', :ordEmailAddress => 'xiaobozzz@example.com', :trnCardCvd => '123', :trnComments => nil, :shippingMethod => nil, :ref1 => 'reference one', :shipAddress2 => 'Apt B', :ordPhoneNumber => '555-555-5555', :ordItemPrice => '8.00' }
   end
+  
+  def next_year
+    (Time.now.year + 1).to_s[/\d\d$/]
+  end
+
+  def successful_recurring_response
+    "trnApproved=1&trnId=10000072&messageId=1&messageText=Approved&trnOrderNumber=5d9f511363a0f35d37de53b4d74f5b&authCode=&errorType=N&errorFields=&responseType=T&trnAmount=15%2E00&trnDate=6%2F4%2F2008+6%3A33%3A55+PM&avsProcessed=0&avsId=0&avsResult=0&avsAddrMatch=0&avsPostalMatch=0&avsMessage=Address+Verification+not+performed+for+this+transaction%2E&trnType=D&paymentMethod=EFT&ref1=reference+one&ref2=&ref3=&ref4=&ref5="
+  end
+
+  def successful_update_recurring_response
+    "<response><code>1</code><message>Request successful</message></response>"
+  end
+
+  def successful_cancel_recurring_response
+    "<response><code>1</code><message>Request successful</message></response>"
+  end
+
 end
+

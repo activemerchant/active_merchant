@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'active_support'
-require 'lib/active_merchant'
+require 'active_merchant'
 
 
 class GatewaySupport #:nodoc:
@@ -11,6 +11,15 @@ class GatewaySupport #:nodoc:
   attr_reader :gateways
   
   def initialize
+    Dir[File.expand_path(File.dirname(__FILE__) + '/../active_merchant/billing/gateways/*.rb')].each do |f|
+      filename = File.basename(f, '.rb') 
+      gateway_name = filename + '_gateway'
+      begin
+        gateway_class = ('ActiveMerchant::Billing::' + gateway_name.camelize).constantize
+      rescue NameError
+        puts "Could not load gateway " + gateway_name.camelize + " from " + f + "."
+      end
+    end
     @gateways = Gateway.implementations.sort_by(&:name)
     @gateways.delete(ActiveMerchant::Billing::BogusGateway)
   end
@@ -54,5 +63,3 @@ class GatewaySupport #:nodoc:
   end
 end
 
-
-    

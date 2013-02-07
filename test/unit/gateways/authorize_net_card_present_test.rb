@@ -126,11 +126,11 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
   end
   
   def test_supported_countries
-    assert_equal ['US'], AuthorizeNetCardPresentGateway.supported_countries
+    assert_equal ['US', 'CA', 'UK'], AuthorizeNetCardPresentGateway.supported_countries
   end
   
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover], AuthorizeNetCardPresentGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb], AuthorizeNetCardPresentGateway.supported_cardtypes
   end
   
   def test_failure_without_response_reason_text

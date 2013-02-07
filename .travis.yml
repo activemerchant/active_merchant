@@ -1,0 +1,19 @@
+rvm:
+  - 1.9.3
+  - 1.9.2
+  - 1.8.7
+  - ree
+  - rbx-18mode
+
+gemfile:
+  - Gemfile
+  - Gemfile_rails31
+  - Gemfile_rails30
+  - Gemfile_rails23
+
+script: "bundle exec rake test:units"
+
+notifications:
+  email:
+    - integrations-team@shopify.com
+    - nathaniel@talbott.ws

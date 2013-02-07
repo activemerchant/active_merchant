@@ -12,12 +12,18 @@ module ActiveMerchant #:nodoc:
     # * +PA+ - Pre Authorization
     # * +PAC+ - Pre Authorization Completion
     #  
+    # == Secure Payment Profiles:
+    # BeanStream supports payment profiles (vaults). This allows you to store cc information with BeanStream and process subsequent transactions with a customer id.
+    # Secure Payment Profiles must be enabled on your account (must be done over the phone).
+    # Your API Access Passcode must be set in Administration => account settings => order settings.
+    # To learn more about storing credit cards with the Beanstream gateway, please read the BEAN_Payment_Profiles.pdf (I had to phone BeanStream to request it.)
+    # 
     # == Notes 
-    # * Recurring billing is not yet implemented.
     # * Adding of order products information is not implemented.
     # * Ensure that country and province data is provided as a code such as "CA", "US", "QC".
     # * login is the Beanstream merchant ID, username and password should be enabled in your Beanstream account and passed in using the <tt>:user</tt> and <tt>:password</tt> options.
     # * Test your app with your true merchant id and test credit card information provided in the api pdf document.
+    # * Beanstream does not allow Payment Profiles to be deleted with their API. The accounts are 'closed', but have to be deleted manually.  
     #  
     #  Example authorization (Beanstream PA transaction type):
     #  
@@ -57,12 +63,12 @@ module ActiveMerchant #:nodoc:
     #   )
     class BeanstreamGateway < Gateway
       include BeanstreamCore
-      
-      def authorize(money, credit_card, options = {})
+ 
+      def authorize(money, source, options = {})
         post = {}
         add_amount(post, money)
         add_invoice(post, options)
-        add_credit_card(post, credit_card)        
+        add_source(post, source)        
         add_address(post, options)
         add_transaction_type(post, :authorization)
         commit(post)
@@ -88,8 +94,67 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
       
+      def recurring(money, source, options = {})
+        post = {}
+        add_amount(post, money)
+        add_invoice(post, options)
+        add_credit_card(post, source)
+        add_address(post, options)
+        add_transaction_type(post, purchase_action(source))
+        add_recurring_type(post, options)
+        commit(post)
+      end
+      
+      def update_recurring(amount, source, options = {})
+        post = {}
+        add_recurring_amount(post, amount)
+        add_recurring_invoice(post, options)
+        add_credit_card(post, source)
+        add_address(post, options)
+        add_recurring_operation_type(post, :update)
+        add_recurring_service(post, options)
+        recurring_commit(post)
+      end
+      
+      def cancel_recurring(options = {})
+        post = {}
+        add_recurring_operation_type(post, :cancel)
+        add_recurring_service(post, options)
+        recurring_commit(post)
+      end
+
       def interac
         @interac ||= BeanstreamInteracGateway.new(@options)
+      end
+      
+      # To match the other stored-value gateways, like TrustCommerce,
+      # store and unstore need to be defined
+      def store(credit_card, options = {})
+        post = {}        
+        add_address(post, options)
+        add_credit_card(post, credit_card)      
+        add_secure_profile_variables(post,options)
+        commit(post, true)
+      end
+      
+      #can't actually delete a secure profile with the supplicaed API. This function sets the status of the profile to closed (C).
+      #Closed profiles will have to removed manually.
+      def delete(vault_id)
+        update(vault_id, false, {:status => "C"})
+      end
+      
+      alias_method :unstore, :delete
+      
+      # Update the values (such as CC expiration) stored at
+      # the gateway.  The CC number must be supplied in the
+      # CreditCard object.
+      def update(vault_id, credit_card, options = {})
+        post = {}
+        add_address(post, options)
+        add_credit_card(post, credit_card)
+        options.merge!({:vault_id => vault_id, :operation => secure_profile_action(:modify)})
+        add_secure_profile_variables(post,options)
+        commit(post, true)
       end
 
       private

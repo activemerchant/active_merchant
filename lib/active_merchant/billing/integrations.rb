@@ -1,15 +1,3 @@
-
-# make the bogus gateway be classified correctly by the inflector
-if defined?(ActiveSupport::Inflector)
-  ActiveSupport::Inflector.inflections do |inflect|
-    inflect.uncountable 'bogus'
-  end
-else
-  Inflector.inflections do |inflect|
-    inflect.uncountable 'bogus'
-  end
-end
-
 module ActiveMerchant
   module Billing
     module Integrations        

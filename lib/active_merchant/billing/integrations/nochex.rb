@@ -68,18 +68,18 @@ module ActiveMerchant #:nodoc:
         
        
         mattr_accessor :service_url
-        self.service_url = 'https://www.nochex.com/nochex.dll/checkout'
+        self.service_url = 'https://secure.nochex.com'
 
         mattr_accessor :notification_confirmation_url
         self.notification_confirmation_url = 'https://www.nochex.com/nochex.dll/apc/apc'
 
         # Simply a convenience method that returns a new 
         # ActiveMerchant::Billing::Integrations::Nochex::Notification
-        def self.notification(post)
+        def self.notification(post, options = {})
           Notification.new(post)
         end  
         
-        def self.return(query_string)
+        def self.return(query_string, options = {})
           Return.new(query_string)
         end
       end
