@@ -44,7 +44,7 @@ class LitleTest < Test::Unit::TestCase
       'litleToken'=>'1111222233334444'
     }
   end
-  
+
   def test_build_purchase_request
     # define all inputs
     money = 1000
@@ -116,13 +116,50 @@ class LitleTest < Test::Unit::TestCase
 
   def test_build_purchase_request_with_token
     # define all inputs
-    money = 1000
-    token = '1234567890123456'
+    money    = 1000
+    token    = '1234567890123456'
+    month    = 9
+    year     = Time.now.year + 1
+    exp_date = "#{'%02d' % month.to_i}#{year.to_s[2..3]}"
+    brand    = 'visa'
+    cvv      = '123'
+    options  = {
+        :token => {
+            :month              => month,
+            :year               => year,
+            :brand              => brand,
+            :verification_value => cvv
+        }
+    }
 
-    hash_from_gateway = @gateway.send(:build_purchase_request, money, token, {})
+    hash_from_gateway = @gateway.send(:build_purchase_request, money, token, options)
 
     assert_equal money, hash_from_gateway['amount']
     assert_equal token, hash_from_gateway['token']['litleToken']
+    assert_equal exp_date, hash_from_gateway['token']['expDate']
+    assert_equal cvv, hash_from_gateway['token']['cardValidationNum']
+    assert_equal 'VI', hash_from_gateway['token']['type']
+  end
+
+  def test_build_authorize_request_with_token
+    # define all inputs
+    money    = 1000
+    token    = '1234567890123456'
+    month    = 9
+    year     = Time.now.year + 1
+    exp_date = "#{'%02d' % month.to_i}#{year.to_s[2..3]}"
+    options  = {
+        :token => {
+            :month => month,
+            :year  => year
+        }
+    }
+
+    hash_from_gateway = @gateway.send(:build_authorize_request, money, token, options)
+
+    assert_equal money, hash_from_gateway['amount']
+    assert_equal token, hash_from_gateway['token']['litleToken']
+    assert_equal exp_date, hash_from_gateway['token']['expDate']
   end
 
   def test_create_hash_money_not_nil
@@ -214,16 +251,16 @@ class LitleTest < Test::Unit::TestCase
   def test_create_hash_money_nil
     # define all inputs
     money = nil
-    
+
     hashFromGateway = @gateway.send(:create_hash, money, {})
 
     assert_nil hashFromGateway['amount']
   end
-  
+
   def test_create_hash_money_empty_string
     # define all inputs
     money = ''
-    
+
     hashFromGateway = @gateway.send(:create_hash, money, {})
 
     assert_nil hashFromGateway['amount']
@@ -282,11 +319,33 @@ class LitleTest < Test::Unit::TestCase
 
   end
 
-  def test_create_credit_hash
-    hashFromGateway = @gateway.send(:create_credit_hash, 1000, '123456789012345678', {})
+  def test_build_credit_request_identification
+    hashFromGateway = @gateway.send(:build_credit_request, 1000, '123456789012345678', {})
     assert_equal '123456789012345678', hashFromGateway['litleTxnId']
     assert_equal nil, hashFromGateway['orderSource']
     assert_equal nil, hashFromGateway['orderId']
+  end
+
+  def test_build_credit_request_token
+    token   = '171299999999999'
+    options = {
+        :order_id        => '1234',
+        :billing_address => {
+            :zip => '12345'
+        },
+        :token           => {
+            :month => 11,
+            :year  => 2014
+        }
+    }
+
+    hashFromGateway = @gateway.send(:build_credit_request, 1000, token, options)
+    assert_equal nil, hashFromGateway['litleTxnId']
+    assert_equal 'ecommerce', hashFromGateway['orderSource']
+    assert_equal '1234', hashFromGateway['orderId']
+    assert_equal token, hashFromGateway['token']['litleToken']
+    assert_equal '1114', hashFromGateway['token']['expDate']
+    assert_equal '12345', hashFromGateway['billToAddress']['zip']
   end
 
   def test_currency_USD
@@ -334,7 +393,7 @@ class LitleTest < Test::Unit::TestCase
     assert_equal 'Y', responseFrom.avs_result['street_match']
     assert_equal 'Y', responseFrom.avs_result['postal_match']
   end
-  
+
   def test_cvv
     fraudResult = {'cardValidationResult'=>'M'}
     authorizationResponseObj = @response_options.merge('fraudResult' => fraudResult)
@@ -362,7 +421,7 @@ class LitleTest < Test::Unit::TestCase
     assert_equal 'N', responseFrom.avs_result['street_match']
     assert_equal 'Y', responseFrom.avs_result['postal_match']
   end
-  
+
   def test_sale_cvv
     fraudResult = {'cardValidationResult'=>''}
     saleResponseObj = @response_options.merge('fraudResult' => fraudResult)
@@ -375,7 +434,7 @@ class LitleTest < Test::Unit::TestCase
     assert_equal 'P', responseFrom.cvv_result['code']
     assert_equal 'Not Processed', responseFrom.cvv_result['message']
   end
-    
+
   def test_auth_fail
     authorizationResponseObj = {'response' => '111', 'message' => 'fail', 'litleTxnId' => '1234', 'litleToken'=>'1111222233334444'}
     retObj = {'response'=>'0','authorizationResponse'=>authorizationResponseObj}
@@ -414,8 +473,14 @@ class LitleTest < Test::Unit::TestCase
     retObj = {'response'=>'0','saleResponse'=>purchaseResponseObj}
     LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
 
-    token = '1234567890123456'
-    responseFrom = @gateway.purchase(0, token)
+    options = {
+        :token => {
+            :month => '11',
+            :year  => '2014'
+        }
+    }
+
+    responseFrom = @gateway.purchase(0, '171299999999999', options)
     assert_equal true, responseFrom.success?
     assert_equal '123456789012345678', responseFrom.authorization
   end
