@@ -14,7 +14,6 @@ authorize_net:
   login: X
   password: Y
 
-# NOTE: This was added by square/master
 authorize_net_card_present:
   login: X
   password: Y

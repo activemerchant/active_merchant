@@ -53,12 +53,7 @@ module ActiveMerchant #:nodoc:
       cattr_accessor :require_verification_value
       self.require_verification_value = true
       
-      
-      # NOTE: From square/active_merchant 
-      # Essential attributes for a valid, non-bogus creditcards
-      # attr_accessor :number, :month, :year, :type, :first_name, :last_name
      
-      ## NOTE: Why no track1 accessor ? 
       # Track data for card-present transactions
       attr_accessor :track2
 
@@ -190,11 +185,6 @@ module ActiveMerchant #:nodoc:
       def display_number
         self.class.mask(number)
       end
-      
-      # NOTE: from square/active_merchant 
-      # def first_digits
-      #   self.class.first_digits(number)
-      # end
       
       def first_digits
         self.class.first_digits(number)

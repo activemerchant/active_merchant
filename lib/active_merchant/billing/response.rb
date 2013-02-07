@@ -7,9 +7,6 @@ module ActiveMerchant #:nodoc:
       
       attr_reader :params, :message, :test, :authorization, :authorization_code, :avs_result, :cvv_result
      
-      # NOTE: from shopify/master 
-      # attr_reader :params, :message, :test, :authorization, :avs_result, :cvv_result
-
       def success?
         @success
       end
