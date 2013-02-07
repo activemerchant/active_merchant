@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Iridium: Enable reference transactions for authorize [ntalbott]
+* Litle: Add support for passing optional fields in token based transactions [forest]
 
 == Version 1.31.1 (February 25, 2013)
 

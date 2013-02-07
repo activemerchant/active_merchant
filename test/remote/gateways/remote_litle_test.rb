@@ -161,7 +161,15 @@ class RemoteLitleTest < Test::Unit::TestCase
     token = store_response.authorization
     assert_equal store_response.params['litleOnlineResponse']['registerTokenResponse']['litleToken'], token
 
-    assert response = @gateway.purchase(10010, token, :order_id => '12345')
+    options = {
+        :order_id => '12345',
+        :token    => {
+            :month => credit_card.month,
+            :year  => credit_card.year
+        }
+    }
+
+    assert response = @gateway.purchase(10010, token, options)
     assert_success response
     assert_equal 'Approved', response.message
   end
