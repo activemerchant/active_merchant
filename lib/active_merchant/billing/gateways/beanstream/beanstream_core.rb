@@ -119,6 +119,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_customer_ip(post, options)
+        post[:customerIP] = options[:ip] if options[:ip]
+      end
+
       def void_action(original_transaction_type)
         (original_transaction_type == TRANSACTIONS[:refund]) ? :void_refund : :void_purchase
       end
