@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
 
       self.default_currency = 'USD'
 
-      self.supported_countries = ['US', 'CA', 'UK']
+      self.supported_countries = ['US', 'CA', 'GB']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net'
