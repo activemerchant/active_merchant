@@ -156,6 +156,17 @@ module ActiveMerchant
           post.delete :exp_date
         end
       end
+
+      private
+
+      def expdate(creditcard)
+        if creditcard.year.blank? || creditcard.month.blank?
+          return nil
+        else
+          super(creditcard)
+        end
+      end
+
     end
   end
 end
