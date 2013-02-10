@@ -126,6 +126,11 @@ federated_canada:
   login: demo
   password: password
 
+finansbank:
+  login: TEST
+  password: TEST
+  client_id: TEST
+
 first_pay:
   login:
   password:
@@ -604,4 +609,3 @@ wirecard:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
-
