@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* WorldPay: XML encoding is required to be ISO-8859-1 [dougal]
+
 == Version 1.30.0 (February 13, 2013)
 
 * Add FirstData Global Gateway e4 [frobcode]
