@@ -31,6 +31,9 @@
 * Balanced: Added support for on_behalf_of_uri to capture [cwise]
 * Litle: Add support for passing an order_source [forest]
 * Add Merchant Warrior gateway [pronix, Fodoj, ntalbott]
+* Use v4 of the MerchantWare API for voiding transactions [melari]
+* Add support for Authorize.net in CA and GB [melari]
+* Send customer's IP to Beanstream for fraud review [melari]
 
 == Version 1.29.3 (December 7, 2012)
 
