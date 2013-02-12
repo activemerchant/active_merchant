@@ -1,75 +1,24 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class FinansbankGateway < Gateway
-      self.test_url = 'https://example.com/test'
-      self.live_url = 'https://example.com/live'
+    class FinansbankGateway < CC5Gateway
+      self.live_url = self.test_url = 'https://www.fbwebpos.com/servlet/cc5ApiServer'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['US']
+      self.supported_countries = ['US', 'TR']
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :master]
 
       # The homepage URL of the gateway
-      self.homepage_url = 'http://www.example.net/'
+      self.homepage_url = 'https://www.fbwebpos.com/'
 
       # The name of the gateway
-      self.display_name = 'New Gateway'
+      self.display_name = 'Finansbank WebPOS'
 
       def initialize(options = {})
-        #requires!(options, :login, :password)
         super
       end
 
-      def authorize(money, creditcard, options = {})
-        post = {}
-        add_invoice(post, options)
-        add_creditcard(post, creditcard)
-        add_address(post, creditcard, options)
-        add_customer_data(post, options)
-
-        commit('authonly', money, post)
-      end
-
-      def purchase(money, creditcard, options = {})
-        post = {}
-        add_invoice(post, options)
-        add_creditcard(post, creditcard)
-        add_address(post, creditcard, options)
-        add_customer_data(post, options)
-
-        commit('sale', money, post)
-      end
-
-      def capture(money, authorization, options = {})
-        commit('capture', money, post)
-      end
-
-      private
-
-      def add_customer_data(post, options)
-      end
-
-      def add_address(post, creditcard, options)
-      end
-
-      def add_invoice(post, options)
-      end
-
-      def add_creditcard(post, creditcard)
-      end
-
-      def parse(body)
-      end
-
-      def commit(action, money, parameters)
-      end
-
-      def message_from(response)
-      end
-
-      def post_data(action, parameters = {})
-      end
     end
   end
 end
