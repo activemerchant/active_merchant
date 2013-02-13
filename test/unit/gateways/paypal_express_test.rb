@@ -467,6 +467,19 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal '123-456-7890', address['phone']
   end
 
+  def test_not_adds_buyer_optin_if_not_specified
+    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {}))
+    assert_nil REXML::XPath.first(xml, '//n2:BuyerEmailOptInEnable')
+  end
+
+  def test_adds_buyer_optin_if_specified
+    allow_optin_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:allow_buyer_optin => true}))
+    do_not_allow_optin_xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 10, {:allow_buyer_optin => false}))
+
+    assert_equal '1', REXML::XPath.first(allow_optin_xml, '//n2:BuyerEmailOptInEnable').text
+    assert_equal '0', REXML::XPath.first(do_not_allow_optin_xml, '//n2:BuyerEmailOptInEnable').text
+  end
+
   def test_structure_correct
     all_options_enabled = {
         :allow_guest_checkout => true,
@@ -480,6 +493,7 @@ class PaypalExpressTest < Test::Unit::TestCase
         :email => 'joe@example.com',
         :billing_agreement => {:type => 'MerchantInitiatedBilling', :description => '9.99 per month for a year'},
         :allow_note => true,
+        :allow_buyer_optin => true,
         :subtotal => 35,
         :shipping => 10,
         :handling => 0,
