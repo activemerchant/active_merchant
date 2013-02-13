@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.30.0 (February 13, 2013)
+
 * Add FirstData Global Gateway e4 [frobcode]
 * PaymentExpress: Add support for optional fields: ClientType and TxnData [moklett]
 * PaymentExpress: Limit MerchantReference/description to 64 chars [moklett]
