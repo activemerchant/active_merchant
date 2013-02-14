@@ -94,6 +94,10 @@ epay:
   login: X
   password: Y
 
+evo_ca:
+  username: demo
+  password: password
+
 # Working credentials, no need to replace
 eway:
   login: '87654321'

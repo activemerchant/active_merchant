@@ -94,6 +94,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Efsnet](http://www.concordefsnet.com/) - US
 * [Elavon MyVirtualMerchant](http://www.elavon.com) - US, CA
 * [ePay](http://www.epay.dk/) - DK, SE, NO
+* [EVO Canada](http://www.evocanada.com/) - CA
 * [eWAY](http://www.eway.com.au/) - AU
 * [eWay Rapid 3.0](http://www.eway.com.au/) - AU
 * [E-xact](http://www.e-xact.com) - CA, US
