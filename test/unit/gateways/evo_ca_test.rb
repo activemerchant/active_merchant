@@ -69,9 +69,8 @@ class EvoCaTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, check, @options)
     assert_instance_of Response, response
     assert_failure response
-
-    assert_empty response.authorization
-    assert_empty response.params['auth_code']
+    assert response.authorization.empty?
+    assert response.params['auth_code'].empty?
     assert_equal EvoCaGateway::MESSAGES[300], response.message
     assert_equal 'Invalid ABA number REFID:340098220', response.params['message']
   end
