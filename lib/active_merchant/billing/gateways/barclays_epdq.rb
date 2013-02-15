@@ -134,7 +134,11 @@ module ActiveMerchant #:nodoc:
         end
 
         def parse
-          doc = REXML::Document.new(@response)
+          doc = begin REXML::Document.new(@response)
+          rescue REXML::ParseException
+            REXML::Document.new(@response.encode("UTF-8", "ISO-8859-1"))
+          end
+
           auth_type = find(doc, "//Transaction/Type").to_s
 
           message = find(doc, "//Message/Text")
