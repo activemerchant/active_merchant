@@ -4,6 +4,7 @@
 * Worldpay: Add card code for more supported card types [dougal]
 * Ogone: Add action option [pwoestelandt]
 * PayPal Express gateway: Add support for BuyerEmailOptInEnable [chrisrbnelson]
+* Add Paymill gateway [duff]
 
 == Version 1.30.0 (February 13, 2013)
 
