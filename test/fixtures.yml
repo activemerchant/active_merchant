@@ -308,6 +308,10 @@ payment_express:
   login: LOGIN
   password: PASSWORD
 
+paymill:
+  private_key: PRIVATE_KEY
+  public_key: PUBLIC_KEY
+
 # You can use either your API PEM file or API signature with PayPal.
 paypal_certificate:
   login: LOGIN
