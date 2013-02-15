@@ -11,7 +11,8 @@ class RemoteOptimalPaymentTest < Test::Unit::TestCase
     @options = {
       :order_id => '1',
       :billing_address => address,
-      :description => 'Basic Subscription'
+      :description => 'Basic Subscription',
+      :email => 'email@example.com'
     }
   end
 

@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.30.0 (February 13, 2013)
+
 * Add FirstData Global Gateway e4 [frobcode]
 * PaymentExpress: Add support for optional fields: ClientType and TxnData [moklett]
 * PaymentExpress: Limit MerchantReference/description to 64 chars [moklett]
@@ -31,6 +33,9 @@
 * Balanced: Added support for on_behalf_of_uri to capture [cwise]
 * Litle: Add support for passing an order_source [forest]
 * Add Merchant Warrior gateway [pronix, Fodoj, ntalbott]
+* Use v4 of the MerchantWare API for voiding transactions [melari]
+* Add support for Authorize.net in CA and GB [melari]
+* Send customer's IP to Beanstream for fraud review [melari]
 
 == Version 1.29.3 (December 7, 2012)
 
