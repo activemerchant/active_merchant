@@ -16,6 +16,9 @@ module ActiveMerchant #:nodoc:
         'master'           => 'ECMC-SSL',
         'discover'         => 'DISCOVER-SSL',
         'american_express' => 'AMEX-SSL',
+        'jcb'              => 'JCB-SSL',
+        'maestro'          => 'MAESTRO-SSL',
+        'laser'            => 'LASER-SSL'
       }
 
       def initialize(options = {})
