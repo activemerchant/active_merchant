@@ -130,7 +130,7 @@ module ActiveMerchant #:nodoc:
 
       # Are we running in test mode?
       def test?
-        (@options[:test] || Base.test?)
+        (@options.has_key?(:test) ? @options[:test] : Base.test?)
       end
 
       private # :nodoc: all
