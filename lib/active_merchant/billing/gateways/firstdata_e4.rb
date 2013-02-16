@@ -27,6 +27,16 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = "http://www.firstdata.com"
       self.display_name = "FirstData Global Gateway e4"
 
+      # Create a new FirstdataE4Gateway
+      #
+      # The gateway requires that a valid login and password be passed
+      # in the +options+ hash.
+      #
+      # ==== Options
+      #
+      # * <tt>:login</tt> --    The EXACT ID.  Also known as the Gateway ID.
+      #                         (Found in your administration terminal settings)
+      # * <tt>:password</tt> -- The terminal password (not your account password)
       def initialize(options = {})
         requires!(options, :login, :password)
         @options = options
