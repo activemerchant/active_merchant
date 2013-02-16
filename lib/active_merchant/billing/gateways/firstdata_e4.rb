@@ -27,6 +27,12 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = "http://www.firstdata.com"
       self.display_name = "FirstData Global Gateway e4"
 
+      # Public: Create a new FirstdataE4Gateway.
+      #
+      # options - A hash of options:
+      #           :login    - The EXACT ID.  Also known as the Gateway ID. (Found in your
+      #                       administration terminal settings)
+      #           :password - The terminal password (not your account password)
       def initialize(options = {})
         requires!(options, :login, :password)
         @options = options
