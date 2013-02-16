@@ -21,23 +21,19 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, creditcard, options = {})
-        # PreAuth
-        request = build_sale_request('PreAuth', money, creditcard, options)
+      def purchase(money, creditcard, options = {})
+        request = build_sale_request('Auth', money, creditcard, options)
+        commit(request)
+      end
 
-        commit('authonly', money, request)
+      def authorize(money, creditcard, options = {})
+        request = build_sale_request('PreAuth', money, creditcard, options)
+        commit(request)
       end
 
       def capture(money, authorization, options = {})
         # PostAuth
         commit('capture', money, post)
-      end
-
-      def purchase(money, creditcard, options = {})
-        # Auth
-        request = build_sale_request('Auth', money, creditcard, options)
-
-        commit('sale', money, request)
       end
 
       protected
@@ -52,13 +48,19 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'OrderId', options[:order_id]
           xml.tag! 'Type', type
           xml.tag! 'Number', creditcard.number
-          xml.tag! 'Expires', [format_exp(creditcard.month), format_exp(creditcard.year)].join('/')
+          xml.tag! 'Expires', [two_digits(creditcard.month), two_digits(creditcard.year)].join('/')
           xml.tag! 'Cvv2Val', creditcard.verification_value
           xml.tag! 'Total', amount(money)
           xml.tag! 'Currency', currency_code(options[:currency] || currency(money))
           xml.tag! 'Email', options[:email]
-          xml.tag! 'BillTo' do
 
+          if address = options[:address]
+            xml.tag! 'BillTo' do
+              add_address(xml, address)
+            end
+            xml.tag! 'ShipTo' do
+              add_address(xml, address)
+            end
           end
 
         end
@@ -66,30 +68,54 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def format_exp(value)
-        format(value, :two_digits)
+      def add_address(xml, address)
+        xml.tag! 'Name', normalize(address[:name])
+        xml.tag! 'Street1', normalize(address[:address1])
+        xml.tag! 'Street2', normalize(address[:address2]) if address[:address2]
+        xml.tag! 'City', normalize(address[:city])
+        xml.tag! 'PostalCode', address[:zip]
+        xml.tag! 'Country', normalize(address[:country])
+        xml.tag! 'Company', normalize(address[:company])
+        xml.tag! 'TelVoice', address[:phone].to_s.gsub(/[^0-9]/, '') if address[:phone]
       end
 
       def currency_code(currency)
         CURRENCY_CODES[currency] || CURRENCY_CODES[default_currency]
       end
 
-      def add_customer_data(post, options)
-      end
+      def commit(request)
+        raw_response = ssl_post(self.live_url, "DATA=" + request)
+        response = parse(raw_response)
 
-      def add_address(post, creditcard, options)
-      end
+        success = success?(response)
 
-      def add_invoice(post, options)
-      end
-
-      def add_creditcard(post, creditcard)
+        Response.new(success,
+                     success ? 'Approved' : "Declined (Reason: #{response[:proc_return_code]} - #{response[:err_msg]})",
+                     response,
+                     :test => test?,
+                     :authorization => response[:order_id])
       end
 
       def parse(body)
+        xml = REXML::Document.new(body)
+
+        response = {}
+        xml.root.elements.to_a.each do |node|
+          parse_element(response, node)
+        end
+        response
       end
 
-      def commit(action, money, parameters)
+      def parse_element(response, node)
+        if node.has_elements?
+          node.elements.each{|element| parse_element(response, element) }
+        else
+          response[node.name.underscore.to_sym] = node.text
+        end
+      end
+
+      def success?(response)
+        response[:message] == "Approved"
       end
 
       def message_from(response)
@@ -97,6 +123,23 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
       end
+
+      def normalize(text)
+        return unless text
+
+        if ActiveSupport::Inflector.method(:transliterate).arity == -2
+          ActiveSupport::Inflector.transliterate(text,'')
+        elsif RUBY_VERSION >= '1.9'
+          text.gsub(/[^\x00-\x7F]+/, '')
+        else
+          ActiveSupport::Inflector.transliterate(text).to_s
+        end
+      end
+
+      def two_digits(value)
+        format(value, :two_digits)
+      end
+
     end
   end
 end
