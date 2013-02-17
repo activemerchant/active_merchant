@@ -4,7 +4,8 @@ class FinansbankTest < Test::Unit::TestCase
   def setup
     @gateway = FinansbankGateway.new(
                  :login => 'login',
-                 :password => 'password'
+                 :password => 'password',
+                 :client_id => 'client_id'
                )
 
     @credit_card = credit_card
@@ -21,11 +22,11 @@ class FinansbankTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of
+    assert_instance_of Response, response
     assert_success response
 
     # Replace with authorization number from the successful response
-    assert_equal '', response.authorization
+    assert_equal '1', response.authorization
     assert response.test?
   end
 
@@ -41,9 +42,33 @@ class FinansbankTest < Test::Unit::TestCase
 
   # Place raw successful response from gateway here
   def successful_purchase_response
+    <<-EOF
+<CC5Response>
+      <OrderId>1</OrderId>
+      <GroupId>2</GroupId>
+      <Response>Approved</Response>
+      <AuthCode>123456</AuthCode>
+      <HostRefNum>123456</HostRefNum>
+      <ProcReturnCode>00</ProcReturnCode>
+      <TransId>123456</TransId>
+      <ErrMsg></ErrMsg>
+</CC5Response>
+    EOF
   end
 
   # Place raw failed response from gateway here
   def failed_purchase_response
+    <<-EOF
+<CC5Response>
+      <OrderId>1</OrderId>
+      <GroupId>2</GroupId>
+      <Response>Declined</Response>
+      <AuthCode></AuthCode>
+      <HostRefNum>123456</HostRefNum>
+      <ProcReturnCode>17</ProcReturnCode>
+      <TransId>123456</TransId>
+      <ErrMsg>Not enough credit</ErrMsg>
+</CC5Response>
+    EOF
   end
 end

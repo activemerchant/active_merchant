@@ -1,3 +1,5 @@
+require File.dirname(__FILE__) + '/cc5'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FinansbankGateway < CC5Gateway

@@ -32,29 +32,28 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        # PostAuth
-        commit('capture', money, post)
+        request = build_capture_request(money, authorization, options)
+        commit(request)
       end
 
       protected
 
       def build_sale_request(type, money, creditcard, options = {})
+        requires!(options,  :order_id)
+
         xml = Builder::XmlMarkup.new :indent => 2
 
         xml.tag! 'CC5Request' do
-          xml.tag! 'Name', options[:login]
-          xml.tag! 'Password', options[:password]
-          xml.tag! 'ClientId', options[:client_id]
+          add_login_tags(xml)
           xml.tag! 'OrderId', options[:order_id]
           xml.tag! 'Type', type
           xml.tag! 'Number', creditcard.number
           xml.tag! 'Expires', [two_digits(creditcard.month), two_digits(creditcard.year)].join('/')
           xml.tag! 'Cvv2Val', creditcard.verification_value
-          xml.tag! 'Total', amount(money)
-          xml.tag! 'Currency', currency_code(options[:currency] || currency(money))
+          add_amount_tags(money, options, xml)
           xml.tag! 'Email', options[:email]
 
-          if address = options[:address]
+          if address = options[:billing_address] || options[:address]
             xml.tag! 'BillTo' do
               add_address(xml, address)
             end
@@ -68,6 +67,17 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
+      def build_capture_request(money, authorization, options = {})
+        xml = Builder::XmlMarkup.new :indent => 2
+
+        xml.tag! 'CC5Request' do
+          add_login_tags(xml)
+          xml.tag! 'OrderId', authorization
+          xml.tag! 'Type', 'PostAuth'
+          add_amount_tags(money, options, xml)
+        end
+      end
+
       def add_address(xml, address)
         xml.tag! 'Name', normalize(address[:name])
         xml.tag! 'Street1', normalize(address[:address1])
@@ -77,6 +87,17 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'Country', normalize(address[:country])
         xml.tag! 'Company', normalize(address[:company])
         xml.tag! 'TelVoice', address[:phone].to_s.gsub(/[^0-9]/, '') if address[:phone]
+      end
+
+      def add_login_tags(xml)
+        xml.tag! 'Name', @options[:login]
+        xml.tag! 'Password', @options[:password]
+        xml.tag! 'ClientId', @options[:client_id]
+      end
+
+      def add_amount_tags(money, options, xml)
+        xml.tag! 'Total', amount(money)
+        xml.tag! 'Currency', currency_code(options[:currency] || currency(money))
       end
 
       def currency_code(currency)
@@ -115,7 +136,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        response[:message] == "Approved"
+        response[:response] == "Approved"
       end
 
       def message_from(response)
@@ -143,4 +164,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
