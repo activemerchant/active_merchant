@@ -23,9 +23,9 @@ module ActiveMerchant #:nodoc:
     #    response = gateway.authorize(1000, credit_card, options)
     #
     #    puts response.authorization          # the transactionid
-    #    puts response.params['auth_code']    # the authcode from the merchant account
+    #    puts response.params['authcode']     # the authcode from the merchant account
     #    puts response.message                # the 'pretty' response message
-    #    puts response.params['message']      # the 'terse' response message
+    #    puts response.params['responsetext'] # the 'terse' response message
     #
     #    gateway.capture(1000, response.authorization)
     #    gateway.update(response.authorization, shipping_carrier: 'fedex')
@@ -263,24 +263,13 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         fields = {}
         CGI::parse(body).each do |k, v|
-          fields[k] = v.kind_of?(Array) ? v[0] : v
+          fields[k.to_s] = v.kind_of?(Array) ? v[0] : v
         end
-
-        {
-          :message          => fields.delete('responsetext').to_s,
-          :response         => fields.delete('response').to_i,
-          :response_code    => fields.delete('response_code').to_i,
-          :auth_code        => fields.delete('authcode').to_s,
-          :avs_result_code  => fields.delete('avsresponse').to_s,
-          :cvv_result       => fields.delete('cvvresponse').to_s,
-          :order_id         => fields.delete('orderid').to_s,
-          :transaction_id   => fields.delete('transactionid').to_s,
-          :type             => fields.delete('type').to_s
-        }
+        fields
       end
 
       def success?(response)
-        response[:response] == APPROVED
+        response['response'].to_i == APPROVED
       end
 
       def commit(action, money, parameters)
@@ -292,14 +281,14 @@ module ActiveMerchant #:nodoc:
 
         Response.new(success?(response), message, response,
           :test          => test?,
-          :authorization => response[:transaction_id],
-          :avs_result    => { :code => response[:avs_result_code] },
-          :cvv_result    => response[:cvv_result]
+          :authorization => response['transactionid'],
+          :avs_result    => { :code => response['avsresponse'] },
+          :cvv_result    => response['cvvresponse']
         )
       end
 
       def message_from(response)
-        MESSAGES.fetch(response[:response_code], false) || response[:message]
+        MESSAGES.fetch(response['response_code'].to_i, false) || response['message']
       end
 
       def post_data(action, parameters = {})

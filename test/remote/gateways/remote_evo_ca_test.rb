@@ -20,7 +20,7 @@ class RemoteEvoCaTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal EvoCaGateway::MESSAGES[100], response.message
-    assert_equal 'SUCCESS', response.params['message']
+    assert_equal 'SUCCESS', response.params['responsetext']
   end
 
   def test_unsuccessful_purchase
@@ -28,7 +28,7 @@ class RemoteEvoCaTest < Test::Unit::TestCase
     assert response = @gateway.purchase(5, @credit_card, @options)
     assert_failure response
     assert_equal EvoCaGateway::MESSAGES[200], response.message
-    assert_equal 'DECLINE', response.params['message']
+    assert_equal 'DECLINE', response.params['responsetext']
   end
 
   def test_purchase_error
@@ -43,14 +43,14 @@ class RemoteEvoCaTest < Test::Unit::TestCase
     assert_success response
     assert_equal EvoCaGateway::MESSAGES[100], response.message
     assert_not_empty response.authorization
-    assert_equal 'SUCCESS', response.params['message']
+    assert_equal 'SUCCESS', response.params['responsetext']
   end
 
   def test_unsuccessful_check_purchase
     # To cause a declined message, pass an amount less than $1.00
     assert response = @gateway.purchase(1, check, @options)
     assert_failure response
-    assert_equal 'FAILED', response.params['message']
+    assert_equal 'FAILED', response.params['responsetext']
   end
 
   def test_purchase_and_refund
@@ -97,7 +97,7 @@ class RemoteEvoCaTest < Test::Unit::TestCase
     assert response = @gateway.credit(@amount, @credit_card, @options)
     assert_success response
     assert_equal EvoCaGateway::MESSAGES[100], response.message
-    assert_equal 'SUCCESS', response.params['message']
+    assert_equal 'SUCCESS', response.params['responsetext']
   end
 
   def test_avs_match

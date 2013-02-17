@@ -26,9 +26,9 @@ class EvoCaTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal '1812592532', response.authorization
-    assert_equal '123456', response.params['auth_code']
+    assert_equal '123456', response.params['authcode']
     assert_equal EvoCaGateway::MESSAGES[100], response.message
-    assert_equal 'SUCCESS', response.params['message']
+    assert_equal 'SUCCESS', response.params['responsetext']
     assert response.test?
   end
 
@@ -59,9 +59,9 @@ class EvoCaTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal '1813337957', response.authorization
-    assert_equal '123456', response.params['auth_code']
+    assert_equal '123456', response.params['authcode']
     assert_equal EvoCaGateway::MESSAGES[100], response.message
-    assert_equal 'SUCCESS', response.params['message']
+    assert_equal 'SUCCESS', response.params['responsetext']
   end
 
   def test_failed_check_purchase
@@ -70,9 +70,9 @@ class EvoCaTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
     assert response.authorization.empty?
-    assert response.params['auth_code'].empty?
+    assert response.params['authcode'].empty?
     assert_equal EvoCaGateway::MESSAGES[300], response.message
-    assert_equal 'Invalid ABA number REFID:340098220', response.params['message']
+    assert_equal 'Invalid ABA number REFID:340098220', response.params['responsetext']
   end
 
   def test_successful_void
