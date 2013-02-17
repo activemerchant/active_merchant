@@ -50,6 +50,17 @@ class OgoneTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_action_param
+    @gateway.expects(:add_pair).at_least(1)
+    @gateway.expects(:add_pair).with(anything, 'ECI', '7')
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:action => 'SAS'))
+    assert_success response
+    assert_equal '3014726;SAS', response.authorization
+    assert response.params['HTML_ANSWER'].nil?
+    assert response.test?
+  end
+
   def test_successful_purchase_without_order_id
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     @options.delete(:order_id)
@@ -114,6 +125,14 @@ class OgoneTest < Test::Unit::TestCase
     assert response = @gateway.capture(@amount, "3048326")
     assert_success response
     assert_equal '3048326;SAL', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_capture_with_action_option
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+    assert response = @gateway.capture(@amount, "3048326", :action => 'SAS')
+    assert_success response
+    assert_equal '3048326;SAS', response.authorization
     assert response.test?
   end
 
