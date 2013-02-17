@@ -40,7 +40,6 @@ class FinansbankTest < Test::Unit::TestCase
 
   private
 
-  # Place raw successful response from gateway here
   def successful_purchase_response
     <<-EOF
 <CC5Response>
@@ -56,7 +55,6 @@ class FinansbankTest < Test::Unit::TestCase
     EOF
   end
 
-  # Place raw failed response from gateway here
   def failed_purchase_response
     <<-EOF
 <CC5Response>
@@ -65,7 +63,7 @@ class FinansbankTest < Test::Unit::TestCase
       <Response>Declined</Response>
       <AuthCode></AuthCode>
       <HostRefNum>123456</HostRefNum>
-      <ProcReturnCode>17</ProcReturnCode>
+      <ProcReturnCode>12</ProcReturnCode>
       <TransId>123456</TransId>
       <ErrMsg>Not enough credit</ErrMsg>
 </CC5Response>

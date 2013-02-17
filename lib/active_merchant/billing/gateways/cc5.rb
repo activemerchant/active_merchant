@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'Expires', [two_digits(creditcard.month), two_digits(creditcard.year)].join('/')
           xml.tag! 'Cvv2Val', creditcard.verification_value
           add_amount_tags(money, options, xml)
-          xml.tag! 'Email', options[:email]
+          xml.tag! 'Email', options[:email] if options[:email]
 
           if address = options[:billing_address] || options[:address]
             xml.tag! 'BillTo' do
@@ -93,6 +93,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'Name', @options[:login]
         xml.tag! 'Password', @options[:password]
         xml.tag! 'ClientId', @options[:client_id]
+        xml.tag! 'Mode', test? ? 'T' : 'P'
       end
 
       def add_amount_tags(money, options, xml)
@@ -105,7 +106,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(request)
-        raw_response = ssl_post(self.live_url, "DATA=" + request)
+        raw_response = ssl_post(test? ? self.test_url : self.live_url, "DATA=" + request)
+
         response = parse(raw_response)
 
         success = success?(response)
