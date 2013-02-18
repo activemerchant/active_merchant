@@ -1,3 +1,4 @@
+require 'pry'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CardStreamModernGateway < Gateway
@@ -10,12 +11,13 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'CardStream'
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, :login)
         super
       end
 
       def authorize(money, creditcard, options = {})
         post = {}
+        add_amount(post, money, options)
         add_invoice(post, options)
         add_creditcard(post, creditcard)
         add_address(post, creditcard, options)
@@ -26,7 +28,8 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, creditcard, options = {})
         post = {}
-        add_invoice(post, options)
+        add_amount(post, money, options)
+        add_invoice(post, creditcard, money, options)
         add_creditcard(post, creditcard)
         add_address(post, creditcard, options)
         add_customer_data(post, options)
@@ -35,6 +38,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
+        add_amount(post, money, options)
         commit('SALE', money, post)
       end
 
@@ -46,20 +50,30 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def add_amount(post, money, options)
+        add_pair(post, :amount, amount(money), :required => true)
+        add_pair(post, :currencyCode, self.default_currency = 'GBP')
+      end
+
       def add_customer_data(post, options)
-        add_pair(post, :customerPostCode, options[:])
+        address = options[:billing_address] || options[:address]
+        add_pair(post, :customerPostCode, address[:zip])
         add_pair(post, :customerEmail, options[:email])
         add_pair(post, :customerPhone, options[:phone])
       end
 
       def add_address(post, creditcard, options)
-        add_pair(post, :customerAddress, options[:])
+        address = options[:billing_address] || options[:address]
+
+        return if address.nil?
+
+        add_pair(post, :customerAddress, address[:address1] + " " + (address[:address2].nil? ? "" : address[:address2]) ) 
+        add_pair(post, :customerPostCode, address[:zip])
       end
 
-      def add_invoice(post, options)
+      def add_invoice(post, credit_card, money, options)
         add_pair(post, :transactionUnique, options[:order_id], :required => true)
         add_pair(post, :orderRef, options[:description] || options[:order_id], :required => true)
-
         if [ 'american_express', 'diners_club' ].include?(card_brand(credit_card).to_s)
           add_pair(post, :item1Quantity,  1)
           add_pair(post, :item1Description,  (options[:description] || options[:order_id]).slice(0, 15))
@@ -67,7 +81,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_creditcard(post, creditcard)
+      def add_creditcard(post, credit_card)
         add_pair(post, :customerName, credit_card.name, :required => true)
         add_pair(post, :cardNumber, credit_card.number, :required => true)
 
@@ -85,11 +99,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
+        result = {}
+        decoded = URI::decode_www_form(body)
+        decoded.each do |pair|
+          result[pair[0].to_sym] = pair[1]
+        end
+        result
       end
 
       def commit(action, money, parameters)
-        response = parse( ssl_post(url_for(action), post_data(action, parameters)) )
-
+        response = parse( ssl_post(self.live_url, post_data(action, parameters)) )
+        # binding.pry
         Response.new(response["responseCode"] == 0, message_from(response), response,
           :test => test?,
           :authorization => response["xref"],
@@ -110,9 +130,13 @@ module ActiveMerchant #:nodoc:
           :merchantID => @options[:login],
           :action => action,
           :type => '1', #Ecommerce
-          :currencyCode => self.default_currency,
           :countryCode => self.supported_countries[0]
         )
+        parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+      end
+
+      def add_pair(post, key, value, options = {})
+        post[key] = value if !value.blank? || options[:required]
       end
     end
   end
