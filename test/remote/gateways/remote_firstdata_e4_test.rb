@@ -75,7 +75,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     gateway = FirstdataE4Gateway.new(:login    => "NotARealUser",
                                      :password => "NotARealPassword" )
     assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_equal "Unauthorized Request (bad or missing credentials).", response.message
+    assert_match /Unauthorized Request/, response.message
     assert_failure response
   end
 end
