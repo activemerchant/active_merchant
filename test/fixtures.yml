@@ -65,6 +65,9 @@ card_stream:
   login: X
   password: Y
 
+card_stream_modern:
+  login: "0000992"
+
 certo_direct:
   login: 1
   password: vP6OwK3
