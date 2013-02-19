@@ -243,8 +243,6 @@ class RemoteCardStreamModernTest < Test::Unit::TestCase
 
     def test_successful_maestro_purchase
       assert response = @gateway.purchase(142, @uk_maestro, @uk_maestro_options)
-      # puts("\nSuccessful Maestro Purchase Response: ")
-      # puts(response.inspect)
       assert_equal 'APPROVED', response.message
       assert_success response
     end
