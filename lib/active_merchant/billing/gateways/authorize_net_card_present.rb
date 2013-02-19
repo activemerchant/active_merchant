@@ -6,8 +6,7 @@ module ActiveMerchant
       # http://www.authorize.net/support/CP_guide.pdf
       API_VERSION = '1.0'
       
-      # There is no test-only endpoint
-      self.test_url = 'https://cardpresent.authorize.net/gateway/transact.dll'
+      self.test_url = 'https://test.authorize.net/gateway/transact.dll'
       self.live_url = 'https://cardpresent.authorize.net/gateway/transact.dll'
       
       # Only one supported market type
@@ -90,7 +89,9 @@ module ActiveMerchant
         # Only activate the test_request when the :test option is passed in
         parameters[:test_request] = (@options[:test] || test?) ? 'TRUE' : 'FALSE'
 
-        url = test? ? self.test_url : self.live_url
+        # Submit requests against the testing endpoint if the :test_url option is passed in 
+        url = @options[:test_url].blank? ? self.live_url : self.test_url 
+
         data = ssl_post url, post_data(action, parameters)
 
         response = parse(data)
@@ -151,6 +152,11 @@ module ActiveMerchant
         super(post, creditcard)
         unless creditcard.track2.blank?
           post[:track2] = creditcard.track2
+        end
+        unless creditcard.track1.blank?
+          post[:track1] = creditcard.track1
+        end
+        if !creditcard.track1.blank? || !creditcard.track2.blank?
           post.delete :card_num
           post.delete :card_code
           post.delete :exp_date
