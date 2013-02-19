@@ -202,76 +202,76 @@ class RemoteCardStreamModernTest < Test::Unit::TestCase
       assert responseRefund.test?
     end
 
-    # def test_successful_visacreditcard_purchase
-    #   assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options)
-    #   assert_equal 'APPROVED', response.message
-    #   assert_success response
-    #   assert response.test?
-    #   assert !response.authorization.blank?
-    # end
+    def test_successful_visacreditcard_purchase
+      assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options)
+      assert_equal 'APPROVED', response.message
+      assert_success response
+      assert response.test?
+      assert !response.authorization.blank?
+    end
     
-    # def test_successful_visadebitcard_purchase
-    #   assert response = @gateway.purchase(142, @visadebitcard, @visadebit_options)
-    #   assert_equal 'APPROVED', response.message
-    #   assert_success response
-    #   assert response.test?
-    #   assert !response.authorization.blank?
-    # end
+    def test_successful_visadebitcard_purchase
+      assert response = @gateway.purchase(142, @visadebitcard, @visadebit_options)
+      assert_equal 'APPROVED', response.message
+      assert_success response
+      assert response.test?
+      assert !response.authorization.blank?
+    end
 
-    # def test_successful_mastercard_purchase
-    #   assert response = @gateway.purchase(142, @mastercard, @mastercard_options)
-    #   assert_equal 'APPROVED', response.message
-    #   assert_success response
-    #   assert response.test?
-    #   assert !response.authorization.blank?
-    # end
+    def test_successful_mastercard_purchase
+      assert response = @gateway.purchase(142, @mastercard, @mastercard_options)
+      assert_equal 'APPROVED', response.message
+      assert_success response
+      assert response.test?
+      assert !response.authorization.blank?
+    end
     
-    # def test_declined_mastercard_purchase
-    #   assert response = @gateway.purchase(10000, @mastercard, @mastercard_options)
-    #   assert_equal 'CARD DECLINED', response.message
-    #   assert_failure response
-    #   assert response.test?
-    # end
+    def test_declined_mastercard_purchase
+      assert response = @gateway.purchase(10000, @mastercard, @mastercard_options)
+      assert_equal 'CARD DECLINED', response.message
+      assert_failure response
+      assert response.test?
+    end
     
-    # def test_expired_mastercard
-    #   @mastercard.year = 2012
-    #   assert response = @gateway.purchase(142, @mastercard, @mastercard_options)
-    #   assert_equal 'INVALID CARDEXPIRYDATE', response.message
-    #   assert_failure response
-    #   assert response.test?
-    # end
+    def test_expired_mastercard
+      @mastercard.year = 2012
+      assert response = @gateway.purchase(142, @mastercard, @mastercard_options)
+      assert_equal 'INVALID CARDEXPIRYDATE', response.message
+      assert_failure response
+      assert response.test?
+    end
 
-    # def test_successful_maestro_purchase
-    #   assert response = @gateway.purchase(142, @uk_maestro, @uk_maestro_options)
-    #   # puts("\nSuccessful Maestro Purchase Response: ")
-    #   # puts(response.inspect)
-    #   assert_equal 'APPROVED', response.message
-    #   assert_success response
-    # end
+    def test_successful_maestro_purchase
+      assert response = @gateway.purchase(142, @uk_maestro, @uk_maestro_options)
+      # puts("\nSuccessful Maestro Purchase Response: ")
+      # puts(response.inspect)
+      assert_equal 'APPROVED', response.message
+      assert_success response
+    end
     
-    # def test_successful_amex_purchase
-    #   assert response = @gateway.purchase(142, @amex, @amex_options)
-    #   assert_equal 'APPROVED', response.message
-    #   assert_success response
-    #   assert response.test?
-    #   assert !response.authorization.blank?
-    # end
+    def test_successful_amex_purchase
+      assert response = @gateway.purchase(142, @amex, @amex_options)
+      assert_equal 'APPROVED', response.message
+      assert_success response
+      assert response.test?
+      assert !response.authorization.blank?
+    end
     
-    # def test_invalid_login
-    #   gateway = CardStreamModernGateway.new(
-    #     :login => '',
-    #     :password => ''
-    #   )
-    #   assert response = gateway.purchase(142, @mastercard, @mastercard_options)
-    #   assert_equal 'MISSING MERCHANTID', response.message
-    #   assert_failure response
-    # end
+    def test_invalid_login
+      gateway = CardStreamModernGateway.new(
+        :login => '',
+        :password => ''
+      )
+      assert response = gateway.purchase(142, @mastercard, @mastercard_options)
+      assert_equal 'MISSING MERCHANTID', response.message
+      assert_failure response
+    end
     
-    # def test_usd_merchant_currency
-    #   assert response = @gateway.purchase(142, @mastercard, @mastercard_options.update(:currency => 'USD'))
-    #   assert_equal 'APPROVED', response.message
-    #   assert_success response
-    #   assert response.test?
-    # end
+    def test_usd_merchant_currency
+      assert response = @gateway.purchase(142, @mastercard, @mastercard_options.update(:currency => 'USD'))
+      assert_equal 'APPROVED', response.message
+      assert_success response
+      assert response.test?
+    end
 
 end
