@@ -130,6 +130,78 @@ class RemoteCardStreamModernTest < Test::Unit::TestCase
       assert responseRefund.test?
     end
 
+    def test_successful_visadebitcard_authorization_and_capture
+      assert responseAuthorization = @gateway.authorize(142, @visadebitcard, @visadebit_options)
+      assert_equal 'APPROVED', responseAuthorization.message
+      assert_success responseAuthorization
+      assert responseAuthorization.test?
+      assert !responseAuthorization.authorization.blank?
+      assert responseCapture = @gateway.capture(142, responseAuthorization.authorization, @visadebit_options)
+      assert_equal 'APPROVED', responseCapture.message
+      assert_success responseCapture
+      assert responseCapture.test?
+    end
+
+    def test_successful_visadebitcard_authorization_and_refund
+      assert responseAuthorization = @gateway.authorize(284, @visadebitcard, @visadebit_options)
+      assert_equal 'APPROVED', responseAuthorization.message
+      assert_success responseAuthorization
+      assert responseAuthorization.test?
+      assert !responseAuthorization.authorization.blank?
+      assert responseRefund = @gateway.void(142, responseAuthorization.authorization, @visadebit_options)
+      assert_equal 'APPROVED', responseRefund.message
+      assert_success responseRefund
+      assert responseRefund.test?
+    end
+
+    def test_successful_amex_authorization_and_capture
+      assert responseAuthorization = @gateway.authorize(142, @amex, @amex_options)
+      assert_equal 'APPROVED', responseAuthorization.message
+      assert_success responseAuthorization
+      assert responseAuthorization.test?
+      assert !responseAuthorization.authorization.blank?
+      assert responseCapture = @gateway.capture(142, responseAuthorization.authorization, @amex_options)
+      assert_equal 'APPROVED', responseCapture.message
+      assert_success responseCapture
+      assert responseCapture.test?
+    end
+
+    def test_successful_amex_authorization_and_refund
+      assert responseAuthorization = @gateway.authorize(284, @amex, @amex_options)
+      assert_equal 'APPROVED', responseAuthorization.message
+      assert_success responseAuthorization
+      assert responseAuthorization.test?
+      assert !responseAuthorization.authorization.blank?
+      assert responseRefund = @gateway.void(142, responseAuthorization.authorization, @amex_options)
+      assert_equal 'APPROVED', responseRefund.message
+      assert_success responseRefund
+      assert responseRefund.test?
+    end
+
+    def test_successful_mastercard_authorization_and_capture
+      assert responseAuthorization = @gateway.authorize(142, @mastercard, @mastercard_options)
+      assert_equal 'APPROVED', responseAuthorization.message
+      assert_success responseAuthorization
+      assert responseAuthorization.test?
+      assert !responseAuthorization.authorization.blank?
+      assert responseCapture = @gateway.capture(142, responseAuthorization.authorization, @mastercard_options)
+      assert_equal 'APPROVED', responseCapture.message
+      assert_success responseCapture
+      assert responseCapture.test?
+    end
+
+    def test_successful_mastercard_authorization_and_refund
+      assert responseAuthorization = @gateway.authorize(284, @mastercard, @mastercard_options)
+      assert_equal 'APPROVED', responseAuthorization.message
+      assert_success responseAuthorization
+      assert responseAuthorization.test?
+      assert !responseAuthorization.authorization.blank?
+      assert responseRefund = @gateway.void(142, responseAuthorization.authorization, @mastercard_options)
+      assert_equal 'APPROVED', responseRefund.message
+      assert_success responseRefund
+      assert responseRefund.test?
+    end
+
     # def test_successful_visacreditcard_purchase
     #   assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options)
     #   assert_equal 'APPROVED', response.message

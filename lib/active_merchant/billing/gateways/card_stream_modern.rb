@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_pair(post, :xref, authorization)
         add_amount(post, money, options)
-        commit('REFUND', post)
+        commit('REFUND', money, post)
       end
 
       private
