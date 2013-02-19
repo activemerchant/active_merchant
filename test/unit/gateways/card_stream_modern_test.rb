@@ -48,7 +48,16 @@ class CardStreamModernTest < Test::Unit::TestCase
   def test_successful_visacreditcard_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    assert responseRefund = @gateway.void(142, "authorization", @visacredit_options)
+    assert responseRefund = @gateway.refund(142, "authorization", @visacredit_options)
+    assert_equal 'APPROVED', responseRefund.message
+    assert_success responseRefund
+    assert responseRefund.test?
+  end
+
+  def test_successful_visacreditcard_cancellation
+    @gateway.expects(:ssl_post).returns(successful_cancellation_response)
+
+    assert responseRefund = @gateway.void("authorization", @visacredit_options)
     assert_equal 'APPROVED', responseRefund.message
     assert_success responseRefund
     assert responseRefund.test?
@@ -57,7 +66,7 @@ class CardStreamModernTest < Test::Unit::TestCase
   def test_successful_visacreditcard_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    assert responseRefund = @gateway.void(142, @visacreditcard, @visacredit_options)
+    assert responseRefund = @gateway.purchase(142, @visacreditcard, @visacredit_options)
     assert_equal 'APPROVED', responseRefund.message
     assert_success responseRefund
     assert responseRefund.test?
@@ -89,7 +98,11 @@ class CardStreamModernTest < Test::Unit::TestCase
   def successful_purchase_response
     "merchantID=0000000&threeDSEnabled=Y&merchantDescription=General+test+account+with+AVS%2FCV2+checking&amount=142&currencyCode=826&transactionUnique=27a594210e27846c8e9102647f210586&orderRef=AM+test+purchase&customerName=Longbob+Longsen&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerPostCode=NN17+8YG+&action=SALE&type=1&countryCode=826&merchantAlias=0000992&remoteAddress=80.229.33.63&responseCode=0&responseMessage=AUTHCODE%3A635959&xref=13021914LS06DW22NW22LVJ&threeDSEnrolled=U&threeDSXID=00000000000004717491&transactionID=4717491&transactionPreviousID=0&timestamp=2013-02-19+14%3A06%3A44&amountReceived=142&avscv2ResponseCode=222100&avscv2ResponseMessage=ALL+MATCH&avscv2AuthEntity=merchant+host&cv2Check=matched&addressCheck=matched&postcodeCheck=matched&cardNumberMask=%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A0821&cardTypeCode=VC&cardType=Visa+Credit&threeDSErrorCode=-1&threeDSErrorDescription=Error+while+attempting+to+send+the+request+to%3A+https%3A%2F%2F3dstest.universalpaymentgateway.com%3A4343%2FAPI%0A%0DPlease+make+sure+that+ActiveMerchant+server+is+running+and+the+URL+is+valid.+ERROR_INTERNET_CANNOT_CONNECT%3A+The+attempt+to+connect+to+the+server+failed.&threeDSMerchantPref=PROCEED&threeDSVETimestamp=2013-02-19+14%3A06%3A22&currencyExponent=2&responseStatus=0&merchantName=CARDSTREAM+TEST&merchantID2=100001"
   end
-  
+
+  def successful_cancellation_response
+    "merchantID=0000992&threeDSEnabled=Y&merchantDescription=General+test+account+with+AVS%2FCV2+checking&xref=13021918BK14KR25PZ82GHH&action=REFUND&type=1&countryCode=826&merchantAlias=0000992&remoteAddress=80.229.33.63&responseCode=0&responseMessage=REFUNDACCEPTED&amount=284&currencyCode=826&customerName=Longbob+Longsen&customerAddress=Flat+6%2C+Primrose+Rise+347+Lavender+Road&customerPostCode=NN17+8YG+&transactionUnique=86935375de4da6e1dfd63e255976d812&orderRef=AM+test+purchase&amountReceived=284&avscv2ResponseCode=222100&avscv2ResponseMessage=ALL+MATCH&avscv2AuthEntity=merchant+host&cv2Check=matched&addressCheck=matched&postcodeCheck=matched&threeDSXID=00000000000004718188&threeDSEnrolled=U&threeDSErrorCode=-1&threeDSErrorDescription=Error+while+attempting+to+send+the+request+to%3A+https%3A%2F%2F3dstest.universalpaymentgateway.com%3A4343%2FAPI%0A%0DPlease+make+sure+that+ActiveMerchant+server+is+running+and+the+URL+is+valid.+ERROR_INTERNET_CANNOT_CONNECT%3A+The+attempt+to+connect+to+the+server+failed.&threeDSMerchantPref=PROCEED&threeDSVETimestamp=2013-02-19+18%3A14%3A02&cardTypeCode=VC&cardNumberMask=%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A0821&threeDSRequired=N&transactionID=4718190&transactionPreviousID=4718188&timestamp=2013-02-19+18%3A14%3A26&cardType=Visa+Credit&currencyExponent=2&responseStatus=0&merchantName=CARDSTREAM+TEST&merchantID2=100001"
+  end
+
   def failed_purchase_card_declined_response
     "merchantID=0000000&threeDSEnabled=Y&merchantDescription=General+test+account+with+AVS%2FCV2+checking&amount=10000&currencyCode=826&transactionUnique=7385df1d9c5484142bb6be1e932cd2df&orderRef=AM+test+purchase&customerName=Longbob+Longsen&customerAddress=25+The+Larches+&customerPostCode=LE10+2RT&action=SALE&type=1&countryCode=826&merchantAlias=0000992&remoteAddress=80.229.33.63&responseCode=5&responseMessage=CARD+DECLINED&xref=13021914RQ07HK55HG29KPH&threeDSEnrolled=U&threeDSXID=00000000000004717495&transactionID=4717495&transactionPreviousID=0&timestamp=2013-02-19+14%3A08%3A18&amountReceived=0&cardNumberMask=%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A%2A0191&cardTypeCode=MC&cardType=Mastercard&threeDSErrorCode=-1&threeDSErrorDescription=Error+while+attempting+to+send+the+request+to%3A+https%3A%2F%2F3dstest.universalpaymentgateway.com%3A4343%2FAPI%0A%0DPlease+make+sure+that+ActiveMerchant+server+is+running+and+the+URL+is+valid.+ERROR_INTERNET_CANNOT_CONNECT%3A+The+attempt+to+connect+to+the+server+failed.&threeDSMerchantPref=PROCEED&threeDSVETimestamp=2013-02-19+14%3A07%3A55&currencyExponent=2&responseStatus=1&merchantName=CARDSTREAM+TEST&merchantID2=100001"
   end

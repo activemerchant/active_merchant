@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, creditcard, options)
         add_customer_data(post, options)
 
-        commit('PREAUTH', money, post)
+        commit('PREAUTH', post)
       end
 
       def purchase(money, creditcard, options = {})
@@ -32,21 +32,27 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard)
         add_address(post, creditcard, options)
         add_customer_data(post, options)
-        commit('SALE', money, post)
+        commit('SALE', post)
       end
 
       def capture(money, authorization, options = {})
         post = {}
         add_pair(post, :xref, authorization)
         add_amount(post, money, options)
-        commit('SALE', money, post)
+        commit('SALE', post)
       end
 
-      def void(money, authorization, options = {})
+      def refund(money, authorization, options = {})
         post = {}
         add_pair(post, :xref, authorization)
         add_amount(post, money, options)
-        commit('REFUND', money, post)
+        commit('REFUND', post)
+      end
+
+      def void(authorization, options = {})
+        post = {}
+        add_pair(post, :xref, authorization)
+        commit('REFUND', post)
       end
 
       private
@@ -108,9 +114,9 @@ module ActiveMerchant #:nodoc:
         result
       end
 
-      def commit(action, money, parameters)
+      def commit(action, parameters)
         response = parse( ssl_post(self.live_url, post_data(action, parameters)) )
-        # binding.pry
+        
         Response.new(response[:responseCode] == "0",
           response[:responseCode] == "0" ? "APPROVED" : response[:responseMessage], 
           response,
