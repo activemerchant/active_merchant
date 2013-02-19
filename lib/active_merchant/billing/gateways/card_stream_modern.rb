@@ -43,9 +43,10 @@ module ActiveMerchant #:nodoc:
         commit('SALE', money, post)
       end
 
-      def void(authorization, options = {})
+      def void(money, authorization, options = {})
         post = {}
         add_pair(post, :xref, authorization)
+        add_amount(post, money, options)
         commit('REFUND', post)
       end
 

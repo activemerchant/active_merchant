@@ -118,6 +118,18 @@ class RemoteCardStreamModernTest < Test::Unit::TestCase
       assert responseCapture.test?
     end
 
+    def test_successful_visacreditcard_authorization_and_refund
+      assert responseAuthorization = @gateway.authorize(284, @visacreditcard, @visacredit_options)
+      assert_equal 'APPROVED', responseAuthorization.message
+      assert_success responseAuthorization
+      assert responseAuthorization.test?
+      assert !responseAuthorization.authorization.blank?
+      assert responseRefund = @gateway.void(142, responseAuthorization.authorization, @visacredit_options)
+      assert_equal 'APPROVED', responseRefund.message
+      assert_success responseRefund
+      assert responseRefund.test?
+    end
+
     # def test_successful_visacreditcard_purchase
     #   assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options)
     #   assert_equal 'APPROVED', response.message
