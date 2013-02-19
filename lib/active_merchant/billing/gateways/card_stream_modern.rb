@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         post = {}
         add_amount(post, money, options)
-        add_invoice(post, options)
+        add_invoice(post, creditcard, money, options)
         add_creditcard(post, creditcard)
         add_address(post, creditcard, options)
         add_customer_data(post, options)
@@ -33,11 +33,12 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard)
         add_address(post, creditcard, options)
         add_customer_data(post, options)
-
         commit('SALE', money, post)
       end
 
       def capture(money, authorization, options = {})
+        post = {}
+        add_pair(post, :xref, authorization)
         add_amount(post, money, options)
         commit('SALE', money, post)
       end
@@ -52,7 +53,7 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(post, money, options)
         add_pair(post, :amount, amount(money), :required => true)
-        add_pair(post, :currencyCode, self.default_currency = 'GBP')
+        add_pair(post, :currencyCode, options[:currency] || self.default_currency)
       end
 
       def add_customer_data(post, options)
@@ -110,19 +111,17 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters)
         response = parse( ssl_post(self.live_url, post_data(action, parameters)) )
         # binding.pry
-        Response.new(response["responseCode"] == 0, message_from(response), response,
+        Response.new(response[:responseCode] == "0",
+          response[:responseCode] == "0" ? "APPROVED" : response[:responseMessage], 
+          response,
           :test => test?,
-          :authorization => response["xref"],
+          :authorization => response[:xref],
           :avs_result => {
-            :street_match => response["addressCheck"],
-            :postal_match => response["postcodeCheck"],
+            :street_match => response[:addressCheck],
+            :postal_match => response[:postcodeCheck],
           },
-          :cvv_result => response["cv2Check"]
+          :cvv_result => response[:cv2Check]
         )
-      end
-
-      def message_from(response)
-        response[:responseMessage]
       end
 
       def post_data(action, parameters = {})

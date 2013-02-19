@@ -13,21 +13,13 @@ class RemoteCardStreamModernTest < Test::Unit::TestCase
                 :brand => :american_express
               )
 
-      @uk_maestro = credit_card('675940410531100173',
+      @uk_maestro = credit_card('6759015050123445002',
                       :month => '12',
                       :year => '2014',
                       :issue_number => '0',
-                      :verification_value => '134',
+                      :verification_value => '309',
                       :brand => :switch
                     )
-      
-      @solo = credit_card('676740340572345678',
-                :month => '12',
-                :year => '2014',
-                :issue_number => '1',
-                :verification_value => '773',
-                :brand => :solo
-              )
 
       @mastercard = credit_card('5301250070000191',
                       :month => '12',
@@ -36,10 +28,59 @@ class RemoteCardStreamModernTest < Test::Unit::TestCase
                       :brand => :master
                     )
 
+      @visacreditcard = credit_card('4929421234600821',
+                      :month => '12',
+                      :year => '2014',
+                      :verification_value => '356',
+                      :brand => :visa 
+                      )
+
+      @visadebitcard = credit_card('4539791001730106',
+                      :month => '12',
+                      :year => '2014',
+                      :verification_value => '289',
+                      :brand => :visa 
+                      )
+
       @declined_card = credit_card('4000300011112220',
                         :month => '9',
                         :year => '2014'
                       )
+
+      @amex_options = { 
+        :billing_address => { 
+          :address1 => 'The Hunts Way',
+          :city => "",
+          :state => "Leicester",
+          :zip => 'SO18 1GW'
+        },
+        :order_id => generate_unique_id,
+        :description => 'AM test purchase'
+      }
+
+      @visacredit_options = { 
+        :billing_address => { 
+          :address1 => "Flat 6, Primrose Rise",
+          :address2 => "347 Lavender Road",
+          :city => "",
+          :state => "Northampton",
+          :zip => 'NN17 8YG '
+        },
+        :order_id => generate_unique_id,
+        :description => 'AM test purchase'
+      }
+
+      @visadebit_options = { 
+        :billing_address => { 
+          :address1 => 'Unit 5, Pickwick Walk',
+          :address2 => "120 Uxbridge Road",
+          :city => "Hatch End",
+          :state => "Middlesex",
+          :zip => "HA6 7HJ"
+        },
+        :order_id => generate_unique_id,
+        :description => 'AM test purchase'
+      }
 
       @mastercard_options = { 
         :billing_address => { 
@@ -49,152 +90,104 @@ class RemoteCardStreamModernTest < Test::Unit::TestCase
           :zip => 'LE10 2RT'
         },
         :order_id => generate_unique_id,
-        :description => 'Store purchase'
+        :description => 'AM test purchase'
       }
      
       @uk_maestro_options = {
         :billing_address => { 
           :address1 => 'The Parkway',
-          :address2 => "Larches Approach",
+          :address2 => "5258 Larches Approach",
           :city => "Hull",
           :state => "North Humberside",
-          :zip => 'HU7 9OP'
+          :zip => 'HU10 5OP'
         },
         :order_id => generate_unique_id,
-        :description => 'Store purchase'
-      }
-      
-      @solo_options = {
-        :billing_address => {
-          :address1 => '5 Zigzag Road',
-          :city => 'Isleworth',
-          :state => 'Middlesex',
-          :zip => 'TW7 8FF'
-        },
-        :order_id => generate_unique_id,
-        :description => 'Store purchase'
+        :description => 'AM test purchase'
       }
     end
     
-    def test_successful_mastercard_purchase
-      assert response = @gateway.purchase(100, @mastercard, @mastercard_options)
-      assert_equal 'APPROVED', response.message
-      assert_success response
-      assert response.test?
-      assert !response.authorization.blank?
+    def test_successful_visacreditcard_authorization_and_capture
+      assert responseAuthorization = @gateway.authorize(142, @visacreditcard, @visacredit_options)
+      assert_equal 'APPROVED', responseAuthorization.message
+      assert_success responseAuthorization
+      assert responseAuthorization.test?
+      assert !responseAuthorization.authorization.blank?
+      assert responseCapture = @gateway.capture(142, responseAuthorization.authorization, @visacredit_options)
+      assert_equal 'APPROVED', responseCapture.message
+      assert_success responseCapture
+      assert responseCapture.test?
     end
+
+    # def test_successful_visacreditcard_purchase
+    #   assert response = @gateway.purchase(142, @visacreditcard, @visacredit_options)
+    #   assert_equal 'APPROVED', response.message
+    #   assert_success response
+    #   assert response.test?
+    #   assert !response.authorization.blank?
+    # end
     
-    def test_declined_mastercard_purchase
-      assert response = @gateway.purchase(10000, @mastercard, @mastercard_options)
-      assert_equal 'CARD DECLINED', response.message
-      assert_failure response
-      assert response.test?
-    end
+    # def test_successful_visadebitcard_purchase
+    #   assert response = @gateway.purchase(142, @visadebitcard, @visadebit_options)
+    #   assert_equal 'APPROVED', response.message
+    #   assert_success response
+    #   assert response.test?
+    #   assert !response.authorization.blank?
+    # end
+
+    # def test_successful_mastercard_purchase
+    #   assert response = @gateway.purchase(142, @mastercard, @mastercard_options)
+    #   assert_equal 'APPROVED', response.message
+    #   assert_success response
+    #   assert response.test?
+    #   assert !response.authorization.blank?
+    # end
     
-    def test_expired_mastercard
-      @mastercard.year = 2005
-      assert response = @gateway.purchase(100, @mastercard, @mastercard_options)
-      assert_equal 'CARD EXPIRED', response.message
-      assert_failure response
-      assert response.test?
-    end
-
-    def test_successful_maestro_purchase
-      assert response = @gateway.purchase(100, @uk_maestro, @uk_maestro_options)
-      assert_equal 'APPROVED', response.message
-      assert_success response
-    end
+    # def test_declined_mastercard_purchase
+    #   assert response = @gateway.purchase(10000, @mastercard, @mastercard_options)
+    #   assert_equal 'CARD DECLINED', response.message
+    #   assert_failure response
+    #   assert response.test?
+    # end
     
-    def test_successful_solo_purchase
-      assert response = @gateway.purchase(100, @solo, @solo_options)
-      assert_equal 'APPROVED', response.message
-      assert_success response
-      assert response.test?
-      assert !response.authorization.blank?
-    end
+    # def test_expired_mastercard
+    #   @mastercard.year = 2012
+    #   assert response = @gateway.purchase(142, @mastercard, @mastercard_options)
+    #   assert_equal 'INVALID CARDEXPIRYDATE', response.message
+    #   assert_failure response
+    #   assert response.test?
+    # end
+
+    # def test_successful_maestro_purchase
+    #   assert response = @gateway.purchase(142, @uk_maestro, @uk_maestro_options)
+    #   # puts("\nSuccessful Maestro Purchase Response: ")
+    #   # puts(response.inspect)
+    #   assert_equal 'APPROVED', response.message
+    #   assert_success response
+    # end
     
-    def test_successful_amex_purchase
-      assert response = @gateway.purchase(100, @amex, :order_id => generate_unique_id)
-      assert_equal 'APPROVED', response.message
-      assert_success response
-      assert response.test?
-      assert !response.authorization.blank?
-    end
+    # def test_successful_amex_purchase
+    #   assert response = @gateway.purchase(142, @amex, @amex_options)
+    #   assert_equal 'APPROVED', response.message
+    #   assert_success response
+    #   assert response.test?
+    #   assert !response.authorization.blank?
+    # end
     
-    def test_maestro_missing_start_date_and_issue_date
-      @uk_maestro.issue_number = nil
-      assert response = @gateway.purchase(100, @uk_maestro, @uk_maestro_options)
-      assert_equal 'ISSUE NUMBER MISSING', response.message
-      assert_failure response
-      assert response.test?
-    end
+    # def test_invalid_login
+    #   gateway = CardStreamModernGateway.new(
+    #     :login => '',
+    #     :password => ''
+    #   )
+    #   assert response = gateway.purchase(142, @mastercard, @mastercard_options)
+    #   assert_equal 'MISSING MERCHANTID', response.message
+    #   assert_failure response
+    # end
     
-    def test_invalid_login
-      gateway = CardStreamModernGateway.new(
-        :login => '',
-        :password => ''
-      )
-      assert response = gateway.purchase(100, @mastercard, @mastercard_options)
-      assert_equal 'MERCHANT ID MISSING', response.message
-      assert_failure response
-    end
-    
-    def test_unsupported_merchant_currency
-      assert response = @gateway.purchase(100, @mastercard, @mastercard_options.update(:currency => 'USD'))
-      assert_equal "ERROR 1052", response.message
-      assert_failure response
-      assert response.test?
-    end
+    # def test_usd_merchant_currency
+    #   assert response = @gateway.purchase(142, @mastercard, @mastercard_options.update(:currency => 'USD'))
+    #   assert_equal 'APPROVED', response.message
+    #   assert_success response
+    #   assert response.test?
+    # end
 
-  # def setup
-  #   @gateway = CardStreamModernGateway.new(fixtures(:card_stream_modern))
-
-  #   @amount = 100
-  #   @credit_card = credit_card('4000100011112224')
-  #   @declined_card = credit_card('4000300011112220')
-
-  #   @options = {
-  #     :order_id => '1',
-  #     :billing_address => address,
-  #     :description => 'Store Purchase'
-  #   }
-  # end
-
-  # def test_successful_purchase
-  #   assert response = @gateway.purchase(@amount, @credit_card, @options)
-  #   assert_success response
-  #   assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
-  # end
-
-  # def test_unsuccessful_purchase
-  #   assert response = @gateway.purchase(@amount, @declined_card, @options)
-  #   assert_failure response
-  #   assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
-  # end
-
-  # def test_authorize_and_capture
-  #   amount = @amount
-  #   assert auth = @gateway.authorize(amount, @credit_card, @options)
-  #   assert_success auth
-  #   assert_equal 'Success', auth.message
-  #   assert auth.authorization
-  #   assert capture = @gateway.capture(amount, auth.authorization)
-  #   assert_success capture
-  # end
-
-  # def test_failed_capture
-  #   assert response = @gateway.capture(@amount, '')
-  #   assert_failure response
-  #   assert_equal 'REPLACE WITH GATEWAY FAILURE MESSAGE', response.message
-  # end
-
-  # def test_invalid_login
-  #   gateway = CardStreamModernGateway.new(
-  #               :login => '',
-  #               :password => ''
-  #             )
-  #   assert response = gateway.purchase(@amount, @credit_card, @options)
-  #   assert_failure response
-  #   assert_equal 'REPLACE WITH FAILURE MESSAGE', response.message
-  # end
 end
