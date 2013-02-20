@@ -1,11 +1,14 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.31.0 (February 20, 2013)
+
 * Worldpay: XML encoding is required to be ISO-8859-1 [dougal]
 * Worldpay: Add card code for more supported card types [dougal]
 * Ogone: Add action option [pwoestelandt]
 * PayPal Express gateway: Add support for BuyerEmailOptInEnable [chrisrbnelson]
 * Add Paymill gateway [duff]
 * Add EVO Canada gateway [alexdunae]
+* Fixed credit card and check interface, used correct method for checking payment type [jduff]
 
 == Version 1.30.0 (February 13, 2013)
 
