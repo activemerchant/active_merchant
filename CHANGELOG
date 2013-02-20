@@ -5,6 +5,7 @@
 * Ogone: Add action option [pwoestelandt]
 * PayPal Express gateway: Add support for BuyerEmailOptInEnable [chrisrbnelson]
 * Add Paymill gateway [duff]
+* Add EVO Canada gateway [alexdunae]
 
 == Version 1.30.0 (February 13, 2013)
 
