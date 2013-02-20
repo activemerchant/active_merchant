@@ -209,10 +209,6 @@ module ActiveMerchant #:nodoc:
         require_verification_value
       end
 
-      def check?
-        false
-      end
-
       private
 
       def before_validate #:nodoc:
