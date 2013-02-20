@@ -8,9 +8,14 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro, :solo, :switch]
       self.homepage_url = 'http://www.cardstream.com/'
       self.display_name = 'CardStream'
-
+      
       def initialize(options = {})
         requires!(options, :login)
+        if(options[:threeDSRequired])
+          @threeDSRequired = options[:threeDSRequired]
+        else
+          @threeDSRequired = 'N'  
+        end
         super
       end
 
@@ -21,7 +26,6 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard)
         add_address(post, creditcard, options)
         add_customer_data(post, options)
-
         commit('PREAUTH', post)
       end
 
@@ -135,7 +139,8 @@ module ActiveMerchant #:nodoc:
           :merchantID => @options[:login],
           :action => action,
           :type => '1', #Ecommerce
-          :countryCode => self.supported_countries[0]
+          :countryCode => self.supported_countries[0],
+          :threeDSRequired => @threeDSRequired #Disable 3d secure by default
         )
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
