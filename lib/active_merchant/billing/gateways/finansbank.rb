@@ -17,10 +17,6 @@ module ActiveMerchant #:nodoc:
       # The name of the gateway
       self.display_name = 'Finansbank WebPOS'
 
-      def initialize(options = {})
-        super
-      end
-
     end
   end
 end

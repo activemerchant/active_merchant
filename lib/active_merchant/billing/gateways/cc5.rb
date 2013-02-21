@@ -1,3 +1,7 @@
+if RUBY_VERSION < '1.9' && $KCODE == "NONE"
+  $KCODE = 'u'
+end
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # CC5 API is used by many banks in Turkey. Extend this base class to provide concrete implementations.
@@ -139,12 +143,6 @@ module ActiveMerchant #:nodoc:
 
       def success?(response)
         response[:response] == "Approved"
-      end
-
-      def message_from(response)
-      end
-
-      def post_data(action, parameters = {})
       end
 
       def normalize(text)
