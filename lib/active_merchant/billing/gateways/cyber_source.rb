@@ -254,7 +254,7 @@ module ActiveMerchant #:nodoc:
       def build_purchase_request(money, payment_method_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_payment_method_or_subscription(xml, money, payment_method_or_reference, options)
-        if card_brand(payment_method_or_reference) == 'check'
+        if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
           add_check_service(xml)
         else
           add_purchase_service(xml, options)
