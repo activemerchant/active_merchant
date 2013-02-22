@@ -82,6 +82,7 @@ module ActiveMerchant #:nodoc:
             end
             
             xml.tag! 'n2:Payer', options[:email]
+            address.delete(:name) if address.present?
             add_address(xml, 'n2:Address', address)
           end
         end
