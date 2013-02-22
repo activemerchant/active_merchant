@@ -4,7 +4,7 @@ class PaypalTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
     
-    @gateway = PaypalGateway.new(fixtures(:paypal_certificate))
+    @gateway = PaypalGateway.new(fixtures(:paypal_signature))
 
     @creditcard = CreditCard.new(
       :type                => "visa",
