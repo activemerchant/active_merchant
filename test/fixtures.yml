@@ -606,11 +606,11 @@ world_pay_gateway:
   password: PASSWORD
 
 spreedly:
-  api_key: 'd17183c4df082e35b111d35e170e0d6977d389fe'
-  short_site_name: 'yovoslav-ivanov-test'
+  api_key: 'your-api-key'
+  short_site_name: 'your-test-short-site-name'
   invoice_request:
-    subscription_plan_id: '22651'
+    subscription_plan_id: 'your-test-subscription-plan'
     subscriber:
-      customer_id: '90'
-      screen_name: 'joe'
-      email: 'joe@example.com'
+      customer_id: 'your-test-customer-id'
+      screen_name: 'your-test-qcustomer-screen-name'
+      email: 'test-customer@test-customer-land.com'
