@@ -1,5 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.31.1 (February 25, 2013)
+
+* Cybersource: Bug fixes [natejgreene, jduff]
+
 == Version 1.31.0 (February 20, 2013)
 
 * Worldpay: XML encoding is required to be ISO-8859-1 [dougal]
