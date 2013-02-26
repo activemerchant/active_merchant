@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def save_card_url
-        (test? ? 'https://test-token.paymill.de' : 'https://token-v2.paymill.de')
+        (test? ? 'https://test-token.paymill.com' : 'https://token-v2.paymill.com')
       end
 
       def post_data(params)
