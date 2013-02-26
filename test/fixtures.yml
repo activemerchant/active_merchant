@@ -605,3 +605,12 @@ world_pay_gateway:
   login: LOGIN
   password: PASSWORD
 
+spreedly:
+  api_key: 'your-api-key'
+  short_site_name: 'your-test-short-site-name'
+  invoice_request:
+    subscription_plan_id: 'your-test-subscription-plan'
+    subscriber:
+      customer_id: 'your-test-customer-id'
+      screen_name: 'your-test-qcustomer-screen-name'
+      email: 'test-customer@test-customer-land.com'
