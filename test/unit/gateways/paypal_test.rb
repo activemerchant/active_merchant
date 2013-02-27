@@ -377,14 +377,6 @@ class PaypalTest < Test::Unit::TestCase
     assert response.success?
   end
 
-  def test_name_is_not_included_twice
-    @gateway.expects(:ssl_post).returns(successful_purchase_response).with do |url, data|
-      data =~ /<n2:FirstName>/ && data =~ /<n2:LastName>/ && data !~ /<n2:Name>/
-    end
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-  end
-
 
 
 
