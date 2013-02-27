@@ -1,8 +1,9 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaymillGateway < Gateway
-      self.supported_countries = %w(AT BE CH CZ DE DK EE ES FI FR GB HU IE
-                                    IS IT LI LU LV NL NO PL PT SE SI TR)
+      self.supported_countries = %w(AD AT BE CY CZ DE DK EE ES FI FO FR GB GR
+                                    HU IE IL IS IT LI LT LU LV MT NL NO PL PT
+                                    SE SI SK TR VA)
 
       self.supported_cardtypes = [:visa, :master]
       self.homepage_url = 'https://paymill.com'
