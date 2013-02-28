@@ -31,6 +31,46 @@ class WorldpayTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_3d_secure_authentication_challenge
+    @options.merge!({
+      ip: '10.0.0.123',
+      session_id: '1234123412341234',
+      browser: {
+        accept_header: 'text/html',
+        user_agent: 'Mozilla/5.0'
+      }
+    })
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/10\.0\.0\.123/, data)
+      assert_match(/1234123412341234/, data)
+      assert_match(/text\/html/, data)
+      assert_match(/Mozilla\/5.0/, data)
+    end.respond_with(request_3d_secure_response)
+    assert_failure response
+    assert response.params['request3_d_secure']
+    assert_equal 'exampleEchoData', response.params['echo_data']
+    assert_equal 'examplePaRequest', response.params['pa_request']
+    assert_equal 'http://example.issuer.url/3dsec.html', response.params['issuer_url']
+  end
+
+  def test_3d_secure_authentication_response
+    @options.merge!({
+      echo_data: '4a4a4a4a4a4a4a4a4a',
+      payer_authentication: {
+        pa_response: '5b5b5b5b5b5b5b5b5b'
+      }
+    })
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/4a4a4a4a4a4a4a4a4a/, data)
+      assert_match(/5b5b5b5b5b5b5b5b5b/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+  end
+
   def test_successful_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -44,6 +84,15 @@ class WorldpayTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/CAD/, data)
     end.respond_with(successful_authorize_response, successful_capture_response)
+    assert_success response
+  end
+
+  def test_authorize_passes_correct_currency_without_fractional_units_and_fractions_in_amount
+    response = stub_comms do
+      @gateway.authorize(1234, @credit_card, @options.merge(:currency => 'HUF'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/value="1200"/, data)
+    end.respond_with(successful_authorize_response)
     assert_success response
   end
 
@@ -420,5 +469,26 @@ class WorldpayTest < Test::Unit::TestCase
 </submit>
 </paymentService>
     REQUEST
+  end
+
+  def request_3d_secure_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE paymentService PUBLIC "-//WorldPay//DTD WorldPay PaymentService v1//EN"
+                                "http://dtd.worldpay.com/paymentService_v1.dtd">
+<paymentService merchantCode="MYMERCHANT" version="1.4">
+  <reply>
+    <orderStatus orderCode='merchantGeneratedOrderCode'>
+      <requestInfo>
+        <request3DSecure>
+          <paRequest>examplePaRequest</paRequest>
+          <issuerURL>http://example.issuer.url/3dsec.html</issuerURL>
+        </request3DSecure>
+      </requestInfo>
+      <echoData>exampleEchoData</echoData>
+    </orderStatus>
+  </reply>
+</paymentService>
+    RESPONSE
   end
 end
