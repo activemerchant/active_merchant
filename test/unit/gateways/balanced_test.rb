@@ -270,11 +270,13 @@ class BalancedTest < Test::Unit::TestCase
     )
 
     card_uri = '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO/cards/CC6r6kLUcxW3MxG3AmZoiuTf'
+    account_uri = '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO/accounts/AC5quPICW5qEHXac1KnjKGYu'
+    expected_response = { :card_uri => card_uri, :account_uri => account_uri }
     assert response = @gateway.store(@credit_card, {
         :email=>'john.buyer@example.org'
     })
-    assert_instance_of String, response
-    assert_equal card_uri, response
+    assert_instance_of Hash, response
+    assert_equal expected_response, response
   end
 
   def test_ensure_does_not_respond_to_credit

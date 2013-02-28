@@ -261,11 +261,12 @@ module ActiveMerchant #:nodoc:
         post = {}
         account_uri = create_or_find_account(post, options)
         if credit_card.respond_to? :number
-          add_credit_card(post, credit_card, options)
+          card_uri  = add_credit_card(post, credit_card, options)
         else
-          associate_card_to_account(account_uri, credit_card)
-          credit_card
+          card_uri = associate_card_to_account(account_uri, credit_card)
         end
+
+        { :card_uri => card_uri, :account_uri => account_uri }
       rescue Error => ex
         failed_response(ex.response)
       end
