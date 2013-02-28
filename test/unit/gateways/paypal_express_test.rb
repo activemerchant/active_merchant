@@ -354,6 +354,23 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal '4', REXML::XPath.match(xml, '//n2:PaymentDetails/n2:PaymentDetailsItem/n2:Quantity')[1].text
   end
 
+  def test_build_create_billing_agreement
+    PaypalExpressGateway.application_id = 'ActiveMerchant_FOO'
+    xml = REXML::Document.new(@gateway.send(:build_create_billing_agreement_request, "ref_id"))
+
+    assert_equal 'ref_id', REXML::XPath.first(xml, '//CreateBillingAgreementReq/CreateBillingAgreementRequest/Token').text
+  end
+
+  def test_store
+    @gateway.expects(:ssl_post).returns(successful_create_billing_agreement_response)
+
+    response = @gateway.store("ref_id")
+
+    assert_equal "Success", response.params['ack']
+    assert_equal "Success", response.message
+    assert_equal "B-3R788221G4476823M", response.params["billing_agreement_id"]
+  end
+
   def test_build_reference_transaction_test
     PaypalExpressGateway.application_id = 'ActiveMerchant_FOO'
     xml = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 'Sale', 2000, {
@@ -535,6 +552,38 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   private
+
+  def successful_create_billing_agreement_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ed="urn:ebay:apis:EnhancedDataTypes" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ns="urn:ebay:api:PayPalAPI">
+  <SOAP-ENV:Header>
+    <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext" xsi:type="wsse:SecurityType">
+  </Security>
+    <RequesterCredentials xmlns="urn:ebay:api:PayPalAPI" xsi:type="ebl:CustomSecurityHeaderType">
+      <Credentials xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:UserIdPasswordType">
+        <Username xsi:type="xs:string"></Username>
+        <Password xsi:type="xs:string"></Password>
+        <Signature xsi:type="xs:string">OMGOMGOMG</Signature>
+        <Subject xsi:type="xs:string"></Subject>
+    </Credentials>
+  </RequesterCredentials>
+</SOAP-ENV:Header>
+  <SOAP-ENV:Body id="_0">
+    <CreateBillingAgreementResponse xmlns="urn:ebay:api:PayPalAPI">
+      <Timestamp xmlns="urn:ebay:apis:eBLBaseComponents">2013-02-28T16:34:47Z</Timestamp>
+      <Ack xmlns="urn:ebay:apis:eBLBaseComponents">Success</Ack>
+      <CorrelationID xmlns="urn:ebay:apis:eBLBaseComponents">8007ac99c51af</CorrelationID>
+      <Version xmlns="urn:ebay:apis:eBLBaseComponents">72</Version>
+      <Build xmlns="urn:ebay:apis:eBLBaseComponents">5331358</Build>
+      <BillingAgreementID xsi:type="xs:string">B-3R788221G4476823M</BillingAgreementID>
+    </CreateBillingAgreementResponse>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
+
+    RESPONSE
+  end
+
   def successful_reference_transaction_response
     <<-RESPONSE
 <?xml version="1.0" encoding="UTF-8"?>
