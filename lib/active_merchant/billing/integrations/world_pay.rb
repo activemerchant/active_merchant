@@ -4,20 +4,27 @@ require File.dirname(__FILE__) + '/world_pay/notification.rb'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
-      module WorldPay 
-       
-        # production and test have the same endpoint
-        mattr_accessor :production_url
-        self.production_url = 'https://secure.wp3.rbsworldpay.com/wcc/purchase'
-        
+      module WorldPay
+
+        mattr_accessor :production_url, :test_url
+        self.production_url = 'https://secure.worldpay.com/wcc/purchase'
+        self.test_url = 'https://secure-test.worldpay.com/wcc/purchase'
+
         def self.service_url
-          production_url
+          case ActiveMerchant::Billing::Base.integration_mode
+          when :production
+            self.production_url
+          when :test
+            self.test_url
+          else
+            raise StandardError, "Integration mode set to an invalid value: #{mode}"
+          end
         end
 
         def self.notification(post, options = {})
           Notification.new(post, options)
         end
-        
+
         def self.return(post, options = {})
           Return.new(post, options)
         end
