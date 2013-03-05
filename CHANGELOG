@@ -5,6 +5,7 @@
 * Add Finansbank gateway [scamurcuoglu]
 * Paymill: Use .com instead of .de for save card url [besi]
 * Worldpay integration: Use more robust endpoint urls [nashbridges]
+* Braintree Blue: Return CC token in transaction hash [cyu]
 
 == Version 1.31.1 (February 25, 2013)
 
