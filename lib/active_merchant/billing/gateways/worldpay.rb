@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
       def build_refund_request(money, authorization, options)
         build_order_modify_request(authorization) do |xml|
           xml.tag! 'refund' do
-            add_amount(xml, money, options)
+            add_amount(xml, money, options.merge(:debit_credit_indicator => "credit"))
           end
         end
       end
@@ -158,7 +158,17 @@ module ActiveMerchant #:nodoc:
         currency = options[:currency] || currency(money)
         amount   = localized_amount(money, currency)
 
-        xml.tag! 'amount', :value => amount, 'currencyCode' => currency, 'exponent' => 2
+        amount_hash = {
+          :value => amount,
+          'currencyCode' => currency,
+          'exponent' => 2
+        }
+
+        if options[:debit_credit_indicator]
+          amount_hash.merge!('debitCreditIndicator' => options[:debit_credit_indicator])
+        end
+
+        xml.tag! 'amount', amount_hash
       end
 
       def add_payment_method(xml, amount, payment_method, options)
