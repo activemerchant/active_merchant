@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :billing_address)
         requires!(options[:billing_address], :country)
         country = options[:billing_address][:country]
-        payment_product = PAYMENT_PRODUCTS.fetch(creditcard.brand)
+        payment_product = PAYMENT_PRODUCTS.fetch(creditcard.brand || 'visa')
 
         post = {
           'ORDER' => {
