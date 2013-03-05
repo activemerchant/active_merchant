@@ -7,6 +7,7 @@
 * Worldpay integration: Use more robust endpoint urls [nashbridges]
 * Braintree Blue: Return CC token in transaction hash [cyu]
 * Robokassa: Fix signature for empty amount [ukolovda]
+* Worldpay gateway: Fix error messages for some failures [duff]
 
 == Version 1.31.1 (February 25, 2013)
 
