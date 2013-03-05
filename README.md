@@ -131,6 +131,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Optimal Payments](http://www.optimalpayments.com/) - CA, US, UK
 * [Orbital Paymentech](http://chasepaymentech.com/) - CA, US, UK, GB
 * [PayBox Direct](http://www.paybox.com) - FR
+* [PayFast](https://www.payfast.co.za/) - ZA
 * [PayGate PayXML](http://paygate.co.za/) - US, ZA
 * [PayJunction](http://www.payjunction.com/) - US
 * [PaymentExpress](http://www.paymentexpress.com/) - AU, MY, NZ, SG, ZA, UK, US
