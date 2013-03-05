@@ -241,7 +241,8 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.refund(@amount, @options[:order_id], @options)
     end.check_request do |endpoint, data, headers|
       if data =~ /<refund>/
-        assert_match '<amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>', data
+        request_hash = Hash.from_xml(data)
+        assert_equal 'credit', request_hash['paymentService']['modify']['orderModification']['refund']['amount']['debitCreditIndicator']
       end
     end.respond_with(successful_refund_inquiry_response, successful_refund_response)
     assert_success response
