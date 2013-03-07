@@ -116,12 +116,12 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @credit_card.first_name = nil
     @credit_card.last_name = '3D'
     @options.merge!({
-      browser: {
-        accept_header: 'text/html',
-        user_agent: 'Mozilla/5.0',
+      :browser => {
+        :accept_header => 'text/html',
+        :user_agent => 'Mozilla/5.0',
       },
-      ip: '10.0.0.1',
-      session_id: '123412341234',
+      :ip => '10.0.0.1',
+      :session_id => '123412341234',
     })
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
@@ -131,10 +131,10 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert cookie = response.params['cookie']
 
     @options.merge!({
-      echo_data: echo_data,
-      cookie: cookie,
-      payer_authentication: {
-        pa_response: 'IDENTIFIED'
+      :echo_data => echo_data,
+      :cookie => cookie,
+      :payer_authentication => {
+        :pa_response => 'IDENTIFIED'
       }
     })
     assert response = @gateway.authorize(@amount, @credit_card, @options)

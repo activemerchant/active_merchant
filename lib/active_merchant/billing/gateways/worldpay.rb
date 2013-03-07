@@ -331,7 +331,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_session(xml, ip, session_id)
-        xml.tag! 'session', shopperIPAddress: ip, id: session_id
+        xml.tag! 'session', 'shopperIPAddress' => ip, 'id' => session_id
       end
 
       def parse(action, xml)

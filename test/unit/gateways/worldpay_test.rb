@@ -11,9 +11,9 @@ class WorldpayTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
-    @options = {:order_id => 1} 
+    @options = {:order_id => 1}
   end
-  
+
   def test_successful_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
@@ -33,11 +33,11 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_3d_secure_authentication_challenge
     @options.merge!({
-      ip: '10.0.0.123',
-      session_id: '1234123412341234',
-      browser: {
-        accept_header: 'text/html',
-        user_agent: 'Mozilla/5.0'
+      :ip =>  '10.0.0.123',
+      :session_id => '1234123412341234',
+      :browser => {
+        :accept_header => 'text/html',
+        :user_agent => 'Mozilla/5.0'
       }
     })
     response = stub_comms do
@@ -57,9 +57,9 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_3d_secure_authentication_response
     @options.merge!({
-      echo_data: '4a4a4a4a4a4a4a4a4a',
-      payer_authentication: {
-        pa_response: '5b5b5b5b5b5b5b5b5b'
+      :echo_data => '4a4a4a4a4a4a4a4a4a',
+      :payer_authentication => {
+        :pa_response => '5b5b5b5b5b5b5b5b5b'
       }
     })
     response = stub_comms do
