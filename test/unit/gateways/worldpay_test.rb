@@ -236,6 +236,18 @@ class WorldpayTest < Test::Unit::TestCase
     ActiveMerchant::Billing::Base.mode = :test
   end
 
+  def test_refund_amount_contains_debit_credit_indicator
+    response = stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options)
+    end.check_request do |endpoint, data, headers|
+      if data =~ /<refund>/
+        request_hash = Hash.from_xml(data)
+        assert_equal 'credit', request_hash['paymentService']['modify']['orderModification']['refund']['amount']['debitCreditIndicator']
+      end
+    end.respond_with(successful_refund_inquiry_response, successful_refund_response)
+    assert_success response
+  end
+
   def assert_tag_with_attributes(tag, attributes, string)
     assert(m = %r(<#{tag}([^>]+)/>).match(string))
     attributes.each do |attribute, value|
