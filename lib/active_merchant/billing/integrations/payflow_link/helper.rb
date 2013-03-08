@@ -32,14 +32,15 @@ module ActiveMerchant #:nodoc:
                                      :phone   => 'phone',
                                      :name    => 'name'
 
-          mapping :customer, :name => 'name'
+          mapping :customer, { :first_name => 'first_name', :last_name => 'last_name' }
 
           def description(value)
             add_field('description', "#{value}".delete("#"))
           end
 
           def customer(params = {})
-            add_field(mappings[:customer][:name], [params.delete(:first_name), params.delete(:last_name)].compact.join(' '))
+            add_field(mappings[:customer][:first_name], params[:first_name])
+            add_field(mappings[:customer][:last_name], params[:last_name])
           end
 
           def billing_address(params = {})

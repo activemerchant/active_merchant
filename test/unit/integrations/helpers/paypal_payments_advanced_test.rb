@@ -46,7 +46,8 @@ class PaypalPaymentsAdvancedHelperTest < Test::Unit::TestCase
     @helper.expects(:ssl_post).with { |url, data|
       params = parse_params(data)
 
-      assert_equal 'John Doe', params["name[8]"]
+      assert_equal 'John', params["first_name[4]"]
+      assert_equal 'Doe', params["last_name[3]"]
       true
     }.returns("RESPMSG=APPROVED&SECURETOKEN=aaa&SECURETOKENID=yyy")
 
