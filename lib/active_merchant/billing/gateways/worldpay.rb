@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options = {})
         MultiResponse.run do |r|
-          r.process{inquire_request(authorization, options, "CAPTURED")}
+          r.process{inquire_request(authorization, options, ["CAPTURED", "SETTLED"])}
           r.process{refund_request(money, authorization, options)}
         end
       end
@@ -260,8 +260,12 @@ module ActiveMerchant #:nodoc:
         test? ? self.test_url : self.live_url
       end
 
+      # success_criteria can be:-
+      #   - a string or an array of strings (if one of many responses)
+      #   - An array of strings if one of many responses could be considered a
+      #     success.
       def success_and_message_from(raw, success_criteria)
-        success = (raw[:last_event] == success_criteria || raw[:ok].present?)
+        success = ([*success_criteria].include?(raw[:last_event]) || raw[:ok].present?)
         if success
           message = "SUCCESS"
         else
@@ -273,8 +277,12 @@ module ActiveMerchant #:nodoc:
 
       def required_status_message(raw, success_criteria)
         if raw[:last_event] != success_criteria
-          "A transaction status of '#{success_criteria}' is required."
+          "A transaction status of #{ formatted_success_criteria(success_criteria) } is required."
         end
+      end
+
+      def formatted_success_criteria(success_criteria)
+        [*success_criteria].map { |s| "'#{ s }'" }.join(" or ")
       end
 
       def authorization_from(raw)
@@ -290,7 +298,7 @@ module ActiveMerchant #:nodoc:
       def localized_amount(money, currency)
         amount = amount(money)
         return amount unless CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
-        
+
         amount.to_i / 100 * 100
       end
     end

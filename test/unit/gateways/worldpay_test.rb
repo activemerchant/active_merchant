@@ -87,10 +87,17 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal "A transaction status of 'AUTHORISED' is required.", response.message
   end
 
-  def test_successful_refund
+  def test_successful_refund_for_captured_payment
     response = stub_comms do
       @gateway.refund(@amount, @options[:order_id], @options)
-    end.respond_with(successful_refund_inquiry_response, successful_refund_response)
+    end.respond_with(successful_refund_inquiry_response('CAPTURED'), successful_refund_response)
+    assert_success response
+  end
+
+  def test_successful_refund_for_settled_payment
+    response = stub_comms do
+      @gateway.refund(@amount, @options[:order_id], @options)
+    end.respond_with(successful_refund_inquiry_response('SETTLED'), successful_refund_response)
     assert_success response
     assert_equal "05d9f8c622553b1df1fe3a145ce91ccf", response.params['refund_received_order_code']
   end
@@ -100,7 +107,7 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.refund(@amount, @options[:order_id], @options)
     end.respond_with(failed_refund_inquiry_response, successful_refund_response)
     assert_failure response
-    assert_equal "A transaction status of 'CAPTURED' is required.", response.message
+    assert_equal "A transaction status of 'CAPTURED' or 'SETTLED' is required.", response.message
   end
 
   def test_capture
@@ -440,7 +447,7 @@ class WorldpayTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_refund_inquiry_response
+  def successful_refund_inquiry_response(last_event="CAPTURED")
     <<-RESPONSE
       <?xml version="1.0" encoding="UTF-8"?>
       <!DOCTYPE paymentService PUBLIC "-//Bibit//DTD Bibit PaymentService v1//EN"
@@ -451,7 +458,7 @@ class WorldpayTest < Test::Unit::TestCase
             <payment>
               <paymentMethod>VISA-SSL</paymentMethod>
               <amount value="100" currencyCode="GBP" exponent="2" debitCreditIndicator="credit"/>
-              <lastEvent>CAPTURED</lastEvent>
+              <lastEvent>#{ last_event }</lastEvent>
               <CVCResultCode description="UNKNOWN"/>
               <AVSResultCode description="NOT SUPPLIED BY SHOPPER"/>
               <balance accountType="IN_PROCESS_AUTHORISED">
