@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options = {})
         MultiResponse.run do |r|
-          r.process{inquire_request(authorization, options, "CAPTURED")}
+          r.process{inquire_request(authorization, options, "CAPTURED", "SETTLED")}
           r.process{refund_request(money, authorization, options)}
         end
       end
@@ -77,8 +77,8 @@ module ActiveMerchant #:nodoc:
         commit('cancel', build_void_request(authorization, options), :ok)
       end
 
-      def inquire_request(authorization, options, success_criteria)
-        commit('inquiry', build_order_inquiry_request(authorization, options), success_criteria)
+      def inquire_request(authorization, options, *success_criteria)
+        commit('inquiry', build_order_inquiry_request(authorization, options), *success_criteria)
       end
 
       def refund_request(money, authorization, options)
@@ -236,7 +236,7 @@ module ActiveMerchant #:nodoc:
         raw
       end
 
-      def commit(action, request, success_criteria)
+      def commit(action, request, *success_criteria)
         xmr = ssl_post(url, request, 'Content-Type' => 'text/xml', 'Authorization' => encoded_credentials)
         raw = parse(action, xmr)
         success, message = success_and_message_from(raw, success_criteria)
@@ -260,20 +260,24 @@ module ActiveMerchant #:nodoc:
         test? ? self.test_url : self.live_url
       end
 
+      # success_criteria can be:
+      #   - a string or an array of strings (if one of many responses)
+      #   - An array of strings if one of many responses could be considered a
+      #     success.
       def success_and_message_from(raw, success_criteria)
-        success = (raw[:last_event] == success_criteria || raw[:ok].present?)
+        success = (success_criteria.include?(raw[:last_event]) || raw[:ok].present?)
         if success
           message = "SUCCESS"
         else
-          message = raw[:iso8583_return_code_description] || raw[:error] || required_status_message(raw, success_criteria)
+          message = (raw[:iso8583_return_code_description] || raw[:error] || required_status_message(raw, success_criteria))
         end
 
         [ success, message ]
       end
 
       def required_status_message(raw, success_criteria)
-        if raw[:last_event] != success_criteria
-          "A transaction status of '#{success_criteria}' is required."
+        if(!success_criteria.include?(raw[:last_event]))
+          "A transaction status of #{success_criteria.collect{|c| "'#{c}'"}.join(" or ")} is required."
         end
       end
 
@@ -290,7 +294,7 @@ module ActiveMerchant #:nodoc:
       def localized_amount(money, currency)
         amount = amount(money)
         return amount unless CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
-        
+
         amount.to_i / 100 * 100
       end
     end
