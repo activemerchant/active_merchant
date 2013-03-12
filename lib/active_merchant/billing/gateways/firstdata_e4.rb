@@ -36,12 +36,12 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, credit_card, options = {})
-        commit(:authorization, build_sale_or_authorization_request(money, credit_card, options))
+      def authorize(money, credit_card_or_store_authorization, options = {})
+        commit(:authorization, build_sale_or_authorization_request(money, credit_card_or_store_authorization, options))
       end
 
-      def purchase(money, credit_card, options = {})
-        commit(:sale, build_sale_or_authorization_request(money, credit_card, options))
+      def purchase(money, credit_card_or_store_authorization, options = {})
+        commit(:sale, build_sale_or_authorization_request(money, credit_card_or_store_authorization, options))
       end
 
       def capture(money, authorization, options = {})
@@ -58,28 +58,29 @@ module ActiveMerchant #:nodoc:
 
       # Tokenize a credit card with TransArmor
       #
-      # Token is returned in +params['transarmor_token']+. If this string is
-      # empty, contact First Data to enable this feature for your account.
+      # The TransArmor token and other card data necessary for subsequent
+      # transactions is stored in the response's +authorization+ attribute.
+      # The authorization string may be passed to +authorize+ and +purchase+
+      # instead of a +ActiveMerchant::Billing::CreditCard+ instance.
       #
-      # When using the token in later calls to +authorize+ or +purchase+,
-      # the token should be passed in as the +:transarmor_token+ option.
-      # A CreditCard instance still needs to be passed in, containing the
-      # original name, expiration, and brand.
+      # TransArmor support must be explicitly activated on your gateway
+      # account by FirstData. If your authorization string is empty, contact
+      # FirstData support for account setup assistance.
       #
       # === Example
       #
       #   # Generate token
       #   result = gateway.store(credit_card)
       #   if result.success?
-      #     my_record.update_attributes(:transarmor_token => result.params['transarmor_token'])
+      #     my_record.update_attributes(:authorization => result.authorization)
       #   end
       #
       #   # Use token
-      #   result = gateway.purchase(1000, credit_card, :transarmor_token => my_record.transarmor_token)
+      #   result = gateway.purchase(1000, my_record.authorization)
       #
       # https://firstdata.zendesk.com/entries/21303361-transarmor-tokenization
       def store(credit_card, options = {})
-        commit(:store, build_store_request(credit_card, options))
+        commit(:store, build_store_request(credit_card, options), credit_card)
       end
 
       private
@@ -97,14 +98,18 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_sale_or_authorization_request(money, credit_card, options)
+      def build_sale_or_authorization_request(money, credit_card_or_store_authorization, options)
         xml = Builder::XmlMarkup.new
 
         add_amount(xml, money)
-        if options[:transarmor_token]
-          add_credit_card_token(xml, credit_card, options[:transarmor_token])
+
+        case credit_card_or_store_authorization
+        when ActiveMerchant::Billing::CreditCard
+          add_credit_card(xml, credit_card_or_store_authorization)
+        when String
+          add_credit_card_token(xml, credit_card_or_store_authorization)
         else
-          add_credit_card(xml, credit_card)
+          raise ArgumentError.new "#{credit_card_or_store_authorization.inspect} is in invalid parameter. You may pass ActiveMerchant::Billing::CreditCard or String (from `response.authorization`)"
         end
         add_customer_data(xml, options)
         add_invoice(xml, options)
@@ -163,8 +168,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_credit_card_token(xml, credit_card, token)
-        xml.tag! "TransarmorToken", token
+      def add_credit_card_token(xml, store_authorization)
+        params = store_authorization.split(";")
+        credit_card = CreditCard.new(
+          :brand      => params[1],
+          :first_name => params[2],
+          :last_name  => params[3],
+          :month      => params[4],
+          :year       => params[5])
+
+        xml.tag! "TransarmorToken", params[0]
         xml.tag! "Expiry_Date", expdate(credit_card)
         xml.tag! "CardHoldersName", credit_card.name
         xml.tag! "CardType", credit_card.brand
@@ -191,7 +204,7 @@ module ActiveMerchant #:nodoc:
         "#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}"
       end
 
-      def commit(action, request)
+      def commit(action, request, credit_card = nil)
         url = (test? ? self.test_url : self.live_url)
         begin
           response = parse(ssl_post(url, build_request(action, request), POST_HEADERS))
@@ -201,7 +214,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful?(response), message_from(response), response,
           :test => test?,
-          :authorization => authorization_from(response),
+          :authorization => response_authorization(action, response, credit_card),
           :avs_result => {:code => response[:avs]},
           :cvv_result => response[:cvv2]
         )
@@ -209,6 +222,14 @@ module ActiveMerchant #:nodoc:
 
       def successful?(response)
         response[:transaction_approved] == SUCCESS
+      end
+
+      def response_authorization(action, response, credit_card)
+        if action == :store
+          store_authorization_from(response, credit_card)
+        else
+          authorization_from(response)
+        end
       end
 
       def authorization_from(response)
@@ -220,6 +241,21 @@ module ActiveMerchant #:nodoc:
           ].join(";")
         else
           ""
+        end
+      end
+
+      def store_authorization_from(response, credit_card)
+        if response[:transarmor_token].present?
+          [
+            response[:transarmor_token],
+            credit_card.brand,
+            credit_card.first_name,
+            credit_card.last_name,
+            credit_card.month,
+            credit_card.year
+            ].map { |value| value.to_s.gsub(/;/, "") }.join(";")
+        else
+          raise StandardError, "TransArmor support is not enabled on your #{display_name} account"
         end
       end
 
