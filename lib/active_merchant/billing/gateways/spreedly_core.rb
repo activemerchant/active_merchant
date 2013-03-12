@@ -3,11 +3,11 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # Public: This gateway allows you to interact with any gateway you've
-    # created in Spreedly Core (https://spreedlycore.com).  It's an adapter
+    # created in Spreedly Core (https://spreedly.com).  It's an adapter
     # which can be particularly useful if you already have code interacting with
     # ActiveMerchant and want to easily take advantage of Core's vault.
     class SpreedlyCoreGateway < Gateway
-      self.live_url = 'https://spreedlycore.com/v1'
+      self.live_url = 'https://core.spreedly.com/v1'
 
       self.supported_countries = %w(AD AE AT AU BD BE BG BN CA CH CY CZ DE DK EE EG ES FI FR GB
                                     GI GR HK HU ID IE IL IM IN IS IT JO KW LB LI LK LT LU LV MC
@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
                                     TR TT UM US VA VN ZA)
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
-      self.homepage_url = 'https://spreedlycore.com'
+      self.homepage_url = 'https://spreedly.com'
       self.display_name = 'Spreedly Core'
       self.money_format = :cents
       self.default_currency = 'USD'
@@ -23,8 +23,8 @@ module ActiveMerchant #:nodoc:
       # Public: Create a new Spreedly Core Gateway.
       #
       # options - A hash of options:
-      #           :login         - Your Spreedly Core API login.
-      #           :password      - Your Spreedly Core API secret.
+      #           :login         - The environment key.
+      #           :password      - The access secret.
       #           :gateway_token - The token of the gateway you've created in
       #                            Spreedly Core.
       def initialize(options = {})
