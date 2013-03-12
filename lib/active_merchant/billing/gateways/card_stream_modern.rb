@@ -1,3 +1,5 @@
+require 'pry'
+    
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CardStreamModernGateway < Gateway
@@ -111,9 +113,11 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         result = {}
-        decoded = URI::decode_www_form(body)
-        decoded.each do |pair|
-          result[pair[0].to_sym] = pair[1]
+        binding.pry
+        pairs = body.split("&")
+        pairs.each do |pair|
+          a = pair.split("=")
+          result[a[0].underscore.to_sym] = CGI.unescape(a[1])
         end
         result
       end
