@@ -688,4 +688,55 @@ class LitleTest < Test::Unit::TestCase
     end
   end
 
+  def test_configured_logger_has_a_default
+    # The default is actually provided by the LittleOnline gem, but we
+    # assert its presence in order to show ActiveMerchant need not
+    # configure a logger
+    assert LitleOnline::Configuration.logger.is_a?(Logger)
+  end
+
+  def test_configured_logger_has_a_default_log_level_defined_by_active_merchant
+    assert_equal Logger::WARN, LitleOnline::Configuration.logger.level
+  end
+
+  def test_configured_logger_respects_any_custom_log_level_set_without_overwriting_it
+    with_litle_configuration_restoration do
+      assert_equal Logger::WARN, LitleOnline::Configuration.logger.level
+
+      LitleOnline::Configuration.logger.level = Logger::DEBUG
+
+      LitleGateway.new({:merchant_id=>'101', :user=>'active', :password=>'merchant', :version=>'8.10', :url=>'https://www.testlitle.com/sandbox/communicator/online'})
+      assert_equal Logger::WARN, LitleOnline::Configuration.logger.level
+    end
+  end
+
+  def test_that_setting_a_wiredump_device_on_the_gateway_sets_the_little_logger_upon_instantiation
+    with_litle_configuration_restoration do
+      logger = Logger.new(STDOUT)
+      ActiveMerchant::Billing::LitleGateway.wiredump_device = logger
+
+      # The gem was already configured in the setup method above
+      assert_not_equal logger, LitleOnline::Configuration.logger
+
+      # The initialize call will setup the logger for the gem
+      LitleGateway.new({:merchant_id=>'101', :user=>'active', :password=>'merchant', :version=>'8.10', :url=>'https://www.testlitle.com/sandbox/communicator/online'})
+      assert_equal logger, LitleOnline::Configuration.logger
+      assert_equal Logger::DEBUG, LitleOnline::Configuration.logger.level
+    end
+  end
+
+  private
+
+  def with_litle_configuration_restoration(&block)
+    # Remember the wiredump device since we may overwrite it
+    existing_wiredump_device = ActiveMerchant::Billing::LitleGateway.wiredump_device
+
+    yield
+
+    # Restore the wiredump device
+    ActiveMerchant::Billing::LitleGateway.wiredump_device = existing_wiredump_device
+
+    # Reset the Litle logger
+    LitleOnline::Configuration.logger = nil
+  end
 end
