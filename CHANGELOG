@@ -10,6 +10,7 @@
 * Worldpay gateway: Fix error messages for some failures [duff]
 * Worldpay gateway: Allow settled payments to be refunded [dougal]
 * Spreedly: Update urls and terminology [duff]
+* Make card brand error more user friendly [oggy]
 
 == Version 1.31.1 (February 25, 2013)
 
