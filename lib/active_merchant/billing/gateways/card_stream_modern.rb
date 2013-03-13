@@ -1,5 +1,3 @@
-require 'pry'
-    
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CardStreamModernGateway < Gateway
@@ -113,7 +111,6 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         result = {}
-        # binding.pry
         pairs = body.split("&")
         pairs.each do |pair|
           a = pair.split("=")
