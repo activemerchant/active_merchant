@@ -60,6 +60,14 @@ module ActiveMerchant #:nodoc:
           raise "Could not load the LitleOnline gem (>= 08.13.2).  Use `gem install LitleOnline` to install it."
         end
 
+        if wiredump_device
+          LitleOnline::Configuration.logger = ((Logger === wiredump_device) ? wiredump_device : Logger.new(wiredump_device))
+          LitleOnline::Configuration.logger.level = Logger::DEBUG
+        else
+          LitleOnline::Configuration.logger = Logger.new(STDOUT)
+          LitleOnline::Configuration.logger.level = Logger::WARN
+        end
+
         @litle = LitleOnline::LitleOnlineRequest.new
 
         options[:version]  ||= LITLE_SCHEMA_VERSION
