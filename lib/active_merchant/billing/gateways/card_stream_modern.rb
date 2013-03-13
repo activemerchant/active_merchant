@@ -113,11 +113,11 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         result = {}
-        binding.pry
+        # binding.pry
         pairs = body.split("&")
         pairs.each do |pair|
           a = pair.split("=")
-          result[a[0].underscore.to_sym] = CGI.unescape(a[1])
+          result[a[0].to_sym] = CGI.unescape(a[1])
         end
         result
       end
