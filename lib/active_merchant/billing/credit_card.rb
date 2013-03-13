@@ -229,7 +229,7 @@ module ActiveMerchant #:nodoc:
         end
 
         unless errors.on(:number) || errors.on(:brand)
-          errors.add :brand, "is not the correct card brand" unless CreditCard.matching_brand?(number, brand)
+          errors.add :brand, "does not match the card number" unless CreditCard.matching_brand?(number, brand)
         end
       end
 
