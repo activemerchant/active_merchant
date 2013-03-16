@@ -100,7 +100,11 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert shipping = response.shipping
     assert_equal '2.95', shipping['amount']
     assert_equal 'default', shipping['name']
+  end
 
+  def test_express_response_missing_address
+    response = PaypalExpressResponse.new(true, "ok")
+    assert_nil response.address['address1']
   end
 
   def test_authorization
