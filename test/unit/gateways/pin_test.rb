@@ -205,10 +205,17 @@ class PinTest < Test::Unit::TestCase
     assert_equal "#{@credit_card.first_name} #{@credit_card.last_name}", post[:card][:name]
   end
 
-  def test_add_creditcard_hash
+  def test_add_creditcard_with_card_token
     post = {}
     @gateway.send(:add_creditcard, post, 'card_nytGw7koRg23EEp9NTmz9w')
-    assert_equal 'card_nytGw7koRg23EEp9NTmz9w', post[:customer_token]
+    assert_equal 'card_nytGw7koRg23EEp9NTmz9w', post[:card_token]
+    assert_false post.has_key?(:card)
+  end
+
+  def test_add_creditcard_with_customer_token
+    post = {}
+    @gateway.send(:add_creditcard, post, 'cus_XZg1ULpWaROQCOT5PdwLkQ')
+    assert_equal 'cus_XZg1ULpWaROQCOT5PdwLkQ', post[:customer_token]
     assert_false post.has_key?(:card)
   end
 
