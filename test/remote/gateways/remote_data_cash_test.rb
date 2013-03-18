@@ -7,13 +7,13 @@ class RemoteDataCashTest < Test::Unit::TestCase
     @gateway = DataCashGateway.new(fixtures(:data_cash))
 
     @mastercard = CreditCard.new(
-      :number => '5473000000000007',
+      :number => '5120790000000034',
       :month => 3,
       :year => Date.today.year + 2,              
       :first_name => 'Mark',      
       :last_name => 'McBride',
       :brand => :master,
-      :verification_value => '547'
+      :verification_value => '444'
     )
 
     @mastercard_declined = CreditCard.new(
