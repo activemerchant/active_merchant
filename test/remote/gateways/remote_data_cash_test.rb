@@ -118,7 +118,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
 
     #Make second payment on the continuous authorization that was set up in the first purchase
     second_order_params = { :order_id => generate_unique_id }
-    purchase = @gateway.purchase(201, response.params['ca_reference'], second_order_params)
+    purchase = @gateway.purchase(201, response.authorization, second_order_params)
     assert_success purchase
     assert purchase.test?
   end
@@ -132,7 +132,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
 
     #Make second payment on the continuous authorization that was set up in the first purchase
     second_order_params = { :order_id => generate_unique_id }
-    purchase = @gateway.purchase(201, response.params['ca_reference'], second_order_params)
+    purchase = @gateway.purchase(201, response.authorization, second_order_params)
     assert_success purchase
     assert purchase.test?
   end
