@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'nokogiri'
 
 class ActiveMerchant::Billing::OptimalPaymentGateway
   public :cc_auth_request
@@ -81,6 +82,28 @@ class OptimalPaymentTest < Test::Unit::TestCase
     @options[:billing_address][:country] = "GB"
     @gateway.expects(:ssl_post).with do |url, data|
       data =~ /region/ && data !~ /state/
+    end.returns(successful_purchase_response)
+
+    assert @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_purchase_with_shipping_address
+    @options[:shipping_address] = {:country => "CA"}
+    @gateway.expects(:ssl_post).with do |url, data|
+      xml = data.split("&").detect{|string| string =~ /txnRequest=/}.gsub("txnRequest=","")
+      doc = Nokogiri::XML.parse(URI.decode(xml))
+      doc.xpath('//xmlns:shippingDetails/xmlns:country').first.text == "CA" && doc.to_s.include?('<shippingDetails>')
+    end.returns(successful_purchase_response)
+
+    assert @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_purchase_without_shipping_address
+    @options[:shipping_address] = nil
+    @gateway.expects(:ssl_post).with do |url, data|
+      xml = data.split("&").detect{|string| string =~ /txnRequest=/}.gsub("txnRequest=","")
+      doc = Nokogiri::XML.parse(URI.decode(xml))
+      doc.to_s.include?('<shippingDetails>') == false
     end.returns(successful_purchase_response)
 
     assert @gateway.purchase(@amount, @credit_card, @options)
