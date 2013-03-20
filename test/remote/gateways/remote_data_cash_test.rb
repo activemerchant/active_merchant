@@ -242,8 +242,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert_success void
     assert void.test?
   end
-  
-  
+
   def test_successful_refund
     response = @gateway.credit(@amount, @mastercard, @params)
     assert_success response
