@@ -96,6 +96,66 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_truncates_address
+    long_address = '1850 Treebeard Drive in Fangorn Forest by the Fields of Rohan'
+
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(:address1 => long_address))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/1850 Treebeard Drive/, data)
+      assert_no_match(/Fields of Rohan/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_truncates_name
+    card = credit_card('4242424242424242', 
+                       :first_name => 'John', 
+                       :last_name => 'Jacob Jingleheimer Smith-Jones')
+
+    response = stub_comms do
+      @gateway.purchase(50, card, :order_id => 1, :billing_address => address)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/John Jacob/, data)
+      assert_no_match(/Jones/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_truncates_city
+    long_city = 'Friendly Village of Crooked Creek'
+
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(:city => long_city))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/Friendly Village/, data)
+      assert_no_match(/Creek/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_truncates_phone
+    long_phone = '123456789012345'
+
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(:phone => long_phone))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/12345678901234</, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_truncates_zip
+   long_zip = '1234567890123'
+
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(:zip => long_zip))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/1234567890</, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_dont_send_customer_data_by_default
     response = stub_comms do
       @gateway.purchase(50, credit_card, :order_id => 1)
