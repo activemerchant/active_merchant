@@ -219,14 +219,14 @@ module ActiveMerchant #:nodoc:
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s)
 
           if avs_supported
-            xml.tag! :AVSzip, address[:zip]
-            xml.tag! :AVSaddress1, address[:address1]
-            xml.tag! :AVSaddress2, address[:address2]
-            xml.tag! :AVScity, address[:city]
+            xml.tag! :AVSzip, address[:zip].to_s[0..9]
+            xml.tag! :AVSaddress1, address[:address1][0..29]
+            xml.tag! :AVSaddress2, address[:address2][0..29]
+            xml.tag! :AVScity, address[:city][0..19]
             xml.tag! :AVSstate, address[:state]
-            xml.tag! :AVSphoneNum, address[:phone] ? address[:phone].scan(/\d/).join.to_s : nil
+            xml.tag! :AVSphoneNum, address[:phone] ? address[:phone].scan(/\d/).join.to_s[0..13] : nil
           end
-          xml.tag! :AVSname, creditcard.name
+          xml.tag! :AVSname, creditcard.name[0..29]
           xml.tag! :AVScountryCode, avs_supported ? address[:country] : ''
         end
       end
