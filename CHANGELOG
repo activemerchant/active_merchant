@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Iridium: Enable reference transactions for authorize [ntalbott]
+
 == Version 1.31.1 (February 25, 2013)
 
 * Cybersource: Bug fixes [natejgreene, jduff]
