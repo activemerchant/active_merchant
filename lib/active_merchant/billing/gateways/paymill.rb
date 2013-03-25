@@ -47,6 +47,14 @@ module ActiveMerchant #:nodoc:
         commit(:post, "refunds/#{transaction_id(authorization)}", post)
       end
 
+      def authorize_with_token(money, card_token, options)
+        post = {}
+
+        add_amount(post, money, options)
+        post[:token] = card_token
+        commit(:post, 'preauthorizations', post)
+      end
+
       private
 
       def add_credit_card(post, credit_card)
@@ -96,14 +104,6 @@ module ActiveMerchant #:nodoc:
         post[:token] = card_token
         post[:description] = options[:description]
         commit(:post, 'transactions', post)
-      end
-
-      def authorize_with_token(money, card_token, options)
-        post = {}
-
-        add_amount(post, money, options)
-        post[:token] = card_token
-        commit(:post, 'preauthorizations', post)
       end
 
       def save_card(credit_card)
