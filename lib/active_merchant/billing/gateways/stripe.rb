@@ -60,6 +60,10 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'charges', post, meta)
       end
 
+      def capture(money, authorization, options = {})
+        commit(:post, "charges/#{CGI.escape(authorization)}/capture", {:amount => amount(money)})
+      end
+
       def void(identification, options = {})
         commit(:post, "charges/#{CGI.escape(identification)}/refund", {})
       end
