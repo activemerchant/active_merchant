@@ -16,6 +16,13 @@ class RemoteStripeTest < Test::Unit::TestCase
     }
   end
 
+  def test_successful_authorization
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert !response.params["captured"]
+  end
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response

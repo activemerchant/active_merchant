@@ -35,6 +35,15 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      def authorize(money, creditcard, options = {})
+        post = create_post_for_auth_or_purchase(money, creditcard, options)
+        post[:capture] = "false"
+        meta = generate_meta(options)
+
+        raise ArgumentError.new("Customer or Credit Card required.") if !post[:card] && !post[:customer]
+        commit(:post, 'charges', post, meta)
+      end
+
       # To create a charge on a card or a token, call
       #
       #   purchase(money, card_hash_or_token, { ... })
@@ -43,16 +52,7 @@ module ActiveMerchant #:nodoc:
       #
       #   purchase(money, nil, { :customer => id, ... })
       def purchase(money, creditcard, options = {})
-        post = {}
-
-        add_amount(post, money, options)
-        add_creditcard(post, creditcard, options)
-        add_customer(post, options)
-        add_customer_data(post,options)
-        post[:description] = options[:description] || options[:email]
-        post[:application_fee] = options[:application_fee] if options[:application_fee]
-        add_flags(post, options)
-
+        post = create_post_for_auth_or_purchase(money, creditcard, options)
         meta = generate_meta(options)
 
         raise ArgumentError.new("Customer or Credit Card required.") if !post[:card] && !post[:customer]
@@ -100,6 +100,18 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def create_post_for_auth_or_purchase(money, creditcard, options)
+        post = {}
+        add_amount(post, money, options)
+        add_creditcard(post, creditcard, options)
+        add_customer(post, options)
+        add_customer_data(post,options)
+        post[:description] = options[:description] || options[:email]
+        post[:application_fee] = options[:application_fee] if options[:application_fee]
+        add_flags(post, options)
+        post
+      end
 
       def add_amount(post, money, options)
         post[:amount] = amount(money)
