@@ -665,6 +665,17 @@ class LitleTest < Test::Unit::TestCase
     assert_equal 'Error validating xml data against the schema', responseFrom.message
   end
 
+  def test_store_via_paypage
+    storeResponseObj = {'response' => '801', 'message' => 'Account number was successfully registered', 'litleToken'=>'1111222233334444', 'litleTxnId'=>nil}
+    retObj = {'response'=>'0','registerTokenResponse'=>storeResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
+    paypage_registration_id = 'eVY1SUYrSTFndWo0U3p0L2RaWjR1blhMVEh2L0pJTWl5bm1LS3QyUDVWOFRpczRYYS9qbndzLzVEb0M5N3RTcQ=='
+
+    responseFrom = @gateway.store(paypage_registration_id,{})
+    assert_equal true, responseFrom.success?
+    assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse']['registerTokenResponse']['litleToken']
+  end
+
   def test_in_production_with_test_param_sends_request_to_test_server
     begin
       ActiveMerchant::Billing::Base.mode = :production

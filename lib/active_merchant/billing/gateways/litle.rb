@@ -117,8 +117,8 @@ module ActiveMerchant #:nodoc:
         build_response(:credit, @litle.credit(to_pass))
       end
 
-      def store(creditcard, options = {})
-        to_pass = create_token_hash(creditcard, options)
+      def store(creditcard_or_paypage_registration_id, options = {})
+        to_pass = create_token_hash(creditcard_or_paypage_registration_id, options)
         build_response(:registerToken, @litle.register_token_request(to_pass), %w(000 801 802))
       end
 
@@ -294,9 +294,15 @@ module ActiveMerchant #:nodoc:
         hash
       end
 
-      def create_token_hash(creditcard, options)
+      def create_token_hash(creditcard_or_paypage_registration_id, options)
         hash                  = create_hash(0, options)
-        hash['accountNumber'] = creditcard.number
+
+        if creditcard_or_paypage_registration_id.is_a?(String)
+          hash['paypageRegistrationId'] = creditcard_or_paypage_registration_id
+        else
+          hash['accountNumber'] = creditcard_or_paypage_registration_id.number
+        end
+
         hash
       end
 
