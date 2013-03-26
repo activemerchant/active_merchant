@@ -16,6 +16,7 @@
 * Pin: Add Pin.js card token support [nagash]
 * PayPal Express gateway: Fix error when no address information is in response [pierre]
 * Ogone: Use BYPSP for ALIASOPERATION [ntalbott]
+* Paymill: Handle error storing card [duff]
 
 == Version 1.31.1 (February 25, 2013)
 
