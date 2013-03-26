@@ -40,7 +40,6 @@ module ActiveMerchant #:nodoc:
         post[:capture] = "false"
         meta = generate_meta(options)
 
-        raise ArgumentError.new("Customer or Credit Card required.") if !post[:card] && !post[:customer]
         commit(:post, 'charges', post, meta)
       end
 
@@ -54,8 +53,6 @@ module ActiveMerchant #:nodoc:
       def purchase(money, creditcard, options = {})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
         meta = generate_meta(options)
-
-        raise ArgumentError.new("Customer or Credit Card required.") if !post[:card] && !post[:customer]
 
         commit(:post, 'charges', post, meta)
       end

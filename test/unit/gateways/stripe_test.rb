@@ -153,12 +153,6 @@ class StripeTest < Test::Unit::TestCase
     end
   end
 
-  def test_purchase_without_card_or_customer
-    assert_raises ArgumentError do
-      @gateway.purchase(@amount, nil)
-    end
-  end
-
   def test_metadata_header
     @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
       headers && headers['X-Stripe-Client-User-Metadata'] == {:ip => '1.1.1.1'}.to_json
