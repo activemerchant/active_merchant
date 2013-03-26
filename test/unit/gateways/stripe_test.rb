@@ -16,6 +16,25 @@ class StripeTest < Test::Unit::TestCase
     }
   end
 
+  def test_successful_authorization
+    @gateway.expects(:ssl_request).returns(successful_authorization_response)
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'ch_test_charge', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_capture
+    @gateway.expects(:ssl_request).returns(successful_capture_response)
+
+    assert response = @gateway.capture(@amount, "ch_test_charge");
+    assert_success response
+    assert response.test?
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_request).returns(successful_purchase_response)
 
@@ -134,12 +153,6 @@ class StripeTest < Test::Unit::TestCase
     end
   end
 
-  def test_purchase_without_card_or_customer
-    assert_raises ArgumentError do
-      @gateway.purchase(@amount, nil)
-    end
-  end
-
   def test_metadata_header
     @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
       headers && headers['X-Stripe-Client-User-Metadata'] == {:ip => '1.1.1.1'}.to_json
@@ -150,7 +163,66 @@ class StripeTest < Test::Unit::TestCase
 
   private
 
-  # Place raw successful response from gateway here
+  def successful_authorization_response
+    <<-RESPONSE
+{
+  "id": "ch_test_charge",
+  "object": "charge",
+  "created": 1309131571,
+  "livemode": false,
+  "paid": true,
+  "amount": 400,
+  "currency": "usd",
+  "refunded": false,
+  "fee": 0,
+  "fee_details": [],
+  "card": {
+    "country": "US",
+    "exp_month": 9,
+    "exp_year": #{Time.now.year + 1},
+    "last4": "4242",
+    "object": "card",
+    "type": "Visa"
+  },
+  "captured": false,
+  "description": "ActiveMerchant Test Purchase",
+  "dispute": null,
+  "uncaptured": true,
+  "disputed": false
+}
+    RESPONSE
+  end
+
+  def successful_capture_response
+    <<-RESPONSE
+{
+  "id": "ch_test_charge",
+  "object": "charge",
+  "created": 1309131571,
+  "livemode": false,
+  "paid": true,
+  "amount": 400,
+  "currency": "usd",
+  "refunded": false,
+  "fee": 0,
+  "fee_details": [],
+  "card": {
+    "country": "US",
+    "exp_month": 9,
+    "exp_year": #{Time.now.year + 1},
+    "last4": "4242",
+    "object": "card",
+    "type": "Visa"
+  },
+  "captured": true,
+  "description": "ActiveMerchant Test Purchase",
+  "dispute": null,
+  "uncaptured": false,
+  "disputed": false
+}
+    RESPONSE
+  end
+
   def successful_purchase_response(refunded=false)
     <<-RESPONSE
 {
