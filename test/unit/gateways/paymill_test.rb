@@ -38,6 +38,13 @@ class PaymillTest < Test::Unit::TestCase
     assert_equal 'Access Denied', response.message
   end
 
+  def test_invalid_login_on_storing_card
+    @gateway.stubs(:raw_ssl_request).returns(failed_store_invalid_credentials_response, successful_purchase_response)
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_failure response
+    assert_equal 'Unable to process the transaction - please check channelId or login data', response.message
+  end
+
   def test_successful_authorize_and_capture
     @gateway.stubs(:raw_ssl_request).returns(successful_store_response, successful_authorize_response)
 
@@ -106,6 +113,10 @@ class PaymillTest < Test::Unit::TestCase
 
   def failed_store_response
     MockResponse.new 200, %[jsonPFunction({"transaction":{"mode":"CONNECTOR_TEST","channel":"57313835619696ac361dc591bc973626","response":"SYNC","payment":{"code":"CC.DB"},"processing":{"code":"CC.DB.70.40","reason":{"code":"40","message":"Account Validation"},"result":"NOK","return":{"code":"000.100.201","message":"Account or Bank Details Incorrect"},"timestamp":"2013-02-12 21:54:45"}}})]
+  end
+
+  def failed_store_invalid_credentials_response
+    MockResponse.new 200, %[jsonPFunction({"error":{"message":"Unable to process the transaction - please check channelId or login data"}})]
   end
 
   def failed_login_response

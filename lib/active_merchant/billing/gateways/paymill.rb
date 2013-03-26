@@ -124,15 +124,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def response_for_save_from(raw_response)
-        parsed = JSON.parse(raw_response.sub(/jsonPFunction\(/, '').sub(/\)\z/, ''))
-        succeeded = parsed['transaction']['processing']['result'] == 'ACK'
-
         options = { :test => test? }
-        if succeeded
-          options[:authorization] = parsed['transaction']['identification']['uniqueId']
+
+        parsed = JSON.parse(raw_response.sub(/jsonPFunction\(/, '').sub(/\)\z/, ''))
+        if parsed['error']
+          succeeded = false
+          message = parsed['error']['message']
+        else
+          succeeded = parsed['transaction']['processing']['result'] == 'ACK'
+          message = parsed['transaction']['processing']['return']['message']
+          options[:authorization] = parsed['transaction']['identification']['uniqueId'] if succeeded
         end
 
-        message = parsed['transaction']['processing']['return']['message']
         Response.new(succeeded, message, parsed, options)
       end
 
