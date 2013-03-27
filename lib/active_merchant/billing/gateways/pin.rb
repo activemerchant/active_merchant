@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        post[:description] = options[:description]
+        post[:description] = options[:description] || "Active Merchant Purchase"
       end
 
       def add_creditcard(post, creditcard)

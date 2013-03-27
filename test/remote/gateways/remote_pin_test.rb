@@ -22,6 +22,12 @@ class RemotePinTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_without_description
+    @options.delete(:description)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
