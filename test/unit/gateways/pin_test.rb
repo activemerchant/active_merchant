@@ -226,8 +226,15 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_headers
-    assert_equal "application/json", @gateway.send(:headers)['Content-Type']
-    assert_equal "Basic #{Base64.strict_encode64('I_THISISNOTAREALAPIKEY:').strip}", @gateway.send(:headers)['Authorization']
+    headers = @gateway.send(:headers)
+    assert_equal "application/json", headers['Content-Type']
+    assert_equal "Basic #{Base64.strict_encode64('I_THISISNOTAREALAPIKEY:').strip}", headers['Authorization']
+    assert !headers.has_key?('X-Partner-Key')
+    assert !headers.has_key?('X-Safe-Card')
+
+    headers = @gateway.send(:headers, :partner_key => "MyPartnerKey", :safe_card => '1')
+    assert_equal 'MyPartnerKey', headers['X-Partner-Key']
+    assert_equal '1', headers['X-Safe-Card']
   end
 
   private

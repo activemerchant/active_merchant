@@ -101,18 +101,22 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def headers
-        {
+      def headers(params = {})
+        result = {
           "Content-Type" => "application/json",
           "Authorization" => "Basic #{Base64.strict_encode64(options[:api_key] + ':').strip}"
         }
+
+        result['X-Partner-Key'] = params[:partner_key] if params[:partner_key]
+        result['X-Safe-Card'] = params[:safe_card] if params[:safe_card]
+        result
       end
 
       def commit(action, params)
         url = "#{test? ? test_url : live_url}/#{action}"
 
         begin
-          body = parse(ssl_post(url, post_data(params), headers))
+          body = parse(ssl_post(url, post_data(params), headers(params)))
         rescue ResponseError => e
           body = parse(e.response.body)
         end
