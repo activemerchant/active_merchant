@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund_request(money, authorization, options)
-        commit('inquiry', build_refund_request(money, authorization, options), :ok)
+        commit('refund', build_refund_request(money, authorization, options), :ok)
       end
 
       def build_request
@@ -237,19 +237,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, request, success_criteria)
-        xmr = ssl_post((test? ? self.test_url : self.live_url),
-          request,
-          'Content-Type' => 'text/xml',
-          'Authorization' => encoded_credentials)
-
+        xmr = ssl_post(url, request, 'Content-Type' => 'text/xml', 'Authorization' => encoded_credentials)
         raw = parse(action, xmr)
+        success, message = success_and_message_from(raw, success_criteria)
 
         Response.new(
-          success_from(raw, success_criteria),
-          message_from(raw),
+          success,
+          message,
           raw,
           :authorization => authorization_from(raw),
           :test => test?)
+
       rescue ActiveMerchant::ResponseError => e
         if e.response.code.to_s == "401"
           return Response.new(false, "Invalid credentials", {}, :test => test?)
@@ -258,15 +256,25 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def success_from(raw, success_criteria)
-        (raw[:last_event] == success_criteria ||
-          raw[:ok].present?)
+      def url
+        test? ? self.test_url : self.live_url
       end
 
-      def message_from(raw)
-        (raw[:iso8583_return_code_description] ||
-          raw[:error] ||
-          "SUCCESS")
+      def success_and_message_from(raw, success_criteria)
+        success = (raw[:last_event] == success_criteria || raw[:ok].present?)
+        if success
+          message = "SUCCESS"
+        else
+          message = raw[:iso8583_return_code_description] || raw[:error] || required_status_message(raw, success_criteria)
+        end
+
+        [ success, message ]
+      end
+
+      def required_status_message(raw, success_criteria)
+        if raw[:last_event] != success_criteria
+          "A transaction status of '#{success_criteria}' is required."
+        end
       end
 
       def authorization_from(raw)
