@@ -41,6 +41,8 @@ module ActiveMerchant #:nodoc:
           mapping :return_url, 'SuccessURL'
           mapping :description, 'Description'
 
+          class_attribute :referrer_id
+
           def shipping_address(params = {})
             @shipping_address_set = true unless params.empty?
 
@@ -74,12 +76,14 @@ module ActiveMerchant #:nodoc:
             key = fields['EncryptKey']
             @crypt ||= create_crypt_field(fields.except(*crypt_skip), key)
 
-            {
+            result = {
               'VPSProtocol' => '2.23',
               'TxType' => 'PAYMENT',
               'Vendor' => @fields['Vendor'],
               'Crypt'  => @crypt
             }
+            result['ReferrerID'] = referrer_id if referrer_id
+            result
           end
 
           private
