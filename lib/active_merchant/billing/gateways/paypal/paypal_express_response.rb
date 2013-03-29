@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
       end
       
       def address
-        address = (@params['PaymentDetails']||{})['ShipToAddress']
+        address = (@params['PaymentDetails']||{'ShipToAddress' => {}})['ShipToAddress']
         {  'name'       => address['Name'],
            'company'    => info['PayerBusiness'],
            'address1'   => address['Street1'],
