@@ -1,6 +1,96 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    #
+    # == Description
+    #
+    # Payment Gateway implementation for WorldPay's XML Direct API.
+    #
+    # References:
+    # * WorldPay Direct XML technical documentation: http://www.worldpay.com/support/bg/xml/kb/3dsecure/dxml.html
+    #
+    # == Gateway Options
+    #
+    # In addition to the options supported by the Gateway base class the
+    # Worldpay Gateway supports the following keys in the options hash:
+    #
+    # * <tt>:inst_id</tt> - The XML Invisible installation ID provided by
+    #   WorldPay.
+    # * <tt>:order_content</tt> - The order content in HTML format.
+    # * <tt>:browser</tt> - A hash containing information about the shopper's
+    #   browser - this is used to redirect the shopper to the correct issuer site
+    #   for authentication.
+    # * <tt>:session_id</tt> - A session ID uniquely identifying the shopper's
+    #   browser session. WorldPay uses the session information for risk
+    #   assessment. The session ID and shopper's IP address (:ip) are mandatory
+    #   elements in a 3-D Secure transaction.
+    # * <tt>:payer_authentication</tt> - A hash containing data for the 3-D
+    #   Secure payer authentication protocol.
+    # * <tt>:echo_data</tt> - An opaque string that may returned by the
+    #   WorldPay gateway in the initial authentication response must be
+    #   supplied in all subsequent requests as is. This is required for
+    #   transactions using 3-D Secure payer authentication.
+    # * <tt>:cookie</tt> - The gateway may set a HTTP session cookie on the
+    #   initial authorize request. If that's the case the session cookie must
+    #   be passed back to the gateway on all subsequent requests. This is
+    #   requirement for 3-D Secure transactions.
+    #
+    # The <tt>:browser</tt> hash must have the following keys:
+    # * <tt>:accept_header</tt> - The exact content of the HTTP accept header
+    #   as sent to the merchant from the shopper's user agent.
+    # * <tt>:user_agent</tt> - The exact content of the HTTP user-agent header
+    #   as sent to the merchant from the shopper's user agent.
+    #
+    # The <tt>:payer_authentication</tt> hash must have the following keys:
+    # * <tt>:pa_response</tt> - An opaque string that is returned by the issuer
+    #   site once the payer authentication process is completed.
+    #
+    # == Gateway Response (3-D Secure)
+    #
+    # The gateway response to the initial authorize request may contain
+    # additional attributes in the <tt>:params</tt> hash which indicate that
+    # 3-D Secure payer authentication is required:
+    #
+    # * <tt>:request3_d_secure</tt> - A boolean that will be <tt>true</true> if
+    #   additional 3-D Secure authentication is required.
+    # * <tt>:issuer_url</tt> - The URL of the issuer's site to which the
+    #   shopper must be redirected to complete 3-D Secure authentication.
+    # * <tt>:pa_request</tt> - A opaque string that needs to be passed when
+    #   redirecting the shopper to the issuer's site.
+    # * <tt>:echo_data</tt> - A opaque string that needs to be passed back to
+    #   the gateway in the second purchase request after the shopper returns from
+    #   the issuer's site.
+    # * <tt>:cookie</tt> - A session cookie set by the payment gateway which
+    #   needs to be passed back in the second purchase request.
+    #
     class WorldpayGateway < Gateway
+
+      ##
+      # Wrapper class for the default ActiveMerchant::Connection class that
+      # extracts any cookies send by the gateway in a <tt>Set-Cookie</tt>
+      # header in the response. The last captured cookie can be read from the
+      # cookie attribute of the connection.
+      class CaptureCookieConnection < ActiveMerchant::Connection
+
+        # Value of the Set-Cookie header received in the last response from the
+        # gateway or nil if the last response did not include any cookies.
+        attr_reader :cookie
+
+        def request(method, body, headers = {})
+          result = super(method, body, headers)
+          if result.key?('set-cookie')
+            @cookie = result.to_hash['set-cookie'].map{|ea|ea[/^.*?;/]}.join
+          else
+            @cookie = nil
+          end
+          result
+        end
+
+      end
+
+      # Instance of the CaptureCookieConnection class for the HTTPS connection to the Worldpay gateway.
+      # This will be valid once the first request has been sent to the gateway.
+      class_attribute :connection
+
       self.test_url = 'https://secure-test.worldpay.com/jsp/merchant/xml/paymentService.jsp'
       self.live_url = 'https://secure.worldpay.com/jsp/merchant/xml/paymentService.jsp'
 
@@ -66,27 +156,27 @@ module ActiveMerchant #:nodoc:
       private
 
       def authorize_request(money, payment_method, options)
-        commit('authorize', build_authorization_request(money, payment_method, options), "AUTHORISED")
+        commit('authorize', build_authorization_request(money, payment_method, options), "AUTHORISED", options)
       end
 
       def capture_request(money, authorization, options)
-        commit('capture', build_capture_request(money, authorization, options), :ok)
+        commit('capture', build_capture_request(money, authorization, options), :ok, options)
       end
 
       def cancel_request(authorization, options)
-        commit('cancel', build_void_request(authorization, options), :ok)
+        commit('cancel', build_void_request(authorization, options), :ok, options)
       end
 
       def inquire_request(authorization, options, success_criteria)
-        commit('inquiry', build_order_inquiry_request(authorization, options), success_criteria)
+        commit('inquiry', build_order_inquiry_request(authorization, options), success_criteria, options)
       end
 
       def refund_request(money, authorization, options)
-        commit('inquiry', build_refund_request(money, authorization, options), :ok)
+        commit('inquiry', build_refund_request(money, authorization, options), :ok, options)
       end
 
       def build_request
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml = Builder::XmlMarkup.new :indent => 0
         xml.instruct! :xml, :encoding => 'ISO-8859-1'
         xml.declare! :DOCTYPE, :paymentService, :PUBLIC, "-//WorldPay//DTD WorldPay PaymentService v1//EN", "http://dtd.wp3.rbsworldpay.com/paymentService_v1.dtd"
         xml.tag! 'paymentService', 'version' => "1.4", 'merchantCode' => @options[:login] do
@@ -125,6 +215,14 @@ module ActiveMerchant #:nodoc:
                 end
               end
               add_payment_method(xml, money, payment_method, options)
+              if options[:browser]
+                add_browser_details(xml, options[:browser])
+              end
+              if options[:echo_data]
+                xml.tag! 'echoData' do
+                  xml.cdata! options[:echo_data]
+                end
+              end
             end
           end
         end
@@ -189,6 +287,21 @@ module ActiveMerchant #:nodoc:
 
               add_address(xml, 'cardAddress', (options[:billing_address] || options[:address]))
             end
+            if options[:ip] && options[:session_id]
+              add_session(xml, options[:ip], options[:session_id])
+            end
+            if options[:payer_authentication]
+              add_3d_secure_info(xml, options[:payer_authentication])
+            end
+          end
+        end
+      end
+
+      def add_browser_details(xml, browser)
+        xml.tag! 'shopper' do
+          xml.tag! 'browser' do
+            xml.tag! 'acceptHeader', browser[:accept_header]
+            xml.tag! 'userAgentHeader', browser[:user_agent]
           end
         end
       end
@@ -219,6 +332,18 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_3d_secure_info(xml, info_3d_secure)
+        xml.tag! 'info3DSecure' do
+          xml.tag! 'paResponse' do
+            xml.cdata! info_3d_secure[:pa_response]
+          end
+        end
+      end
+
+      def add_session(xml, ip, session_id)
+        xml.tag! 'session', 'shopperIPAddress' => ip, 'id' => session_id
+      end
+
       def parse(action, xml)
         parse_element({:action => action}, REXML::Document.new(xml))
       end
@@ -236,13 +361,19 @@ module ActiveMerchant #:nodoc:
         raw
       end
 
-      def commit(action, request, success_criteria)
-        xmr = ssl_post((test? ? self.test_url : self.live_url),
-          request,
+      def commit(action, request, success_criteria, options)
+        headers = {
           'Content-Type' => 'text/xml',
-          'Authorization' => encoded_credentials)
+          'Authorization' => encoded_credentials
+        }
+        headers['Cookie'] = options[:cookie] if options[:cookie]
+
+        xmr = ssl_post((test? ? self.test_url : self.live_url), request, headers)
 
         raw = parse(action, xmr)
+
+        cookie = session_cookie(connection)
+        raw[:cookie] = cookie if cookie
 
         Response.new(
           success_from(raw, success_criteria),
@@ -282,8 +413,18 @@ module ActiveMerchant #:nodoc:
       def localized_amount(money, currency)
         amount = amount(money)
         return amount unless CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
-        
+
         amount.to_i / 100 * 100
+      end
+
+      def new_connection(endpoint)
+        self.connection = CaptureCookieConnection.new(endpoint)
+      end
+
+      def session_cookie(connection)
+        if connection and connection.respond_to?(:cookie)
+          connection.cookie
+        end
       end
     end
   end

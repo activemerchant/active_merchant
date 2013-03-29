@@ -1,18 +1,20 @@
 require 'test_helper'
 
 class RemoteWorldpayTest < Test::Unit::TestCase
-  
+
 
   def setup
     @gateway = WorldpayGateway.new(fixtures(:world_pay_gateway))
-    
+
     @amount = 100
     @credit_card = credit_card('4111111111111111')
     @declined_card = credit_card('4111111111111111', :first_name => nil, :last_name => 'REFUSED')
-    
+
     @options = {:order_id => generate_unique_id}
+
+    #ActiveMerchant::Billing::Gateway.wiredump_device = $stderr
   end
-  
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -108,5 +110,35 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid credentials', response.message
+  end
+
+  def test_3d_secure_authentication
+    @credit_card.first_name = nil
+    @credit_card.last_name = '3D'
+    @options.merge!({
+      :browser => {
+        :accept_header => 'text/html',
+        :user_agent => 'Mozilla/5.0',
+      },
+      :ip => '10.0.0.1',
+      :session_id => '123412341234',
+    })
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+    assert response.params['request3_d_secure']
+    assert response.params['pa_request']
+    assert echo_data = response.params['echo_data']
+    assert cookie = response.params['cookie']
+
+    @options.merge!({
+      :echo_data => echo_data,
+      :cookie => cookie,
+      :payer_authentication => {
+        :pa_response => 'IDENTIFIED'
+      }
+    })
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
   end
 end
