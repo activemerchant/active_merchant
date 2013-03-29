@@ -18,6 +18,7 @@
 * Ogone: Use BYPSP for ALIASOPERATION [ntalbott]
 * Paymill: Handle error storing card [duff]
 * SagePay integration: Add referrer field [melari]
+* Pin: Add extra headers [duff]
 
 == Version 1.31.1 (February 25, 2013)
 
