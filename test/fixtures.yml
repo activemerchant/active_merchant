@@ -562,8 +562,8 @@ trans_first:
   password: PASSWORD
 
 transax:
-  login: demo
-  password: password
+  login: transaxdemo
+  password: nelix123
 
 # Working credentials, no need to replace
 trust_commerce:
