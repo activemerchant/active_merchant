@@ -15,6 +15,7 @@
 * DataCash: Update test response fixtures [jamesshipton]
 * Pin: Add Pin.js card token support [nagash]
 * PayPal Express gateway: Fix error when no address information is in response [pierre]
+* Ogone: Use BYPSP for ALIASOPERATION [ntalbott]
 
 == Version 1.31.1 (February 25, 2013)
 

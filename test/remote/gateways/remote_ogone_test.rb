@@ -177,13 +177,6 @@ class RemoteOgoneTest < Test::Unit::TestCase
     assert_success purchase
   end
 
-  def test_successful_store_generated_alias
-    assert response = @gateway.store(@credit_card)
-    assert_success response
-    assert purchase = @gateway.purchase(@amount, response.billing_id)
-    assert_success purchase
-  end
-
   def test_successful_referenced_credit
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase

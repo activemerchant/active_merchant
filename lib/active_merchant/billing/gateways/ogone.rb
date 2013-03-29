@@ -200,7 +200,7 @@ module ActiveMerchant #:nodoc:
 
       # Store a credit card by creating an Ogone Alias
       def store(payment_source, options = {})
-        options.merge!(:alias_operation => 'BYOGONE') unless options.has_key?(:billing_id) || options.has_key?(:store)
+        options.merge!(:alias_operation => 'BYPSP') unless(options.has_key?(:billing_id) || options.has_key?(:store))
         response = authorize(1, payment_source, options)
         void(response.authorization) if response.success?
         response
