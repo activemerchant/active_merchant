@@ -25,6 +25,7 @@
 * SagePay integration: Add referrer field [melari]
 * Pin: Add extra headers [duff]
 * Paymill: Add support for store [ntalbott]
+* USA ePay Advanced: Fix typo in message credit card data options [joelvh]
 
 == Version 1.31.1 (February 25, 2013)
 

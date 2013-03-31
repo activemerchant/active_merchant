@@ -174,7 +174,7 @@ module ActiveMerchant #:nodoc:
         :xid => [:string, 'XID'],
         :cavv => [:string, 'CAVV'],
         :eci => [:integer, 'ECI'],
-        :internal_card_authorization => [:boolean, 'InternalCardAduth'],
+        :internal_card_authorization => [:boolean, 'InternalCardAuth'],
         :pares => [:string, 'Pares']
       } #:nodoc:
 
