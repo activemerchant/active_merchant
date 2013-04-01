@@ -24,6 +24,7 @@
 * Paymill: Handle error storing card [duff]
 * SagePay integration: Add referrer field [melari]
 * Pin: Add extra headers [duff]
+* Paymill: Add support for store [ntalbott]
 
 == Version 1.31.1 (February 25, 2013)
 

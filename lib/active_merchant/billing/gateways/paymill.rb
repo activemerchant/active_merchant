@@ -16,17 +16,27 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, credit_card, options = {})
-        MultiResponse.run do |r|
-          r.process { save_card(credit_card) }
-          r.process { purchase_with_token(money, r.authorization, options) }
+      def purchase(money, payment_method, options = {})
+        case payment_method
+        when String
+          purchase_with_token(money, payment_method, options)
+        else
+          MultiResponse.run do |r|
+            r.process { save_card(payment_method) }
+            r.process { purchase_with_token(money, r.authorization, options) }
+          end
         end
       end
 
-      def authorize(money, credit_card, options = {})
-        MultiResponse.run do |r|
-          r.process { save_card(credit_card) }
-          r.process { authorize_with_token(money, r.authorization, options) }
+      def authorize(money, payment_method, options = {})
+        case payment_method
+        when String
+          authorize_with_token(money, payment_method, options)
+        else
+          MultiResponse.run do |r|
+            r.process { save_card(payment_method) }
+            r.process { authorize_with_token(money, r.authorization, options) }
+          end
         end
       end
 
@@ -45,6 +55,10 @@ module ActiveMerchant #:nodoc:
         post[:amount] = amount(money)
         post[:description] = options[:description]
         commit(:post, "refunds/#{transaction_id(authorization)}", post)
+      end
+
+      def store(credit_card, options={})
+        save_card(credit_card)
       end
 
       private
