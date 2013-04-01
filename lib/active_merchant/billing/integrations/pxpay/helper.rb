@@ -80,6 +80,7 @@ module ActiveMerchant #:nodoc:
             root = xml.add_element('GenerateRequest')
 
             @fields.each do | k, v |
+              v = v.slice(0, 50) if k == "MerchantReference"
               root.add_element(k).text = v
             end
 
