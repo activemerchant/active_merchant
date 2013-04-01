@@ -1,6 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+* Optimal: Submit shipping address with requests [jduff]
 * Iridium: Enable reference transactions for authorize [ntalbott]
+* Stripe: Add authorize and capture methods [melari]
+* Pin: Add a default description if none is specified to fix failures [melari]
 * Litle: Add support for passing optional fields in token based transactions [forest]
 * Add Finansbank gateway [scamurcuoglu]
 * Paymill: Use .com instead of .de for save card url [besi]
