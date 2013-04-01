@@ -2,6 +2,11 @@ require 'test_helper'
 
 class RemoteFinansbankTest < Test::Unit::TestCase
   def setup
+    @original_kcode = $KCODE
+    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
+      $KCODE = 'u'
+    end
+
     @gateway = FinansbankGateway.new(fixtures(:finansbank))
 
     @amount = 100
@@ -15,6 +20,10 @@ class RemoteFinansbankTest < Test::Unit::TestCase
       :description => 'Store Purchase',
       :email => 'xyz@gmail.com'
     }
+  end
+
+  def teardown
+    $KCODE = @original_kcode
   end
 
   def test_successful_purchase

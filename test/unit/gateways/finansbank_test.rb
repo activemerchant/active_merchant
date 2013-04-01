@@ -2,6 +2,11 @@ require 'test_helper'
 
 class FinansbankTest < Test::Unit::TestCase
   def setup
+    @original_kcode = $KCODE
+    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
+      $KCODE = 'u'
+    end
+
     @gateway = FinansbankGateway.new(
       :login => 'login',
       :password => 'password',
@@ -16,6 +21,10 @@ class FinansbankTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store Purchase'
     }
+  end
+
+  def teardown
+    $KCODE = @original_kcode
   end
 
   def test_successful_purchase
