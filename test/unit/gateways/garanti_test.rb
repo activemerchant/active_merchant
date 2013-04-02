@@ -4,8 +4,8 @@ require 'test_helper'
 
 class GarantiTest < Test::Unit::TestCase
   def setup
-    @original_kcode = $KCODE
     if RUBY_VERSION < '1.9' && $KCODE == "NONE"
+      @original_kcode = $KCODE
       $KCODE = 'u'
     end
 
@@ -23,7 +23,7 @@ class GarantiTest < Test::Unit::TestCase
   end
 
   def teardown
-    $KCODE = @original_kcode
+    $KCODE = @original_kcode if @original_kcode
   end
 
   def test_successful_purchase
