@@ -290,7 +290,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
                                  :year => '2014', :brand => 'visa')
     assert auth_response2 = @gateway.authorize(18699, credit_card, :order_id => '29')
 
-    assert reversal_response = @gateway.auth_reversal(auth_response2.authorization)
+    assert reversal_response = @gateway.void(auth_response2.authorization)
     assert_success reversal_response
   end
 
@@ -306,7 +306,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert auth_response = @gateway.authorize(20500, credit_card, options)
     assert_success auth_response
 
-    assert reversal_response = @gateway.auth_reversal(auth_response.authorization, 10000)
+    assert reversal_response = @gateway.void(auth_response.authorization, amount: 10000)
     assert !reversal_response.success?
     assert_equal '336', reversal_response.params['litleOnlineResponse']['authReversalResponse']['response']
   end
