@@ -1,7 +1,3 @@
-if RUBY_VERSION < '1.9' && $KCODE == "NONE"
-  $KCODE = 'u'
-end
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # CC5 API is used by many banks in Turkey. Extend this base class to provide
