@@ -82,13 +82,26 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        to_pass = create_capture_hash(money, authorization, options)
+        transaction_id, kind = split_authorization(authorization)
+        to_pass = create_capture_hash(money, transaction_id, options)
         build_response(:capture, @litle.capture(to_pass))
       end
 
+      # Note: Litle requires that authorization requests be voided via auth_reversal
+      # and other requests via void. To maintain the same interface as the other
+      # gateways the transaction_id and the kind of transaction are concatenated
+      # together with a ; separator (e.g. 1234;authorization)
+      #
+      # A partial auth_reversal can be accomplished by passing :amount as an option
       def void(identification, options = {})
-        to_pass = create_void_hash(identification, options)
-        build_response(:void, @litle.void(to_pass))
+        transaction_id, kind = split_authorization(identification)
+        if kind == 'authorization'
+          to_pass = create_auth_reversal_hash(transaction_id, options[:amount], options)
+          build_response(:authReversal, @litle.auth_reversal(to_pass))
+        else
+          to_pass = create_void_hash(transaction_id, options)
+          build_response(:void, @litle.void(to_pass))
+        end
       end
 
       def credit(money, identification_or_token, options = {})
@@ -142,17 +155,11 @@ module ActiveMerchant #:nodoc:
         if response['response'] == "0"
           detail        = response["#{kind}Response"]
           fraud         = fraud_result(detail)
-          authorization = case kind
-                          when :registerToken
-                            response['registerTokenResponse']['litleToken']
-                          else
-                            detail['litleTxnId']
-                          end
           Response.new(
               valid_responses.include?(detail['response']),
               detail['message'],
               { :litleOnlineResponse => response },
-              :authorization => authorization,
+              :authorization => authorization_from(detail, kind),
               :avs_result    => { :code => fraud['avs'] },
               :cvv_result    => fraud['cvv'],
               :test          => test?
@@ -160,6 +167,21 @@ module ActiveMerchant #:nodoc:
         else
           Response.new(false, response['message'], :litleOnlineResponse => response, :test => test?)
         end
+      end
+
+      # Generates an authorization string of the appropriate id and the kind of transaction
+      # See #void for how the kind is used
+      def authorization_from(litle_response, kind)
+        case kind
+        when :registerToken
+          authorization = litle_response['litleToken']
+        else
+          authorization = [litle_response['litleTxnId'], kind.to_s].join(";")
+        end
+      end
+
+      def split_authorization(authorization)
+        transaction_id, kind = authorization.to_s.split(';')
       end
 
       def build_authorize_request(money, creditcard_or_token, options)
@@ -224,7 +246,8 @@ module ActiveMerchant #:nodoc:
         if identification_or_cardtoken.is_a?(LitleCardToken)
           add_cardtoken_hash(hash, identification_or_cardtoken)
         else
-          hash['litleTxnId'] = identification_or_cardtoken
+          transaction_id, kind = split_authorization(identification_or_cardtoken)
+          hash['litleTxnId'] = transaction_id
         end
       end
 
@@ -270,6 +293,12 @@ module ActiveMerchant #:nodoc:
 
       def create_void_hash(identification, options)
         hash               = create_hash(nil, options)
+        hash['litleTxnId'] = identification
+        hash
+      end
+
+      def create_auth_reversal_hash(identification, money, options)
+        hash               = create_hash(money, options)
         hash['litleTxnId'] = identification
         hash
       end

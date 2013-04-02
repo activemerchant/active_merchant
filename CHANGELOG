@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Netaxept: Completely revamped to use the "M" service type [rbjordan3, ntalbott]
+* Litle: Void authorizations via an auth reversal [jrust]
 
 == Version 1.32.1 (April 4, 2013)
 
