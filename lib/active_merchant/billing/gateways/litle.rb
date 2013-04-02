@@ -91,6 +91,11 @@ module ActiveMerchant #:nodoc:
         build_response(:void, @litle.void(to_pass))
       end
 
+      def auth_reversal(identification, money = nil, options = {})
+        to_pass = create_auth_reversal_hash(identification, money, options)
+        build_response(:authReversal, @litle.auth_reversal(to_pass))
+      end
+
       def credit(money, identification_or_token, options = {})
         to_pass = build_credit_request(money, identification_or_token, options)
         build_response(:credit, @litle.credit(to_pass))
@@ -270,6 +275,12 @@ module ActiveMerchant #:nodoc:
 
       def create_void_hash(identification, options)
         hash               = create_hash(nil, options)
+        hash['litleTxnId'] = identification
+        hash
+      end
+
+      def create_auth_reversal_hash(identification, money, options)
+        hash               = create_hash(money, options)
         hash['litleTxnId'] = identification
         hash
       end
