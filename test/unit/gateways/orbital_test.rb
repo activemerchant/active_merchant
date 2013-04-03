@@ -156,6 +156,23 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_nil_address_values_should_not_throw_exceptions
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    address_options = {
+      :address1 => nil,
+      :address2 => nil,
+      :city     => nil,
+      :state    => nil,
+      :zip      => nil,
+      :phone    => nil,
+      :fax      => nil
+    }
+
+    response = @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(address_options))
+    assert_success response
+  end
+
   def test_dont_send_customer_data_by_default
     response = stub_comms do
       @gateway.purchase(50, credit_card, :order_id => 1)
