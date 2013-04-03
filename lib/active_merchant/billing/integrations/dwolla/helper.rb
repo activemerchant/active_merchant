@@ -1,3 +1,5 @@
+require 'digest/sha1'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
@@ -11,12 +13,23 @@ module ActiveMerchant #:nodoc:
             if ActiveMerchant::Billing::Base.integration_mode == :test || options[:test]
               add_field('test', 'true')
             end 
+
+            # add timestamp
+            timestamp = Time.now.to_i.to_s
+            add_field('timestamp', timestamp)
+
+            # generate and add signature
+            key = options[:credential2].to_s
+            secret = options[:credential3].to_s
+            orderid = order.to_s
+            signature = Digest::SHA1.hexdigest(secret + "#{key}&#{timestamp}&#{orderid}")
+            add_field('signature', signature)
           end
           
           # Replace with the real mapping
           mapping :account, 'destinationid'
           mapping :credential2, 'key'
-          mapping :credential3, 'secret'
+          mapping :credential4, 'allowFundingSources'
           mapping :notify_url, 'callback'
           mapping :return_url, 'redirect'
           mapping :description, 'description'

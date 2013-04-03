@@ -1,7 +1,8 @@
 # All mappings in helper.rb are required fields to be sent to Dwolla.
 # :account = 'Dwolla Id of merchant'
-# :credential1 = 'key from Dwolla Application'
-# :credential2 = 'secret from Dwolla Application'
+# :credential2 = 'key from Dwolla Application'
+# :credential3 = 'secret from Dwolla Application'
+# :credential4 = 'Allow Guest Checkout?  true or false'
 # :redirect_url = 'can be different that what is specified on Dwolla Application creation'
 # :return_url = 'can be different that what is specified on Dwolla Application creation'
 # :order_id = must be unique for each transaction
@@ -18,11 +19,11 @@ module ActiveMerchant #:nodoc:
         self.service_url = 'https://www.dwolla.com/payment/pay'
 
         def self.notification(post, options={})
-          Notification.new(post)
+          Notification.new(post, options)
         end
 
         def self.return(query_string, options={})
-          Return.new(query_string)
+          Return.new(query_string, options)
         end
       end
     end
