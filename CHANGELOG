@@ -24,6 +24,7 @@
 * Merchant e-Solutions: Add ref number and recurring support [carlaares]
 * Bogus gateway: Add authorization to purchase response [hron]
 * Bluepay gateway: Fix Check support; general cleanup [ntalbott]
+* Dwolla: Fix security issues and enable guest checkout [capablemonkey, schonfeld]
 
 == Version 1.32.1 (April 4, 2013)
 
