@@ -5,7 +5,7 @@ class DwollaHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
   
   def setup
-    @helper = Dwolla::Helper.new('order-500','812-546-3855', :credential2 => 'mykey', :credential3 => 'mysecret', :credential4 => 'true', :amount => 500, :currency => 'USD')
+    @helper = Dwolla::Helper.new('order-500','812-546-3855', :credential2 => 'mykey', :credential3 => 'mysecret', :amount => 500, :currency => 'USD')
   end
  
   def test_basic_helper_fields
@@ -13,7 +13,6 @@ class DwollaHelperTest < Test::Unit::TestCase
     assert_field 'orderid', 'order-500'
     assert_field 'destinationid', '812-546-3855'
     assert_field 'key', 'mykey'
-    assert_field 'allowFundingSources', 'true'
     assert_field 'timestamp', Time.now.to_i.to_s
 
     # test signature is correct

@@ -18,6 +18,9 @@ module ActiveMerchant #:nodoc:
             timestamp = Time.now.to_i.to_s
             add_field('timestamp', timestamp)
 
+            # enable guest checkout
+            add_field('allowFundingSources', 'true')
+
             # generate and add signature
             key = options[:credential2].to_s
             secret = options[:credential3].to_s
@@ -29,7 +32,6 @@ module ActiveMerchant #:nodoc:
           # Replace with the real mapping
           mapping :account, 'destinationid'
           mapping :credential2, 'key'
-          mapping :credential4, 'allowFundingSources'
           mapping :notify_url, 'callback'
           mapping :return_url, 'redirect'
           mapping :description, 'description'

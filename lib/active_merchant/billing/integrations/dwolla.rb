@@ -2,7 +2,6 @@
 # :account = 'Dwolla Id of merchant'
 # :credential2 = 'key from Dwolla Application'
 # :credential3 = 'secret from Dwolla Application'
-# :credential4 = 'Allow Guest Checkout?  true or false'
 # :redirect_url = 'can be different that what is specified on Dwolla Application creation'
 # :return_url = 'can be different that what is specified on Dwolla Application creation'
 # :order_id = must be unique for each transaction
