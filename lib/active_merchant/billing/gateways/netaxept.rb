@@ -30,56 +30,73 @@ module ActiveMerchant #:nodoc:
       def purchase(money, creditcard, options = {})
         requires!(options, :order_id)
 
-        post = {}
-        add_credentials(post, options)
-        add_transaction(post, options)
-        add_order(post, money, options)
-        add_creditcard(post, creditcard)
-        commit('Sale', post)
+        MultiResponse.run do |r|
+          r.process{authorize(money, creditcard, options)}
+          r.process{capture(money, r.authorization, options)}
+        end
       end
 
       def authorize(money, creditcard, options = {})
         requires!(options, :order_id)
 
-        post = {}
-        add_credentials(post, options)
-        add_transaction(post, options)
-        add_order(post, money, options)
-        add_creditcard(post, creditcard)
-        commit('Auth', post)
+        MultiResponse.run do |r|
+          r.process{setup_transaction(money, options)}
+          r.process{add_and_auth_credit_card(r.authorization, creditcard, options)}
+          r.process{query_transaction(r.authorization, options)}
+        end
       end
 
       def capture(money, authorization, options = {})
         post = {}
         add_credentials(post, options)
         add_authorization(post, authorization, money)
-        commit('Capture', post, false)
+        post[:operation] = "Capture"
+        commit("Netaxept/process.aspx", post)
       end
 
       def refund(money, authorization, options = {})
         post = {}
         add_credentials(post, options)
         add_authorization(post, authorization, money)
-        commit('Credit', post, false)
-      end
-
-      def credit(money, authorization, options = {})
-        deprecated CREDIT_DEPRECATION_MESSAGE
-        refund(money, authorization, options)
+        post[:operation] = "Credit"
+        commit("Netaxept/process.aspx", post)
       end
 
       def void(authorization, options = {})
         post = {}
         add_credentials(post, options)
         add_authorization(post, authorization)
-        commit('Annul', post, false)
+        post[:operation] = "Annul"
+        commit("Netaxept/process.aspx", post)
       end
 
       private
 
-      def add_credentials(post, options)
+      def setup_transaction(money, options)
+        post = {}
+        add_credentials(post, options)
+        add_order(post, money, options)
+        commit("Netaxept/Register.aspx", post)
+      end
+
+      def add_and_auth_credit_card(authorization, creditcard, options)
+        post = {}
+        add_credentials(post, options, false)
+        add_authorization(post, authorization)
+        add_creditcard(post, creditcard)
+        commit("terminal/default.aspx", post, false)
+      end
+
+      def query_transaction(authorization, options)
+        post = {}
+        add_credentials(post, options)
+        add_authorization(post, authorization)
+        commit("Netaxept/query.aspx", post)
+      end
+
+      def add_credentials(post, options, secure=true)
         post[:merchantId] = @options[:login]
-        post[:token] = @options[:password]
+        post[:token] = @options[:password] if secure
       end
 
       def add_authorization(post, authorization, money=nil)
@@ -87,92 +104,45 @@ module ActiveMerchant #:nodoc:
         post[:transactionAmount] = amount(money) if money
       end
 
-      def add_transaction(post, options)
-        post[:transactionId] = generate_transaction_id(options)
-        post[:serviceType] = 'M'
-        post[:redirectUrl] = 'http://example.com'
-      end
-
       def add_order(post, money, options)
+        post[:serviceType] = 'M'
         post[:orderNumber] = options[:order_id]
         post[:amount] = amount(money)
         post[:currencyCode] = (options[:currency] || currency(money))
+        post[:autoAuth] = "true"
       end
 
-      CARD_TYPE_PREFIXES = {
-        'visa' => 'v',
-        'master' => 'm',
-        'american_express' => 'a',
-      }
-      def add_creditcard(post, creditcard)
-        brand = Gateway.card_brand(creditcard)
-        prefix = CARD_TYPE_PREFIXES[brand]
-        unless prefix
-          raise ArgumentError.new("Card type #{brand} not supported.")
-        end
-
-        post[:creditcard] = {}
-        post[:creditcard][:"#{prefix}a"] = creditcard.number
-        post[:creditcard][:"#{prefix}m"] = format(creditcard.month, :two_digits)
-        post[:creditcard][:"#{prefix}y"] = format(creditcard.year, :two_digits)
-        post[:creditcard][:"#{prefix}c"] = creditcard.verification_value
+      def add_creditcard(post, options)
+        post[:pan] = options.number
+        post[:expiryDate] = format(options.month, :two_digits) + format(options.year, :two_digits)
+        post[:securityCode] = options.verification_value
       end
 
-      def commit(action, parameters, setup=true)
-        parameters[:action] = action
+      def commit(path, parameters, xml=true)
+        raw = parse(ssl_get(build_url(path, parameters)), xml)
 
-        response = {:success => false}
-
-        catch(:exception) do
-          if setup
-            commit_transaction_setup(response, parameters)
-            commit_payment_details(response, parameters)
-            commit_process_setup(response, parameters)
-          end
-          commit_transaction(response, parameters)
-          response[:success] = true
-        end
-
-        Response.new(response[:success], response[:message], response, :test => test?, :authorization => response[:authorization])
-      end
-
-      def commit_transaction_setup(response, parameters)
-        response[:setup] = parse(ssl_get(build_url("REST/Setup.aspx", pick(parameters, :merchantId, :token, :serviceType, :amount, :currencyCode, :redirectUrl, :orderNumber, :transactionId))))
-        process(response, :setup)
-      end
-
-      def commit_payment_details(response, parameters)
-        data = encode(parameters[:creditcard].merge(:BBSePay_transaction => response[:setup]['SetupString']))
-        response[:paymentDetails] = parse(ssl_post(build_url("terminal/default.aspx"), data), false)
-        process(response, :paymentDetails)
-      end
-
-      def commit_process_setup(response, parameters)
-        result = ssl_get(build_url("REST/ProcessSetup.aspx", pick(parameters, :merchantId, :token, :transactionId).merge(:transactionString => response[:paymentDetails][:result])))
-        response[:processSetup] = parse(result)
-        process(response, :processSetup)
-      end
-
-      def commit_transaction(response, parameters)
-        result = ssl_get(build_url("REST/#{parameters[:action]}.aspx", pick(parameters, :merchantId, :token, :transactionId, :transactionAmount)))
-        response[:action] = parse(result)
-        process(response, :action)
-      end
-
-      def process(response, step)
-        if response[step][:container] =~ /Exception|Error/
-          response[:message] = response[step]['Message']
-          throw :exception
+        success = false
+        authorization = (raw["TransactionId"] || parameters[:transactionId])
+        if raw[:container] =~ /Exception|Error/
+          message = (raw["Message"] || raw["Error"]["Message"])
+        elsif raw["Error"] && !raw["Error"].empty?
+          message = (raw["Error"]["ResponseText"] || raw["Error"]["ResponseCode"])
         else
-          message = (response[step]['ResponseText'] || response[step]['ResponseCode'])
-          response[:message] = (message || response[:message])
-
-          response[:authorization] = response[step]['TransactionId']
+          message = (raw["ResponseText"] || raw["ResponseCode"] || "OK")
+          success = true
         end
+
+        Response.new(
+          success,
+          message,
+          raw,
+          :test => test?,
+          :authorization => authorization
+        )
       end
 
       def parse(result, expects_xml=true)
-        if expects_xml || /^</ =~ result
+        if expects_xml
           doc = REXML::Document.new(result)
           extract_xml(doc.root).merge(:container => doc.root.name)
         else
@@ -192,20 +162,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def url
-        (test? ? self.test_url : self.live_url)
-      end
-
-      def generate_transaction_id(options)
-        Digest::MD5.hexdigest("#{options.inspect}+#{Time.now}+#{rand}")
-      end
-
-      def pick(hash, *keys)
-        keys.inject({}){|h,key| h[key] = hash[key] if hash[key]; h}
-      end
-
       def build_url(base, parameters=nil)
-        url = "#{test? ? self.test_url : self.live_url}"
+        url = (test? ? self.test_url : self.live_url).dup
         url << base
         if parameters
           url << '?'
@@ -216,16 +174,6 @@ module ActiveMerchant #:nodoc:
 
       def encode(hash)
         hash.collect{|(k,v)| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"}.join('&')
-      end
-
-      class Response < Billing::Response
-        attr_reader :error_detail
-        def initialize(success, message, raw, options)
-          super
-          unless success
-            @error_detail = raw[:processSetup]['Result']['ResponseText'] if raw[:processSetup] && raw[:processSetup]['Result']
-          end
-        end
       end
     end
   end

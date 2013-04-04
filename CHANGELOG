@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Netaxept: Completely revamped to use the "M" service type [rbjordan3, ntalbott]
+
 == Version 1.32.1 (April 4, 2013)
 
 * CC5 and Garanti: Remove $KCODE modifications [melari]
