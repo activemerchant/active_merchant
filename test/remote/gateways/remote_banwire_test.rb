@@ -16,6 +16,7 @@ class RemoteBanwireTest < Test::Unit::TestCase
       :order_id => '1',
       :email => "test@email.com",
       :billing_address => address,
+      :shipping_address => s_address,
       :description => 'Store Purchase'
     }
 
@@ -31,6 +32,7 @@ class RemoteBanwireTest < Test::Unit::TestCase
         :order_id => '3',
         :email => 'test@email.com',
         :billing_address => address(:address1 => 'Horacio', :zipcode => '11560'),
+        :shipping_address => address(:s_address => 'Horacio', :s_zipcode => '11560'),
         :description  => 'Store purchase amex'
     }
 
@@ -38,6 +40,7 @@ class RemoteBanwireTest < Test::Unit::TestCase
         :order_id => '2',
         :email => 'test@email.com',
         :billing_address => address,
+        :shipping_address => s_address,
         :description  => 'Store purchase amex'
     }
   end
