@@ -1,5 +1,12 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.32.1 (April 4, 2013)
+
+* CC5 and Garanti: Remove $KCODE modifications [melari]
+* Paymill: Add support for store [ntalbott]
+* USA ePay: Fix misspelling of "Aduth" [joelvh, ntalbott]
+* Orbital: Fix nil address values throwing exceptions during truncation [melari]
+
 == Version 1.32.0 (April 1, 2013)
 
 * Optimal: Submit shipping address with requests [jduff]
