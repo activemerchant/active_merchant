@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
       # A partial auth_reversal can be accomplished by passing :amount as an option
       def void(identification, options = {})
         transaction_id, kind = split_authorization(identification)
-        if kind == 'authorization'
+        if(kind == 'authorization')
           to_pass = create_auth_reversal_hash(transaction_id, options[:amount], options)
           build_response(:authReversal, @litle.auth_reversal(to_pass))
         else
@@ -182,6 +182,7 @@ module ActiveMerchant #:nodoc:
 
       def split_authorization(authorization)
         transaction_id, kind = authorization.to_s.split(';')
+        [transaction_id, kind]
       end
 
       def build_authorize_request(money, creditcard_or_token, options)
