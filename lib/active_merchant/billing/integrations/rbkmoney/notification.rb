@@ -42,7 +42,12 @@ module ActiveMerchant #:nodoc:
           end
 
           def user_fields
-            params.select{|k,v| /\AuserField_[\d+]\z/.match(k) }
+            params.inject({}) do |fields, (k,v)|
+              if /\AuserField_[\d+]\z/.match(k)
+                fields[k] = v
+              end
+              fields
+            end
           end
 
           alias_method :client_id, :eshop_id
