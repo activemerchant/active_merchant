@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
         mattr_accessor :production_url, :test_url
         
         self.production_url = "https://www.timesofmoney.com/direcpay/secure/dpMerchantTransaction.jsp"
-        self.test_url       = "https://test.timesofmoney.com/direcpay/secure/dpMerchantTransaction.jsp"
+        self.test_url       = "https://test.direcpay.com/direcpay/secure/dpMerchantTransaction.jsp"
 
         def self.service_url
           mode = ActiveMerchant::Billing::Base.integration_mode
