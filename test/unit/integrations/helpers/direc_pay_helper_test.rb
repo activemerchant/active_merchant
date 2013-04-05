@@ -238,7 +238,7 @@ class DirecPayHelperTest < Test::Unit::TestCase
 
   def test_status_update_in_test_mode
     params = "dummy-authorization|1234|http://localhost/notify"
-    DirecPay::Status.any_instance.expects(:ssl_get).with("https://test.timesofmoney.com/direcpay/secure/dpPullMerchAtrnDtls.jsp?requestparams=#{CGI.escape(params)}")
+    DirecPay::Status.any_instance.expects(:ssl_get).with("https://test.direcpay.com/direcpay/secure/dpMerchantTransaction.jsp?requestparams=#{CGI.escape(params)}")
 
     DirecPay::Status.new(1234, :test => true).update("dummy-authorization", "http://localhost/notify")
   end

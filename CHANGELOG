@@ -3,6 +3,7 @@
 * Netaxept: Completely revamped to use the "M" service type [rbjordan3, ntalbott]
 * Litle: Void authorizations via an auth reversal [jrust]
 * Add RBK Money integration [england]
+* Direcpay: Update test url [ashish-d]
 
 == Version 1.32.1 (April 4, 2013)
 
