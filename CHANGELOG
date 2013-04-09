@@ -5,6 +5,7 @@
 * Add RBK Money integration [england]
 * Direcpay: Update test url [ashish-d]
 * PayPal Express gateway: Add support for creating billing agreements [fabiokr]
+* PayPal Express gateway: Add reference authorizations [fabiokr]
 
 == Version 1.32.1 (April 4, 2013)
 

@@ -63,6 +63,12 @@ module ActiveMerchant #:nodoc:
         commit 'CreateBillingAgreement', build_create_billing_agreement_request(token, options)
       end
 
+      def authorize_reference_transaction(money, options = {})
+        requires!(options, :reference_id, :payment_type, :invoice_id, :description, :ip)
+
+        commit 'DoReferenceTransaction', build_reference_transaction_request('Authorization', money, options)
+      end
+
       def reference_transaction(money, options = {})
         requires!(options, :reference_id, :payment_type, :invoice_id, :description, :ip)
 
