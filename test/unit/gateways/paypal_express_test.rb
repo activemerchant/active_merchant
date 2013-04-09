@@ -391,6 +391,21 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal '127.0.0.1', REXML::XPath.first(xml, '//DoReferenceTransactionReq/DoReferenceTransactionRequest/n2:DoReferenceTransactionRequestDetails/n2:IPAddress').text
   end
 
+  def test_authorize_reference_transaction
+    @gateway.expects(:ssl_post).returns(successful_authorize_reference_transaction_response)
+
+    response = @gateway.authorize_reference_transaction(2000,  {
+      :reference_id => "ref_id",
+      :payment_type => 'Any',
+      :invoice_id   => 'invoice_id',
+      :description  => 'Description',
+      :ip           => '127.0.0.1' })
+
+    assert_equal "Success", response.params['ack']
+    assert_equal "Success", response.message
+    assert_equal "9R43552341412482K", response.authorization
+  end
+
   def test_reference_transaction
     @gateway.expects(:ssl_post).returns(successful_reference_transaction_response)
 
@@ -581,6 +596,55 @@ class PaypalExpressTest < Test::Unit::TestCase
   </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
 
+    RESPONSE
+  end
+
+
+def successful_authorize_reference_transaction_response
+  <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ed="urn:ebay:apis:EnhancedDataTypes" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ns="urn:ebay:api:PayPalAPI">
+  <SOAP-ENV:Header>
+    <Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext" xsi:type="wsse:SecurityType"></Security>
+    <RequesterCredentials xmlns="urn:ebay:api:PayPalAPI" xsi:type="ebl:CustomSecurityHeaderType">
+      <Credentials xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:UserIdPasswordType">
+        <Username xsi:type="xs:string"></Username>
+        <Password xsi:type="xs:string"></Password>
+        <Signature xsi:type="xs:string">OMGOMGOMG</Signature>
+        <Subject xsi:type="xs:string"></Subject>
+        </Credentials>
+      </RequesterCredentials>
+    </SOAP-ENV:Header>
+  <SOAP-ENV:Body id="_0">
+    <DoReferenceTransactionResponse xmlns="urn:ebay:api:PayPalAPI">
+      <Timestamp xmlns="urn:ebay:apis:eBLBaseComponents">2011-05-23T21:36:32Z</Timestamp>
+      <Ack xmlns="urn:ebay:apis:eBLBaseComponents">Success</Ack>
+      <CorrelationID xmlns="urn:ebay:apis:eBLBaseComponents">4d6d3af55369b</CorrelationID>
+      <Version xmlns="urn:ebay:apis:eBLBaseComponents">72</Version>
+      <Build xmlns="urn:ebay:apis:eBLBaseComponents">1863577</Build>
+      <DoReferenceTransactionResponseDetails xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:DoReferenceTransactionResponseDetailsType">
+        <BillingAgreementID xsi:type="xs:string">B-3R788221G4476823M</BillingAgreementID>
+        <PaymentInfo xsi:type="ebl:PaymentInfoType">
+          <TransactionID>9R43552341412482K</TransactionID>
+          <ParentTransactionID xsi:type="ebl:TransactionId"></ParentTransactionID>
+          <ReceiptID></ReceiptID>
+          <TransactionType xsi:type="ebl:PaymentTransactionCodeType">mercht-pmt</TransactionType>
+          <PaymentType xsi:type="ebl:PaymentCodeType">instant</PaymentType>
+          <PaymentDate xsi:type="xs:dateTime">2011-05-23T21:36:32Z</PaymentDate>
+          <GrossAmount xsi:type="cc:BasicAmountType" currencyID="USD">190.00</GrossAmount>
+          <FeeAmount xsi:type="cc:BasicAmountType" currencyID="USD">5.81</FeeAmount>
+          <TaxAmount xsi:type="cc:BasicAmountType" currencyID="USD">0.00</TaxAmount>
+          <ExchangeRate xsi:type="xs:string"></ExchangeRate>
+          <PaymentStatus xsi:type="ebl:PaymentStatusCodeType">Completed</PaymentStatus>
+          <PendingReason xsi:type="ebl:PendingStatusCodeType">none</PendingReason>
+          <ReasonCode xsi:type="ebl:ReversalReasonCodeType">none</ReasonCode>
+          <ProtectionEligibility xsi:type="xs:string">Ineligible</ProtectionEligibility>
+          <ProtectionEligibilityType xsi:type="xs:string">None</ProtectionEligibilityType>
+          </PaymentInfo>
+        </DoReferenceTransactionResponseDetails>
+      </DoReferenceTransactionResponse>
+    </SOAP-ENV:Body>
+  </SOAP-ENV:Envelope>
     RESPONSE
   end
 
