@@ -617,11 +617,11 @@ module ActiveMerchant #:nodoc:
         response = parse(action, ssl_post(endpoint_url, build_request(request), @options[:headers]))
 
         build_response(successful?(response), message_from(response), response,
-    	    :test => test?,
-    	    :authorization => authorization_from(response),
-    	    :fraud_review => fraud_review?(response),
-    	    :avs_result => { :code => response[:avs_code] },
-    	    :cvv_result => response[:cvv2_code]
+          :test => test?,
+          :authorization => authorization_from(response),
+          :fraud_review => fraud_review?(response),
+          :avs_result => { :code => response[:avs_code] },
+          :cvv_result => response[:cvv2_code]
         )
       end
 
@@ -630,7 +630,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response[:transaction_id] || response[:authorization_id] || response[:refund_transaction_id] # middle one is from reauthorization
+        (
+          response[:transaction_id] ||
+          response[:authorization_id] ||
+          response[:refund_transaction_id] ||
+          response[:billing_agreement_id]
+        )
       end
 
       def successful?(response)
