@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def reference_transaction(money, options = {})
-        requires!(options, :reference_id, :payment_type, :invoice_id, :description, :ip)
+        requires!(options, :reference_id)
 
         commit 'DoReferenceTransaction', build_reference_transaction_request('Sale', money, options)
       end
