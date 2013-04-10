@@ -273,12 +273,6 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal '0.50', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:OrderTotal').text
   end
 
-  def test_handles_zero_amount
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', 0, {}))
-
-    assert_equal '1.00', REXML::XPath.first(xml, '//n2:PaymentDetails/n2:OrderTotal').text
-  end
-
   def test_amount_format_for_jpy_currency
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/n2:OrderTotal currencyID=.JPY.>1<\/n2:OrderTotal>/), {}).returns(successful_authorization_response)
     response = @gateway.authorize(100, :token => 'EC-6WS104951Y388951L', :payer_id => 'FWRVKNRRZ3WUC', :currency => 'JPY')
@@ -472,16 +466,6 @@ class PaypalExpressTest < Test::Unit::TestCase
 
     assert_equal 'Sole', REXML::XPath.first(xml, '//n2:SolutionType').text
     assert_equal 'Billing', REXML::XPath.first(xml, '//n2:LandingPage').text
-  end
-
-  def test_build_setup_request_money_defaults_money_to_100
-    xml = REXML::Document.new(@gateway.send(:build_setup_request, 'SetExpressCheckout', nil, {}))
-    assert_equal '1.00', REXML::XPath.first(xml, '//n2:OrderTotal').text
-  end
-
-  def test_build_reference_transaction_request_defaults_money_to_100
-    xml = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 'Sale', nil, {}))
-    assert_equal '1.00', REXML::XPath.first(xml, '//n2:OrderTotal').text
   end
 
   def test_not_adds_brand_name_if_not_specified
