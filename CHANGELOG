@@ -10,6 +10,7 @@
 * Pin: Fix special headers [duff]
 * PayPal Express gateway: Remember the billing agreement id as Response#authorization [duff]
 * PayPal Express gateway: Allow an amount of 0 [duff]
+* PayPal Express gateway: Reduce parameter requirements [duff]
 
 == Version 1.32.1 (April 4, 2013)
 

@@ -403,12 +403,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   def test_reference_transaction
     @gateway.expects(:ssl_post).returns(successful_reference_transaction_response)
 
-    response = @gateway.reference_transaction(2000,  {
-      :reference_id => "ref_id",
-      :payment_type => 'Any',
-      :invoice_id   => 'invoice_id',
-      :description  => 'Description',
-      :ip           => '127.0.0.1' })
+    response = @gateway.reference_transaction(2000,  { :reference_id => "ref_id" })
 
     assert_equal "Success", response.params['ack']
     assert_equal "Success", response.message
@@ -416,19 +411,8 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
   def test_reference_transaction_requires_fields
-    valid_options = {
-      :reference_id => "ref_id",
-      :payment_type => 'Any',
-      :invoice_id   => 'invoice_id',
-      :description  => 'Description',
-      :ip           => '127.0.0.1' }
-
-    [:reference_id, :payment_type, :invoice_id, :description, :ip].each do |field|
-      options = valid_options.dup
-      options.delete(field)
-      assert_raise ArgumentError do
-        @gateway.reference_transaction(2000, options)
-      end
+    assert_raise ArgumentError do
+      @gateway.reference_transaction(2000, {})
     end
   end
 
