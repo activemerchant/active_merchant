@@ -119,8 +119,8 @@ module ActiveMerchant #:nodoc:
 
             if post =~ /-{20,40}\w{6,24}/
               @raw = post.to_s
-              post.split(/-{20,40}\w{6,24}/m).each do |part|
-                part.scan(/(.*)[\n\r]{2,4}(.*)\s*/m) do |header, value|
+              post.split(/-{20,40}\w{6,24}[\n\r]*/m).each do |part|
+                part.scan(/([^\n\r]+)[\n\r]+([^\n\r]*)/m) do |header, value|
                   if header.match(/name=["'](.*)["']/)
                     params[$1] = value.strip
                   end

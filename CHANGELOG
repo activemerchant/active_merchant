@@ -15,6 +15,7 @@
 * Sage gateway: Deprecate #credit call [duff]
 * Update notification generator to better match current notification class [lulalala]
 * Paymill gateway: Change .com -> .de [louiskearns]
+* Quickpay integration: Fix v6 response parsing [larspind]
 
 == Version 1.32.1 (April 4, 2013)
 
