@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
           end
 
           # Provide access to raw fields from quickpay
-          %w(msgtype ordernumber state chstat chstatmsg qpstat qpstatmsg merchant merchantemail cardtype cardnumber cardhash cardexpire splitpayment fraudprobability fraudremarks fraudreport fee).each do |attr|
+          %w(msgtype ordernumber state chstat chstatmsg qpstat qpstatmsg merchant merchantemail cardtype cardnumber cardhash cardexpire acquirer splitpayment fraudprobability fraudremarks fraudreport fee).each do |attr|
             define_method(attr) do
               params[attr]
             end
@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
           MD5_CHECK_FIELDS = [
             :msgtype, :ordernumber, :amount, :currency, :time, :state,
             :qpstat, :qpstatmsg, :chstat, :chstatmsg, :merchant, :merchantemail,
-            :transaction, :cardtype, :cardnumber, :cardhash, :cardexpire, :splitpayment, :fraudprobability,
+            :transaction, :cardtype, :cardnumber, :cardhash, :cardexpire, :acquirer, :splitpayment, :fraudprobability,
             :fraudremarks, :fraudreport, :fee
           ]
 
