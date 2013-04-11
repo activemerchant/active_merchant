@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
           def initialize(order, account, options = {})
             md5secret options.delete(:credential2)
             super
-            add_field('protocol', '6')
+            add_field('protocol', '7')
             add_field('msgtype', 'authorize')
             add_field('language', 'da')
             add_field('autocapture', 0)
