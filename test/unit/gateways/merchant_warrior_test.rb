@@ -69,6 +69,8 @@ class MerchantWarriorTest < Test::Unit::TestCase
 
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
+    @gateway.expects(:formatted_year_for).with(@credit_card)
+    @gateway.expects(:formatted_month_for).with(@credit_card)
 
     assert store = @gateway.store(@credit_card, @options)
     assert_success store
