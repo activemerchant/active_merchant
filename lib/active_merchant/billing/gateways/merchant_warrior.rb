@@ -62,8 +62,8 @@ module ActiveMerchant #:nodoc:
         post = {
           'cardName' => creditcard.name,
           'cardNumber' => creditcard.number,
-          'cardExpiryMonth' => sprintf('%02d', creditcard.month),
-          'cardExpiryYear' => sprintf('%02d', creditcard.year)
+          'cardExpiryMonth' => format(creditcard.month, :two_digits),
+          'cardExpiryYear'  => format(creditcard.year, :two_digits)
         }
         commit('addCard', post)
       end
