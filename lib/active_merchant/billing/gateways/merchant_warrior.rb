@@ -62,8 +62,8 @@ module ActiveMerchant #:nodoc:
         post = {
           'cardName' => creditcard.name,
           'cardNumber' => creditcard.number,
-          'cardExpiryMonth' => sprintf('%02d', creditcard.month),
-          'cardExpiryYear' => sprintf('%02d', creditcard.year)
+          'cardExpiryMonth' => formatted_month_for(creditcard),
+          'cardExpiryYear'  => formatted_year_for(creditcard)
         }
         commit('addCard', post)
       end
@@ -184,6 +184,21 @@ module ActiveMerchant #:nodoc:
 
       def post_data(post)
         post.collect{|k,v| "#{k}=#{CGI.escape(v.to_s)}" }.join("&")
+      end
+
+      def formatted_year_for(creditcard)
+        date(creditcard).strftime("%y")
+      end
+
+      def formatted_month_for(creditcard)
+        date(creditcard).strftime("%m")
+      end
+
+      def date(creditcard)
+        time  = ->{ Time.now }
+        year  = creditcard.year  or time.().year
+        month = creditcard.month or time.().month
+        Date.new(year, month)
       end
     end
   end
