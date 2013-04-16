@@ -13,6 +13,7 @@
 * PayPal Express gateway: Reduce parameter requirements [duff]
 * Quickpay integration: Update notification parser to handle API v6 [larspind]
 * Sage gateway: Deprecate #credit call [duff]
+* Update notification generator to better match current notification class [lulalala]
 
 == Version 1.32.1 (April 4, 2013)
 
