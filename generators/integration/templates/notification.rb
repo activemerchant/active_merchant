@@ -87,10 +87,10 @@ module ActiveMerchant #:nodoc:
 
           # Take the posted data and move the relevant data into a hash
           def parse(post)
-            @raw = post
-            for line in post.split('&')
-              key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
-              params[key] = value
+            @raw = post.to_s
+            for line in @raw.split('&')
+              key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
+              params[key] = CGI.unescape(value)
             end
           end
         end
