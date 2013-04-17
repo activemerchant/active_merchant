@@ -12,6 +12,7 @@
 * PayPal Express gateway: Allow an amount of 0 [duff]
 * PayPal Express gateway: Reduce parameter requirements [duff]
 * Quickpay integration: Update notification parser to handle API v6 [larspind]
+* Sage gateway: Deprecate #credit call [duff]
 
 == Version 1.32.1 (April 4, 2013)
 
