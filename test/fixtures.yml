@@ -263,6 +263,10 @@ moneris_us:
   login: monusqa002
   password: qatoken
 
+money_movers:
+  login: demo
+  password: password
+
 # Working credentials, no need to replace
 nab_transact:
   login: ABC0001
