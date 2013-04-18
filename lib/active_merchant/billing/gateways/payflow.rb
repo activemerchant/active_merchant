@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
         commit(request, options.merge(:request_type => :recurring))
       end
 
-      def cancel_recurring(profile_id)
+      def cancel_recurring(profile_id, options = {})
         request = build_recurring_request(:cancel, 0, :profile_id => profile_id)
         commit(request, options.merge(:request_type => :recurring))
       end
