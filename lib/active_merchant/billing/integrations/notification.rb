@@ -8,6 +8,9 @@ module ActiveMerchant #:nodoc:
         # set this to an array in the subclass, to specify which IPs are allowed to send requests
         class_attribute :production_ips
 
+        # * *Args*    :
+        #   - +doc+ -> raw post string
+        #   - +options+ -> custom options which individual implementations can utilize
         def initialize(post, options = {})
           @options = options
           empty!
