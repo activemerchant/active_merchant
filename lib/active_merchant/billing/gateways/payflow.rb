@@ -71,6 +71,16 @@ module ActiveMerchant #:nodoc:
         commit(request, options.merge(:request_type => :recurring))
       end
 
+      def reactivate_recurring(profile_id, options={})
+        request = build_recurring_request(:reactivate, 0, options.merge({:profile_id => profile_id}))
+        commit(request, :recurring)
+      end
+
+      def recurring_payment_retry(profile_id, payment_num, money)
+        request = build_recurring_request(:payment, money, {:profile_id => profile_id, :payment_num => payment_num})
+        commit(request, :recurring)
+      end
+
       def express
         @express ||= PayflowExpressGateway.new(@options)
       end
