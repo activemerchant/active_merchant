@@ -18,7 +18,3 @@ notifications:
   email:
     - integrations-team@shopify.com
     - nathaniel@talbott.ws
-
-matrix:
-  allow_failures:
-    - rvm: 2.0.0
