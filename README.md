@@ -12,7 +12,7 @@ Ruby applications which deal with financial transactions. It is maintained by th
 [Shopify](http://www.shopify.com) and [Spreedly](https://spreedly.com) teams, with much help
 from an ever-growing set of contributors.
 
-See {file:GettingStarted.md} if you want to learn more about using Active Merchant in your
+See [GettingStarted.md](GettingStarted.md) if you want to learn more about using Active Merchant in your
 applications.
 
 ## Installation
@@ -72,7 +72,7 @@ credit card details.
       end
     end
 
-For more in-depth documentation and tutorials, see {file:GettingStarted.md} and the
+For more in-depth documentation and tutorials, see [GettingStarted.md](GettingStarted.md) and the
 [API documentation](http://rubydoc.info/github/Shopify/active_merchant/master/file/README.md).
 
 ## Supported Direct Payment Gateways
