@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'test_helper'
 
 class PayflowLinkHelperTest < Test::Unit::TestCase
@@ -41,6 +42,17 @@ class PayflowLinkHelperTest < Test::Unit::TestCase
 
   def test_description_cleaned
     @helper.description "#my order#"
+    @helper.expects(:ssl_post).with { |url, data|
+      params = parse_params(data)
+
+      'my order' == params["description[8]"]
+    }.returns("RESPMSG=APPROVED&SECURETOKEN=aaa&SECURETOKENID=yyy")
+
+    @helper.form_fields
+  end
+
+  def test_description_transliterate
+    @helper.description "#my ordér"
     @helper.expects(:ssl_post).with { |url, data|
       params = parse_params(data)
 

@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
           mapping :customer, { :first_name => 'first_name', :last_name => 'last_name' }
 
           def description(value)
-            add_field('description', "#{value}".delete("#"))
+            add_field('description', ActiveSupport::Inflector.transliterate("#{value}").delete("#"))
           end
 
           def customer(params = {})
