@@ -53,10 +53,16 @@ class PayflowLinkHelperTest < Test::Unit::TestCase
 
   def test_description_transliterate
     @helper.description "#my ordér"
+
     @helper.expects(:ssl_post).with { |url, data|
       params = parse_params(data)
-
-      'my order' == params["description[8]"]
+      if ActiveSupport::Inflector.method(:transliterate).arity == -2
+        'my order' == params["description[8]"]
+      elsif RUBY_VERSION >= '1.9'
+        'my ordr' == params["description[7]"]
+      else
+        'my order' == params["description[8]"]
+      end
     }.returns("RESPMSG=APPROVED&SECURETOKEN=aaa&SECURETOKENID=yyy")
 
     @helper.form_fields
