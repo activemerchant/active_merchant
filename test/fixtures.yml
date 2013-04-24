@@ -568,6 +568,10 @@ transax:
   login: transaxdemo
   password: nelix123
 
+transnational:
+  login: demo
+  password: password
+
 # Working credentials, no need to replace
 trust_commerce:
   login: 'TestMerchant'

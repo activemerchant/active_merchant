@@ -19,6 +19,7 @@
 * First Data e4: Add TransArmor store/tokenization support [gabetax]
 * MerchantWarrior: Format expiration month/year correctly [klebervirgilio]
 * Add iconv for ActiveSupport 2.3 under Ruby 2.0 [sanemat]
+* Add Transnational gateway [bvandenbos]
 
 == Version 1.32.1 (April 4, 2013)
 
