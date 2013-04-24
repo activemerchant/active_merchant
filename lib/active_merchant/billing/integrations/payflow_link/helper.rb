@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
           mapping :customer, { :first_name => 'first_name', :last_name => 'last_name' }
 
           def description(value)
-            add_field('description', "#{value}".delete("#"))
+            add_field('description', normalize("#{value}").delete("#"))
           end
 
           def customer(params = {})
@@ -96,6 +96,18 @@ module ActiveMerchant #:nodoc:
             end
 
             [response['SECURETOKEN'], response['SECURETOKENID']] if response['RESPMSG'] && response['RESPMSG'].downcase == "approved"
+          end
+
+          def normalize(text)
+            return unless text
+
+            if ActiveSupport::Inflector.method(:transliterate).arity == -2
+              ActiveSupport::Inflector.transliterate(text,'')
+            elsif RUBY_VERSION >= '1.9'
+              text.gsub(/[^\x00-\x7F]+/, '')
+            else
+              ActiveSupport::Inflector.transliterate(text).to_s
+            end
           end
         end
       end
