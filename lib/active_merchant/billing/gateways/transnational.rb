@@ -225,7 +225,7 @@ module ActiveMerchant #:nodoc:
         Response.new(success, rsp['responsetext'], rsp,
           :test => test?,
           :authorization => authorization,
-          :avs_result => { code: rsp['avsresponse']},
+          :avs_result => { :code => rsp['avsresponse']},
           :cvv_result => rsp['cvvresponse']
         )
       end
