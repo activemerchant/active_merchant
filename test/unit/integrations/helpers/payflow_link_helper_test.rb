@@ -3,12 +3,21 @@ require 'test_helper'
 
 class PayflowLinkHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
-  
+
   def setup
+    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
+      @original_kcode = $KCODE
+      $KCODE = 'u'
+    end
+
     @helper = PayflowLink::Helper.new(1121, 'myaccount', :amount => 500, 
                                       :currency => 'CAD', :credential3 => 'PayPal', 
                                       :credential2 => "password", :test => true, :credential4 => '')
     @url = 'http://example.com'
+  end
+
+  def teardown
+    $KCODE = @original_kcode if @original_kcode
   end
 
   def test_basic_helper_fields
