@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
     # not backed by any database.
     #
     # You may use Check in place of CreditCard with any gateway that supports it. Currently, only
-    # +BraintreeGateway+ supports the Check object.
+    # +BraintreeGateway+ and +Authorize.net+ support the Check object.
     class Check
       include Validateable
 

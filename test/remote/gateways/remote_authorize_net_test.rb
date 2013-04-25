@@ -7,6 +7,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @gateway = AuthorizeNetGateway.new(fixtures(:authorize_net))
     @amount = 100
     @credit_card = credit_card('4242424242424242')
+    @check = check
     @options = {
       :order_id => generate_unique_id,
       :billing_address => address,
@@ -37,6 +38,15 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+
+  def test_successful_echeck_purchase
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
   def test_expired_credit_card
     @credit_card.year = 2004
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -56,6 +66,13 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_successful_authorization
     assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_successfule_echeck_authorization
+    assert response = @gateway.authorize(@amount, @check, @options)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
     assert response.authorization
