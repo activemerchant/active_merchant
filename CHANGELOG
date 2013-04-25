@@ -20,6 +20,7 @@
 * MerchantWarrior: Format expiration month/year correctly [klebervirgilio]
 * Add iconv for ActiveSupport 2.3 under Ruby 2.0 [sanemat]
 * Add Transnational gateway [bvandenbos]
+* Authorize.Net: Add Check as payment method [andrunix]
 
 == Version 1.32.1 (April 4, 2013)
 

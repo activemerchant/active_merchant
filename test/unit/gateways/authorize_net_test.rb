@@ -12,6 +12,34 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @credit_card = credit_card
     @subscription_id = '100748'
     @subscription_status = 'active'
+    @check = check
+  end
+
+  def test_successful_echeck_authorization
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+
+    assert response = @gateway.authorize(@amount, @check)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141794', response.authorization
+  end
+
+  def test_successful_echeck_purchase
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @check)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141795', response.authorization
+  end
+
+  def test_failed_echeck_authorization
+    @gateway.expects(:ssl_post).returns(failed_authorization_response)
+
+    assert response = @gateway.authorize(@amount, @check)
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal '508141794', response.authorization
   end
 
   def test_successful_authorization
