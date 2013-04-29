@@ -171,4 +171,26 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
 		assert_failure response
 		assert_equal 'Invalid ID or Key', response.message
 	end
+
+  # On 03/14/2013 MeS has problems with the test enviroment.
+  # Every time you wanted to access the API, it answered 404 NOT FOUND. 
+  # That error message was not rescue anywhere.
+  #
+  # Exmaple of the output generated
+  # test_unsuccessful_void(RemoteMerchantESolutionTest):
+  # ActiveMerchant::ResponseError: Failed with 404 Not Found
+  #     /home/carla/.rvm/gems/ruby-1.9.3-p327@activemerchant/gems/active_utils-1.0.5/lib/active_utils/common/posts_data.rb:64:in `handle_response'
+  #     /home/carla/.rvm/gems/ruby-1.9.3-p327@activemerchant/gems/active_utils-1.0.5/lib/active_utils/common/posts_data.rb:30:in `ssl_request'
+  #     /home/carla/.rvm/gems/ruby-1.9.3-p327@activemerchant/gems/active_utils-1.0.5/lib/active_utils/common/posts_data.rb:26:in `ssl_post'
+  #     /active_merchant_xagax/lib/active_merchant/billing/gateways/merchant_e_solutions.rb:136:in `commit'
+  #     /active_merchant_xagax/lib/active_merchant/billing/gateways/merchant_e_solutions.rb:87:in `void'
+  #     /active_merchant_xagax/test/remote/gateways/remote_merchant_e_solutions_test.rb:92:in `test_unsuccessful_void'
+  #     /home/carla/.rvm/gems/ruby-1.9.3-p327@activemerchant/gems/mocha-0.11.4/lib/mocha/integration/mini_test/version_230_to_262.rb:28:in `run'
+  def test_connection_failure_404_notfound_with_purchase
+    @gateway.test_url = 'https://cert.merchante-solutions.com/mes-api/tridentApiasdasd'
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Failed with 404 Not Found', response.message    
+  end
+
 end
