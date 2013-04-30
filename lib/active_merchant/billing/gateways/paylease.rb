@@ -138,21 +138,14 @@ module ActiveMerchant #:nodoc:
         raise "Gateway response does not appear to be XML" unless xml.root
         response[:test] = xml.root.elements["Mode"].text == "Test"
         
-        xml = REXML::XPath.first(xml, "//Transaction")
-        if xml
-          response[:trans_id] = xml.elements['TransactionId'].text if xml.elements['TransactionId']
-          response[:status] = xml.elements['Status'].text
-          response[:code] = xml.elements['Code'].text.to_i
-          response[:message] = xml.elements['Message'].text
+        parsed = REXML::XPath.first(xml, "//Transaction") || parsed = REXML::XPath.first(xml, "//Error")
+        if parsed
+          response[:trans_id] = parsed.elements['TransactionId'].text if parsed.elements['TransactionId']
+          response[:status] = parsed.elements['Status'].text
+          response[:code] = parsed.elements['Code'].text.to_i
+          response[:message] = parsed.elements['Message'].text
         else
-          xml = REXML::XPath.first(xml, "//Error")
-          if xml
-            response[:status] = xml.elements['Status'].text
-            response[:code] = xml.elements['Code'].text.to_i
-            response[:message] = xml.elements['Message'].text            
-          else
-            raise "Unknown response from paylease: #{data}"
-          end
+          raise "Unknown response from paylease: #{data}"
         end
                 
         response
