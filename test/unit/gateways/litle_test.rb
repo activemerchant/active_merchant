@@ -375,7 +375,7 @@ class LitleTest < Test::Unit::TestCase
     responseFrom = @gateway.authorize(0, creditcard)
     assert_equal true, responseFrom.success?
     assert_equal 'successful', responseFrom.message
-    assert_equal '1234', responseFrom.authorization
+    assert_equal '1234;authorization', responseFrom.authorization
     assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse']['authorizationResponse']['litleToken']
   end
 
@@ -443,7 +443,7 @@ class LitleTest < Test::Unit::TestCase
     creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.authorize(0, creditcard)
     assert_equal false, responseFrom.success?
-    assert_equal '1234', responseFrom.authorization
+    assert_equal '1234;authorization', responseFrom.authorization
     assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse']['authorizationResponse']['litleToken']
   end
 
@@ -465,7 +465,7 @@ class LitleTest < Test::Unit::TestCase
     creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.purchase(0, creditcard)
     assert_equal true, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.authorization
+    assert_equal '123456789012345678;sale', responseFrom.authorization
   end
 
   def test_purchase_pass_with_token
@@ -482,7 +482,7 @@ class LitleTest < Test::Unit::TestCase
 
     responseFrom = @gateway.purchase(0, '171299999999999', options)
     assert_equal true, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.authorization
+    assert_equal '123456789012345678;sale', responseFrom.authorization
   end
 
   def test_purchase_fail
@@ -493,7 +493,7 @@ class LitleTest < Test::Unit::TestCase
     creditcard = CreditCard.new(@credit_card_options)
     responseFrom = @gateway.purchase(0, creditcard)
     assert_equal false, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.authorization
+    assert_equal '123456789012345678;sale', responseFrom.authorization
   end
 
   def test_purchase_fail_schema
@@ -513,7 +513,7 @@ class LitleTest < Test::Unit::TestCase
     authorization = "1234"
     responseFrom = @gateway.capture(0, authorization)
     assert_equal true, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.authorization
+    assert_equal '123456789012345678;capture', responseFrom.authorization
   end
 
   def test_capture_fail
@@ -523,7 +523,7 @@ class LitleTest < Test::Unit::TestCase
     authorization = "1234"
     responseFrom = @gateway.capture(0, authorization)
     assert_equal false, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.authorization
+    assert_equal '123456789012345678;capture', responseFrom.authorization
   end
 
   def test_capture_fail_schema
@@ -535,30 +535,59 @@ class LitleTest < Test::Unit::TestCase
     assert_equal 'Error validating xml data against the schema', responseFrom.message
   end
 
-  def test_void_pass
+  def test_void_sale_pass
     voidResponseObj = {'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'}
     retObj = {'response'=>'0','voidResponse'=>voidResponseObj}
     LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
-    identification = "1234"
+    identification = "1234;sale"
     responseFrom = @gateway.void(identification)
     assert_equal true, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.authorization
+    assert_equal '123456789012345678;void', responseFrom.authorization
   end
 
-  def test_void_fail
+  def test_void_sale_fail
     voidResponseObj = {'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'}
     retObj = {'response'=>'0','voidResponse'=>voidResponseObj}
     LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
-    identification = "1234"
+    identification = "1234;sale"
     responseFrom = @gateway.void(identification)
     assert_equal false, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.authorization
+    assert_equal '123456789012345678;void', responseFrom.authorization
   end
 
-  def test_void_fail_schema
+  def test_void_sale_fail_schema
     retObj = {'response'=>'1','message'=>'Error validating xml data against the schema'}
     LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
-    identification = "1234"
+    identification = "1234;sale"
+    responseFrom = @gateway.void(identification)
+    assert_equal false, responseFrom.success?
+    assert_equal 'Error validating xml data against the schema', responseFrom.message
+  end
+
+  def test_void_authorization_pass
+    authReversalResponseObj = {'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'}
+    retObj = {'response'=>'0','authReversalResponse'=>authReversalResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
+    identification = "1234;authorization"
+    responseFrom = @gateway.void(identification)
+    assert_equal true, responseFrom.success?
+    assert_equal '123456789012345678;authReversal', responseFrom.authorization
+  end
+
+  def test_void_authorization_fail
+    authReversalResponseObj = {'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'}
+    retObj = {'response'=>'0','authReversalResponse'=>authReversalResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
+    identification = "1234;authorization"
+    responseFrom = @gateway.void(identification)
+    assert_equal false, responseFrom.success?
+    assert_equal '123456789012345678;authReversal', responseFrom.authorization
+  end
+
+  def test_void_authorization_fail_schema
+    retObj = {'response'=>'1','message'=>'Error validating xml data against the schema'}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
+    identification = "1234;authorization"
     responseFrom = @gateway.void(identification)
     assert_equal false, responseFrom.success?
     assert_equal 'Error validating xml data against the schema', responseFrom.message
@@ -568,26 +597,26 @@ class LitleTest < Test::Unit::TestCase
     creditResponseObj = {'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'}
     retObj = {'response'=>'0','creditResponse'=>creditResponseObj}
     LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
-    identification = "1234"
+    identification = "1234;credit"
     responseFrom = @gateway.credit(0, identification)
     assert_equal true, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.authorization
+    assert_equal '123456789012345678;credit', responseFrom.authorization
   end
 
   def test_credit_fail
     creditResponseObj = {'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'}
     retObj = {'response'=>'0','creditResponse'=>creditResponseObj}
     LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
-    identification = "1234"
+    identification = "1234;credit"
     responseFrom = @gateway.credit(0, identification)
     assert_equal false, responseFrom.success?
-    assert_equal '123456789012345678', responseFrom.authorization
+    assert_equal '123456789012345678;credit', responseFrom.authorization
   end
 
   def test_credit_fail_schema
     retObj = {'response'=>'1','message'=>'Error validating xml data against the schema'}
     LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
-    identification = '1234'
+    identification = '1234;credit'
     responseFrom = @gateway.credit(0, identification)
     assert_equal false, responseFrom.success?
     assert_equal 'Error validating xml data against the schema', responseFrom.message

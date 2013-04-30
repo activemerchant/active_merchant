@@ -63,14 +63,14 @@ class RemoteSageTest < Test::Unit::TestCase
     assert_success void
   end
 
-  def test_visa_credit
-    assert response = @gateway.credit(@amount, @visa, @options)
+  def test_visa_refund
+    assert response = @gateway.refund(@amount, @visa, @options)
     assert_success response
     assert response.test?
   end
   
-  def test_check_credit
-    assert response = @gateway.credit(@amount, @check, @options)
+  def test_check_refund
+    assert response = @gateway.refund(@amount, @check, @options)
     assert_success response
     assert response.test?
   end

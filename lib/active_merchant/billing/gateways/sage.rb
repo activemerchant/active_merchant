@@ -119,17 +119,22 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # Performs a credit transaction. (Sage +Credit+ transaction).
+      def credit(money, source, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, source, options)
+      end
+
+      # Performs a refund transaction.
       #
       # ==== Parameters
       #
       # * <tt>money</tt> - The amount to be authorized as an integer value in cents.
-      # * <tt>source</tt> - The CreditCard or Check object to be used as the target for the credit.
-      def credit(money, source, options = {})
+      # * <tt>source</tt> - The CreditCard or Check object to be used as the target for the refund.
+      def refund(money, source, options = {})
         if card_brand(source) == "check"
-          virtual_check.credit(money, source, options)
+          virtual_check.refund(money, source, options)
         else
-          bankcard.credit(money, source, options)
+          bankcard.refund(money, source, options)
         end
       end
 
