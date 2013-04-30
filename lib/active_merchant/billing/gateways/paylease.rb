@@ -144,12 +144,15 @@ module ActiveMerchant #:nodoc:
           response[:status] = xml.elements['Status'].text
           response[:code] = xml.elements['Code'].text.to_i
           response[:message] = xml.elements['Message'].text
-        elsif xml = REXML::XPath.first(xml, "//Error")
-          response[:status] = xml.elements['Status'].text
-          response[:code] = xml.elements['Code'].text.to_i
-          response[:message] = xml.elements['Message'].text
         else
-          raise "Unknown response from paylease: #{data}"
+          xml = REXML::XPath.first(xml, "//Error")
+          if xml
+            response[:status] = xml.elements['Status'].text
+            response[:code] = xml.elements['Code'].text.to_i
+            response[:message] = xml.elements['Message'].text            
+          else
+            raise "Unknown response from paylease: #{data}"
+          end
         end
                 
         response
