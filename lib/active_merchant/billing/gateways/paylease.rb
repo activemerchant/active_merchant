@@ -135,7 +135,7 @@ module ActiveMerchant #:nodoc:
         response[:original_data] = data
         
         xml = REXML::Document.new(data)
-        raise "Gateway communication error" unless xml.root
+        raise "Gateway response does not appear to be XML" unless xml.root
         response[:test] = xml.root.elements["Mode"].text == "Test"
         
         xml = REXML::XPath.first(xml, "//Transaction")
@@ -144,10 +144,14 @@ module ActiveMerchant #:nodoc:
           response[:status] = xml.elements['Status'].text
           response[:code] = xml.elements['Code'].text.to_i
           response[:message] = xml.elements['Message'].text
+        elsif xml = REXML::XPath.first(xml, "//Error")
+          response[:status] = xml.elements['Status'].text
+          response[:code] = xml.elements['Code'].text.to_i
+          response[:message] = xml.elements['Message'].text
         else
           raise "Unknown response from paylease: #{data}"
         end
-        
+                
         response
       end
       
