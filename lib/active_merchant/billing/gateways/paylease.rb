@@ -145,7 +145,7 @@ module ActiveMerchant #:nodoc:
           response[:code] = xml.elements['Code'].text.to_i
           response[:message] = xml.elements['Message'].text
         else
-          raise "Unknown gateway error"
+          raise "Unknown response from paylease: #{data}"
         end
         
         response
