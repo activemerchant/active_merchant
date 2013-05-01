@@ -1,3 +1,8 @@
+# Dwolla ActiveMerchant Integration
+# http://www.dwolla.com/
+# Authors: Michael Schonfeld <michael@dwolla.com>, Gordon Zheng <gordon@dwolla.com>
+# Date: May 1, 2013
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:

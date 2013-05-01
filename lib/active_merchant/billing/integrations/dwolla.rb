@@ -1,3 +1,8 @@
+# Dwolla ActiveMerchant Integration
+# http://www.dwolla.com/
+# Authors: Michael Schonfeld <michael@dwolla.com>, Gordon Zheng <gordon@dwolla.com>
+# Date: May 1, 2013
+
 # All mappings in helper.rb are required fields to be sent to Dwolla.
 # :account = 'Dwolla Id of merchant'
 # :credential2 = 'key from Dwolla Application'

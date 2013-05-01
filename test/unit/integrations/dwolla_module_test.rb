@@ -1,5 +1,9 @@
-require 'test_helper'
+# Dwolla ActiveMerchant Integration
+# http://www.dwolla.com/
+# Authors: Michael Schonfeld <michael@dwolla.com>, Gordon Zheng <gordon@dwolla.com>
+# Date: May 1, 2013
 
+require 'test_helper'
 
 class DwollaModuleTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
