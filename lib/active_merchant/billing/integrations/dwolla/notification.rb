@@ -6,6 +6,8 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Dwolla
         class Notification < ActiveMerchant::Billing::Integrations::Notification
+          include Common
+
           def initialize(data, options)
             if options[:credential3].nil?
               raise ArgumentError, "You need to provide the Application secret as the option :credential3 to verify that the notification originated from Dwolla"
@@ -57,15 +59,7 @@ module ActiveMerchant #:nodoc:
             json_post = JSON.parse(post)
 
             # generate and check signature here before merging with params
-            checkoutId = json_post['CheckoutId']
-            amount = json_post['Amount']
-            secret = @options[:credential3]
-            notification_signature = json_post['Signature']
-            expected_signature = Digest::SHA1.hexdigest(secret + ('%s&%.2f' % [checkoutId, amount]))
-
-            if notification_signature != expected_signature
-              raise StandardError, "Callback signature did not verify."
-            end
+            verify_signature(json_post['CheckoutId'], json_post['Amount'], json_post['Signature'])
 
             params.merge!(json_post)
           end

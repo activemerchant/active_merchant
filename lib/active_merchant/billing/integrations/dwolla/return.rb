@@ -3,24 +3,16 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Dwolla
         class Return < ActiveMerchant::Billing::Integrations::Return
+          include Common
 
           def initialize(data, options)
             if options[:credential3].nil?
               raise ArgumentError, "You need to provide the Application secret as the option :credential3 to verify that the redirect originated from Dwolla"
             end
             
-            params  = parse(data)
-
             # verify signature
-            checkoutId = params['checkoutId']
-            amount = params['amount']
-            secret = options[:credential3]
-            notification_signature = params['signature']
-            expected_signature = Digest::SHA1.hexdigest(secret + ('%s&%.2f' % [checkoutId, amount]))
-
-            if notification_signature != expected_signature
-              raise StandardError, "Callback signature did not verify."
-            end
+            params = parse(data)
+            verify_signature(params['checkoutId'], params['amount'], params['signature'])
 
             super
           end
