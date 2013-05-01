@@ -49,7 +49,8 @@ module ActiveMerchant #:nodoc:
           def acknowledge      
             true
           end
- private
+        
+        private
           # Take the posted data and move the relevant data into a hash
           def parse(post)
             @raw = post.to_s
@@ -57,7 +58,7 @@ module ActiveMerchant #:nodoc:
 
             # generate and check signature here before merging with params
             checkoutId = json_post['CheckoutId']
-            amount = json_post['Amount']
+            amount = format("%05.2f", params['amount'])
             secret = @options[:credential3]
             notification_signature = json_post['Signature']
             expected_signature = Digest::SHA1.hexdigest(secret + ('%s&%.2f' % [checkoutId, amount]))

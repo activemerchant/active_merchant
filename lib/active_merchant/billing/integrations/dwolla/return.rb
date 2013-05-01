@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
 
             # verify signature
             checkoutId = params['checkoutId']
-            amount = params['amount']
+            amount = format("%05.2f", params['amount'])
             secret = options[:credential3]
             notification_signature = params['signature']
             expected_signature = Digest::SHA1.hexdigest(secret + ('%s&%.2f' % [checkoutId, amount]))
