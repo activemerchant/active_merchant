@@ -6,10 +6,6 @@ module ActiveMerchant #:nodoc:
           include Common
 
           def initialize(data, options)
-            if options[:credential3].nil?
-              raise ArgumentError, "You need to provide the Application secret as the option :credential3 to verify that the redirect originated from Dwolla"
-            end
-            
             # verify signature
             params = parse(data)
             verify_signature(params['checkoutId'], params['amount'], params['signature'])

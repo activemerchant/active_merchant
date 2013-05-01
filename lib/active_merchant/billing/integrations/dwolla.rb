@@ -1,7 +1,7 @@
 # All mappings in helper.rb are required fields to be sent to Dwolla.
 # :account = 'Dwolla Id of merchant'
-# :credential2 = 'key from Dwolla Application'
-# :credential3 = 'secret from Dwolla Application'
+# :credential1 = 'key from Dwolla Application'
+# :credential2 = 'secret from Dwolla Application'
 # :redirect_url = 'can be different that what is specified on Dwolla Application creation'
 # :return_url = 'can be different that what is specified on Dwolla Application creation'
 # :order_id = must be unique for each transaction
