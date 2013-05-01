@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
 
             # generate and check signature here before merging with params
             checkoutId = json_post['CheckoutId']
-            amount = format("%05.2f", params['amount'])
+            amount = json_post['Amount']
             secret = @options[:credential3]
             notification_signature = json_post['Signature']
             expected_signature = Digest::SHA1.hexdigest(secret + ('%s&%.2f' % [checkoutId, amount]))
