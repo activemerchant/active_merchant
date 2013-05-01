@@ -9,8 +9,8 @@ class DwollaReturnTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @failed_callback_dwolla = Dwolla::Return.new(http_raw_data_failed_callback, {:credential3 => 'mysecret'})
-    @dwolla = Dwolla::Return.new(http_raw_data_success, {:credential3 => 'mysecret'})
+    @failed_callback_dwolla = Dwolla::Return.new(http_raw_data_failed_callback, {:credential2 => 'mysecret'})
+    @dwolla = Dwolla::Return.new(http_raw_data_success, {:credential2 => 'mysecret'})
   end
 
   def test_failed_callback_return

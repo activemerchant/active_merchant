@@ -9,8 +9,8 @@ class DwollaNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @error_dwolla = Dwolla::Notification.new(http_raw_error_data, {:credential3 => 'mysecret'})
-    @dwolla = Dwolla::Notification.new(http_raw_success_data, {:credential3 => 'mysecret'})
+    @error_dwolla = Dwolla::Notification.new(http_raw_error_data, {:credential2 => 'mysecret'})
+    @dwolla = Dwolla::Notification.new(http_raw_success_data, {:credential2 => 'mysecret'})
   end
 
   def test_success_accessors

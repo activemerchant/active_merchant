@@ -10,7 +10,7 @@ class DwollaHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
   
   def setup
-    @helper = Dwolla::Helper.new('order-500','812-546-3855', :credential2 => 'mykey', :credential3 => 'mysecret', :amount => 500, :currency => 'USD')
+    @helper = Dwolla::Helper.new('order-500','812-546-3855', :credential1 => 'mykey', :credential2 => 'mysecret', :amount => 500, :currency => 'USD')
   end
  
   def test_basic_helper_fields
