@@ -149,7 +149,8 @@ module ActiveMerchant #:nodoc:
 
         # encrypted tracks
         post[:magnesafe_track_1] = options[:magnesafe_track_1]
-        post[:magnesafe_track_2] = options[:magnesafe_track_1]
+        post[:magnesafe_track_2] = options[:magnesafe_track_2]
+        post[:magnesafe_track_3] = options[:magnesafe_track_3]
         post[:magnesafe_magneprint] = options[:magnesafe_magneprint]
         post[:magnesafe_ksn] = options[:magnesafe_ksn]
         post[:magnesafe_magneprint_status] = options[:magnesafe_magneprint_status]
