@@ -1,16 +1,11 @@
-# Dwolla ActiveMerchant Integration
-# http://www.dwolla.com/
-# Authors: Michael Schonfeld <michael@dwolla.com>, Gordon Zheng <gordon@dwolla.com>
-# Date: May 1, 2013
-
 require 'test_helper'
 
 class DwollaReturnTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @failed_callback_dwolla = Dwolla::Return.new(http_raw_data_failed_callback, {:credential2 => 'mysecret'})
-    @dwolla = Dwolla::Return.new(http_raw_data_success, {:credential2 => 'mysecret'})
+    @failed_callback_dwolla = Dwolla::Return.new(http_raw_data_failed_callback, {:credential3 => 'mysecret'})
+    @dwolla = Dwolla::Return.new(http_raw_data_success, {:credential3 => 'mysecret'})
   end
 
   def test_failed_callback_return

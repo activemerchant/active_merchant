@@ -6,9 +6,8 @@ module ActiveMerchant #:nodoc:
           include Common
 
           def initialize(data, options)
-            # verify signature
             params = parse(data)
-            verify_signature(params['checkoutId'], params['amount'], params['signature'])
+            verify_signature(params['checkoutId'], params['amount'], params['signature'], options[:credential3])
 
             super
           end

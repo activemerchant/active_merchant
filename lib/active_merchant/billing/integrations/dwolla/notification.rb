@@ -50,13 +50,10 @@ module ActiveMerchant #:nodoc:
           end
         
         private
-          # Take the posted data and move the relevant data into a hash
           def parse(post)
             @raw = post.to_s
             json_post = JSON.parse(post)
-
-            # generate and check signature here before merging with params
-            verify_signature(json_post['CheckoutId'], json_post['Amount'], json_post['Signature'])
+            verify_signature(json_post['CheckoutId'], json_post['Amount'], json_post['Signature'], @options[:credential3])
 
             params.merge!(json_post)
           end

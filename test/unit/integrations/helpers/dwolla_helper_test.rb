@@ -1,8 +1,3 @@
-# Dwolla ActiveMerchant Integration
-# http://www.dwolla.com/
-# Authors: Michael Schonfeld <michael@dwolla.com>, Gordon Zheng <gordon@dwolla.com>
-# Date: May 1, 2013
-
 require 'test_helper'
 require 'digest/sha1'
 
@@ -10,7 +5,7 @@ class DwollaHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
   
   def setup
-    @helper = Dwolla::Helper.new('order-500','812-546-3855', :credential1 => 'mykey', :credential2 => 'mysecret', :amount => 500, :currency => 'USD')
+    @helper = Dwolla::Helper.new('order-500','812-546-3855', :credential2 => 'mykey', :credential3 => 'mysecret', :amount => 500, :currency => 'USD')
   end
  
   def test_basic_helper_fields
@@ -20,7 +15,6 @@ class DwollaHelperTest < Test::Unit::TestCase
     assert_field 'key', 'mykey'
     assert_field 'timestamp', Time.now.to_i.to_s
 
-    # test signature is correct
     expected_signature = Digest::SHA1.hexdigest('mysecret' + 'mykey&' + Time.now.to_i.to_s() +'&order-500')
     assert_field 'signature', expected_signature
   end

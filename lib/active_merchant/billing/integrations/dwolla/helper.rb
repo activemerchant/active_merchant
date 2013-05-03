@@ -14,24 +14,19 @@ module ActiveMerchant #:nodoc:
               add_field('test', 'true')
             end 
 
-            # add timestamp
             timestamp = Time.now.to_i.to_s
             add_field('timestamp', timestamp)
-
-            # enable guest checkout
             add_field('allowFundingSources', 'true')
 
-            # generate and add signature
-            key = options[:credential1].to_s
-            secret = options[:credential2].to_s
+            key = options[:credential2].to_s
+            secret = options[:credential3].to_s
             orderid = order.to_s
             signature = Digest::SHA1.hexdigest(secret + "#{key}&#{timestamp}&#{orderid}")
             add_field('signature', signature)
           end
           
-          # Replace with the real mapping
           mapping :account, 'destinationid'
-          mapping :credential1, 'key'
+          mapping :credential2, 'key'
           mapping :notify_url, 'callback'
           mapping :return_url, 'redirect'
           mapping :description, 'description'
