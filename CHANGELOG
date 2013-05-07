@@ -26,6 +26,7 @@
 * Bluepay gateway: Fix Check support; general cleanup [ntalbott]
 * Dwolla: Fix security issues and enable guest checkout [capablemonkey, schonfeld]
 * SagePay gateway: Per-transaction 3D-secure selection [ExxKA]
+* Barclays ePDQ: Handle incorrectly encoded response [jordanwheeler, aprofeit]
 
 == Version 1.32.1 (April 4, 2013)
 
