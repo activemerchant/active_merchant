@@ -59,6 +59,13 @@ class BarclaysEpdqTest < Test::Unit::TestCase
     assert response = @gateway.refund(@amount, "asdfasdf:jklljkll")
     assert_success response
   end
+
+  def test_handling_incorrectly_encoded_message
+    @gateway.expects(:ssl_post).returns(incorrectly_encoded_response)
+
+    assert_nothing_raised { @gateway.purchase(@amount, @credit_card, @options) }
+  end
+
   private
 
   def successful_purchase_response
@@ -441,5 +448,9 @@ class BarclaysEpdqTest < Test::Unit::TestCase
 </EngineDocList>
 
 )
+  end
+
+  def incorrectly_encoded_response
+    successful_purchase_response.gsub("Ottawa", "\xD6ttawa")
   end
 end
