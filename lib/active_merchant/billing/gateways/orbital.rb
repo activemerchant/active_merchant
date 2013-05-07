@@ -153,7 +153,7 @@ module ActiveMerchant #:nodoc:
             add_managed_billing(xml, options)
           end
         end
-        commit(order, :authorize)
+        commit(order, :authorize, options[:trace_number])
       end
 
       # AC – Authorization and Capture
@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
             add_managed_billing(xml, options)
           end
         end
-        commit(order, :purchase)
+        commit(order, :purchase, options[:trace_number])
       end
 
       # MFC - Mark For Capture
@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
           add_refund(xml, options[:currency])
           xml.tag! :CustomerRefNum, options[:customer_ref_num] if @options[:customer_profiles] && options[:profile_txn]
         end
-        commit(order, :refund)
+        commit(order, :refund, options[:trace_number])
       end
 
       def credit(money, authorization, options= {})
@@ -195,7 +195,7 @@ module ActiveMerchant #:nodoc:
         end
 
         order = build_void_request_xml(authorization, options)
-        commit(order, :void)
+        commit(order, :void, options[:trace_number])
       end
 
 
@@ -288,27 +288,26 @@ module ActiveMerchant #:nodoc:
             xml.tag! :AVScity,      address[:city] ? address[:city][0..19] : nil
             xml.tag! :AVSstate,     address[:state]
             xml.tag! :AVSphoneNum,  address[:phone] ? address[:phone].scan(/\d/).join.to_s[0..13] : nil
-            xml.tag! :AVSPhoneType, address[:phone_type] if address[:phone_type]
-
-            add_destination_address(xml, address)
           end
           # can't look in billing address?
           xml.tag! :AVSname, creditcard && creditcard.name ? creditcard.name[0..29] : nil
           xml.tag! :AVScountryCode, avs_supported ? address[:country] : ''
+
+          # Needs to come after AVScountryCode
+          add_destination_address(xml, address) if avs_supported
         end
       end
 
       def add_destination_address(xml, address)
         if address[:dest_zip]
-          xml.tag! :AVSDestzip, address[:dest_zip] ? address[:dest_zip].to_s[0..9] : nil
+          xml.tag! :AVSDestzip,      address[:dest_zip] ? address[:dest_zip].to_s[0..9] : nil
           xml.tag! :AVSDestaddress1, address[:dest_address1] ? address[:dest_address1][0..29] : nil
-          xml.tag! :AVSaddress2, address[:dest_address2] ? address[:dest_address2][0..29] : nil
-          xml.tag! :AVSDestcity, address[:dest_city] ? address[:dest_city][0..19] : nil
-          xml.tag! :AVSDeststate, address[:dest_state]
+          xml.tag! :AVSaddress2,     address[:dest_address2] ? address[:dest_address2][0..29] : nil
+          xml.tag! :AVSDestcity,     address[:dest_city] ? address[:dest_city][0..19] : nil
+          xml.tag! :AVSDeststate,    address[:dest_state]
           xml.tag! :AVSDestphoneNum, address[:dest_phone] ? address[:dest_phone].scan(/\d/).join.to_s[0..13] : nil
-          xml.tag! :AVSDestPhoneType, address[:dest_phone_type] if address[:dest_phone_type]
 
-          xml.tag! :AVSDestname, address[:dest_name] ? address[:dest_name][0..29] : nil
+          xml.tag! :AVSDestname,        address[:dest_name] ? address[:dest_name][0..29] : nil
           xml.tag! :AVSDesccountryCode, address[:dest_country]
         end
       end
@@ -399,8 +398,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit(order, message_type)
+      def commit(order, message_type, trace_number=nil)
         headers = POST_HEADERS.merge("Content-length" => order.size.to_s)
+        headers.merge!( "Trace-number" => trace_number.to_s,
+                        "Merchant-Id" => @options[:merchant_id] ) if @options[:retry_logic] && trace_number
         request = lambda{|url| parse(ssl_post(url, order, headers))}
 
         # Failover URL will be attempted in the event of a connection error
@@ -474,6 +475,8 @@ module ActiveMerchant #:nodoc:
             xml.tag! :Amount, amount(money)
             xml.tag! :Comments, parameters[:comments] if parameters[:comments]
 
+            # CustomerAni, AVSPhoneType and AVSDestPhoneType could be added here.
+
             if parameters[:soft_descriptors].is_a?(OrbitalSoftDescriptors)
               add_soft_descriptors(xml, parameters[:soft_descriptors])
             end
@@ -526,7 +529,6 @@ module ActiveMerchant #:nodoc:
             xml.tag! :AdjustedAmt, parameters[:amount] # setting adjusted amount to nil will void entire amount
             xml.tag! :OrderID, format_order_id(order_id || parameters[:order_id])
             add_bin_merchant_and_terminal(xml, parameters)
-            # HEREHEREHERE
             xml.tag! :ReversalRetryNumber, parameters[:reversal_retry_number] if parameters[:reversal_retry_number]
             xml.tag! :OnlineReversalInd,   parameters[:online_reversal_ind]   if parameters[:online_reversal_ind]
           end
