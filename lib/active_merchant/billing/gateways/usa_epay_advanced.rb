@@ -1600,28 +1600,34 @@ module ActiveMerchant #:nodoc:
         fault = (!response) || (response.length < 1) || response.has_key?('faultcode')
         return [response, success, response['faultstring'], authorization, avs, cvv] if fault
 
-        if response.respond_to?(:[]) && p = response["#{action}_return"]
-          if p.respond_to?(:key?) && p.key?('result_code')
-            success = p['result_code'] == 'A' ? true : false
-            authorization = p['ref_num']
-            avs = AVS_RESULTS[p['avs_result_code']]
-            cvv = p['card_code_result_code']
-          else
-            success = true
+        if response.respond_to?(:[])
+          if p = response["#{action}_return"]
+            if p.respond_to?(:key?) && p.key?('result_code')
+              success = p['result_code'] == 'A' ? true : false
+              authorization = p['ref_num']
+              avs = AVS_RESULTS[p['avs_result_code']]
+              cvv = p['card_code_result_code']
+            else
+              success = true
+            end
+            message = case action
+            when :get_customer_payment_methods
+              p['item']
+            when :get_transaction_custom
+              [p['item']].flatten.inject({}) { |map, field| map[field['field']] = field['value']; map }
+            else
+              p
+            end
+          elsif p = response[:response]
+            message = p # when response is html
           end
-          message = case action
-          when :get_customer_payment_methods
-            p['item']
-          when :get_transaction_custom
-            items = p['item'].kind_of?(Array) ? p['item'] : [p['item']]
-            items.inject({}) { |hash, item| hash[item['field']] = item['value']; hash }
-          else
-            p
-          end
-        elsif response.respond_to?(:[]) && p = response[:response]
-          message = p # when response is html
         end
 
+        #"#{response.message['result']}: #{response.message['error']}"
+        if success == false && message.respond_to?(:[]) && message.respond_to?(:has_key?) && message.has_key?('error')
+          message = message.has_key?('result') ? "#{message['result']}: #{message['error']}" : message['error']
+        end
+        
         [response, success, message, authorization, avs, cvv]
       end
 
