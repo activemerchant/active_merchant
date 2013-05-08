@@ -302,13 +302,13 @@ module ActiveMerchant #:nodoc:
         if address[:dest_zip]
           xml.tag! :AVSDestzip,      address[:dest_zip] ? address[:dest_zip].to_s[0..9] : nil
           xml.tag! :AVSDestaddress1, address[:dest_address1] ? address[:dest_address1][0..29] : nil
-          xml.tag! :AVSaddress2,     address[:dest_address2] ? address[:dest_address2][0..29] : nil
+          xml.tag! :AVSDestaddress2, address[:dest_address2] ? address[:dest_address2][0..29] : nil
           xml.tag! :AVSDestcity,     address[:dest_city] ? address[:dest_city][0..19] : nil
           xml.tag! :AVSDeststate,    address[:dest_state]
           xml.tag! :AVSDestphoneNum, address[:dest_phone] ? address[:dest_phone].scan(/\d/).join.to_s[0..13] : nil
 
           xml.tag! :AVSDestname,        address[:dest_name] ? address[:dest_name][0..29] : nil
-          xml.tag! :AVSDesccountryCode, address[:dest_country]
+          xml.tag! :AVSDestcountryCode, address[:dest_country]
         end
       end
 
@@ -366,6 +366,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! :MBRecurringStartDate,          mb[:start_date].scan(/\d/).join.to_s if mb[:start_date]
           # MMDDYYYY
           xml.tag! :MBRecurringEndDate,            mb[:end_date].scan(/\d/).join.to_s if mb[:end_date]
+          # By default listen to any value set in MBRecurringEndDate.
           xml.tag! :MBRecurringNoEndDateFlag,      mb[:no_end_date_flag] || 'N' # 'Y' || 'N' (Yes or No).
           xml.tag! :MBRecurringMaxBillings,        mb[:max_billings]       if mb[:max_billings]
           xml.tag! :MBRecurringFrequency,          mb[:frequency]          if mb[:frequency]
@@ -375,7 +376,6 @@ module ActiveMerchant #:nodoc:
           xml.tag! :MBMicroPaymentMaxTransactions, mb[:max_transactions]   if mb[:max_transactions]
         end
       end
-
 
       def parse(body)
         response = {}
