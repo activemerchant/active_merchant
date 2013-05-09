@@ -77,7 +77,7 @@ class WirecardTest < Test::Unit::TestCase
     assert response.message[/this is a demo/i]
   end
 
-  def test_successful_authorization_and_capture
+  def test_successful_authorization_and_partial_capture
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response

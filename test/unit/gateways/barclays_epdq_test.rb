@@ -42,12 +42,6 @@ class BarclaysEpdqTest < Test::Unit::TestCase
     end
   end
 
-  def test_refund
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/>asdfasdf</)).returns(successful_credit_response)
-    assert response = @gateway.refund(@amount, "asdfasdf:jklljkll")
-    assert_success response
-  end
-
   def test_credit
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/#{@credit_card.number}/)).returns(successful_credit_response)
     assert response = @gateway.credit(@amount, @credit_card)
@@ -59,6 +53,7 @@ class BarclaysEpdqTest < Test::Unit::TestCase
     assert response = @gateway.refund(@amount, "asdfasdf:jklljkll")
     assert_success response
   end
+
   private
 
   def successful_purchase_response
