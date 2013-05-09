@@ -18,3 +18,10 @@ notifications:
   email:
     - integrations-team@shopify.com
     - nathaniel@talbott.ws
+
+matrix:
+  include:
+    - rvm: 2.0.0
+      gemfile: Gemfile_rails40
+    - rvm: 1.9.3
+      gemfile: Gemfile_rails40
