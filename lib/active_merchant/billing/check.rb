@@ -4,8 +4,7 @@ module ActiveMerchant #:nodoc:
     # of necessary attributes such as checkholder's name, routing and account numbers, but it is
     # not backed by any database.
     #
-    # You may use Check in place of CreditCard with any gateway that supports it. Currently, only
-    # +BraintreeGateway+ supports the Check object.
+    # You may use Check in place of CreditCard with any gateway that supports it.
     class Check
       include Validateable
 
