@@ -11,7 +11,12 @@ end
 
 require 'test/unit'
 require 'money'
-require 'mocha'
+require 'mocha/version'
+if(Mocha::VERSION.split(".")[1].to_i < 12)
+  require 'mocha'
+else
+  require 'mocha/setup'
+end
 require 'yaml'
 require 'json'
 require 'active_merchant'
