@@ -11,7 +11,7 @@ end
 
 require 'test/unit'
 require 'money'
-require 'mocha'
+require 'mocha/setup'
 require 'yaml'
 require 'json'
 require 'active_merchant'
