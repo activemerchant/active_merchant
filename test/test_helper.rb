@@ -11,7 +11,11 @@ end
 
 require 'test/unit'
 require 'money'
-require 'mocha/setup'
+if RUBY_VERSION < '1.9'
+  require 'mocha'
+else
+  require 'mocha/setup'
+end
 require 'yaml'
 require 'json'
 require 'active_merchant'
