@@ -3,6 +3,14 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Dwolla
         class Return < ActiveMerchant::Billing::Integrations::Return
+          include Common
+
+          def initialize(data, options)
+            params = parse(data)
+            verify_signature(params['checkoutId'], params['amount'], params['signature'], options[:credential3])
+
+            super
+          end
 
           def success?
             self.error.nil? && self.callback_success?
@@ -17,7 +25,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def checkout_id
-            params['checkoutid']
+            params['checkoutId']
           end
 
           def transaction

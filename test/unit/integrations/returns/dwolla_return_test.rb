@@ -4,18 +4,8 @@ class DwollaReturnTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @error_dwolla = Dwolla::Return.new(http_raw_data_failure)
-    @failed_callback_dwolla = Dwolla::Return.new(http_raw_data_failed_callback)
-    @dwolla = Dwolla::Return.new(http_raw_data_success)
-  end
-
-  def test_error_return
-    assert_false @error_dwolla.success?
-  end
-
-  def test_error_accessors
-    assert_equal "failure", @error_dwolla.error
-    assert_equal "Invalid application credentials.", @error_dwolla.error_description
+    @failed_callback_dwolla = Dwolla::Return.new(http_raw_data_failed_callback, {:credential3 => 'mysecret'})
+    @dwolla = Dwolla::Return.new(http_raw_data_success, {:credential3 => 'mysecret'})
   end
 
   def test_failed_callback_return
@@ -23,8 +13,8 @@ class DwollaReturnTest < Test::Unit::TestCase
   end
 
   def test_failed_callback_accessors
-    assert_equal "4ac56e71-8a45-4be2-be5e-03a2db87f418", @failed_callback_dwolla.checkout_id
-    assert_equal "1", @failed_callback_dwolla.transaction
+    assert_equal "f32b1e55-9612-4b6d-90f9-1c1519e588da", @failed_callback_dwolla.checkout_id
+    assert_equal "1312616", @failed_callback_dwolla.transaction
     assert @failed_callback_dwolla.test?
   end
 
@@ -33,23 +23,17 @@ class DwollaReturnTest < Test::Unit::TestCase
   end
 
   def test_success_accessors
-    assert_equal "4ac56e71-8a45-4be2-be5e-03a2db87f418", @dwolla.checkout_id
-    assert_equal "1", @dwolla.transaction
+    assert_equal "f32b1e55-9612-4b6d-90f9-1c1519e588da", @dwolla.checkout_id
+    assert_equal "1312616", @dwolla.transaction
     assert @dwolla.test?
   end
   
   private
   def http_raw_data_success
-    "checkoutid=4ac56e71-8a45-4be2-be5e-03a2db87f418&transaction=1&postback=success&test=true"
+    "signature=098d3f32654bd8eebc9db323228879fa2ea12459&test=true&orderId=&amount=0.01&checkoutId=f32b1e55-9612-4b6d-90f9-1c1519e588da&status=Completed&clearingDate=8/28/2012%203:17:18%20PM&transaction=1312616&postback=success"
   end
 
   def http_raw_data_failed_callback
-    "checkoutid=4ac56e71-8a45-4be2-be5e-03a2db87f418&transaction=1&postback=failure&test=true"
-  end
-  
-  def http_raw_data_failure
-    "error=failure&error_description=Invalid+application+credentials."
+    "signature=098d3f32654bd8eebc9db323228879fa2ea12459&test=true&orderId=&amount=0.01&checkoutId=f32b1e55-9612-4b6d-90f9-1c1519e588da&status=Completed&clearingDate=8/28/2012%203:17:18%20PM&transaction=1312616&postback=failure"
   end
 end
-
-

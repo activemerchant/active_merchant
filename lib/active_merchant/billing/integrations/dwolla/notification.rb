@@ -1,10 +1,17 @@
 require 'net/http'
+require 'digest/sha1'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module Dwolla
         class Notification < ActiveMerchant::Billing::Integrations::Notification
+          include Common
+
+          def initialize(data, options)
+            super
+          end
+
           def complete?
             status == "Completed"
           end
@@ -30,7 +37,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def error
-            params['Message']
+            params['Error']
           end
 
           # Was this a test transaction?
@@ -41,11 +48,13 @@ module ActiveMerchant #:nodoc:
           def acknowledge      
             true
           end
- private
-          # Take the posted data and move the relevant data into a hash
+        
+        private
           def parse(post)
             @raw = post.to_s
             json_post = JSON.parse(post)
+            verify_signature(json_post['CheckoutId'], json_post['Amount'], json_post['Signature'], @options[:credential3])
+
             params.merge!(json_post)
           end
         end
