@@ -160,6 +160,7 @@ module ActiveMerchant #:nodoc:
 
       def add_optional_data(post, options)
         add_pair(post, :GiftAidPayment, options[:gift_aid_payment]) unless options[:gift_aid_payment].blank?
+        add_pair(post, :Apply3DSecure, options[:apply_3d_secure]) unless options[:apply_3d_secure].blank?
       end
 
       def add_address(post, options)
