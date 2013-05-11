@@ -41,7 +41,7 @@ if "".respond_to? :html_safe?
   end
 
   class PaymentServiceControllerTest < ActionController::TestCase
-    if ActionPack::VERSION::MAJOR == 3
+    if [3, 4].include?(ActionPack::VERSION::MAJOR)
       begin
         require 'rails'
       rescue NameError, LoadError
@@ -67,7 +67,7 @@ if "".respond_to? :html_safe?
     def with_routes
       raise "You need to pass a block to me" unless block_given?
 
-      if ActionPack::VERSION::MAJOR == 3
+      if [3, 4].include?(ActionPack::VERSION::MAJOR)
         with_routing do |set|
           set.draw { match '/:action', :controller => 'payment_service' }
           yield
