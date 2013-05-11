@@ -38,7 +38,7 @@ module ActiveMerchant #:nodoc:
 
       APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
 
-      RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT = 0, 2, 3
+      RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT, AUTHORIZATION_CODE = 0, 2, 3, 4
       AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE  = 5, 6, 38
 
       self.default_currency = 'USD'
@@ -310,7 +310,8 @@ module ActiveMerchant #:nodoc:
           :response_reason_text => fields[RESPONSE_REASON_TEXT],
           :avs_result_code => fields[AVS_RESULT_CODE],
           :transaction_id => fields[TRANSACTION_ID],
-          :card_code => fields[CARD_CODE_RESPONSE_CODE]
+          :card_code => fields[CARD_CODE_RESPONSE_CODE],
+          :authorization_code => fields[AUTHORIZATION_CODE]
         }
         results
       end
