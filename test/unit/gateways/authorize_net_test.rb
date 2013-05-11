@@ -179,6 +179,13 @@ class AuthorizeNetTest < Test::Unit::TestCase
    assert_equal('PRIOR_AUTH_CAPTURE', response.params['action'] )
   end
 
+  def test_authorization_code_included_in_params
+   @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+   response = @gateway.capture(50, '123456789')
+   assert_equal('d1GENk', response.params['authorization_code'] )
+  end
+
   def test_capture_passing_extra_info
     response = stub_comms do
       @gateway.capture(50, '123456789', :description => "Yo", :order_id => "Sweetness")
