@@ -25,5 +25,3 @@ matrix:
       gemfile: Gemfile_rails40
     - rvm: 1.9.3
       gemfile: Gemfile_rails40
-  allow_failures:
-    - gemfile: Gemfile_rails40
