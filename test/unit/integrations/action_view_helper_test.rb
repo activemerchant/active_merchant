@@ -72,7 +72,7 @@ if "".respond_to? :html_safe?
 
       if [3, 4].include?(ActionPack::VERSION::MAJOR)
         with_routing do |set|
-          set.draw { match '/:action', :controller => 'payment_service' }
+          set.draw { match '/:action', :controller => 'payment_service', :via => [:get, :post] }
           yield
         end
       else
