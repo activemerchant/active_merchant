@@ -258,7 +258,7 @@ module ActiveMerchant #:nodoc:
           add_check_service(xml)
         else
           add_purchase_service(xml, options)
-          add_business_rules_data(xml)
+          add_business_rules_data(xml) unless options[:pinless_debit_card]
         end
         xml.target!
       end
@@ -441,8 +441,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_purchase_service(xml, options)
-        xml.tag! 'ccAuthService', {'run' => 'true'}
-        xml.tag! 'ccCaptureService', {'run' => 'true'}
+        if options[:pinless_debit_card]
+          xml.tag! 'pinlessDebitService', {'run' => 'true'}
+        else
+          xml.tag! 'ccAuthService', {'run' => 'true'}
+          xml.tag! 'ccCaptureService', {'run' => 'true'}
+        end
       end
 
       def add_void_service(xml, request_id, request_token)
