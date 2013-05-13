@@ -6,6 +6,7 @@
 * Make Rails 4 a supported version [sanemat]
 * CyberSource: Add pinless debit card support [JoshMcKin]
 * Verkkomaksut: Add item title field [kaapa]
+* Add MerchantWare V4 gateway [hron]
 
 == Version 1.34.1 (June 28, 2013)
 

@@ -210,6 +210,11 @@ merchant_ware:
  password:
  name:
 
+merchant_ware_version_four:
+ login:
+ password:
+ name:
+
 merchant_warrior:
   merchant_uuid: '50c5b9f0b52ea'
   api_key: '8fr3ajm7'
