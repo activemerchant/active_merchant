@@ -9,6 +9,7 @@ class MerchantWareTest < Test::Unit::TestCase
                )
 
     @credit_card = credit_card
+    @authorization = '1236564'
     @amount = 100
 
     @options = {
@@ -104,6 +105,18 @@ class MerchantWareTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_equal 'M', response.cvv_result['code']
+  end
+
+  def test_successful_purchase_using_prior_transaction
+    @gateway.expects(:ssl_post).returns(successful_purchase_using_prior_transaction_response)
+
+    response = @gateway.purchase(@amount, @authorization, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal '1236564', response.authorization
+    assert_equal "APPROVED", response.message
+    assert response.test?
   end
 
   private
@@ -205,4 +218,35 @@ Parameter name: strPAN</faultstring>
     XML
   end
 
+  def successful_purchase_using_prior_transaction_response
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <RepeatSaleResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+      <RepeatSaleResult>
+        <Amount>5.00</Amount>
+        <ApprovalStatus>APPROVED</ApprovalStatus>
+        <AuthorizationCode>MC0110</AuthorizationCode>
+        <AvsResponse></AvsResponse>
+        <Cardholder></Cardholder>
+        <CardNumber></CardNumber>
+        <CardType>0</CardType>
+        <CvResponse></CvResponse>
+        <EntryMode>0</EntryMode>
+        <ErrorMessage></ErrorMessage>
+        <ExtraData></ExtraData>
+        <InvoiceNumber></InvoiceNumber>
+        <Token>1236564</Token>
+        <TransactionDate>10/10/2008 1:13:55 PM</TransactionDate>
+        <TransactionType>7</TransactionType>
+      </RepeatSaleResult>
+    </RepeatSaleResponse>
+  </soap:Body>
+</soap:Envelope>
+    XML
+  end
 end

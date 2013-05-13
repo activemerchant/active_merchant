@@ -25,6 +25,7 @@ module ActiveMerchant #:nodoc:
 
       ACTIONS = {
         :purchase  => "IssueKeyedSale",
+        :reference_purchase => 'RepeatSale',
         :authorize => "IssueKeyedPreAuth",
         :capture   => "IssuePostAuth",
         :void      => "VoidPreAuthorization",
@@ -64,13 +65,14 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       # * <tt>money</tt> - The amount to be authorized as anInteger value in cents.
-      # * <tt>credit_card</tt> - The CreditCard details for the transaction.
+      # * <tt>payment_source</tt> - The CreditCard details or 'token' from prior transaction
       # * <tt>options</tt>
       #   * <tt>:order_id</tt> - A unique reference for this order (required).
       #   * <tt>:billing_address</tt> - The billing address for the cardholder.
-      def purchase(money, credit_card, options = {})
-        request = build_purchase_request(:purchase, money, credit_card, options)
-        commit(:purchase, request)
+      def purchase(money, payment_source, options = {})
+        action = payment_source.is_a?(String) ? :reference_purchase : :purchase
+        request = build_purchase_request(action, money, payment_source, options)
+        commit(action, request)
       end
 
       # Capture authorized funds from a credit card.
@@ -148,13 +150,13 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_purchase_request(action, money, credit_card, options)
+      def build_purchase_request(action, money, payment_source, options)
         requires!(options, :order_id)
 
         request = soap_request(action) do |xml|
           add_invoice(xml, options)
           add_amount(xml, money)
-          add_credit_card(xml, credit_card)
+          add_payment_source(xml, payment_source)
           add_address(xml, options)
         end
       end
@@ -226,6 +228,14 @@ module ActiveMerchant #:nodoc:
         if address = options[:billing_address] || options[:address]
           xml.tag! "strAVSStreetAddress", address[:address1]
           xml.tag! "strAVSZipCode", address[:zip]
+        end
+      end
+
+      def add_payment_source(xml, source)
+        if source.is_a?(String)
+          add_reference_token(xml, source)
+        else
+          add_credit_card(xml, source)
         end
       end
 
@@ -314,10 +324,13 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         if response[:success]
-          [ response["ReferenceID"], response["OrderNumber"] ].join(";")
+          if response['Token'].present?
+            response['Token']
+          else
+            [ response["ReferenceID"], response["OrderNumber"] ].join(";")
+          end
         end
       end
     end
   end
 end
-
