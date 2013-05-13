@@ -212,6 +212,12 @@ module ActiveMerchant #:nodoc:
         commit(build_tax_calculation_request(creditcard, options), options)
       end
 
+      # Determines if a card can be used for Pinless Debit Card transactions
+      def validate_pinless_debit_card(creditcard, options = {})
+        requires!(options, :order_id)
+        commit(build_validate_pinless_debit_request(creditcard,options), options)
+      end
+
       private
 
       # Create all address hash key value pairs so that we still function if we
@@ -346,6 +352,13 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new :indent => 2
         add_subscription(xml, options, reference)
         add_subscription_retrieve_service(xml, options)
+        xml.target!
+      end
+
+      def build_validate_pinless_debit_request(creditcard,options)
+        xml = Builder::XmlMarkup.new :indent => 2
+        add_creditcard(xml, creditcard)
+        add_validate_pinless_debit_service(xml)
         xml.target!
       end
 
@@ -537,6 +550,10 @@ module ActiveMerchant #:nodoc:
           add_purchase_data(xml, money, true, options)
           add_creditcard(xml, payment_method_or_reference)
         end
+      end
+
+      def add_validate_pinless_debit_service(xml)
+        xml.tag!'pinlessDebitValidateService', {'run' => 'true'}
       end
 
       # Where we actually build the full SOAP request using builder

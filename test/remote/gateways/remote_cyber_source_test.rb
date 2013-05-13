@@ -8,6 +8,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4111111111111111')
     @declined_card = credit_card('801111111111111')
+    @pinless_debit_card = credit_card('4002269999999999')
 
     @amount = 100
 
@@ -276,4 +277,10 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_validate_pinless_debit_card
+    assert response = @gateway.validate_pinless_debit_card(@pinless_debit_card, @options)
+    assert response.test?
+    assert_equal 'Y', response.params["status"]
+    assert_equal false,  response.success?
+  end
 end
