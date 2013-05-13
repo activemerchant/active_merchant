@@ -4,6 +4,7 @@
 * PayPal: Add MassPay payment to recipients by UserID [damonmorgan]
 * Authorize.Net: Add authorization_code to response params [noahlh]
 * Make Rails 4 a supported version [sanemat]
+* CyberSource: Add pinless debit card support [JoshMcKin]
 
 == Version 1.34.1 (June 28, 2013)
 
