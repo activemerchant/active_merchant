@@ -349,10 +349,12 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'MassPayRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'EmailSubject', default_options[:subject] if default_options[:subject]
+            xml.tag! 'ReceiverType', default_options[:receiver_type] if default_options[:receiver_type]
             recipients.each do |money, recipient, options|
               options ||= default_options
               xml.tag! 'MassPayItem' do
-                xml.tag! 'ReceiverEmail', recipient
+                xml.tag! 'ReceiverEmail', recipient unless default_options[:receiver_type] && default_options[:receiver_type] != 'EmailAddress'
+                xml.tag! 'ReceiverID', recipient if default_options[:receiver_type] && default_options[:receiver_type] == 'UserID'
                 xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
                 xml.tag! 'Note', options[:note] if options[:note]
                 xml.tag! 'UniqueId', options[:unique_id] if options[:unique_id]
