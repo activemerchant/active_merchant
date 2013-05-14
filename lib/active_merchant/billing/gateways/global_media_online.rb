@@ -129,7 +129,7 @@ module ActiveMerchant #:nodoc:
         post["ShopPass"] = @options[:password]
         post["JobCd"]    = action
 
-        request = post.merge(params).map{|key, value| "#{key}=#{value}" }.join("&")
+        request = post.merge(params).sort_by{|key,value| key}.map{|key, value| "#{key}=#{value}" }.join("&")
         request
       end
 

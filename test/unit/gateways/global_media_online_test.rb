@@ -62,7 +62,7 @@ class GlobalMediaOnlineTest < Test::Unit::TestCase
 
     assert result = @gateway.instance_eval{ post_data("AUTH", parameters) }
     assert_instance_of(String, result)
-    assert_equal("ShopID=login&ShopPass=password&JobCd=AUTH&OrderID=1234-1234&Amount=1234",result)
+    assert_equal("Amount=1234&JobCd=AUTH&OrderID=1234-1234&ShopID=login&ShopPass=password", result)
   end
 
   def test_expdate
@@ -75,7 +75,7 @@ class GlobalMediaOnlineTest < Test::Unit::TestCase
   end
 
   def test_parse
-    body = "ShopID=login&ShopPass=password&JobCd=AUTH&OrderID=1234-1234&Amount=1234"
+    body = "Amount=1234&JobCd=AUTH&OrderID=1234-1234&ShopID=login&ShopPass=password"
 
     assert result = @gateway.instance_eval{ parse(body) }
     assert_instance_of(Hash, result)
