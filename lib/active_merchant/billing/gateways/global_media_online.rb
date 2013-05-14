@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
         data = ssl_post( ENDPOINT[action], post_data(action, params) )
         response = parse(data)
 
-        Response.new(success?(response), nil, response, authorization: authorization)
+        Response.new(success?(response), nil, response, :authorization => authorization)
       end
 
       def add_invoice(params, options)
@@ -144,4 +144,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
