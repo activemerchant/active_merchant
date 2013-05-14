@@ -342,6 +342,7 @@ module ActiveMerchant #:nodoc:
       def build_mass_pay_request(*args)
         default_options = args.last.is_a?(Hash) ? args.pop : {}
         recipients = args.first.is_a?(Array) ? args : [args]
+        receiver_type = default_options[:receiver_type]
 
         xml = Builder::XmlMarkup.new
 
@@ -349,11 +350,18 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'MassPayRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'EmailSubject', default_options[:subject] if default_options[:subject]
+            xml.tag! 'ReceiverType', receiver_type if receiver_type
             recipients.each do |money, recipient, options|
               options ||= default_options
               xml.tag! 'MassPayItem' do
-                xml.tag! 'ReceiverEmail', recipient
-                xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
+                if(!receiver_type || receiver_type == 'EmailAddress')
+                  xml.tag! 'ReceiverEmail', recipient
+                elsif receiver_type == 'UserID'
+                  xml.tag! 'ReceiverID', recipient
+                else
+                  raise ArgumentError.new("Unknown receiver_type: #{receiver_type}")
+                end
+                xml.tag! 'Amount', amount(money), 'currencyID' => (options[:currency] || currency(money))
                 xml.tag! 'Note', options[:note] if options[:note]
                 xml.tag! 'UniqueId', options[:unique_id] if options[:unique_id]
               end

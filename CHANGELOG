@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Add Barclays ePDQ Extra Plus gateway [ntalbott]
+* PayPal: Add MassPay payment to recipients by UserID [damonmorgan]
 
 == Version 1.34.1 (June 28, 2013)
 
