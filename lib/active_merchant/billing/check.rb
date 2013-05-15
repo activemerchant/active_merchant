@@ -8,7 +8,9 @@ module ActiveMerchant #:nodoc:
     class Check
       include Validateable
 
-      attr_accessor :first_name, :last_name, :routing_number, :account_number, :account_holder_type, :account_type, :number
+      attr_accessor :first_name, :last_name,
+                    :bank_name, :routing_number, :account_number,
+                    :account_holder_type, :account_type, :number
 
       # Used for Canadian bank accounts
       attr_accessor :institution_number, :transit_number

@@ -31,6 +31,7 @@
 * Distinguish invalid vs empty issue_numbers on CreditCards [drasch]
 * Float Gemfiles to latest Rails [sanemat]
 * USA ePay Advanced: Fix Check support [RyanScottLewis]
+* Authorize.Net: Match up Check fields better with eCheck.Net requirements [ntalbott]
 
 == Version 1.32.1 (April 4, 2013)
 

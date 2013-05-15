@@ -350,22 +350,26 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_source(params, source, options={})
-        case 
-        when source.class == ActiveMerchant::Billing::CreditCard then add_creditcard(params, source)
-        when source.class == ActiveMerchant::Billing::Check then add_check(params, source)
+        case source
+        when ActiveMerchant::Billing::CreditCard
+          add_creditcard(params, source)
+        when ActiveMerchant::Billing::Check
+          add_check(params, source, options)
         else
-          raise ArgumentError, "Unsupported payment source. Must be either CreditCard or Check."
+          raise ArgumentError, "Unsupported payment source #{source.inspect}. Must be either CreditCard or Check."
         end
       end
 
-      def add_check(post, check)
-        post[:method] = 'ECHECK'
+      def add_check(post, check, options)
+        post[:method] = "ECHECK"
+        post[:bank_name] = check.bank_name
         post[:bank_aba_code] = check.routing_number
         post[:bank_acct_num] = check.account_number
         post[:bank_acct_type] = check.account_type
-        post[:echeck_type] = 'WEB'
-        post[:checkname] = check.name
-        post[:account_holder_type] = check.account_holder_type
+        post[:echeck_type] = "WEB"
+        post[:bank_acct_name] = check.name
+        post[:bank_check_number] = check.number if check.number.present?
+        post[:recurring_billing] = (options[:recurring] ? "TRUE" : "FALSE")
       end
 
       def add_customer_data(post, options)

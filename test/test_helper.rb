@@ -169,6 +169,7 @@ module ActiveMerchant
     def check(options = {})
       defaults = {
         :name => 'Jim Smith',
+        :bank_name => 'Bank of Elbonia',
         :routing_number => '244183602',
         :account_number => '15378535',
         :account_holder_type => 'personal',

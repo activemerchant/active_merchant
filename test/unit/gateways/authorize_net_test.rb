@@ -16,21 +16,53 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_successful_echeck_authorization
-    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    response = stub_comms do
+      @gateway.authorize(@amount, @check)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/x_method=ECHECK/, data)
+      assert_match(/x_bank_aba_code=244183602/, data)
+      assert_match(/x_bank_acct_num=15378535/, data)
+      assert_match(/x_bank_name=Bank\+of\+Elbonia/, data)
+      assert_match(/x_bank_acct_name=Jim\+Smith/, data)
+      assert_match(/x_echeck_type=WEB/, data)
+      assert_match(/x_bank_check_number=1/, data)
+      assert_match(/x_recurring_billing=FALSE/, data)
+    end.respond_with(successful_authorization_response)
 
-    assert response = @gateway.authorize(@amount, @check)
+    assert response
     assert_instance_of Response, response
     assert_success response
     assert_equal '508141794', response.authorization
   end
 
   def test_successful_echeck_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    response = stub_comms do
+      @gateway.purchase(@amount, @check)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/x_method=ECHECK/, data)
+      assert_match(/x_bank_aba_code=244183602/, data)
+      assert_match(/x_bank_acct_num=15378535/, data)
+      assert_match(/x_bank_name=Bank\+of\+Elbonia/, data)
+      assert_match(/x_bank_acct_name=Jim\+Smith/, data)
+      assert_match(/x_echeck_type=WEB/, data)
+      assert_match(/x_bank_check_number=1/, data)
+      assert_match(/x_recurring_billing=FALSE/, data)
+    end.respond_with(successful_purchase_response)
 
-    assert response = @gateway.purchase(@amount, @check)
+    assert response
     assert_instance_of Response, response
     assert_success response
     assert_equal '508141795', response.authorization
+  end
+
+  def test_passing_recurring_flag
+    response = stub_comms do
+      @gateway.purchase(@amount, @check, :recurring => true)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/x_recurring_billing=TRUE/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   def test_failed_echeck_authorization
