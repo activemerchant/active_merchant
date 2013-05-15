@@ -24,7 +24,8 @@ module ActiveMerchant #:nodoc:
 	  #The PayDollar server returns only one parameter
 	  #the "order reference". However, it is mandatory to
 	  #implement this method and hence using a variable
-	  #with default value as "PAID"
+	  #with default value as "PAID". The value can be 
+	  #updated by calling set_payment_status method
 	  def status
 	    @payment_status
           end
