@@ -5,76 +5,43 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Paydollar
         class Notification < ActiveMerchant::Billing::Integrations::Notification
-          # -1 : Error
-	  # 0 : Transaction succeeded
-	  # 1 : Transaction failure
-	  def complete?
-            params['successcode'] == '0'
+	  include PostsData
+
+          def initialize(post, options = {})
+            super
+	    @payment_status = "PAID"
           end
 
-	  # Order Reference Number
+	  #Order Reference Number
           def item_id
             params['Ref']
           end
+	 
+	  def set_payment_status(result)
+	    @payment_status = result
+	  end
 
-	  # Payment Reference Number
-          def transaction_id
-            params['PayRef']
+	  #The PayDollar server returns only one parameter
+	  #the "order reference". However, it is mandatory to
+	  #implement this method and hence using a variable
+	  #with default value as "PAID"
+	  def status
+	    @payment_status
           end
 
-          # When was this payment received by the client.
-	  # Format: YYYY-MM-DD HH:MI:SS.0
-          def received_at
-            params['TxTime']
-          end
-
-          def payer_email
-            params['']
-          end
-
-          def receiver_email
-            params['']
-          end
-
-          def security_key
-	    params['']
-          end
-
-          # the money amount we received in X.2 decimal.
-	  # (essentially the transaction amount)
+	  #The PayDollar server returns only one parameter
+	  #the "order reference". However, it is mandatory to
+	  #implement this method and hence just returning 0
           def gross
-            params['Amt']
+	    0
           end
 
-          # Was this a test transaction?
-          def test?
-            params[''] == 'test'
-          end
-
-	  # Return bank host status code
-          def status
-            params['Prc']
-          end
-
-          # Acknowledge the transaction to Paydollar. This method has to be called after a new
-          # apc arrives. Paydollar will verify that all the information we received are correct and will return a
-          # ok or a fail.
-          #
-          # Example:
-          #
-          #   def ipn
-          #     notify = PaydollarNotification.new(request.raw_post)
-          #
-          #     if notify.acknowledge
-          #       ... process order ... if notify.complete?
-          #     else
-          #       ... log possible hacking attempt ...
-          #     end
-          def acknowledge()
-	    true
-          end
+	  def acknowledge(order_number)
+	    order_number == item_id
+	  end
         end
       end
     end
   end
 end
+
