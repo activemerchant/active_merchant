@@ -1,24 +1,22 @@
-require 'test/unit'
-require './lib/payu_in'
+require 'test_helper'
 
 class PayuInNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
-  def setup    
-    assert PayuIn.new({:merchant_id => 'C0Dr8m', :secret_key => '3sf0jURk'})
-    @payu = PayuIn::Notification.new(http_raw_data)
+  def setup
+    @payu = PayuIn::Notification.new(http_raw_data, :credential1 => 'C0Dr8m', :credential2 => '3sf0jURk')
   end
 
   def test_accessors
     assert @payu.complete?
     assert_equal "success", @payu.status
-    assert_equal "403993715508030204", @payu.transaction_id 
-    assert_equal "success", @payu.transaction_status    
+    assert_equal "403993715508030204", @payu.transaction_id
+    assert_equal "success", @payu.transaction_status
     assert_equal "10.00", @payu.gross
     assert_equal "Product Info", @payu.product_info
-    assert_equal "INR", @payu.currency        
-    assert_equal true, @payu.invoice_ok?('4ba4afe87f7e73468f2a')     
-    assert_equal true, @payu.amount_ok?(BigDecimal.new('10.00'),BigDecimal.new('0.00'))     
+    assert_equal "INR", @payu.currency
+    assert_equal true, @payu.invoice_ok?('4ba4afe87f7e73468f2a')
+    assert_equal true, @payu.amount_ok?(BigDecimal.new('10.00'),BigDecimal.new('0.00'))
     assert_equal "CC", @payu.type
     assert_equal "4ba4afe87f7e73468f2a", @payu.invoice
     assert_equal "C0Dr8m", @payu.account
@@ -26,7 +24,7 @@ class PayuInNotificationTest < Test::Unit::TestCase
     assert_equal "test@example.com", @payu.customer_email
     assert_equal "1234567890", @payu.customer_phone
     assert_equal "Payu-Admin", @payu.customer_first_name
-    assert_equal "", @payu.customer_last_name    
+    assert_equal "", @payu.customer_last_name
     assert_equal "ef0c1b509a42b802a4938c25dc9bb9efe40b75a7dfb8bde1a6f126fa1f86cee264c5e5a17e87db85150d6d8912eafda838416e669712f1989dcb9cbdb8c24219", @payu.checksum
     assert_equal "E000", @payu.message
     assert_equal true, @payu.checksum_ok?
@@ -36,13 +34,12 @@ class PayuInNotificationTest < Test::Unit::TestCase
     assert_equal '10.00', @payu.gross
   end
 
-  # Replace with real successful acknowledgement code
   def test_acknowledgement
-    assert @payu.checksum_ok?
+    assert @payu.acknowledge
   end
-  
+
   def test_respond_to_acknowledge
-    assert @payu.respond_to?(:checksum_ok?)
+    assert @payu.respond_to?(:acknowledge)
   end
 
   private

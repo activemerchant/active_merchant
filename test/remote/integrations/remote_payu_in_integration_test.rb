@@ -1,26 +1,21 @@
-require 'test/unit'
-require './lib/active_merchant_payu_in'
+require 'test_helper'
 
 class RemotePayuInIntegrationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @payu_in = PayuIn::Notification.new(http_raw_data)
-  end
-
-  def tear_down
-    ActiveMerchant::Billing::Base.integration_mode = :test
+    @payu_in = PayuIn::Notification.new(http_raw_data, :credential1 => 'C0Dr8m', :credential2 => '3sf0jURk')
   end
 
   def test_raw
-  	ActiveMerchant::Billing::Base.integration_mode = :test
-    assert_equal "https://test.payu.in/_payment.php", PayuIn.service_url
-
     ActiveMerchant::Billing::Base.integration_mode = :production
     assert_equal "https://secure.payu.in/_payment.php", PayuIn.service_url
 
+    ActiveMerchant::Billing::Base.integration_mode = :test
+    assert_equal "https://test.payu.in/_payment.php", PayuIn.service_url
+
     assert_nothing_raised do
-      assert_equal false, @payu_in.checksum_ok?
+      assert @payu_in.checksum_ok?
     end
   end
 

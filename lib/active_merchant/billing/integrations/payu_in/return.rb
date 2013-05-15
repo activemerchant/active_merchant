@@ -5,6 +5,7 @@ module ActiveMerchant #:nodoc:
         class Return < ActiveMerchant::Billing::Integrations::Return
 
           def initialize(query_string, options = {})
+            super
             @notification = Notification.new(query_string, options)
           end
 
@@ -28,21 +29,17 @@ module ActiveMerchant #:nodoc:
           # it can be easily forged by the attacker without detection
           #
           def status( order_id, order_amount )
-            if @notification.invoice_ok?( order_id ) && @notification.amount_ok?( order_amount )
+            if @notification.invoice_ok?( order_id ) && @notification.amount_ok?( BigDecimal.new(order_amount) )
               @notification.status
             else
-              'mismatch'.freeze
+              'mismatch'
             end
           end
 
           # check success of the transaction
           # check order_id and
-          def success?( order_id, order_amount )
-            status( order_id, order_amount ) == 'success'
-          end
-
-          def cancelled?
-            false
+          def success?
+            status( @params['txnid'], @params['amount'] ) == 'success'
           end
 
           def message

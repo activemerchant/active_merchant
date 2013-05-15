@@ -21,13 +21,12 @@ module ActiveMerchant #:nodoc:
             :zip => 'zip',
             :country => 'country'
 
-          # Which	tab	you	want	to	be	open	default	on	PayU
+          # Which tab you want to be open default on PayU
           # CC (CreditCard) or NB (NetBanking)
           mapping :mode, 'pg'
 
           mapping :notify_url, 'notify_url'
-          mapping :return_url, :success => 'surl',
-            :failure => 'furl'
+          mapping :return_url, ['surl', 'furl']
           mapping :cancel_return_url, 'curl'
           mapping :checksum, 'hash'
 
@@ -43,23 +42,28 @@ module ActiveMerchant #:nodoc:
             :var10 => 'udf10'
           }
 
-          # Computes the checksum for the form data and add it to the field
-          def add_checksum(  options = {} )
+          def initialize(order, account, options = {})
+            super
+            self.pg = 'CC'
+          end
+
+          def form_fields
+            @fields.merge(mappings[:checksum] => generate_checksum)
+          end
+
+          def generate_checksum(  options = {} )
             checksum_fields = [ :order, :amount, :credential2, { :customer => [ :first_name, :email ] },
               { :user_defined => [ :var1, :var2, :var3, :var4, :var5, :var6, :var7, :var8, :var9, :var10 ] } ]
             checksum_payload_items = checksum_fields.inject( [] ) do | items, field |
               if Hash === field then
                 key = field.keys.first
-                field[key].inject( items ){ |s,x| items.push( form_fields[ mappings[key][x] ] ) }
-                # items.push( form_fields[ field.values.each{ |x| mappings[ key ][ x ] } ] )
+                field[key].inject( items ){ |s,x| items.push( @fields[ mappings[key][x] ] ) }
               else
-                items.push( form_fields[ mappings[field] ] )
+                items.push( @fields[ mappings[field] ] )
               end
             end
             checksum_payload_items.push( options )
-            checksum = PayuIn.checksum( *checksum_payload_items )
-            add_field( mappings[:checksum], checksum )
-            return checksum_payload_items
+            PayuIn.checksum(@fields["key"], @fields["productinfo"], *checksum_payload_items )
           end
 
         end

@@ -4,7 +4,12 @@ module ActiveMerchant #:nodoc:
       module PayuIn
         class Notification < ActiveMerchant::Billing::Integrations::Notification
 
-          # Was the transaction complete?
+          def initialize(post, options = {})
+            super(post, options)
+            @merchant_id = options[:credential1]
+            @secret_key = options[:credential2]
+          end
+
           def complete?
             status == "success"
           end
@@ -24,7 +29,7 @@ module ActiveMerchant #:nodoc:
               end
             else
               'tampered'
-            end.freeze
+            end
           end
 
           def invoice_ok?( order_id )
@@ -62,6 +67,10 @@ module ActiveMerchant #:nodoc:
           # What currency have we been dealing with
           def currency
             'INR'
+          end
+
+          def item_id
+            params['txnid']
           end
 
           # This is the invoice which you passed to PayU.in
@@ -136,14 +145,18 @@ module ActiveMerchant #:nodoc:
             @message || params['error']
           end
 
+          def acknowledge
+            checksum_ok?
+          end
+
           def checksum_ok?
             fields = user_defined.dup.push( customer_email, customer_first_name, product_info, gross, invoice, :reverse => true )
             fields.unshift( transaction_status )
-            unless PayuIn.checksum( *fields ) == checksum
+            unless PayuIn.checksum(@merchant_id, @secret_key, *fields ) == checksum
               @message = 'Return checksum not matching the data provided'
               return false
             end
-            return true
+            true
           end
 
         end
