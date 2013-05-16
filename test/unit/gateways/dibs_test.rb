@@ -4,7 +4,7 @@ class DibsPaymentTest < Test::Unit::TestCase
   
   def setup
     @gateway = DibsGateway.new(
-      :login => 90056012, 
+      :login => 12356012, 
       :password =>'5168216856327a756834793a463025577c5e6b487d582d63294f262a6725483f4d30696c377b3f2b29304c2921546e6b52497378645d71377d594d522c576c3f'
     )
 
@@ -12,7 +12,7 @@ class DibsPaymentTest < Test::Unit::TestCase
       :number             => 54130300033444,
       :month              => 6,
       :year               => 24,
-      :verification_value => 684,
+      :verification_value => 684
     )
 
     @amount = 100

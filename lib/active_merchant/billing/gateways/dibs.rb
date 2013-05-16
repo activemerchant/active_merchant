@@ -156,7 +156,7 @@ module ActiveMerchant #:nodoc:
        
         Response.new(success, message, response,
           :test => test? ? 1 : 0,
-          :authorization => [:authorizeticket, :createticket].include?(action) ? response["ticketId"] : response["transactionId"],
+          :authorization => [:authorizeticket, :createticket].include?(action) ? response["ticketId"] : response["transactionId"]
         )
       end
 
@@ -184,7 +184,7 @@ module ActiveMerchant #:nodoc:
       # http://tech.dibspayment.com/dibs_api/flexwin/other_features/mac_calculation/
       def calc_mac(post) 
         string = "";
-        post.sort.map do |key,value|
+        post.sort_by {|sym| sym.to_s}.map do |key,value|
           if key != "MAC"
             if string.length > 0 
               string += "&"

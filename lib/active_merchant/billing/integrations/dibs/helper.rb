@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
           
           def calc_mac(post) 
             string = "";
-            post.sort.map do |key,value|
+            post.sort_by {|sym| sym.to_s}.map do |key,value|
           if key != "MAC"
             if string.length > 0 
               string += "&"
