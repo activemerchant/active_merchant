@@ -25,14 +25,14 @@ class MerchantWareTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal '4706382;1', response.authorization
+    assert_equal '1236564', response.authorization
     assert_equal "APPROVED", response.message
     assert response.test?
   end
 
   def test_soap_fault_during_authorization
-    response_500 = stub(:code => "500", :message => "Internal Server Error", :body => fault_authorization_response)
-    @gateway.expects(:ssl_post).raises(ActiveMerchant::ResponseError.new(response_500))
+    response_400 = stub(:code => "400", :message => "Bad Request", :body => fault_authorization_response)
+    @gateway.expects(:ssl_post).raises(ActiveMerchant::ResponseError.new(response_400))
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
@@ -40,9 +40,9 @@ class MerchantWareTest < Test::Unit::TestCase
     assert response.test?
 
     assert_nil response.authorization
-    assert_equal "Server was unable to process request. ---> strPAN should be at least 13 to at most 19 characters in size. Parameter name: strPAN", response.message
-    assert_equal response_500.code, response.params["http_code"]
-    assert_equal response_500.message, response.params["http_message"]
+    assert_equal "amount cannot be null. Parameter name: amount", response.message
+    assert_equal response_400.code, response.params["http_code"]
+    assert_equal response_400.message, response.params["http_message"]
   end
 
   def test_failed_authorization
@@ -54,27 +54,27 @@ class MerchantWareTest < Test::Unit::TestCase
     assert response.test?
 
     assert_nil response.authorization
-    assert_equal "transaction type not supported by version", response.message
-    assert_equal "FAILED", response.params["status"]
-    assert_equal "1014", response.params["failure_code"]
+    assert_equal "invalid exp date", response.message
+    assert_equal "DECLINED", response.params["status"]
+    assert_equal "1024", response.params["failure_code"]
   end
 
-  def test_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<strPAN>#{@credit_card.number}<\//), anything).returns("")
-    @gateway.expects(:parse).returns({})
-    @gateway.credit(@amount, @credit_card, @options)
-  end
+  def test_failed_authorization_due_to_invalid_credit_card_number
+    @gateway.expects(:ssl_post).returns(invalid_credit_card_number_response)
 
-  def test_deprecated_credit
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<strReferenceCode>transaction_id<\//), anything).returns("")
-    @gateway.expects(:parse).returns({})
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
-      @gateway.credit(@amount, "transaction_id", @options)
-    end
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
+    assert response.test?
+
+    assert_nil response.authorization
+    assert_equal "Invalid card number.", response.message
+    assert_nil response.params["status"]
+    assert_nil response.params["failure_code"]
   end
 
   def test_refund
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<strReferenceCode>transaction_id<\//), anything).returns("")
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<token>transaction_id<\//), anything).returns("")
     @gateway.expects(:parse).returns({})
     @gateway.refund(@amount, "transaction_id", @options)
   end
@@ -88,9 +88,9 @@ class MerchantWareTest < Test::Unit::TestCase
     assert response.test?
 
     assert_nil response.authorization
-    assert_equal "decline", response.message
+    assert_equal "original transaction id not found", response.message
     assert_equal "DECLINED", response.params["status"]
-    assert_equal "1012", response.params["failure_code"]
+    assert_equal "1019", response.params["failure_code"]
   end
 
   def test_avs_result
@@ -124,25 +124,30 @@ class MerchantWareTest < Test::Unit::TestCase
   def successful_authorization_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<soap:Envelope
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
-    <IssueKeyedPreAuthResponse xmlns="http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail">
-      <IssueKeyedPreAuthResult>
-        <ReferenceID>4706382</ReferenceID>
-        <OrderNumber>1</OrderNumber>
-        <TXDate>7/3/2009 2:05:04 AM</TXDate>
-        <ApprovalStatus>APPROVED</ApprovalStatus>
-        <AuthCode>VI0100</AuthCode>
-        <CardHolder>Longbob Longsen</CardHolder>
+    <PreAuthorizationKeyedResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+      <PreAuthorizationKeyedResult>
         <Amount>1.00</Amount>
-        <Type>5</Type>
-        <CardNumber>************4242</CardNumber>
+        <ApprovalStatus>APPROVED</ApprovalStatus>
+        <AuthorizationCode>MC0110</AuthorizationCode>
+        <AvsResponse>N</AvsResponse>
+        <Cardholder></Cardholder>
+        <CardNumber></CardNumber>
         <CardType>0</CardType>
-        <AVSResponse>N</AVSResponse>
-        <CVResponse>M</CVResponse>
-        <POSEntryType>1</POSEntryType>
-      </IssueKeyedPreAuthResult>
-    </IssueKeyedPreAuthResponse>
+        <CvResponse>M</CvResponse>
+        <EntryMode>0</EntryMode>
+        <ErrorMessage></ErrorMessage>
+        <ExtraData></ExtraData>
+        <InvoiceNumber></InvoiceNumber>
+        <Token>1236564</Token>
+        <TransactionDate>10/10/2008 1:13:55 PM</TransactionDate>
+        <TransactionType>7</TransactionType>
+      </PreAuthorizationKeyedResult>
+    </PreAuthorizationKeyedResponse>
   </soap:Body>
 </soap:Envelope>
     XML
@@ -151,14 +156,29 @@ class MerchantWareTest < Test::Unit::TestCase
   def fault_authorization_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <soap:Body>
-    <soap:Fault>
-      <faultcode>soap:Server</faultcode>
-      <faultstring>Server was unable to process request. ---&gt; strPAN should be at least 13 to at most 19 characters in size.
-Parameter name: strPAN</faultstring>
-      <detail/>
-    </soap:Fault>
+    <PreAuthorizationKeyedResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+      <PreAuthorizationKeyedResult>
+        <Amount />
+        <ApprovalStatus />
+        <AuthorizationCode />
+        <AvsResponse />
+        <Cardholder />
+        <CardNumber />
+        <CardType>0</CardType>
+        <CvResponse />
+        <EntryMode>0</EntryMode>
+        <ErrorMessage>amount cannot be null. Parameter name: amount</ErrorMessage>
+        <ExtraData />
+        <InvoiceNumber />
+        <Token />
+        <TransactionDate />
+        <TransactionType>0</TransactionType>
+      </PreAuthorizationKeyedResult>
+    </PreAuthorizationKeyedResponse>
   </soap:Body>
 </soap:Envelope>
     XML
@@ -169,23 +189,25 @@ Parameter name: strPAN</faultstring>
 <?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <soap:Body>
-    <IssueKeyedPreAuthResponse xmlns="http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail">
-      <IssueKeyedPreAuthResult>
-        <ReferenceID/>
-        <OrderNumber>1</OrderNumber>
-        <TXDate>7/3/2009 3:04:33 AM</TXDate>
-        <ApprovalStatus>FAILED;1014;transaction type not supported by version</ApprovalStatus>
-        <AuthCode/>
-        <CardHolder>Longbob Longsen</CardHolder>
+    <PreAuthorizationKeyedResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+      <PreAuthorizationKeyedResult>
         <Amount>1.00</Amount>
-        <Type>5</Type>
-        <CardNumber>*********0123</CardNumber>
-        <CardType>0</CardType>
-        <AVSResponse/>
-        <CVResponse/>
-        <POSEntryType>1</POSEntryType>
-      </IssueKeyedPreAuthResult>
-    </IssueKeyedPreAuthResponse>
+        <ApprovalStatus>DECLINED;1024;invalid exp date</ApprovalStatus>
+        <AuthorizationCode />
+        <AvsResponse />
+        <Cardholder>Visa Test Card</Cardholder>
+        <CardNumber>************0019</CardNumber>
+        <CardType>4</CardType>
+        <CvResponse />
+        <EntryMode>1</EntryMode>
+        <ErrorMessage />
+        <ExtraData />
+        <InvoiceNumber>TT0017</InvoiceNumber>
+        <Token />
+        <TransactionDate>5/15/2013 8:47:14 AM</TransactionDate>
+        <TransactionType>5</TransactionType>
+      </PreAuthorizationKeyedResult>
+    </PreAuthorizationKeyedResponse>
   </soap:Body>
 </soap:Envelope>
     XML
@@ -193,24 +215,25 @@ Parameter name: strPAN</faultstring>
 
   def failed_void_response
     <<-XML
-<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <soap:Body>
-    <VoidPreAuthorizationResponse xmlns="http://merchantwarehouse.com/MerchantWARE/Client/TransactionRetail">
+    <VoidPreAuthorizationResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
       <VoidPreAuthorizationResult>
-        <ReferenceID>4707277</ReferenceID>
-        <OrderNumber/>
-        <TXDate>7/3/2009 3:28:38 AM</TXDate>
-        <ApprovalStatus>DECLINED;1012;decline</ApprovalStatus>
-        <AuthCode/>
-        <CardHolder/>
-        <Amount/>
-        <Type>3</Type>
-        <CardNumber/>
+        <Amount />
+        <ApprovalStatus>DECLINED;1019;original transaction id not found</ApprovalStatus>
+        <AuthorizationCode />
+        <AvsResponse />
+        <Cardholder />
+        <CardNumber />
         <CardType>0</CardType>
-        <AVSResponse/>
-        <CVResponse/>
-        <POSEntryType>0</POSEntryType>
+        <CvResponse />
+        <EntryMode>0</EntryMode>
+        <ErrorMessage />
+        <ExtraData />
+        <InvoiceNumber />
+        <Token />
+        <TransactionDate>5/15/2013 9:37:04 AM</TransactionDate>
+        <TransactionType>3</TransactionType>
       </VoidPreAuthorizationResult>
     </VoidPreAuthorizationResponse>
   </soap:Body>
@@ -245,6 +268,35 @@ Parameter name: strPAN</faultstring>
         <TransactionType>7</TransactionType>
       </RepeatSaleResult>
     </RepeatSaleResponse>
+  </soap:Body>
+</soap:Envelope>
+    XML
+  end
+
+  def invalid_credit_card_number_response
+    <<-XML
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <soap:Body>
+    <PreAuthorizationKeyedResponse xmlns="http://schemas.merchantwarehouse.com/merchantware/40/Credit/">
+      <PreAuthorizationKeyedResult>
+        <Amount />
+        <ApprovalStatus />
+        <AuthorizationCode />
+        <AvsResponse />
+        <Cardholder />
+        <CardNumber />
+        <CardType>0</CardType>
+        <CvResponse />
+        <EntryMode>0</EntryMode>
+        <ErrorMessage>Invalid card number.</ErrorMessage>
+        <ExtraData />
+        <InvoiceNumber />
+        <Token />
+        <TransactionDate />
+        <TransactionType>0</TransactionType>
+      </PreAuthorizationKeyedResult>
+    </PreAuthorizationKeyedResponse>
   </soap:Body>
 </soap:Envelope>
     XML
