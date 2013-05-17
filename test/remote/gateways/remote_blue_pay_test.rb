@@ -23,6 +23,13 @@ class BluePayTest < Test::Unit::TestCase
     }
   end
 
+  def test_successful_authorization
+    assert response = @gateway.authorize(@amount+100, @credit_card, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -31,13 +38,15 @@ class BluePayTest < Test::Unit::TestCase
     assert response.authorization
   end
 
-  def test_successful_purchase_with_check
-    assert response = @gateway.purchase(@amount, check, @options)
-    assert_success response
-    assert response.test?
-    assert_equal 'This transaction has been approved', response.message
-    assert response.authorization
-  end
+  #  The included test account credentials do not support ACH processor.
+  #
+  #  def test_successful_purchase_with_check
+  #    assert response = @gateway.purchase(@amount, check, @options.merge(:email=>'foo@example.com'))
+  #    assert_success response
+  #    assert response.test?
+  #    assert_equal 'This transaction has been approved', response.message
+  #    assert response.authorization
+  #  end
 
   def test_expired_credit_card
     @credit_card.year = 2004
@@ -63,10 +72,10 @@ class BluePayTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+
   def test_authorization_and_capture
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
-
     assert capture = @gateway.capture(@amount, authorization.authorization)
     assert_success capture
     assert_equal 'This transaction has been approved', capture.message
@@ -86,16 +95,9 @@ class BluePayTest < Test::Unit::TestCase
       :login => 'X',
       :password => 'Y'
     )
-
     assert response = gateway.purchase(@amount, @credit_card)
 
     assert_equal Response, response.class
-    assert_equal ["avs_result_code",
-                  "card_code",
-                  "response_code",
-                  "response_reason_code",
-                  "response_reason_text",
-                  "transaction_id"], response.params.keys.sort
     assert_match(/The merchant login ID or password is invalid/, response.message)
     assert_failure response
   end
@@ -105,16 +107,9 @@ class BluePayTest < Test::Unit::TestCase
       :login => 'X',
       :password => 'Y'
     )
-
     assert response = gateway.purchase(@amount, @credit_card)
-
     assert_equal Response, response.class
-    assert_equal ["avs_result_code",
-                  "card_code",
-                  "response_code",
-                  "response_reason_code",
-                  "response_reason_text",
-                  "transaction_id"], response.params.keys.sort
+
     assert_match(/The merchant login ID or password is invalid/, response.message)
     assert_failure response
   end
@@ -124,16 +119,18 @@ class BluePayTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
 
-    rebill_id = response.params['REBID']
+    rebill_id = response.params['rebid']
 
     assert response = @gateway.update_recurring(:rebill_id => rebill_id, :rebill_amount => @amount * 2)
     assert_success response
 
     assert response = @gateway.status_recurring(rebill_id)
     assert_success response
+    assert_equal response.params['status'], 'active'
 
     assert response = @gateway.cancel_recurring(rebill_id)
     assert_success response
+    assert_equal response.params['status'], 'stopped'
   end
 
   def test_recurring_should_fail_expired_credit_card
