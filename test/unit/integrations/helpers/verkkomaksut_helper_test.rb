@@ -58,9 +58,9 @@ class VerkkomaksutHelperTest < Test::Unit::TestCase
 
     @helper.return_url "http://example.com"
     @helper.cancel_return_url "http://example.com"
-    assert_equal @helper.generate_md5string, "604199E6A2613419E32C58C0F0A3A1B1"
+    assert_equal @helper.generate_md5string, "AC7B763192D40886906E657E2ED26E17"
   end
-  
+
   def test_unknown_address_mapping
     @helper.billing_address :farm => 'CA'
     assert_equal 4, @helper.fields.size
