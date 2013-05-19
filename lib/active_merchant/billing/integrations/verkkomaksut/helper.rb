@@ -73,6 +73,7 @@ module ActiveMerchant #:nodoc:
           mapping :group, "GROUP"
           
           (0..499.to_i).each do |i|
+            mapping "item_title_#{i}".to_sym, "ITEM_TITLE[#{i}]"
             mapping "item_no_#{i}".to_sym, "ITEM_NO[#{i}]"
             mapping "item_amount_#{i}".to_sym, "ITEM_AMOUNT[#{i}]"
             mapping "item_price_#{i}".to_sym, "ITEM_PRICE[#{i}]"
