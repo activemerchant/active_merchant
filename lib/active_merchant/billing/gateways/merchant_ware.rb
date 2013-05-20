@@ -167,10 +167,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, options)
-        if address = options[:billing_address] || options[:address]
-          xml.tag! "avsStreetAddress", address[:address1]
-          xml.tag! "avsStreetZipCode", address[:zip]
-        end
+        address = options[:billing_address] || options[:address] || {}
+        xml.tag! "avsStreetAddress", address[:address1]
+        xml.tag! "avsStreetZipCode", address[:zip]
       end
 
       def add_payment_source(xml, source)

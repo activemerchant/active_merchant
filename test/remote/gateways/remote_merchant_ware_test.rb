@@ -12,6 +12,10 @@ class RemoteMerchantWareTest < Test::Unit::TestCase
       :order_id => generate_unique_id[0,8],
       :billing_address => address
     }
+
+    @reference_purchase_options = {
+      :order_id => generate_unique_id[0,8]
+    }
   end
 
   def test_successful_authorization
@@ -66,7 +70,9 @@ class RemoteMerchantWareTest < Test::Unit::TestCase
     assert_success purchase
     assert purchase.authorization
 
-    assert reference_purchase = @gateway.purchase(@amount, purchase.authorization, @options)
+    assert reference_purchase = @gateway.purchase(@amount,
+                                                  purchase.authorization,
+                                                  @reference_purchase_options)
     assert_success reference_purchase
     assert_not_nil reference_purchase.authorization
   end
