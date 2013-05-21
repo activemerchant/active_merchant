@@ -310,15 +310,13 @@ module ActiveMerchant #:nodoc:
         parse(ssl_post(url, post_data(action, fields)))
       end
 
-      def parse_recurring(body, opts={}) # expected status?
-        field_array = URI::decode_www_form(body)
+      def parse_recurring(response_fields, opts={}) # expected status?
         parsed = {}
-        field_array.each do |pair|
-          key,val = pair[0],pair[1]
-          if !REBILL_FIELD_MAP.include?(key.upcase!)
-            raise "Got unkown response key: #{key}"
+        response_fields.each do |k,v|
+          if !REBILL_FIELD_MAP.include?(k)
+            raise "Got unkown response key: #{k}"
           end
-          parsed[REBILL_FIELD_MAP[pair.first]] = val
+          parsed[REBILL_FIELD_MAP[k]] = v
         end
 
         success = parsed[:status] != 'error'
@@ -326,24 +324,23 @@ module ActiveMerchant #:nodoc:
 
         Response.new(success, message, parsed,
           :test          => test?,
-          :authorization => parsed[:rebill_id],
-        )
+          :authorization => parsed[:rebill_id])
       end
 
       def parse(body)
-        field_array = URI::decode_www_form(body)
+        # The bp20api has max one value per form field.
+        response_fields = Hash[CGI::parse(body).map{|k,v| [k.upcase,v.first]}]
 
-        keys = field_array.map(&:first).map(&:upcase)
-        if keys.include? "REBILL_ID"
-          return parse_recurring(body)
+        if response_fields.include? "REBILL_ID"
+          return parse_recurring(response_fields)
         end
 
         parsed = {}
-        field_array.each do |pair|
-          if !FIELD_MAP.include?(pair[0])
-            raise "Got unkown response key: #{pair[0]}"
+        response_fields.each do |k,v|
+          if !FIELD_MAP.include?(k)
+            raise "Got unkown response key: #{k}"
           end
-          parsed[FIELD_MAP[pair.first]] = pair[1]
+          parsed[FIELD_MAP[k]] = v
         end
 
         # normalize message
@@ -437,8 +434,8 @@ module ActiveMerchant #:nodoc:
             :city => :CITY,
             :state => :STATE,
             :zip => :ZIP,
-            :country => :COUNTRY
-          }
+            :country => :COUNTRY }
+
           mapping.each do |src,dst|
             post[dst] = address[src]
           end
