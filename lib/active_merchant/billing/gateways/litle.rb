@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
         begin
           require 'LitleOnline'
         rescue LoadError
-          raise "Could not load the LitleOnline gem (>= 08.13.2).  Use `gem install LitleOnline` to install it."
+          raise "Could not load the LitleOnline gem (> 08.15.0).  Use `gem install LitleOnline` to install it."
         end
 
         if wiredump_device
