@@ -283,12 +283,17 @@ module ActiveMerchant #:nodoc:
         void_transaction(options.merge!(:reference_number => identification))
       end
 
-      # Credit a previous transaction.
+      # Refund a previous transaction.
       #
       # Note: See run_transaction for additional options.
       #
-      def credit(money, identification, options={})
+      def refund(money, identification, options={})
         refund_transaction(options.merge!(:amount => money, :reference_number => identification))
+      end
+
+      def credit(money, identification, options={})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
 
       # Customer ======================================================
