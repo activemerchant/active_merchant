@@ -1,4 +1,3 @@
-require 'uri'
 require 'digest/md5'
 
 module ActiveMerchant #:nodoc:
@@ -43,7 +42,7 @@ module ActiveMerchant #:nodoc:
         'CYCLES_REMAIN' => :cycles_remain,
         'REB_AMOUNT' => :rebill_amount,
         'NEXT_AMOUNT' => :next_amount,
-        'USUAL_DATE' => :undoc_usual_date,
+        'USUAL_DATE' => :undoc_usual_date, # Not found in the bp20rebadmin API doc.
       }
 
       self.supported_countries = ['US']
@@ -313,10 +312,8 @@ module ActiveMerchant #:nodoc:
       def parse_recurring(response_fields, opts={}) # expected status?
         parsed = {}
         response_fields.each do |k,v|
-          if !REBILL_FIELD_MAP.include?(k)
-            raise "Got unkown response key: #{k}"
-          end
-          parsed[REBILL_FIELD_MAP[k]] = v
+          mapped_key = REBILL_FIELD_MAP.include?(k) ? REBILL_FIELD_MAP[k] : k
+          parsed[mapped_key] = v
         end
 
         success = parsed[:status] != 'error'
@@ -337,13 +334,23 @@ module ActiveMerchant #:nodoc:
 
         parsed = {}
         response_fields.each do |k,v|
-          if !FIELD_MAP.include?(k)
-            raise "Got unkown response key: #{k}"
-          end
-          parsed[FIELD_MAP[k]] = v
+          mapped_key = FIELD_MAP.include?(k) ? FIELD_MAP[k] : k
+          parsed[mapped_key] = v
         end
 
         # normalize message
+        message = message_from(parsed)
+        success = parsed[:response_code] == '1'
+        Response.new(success, message, parsed,
+          :test          => test?,
+          :authorization => (parsed[:rebid] && parsed[:rebid] != '' ? parsed[:rebid] : parsed[:transaction_id]),
+          :fraud_review  => FRAUD_REVIEW_STATUSES.include?(parsed[:response_code]),
+          :avs_result    => { :code => parsed[:avs_result_code] },
+          :cvv_result    => parsed[:card_code]
+        )
+      end
+
+      def message_from(parsed)
         message = parsed[:message]
         if(parsed[:response_code].to_i == 2)
           if CARD_CODE_ERRORS.include?(parsed[:card_code])
@@ -360,15 +367,7 @@ module ActiveMerchant #:nodoc:
         elsif message =~  /Expired/
           message =  "The credit card has expired"
         end
-
-        success = parsed[:response_code] == '1'
-        Response.new(success, message, parsed,
-          :test          => test?,
-          :authorization => (parsed[:rebid] && parsed[:rebid] != '' ? parsed[:rebid] : parsed[:transaction_id]),
-          :fraud_review  => FRAUD_REVIEW_STATUSES.include?(parsed[:response_code]),
-          :avs_result    => { :code => parsed[:avs_result_code] },
-          :cvv_result    => parsed[:card_code]
-        )
+        message
       end
 
       def add_invoice(post, options)
@@ -422,26 +421,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        address = options[:shipping_address] || options[:billing_address] || options[:address]
-        if address
-          mapping = {
-            :first_name => :NAME1,
-            :last_name => :NAME2,
-            :address1 => :ADDR1,
-            :address2 => :ADDR2,
-            :company => :COMPANY_NAME,
-            :phone => :PHONE,
-            :city => :CITY,
-            :state => :STATE,
-            :zip => :ZIP,
-            :country => :COUNTRY }
-
-          mapping.each do |src,dst|
-            post[dst] = address[src]
-          end
-          if !post[:STATE] || post[:STATE] == ""
-            post[:STATE] = 'n/a'
-          end
+        if address = (options[:shipping_address] || options[:billing_address] || options[:address])
+          post[:NAME1]        = address[:first_name]
+          post[:NAME2]        = address[:last_name]
+          post[:ADDR1]        = address[:address1]
+          post[:ADDR2]        = address[:address2]
+          post[:COMPANY_NAME] = address[:company]
+          post[:PHONE]        = address[:phone]
+          post[:CITY]         = address[:city]
+          post[:STATE]        = (address[:state].blank? ? 'n/a' : address[:state])
+          post[:ZIP]          = address[:zip]
+          post[:COUNTRY]      = address[:country]
         end
       end
 
@@ -503,7 +493,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def handle_response(response)
-        if ignore_http_status or (200...300).include? response.code.to_i
+        if ignore_http_status || (200...300).include?(response.code.to_i)
           return response.body
         end
         raise ResponseError.new(response)

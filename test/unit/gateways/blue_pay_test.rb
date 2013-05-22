@@ -139,6 +139,14 @@ class BluePayTest < Test::Unit::TestCase
     assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb],  BluePayGateway.supported_cardtypes
   end
 
+  def test_parser_extracts_exactly_the_keys_in_gateway_response
+    assert_nothing_raised do
+      response = @gateway.send(:parse, "NEW_IMPORTANT_FIELD=value_on_fire")
+      assert_equal response.params.keys, ['NEW_IMPORTANT_FIELD']
+      assert_equal response.params['NEW_IMPORTANT_FIELD'], "value_on_fire"
+    end
+  end
+
   def test_failure_without_response_reason_text
     assert_nothing_raised do
       assert_equal '', @gateway.send(:parse, "MESSAGE=").message
