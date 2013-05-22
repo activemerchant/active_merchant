@@ -151,7 +151,19 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
   def test_successful_credit
     @gateway.expects(:ssl_post).returns(successful_credit_response)
-    assert response = @gateway.credit(1234, @credit_card, @options)
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.credit(1234, @credit_card, @options)
+      assert_instance_of Response, response
+      assert response.test?
+      assert_success response
+      assert_equal 'Approved', response.message['result']
+      assert_equal '47602599', response.authorization
+    end
+  end
+
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_credit_response)
+    assert response = @gateway.refund(1234, @credit_card, @options)
 
     assert_instance_of Response, response
     assert response.test?
