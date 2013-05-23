@@ -364,6 +364,22 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_include_cust_id_for_numeric_values
+   stub_comms do
+      @gateway.purchase(@amount, @credit_card, {:customer => "123"})
+    end.check_request do |method, data|
+      assert data =~ /x_cust_id=123/
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_dont_include_cust_id_for_non_numeric_values
+   stub_comms do
+      @gateway.purchase(@amount, @credit_card, {:customer => "bob@test.com"})
+    end.check_request do |method, data|
+      assert data !~ /x_cust_id/
+    end.respond_with(successful_authorization_response)
+  end
+
   private
   def post_data_fixture
     'x_encap_char=%24&x_card_num=4242424242424242&x_exp_date=0806&x_card_code=123&x_type=AUTH_ONLY&x_first_name=Longbob&x_version=3.1&x_login=X&x_last_name=Longsen&x_tran_key=Y&x_relay_response=FALSE&x_delim_data=TRUE&x_delim_char=%2C&x_amount=1.01'
