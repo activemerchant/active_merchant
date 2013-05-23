@@ -1,16 +1,20 @@
 require 'test_helper'
 
-class RemoteMerchantWareTest < Test::Unit::TestCase
+class RemoteMerchantWareVersion4Test < Test::Unit::TestCase
   def setup
-    @gateway = MerchantWareGateway.new(fixtures(:merchant_ware))
+    @gateway = MerchantWareVersion4Gateway.new(fixtures(:merchant_ware_version4))
 
     @amount = rand(1000) + 200
 
     @credit_card = credit_card('5424180279791732', {:brand => 'master'})
 
     @options = {
-      :order_id => generate_unique_id,
+      :order_id => generate_unique_id[0,8],
       :billing_address => address
+    }
+
+    @reference_purchase_options = {
+      :order_id => generate_unique_id[0,8]
     }
   end
 
@@ -38,43 +42,39 @@ class RemoteMerchantWareTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  def test_authorize_and_capture
+  def test_authorize_and_capture_and_refund
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
     assert auth.authorization
     assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
+
+    assert refund = @gateway.refund(@amount, capture.authorization, @options)
+    assert_success refund
+    assert_not_nil refund.authorization
   end
 
-  def test_authorize_and_credit
-    assert auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-    assert auth.authorization
-
-    assert credit = @gateway.credit(@amount, @credit_card, @options)
-    assert_success credit
-    assert_not_nil credit.authorization
-  end
-
-  def test_purchase_and_credit
+  def test_purchase_and_refund
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
     assert purchase.authorization
 
-    assert credit = @gateway.credit(@amount, @credit_card, @options)
-    assert_success credit
-    assert_not_nil credit.authorization
+    assert refund = @gateway.refund(@amount, purchase.authorization, @options)
+    assert_success refund
+    assert_not_nil refund.authorization
   end
 
-  def test_purchase_and_reference_credit
-    assert auth = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success auth
-    assert auth.authorization
+  def test_purchase_and_reference_purchase
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert purchase.authorization
 
-    assert credit = @gateway.credit(@amount, auth.authorization, @options)
-    assert_success credit
-    assert_not_nil credit.authorization
+    assert reference_purchase = @gateway.purchase(@amount,
+                                                  purchase.authorization,
+                                                  @reference_purchase_options)
+    assert_success reference_purchase
+    assert_not_nil reference_purchase.authorization
   end
 
   def test_authorization_and_void
@@ -88,17 +88,17 @@ class RemoteMerchantWareTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '', @options)
     assert_failure response
-    assert_equal 'Server was unable to process request. ---> strOriginalReferenceID should be at least 1 to at most 100 characters in size. Parameter name: strOriginalReferenceID', response.message
+    assert_equal "token should be at least 1 to at most 100 characters in size.\nParameter name: token", response.message
   end
 
   def test_invalid_login
-    gateway = MerchantWareGateway.new(
+    gateway = MerchantWareVersion4Gateway.new(
                 :login => '',
                 :password => '',
                 :name => ''
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'Server was unable to process request. ---> Invalid Credentials.', response.message
+    assert_equal 'Invalid Credentials.', response.message
   end
 end
