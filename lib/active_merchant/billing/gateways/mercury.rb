@@ -53,7 +53,42 @@ module ActiveMerchant #:nodoc:
         commit(options[:void], request)
       end
 
+      def batch_clear
+        request = build_admin_request("BatchClear")
+        commit('BatchClear', request)
+      end
+
+      def batch_summary
+        request = build_admin_request("BatchSummary")
+        commit('BatchSummary', request)
+      end
+
+      def batch_close(options = {})
+        required_tags = [:batch_no, :batch_item_count, :net_batch_total,
+          :credit_purchase_count, :credit_purchase_amount, :credit_return_count,
+          :credit_return_amount, :debit_purchase_count, :debit_purchase_amount,
+          :debit_return_count, :debit_return_amount]
+        request = build_admin_request("BatchClose", options, required_tags)
+        commit('BatchClose', request)
+      end
+
       private
+
+      def build_admin_request(action, options = {}, required_tags = [])
+        requires!(options, *required_tags)
+        xml = Builder::XmlMarkup.new
+
+        xml.tag! "TStream" do
+          xml.tag! "Admin" do
+            xml.tag! 'TranCode', action
+            xml.tag! 'MerchantID', @options[:login]
+            required_tags.each do |option|
+              xml.tag! option.to_s.camelize, options[option]
+            end
+          end
+        end
+        xml = xml.target!
+      end
 
       def build_non_authorized_request(action, money, credit_card, options)
         xml = Builder::XmlMarkup.new
@@ -174,22 +209,20 @@ module ActiveMerchant #:nodoc:
         response
       end
 
+      def rexml_recurse(element, response)
+        if element.has_elements?
+          element.each_element do |node|
+            rexml_recurse(node, response)
+          end
+        else
+          # leaf node, store the value
+          response[element.name.underscore.to_sym] = element.text
+        end
+      end
+
       def hashify_xml!(xml, response)
         xml = REXML::Document.new(xml)
-
-        xml.elements.each("//CmdResponse/*") do |node|
-          response[node.name.underscore.to_sym] = node.text
-        end
-
-        xml.elements.each("//TranResponse/*") do |node|
-          if node.name.to_s == "Amount"
-            node.elements.each do |amt|
-              response[amt.name.underscore.to_sym] = amt.text
-            end
-          else
-            response[node.name.underscore.to_sym] = node.text
-          end
-        end
+        rexml_recurse(REXML::XPath.match(xml, "//RStream")[0], response)
       end
 
       def endpoint_url
