@@ -379,7 +379,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if options.has_key? :customer
-          post[:cust_id] = options[:customer]
+          post[:cust_id] = options[:customer] if Float(options[:customer]) rescue nil
         end
 
         if options.has_key? :ip
