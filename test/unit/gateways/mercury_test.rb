@@ -13,7 +13,8 @@ class MercuryTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
 
     @options = {
-      :order_id => '1'
+      :credit_card => @credit_card,
+      :order_id => '1',
     }
   end
 
@@ -58,6 +59,64 @@ class MercuryTest < Test::Unit::TestCase
     assert_instance_of Response, refund_response
     assert_success refund_response
     assert refund_response.test?
+  end
+
+  def test_successful_authorize
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal "1;;000077;KbMCC1054050524  e00;|14|410100701000", response.authorization
+    assert response.test?
+  end
+
+  def test_successful_capture
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+
+    assert response = @gateway.capture(@amount, response.authorization, @options)
+
+    assert_instance_of Response, response
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_batch_clear
+    @gateway.expects(:ssl_post).returns(successful_clear_response)
+
+    assert response = @gateway.batch_clear()
+
+    assert_instance_of Response, response
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_batch_summary
+    @gateway.expects(:ssl_post).returns(successful_summary_response)
+    assert response = @gateway.batch_summary()
+
+    assert_instance_of Response, response
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_batch_close
+    assert response = @gateway.expects(:ssl_post).returns(successful_summary_response)
+
+    assert response = @gateway.batch_summary()
+
+    @gateway.expects(:ssl_post).returns(successful_close_response)
+
+    assert response = @gateway.batch_close(response.params.symbolize_keys)
+
+    assert_instance_of Response, response
+    assert_success response
+    assert response.test?
   end
 
   private
@@ -144,6 +203,152 @@ class MercuryTest < Test::Unit::TestCase
     &lt;AcqRefData&gt;K&lt;/AcqRefData&gt;
   &lt;/TranResponse&gt;
 &lt;/RStream&gt;
+</CreditTransactionResult></CreditTransactionResponse></soap:Body></soap:Envelope>
+    RESPONSE
+  end
+
+  def successful_clear_response
+    <<-RESPONSE
+<?xml version=1.0 encoding=utf-8?><soap:Envelope xmlns:soap=http://schemas.xmlsoap.org/soap/envelope/ xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance xmlns:xsd=http://www.w3.org/2001/XMLSchema><soap:Body><CreditTransactionResponse xmlns=http://www.mercurypay.com><CreditTransactionResult>&lt;?xml version=1.0?&gt;^M
+&lt;RStream&gt;^M
+  &lt;CmdResponse&gt;^M
+    &lt;ResponseOrigin&gt;Processor&lt;/ResponseOrigin&gt;^M
+    &lt;DSIXReturnCode&gt;000000&lt;/DSIXReturnCode&gt;^M
+    &lt;CmdStatus&gt;Success&lt;/CmdStatus&gt;^M
+    &lt;TextResponse&gt;OK&lt;/TextResponse&gt;^M
+    &lt;UserTraceData&gt;&lt;/UserTraceData&gt;^M
+  &lt;/CmdResponse&gt;^M
+  &lt;BatchClear&gt;^M
+    &lt;MerchantID&gt;595901&lt;/MerchantID&gt;^M
+    &lt;NetBatchTotal&gt;0.00&lt;/NetBatchTotal&gt;^M
+  &lt;/BatchClear&gt;^M
+&lt;/RStream&gt;^M
+</CreditTransactionResult></CreditTransactionResponse></soap:Body></soap:Envelope>
+    RESPONSE
+  end
+
+  def successful_summary_response
+    <<-RESPONSE
+<?xml version=1.0 encoding=utf-8?><soap:Envelope xmlns:soap=http://schemas.xmlsoap.org/soap/envelope/ xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance xmlns:xsd=http://www.w3.org/2001/XMLSchema><soap:Body><CreditTransactionResponse xmlns=http://www.mercurypay.com><CreditTransactionResult><?xml version=1.0?>^M
+<RStream>^M
+  <CmdResponse>^M
+    <ResponseOrigin>Processor</ResponseOrigin>^M
+    <DSIXReturnCode>000000</DSIXReturnCode>^M
+    <CmdStatus>Success</CmdStatus>^M
+    <TextResponse>OK</TextResponse>^M
+    <UserTraceData></UserTraceData>^M
+  </CmdResponse>^M
+  <BatchSummary>^M
+    <MerchantID>595901</MerchantID>^M
+    <BatchNo>4182</BatchNo>^M
+    <BatchItemCount>8</BatchItemCount>^M
+    <NetBatchTotal>15.16</NetBatchTotal>^M
+    <CreditPurchaseCount>8</CreditPurchaseCount>^M
+    <CreditPurchaseAmount>15.16</CreditPurchaseAmount>^M
+    <CreditReturnCount>0</CreditReturnCount>^M
+    <CreditReturnAmount>0.00</CreditReturnAmount>^M
+    <DebitPurchaseCount>0</DebitPurchaseCount>^M
+    <DebitPurchaseAmount>0.00</DebitPurchaseAmount>^M
+    <DebitReturnCount>0</DebitReturnCount>^M
+    <DebitReturnAmount>0.00</DebitReturnAmount>^M
+  </BatchSummary>^M
+</RStream>^M
+</CreditTransactionResult></CreditTransactionResponse></soap:Body></soap:Envelope>
+    RESPONSE
+  end
+
+  def successful_close_response
+    <<-RESPONSE
+<?xml version=1.0 encoding=utf-8?><soap:Envelope xmlns:soap=http://schemas.xmlsoap.org/soap/envelope/ xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance xmlns:xsd=http://www.w3.org/2001/XMLSchema><soap:Body><CreditTransactionResponse xmlns=http://www.mercurypay.com><CreditTransactionResult><?xml version=1.0?>^M
+<RStream>^M
+<CmdResponse>^M
+<ResponseOrigin>Processor</ResponseOrigin>^M
+<DSIXReturnCode>000000</DSIXReturnCode>^M
+<CmdStatus>Success</CmdStatus>^M
+<TextResponse>OK TEST</TextResponse>^M
+<UserTraceData></UserTraceData>^M
+</CmdResponse>^M
+<BatchClose>^M
+<MerchantID>595901</MerchantID>^M
+<BatchNo>4182</BatchNo>^M
+<BatchItemCount>8</BatchItemCount>^M
+<NetBatchTotal>15.16</NetBatchTotal>^M
+<CreditPurchaseCount>8</CreditPurchaseCount>^M
+<CreditPurchaseAmount>15.16</CreditPurchaseAmount>^M
+<CreditReturnCount>0</CreditReturnCount>^M
+<CreditReturnAmount>0.00</CreditReturnAmount>^M
+<DebitPurchaseCount>0</DebitPurchaseCount>^M
+<DebitPurchaseAmount>0.00</DebitPurchaseAmount>^M
+<DebitReturnCount>0</DebitReturnCount>^M
+<DebitReturnAmount>0.00</DebitReturnAmount>^M
+<ControlNo>144105408   </ControlNo>^M
+</BatchClose>^M
+</RStream>^M
+</CreditTransactionResult></CreditTransactionResponse></soap:Body></soap:Envelope>
+    RESPONSE
+  end
+
+  def successful_authorize_response
+    <<-RESPONSE
+<?xml version=1.0 encoding=utf-8?><soap:Envelope xmlns:soap=http://schemas.xmlsoap.org/soap/envelope/ xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance xmlns:xsd=http://www.w3.org/2001/XMLSchema><soap:Body><CreditTransactionResponse xmlns=http://www.mercurypay.com><CreditTransactionResult><?xml version=1.0?>^M
+<RStream>^M
+  <CmdResponse>^M
+    <ResponseOrigin>Processor</ResponseOrigin>^M
+    <DSIXReturnCode>000000</DSIXReturnCode>^M
+    <CmdStatus>Approved</CmdStatus>^M
+    <TextResponse>AP</TextResponse>^M
+    <UserTraceData></UserTraceData>^M
+  </CmdResponse>^M
+  <TranResponse>^M
+    <MerchantID>595901</MerchantID>^M
+    <AcctNo>5499990123456781</AcctNo>^M
+    <ExpDate>0914</ExpDate>^M
+    <CardType>M/C</CardType>^M
+    <TranCode>PreAuth</TranCode>^M
+    <AuthCode>000077</AuthCode>^M
+    <InvoiceNo>1</InvoiceNo>^M
+    <CVVResult>M</CVVResult>^M
+    <Amount>^M
+      <Purchase>1.00</Purchase>^M
+      <Authorize>1.00</Authorize>^M
+    </Amount>^M
+    <AcqRefData>KbMCC1054050524  e00</AcqRefData>^M
+    <ProcessData>|14|410100701000</ProcessData>^M
+  </TranResponse>^M
+</RStream>^M
+</CreditTransactionResult></CreditTransactionResponse></soap:Body></soap:Envelope>
+    RESPONSE
+  end
+
+  def successful_capture_response
+    <<-RESPONSE
+<?xml version=1.0 encoding=utf-8?><soap:Envelope xmlns:soap=http://schemas.xmlsoap.org/soap/envelope/ xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance xmlns:xsd=http://www.w3.org/2001/XMLSchema><soap:Body><CreditTransactionResponse xmlns=http://www.mercurypay.com><CreditTransactionResult><?xml version=1.0?>^M
+<RStream>^M
+  <CmdResponse>^M
+    <ResponseOrigin>Processor</ResponseOrigin>^M
+    <DSIXReturnCode>000000</DSIXReturnCode>^M
+    <CmdStatus>Approved</CmdStatus>^M
+    <TextResponse>AP*</TextResponse>^M
+    <UserTraceData></UserTraceData>^M
+  </CmdResponse>^M
+  <TranResponse>^M
+    <MerchantID>595901</MerchantID>^M
+    <AcctNo>5499990123456781</AcctNo>^M
+    <ExpDate>0914</ExpDate>^M
+    <CardType>M/C</CardType>^M
+    <TranCode>PreAuthCapture</TranCode>^M
+    <AuthCode>000077</AuthCode>^M
+    <CaptureStatus>Captured</CaptureStatus>^M
+    <RefNo>0008</RefNo>^M
+    <InvoiceNo>1</InvoiceNo>^M
+    <Amount>^M
+      <Purchase>1.00</Purchase>^M
+      <Authorize>1.00</Authorize>^M
+    </Amount>^M
+    <AcqRefData>KbMCC1051050524  c0   </AcqRefData>^M
+    <ProcessData>|15|410100700000</ProcessData>^M
+  </TranResponse>^M
+</RStream>^M
 </CreditTransactionResult></CreditTransactionResponse></soap:Body></soap:Envelope>
     RESPONSE
   end
