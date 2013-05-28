@@ -10,12 +10,40 @@ module ActiveMerchant #:nodoc:
 
       self.ignore_http_status = true
 
-      RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT = 0, 2, 3
-      AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE  = 5, 6, 38
-
       CARD_CODE_ERRORS = %w( N S )
       AVS_ERRORS = %w( A E N R W Z )
       AVS_REASON_CODES = %w(27 45)
+
+      FRAUD_REVIEW_STATUSES = %w( E 0 )
+
+      FIELD_MAP = {
+        'TRANS_ID' => :transaction_id,
+        'STATUS' => :response_code,
+        'AVS' => :avs_result_code,
+        'CVV2'=> :card_code,
+        'AUTH_CODE' => :authorization,
+        'MESSAGE' => :message,
+        'REBID' => :rebid,
+        'TRANS_TYPE' => :trans_type,
+        'PAYMENT_ACCOUNT_MASK' => :acct_mask,
+        'CARD_TYPE' => :card_type,
+      }
+
+      REBILL_FIELD_MAP = {
+        'REBILL_ID' => :rebill_id,
+        'ACCOUNT_ID'=> :account_id,
+        'USER_ID' => :user_id,
+        'TEMPLATE_ID' => :template_id,
+        'STATUS' => :status,
+        'CREATION_DATE' => :creation_date,
+        'NEXT_DATE' => :next_date,
+        'LAST_DATE' => :last_date,
+        'SCHED_EXPR' => :schedule,
+        'CYCLES_REMAIN' => :cycles_remain,
+        'REB_AMOUNT' => :rebill_amount,
+        'NEXT_AMOUNT' => :next_amount,
+        'USUAL_DATE' => :undoc_usual_date, # Not found in the bp20rebadmin API doc.
+      }
 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
@@ -278,80 +306,68 @@ module ActiveMerchant #:nodoc:
           url = live_url
           fields[:TAMPER_PROOF_SEAL] = calc_tps(amount(money), fields)
         end
+        parse(ssl_post(url, post_data(action, fields)))
+      end
 
-        response = parse(ssl_post(url, post_data(action, fields)))
-
-        message = message_from(response)
-        if(response['rebill_id'])
-          response_id = response['rebill_id'][0]
-        elsif(response['TRANS_ID'])
-          response_id = response['TRANS_ID'].to_s
-        else
-          response_id = response[TRANSACTION_ID]
+      def parse_recurring(response_fields, opts={}) # expected status?
+        parsed = {}
+        response_fields.each do |k,v|
+          mapped_key = REBILL_FIELD_MAP.include?(k) ? REBILL_FIELD_MAP[k] : k
+          parsed[mapped_key] = v
         end
-        avs = ((response[AVS_RESULT_CODE] != '') ? response[AVS_RESULT_CODE] : '')
-        cvv2 = (!response[CARD_CODE_RESPONSE_CODE].empty? ? response[CARD_CODE_RESPONSE_CODE] : '')
-        Response.new(success?(response), message, response,
+
+        success = parsed[:status] != 'error'
+        message = parsed[:status]
+
+        Response.new(success, message, parsed,
           :test          => test?,
-          :authorization => response_id,
-          :fraud_review  => fraud_review?(response),
-          :avs_result    => { :code => avs },
-          :cvv_result    => cvv2
-        )
-      end
-
-      def success?(response)
-        (
-          (response['STATUS'] == '1') ||
-          (message_from(response) =~ /approved/) ||
-          response['rebill_id'] ||
-          (response[RESPONSE_REASON_TEXT] =~ /approved/)
-        )
-      end
-
-      def fraud_review?(response)
-        (
-          (response['STATUS'] == 'E') ||
-          (response['STATUS'] == '0') ||
-          (response[RESPONSE_REASON_TEXT] =~ /being reviewed/)
-        )
+          :authorization => parsed[:rebill_id])
       end
 
       def parse(body)
-        fields = CGI::parse(body)
-        if(fields['MESSAGE'].first || fields['rebill_id'].first)
-          if fields['MESSAGE']
-            message = if(fields['MESSAGE'][0] == "Missing ACCOUNT_ID")
-              "The merchant login ID or password is invalid"
-            elsif(fields['MESSAGE'][0] =~ /Approved/)
-              "This transaction has been approved"
-            elsif(fields['MESSAGE'][0] =~ /Expired/)
-              "The credit card has expired"
-            else
-              fields['MESSAGE']
-            end
-            fields.delete('MESSAGE')
-          end
-          status = (fields.delete('STATUS') || "")
-          avs = (fields.delete('AVS') || "")
-          cvv2 = (fields.delete('CVV2') || "")
-          trans_id = (fields.delete('MASTER_ID') || "")
-          fields[:avs_result_code] = avs
-          fields[:card_code] = cvv2
-          fields[:response_code] = status
-          fields[:response_reason_code] = ''
-          fields[:response_reason_text] = message
-          fields[:transaction_id] = trans_id
-          fields
-        else
-          # parse response if using other old API
-          hash = Hash.new
-          fields = fields.first[0].split(",")
-          fields.each_index do |x|
-            hash[x] = fields[x].tr('$','')
-          end
-          hash
+        # The bp20api has max one value per form field.
+        response_fields = Hash[CGI::parse(body).map{|k,v| [k.upcase,v.first]}]
+
+        if response_fields.include? "REBILL_ID"
+          return parse_recurring(response_fields)
         end
+
+        parsed = {}
+        response_fields.each do |k,v|
+          mapped_key = FIELD_MAP.include?(k) ? FIELD_MAP[k] : k
+          parsed[mapped_key] = v
+        end
+
+        # normalize message
+        message = message_from(parsed)
+        success = parsed[:response_code] == '1'
+        Response.new(success, message, parsed,
+          :test          => test?,
+          :authorization => (parsed[:rebid] && parsed[:rebid] != '' ? parsed[:rebid] : parsed[:transaction_id]),
+          :fraud_review  => FRAUD_REVIEW_STATUSES.include?(parsed[:response_code]),
+          :avs_result    => { :code => parsed[:avs_result_code] },
+          :cvv_result    => parsed[:card_code]
+        )
+      end
+
+      def message_from(parsed)
+        message = parsed[:message]
+        if(parsed[:response_code].to_i == 2)
+          if CARD_CODE_ERRORS.include?(parsed[:card_code])
+            message = CVVResult.messages[parsed[:card_code]]
+          elsif AVS_ERRORS.include?(parsed[:avs_result_code])
+            message = AVSResult.messages[ parsed[:avs_result_code] ]
+          else
+            message = message.chomp('.')
+          end
+        elsif message == "Missing ACCOUNT_ID" 
+          message = "The merchant login ID or password is invalid"
+        elsif message =~ /Approved/
+          message = "This transaction has been approved"
+        elsif message =~  /Expired/
+          message =  "The credit card has expired"
+        end
+        message
       end
 
       def add_invoice(post, options)
@@ -429,7 +445,7 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         post = {}
-        post[:version]        = '3.0'
+        post[:version]        = '1'
         post[:login]          = ''
         post[:tran_key]       = ''
         post[:relay_response] = "FALSE"
@@ -441,22 +457,6 @@ module ActiveMerchant #:nodoc:
         post[:exp_date]       = '1212'
         post[:solution_ID]    = application_id if(application_id && application_id != "ActiveMerchant")
         post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
-      end
-
-      def message_from(results)
-        if(results[:response_code] == 2)
-          if CARD_CODE_ERRORS.include?(results[:card_code])
-            CVVResult.messages[results[:card_code]]
-          elsif AVS_REASON_CODES.include?(results[:response_reason_code]) && AVS_ERRORS.include?(results[:avs_result_code])
-            AVSResult.messages[ results[:avs_result_code] ]
-          else
-            (results[:response_reason_text] ? results[:response_reason_text].chomp('.') : '')
-          end
-        elsif results[:response_reason_text]
-          results[:response_reason_text]
-        elsif !results['STATUS']
-          (results[RESPONSE_REASON_TEXT] ? results[RESPONSE_REASON_TEXT].chomp('.') : '')
-        end
       end
 
       def expdate(creditcard)
@@ -487,22 +487,16 @@ module ActiveMerchant #:nodoc:
             @options[:password],
             @options[:login],
             post[:TRANS_TYPE],
-            post[:REBILL_ID][0]
+            post[:REBILL_ID]
           ].join("")
         )
       end
 
       def handle_response(response)
-        if ignore_http_status
-          response.body
-        else
-          case response.code.to_i
-          when 200...300
-            response.body
-          else
-            raise ResponseError.new(response)
-          end
+        if ignore_http_status || (200...300).include?(response.code.to_i)
+          return response.body
         end
+        raise ResponseError.new(response)
       end
     end
   end

@@ -31,8 +31,9 @@ class BluePayTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  #  The included test account credentials do not support ACH processor.
   def test_successful_purchase_with_check
-    assert response = @gateway.purchase(@amount, check, @options)
+    assert response = @gateway.purchase(@amount, check, @options.merge(:email=>'foo@example.com'))
     assert_success response
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
@@ -63,10 +64,36 @@ class BluePayTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_that_we_understand_and_parse_all_keys_in_standard_response
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+
+    response_keys = response.params.keys.map(&:to_sym)
+    unknown_response_keys = response_keys - BluePayGateway::FIELD_MAP.values
+    missing_response_keys = BluePayGateway::FIELD_MAP.values - response_keys
+
+    assert_empty unknown_response_keys, "unknown_response_keys"
+    assert_empty missing_response_keys, "missing response_keys"
+  end
+
+  def test_that_we_understand_and_parse_all_keys_in_rebilling_response
+    assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
+    assert_success response
+    rebill_id = response.params['rebid']
+    assert response = @gateway.update_recurring(:rebill_id => rebill_id, :rebill_amount => @amount * 2)
+    assert_success response
+
+    response_keys = response.params.keys.map(&:to_sym)
+    unknown_response_keys = response_keys - BluePayGateway::REBILL_FIELD_MAP.values
+    missing_response_keys = BluePayGateway::REBILL_FIELD_MAP.values - response_keys
+
+    assert_empty unknown_response_keys, "unknown_response_keys"
+    assert_empty missing_response_keys, "missing response_keys"
+  end
+
   def test_authorization_and_capture
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
-
     assert capture = @gateway.capture(@amount, authorization.authorization)
     assert_success capture
     assert_equal 'This transaction has been approved', capture.message
@@ -86,16 +113,9 @@ class BluePayTest < Test::Unit::TestCase
       :login => 'X',
       :password => 'Y'
     )
-
     assert response = gateway.purchase(@amount, @credit_card)
 
     assert_equal Response, response.class
-    assert_equal ["avs_result_code",
-                  "card_code",
-                  "response_code",
-                  "response_reason_code",
-                  "response_reason_text",
-                  "transaction_id"], response.params.keys.sort
     assert_match(/The merchant login ID or password is invalid/, response.message)
     assert_failure response
   end
@@ -105,16 +125,9 @@ class BluePayTest < Test::Unit::TestCase
       :login => 'X',
       :password => 'Y'
     )
-
     assert response = gateway.purchase(@amount, @credit_card)
-
     assert_equal Response, response.class
-    assert_equal ["avs_result_code",
-                  "card_code",
-                  "response_code",
-                  "response_reason_code",
-                  "response_reason_text",
-                  "transaction_id"], response.params.keys.sort
+
     assert_match(/The merchant login ID or password is invalid/, response.message)
     assert_failure response
   end
@@ -124,16 +137,18 @@ class BluePayTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
 
-    rebill_id = response.params['REBID']
+    rebill_id = response.params['rebid']
 
     assert response = @gateway.update_recurring(:rebill_id => rebill_id, :rebill_amount => @amount * 2)
     assert_success response
 
     assert response = @gateway.status_recurring(rebill_id)
     assert_success response
+    assert_equal response.params['status'], 'active'
 
     assert response = @gateway.cancel_recurring(rebill_id)
     assert_success response
+    assert_equal response.params['status'], 'stopped'
   end
 
   def test_recurring_should_fail_expired_credit_card
