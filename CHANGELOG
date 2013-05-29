@@ -6,6 +6,7 @@
 * Dwolla: Major bug fixes. [capablemonkey, melari]
 * Stripe: Add support for including track data [melari]
 * Balanced: Fix exception for invalid email [duff]
+* Update supported countries for Paymill & PaymentExpress [duff]
 
 == Version 1.33.0 (May 30, 2013)
 

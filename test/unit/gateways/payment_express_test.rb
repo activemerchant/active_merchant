@@ -11,10 +11,7 @@ class PaymentExpressTest < Test::Unit::TestCase
 
     @visa = credit_card
 
-    @solo = credit_card("6334900000000005",
-              :brand   => "solo",
-              :issue_number => '01'
-            )
+    @solo = credit_card("6334900000000005", :brand => "solo", :issue_number => '01')
 
     @options = {
       :order_id => generate_unique_id,
@@ -39,31 +36,31 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_successful_authorization
-     @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
 
-     assert response = @gateway.purchase(@amount, @visa, @options)
-     assert_success response
-     assert response.test?
-     assert_equal 'The Transaction was approved', response.message
-     assert_equal '00000004011a2478', response.authorization
+    assert response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'The Transaction was approved', response.message
+    assert_equal '00000004011a2478', response.authorization
   end
 
   def test_purchase_request_should_include_cvc2_presence
-     @gateway.expects(:commit).with do |type, request|
-       type == :purchase && request.to_s =~ %r{<Cvc2Presence>1<\/Cvc2Presence>}
-     end
+    @gateway.expects(:commit).with do |type, request|
+      type == :purchase && request.to_s =~ %r{<Cvc2Presence>1<\/Cvc2Presence>}
+    end
 
-     @gateway.purchase(@amount, @visa, @options)
+    @gateway.purchase(@amount, @visa, @options)
   end
 
   def test_successful_solo_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
 
-     assert response = @gateway.purchase(@amount, @solo, @options)
-     assert_success response
-     assert response.test?
-     assert_equal 'The Transaction was approved', response.message
-     assert_equal '00000004011a2478', response.authorization
+    assert response = @gateway.purchase(@amount, @solo, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'The Transaction was approved', response.message
+    assert_equal '00000004011a2478', response.authorization
   end
 
   def test_successful_card_store
@@ -128,11 +125,11 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-     assert_equal ['AU','MY','NZ','SG','ZA','GB','US'], PaymentExpressGateway.supported_countries
-   end
+    assert_equal %w(AU CA DE ES FR GB HK IE MY NL NZ SG US ZA), PaymentExpressGateway.supported_countries
+  end
 
   def test_supported_card_types
-   assert_equal [ :visa, :master, :american_express, :diners_club, :jcb ], PaymentExpressGateway.supported_cardtypes
+    assert_equal [ :visa, :master, :american_express, :diners_club, :jcb ], PaymentExpressGateway.supported_cardtypes
   end
 
   def test_avs_result_not_supported

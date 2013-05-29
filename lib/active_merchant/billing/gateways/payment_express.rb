@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
       # However, regular accounts with DPS only support VISA and Mastercard
       self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb ]
 
-      self.supported_countries = %w[ AU MY NZ SG ZA GB US ]
+      self.supported_countries = %w[ AU CA DE ES FR GB HK IE MY NL NZ SG US ZA ]
 
       self.homepage_url = 'http://www.paymentexpress.com/'
       self.display_name = 'PaymentExpress'
