@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.33.0 (May 30, 2013)
+
 * Netaxept: Completely revamped to use the "M" service type [rbjordan3, ntalbott]
 * Litle: Void authorizations via an auth reversal [jrust]
 * Add RBK Money integration [england]
@@ -32,6 +34,12 @@
 * Float Gemfiles to latest Rails [sanemat]
 * USA ePay Advanced: Fix Check support [RyanScottLewis]
 * Authorize.Net: Match up Check fields better with eCheck.Net requirements [ntalbott]
+* Bluepay: Updated to bp20post api [cagerton, melari]
+* Net Registry: Deprecate credit method [jduff]
+* Sage: Don't include T_customer_number unless it is numeric [melari]
+* Auth.net: Don't include cust_id unless it is numeric [melari]
+* Epay: Deprecate credit method [melari]
+* New PayU.in Integration [PayU, melari]
 
 == Version 1.32.1 (April 4, 2013)
 
