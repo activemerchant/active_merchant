@@ -350,13 +350,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment_source(params, source, options={})
-        case source
-        when ActiveMerchant::Billing::CreditCard
-          add_creditcard(params, source)
-        when ActiveMerchant::Billing::Check
+        if card_brand(source) == "check"
           add_check(params, source, options)
         else
-          raise ArgumentError, "Unsupported payment source #{source.inspect}. Must be either CreditCard or Check."
+          add_creditcard(params, source)
         end
       end
 
