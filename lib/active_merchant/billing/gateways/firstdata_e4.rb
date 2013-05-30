@@ -113,14 +113,12 @@ module ActiveMerchant #:nodoc:
 
         add_amount(xml, money)
 
-        case credit_card_or_store_authorization
-        when ActiveMerchant::Billing::CreditCard
-          add_credit_card(xml, credit_card_or_store_authorization)
-        when String
+        if credit_card_or_store_authorization.is_a? String
           add_credit_card_token(xml, credit_card_or_store_authorization)
         else
-          raise ArgumentError.new "#{credit_card_or_store_authorization.inspect} is in invalid parameter. You may pass ActiveMerchant::Billing::CreditCard or String (from `response.authorization`)"
+          add_credit_card(xml, credit_card_or_store_authorization)
         end
+
         add_customer_data(xml, options)
         add_invoice(xml, options)
 
