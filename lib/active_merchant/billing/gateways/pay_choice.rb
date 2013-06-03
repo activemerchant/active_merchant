@@ -13,6 +13,7 @@ module ActiveMerchant
         requires!(options, :login, :password)
         @login = options[:login]
         @password = options[:password]
+        @environment = test? ? :sandbox : :production
         super
       end
 
@@ -51,10 +52,9 @@ module ActiveMerchant
      private
 
       def init
-        PayChoice.new(
+        PayChoice.new({
           username: @login,
-          password: @password
-        )
+          password: @password}, @environment)
       end
 
       def to_hash_from_credit_card(credit_card)
