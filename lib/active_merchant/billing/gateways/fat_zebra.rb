@@ -93,6 +93,7 @@ module ActiveMerchant #:nodoc:
       def commit(method, uri, parameters=nil)
         raw_response = response = nil
         success = false
+        authorization = nil
         begin
           raw_response = ssl_request(method, get_url(uri), parameters.to_json, headers)
           response = parse(raw_response)
@@ -108,8 +109,10 @@ module ActiveMerchant #:nodoc:
           response = json_error(raw_response)
         end
 
-        message = response["response"]["message"]
-        unless response["successful"]
+        if response["successful"] && response["response"]
+          authorization = response["response"]["id"] || response["response"]["token"]
+          message = response["response"]["message"]
+        else
           # There is an error, so we will show that instead
           message = response["errors"].empty? ? "Unknown Error" : response["errors"].join(", ")
         end
@@ -118,7 +121,7 @@ module ActiveMerchant #:nodoc:
           message,
           response,
           :test => response.has_key?("test") ? response["test"] : false,
-          :authorization => response["response"]["id"] || response["response"]["token"])
+          :authorization => authorization)
       end
 
       # Parse the returned JSON, if parse errors are raised then return a detailed error.
