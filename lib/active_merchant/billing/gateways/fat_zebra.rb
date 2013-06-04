@@ -153,7 +153,7 @@ module ActiveMerchant #:nodoc:
       class FatZebraResponse < Response
         # Provides access to the credit card token from #store
         def token
-          @params["response"]["token"]
+          @params["response"]["token"] if @params["response"]
         end
       end
     end
