@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Fat Zebra: More consistent handling of tokens [adrianmacneil]
+
 == Version 1.35.1 (July 22, 2013)
 
 * Stripe: Allow application_fees to be refunded via the refund_application_fee flag [melari]
