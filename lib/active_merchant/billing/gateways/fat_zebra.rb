@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'https://www.fatzebra.com.au/'
       self.display_name = 'Fat Zebra'
-    
+
       # Setup a new instance of the gateway.
       #
       # The options hash should include :username and :token
@@ -81,9 +81,11 @@ module ActiveMerchant #:nodoc:
           post[:card_expiry] = "#{creditcard.month}/#{creditcard.year}"
           post[:cvv] = creditcard.verification_value if creditcard.verification_value?
           post[:card_holder] = creditcard.name if creditcard.name
+        elsif creditcard.is_a?(String)
+          post[:card_token] = creditcard
         else
-            post[:card_token] = creditcard[:token]
-            post[:cvv] = creditcard[:cvv]
+          post[:card_token] = creditcard[:token]
+          post[:cvv] = creditcard[:cvv]
         end
       end
 
@@ -146,7 +148,7 @@ module ActiveMerchant #:nodoc:
           "Authorization" => "Basic " + Base64.strict_encode64(@username.to_s + ":" + @token.to_s).strip,
           "User-Agent" => "Fat Zebra v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
         }
-      end 
+      end
     end
   end
 end
