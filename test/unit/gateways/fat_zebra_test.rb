@@ -89,6 +89,8 @@ class FatZebraTest < Test::Unit::TestCase
 
     assert response = @gateway.store(@credit_card)
     assert_success response
+    assert_equal "e1q7dbj2", response.params["response"]["token"]
+    assert_equal "e1q7dbj2", response.token
   end
 
   def test_unsuccessful_tokenization

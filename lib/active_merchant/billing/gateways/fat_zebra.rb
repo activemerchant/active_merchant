@@ -114,7 +114,7 @@ module ActiveMerchant #:nodoc:
           message = response["errors"].empty? ? "Unknown Error" : response["errors"].join(", ")
         end
 
-        Response.new(success,
+        FatZebraResponse.new(success,
           message,
           response,
           :test => response.has_key?("test") ? response["test"] : false,
@@ -148,6 +148,13 @@ module ActiveMerchant #:nodoc:
           "Authorization" => "Basic " + Base64.strict_encode64(@username.to_s + ":" + @token.to_s).strip,
           "User-Agent" => "Fat Zebra v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
         }
+      end
+
+      class FatZebraResponse < Response
+        # Provides access to the credit card token from #store
+        def token
+          @params["response"]["token"]
+        end
       end
     end
   end
