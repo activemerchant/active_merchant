@@ -365,6 +365,27 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal "B-3R788221G4476823M", response.params["billing_agreement_id"]
   end
 
+  def test_unstore_successful
+    @gateway.expects(:ssl_post).returns(successful_cancel_billing_agreement_response)
+    response = @gateway.unstore("B-3RU433629T663020S")
+
+    assert response.success?
+    assert_equal "Success", response.params['ack']
+    assert_equal "Success", response.message
+    assert_equal "B-3RU433629T663020S", response.params["billing_agreement_id"]
+    assert_equal "Canceled", response.params["billing_agreement_status"]
+  end
+
+  def test_unstore_failed
+    @gateway.expects(:ssl_post).returns(failed_cancel_billing_agreement_response)
+    response = @gateway.unstore("B-3RU433629T663020S")
+
+    assert !response.success?
+    assert_equal "Failure", response.params['ack']
+    assert_equal "Billing Agreement was cancelled", response.message
+    assert_equal "10201", response.params["error_codes"]
+  end
+
   def test_build_reference_transaction_test
     PaypalExpressGateway.application_id = 'ActiveMerchant_FOO'
     xml = REXML::Document.new(@gateway.send(:build_reference_transaction_request, 'Sale', 2000, {
@@ -919,6 +940,59 @@ def successful_authorize_reference_transaction_response
       </SetExpressCheckoutResponse>
     </SOAP-ENV:Body>
   </SOAP-ENV:Envelope>
+      RESPONSE
+    end
+
+    def successful_cancel_billing_agreement_response
+      <<-RESPONSE
+        <?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes"
+        xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+        xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ed="urn:ebay:apis:EnhancedDataTypes" xmlns:ebl="urn:ebay:apis:eBLBaseComponents"
+        xmlns:ns="urn:ebay:api:PayPalAPI"><SOAP-ENV:Header><Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext" xsi:type="wsse:SecurityType"></Security><RequesterCredentials
+        xmlns="urn:ebay:api:PayPalAPI" xsi:type="ebl:CustomSecurityHeaderType"><Credentials xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:UserIdPasswordType"><Username
+        xsi:type="xs:string"></Username><Password xsi:type="xs:string"></Password><Signature xsi:type="xs:string"></Signature><Subject
+        xsi:type="xs:string"></Subject></Credentials></RequesterCredentials></SOAP-ENV:Header><SOAP-ENV:Body id="_0"><BAUpdateResponse xmlns="urn:ebay:api:PayPalAPI"><Timestamp
+        xmlns="urn:ebay:apis:eBLBaseComponents">2013-06-04T16:24:31Z</Timestamp><Ack xmlns="urn:ebay:apis:eBLBaseComponents">Success</Ack><CorrelationID
+        xmlns="urn:ebay:apis:eBLBaseComponents">aecbb96bd4658</CorrelationID><Version xmlns="urn:ebay:apis:eBLBaseComponents">72</Version><Build
+        xmlns="urn:ebay:apis:eBLBaseComponents">6118442</Build><BAUpdateResponseDetails xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:BAUpdateResponseDetailsType"><BillingAgreementID
+        xsi:type="xs:string">B-3RU433629T663020S</BillingAgreementID><BillingAgreementDescription xsi:type="xs:string">Wow. Amazing.</BillingAgreementDescription><BillingAgreementStatus
+        xsi:type="ebl:MerchantPullStatusCodeType">Canceled</BillingAgreementStatus><PayerInfo xsi:type="ebl:PayerInfoType"><Payer xsi:type="ebl:EmailAddressType">duff@example.com</Payer><PayerID
+        xsi:type="ebl:UserIDType">VZNKJ2ZWMYK2E</PayerID><PayerStatus xsi:type="ebl:PayPalUserStatusCodeType">verified</PayerStatus><PayerName xsi:type="ebl:PersonNameType"><Salutation
+        xmlns="urn:ebay:apis:eBLBaseComponents"></Salutation><FirstName xmlns="urn:ebay:apis:eBLBaseComponents">Duff</FirstName><MiddleName
+        xmlns="urn:ebay:apis:eBLBaseComponents"></MiddleName><LastName xmlns="urn:ebay:apis:eBLBaseComponents">Jones</LastName><Suffix
+        xmlns="urn:ebay:apis:eBLBaseComponents"></Suffix></PayerName><PayerCountry xsi:type="ebl:CountryCodeType">US</PayerCountry><PayerBusiness xsi:type="xs:string"></PayerBusiness><Address
+        xsi:type="ebl:AddressType"><Name xsi:type="xs:string"></Name><Street1 xsi:type="xs:string"></Street1><Street2 xsi:type="xs:string"></Street2><CityName
+        xsi:type="xs:string"></CityName><StateOrProvince xsi:type="xs:string"></StateOrProvince><CountryName></CountryName><Phone xsi:type="xs:string"></Phone><PostalCode
+        xsi:type="xs:string"></PostalCode><AddressID xsi:type="xs:string"></AddressID><AddressOwner xsi:type="ebl:AddressOwnerCodeType">PayPal</AddressOwner><ExternalAddressID
+        xsi:type="xs:string"></ExternalAddressID><AddressStatus
+        xsi:type="ebl:AddressStatusCodeType">None</AddressStatus></Address></PayerInfo></BAUpdateResponseDetails></BAUpdateResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
+      RESPONSE
+    end
+
+    def failed_cancel_billing_agreement_response
+      <<-RESPONSE
+        <?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes"
+        xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+        xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ed="urn:ebay:apis:EnhancedDataTypes" xmlns:ebl="urn:ebay:apis:eBLBaseComponents"
+        xmlns:ns="urn:ebay:api:PayPalAPI"><SOAP-ENV:Header><Security xmlns="http://schemas.xmlsoap.org/ws/2002/12/secext" xsi:type="wsse:SecurityType"></Security><RequesterCredentials
+        xmlns="urn:ebay:api:PayPalAPI" xsi:type="ebl:CustomSecurityHeaderType"><Credentials xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:UserIdPasswordType"><Username
+        xsi:type="xs:string"></Username><Password xsi:type="xs:string"></Password><Signature xsi:type="xs:string"></Signature><Subject
+        xsi:type="xs:string"></Subject></Credentials></RequesterCredentials></SOAP-ENV:Header><SOAP-ENV:Body id="_0"><BAUpdateResponse xmlns="urn:ebay:api:PayPalAPI"><Timestamp
+        xmlns="urn:ebay:apis:eBLBaseComponents">2013-06-04T16:25:06Z</Timestamp><Ack xmlns="urn:ebay:apis:eBLBaseComponents">Failure</Ack><CorrelationID
+        xmlns="urn:ebay:apis:eBLBaseComponents">5ec2d55830b40</CorrelationID><Errors xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:ErrorType"><ShortMessage xsi:type="xs:string">Billing
+        Agreement was cancelled</ShortMessage><LongMessage xsi:type="xs:string">Billing Agreement was cancelled</LongMessage><ErrorCode xsi:type="xs:token">10201</ErrorCode><SeverityCode
+        xmlns="urn:ebay:apis:eBLBaseComponents">Error</SeverityCode></Errors><Version xmlns="urn:ebay:apis:eBLBaseComponents">72</Version><Build
+        xmlns="urn:ebay:apis:eBLBaseComponents">6118442</Build><BAUpdateResponseDetails xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:BAUpdateResponseDetailsType"><PayerInfo
+        xsi:type="ebl:PayerInfoType"><Payer xsi:type="ebl:EmailAddressType"></Payer><PayerID xsi:type="ebl:UserIDType"></PayerID><PayerStatus
+        xsi:type="ebl:PayPalUserStatusCodeType">unverified</PayerStatus><PayerName xsi:type="ebl:PersonNameType"><Salutation xmlns="urn:ebay:apis:eBLBaseComponents"></Salutation><FirstName
+        xmlns="urn:ebay:apis:eBLBaseComponents"></FirstName><MiddleName xmlns="urn:ebay:apis:eBLBaseComponents"></MiddleName><LastName xmlns="urn:ebay:apis:eBLBaseComponents"></LastName><Suffix
+        xmlns="urn:ebay:apis:eBLBaseComponents"></Suffix></PayerName><PayerBusiness xsi:type="xs:string"></PayerBusiness><Address xsi:type="ebl:AddressType"><Name
+        xsi:type="xs:string"></Name><Street1 xsi:type="xs:string"></Street1><Street2 xsi:type="xs:string"></Street2><CityName xsi:type="xs:string"></CityName><StateOrProvince
+        xsi:type="xs:string"></StateOrProvince><CountryName></CountryName><Phone xsi:type="xs:string"></Phone><PostalCode xsi:type="xs:string"></PostalCode><AddressID
+        xsi:type="xs:string"></AddressID><AddressOwner xsi:type="ebl:AddressOwnerCodeType">PayPal</AddressOwner><ExternalAddressID xsi:type="xs:string"></ExternalAddressID><AddressStatus
+        xsi:type="ebl:AddressStatusCodeType">None</AddressStatus></Address></PayerInfo></BAUpdateResponseDetails></BAUpdateResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
       RESPONSE
     end
 end
