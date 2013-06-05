@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Fat Zebra: More consistent handling of tokens [adrianmacneil]
+* Add Platron integration [alexwl]
 
 == Version 1.35.1 (July 22, 2013)
 
