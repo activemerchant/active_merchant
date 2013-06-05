@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * PayPal Express gateway: Add unstore support [duff]
+* Stripe: Send application_fee with capture requests [melari]
 
 == Version 1.33.0 (May 30, 2013)
 
