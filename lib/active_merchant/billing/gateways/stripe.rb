@@ -58,7 +58,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        commit(:post, "charges/#{CGI.escape(authorization)}/capture", {:amount => amount(money)})
+        post = {}
+        post[:amount] = amount(money)
+        add_application_fee(post, options)
+
+        commit(:post, "charges/#{CGI.escape(authorization)}/capture", post)
       end
 
       def void(identification, options = {})
@@ -109,14 +113,18 @@ module ActiveMerchant #:nodoc:
         add_customer(post, options)
         add_customer_data(post,options)
         post[:description] = options[:description] || options[:email]
-        post[:application_fee] = options[:application_fee] if options[:application_fee]
         add_flags(post, options)
+        add_application_fee(post, options)
         post
       end
 
       def add_amount(post, money, options)
         post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money)).downcase
+      end
+
+      def add_application_fee(post, options)
+        post[:application_fee] = options[:application_fee] if options[:application_fee]
       end
 
       def add_customer_data(post, options)
