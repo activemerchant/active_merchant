@@ -422,8 +422,6 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         if address = (options[:shipping_address] || options[:billing_address] || options[:address])
-          post[:NAME1]        = address[:first_name]
-          post[:NAME2]        = address[:last_name]
           post[:ADDR1]        = address[:address1]
           post[:ADDR2]        = address[:address2]
           post[:COMPANY_NAME] = address[:company]
