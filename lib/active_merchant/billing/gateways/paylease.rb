@@ -5,6 +5,8 @@ module ActiveMerchant #:nodoc:
       TEST_URL = LIVE_URL
       
       CC_PAYMENT = 'CCPayment'
+      AUTHORIZE = 'AUTH'
+      CAPTURE = 'CAPTURE'
       
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -20,12 +22,29 @@ module ActiveMerchant #:nodoc:
       
       
       def authorize(money, creditcard, options = {})
-        raise 'Paylease does not support "authorize" action.  Please use "purchase" instead.'
+        requires!(options, :payer_reference_id)
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.instruct!
+        xml.tag! 'PayLeaseGatewayRequest' do
+          add_credentials(xml, options)
+          add_mode(xml, options)
+          add_cc_authorize_transactions(xml, money, creditcard, options)
+        end 
+        commit(xml.target!)
       end
       
       
       def capture(money, authorization, options = {})
-        raise 'PayLease does not support "capture" action.  Please use "purchase" instead.'
+        requires!(options, :payer_reference_id)
+        options[:trans_id] = authorization
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.instruct!
+        xml.tag! 'PayLeaseGatewayRequest' do
+          add_credentials(xml, options)
+          add_mode(xml, options)
+          add_cc_capture_transactions(xml, money, creditcard, options)
+        end 
+        commit(xml.target!)
       end
       
       
@@ -36,7 +55,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'PayLeaseGatewayRequest' do
           add_credentials(xml, options)
           add_mode(xml, options)
-          add_transactions(xml, CC_PAYMENT, money, creditcard, options)
+          add_cc_purchase_transactions(xml, money, creditcard, options)
         end 
         commit(xml.target!)
       end                       
@@ -57,12 +76,13 @@ module ActiveMerchant #:nodoc:
       def add_mode(xml, options)
         xml.tag! 'Mode', test? ? 'Test' : 'Production'
       end
-
-
-      def add_transactions(xml, action, money, creditcard, options)
+      
+      
+      def add_cc_authorize_transactions(xml, money, creditcard, options)
         xml.tag! 'Transactions' do
           xml.tag! 'Transaction' do
-            xml.tag! 'TransactionAction', action
+            xml.tag! 'TransactionAction', CC_PAYMENT
+            xml.tag! 'CreditCardAction', AUTHORIZE
             xml.tag! 'PaymentReferenceId', options[:payment_reference_id] || SecureRandom.hex(10)
             xml.tag! 'PaymentTraceId', options[:payment_trace_id] || SecureRandom.hex(10)
             xml.tag! 'PayerReferenceId', options[:payer_reference_id]
@@ -94,6 +114,52 @@ module ActiveMerchant #:nodoc:
       end
       
       
+      def add_cc_capture_transactions(xml, money, creditcard, options)
+        xml.tag! 'Transactions' do
+          xml.tag! 'Transaction' do
+            xml.tag! 'TransactionAction', CC_PAYMENT
+            xml.tag! 'CreditCardAction', CAPTURE
+            xml.tag! 'TransactionId', options[:trans_id]
+          end
+        end
+      end
+      
+
+      def add_cc_purchase_transactions(xml, money, creditcard, options)
+        xml.tag! 'Transactions' do
+          xml.tag! 'Transaction' do
+            xml.tag! 'TransactionAction', CC_PAYMENT
+            xml.tag! 'PaymentReferenceId', options[:payment_reference_id] || SecureRandom.hex(10)
+            xml.tag! 'PaymentTraceId', options[:payment_trace_id] || SecureRandom.hex(10)
+            xml.tag! 'PayerReferenceId', options[:payer_reference_id]
+            xml.tag! 'PayeeId', @options[:payee_id]
+            xml.tag! 'PayerFirstName', creditcard.first_name
+            xml.tag! 'PayerLastName', creditcard.last_name
+            
+            xml.tag! 'CreditCardType', credit_card_type(creditcard)
+            xml.tag! 'CreditCardNumber', creditcard.number
+            xml.tag! 'CreditCardExpMonth', format(creditcard.month, :two_digits)
+            xml.tag! 'CreditCardExpYear', format(creditcard.year, :two_digits)
+            xml.tag! 'CreditCardCvv2', creditcard.verification_value if creditcard.verification_value?
+            
+            xml.tag! 'BillingFirstName', creditcard.first_name
+            xml.tag! 'BillingLastName', creditcard.last_name
+            if address = options[:billing_address] || options[:address]
+              xml.tag! 'BillingStreetAddress', address[:address1].to_s
+              xml.tag! 'BillingCity', address[:city].to_s
+              xml.tag! 'BillingState', address[:state].to_s
+              xml.tag! 'BillingCountry', 'US' # only accepted value
+              xml.tag! 'BillingZip', address[:zip].to_s
+            end
+            
+            xml.tag! 'TotalAmount', amount(money)
+            xml.tag! 'FeeAmount', '0.00'
+            xml.tag! 'SaveAccount', 'No'
+          end
+        end
+      end
+      
+            
       def credit_card_type(creditcard)
         case creditcard.type
         when "visa"
