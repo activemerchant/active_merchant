@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
             @path = options.delete(:path)
             description = options.delete(:description)
             super
-            self.add_field('pg_salt',Random.rand(36**15).to_s(36))
+            self.add_field('pg_salt',rand(36**15).to_s(36))
             self.add_field('pg_description',description)
           end
 

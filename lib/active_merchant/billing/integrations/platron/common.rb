@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       module Platron
         module Common
           def self.generate_signature_string(params,path,secret)
-            sorted_params=params.keys.sort.map{|k|params[k]}
+            sorted_params=params.with_indifferent_access.sort.map{|ar|ar[1]}
             [path,sorted_params,secret].flatten.compact.join(';')
           end
 

@@ -34,7 +34,7 @@ class PlatronNotificationTest < Test::Unit::TestCase
     assert_nothing_raised do
        hash= Hash.from_xml(xml_response)
        assert_equal hash['response']['pg_status'],'ok'
-       sign=Digest::MD5.hexdigest(['result',{:pg_status=>'ok',:pg_salt=>hash['response']['pg_salt']}.sort.map{|ar|ar[1]},'secret'].join(';'))
+       sign=Digest::MD5.hexdigest(['result',{:pg_status=>'ok',:pg_salt=>hash['response']['pg_salt']}.with_indifferent_access.sort.map{|ar|ar[1]},'secret'].join(';'))
        assert_equal hash['response']['pg_sig'],sign
     end
 
@@ -51,7 +51,7 @@ class PlatronNotificationTest < Test::Unit::TestCase
   end
 
   def http_raw_data_with_correct_signature
-    pg_sig= Digest::MD5.hexdigest(['result',test_response_params.sort.map{|ar|ar[1]},'secret'].join(';'))
+    pg_sig= Digest::MD5.hexdigest(['result',test_response_params.with_indifferent_access.sort.map{|ar|ar[1]},'secret'].join(';'))
     test_response_params.merge({:pg_sig=>pg_sig}).to_param
   end
 

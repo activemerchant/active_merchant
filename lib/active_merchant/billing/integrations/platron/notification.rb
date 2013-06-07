@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def success_response(path,secret)
-            salt=Random.rand(36**15).to_s(36)
+            salt=rand(36**15).to_s(36)
             xml=''
             doc=Builder::XmlMarkup.new(:target=>xml)
             sign=Common.generate_signature({:pg_status=>'ok',:pg_salt=>salt},path,secret)
