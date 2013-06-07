@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         commit 'CreateBillingAgreement', build_create_billing_agreement_request(token, options)
       end
 
-      def unstore(token)
+      def unstore(token, options = {})
         commit 'BAUpdate', build_cancel_billing_agreement_request(token)
       end
 

@@ -101,7 +101,7 @@ module ActiveMerchant #:nodoc:
         commit('res_add_cc', post)
       end
 
-      def unstore(data_key)
+      def unstore(data_key, options = {})
         post = {}
         post[:data_key] = data_key
         commit('res_delete', post)

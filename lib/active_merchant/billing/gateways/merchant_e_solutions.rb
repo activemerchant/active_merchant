@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
         commit('T', nil, post)
       end
 
-      def unstore(card_id)
+      def unstore(card_id, options = {})
         post = {}
         post[:client_reference_number] = options[:customer] if options.has_key?(:customer)
         post[:card_id] = card_id
