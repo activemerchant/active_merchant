@@ -35,7 +35,6 @@ module ActiveMerchant #:nodoc:
       
       
       def capture(money, authorization, options = {})
-        requires!(options, :payer_reference_id)
         options[:trans_id] = authorization
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
