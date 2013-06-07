@@ -119,6 +119,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'TransactionAction', CC_PAYMENT
             xml.tag! 'CreditCardAction', CAPTURE
             xml.tag! 'TransactionId', authorization
+            xml.tag! 'PaymentReferenceId', options[:payment_reference_id] || SecureRandom.hex(10)
           end
         end
       end
