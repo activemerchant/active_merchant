@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'PayLeaseGatewayRequest' do
           add_credentials(xml, options)
           add_mode(xml, options)
-          add_cc_capture_transactions(xml, money, creditcard, options)
+          add_cc_capture_transactions(xml, money, authorization, options)
         end 
         commit(xml.target!)
       end
@@ -113,12 +113,12 @@ module ActiveMerchant #:nodoc:
       end
       
       
-      def add_cc_capture_transactions(xml, money, creditcard, options)
+      def add_cc_capture_transactions(xml, money, authorization, options)
         xml.tag! 'Transactions' do
           xml.tag! 'Transaction' do
             xml.tag! 'TransactionAction', CC_PAYMENT
             xml.tag! 'CreditCardAction', CAPTURE
-            xml.tag! 'TransactionId', options[:trans_id]
+            xml.tag! 'TransactionId', authorization
           end
         end
       end
