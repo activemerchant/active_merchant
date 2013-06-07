@@ -127,6 +127,7 @@ module ActiveMerchant
           :transaction_id => fields[TRANSACTION_ID],
           :card_code => fields[CARD_CODE_RESPONSE_CODE]
         }
+        results[:card_type] = fields.last 
         results
       end
 
