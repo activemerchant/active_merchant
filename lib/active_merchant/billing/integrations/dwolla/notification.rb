@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
 
           # Was this a test transaction?
           def test?
-            params['TestMode']
+            params['TestMode'] != "false"
           end
 
           def acknowledge      
