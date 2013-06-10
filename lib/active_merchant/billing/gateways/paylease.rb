@@ -9,6 +9,8 @@ module ActiveMerchant #:nodoc:
       AUTHORIZE = 'AUTH'
       CAPTURE = 'CAPTURE'
       
+      SUCCESS_CODES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 182, 183, 189]
+      
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.paylease.com/'
@@ -223,7 +225,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         message = response[:status]
-        if response.has_key?(:code) && response[:code] >= 16
+        if response.has_key?(:code) && !SUCCESS_CODES.include?(response[:code])
           message += " - #{response[:message]}"
         end
         message
@@ -231,7 +233,7 @@ module ActiveMerchant #:nodoc:
       
       
       def success?(response)
-        response.has_key?(:code) && response[:code] < 15
+        response.has_key?(:code) && SUCCESS_CODES.include?(response[:code])
       end
       
     end
