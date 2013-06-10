@@ -127,6 +127,7 @@ module ActiveMerchant #:nodoc:
             
             xml.tag! 'PayerFirstName', 'Bob'
             xml.tag! 'PayerLastName', 'Test'
+            xml.tag! 'CreditCardType', 'Discover'
           end
         end
       end
