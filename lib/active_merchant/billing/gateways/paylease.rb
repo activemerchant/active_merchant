@@ -35,6 +35,7 @@ module ActiveMerchant #:nodoc:
       
       
       def capture(money, authorization, options = {})
+        requires!(options, :payer_reference_id)
         options[:trans_id] = authorization
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
@@ -121,6 +122,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'TransactionId', authorization
             xml.tag! 'PaymentReferenceId', options[:payment_reference_id] || SecureRandom.hex(10)
             xml.tag! 'PaymentTraceId', options[:payment_trace_id] || SecureRandom.hex(10)
+            xml.tag! 'PayerReferenceId', options[:payer_reference_id]
           end
         end
       end
