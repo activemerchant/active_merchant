@@ -7,6 +7,7 @@
 * Stripe: Add support for including track data [melari]
 * Balanced: Fix exception for invalid email [duff]
 * Update supported countries for Paymill & PaymentExpress [duff]
+* Worldpay: Add support for diners club [duff]
 
 == Version 1.33.0 (May 30, 2013)
 
