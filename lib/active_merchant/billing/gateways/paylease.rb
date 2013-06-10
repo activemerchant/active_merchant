@@ -5,6 +5,7 @@ module ActiveMerchant #:nodoc:
       TEST_URL = LIVE_URL
       
       CC_PAYMENT = 'CCPayment'
+      CC_TRANSACTION = 'CCTransaction'
       AUTHORIZE = 'AUTH'
       CAPTURE = 'CAPTURE'
       
@@ -117,17 +118,17 @@ module ActiveMerchant #:nodoc:
       def add_cc_capture_transactions(xml, money, authorization, options)
         xml.tag! 'Transactions' do
           xml.tag! 'Transaction' do
-            xml.tag! 'TransactionAction', CC_PAYMENT
+            xml.tag! 'TransactionAction', CC_TRANSACTION
             xml.tag! 'CreditCardAction', CAPTURE
             xml.tag! 'TransactionId', authorization
-            xml.tag! 'PaymentReferenceId', options[:payment_reference_id] || SecureRandom.hex(10)
-            xml.tag! 'PaymentTraceId', options[:payment_trace_id] || SecureRandom.hex(10)
-            xml.tag! 'PayerReferenceId', options[:payer_reference_id]
-            xml.tag! 'PayeeId', @options[:payee_id]
+            # xml.tag! 'PaymentReferenceId', options[:payment_reference_id] || SecureRandom.hex(10)
+            # xml.tag! 'PaymentTraceId', options[:payment_trace_id] || SecureRandom.hex(10)
+            # xml.tag! 'PayerReferenceId', options[:payer_reference_id]
+            # xml.tag! 'PayeeId', @options[:payee_id]
             
-            xml.tag! 'PayerFirstName', 'Bob'
-            xml.tag! 'PayerLastName', 'Test'
-            xml.tag! 'CreditCardType', 'Discover'
+            # xml.tag! 'PayerFirstName', 'Bob'
+            # xml.tag! 'PayerLastName', 'Test'
+            # xml.tag! 'CreditCardType', 'Discover'
           end
         end
       end
