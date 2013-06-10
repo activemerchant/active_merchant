@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
       
       def capture(money, authorization, options = {})
         requires!(options, :payer_reference_id)
-        options[:trans_id] = authorization
+        requires!(options, :transaction_id)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
         xml.tag! 'PayLeaseGatewayRequest' do
@@ -121,14 +121,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'TransactionAction', CC_TRANSACTION
             xml.tag! 'CreditCardAction', CAPTURE
             xml.tag! 'TransactionId', authorization
-            # xml.tag! 'PaymentReferenceId', options[:payment_reference_id] || SecureRandom.hex(10)
-            # xml.tag! 'PaymentTraceId', options[:payment_trace_id] || SecureRandom.hex(10)
-            # xml.tag! 'PayerReferenceId', options[:payer_reference_id]
-            # xml.tag! 'PayeeId', @options[:payee_id]
-            
-            # xml.tag! 'PayerFirstName', 'Bob'
-            # xml.tag! 'PayerLastName', 'Test'
-            # xml.tag! 'CreditCardType', 'Discover'
+            xml.tag! 'GatewayPayerId', options[:transaction_id]
           end
         end
       end
@@ -193,7 +186,7 @@ module ActiveMerchant #:nodoc:
         
         Response.new(success?(response), message, response, 
           :test => response[:test], 
-          :authorization => response[:trans_id],
+          :authorization => response[:authorization],
         )
       end
       
@@ -215,7 +208,8 @@ module ActiveMerchant #:nodoc:
         
         parsed = REXML::XPath.first(xml, "//Transaction") || parsed = REXML::XPath.first(xml, "//Error")
         if parsed
-          response[:trans_id] = parsed.elements['TransactionId'].text if parsed.elements['TransactionId']
+          response[:authorization] = parsed.elements['TransactionId'].text if parsed.elements['TransactionId']
+          response[:transaction_id] = parsed.elements['GatewayPayerId'].text if parsed.elements['GatewayPayerId']
           response[:status] = parsed.elements['Status'].text
           response[:code] = parsed.elements['Code'].text.to_i
           response[:message] = parsed.elements['Message'].text
