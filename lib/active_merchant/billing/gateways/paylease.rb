@@ -209,7 +209,7 @@ module ActiveMerchant #:nodoc:
         parsed = REXML::XPath.first(xml, "//Transaction") || parsed = REXML::XPath.first(xml, "//Error")
         if parsed
           response[:authorization] = parsed.elements['TransactionId'].text if parsed.elements['TransactionId']
-          response[:transaction_id] = parsed.elements['GatewayPayerId'].text if parsed.elements['GatewayPayerId']
+          response[:transaction_id] = parsed.elements['ApprovalCode'].text if parsed.elements['ApprovalCode']
           response[:status] = parsed.elements['Status'].text
           response[:code] = parsed.elements['Code'].text.to_i
           response[:message] = parsed.elements['Message'].text
