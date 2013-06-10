@@ -123,6 +123,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'PaymentReferenceId', options[:payment_reference_id] || SecureRandom.hex(10)
             xml.tag! 'PaymentTraceId', options[:payment_trace_id] || SecureRandom.hex(10)
             xml.tag! 'PayerReferenceId', options[:payer_reference_id]
+            xml.tag! 'PayeeId', @options[:payee_id]
             
             xml.tag! 'PayerFirstName', 'Bob'
             xml.tag! 'PayerLastName', 'Test'
