@@ -83,13 +83,13 @@ module ActiveMerchant #:nodoc:
       # ==== Parameters
       #
       # * <tt>money</tt> -- The amount to be authorized as an Integer value in cents.
-      # * <tt>creditcard</tt> -- The CreditCard details for the transaction.
+      # * <tt>paysource</tt> -- The CreditCard or Check details for the transaction.
       # * <tt>options</tt> -- A hash of optional parameters.
-      def authorize(money, creditcard, options = {})
+      def authorize(money, paysource, options = {})
         post = {}
         add_currency_code(post, money, options)
         add_invoice(post, options)
-        add_creditcard(post, creditcard)
+        add_payment_source(post, paysource, options)
         add_address(post, options)
         add_customer_data(post, options)
         add_duplicate_window(post)
@@ -102,13 +102,13 @@ module ActiveMerchant #:nodoc:
       # ==== Parameters
       #
       # * <tt>money</tt> -- The amount to be purchased as an Integer value in cents.
-      # * <tt>creditcard</tt> -- The CreditCard details for the transaction.
+      # * <tt>paysource</tt> -- The CreditCard or Check details for the transaction.
       # * <tt>options</tt> -- A hash of optional parameters.
-      def purchase(money, creditcard, options = {})
+      def purchase(money, paysource, options = {})
         post = {}
         add_currency_code(post, money, options)
         add_invoice(post, options)
-        add_creditcard(post, creditcard)
+        add_payment_source(post, paysource, options)
         add_address(post, options)
         add_customer_data(post, options)
         add_duplicate_window(post)
@@ -349,6 +349,26 @@ module ActiveMerchant #:nodoc:
         post[:last_name]  = creditcard.last_name
       end
 
+      def add_payment_source(params, source, options={})
+        if card_brand(source) == "check"
+          add_check(params, source, options)
+        else
+          add_creditcard(params, source)
+        end
+      end
+
+      def add_check(post, check, options)
+        post[:method] = "ECHECK"
+        post[:bank_name] = check.bank_name
+        post[:bank_aba_code] = check.routing_number
+        post[:bank_acct_num] = check.account_number
+        post[:bank_acct_type] = check.account_type
+        post[:echeck_type] = "WEB"
+        post[:bank_acct_name] = check.name
+        post[:bank_check_number] = check.number if check.number.present?
+        post[:recurring_billing] = (options[:recurring] ? "TRUE" : "FALSE")
+      end
+
       def add_customer_data(post, options)
         if options.has_key? :email
           post[:email] = options[:email]
@@ -356,7 +376,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if options.has_key? :customer
-          post[:cust_id] = options[:customer]
+          post[:cust_id] = options[:customer] if Float(options[:customer]) rescue nil
         end
 
         if options.has_key? :ip

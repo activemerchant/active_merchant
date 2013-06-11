@@ -39,6 +39,7 @@ class DwollaReturnTest < Test::Unit::TestCase
   end
 
   private
+
   def http_raw_data_success
     "signature=7d4c5deaf9178faae7c437fd8693fc0b97b1b22b&orderId=abc123&amount=0.01&checkoutId=ac5b910a-7ec1-4b65-9f68-90449ed030f6&status=Completed&clearingDate=6/8/2013%208:07:41%20PM&transaction=3165397&postback=success"
   end

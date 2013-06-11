@@ -83,14 +83,15 @@ module ActiveMerchant #:nodoc:
             raise StandardError.new("Faulty <%= class_name %> result: #{response.body}") unless ["AUTHORISED", "DECLINED"].include?(response.body)
             response.body == "AUTHORISED"
           end
- private
+
+          private
 
           # Take the posted data and move the relevant data into a hash
           def parse(post)
-            @raw = post
-            for line in post.split('&')
-              key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
-              params[key] = value
+            @raw = post.to_s
+            for line in @raw.split('&')
+              key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
+              params[key] = CGI.unescape(value)
             end
           end
         end

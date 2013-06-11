@@ -1,15 +1,17 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FirstdataE4Gateway < Gateway
-      self.test_url = "https://api.demo.globalgatewaye4.firstdata.com/transaction"
-      self.live_url = "https://api.globalgatewaye4.firstdata.com/transaction"
+      # TransArmor support requires v11 or lower
+      self.test_url = "https://api.demo.globalgatewaye4.firstdata.com/transaction/v11"
+      self.live_url = "https://api.globalgatewaye4.firstdata.com/transaction/v11"
 
       TRANSACTIONS = {
         :sale          => "00",
         :authorization => "01",
         :capture       => "32",
         :void          => "33",
-        :credit        => "34"
+        :credit        => "34",
+        :store         => "05"
       }
 
       POST_HEADERS = {
@@ -44,12 +46,12 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, credit_card, options = {})
-        commit(:authorization, build_sale_or_authorization_request(money, credit_card, options))
+      def authorize(money, credit_card_or_store_authorization, options = {})
+        commit(:authorization, build_sale_or_authorization_request(money, credit_card_or_store_authorization, options))
       end
 
-      def purchase(money, credit_card, options = {})
-        commit(:sale, build_sale_or_authorization_request(money, credit_card, options))
+      def purchase(money, credit_card_or_store_authorization, options = {})
+        commit(:sale, build_sale_or_authorization_request(money, credit_card_or_store_authorization, options))
       end
 
       def capture(money, authorization, options = {})
@@ -62,6 +64,33 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options = {})
         commit(:credit, build_capture_or_credit_request(money, authorization, options))
+      end
+
+      # Tokenize a credit card with TransArmor
+      #
+      # The TransArmor token and other card data necessary for subsequent
+      # transactions is stored in the response's +authorization+ attribute.
+      # The authorization string may be passed to +authorize+ and +purchase+
+      # instead of a +ActiveMerchant::Billing::CreditCard+ instance.
+      #
+      # TransArmor support must be explicitly activated on your gateway
+      # account by FirstData. If your authorization string is empty, contact
+      # FirstData support for account setup assistance.
+      #
+      # === Example
+      #
+      #   # Generate token
+      #   result = gateway.store(credit_card)
+      #   if result.success?
+      #     my_record.update_attributes(:authorization => result.authorization)
+      #   end
+      #
+      #   # Use token
+      #   result = gateway.purchase(1000, my_record.authorization)
+      #
+      # https://firstdata.zendesk.com/entries/21303361-transarmor-tokenization
+      def store(credit_card, options = {})
+        commit(:store, build_store_request(credit_card, options), credit_card)
       end
 
       private
@@ -79,11 +108,17 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_sale_or_authorization_request(money, credit_card, options)
+      def build_sale_or_authorization_request(money, credit_card_or_store_authorization, options)
         xml = Builder::XmlMarkup.new
 
         add_amount(xml, money)
-        add_credit_card(xml, credit_card)
+
+        if credit_card_or_store_authorization.is_a? String
+          add_credit_card_token(xml, credit_card_or_store_authorization)
+        else
+          add_credit_card(xml, credit_card_or_store_authorization)
+        end
+
         add_customer_data(xml, options)
         add_invoice(xml, options)
 
@@ -95,6 +130,15 @@ module ActiveMerchant #:nodoc:
 
         add_identification(xml, identification)
         add_amount(xml, money)
+        add_customer_data(xml, options)
+
+        xml.target!
+      end
+
+      def build_store_request(credit_card, options)
+        xml = Builder::XmlMarkup.new
+
+        add_credit_card(xml, credit_card)
         add_customer_data(xml, options)
 
         xml.target!
@@ -132,6 +176,21 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_credit_card_token(xml, store_authorization)
+        params = store_authorization.split(";")
+        credit_card = CreditCard.new(
+          :brand      => params[1],
+          :first_name => params[2],
+          :last_name  => params[3],
+          :month      => params[4],
+          :year       => params[5])
+
+        xml.tag! "TransarmorToken", params[0]
+        xml.tag! "Expiry_Date", expdate(credit_card)
+        xml.tag! "CardHoldersName", credit_card.name
+        xml.tag! "CardType", credit_card.brand
+      end
+
       def add_customer_data(xml, options)
         xml.tag! "Customer_Ref", options[:customer] if options[:customer]
         xml.tag! "Client_IP", options[:ip] if options[:ip]
@@ -153,7 +212,7 @@ module ActiveMerchant #:nodoc:
         "#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}"
       end
 
-      def commit(action, request)
+      def commit(action, request, credit_card = nil)
         url = (test? ? self.test_url : self.live_url)
         begin
           response = parse(ssl_post(url, build_request(action, request), POST_HEADERS))
@@ -163,7 +222,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful?(response), message_from(response), response,
           :test => test?,
-          :authorization => authorization_from(response),
+          :authorization => response_authorization(action, response, credit_card),
           :avs_result => {:code => response[:avs]},
           :cvv_result => response[:cvv2]
         )
@@ -171,6 +230,14 @@ module ActiveMerchant #:nodoc:
 
       def successful?(response)
         response[:transaction_approved] == SUCCESS
+      end
+
+      def response_authorization(action, response, credit_card)
+        if action == :store
+          store_authorization_from(response, credit_card)
+        else
+          authorization_from(response)
+        end
       end
 
       def authorization_from(response)
@@ -185,6 +252,21 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def store_authorization_from(response, credit_card)
+        if response[:transarmor_token].present?
+          [
+            response[:transarmor_token],
+            credit_card.brand,
+            credit_card.first_name,
+            credit_card.last_name,
+            credit_card.month,
+            credit_card.year
+            ].map { |value| value.to_s.gsub(/;/, "") }.join(";")
+        else
+          raise StandardError, "TransArmor support is not enabled on your #{display_name} account"
+        end
+      end
+
       def money_from_authorization(auth)
         _, _, amount = auth.split(/;/, 3)
         amount.to_i # return the # of cents, no need to divide
@@ -193,7 +275,7 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         if(response[:faultcode] && response[:faultstring])
           response[:faultstring]
-        elsif(response[:error_number] != "0")
+        elsif(response[:error_number] && response[:error_number] != "0")
           response[:error_description]
         else
           result = (response[:exact_message] || "")

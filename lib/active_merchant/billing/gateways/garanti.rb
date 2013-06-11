@@ -1,7 +1,3 @@
-if RUBY_VERSION < '1.9' && $KCODE == "NONE"
-  $KCODE = 'u'
-end
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class GarantiGateway < Gateway

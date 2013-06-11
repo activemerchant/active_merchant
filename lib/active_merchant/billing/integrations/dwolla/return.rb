@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def success?
-            self.error.nil? && self.callback_success?
+            (self.error.nil? && self.callback_success?)
           end
 
           def error
@@ -40,9 +40,9 @@ module ActiveMerchant #:nodoc:
           end
 
           def callback_success?
-            params['postback'] != "failure"
+            (params['postback'] != "failure")
           end
-	      end
+        end
       end
     end
   end

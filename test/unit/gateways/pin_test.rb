@@ -226,16 +226,21 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_headers
-    headers = @gateway.send(:headers)
-    assert_equal "application/json", headers['Content-Type']
-    assert_equal "Basic #{Base64.strict_encode64('I_THISISNOTAREALAPIKEY:').strip}", headers['Authorization']
-    assert !headers.has_key?('X-Partner-Key')
-    assert !headers.has_key?('X-Safe-Card')
+    expected_headers = {
+      "Content-Type" => "application/json",
+      "Authorization" => "Basic #{Base64.strict_encode64('I_THISISNOTAREALAPIKEY:').strip}"
+    }
 
-    headers = @gateway.send(:headers, :partner_key => "MyPartnerKey", :safe_card => '1')
-    assert_equal 'MyPartnerKey', headers['X-Partner-Key']
-    assert_equal '1', headers['X-Safe-Card']
+    @gateway.expects(:ssl_post).with(anything, anything, expected_headers).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, {})
+
+    expected_headers['X-Partner-Key'] = 'MyPartnerKey'
+    expected_headers['X-Safe-Card'] = '1'
+
+    @gateway.expects(:ssl_post).with(anything, anything, expected_headers).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, :partner_key => 'MyPartnerKey', :safe_card => '1')
   end
+
 
   private
 

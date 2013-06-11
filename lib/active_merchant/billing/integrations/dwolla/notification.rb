@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def complete?
-            status == "Completed"
+            (status == "Completed")
           end
 
           def status
@@ -40,16 +40,16 @@ module ActiveMerchant #:nodoc:
             params['Error']
           end
 
-          # Was this a test transaction?
           def test?
             params['TestMode'] != "false"
           end
 
-          def acknowledge      
+          def acknowledge
             true
           end
         
         private
+
           def parse(post)
             @raw = post.to_s
             json_post = JSON.parse(post)

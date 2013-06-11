@@ -105,6 +105,53 @@ class PaymillTest < Test::Unit::TestCase
     assert_equal 'Amount to high', refund.message
   end
 
+  def test_successful_store
+    @gateway.stubs(:raw_ssl_request).returns(successful_store_response)
+
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert_equal "tok_4f9a571b39bd8d0b4db5", response.authorization
+    assert_equal "Request successfully processed in 'Merchant in Connector Test Mode'", response.message
+    assert response.test?
+  end
+
+  def test_failed_store_with_invalid_credit_card
+    @gateway.expects(:raw_ssl_request).returns(failed_store_response)
+    response = @gateway.store(@credit_card)
+    assert_failure response
+    assert_equal 'Account or Bank Details Incorrect', response.message
+    assert_equal '000.100.201', response.params['transaction']['processing']['return']['code']
+  end
+
+  def test_successful_purchase_with_token
+    @gateway.stubs(:raw_ssl_request).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, "token")
+    assert_success response
+    assert_equal "tran_c94ba7df2dae8fd55028df41173c;", response.authorization
+    assert_equal "Transaction approved", response.message
+    assert_equal 20000, response.params['data']['response_code']
+    assert_equal 'pay_b8e6a28fc5e5e1601cdbefbaeb8a', response.params['data']['payment']['id']
+    assert_equal '5100', response.params['data']['payment']['last4']
+    assert_nil response.cvv_result["message"]
+    assert_nil response.avs_result["message"]
+    assert response.test?
+  end
+
+  def test_successful_authorize_with_token
+    @gateway.stubs(:raw_ssl_request).returns(successful_authorize_response)
+
+    assert response = @gateway.authorize(@amount, "token")
+    assert_success response
+    assert response.test?
+
+    assert_equal "tran_50fb13e10636cf1e59e13018d100;preauth_57c0c87ae3d193f66dc8", response.authorization
+    assert_equal "Transaction approved", response.message
+    assert_equal '5100', response.params['data']['payment']['last4']
+    assert_equal 10001, response.params['data']['response_code']
+    assert_nil response.avs_result["message"]
+    assert_nil response.cvv_result["message"]
+  end
 
   private
   def successful_store_response

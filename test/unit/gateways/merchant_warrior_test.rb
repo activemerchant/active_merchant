@@ -1,7 +1,8 @@
 require 'test_helper'
 
-
 class MerchantWarriorTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = MerchantWarriorGateway.new(
                  :merchant_uuid => '4e922de8c2a4c',
@@ -68,9 +69,16 @@ class MerchantWarriorTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    @gateway.expects(:ssl_post).returns(successful_store_response)
+    @credit_card.month = "2"
+    @credit_card.year = "2005"
 
-    assert store = @gateway.store(@credit_card, @options)
+    store = stub_comms do
+      @gateway.store(@credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/cardExpiryMonth=02\b/, data)
+      assert_match(/cardExpiryYear=05\b/, data)
+    end.respond_with(successful_store_response)
+
     assert_success store
     assert_equal "Operation successful", store.message
     assert_match "KOCI10023982", store.authorization

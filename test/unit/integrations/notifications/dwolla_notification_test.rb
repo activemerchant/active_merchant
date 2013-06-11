@@ -45,6 +45,7 @@ class DwollaNotificationTest < Test::Unit::TestCase
   end
 
   private
+
   def http_raw_error_data
     %*{"Amount":300.00,"OrderId":"abc123","Status":"Failed","Error":"Insufficient funds exist to complete the transaction.","TransactionId":null,"CheckoutId":"a6129f18-2932-4c4f-ac36-4363aa2bd19b","Signature":"641ac3fb80566eb33c5f6bf3db282a8c9f912a71","TestMode":"false","ClearingDate":""}*
   end

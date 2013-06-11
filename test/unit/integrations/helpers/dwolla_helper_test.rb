@@ -3,11 +3,11 @@ require 'digest/sha1'
 
 class DwollaHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
-  
+
   def setup
     @helper = Dwolla::Helper.new('order-500','812-546-3855', :credential2 => 'mykey', :credential3 => 'mysecret', :amount => 500, :currency => 'USD')
   end
- 
+
   def test_basic_helper_fields
     assert_field 'amount', '500'
     assert_field 'orderid', 'order-500'
@@ -18,7 +18,7 @@ class DwollaHelperTest < Test::Unit::TestCase
     expected_signature = "4eb42d8635547a0bc9f1b23615bf92c89f12f606"
     assert_field 'signature', expected_signature
   end
-  
+
   def test_other_fields
     @helper.return_url 'http://test.com/ecommerce/redirect.aspx'
     @helper.notify_url 'http://test.com/test/callback'

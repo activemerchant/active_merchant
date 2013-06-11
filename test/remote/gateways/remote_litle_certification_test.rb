@@ -265,6 +265,52 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal "I", response.avs_result["code"]
   end
 
+  # Authorization Reversal Tests
+  def test34
+    credit_card = CreditCard.new(:number => '6011010000000003', :month => '03',
+                                 :year => '2014', :brand => 'discover',
+                                 :verification_value => '758')
+
+    options = {
+        :order_id => '34',
+        :billing_address => {
+            :name => 'Eileen Jones',
+            :address1 => '3 Main St.',
+            :city => 'Bloomfield',
+            :state => 'CT',
+            :zip => '06002',
+            :country => 'US'
+        }
+    }
+
+    assert auth_response = @gateway.authorize(30030, credit_card, options)
+    assert_success auth_response
+
+    credit_card = CreditCard.new(:number => '4024720001231239', :month => '12',
+                                 :year => '2014', :brand => 'visa')
+    assert auth_response2 = @gateway.authorize(18699, credit_card, :order_id => '29')
+
+    assert reversal_response = @gateway.void(auth_response2.authorization)
+    assert_success reversal_response
+  end
+
+  def test36
+    options = {
+        :order_id => '36'
+    }
+
+    credit_card = CreditCard.new(:number => '375000026600004', :month => '05',
+                                 :year => '2014', :brand => 'american_express',
+                                 :verification_value => '261')
+
+    assert auth_response = @gateway.authorize(20500, credit_card, options)
+    assert_success auth_response
+
+    assert reversal_response = @gateway.void(auth_response.authorization, amount: 10000)
+    assert !reversal_response.success?
+    assert_equal '336', reversal_response.params['litleOnlineResponse']['authReversalResponse']['response']
+  end
+
   # Explicit Token Registration Tests
   def test50
     credit_card = CreditCard.new(:number => '4457119922390123')
@@ -433,7 +479,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
   def test_authorize_and_purchase_and_credit_with_token
     options = {
-        :order_id => generate_unique_id,
+        :order_id => transaction_id,
         :billing_address => {
             :name => 'John Smith',
             :address1 => '1 Main St.',
@@ -461,7 +507,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
     # purchase
     purchase_options = options.merge({
-                                         :order_id => generate_unique_id,
+                                         :order_id => transaction_id,
                                          :token    => {
                                              :month => credit_card.month,
                                              :year  => credit_card.year
@@ -475,7 +521,7 @@ class RemoteLitleCertification < Test::Unit::TestCase
 
     # credit
     credit_options = options.merge({
-                                       :order_id => generate_unique_id,
+                                       :order_id => transaction_id,
                                        :token    => {
                                            :month => credit_card.month,
                                            :year  => credit_card.year
@@ -500,19 +546,19 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal options[:order_id], response.params['litleOnlineResponse']['authorizationResponse']['id']
 
     # 1A: capture
-    id = generate_unique_id
+    id = transaction_id
     assert response = @gateway.capture(amount, response.authorization, {:id => id})
     assert_equal 'Approved', response.message
     assert_equal id, response.params['litleOnlineResponse']['captureResponse']['id']
 
     # 1B: credit
-    id = generate_unique_id
+    id = transaction_id
     assert response = @gateway.credit(amount, response.authorization, {:id => id})
     assert_equal 'Approved', response.message
     assert_equal id, response.params['litleOnlineResponse']['creditResponse']['id']
 
     # 1C: void
-    id = generate_unique_id
+    id = transaction_id
     assert response = @gateway.void(response.authorization, {:id => id})
     assert_equal 'Approved', response.message
     assert_equal id, response.params['litleOnlineResponse']['voidResponse']['id']
@@ -537,15 +583,25 @@ class RemoteLitleCertification < Test::Unit::TestCase
     assert_equal options[:order_id], response.params['litleOnlineResponse']['saleResponse']['id']
 
     # 1B: credit
-    id = generate_unique_id
+    id = transaction_id
     assert response = @gateway.credit(amount, response.authorization, {:id => id})
     assert_equal 'Approved', response.message
     assert_equal id, response.params['litleOnlineResponse']['creditResponse']['id']
 
     # 1C: void
-    id = generate_unique_id
+    id = transaction_id
     assert response = @gateway.void(response.authorization, {:id => id})
     assert_equal 'Approved', response.message
     assert_equal id, response.params['litleOnlineResponse']['voidResponse']['id']
+  end
+
+  def transaction_id
+    # A unique identifier assigned by the presenter and mirrored back in the response.
+    # This attribute is also used for Duplicate Transaction Detection.
+    # For Online transactions, omitting this attribute, or setting it to a
+    # null value (id=""), disables Duplicate Detection for the transaction.
+    #
+    # minLength = N/A   maxLength = 25
+    generate_unique_id[0, 24]
   end
 end

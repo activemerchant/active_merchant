@@ -12,7 +12,7 @@ Ruby applications which deal with financial transactions. It is maintained by th
 [Shopify](http://www.shopify.com) and [Spreedly](https://spreedly.com) teams, with much help
 from an ever-growing set of contributors.
 
-See {file:GettingStarted.md} if you want to learn more about using Active Merchant in your
+See [GettingStarted.md](GettingStarted.md) if you want to learn more about using Active Merchant in your
 applications.
 
 ## Installation
@@ -72,7 +72,7 @@ credit card details.
       end
     end
 
-For more in-depth documentation and tutorials, see {file:GettingStarted.md} and the
+For more in-depth documentation and tutorials, see [GettingStarted.md](GettingStarted.md) and the
 [API documentation](http://rubydoc.info/github/Shopify/active_merchant/master/file/README.md).
 
 ## Supported Direct Payment Gateways
@@ -135,7 +135,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [PayGate PayXML](http://paygate.co.za/) - US, ZA
 * [PayJunction](http://www.payjunction.com/) - US
 * [PaymentExpress](http://www.paymentexpress.com/) - AU, MY, NZ, SG, ZA, UK, US
-* [Paymill](https://www.paymill.com) - AT, BE, CH, CZ, DE, DK, EE, ES, FI, FR, GB, HU, IE, IS, IT, LI, LU, LV, NL, NO, PL, PT, SE, SI, TR
+* [PAYMILL](https://www.paymill.com) - AD, AT, BE, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GR, HU, IE, IL, IS, IT, LI, LT, LU, LV, MT, NL, NO, PL, PT, SE, SI, SK, TR, VA
 * [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside) - US, CA, SG, AU
 * [PayPal Payflow Pro](https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-pro-overview-outside) - US, CA, SG, AU
 * [PayPal Website Payments Pro (UK)](https://www.paypal.com/uk/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - UK
@@ -165,6 +165,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Spreedly Core](https://spreedlycore.com/) - AD, AE, AT, AU, BD, BE, BG, BN, CA, CH, CY, CZ, DE, DK, EE, EG, ES, FI, FR, GB, GI, GR, HK, HU, ID, IE, IL, IM, IN, IS, IT, JO, KW, LB, LI, LK, LT, LU, LV, MC, MT, MU, MV, MX, MY, NL, NO, NZ, OM, PH, PL, PT, QA, RO, SA, SE, SG, SI, SK, SM, TR, TT, UM, US, VA, VN, ZA
 * [Stripe](https://stripe.com/) - US
 * [TransFirst](http://www.transfirst.com/) - US
+* [Transnational](http://www.tnbci.com/) - US
 * [TrustCommerce](http://www.trustcommerce.com/) - US
 * [USA ePay](http://www.usaepay.com/) - US
 * [Verifi](http://www.verifi.com/) - US
@@ -193,7 +194,8 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Paxum](https://www.paxum.com/)
 * [PayPal Website Payments Standard](https://www.paypal.com/cgi-bin/webscr?cmd#_wp-standard-overview-outside)
 * [Paysbuy](https://www.paysbuy.com/) - TH
-* [Robokassa](http://robokassa.ru/)
+* [RBK Money](https://rbkmoney.ru/) - RU
+* [Robokassa](http://robokassa.ru/) - RU
 * [SagePay Form](http://www.sagepay.com/products_services/sage_pay_go/integration/form)
 * [Suomen Maksuturva](https://www.maksuturva.fi/services/vendor_services/integration_guidelines.html)
 * [Valitor](http://www.valitor.is/) - IS

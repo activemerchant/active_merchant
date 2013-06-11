@@ -288,9 +288,9 @@ class PayflowTest < Test::Unit::TestCase
     assert_match /Timeout="#{timeout}"/, xml
   end
 
-  def test_first_and_last_name_fields_are_included
+  def test_name_field_are_included_instead_of_first_and_last
     @gateway.expects(:ssl_post).returns(successful_authorization_response).with do |url, data|
-      data =~ /FirstName/ && data =~ /LastName/
+      data !~ /FirstName/ && data !~ /LastName/ && data =~ /<Name>/
     end
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response

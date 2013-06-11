@@ -5,7 +5,6 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Dwolla
         class Helper < ActiveMerchant::Billing::Integrations::Helper
-
           def initialize(order, account, options = {})
             super
             add_field('name', 'Store Purchase')
@@ -36,7 +35,7 @@ module ActiveMerchant #:nodoc:
           mapping :amount, 'amount'
           mapping :tax, 'tax'
           mapping :shipping, 'shipping'
-          mapping :order, 'orderid'          
+          mapping :order, 'orderid'
         end
       end
     end
