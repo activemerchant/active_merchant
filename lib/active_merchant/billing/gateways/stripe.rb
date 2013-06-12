@@ -1,5 +1,3 @@
-require 'json'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class StripeGateway < Gateway
