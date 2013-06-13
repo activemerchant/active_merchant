@@ -146,19 +146,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard(post, creditcard, options)
+        card = {}
         if creditcard.respond_to?(:number)
-          card = {}
           card[:number] = creditcard.number
           card[:exp_month] = creditcard.month
           card[:exp_year] = creditcard.year
           card[:cvc] = creditcard.verification_value if creditcard.verification_value?
           card[:name] = creditcard.name if creditcard.name
-          post[:card] = card
+          card[:swipe_data] = creditcard.swipe_data if creditcard.respond_to?(:swipe_data)
 
           add_address(post, options)
         elsif creditcard.kind_of?(String)
-          post[:card] = creditcard
+          card[:number] = creditcard
+          card[:swipe_data] = options[:swipe_data] if options[:swipe_data]
         end
+        post[:card] = card
       end
 
       def add_customer(post, options)
