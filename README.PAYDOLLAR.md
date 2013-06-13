@@ -90,3 +90,49 @@ end
 <%= submit_tag 'Pay this order' %>
 <% end %>
 ```
+
+## Usage - Handling Data Feed via Notification
+The data feed page must meet the following two requirements:
+- Send "OK" in response to the data feed HTTP request received from Paydollar (ACK message)
+- Make Sure to Print ‘OK’ for acknowledge to Paydollar system first then do the rest of your system process, if something wrong with your system process (i.e. download photo, ring tone problem) you can send a void request to Paydollar system, for more details please refer to API guide and contact our technical staff.
+
+The first step is to add a route and then implement that action in the controller:
+- Add a route to the config/routes.rb, say 
+    match '/payment/process_payment' => "payment#process_payment"
+- Add "process_payment" action to the PaymentController
+
+The next step is to configure Paydollar to use the datafeed. This can be done as below:
+- Login to the Paydollar admin page
+- Under "Profile->Payment Options" set the "Return Value Link (Datafeed)" to your data feed (say, https://mycompany.com/payment/process_payment)
+- Ensure to click, "Test" to confirm that Paydollar can access your data feed and you get a SUCCESS result.
+
+IMPORTANT: Please note that the system only supports either port 80 (HTTP) or 443 (HTTPS) for the data feed page location. And make sure the data feed page location is externally accessible, so that Paydollar server can call the data feed page.
+
+
+### Controller
+```
+class PaymentController < ApplicationController
+  include ActiveMerchant::Billing::Integrations
+
+  <other methods>
+  
+  def process_payment
+    # Parse the incoming request data
+    notify = Paydollar::Notification.new request.raw_post
+    
+    # Send "OK" to Paydollar server
+    render :text => notify.acknowledge
+
+    # Do application specific validation for the payment
+    if (notify.approved?(@secret_hash))
+      # ------------------------------ Payment successful ------------------------------
+      # The payment is approved - add application specific validations here
+      # for e.g. for the order check the amount etc.
+    else
+      # ***************************** Payment failed ************************"******
+      # Take necessary action, like cancel the order etc.
+    end
+  end
+end
+```
+
