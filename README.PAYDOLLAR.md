@@ -1,4 +1,4 @@
-# Active Merchant - PayDollar payment gateway support
+# Active Merchant - PayDollar payment gateway
 
 NOTE - For details on Active Merchant read the README.md file.
 
@@ -13,29 +13,32 @@ The first step is to download the "paydollar" ActiveMerchant branch and generate
 Next, create a rails project (the code was tested with Rails 3.2.13) and make the following changes:
 - add active_merchant gem to the GemFile
 - To use ActionView helper from active_merchant, create activemerchant.rb file under "config/initializers" folder and add the following lines to it:
-################ Add these to activemerchant.rb file ################# 
-require 'active_merchant'
-require 'active_merchant/billing/integrations/action_view_helper'
 
-ActionView::Base.send(:include, ActiveMerchant::Billing::Integrations::ActionViewHelper)
+  ################ Add these to activemerchant.rb file ################# 
+  require 'active_merchant'
+  require 'active_merchant/billing/integrations/action_view_helper'
 
-if Rails.env.production?
-  ActiveMerchant::Billing::Base.integration_mode = :production
-else
-  ActiveMerchant::Billing::Base.integration_mode = :test
-end 
-############# activemerchant.rb changes end here ################
+  ActionView::Base.send(:include, ActiveMerchant::Billing::Integrations::ActionViewHelper)
 
-# Sample Controller & View
-NOTE: The sample code below does not contain any business logic so that
-one can clearly understand the usage of Paydollar module. In real scenario
-add the business logic as per the requirement.
+  if Rails.env.production?
+    ActiveMerchant::Billing::Base.integration_mode = :production
+  else
+    ActiveMerchant::Billing::Base.integration_mode = :test
+  end 
+  ############# activemerchant.rb changes end here ################
 
+## Sample Controller & View
+NOTE: The sample code below does not contain any business logic so as to
+clearly understand the usage of Paydollar module. In real scenario add 
+the business logic as per the requirement.
+
+### Controller
+```
 class PaymentController < ApplicationController
   include ActiveMerchant::Billing::Integrations
-
+  
   before_filter :initialize_params
-
+  
   def success
    @order_id = params[:Ref]
   end
@@ -51,7 +54,7 @@ class PaymentController < ApplicationController
   def initialize_params
     # After processing (success, failure, error)
     # this is the value retured by PayDollar
-    @order_id = "Order_PD_1000" 
+    @order_id = "Order_PD_1000"
     @amount = "100.94"  # The billing amount
     #secret_hash is used only when merchant has
     #registered for "secure hash" function
@@ -67,8 +70,9 @@ class PaymentController < ApplicationController
     @fail_url = "http://localhost:3000/payment/fail"
   end
 end
-
-# VIEW
+```
+### VIEW
+```
 <% payment_service_for @order_id, "",
   :service => :paydollar do |service| 
     service.amount = @amount 
@@ -85,6 +89,4 @@ end
 %>
 <%= submit_tag 'Pay this order' %>
 <% end %>
-
-
-
+```
