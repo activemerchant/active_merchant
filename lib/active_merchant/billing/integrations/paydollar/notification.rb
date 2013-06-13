@@ -230,7 +230,7 @@ module ActiveMerchant # Primary active_merchant module
           # Secure hash
           # @return [String] The secure hash received in the response from Paydollar
           def secure_hash
-            params['secureHash'].upcase
+            params['secureHash'] ? params['secureHash'].upcase : ""
           end
 
           # The data feed page must meet the following requirements:
