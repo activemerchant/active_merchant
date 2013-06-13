@@ -129,7 +129,7 @@ class PaymentController < ApplicationController
       # The payment is approved - add application specific validations here
       # for e.g. for the order check the amount etc.
     else
-      # ***************************** Payment failed ************************"******
+      # ***************************** Payment failed ******************************
       # Take necessary action, like cancel the order etc.
     end
   end
