@@ -153,12 +153,12 @@ module ActiveMerchant #:nodoc:
           card[:exp_year] = creditcard.year
           card[:cvc] = creditcard.verification_value if creditcard.verification_value?
           card[:name] = creditcard.name if creditcard.name
-          card[:swipe_data] = creditcard.swipe_data if creditcard.respond_to?(:swipe_data)
+          card[:swipe_data] = creditcard.track_data if creditcard.respond_to?(:track_data)
 
           add_address(post, options)
         elsif creditcard.kind_of?(String)
           card[:number] = creditcard
-          card[:swipe_data] = options[:swipe_data] if options[:swipe_data]
+          card[:swipe_data] = options[:track_data] if options[:track_data]
         end
         post[:card] = card
       end
