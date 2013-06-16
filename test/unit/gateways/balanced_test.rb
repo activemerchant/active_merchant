@@ -255,6 +255,10 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_refund_with_nil_debit_uri
+    @gateway.expects(:ssl_request).times(1).returns(
+        failed_refund_response
+    )
+
     assert refund = @gateway.refund(nil, nil)
     assert_instance_of Response, refund
     assert_failure refund
