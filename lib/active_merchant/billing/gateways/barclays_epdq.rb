@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :maestro, :switch ]
       self.money_format = :cents
       self.homepage_url = 'http://www.barclaycard.co.uk/business/accepting-payments/epdq-mpi/'
-      self.display_name = 'Barclays ePDQ'
+      self.display_name = 'Barclays ePDQ MPI'
 
       def initialize(options = {})
         requires!(options, :login, :password, :client_id)

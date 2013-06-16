@@ -99,12 +99,6 @@ module ActiveMerchant #:nodoc:
     #     :language        => Customer's language, for example: "en_EN"
     #
     class OgoneGateway < Gateway
-
-      URLS = {
-        :order       => 'https://secure.ogone.com/ncol/%s/orderdirect.asp',
-        :maintenance => 'https://secure.ogone.com/ncol/%s/maintenancedirect.asp'
-      }
-
       CVV_MAPPING = { 'OK' => 'M',
                       'KO' => 'N',
                       'NO' => 'P' }
@@ -125,8 +119,8 @@ module ActiveMerchant #:nodoc:
       OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE   = "Signature usage will be the default for a future release of ActiveMerchant. You should either begin using it, or update your configuration to explicitly disable it (signature_encryptor: none)"
       OGONE_STORE_OPTION_DEPRECATION_MESSAGE   = "The 'store' option has been renamed to 'billing_id', and its usage is deprecated."
 
-      self.test_url = URLS[:order] % "test"
-      self.live_url = URLS[:order] % "prod"
+      self.test_url = "https://secure.ogone.com/ncol/test/"
+      self.live_url = "https://secure.ogone.com/ncol/prod/"
 
       self.supported_countries = ['BE', 'DE', 'FR', 'NL', 'AT', 'CH']
       # also supports Airplus and UATP
@@ -331,8 +325,7 @@ module ActiveMerchant #:nodoc:
         add_pair parameters, 'USERID', @options[:user]
         add_pair parameters, 'PSWD',   @options[:password]
 
-        url = URLS[parameters['PAYID'] ? :maintenance : :order] % [test? ? "test" : "prod"]
-        response = parse(ssl_post(url, post_data(action, parameters)))
+        response = parse(ssl_post(url(parameters['PAYID']), post_data(action, parameters)))
 
         options = {
           :authorization => [response["PAYID"], action].join(";"),
@@ -341,6 +334,10 @@ module ActiveMerchant #:nodoc:
           :cvv_result    => CVV_MAPPING[response["CVCCheck"]]
         }
         OgoneResponse.new(successful?(response), message_from(response), response, options)
+      end
+
+      def url(payid)
+        (test? ? test_url : live_url) + (payid ? "maintenancedirect.asp" : "orderdirect.asp")
       end
 
       def successful?(response)

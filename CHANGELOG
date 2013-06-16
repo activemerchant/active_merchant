@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add Barclays ePDQ Extra Plus gateway [ntalbott]
+
 == Version 1.34.1 (June 28, 2013)
 
 * WorldPay: Add dynamic return URL [jordanwheeler]
