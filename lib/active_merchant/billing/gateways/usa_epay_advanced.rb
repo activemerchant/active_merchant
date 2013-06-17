@@ -126,7 +126,8 @@ module ActiveMerchant #:nodoc:
         :merchant_receipt => [:boolean, 'MerchReceipt'],
         :merchant_email => [:boolean, 'MerchReceiptEmail'],
         :merchant_template => [:boolean, 'MerchReceiptName'],
-        :verification_value => [:boolean, 'isRecurring'],
+        :recurring => [:boolean, 'isRecurring'],
+        :verification_value => [:boolean, 'CardCode'],
         :software => [:string, 'Software']
       } #:nodoc:
 
@@ -161,7 +162,8 @@ module ActiveMerchant #:nodoc:
         :amount => [:double, 'Amount'],
         :tax => [:double, 'Tax'],
         :tip => [:double, 'Tip'],
-        :non_tax => [:boolean, 'NonTax'],
+        # :non_tax is not a number and is already specified in TRANSACTION_DETAIL_OPTIONS
+        #:non_tax => [:boolean, 'NonTax'],
         :shipping => [:double, 'Shipping'],
         :discount => [:double, 'Discount'],
         :subtotal => [:double, 'Subtotal']
@@ -421,6 +423,8 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Options
       #  * Same as update_customer (except for payment methods)
+      #
+      #  * <tt>:credit_card</tt> -- converted to CardNum and CardExp fields
       #
       def quick_update_customer(options={})
         requires! options, :customer_number
@@ -1414,10 +1418,10 @@ module ActiveMerchant #:nodoc:
 
       def build_customer_transaction(soap, options)
         soap.Parameters 'xsi:type' => "ns1:CustomerTransactionRequest" do |soap|
-          build_transaction_detail soap, options
           CUSTOMER_TRANSACTION_REQUEST_OPTIONS.each do |key, (soap_type, soap_field)|
             build_tag soap, soap_type, soap_field, options[key]
           end
+          build_transaction_detail soap, options
           build_custom_fields soap, options
           build_line_items soap, options
         end
@@ -1454,12 +1458,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_transaction_detail(soap, options)
-        soap.Details 'xsi:type' => "ns1:TransactionDetail" do |soap|
+        soap.Details 'xsi:type' => "ns1:TransactionDetail" do |soap_details|
           TRANSACTION_DETAIL_OPTIONS.each do |key, (soap_type, soap_field)|
-            build_tag soap, soap_type, soap_field, options[key]
+            build_tag soap_details, soap_type, soap_field, options[key]
           end
           TRANSACTION_DETAIL_MONEY_OPTIONS.each do |key, (soap_type, soap_field)|
-            build_tag soap, soap_type, soap_field, amount(options[key])
+            build_tag soap_details, soap_type, soap_field, amount(options[key])
           end
         end
       end
@@ -1558,16 +1562,16 @@ module ActiveMerchant #:nodoc:
         url = test? ? test_url : live_url
         
         begin
-          #puts "SOAP REQUEST"
-          #pp request
+          # puts "SOAP REQUEST"
+          # pp request
           soap = ssl_post(url, request, "Content-Type" => "text/xml")
         rescue ActiveMerchant::ResponseError => error
           soap = error.response.body
         end
         
         response = build_response(action, soap)
-        #puts "SOAP RESPONSE"
-        #pp response
+        # puts "SOAP RESPONSE"
+        # pp response
         response
       end
 
