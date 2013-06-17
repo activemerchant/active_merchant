@@ -301,6 +301,10 @@ optimal_payment:
   password: test
   account: 'ACCOUNT_NUMBER'
 
+pay_choice:
+  login: 44f79424-2fdb-49e3-98a6-fc8d27de9934
+  password: f2B9E=B{9URs
+
 paybox_direct:
   login: 199988899
   password: 1999888I

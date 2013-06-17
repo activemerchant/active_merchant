@@ -1,4 +1,8 @@
-require 'activemerchant'
+begin
+  require "pay_choice"
+rescue LoadError
+  raise "Could not load the PayChoice gem.  Use `gem install pay_choice` to install it."
+end
 
 module ActiveMerchant
   module Billing
@@ -8,6 +12,27 @@ module ActiveMerchant
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = "http://www.paychoice.com.au/"
       self.display_name = "PayChoice"
+      self.supported_countries = ['AU']
+
+      class PayChoiceGatewayPurchase < Hash
+        attr_accessor :gateway
+
+        def self.create gateway, response
+          result = self[response]
+          result.gateway = gateway
+          result
+        end
+        def success?
+          charge = self["charge"]
+          charge.try(:[],"status") == "Approved" && charge.try(:[],"error_code") == "0"
+        end
+        def authorization
+          self["charge"].try(:[],"id")
+        end
+        def test?
+          self.gateway.test?
+        end
+      end
 
       def initialize(options)
         requires!(options, :login, :password)
@@ -17,12 +42,13 @@ module ActiveMerchant
       end
 
       def purchase(money, card, options = {})
-        init.create(
+        result = init.create(
           currency: options[:currency] || currency(money),
           amount: money,
           reference: "Invoice #{Time.now.to_i}",
           card: to_hash_from_credit_card(card)
         )
+        PayChoiceGatewayPurchase.create self, result
       end
 
       def list
@@ -30,22 +56,22 @@ module ActiveMerchant
       end
 
       def get id
-        init.get id
+        result = init.get id
       end
 
       def get_card id
-        init.get_card id
+        result = init.get_card id
       end
 
       # TODO: Example on http://www.paychoice.com.au/docs/api/v3/ is currently broken
       #
       def authorize(money, card, options = {})
         # Ignore params for basic_auth
-        init.basic_auth
+        result = init.basic_auth
       end
 
       def store(card)
-        init.store_card(to_hash_from_credit_card(card))
+        result = init.store_card(to_hash_from_credit_card(card))
       end
 
      private
