@@ -82,6 +82,6 @@ class RemoteBanwireTest < Test::Unit::TestCase
 
   def test_invalid_amex_address
     assert response = @gateway.purchase(@amount, @amex_credit_card, @amex_options)
-    assert_equal 'Dirección y código postal requeridos para pagos con AMEX', response.message
+    assert_equal 'Error en los datos de facturación de la tarjeta, por favor inserte su dirección y código postal tal y como viene en su estado de cuenta de American Express. En caso de que persista el error, por favor comuníquese con American Express.', response.message
   end
 end
