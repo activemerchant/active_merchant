@@ -9,7 +9,14 @@ class RemoteBanwireTest < Test::Unit::TestCase
     @credit_card = credit_card('5204164299999999',
                                :month => 11,
                                :year => 2012,
-                               :verification_value => '999')
+                               :verification_value => '999',
+                               :brand => 'mastercard')
+
+    @visa_credit_card = credit_card('4485814063899108',
+                                    :month => 12,
+                                    :year => 2016,
+                                    :verification_value => '434')
+
     @declined_card = credit_card('4000300011112220')
 
     @options = {
@@ -20,8 +27,8 @@ class RemoteBanwireTest < Test::Unit::TestCase
     }
 
     @amex_credit_card = credit_card('375932134599999',
-                                    :month => 3,
-                                    :year => 2017,
+                                    :month => 10,
+                                    :year => 2014,
                                     :first_name => "Banwire",
                                     :last_name => "Test Card",
                                     :verification_value => '9999',
@@ -30,7 +37,7 @@ class RemoteBanwireTest < Test::Unit::TestCase
     @amex_successful_options = {
         :order_id => '3',
         :email => 'test@email.com',
-        :billing_address => address(:address1 => 'Horacio', :zipcode => '11560'),
+        :billing_address => address(:address1 => 'Horacio', :zip => '11560'),
         :description  => 'Store purchase amex'
     }
 
