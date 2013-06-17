@@ -54,6 +54,11 @@ class RemoteBanwireTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_visa_purchase
+    assert response = @gateway.purchase(@amount, @visa_credit_card, @options)
+    assert_success response
+  end
+
   def test_successful_amex_purchase
     assert response = @gateway.purchase(@amount, @amex_credit_card, @amex_successful_options)
     assert_success response
