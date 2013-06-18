@@ -13,9 +13,9 @@ class DwollaHelperTest < Test::Unit::TestCase
     assert_field 'orderid', 'order-500'
     assert_field 'destinationid', '812-546-3855'
     assert_field 'key', 'mykey'
-    assert_field 'timestamp', Time.now.to_i.to_s
+    assert_field 'timestamp', "1370726016"
 
-    expected_signature = Digest::SHA1.hexdigest('mysecret' + 'mykey&' + Time.now.to_i.to_s() +'&order-500')
+    expected_signature = "4eb42d8635547a0bc9f1b23615bf92c89f12f606"
     assert_field 'signature', expected_signature
   end
 
