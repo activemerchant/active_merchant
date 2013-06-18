@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
         autoload :Helper, 'active_merchant/billing/integrations/dwolla/helper.rb'
         autoload :Notification, 'active_merchant/billing/integrations/dwolla/notification.rb'
         autoload :Common, 'active_merchant/billing/integrations/dwolla/common.rb'
-
+        
         mattr_accessor :service_url
         self.service_url = 'https://www.dwolla.com/payment/pay'
 

@@ -7,7 +7,10 @@ module ActiveMerchant #:nodoc:
 
           def initialize(data, options)
             params = parse(data)
-            verify_signature(params['checkoutId'], params['amount'], params['signature'], options[:credential3])
+
+            if params['error'] != 'failure'
+              verify_signature(params['checkoutId'], params['amount'], params['signature'], options[:credential3])
+            end
 
             super
           end
@@ -33,7 +36,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def test?
-            params['test']
+            params['test'] != nil
           end
 
           def callback_success?

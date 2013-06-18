@@ -8,6 +8,10 @@ module ActiveMerchant #:nodoc:
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           include Common
 
+          def initialize(data, options)
+            super
+          end
+
           def complete?
             (status == "Completed")
           end
@@ -37,14 +41,14 @@ module ActiveMerchant #:nodoc:
           end
 
           def test?
-            params['TestMode']
+            params['TestMode'] != "false"
           end
 
           def acknowledge
             true
           end
-
-          private
+        
+        private
 
           def parse(post)
             @raw = post.to_s
