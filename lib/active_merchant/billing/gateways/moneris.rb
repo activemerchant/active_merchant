@@ -71,8 +71,11 @@ module ActiveMerchant #:nodoc:
       end
 
       # Voiding requires the original transaction ID and order ID of some open
-      # transaction. Closed transactions must be refunded. Note that the only
-      # methods which may be voided are +capture+ and +purchase+.
+      # transaction. Closed transactions must be refunded.
+      #
+      # As of September 19, 2011, Moneris allows the voiding of an authorization
+      # by performing a capture of $0. Pass :authorization => true in the
+      # options to void an authorization.
       #
       # Concatenate your transaction number and order_id by using a semicolon
       # (';'). This is to keep the Moneris interface consistent with other
