@@ -113,8 +113,7 @@ class MonerisTest < Test::Unit::TestCase
     end
   end
 
-
- def test_successful_store
+  def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
     assert response = @gateway.store(@credit_card)
     assert_success response
