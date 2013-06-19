@@ -98,13 +98,6 @@ module ActiveMerchant #:nodoc:
         commit('Void', money, post)
       end
       
-      # Store customer data and card information.
-      # eProcessingNetwork does not appear to provide for deletion of stored data.
-      #   Maybe void would do it?
-     # def store(creditcard, options = {})
-     #  post = {}
-     #  commit('Store', nil, post)
-     # end
  
       private                       
       
