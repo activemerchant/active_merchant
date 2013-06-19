@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters)
         url = test? ? self.test_url : self.live_url
 
-        # Inv must be passed report to receive a transaction ID
+        # Inv MUST be passed a value to receive a transaction ID
         parameters[:Inv] = 'report' unless parameters[:Inv]
         parameters[:Total] = amount(money)
         
