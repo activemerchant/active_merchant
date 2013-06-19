@@ -169,6 +169,23 @@ class StripeTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options.merge(:ip => '1.1.1.1'))
   end
 
+  def test_track_data_and_traditional_should_be_mutually_exclusive
+    stub_comms(:ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert data =~ /card\[name\]/
+      assert data !~ /card\[swipe_data\]/
+    end.respond_with(successful_purchase_response)
+
+    stub_comms(:ssl_request) do
+      @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert data !~ /card\[name\]/
+      assert data =~ /card\[swipe_data\]/
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def successful_authorization_response
