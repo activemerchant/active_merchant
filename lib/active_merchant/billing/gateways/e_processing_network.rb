@@ -155,6 +155,12 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters)
         url = test? ? self.test_url : self.live_url
 
+        # Current API uses a separate login rather than URL. 
+        if test?
+          @options[:login] = '080880' unless @options[:login].empty?
+          @options[:password] = 'yFqqXJh9Pqnugfr' unless @options[:password] == 'invalid'
+        end
+
         # Inv MUST be passed a value to receive a transaction ID
         parameters[:Inv] = 'report' unless parameters[:Inv]
         parameters[:Total] = amount(money)
