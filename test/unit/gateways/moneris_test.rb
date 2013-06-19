@@ -211,8 +211,8 @@ class MonerisTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-
   private
+
   def successful_purchase_response
     <<-RESPONSE
 <?xml version="1.0"?>
@@ -263,7 +263,6 @@ class MonerisTest < Test::Unit::TestCase
     RESPONSE
   end
 
-
   def successful_store_response
     <<-RESPONSE
 <?xml version="1.0"?>
@@ -305,7 +304,6 @@ class MonerisTest < Test::Unit::TestCase
 </response>
     RESPONSE
   end
-
 
   def xml_purchase_fixture
    '<request><store_id>store1</store_id><api_token>yesguy</api_token><purchase><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></purchase></request>'

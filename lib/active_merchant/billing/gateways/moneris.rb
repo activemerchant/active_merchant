@@ -81,13 +81,28 @@ module ActiveMerchant #:nodoc:
         commit 'completion', crediting_params(authorization, :comp_amount => amount(money))
       end
 
-      # Voiding cancels an open authorization.
+      # Voiding requires the original transaction ID and order ID of some open
+      # transaction. Closed transactions must be refunded.
+      #
+      # Moneris supports the voiding of an unsettled capture or purchase via
+      # its <tt>purchasecorrection</tt> command. This action can only occur
+      # on the same day as the capture/purchase prior to 22:00-23:00 EST. If
+      # you want to do this, pass <tt>:purchasecorrection => true</tt> as
+      # an option.
+      #
+      # Fun, Historical Trivia:
+      # Voiding an authorization in Moneris is a relatively new feature
+      # (September, 2011). It is actually done by doing a $0 capture.
       #
       # Concatenate your transaction number and order_id by using a semicolon
       # (';'). This is to keep the Moneris interface consistent with other
       # gateways. (See +capture+ for details.)
       def void(authorization, options = {})
-        capture(0, authorization, options)
+        if options[:purchasecorrection]
+          commit 'purchasecorrection', crediting_params(authorization)
+        else
+          capture(0, authorization, options)
+        end
       end
 
       # Performs a refund. This method requires that the original transaction
