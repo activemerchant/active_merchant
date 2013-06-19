@@ -7,8 +7,8 @@ class RemoteEProcessingNetworkTest < Test::Unit::TestCase
     @gateway = EProcessingNetworkGateway.new(fixtures(:e_processing_network))
 
     @amount = 100
+    @declined_amount = 101
     @credit_card = credit_card('4000100011112224')
-    @declined_card = credit_card('4000300011112220')
 
     @options = {
       :order_id => '1',
@@ -20,20 +20,20 @@ class RemoteEProcessingNetworkTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_match /APPROVED \d+/, response.message
   end
 
   def test_unsuccessful_purchase
-    assert response = @gateway.purchase(@amount, @declined_card, @options)
+    assert response = @gateway.purchase(@declined_amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
+    assert_equal 'DECLINED', response.message
   end
 
   def test_authorize_and_capture
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
     assert_success auth
-    assert_equal 'Success', auth.message
+    assert_match /APPROVED \d+/, auth.message
     assert auth.authorization
     assert capture = @gateway.capture(amount, auth.authorization)
     assert_success capture
@@ -52,6 +52,6 @@ class RemoteEProcessingNetworkTest < Test::Unit::TestCase
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILURE MESSAGE', response.message
+    assert_equal 'Invalid Authentication', response.message
   end
 end
