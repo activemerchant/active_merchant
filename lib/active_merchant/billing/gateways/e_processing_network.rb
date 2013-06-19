@@ -168,7 +168,7 @@ module ActiveMerchant #:nodoc:
       	response = parse(data)
       	message = message_from(response)
       	Response.new(success?(response), message, response,
-      	  :test => false,
+      	  :test => @options[:test] || test?,
       	  :authorization => response[:transaction_id],
       	  #:fraud_review => fraud_review?(response),
           :avs_result => { :code => response[:avs_result_code] },
