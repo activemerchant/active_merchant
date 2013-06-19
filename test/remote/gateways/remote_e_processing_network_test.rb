@@ -42,16 +42,26 @@ class RemoteEProcessingNetworkTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_equal 'REPLACE WITH GATEWAY FAILURE MESSAGE', response.message
+    assert_equal 'Must pass in a TransID or AuthCode', response.message
   end
 
   def test_invalid_login
+    gateway = EProcessingNetworkGateway.new(
+                :login => '080880',
+                :password => 'invalid'
+              )
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'Invalid Authentication', response.message
+  end
+
+  def test_missing_login
     gateway = EProcessingNetworkGateway.new(
                 :login => '',
                 :password => ''
               )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'Invalid Authentication', response.message
+    assert_equal 'Incomplete information - ePNAccount', response.message
   end
 end
