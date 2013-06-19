@@ -143,17 +143,20 @@ module ActiveMerchant #:nodoc:
       end
       
       def parse(body)
-      	fields = body.split(',')
-      	
-      	results = {
-      		:response_code => fields[RESPONSE_CODE][1..1],
-      		:response_reason_code => fields[RESPONSE_CODE][1..1],
-      		:response_reason_text => fields[RESPONSE_CODE][2..-2],
-      		:avs_result_code => fields[AVS_RESULT_CODE][-3..-3],
-      		:transaction_id => fields[TRANSACTION_ID][1..-2],
-      		:card_code => fields[CVV_RESPONSE_CODE][-3..-3]
-      	}
-      	results
+        fields = body.split(',')
+        
+        results = {
+          :response_code => fields[RESPONSE_CODE][1..1],
+          :response_reason_code => fields[RESPONSE_CODE][1..1],
+          :response_reason_text => fields[RESPONSE_CODE][2..-2],
+        }
+        if fields.size > 1
+          results[:avs_result_code] = fields[AVS_RESULT_CODE][-3..-3]
+          results[:transaction_id] = fields[TRANSACTION_ID][1..-2]
+          results[:card_code] = fields[CVV_RESPONSE_CODE][-3..-3]
+        end
+
+        results
       end     
       
       def commit(action, money, parameters)
