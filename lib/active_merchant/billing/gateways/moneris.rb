@@ -70,13 +70,15 @@ module ActiveMerchant #:nodoc:
         commit 'completion', crediting_params(authorization, :comp_amount => amount(money))
       end
 
-      # Voiding cancels an open authorization.
+      # Voiding requires the original transaction ID and order ID of some open
+      # transaction. Closed transactions must be refunded. Note that the only
+      # methods which may be voided are +capture+ and +purchase+.
       #
       # Concatenate your transaction number and order_id by using a semicolon
       # (';'). This is to keep the Moneris interface consistent with other
       # gateways. (See +capture+ for details.)
       def void(authorization, options = {})
-        capture(0, authorization, options)
+        commit 'purchasecorrection', crediting_params(authorization)
       end
 
       # Performs a refund. This method requires that the original transaction
