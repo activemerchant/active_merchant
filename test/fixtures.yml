@@ -83,6 +83,10 @@ data_cash:
 direc_pay:
   login: 200904281000001
 
+e_processing_network:
+  login: 080880
+  password: 080880pw
+
 efsnet:
   login: X
   password: Y
