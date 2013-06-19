@@ -166,7 +166,6 @@ module ActiveMerchant #:nodoc:
         Response.new(success?(response), message, response,
           :test => @options[:test] || test?,
           :authorization => response[:transaction_id],
-          #:fraud_review => fraud_review?(response),
           :avs_result => { :code => response[:avs_result_code] },
           :cvv_result => response[:card_code]
         )
@@ -180,10 +179,6 @@ module ActiveMerchant #:nodoc:
         
         return response[:response_reason_text].nil? ? '' : response[:response_reason_text]
       end
-      
-      #def fraud_review?(response)
-      #  response[:response_code] == FRAUD_REVIEW
-      #end
       
       def post_data(action, parameters = {})  
         parameters[:ePNAccount]   = @options[:login]
