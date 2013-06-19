@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>money</tt> -- The amount to be captured.  Either an Integer value in cents or a Money object.
       # * <tt>authorization</tt> -- The authorization returned from the previous authorize request.
       def capture(money, authorization, options = {})
-      	post = {:TransID => authorization}		# Must pass TID in TransID
+        post = {:TransID => authorization}    # Must pass TID in TransID
         commit('Auth2Sale', money, post)
       end
       
@@ -91,19 +91,19 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Parameters
       #
-      #	* <tt>money</tt> -- The amount of the original transaction.
+      # * <tt>money</tt> -- The amount of the original transaction.
       # * <tt>authorization</tt> -- The authorization returned from the previous authorize request.
       def void(money, authorization, options = {})
-      	post = {:TransID => authorization}
-      	commit('Void', money, post)
+        post = {:TransID => authorization}
+        commit('Void', money, post)
       end
       
       # Store customer data and card information.
       # eProcessingNetwork does not appear to provide for deletion of stored data.
-      #		Maybe void would do it?
+      #   Maybe void would do it?
      # def store(creditcard, options = {})
-     # 	post = {}
-     # 	commit('Store', nil, post)
+     #  post = {}
+     #  commit('Store', nil, post)
      # end
  
       private                       
@@ -111,35 +111,35 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
       end
 
-			# Adds the customer's address to the POST request.
-			# eProcessingNetwork REQUIRES street address and ZIP code.
+      # Adds the customer's address to the POST request.
+      # eProcessingNetwork REQUIRES street address and ZIP code.
       def add_address(post, creditcard, options)    
-      	if address = options[:billing_address] || options[:address]
-      		post[:Address] 	= address[:address1].to_s
-      		post[:Zip] 			= address[:zip].to_s
-      		# City, State are optional and will be viewable in ePN reports.
-      		#post[:City]     = address[:city].to_s
-      		#post[:State]    = address[:state].to_s
-      	end
+        if address = options[:billing_address] || options[:address]
+          post[:Address]  = address[:address1].to_s
+          post[:Zip]      = address[:zip].to_s
+          # City, State are optional and will be viewable in ePN reports.
+          #post[:City]     = address[:city].to_s
+          #post[:State]    = address[:state].to_s
+        end
       end
 
       def add_invoice(post, options)
-      	post[:Inv] 					= options[:order_id]
-      	post[:Description] 	= options[:description] || ''
+        post[:Inv]          = options[:order_id]
+        post[:Description]  = options[:description] || ''
       end
       
       def add_creditcard(post, creditcard)
-      	post[:CardNo] 		= creditcard.number
-      	post[:CVV2] 		  = creditcard.verification_value if creditcard.verification_value?
-      	post[:CVV2Type] 	= creditcard.verification_value? ? '1' : '0'
-      	post[:ExpMonth] 	= creditcard.month
-      	post[:ExpYear] 		= creditcard.year
-      	post[:FirstName] 	= creditcard.first_name
-      	post[:LastName] 	= creditcard.last_name
+        post[:CardNo]     = creditcard.number
+        post[:CVV2]       = creditcard.verification_value if creditcard.verification_value?
+        post[:CVV2Type]   = creditcard.verification_value? ? '1' : '0'
+        post[:ExpMonth]   = creditcard.month
+        post[:ExpYear]    = creditcard.year
+        post[:FirstName]  = creditcard.first_name
+        post[:LastName]   = creditcard.last_name
       end
       
       def success?(response)
-      	response[:response_code] == 'Y'
+        response[:response_code] == 'Y'
       end
       
       def parse(body)
@@ -159,21 +159,21 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters)
         url = test? ? self.test_url : self.live_url
 
-      	# Inv must be passed report to receive a transaction ID
-      	parameters[:Inv] = 'report'	unless parameters[:Inv]
+        # Inv must be passed report to receive a transaction ID
+        parameters[:Inv] = 'report' unless parameters[:Inv]
         parameters[:Total] = amount(money)
         
-      	data = ssl_post url, post_data(action, parameters)
-      	
-      	response = parse(data)
-      	message = message_from(response)
-      	Response.new(success?(response), message, response,
-      	  :test => @options[:test] || test?,
-      	  :authorization => response[:transaction_id],
-      	  #:fraud_review => fraud_review?(response),
+        data = ssl_post url, post_data(action, parameters)
+        
+        response = parse(data)
+        message = message_from(response)
+        Response.new(success?(response), message, response,
+          :test => @options[:test] || test?,
+          :authorization => response[:transaction_id],
+          #:fraud_review => fraud_review?(response),
           :avs_result => { :code => response[:avs_result_code] },
           :cvv_result => response[:card_code]
-      	)
+        )
       end
 
       def message_from(response)
@@ -189,14 +189,14 @@ module ActiveMerchant #:nodoc:
       #  response[:response_code] == FRAUD_REVIEW
       #end
       
-      def post_data(action, parameters = {}) 	
-      	parameters[:ePNAccount] 	= @options[:login]
-      	parameters[:RestrictKey] 	= @options[:password]
-      	parameters[:TranType] 		= action
-      	parameters[:Email]				= ''
-      	parameters[:HTML] 				= 'No'
-      	
-      	parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
+      def post_data(action, parameters = {})  
+        parameters[:ePNAccount]   = @options[:login]
+        parameters[:RestrictKey]  = @options[:password]
+        parameters[:TranType]     = action
+        parameters[:Email]        = ''
+        parameters[:HTML]         = 'No'
+        
+        parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
     end
   end
