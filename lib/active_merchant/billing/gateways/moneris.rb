@@ -78,7 +78,11 @@ module ActiveMerchant #:nodoc:
       # (';'). This is to keep the Moneris interface consistent with other
       # gateways. (See +capture+ for details.)
       def void(authorization, options = {})
-        commit 'purchasecorrection', crediting_params(authorization)
+        if options[:authorization].nil?
+          commit 'purchasecorrection', crediting_params(authorization)
+        else
+          capture(0, authorization, options)
+        end
       end
 
       # Performs a refund. This method requires that the original transaction
