@@ -184,7 +184,8 @@ module ActiveMerchant #:nodoc:
         parameters[:ePNAccount]   = @options[:login]
         parameters[:RestrictKey]  = @options[:password]
         parameters[:TranType]     = action
-        parameters[:Email]        = ''
+        # You shall not pass! DO NOT pass email or ePN will generate a hideous receipt.
+        parameters[:Email]        = ''    
         parameters[:HTML]         = 'No'
         
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
