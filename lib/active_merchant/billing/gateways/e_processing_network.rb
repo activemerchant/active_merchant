@@ -2,7 +2,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class EProcessingNetworkGateway < Gateway
       self.money_format = :dollars
-      LIVE_URL = 'https://www.eProcessingNetwork.Com/cgi-bin/tdbe/transact.pl'
+      self.test_url = self.live_url = 'https://www.eProcessingNetwork.Com/cgi-bin/tdbe/transact.pl'
       
       RESPONSE_CODE, AVS_RESULT_CODE, CVV_RESPONSE_CODE, TRANSACTION_ID = 0, 1, 2, 4
       
@@ -157,11 +157,13 @@ module ActiveMerchant #:nodoc:
       end     
       
       def commit(action, money, parameters)
+        url = test? ? self.test_url : self.live_url
+
       	# Inv must be passed report to receive a transaction ID
       	parameters[:Inv] = 'report'	unless parameters[:Inv]
         parameters[:Total] = amount(money)
         
-      	data = ssl_post LIVE_URL, post_data(action, parameters)
+      	data = ssl_post url, post_data(action, parameters)
       	
       	response = parse(data)
       	message = message_from(response)
