@@ -28,8 +28,8 @@ module ActiveMerchant #:nodoc:
       #
       # ==== Options
       #
-      # * <tt>:epnaccount</tt> -- The ePN API Login ID (REQUIRED)
-      # * <tt>:restrictkey</tt> -- The ePN Transaction Security Key. (REQUIRED)
+      # * <tt>:login</tt> -- The ePN API Login ID (REQUIRED)
+      # * <tt>:password</tt> -- The ePN Transaction Security Key. (REQUIRED)
       # * <tt>:billing_address</tt> -- Customer's billing address. (REQUIRED)
       #   Street address and ZIP code are mandatory and used for the AVS lookup.
       # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test account. 
