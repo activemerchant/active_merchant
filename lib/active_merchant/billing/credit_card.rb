@@ -112,6 +112,11 @@ module ActiveMerchant #:nodoc:
       # @return [String] the verification value
       attr_accessor :verification_value
 
+      # Returns or sets the track data for the card
+      #
+      # @return [String]
+      attr_accessor :track_data
+
       def type
         self.class.deprecated "CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead."
         brand

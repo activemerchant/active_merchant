@@ -125,4 +125,22 @@ class RemoteStripeTest < Test::Unit::TestCase
     end
   end
 
+  def test_card_present_purchase
+    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert response.params["paid"]
+  end
+
+  def test_card_present_authorize_and_capture
+    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
+    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+    assert !authorization.params["captured"]
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+  end
+
 end
