@@ -1,3 +1,5 @@
+require "openssl"
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
@@ -8,7 +10,7 @@ module ActiveMerchant #:nodoc:
               raise ArgumentError, "You need to provide the Application secret as the option :credential3 to verify that the notification originated from Dwolla"
             end
 
-            expected_signature = Digest::HMAC.hexdigest('%s&%.2f' % [checkoutId, amount], secret, Digest::SHA1)
+            expected_signature = OpenSSL::HMAC.hexdigest(OpenSSL::Digest::SHA1.new, secret, "%s&%.2f" % [checkoutId, amount])
 
             if notification_signature != expected_signature
               raise StandardError, "Dwolla signature verification failed."
