@@ -5,6 +5,7 @@
 * Make #unstore method signature consistent across gateways [duff]
 * Dwolla: Major bug fixes. [capablemonkey, melari]
 * Stripe: Add support for including track data [melari]
+* Balanced: Fix exception for invalid email [duff]
 
 == Version 1.33.0 (May 30, 2013)
 
