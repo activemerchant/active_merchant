@@ -1,8 +1,18 @@
-require 'curb'
 require 'addressable/uri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MerchantOneGateway < Gateway
+      class MerchantOneSslConnection < ActiveMerchant::Connection
+        def configure_ssl(http)
+          super(http)
+          http.use_ssl = true
+          http.ssl_version = :SSLv3
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+#[:TLSv1, :TLSv1_server, :TLSv1_client, :SSLv3, :SSLv3_server, :SSLv3_client, :SSLv23, :SSLv23_server, :SSLv23_client]
+        end
+      end
+
+
       BASE_URL = 'https://secure.merchantonegateway.com/api/transact.php'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
@@ -52,6 +62,10 @@ module ActiveMerchant #:nodoc:
         commit('capture', money, post)
       end
 
+      def new_connection(endpoint)
+        MerchantOneSslConnection.new(endpoint)
+      end
+
 private
 
       def add_customer_data(post, options)
@@ -80,23 +94,8 @@ private
       end
 
       def commit(action, money, parameters={})
-        parse(ssl_post(BASE_URL, post_data(action, parameters)))
+        parse(ssl_post(BASE_URL,post_data(action, parameters)))
       end
-      # Have to bypass the normal stucch because of
-      # merchant one's server settings.
-      def ssl_post(url, data, headers={})
-        url = "#{url}?#{data}"
-        curlObj = Curl::Easy.new(url)
-        curlObj.connect_timeout = 15
-        curlObj.timeout = 15
-        curlObj.header_in_body = false
-        curlObj.ssl_verify_peer = false
-        curlObj.post_body = ''
-        curlObj.perform()
-        data = curlObj.body_str
-        data
-      end
-
 
       def post_data(action, parameters = {})
         parameters.merge!({type: action})

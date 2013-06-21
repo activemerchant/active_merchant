@@ -1,4 +1,5 @@
 require 'test_helper'
+  require 'logger'
 
 class RemoteMerchantOneTest < Test::Unit::TestCase
 
@@ -18,6 +19,7 @@ class RemoteMerchantOneTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
+
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'SUCCESS', response.message
