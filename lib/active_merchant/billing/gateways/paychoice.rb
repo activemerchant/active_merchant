@@ -1,20 +1,20 @@
 begin
-  require "pay_choice"
+  require "paychoice"
 rescue LoadError
-  raise "Could not load the PayChoice gem.  Use `gem install pay_choice` to install it."
+  raise "Could not load the Paychoice gem.  Use `gem install paychoice` to install it."
 end
 
 module ActiveMerchant
   module Billing
-    class PayChoiceGateway < Gateway
+    class PaychoiceGateway < Gateway
       self.money_format = :dollars
       self.default_currency = 'AUD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = "http://www.paychoice.com.au/"
-      self.display_name = "PayChoice"
+      self.display_name = "Paychoice"
       self.supported_countries = ['AU']
 
-      class PayChoiceGatewayPurchase < Hash
+      class PaychoiceGatewayPurchase < Hash
         attr_accessor :gateway
 
         def self.create gateway, response
@@ -48,7 +48,7 @@ module ActiveMerchant
           reference: "Invoice #{Time.now.to_i}",
           card: to_hash_from_credit_card(card)
         )
-        PayChoiceGatewayPurchase.create self, result
+        PaychoiceGatewayPurchase.create self, result
       end
 
       def list
@@ -79,7 +79,7 @@ module ActiveMerchant
       def init
         environment = test? ? :sandbox : :production
 
-        PayChoice.new({
+        Paychoice.new({
           username: @login,
           password: @password}, environment)
       end
