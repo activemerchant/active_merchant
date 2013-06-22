@@ -19,15 +19,12 @@ module ActiveMerchant #:nodoc:
       # The name of the gateway
       self.display_name = 'Merchant One Gateway'
       self.money_format = :dollars
-
       # Attempt to wrap the extreamly simple MerchantOne Gateway into Active merchant
-
       # Merchant One uses real user names and password for the account.
       def initialize(options = {})
         requires!(options, :username, :password)
         super
       end
-
       def authorize(money, creditcard, options = {})
         post = {}
         add_customer_data(post, options)
@@ -37,7 +34,6 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         commit('auth', money, post)
       end
-
       def purchase(money, creditcard, options = {})
         post = {}
         add_customer_data(post, options)
@@ -47,7 +43,6 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         commit('sale', money, post)
       end
-
       def capture(money, authorization, options = {})
         post = {}
         post.merge!({transactionid: authorization})
@@ -59,7 +54,6 @@ module ActiveMerchant #:nodoc:
       def new_connection(endpoint)
         MerchantOneSslConnection.new(endpoint)
       end
-
 private
       def add_customer_data(post, options)
         post['firstname'] = options[:billing_address][:first_name]
@@ -76,22 +70,18 @@ private
         post['zip'] = options[:billing_address][:zip]
         post['country'] = options[:billing_address][:country]
       end
-
-
       def add_creditcard(post, creditcard)
        post['cvv'] = creditcard.verification_value
        post['ccnumber'] = creditcard.number
        # Format MMYY
        post['ccexp'] =  "#{sprintf("%02d", creditcard.month)}#{"#{creditcard.year}"[-2, 2]}"
       end
-
       # Add Username and password to all commits
       def commit(action, money, parameters={})
         parameters['username'] = @options[:username]
         parameters['password'] = @options[:password]
         parse(ssl_post(BASE_URL,post_data(action, parameters)))
       end
-
       # This is a funky way to handel post data but currently,
       # it's the only way that Merchant One accepts the data
       def post_data(action, parameters = {})
@@ -105,15 +95,13 @@ private
         end
         ret.to_s
       end
-
       # Same for parsing. Odd, but it's how they work.
       def parse(data)
         # NOTE: The domain name below is simply used to create a full URI to allow URI.parse to parse out the query values
         # for us. It is not used to send any data
-        data = '"https://secure.merchantonegateway.com/api/transact.php?' + data
-        uri = Addressable::URI.parse(data)
-        responses = uri.query_values
-        response = Response.new(responses['response'].to_i == 1, responses['responsetext'], responses, test: test?, authorization: responses['transactionid'])
+        #data = '"https://secure.merchantonegateway.com/api/transact.php?' + data
+        responses =  Hash[URI::decode_www_form(data)]
+        response = Response.new(responses["response"].to_i == 1, responses["responsetext"], responses, test: test?, authorization: responses["transactionid"])
         response
       end
     end
