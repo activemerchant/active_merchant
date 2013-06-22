@@ -1,4 +1,3 @@
-require 'addressable/uri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MerchantOneGateway < Gateway
