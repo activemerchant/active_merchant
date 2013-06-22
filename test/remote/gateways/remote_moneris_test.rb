@@ -48,7 +48,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
     response = @gateway.capture(@amount, response.authorization)
     assert_success response
 
-    void = @gateway.void(response.authorization)
+    void = @gateway.void(response.authorization, :purchasecorrection => true)
     assert_success void
   end
 
@@ -57,7 +57,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_success response
     assert response.authorization
 
-    void = @gateway.void(response.authorization, :authorization => true)
+    void = @gateway.void(response.authorization)
     assert_success void
   end
 
@@ -65,7 +65,7 @@ class MonerisRemoteTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    void = @gateway.void(purchase.authorization)
+    void = @gateway.void(purchase.authorization, :purchasecorrection => true)
     assert_success void
   end
 
