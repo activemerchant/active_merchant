@@ -196,6 +196,10 @@ merchant_esolutions:
   login: "94100008043900000004"
   password: "gvQzgKXOTEoDzpzJzROrQQzoKLaEqxjf"
 
+merchant_one:
+  username: 'demo'
+  password: 'password'
+
 merchant_ware:
  login:
  password:
