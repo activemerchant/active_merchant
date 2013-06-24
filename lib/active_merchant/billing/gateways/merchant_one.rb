@@ -1,3 +1,5 @@
+require "cgi"
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class MerchantOneGateway < Gateway
@@ -45,7 +47,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         post = {}
-        post.merge!({transactionid: authorization})
+        post.merge!(:transactionid => authorization)
         add_amount(post, money, options)
         commit('capture', money, post)
       end
@@ -86,7 +88,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, parameters = {})
-        parameters.merge!({type: action})
+        parameters.merge!({:type => action})
         ret = ""
         for key in parameters.keys
           ret += "#{key}=#{CGI.escape(parameters[key].to_s)}"
@@ -98,9 +100,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(data)
-        responses =  Hash[URI::decode_www_form(data)]
-        response = Response.new(responses["response"].to_i == 1, responses["responsetext"], responses, test: test?, authorization: responses["transactionid"])
-        response
+        responses =  CGI.parse(data).inject({}){|h,(k, v)| h[k] = v.first; h}
+        Response.new(
+          (responses["response"].to_i == 1),
+          responses["responsetext"],
+          responses,
+          :test => test?,
+          :authorization => responses["transactionid"]
+        )
       end
     end
   end
