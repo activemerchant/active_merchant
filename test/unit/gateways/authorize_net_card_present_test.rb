@@ -33,6 +33,25 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
     assert_equal '000000', response.authorization_code
   end
   
+  def test_parsing_purchase_response_with_card_number_and_type
+    res = @gateway.send(:parse, successful_purchase_response_with_card_number_and_type)
+    assert_equal( 
+      res, 
+      {
+        :response_code=>1,
+        :response_reason_code=>"1",
+        :response_reason_text=>"This transaction has been approved.",
+        :authorization_code=>"X931M4",
+        :avs_result_code=>"Y",
+        :transaction_id=>"2194822223",
+        :card_code=>"",
+        :card_number=>"XXXX1111",
+        :card_type=>"Visa"
+      }
+    )
+  end
+
+
   def test_failed_authorization
     @gateway.expects(:ssl_post).returns(failed_authorization_response)
 
@@ -155,6 +174,10 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
   
   def successful_purchase_response
     '$1.0$,$1$,$1$,$This transaction has been approved.$,$000000$,$P$,$$,$508141795$,$77F2FA67D1A4D2FBAB51F243D90BAB26$,$$'
+  end
+
+  def successful_purchase_response_with_card_number_and_type
+    "$1.0$,$1$,$1$,$This transaction has been approved.$,$X931M4$,$Y$,$$,$2194822223$,$7FE879E74A388D4E4BC056244A434BC7$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$XXXX1111$,$Visa$"
   end
   
   def failed_authorization_response

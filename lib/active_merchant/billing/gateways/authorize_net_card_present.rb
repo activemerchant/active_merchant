@@ -29,7 +29,8 @@ module ActiveMerchant
       # These differ from AuthorizeNetGateway
       RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT = 1, 2, 3
       AUTHORIZATION_CODE, AVS_RESULT_CODE, CARD_CODE_RESPONSE_CODE, TRANSACTION_ID = 4, 5, 6, 7
-      
+      CARD_NUMBER, CARD_TYPE = 20, 21      
+
       # Captures the funds from an authorized transaction.
       #
       # ==== Parameters
@@ -125,10 +126,10 @@ module ActiveMerchant
           :authorization_code => fields[AUTHORIZATION_CODE],
           :avs_result_code => fields[AVS_RESULT_CODE],
           :transaction_id => fields[TRANSACTION_ID],
-          :card_code => fields[CARD_CODE_RESPONSE_CODE]
+          :card_code => fields[CARD_CODE_RESPONSE_CODE],
+          :card_number => fields[CARD_NUMBER],
+          :card_type => fields[CARD_TYPE]
         }
-        results[:card_type] = fields.last 
-        results
       end
 
       def post_data(action, parameters = {})
