@@ -135,6 +135,7 @@ module ActiveMerchant #:nodoc:
         create_or_find_account(post, options)
         add_credit_card(post, credit_card, options)
         add_address(credit_card, options)
+        add_common_params(post, options)
 
         create_transaction(:post, @holds_uri, post)
       rescue Error => ex
@@ -172,6 +173,7 @@ module ActiveMerchant #:nodoc:
         create_or_find_account(post, options)
         add_credit_card(post, credit_card, options)
         add_address(credit_card, options)
+        add_common_params(post, options)
 
         create_transaction(:post, @debits_uri, post)
       rescue Error => ex
@@ -246,6 +248,7 @@ module ActiveMerchant #:nodoc:
         post[:debit_uri] = debit_uri
         post[:amount] = amount
         post[:description] = options[:description]
+        add_common_params(post, options)
         create_transaction(:post, @refunds_uri, post)
       rescue Error => ex
         failed_response(ex.response)
