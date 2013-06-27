@@ -334,9 +334,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_common_params(post, options)
-        post[:on_behalf_of_uri] = options[:on_behalf_of_uri] if options[:on_behalf_of_uri]
-        post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
-        post[:meta] = options[:meta] if options[:meta]
+        common_params = [
+          :on_behalf_of_uri,
+          :appears_on_statement_as,
+          :meta,
+        ]
+        post.update(options.slice(*common_params))
       end
 
       def add_credit_card(post, credit_card, options)
