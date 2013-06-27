@@ -303,6 +303,7 @@ module ActiveMerchant #:nodoc:
 
         if account_uri == nil
           post[:email_address] = options[:email]
+          post[:meta] = options[:meta] if options[:meta]
 
           # create an account
           response = http_request(:post, @accounts_uri, post)
@@ -348,6 +349,7 @@ module ActiveMerchant #:nodoc:
           card[:name] = credit_card.name if credit_card.name
 
           add_address(card, options)
+          card[:meta] = options[:meta] if options[:meta]
 
           response = http_request(:post, @cards_uri, card)
           if error?(response)
