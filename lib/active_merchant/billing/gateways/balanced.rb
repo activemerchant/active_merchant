@@ -197,7 +197,7 @@ module ActiveMerchant #:nodoc:
         post[:hold_uri] = authorization
         post[:amount] = money if money
         post[:description] = options[:description] if options[:description]
-        post[:on_behalf_of_uri] = options[:on_behalf_of_uri] if options[:on_behalf_of_uri]
+        add_common_params(post, options)
 
         create_transaction(:post, @debits_uri, post)
       rescue Error => ex
@@ -327,6 +327,10 @@ module ActiveMerchant #:nodoc:
           credit_card[:postal_code] = address[:zip] if address[:zip]
           credit_card[:country] = address[:country] if address[:country]
         end
+      end
+
+      def add_common_params(post, options)
+        post[:on_behalf_of_uri] = options[:on_behalf_of_uri] if options[:on_behalf_of_uri]
       end
 
       def add_credit_card(post, credit_card, options)
