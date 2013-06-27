@@ -170,7 +170,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer(post, options)
-        post[:customer] = options[:customer] if options[:customer] && !post[:card]
+        post[:customer] = options[:customer] if options[:customer] && post[:card].blank?
       end
 
       def add_flags(post, options)
