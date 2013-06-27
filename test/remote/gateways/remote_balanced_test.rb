@@ -69,7 +69,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert response.message.index('Missing required field') != nil
+    assert response.message.index('must be specified') != nil
   end
 
   def test_void_authorization
