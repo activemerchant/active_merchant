@@ -158,6 +158,7 @@ module ActiveMerchant #:nodoc:
             card[:name] = creditcard.name if creditcard.name
           end
 
+          post[:card] = card
           add_address(post, options)
         elsif creditcard.kind_of?(String)
           if options[:track_data]
@@ -165,8 +166,8 @@ module ActiveMerchant #:nodoc:
           else
             card[:number] = creditcard
           end
+          post[:card] = card
         end
-        post[:card] = card
       end
 
       def add_customer(post, options)

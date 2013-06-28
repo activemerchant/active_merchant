@@ -186,6 +186,14 @@ class StripeTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_address_is_included_with_card_data
+    stub_comms(:ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert data =~ /card\[address_line1\]/
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def successful_authorization_response
