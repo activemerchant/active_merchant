@@ -1,13 +1,21 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.34.1 (June 28, 2013)
+
+* WorldPay: Add dynamic return URL [jordanwheeler]
+* Merchant One: New gateway [coteyr, melari]
+* Balanced: Fix exception for invalid email [duff]
+* Update supported countries for Paymill & PaymentExpress [duff]
+* Worldpay: Add support for diners club [duff]
+* Stripe: Include address with card data [melari]
+
+== Version 1.34.0 (June 20, 2013)
+
 * PayPal Express gateway: Add unstore support [duff]
 * Stripe: Send application_fee with capture requests [melari]
 * Make #unstore method signature consistent across gateways [duff]
 * Dwolla: Major bug fixes. [capablemonkey, melari]
 * Stripe: Add support for including track data [melari]
-* Balanced: Fix exception for invalid email [duff]
-* Update supported countries for Paymill & PaymentExpress [duff]
-* Worldpay: Add support for diners club [duff]
 
 == Version 1.33.0 (May 30, 2013)
 
