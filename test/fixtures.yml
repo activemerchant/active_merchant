@@ -31,6 +31,10 @@ barclays_epdq_extra_plus:
   user: username
   password: password
 
+be2bill:
+  login: your_test_login
+  password: your_test_password
+
 beanstream:
   login: merchant id
   user: username
