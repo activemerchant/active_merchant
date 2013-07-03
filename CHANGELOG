@@ -8,6 +8,7 @@
 * Mercury: Add support for requesting a token [kcdragon]
 * Add App55 gateway [ianbutler55]
 * UsaEpayTransaction: Support for split payments [GBH]
+* Add Swipe Checkout gateway [matt-optimizerhq]
 
 == Version 1.41.0 (October 24th, 2013)
 
