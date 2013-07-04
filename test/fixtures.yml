@@ -10,6 +10,10 @@
 #
 # Paste any required PEM certificates after the pem key.
 #
+app55:
+  ApiKey: Account Api Key
+  ApiSecret: Account Api Secret
+  
 authorize_net:
   login: X
   password: Y
