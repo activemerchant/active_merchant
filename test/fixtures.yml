@@ -10,6 +10,10 @@
 #
 # Paste any required PEM certificates after the pem key.
 #
+app55:
+  api_key: "QDtACYMCFqtuKOQ22QtCkGR1TzD7XM8i"
+  api_secret: "yT1FRpuusBIQoEBIfIQ8bPStkl7yzdTz"
+
 authorize_net:
   login: X
   password: Y
