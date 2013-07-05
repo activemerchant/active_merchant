@@ -10,6 +10,7 @@
 * Moneris: Add support for purchasecorrection [pgib]
 * Spreedly: Add ability to retain on success [duff]
 * Spreedly: Pass verification value [duff]
+* Paymill: Add support for specifying the :customer [Sbastien]
 
 == Version 1.38.1 (September 16, 2013)
 
