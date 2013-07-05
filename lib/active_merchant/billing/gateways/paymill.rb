@@ -109,6 +109,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         post[:token] = card_token
         post[:description] = options[:description]
+        post[:client] = options[:customer]
         commit(:post, 'transactions', post)
       end
 
@@ -163,7 +164,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(post, money, options)
-        post[:amount] = amount(money)
+        post[:amount] = money.to_i
         post[:currency] = (options[:currency] || currency(money))
       end
 
