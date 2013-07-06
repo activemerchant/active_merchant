@@ -1,4 +1,5 @@
-require 'active_support/core_ext/float/rounding.rb' # Float#round(precision)
+require 'active_support/version' # for ActiveSupport2.3
+require 'active_support/core_ext/float/rounding.rb' unless ActiveSupport::VERSION::MAJOR == 4 # Float#round(precision)
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
