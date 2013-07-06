@@ -153,6 +153,10 @@ garanti:
   merchant_id: 600218
   password: "123qweASD"
 
+global_media_online:
+  login: X
+  password: Y
+
 # login: merchant number
 # password: password for the PEM secret key
 # pem: public certificate and PEM secret key

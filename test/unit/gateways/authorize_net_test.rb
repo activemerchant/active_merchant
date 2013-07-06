@@ -101,6 +101,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal '508141794', response.authorization
   end
 
+
   def test_add_address_outsite_north_america
     result = {}
 
