@@ -54,14 +54,16 @@ class EwayRapidTest < Test::Unit::TestCase
       @gateway.setup_purchase(200,
         :redirect_url => "http://awesomesauce.com",
         :ip => "0.0.0.0",
+        :request_method => "CustomRequest",
         :application_id => "Woohoo",
         :description => "Description",
         :order_id => "orderid1",
         :currency => "INR",
         :email => "jim@example.com",
         :billing_address => {
-          :name => "Jim Awesome Smith",
-          :company => "Awesome Co",
+          :title    => "Mr.",
+          :name     => "Jim Awesome Smith",
+          :company  => "Awesome Co",
           :address1 => "1234 My Street",
           :address2 => "Apt 1",
           :city     => "Ottawa",
@@ -72,8 +74,9 @@ class EwayRapidTest < Test::Unit::TestCase
           :fax      => "(555)555-6666"
         },
         :shipping_address => {
-          :name => "Baker",
-          :company => "Elsewhere Inc.",
+          :title    => "Ms.",
+          :name     => "Baker",
+          :company  => "Elsewhere Inc.",
           :address1 => "4321 Their St.",
           :address2 => "Apt 2",
           :city     => "Chicago",
@@ -89,6 +92,7 @@ class EwayRapidTest < Test::Unit::TestCase
 
       assert_match(%r{RedirectUrl>http://awesomesauce.com<}, data)
       assert_match(%r{CustomerIP>0.0.0.0<}, data)
+      assert_match(%r{Method>CustomRequest<}, data)
       assert_match(%r{DeviceID>Woohoo<}, data)
 
       assert_match(%r{TotalAmount>200<}, data)
@@ -96,6 +100,7 @@ class EwayRapidTest < Test::Unit::TestCase
       assert_match(%r{InvoiceReference>orderid1<}, data)
       assert_match(%r{CurrencyCode>INR<}, data)
 
+      assert_match(%r{Title>Mr.<}, data)
       assert_match(%r{FirstName>Jim<}, data)
       assert_match(%r{LastName>Awesome Smith<}, data)
       assert_match(%r{CompanyName>Awesome Co<}, data)
@@ -104,11 +109,12 @@ class EwayRapidTest < Test::Unit::TestCase
       assert_match(%r{City>Ottawa<}, data)
       assert_match(%r{State>ON<}, data)
       assert_match(%r{PostalCode>K1C2N6<}, data)
-      assert_match(%r{Country>CA<}, data)
+      assert_match(%r{Country>ca<}, data)
       assert_match(%r{Phone>\(555\)555-5555<}, data)
       assert_match(%r{Fax>\(555\)555-6666<}, data)
       assert_match(%r{Email>jim@example\.com<}, data)
 
+      assert_match(%r{Title>Ms.<}, data)
       assert_match(%r{LastName>Baker<}, data)
       assert_no_match(%r{Elsewhere Inc.}, data)
       assert_match(%r{Street1>4321 Their St.<}, data)
@@ -116,7 +122,7 @@ class EwayRapidTest < Test::Unit::TestCase
       assert_match(%r{City>Chicago<}, data)
       assert_match(%r{State>IL<}, data)
       assert_match(%r{PostalCode>60625<}, data)
-      assert_match(%r{Country>US<}, data)
+      assert_match(%r{Country>us<}, data)
       assert_match(%r{Phone>1115555555<}, data)
       assert_match(%r{Fax>1115556666<}, data)
       assert_match(%r{Email>(\s+)?<}, data)
@@ -200,6 +206,18 @@ class EwayRapidTest < Test::Unit::TestCase
     assert response.test?
     assert_equal "Do Not Honour", response.message
     assert_equal "1", response.params["invoicereference"]
+  end
+
+  def test_store_calls_sub_methods
+    options = {
+      :order_id => 1,
+      :billing_address => {
+        :name => "Jim Awesome Smith",
+      }
+    }
+    @gateway.expects(:purchase).with(0, @credit_card, options.merge(:request_method => "CreateTokenCustomer"))
+
+    @gateway.store(@credit_card, options)
   end
 
   def test_verification_results
