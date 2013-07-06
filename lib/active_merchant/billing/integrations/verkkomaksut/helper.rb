@@ -3,40 +3,40 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Verkkomaksut
         class Helper < ActiveMerchant::Billing::Integrations::Helper
-          
+
           # Fetches the md5secret and adds MERCHANT_ID and API TYPE to the form
           def initialize(order, account, options = {})
             md5secret options.delete(:credential2)
             super
             add_field("MERCHANT_ID", account)
             add_field("TYPE", "E1")
-          end          
-          
+          end
+
           def md5secret(value)
             @md5secret = value
           end
-          
+
           # Adds the AUTHCODE to the form
           def form_fields
             @fields.merge("AUTHCODE" => generate_md5string)
           end
-          
+
           # Calculates the AUTHCODE
           def generate_md5string
             fields = [@md5secret, @fields["MERCHANT_ID"], @fields["ORDER_NUMBER"], @fields["REFERENCE_NUMBER"], @fields["ORDER_DESCRIPTION"], @fields["CURRENCY"], @fields["RETURN_ADDRESS"], @fields["CANCEL_ADDRESS"], @fields["PENDING_ADDRESS"],
                       @fields["NOTIFY_ADDRESS"], @fields["TYPE"], @fields["CULTURE"], @fields["PRESELECTED_METHOD"], @fields["MODE"], @fields["VISIBLE_METHODS"], @fields["GROUP"], @fields["CONTACT_TELNO"], @fields["CONTACT_CELLNO"],
                       @fields["CONTACT_EMAIL"], @fields["CONTACT_FIRSTNAME"], @fields["CONTACT_LASTNAME"], @fields["CONTACT_COMPANY"], @fields["CONTACT_ADDR_STREET"], @fields["CONTACT_ADDR_ZIP"], @fields["CONTACT_ADDR_CITY"], @fields["CONTACT_ADDR_COUNTRY"], @fields["INCLUDE_VAT"],
                       @fields["ITEMS"]]
-                      
+
             (0..@fields["ITEMS"].to_i-1).each do |i|
               fields += [@fields["ITEM_TITLE[#{i}]"], @fields["ITEM_NO[#{i}]"], @fields["ITEM_AMOUNT[#{i}]"], @fields["ITEM_PRICE[#{i}]"], @fields["ITEM_TAX[#{i}]"], @fields["ITEM_DISCOUNT[#{i}]"], @fields["ITEM_TYPE[#{i}]"]]
             end
-                      
+
             fields = fields.join("|")
-            
+
             return Digest::MD5.hexdigest(fields).upcase
           end
-          
+
           # Mappings
           mapping :merchant_id, "MERCHANT_ID"
           mapping :order, "ORDER_NUMBER"
@@ -47,8 +47,8 @@ module ActiveMerchant #:nodoc:
                              :phone      => "CONTACT_CELLNO",
                              :tellno     => "CONTACT_TELLNO",
                              :company    => "CONTACT_COMPANY"
-              
-          
+
+
           mapping :billing_address, :city     => "CONTACT_ADDR_CITY",
                                     :address1 => "CONTACT_ADDR_STREET",
                                     :address2 => "",
@@ -71,8 +71,9 @@ module ActiveMerchant #:nodoc:
           mapping :mode, "MODE"
           mapping :visible_methods, "VISIBLE_METHODS"
           mapping :group, "GROUP"
-          
+
           (0..499.to_i).each do |i|
+            mapping "item_title_#{i}".to_sym, "ITEM_TITLE[#{i}]"
             mapping "item_no_#{i}".to_sym, "ITEM_NO[#{i}]"
             mapping "item_amount_#{i}".to_sym, "ITEM_AMOUNT[#{i}]"
             mapping "item_price_#{i}".to_sym, "ITEM_PRICE[#{i}]"
