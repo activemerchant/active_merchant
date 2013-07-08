@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'pry'
 
 class RemoteRealexTest < Test::Unit::TestCase
 
@@ -70,7 +69,7 @@ class RemoteRealexTest < Test::Unit::TestCase
 
     assert_not_nil response
     assert_failure response
-    
+
     assert_equal '506', response.params['result']
     assert_equal "There is no such merchant account. Please contact realex payments if you continue to experience this problem.", response.message
   end
