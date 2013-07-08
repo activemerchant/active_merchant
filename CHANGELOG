@@ -11,6 +11,7 @@
 * Spreedly: Add ability to retain on success [duff]
 * Spreedly: Pass verification value [duff]
 * Paymill: Add support for specifying the :customer [Sbastien]
+* Realex: Correct AVS input format [ExxKA]
 
 == Version 1.38.1 (September 16, 2013)
 
