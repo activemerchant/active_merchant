@@ -85,9 +85,9 @@ module ActiveMerchant
       private
       def commit(request)
         response = parse(ssl_post(self.live_url, request))
-
-        Response.new(response[:result] == "00", message_from(response), response,
-          :test => response[:message] =~ /\[ test system \]/,
+        
+        Response.new(response[:result] == "00", message_from(response), response,      
+          :test => response[:message].include?("test system"),
           :authorization => authorization_from(response),
           :cvv_result => response[:cvnresult],
           :avs_result => {
