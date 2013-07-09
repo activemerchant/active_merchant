@@ -1,6 +1,5 @@
 require 'nokogiri'
 require 'digest/sha1'
-require 'pry'
 
 module ActiveMerchant
   module Billing
@@ -248,7 +247,7 @@ module ActiveMerchant
       def format_address_code(zip, street1, street2)
         street1 = street1.to_s
         street2 = street2.to_s
-        #binding.pry
+
         if(street1.length > 0 || street2.length > 0)
           return format_only_numbers(zip)+'|'+format_only_numbers(street1) + format_only_numbers(street2) 
         else
