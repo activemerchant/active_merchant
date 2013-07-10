@@ -79,6 +79,7 @@ For more in-depth documentation and tutorials, see [GettingStarted.md](GettingSt
 
 The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) contains a [table of features supported by each gateway](http://github.com/Shopify/active_merchant/wikis/gatewayfeaturematrix).
 
+* [App55](http://www.app55.com/) - AU, BR, CA, CH, CL, CN, CO, CZ, DK, EU, GB, HK, HU, ID, IS, JP, KE, KR, MX, MY, NO, NZ, PH, PL, TH, TW, US, VN, ZA
 * [Authorize.Net](http://www.authorize.net/) - US
 * [Authorize.Net CIM](http://www.authorize.net/) - US
 * [Balanced](https://www.balancedpayments.com/) - US
