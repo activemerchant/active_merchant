@@ -7,13 +7,13 @@ class RemoteDataCashTest < Test::Unit::TestCase
     @gateway = DataCashGateway.new(fixtures(:data_cash))
 
     @mastercard = CreditCard.new(
-      :number => '5473000000000007',
+      :number => '5120790000000034',
       :month => 3,
       :year => Date.today.year + 2,              
       :first_name => 'Mark',      
       :last_name => 'McBride',
       :brand => :master,
-      :verification_value => '547'
+      :verification_value => '444'
     )
 
     @mastercard_declined = CreditCard.new(
@@ -118,7 +118,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
 
     #Make second payment on the continuous authorization that was set up in the first purchase
     second_order_params = { :order_id => generate_unique_id }
-    purchase = @gateway.purchase(201, response.params['ca_reference'], second_order_params)
+    purchase = @gateway.purchase(201, response.authorization, second_order_params)
     assert_success purchase
     assert purchase.test?
   end
@@ -132,7 +132,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
 
     #Make second payment on the continuous authorization that was set up in the first purchase
     second_order_params = { :order_id => generate_unique_id }
-    purchase = @gateway.purchase(201, response.params['ca_reference'], second_order_params)
+    purchase = @gateway.purchase(201, response.authorization, second_order_params)
     assert_success purchase
     assert purchase.test?
   end
@@ -242,8 +242,7 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert_success void
     assert void.test?
   end
-  
-  
+
   def test_successful_refund
     response = @gateway.credit(@amount, @mastercard, @params)
     assert_success response

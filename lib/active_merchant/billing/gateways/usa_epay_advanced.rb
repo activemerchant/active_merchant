@@ -174,7 +174,7 @@ module ActiveMerchant #:nodoc:
         :xid => [:string, 'XID'],
         :cavv => [:string, 'CAVV'],
         :eci => [:integer, 'ECI'],
-        :internal_card_authorization => [:boolean, 'InternalCardAduth'],
+        :internal_card_authorization => [:boolean, 'InternalCardAuth'],
         :pares => [:string, 'Pares']
       } #:nodoc:
 
@@ -1334,7 +1334,7 @@ module ActiveMerchant #:nodoc:
 
       def build_check_data(soap, options)
         soap.CheckData 'xsi:type' => "ns1:CheckData" do |soap|
-          build_tag soap, :string, 'Account', options[:payment_method].number
+          build_tag soap, :string, 'Account', options[:payment_method].account_number
           build_tag soap, :string, 'Routing', options[:payment_method].routing_number
           build_tag soap, :string, 'AccountType', options[:payment_method].account_type.capitalize
           CHECK_DATA_OPTIONS.each do |k,v|

@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class BalancedTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @marketplace_uri = '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO'
 
@@ -26,7 +28,6 @@ class BalancedTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Shopify Purchase'
     }
-
   end
 
   def test_successful_purchase
@@ -157,6 +158,26 @@ class BalancedTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_authorization_capture_with_on_behalf_of_uri
+    @gateway.expects(:ssl_request).times(1).returns(
+        successful_purchase_response
+    )
+
+    hold_uri = '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO/holds/HL7dYMhpVBcqAYqxLF5mZtQ5'
+    on_behalf_of_uri = '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO/accounts/AC73SN17anKkjk6Y1sVe2uaq'
+
+    response = stub_comms do
+      @gateway.capture(nil, hold_uri, :on_behalf_of_uri => on_behalf_of_uri)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/on_behalf_of_uri=\/v1\/marketplaces\/TEST-MP73SaFdpQePv9dOaG5wXOGO\/accounts\/AC73SN17anKkjk6Y1sVe2uaq/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO/debits/WD2x6vLS7RzHYEcdymqRyNAO', response.authorization
+    assert response.test?
+  end
+
   def test_unsuccessful_authorization_capture
     @gateway.expects(:ssl_request).times(1).returns(
         failed_purchase_response
@@ -198,7 +219,7 @@ class BalancedTest < Test::Unit::TestCase
 
     debit_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/debits/WD2Nkre6GkWAV1A52YgLWEkh'
     refund_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/refunds/RF3GhhG5I3AgrjjXsdkRFQDA'
-    assert refund = @gateway.refund(debit_uri)
+    assert refund = @gateway.refund(@amount, debit_uri)
     assert_instance_of Response, refund
     assert_success refund
     assert refund.test?
@@ -211,10 +232,32 @@ class BalancedTest < Test::Unit::TestCase
     )
 
     debit_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/debits/WD2Nkre6GkWAV1A52YgLWEkh'
-    assert refund = @gateway.refund(debit_uri)
+    assert refund = @gateway.refund(@amount, debit_uri)
     assert_instance_of Response, refund
     assert_failure refund
     assert refund.test?
+  end
+
+  def test_deprecated_refund_purchase
+    assert_deprecation_warning("Calling the refund method without an amount parameter is deprecated and will be removed in a future version.", @gateway) do
+      @gateway.expects(:ssl_request).times(1).returns(
+          successful_refund_response
+      )
+
+      debit_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/debits/WD2Nkre6GkWAV1A52YgLWEkh'
+      refund_uri = '/v1/marketplaces/TEST-MP6IEymJ6ynwnSoqJQnUTacN/refunds/RF3GhhG5I3AgrjjXsdkRFQDA'
+      assert refund = @gateway.refund(debit_uri)
+      assert_instance_of Response, refund
+      assert_success refund
+      assert refund.test?
+      assert_equal refund.authorization, refund_uri
+    end
+  end
+
+  def test_refund_with_nil_debit_uri
+    assert refund = @gateway.refund(nil, nil)
+    assert_instance_of Response, refund
+    assert_failure refund
   end
 
   def test_store

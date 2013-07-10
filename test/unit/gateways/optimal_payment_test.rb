@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'nokogiri'
 
 class ActiveMerchant::Billing::OptimalPaymentGateway
   public :cc_auth_request
@@ -17,7 +18,8 @@ class OptimalPaymentTest < Test::Unit::TestCase
     @options = {
       :order_id => '1',
       :billing_address => address,
-      :description => 'Store Purchase'
+      :description => 'Store Purchase',
+      :email => 'email@example.com'
     }
   end
 
@@ -85,6 +87,28 @@ class OptimalPaymentTest < Test::Unit::TestCase
     assert @gateway.purchase(@amount, @credit_card, @options)
   end
 
+  def test_purchase_with_shipping_address
+    @options[:shipping_address] = {:country => "CA"}
+    @gateway.expects(:ssl_post).with do |url, data|
+      xml = data.split("&").detect{|string| string =~ /txnRequest=/}.gsub("txnRequest=","")
+      doc = Nokogiri::XML.parse(URI.decode(xml))
+      doc.xpath('//xmlns:shippingDetails/xmlns:country').first.text == "CA" && doc.to_s.include?('<shippingDetails>')
+    end.returns(successful_purchase_response)
+
+    assert @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_purchase_without_shipping_address
+    @options[:shipping_address] = nil
+    @gateway.expects(:ssl_post).with do |url, data|
+      xml = data.split("&").detect{|string| string =~ /txnRequest=/}.gsub("txnRequest=","")
+      doc = Nokogiri::XML.parse(URI.decode(xml))
+      doc.to_s.include?('<shippingDetails>') == false
+    end.returns(successful_purchase_response)
+
+    assert @gateway.purchase(@amount, @credit_card, @options)
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -124,6 +148,36 @@ class OptimalPaymentTest < Test::Unit::TestCase
     end
   end
 
+  def test_avs_result_in_response
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response.avs_result['code']
+  end
+
+  def test_cvv_result_in_response
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response.cvv_result['code']
+  end
+
+  def test_avs_results_not_in_response
+    @gateway.expects(:ssl_post).returns(successful_purchase_response_without_avs_results)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert !response.avs_result['code']
+    assert !response.cvv_result['code']
+  end
+
+  def test_email_being_sent
+    @gateway.expects(:ssl_post).with do |url, data|
+      data =~ /email%3Eemail%2540example.com%3C\/email/
+    end
+
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+
   private
 
   def full_request
@@ -157,6 +211,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
     <country>CA</country>
     <zip>K1C2N6</zip>
     <phone>%28555%29555-5555</phone>
+    <email>email%40example.com</email>
   </billingDetails>
 </ccAuthRequestV1>
     XML
@@ -201,6 +256,33 @@ class OptimalPaymentTest < Test::Unit::TestCase
   <authCode>112232</authCode>
   <avsResponse>B</avsResponse>
   <cvdResponse>M</cvdResponse>
+  <detail>
+    <tag>InternalResponseCode</tag>
+    <value>0</value>
+  </detail>
+  <detail>
+    <tag>SubErrorCode</tag>
+    <value>0</value>
+  </detail>
+  <detail>
+    <tag>InternalResponseDescription</tag>
+    <value>no_error</value>
+  </detail>
+  <txnTime>2009-01-08T17:00:45.210-05:00</txnTime>
+  <duplicateFound>false</duplicateFound>
+</ccTxnResponseV1>
+    XML
+  end
+
+  # Place raw successful response from gateway here
+  def successful_purchase_response_without_avs_results
+    <<-XML
+<ccTxnResponseV1 xmlns="http://www.optimalpayments.com/creditcard/xmlschema/v1">
+  <confirmationNumber>126740505</confirmationNumber>
+  <decision>ACCEPTED</decision>
+  <code>0</code>
+  <description>No Error</description>
+  <authCode>112232</authCode>
   <detail>
     <tag>InternalResponseCode</tag>
     <value>0</value>

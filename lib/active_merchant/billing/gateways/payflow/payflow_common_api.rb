@@ -1,3 +1,4 @@
+require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module PayflowCommonAPI
@@ -121,7 +122,8 @@ module ActiveMerchant #:nodoc:
       def add_address(xml, tag, address, options)
         return if address.nil?
         xml.tag! tag do
-          xml.tag! 'Name', address[:name] unless address[:name].blank?
+          xml.tag! 'FirstName', address[:first_name] unless address[:first_name].blank?
+          xml.tag! 'LastName', address[:last_name] unless address[:last_name].blank?
           xml.tag! 'EMail', options[:email] unless options[:email].blank?
           xml.tag! 'Phone', address[:phone] unless address[:phone].blank?
           xml.tag! 'CustCode', options[:customer] if !options[:customer].blank? && tag == 'BillTo'
@@ -139,17 +141,18 @@ module ActiveMerchant #:nodoc:
 
       def parse(data)
         response = {}
-        xml = REXML::Document.new(data)
-        root = REXML::XPath.first(xml, "//ResponseData")
+        xml = Nokogiri::XML(data)
+        xml.remove_namespaces!
+        root = xml.xpath("//ResponseData")
 
         # REXML::XPath in Ruby 1.8.6 is now unable to match nodes based on their attributes
-        tx_result = REXML::XPath.first(root, "//TransactionResult")
+        tx_result = root.xpath(".//TransactionResult").first
 
-        if tx_result && tx_result.attributes['Duplicate'] == "true"
+        if tx_result && tx_result.attributes['Duplicate'].to_s == "true"
           response[:duplicate] = true
         end
 
-        root.elements.to_a.each do |node|
+        root.xpath(".//*").each do |node|
           parse_element(response, node)
         end
 
@@ -165,14 +168,14 @@ module ActiveMerchant #:nodoc:
           # in an RPPaymentResults element so we'll come here multiple times
           response[node_name] ||= []
           response[node_name] << ( payment_result_response = {} )
-          node.elements.each{ |e| parse_element(payment_result_response, e) }
-        when node.has_elements?
-          node.elements.each{|e| parse_element(response, e) }
+          node.xpath(".//*").each{ |e| parse_element(payment_result_response, e) }
+        when node.xpath(".//*").to_a.any?
+          node.xpath(".//*").each{|e| parse_element(response, e) }
         when node_name.to_s =~ /amt$/
           # *Amt elements don't put the value in the #text - instead they use a Currency attribute
-          response[node_name] = node.attributes['Currency']
+          response[node_name] = node.attributes['Currency'].to_s
         when node_name == :ext_data
-          response[node.attributes['Name'].underscore.to_sym] = node.attributes['Value']
+          response[node.attributes['Name'].to_s.underscore.to_sym] = node.attributes['Value'].to_s
         else
           response[node_name] = node.text
         end

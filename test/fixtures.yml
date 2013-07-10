@@ -65,6 +65,9 @@ card_stream:
   login: X
   password: Y
 
+card_stream_modern:
+  login: "0000992"
+
 certo_direct:
   login: 1
   password: vP6OwK3
@@ -94,6 +97,10 @@ epay:
   login: X
   password: Y
 
+evo_ca:
+  username: demo
+  password: password
+
 # Working credentials, no need to replace
 eway:
   login: '87654321'
@@ -122,7 +129,16 @@ federated_canada:
   login: demo
   password: password
 
+finansbank:
+  login: TEST
+  password: TEST
+  client_id: TEST
+
 first_pay:
+  login:
+  password:
+
+firstdata_e4:
   login:
   password:
 
@@ -185,6 +201,11 @@ merchant_ware:
  password:
  name:
 
+merchant_warrior:
+  merchant_uuid: '50c5b9f0b52ea'
+  api_key: '8fr3ajm7'
+  api_passphrase: 'cymvlwgc'
+
 # Working credentials, no need to replace
 mercury:
   login: '595901'
@@ -242,6 +263,11 @@ netaxept:
 netbilling:
   login: '104901072025'
 
+netpay:
+  store_id: 14
+  login: POS
+  password: plaza2020
+
 net_registry:
   login: X
   password: Y
@@ -294,6 +320,10 @@ payment_express:
   login: LOGIN
   password: PASSWORD
 
+paymill:
+  private_key: PRIVATE_KEY
+  public_key: PUBLIC_KEY
+
 # You can use either your API PEM file or API signature with PayPal.
 paypal_certificate:
   login: LOGIN
@@ -315,6 +345,9 @@ payway:
 pay_secure:
   login: LOGIN
   password: PASSWORD
+
+pin:
+  api_key: "I_mo9BUUUXIwXF-avcs3LA"
 
 plugnpay:
   login: LOGIN
@@ -406,8 +439,8 @@ quickpay:
 quickpay_with_api_key:
   login: 89898978
   password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
-  apikey: "3WrEgfY995CnetPlp7R7XG6J5aq83K4k7B4Z3jsLd1vz53x1w6h42M81u7H62Sb4"
-  version: 4
+  apikey: "fB46983ZwR5dzy46A3r6ngDx7P37N5YTu1F4S9W2JKCs9v4t5L9m2Q8Mlbjpa2I1"
+  version: 6
 
 quantum:
   login: X
@@ -518,6 +551,12 @@ skipjack:
   login: X
   password: Y
 
+# Working credentials, no need to replace
+spreedly_core:
+  login: "4Y9bVkOCpYesPQOfDi7TXQyUw50"
+  password: "Y2i7AjgU03SUjwY4xnOPqzdsv4dMbPDCQzorAk8Bcoy0U8EIVE4innGjuoMQv7MN"
+  gateway_token: "3gLeg4726V5P0HK7cq7QzHsL0a6"
+
 stripe:
   login:
 
@@ -526,6 +565,10 @@ trans_first:
   password: PASSWORD
 
 transax:
+  login: transaxdemo
+  password: nelix123
+
+transnational:
   login: demo
   password: password
 

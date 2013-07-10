@@ -1,18 +1,17 @@
 require 'test_helper'
 
 class RemoteWorldpayTest < Test::Unit::TestCase
-  
 
   def setup
     @gateway = WorldpayGateway.new(fixtures(:world_pay_gateway))
-    
+
     @amount = 100
     @credit_card = credit_card('4111111111111111')
     @declined_card = credit_card('4111111111111111', :first_name => nil, :last_name => 'REFUSED')
-    
+
     @options = {:order_id => generate_unique_id}
   end
-  
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -45,28 +44,16 @@ class RemoteWorldpayTest < Test::Unit::TestCase
   end
 
   def test_void
-    assert_success(auth = @gateway.authorize(@amount, @credit_card, @options))
-    assert_success @gateway.void(auth.authorization)
-
-    assert_failure @gateway.void('bogus')
+    assert_success(response = @gateway.authorize(@amount, @credit_card, @options))
+    assert_success (void = @gateway.void(response.authorization))
+    assert_equal "SUCCESS", void.message
+    assert void.params["cancel_received_order_code"]
   end
 
-  # Worldpay has a delay between asking for a transaction to be captured and actually marking it as captured
-  # These tests work if you take the auth code, wait some time and then request the refund
-  #def test_refund
-  #  assert_success(auth = @gateway.authorize(@amount, @credit_card, @options))
-  #  assert_success auth
-  #  assert_equal 'SUCCESS', auth.message
-  #  assert auth.authorization
-  #  puts auth.authorization
-  #  assert capture = @gateway.capture(@amount, auth.authorization)
-  #  assert_success @gateway.refund(@amount, auth.authorization)
-  #end
-  #
-  #def test_refund_existing_transaction
-  #  assert_success resp = @gateway.refund(@amount, "7c85e685c35115689ff9c429be9f65e7")
-  #  puts resp.inspect
-  #end
+  def test_void_nonexistent_transaction
+    assert_failure response = @gateway.void('non_existent_authorization')
+    assert_equal "Could not find payment for order", response.message
+  end
 
   def test_currency
     assert_success(result = @gateway.authorize(@amount, @credit_card, @options.merge(:currency => 'USD')))
@@ -109,4 +96,37 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Invalid credentials', response.message
   end
+
+  def test_refund_fails_unless_status_is_captured
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success(response)
+
+    assert refund = @gateway.refund(30, response.authorization)
+    assert_failure refund
+    assert_equal "A transaction status of 'CAPTURED' or 'SETTLED' is required.", refund.message
+  end
+
+  def test_refund_nonexistent_transaction
+    assert_failure response = @gateway.refund(@amount, "non_existent_authorization")
+    assert_equal "Could not find payment for order", response.message
+  end
+
+
+  # Worldpay has a delay between asking for a transaction to be captured and actually marking it as captured
+  # These 2 tests work if you take the auth code, wait some time and then perform the next operation.
+
+  # def test_refund
+  #   assert_success(response = @gateway.purchase(@amount, @credit_card, @options))
+  #   assert response.authorization
+  #   refund = @gateway.refund(@amount, capture.authorization)
+  #   assert_success refund
+  #   assert_equal "SUCCESS", refund.message
+  # end
+
+  # def test_void_fails_unless_status_is_authorised
+  #   response = @gateway.void("33d6dfa9726198d44a743488cf611d3b") # existing transaction in CAPTURED state
+  #   assert_failure response
+  #   assert_equal "A transaction status of 'AUTHORISED' is required.", response.message
+  # end
+
 end

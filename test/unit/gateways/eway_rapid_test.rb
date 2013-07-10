@@ -119,7 +119,7 @@ class EwayRapidTest < Test::Unit::TestCase
       assert_match(%r{Country>US<}, data)
       assert_match(%r{Phone>1115555555<}, data)
       assert_match(%r{Fax>1115556666<}, data)
-      assert_match(%r{Email><}, data)
+      assert_match(%r{Email>(\s+)?<}, data)
     end.respond_with(successful_setup_purchase_response)
 
     assert_success response

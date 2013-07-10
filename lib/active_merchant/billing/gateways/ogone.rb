@@ -154,23 +154,25 @@ module ActiveMerchant #:nodoc:
 
       # Verify and transfer the specified amount.
       def purchase(money, payment_source, options = {})
-        post = {}
+        post   = {}
+        action = options[:action] || 'SAL'
         add_invoice(post, options)
         add_payment_source(post, payment_source, options)
         add_address(post, payment_source, options)
         add_customer_data(post, options)
         add_money(post, money, options)
-        commit('SAL', post)
+        commit(action, post)
       end
 
       # Complete a previously authorized transaction.
       def capture(money, authorization, options = {})
-        post = {}
+        post   = {}
+        action = options[:action] || 'SAL'
         add_authorization(post, reference_from(authorization))
         add_invoice(post, options)
         add_customer_data(post, options)
         add_money(post, money, options)
-        commit('SAL', post)
+        commit(action, post)
       end
 
       # Cancels a previously authorized transaction.
@@ -198,7 +200,7 @@ module ActiveMerchant #:nodoc:
 
       # Store a credit card by creating an Ogone Alias
       def store(payment_source, options = {})
-        options.merge!(:alias_operation => 'BYOGONE') unless options.has_key?(:billing_id) || options.has_key?(:store)
+        options.merge!(:alias_operation => 'BYPSP') unless(options.has_key?(:billing_id) || options.has_key?(:store))
         response = authorize(1, payment_source, options)
         void(response.authorization) if response.success?
         response

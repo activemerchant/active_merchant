@@ -49,6 +49,17 @@ class RemoteWirecardTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_authorize_and_partial_capture
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert auth.message[/THIS IS A DEMO/]
+    assert auth.authorization
+
+    #Capture some of the authorized amount
+    assert capture = @gateway.capture(@amount - 10, auth.authorization, @options)
+    assert_success capture
+  end
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     # puts response.message

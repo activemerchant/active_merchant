@@ -13,6 +13,14 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://webpay.jp/'
       self.display_name = 'WebPay'
 
+      def authorize(money, credit_card, options = {})
+        raise NotImplementedError.new
+      end
+
+      def capture(money, credit_card, options = {})
+        raise NotImplementedError.new
+      end
+
       def json_error(raw_response)
         msg = 'Invalid response received from the WebPay API.  Please contact support@webpay.jp if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"

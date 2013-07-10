@@ -68,8 +68,10 @@ module ActiveMerchant #:nodoc:
         Braintree::Configuration.custom_user_agent = "ActiveMerchant #{ActiveMerchant::VERSION}"
 
         if wiredump_device
-          Braintree::Configuration.logger = wiredump_device
+          Braintree::Configuration.logger = ((Logger === wiredump_device) ? wiredump_device : Logger.new(wiredump_device))
           Braintree::Configuration.logger.level = Logger::DEBUG
+        else
+          Braintree::Configuration.logger.level = Logger::WARN
         end
       end
 
@@ -135,7 +137,8 @@ module ActiveMerchant #:nodoc:
             {
               :braintree_customer => (customer_hash(result.customer) if result.success?),
               :customer_vault_id => (result.customer.id if result.success?)
-            }
+            },
+            :authorization => (result.customer.id if result.success?)
           )
         end
       end
@@ -337,6 +340,7 @@ module ActiveMerchant #:nodoc:
           "bin"                 => transaction.credit_card_details.bin,
           "last_4"              => transaction.credit_card_details.last_4,
           "card_type"           => transaction.credit_card_details.card_type,
+          "token"               => transaction.credit_card_details.token
         }
 
         {

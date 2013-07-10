@@ -91,8 +91,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>:login</tt> -- The Balanced API Secret (REQUIRED)
       def initialize(options = {})
         requires!(options, :login)
-        initialize_marketplace(options[:marketplace] || load_marketplace)
         super
+        initialize_marketplace(options[:marketplace] || load_marketplace)
       end
 
       # Performs an authorization (Hold in Balanced nonclementure), which
@@ -197,6 +197,7 @@ module ActiveMerchant #:nodoc:
         post[:hold_uri] = authorization
         post[:amount] = money if money
         post[:description] = options[:description] if options[:description]
+        post[:on_behalf_of_uri] = options[:on_behalf_of_uri] if options[:on_behalf_of_uri]
 
         create_transaction(:post, @debits_uri, post)
       rescue Error => ex
@@ -234,11 +235,16 @@ module ActiveMerchant #:nodoc:
       # * <tt>`:amount`<tt> -- specify an amount if you want to perform a
       #   partial refund. This value will default to the total amount of the
       #   debit that has not been refunded so far.
-      def refund(debit_uri, options = {})
+      def refund(amount, debit_uri = "deprecated", options = {})
+        if(debit_uri == "deprecated" || debit_uri.kind_of?(Hash))
+          deprecated "Calling the refund method without an amount parameter is deprecated and will be removed in a future version."
+          return refund(options[:amount], amount, options)
+        end
+
         requires!(debit_uri)
         post = {}
         post[:debit_uri] = debit_uri
-        post[:amount] = options[:amount] if options[:amount]
+        post[:amount] = amount
         post[:description] = options[:description]
         create_transaction(:post, @refunds_uri, post)
       rescue Error => ex

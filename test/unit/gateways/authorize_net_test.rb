@@ -12,6 +12,34 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @credit_card = credit_card
     @subscription_id = '100748'
     @subscription_status = 'active'
+    @check = check
+  end
+
+  def test_successful_echeck_authorization
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+
+    assert response = @gateway.authorize(@amount, @check)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141794', response.authorization
+  end
+
+  def test_successful_echeck_purchase
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @check)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141795', response.authorization
+  end
+
+  def test_failed_echeck_authorization
+    @gateway.expects(:ssl_post).returns(failed_authorization_response)
+
+    assert response = @gateway.authorize(@amount, @check)
+    assert_instance_of Response, response
+    assert_failure response
+    assert_equal '508141794', response.authorization
   end
 
   def test_successful_authorization
@@ -165,7 +193,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['US'], AuthorizeNetGateway.supported_countries
+    assert_equal ['US', 'CA', 'GB'], AuthorizeNetGateway.supported_countries
   end
 
   def test_supported_card_types
@@ -289,6 +317,21 @@ class AuthorizeNetTest < Test::Unit::TestCase
     ActiveMerchant::Billing::AuthorizeNetGateway.application_id = nil
   end
 
+  def test_bad_currency
+    @gateway.expects(:ssl_post).returns(bad_currency_response)
+
+    response = @gateway.purchase(@amount, @credit_card, {:currency => "XYZ"})
+    assert_failure response
+    assert_equal 'The supplied currency code is either invalid, not supported, not allowed for this merchant or doesn\'t have an exchange rate', response.message
+  end
+
+  def test_alternate_currency
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, {:currency => "GBP"})
+    assert_success response
+  end
+
   private
   def post_data_fixture
     'x_encap_char=%24&x_card_num=4242424242424242&x_exp_date=0806&x_card_code=123&x_type=AUTH_ONLY&x_first_name=Longbob&x_version=3.1&x_login=X&x_last_name=Longsen&x_tran_key=Y&x_relay_response=FALSE&x_delim_data=TRUE&x_delim_char=%2C&x_amount=1.01'
@@ -320,6 +363,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def fraud_review_response
     "$4$,$$,$253$,$Thank you! For security reasons your order is currently being reviewed.$,$$,$X$,$0$,$$,$$,$1.00$,$$,$auth_capture$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$207BCBBF78E85CF174C87AE286B472D2$,$M$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$"
+  end
+
+  def bad_currency_response
+    "$3$,$1$,$39$,$The supplied currency code is either invalid, not supported, not allowed for this merchant or doesn't have an exchange rate.$,$$,$P$,$0$,$$,$$,$1.00$,$$,$auth_capture$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$207BCBBF78E85CF174C87AE286B472D2$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$"
   end
 
   def successful_recurring_response

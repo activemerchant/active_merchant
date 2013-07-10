@@ -21,7 +21,7 @@ class <%= class_name %>Test < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of
+    assert_instance_of Response, response
     assert_success response
 
     # Replace with authorization number from the successful response

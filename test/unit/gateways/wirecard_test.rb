@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class WirecardTest < Test::Unit::TestCase
+  include CommStub
+
   TEST_AUTHORIZATION_GUWID = 'C822580121385121429927'
   TEST_PURCHASE_GUWID = 'C865402121385575982910'
   TEST_CAPTURE_GUWID = 'C833707121385268439116'
@@ -75,6 +77,19 @@ class WirecardTest < Test::Unit::TestCase
     assert response.message[/this is a demo/i]
   end
 
+  def test_successful_authorization_and_partial_capture
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal TEST_AUTHORIZATION_GUWID, response.authorization
+
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+    assert response = @gateway.capture(@amount - 10, response.authorization, @options)
+    assert_success response
+    assert response.test?
+    assert response.message[/this is a demo/i]
+  end
+
   def test_unauthorized_capture
     @gateway.expects(:ssl_post).returns(unauthorized_capture_response)
     assert response = @gateway.capture(@amount, "1234567890123456789012", @options)
@@ -100,6 +115,26 @@ class WirecardTest < Test::Unit::TestCase
     end
   end
 
+  def test_description_trucated_to_32_chars_in_authorize
+    options = {:description => "32chars-------------------------EXTRA"}
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<FunctionID>32chars-------------------------<\/FunctionID>/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_description_trucated_to_32_chars_in_purchase
+    options = {:description => "32chars-------------------------EXTRA"}
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<FunctionID>32chars-------------------------<\/FunctionID>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   # Authorization success
@@ -110,7 +145,7 @@ class WirecardTest < Test::Unit::TestCase
     <W_RESPONSE>
       <W_JOB>
         <JobID>test dummy data</JobID>
-        <FNC_CC_AUTHORIZATION>
+        <FNC_CC_PREAUTHORIZATION>
           <FunctionID>Wirecard remote test purchase</FunctionID>
           <CC_TRANSACTION>
             <TransactionID>1</TransactionID>
@@ -123,7 +158,7 @@ class WirecardTest < Test::Unit::TestCase
               <TimeStamp>2008-06-19 06:53:33</TimeStamp>
             </PROCESSING_STATUS>
           </CC_TRANSACTION>
-        </FNC_CC_AUTHORIZATION>
+        </FNC_CC_PREAUTHORIZATION>
       </W_JOB>
   </W_RESPONSE>
 </WIRECARD_BXML>
@@ -157,7 +192,7 @@ class WirecardTest < Test::Unit::TestCase
       <W_RESPONSE>
         <W_JOB>
           <JobID>test dummy data</JobID>
-          <FNC_CC_CAPTURE_AUTHORIZATION>
+          <FNC_CC_CAPTURE>
             <FunctionID>Wirecard remote test purchase</FunctionID>
             <CC_TRANSACTION>
               <TransactionID>1</TransactionID>
@@ -170,7 +205,7 @@ class WirecardTest < Test::Unit::TestCase
                 <TimeStamp>2008-06-19 07:18:04</TimeStamp>
               </PROCESSING_STATUS>
             </CC_TRANSACTION>
-          </FNC_CC_CAPTURE_AUTHORIZATION>
+          </FNC_CC_CAPTURE>
         </W_JOB>
       </W_RESPONSE>
     </WIRECARD_BXML>
@@ -185,7 +220,7 @@ class WirecardTest < Test::Unit::TestCase
       <W_RESPONSE>
         <W_JOB>
           <JobID>test dummy data</JobID>
-          <FNC_CC_CAPTURE_AUTHORIZATION>
+          <FNC_CC_CAPTURE>
             <FunctionID>Test dummy FunctionID</FunctionID>
             <CC_TRANSACTION>
               <TransactionID>a2783d471ccc98825b8c498f1a62ce8f</TransactionID>
@@ -202,7 +237,7 @@ class WirecardTest < Test::Unit::TestCase
                 <TimeStamp>2008-06-19 08:09:20</TimeStamp>
               </PROCESSING_STATUS>
             </CC_TRANSACTION>
-          </FNC_CC_CAPTURE_AUTHORIZATION>
+          </FNC_CC_CAPTURE>
         </W_JOB>
       </W_RESPONSE>
     </WIRECARD_BXML>

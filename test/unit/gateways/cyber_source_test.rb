@@ -12,6 +12,7 @@ class CyberSourceTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4111111111111111', :brand => 'visa')
     @declined_card = credit_card('801111111111111', :brand => 'visa')
+    @check = check()
 
     @options = { :billing_address => {
                   :address1 => '1234 My Street',
@@ -60,13 +61,31 @@ class CyberSourceTest < Test::Unit::TestCase
     }
   end
 
-  def test_successful_purchase
+  def test_successful_credit_card_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']}", response.authorization
+    assert response.test?
+  end
+
+  def test_successful_check_purchase
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']}", response.authorization
+    assert response.test?
+  end
+
+  def test_successful_reference_purchase
+    @gateway.stubs(:ssl_post).returns(successful_create_subscription_response, successful_purchase_response)
+
+    assert_success(response = @gateway.store(@credit_card, @subscription_options))
+    assert_success(response_reference_purchase = @gateway.purchase(@amount, response.authorization, @options))
     assert response.test?
   end
 
@@ -86,7 +105,7 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_tax_request
+  def test_successful_credit_card_tax_request
     @gateway.stubs(:ssl_post).returns(successful_tax_response)
     assert response = @gateway.calculate_tax(@credit_card, @options)
     assert_equal Response, response.class
@@ -94,7 +113,7 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_capture_request
+  def test_successful_credit_card_capture_request
     @gateway.stubs(:ssl_post).returns(successful_authorization_response, successful_capture_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert response.success?
@@ -104,9 +123,16 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response_capture.test?
   end
 
-  def test_successful_purchase_request
+  def test_successful_credit_card_purchase_request
     @gateway.stubs(:ssl_post).returns(successful_capture_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response.success?
+    assert response.test?
+  end
+
+  def test_successful_check_purchase_request
+    @gateway.stubs(:ssl_post).returns(successful_capture_response)
+    assert response = @gateway.purchase(@amount, @check, @options)
     assert response.success?
     assert response.test?
   end
@@ -127,14 +153,14 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_equal 'USD', CyberSourceGateway.default_currency
   end
 
-  def test_successful_store_request
+  def test_successful_credit_card_store_request
     @gateway.stubs(:ssl_post).returns(successful_create_subscription_response)
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert response.success?
     assert response.test?
   end
 
-  def test_successful_update_request
+  def test_successful_credit_card_update_request
     @gateway.stubs(:ssl_post).returns(successful_create_subscription_response, successful_update_subscription_response)
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert response.success?
@@ -144,7 +170,7 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_unstore_request
+  def test_successful_credit_card_unstore_request
     @gateway.stubs(:ssl_post).returns(successful_create_subscription_response, successful_delete_subscription_response)
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert response.success?
@@ -154,7 +180,7 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_retrieve_request
+  def test_successful_credit_card_retrieve_request
     @gateway.stubs(:ssl_post).returns(successful_create_subscription_response, successful_retrieve_subscription_response)
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert response.success?

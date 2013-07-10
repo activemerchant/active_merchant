@@ -41,7 +41,9 @@ module ActiveMerchant #:nodoc:
       RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT = 0, 2, 3
       AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE  = 5, 6, 38
 
-      self.supported_countries = ['US']
+      self.default_currency = 'USD'
+
+      self.supported_countries = ['US', 'CA', 'GB']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net'
@@ -81,12 +83,13 @@ module ActiveMerchant #:nodoc:
       # ==== Parameters
       #
       # * <tt>money</tt> -- The amount to be authorized as an Integer value in cents.
-      # * <tt>creditcard</tt> -- The CreditCard details for the transaction.
+      # * <tt>paysource</tt> -- The CreditCard or Check details for the transaction.
       # * <tt>options</tt> -- A hash of optional parameters.
-      def authorize(money, creditcard, options = {})
+      def authorize(money, paysource, options = {})
         post = {}
+        add_currency_code(post, money, options)
         add_invoice(post, options)
-        add_creditcard(post, creditcard)
+        add_payment_source(post, paysource, options)
         add_address(post, options)
         add_customer_data(post, options)
         add_duplicate_window(post)
@@ -99,12 +102,13 @@ module ActiveMerchant #:nodoc:
       # ==== Parameters
       #
       # * <tt>money</tt> -- The amount to be purchased as an Integer value in cents.
-      # * <tt>creditcard</tt> -- The CreditCard details for the transaction.
+      # * <tt>paysource</tt> -- The CreditCard or Check details for the transaction.
       # * <tt>options</tt> -- A hash of optional parameters.
-      def purchase(money, creditcard, options = {})
+      def purchase(money, paysource, options = {})
         post = {}
+        add_currency_code(post, money, options)
         add_invoice(post, options)
-        add_creditcard(post, creditcard)
+        add_payment_source(post, paysource, options)
         add_address(post, options)
         add_customer_data(post, options)
         add_duplicate_window(post)
@@ -328,6 +332,10 @@ module ActiveMerchant #:nodoc:
         request
       end
 
+      def add_currency_code(post, money, options)
+        post[:currency_code] = options[:currency] || currency(money)
+      end
+
       def add_invoice(post, options)
         post[:invoice_num] = options[:order_id]
         post[:description] = options[:description]
@@ -339,6 +347,25 @@ module ActiveMerchant #:nodoc:
         post[:exp_date]   = expdate(creditcard)
         post[:first_name] = creditcard.first_name
         post[:last_name]  = creditcard.last_name
+      end
+
+      def add_payment_source(params, source, options={})
+        case 
+        when source.class == ActiveMerchant::Billing::CreditCard then add_creditcard(params, source)
+        when source.class == ActiveMerchant::Billing::Check then add_check(params, source)
+        else
+          raise ArgumentError, "Unsupported payment source. Must be either CreditCard or Check."
+        end
+      end
+
+      def add_check(post, check)
+        post[:method] = 'ECHECK'
+        post[:bank_aba_code] = check.routing_number
+        post[:bank_acct_num] = check.account_number
+        post[:bank_acct_type] = check.account_type
+        post[:echeck_type] = 'WEB'
+        post[:checkname] = check.name
+        post[:account_holder_type] = check.account_holder_type
       end
 
       def add_customer_data(post, options)
