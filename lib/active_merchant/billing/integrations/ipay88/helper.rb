@@ -68,7 +68,6 @@ module ActiveMerchant #:nodoc:
             add_field mappings[:payment], pay_method
           end
 
-          # Generate a Base64-encoded SHA1 given a string
           def self.sign(str)
             [Digest::SHA1.digest(str)].pack("m").chomp
           end
@@ -77,35 +76,23 @@ module ActiveMerchant #:nodoc:
             self.class.sign(self.sig_components)
           end
 
-          # MerchantCode (required)
           mapping :account,     "MerchantCode"
-          # Amount (required)
           mapping :amount,      "Amount"
-          # Currency (required)
           mapping :currency,    "Currency"
-          # RefNo (required)
           mapping :order,       "RefNo"
-          # ProdDesc (required)
           mapping :description, "ProdDesc"
-          # UserName (required)
-          # UserEmail (required)
-          # UserContact (required)
           mapping :customer, :name  => "UserName",
                              :email => "UserEmail",
                              :phone => "UserContact"
-          # Remark
           mapping :remark,      "Remark"
-          # Lang
           mapping :language,    "Lang"
-          # PaymentId
           mapping :payment,     "PaymentId"
-          # ResponseURL
           mapping :return_url,  "ResponseURL"
-          # Signature
           mapping :signature,   "Signature"
 
           protected
-          def sig_components #:nodoc:
+
+          def sig_components
             components  = [Ipay88.merchant_key]
             components << fields[mappings[:account]]
             components << fields[mappings[:order]]
