@@ -164,7 +164,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_amount(post, money, options)
-        post[:amount] = money.to_i
+        post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money))
       end
 
