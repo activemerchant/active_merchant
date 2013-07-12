@@ -70,6 +70,14 @@ module ActiveMerchant #:nodoc:
         commit :refund, build_reference_request(money, authorization)
       end
 
+      def authorize(money, credit_card, options = {})
+        commit :authorization, build_purchase_request(money, credit_card, options)
+      end
+
+      def capture(money, authorization)
+        commit :capture, build_reference_request(money, authorization)
+      end
+
       def store(creditcard, options = {})
         requires!(options, :billing_id, :amount)
         commit_periodic(build_periodic_item(:addcrn, options[:amount], creditcard, options))
