@@ -1,4 +1,6 @@
 # Active Merchant
+[![Build Status](https://secure.travis-ci.org/Shopify/active_merchant.png)](http://travis-ci.org/Shopify/active_merchant)
+[![Code Climate](https://codeclimate.com/badge.png)](https://codeclimate.com/github/Shopify/active_merchant)
 
 Active Merchant is an extraction from the e-commerce system [Shopify](http://www.shopify.com).
 Shopify's requirements for a simple and unified API to access dozens of different payment
@@ -216,7 +218,3 @@ information on adding a new gateway to ActiveMerchant.
 
 Please don't touch the CHANGELOG in your pull requests, we'll add the appropriate CHANGELOG entries
 at release time.
-
-[![Build Status](https://secure.travis-ci.org/Shopify/active_merchant.png)](http://travis-ci.org/Shopify/active_merchant)
-
-[![Code Climate](https://codeclimate.com/badge.png)](https://codeclimate.com/github/Shopify/active_merchant)
