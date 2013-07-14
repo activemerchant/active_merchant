@@ -616,3 +616,7 @@ wirecard:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+payconex:
+  login: '220614962961'
+  password: '2ba872e9f27fc91515bd246c0848ee91'
