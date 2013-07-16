@@ -38,7 +38,7 @@ class RemoteWebpayTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'クレジットカード情報が正しくありません。 Brand is required. Number is not a valid credit card number', response.message
+    assert_equal 'Your card number is incorrect', response.message
   end
 
   def test_successful_void
@@ -52,7 +52,7 @@ class RemoteWebpayTest < Test::Unit::TestCase
   def test_unsuccessful_void
     assert void = @gateway.void("active_merchant_fake_charge")
     assert_failure void
-    assert_match /データが見つかりません。/, void.message
+    assert_match 'No such charge: active_merchant_fake_charge', void.message
   end
 
   def test_successful_refund
@@ -66,7 +66,7 @@ class RemoteWebpayTest < Test::Unit::TestCase
   def test_unsuccessful_refund
     assert refund = @gateway.refund(@amount, "active_merchant_fake_charge")
     assert_failure refund
-    assert_match /データが見つかりません。/, refund.message
+    assert_match 'No such charge: active_merchant_fake_charge', refund.message
   end
 
   def test_successful_store
@@ -97,7 +97,7 @@ class RemoteWebpayTest < Test::Unit::TestCase
     gateway = WebpayGateway.new(:login => 'active_merchant_test')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "不正なAPIキーです。 active_merchant_test", response.message
+    assert_equal "Invalid API key provided: active_merchant_test", response.message
   end
 
 end
