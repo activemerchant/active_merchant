@@ -11,9 +11,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     @credit_card = credit_card("4003000123456781", :brand => "visa")
 
     @options = {
-      :merchant => 'test',
-      :order_id => "1",
-      :description => "Open Dining Mercury Integration v1.0"
+      :order_id => "1"
     }
     @options_with_billing = @options.merge(
       :merchant => '999',
@@ -29,7 +27,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
       :tax => "5"
     )
 
-    close_batch(fixtures(:mercury))
+    close_batch
   end
 
   def test_successful_authorize_and_capture
@@ -48,6 +46,14 @@ class RemoteMercuryTest < Test::Unit::TestCase
     response = @gateway.authorize(1100, @credit_card, @options.merge(:order_id => order_id))
     assert_failure response
     assert_equal "DECLINE", response.message
+  end
+
+  def test_void
+    response = @gateway.authorize(100, @credit_card, @options)
+    assert_success response
+
+    void = @gateway.void(response.authorization)
+    assert_success void
   end
 
   def test_successful_purchase
@@ -141,7 +147,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert_success capture
     assert_equal '2.01', capture.params['authorize']
 
-    response = @gateway.refund(201, amex, @options.merge(:order_id => order_id))
+    response = @gateway.refund(201, capture.authorization, @options.merge(:order_id => order_id))
     assert_success response
     assert_equal '2.01', response.params['purchase']
   end
@@ -157,6 +163,16 @@ class RemoteMercuryTest < Test::Unit::TestCase
     capture = @gateway.capture(225, response.authorization)
     assert_success capture
     assert_equal '2.25', capture.params['authorize']
+  end
+
+  def test_refund_after_batch_close
+    purchase = @gateway.purchase(50, @credit_card, @options)
+    assert_success purchase
+
+    close_batch
+
+    refund = @gateway.refund(50, purchase.authorization)
+    assert_success refund
   end
 
   def test_authorize_and_capture_without_tokenization
@@ -219,7 +235,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     end
   end
 
-  def close_batch(gateway_credentials)
+  def close_batch(gateway_credentials=fixtures(:mercury))
     gateway = MercuryGateway.new(gateway_credentials)
     gateway.extend(BatchClosing)
     gateway.close_batch

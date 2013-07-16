@@ -63,6 +63,10 @@ module ActiveMerchant #:nodoc:
         commit(options[:void], request)
       end
 
+      def void(authorization, options={})
+        refund(nil, authorization, options.merge(:void => true))
+      end
+
       private
 
       def build_non_authorized_request(action, money, credit_card, options)
@@ -89,6 +93,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new
 
         invoice_no, ref_no, auth_code, acq_ref_data, process_data, record_no, amount = split_authorization(authorization)
+        ref_no = invoice_no if options[:void]
 
         xml.tag! "TStream" do
           xml.tag! "Transaction" do
@@ -119,7 +124,7 @@ module ActiveMerchant #:nodoc:
         end
 
         xml.tag! 'InvoiceNo', invoice_no
-        xml.tag! 'RefNo', ref_no || invoice_no
+        xml.tag! 'RefNo', (ref_no || invoice_no)
         xml.tag! 'OperatorID', options[:merchant] if options[:merchant]
         xml.tag! 'Memo', options[:description] if options[:description]
         if @use_tokenization

@@ -12,6 +12,7 @@
 * Hitrust: update test & live urls [melari]
 * NAB Transact: Add auth & capture support [nagash]
 * Mercury: Support card-less capture and refund [ntalbott]
+* Mercury: Support void [ntalbott]
 
 == Version 1.34.1 (June 28, 2013)
 
