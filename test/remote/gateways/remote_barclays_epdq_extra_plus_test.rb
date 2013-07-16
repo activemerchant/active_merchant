@@ -24,6 +24,16 @@ class RemoteBarclaysEpdqExtraPlusTest < Test::Unit::TestCase
     assert_equal @options[:order_id], response.order_id
   end
 
+  def test_successful_purchase_with_minimal_info
+    @options.delete(:billing_address)
+    @options.delete(:description)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal BarclaysEpdqExtraPlusGateway::SUCCESS_MESSAGE, response.message
+    assert_equal @options[:currency], response.params["currency"]
+    assert_equal @options[:order_id], response.order_id
+  end
+
   def test_successful_purchase_with_utf8_encoding_1
     assert response = @gateway.purchase(@amount, credit_card('4000100011112224', :first_name => "Rémy", :last_name => "Fröåïør"), @options)
     assert_success response
