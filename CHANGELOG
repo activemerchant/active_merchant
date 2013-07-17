@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.35.0 (July 17, 2013)
+
 * Add Barclays ePDQ Extra Plus gateway [ntalbott]
 * PayPal: Add MassPay payment to recipients by UserID [damonmorgan]
 * Authorize.Net: Add authorization_code to response params [noahlh]
