@@ -32,6 +32,7 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login)
         @api_key = options[:login]
+        @fee_refund_api_key = options[:fee_refund_login]
         super
       end
 
@@ -76,7 +77,18 @@ module ActiveMerchant #:nodoc:
         post[:amount] = amount(money) if money
         post[:refund_application_fee] = true if options[:refund_application_fee]
 
-        commit(:post, "charges/#{CGI.escape(identification)}/refund", post, meta)
+        result = commit(:post, "charges/#{CGI.escape(identification)}/refund", post, meta)
+
+        refund_fee(identification, options, meta) if options[:refund_fee_amount] && result.success?
+
+        result
+      end
+
+      def refund_fee(identification, options, meta)
+        result = commit(:get, "application_fees?charge=#{identification}", nil, meta, true)
+        application_fees = result.params["data"].select { |fee| fee["object"] == "application_fee" }
+        fee_id = application_fees.first["id"]
+        commit(:post, "application_fees/#{fee_id}/refund", {:amount => options[:refund_fee_amount]}, meta, true)
       end
 
       def store(creditcard, options = {})
@@ -206,7 +218,7 @@ module ActiveMerchant #:nodoc:
         {:ip => options[:ip]}
       end
 
-      def headers(meta={})
+      def headers(meta={}, use_fee_refund_key)
         @@ua ||= JSON.dump({
           :bindings_version => ActiveMerchant::VERSION,
           :lang => 'ruby',
@@ -216,19 +228,21 @@ module ActiveMerchant #:nodoc:
           :uname => (RUBY_PLATFORM =~ /linux|darwin/i ? `uname -a 2>/dev/null`.strip : nil)
         })
 
+        key = use_fee_refund_key ? @fee_refund_api_key : @api_key
+
         {
-          "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":").strip,
+          "Authorization" => "Basic " + Base64.encode64(key.to_s + ":").strip,
           "User-Agent" => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "X-Stripe-Client-User-Agent" => @@ua,
           "X-Stripe-Client-User-Metadata" => meta.to_json
         }
       end
 
-      def commit(method, url, parameters=nil, meta={})
+      def commit(method, url, parameters=nil, meta={}, use_fee_refund_key = false)
         raw_response = response = nil
         success = false
         begin
-          raw_response = ssl_request(method, self.live_url + url, post_data(parameters), headers(meta))
+          raw_response = ssl_request(method, self.live_url + url, post_data(parameters), headers(meta, use_fee_refund_key))
           response = parse(raw_response)
           success = !response.key?("error")
         rescue ResponseError => e

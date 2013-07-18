@@ -578,6 +578,7 @@ spreedly_core:
 
 stripe:
   login:
+  fee_refund_login:
 
 trans_first:
   login: LOGIN
