@@ -1,9 +1,10 @@
 require 'test_helper'
+require "support/mercury_helper"
 
 class RemoteMercuryTest < Test::Unit::TestCase
-  def setup
-    Base.gateway_mode = :test
+  include MercuryHelper
 
+  def setup
     @gateway = MercuryGateway.new(fixtures(:mercury))
 
     @amount = 100
@@ -11,7 +12,8 @@ class RemoteMercuryTest < Test::Unit::TestCase
     @credit_card = credit_card("4003000123456781", :brand => "visa")
 
     @options = {
-      :order_id => "1"
+      :order_id => "1",
+      :description => "ActiveMerchant"
     }
     @options_with_billing = @options.merge(
       :merchant => '999',
@@ -176,8 +178,8 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_capture_without_tokenization
-    close_batch(fixtures(:mercury_no_tokenization))
     gateway = MercuryGateway.new(fixtures(:mercury_no_tokenization))
+    close_batch(gateway)
 
     response = gateway.authorize(100, @credit_card, @options)
     assert_success response
@@ -186,58 +188,5 @@ class RemoteMercuryTest < Test::Unit::TestCase
     capture = gateway.capture(nil, response.authorization, :credit_card => @credit_card)
     assert_success capture
     assert_equal '1.00', capture.params['authorize']
-  end
-
-  private
-
-  module BatchClosing
-    def close_batch
-      xml = Builder::XmlMarkup.new
-      xml.tag! "TStream" do
-        xml.tag! "Admin" do
-          xml.tag! 'MerchantID', @options[:login]
-          xml.tag! 'TranCode', "BatchSummary"
-        end
-      end
-      xml = xml.target!
-      response = commit("BatchSummary", xml)
-
-      xml = Builder::XmlMarkup.new
-      xml.tag! "TStream" do
-        xml.tag! "Admin" do
-          xml.tag! 'MerchantID', @options[:login]
-          xml.tag! 'OperatorID', response.params["operator_id"]
-          xml.tag! 'TranCode', "BatchClose"
-          xml.tag! 'BatchNo', response.params["batch_no"]
-          xml.tag! 'BatchItemCount', response.params["batch_item_count"]
-          xml.tag! 'NetBatchTotal', response.params["net_batch_total"]
-          xml.tag! 'CreditPurchaseCount', response.params["credit_purchase_count"]
-          xml.tag! 'CreditPurchaseAmount', response.params["credit_purchase_amount"]
-          xml.tag! 'CreditReturnCount', response.params["credit_return_count"]
-          xml.tag! 'CreditReturnAmount', response.params["credit_return_amount"]
-          xml.tag! 'DebitPurchaseCount', response.params["debit_purchase_count"]
-          xml.tag! 'DebitPurchaseAmount', response.params["debit_purchase_amount"]
-          xml.tag! 'DebitReturnCount', response.params["debit_return_count"]
-          xml.tag! 'DebitReturnAmount', response.params["debit_return_amount"]
-        end
-      end
-      xml = xml.target!
-      commit("BatchClose", xml)
-    end
-
-    def hashify_xml!(xml, response)
-      super
-
-      doc = REXML::Document.new(xml)
-      doc.elements.each("//BatchSummary/*") do |node|
-        response[node.name.underscore.to_sym] = node.text
-      end
-    end
-  end
-
-  def close_batch(gateway_credentials=fixtures(:mercury))
-    gateway = MercuryGateway.new(gateway_credentials)
-    gateway.extend(BatchClosing)
-    gateway.close_batch
   end
 end
