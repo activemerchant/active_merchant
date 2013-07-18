@@ -24,10 +24,10 @@ Gem::Specification.new do |s|
   s.add_dependency('builder', '>= 2.0.0')
   s.add_dependency('json', '>= 1.5.1')
   s.add_dependency('active_utils', '>= 1.0.2')
-  s.add_dependency('nokogiri')
+  s.add_dependency('nokogiri', "< 1.6.0")
 
   s.add_development_dependency('rake')
-  s.add_development_dependency('mocha', '~> 0.11.3')
+  s.add_development_dependency('mocha', '~> 0.13.0')
   s.add_development_dependency('rails', '>= 2.3.14')
   s.add_development_dependency('thor')
   s.signing_key = ENV['GEM_PRIVATE_KEY']

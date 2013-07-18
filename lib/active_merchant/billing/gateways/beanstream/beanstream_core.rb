@@ -119,6 +119,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_customer_ip(post, options)
+        post[:customerIP] = options[:ip] if options[:ip]
+      end
+
       def void_action(original_transaction_type)
         (original_transaction_type == TRANSACTIONS[:refund]) ? :void_refund : :void_purchase
       end
@@ -235,6 +239,7 @@ module ActiveMerchant #:nodoc:
 
       def add_recurring_invoice(post, options)
         post[:rbApplyTax1] = options[:apply_tax1]
+        post[:rbApplyTax2] = options[:apply_tax2]
       end
 
       def add_recurring_operation_type(post, operation)
@@ -288,7 +293,7 @@ module ActiveMerchant #:nodoc:
         results = {}
         if !body.nil?
           body.split(/&/).each do |pair|
-            key, val = pair.split(/=/)
+            key, val = pair.split(/\=/)
             results[key.to_sym] = val.nil? ? nil : CGI.unescape(val)
           end
         end

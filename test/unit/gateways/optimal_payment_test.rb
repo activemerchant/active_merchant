@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'nokogiri'
 
 class ActiveMerchant::Billing::OptimalPaymentGateway
   public :cc_auth_request
@@ -17,7 +18,8 @@ class OptimalPaymentTest < Test::Unit::TestCase
     @options = {
       :order_id => '1',
       :billing_address => address,
-      :description => 'Store Purchase'
+      :description => 'Store Purchase',
+      :email => 'email@example.com'
     }
   end
 
@@ -85,6 +87,28 @@ class OptimalPaymentTest < Test::Unit::TestCase
     assert @gateway.purchase(@amount, @credit_card, @options)
   end
 
+  def test_purchase_with_shipping_address
+    @options[:shipping_address] = {:country => "CA"}
+    @gateway.expects(:ssl_post).with do |url, data|
+      xml = data.split("&").detect{|string| string =~ /txnRequest=/}.gsub("txnRequest=","")
+      doc = Nokogiri::XML.parse(URI.decode(xml))
+      doc.xpath('//xmlns:shippingDetails/xmlns:country').first.text == "CA" && doc.to_s.include?('<shippingDetails>')
+    end.returns(successful_purchase_response)
+
+    assert @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_purchase_without_shipping_address
+    @options[:shipping_address] = nil
+    @gateway.expects(:ssl_post).with do |url, data|
+      xml = data.split("&").detect{|string| string =~ /txnRequest=/}.gsub("txnRequest=","")
+      doc = Nokogiri::XML.parse(URI.decode(xml))
+      doc.to_s.include?('<shippingDetails>') == false
+    end.returns(successful_purchase_response)
+
+    assert @gateway.purchase(@amount, @credit_card, @options)
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -146,6 +170,14 @@ class OptimalPaymentTest < Test::Unit::TestCase
     assert !response.cvv_result['code']
   end
 
+  def test_email_being_sent
+    @gateway.expects(:ssl_post).with do |url, data|
+      data =~ /email%3Eemail%2540example.com%3C\/email/
+    end
+
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+
   private
 
   def full_request
@@ -179,6 +211,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
     <country>CA</country>
     <zip>K1C2N6</zip>
     <phone>%28555%29555-5555</phone>
+    <email>email%40example.com</email>
   </billingDetails>
 </ccAuthRequestV1>
     XML

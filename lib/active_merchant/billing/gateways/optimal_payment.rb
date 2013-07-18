@@ -160,6 +160,7 @@ module ActiveMerchant #:nodoc:
           xml.amount(money/100.0)
           build_card(xml, opts)
           build_billing_details(xml, opts)
+          build_shipping_details(xml, opts)
         end
       end
 
@@ -250,24 +251,33 @@ module ActiveMerchant #:nodoc:
 
       def build_billing_details(xml, opts)
         xml.tag! 'billingDetails' do
-          addr = opts[:billing_address]
           xml.tag! 'cardPayMethod', 'WEB'
-          if addr[:name]
-            xml.tag! 'firstName', CGI.escape(addr[:name].split(' ').first) # TODO: parse properly
-            xml.tag! 'lastName' , CGI.escape(addr[:name].split(' ').last )
-          end
-          xml.tag! 'street' , CGI.escape(addr[:address1]) if addr[:address1].present?
-          xml.tag! 'street2', CGI.escape(addr[:address2]) if addr[:address2].present?
-          xml.tag! 'city'   , CGI.escape(addr[:city]    ) if addr[:city].present?
-          if addr[:state].present?
-            state_tag = %w(US CA).include?(addr[:country]) ? 'state' : 'region'
-            xml.tag! state_tag, CGI.escape(addr[:state])
-          end
-          xml.tag! 'country', CGI.escape(addr[:country] ) if addr[:country].present?
-          xml.tag! 'zip'    , CGI.escape(addr[:zip]     ) # this one's actually required
-          xml.tag! 'phone'  , CGI.escape(addr[:phone]   ) if addr[:phone].present?
-          #xml.tag! 'email'        , ''
+          build_address(xml, opts[:billing_address], opts[:email])
         end
+      end
+
+      def build_shipping_details(xml, opts)
+        xml.tag! 'shippingDetails' do
+          build_address(xml, opts[:shipping_address], opts[:email])
+        end if opts[:shipping_address].present?
+      end
+
+      def build_address(xml, addr, email=nil)
+        if addr[:name]
+          xml.tag! 'firstName', CGI.escape(addr[:name].split(' ').first) # TODO: parse properly
+          xml.tag! 'lastName' , CGI.escape(addr[:name].split(' ').last )
+        end
+        xml.tag! 'street' , CGI.escape(addr[:address1]) if addr[:address1].present?
+        xml.tag! 'street2', CGI.escape(addr[:address2]) if addr[:address2].present?
+        xml.tag! 'city'   , CGI.escape(addr[:city]    ) if addr[:city].present?
+        if addr[:state].present?
+          state_tag = %w(US CA).include?(addr[:country]) ? 'state' : 'region'
+          xml.tag! state_tag, CGI.escape(addr[:state])
+        end
+        xml.tag! 'country', CGI.escape(addr[:country] ) if addr[:country].present?
+        xml.tag! 'zip'    , CGI.escape(addr[:zip]     ) if addr[:zip].present?
+        xml.tag! 'phone'  , CGI.escape(addr[:phone]   ) if addr[:phone].present?
+        xml.tag! 'email', CGI.escape(email) if email
       end
 
       def card_type(key)

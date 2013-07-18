@@ -3,11 +3,11 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # Public: This gateway allows you to interact with any gateway you've
-    # created in Spreedly Core (https://spreedlycore.com).  It's an adapter
-    # which can be particularly useful if you already have code interacting with
-    # ActiveMerchant and want to easily take advantage of Core's vault.
+    # created in Spreedly (https://spreedly.com).  It's an adapter which can be
+    # particularly useful if you already have code interacting with
+    # ActiveMerchant and want to easily take advantage of Spreedly's vault.
     class SpreedlyCoreGateway < Gateway
-      self.live_url = 'https://spreedlycore.com/v1'
+      self.live_url = 'https://core.spreedly.com/v1'
 
       self.supported_countries = %w(AD AE AT AU BD BE BG BN CA CH CY CZ DE DK EE EG ES FI FR GB
                                     GI GR HK HU ID IE IL IM IN IS IT JO KW LB LI LK LT LU LV MC
@@ -15,18 +15,18 @@ module ActiveMerchant #:nodoc:
                                     TR TT UM US VA VN ZA)
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
-      self.homepage_url = 'https://spreedlycore.com'
-      self.display_name = 'Spreedly Core'
+      self.homepage_url = 'https://spreedly.com'
+      self.display_name = 'Spreedly'
       self.money_format = :cents
       self.default_currency = 'USD'
 
-      # Public: Create a new Spreedly Core Gateway.
+      # Public: Create a new Spreedly gateway.
       #
       # options - A hash of options:
-      #           :login         - Your Spreedly Core API login.
-      #           :password      - Your Spreedly Core API secret.
+      #           :login         - The environment key.
+      #           :password      - The access secret.
       #           :gateway_token - The token of the gateway you've created in
-      #                            Spreedly Core.
+      #                            Spreedly.
       def initialize(options = {})
         requires!(options, :login, :password, :gateway_token)
         super
@@ -35,8 +35,7 @@ module ActiveMerchant #:nodoc:
       # Public: Run a purchase transaction.
       #
       # money          - The monetary amount of the transaction in cents.
-      # payment_method - The CreditCard or the Spreedly Core payment method
-      #                  token.
+      # payment_method - The CreditCard or the Spreedly payment method token.
       # options        - A standard ActiveMerchant options hash
       def purchase(money, payment_method, options = {})
         if payment_method.is_a?(String)
@@ -52,8 +51,7 @@ module ActiveMerchant #:nodoc:
       # Public: Run an authorize transaction.
       #
       # money          - The monetary amount of the transaction in cents.
-      # payment_method - The CreditCard or the Spreedly Core payment method
-      #                  token.
+      # payment_method - The CreditCard or the Spreedly payment method token.
       # options        - A standard ActiveMerchant options hash
       def authorize(money, payment_method, options = {})
         if payment_method.is_a?(String)
@@ -86,7 +84,7 @@ module ActiveMerchant #:nodoc:
         commit("transactions/#{authorization}/void.xml", '')
       end
 
-      # Public: Store a credit card in the Spreedly Core vault and retain it.
+      # Public: Store a credit card in the Spreedly vault and retain it.
       #
       # credit_card    - The CreditCard to store
       # options        - A standard ActiveMerchant options hash
@@ -94,8 +92,8 @@ module ActiveMerchant #:nodoc:
         save_card(true, credit_card, options)
       end
 
-      # Public: Redact the CreditCard in Spreedly Core.  This wipes the
-      # sensitive payment information from the card.
+      # Public: Redact the CreditCard in Spreedly. This wipes the sensitive
+      #         payment information from the card.
       #
       # credit_card    - The CreditCard to store
       # options        - A standard ActiveMerchant options hash

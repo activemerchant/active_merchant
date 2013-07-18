@@ -34,7 +34,15 @@ class NetRegistryTest < Test::Unit::TestCase
 
   def test_successful_credit
     @gateway.stubs(:ssl_post).returns(successful_credit_response)
-    response = @gateway.credit(@amount, '0707161858000000', @options)
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      response = @gateway.credit(@amount, '0707161858000000', @options)
+      assert_success response
+    end
+  end
+
+  def test_successful_refund
+    @gateway.stubs(:ssl_post).returns(successful_credit_response)
+    response = @gateway.refund(@amount, '0707161858000000', @options)
     assert_success response
   end
   

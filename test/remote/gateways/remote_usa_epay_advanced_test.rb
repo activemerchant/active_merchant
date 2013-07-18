@@ -137,8 +137,17 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
 
   def test_credit
     assert purchase = @gateway.purchase(@amount, @credit_card, @options.dup)
-    
-    assert credit = @gateway.credit(@amount, purchase.authorization, @options)
+
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert credit = @gateway.credit(@amount, purchase.authorization, @options)
+      assert_equal 'A', credit.params['refund_transaction_return']['result_code']
+    end
+  end
+
+  def test_refund
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options.dup)
+
+    assert credit = @gateway.refund(@amount, purchase.authorization, @options)
     assert_equal 'A', credit.params['refund_transaction_return']['result_code']
   end
 

@@ -38,8 +38,14 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, creditcard, options = {})
-        commit(build_purchase_request('PREAUTH', money, creditcard, options), options)
+      def authorize(money, payment_source, options = {})
+        setup_address_hash(options)
+
+        if payment_source.respond_to?(:number)
+          commit(build_purchase_request('PREAUTH', money, payment_source, options), options)
+        else
+          commit(build_reference_request('PREAUTH', money, payment_source, options), options)
+        end
       end
 
       def purchase(money, payment_source, options = {})

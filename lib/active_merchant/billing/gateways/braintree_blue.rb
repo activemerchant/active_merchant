@@ -172,7 +172,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def unstore(customer_vault_id)
+      def unstore(customer_vault_id, options = {})
         commit do
           Braintree::Customer.delete(customer_vault_id)
           Response.new(true, "OK")
@@ -340,6 +340,7 @@ module ActiveMerchant #:nodoc:
           "bin"                 => transaction.credit_card_details.bin,
           "last_4"              => transaction.credit_card_details.last_4,
           "card_type"           => transaction.credit_card_details.card_type,
+          "token"               => transaction.credit_card_details.token
         }
 
         {

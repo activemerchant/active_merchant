@@ -310,6 +310,7 @@ module ActiveMerchant #:nodoc:
             # lookup account from Balanced, account_uri should be in the
             # exception in a dictionary called extras
             account_uri = response['extras']['account_uri']
+            raise Error.new(response) unless account_uri
           end
         end
 

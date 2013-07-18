@@ -57,7 +57,7 @@ class MonerisTest < Test::Unit::TestCase
    end
   end
 
-  def test_purchase_is_valid_xml
+  def test_preauth_is_valid_xml
    params = {
      :order_id => "order1",
      :amount => "1.01",

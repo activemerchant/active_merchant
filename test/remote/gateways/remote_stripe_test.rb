@@ -40,6 +40,24 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_match /card number.* invalid/, response.message
   end
 
+  def test_authorization_and_capture
+    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+    assert !authorization.params["captured"]
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+  end
+
+  def test_authorization_and_void
+    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+    assert !authorization.params["captured"]
+
+    assert void = @gateway.void(authorization.authorization)
+    assert_success void
+  end
+
   def test_successful_void
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -105,6 +123,24 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response.params['fee_details'].any? do |fee|
       (fee['type'] == 'application_fee') && (fee['amount'] == 12)
     end
+  end
+
+  def test_card_present_purchase
+    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert response.params["paid"]
+  end
+
+  def test_card_present_authorize_and_capture
+    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
+    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+    assert !authorization.params["captured"]
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
   end
 
 end

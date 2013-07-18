@@ -1,5 +1,3 @@
-require 'json'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class StripeGateway < Gateway
@@ -35,6 +33,14 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      def authorize(money, creditcard, options = {})
+        post = create_post_for_auth_or_purchase(money, creditcard, options)
+        post[:capture] = "false"
+        meta = generate_meta(options)
+
+        commit(:post, 'charges', post, meta)
+      end
+
       # To create a charge on a card or a token, call
       #
       #   purchase(money, card_hash_or_token, { ... })
@@ -43,21 +49,18 @@ module ActiveMerchant #:nodoc:
       #
       #   purchase(money, nil, { :customer => id, ... })
       def purchase(money, creditcard, options = {})
-        post = {}
-
-        add_amount(post, money, options)
-        add_creditcard(post, creditcard, options)
-        add_customer(post, options)
-        add_customer_data(post,options)
-        post[:description] = options[:description] || options[:email]
-        post[:application_fee] = options[:application_fee] if options[:application_fee]
-        add_flags(post, options)
-
+        post = create_post_for_auth_or_purchase(money, creditcard, options)
         meta = generate_meta(options)
 
-        raise ArgumentError.new("Customer or Credit Card required.") if !post[:card] && !post[:customer]
-
         commit(:post, 'charges', post, meta)
+      end
+
+      def capture(money, authorization, options = {})
+        post = {}
+        post[:amount] = amount(money)
+        add_application_fee(post, options)
+
+        commit(:post, "charges/#{CGI.escape(authorization)}/capture", post)
       end
 
       def void(identification, options = {})
@@ -101,9 +104,25 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def create_post_for_auth_or_purchase(money, creditcard, options)
+        post = {}
+        add_amount(post, money, options)
+        add_creditcard(post, creditcard, options)
+        add_customer(post, options)
+        add_customer_data(post,options)
+        post[:description] = options[:description] || options[:email]
+        add_flags(post, options)
+        add_application_fee(post, options)
+        post
+      end
+
       def add_amount(post, money, options)
         post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money)).downcase
+      end
+
+      def add_application_fee(post, options)
+        post[:application_fee] = options[:application_fee] if options[:application_fee]
       end
 
       def add_customer_data(post, options)
@@ -127,18 +146,27 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard(post, creditcard, options)
+        card = {}
         if creditcard.respond_to?(:number)
-          card = {}
-          card[:number] = creditcard.number
-          card[:exp_month] = creditcard.month
-          card[:exp_year] = creditcard.year
-          card[:cvc] = creditcard.verification_value if creditcard.verification_value?
-          card[:name] = creditcard.name if creditcard.name
-          post[:card] = card
+          if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
+            card[:swipe_data] = creditcard.track_data
+          else
+            card[:number] = creditcard.number
+            card[:exp_month] = creditcard.month
+            card[:exp_year] = creditcard.year
+            card[:cvc] = creditcard.verification_value if creditcard.verification_value?
+            card[:name] = creditcard.name if creditcard.name
+          end
 
+          post[:card] = card
           add_address(post, options)
         elsif creditcard.kind_of?(String)
-          post[:card] = creditcard
+          if options[:track_data]
+            card[:swipe_data] = options[:track_data]
+          else
+            card[:number] = creditcard
+          end
+          post[:card] = card
         end
       end
 

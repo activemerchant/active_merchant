@@ -338,7 +338,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>:type</tt> -- The type of transaction. Can be either <tt>:auth_only</tt>, <tt>:capture_only</tt>, <tt>:auth_capture</tt>, <tt>:prior_auth_capture</tt>, <tt>:refund</tt> or <tt>:void</tt>. (REQUIRED)
       # * <tt>:amount</tt> -- The amount for the tranaction. Formatted with a decimal. For example "4.95" (CONDITIONAL)
       #     - :type == :void (NOT USED)
-      #     - :type == (:refund, :auth_only, :capture_only, :auth_capture, :prior_auth_capture) (REQUIRED)
+      #     - :type == :refund (OPTIONAL)
+      #     - :type == (:auth_only, :capture_only, :auth_capture, :prior_auth_capture) (REQUIRED)
       #
       # * <tt>:customer_profile_id</tt> -- The Customer Profile ID of the customer to use in this transaction. (CONDITIONAL)
       #     - :type == (:void, :prior_auth_capture) (OPTIONAL)

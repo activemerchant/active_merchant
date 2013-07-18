@@ -104,6 +104,23 @@ module ActiveMerchant #:nodoc:
         commit(url_for("GetAccessCodeResult"), request)
       end
 
+      # Public: Store card details and return a valid token
+      #
+      # options - A supplemented ActiveMerchant options hash:
+      #           :order_id         - A merchant-supplied identifier for the
+      #                               transaction (optional).
+      #           :billing_address  - Standard ActiveMerchant address hash
+      #                               (required).
+      #           :ip               - The ip of the consumer initiating the
+      #                               transaction (optional).
+      #           :application_id   - A string identifying the application
+      #                               submitting the transaction
+      #                               (default: "https://github.com/Shopify/active_merchant")
+      def store(payment_method, options = {})
+        requires!(options, :billing_address)
+        purchase(0, payment_method, options.merge(:request_method => "CreateTokenCustomer"))
+      end
+
       private
 
       def run_purchase(identification, payment_method, endpoint)
@@ -118,7 +135,7 @@ module ActiveMerchant #:nodoc:
       def add_metadata(doc, options)
         doc.RedirectUrl(options[:redirect_url])
         doc.CustomerIP options[:ip] if options[:ip]
-        doc.Method "ProcessPayment"
+        doc.Method options[:request_method] || "ProcessPayment"
         doc.DeviceID(options[:application_id] || application_id)
       end
 
@@ -148,13 +165,14 @@ module ActiveMerchant #:nodoc:
           doc.FirstName parts.shift if parts.size > 1
           doc.LastName parts.join(" ")
         end
+        doc.Title address[:title]
         doc.CompanyName address[:company] unless options[:skip_company]
         doc.Street1 address[:address1]
         doc.Street2 address[:address2]
         doc.City address[:city]
         doc.State address[:state]
         doc.PostalCode address[:zip]
-        doc.Country address[:country]
+        doc.Country address[:country].to_s.downcase
         doc.Phone address[:phone]
         doc.Fax address[:fax]
         doc.Email options[:email]
@@ -242,6 +260,8 @@ module ActiveMerchant #:nodoc:
       def success?(response)
         if response[:errors]
           false
+        elsif response[:responsecode] == "00"
+          true
         elsif response[:transactionstatus]
           (response[:transactionstatus] == "true")
         else

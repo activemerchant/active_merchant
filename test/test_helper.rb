@@ -11,7 +11,12 @@ end
 
 require 'test/unit'
 require 'money'
-require 'mocha'
+require 'mocha/version'
+if(Mocha::VERSION.split(".")[1].to_i < 12)
+  require 'mocha'
+else
+  require 'mocha/setup'
+end
 require 'yaml'
 require 'json'
 require 'active_merchant'
@@ -164,6 +169,7 @@ module ActiveMerchant
     def check(options = {})
       defaults = {
         :name => 'Jim Smith',
+        :bank_name => 'Bank of Elbonia',
         :routing_number => '244183602',
         :account_number => '15378535',
         :account_holder_type => 'personal',

@@ -41,17 +41,54 @@ module ActiveMerchant #:nodoc:
           end
 
           # Provide access to raw fields from quickpay
-          %w(msgtype ordernumber state chstat chstatmsg qpstat qpstatmsg merchant merchantemail cardtype cardnumber splitpayment fraudprobability fraudremarks fraudreport fee).each do |attr|
+          %w(
+            msgtype
+            ordernumber
+            state
+            chstat
+            chstatmsg
+            qpstat
+            qpstatmsg
+            merchant
+            merchantemail
+            cardtype
+            cardnumber
+            cardhash
+            cardexpire
+            splitpayment
+            fraudprobability
+            fraudremarks
+            fraudreport
+            fee
+          ).each do |attr|
             define_method(attr) do
               params[attr]
             end
           end
 
           MD5_CHECK_FIELDS = [
-            :msgtype, :ordernumber, :amount, :currency, :time, :state,
-            :qpstat, :qpstatmsg, :chstat, :chstatmsg, :merchant, :merchantemail,
-            :transaction, :cardtype, :cardnumber, :splitpayment, :fraudprobability,
-            :fraudremarks, :fraudreport, :fee
+            :msgtype,
+            :ordernumber,
+            :amount,
+            :currency,
+            :time,
+            :state,
+            :qpstat,
+            :qpstatmsg,
+            :chstat,
+            :chstatmsg,
+            :merchant,
+            :merchantemail,
+            :transaction,
+            :cardtype,
+            :cardnumber,
+            :cardhash,
+            :cardexpire,
+            :splitpayment,
+            :fraudprobability,
+            :fraudremarks,
+            :fraudreport,
+            :fee
           ]
 
           def generate_md5string
@@ -66,6 +103,32 @@ module ActiveMerchant #:nodoc:
           # Instead it uses and MD5 hash of all parameters
           def acknowledge
             generate_md5check == params['md5check']
+          end
+
+          # Take the posted data and move the relevant data into a hash
+          def parse(post)
+            # 30 + 12
+            #------------------------------8a827a0e6829
+            #Content-Disposition: form-data; name="msgtype"
+            #
+            #subscribe
+            #------------------------------8a827a0e6829
+            #Content-Disposition: form-data; name="ordernumber"
+            #
+            #BILP94406
+
+            if post =~ /-{20,40}\w{6,24}/
+              @raw = post.to_s
+              post.split(/-{20,40}\w{6,24}[\n\r]*/m).each do |part|
+                part.scan(/([^\n\r]+)[\n\r]+([^\n\r]*)/m) do |header, value|
+                  if header.match(/name=["'](.*)["']/)
+                    params[$1] = value.strip
+                  end
+                end
+              end
+            else
+              super
+            end
           end
         end
       end

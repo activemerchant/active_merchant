@@ -16,6 +16,7 @@ module ActiveMerchant #:nodoc:
 
           mapping :description, 'desc'
           mapping :notify_url, 'MC_callback'
+          mapping :return_url, 'MC_return'
           
           
           # WorldPay supports two different test modes - :always_succeed and :always_fail

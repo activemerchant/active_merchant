@@ -30,16 +30,16 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['US']
       self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside'
       self.display_name = 'PayPal Express Checkout'
-      
+
       def setup_authorization(money, options = {})
         requires!(options, :return_url, :cancel_return_url)
-        
+
         commit 'SetExpressCheckout', build_setup_request('Authorization', money, options)
       end
-      
+
       def setup_purchase(money, options = {})
         requires!(options, :return_url, :cancel_return_url)
-        
+
         commit 'SetExpressCheckout', build_setup_request('Sale', money, options)
       end
 
@@ -49,18 +49,32 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, options = {})
         requires!(options, :token, :payer_id)
-      
+
         commit 'DoExpressCheckoutPayment', build_sale_or_authorization_request('Authorization', money, options)
       end
 
       def purchase(money, options = {})
         requires!(options, :token, :payer_id)
-        
+
         commit 'DoExpressCheckoutPayment', build_sale_or_authorization_request('Sale', money, options)
       end
 
-      def reference_transaction(money, options = {})
+      def store(token, options = {})
+        commit 'CreateBillingAgreement', build_create_billing_agreement_request(token, options)
+      end
+
+      def unstore(token, options = {})
+        commit 'BAUpdate', build_cancel_billing_agreement_request(token)
+      end
+
+      def authorize_reference_transaction(money, options = {})
         requires!(options, :reference_id, :payment_type, :invoice_id, :description, :ip)
+
+        commit 'DoReferenceTransaction', build_reference_transaction_request('Authorization', money, options)
+      end
+
+      def reference_transaction(money, options = {})
+        requires!(options, :reference_id)
 
         commit 'DoReferenceTransaction', build_reference_transaction_request('Sale', money, options)
       end
@@ -77,10 +91,10 @@ module ActiveMerchant #:nodoc:
 
         xml.target!
       end
-      
+
       def build_sale_or_authorization_request(action, money, options)
         currency_code = options[:currency] || currency(money)
-        
+
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'DoExpressCheckoutPaymentReq', 'xmlns' => PAYPAL_NAMESPACE do
           xml.tag! 'DoExpressCheckoutPaymentRequest', 'xmlns:n2' => EBAY_NAMESPACE do
@@ -141,8 +155,8 @@ module ActiveMerchant #:nodoc:
                 xml.tag! 'n2:AllowNote', options[:allow_note] ? '1' : '0'
               end
               xml.tag! 'n2:CallbackURL', options[:callback_url] unless options[:callback_url].blank?
-              
-              add_payment_details(xml, with_money_default(money), currency_code, options)
+
+              add_payment_details(xml, money, currency_code, options)
               if options[:shipping_options]
                 options[:shipping_options].each do |shipping_option|
                   xml.tag! 'n2:FlatRateShippingOptions' do
@@ -155,16 +169,45 @@ module ActiveMerchant #:nodoc:
 
               xml.tag! 'n2:CallbackTimeout', options[:callback_timeout] unless options[:callback_timeout].blank?
               xml.tag! 'n2:CallbackVersion', options[:callback_version] unless options[:callback_version].blank?
+
+              if options.has_key?(:allow_buyer_optin)
+                xml.tag! 'n2:BuyerEmailOptInEnable', (options[:allow_buyer_optin] ? '1' : '0')
+              end
             end
           end
         end
 
         xml.target!
       end
-      
+
+      def build_create_billing_agreement_request(token, options = {})
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.tag! 'CreateBillingAgreementReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'CreateBillingAgreementRequest', 'xmlns:n2' => EBAY_NAMESPACE do
+            xml.tag! 'n2:Version', API_VERSION
+            xml.tag! 'Token', token
+          end
+        end
+
+        xml.target!
+      end
+
+      def build_cancel_billing_agreement_request(token)
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.tag! 'BillAgreementUpdateReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'BAUpdateRequest', 'xmlns:n2' => EBAY_NAMESPACE do
+            xml.tag! 'n2:Version', API_VERSION
+            xml.tag! 'ReferenceID', token
+            xml.tag! 'BillingAgreementStatus', "Canceled"
+          end
+        end
+
+        xml.target!
+      end
+
       def build_reference_transaction_request(action, money, options)
         currency_code = options[:currency] || currency(money)
-        
+
         # I am not sure why it's set like this for express gateway
         # but I don't want to break the existing behavior
         xml = Builder::XmlMarkup.new :indent => 2
@@ -175,7 +218,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:ReferenceID', options[:reference_id]
               xml.tag! 'n2:PaymentAction', action
               xml.tag! 'n2:PaymentType', options[:payment_type] || 'Any'
-              add_payment_details(xml, with_money_default(money), currency_code, options)
+              add_payment_details(xml, money, currency_code, options)
               xml.tag! 'n2:IPAddress', options[:ip]
             end
           end
@@ -186,10 +229,6 @@ module ActiveMerchant #:nodoc:
 
       def build_response(success, message, response, options = {})
         PaypalExpressResponse.new(success, message, response, options)
-      end
-
-      def with_money_default(money)
-        amount(money).to_f.zero? ? 100 : money
       end
 
       def locale_code(country_code)

@@ -4,10 +4,10 @@ class PaypalTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
     
-    @gateway = PaypalGateway.new(fixtures(:paypal_certificate))
+    @gateway = PaypalGateway.new(fixtures(:paypal_signature))
 
     @creditcard = CreditCard.new(
-      :type                => "visa",
+      :brand                => "visa",
       :number              => "4381258770269608", # Use a generated CC from the paypal Sandbox
       :verification_value => "000",
       :month               => 1,
@@ -141,7 +141,7 @@ class PaypalTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @creditcard, @params)
     assert_success purchase
     
-    credit = @gateway.credit(@amount, purchase.authorization, :note => 'Sorry')
+    credit = @gateway.refund(@amount, purchase.authorization, :note => 'Sorry')
     assert_success credit
     assert credit.test?
     assert_equal 'USD',  credit.params['net_refund_amount_currency_id']
@@ -188,6 +188,30 @@ class PaypalTest < Test::Unit::TestCase
     # You can only include up to 250 recipients
     recipients = (1..251).collect {|i| [100, "person#{i}@example.com"]}
     response = @gateway.transfer(*recipients)
+    assert_failure response
+  end
+
+  def test_successful_email_transfer
+    response = @gateway.purchase(@amount, @creditcard, @params)
+    assert_success response
+
+    response = @gateway.transfer([@amount, 'joe@example.com'], :receiver_type => 'EmailAddress', :subject => 'Your money', :note => 'Thanks for taking care of that')
+    assert_success response
+  end
+
+  def test_successful_userid_transfer
+    response = @gateway.purchase(@amount, @creditcard, @params)
+    assert_success response
+
+    response = @gateway.transfer([@amount, '4ET96X3PQEN8H'], :receiver_type => 'UserID', :subject => 'Your money', :note => 'Thanks for taking care of that')
+    assert_success response
+  end
+
+  def test_failed_userid_transfer
+    response = @gateway.purchase(@amount, @creditcard, @params)
+    assert_success response
+
+    response = @gateway.transfer([@amount, 'joe@example.com'], :receiver_type => 'UserID', :subject => 'Your money', :note => 'Thanks for taking care of that')
     assert_failure response
   end
   

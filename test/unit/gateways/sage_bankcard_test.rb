@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class SageBankcardGatewayTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = SageBankcardGateway.new(
                  :login => 'login',
@@ -123,6 +125,22 @@ class SageBankcardGatewayTest < Test::Unit::TestCase
     assert_equal "0000000000",         response.params["reference"]
     assert_equal "",                   response.params["order_number"]
     assert_equal "0",                  response.params["recurring"]
+  end
+
+  def test_include_customer_number_for_numeric_values
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge({:customer => "123"}))
+    end.check_request do |method, data|
+      assert data =~ /T_customer_number=123/
+    end.respond_with(successful_authorization_response)
+  end
+
+  def test_dont_include_customer_number_for_numeric_values
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge({:customer => "bob@test.com"}))
+    end.check_request do |method, data|
+      assert data !~ /T_customer_number/
+    end.respond_with(successful_authorization_response)
   end
   
   def test_avs_result

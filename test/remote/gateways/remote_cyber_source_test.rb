@@ -8,6 +8,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4111111111111111')
     @declined_card = credit_card('801111111111111')
+    @pinless_debit_card = credit_card('4002269999999999')
 
     @amount = 100
 
@@ -140,6 +141,13 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_pinless_debit_card_puchase
+    assert response = @gateway.purchase(@amount, @pinless_debit_card, @options.merge(:pinless_debit_card => true))
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
   def test_successful_subscription_purchase
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert_equal 'Successful transaction', response.message
@@ -202,6 +210,17 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
+  end
+
+  # Pinless debit payment can never be refunded.
+  def test_unsuccessful_pinless_debit_card_refund
+    assert response = @gateway.purchase(@amount, @pinless_debit_card, @options.merge(:pinless_debit_card => true))
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    assert response = @gateway.refund(@amount, response.authorization)
+    assert_equal 'One or more fields contains invalid data', response.message
+    assert_equal false,  response.success?
   end
 
   def test_successful_subscription_credit
@@ -276,4 +295,10 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_validate_pinless_debit_card
+    assert response = @gateway.validate_pinless_debit_card(@pinless_debit_card, @options)
+    assert response.test?
+    assert_equal 'Y', response.params["status"]
+    assert_equal true,  response.success?
+  end
 end

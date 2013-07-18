@@ -4,12 +4,13 @@ module ActiveMerchant #:nodoc:
     # of necessary attributes such as checkholder's name, routing and account numbers, but it is
     # not backed by any database.
     #
-    # You may use Check in place of CreditCard with any gateway that supports it. Currently, only
-    # +BraintreeGateway+ supports the Check object.
+    # You may use Check in place of CreditCard with any gateway that supports it.
     class Check
       include Validateable
 
-      attr_accessor :first_name, :last_name, :routing_number, :account_number, :account_holder_type, :account_type, :number
+      attr_accessor :first_name, :last_name,
+                    :bank_name, :routing_number, :account_number,
+                    :account_holder_type, :account_type, :number
 
       # Used for Canadian bank accounts
       attr_accessor :institution_number, :transit_number
@@ -43,10 +44,6 @@ module ActiveMerchant #:nodoc:
 
       def type
         'check'
-      end
-
-      def check?
-        true
       end
 
       # Routing numbers may be validated by calculating a checksum and dividing it by 10. The

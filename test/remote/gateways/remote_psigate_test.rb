@@ -35,12 +35,12 @@ class PsigateRemoteTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_successful_purchase_and_credit
+  def test_successful_purchase_and_refund
     assert purchase = @gateway.purchase(@amount, @creditcard, @options)
     assert_success purchase
 
-    assert credit = @gateway.credit(@amount, purchase.authorization)
-    assert_success credit
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
   end
 
   def test_failed_purchase

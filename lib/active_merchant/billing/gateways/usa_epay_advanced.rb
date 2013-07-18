@@ -174,7 +174,7 @@ module ActiveMerchant #:nodoc:
         :xid => [:string, 'XID'],
         :cavv => [:string, 'CAVV'],
         :eci => [:integer, 'ECI'],
-        :internal_card_authorization => [:boolean, 'InternalCardAduth'],
+        :internal_card_authorization => [:boolean, 'InternalCardAuth'],
         :pares => [:string, 'Pares']
       } #:nodoc:
 
@@ -283,12 +283,17 @@ module ActiveMerchant #:nodoc:
         void_transaction(options.merge!(:reference_number => identification))
       end
 
-      # Credit a previous transaction.
+      # Refund a previous transaction.
       #
       # Note: See run_transaction for additional options.
       #
-      def credit(money, identification, options={})
+      def refund(money, identification, options={})
         refund_transaction(options.merge!(:amount => money, :reference_number => identification))
+      end
+
+      def credit(money, identification, options={})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
 
       # Customer ======================================================
@@ -1334,7 +1339,7 @@ module ActiveMerchant #:nodoc:
 
       def build_check_data(soap, options)
         soap.CheckData 'xsi:type' => "ns1:CheckData" do |soap|
-          build_tag soap, :string, 'Account', options[:payment_method].number
+          build_tag soap, :string, 'Account', options[:payment_method].account_number
           build_tag soap, :string, 'Routing', options[:payment_method].routing_number
           build_tag soap, :string, 'AccountType', options[:payment_method].account_type.capitalize
           CHECK_DATA_OPTIONS.each do |k,v|

@@ -12,6 +12,12 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
     @helper = Pxpay::Helper.new('500', @options[:login], :amount => "120.99", :currency => 'USD', :credential2 => @options[:password])
   end
 
+  def test_merchant_references_longer_than_50_characters_should_be_trimmed
+    @helper.description = "more than 50 chars--------------------40--------50---55"
+    request = @helper.send(:generate_request)
+    assert_match /<MerchantReference>more than 50 chars--------------------40--------50<\/MerchantReference>/, request
+  end
+
   def test_valid_credentials_returns_secure_token
     @helper.return_url "http://t/pxpay/return_url"
     @helper.cancel_return_url "http://t/pxpay/cancel_url"

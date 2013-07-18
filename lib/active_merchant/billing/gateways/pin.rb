@@ -29,7 +29,7 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard)
         add_address(post, creditcard, options)
 
-        commit('charges', post)
+        commit('charges', post, options)
       end
 
       # Create a customer and associated credit card. The token that is returned
@@ -40,14 +40,14 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard)
         add_customer_data(post, options)
         add_address(post, creditcard, options)
-        commit('customers', post)
+        commit('customers', post, options)
       end
 
       # Refund a transaction, note that the money attribute is ignored at the
       # moment as the API does not support partial refunds. The parameter is
       # kept for compatibility reasons
       def refund(money, token, options = {})
-        commit("charges/#{CGI.escape(token)}/refunds", :amount => amount(money))
+        commit("charges/#{CGI.escape(token)}/refunds", { :amount => amount(money) }, options)
       end
 
       private
@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        post[:description] = options[:description]
+        post[:description] = options[:description] || "Active Merchant Purchase"
       end
 
       def add_creditcard(post, creditcard)
@@ -93,22 +93,30 @@ module ActiveMerchant #:nodoc:
             :name => "#{creditcard.first_name} #{creditcard.last_name}"
           )
         elsif creditcard.kind_of?(String)
-          post[:customer_token] = creditcard
+          if creditcard =~ /^card_/
+            post[:card_token] = creditcard
+          else
+            post[:customer_token] = creditcard
+          end
         end
       end
 
-      def headers
-        {
+      def headers(params = {})
+        result = {
           "Content-Type" => "application/json",
           "Authorization" => "Basic #{Base64.strict_encode64(options[:api_key] + ':').strip}"
         }
+
+        result['X-Partner-Key'] = params[:partner_key] if params[:partner_key]
+        result['X-Safe-Card'] = params[:safe_card] if params[:safe_card]
+        result
       end
 
-      def commit(action, params)
+      def commit(action, params, options)
         url = "#{test? ? test_url : live_url}/#{action}"
 
         begin
-          body = parse(ssl_post(url, post_data(params), headers))
+          body = parse(ssl_post(url, post_data(params), headers(options)))
         rescue ResponseError => e
           body = parse(e.response.body)
         end
