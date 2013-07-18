@@ -49,7 +49,7 @@ class RemoteMercuryCertificationTest < Test::Unit::TestCase
   def test_preauth_and_reversal
     close_batch(tokenization_gateway)
 
-    preauth = tokenization_gateway.authorize(106, visa, options("1"))
+    preauth = tokenization_gateway.authorize(113, visa, options("1"))
     assert_success preauth
     assert_equal "AP", preauth.params["text_response"]
 
