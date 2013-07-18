@@ -29,12 +29,12 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_instance_of Response, response
     assert_success response
-    assert_equal '508141795', response.authorization
-    assert_equal '000000', response.authorization_code
+    assert_equal '2194822223', response.authorization
+    assert_equal 'X931M4', response.authorization_code
   end
   
   def test_parsing_purchase_response_with_card_number_and_type
-    res = @gateway.send(:parse, successful_purchase_response_with_card_number_and_type)
+    res = @gateway.send(:parse, successful_purchase_response)
     assert_equal( 
       res, 
       {
@@ -171,12 +171,8 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
   def successful_authorization_response
     '$1.0$,$1$,$1$,$This transaction has been approved.$,$000000$,$P$,$$,$508141794$,$77F2FA67D1A4D2FBAB51F243D90BAB26$,$$'
   end
-  
-  def successful_purchase_response
-    '$1.0$,$1$,$1$,$This transaction has been approved.$,$000000$,$P$,$$,$508141795$,$77F2FA67D1A4D2FBAB51F243D90BAB26$,$$'
-  end
 
-  def successful_purchase_response_with_card_number_and_type
+  def successful_purchase_response
     "$1.0$,$1$,$1$,$This transaction has been approved.$,$X931M4$,$Y$,$$,$2194822223$,$7FE879E74A388D4E4BC056244A434BC7$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$XXXX1111$,$Visa$"
   end
   
