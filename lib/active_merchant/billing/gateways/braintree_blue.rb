@@ -232,33 +232,46 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def response_params(result)
+        params = {}
+        if result.success?
+          params[:braintree_transaction] = transaction_hash(result.transaction)
+          params[:customer_vault_id] = result.transaction.customer_details.id
+        end
+        params
+      end
+
+      def response_options(result)
+        options = {}
+        if result.success?
+          options[:authorization] = result.transaction.id
+        end
+        if result.transaction
+          options[:avs_result] = {
+            :code => nil, :message => nil,
+            :street_match => result.transaction.avs_street_address_response_code,
+            :postal_match => result.transaction.avs_postal_code_response_code
+          }
+          options[:cvv_result] = result.transaction.cvv_response_code
+        end
+        options
+      end
+
+      def message_from_transaction_result(result)
+        if result.transaction && result.transaction.status == "gateway_rejected"
+          "Transaction declined - gateway rejected"
+        elsif result.transaction
+          "#{result.transaction.processor_response_code} #{result.transaction.processor_response_text}"
+        else
+          message_from_result(result)
+        end
+      end
+
       def create_transaction(transaction_type, money, credit_card_or_vault_id, options)
         transaction_params = create_transaction_parameters(money, credit_card_or_vault_id, options)
-
         commit do
           result = Braintree::Transaction.send(transaction_type, transaction_params)
-          response_params, response_options, avs_result, cvv_result = {}, {}, {}, {}
-          if result.success?
-            response_params[:braintree_transaction] = transaction_hash(result.transaction)
-            response_params[:customer_vault_id] = result.transaction.customer_details.id
-            response_options[:authorization] = result.transaction.id
-          end
-          if result.transaction
-            response_options[:avs_result] = {
-              :code => nil, :message => nil,
-              :street_match => result.transaction.avs_street_address_response_code,
-              :postal_match => result.transaction.avs_postal_code_response_code
-            }
-            response_options[:cvv_result] = result.transaction.cvv_response_code
-            if result.transaction.status == "gateway_rejected"
-              message = "Transaction declined - gateway rejected"
-            else
-              message = "#{result.transaction.processor_response_code} #{result.transaction.processor_response_text}"
-            end
-          else
-            message = message_from_result(result)
-          end
-          response = Response.new(result.success?, message, response_params, response_options)
+          response = Response.new(result.success?, message_from_transaction_result(result), response_params(result), response_options(result))
           response.cvv_result['message'] = ''
           response
         end
