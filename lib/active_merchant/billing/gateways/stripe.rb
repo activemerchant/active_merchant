@@ -79,7 +79,10 @@ module ActiveMerchant #:nodoc:
 
         result = commit(:post, "charges/#{CGI.escape(identification)}/refund", post, meta)
 
-        refund_fee(identification, options, meta) if options[:refund_fee_amount] && result.success?
+        if options[:refund_fee_amount] && result.success?
+          fee_refund_result = refund_fee(identification, options, meta)
+          return fee_refund_result unless fee_refund_result.success?
+        end
 
         result
       end
