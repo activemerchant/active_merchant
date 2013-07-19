@@ -80,6 +80,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! "PartialAuth", "Allow"
             end
             add_invoice(xml, options[:order_id], nil, options)
+            add_reference(xml, "RecordNumberRequested")
             add_customer_data(xml, options)
             add_amount(xml, money, options)
             add_credit_card(xml, credit_card, action)
@@ -103,7 +104,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! "PartialAuth", "Allow"
             end
             add_invoice(xml, invoice_no, ref_no, options)
-            add_reference(xml, record_no) if @use_tokenization
+            add_reference(xml, record_no)
             add_customer_data(xml, options)
             add_amount(xml, (money || amount.to_i), options)
             add_credit_card(xml, credit_card, action) if credit_card
@@ -127,15 +128,13 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'RefNo', (ref_no || invoice_no)
         xml.tag! 'OperatorID', options[:merchant] if options[:merchant]
         xml.tag! 'Memo', options[:description] if options[:description]
-        if @use_tokenization
-          xml.tag! 'Frequency', "OneTime"
-          xml.tag! 'RecordNo', "RecordNumberRequested"
-        end
       end
 
       def add_reference(xml, record_no)
-        xml.tag! "Frequency", "OneTime"
-        xml.tag! "RecordNo", record_no
+        if @use_tokenization
+          xml.tag! "Frequency", "OneTime"
+          xml.tag! "RecordNo", record_no
+        end
       end
 
       def add_customer_data(xml, options)
