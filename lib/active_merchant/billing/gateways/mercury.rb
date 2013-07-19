@@ -99,10 +99,10 @@ module ActiveMerchant #:nodoc:
         xml.tag! "TStream" do
           xml.tag! "Transaction" do
             xml.tag! 'TranType', 'Credit'
-            xml.tag! 'TranCode', (@use_tokenization ? (action + "ByRecordNo") : action)
             if action == 'PreAuthCapture'
               xml.tag! "PartialAuth", "Allow"
             end
+            xml.tag! 'TranCode', (@use_tokenization ? (action + "ByRecordNo") : action)
             add_invoice(xml, invoice_no, ref_no, options)
             add_reference(xml, record_no)
             add_customer_data(xml, options)
