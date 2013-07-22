@@ -313,7 +313,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_create_subscription_request(payment_method, options)
-        options[:subscription] = (options[:subscription] || {}).merge(:frequency => "on-demand", :amount => 0, :automatic_renew => false)
+        default_subscription_params = {:frequency => "on-demand", :amount => 0, :automatic_renew => false}
+        options[:subscription] = default_subscription_params.update(
+          options[:subscription] || {}
+        )
 
         xml = Builder::XmlMarkup.new :indent => 2
         add_address(xml, payment_method, options[:billing_address], options)
