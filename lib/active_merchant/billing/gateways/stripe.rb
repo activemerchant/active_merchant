@@ -72,6 +72,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         post[:amount] = amount(money) if money
+        post[:refund_application_fee] = true if options[:refund_application_fee]
 
         commit(:post, "charges/#{CGI.escape(identification)}/refund", post, meta)
       end
