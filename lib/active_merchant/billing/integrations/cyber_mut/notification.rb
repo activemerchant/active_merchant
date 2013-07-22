@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
 
           # When was this payment received by the client.
           def received_at
-            params['date']
+            Time.parse(params['date'].gsub('_a_', ' ')) if params['date']
           end
 
           def payer_email

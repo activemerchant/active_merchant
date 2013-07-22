@@ -14,7 +14,7 @@ class CyberMutNotificationTest < Test::Unit::TestCase
     assert_equal "LeTexteLibre", @cyber_mut.item_id
     assert_equal "62.75", @cyber_mut.gross
     assert_equal "EUR", @cyber_mut.currency
-    assert_equal "05/12/2006_a_11:55:23", @cyber_mut.received_at
+    assert_equal Time.parse('05/12/2006 11:55:23'), @cyber_mut.received_at
     assert @cyber_mut.test?
   end
 
