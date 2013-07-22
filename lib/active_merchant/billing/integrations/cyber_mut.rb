@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
         mattr_accessor :production_url
         self.production_url = 'https://ssl.paiement.cic-banques.fr/paiement.cgi'
 
-        def self.notification_confirmation_url
+        def self.service_url
           mode = ActiveMerchant::Billing::Base.integration_mode
           case mode
           when :production
