@@ -6,22 +6,27 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module CyberMut
         class Helper < ActiveMerchant::Billing::Integrations::Helper
-          mapping :account, 'account'
-          mapping :amount, 'amount'
+          mapping :amount, 'montant'
           mapping :'text-libre', ''
 
-          mapping :order, 'order'
-          mapping :societe, 'masociete'
-          mapping :hmac_key, 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ'
-          mapping :TPE, '123456'
+          mapping :order, 'reference'
+          mapping :company, 'societe'
+          mapping :tpe, 'TPE'
 
-          mapping :url_retour, 'url_retour'
-          mapping :url_retour_ok, 'url_retour_ok'
-          mapping :url_retour_err, 'url_retour_err'
+          mapping :notify_url, 'url_retour'
+          mapping :return_url, 'url_retour_ok'
+          mapping :return_error_url, 'url_retour_err'
 
+          ##
+          #
+          # - payment_service_for(resource.id, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ", :amount => resource.amount.cents, :currency => resource.amount.currency, :service => :cyber_mut) do |service|
+          #   - service.tpe '123456'
+          #   = submit_tag 'OK'
+          #
           def initialize(order, account, options = {})
             super
             # https://github.com/novelys/paiementcic/blob/master/lib/paiement_cic.rb#L41
+            @hmac_key = account
             version = '3.0'
             add_field('version', version)
             montant = ("%.2f" % options[:amount]) + "EUR"
@@ -31,11 +36,11 @@ module ActiveMerchant #:nodoc:
             date = Time.now.strftime('"%d/%m/%Y:%H:%M:%S"')
             add_field('date', date)
             add_field('reference', order)
-
-            add_field('TPE', mappings[:TPE])
+            add_field('TPE', '123456')
+            # MAC field
             mac_data = [
-              mappings[:TPE], date, montant, order,
-              options['text-libre'], version, langue, mappings[:societe],
+              mappings[:tpe], date, montant, order,
+              mappings['text-libre'], version, langue, mappings[:company],
               "", "", "", "", "", "", "", "", "", "", ""
             ].join('*')
             add_field('MAC', compute_HMACSHA1(mac_data))
@@ -44,7 +49,7 @@ module ActiveMerchant #:nodoc:
 
           # Return the HMAC for a data string
           def compute_HMACSHA1(data)
-            hmac_sha1(usable_key(mappings[:hmac_key]), data).downcase
+            hmac_sha1(usable_key(@hmac_key), data).downcase
           end
 
           def hmac_sha1(key, data)

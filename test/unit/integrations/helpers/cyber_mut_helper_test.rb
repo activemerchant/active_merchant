@@ -4,7 +4,7 @@ class CyberMutHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @helper = CyberMut::Helper.new('order-500', 'cody@example.com',
+    @helper = CyberMut::Helper.new('order-500', 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ',
                                    :amount => 500, :currency => 'EUR')
   end
 
@@ -18,9 +18,6 @@ class CyberMutHelperTest < Test::Unit::TestCase
   end
 
   def test_basic_helper_fields
-    assert_field 'account', 'cody@example.com'
-
-    assert_field 'amount', '500'
-    assert_field 'order', 'order-500'
+    assert_field 'montant', '500.00EUR'
   end
 end
