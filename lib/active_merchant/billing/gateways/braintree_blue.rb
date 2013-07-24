@@ -23,33 +23,18 @@ module ActiveMerchant #:nodoc:
     # Setting an ActiveMerchant +wiredump_device+ will automatically
     # configure the Braintree logger (via the Braintree gem's
     # configuration) when the BraintreeBlueGateway is instantiated.
-    # Additionally, the log level will be set to +DEBUG+.  Therefore,
-    # all you have to do is set the +wiredump_device+ and you'll
-    # get your debug output from your HTTP interactions with the
-    # remote gateway. (Don't enable this in production.)
+    # Additionally, the log level will be set to +DEBUG+. Therefore,
+    # all you have to do is set the +wiredump_device+ and you'll get
+    # your debug output from your HTTP interactions with the remote
+    # gateway. (Don't enable this in production.) The ActiveMerchant
+    # implementation doesn't mess with the Braintree::Configuration
+    # globals at all, so there won't be any side effects outside
+    # Active Merchant.
     #
-    # For example:
+    # If no +wiredump_device+ is set, the logger in
+    # +Braintree::Configuration.logger+ will be cloned and the log
+    # level set to +WARN+.
     #
-    #     ActiveMerchant::Billing::BraintreeBlueGateway.wiredump_device = Logger.new(STDOUT)
-    #     # => #<Logger:0x107d385f8 ...>
-    #
-    #     Braintree::Configuration.logger
-    #     # => (some other logger, created by default by the gem)
-    #
-    #     Braintree::Configuration.logger.level
-    #     # => 1 (INFO)
-    #
-    #     ActiveMerchant::Billing::BraintreeBlueGateway.new(:merchant_id => 'x', :public_key => 'x', :private_key => 'x')
-    #
-    #     Braintree::Configuration.logger
-    #     # => #<Logger:0x107d385f8 ...>
-    #
-    #     Braintree::Configuration.logger.level
-    #     # => 0 (DEBUG)
-    #
-    #  Alternatively, you can avoid setting the +wiredump_device+
-    #  and set +Braintree::Configuration.logger+ and/or
-    #  +Braintree::Configuration.logger.level+ directly.
     class BraintreeBlueGateway < Gateway
       include BraintreeCommon
 
@@ -61,18 +46,24 @@ module ActiveMerchant #:nodoc:
 
         super
 
-        Braintree::Configuration.merchant_id = options[:merchant_id]
-        Braintree::Configuration.public_key = options[:public_key]
-        Braintree::Configuration.private_key = options[:private_key]
-        Braintree::Configuration.environment = (options[:environment] || (test? ? :sandbox : :production)).to_sym
-        Braintree::Configuration.custom_user_agent = "ActiveMerchant #{ActiveMerchant::VERSION}"
-
         if wiredump_device
-          Braintree::Configuration.logger = ((Logger === wiredump_device) ? wiredump_device : Logger.new(wiredump_device))
-          Braintree::Configuration.logger.level = Logger::DEBUG
+          logger = ((Logger === wiredump_device) ? wiredump_device : Logger.new(wiredump_device))
+          logger.level = Logger::DEBUG
         else
-          Braintree::Configuration.logger.level = Logger::WARN
+          logger = Braintree::Configuration.logger.clone
+          logger.level = Logger::WARN
         end
+
+        @configuration = Braintree::Configuration.new(
+          :merchant_id       => options[:merchant_id],
+          :public_key        => options[:public_key],
+          :private_key       => options[:private_key],
+          :environment       => (options[:environment] || (test? ? :sandbox : :production)).to_sym,
+          :custom_user_agent => "ActiveMerchant #{ActiveMerchant::VERSION}",
+          :logger            => logger,
+        )
+
+        @braintree_gateway = Braintree::Gateway.new( @configuration )
       end
 
       def authorize(money, credit_card_or_vault_id, options = {})
@@ -81,7 +72,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         commit do
-          result = Braintree::Transaction.submit_for_settlement(authorization, amount(money).to_s)
+          result = @braintree_gateway.transaction.submit_for_settlement(authorization, amount(money).to_s)
           Response.new(result.success?, message_from_result(result))
         end
       end
@@ -101,7 +92,7 @@ module ActiveMerchant #:nodoc:
         money = amount(money).to_s if money
 
         commit do
-          result = Braintree::Transaction.refund(transaction_id, money)
+          result = @braintree_gateway.transaction.refund(transaction_id, money)
           Response.new(result.success?, message_from_result(result),
             {:braintree_transaction => (transaction_hash(result.transaction) if result.success?)},
             {:authorization => (result.transaction.id if result.success?)}
@@ -111,7 +102,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options = {})
         commit do
-          result = Braintree::Transaction.void(authorization)
+          result = @braintree_gateway.transaction.void(authorization)
           Response.new(result.success?, message_from_result(result),
             {:braintree_transaction => (transaction_hash(result.transaction) if result.success?)},
             {:authorization => (result.transaction.id if result.success?)}
@@ -132,7 +123,7 @@ module ActiveMerchant #:nodoc:
               :expiration_year => creditcard.year.to_s
             }
           }
-          result = Braintree::Customer.create(merge_credit_card_options(parameters, options))
+          result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
           Response.new(result.success?, message_from_result(result),
             {
               :braintree_customer => (customer_hash(result.customer) if result.success?),
@@ -146,7 +137,7 @@ module ActiveMerchant #:nodoc:
       def update(vault_id, creditcard, options = {})
         braintree_credit_card = nil
         commit do
-          braintree_credit_card = Braintree::Customer.find(vault_id).credit_cards.detect { |cc| cc.default? }
+          braintree_credit_card = @braintree_gateway.customer.find(vault_id).credit_cards.detect { |cc| cc.default? }
           return Response.new(false, 'Braintree::NotFoundError') if braintree_credit_card.nil?
 
           options.merge!(:update_existing_token => braintree_credit_card.token)
@@ -159,14 +150,14 @@ module ActiveMerchant #:nodoc:
             }
           }, options)[:credit_card]
 
-          result = Braintree::Customer.update(vault_id,
+          result = @braintree_gateway.customer.update(vault_id,
             :first_name => creditcard.first_name,
             :last_name => creditcard.last_name,
             :email => options[:email],
             :credit_card => credit_card_params
           )
           Response.new(result.success?, message_from_result(result),
-            :braintree_customer => (customer_hash(Braintree::Customer.find(vault_id)) if result.success?),
+            :braintree_customer => (customer_hash(@braintree_gateway.customer.find(vault_id)) if result.success?),
             :customer_vault_id => (result.customer.id if result.success?)
           )
         end
@@ -174,7 +165,7 @@ module ActiveMerchant #:nodoc:
 
       def unstore(customer_vault_id, options = {})
         commit do
-          Braintree::Customer.delete(customer_vault_id)
+          @braintree_gateway.customer.delete(customer_vault_id)
           Response.new(true, "OK")
         end
       end
@@ -270,7 +261,7 @@ module ActiveMerchant #:nodoc:
       def create_transaction(transaction_type, money, credit_card_or_vault_id, options)
         transaction_params = create_transaction_parameters(money, credit_card_or_vault_id, options)
         commit do
-          result = Braintree::Transaction.send(transaction_type, transaction_params)
+          result = @braintree_gateway.transaction.send(transaction_type, transaction_params)
           response = Response.new(result.success?, message_from_transaction_result(result), response_params(result), response_options(result))
           response.cvv_result['message'] = ''
           response
@@ -411,4 +402,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

@@ -13,6 +13,7 @@
 * Paymill: Add support for specifying the :customer [Sbastien]
 * Realex: Correct AVS input format [ExxKA]
 * USAEpay Transaction: Use sandbox when in test mode [radar]
+* Braintree Blue: do not use global config [rdj]
 
 == Version 1.38.1 (September 16, 2013)
 
