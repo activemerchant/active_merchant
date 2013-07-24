@@ -7,10 +7,12 @@ class BraintreeBlueTest < Test::Unit::TestCase
       :public_key => 'test',
       :private_key => 'test'
     )
+
+    @internal_gateway = @gateway.instance_variable_get( :@braintree_gateway )
   end
 
   def test_refund_legacy_method_signature
-    Braintree::Transaction.expects(:refund).
+    Braintree::TransactionGateway.any_instance.expects(:refund).
       with('transaction_id', nil).
       returns(braintree_result(:id => "refund_transaction_id"))
     response = @gateway.refund('transaction_id', :test => true)
@@ -18,7 +20,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_refund_method_signature
-    Braintree::Transaction.expects(:refund).
+    Braintree::TransactionGateway.any_instance.expects(:refund).
       with('transaction_id', '10.00').
       returns(braintree_result(:id => "refund_transaction_id"))
     response = @gateway.refund(1000, 'transaction_id', :test => true)
@@ -26,7 +28,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_void_transaction
-    Braintree::Transaction.expects(:void).
+    Braintree::TransactionGateway.any_instance.expects(:void).
       with('transaction_id').
       returns(braintree_result(:id => "void_transaction_id"))
 
@@ -35,7 +37,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_user_agent_includes_activemerchant_version
-    assert Braintree::Configuration.instantiate.user_agent.include?("(ActiveMerchant #{ActiveMerchant::VERSION})")
+    assert @internal_gateway.config.user_agent.include?("(ActiveMerchant #{ActiveMerchant::VERSION})")
   end
 
   def test_merchant_account_id_present_when_provided_on_gateway_initialization
@@ -46,7 +48,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       :private_key => 'test'
     )
 
-    Braintree::Transaction.expects(:sale).
+    Braintree::TransactionGateway.any_instance.expects(:sale).
       with(has_entries(:merchant_account_id => "present")).
       returns(braintree_result)
 
@@ -61,7 +63,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       :private_key => 'test'
     )
 
-    Braintree::Transaction.expects(:sale).
+    Braintree::TransactionGateway.any_instance.expects(:sale).
       with(has_entries(:merchant_account_id => "account_on_transaction")).
       returns(braintree_result)
 
@@ -69,7 +71,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_merchant_account_id_present_when_provided
-    Braintree::Transaction.expects(:sale).
+    Braintree::TransactionGateway.any_instance.expects(:sale).
       with(has_entries(:merchant_account_id => "present")).
       returns(braintree_result)
 
@@ -77,7 +79,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_merchant_account_id_absent_if_not_provided
-    Braintree::Transaction.expects(:sale).with do |params|
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
       not params.has_key?(:merchant_account_id)
     end.returns(braintree_result)
 
@@ -93,7 +95,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     )
     customer.stubs(:id).returns('123')
     result = Braintree::SuccessfulResult.new(:customer => customer)
-    Braintree::Customer.expects(:create).with do |params|
+    Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       params[:credit_card][:options].has_key?(:verify_card)
       assert_equal true, params[:credit_card][:options][:verify_card]
       params
@@ -113,7 +115,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     )
     customer.stubs(:id).returns('123')
     result = Braintree::SuccessfulResult.new(:customer => customer)
-    Braintree::Customer.expects(:create).with do |params|
+    Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       params[:credit_card][:options].has_key?(:verify_card)
       assert_equal false, params[:credit_card][:options][:verify_card]
       params
@@ -142,7 +144,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     customer = mock(customer_attributes)
     customer.stubs(:id).returns('123')
     result = Braintree::SuccessfulResult.new(:customer => customer)
-    Braintree::Customer.expects(:create).with do |params|
+    Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_not_nil params[:credit_card][:billing_address]
       [:street_address, :extended_address, :locality, :region, :postal_code, :country_name].each do |billing_attribute|
         params[:credit_card][:billing_address].has_key?(billing_attribute) if params[:billing_address]
@@ -156,11 +158,11 @@ class BraintreeBlueTest < Test::Unit::TestCase
   def test_update_with_cvv
     stored_credit_card = mock(:token => "token", :default? => true)
     customer = mock(:credit_cards => [stored_credit_card], :id => '123')
-    Braintree::Customer.stubs(:find).with('vault_id').returns(customer)
+    Braintree::CustomerGateway.any_instance.stubs(:find).with('vault_id').returns(customer)
     BraintreeBlueGateway.any_instance.stubs(:customer_hash)
 
     result = Braintree::SuccessfulResult.new(:customer => customer)
-    Braintree::Customer.expects(:update).with do |vault, params|
+    Braintree::CustomerGateway.any_instance.expects(:update).with do |vault, params|
       assert_equal "567", params[:credit_card][:cvv]
       [vault, params]
     end.returns(result)
@@ -171,11 +173,11 @@ class BraintreeBlueTest < Test::Unit::TestCase
   def test_update_with_verify_card_true
     stored_credit_card = mock(:token => "token", :default? => true)
     customer = mock(:credit_cards => [stored_credit_card], :id => '123')
-    Braintree::Customer.stubs(:find).with('vault_id').returns(customer)
+    Braintree::CustomerGateway.any_instance.stubs(:find).with('vault_id').returns(customer)
     BraintreeBlueGateway.any_instance.stubs(:customer_hash)
 
     result = Braintree::SuccessfulResult.new(:customer => customer)
-    Braintree::Customer.expects(:update).with do |vault, params|
+    Braintree::CustomerGateway.any_instance.expects(:update).with do |vault, params|
       assert_equal true, params[:credit_card][:options][:verify_card]
       [vault, params]
     end.returns(result)
@@ -240,27 +242,27 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_address_country_handling
-    Braintree::Transaction.expects(:sale).with do |params|
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
       (params[:billing][:country_code_alpha2] == "US")
     end.returns(braintree_result)
     @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:country => "US"})
 
-    Braintree::Transaction.expects(:sale).with do |params|
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
       (params[:billing][:country_code_alpha2] == "US")
     end.returns(braintree_result)
     @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:country_code_alpha2 => "US"})
 
-    Braintree::Transaction.expects(:sale).with do |params|
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
       (params[:billing][:country_name] == "United States of America")
     end.returns(braintree_result)
     @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:country_name => "United States of America"})
 
-    Braintree::Transaction.expects(:sale).with do |params|
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
       (params[:billing][:country_code_alpha3] == "USA")
     end.returns(braintree_result)
     @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:country_code_alpha3 => "USA"})
 
-    Braintree::Transaction.expects(:sale).with do |params|
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
       (params[:billing][:country_code_numeric] == 840)
     end.returns(braintree_result)
     @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:country_code_numeric => 840})
@@ -274,13 +276,13 @@ class BraintreeBlueTest < Test::Unit::TestCase
       :private_key => 'test'
     )
 
-    Braintree::Transaction.expects(:sale).
+    Braintree::TransactionGateway.any_instance.expects(:sale).
       with(has_entries(:recurring => true)).
       returns(braintree_result)
 
     @gateway.purchase(100, credit_card("41111111111111111111"), :recurring => true)
 
-    Braintree::Transaction.expects(:sale).
+    Braintree::TransactionGateway.any_instance.expects(:sale).
       with(Not(has_entries(:recurring => true))).
       returns(braintree_result)
 
@@ -291,26 +293,28 @@ class BraintreeBlueTest < Test::Unit::TestCase
     # The default is actually provided by the Braintree gem, but we
     # assert its presence in order to show ActiveMerchant need not
     # configure a logger
-    assert Braintree::Configuration.logger.is_a?(Logger)
+    assert @internal_gateway.config.logger.is_a?(Logger)
   end
 
   def test_configured_logger_has_a_default_log_level_defined_by_active_merchant
-    assert_equal Logger::WARN, Braintree::Configuration.logger.level
+    assert_equal Logger::WARN, @internal_gateway.config.logger.level
   end
 
-  def test_configured_logger_respects_any_custom_log_level_set_without_overwriting_it
+  def test_default_logger_sets_warn_level_without_overwriting_global
     with_braintree_configuration_restoration do
       assert Braintree::Configuration.logger.level != Logger::DEBUG
       Braintree::Configuration.logger.level = Logger::DEBUG
 
-      # Re-instatiate a gateway to show it doesn't affect the log level
-      BraintreeBlueGateway.new(
+      # Re-instatiate a gateway to show it doesn't touch the global
+      gateway = BraintreeBlueGateway.new(
         :merchant_id => 'test',
         :public_key => 'test',
         :private_key => 'test'
       )
+      internal_gateway = gateway.instance_variable_get(:@braintree_gateway)
 
-      assert_equal Logger::WARN, Braintree::Configuration.logger.level
+      assert_equal Logger::WARN, internal_gateway.config.logger.level
+      assert_equal Logger::DEBUG, Braintree::Configuration.logger.level
     end
   end
 
@@ -321,14 +325,15 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
       assert_not_equal logger, Braintree::Configuration.logger
 
-      BraintreeBlueGateway.new(
+      gateway = BraintreeBlueGateway.new(
         :merchant_id => 'test',
         :public_key => 'test',
         :private_key => 'test'
       )
+      internal_gateway = gateway.instance_variable_get(:@braintree_gateway)
 
-      assert_equal logger, Braintree::Configuration.logger
-      assert_equal Logger::DEBUG, Braintree::Configuration.logger.level
+      assert_equal logger, internal_gateway.config.logger
+      assert_equal Logger::DEBUG, internal_gateway.config.logger.level
     end
   end
 
