@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'https://www.fatzebra.com.au/'
       self.display_name = 'Fat Zebra'
-    
+
       # Setup a new instance of the gateway.
       #
       # The options hash should include :username and :token
@@ -81,9 +81,11 @@ module ActiveMerchant #:nodoc:
           post[:card_expiry] = "#{creditcard.month}/#{creditcard.year}"
           post[:cvv] = creditcard.verification_value if creditcard.verification_value?
           post[:card_holder] = creditcard.name if creditcard.name
+        elsif creditcard.is_a?(String)
+          post[:card_token] = creditcard
         else
-            post[:card_token] = creditcard[:token]
-            post[:cvv] = creditcard[:cvv]
+          post[:card_token] = creditcard[:token]
+          post[:cvv] = creditcard[:cvv]
         end
       end
 
@@ -91,6 +93,7 @@ module ActiveMerchant #:nodoc:
       def commit(method, uri, parameters=nil)
         raw_response = response = nil
         success = false
+        authorization = nil
         begin
           raw_response = ssl_request(method, get_url(uri), parameters.to_json, headers)
           response = parse(raw_response)
@@ -106,17 +109,19 @@ module ActiveMerchant #:nodoc:
           response = json_error(raw_response)
         end
 
-        message = response["response"]["message"]
-        unless response["successful"]
+        if response["successful"] && response["response"]
+          authorization = response["response"]["id"] || response["response"]["token"]
+          message = response["response"]["message"]
+        else
           # There is an error, so we will show that instead
           message = response["errors"].empty? ? "Unknown Error" : response["errors"].join(", ")
         end
 
-        Response.new(success,
+        FatZebraResponse.new(success,
           message,
           response,
           :test => response.has_key?("test") ? response["test"] : false,
-          :authorization => response["response"]["id"] || response["response"]["token"])
+          :authorization => authorization)
       end
 
       # Parse the returned JSON, if parse errors are raised then return a detailed error.
@@ -146,7 +151,14 @@ module ActiveMerchant #:nodoc:
           "Authorization" => "Basic " + Base64.strict_encode64(@username.to_s + ":" + @token.to_s).strip,
           "User-Agent" => "Fat Zebra v1.0/ActiveMerchant #{ActiveMerchant::VERSION}"
         }
-      end 
+      end
+
+      class FatZebraResponse < Response
+        # Provides access to the credit card token from #store
+        def token
+          @params["response"]["token"] if @params["response"]
+        end
+      end
     end
   end
 end
