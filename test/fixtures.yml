@@ -636,3 +636,7 @@ wirecard:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+iats_payments:
+  login: TEST88
+  password: TEST88
