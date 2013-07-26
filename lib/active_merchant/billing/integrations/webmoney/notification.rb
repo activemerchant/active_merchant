@@ -36,6 +36,10 @@ module ActiveMerchant #:nodoc:
           def acknowledge
             (security_key == generate_signature)
           end
+
+          def success_response(*args)
+            {:nothing => true}
+          end
         end
       end
     end
