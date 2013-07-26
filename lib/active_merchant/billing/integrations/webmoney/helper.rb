@@ -32,6 +32,7 @@ module ActiveMerchant #:nodoc:
           mapping :fail_url, 'LMI_FAIL_URL'
           mapping :success_url, 'LMI_SUCCESS_URL'
           mapping :result_url, 'LMI_RESULT_URL'
+          mapping :debug, 'LMI_SIM_MODE'
         end
       end
     end
