@@ -57,7 +57,15 @@ module ActiveMerchant #:nodoc:
         begin
           require 'LitleOnline'
         rescue LoadError
-          raise "Could not load the LitleOnline gem (>= 08.13.2).  Use `gem install LitleOnline` to install it."
+          raise "Could not load the LitleOnline gem (> 08.15.0).  Use `gem install LitleOnline` to install it."
+        end
+
+        if wiredump_device
+          LitleOnline::Configuration.logger = ((Logger === wiredump_device) ? wiredump_device : Logger.new(wiredump_device))
+          LitleOnline::Configuration.logger.level = Logger::DEBUG
+        else
+          LitleOnline::Configuration.logger = Logger.new(STDOUT)
+          LitleOnline::Configuration.logger.level = Logger::WARN
         end
 
         @litle = LitleOnline::LitleOnlineRequest.new
@@ -109,8 +117,8 @@ module ActiveMerchant #:nodoc:
         build_response(:credit, @litle.credit(to_pass))
       end
 
-      def store(creditcard, options = {})
-        to_pass = create_token_hash(creditcard, options)
+      def store(creditcard_or_paypage_registration_id, options = {})
+        to_pass = create_token_hash(creditcard_or_paypage_registration_id, options)
         build_response(:registerToken, @litle.register_token_request(to_pass), %w(000 801 802))
       end
 
@@ -286,9 +294,15 @@ module ActiveMerchant #:nodoc:
         hash
       end
 
-      def create_token_hash(creditcard, options)
+      def create_token_hash(creditcard_or_paypage_registration_id, options)
         hash                  = create_hash(0, options)
-        hash['accountNumber'] = creditcard.number
+
+        if creditcard_or_paypage_registration_id.is_a?(String)
+          hash['paypageRegistrationId'] = creditcard_or_paypage_registration_id
+        else
+          hash['accountNumber'] = creditcard_or_paypage_registration_id.number
+        end
+
         hash
       end
 

@@ -665,6 +665,17 @@ class LitleTest < Test::Unit::TestCase
     assert_equal 'Error validating xml data against the schema', responseFrom.message
   end
 
+  def test_store_via_paypage
+    storeResponseObj = {'response' => '801', 'message' => 'Account number was successfully registered', 'litleToken'=>'1111222233334444', 'litleTxnId'=>nil}
+    retObj = {'response'=>'0','registerTokenResponse'=>storeResponseObj}
+    LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
+    paypage_registration_id = 'eVY1SUYrSTFndWo0U3p0L2RaWjR1blhMVEh2L0pJTWl5bm1LS3QyUDVWOFRpczRYYS9qbndzLzVEb0M5N3RTcQ=='
+
+    responseFrom = @gateway.store(paypage_registration_id,{})
+    assert_equal true, responseFrom.success?
+    assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse']['registerTokenResponse']['litleToken']
+  end
+
   def test_in_production_with_test_param_sends_request_to_test_server
     begin
       ActiveMerchant::Billing::Base.mode = :production
@@ -688,4 +699,55 @@ class LitleTest < Test::Unit::TestCase
     end
   end
 
+  def test_configured_logger_has_a_default
+    # The default is actually provided by the LittleOnline gem, but we
+    # assert its presence in order to show ActiveMerchant need not
+    # configure a logger
+    assert LitleOnline::Configuration.logger.is_a?(Logger)
+  end
+
+  def test_configured_logger_has_a_default_log_level_defined_by_active_merchant
+    assert_equal Logger::WARN, LitleOnline::Configuration.logger.level
+  end
+
+  def test_configured_logger_respects_any_custom_log_level_set_without_overwriting_it
+    with_litle_configuration_restoration do
+      assert_equal Logger::WARN, LitleOnline::Configuration.logger.level
+
+      LitleOnline::Configuration.logger.level = Logger::DEBUG
+
+      LitleGateway.new({:merchant_id=>'101', :user=>'active', :password=>'merchant', :version=>'8.10', :url=>'https://www.testlitle.com/sandbox/communicator/online'})
+      assert_equal Logger::WARN, LitleOnline::Configuration.logger.level
+    end
+  end
+
+  def test_that_setting_a_wiredump_device_on_the_gateway_sets_the_little_logger_upon_instantiation
+    with_litle_configuration_restoration do
+      logger = Logger.new(STDOUT)
+      ActiveMerchant::Billing::LitleGateway.wiredump_device = logger
+
+      # The gem was already configured in the setup method above
+      assert_not_equal logger, LitleOnline::Configuration.logger
+
+      # The initialize call will setup the logger for the gem
+      LitleGateway.new({:merchant_id=>'101', :user=>'active', :password=>'merchant', :version=>'8.10', :url=>'https://www.testlitle.com/sandbox/communicator/online'})
+      assert_equal logger, LitleOnline::Configuration.logger
+      assert_equal Logger::DEBUG, LitleOnline::Configuration.logger.level
+    end
+  end
+
+  private
+
+  def with_litle_configuration_restoration(&block)
+    # Remember the wiredump device since we may overwrite it
+    existing_wiredump_device = ActiveMerchant::Billing::LitleGateway.wiredump_device
+
+    yield
+
+    # Restore the wiredump device
+    ActiveMerchant::Billing::LitleGateway.wiredump_device = existing_wiredump_device
+
+    # Reset the Litle logger
+    LitleOnline::Configuration.logger = nil
+  end
 end
