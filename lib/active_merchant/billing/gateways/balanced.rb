@@ -135,6 +135,7 @@ module ActiveMerchant #:nodoc:
         create_or_find_account(post, options)
         add_credit_card(post, credit_card, options)
         add_address(credit_card, options)
+        add_common_params(post, options)
 
         create_transaction(:post, @holds_uri, post)
       rescue Error => ex
@@ -172,6 +173,7 @@ module ActiveMerchant #:nodoc:
         create_or_find_account(post, options)
         add_credit_card(post, credit_card, options)
         add_address(credit_card, options)
+        add_common_params(post, options)
 
         create_transaction(:post, @debits_uri, post)
       rescue Error => ex
@@ -197,7 +199,7 @@ module ActiveMerchant #:nodoc:
         post[:hold_uri] = authorization
         post[:amount] = money if money
         post[:description] = options[:description] if options[:description]
-        post[:on_behalf_of_uri] = options[:on_behalf_of_uri] if options[:on_behalf_of_uri]
+        add_common_params(post, options)
 
         create_transaction(:post, @debits_uri, post)
       rescue Error => ex
@@ -246,6 +248,7 @@ module ActiveMerchant #:nodoc:
         post[:debit_uri] = debit_uri
         post[:amount] = amount
         post[:description] = options[:description]
+        add_common_params(post, options)
         create_transaction(:post, @refunds_uri, post)
       rescue Error => ex
         failed_response(ex.response)
@@ -300,6 +303,7 @@ module ActiveMerchant #:nodoc:
 
         if account_uri == nil
           post[:email_address] = options[:email]
+          post[:meta] = options[:meta] if options[:meta]
 
           # create an account
           response = http_request(:post, @accounts_uri, post)
@@ -329,6 +333,15 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_common_params(post, options)
+        common_params = [
+          :on_behalf_of_uri,
+          :appears_on_statement_as,
+          :meta,
+        ]
+        post.update(options.slice(*common_params))
+      end
+
       def add_credit_card(post, credit_card, options)
         if credit_card.respond_to? :number
           card = {}
@@ -339,6 +352,7 @@ module ActiveMerchant #:nodoc:
           card[:name] = credit_card.name if credit_card.name
 
           add_address(card, options)
+          card[:meta] = options[:meta] if options[:meta]
 
           response = http_request(:post, @cards_uri, card)
           if error?(response)
