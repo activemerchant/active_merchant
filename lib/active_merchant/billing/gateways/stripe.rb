@@ -1,3 +1,5 @@
+require 'active_support/core_ext/hash/slice'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class StripeGateway < Gateway
