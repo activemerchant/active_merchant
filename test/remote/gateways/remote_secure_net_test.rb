@@ -97,7 +97,7 @@ class SecureNetTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @bad_card_number, @options)
     assert_failure response
-    assert_equal "CARD TYPE COULDN'T BE IDENTIFIED.", response.message
+    assert_equal "CARD TYPE COULD NOT BE IDENTIFIED", response.message
   end
 
   def test_unsuccessful_purchase_and_credit
