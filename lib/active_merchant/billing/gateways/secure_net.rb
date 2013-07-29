@@ -5,53 +5,28 @@ module ActiveMerchant #:nodoc:
       API_VERSION = "4.0"
 
       TRANSACTIONS = {
-        :auth_only                      => "0000",  #
-        :partial_auth_only              => "0001",
-        :auth_capture                   => "0100",  #
-        :partial_auth_capture           => "0101",
+        :auth_only                      => "0000",
+        :auth_capture                   => "0100",
         :prior_auth_capture             => "0200",
-        :capture_only                   => "0300",  #
-        :void                           => "0400",  #
-        :partial_void                   => "0401",
-        :credit                         => "0500",  #
-        :credit_authonly                => "0501",
-        :credit_priorauthcapture        => "0502",
-        :force_credit                   => "0600",
-        :force_credit_authonly          => "0601",
-        :force_credit_priorauthcapture  => "0602",
-        :verification                   => "0700",
-        :auth_increment                 => "0800",
-        :issue                          => "0900",
-        :activate                       => "0901",
-        :redeem                         => "0902",
-        :redeem_partial                 => "0903",
-        :deactivate                     => "0904",
-        :reactivate                     => "0905",
-        :inquiry_balance                => "0906"
+        :void                           => "0400",
+        :credit                         => "0500"
       }
 
-      XML_ATTRIBUTES = { 'xmlns' => "http://gateway.securenet.com/API/Contracts",
-                         'xmlns:i' => "http://www.w3.org/2001/XMLSchema-instance"
+      XML_ATTRIBUTES = {
+                        'xmlns' => "http://gateway.securenet.com/API/Contracts",
+                        'xmlns:i' => "http://www.w3.org/2001/XMLSchema-instance"
                        }
       NIL_ATTRIBUTE = { 'i:nil' => "true" }
-
-#      SUCCESS = "true"
-#      SENSITIVE_FIELDS = [ :verification_str2, :expiry_date, :card_number ]
 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.securenet.com/'
       self.display_name = 'SecureNet'
-#      self.wiredump_device = STDOUT
 
-#      self.test_url = 'https://certify.securenet.com/api/Gateway.svc'
       self.test_url = 'https://certify.securenet.com/API/gateway.svc/webHttp/ProcessTransaction'
       self.live_url = 'https://gateway.securenet.com/api/Gateway.svc'
 
-      APPROVED, DECLINED, ERROR = 1, 2, 3
-
-      RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT = 0, 2, 3
-      AVS_RESULT_CODE, CARD_CODE_RESPONSE_CODE, TRANSACTION_ID  = 5, 6, 8
+      APPROVED, DECLINED = 1, 2
 
       CARD_CODE_ERRORS = %w( N S )
       AVS_ERRORS = %w( A E N R W Z )
@@ -70,15 +45,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, creditcard, authorization, options = {})
-        commit(build_capture_request(authorization, creditcard, options, :prior_auth_capture), money)
+        commit(build_capture_refund_void_request(authorization, creditcard, options, :prior_auth_capture), money)
       end
 
       def void(money, creditcard, authorization, options = {})
-        commit(build_void_request(authorization, creditcard, options, :void), money)
+        commit(build_capture_refund_void_request(authorization, creditcard, options, :void), money)
       end
 
       def credit(money, creditcard, authorization, options = {})
-        commit(build_credit_request(authorization, creditcard, options, :credit), money)
+        commit(build_capture_refund_void_request(authorization, creditcard, options, :credit), money)
       end
 
       private
@@ -130,16 +105,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_capture_or_credit_request(identification, options)
-        xml = Builder::XmlMarkup.new
-
-        add_identification(xml, identification)
-        add_customer_data(xml, options)
-
-        xml.target!
-      end
-
-      def build_capture_request(authorization, creditcard, options, action)
+      def build_capture_refund_void_request(authorization, creditcard, options, action)
         xml = Builder::XmlMarkup.new
 
         add_credit_card(xml, creditcard)
@@ -149,10 +115,10 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'INSTALLMENT_SEQUENCENUM', 1
         add_merchant_key(xml, options)
         xml.tag! 'METHOD', 'CC'
-        xml.tag! 'ORDERID', options[:order_id]#'30'.to_i.to_s#'22'# @options[:order_id]
+        xml.tag! 'ORDERID', options[:order_id]
         xml.tag! 'OVERRIDE_FROM', 0 # Docs say not required, but doesn't work without it
         xml.tag! 'REF_TRANSID', authorization
-        xml.tag! 'RETAIL_LANENUM', '0' # Docs say string, but it's an integer!?
+        xml.tag! 'RETAIL_LANENUM', '0'
         xml.tag! 'TEST', 'TRUE'
         xml.tag! 'TOTAL_INSTALLMENTCOUNT', 0
         xml.tag! 'TRANSACTION_SERVICE', 0
@@ -160,52 +126,6 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_credit_request(authorization, creditcard, options, action)
-#        requires!(options, :card_number)
-        xml = Builder::XmlMarkup.new
-
-        add_credit_card(xml, creditcard)
-        xml.tag! 'CODE', TRANSACTIONS[action]
-        add_customer_data(xml, options)
-        xml.tag! 'DCI', 0 # No duplicate checking will be done, except for ORDERID
-        xml.tag! 'INSTALLMENT_SEQUENCENUM', 1
-        add_merchant_key(xml, options)
-        xml.tag! 'METHOD', 'CC'
-        xml.tag! 'ORDERID', options[:order_id]#'30'.to_i.to_s#'22'# @options[:order_id]
-        xml.tag! 'OVERRIDE_FROM', 0 # Docs say not required, but doesn't work without it
-        xml.tag! 'REF_TRANSID', authorization
-        xml.tag! 'RETAIL_LANENUM', '0' # Docs say string, but it's an integer!?
-        xml.tag! 'TEST', 'TRUE'
-        xml.tag! 'TOTAL_INSTALLMENTCOUNT', 0
-        xml.tag! 'TRANSACTION_SERVICE', 0
-
-        xml.target!
-      end
-
-      def build_void_request(authorization, creditcard, options, action)
-        xml = Builder::XmlMarkup.new
-
-        add_credit_card(xml, creditcard)
-        xml.tag! 'CODE', TRANSACTIONS[action]
-        add_customer_data(xml, options)
-        xml.tag! 'DCI', 0 # No duplicate checking will be done, except for ORDERID
-        xml.tag! 'INSTALLMENT_SEQUENCENUM', 1
-        add_merchant_key(xml, options)
-        xml.tag! 'METHOD', 'CC'
-        xml.tag! 'ORDERID', options[:order_id]#'30'.to_i.to_s#'22'# @options[:order_id]
-        xml.tag! 'OVERRIDE_FROM', 0 # Docs say not required, but doesn't work without it
-        xml.tag! 'REF_TRANSID', authorization
-        xml.tag! 'RETAIL_LANENUM', '0' # Docs say string, but it's an integer!?
-        xml.tag! 'TEST', 'TRUE'
-        xml.tag! 'TOTAL_INSTALLMENTCOUNT', 0
-        xml.tag! 'TRANSACTION_SERVICE', 0
-
-        xml.target!
-      end
-
-      #########################################################################
-      # FUNCTIONS RELATED TO BUILDING THE XML
-      #########################################################################
       def add_credit_card(xml, creditcard)
         xml.tag!("CARD") do
           xml.tag! 'CARDCODE', creditcard.verification_value if creditcard.verification_value?
@@ -241,7 +161,6 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'COUNTRY', address[:country].to_s
             if options.has_key? :email
               xml.tag! 'EMAIL', options[:email]
-#              xml.tag! 'EMAIL', 'myemail@yahoo.com'
               xml.tag! 'EMAILRECEIPT', 'FALSE'
             end
             xml.tag! 'FIRSTNAME', creditcard.first_name
@@ -283,9 +202,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      #########################################################################
-      # FUNCTIONS RELATED TO THE RESPONSE
-      #########################################################################
       def success?(response)
         response[:response_code].to_i == APPROVED
       end
@@ -302,9 +218,7 @@ module ActiveMerchant #:nodoc:
       def parse(xml)
         response = {}
         xml = REXML::Document.new(xml)
-        root = REXML::XPath.first(xml, "//GATEWAYRESPONSE")# ||
-#        root = REXML::XPath.first(xml, "//ProcessTransactionResponse")# ||
-#               REXML::XPath.first(xml, "//ErrorResponse")
+        root = REXML::XPath.first(xml, "//GATEWAYRESPONSE")
         if root
           root.elements.to_a.each do |node|
             recurring_parse_element(response, node)
@@ -321,7 +235,6 @@ module ActiveMerchant #:nodoc:
           response[node.name.underscore.to_sym] = node.text
         end
       end
-
 
     end
   end
