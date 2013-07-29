@@ -37,91 +37,77 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, creditcard, options = {})
-        commit(build_sale_or_authorization_request(creditcard, options, :auth_only), money)
+        commit(build_sale_or_authorization(creditcard, options, :auth_only, money))
       end
 
       def purchase(money, creditcard, options = {})
-        commit(build_sale_or_authorization_request(creditcard, options, :auth_capture), money)
+        commit(build_sale_or_authorization(creditcard, options, :auth_capture, money))
       end
 
-      def capture(money, creditcard, authorization, options = {})
-        commit(build_capture_refund_void_request(authorization, creditcard, options, :prior_auth_capture), money)
+      def capture(money, authorization, options = {})
+        commit(build_capture_refund_void(authorization, options, :prior_auth_capture, money))
       end
 
-      def void(money, creditcard, authorization, options = {})
-        commit(build_capture_refund_void_request(authorization, creditcard, options, :void), money)
+      def void(authorization, options = {})
+        commit(build_capture_refund_void(authorization, options, :void))
       end
 
-      def credit(money, creditcard, authorization, options = {})
-        commit(build_capture_refund_void_request(authorization, creditcard, options, :credit), money)
+      def credit(money, authorization, options = {})
+        commit(build_capture_refund_void(authorization, options, :credit, money))
       end
 
       private
-      def commit(request, money)
-        xml = build_request(request, money)
+      def commit(request)
+        xml = build_request(request)
         data = ssl_post(self.test_url, xml, "Content-Type" => "text/xml")
         response = parse(data)
 
         test_mode = test?
         Response.new(success?(response), message_from(response), response,
           :test => test_mode,
-          :authorization => response[:transactionid],
+          :authorization => build_authorization(response),
           :avs_result => { :code => response[:avs_result_code] },
           :cvv_result => response[:card_code_response_code]
         )
       end
 
-      def build_request(request, money)
+      def build_request(request)
         xml = Builder::XmlMarkup.new
 
         xml.instruct!
         xml.tag!("TRANSACTION", XML_ATTRIBUTES) do
-          xml.tag! 'AMOUNT', amount(money)
           xml << request
         end
 
         xml.target!
       end
 
-      def build_sale_or_authorization_request(creditcard, options, action)
+      def build_sale_or_authorization(creditcard, options, action, money)
         xml = Builder::XmlMarkup.new
 
+        xml.tag! 'AMOUNT', amount(money)
         add_credit_card(xml, creditcard)
-        xml.tag! 'CODE', TRANSACTIONS[action]
-        add_customer_data(xml, options)
+        add_required_params(xml, action, options)
         add_address(xml, creditcard, options)
-        xml.tag! 'DCI', 0 # No duplicate checking will be done, except for ORDERID
-        xml.tag! 'INSTALLMENT_SEQUENCENUM', 1
         add_invoice(xml, options)
-        add_merchant_key(xml, options)
-        xml.tag! 'METHOD', 'CC'
-        xml.tag! 'ORDERID', options[:order_id]#'30'.to_i.to_s#'22'# @options[:order_id]
-        xml.tag! 'OVERRIDE_FROM', 0 # Docs say not required, but doesn't work without it
-        xml.tag! 'RETAIL_LANENUM', '0' # Docs say string, but it's an integer!?
-        xml.tag! 'TEST', 'TRUE'
-        xml.tag! 'TOTAL_INSTALLMENTCOUNT', 0
-        xml.tag! 'TRANSACTION_SERVICE', 0
+        add_more_required_params(xml, options)
 
         xml.target!
       end
 
-      def build_capture_refund_void_request(authorization, creditcard, options, action)
+      def build_capture_refund_void(authorization, options, action, money = nil)
         xml = Builder::XmlMarkup.new
 
-        add_credit_card(xml, creditcard)
-        xml.tag! 'CODE', TRANSACTIONS[action]
-        add_customer_data(xml, options)
-        xml.tag! 'DCI', 0 # No duplicate checking will be done, except for ORDERID
-        xml.tag! 'INSTALLMENT_SEQUENCENUM', 1
-        add_merchant_key(xml, options)
-        xml.tag! 'METHOD', 'CC'
-        xml.tag! 'ORDERID', options[:order_id]
-        xml.tag! 'OVERRIDE_FROM', 0 # Docs say not required, but doesn't work without it
-        xml.tag! 'REF_TRANSID', authorization
-        xml.tag! 'RETAIL_LANENUM', '0'
-        xml.tag! 'TEST', 'TRUE'
-        xml.tag! 'TOTAL_INSTALLMENTCOUNT', 0
-        xml.tag! 'TRANSACTION_SERVICE', 0
+        transaction_id, amount_in_ref, last_four = split_authorization(authorization)
+
+        xml.tag! 'AMOUNT', amount(money) || amount_in_ref
+        xml.tag!("CARD") do
+          xml.tag! 'CARDNUMBER', last_four
+        end
+
+        add_required_params(xml, action, options)
+        xml.tag! 'REF_TRANSID', transaction_id
+        add_more_required_params(xml, options)
 
         xml.target!
       end
@@ -202,6 +188,24 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_required_params(xml, action, options)
+        xml.tag! 'CODE', TRANSACTIONS[action]
+        add_customer_data(xml, options)
+        xml.tag! 'DCI', 0 # No duplicate checking will be done, except for ORDERID
+        xml.tag! 'INSTALLMENT_SEQUENCENUM', 1
+        add_merchant_key(xml, options)
+        xml.tag! 'METHOD', 'CC'
+        xml.tag! 'ORDERID', options[:order_id]
+        xml.tag! 'OVERRIDE_FROM', 0 # Docs say not required, but doesn't work without it
+      end
+
+      def add_more_required_params(xml, options)
+        xml.tag! 'RETAIL_LANENUM', '0'
+        xml.tag! 'TEST', 'TRUE'
+        xml.tag! 'TOTAL_INSTALLMENTCOUNT', 0
+        xml.tag! 'TRANSACTION_SERVICE', 0
+      end
+
       def success?(response)
         response[:response_code].to_i == APPROVED
       end
@@ -234,6 +238,15 @@ module ActiveMerchant #:nodoc:
         else
           response[node.name.underscore.to_sym] = node.text
         end
+      end
+
+      def split_authorization(authorization)
+        transaction_id, amount, last_four = authorization.split("|")
+        [transaction_id, amount, last_four]
+      end
+
+      def build_authorization(response)
+        [response[:transactionid], response[:transactionamount], response[:last4_digits]].join("|")
       end
 
     end
