@@ -13,7 +13,7 @@ class RemoteMercuryCertificationTest < Test::Unit::TestCase
     assert_success sale
     assert_equal "AP", sale.params["text_response"]
 
-    reversal = tokenization_gateway.refund(101, sale.authorization, options)
+    reversal = tokenization_gateway.void(sale.authorization, options.merge(:try_reversal => true))
     assert_success reversal
     assert_equal "REVERSED", reversal.params["text_response"]
   end
@@ -27,7 +27,47 @@ class RemoteMercuryCertificationTest < Test::Unit::TestCase
 
     void = tokenization_gateway.void(sale.authorization, options)
     assert_success void
-    assert_equal "REVERSED", void.params["text_response"]
+    assert_equal "AP", void.params["text_response"]
+  end
+
+  def test_preauth_capture_and_reversal
+    close_batch(tokenization_gateway)
+
+    preauth = tokenization_gateway.authorize(106, visa_5, options("1"))
+    assert_success preauth
+    assert_equal "AP", preauth.params["text_response"]
+
+    capture = tokenization_gateway.capture(106, preauth.authorization, options)
+    assert_success capture
+    assert_equal "AP", capture.params["text_response"]
+
+    reversal = tokenization_gateway.void(capture.authorization, options.merge(:try_reversal => true))
+    assert_success reversal
+    assert_equal "REVERSED", reversal.params["text_response"]
+  end
+
+  def test_return_and_void
+    close_batch(tokenization_gateway)
+
+    credit = tokenization_gateway.credit(109, visa, options("1"))
+    assert_success credit
+    assert_equal "AP", credit.params["text_response"]
+
+    void = tokenization_gateway.void(credit.authorization, options)
+    assert_success void
+    assert_equal "AP*", void.params["text_response"]
+  end
+
+  def test_preauth_and_reversal
+    close_batch(tokenization_gateway)
+
+    preauth = tokenization_gateway.authorize(113, disc, options("1"))
+    assert_success preauth
+    assert_equal "AP", preauth.params["text_response"]
+
+    reversal = tokenization_gateway.void(preauth.authorization, options.merge(:try_reversal => true))
+    assert_success reversal
+    assert_equal "REVERSED", reversal.params["text_response"]
   end
 
   def test_preauth_capture_and_reversal
@@ -37,25 +77,13 @@ class RemoteMercuryCertificationTest < Test::Unit::TestCase
     assert_success preauth
     assert_equal "AP", preauth.params["text_response"]
 
-    capture = tokenization_gateway.capture(106, preauth.authorization, options)
+    capture = tokenization_gateway.capture(206, preauth.authorization, options)
     assert_success capture
     assert_equal "AP", capture.params["text_response"]
 
-    reversal = tokenization_gateway.refund(106, capture.authorization, options)
-    assert_success reversal
-    assert_equal "REVERSED", reversal.params["text_response"]
-  end
-
-  def test_preauth_and_reversal
-    close_batch(tokenization_gateway)
-
-    preauth = tokenization_gateway.authorize(113, visa, options("1"))
-    assert_success preauth
-    assert_equal "AP", preauth.params["text_response"]
-
-    reversal = tokenization_gateway.void(preauth.authorization, options)
-    assert_success reversal
-    assert_equal "REVERSED", reversal.params["text_response"]
+    void = tokenization_gateway.void(capture.authorization, options)
+    assert_success void
+    assert_equal "AP", void.params["text_response"]
   end
 
   private
@@ -71,6 +99,36 @@ class RemoteMercuryCertificationTest < Test::Unit::TestCase
     @visa ||= credit_card(
       "4003000123456781",
       :brand => "visa",
+      :month => "12",
+      :year => "15",
+      :verification_value => "123"
+    )
+  end
+
+  def disc
+    @disc ||= credit_card(
+      "6011000997235373",
+      :brand => "discover",
+      :month => "12",
+      :year => "15",
+      :verification_value => "362"
+    )
+  end
+
+  def visa_5
+    @visa_5 ||= credit_card(
+      "4005550000000480",
+      :brand => "visa",
+      :month => "12",
+      :year => "15",
+      :verification_value => "123"
+    )
+  end
+
+  def mc
+    @mc ||= credit_card(
+      "5439750001500248",
+      :brand => "master",
       :month => "12",
       :year => "15",
       :verification_value => "123"

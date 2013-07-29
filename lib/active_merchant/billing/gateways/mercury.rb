@@ -59,11 +59,24 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         requires!(options, :credit_card) unless @use_tokenization
 
-        request = build_authorized_request('VoidSale', money, authorization, options[:credit_card], options)
-        commit(options[:void], request)
+        request = build_authorized_request('Return', money, authorization, options[:credit_card], options)
+        commit('Return', request)
       end
 
       def void(authorization, options={})
+        requires!(options, :credit_card) unless @use_tokenization
+
+        if options[:try_reversal]
+          request = build_authorized_request('VoidSale', nil, authorization, options[:credit_card], options.merge(:void => true, :reversal => true))
+          response = commit('VoidSale', request)
+
+          return response if response.success?
+        end
+
+        request = build_authorized_request('VoidSale', nil, authorization, options[:credit_card], options.merge(:void => true))
+        commit('VoidSale', request)
+
+
         refund(nil, authorization, options.merge(:void => true))
       end
 
@@ -111,8 +124,8 @@ module ActiveMerchant #:nodoc:
             add_address(xml, options)
             xml.tag! 'TranInfo' do
               xml.tag! "AuthCode", auth_code
-              xml.tag! "AcqRefData", acq_ref_data
-              xml.tag! "ProcessData", process_data
+              xml.tag! "AcqRefData", acq_ref_data if options[:reversal]
+              xml.tag! "ProcessData", process_data if options[:reversal]
             end
           end
         end
