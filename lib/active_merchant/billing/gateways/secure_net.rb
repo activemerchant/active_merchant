@@ -52,9 +52,15 @@ module ActiveMerchant #:nodoc:
         commit(build_capture_refund_void(authorization, options, :void))
       end
 
-      def credit(money, authorization, options = {})
+      def refund(money, authorization, options = {})
         commit(build_capture_refund_void(authorization, options, :credit, money))
       end
+
+      def credit(money, authorization, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, authorization, options)
+      end
+
 
       private
       def commit(request)

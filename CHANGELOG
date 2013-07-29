@@ -4,6 +4,7 @@
 * Add Platron integration [alexwl]
 * Litle: Support wiredump_device [pierre]
 * Litle: support paypage registrations [pierre]
+* SecureNet: Cleanup and refactoring [duff]
 
 == Version 1.35.1 (July 22, 2013)
 
