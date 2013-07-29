@@ -5,7 +5,6 @@ module ActiveMerchant #:nodoc:
         class Helper < ActiveMerchant::Billing::Integrations::Helper
           def initialize(order, account, options = {})
             super
-            add_field('fixed', 'Y')
 
             if ActiveMerchant::Billing::Base.integration_mode == :test || options[:test]
               add_field('demo', 'Y')
@@ -16,16 +15,18 @@ module ActiveMerchant #:nodoc:
           mapping :account, 'sid'
 
           # The total amount to be billed, in decimal form, without a currency symbol. (8 characters, decimal, 2 characters: Example: 99999999.99)
+          # This field is only used with the Third Party Cart parameter set.
           mapping :amount, 'total'
 
-          # Pass your order id if you are using Third Part Cart Parameters. (128 characters max)
-          mapping :order, 'cart_order_id'
+          # Pass the sale's currency code.
+          mapping :currency, 'currency_code'
 
-          # Pass your order id if you are using the Pass Through Products Parameters.  (50 characters max)
-          mapping :invoice, 'merchant_order_id'
+          # Pass your order id.  (50 characters max)
+          mapping :order, 'merchant_order_id'
 
-          # Left here for backward compatibility, do not use. The line_item method will add automatically.
-          mapping :mode, 'mode'
+          # Pass your cart identifier if you are using Third Part Cart Parameters. (128 characters max)
+          # This value is visible to the buyer and will be listed as the sale's lineitem.
+          mapping :invoice, 'cart_order_id'
 
           mapping :customer, :email      => 'email',
                   :phone      => 'phone'
@@ -56,7 +57,6 @@ module ActiveMerchant #:nodoc:
           end
 
           # Uses Pass Through Product Parameters to pass in lineitems.
-          # (must mark tangible sales as shipped to settle the transaction)
           def line_item(params = {})
             add_field('mode', '2CO')
             (max_existing_line_item_id = form_fields.keys.map do |key|
@@ -71,8 +71,8 @@ module ActiveMerchant #:nodoc:
           end
 
           # Uses Third Party Cart parameter set to pass in lineitem details.
-          # (sales settle automatically)
-          def auto_settle(params = {})
+          # You must also specify `service.invoice` when using this method.
+          def third_party_cart(params = {})
             add_field('id_type', '1')
             (max_existing_line_item_id = form_fields.keys.map do |key|
               i = key.to_s[/^c_prod_(\d+)/, 1]
