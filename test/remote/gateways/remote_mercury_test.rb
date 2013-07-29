@@ -9,7 +9,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
 
     @amount = 100
 
-    @credit_card = credit_card("4003000123456781", :brand => "visa")
+    @credit_card = credit_card("4003000123456781", :brand => "visa", :month => "12", :year => "15")
 
     @options = {
       :order_id => "1",
@@ -33,8 +33,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_and_capture
-    order_id = 500
-    response = @gateway.authorize(100, @credit_card, @options.merge(:order_id => order_id))
+    response = @gateway.authorize(100, @credit_card, @options)
     assert_success response
     assert_equal '1.00', response.params['authorize']
 
@@ -44,14 +43,21 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    order_id = 509
-    response = @gateway.authorize(1100, @credit_card, @options.merge(:order_id => order_id))
+    response = @gateway.authorize(1100, @credit_card, @options)
     assert_failure response
     assert_equal "DECLINE", response.message
   end
 
-  def test_void
+  def test_reversal
     response = @gateway.authorize(100, @credit_card, @options)
+    assert_success response
+
+    void = @gateway.void(response.authorization, @options.merge(:try_reversal => true))
+    assert_success void
+  end
+
+  def test_purchase_and_void
+    response = @gateway.purchase(102, @credit_card, @options)
     assert_success response
 
     void = @gateway.void(response.authorization)
@@ -59,8 +65,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    order_id = 511
-    response = @gateway.purchase(50, @credit_card, @options.merge(:order_id => order_id))
+    response = @gateway.purchase(50, @credit_card, @options)
 
     assert_success response
     assert_equal "0.50", response.params["purchase"]
@@ -80,8 +85,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
   end
 
   def test_avs_and_cvv_results
-    order_id = 513
-    response = @gateway.authorize(333, @credit_card, @options_with_billing.merge(:order_id => order_id))
+    response = @gateway.authorize(333, @credit_card, @options_with_billing)
 
     assert_success response
     assert_equal(
@@ -99,8 +103,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
   def test_partial_capture
     visa_partial_card = credit_card("4005550000000480")
 
-    @order_id = 156
-    response = @gateway.authorize(2354, visa_partial_card, @options.merge(:order_id => @order_id))
+    response = @gateway.authorize(2354, visa_partial_card, @options)
 
     assert_success response
 
@@ -122,8 +125,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
   def test_mastercard_authorize_and_capture_with_refund
     mc = credit_card("5499990123456781", :brand => "master")
 
-    order_id = 501
-    response = @gateway.authorize(200, mc, @options.merge(:order_id => order_id))
+    response = @gateway.authorize(200, mc, @options)
     assert_success response
     assert_equal '2.00', response.params['authorize']
 
@@ -134,14 +136,13 @@ class RemoteMercuryTest < Test::Unit::TestCase
     refund = @gateway.refund(200, capture.authorization)
     assert_success refund
     assert_equal '2.00', refund.params['purchase']
-    assert_equal 'VoidSale', refund.params['tran_code']
+    assert_equal 'Return', refund.params['tran_code']
   end
 
   def test_amex_authorize_and_capture_with_refund
     amex = credit_card("373953244361001", :brand => "american_express", :verification_value => "1234")
 
-    order_id = 201
-    response = @gateway.authorize(201, amex, @options.merge(:order_id => order_id))
+    response = @gateway.authorize(201, amex, @options)
     assert_success response
     assert_equal '2.01', response.params['authorize']
 
@@ -149,7 +150,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert_success capture
     assert_equal '2.01', capture.params['authorize']
 
-    response = @gateway.refund(201, capture.authorization, @options.merge(:order_id => order_id))
+    response = @gateway.refund(201, capture.authorization, @options)
     assert_success response
     assert_equal '2.01', response.params['purchase']
   end
@@ -157,8 +158,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
   def test_discover_authorize_and_capture
     discover = credit_card("6011000997235373", :brand => "discover")
 
-    order_id = 506
-    response = @gateway.authorize(225, discover, @options_with_billing.merge(:order_id => order_id))
+    response = @gateway.authorize(225, discover, @options_with_billing)
     assert_success response
     assert_equal '2.25', response.params['authorize']
 

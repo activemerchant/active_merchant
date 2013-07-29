@@ -5,6 +5,7 @@
 * Litle: Support wiredump_device [pierre]
 * Litle: support paypage registrations [pierre]
 * SecureNet: Cleanup and refactoring [duff]
+* Mercury: Proper refund and void support [opendining]
 
 == Version 1.35.1 (July 22, 2013)
 
