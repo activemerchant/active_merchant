@@ -106,9 +106,9 @@ class SecureNetTest < Test::Unit::TestCase
     assert_equal 'Approved', purchase.message
     assert purchase.authorization
 
-    assert credit = @gateway.credit(@amount, purchase.authorization)
-    assert_failure credit
-    assert_equal 'CREDIT CANNOT BE COMPLETED ON AN UNSETTLED TRANSACTION', credit.message
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_failure refund
+    assert_equal 'CREDIT CANNOT BE COMPLETED ON AN UNSETTLED TRANSACTION', refund.message
   end
 
 end
