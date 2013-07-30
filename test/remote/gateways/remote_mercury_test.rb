@@ -9,7 +9,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
 
     @amount = 100
 
-    @credit_card = credit_card("4003000123456781", :brand => "visa")
+    @credit_card = credit_card("4003000123456781", :brand => "visa", :month => "12", :year => "15")
 
     @options = {
       :order_id => "1",
@@ -50,8 +50,17 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert_equal "DECLINE", response.message
   end
 
-  def test_void
+  def test_reversal
     response = @gateway.authorize(100, @credit_card, @options)
+    assert_success response
+
+    void = @gateway.void(response.authorization, @options.merge(:try_reversal => true))
+    assert_success void
+  end
+
+  def test_purchase_and_void
+    order_id = 601
+    response = @gateway.purchase(102, @credit_card, @options.merge(:order_id => order_id))
     assert_success response
 
     void = @gateway.void(response.authorization)
@@ -134,7 +143,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     refund = @gateway.refund(200, capture.authorization)
     assert_success refund
     assert_equal '2.00', refund.params['purchase']
-    assert_equal 'VoidSale', refund.params['tran_code']
+    assert_equal 'Return', refund.params['tran_code']
   end
 
   def test_amex_authorize_and_capture_with_refund
