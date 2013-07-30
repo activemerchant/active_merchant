@@ -39,9 +39,8 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
         post[:capture] = "false"
-        meta = generate_meta(options)
 
-        commit(:post, 'charges', post, meta)
+        commit(:post, 'charges', post, generate_meta(options))
       end
 
       # To create a charge on a card or a token, call
@@ -53,14 +52,12 @@ module ActiveMerchant #:nodoc:
       #   purchase(money, nil, { :customer => id, ... })
       def purchase(money, creditcard, options = {})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
-        meta = generate_meta(options)
 
-        commit(:post, 'charges', post, meta)
+        commit(:post, 'charges', post, generate_meta(options))
       end
 
       def capture(money, authorization, options = {})
-        post = {}
-        post[:amount] = amount(money)
+        post = {:amount => amount(money)}
         add_application_fee(post, options)
 
         commit(:post, "charges/#{CGI.escape(authorization)}/capture", post)
@@ -71,12 +68,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, identification, options = {})
-        meta = generate_meta(options)
-        post = {}
-
-        post[:amount] = amount(money) if money
-        post[:refund_application_fee] = true if options[:refund_application_fee]
-
+        post = {:amount => amount(money)}
         commit_options = generate_meta(options)
 
         MultiResponse.run do |r|
@@ -111,14 +103,13 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         post[:email] = options[:email]
 
-        meta = generate_meta(options)
         path = if options[:customer]
           "customers/#{CGI.escape(options[:customer])}"
         else
           'customers'
         end
 
-        commit(:post, path, post, meta)
+        commit(:post, path, post, generate_meta(options))
       end
 
       def update(customer_id, creditcard, options = {})
@@ -127,8 +118,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def unstore(customer_id, options = {})
-        meta = generate_meta(options)
-        commit(:delete, "customers/#{CGI.escape(customer_id)}", nil, meta)
+        commit(:delete, "customers/#{CGI.escape(customer_id)}", nil, generate_meta(options))
       end
 
       private
