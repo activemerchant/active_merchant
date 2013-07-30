@@ -46,16 +46,12 @@ class RemoteMercuryCertificationTest < Test::Unit::TestCase
     assert_equal "REVERSED", reversal.params["text_response"]
   end
 
-  def test_return_and_void
+  def test_return
     close_batch(tokenization_gateway)
 
     credit = tokenization_gateway.credit(109, visa, options("1"))
     assert_success credit
     assert_equal "AP", credit.params["text_response"]
-
-    void = tokenization_gateway.void(credit.authorization, options)
-    assert_success void
-    assert_equal "AP*", void.params["text_response"]
   end
 
   def test_preauth_and_reversal

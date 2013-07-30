@@ -75,9 +75,6 @@ module ActiveMerchant #:nodoc:
 
         request = build_authorized_request('VoidSale', nil, authorization, options[:credit_card], options.merge(:void => true))
         commit('VoidSale', request)
-
-
-        refund(nil, authorization, options.merge(:void => true))
       end
 
       private
@@ -107,7 +104,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new
 
         invoice_no, ref_no, auth_code, acq_ref_data, process_data, record_no, amount = split_authorization(authorization)
-        ref_no = invoice_no if options[:void]
+        ref_no = invoice_no if options[:void] and options[:reversal]
 
         xml.tag! "TStream" do
           xml.tag! "Transaction" do
