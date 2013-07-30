@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def headers(meta={}, use_fee_refund_key)
+      def headers(options = {})
         @@ua ||= JSON.dump({
           :bindings_version => ActiveMerchant::VERSION,
           :lang => 'ruby',
@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
           "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":").strip,
           "User-Agent" => "Webpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "X-Webpay-Client-User-Agent" => @@ua,
-          "X-Webpay-Client-User-Metadata" => meta.to_json
+          "X-Webpay-Client-User-Metadata" => options[:meta].to_json
         }
       end
     end

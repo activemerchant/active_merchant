@@ -77,21 +77,32 @@ module ActiveMerchant #:nodoc:
         post[:amount] = amount(money) if money
         post[:refund_application_fee] = true if options[:refund_application_fee]
 
-        result = commit(:post, "charges/#{CGI.escape(identification)}/refund", post, meta)
+        commit_options = generate_meta(options)
 
-        if options[:refund_fee_amount] && result.success?
-          fee_refund_result = refund_fee(identification, options, meta)
-          return fee_refund_result unless fee_refund_result.success?
+        MultiResponse.run do |r|
+          r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, commit_options) }
+
+          return r unless options[:refund_fee_amount]
+
+          r.process { fetch_application_fees(identification, commit_options) }
+          r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r), commit_options) }
         end
-
-        result
       end
 
-      def refund_fee(identification, options, meta)
-        result = commit(:get, "application_fees?charge=#{identification}", nil, meta, true)
-        application_fees = result.params["data"].select { |fee| fee["object"] == "application_fee" }
-        fee_id = application_fees.first["id"]
-        commit(:post, "application_fees/#{fee_id}/refund", {:amount => options[:refund_fee_amount]}, meta, true)
+      def application_fee_from_response(response)
+        return unless response.success?
+
+        application_fees = response.params["data"].select { |fee| fee["object"] == "application_fee" }
+        application_fees.first["id"] unless application_fees.empty?
+      end
+
+      def refund_application_fee(money, identification, options = {})
+        return Response.new(false, "Application fee id could not be found") unless identification
+
+        post = {:amount => amount(money)}
+        options.merge!(:key => @fee_refund_api_key)
+
+        commit(:post, "application_fees/#{CGI.escape(identification)}/refund", post, options)
       end
 
       def store(creditcard, options = {})
@@ -196,6 +207,12 @@ module ActiveMerchant #:nodoc:
         post[:uncaptured] = true if options[:uncaptured]
       end
 
+      def fetch_application_fees(identification, options = {})
+        options.merge!(:key => @fee_refund_api_key)
+
+        commit(:get, "application_fees?charge=#{identification}", nil, options)
+      end
+
       def parse(body)
         JSON.parse(body)
       end
@@ -218,10 +235,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def generate_meta(options)
-        {:ip => options[:ip]}
+        {:meta => {:ip => options[:ip]}}
       end
 
-      def headers(meta={}, use_fee_refund_key)
+      def headers(options = {})
         @@ua ||= JSON.dump({
           :bindings_version => ActiveMerchant::VERSION,
           :lang => 'ruby',
@@ -231,21 +248,21 @@ module ActiveMerchant #:nodoc:
           :uname => (RUBY_PLATFORM =~ /linux|darwin/i ? `uname -a 2>/dev/null`.strip : nil)
         })
 
-        key = use_fee_refund_key ? @fee_refund_api_key : @api_key
+        key = options[:key] || @api_key
 
         {
           "Authorization" => "Basic " + Base64.encode64(key.to_s + ":").strip,
           "User-Agent" => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "X-Stripe-Client-User-Agent" => @@ua,
-          "X-Stripe-Client-User-Metadata" => meta.to_json
+          "X-Stripe-Client-User-Metadata" => options[:meta].to_json
         }
       end
 
-      def commit(method, url, parameters=nil, meta={}, use_fee_refund_key = false)
+      def commit(method, url, parameters=nil, options = {})
         raw_response = response = nil
         success = false
         begin
-          raw_response = ssl_request(method, self.live_url + url, post_data(parameters), headers(meta, use_fee_refund_key))
+          raw_response = ssl_request(method, self.live_url + url, post_data(parameters), headers(options))
           response = parse(raw_response)
           success = !response.key?("error")
         rescue ResponseError => e
