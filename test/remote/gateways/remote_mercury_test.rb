@@ -134,7 +134,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     refund = @gateway.refund(200, capture.authorization)
     assert_success refund
     assert_equal '2.00', refund.params['purchase']
-    assert_equal 'VoidSale', refund.params['tran_code']
+    assert_equal 'Return', refund.params['tran_code']
   end
 
   def test_amex_authorize_and_capture_with_refund
