@@ -94,10 +94,14 @@ module ActiveMerchant #:nodoc:
       # * <tt>:password</tt> -- The Authorize.Net Transaction Key. (REQUIRED)
       # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test server.
       #   Otherwise, perform transactions against the production server.
+      # * <tt>:test_requests</tt> -- +true+ or +false+. If true, perform transactions without the
+      #   test flag. This is useful when you need to generate card declines, AVS or CVV erros.
+      #   Will hold the same value as :test by default.
       # * <tt>:delimiter</tt> -- The delimiter used in the direct response.  Default is ',' (comma).
       def initialize(options = {})
         requires!(options, :login, :password)
         super
+        @options[:test_requests] = test? if @options[:test_requests].nil?
       end
 
       # Creates a new customer profile along with any customer payment profiles and customer shipping addresses
@@ -605,7 +609,7 @@ module ActiveMerchant #:nodoc:
 
       def build_create_customer_profile_transaction_request(xml, options)
         options[:extra_options] ||= {}
-        options[:extra_options].merge!('x_test_request' => 'TRUE') if @options[:test]
+        options[:extra_options].merge!('x_test_request' => 'TRUE') if @options[:test_requests]
 
         add_transaction(xml, options[:transaction])
         tag_unless_blank(xml, 'extraOptions', format_extra_options(options[:extra_options]))
@@ -842,7 +846,7 @@ module ActiveMerchant #:nodoc:
         response_params = parse(action, xml)
 
         message = response_params['messages']['message']['text']
-        test_mode = test? || message =~ /Test Mode/
+        test_mode = @options[:test_requests] || message =~ /Test Mode/
         success = response_params['messages']['result_code'] == 'Ok'
         response_params['direct_response'] = parse_direct_response(response_params['direct_response']) if response_params['direct_response']
         transaction_id = response_params['direct_response']['transaction_id'] if response_params['direct_response']
