@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
             add_field('montant', montant)
             langue = 'FR'
             add_field('lgue', langue)
-            date = Time.now.strftime('"%d/%m/%Y:%H:%M:%S"')
+            date = Time.now.strftime("%d/%m/%Y:%H:%M:%S")
             add_field('date', date)
             add_field('reference', order)
             add_field('TPE', '123456')
