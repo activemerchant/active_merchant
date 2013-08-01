@@ -6,6 +6,7 @@
 * Litle: support paypage registrations [pierre]
 * SecureNet: Cleanup and refactoring [duff]
 * Mercury: Proper refund and void support [opendining]
+* PaymentExpress: Return token in authorization [ntalbott]
 
 == Version 1.35.1 (July 22, 2013)
 
