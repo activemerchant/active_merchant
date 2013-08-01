@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
           def acknowledge
             payload = raw
 
-            uri = URI.parse(CyberMut.notification_confirmation_url)
+            uri = URI.parse(CyberMut.service_url)
 
             request = Net::HTTP::Post.new(uri.path)
 
