@@ -42,7 +42,6 @@ class WebpayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
-    assert_instance_of Response, response
     assert_success response
 
     # Replace with authorization number from the successful response
@@ -54,7 +53,6 @@ class WebpayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response(:livemode => true))
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
-    assert_instance_of Response, response
     assert_success response
 
     assert !response.test?

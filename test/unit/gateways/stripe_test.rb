@@ -63,7 +63,6 @@ class StripeTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
-    assert_instance_of Response, response
     assert_success response
 
     # Replace with authorization number from the successful response
@@ -71,11 +70,47 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_unsuccessful_refund
+    @gateway.expects(:ssl_request).returns(generic_error_response)
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
+    assert_failure response
+  end
+
+  def test_successful_refund_with_refund_fee_amount
+    s = sequence("request")
+    @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(successful_application_fee_list_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(successful_refunded_application_fee_response).in_sequence(s)
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)
+    assert_success response
+  end
+
+  def test_unsuccessful_refund_with_refund_fee_amount_when_application_fee_id_not_found
+    s = sequence("request")
+    @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(unsuccessful_application_fee_list_response).in_sequence(s)
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)
+    assert_failure response
+    assert_match(/^Application fee id could not be found/, response.message)
+  end
+
+  def test_unsuccessful_refund_with_refund_fee_amount_when_refunding_application_fee
+    s = sequence("request")
+    @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(successful_application_fee_list_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(generic_error_response).in_sequence(s)
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)
+    assert_failure response
+  end
+
   def test_successful_request_always_uses_live_mode_to_determine_test_request
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response(:livemode => true))
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
-    assert_instance_of Response, response
     assert_success response
 
     assert !response.test?
@@ -306,6 +341,56 @@ class StripeTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_refunded_application_fee_response
+    <<-RESPONSE
+{
+  "id": "fee_id",
+  "object": "application_fee",
+  "created": 1375375417,
+  "livemode": false,
+  "amount": 10,
+  "currency": "usd",
+  "user": "acct_id",
+  "user_email": "acct_id",
+  "application": "ca_application",
+  "charge": "ch_test_charge",
+  "refunded": false,
+  "amount_refunded": 10
+}
+    RESPONSE
+  end
+
+  def successful_application_fee_list_response
+    <<-RESPONSE
+{
+  "object": "list",
+  "count": 2,
+  "url": "/v1/application_fees",
+  "data": [
+    {
+      "object": "application_fee",
+      "id": "application_fee_id"
+    },
+    {
+      "object": "another_fee",
+      "id": "another_fee_id"
+    }
+  ]
+}
+    RESPONSE
+  end
+
+  def unsuccessful_application_fee_list_response
+    <<-RESPONSE
+{
+  "object": "list",
+  "count": 0,
+  "url": "/v1/application_fees",
+  "data": []
+}
+    RESPONSE
+  end
+
   # Place raw failed response from gateway here
   def failed_purchase_response
     <<-RESPONSE
@@ -325,6 +410,17 @@ class StripeTest < Test::Unit::TestCase
     <<-RESPONSE
     {
        foo : bar
+    }
+    RESPONSE
+  end
+
+  def generic_error_response
+    <<-RESPONSE
+    {
+      "error": {
+        "code": "generic",
+        "message": "This is a generic error response"
+      }
     }
     RESPONSE
   end

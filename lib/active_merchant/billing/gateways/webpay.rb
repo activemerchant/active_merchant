@@ -21,6 +21,10 @@ module ActiveMerchant #:nodoc:
         raise NotImplementedError.new
       end
 
+      def refund_fee(identification, options, meta)
+        raise NotImplementedError.new
+      end
+
       def json_error(raw_response)
         msg = 'Invalid response received from the WebPay API.  Please contact support@webpay.jp if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
@@ -31,7 +35,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def headers(meta={})
+      def headers(options = {})
         @@ua ||= JSON.dump({
           :bindings_version => ActiveMerchant::VERSION,
           :lang => 'ruby',
@@ -45,7 +49,7 @@ module ActiveMerchant #:nodoc:
           "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":").strip,
           "User-Agent" => "Webpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "X-Webpay-Client-User-Agent" => @@ua,
-          "X-Webpay-Client-User-Metadata" => meta.to_json
+          "X-Webpay-Client-User-Metadata" => options[:meta].to_json
         }
       end
     end
