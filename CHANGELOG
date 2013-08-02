@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.36.0 (August 2, 2013)
+
 * Fat Zebra: More consistent handling of tokens [adrianmacneil]
 * Add Platron integration [alexwl]
 * Litle: Support wiredump_device [pierre]
@@ -7,6 +9,7 @@
 * SecureNet: Cleanup and refactoring [duff]
 * Mercury: Proper refund and void support [opendining]
 * PaymentExpress: Return token in authorization [ntalbott]
+* Stripe: Support for partial application fee refunds [melari, odorcicd]
 
 == Version 1.35.1 (July 22, 2013)
 
