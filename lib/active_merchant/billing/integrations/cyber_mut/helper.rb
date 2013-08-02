@@ -37,10 +37,12 @@ module ActiveMerchant #:nodoc:
             add_field('date', date)
             add_field('reference', order)
             add_field('TPE', '123456')
+            add_field('text-libre', '')
+            add_field('societe', 'masociete')
             # MAC field
             mac_data = [
-              mappings[:tpe], date, montant, order,
-              mappings['text-libre'], version, langue, mappings[:company],
+              fields['TPE'], date, montant, order,
+              fields['text-libre'], version, langue, fields['company'],
               "", "", "", "", "", "", "", "", "", "", ""
             ].join('*')
             add_field('MAC', compute_HMACSHA1(mac_data))
