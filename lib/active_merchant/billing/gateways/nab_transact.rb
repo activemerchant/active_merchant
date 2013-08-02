@@ -74,8 +74,8 @@ module ActiveMerchant #:nodoc:
         commit :authorization, build_purchase_request(money, credit_card, options)
       end
 
-      def capture(money, authorization)
-        commit :capture, build_reference_request(money, authorization)
+      def capture(money, authorization, options = {})
+        commit :capture, build_reference_request(money, authorization, options)
       end
 
       def store(creditcard, options = {})
