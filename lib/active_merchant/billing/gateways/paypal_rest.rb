@@ -58,6 +58,11 @@ module ActiveMerchant
       end
 
       class Response < Billing::Response
+
+        def state
+          params["state"]
+        end
+
         def authorization
           params["transactions"][0]["related_resources"][0]["authorization"] rescue nil
         end
@@ -205,6 +210,20 @@ module ActiveMerchant
         end
       end
 
+      # Store credit-card in vault
+      # === Arguments
+      # * <tt>credit_card</tt> - CreditCrad
+      # * <tt>options</tt> - (Optional)
+      # === Example
+      #   response = @gateway.store_credit_card(credit_card)
+      #   if response.success?
+      #     response.params["id"]
+      #   end
+      def store_credit_card(credit_card, options = {})
+        credit_card = build_credit_card(credit_card, options)
+        request(:post, "v1/vault/credit-card", credit_card, options)
+      end
+
       private
 
       def request(method, path, data, options)
@@ -232,28 +251,32 @@ module ActiveMerchant
       end
 
       def build_payment(intent, money, options)
-        options[:cancel_url] ||= options[:cancel_return_url]
-        {
+        payment = {
           :intent => intent,
-          :payer => build_payer(options),
-          :redirect_urls => build_redirect_urls(options),
+          :payer  => build_payer(options),
           :transactions => [ build_transaction(money, options) ] }
+        redirect_urls = build_redirect_urls(options)
+        payment[:redirect_urls] = redirect_urls if redirect_urls.any?
+        payment
       end
 
       def build_redirect_urls(options)
-        if options[:return_url] or options[:cancel_url]
-          { :return_url => options[:return_url],
-            :cancel_url => options[:cancel_url] }
-        else
-          nil
+        options[:cancel_url] = options[:cancel_return_url] if options[:cancel_return_url]
+        redirect_urls = {}
+        [ :cancel_url, :return_url ].each do |key|
+          redirect_urls[key] = options[key] if options[key]
         end
+        redirect_urls
       end
 
       def build_transaction(money, options)
         transaction = {}
-        transaction[:amount]      = build_amount(money, options)
-        transaction[:item_list]   = build_item_list(options)
+        transaction[:amount] = build_amount(money, options)
         transaction[:description] = options[:description] if options[:description]
+
+        item_list = build_item_list(options)
+        transaction[:item_list] = item_list if item_list.any?
+
         transaction
       end
 
@@ -268,14 +291,17 @@ module ActiveMerchant
 
       def build_amount(money, options)
         currency_code = options[:currency] || currency(money)
+        amount = {
+          :total => localized_amount(money, currency_code),
+          :currency => currency_code }
+
         details = {}
         AmountDetails.each do |value|
           details[value] = localized_amount(options[value], currency_code) if options[value]
         end
-        {
-          :total    => localized_amount(money, currency_code),
-          :currency => currency_code,
-          :details  => details }
+        amount[:details] = details if details.any?
+
+        amount
       end
 
       def build_payer(options)
@@ -298,15 +324,17 @@ module ActiveMerchant
       end
 
       def build_credit_card(credit_card, options)
-        {
+        credit_card = {
           :type => card_brand(credit_card),
           :number => credit_card.number,
           :expire_month => format(credit_card.month, :two_digits),
           :expire_year  => format(credit_card.year,  :four_digits),
           :cvv2 => credit_card.verification_value,
           :first_name => credit_card.first_name,
-          :last_name => credit_card.last_name,
-          :billing_address => options[:billing_address] }
+          :last_name => credit_card.last_name }
+        address = options[:billing_address] || options[:address]
+        credit_card[:billing_address] = address if address
+        credit_card
       end
 
     end
