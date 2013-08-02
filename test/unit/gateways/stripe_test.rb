@@ -70,6 +70,13 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_unsuccessful_refund
+    @gateway.expects(:ssl_request).returns(generic_error_response)
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
+    assert_failure response
+  end
+
   def test_successful_refund_with_refund_fee_amount
     s = sequence("request")
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
@@ -80,7 +87,7 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_unsuccessful_refund_with_refund_fee_amount
+  def test_unsuccessful_refund_with_refund_fee_amount_when_application_fee_id_not_found
     s = sequence("request")
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
     @gateway.expects(:ssl_request).returns(unsuccessful_application_fee_list_response).in_sequence(s)
@@ -88,6 +95,16 @@ class StripeTest < Test::Unit::TestCase
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)
     assert_failure response
     assert_match(/^Application fee id could not be found/, response.message)
+  end
+
+  def test_unsuccessful_refund_with_refund_fee_amount_when_refunding_application_fee
+    s = sequence("request")
+    @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(successful_application_fee_list_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(generic_error_response).in_sequence(s)
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)
+    assert_failure response
   end
 
   def test_successful_request_always_uses_live_mode_to_determine_test_request
@@ -393,6 +410,17 @@ class StripeTest < Test::Unit::TestCase
     <<-RESPONSE
     {
        foo : bar
+    }
+    RESPONSE
+  end
+
+  def generic_error_response
+    <<-RESPONSE
+    {
+      "error": {
+        "code": "generic",
+        "message": "This is a generic error response"
+      }
     }
     RESPONSE
   end
