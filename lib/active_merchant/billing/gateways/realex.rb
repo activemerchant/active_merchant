@@ -183,6 +183,7 @@ module ActiveMerchant
         xml.tag! 'tssinfo' do
           xml.tag! 'custnum', options[:customer] if options[:customer]
           xml.tag! 'prodid', options[:invoice] if options[:invoice]
+          xml.tag! 'varref', options[:varref] if options[:varref]
           xml.tag! 'custipaddress', options[:ip] if options[:ip]
 
           if billing_address
