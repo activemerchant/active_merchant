@@ -5,8 +5,8 @@ class PayPalRESTTest < Test::Unit::TestCase
   def setup
     @gateway = PaypalRestGateway.new({
       :mode => "sandbox",
-      :client_id => "CLIENT_ID",
-      :client_secret => "CLIENT_SECRET"
+      :client_id => ENV["TEST_PAYPAL_CLIENT_ID"] || "CLIENT_ID",
+      :client_secret => ENV["TEST_PAYPAL_CLIENT_SECRET"] || "CLIENT_SECRET"
     })
 
     @amount = 1 * 100
@@ -19,6 +19,7 @@ class PayPalRESTTest < Test::Unit::TestCase
       :country_code => "US",
       :postal_code => "43210",
       :state => "OH" }
+    @shipping_address = @address.merge( :recipient_name => "Testing" )
 
     @item = {
       :name => "item",
@@ -38,7 +39,7 @@ class PayPalRESTTest < Test::Unit::TestCase
   def test_with_credit_card
     @gateway.api.expects(:post).
       with("v1/payments/payment", request_data[:payment_with_credit_card]).
-      returns(create_payment_with_credit_card_response)
+      returns(create_payment_with_credit_card_response) unless sandbox_test?
 
     response = @gateway.purchase(@amount, @credit_card)
     assert(response.success?, "Should be success")
@@ -48,7 +49,7 @@ class PayPalRESTTest < Test::Unit::TestCase
   def test_with_credit_card_token
     @gateway.api.expects(:post).
       with("v1/payments/payment", request_data[:payment_with_credit_card_token]).
-      returns(create_payment_with_token_response)
+      returns(create_payment_with_token_response) unless sandbox_test?
 
     response = @gateway.purchase(@amount, @credit_card_token)
     assert(response.success?, "Should be success")
@@ -58,7 +59,7 @@ class PayPalRESTTest < Test::Unit::TestCase
   def test_with_billing_address
     @gateway.api.expects(:post).
       with("v1/payments/payment", request_data[:payment_with_billing_address]).
-      returns(create_payment_with_credit_card_response)
+      returns(create_payment_with_credit_card_response) unless sandbox_test?
 
     response = @gateway.purchase(@amount, @credit_card, :billing_address => @address )
     assert(response.success?, "Should be success")
@@ -67,20 +68,20 @@ class PayPalRESTTest < Test::Unit::TestCase
   def test_with_items
     @gateway.api.expects(:post).
       with("v1/payments/payment", request_data[:payment_with_items]).
-      returns(create_payment_with_credit_card_response)
+      returns(create_payment_with_credit_card_response) unless sandbox_test?
 
-    response = @gateway.purchase(@amount, @credit_card, :items => [ @item ], :shipping_address => @address )
+    response = @gateway.purchase(@amount, @credit_card, :items => [ @item ], :shipping_address => @shipping_address )
     assert(response.success?, "Should be success")
   end
 
   def test_with_items_and_amount
     @gateway.api.expects(:post).
       with("v1/payments/payment", request_data[:payment_with_items]).
-      returns(create_payment_with_credit_card_response)
+      returns(create_payment_with_credit_card_response) unless sandbox_test?
 
     response = @gateway.purchase(@amount, @credit_card,
       :items => [ { :amount => 1 * 100, :name => @item[:name], :quantity => @item[:quantity], :sku => 'item' } ],
-      :shipping_address => @address )
+      :shipping_address => @shipping_address )
     assert(response.success?, "Should be success")
   end
 
@@ -107,17 +108,17 @@ class PayPalRESTTest < Test::Unit::TestCase
       with("v1/payments/payment", request_data[:payment_with_credit_card].merge({
         :transactions => [{
           :amount  => request_data[:amount].merge({
-            :details => { :tax => "1.00", :subtotal => "1.00" }}) }]})).
-      returns({})
+            :details => { :tax => "0.50", :subtotal => "0.50" }}) }]})).
+      returns(create_payment_with_credit_card_response) unless sandbox_test?
 
-    response = @gateway.purchase(@amount, @credit_card, :tax => 1 * 100, :subtotal => 1 * 100)
+    response = @gateway.purchase(@amount, @credit_card, :tax => 50, :subtotal => 50)
     assert(response.success?, "Should be success")
   end
 
   def test_with_paypal
     @gateway.api.expects(:post).
       with("v1/payments/payment", request_data[:payment_with_paypal]).
-      returns({})
+      returns(create_payment_with_paypal_response) unless sandbox_test?
 
     response = @gateway.purchase(@amount,
       :return_url => "http://return.url",
@@ -127,11 +128,11 @@ class PayPalRESTTest < Test::Unit::TestCase
 
   def test_execute
     @gateway.api.expects(:post).
-      with("v1/payments/payment/PAY-123/execute",
+      with("v1/payments/payment/PAY-2YB28071MB744303AKH5DMWA/execute",
         { :payer_id => "123", :transactions => [ request_data[:transaction][:amount] ] }).
-      returns({})
+      returns(create_payment_with_paypal_response)
 
-    response = @gateway.execute(@amount, :payment_id => "PAY-123", :payer_id => "123")
+    response = @gateway.execute(@amount, :payment_id => "PAY-2YB28071MB744303AKH5DMWA", :payer_id => "123")
     assert(response.success?, "Should be success")
   end
 
@@ -145,7 +146,7 @@ class PayPalRESTTest < Test::Unit::TestCase
     @gateway.api.expects(:post).
       with("v1/payments/payment",
         request_data[:payment_with_credit_card].merge(:intent => "authorize") ).
-      returns({})
+      returns(create_authorize_response) unless sandbox_test?
 
     response = @gateway.authorize(@amount, @credit_card)
     assert(response.success?, "Should be success")
@@ -153,30 +154,30 @@ class PayPalRESTTest < Test::Unit::TestCase
 
   def test_reauthorize
     @gateway.api.expects(:post).
-      with("v1/payments/authorization/123/reauthorize",
+      with("v1/payments/authorization/1J319028U3903480V/reauthorize",
         { :amount => request_data[:amount] }).
-      returns({})
+      returns(create_authorize_response)
 
-    response = @gateway.reauthorize(@amount, :authorization_id => "123")
+    response = @gateway.reauthorize(@amount, :authorization_id => "1J319028U3903480V")
     assert(response.success?, "Should be success")
   end
 
   def test_capture
     @gateway.api.expects(:post).
-      with("v1/payments/authorization/123/capture",
-        { :amount => request_data[:amount], :is_final_capture => true }).
+      with("v1/payments/authorization/1J319028U3903480V/capture",
+        { :amount => request_data[:amount], :is_final_capture => false }).
       returns({})
 
-    response = @gateway.capture(@amount, :authorization_id => "123", :is_final_capture => true)
+    response = @gateway.capture(@amount, :authorization_id => "1J319028U3903480V", :is_final_capture => false)
     assert(response.success?, "Should be success")
   end
 
   def test_refund_for_sale
     @gateway.api.expects(:post).
-      with("v1/payments/sale/123/refund", request_data[:transaction]).
+      with("v1/payments/sale/28H16906173986239/refund", request_data[:transaction]).
       returns({})
 
-    refund = @gateway.refund(@amount, :sale_id => "123")
+    refund = @gateway.refund(@amount, :sale_id => "28H16906173986239")
     assert(refund.success?, "Should be success")
   end
 
@@ -192,7 +193,7 @@ class PayPalRESTTest < Test::Unit::TestCase
   def test_store_credit_card
     @gateway.api.expects(:post).
       with("v1/vault/credit-card", request_data[:credit_card]).
-      returns(store_credit_card_response)
+      returns(store_credit_card_response) unless sandbox_test?
 
     response = @gateway.store_credit_card(@credit_card)
     assert(response.success?, "Should be success")
@@ -200,6 +201,10 @@ class PayPalRESTTest < Test::Unit::TestCase
   end
 
   private
+
+  def sandbox_test?
+    ENV["TEST_PAYPAL_CLIENT_ID"] and ENV["TEST_PAYPAL_CLIENT_SECRET"]
+  end
 
   def request_data
     @request_data ||=
@@ -239,7 +244,7 @@ class PayPalRESTTest < Test::Unit::TestCase
             :funding_instruments => [{
               :credit_card => examples[:credit_card] }] },
           :transactions => [ examples[:transaction].merge({
-            :item_list => { :items => [ { :currency => 'USD' }.merge(@item) ], :shipping_address => @address } }) ] }
+            :item_list => { :items => [ { :currency => 'USD' }.merge(@item) ], :shipping_address => @shipping_address } }) ] }
         examples[:payment_with_credit_card_token] = {
           :intent => "sale",
           :payer  => {

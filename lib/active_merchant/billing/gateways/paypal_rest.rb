@@ -297,7 +297,9 @@ module ActiveMerchant
         item_list = {}
         items = build_items(options)
         item_list[:items] = items if items
-        item_list[:shipping_address] = build_address(options[:shipping_address], options) if options[:shipping_address]
+        if options[:shipping_address]
+          item_list[:shipping_address] = build_shipping_address(options[:shipping_address], options)
+        end
         item_list
       end
 
@@ -326,6 +328,13 @@ module ActiveMerchant
           address[new_key] = address.delete(key) if address.has_key? key
         end
         requires!(address, :line1, :city, :country_code, :state)
+        address
+      end
+
+      def build_shipping_address(address, options)
+        address = build_address(address, options)
+        address[:recipient_name] = address.delete(:name) if address.has_key? :name
+        requires!(address, :recipient_name)
         address
       end
 
