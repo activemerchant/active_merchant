@@ -282,9 +282,38 @@ module ActiveMerchant
 
       def build_item_list(options)
         item_list = {}
-        item_list[:items] = options[:items] if options[:items]
-        item_list[:shipping_address] = options[:shipping_address] if options[:shipping_address]
+        items = build_items(options)
+        item_list[:items] = items if items
+        item_list[:shipping_address] = build_address(options[:shipping_address], options) if options[:shipping_address]
         item_list
+      end
+
+      def build_items(options)
+        currency_code = options[:currency] || default_currency
+
+        options[:items].map do |item|
+          item = item.dup
+          item[:price] ||= item.delete(:amount)
+          requires!(item, :name, :price, :quantity)
+          if item[:price].is_a? Integer
+            item[:currency] = options[:currency] || currency(item[:price])
+            item[:price]    = localized_amount(item[:price], item[:currency])
+          end
+          item[:currency] ||= currency_code
+          item
+        end if options[:items]
+      end
+
+      AddressFields = { :line1 => :address1, :line2 => :address2,
+        :country_code => :country, :postal_code => :zip }
+
+      def build_address(address, options)
+        address = address.dup
+        AddressFields.each do |new_key, key|
+          address[new_key] = address.delete(key) if address.has_key? key
+        end
+        requires!(address, :line1, :city, :country_code, :state)
+        address
       end
 
       AmountDetails = [ :tax, :shipping, :subtotal, :fee ]
@@ -333,7 +362,7 @@ module ActiveMerchant
           :first_name => credit_card.first_name,
           :last_name => credit_card.last_name }
         address = options[:billing_address] || options[:address]
-        credit_card[:billing_address] = address if address
+        credit_card[:billing_address] = build_address(address, options) if address
         credit_card
       end
 

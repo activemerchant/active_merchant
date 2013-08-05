@@ -20,11 +20,10 @@ class PayPalRESTTest < Test::Unit::TestCase
       :postal_code => "43210",
       :state => "OH" }
 
-    @items = {
+    @item = {
       :name => "item",
       :sku => "item",
       :price => "1.00",
-      :currency => "USD",
       :quantity => 1 }
   end
 
@@ -72,6 +71,35 @@ class PayPalRESTTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, :items => [ @item ], :shipping_address => @address )
     assert(response.success?, "Should be success")
+  end
+
+  def test_with_items_and_amount
+    @gateway.api.expects(:post).
+      with("v1/payments/payment", request_data[:payment_with_items]).
+      returns(create_payment_with_credit_card_response)
+
+    response = @gateway.purchase(@amount, @credit_card,
+      :items => [ { :amount => 1 * 100, :name => @item[:name], :quantity => @item[:quantity], :sku => 'item' } ],
+      :shipping_address => @address )
+    assert(response.success?, "Should be success")
+  end
+
+  def test_with_invalid_items
+    assert_raise(ArgumentError) {
+      @gateway.purchase(@amount, @credit_card, :items => [ { :name => "incomplete item" } ])
+    }
+  end
+
+  def test_with_invalid_address
+    assert_raise(ArgumentError) {
+      @gateway.purchase(@amount, @credit_card, :shipping_address => { :line1 => "incomplete address" } )
+    }
+    assert_raise(ArgumentError) {
+      @gateway.purchase(@amount, @credit_card, :address => { :line1 => "incomplete address" } )
+    }
+    assert_raise(ArgumentError) {
+      @gateway.purchase(@amount, @credit_card, :billing_address => { :line1 => "incomplete address" } )
+    }
   end
 
   def test_with_amount_details
@@ -187,12 +215,6 @@ class PayPalRESTTest < Test::Unit::TestCase
             :payment_method => 'credit_card',
             :funding_instruments => [{ :credit_card => examples[:credit_card] }] },
           :transactions => [ examples[:transaction] ] }
-        examples[:payment_with_items] = {
-          :intent => "sale",
-          :payer  => {
-            :payment_method => 'credit_card',
-            :funding_instruments => [{ :credit_card => examples[:credit_card] }] },
-          :transactions => [ examples[:transaction] ] }
         examples[:payment_with_billing_address] = {
           :intent => "sale",
           :payer  => {
@@ -207,7 +229,7 @@ class PayPalRESTTest < Test::Unit::TestCase
             :funding_instruments => [{
               :credit_card => examples[:credit_card] }] },
           :transactions => [ examples[:transaction].merge({
-            :item_list => { :items => [ @item ], :shipping_address => @address } }) ] }
+            :item_list => { :items => [ { :currency => 'USD' }.merge(@item) ], :shipping_address => @address } }) ] }
         examples[:payment_with_credit_card_token] = {
           :intent => "sale",
           :payer  => {
