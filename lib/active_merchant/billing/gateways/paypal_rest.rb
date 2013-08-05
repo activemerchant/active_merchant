@@ -155,6 +155,19 @@ module ActiveMerchant
         purchase(money, credit_card, options.merge( :intent => "authorize" ))
       end
 
+      # Reauthorizes an expired Authorization.
+      # === Arguments
+      # * <tt>money</tt>
+      # * <tt>options</tt> - Allowed options (authorization_id, currency)
+      # === Example
+      #   response = @gateway.reauthorize(100, :authorization_id => "Replace with authorization_id")
+      def reauthorize(money, options = {})
+        requires!(options, :authorization_id)
+        payload = {
+          :amount => build_amount(money, options) }
+        request(:post, "v1/payments/authorization/#{options[:authorization_id]}/reauthorize", payload, options)
+      end
+
       # Capture amount for authorize payment
       # === Arguments
       # * <tt>money</tt> - In cents

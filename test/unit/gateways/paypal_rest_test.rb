@@ -151,10 +151,20 @@ class PayPalRESTTest < Test::Unit::TestCase
     assert(response.success?, "Should be success")
   end
 
+  def test_reauthorize
+    @gateway.api.expects(:post).
+      with("v1/payments/authorization/123/reauthorize",
+        { :amount => request_data[:amount] }).
+      returns({})
+
+    response = @gateway.reauthorize(@amount, :authorization_id => "123")
+    assert(response.success?, "Should be success")
+  end
+
   def test_capture
     @gateway.api.expects(:post).
       with("v1/payments/authorization/123/capture",
-        request_data[:transaction].merge( :is_final_capture => true )).
+        { :amount => request_data[:amount], :is_final_capture => true }).
       returns({})
 
     response = @gateway.capture(@amount, :authorization_id => "123", :is_final_capture => true)
