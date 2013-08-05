@@ -4,8 +4,7 @@ class Ipay88HelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    Ipay88.merchant_key = "abc"
-    @helper = Ipay88::Helper.new("order-500", "ipay88merchcode", :amount => 500, :currency => "MYR")
+    @helper = Ipay88::Helper.new("order-500", "ipay88merchcode", :credential2 => "abc", :amount => 500, :currency => "MYR")
   end
 
   def test_basic_helper_fields

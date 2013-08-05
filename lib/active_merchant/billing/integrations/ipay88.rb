@@ -6,16 +6,6 @@ module ActiveMerchant #:nodoc:
         autoload :Helper,       "active_merchant/billing/integrations/ipay88/helper.rb"
         autoload :Notification, "active_merchant/billing/integrations/ipay88/notification.rb"
 
-        mattr_accessor :merch_key
-
-        def self.merchant_key
-          self.merch_key
-        end
-
-        def self.merchant_key=(key)
-          self.merch_key = key
-        end
-
         def self.service_url
           "https://www.mobile88.com/epayment/enquiry.asp"
         end

@@ -36,10 +36,11 @@ module ActiveMerchant #:nodoc:
           #   14 (RHB)
           PAYMENT_METHODS      = %w[8 10 21 20 2 16 15 6 23 17 33 14]
 
-          attr_reader :amount_in_cents
+          attr_reader :amount_in_cents, :merchant_key
 
           def initialize(order, account, options = {})
-            requires!(options, :amount, :currency)
+            requires!(options, :amount, :currency, :credential2)
+            @merchant_key = options[:credential2]
             @amount_in_cents = options[:amount]
             super
             add_field mappings[:signature], signature
@@ -93,7 +94,7 @@ module ActiveMerchant #:nodoc:
           protected
 
           def sig_components
-            components  = [Ipay88.merchant_key]
+            components  = [merchant_key]
             components << fields[mappings[:account]]
             components << fields[mappings[:order]]
             components << amount_in_cents

@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def sig_components
-            components = [Ipay88.merchant_key]
+            components = [@options[:credential2]]
             [:account, :payment, :order, :amount_in_cents, :currency, :status].each do |i|
               components << self.send(i)
             end

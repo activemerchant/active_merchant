@@ -4,8 +4,7 @@ class Ipay88ReturnTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    Ipay88.merchant_key = "apple"
-    @ipay88 = Ipay88::Return.new(http_raw_data)
+    @ipay88 = build_return(http_raw_data)
   end
 
   def test_accessors
@@ -27,7 +26,7 @@ class Ipay88ReturnTest < Test::Unit::TestCase
   end
 
   def test_insecure_request
-    assert !Ipay88::Return.new(http_raw_data(:invalid_sig)).secure?
+    assert !build_return(http_raw_data(:invalid_sig)).secure?
   end
 
   def test_successful_return
@@ -40,7 +39,7 @@ class Ipay88ReturnTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_return_due_to_signature
-    ipay = Ipay88::Return.new(http_raw_data(:invalid_sig))
+    ipay = build_return(http_raw_data(:invalid_sig))
     assert !ipay.success?
   end
 
@@ -57,12 +56,12 @@ class Ipay88ReturnTest < Test::Unit::TestCase
     Ipay88::Return.any_instance.expects(:ssl_post).with(Ipay88.service_url, params,
       { "Content-Length" => params.size.to_s, "User-Agent" => "Active Merchant -- http://activemerchant.org" }
     ).returns("00")
-    ipay = Ipay88::Return.new(http_raw_data(:payment_failed))
+    ipay = build_return(http_raw_data(:payment_failed))
     assert !ipay.success?
   end
 
   def test_unsuccessful_return_due_to_missing_amount
-    ipay = Ipay88::Return.new(http_raw_data(:missing_amount))
+    ipay = build_return(http_raw_data(:missing_amount))
     assert !ipay.success?
   end
 
@@ -99,5 +98,9 @@ class Ipay88ReturnTest < Test::Unit::TestCase
 
   def parameterize(params)
     params.reject{|k, v| v.blank?}.keys.sort.collect { |key| "#{key}=#{CGI.escape(params[key].to_s)}" }.join("&")
+  end
+
+  def build_return(data)
+    Ipay88::Return.new(data, :credential2 => "apple")
   end
 end
