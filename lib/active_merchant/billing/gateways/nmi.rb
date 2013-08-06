@@ -7,7 +7,14 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'NMI'
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+
+      private
+      def add_creditcard(post, creditcard, options={})
+        super
+        post[:recurring_billing] = "TRUE" if options[:recurring]
+      end
     end
+
   end
 end
 

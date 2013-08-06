@@ -10,6 +10,7 @@
 * Mercury: Proper refund and void support [opendining]
 * PaymentExpress: Return token in authorization [ntalbott]
 * Stripe: Support for partial application fee refunds [melari, odorcicd]
+* NMI: Support for recurring flag [duff]
 
 == Version 1.35.1 (July 22, 2013)
 
