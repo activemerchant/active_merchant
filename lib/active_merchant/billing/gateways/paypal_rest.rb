@@ -1,8 +1,8 @@
 begin
-  require "paypal-sdk-core"
-  raise "Please update paypal-sdk-core gem to 0.2.x" if PayPal::SDK::Core::VERSION < '0.2.5'
+  require "paypal-sdk-rest"
+  raise "Please update paypal-sdk-rest gem to >= 0.6.0" if PayPal::SDK::REST::VERSION < '0.6.0'
 rescue LoadError
-  raise "Install paypal-sdk-core gem, to use PaypalRestGateway"
+  raise "Install paypal-sdk-rest gem, to use PaypalRestGateway"
 end
 
 module ActiveMerchant
@@ -61,6 +61,9 @@ module ActiveMerchant
       end
 
       class Response < Billing::Response
+        def id
+          params["id"]
+        end
 
         def state
           params["state"]
@@ -112,7 +115,8 @@ module ActiveMerchant
       #   # with paypal
       #   response = @gateway.purchase(1000,
       #     :return_url => "http://example.com/return",
-      #     :cancel_url => "http://example.com/cancel" )
+      #     :cancel_url => "http://example.com/cancel",
+      #     :items => [ { :price => 1000, :quantity => 1, :name => "Item" } ] )
       #
       #   # check response status
       #   response.success? # true or false
@@ -128,9 +132,15 @@ module ActiveMerchant
         else
           options[:credit_card] = credit_card
         end
-        payment  = build_payment(options[:intent] || "sale", money, options)
-        request(:post, "v1/payments/payment", payment, options)
+        if options[:payment_id]
+          execute(money, options)
+        else
+          payment = build_payment(options[:intent] || "sale", money, options)
+          request(:post, "v1/payments/payment", payment, options)
+        end
       end
+
+      alias_method :setup_purchase, :purchase
 
       # Get authorize make payment with credit-card, credit-card-token or paypal
       # === Arguments
@@ -157,6 +167,10 @@ module ActiveMerchant
       def authorize(money, credit_card, options = {})
         purchase(money, credit_card, options.merge( :intent => "authorize" ))
       end
+
+      alias_method :authorization,       :authorize
+      alias_method :setup_authorize,     :authorize
+      alias_method :setup_authorization, :authorize
 
       # Reauthorizes an expired Authorization.
       # === Arguments
@@ -238,6 +252,67 @@ module ActiveMerchant
       def store_credit_card(credit_card, options = {})
         credit_card = build_credit_card(credit_card, options)
         request(:post, "v1/vault/credit-card", credit_card, options)
+      end
+
+      # Get credit-card object
+      def get_credit_card(credit_card_id, options = {})
+        credit_card_id = CGI.escape(credit_card_id)
+        request(:get, "v1/vault/credit-card/#{credit_card_id}", {}, options)
+      end
+
+      # Delete credit-card
+      def delete_credit_card(credit_card_id, options = {})
+        credit_card_id = CGI.escape(credit_card_id)
+        request(:delete, "v1/vault/credit-card/#{credit_card_id}", {}, options)
+      end
+
+      # Get PaymentHistory
+      # === Arguments
+      # * <tt>params</tt>  - parameters( :count, next_id )
+      # * <tt>options</tt> - (Optional)
+      # === Example
+      #   response = @gateway.payment_history( :count => 10 )
+      #   if response.success?
+      #     response.params["payments"]
+      #   end
+      def payment_history(params = {}, options = {})
+        request(:get, "v1/payments/payment", params, options)
+      end
+
+      # Get Payment object
+      def get_payment(payment_id, options = {})
+        payment_id = CGI.escape(payment_id)
+        request(:get, "v1/payments/payment/#{payment_id}", {}, options)
+      end
+
+      # Get Sale object
+      def get_sale(sale_id, options = {})
+        sale_id = CGI.escape(sale_id)
+        request(:get, "v1/payments/sale/#{sale_id}", {}, options)
+      end
+
+      # Get Authorization object
+      def get_authorization(authorization_id, options = {})
+        authorization_id = CGI.escape(authorization_id)
+        request(:get, "v1/payments/authorization/#{authorization_id}", {}, options)
+      end
+
+      # Void Authorization
+      def void_authorization(authorization_id, options = {})
+        authorization_id = CGI.escape(authorization_id)
+        request(:post, "v1/payments/authorization/#{authorization_id}/void", {}, options)
+      end
+
+      # Get Capture object
+      def get_capture(capture_id, options = {})
+        capture_id = CGI.escape(capture_id)
+        request(:get, "v1/payments/capture/#{capture_id}", {}, options)
+      end
+
+      # Get Refund object
+      def get_refund(refund_id, options = {})
+        refund_id = CGI.escape(refund_id)
+        request(:get, "v1/payments/refund/#{refund_id}", {}, options)
       end
 
       private
@@ -324,13 +399,11 @@ module ActiveMerchant
 
         options[:items].map do |item|
           item = item.dup
-          item[:price] ||= item.delete(:amount)
+          item[:price] = item.delete(:amount) if item.has_key? :amount
           requires!(item, :name, :price, :quantity)
-          if item[:price].is_a? Integer
-            item[:currency] = options[:currency] || currency(item[:price])
-            item[:price]    = localized_amount(item[:price], item[:currency])
-          end
-          item[:currency] ||= currency_code
+
+          item[:currency] ||= options[:currency] || currency(item[:price])
+          item[:price] = localized_amount(item[:price], item[:currency])
           item
         end if options[:items]
       end

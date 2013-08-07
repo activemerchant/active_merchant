@@ -24,7 +24,7 @@ class PayPalRESTTest < Test::Unit::TestCase
     @item = {
       :name => "item",
       :sku => "item",
-      :price => "1.00",
+      :price => 100,
       :quantity => 1 }
   end
 
@@ -136,6 +136,18 @@ class PayPalRESTTest < Test::Unit::TestCase
     assert(response.success?, "Should be success")
   end
 
+  def test_with_payment_id
+    @gateway.api.expects(:post).
+      with("v1/payments/payment/PAY-2YB28071MB744303AKH5DMWA/execute",
+        { :payer_id => "123", :transactions => [ request_data[:transaction][:amount] ] }).
+      returns(create_payment_with_paypal_response)
+
+    assert_raise(ArgumentError){ @gateway.purchase(@amount, :payment_id => "PAY-2YB28071MB744303AKH5DMWA") }
+
+    response = @gateway.purchase(@amount, :payment_id => "PAY-2YB28071MB744303AKH5DMWA", :payer_id => "123")
+    assert(response.success?, "Should be success")
+  end
+
   def test_execute
     @gateway.api.expects(:post).
       with("v1/payments/payment/PAY-2YB28071MB744303AKH5DMWA/execute",
@@ -145,6 +157,7 @@ class PayPalRESTTest < Test::Unit::TestCase
     response = @gateway.execute(@amount, :payment_id => "PAY-2YB28071MB744303AKH5DMWA", :payer_id => "123")
     assert(response.success?, "Should be success")
   end
+
 
   def test_execute_with_no_values
     assert_raise(ArgumentError){ @gateway.execute(@amount) }
@@ -210,6 +223,96 @@ class PayPalRESTTest < Test::Unit::TestCase
     assert_not_nil(response.params["id"])
   end
 
+  def test_get_credit_card
+    @gateway.api.expects(:get).
+      with("v1/vault/credit-card/CARD-9WF44094V8439724WKH5D3DI", {}).
+      returns(store_credit_card_response)
+
+    response = @gateway.get_credit_card("CARD-9WF44094V8439724WKH5D3DI")
+    assert(response.success?, "Should be success")
+    assert_equal("CARD-9WF44094V8439724WKH5D3DI", response.params["id"])
+  end
+
+  def test_delete_credit_card
+    @gateway.api.expects(:delete).
+      with("v1/vault/credit-card/CARD-9WF44094V8439724WKH5D3DI", {}).
+      returns(store_credit_card_response)
+
+    response = @gateway.delete_credit_card("CARD-9WF44094V8439724WKH5D3DI")
+    assert(response.success?, "Should be success")
+    assert_equal("CARD-9WF44094V8439724WKH5D3DI", response.params["id"])
+  end
+
+  def test_payment_history
+    @gateway.api.expects(:get).
+      with("v1/payments/payment", :count => 1 ).
+      returns( "payments" => [ create_payment_with_paypal_response ] ) unless sandbox_test?
+
+    response = @gateway.payment_history( :count => 1 )
+    assert(response.success?, "Should be success")
+    assert_not_nil(response.params["payments"])
+  end
+
+  def test_get_payment
+    @gateway.api.expects(:get).
+      with("v1/payments/payment/PAY-2YB28071MB744303AKH5DMWA", {}).
+      returns(create_payment_with_paypal_response)
+
+    response = @gateway.get_payment("PAY-2YB28071MB744303AKH5DMWA")
+    assert(response.success?, "Should be success")
+    assert_equal("PAY-2YB28071MB744303AKH5DMWA", response.params["id"])
+  end
+
+  def test_get_sale
+    @gateway.api.expects(:get).
+      with("v1/payments/sale/28H16906173986239", {}).
+      returns({ "id" => "28H16906173986239" })
+
+    response = @gateway.get_sale("28H16906173986239")
+    assert(response.success?, "Should be success")
+    assert_equal("28H16906173986239", response.params["id"])
+  end
+
+  def test_get_authorization
+    @gateway.api.expects(:get).
+      with("v1/payments/authorization/123", {}).
+      returns({ "id" => "123" })
+
+    response = @gateway.get_authorization("123")
+    assert(response.success?, "Should be success")
+    assert_equal("123", response.params["id"])
+  end
+
+  def test_void_authorization
+    @gateway.api.expects(:post).
+      with("v1/payments/authorization/123/void", {}).
+      returns({ "id" => "123" })
+
+    response = @gateway.void_authorization("123")
+    assert(response.success?, "Should be success")
+    assert_equal("123", response.params["id"])
+  end
+
+  def test_get_refund
+    @gateway.api.expects(:get).
+      with("v1/payments/refund/123", {}).
+      returns({ "id" => "123" })
+
+    response = @gateway.get_refund("123")
+    assert(response.success?, "Should be success")
+    assert_equal("123", response.params["id"])
+  end
+
+  def test_get_capture
+    @gateway.api.expects(:get).
+      with("v1/payments/capture/123", {}).
+      returns({ "id" => "123" })
+
+    response = @gateway.get_capture("123")
+    assert(response.success?, "Should be success")
+    assert_equal("123", response.params["id"])
+  end
+
   private
 
   def sandbox_test?
@@ -254,7 +357,8 @@ class PayPalRESTTest < Test::Unit::TestCase
             :funding_instruments => [{
               :credit_card => examples[:credit_card] }] },
           :transactions => [ examples[:transaction].merge({
-            :item_list => { :items => [ { :currency => 'USD' }.merge(@item) ], :shipping_address => @shipping_address } }) ] }
+            :item_list => { :items => [ @item.merge({ :currency => 'USD', :price => '1.00' }) ],
+            :shipping_address => @shipping_address } }) ] }
         examples[:payment_with_credit_card_token] = {
           :intent => "sale",
           :payer  => {
