@@ -19,6 +19,7 @@
 * [POSSIBLE BREAKAGE] Remove dependency on active_utils Validateable [ntalbott]
 * Make all active_utils requires explicit [ntalbott]
 * Balanced: Handle legacy card tokens [ntalbott]
+* Braintree Blue: Default verification merchant id [speric]
 
 == Version 1.43.2 (May 12, 2014)
 
