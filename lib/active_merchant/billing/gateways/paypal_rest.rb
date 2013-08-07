@@ -74,13 +74,23 @@ module ActiveMerchant
           params["transactions"][0]["related_resources"][0]["authorization"] rescue nil
         end
 
+        def authorization_id
+          authorization ? authorization["id"] : nil
+        end
+
         def sale
           params["transactions"][0]["related_resources"][0]["sale"] rescue nil
+        end
+
+        def sale_id
+          sale ? sale["id"] : nil
         end
 
         def approval_url
           params["links"].find{|link| link["rel"] == "approval_url" }["href"] rescue nil
         end
+        alias_method :redirect_url, :approval_url
+
       end
 
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]

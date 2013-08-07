@@ -44,6 +44,7 @@ class PayPalRESTTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card)
     assert(response.success?, "Should be success")
     assert_equal("approved", response.state)
+    assert_equal("28H16906173986239", response.sale_id)
   end
 
   def test_with_credit_card_token
@@ -134,6 +135,8 @@ class PayPalRESTTest < Test::Unit::TestCase
       :return_url => "http://return.url",
       :cancel_url => "http://cancel.url" )
     assert(response.success?, "Should be success")
+    assert_equal("https://www.sandbox.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token=EC-6T619957819203415",
+                 response.approval_url)
   end
 
   def test_with_payment_id
@@ -173,6 +176,7 @@ class PayPalRESTTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card)
     assert(response.success?, "Should be success")
+    assert("1J319028U3903480V", response.authorization_id)
   end
 
   def test_reauthorize
