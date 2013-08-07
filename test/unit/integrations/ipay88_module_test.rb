@@ -8,10 +8,6 @@ class Ipay88ModuleTest < Test::Unit::TestCase
   end
 
   def test_service_url
-    assert_equal "https://www.mobile88.com/epayment/enquiry.asp", Ipay88.service_url
-  end
-
-  def test_entry_url
-    assert_equal "https://www.mobile88.com/epayment/entry.asp", Ipay88.entry_url
+    assert_equal "https://www.mobile88.com/epayment/entry.asp", Ipay88.service_url
   end
 end

@@ -7,15 +7,11 @@ module ActiveMerchant #:nodoc:
         autoload :Notification, "active_merchant/billing/integrations/ipay88/notification.rb"
 
         def self.service_url
-          "https://www.mobile88.com/epayment/enquiry.asp"
-        end
-
-        def self.entry_url
           "https://www.mobile88.com/epayment/entry.asp"
         end
 
-        def self.return(query_string)
-          Return.new(query_string)
+        def self.return(query_string, options={})
+          Return.new(query_string, options)
         end
       end
     end

@@ -69,6 +69,12 @@ module ActiveMerchant #:nodoc:
             add_field mappings[:payment], pay_method
           end
 
+          def customer(params = {})
+            add_field(mappings[:customer][:name], "#{params[:first_name]} #{params[:last_name]}")
+            add_field(mappings[:customer][:email], params[:email])
+            add_field(mappings[:customer][:phone], params[:userContact])
+          end
+
           def self.sign(str)
             [Digest::SHA1.digest(str)].pack("m").chomp
           end
