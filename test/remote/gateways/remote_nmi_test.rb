@@ -53,11 +53,11 @@ class RemoteNmiTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved', void.message
   end
 
-  def test_credit
+  def test_refund
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert response = @gateway.credit(@amount, response.authorization, :card_number => @credit_card.number)
+    assert response = @gateway.refund(@amount, response.authorization, :card_number => @credit_card.number)
     assert_success response
     assert_equal 'This transaction has been approved', response.message
   end

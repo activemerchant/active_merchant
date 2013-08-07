@@ -55,7 +55,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal '508141795', response.authorization
   end
 
-  def test_passing_recurring_flag
+  def test_echeck_passing_recurring_flag
     response = stub_comms do
       @gateway.purchase(@amount, @check, :recurring => true)
     end.check_request do |endpoint, data, headers|
