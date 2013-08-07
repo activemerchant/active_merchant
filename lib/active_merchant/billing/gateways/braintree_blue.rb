@@ -258,6 +258,10 @@ module ActiveMerchant #:nodoc:
           valid_options[key] = value if [:update_existing_token, :verify_card, :verification_merchant_account_id].include?(key)
         end
 
+        if valid_options.include?(:verify_card) && @merchant_account_id
+          valid_options[:verification_merchant_account_id] ||= @merchant_account_id
+        end
+
         parameters[:credit_card] ||= {}
         parameters[:credit_card].merge!(:options => valid_options)
         parameters[:credit_card][:billing_address] = map_address(options[:billing_address]) if options[:billing_address]
