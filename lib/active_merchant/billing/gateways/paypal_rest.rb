@@ -4,6 +4,7 @@ begin
 rescue LoadError
   raise "Install paypal-sdk-rest gem, to use PaypalRestGateway"
 end
+require 'cgi'
 
 module ActiveMerchant
   module Billing
@@ -182,7 +183,8 @@ module ActiveMerchant
         requires!(options, :authorization_id)
         payload = {
           :amount => build_amount(money, options) }
-        request(:post, "v1/payments/authorization/#{options[:authorization_id]}/reauthorize", payload, options)
+        authorization_id = CGI.escape(options[:authorization_id])
+        request(:post, "v1/payments/authorization/#{authorization_id}/reauthorize", payload, options)
       end
 
       # Capture amount for authorize payment
@@ -200,7 +202,8 @@ module ActiveMerchant
         transaction = {
           :amount => build_amount(money, options),
           :is_final_capture => options[:is_final_capture] }
-        request(:post, "v1/payments/authorization/#{options[:authorization_id]}/capture", transaction, options)
+        authorization_id = CGI.escape(options[:authorization_id])
+        request(:post, "v1/payments/authorization/#{authorization_id}/capture", transaction, options)
       end
 
       # Execute the PayPal Payment
@@ -216,7 +219,8 @@ module ActiveMerchant
         payload = { :payer_id => options[:payer_id] }
         # FIXME: Document refer Transaction type, but actual API work with Amount type only
         payload[:transactions] = [ build_amount(money, options) ] if money
-        request(:post, "v1/payments/payment/#{options[:payment_id]}/execute", payload, options)
+        payment_id = CGI.escape(options[:payment_id])
+        request(:post, "v1/payments/payment/#{payment_id}/execute", payload, options)
       end
 
       # Refund purchase payment
@@ -233,10 +237,12 @@ module ActiveMerchant
       def refund(money, options = {})
         payload = { :amount => build_amount(money, options) }
         if options[:capture_id]
-          request(:post, "v1/payments/capture/#{options[:capture_id]}/refund", payload, options)
+          capture_id = CGI.escape(options[:capture_id])
+          request(:post, "v1/payments/capture/#{capture_id}/refund", payload, options)
         else
           requires!(options, :sale_id)
-          request(:post, "v1/payments/sale/#{options[:sale_id]}/refund", payload, options)
+          sale_id = CGI.escape(options[:sale_id])
+          request(:post, "v1/payments/sale/#{sale_id}/refund", payload, options)
         end
       end
 
@@ -326,6 +332,11 @@ module ActiveMerchant
             api.send(method, path, data)
           end
         build_response(response, options)
+      rescue PayPal::SDK::Core::Exceptions::ConnectionError => error
+        build_response({"error" => {
+          "name" => error.message,
+          "exception" => error,
+          "response" => error.response }}, options)
       end
 
       def resource_id(resource)
@@ -346,7 +357,7 @@ module ActiveMerchant
       end
 
       def build_response(data, options)
-        if data["error"]
+        if data.is_a? Hash and data["error"]
           message = data["error"]["name"] || "Failed"
           Response.new(false, message, data["error"], options)
         else

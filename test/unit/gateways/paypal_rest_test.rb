@@ -253,6 +253,16 @@ class PayPalRESTTest < Test::Unit::TestCase
     assert_not_nil(response.params["payments"])
   end
 
+  def test_not_found_exception
+    http_response = Struct.new(:code, :message).new( 400, "Not Found")
+    @gateway.api.expects(:get).
+      raises(PayPal::SDK::Core::Exceptions::ResourceNotFound.new(http_response))
+
+    response = @gateway.get_payment("PAY-invalid")
+    assert_false(response.success?)
+    assert_equal("Failed.  Response code = 400.  Response message = Not Found.", response.message)
+  end
+
   def test_get_payment
     @gateway.api.expects(:get).
       with("v1/payments/payment/PAY-2YB28071MB744303AKH5DMWA", {}).
