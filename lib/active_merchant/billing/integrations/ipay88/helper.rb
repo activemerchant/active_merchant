@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
           def customer(params = {})
             add_field(mappings[:customer][:name], "#{params[:first_name]} #{params[:last_name]}")
             add_field(mappings[:customer][:email], params[:email])
-            add_field(mappings[:customer][:phone], params[:userContact])
+            add_field(mappings[:customer][:phone], params[:phone])
           end
 
           def self.sign(str)

@@ -15,7 +15,7 @@ class Ipay88HelperTest < Test::Unit::TestCase
   end
 
   def test_customer_fields
-    @helper.customer :name => "John Doe", :email => "john@example.com", :phone => "+60128888888"
+    @helper.customer :first_name => "John", :last_name => "Doe", :email => "john@example.com", :phone => "+60128888888"
     assert_field "UserName",    "John Doe"
     assert_field "UserEmail",   "john@example.com"
     assert_field "UserContact", "+60128888888"
