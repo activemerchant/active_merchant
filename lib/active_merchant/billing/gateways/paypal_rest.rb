@@ -42,6 +42,9 @@ module ActiveMerchant
     # * <tt>shipping</tt> - Shipping amount
     # * <tt>subtotal</tt> - Items total amount
     # * <tt>fee</tt>      - Fee amount
+    # * <tt>items</tt>    - Array of item( :name, :quantity, :price )
+    # * <tt>header</tt>   - HTTP header
+    # * <tt>request_id</tt> - Unique ID for the API request.
     #
     # * <tt>billing_address</tt>  - Billing Address for credit_card payment
     # * <tt>shipping_address</tt> - Shipping address for purchase and authorize calls
@@ -240,7 +243,13 @@ module ActiveMerchant
       private
 
       def request(method, path, data, options)
-        response = api.send(method, path, data)
+        http_header = build_http_header(options)
+        response =
+          if http_header.any?
+            api.send(method, path, data, http_header)
+          else
+            api.send(method, path, data)
+          end
         build_response(response, options)
       end
 
@@ -252,6 +261,13 @@ module ActiveMerchant
         else
           resource
         end
+      end
+
+      def build_http_header(options)
+        header = {}
+        header.merge!( "PayPal-Request-Id" => options[:request_id] ) if options[:request_id]
+        header.merge!(options[:header]) if options[:header].is_a? Hash
+        header
       end
 
       def build_response(data, options)

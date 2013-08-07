@@ -115,6 +115,16 @@ class PayPalRESTTest < Test::Unit::TestCase
     assert(response.success?, "Should be success")
   end
 
+  def test_with_request_id
+    @gateway.api.expects(:post).
+      with("v1/payments/payment", request_data[:payment_with_credit_card], "PayPal-Request-Id" => "unique-id" ).
+      returns(create_payment_with_credit_card_response)
+
+    response = @gateway.purchase(@amount, @credit_card, :request_id => "unique-id" )
+    assert(response.success?, "Should be success")
+  end
+
+
   def test_with_paypal
     @gateway.api.expects(:post).
       with("v1/payments/payment", request_data[:payment_with_paypal]).
