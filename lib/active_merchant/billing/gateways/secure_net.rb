@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'SecureNet'
 
       self.test_url = 'https://certify.securenet.com/API/gateway.svc/webHttp/ProcessTransaction'
-      self.live_url = 'https://gateway.securenet.com/api/Gateway.svc'
+      self.live_url = 'https://gateway.securenet.com/api/Gateway.svc/webHttp/ProcessTransaction'
 
       APPROVED, DECLINED = 1, 2
 
