@@ -36,9 +36,11 @@ module ActiveMerchant #:nodoc:
             date = Time.now.strftime("%d/%m/%Y:%H:%M:%S")
             add_field('date', date)
             add_field('reference', order)
-            add_field('TPE', '123456')
+            tpe = options[:credential2]
+            add_field('TPE', tpe)
             add_field('text-libre', '')
-            add_field('societe', 'masociete')
+            company = options[:account_name]
+            add_field('company', company)
             # MAC field
             mac_data = [
               fields['TPE'], date, montant, order,
