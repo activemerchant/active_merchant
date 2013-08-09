@@ -183,14 +183,14 @@ module ActiveMerchant #:nodoc:
           if options[:track_data]
             card[:swipe_data] = options[:track_data]
           else
-            card[:number] = creditcard
+            card = creditcard
           end
           post[:card] = card
         end
       end
 
       def add_customer(post, options)
-        post[:customer] = options[:customer] if options[:customer] && post[:card].blank?
+        post[:customer] = options[:customer] if options[:customer]
       end
 
       def add_flags(post, options)
