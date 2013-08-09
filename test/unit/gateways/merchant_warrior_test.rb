@@ -11,9 +11,9 @@ class MerchantWarriorTest < Test::Unit::TestCase
                )
 
     @credit_card = credit_card
-    @success_amount = '100.00'
+    @success_amount = 10000
     @transaction_id = '30-98a79008-dae8-11df-9322-0022198101cd'
-    @failure_amount = '100.33'
+    @failure_amount = 10033
 
     @options = {
       :address => {
