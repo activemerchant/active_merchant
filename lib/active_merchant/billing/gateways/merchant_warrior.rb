@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
-        post.merge!('captureAmount' => money.to_s)
+        post.merge!('captureAmount' => amount(money))
         commit('processCapture', post)
       end
 
@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
         add_transaction(post, identification)
-        post['refundAmount'] = money
+        post['refundAmount'] = amount(money)
         commit('refundCard', post)
       end
 
@@ -105,14 +105,15 @@ module ActiveMerchant #:nodoc:
         post['paymentCardNumber'] = creditcard.number
         post['paymentCardName'] = creditcard.name
         post['paymentCardExpiry'] = creditcard.expiry_date.expiration.strftime("%m%y")
+        post['paymentCardCSC'] = creditcard.verification_value if creditcard.verification_value?
       end
 
       def add_amount(post, money, options)
         currency = (options[:currency] || currency(money))
 
-        post['transactionAmount'] = money.to_s
+        post['transactionAmount'] = amount(money)
         post['transactionCurrency'] = currency
-        post['hash'] = verification_hash(money, currency)
+        post['hash'] = verification_hash(amount(money), currency)
       end
 
       def verification_hash(money, currency)
