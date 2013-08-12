@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * MerchantWarrior: Fix handling of amounts [duff]
+* MerchantWarrior: Send the CVV to the gateway [duff]
 
 == Version 1.36.0 (August 2, 2013)
 

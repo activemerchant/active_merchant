@@ -105,6 +105,7 @@ module ActiveMerchant #:nodoc:
         post['paymentCardNumber'] = creditcard.number
         post['paymentCardName'] = creditcard.name
         post['paymentCardExpiry'] = creditcard.expiry_date.expiration.strftime("%m%y")
+        post['paymentCardCSC'] = creditcard.verification_value if creditcard.verification_value?
       end
 
       def add_amount(post, money, options)
