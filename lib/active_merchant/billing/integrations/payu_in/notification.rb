@@ -11,24 +11,22 @@ module ActiveMerchant #:nodoc:
           end
 
           def complete?
-            status == "success"
+            status == "Completed"
           end
 
-          # Status of the transaction. List of possible values:
-          # <tt>invalid</tt>:: transaction id is not present
-          # <tt>tampered</tt>:: transaction data has been tampered
-          # <tt>success</tt>:: transaction successful
-          # <tt>pending</tt>:: transaction is pending for some approval
-          # <tt>failure</tt>:: transaction failure
           def status
             @status ||= if checksum_ok?
               if transaction_id.blank?
-                'invalid'
+                'Invalid'
               else
-                transaction_status.downcase
+                case transaction_status.downcase
+                when 'success' then 'Completed'
+                when 'failure' then 'Failed'
+                when 'pending' then 'Pending'
+                end
               end
             else
-              'tampered'
+              'Tampered'
             end
           end
 
