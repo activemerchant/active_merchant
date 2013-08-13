@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase_with_token(money, payment_method_token, options)
         request = auth_purchase_request(money, payment_method_token, options)
-        commit("gateways/#{@options[:gateway_token]}/purchase.xml", request)
+        commit("gateways/#{options[:gateway_token] || @options[:gateway_token]}/purchase.xml", request)
       end
 
       def authorize_with_token(money, payment_method_token, options)
