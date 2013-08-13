@@ -75,6 +75,16 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_equal '0957', response.params['payment_method_last_four_digits']
   end
 
+  def test_purchase_without_gateway_token_option
+    @gateway.expects(:commit).with("gateways/token/purchase.xml", anything)
+    @gateway.purchase(@amount, @payment_method_token)
+  end
+
+  def test_purchase_with_gateway_token_option
+    @gateway.expects(:commit).with("gateways/mynewtoken/purchase.xml", anything)
+    @gateway.purchase(@amount, @payment_method_token, gateway_token: 'mynewtoken')
+  end
+
   def test_successful_authorize_with_token_and_capture
     @gateway.expects(:raw_ssl_request).returns(successful_authorize_response)
     response = @gateway.authorize(@amount, @payment_method_token)
