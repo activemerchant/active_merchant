@@ -229,6 +229,24 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_equal "Succeeded!", response.message
   end
 
+  def test_successful_retrieve
+    @gateway.expects(:raw_ssl_request).returns(successful_store_response)
+    response = @gateway.store(@credit_card)
+    assert_success response
+
+    @gateway.expects(:raw_ssl_request).returns(successful_retrieve_response)
+    response = @gateway.retrieve(response.authorization)
+    assert_success response
+    assert_equal "XXXX-XXXX-XXXX-3886", response.params['number']
+  end
+
+  def test_unsuccessful_retrieve
+    @gateway.expects(:raw_ssl_request).returns(unsuccessful_retrieve_response)
+    response = @gateway.retrieve('dummy_token')
+    assert_failure response
+    assert_equal "Unable to find the specified payment method.", response.message
+  end
+
 
   private
   def successful_purchase_response
@@ -748,7 +766,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
   end
 
   def successful_unstore_response
-    MockResponse.failed <<-XML
+    MockResponse.succeeded <<-XML
       <transaction>
         <token>Ydpteng4vTNG37eulEbUvYIbuJC</token>
         <created_at type="datetime">2012-12-11T22:02:50Z</created_at>
@@ -784,6 +802,48 @@ class SpreedlyCoreTest < Test::Unit::TestCase
       </transaction>
     XML
   end
+
+  def successful_retrieve_response
+    MockResponse.succeeded <<-XML
+      <payment_method>
+        <token>PgXuZ5YzLbPHewpYcXexDDvOpK2</token>
+        <created_at type="datetime">2013-06-28T20:37:15Z</created_at>
+        <updated_at type="datetime">2013-06-28T20:37:16Z</updated_at>
+        <email nil="true"/>
+        <data nil="true"/>
+        <storage_state>retained</storage_state>
+        <last_four_digits>3886</last_four_digits>
+        <card_type>visa</card_type>
+        <first_name>Bob</first_name>
+        <last_name>Smith</last_name>
+        <month type="integer">1</month>
+        <year type="integer">2020</year>
+        <address1 nil="true"/>
+        <address2 nil="true"/>
+        <city nil="true"/>
+        <state nil="true"/>
+        <zip nil="true"/>
+        <country nil="true"/>
+        <phone_number nil="true"/>
+        <full_name>Bob Smith</full_name>
+        <payment_method_type>credit_card</payment_method_type>
+        <errors>
+        </errors>
+        <verification_value></verification_value>
+        <number>XXXX-XXXX-XXXX-3886</number>
+      </payment_method>
+    XML
+  end
+
+  def unsuccessful_retrieve_response
+    MockResponse.failed <<-XML
+      <errors>
+        <error key="errors.payment_method_not_found">Unable to find the specified payment method.</error>
+      </errors>
+    XML
+  end
+
+
 
   class MockResponse
     attr_reader :code, :body
