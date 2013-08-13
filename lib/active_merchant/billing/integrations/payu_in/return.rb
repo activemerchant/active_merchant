@@ -9,37 +9,20 @@ module ActiveMerchant #:nodoc:
             @notification = Notification.new(query_string, options)
           end
 
-          # PayU Transaction Id
-          #
           def transaction_id
             @notification.transaction_id
           end
 
-          # Returns the status of the transaction as a string
-          # The status can be one of the following
-          #
-          # invalid - transaction id not present
-          # tampered - checksum does not mismatch
-          # mismatch - order id mismatch
-          # success - transaction success
-          # pending - transaction pending
-          # failure - transaction failure
-          #
-          # payu does not put the discount field in the checksum
-          # it can be easily forged by the attacker without detection
-          #
           def status( order_id, order_amount )
             if @notification.invoice_ok?( order_id ) && @notification.amount_ok?( BigDecimal.new(order_amount) )
               @notification.status
             else
-              'mismatch'
+              'Mismatch'
             end
           end
 
-          # check success of the transaction
-          # check order_id and
           def success?
-            status( @params['txnid'], @params['amount'] ) == 'success'
+            status( @params['txnid'], @params['amount'] ) == 'Completed'
           end
 
           def message
