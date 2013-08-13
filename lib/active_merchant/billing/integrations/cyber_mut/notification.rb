@@ -35,8 +35,9 @@ module ActiveMerchant #:nodoc:
           end
 
           # the money amount we received in X.2 decimal with devise
+          # Needs to have dot instead of comma to comply to `to_f`.
           def gross
-            params['montant'][0..-4]
+            params['montant'][0..-4].gsub(",", ".")
           end
 
           # What currency have we been dealing with
