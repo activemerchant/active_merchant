@@ -15,10 +15,12 @@ module ActiveMerchant #:nodoc:
 
       # gateway_id maps to MerchantName in the request
       # payee_id maps to BillType in the request
-      # if you pass in :applicant_name, :property_address, :property_unit_number those will be passed into the ID1-4 columns
-      def initialize(options = {})
+      # if you pass in :applicant_name, :property_address, :property_unit_number those will be passed into the ID1-4 columns.
+      # ID1 is required so a default value of "Generic Application" will be inserted if no value is given.
+      def initialize(options = {}) 
         requires!(options, :login, :password, :gateway_id, :payee_id)
         @options = options
+        @options.reverse_merge! :property_address, 'Generic Application'
         super
       end  
 
