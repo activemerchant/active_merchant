@@ -192,6 +192,22 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert_equal 'RedactPaymentMethod', response.params['transaction_type']
   end
 
+  def test_successful_retrieve
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+
+    assert response = @gateway.retrieve(response.authorization)
+    assert_success response
+    assert_equal response.params['payment_method_token'], response.authorization
+    assert_equal 'Longbob', response.params['first_name']
+  end
+
+  def test_unsuccessful_retrieve
+    assert response = @gateway.retrieve('osoisisususu')
+    assert_failure response
+    assert_equal response.params['error'], 'Unable to find the specified payment method.'
+  end
+
   def test_successful_refund
     assert response = @gateway.purchase(@amount, @existing_payment_method)
     assert_success response
@@ -224,6 +240,6 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
 
     assert response = gateway.purchase(@amount, @existing_payment_method)
     assert_failure response
-    assert_equal 'HTTP Basic: Access denied.', response.message
+    assert_equal 'Unable to authenticate using the given environment_key and access_token.  Please check your credentials.', response.message
   end
 end
