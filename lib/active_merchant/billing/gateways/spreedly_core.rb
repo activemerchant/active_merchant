@@ -105,6 +105,10 @@ module ActiveMerchant #:nodoc:
         commit("payment_methods/#{authorization}/redact.xml", '', :put)
       end
 
+      def retrieve(authorization, options={})
+        commit("payment_methods/#{authorization}.xml", nil, :get)
+      end
+
       private
       def save_card(retain, credit_card, options)
         request = build_xml_request('payment_method') do |doc|
@@ -212,10 +216,10 @@ module ActiveMerchant #:nodoc:
           raw_response = e.response.body
         end
 
-        response_from(raw_response, authorization_field)
+        method != :get ? response_from_transaction(raw_response, authorization_field) : response_from_request(raw_response)
       end
 
-      def response_from(raw_response, authorization_field)
+      def response_from_transaction(raw_response, authorization_field)
         parsed = parse(raw_response)
         options = {
           :authorization => parsed[authorization_field],
@@ -225,6 +229,11 @@ module ActiveMerchant #:nodoc:
         }
 
         Response.new(parsed[:succeeded] == 'true', parsed[:message] || parsed[:error], parsed, options)
+      end
+
+      def response_from_request(raw_response)
+        parsed = parse(raw_response)
+        Response.new(parsed[:error].blank?, parsed[:message] || parsed[:error], parsed)
       end
 
       def headers
