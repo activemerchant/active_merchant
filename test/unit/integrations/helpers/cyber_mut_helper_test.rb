@@ -5,7 +5,7 @@ class CyberMutHelperTest < Test::Unit::TestCase
 
   def setup
     @helper = CyberMut::Helper.new('order-500', 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ',
-                                   :amount => 500, :currency => 'EUR')
+                                   :amount => 500, :currency => 'EUR', :credential2 => '123456')
   end
 
   def test_static_fields
