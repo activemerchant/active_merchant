@@ -27,20 +27,14 @@ module ActiveMerchant #:nodoc:
             super
             # https://github.com/novelys/paiementcic/blob/master/lib/paiement_cic.rb#L41
             @hmac_key = account
-            version = '3.0'
-            add_field('version', version)
-            montant = ("%.2f" % options[:amount]) + "EUR"
-            add_field('montant', montant)
-            langue = 'FR'
-            add_field('lgue', langue)
-            date = Time.now.strftime("%d/%m/%Y:%H:%M:%S")
-            add_field('date', date)
+            add_field('version', '3.0')
+            add_field('montant', ("%.2f" % options[:amount]) + "EUR")
+            add_field('lgue', 'FR')
+            add_field('date', Time.now.strftime("%d/%m/%Y:%H:%M:%S"))
             add_field('reference', order)
-            tpe = options[:credential2]
-            add_field('TPE', tpe)
+            add_field('TPE', options[:credential2])
             add_field('text-libre', '')
-            company = options[:account_name]
-            add_field('company', company)
+            add_field('company', options[:account_name])
             # MAC field
             mac_data = [
               fields['TPE'], date, montant, order,
