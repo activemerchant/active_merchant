@@ -1,8 +1,13 @@
 require "test_helper"
 
-class PayPalRESTTest < Test::Unit::TestCase
+class PayPalRestTest < Test::Unit::TestCase
 
   def setup
+    # FIXME: To resolve conflict with vindicia because of PayPal constant
+    Object.class_eval do
+      const_set :PayPal, PayPalBackup if const_defined? :PayPalBackup
+    end
+
     @gateway = PaypalRestGateway.new({
       :mode => "sandbox",
       :client_id => ENV["TEST_PAYPAL_CLIENT_ID"] || "CLIENT_ID",
@@ -26,6 +31,15 @@ class PayPalRESTTest < Test::Unit::TestCase
       :sku => "item",
       :price => 100,
       :quantity => 1 }
+  end
+
+  def teardown
+    # FIXME: To resolve conflict with vindicia because of PayPal constant
+    Object.class_eval do
+      remove_const :PayPalBackup if const_defined? :PayPalBackup
+      const_set :PayPalBackup, PayPal
+      remove_const :PayPal
+    end
   end
 
   def test_user_agent
