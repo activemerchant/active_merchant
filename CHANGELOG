@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Fix NoMethodError "tr" for params with dash [TimothyKlim]
+* Authorize.Net: Add cardholder authentication options (CAVV) support [structure]
 
 == Version 1.41.0 (October 24th, 2013)
 
