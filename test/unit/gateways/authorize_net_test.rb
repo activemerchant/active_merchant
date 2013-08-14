@@ -150,6 +150,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 0, result[:duplicate_window]
   end
 
+  def test_add_cardholder_authentication_value
+    result = {}
+    params = {:cardholder_authentication_value => 'E0Mvq8AAABEiMwARIjNEVWZ3iJk=', :authentication_indicator => '2'}
+    @gateway.send(:add_customer_data, result, params)
+    assert_equal 'E0Mvq8AAABEiMwARIjNEVWZ3iJk=', result[:cardholder_authentication_value]
+    assert_equal '2', result[:authentication_indicator]
+  end
+
   def test_purchase_is_valid_csv
    params = { :amount => '1.01' }
 
@@ -184,6 +192,13 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
    response = @gateway.capture(50, '123456789')
    assert_equal('d1GENk', response.params['authorization_code'] )
+  end
+
+  def test_cardholder_authorization_code_included_in_params
+   @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+   response = @gateway.capture(50, '123456789')
+   assert_equal('2', response.params['cardholder_authentication_code'] )
   end
 
   def test_capture_passing_extra_info
