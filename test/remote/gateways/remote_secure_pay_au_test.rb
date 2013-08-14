@@ -18,6 +18,8 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4242424242424242', {:month => 9, :year => 15})
 
+    @check = check(:routing_number => '123123', :account_number => '0012345', :name => 'John Citizen')
+
     @options = {
       :order_id => '2',
       :billing_address => address,
@@ -27,6 +29,12 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_successful_purchase_with_check
+    assert response = @gateway.purchase(@amount, @check, @options)
     assert_success response
     assert_equal 'Approved', response.message
   end

@@ -61,12 +61,12 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, credit_card_or_stored_id, options = {})
-        if credit_card_or_stored_id.respond_to?(:number)
+      def purchase(money, source_or_stored_id, options = {})
+        if source_or_stored_id.respond_to?(:number)
           requires!(options, :order_id)
-          commit :purchase, build_purchase_request(money, credit_card_or_stored_id, options)
+          commit :purchase, build_purchase_request(money, source_or_stored_id, options)
         else
-          options[:billing_id] = credit_card_or_stored_id.to_s
+          options[:billing_id] = source_or_stored_id.to_s
           commit_periodic(build_periodic_item(:trigger, money, nil, options))
         end
       end
@@ -105,17 +105,17 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def build_purchase_request(money, credit_card, options)
+      def build_purchase_request(money, source, options)
         xml = Builder::XmlMarkup.new
 
         xml.tag! 'amount', amount(money)
         xml.tag! 'currency', options[:currency] || currency(money)
         xml.tag! 'purchaseOrderNo', options[:order_id].to_s.gsub(/[ ']/, '')
 
-        xml.tag! 'CreditCardInfo' do
-          xml.tag! 'cardNumber', credit_card.number
-          xml.tag! 'expiryDate', expdate(credit_card)
-          xml.tag! 'cvv', credit_card.verification_value if credit_card.verification_value?
+        if card_brand(source) == "check"
+          build_check(source, xml)
+        else
+          build_creditcard(source, xml)
         end
 
         xml.target!
@@ -166,6 +166,22 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
+      def build_creditcard(credit_card, xml)
+        xml.tag! 'CreditCardInfo' do
+          xml.tag! 'cardNumber', credit_card.number
+          xml.tag! 'expiryDate', expdate(credit_card)
+          xml.tag! 'cvv', credit_card.verification_value if credit_card.verification_value?
+        end
+      end
+
+      def build_check(check, xml)
+        xml.tag! 'DirectEntryInfo' do
+          xml.tag! 'bsbNumber', check.routing_number
+          xml.tag! 'accountNumber', check.account_number
+          xml.tag! 'accountName', check.name 
+        end
+      end
+
       def commit(action, request)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(action, request)))
 
@@ -175,17 +191,17 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def build_periodic_item(action, money, credit_card, options)
+      def build_periodic_item(action, money, source, options)
         xml = Builder::XmlMarkup.new
 
         xml.tag! 'actionType', PERIODIC_ACTIONS[action]
         xml.tag! 'clientID', options[:billing_id].to_s
 
-        if credit_card
-          xml.tag! 'CreditCardInfo' do
-            xml.tag! 'cardNumber', credit_card.number
-            xml.tag! 'expiryDate', expdate(credit_card)
-            xml.tag! 'cvv', credit_card.verification_value if credit_card.verification_value?
+        if source
+          if card_brand(source) == "check"
+            build_check(source, xml)
+          else
+            build_creditcard(source, xml)
           end
         end
         xml.tag! 'amount', amount(money)

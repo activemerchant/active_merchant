@@ -8,6 +8,7 @@ class SecurePayAuTest < Test::Unit::TestCase
                )
 
     @credit_card = credit_card
+    @check = check
     @amount = 100
 
     @options = {
@@ -37,10 +38,32 @@ class SecurePayAuTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_check_and_live_data
+    @gateway.expects(:ssl_post).returns(successful_live_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal '000000*#1047.5**211700', response.authorization
+    assert response.test?
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal '024259*test**1000', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_check
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @check, @options)
     assert_instance_of Response, response
     assert_success response
 
@@ -152,6 +175,15 @@ class SecurePayAuTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_store_response)
 
     assert response = @gateway.store(@credit_card, {:billing_id => 'test3', :amount => 123})
+    assert_instance_of Response, response
+    assert_equal "Successful", response.message
+    assert_equal 'test3', response.params['client_id']
+  end
+
+  def test_successful_store_check
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+
+    assert response = @gateway.store(@check, {:billing_id => 'test3', :amount => 123})
     assert_instance_of Response, response
     assert_equal "Successful", response.message
     assert_equal 'test3', response.params['client_id']
