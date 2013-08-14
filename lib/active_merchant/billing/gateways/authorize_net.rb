@@ -383,6 +383,15 @@ module ActiveMerchant #:nodoc:
         if options.has_key? :ip
           post[:customer_ip] = options[:ip]
         end
+
+        if options.has_key? :cardholder_authentication_value
+          post[:cardholder_authentication_value] = options[:cardholder_authentication_value]
+        end
+
+        if options.has_key? :authentication_indicator
+          post[:authentication_indicator] = options[:authentication_indicator]
+        end
+
       end
 
       # x_duplicate_window won't be sent by default, because sending it changes the response.
