@@ -69,9 +69,8 @@ module ActiveMerchant #:nodoc:
         data = ssl_post(url, xml, "Content-Type" => "text/xml")
         response = parse(data)
 
-        test_mode = test?
         Response.new(success?(response), message_from(response), response,
-          :test => test_mode,
+          :test => test?,
           :authorization => build_authorization(response),
           :avs_result => { :code => response[:avs_result_code] },
           :cvv_result => response[:card_code_response_code]
@@ -208,7 +207,7 @@ module ActiveMerchant #:nodoc:
 
       def add_more_required_params(xml, options)
         xml.tag! 'RETAIL_LANENUM', '0'
-        xml.tag! 'TEST', 'TRUE'
+        xml.tag! 'TEST', 'TRUE' if test?
         xml.tag! 'TOTAL_INSTALLMENTCOUNT', 0
         xml.tag! 'TRANSACTION_SERVICE', 0
       end
