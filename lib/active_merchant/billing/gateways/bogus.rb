@@ -2,8 +2,6 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # Bogus Gateway
     class BogusGateway < Gateway
-      AUTHORIZATION = '53433'
-
       SUCCESS_MESSAGE = "Bogus Gateway: Forced success"
       FAILURE_MESSAGE = "Bogus Gateway: Forced failure"
       ERROR_MESSAGE = "Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error"
@@ -20,10 +18,10 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, credit_card_or_reference, options = {})
         money = amount(money)
-        case normalize(credit_card_or_reference)
-        when /1$/
-          Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
-        when /2$/
+        case nth_last(credit_card_or_reference, 1)
+        when '1'
+          Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => authorization(credit_card_or_reference) )
+        when '2'
           Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money, :error => FAILURE_MESSAGE }, :test => true)
         else
           raise Error, ERROR_MESSAGE
@@ -32,10 +30,10 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, credit_card_or_reference, options = {})
         money = amount(money)
-        case normalize(credit_card_or_reference)
-        when /1$/, AUTHORIZATION
-          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true, :authorization => AUTHORIZATION)
-        when /2$/
+        case nth_last(credit_card_or_reference, 2)
+        when '1'
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true, :authorization => authorization(credit_card_or_reference))
+        when '2'
           Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE },:test => true)
         else
           raise Error, ERROR_MESSAGE
@@ -44,10 +42,10 @@ module ActiveMerchant #:nodoc:
 
       def recurring(money, credit_card_or_reference, options = {})
         money = amount(money)
-        case normalize(credit_card_or_reference)
-        when /1$/
+        case nth_last(credit_card_or_reference, 3)
+        when '1'
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
-        when /2$/
+        when '2'
           Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE },:test => true)
         else
           raise Error, ERROR_MESSAGE
@@ -61,10 +59,10 @@ module ActiveMerchant #:nodoc:
         end
 
         money = amount(money)
-        case normalize(credit_card_or_reference)
-        when /1$/
+        case nth_last(credit_card_or_reference, 4)
+        when '1'
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true )
-        when /2$/
+        when '2'
           Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true)
         else
           raise Error, CREDIT_ERROR_MESSAGE
@@ -73,44 +71,44 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, reference, options = {})
         money = amount(money)
-        case reference
-        when /1$/
-          raise Error, REFUND_ERROR_MESSAGE
-        when /2$/
+        case nth_last(reference, 5)
+        when '1'
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
+        when '2'
           Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true)
         else
-          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
+          raise Error, REFUND_ERROR_MESSAGE
         end
       end
 
       def capture(money, reference, options = {})
         money = amount(money)
-        case reference
-        when /1$/
-          raise Error, CAPTURE_ERROR_MESSAGE
-        when /2$/
+        case nth_last(reference, 6)
+        when '1'
+          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
+        when '2'
           Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true)
         else
-          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
+          raise Error, CAPTURE_ERROR_MESSAGE
         end
       end
 
       def void(reference, options = {})
-        case reference
-        when /1$/
-          raise Error, VOID_ERROR_MESSAGE
-        when /2$/
+        case nth_last(reference, 7)
+        when '1'
+          Response.new(true, SUCCESS_MESSAGE, {:authorization => reference}, :test => true)
+        when '2'
           Response.new(false, FAILURE_MESSAGE, {:authorization => reference, :error => FAILURE_MESSAGE }, :test => true)
         else
-          Response.new(true, SUCCESS_MESSAGE, {:authorization => reference}, :test => true)
+          raise Error, VOID_ERROR_MESSAGE
         end
       end
 
       def store(credit_card_or_reference, options = {})
-        case normalize(credit_card_or_reference)
-        when /1$/
-          Response.new(true, SUCCESS_MESSAGE, {:billingid => '1'}, :test => true, :authorization => AUTHORIZATION)
-        when /2$/
+        case nth_last(credit_card_or_reference, 8)
+        when '1'
+          Response.new(true, SUCCESS_MESSAGE, {:billingid => '1'}, :test => true, :authorization => authorization(credit_card_or_reference))
+        when '2'
           Response.new(false, FAILURE_MESSAGE, {:billingid => nil, :error => FAILURE_MESSAGE }, :test => true)
         else
           raise Error, ERROR_MESSAGE
@@ -118,10 +116,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def unstore(reference, options = {})
-        case reference
-        when /1$/
+        case nth_last(reference, 9)
+        when '1'
           Response.new(true, SUCCESS_MESSAGE, {}, :test => true)
-        when /2$/
+        when '2'
           Response.new(false, FAILURE_MESSAGE, {:error => FAILURE_MESSAGE },:test => true)
         else
           raise Error, UNSTORE_ERROR_MESSAGE
@@ -130,12 +128,21 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def authorization(credit_card_or_reference)
+        return normalize(credit_card_or_reference)[-9,9]
+      end
+
       def normalize(credit_card_or_reference)
         if credit_card_or_reference.respond_to?(:number)
           credit_card_or_reference.number
         else
           credit_card_or_reference.to_s
         end
+      end
+
+      def nth_last(credit_card_or_reference, n)
+        c = normalize(credit_card_or_reference)
+        c[-n] || c[0]
       end
     end
   end

@@ -1,8 +1,8 @@
 require 'test_helper'
 
 class BogusTest < Test::Unit::TestCase
-  SUCCESS_PLACEHOLDER = '4444333322221111'
-  FAILURE_PLACEHOLDER = '4444333311112222'
+  SUCCESS_PLACEHOLDER = '1111111111111111'
+  FAILURE_PLACEHOLDER = '2222222222222222'
 
   def setup
     @gateway = BogusGateway.new(
@@ -12,14 +12,14 @@ class BogusTest < Test::Unit::TestCase
 
     @creditcard = credit_card(SUCCESS_PLACEHOLDER)
 
-    @response = ActiveMerchant::Billing::Response.new(true, "Transaction successful", :transid => BogusGateway::AUTHORIZATION)
+    @response = ActiveMerchant::Billing::Response.new(true, "Transaction successful", :transid => SUCCESS_PLACEHOLDER)
   end
 
   def test_authorize
     assert  @gateway.authorize(1000, credit_card(SUCCESS_PLACEHOLDER)).success?
     assert !@gateway.authorize(1000, credit_card(FAILURE_PLACEHOLDER)).success?
     assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.authorize(1000, credit_card('123'))
+      @gateway.authorize(1000, credit_card('111111113'))
     end
   end
 
@@ -27,7 +27,7 @@ class BogusTest < Test::Unit::TestCase
     assert  @gateway.purchase(1000, credit_card(SUCCESS_PLACEHOLDER)).success?
     assert !@gateway.purchase(1000, credit_card(FAILURE_PLACEHOLDER)).success?
     assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.purchase(1000, credit_card('123'))
+      @gateway.purchase(1000, credit_card('111111131'))
     end
   end
 
@@ -35,16 +35,15 @@ class BogusTest < Test::Unit::TestCase
     assert  @gateway.recurring(1000, credit_card(SUCCESS_PLACEHOLDER)).success?
     assert !@gateway.recurring(1000, credit_card(FAILURE_PLACEHOLDER)).success?
     assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.recurring(1000, credit_card('123'))
+      @gateway.recurring(1000, credit_card('111111311'))
     end
   end
 
   def test_capture
-    assert  @gateway.capture(1000, '1337').success?
-    assert  @gateway.capture(1000, @response.params["transid"]).success?
+    assert  @gateway.capture(1000, SUCCESS_PLACEHOLDER).success?
     assert !@gateway.capture(1000, FAILURE_PLACEHOLDER).success?
     assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.capture(1000, SUCCESS_PLACEHOLDER)
+      @gateway.capture(1000, '111311111')
     end
   end
 
@@ -52,33 +51,31 @@ class BogusTest < Test::Unit::TestCase
     assert  @gateway.credit(1000, credit_card(SUCCESS_PLACEHOLDER)).success?
     assert !@gateway.credit(1000, credit_card(FAILURE_PLACEHOLDER)).success?
     assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.credit(1000, credit_card('123'))
+      @gateway.credit(1000, credit_card('111113111'))
     end
   end
 
   def test_refund
-    assert  @gateway.refund(1000, '1337').success?
-    assert  @gateway.refund(1000, @response.params["transid"]).success?
+    assert  @gateway.refund(1000, SUCCESS_PLACEHOLDER).success?
     assert !@gateway.refund(1000, FAILURE_PLACEHOLDER).success?
     assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.refund(1000, SUCCESS_PLACEHOLDER)
+      @gateway.refund(1000, '111131111')
     end
   end
 
   def test_credit_uses_refund
     options = {:foo => :bar}
-    @gateway.expects(:refund).with(1000, '1337', options)
+    @gateway.expects(:refund).with(1000, '111111111', options)
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
-      @gateway.credit(1000, '1337', options)
+      @gateway.credit(1000, '111111111', options)
     end
   end
 
   def test_void
-    assert  @gateway.void('1337').success?
-    assert  @gateway.void(@response.params["transid"]).success?
+    assert  @gateway.void(SUCCESS_PLACEHOLDER).success?
     assert !@gateway.void(FAILURE_PLACEHOLDER).success?
     assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.void(SUCCESS_PLACEHOLDER)
+      @gateway.void('113111111')
     end
   end
 
@@ -93,6 +90,27 @@ class BogusTest < Test::Unit::TestCase
   def test_store_then_purchase
     reference = @gateway.store(@creditcard)
     assert @gateway.purchase(1000, reference.authorization).success?
+
+    reference = @gateway.store(credit_card('1111111111111121'))
+    assert !@gateway.purchase(1000, reference.authorization).success?
+
+    reference = @gateway.store(credit_card('1111111111111131'))
+    assert_raises(ActiveMerchant::Billing::Error) do
+      @gateway.purchase(1000, reference.authorization)
+    end
+  end
+
+  def test_store_then_authorize
+    reference = @gateway.store(@creditcard)
+    assert @gateway.authorize(1000, reference.authorization).success?
+
+    reference = @gateway.store(credit_card('1111111111111112'))
+    assert !@gateway.authorize(1000, reference.authorization).success?
+
+    reference = @gateway.store(credit_card('1111111111111113'))
+    assert_raises(ActiveMerchant::Billing::Error) do
+      @gateway.authorize(1000, reference.authorization)
+    end
   end
 
   def test_supported_countries
