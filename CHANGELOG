@@ -18,6 +18,7 @@
 * Litle: Allow easier access to the response code [duff]
 * Stripe: Add the option to pass a version header [odorcicd]
 * Elavon: Update supported countries [duff]
+* Add Raven PacNet gateway [llopez]
 
 == Version 1.41.0 (October 24th, 2013)
 
