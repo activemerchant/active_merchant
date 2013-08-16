@@ -10,6 +10,7 @@
 #
 # Paste any required PEM certificates after the pem key.
 #
+
 app55:
   api_key: "QDtACYMCFqtuKOQ22QtCkGR1TzD7XM8i"
   api_secret: "yT1FRpuusBIQoEBIfIQ8bPStkl7yzdTz"
@@ -479,6 +480,11 @@ quickpay_with_api_key:
 quantum:
   login: X
   password: Y
+
+raven_pac_net:
+  user: ernest
+  secret: "all good men die young"
+  prn: 840033
 
 realex:
   login: X
