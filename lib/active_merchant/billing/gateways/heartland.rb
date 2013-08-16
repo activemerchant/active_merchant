@@ -160,9 +160,10 @@ module ActiveMerchant #:nodoc:
         end
         xml = xml.target!
         
-        f = File.new('test-bill-type', 'w')
-        f << xml
-        f.close
+        # useful for testing         
+        # f = File.new('test-bill-type', 'w')
+        # f << xml
+        # f.close
         
         return xml
       end
