@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {}) 
         requires!(options, :login, :password, :gateway_id, :payee_id)
         @options = options
-        @options.reverse_merge! :property_address, 'Generic Application'
+          @options.reverse_merge! property_address: 'Generic Application'
         super
       end  
 
