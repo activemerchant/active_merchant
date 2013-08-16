@@ -10,6 +10,12 @@
 #
 # Paste any required PEM certificates after the pem key.
 #
+
+raven_pac_net:
+  user: user
+  secret: serial
+  prn: 123456
+
 authorize_net:
   login: X
   password: Y
