@@ -37,8 +37,8 @@ module ActiveMerchant #:nodoc:
             add_field('company', options[:account_name])
             # MAC field
             mac_data = [
-              fields['TPE'], date, montant, order,
-              fields['text-libre'], version, langue, fields['company'],
+              fields['TPE'], fields['date'], fields['montant'], order,
+              fields['text-libre'], fields['version'], fields['lgue'], fields['company'],
               "", "", "", "", "", "", "", "", "", "", ""
             ].join('*')
             add_field('MAC', compute_HMACSHA1(mac_data))
