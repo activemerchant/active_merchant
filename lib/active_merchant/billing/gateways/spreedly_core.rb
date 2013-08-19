@@ -109,6 +109,11 @@ module ActiveMerchant #:nodoc:
         commit("payment_methods/#{authorization}.xml", nil, :get)
       end
 
+      def add_gateway(gateway_type,options={})
+        request = add_gateway_body(gateway_type, options)
+        commit_gateway("gateways.xml",request)
+      end
+
       private
       def save_card(retain, credit_card, options)
         request = build_xml_request('payment_method') do |doc|
@@ -236,6 +241,27 @@ module ActiveMerchant #:nodoc:
         Response.new(parsed[:error].blank?, parsed[:message] || parsed[:error], parsed)
       end
 
+      def add_gateway_body(gateway_type, options)
+        build_xml_request('gateway') do |doc|
+          doc.gateway_type gateway_type
+          data_to_doc(doc, options)
+        end
+      end
+
+      def commit_gateway(relative_url, request,authorization_field = :token)
+        begin
+          raw_response = ssl_request(:post, "#{live_url}/#{relative_url}", request, headers)
+        rescue ResponseError => e
+          raw_response = e.response.body
+        end
+        response_from_gateway(raw_response,authorization_field)
+      end
+      
+      def response_from_gateway(raw_response, authorization_field)
+        parsed = parse(raw_response)
+        Response.new(parsed[:error].blank?, parsed[:message] || parsed[:error], parsed)
+      end
+      
       def headers
         {
           'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:login]}:#{@options[:password]}").chomp),

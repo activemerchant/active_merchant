@@ -236,6 +236,25 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert_equal 'Succeeded!', refund.message
   end
 
+  def test_successful_add_gateway
+    options = {
+      :user_name => 'user',
+      :transaction_key => 'key',
+    }
+    assert response = @gateway.add_gateway(:cyber_source,options)
+    assert_success response
+  end
+  
+  def test_unsuccessful_add_gateway
+    options = {
+      :login => 'user',
+      :transaction_key => 'key',
+    }
+    assert response = @gateway.add_gateway(:cyber_source,options)
+    assert_failure response
+    assert_equal response.params['error'], "User name can't be blank."
+  end
+
   def test_failed_refund
     assert response = @gateway.purchase(@amount, @existing_payment_method)
     assert_success response
