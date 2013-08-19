@@ -124,6 +124,12 @@ module ActiveMerchant #:nodoc:
       private
 
       def create_post_for_auth_or_purchase(money, creditcard, options)
+        @includes_track_data ||= if creditcard.respond_to?(:track_data)
+          creditcard.track_data.present?
+        else
+          options[:track_data].present?
+        end
+
         post = {}
         add_amount(post, money, options)
         add_creditcard(post, creditcard, options)
@@ -141,7 +147,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_application_fee(post, options)
-        post[:application_fee] = options[:application_fee] if options[:application_fee]
+        return unless options[:application_fee]
+        if use_card_not_present_fee?(options)
+          post[:application_fee] = options[:card_not_present_fee]
+        else
+          post[:application_fee] = options[:application_fee]
+        end
+      end
+
+      def use_card_not_present_fee?(options)
+        options[:card_not_present_fee].present? && !@includes_track_data
       end
 
       def add_customer_data(post, options)
@@ -261,6 +276,8 @@ module ActiveMerchant #:nodoc:
         rescue JSON::ParserError
           response = json_error(raw_response)
         end
+
+        response[:card_present] = @includes_track_data
 
         card = response["card"] || response["active_card"] || {}
         avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
