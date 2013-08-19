@@ -257,6 +257,26 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_equal "Unable to find the specified payment method.", response.message
   end
 
+  def test_successful_add_gateway
+    options = {
+      :user_name => 'user',
+      :transaction_key => 'key',
+    }
+    @gateway.expects(:raw_ssl_request).returns(successful_add_gateway_response)
+    response = @gateway.add_gateway(:cyber_source,options)
+    assert_success response
+    assert_equal "aQi0Vx8WlJEVXvzz1WfeIkDxa8c", response.params['token']
+  end
+
+  def test_unsuccessful_add_gateway
+    options = {
+      :transaction_key => 'key',
+    }
+    @gateway.expects(:raw_ssl_request).returns(unsuccessful_add_gateway_response)
+    response = @gateway.add_gateway(:cyber_source,options)
+    assert_failure response
+    assert_equal "User name can't be blank", response.message
+  end
 
   private
   def successful_purchase_response
@@ -849,6 +869,47 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     MockResponse.failed <<-XML
       <errors>
         <error key="errors.payment_method_not_found">Unable to find the specified payment method.</error>
+      </errors>
+    XML
+  end
+
+  def successful_add_gateway_response
+    MockResponse.failed <<-XML
+      <gateway>
+        <token>aQi0Vx8WlJEVXvzz1WfeIkDxa8c</token>
+        <gateway_type>cyber_source</gateway_type>
+        <name>CyberSource</name>
+        <user_name>user</user_name>
+        <characteristics>
+          <supports_purchase type="boolean">true</supports_purchase>
+          <supports_authorize type="boolean">true</supports_authorize>
+          <supports_capture type="boolean">true</supports_capture>
+          <supports_credit type="boolean">true</supports_credit>
+          <supports_void type="boolean">true</supports_void>
+          <supports_reference_purchase type="boolean">false</supports_reference_purchase>
+          <supports_purchase_via_preauthorization type="boolean">false</supports_purchase_via_preauthorization>
+          <supports_offsite_purchase type="boolean">false</supports_offsite_purchase>
+          <supports_offsite_authorize type="boolean">false</supports_offsite_authorize>
+          <supports_3dsecure_purchase type="boolean">false</supports_3dsecure_purchase>
+          <supports_3dsecure_authorize type="boolean">false</supports_3dsecure_authorize>
+          <supports_store type="boolean">false</supports_store>
+          <supports_remove type="boolean">false</supports_remove>
+        </characteristics>
+        <state>retained</state>
+        <payment_methods>
+          <payment_method>credit_card</payment_method>
+        </payment_methods>
+        <gateway_specific_fields/>
+        <redacted type="boolean">false</redacted>
+        <created_at type="datetime">2013-08-19T10:19:06Z</created_at>
+        <updated_at type="datetime">2013-08-19T10:19:06Z</updated_at>
+      </gateway>
+    XML
+  end
+  def unsuccessful_add_gateway_response
+    MockResponse.failed <<-XML
+      <errors>
+        <error attribute="user_name" key="errors.blank">User name can't be blank</error>
       </errors>
     XML
   end
