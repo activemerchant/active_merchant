@@ -116,7 +116,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     gateway = StripeGateway.new(:login => 'active_merchant_test')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Invalid API Key provided: active_merchant_test", response.message
+    assert_match "Invalid API Key provided", response.message
   end
 
   def test_application_fee_for_stripe_connect
