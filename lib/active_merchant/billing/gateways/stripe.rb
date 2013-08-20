@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         post = create_post_for_auth_or_purchase(money, creditcard, options)
         post[:capture] = "false"
 
-        commit(:post, 'charges', post, generate_meta(options))
+        commit(:post, 'charges', post, generate_meta(options), creditcard)
       end
 
       # To create a charge on a card or a token, call
@@ -53,12 +53,12 @@ module ActiveMerchant #:nodoc:
       def purchase(money, creditcard, options = {})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
 
-        commit(:post, 'charges', post, generate_meta(options))
+        commit(:post, 'charges', post, generate_meta(options), creditcard)
       end
 
       def capture(money, authorization, options = {})
         post = {:amount => amount(money)}
-        add_application_fee(post, options)
+        add_application_fee(post, nil, options)
 
         commit(:post, "charges/#{CGI.escape(authorization)}/capture", post)
       end
@@ -131,7 +131,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post,options)
         post[:description] = options[:description] || options[:email]
         add_flags(post, options)
-        add_application_fee(post, options)
+        add_application_fee(post, creditcard, options)
         post
       end
 
@@ -140,8 +140,25 @@ module ActiveMerchant #:nodoc:
         post[:currency] = (options[:currency] || currency(money)).downcase
       end
 
-      def add_application_fee(post, options)
-        post[:application_fee] = options[:application_fee] if options[:application_fee]
+      def add_application_fee(post, creditcard, options)
+        return unless options[:application_fee]
+        if use_card_not_present_fee?(creditcard, options)
+          post[:application_fee] = options[:card_not_present_fee]
+        else
+          post[:application_fee] = options[:application_fee]
+        end
+      end
+
+      def use_card_not_present_fee?(creditcard, options)
+        options[:card_not_present_fee].present? && !includes_track_data?(creditcard, options)
+      end
+
+      def includes_track_data?(creditcard, options)
+        if creditcard.respond_to?(:track_data)
+          creditcard.track_data.present?
+        else
+          options[:track_data].present?
+        end
       end
 
       def add_customer_data(post, options)
@@ -248,7 +265,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def commit(method, url, parameters=nil, options = {})
+      def commit(method, url, parameters=nil, options = {}, creditcard = nil)
         raw_response = response = nil
         success = false
         begin
@@ -261,6 +278,8 @@ module ActiveMerchant #:nodoc:
         rescue JSON::ParserError
           response = json_error(raw_response)
         end
+
+        response[:card_present] = includes_track_data?(creditcard, options)
 
         card = response["card"] || response["active_card"] || {}
         avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
