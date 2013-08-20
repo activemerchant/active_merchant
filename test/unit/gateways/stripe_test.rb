@@ -213,7 +213,7 @@ class StripeTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
 
     stub_comms(:ssl_request) do
-      set_example_track_data
+      @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert data !~ /card\[name\]/
@@ -229,43 +229,7 @@ class StripeTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_the_response_should_specifiy_if_the_transaction_was_card_present
-    @gateway.expects(:ssl_request).twice.returns(successful_purchase_response)
-
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert !response.params["card_present"]
-
-    set_example_track_data
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert response.params["card_present"]
-  end
-
-  def test_application_fee_should_be_used_when_there_is_no_card_not_present_fee_given
-    run_application_fee_test(@options.merge({:application_fee => 123}), 123)
-  end
-
-  def test_application_fee_should_be_used_when_there_is_track_data
-    set_example_track_data
-    run_application_fee_test(@options.merge({:application_fee => 123, :card_not_present_fee => 456}), 123)
-  end
-
-  def test_card_not_present_fee_should_be_used_when_specified_and_there_is_no_track_data
-    run_application_fee_test(@options.merge({:application_fee => 123, :card_not_present_fee => 456}), 456)
-  end
-
   private
-
-  def run_application_fee_test(options, expected_amount)
-    stub_comms(:ssl_request) do
-      @gateway.purchase(@amount, @credit_card, options)
-    end.check_request do |method, endpoint, data, headers|
-      assert data =~ /application_fee=#{expected_amount}/
-    end.respond_with(successful_purchase_response)
-  end
-
-  def set_example_track_data
-    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
-  end
 
   def successful_authorization_response
     <<-RESPONSE
