@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
               end
             end
             checksum_payload_items.push( options )
-            PayuIn.checksum(@fields["key"], @fields["productinfo"], *checksum_payload_items )
+            PayuIn.checksum(PayuIn.merchant_id, PayuIn.secret_key, *checksum_payload_items )
           end
 
         end
