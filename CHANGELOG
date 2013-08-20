@@ -1,8 +1,13 @@
 = ActiveMerchant CHANGELOG
 
 * MerchantWarrior: Fix handling of amounts [duff]
+* Ipay88: New gateway [kamal, siong1987, jduff]
+* IATS: New gateway [unkown, jduff]
 * MerchantWarrior: Send the CVV to the gateway [duff]
+* PayU: Fix a major bug with status types [melari]
 * SecureNet: Allow production transactions [duff]
+* Stripe: Allow a card_not_present_fee to be specified [melari]
+
 
 == Version 1.36.0 (August 2, 2013)
 
