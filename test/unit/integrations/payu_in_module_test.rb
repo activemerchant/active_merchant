@@ -5,12 +5,11 @@ class PayuInModuleTest < Test::Unit::TestCase
 
   def setup
     ActiveMerchant::Billing::Base.integration_mode = :test
-    ActiveMerchant::Billing::Integrations::PayuIn.merchant_id = 'C0Dr8m'
-    ActiveMerchant::Billing::Integrations::PayuIn.secret_key = '3sf0jURk'
+    ActiveMerchant::Billing::Integrations::PayuIn.new(:merchant_id => 'C0Dr8m', :secret_key => '3sf0jURk')
   end
 
-  def test_merchant_id_and_secret_key    
-    assert_equal 'C0Dr8m', PayuIn.merchant_id    
+  def test_new_method
+    assert_equal 'C0Dr8m', PayuIn.merchant_id
     assert_equal '3sf0jURk', PayuIn.secret_key
   end
 

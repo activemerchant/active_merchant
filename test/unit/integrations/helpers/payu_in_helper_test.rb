@@ -4,9 +4,8 @@ class PayuInHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @helper = PayuIn::Helper.new( 'jh34h53kj4h5hj34kh5', 'C0Dr8m', :amount => '10.00', :credential2 => 'Product Info')
-    ActiveMerchant::Billing::Integrations::PayuIn.merchant_id = 'C0Dr8m'
-    ActiveMerchant::Billing::Integrations::PayuIn.secret_key = '3sf0jURk'
+    @helper = PayuIn::Helper.new( 'jh34h53kj4h5hj34kh5', 'C0Dr8m', :amount => '10.00', :credential2 => 'Product Info')    
+    ActiveMerchant::Billing::Integrations::PayuIn.new(:merchant_id => 'C0Dr8m', :secret_key => '3sf0jURk')
   end
 
   def test_basic_helper_fields
