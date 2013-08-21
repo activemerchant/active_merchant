@@ -78,7 +78,7 @@ module ActiveMerchant #:nodoc:
 
           r.process { fetch_application_fees(identification, commit_options) }
           r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r), commit_options) }
-        end
+        end.make_first_response_primary
       end
 
       def application_fee_from_response(response)
