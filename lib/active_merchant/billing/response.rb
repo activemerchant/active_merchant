@@ -47,6 +47,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize
         @responses = []
+        @primary_response = :last
       end
 
       def process
@@ -65,10 +66,19 @@ module ActiveMerchant #:nodoc:
         @responses.all?{|r| r.success?}
       end
 
+      def primary_response
+        success? && @primary_response == :first ? @responses.first : @responses.last
+      end
+
+      def make_first_response_primary
+        @primary_response = :first
+        self
+      end
+
       %w(params message test authorization avs_result cvv_result test? fraud_review?).each do |m|
         class_eval %(
           def #{m}
-            (@responses.empty? ? nil : @responses.last.#{m})
+            (@responses.empty? ? nil : primary_response.#{m})
           end
         )
       end
