@@ -149,12 +149,17 @@ module ActiveMerchant
 
       def build_refund_request(money, authorization, options)
         timestamp = new_timestamp
+
+        # hash of refund password is required (so start with global setting if provided but override if option passed in)
+        refund_hash = @options[:refund_hash]
+        refund_hash = Digest::SHA1.hexdigest(options[:rebate_secret]) if options.has_key?(:rebate_secret)
+
         xml = Builder::XmlMarkup.new :indent => 2
         xml.tag! 'request', 'timestamp' => timestamp, 'type' => 'rebate' do
           add_merchant_details(xml, options)
           add_transaction_identifiers(xml, authorization, options)
           xml.tag! 'amount', amount(money), 'currency' => options[:currency] || currency(money)
-          xml.tag! 'refundhash', @options[:refund_hash] if @options[:refund_hash]
+          xml.tag! 'refundhash', refund_hash if refund_hash
           xml.tag! 'autosettle', 'flag' => 1
           add_comments(xml, options)
           add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), nil)
