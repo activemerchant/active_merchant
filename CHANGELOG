@@ -6,6 +6,8 @@
 * Stripe: Send :ip to the gateway instead of :browser_ip [f3ndot]
 * Wirecard Page: new offsite gateway [mbretter]
 * Mercury: Add support for requesting a token [kcdragon]
+* Add App55 gateway [ianbutler55]
+* UsaEpayTransaction: Support for split payments [GBH]
 
 == Version 1.41.0 (October 24th, 2013)
 
