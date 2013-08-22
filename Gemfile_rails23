@@ -1,6 +1,7 @@
 source 'https://rubygems.org'
 gemspec
 
+gem 'builder', '~> 3.0'
 gem 'activesupport', '~> 2.3'
 gem 'rails', '~> 2.3'
 platforms :mri_20 do

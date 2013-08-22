@@ -1,6 +1,7 @@
 source 'https://rubygems.org'
 gemspec
 
+gem 'builder', '~> 2.1.2'
 gem 'activesupport', '~> 3.0.17'
 gem 'rails', '~> 3.0.17'
 
