@@ -2,6 +2,8 @@ require 'test_helper'
 require 'yaml'
 
 class FirstdataE4Test < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = FirstdataE4Gateway.new(
       :login    => "A00427-01",
@@ -105,6 +107,14 @@ class FirstdataE4Test < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card)
     assert_equal 'M', response.cvv_result['code']
+  end
+
+  def test_requests_include_verification_string
+    stub_comms(:ssl_post) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>", data
+    end.respond_with(successful_purchase_response)
   end
 
   private
