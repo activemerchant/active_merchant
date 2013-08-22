@@ -9,25 +9,16 @@ class PayboxSystemNotificationTest < Test::Unit::TestCase
 
   def test_accessors
     assert @paybox_system.complete?
-    assert_equal "", @paybox_system.status
-    assert_equal "", @paybox_system.transaction_id
-    assert_equal "", @paybox_system.item_id
-    assert_equal "", @paybox_system.gross
-    assert_equal "", @paybox_system.currency
-    assert_equal "", @paybox_system.received_at
+    assert_equal "00000", @paybox_system.status
+    assert_equal "ABCDEFGH123456", @paybox_system.transaction_id
+    assert_equal "order-500", @paybox_system.item_id
+    assert_equal "500", @paybox_system.gross
+    assert_equal "EUR", @paybox_system.currency
     assert @paybox_system.test?
   end
 
   def test_compositions
-    assert_equal Money.new(3166, 'USD'), @paybox_system.amount
-  end
-
-  # Replace with real successful acknowledgement code
-  def test_acknowledgement
-
-  end
-
-  def test_send_acknowledgement
+    assert_equal Money.new(5.00, 'EUR'), @paybox_system.amount
   end
 
   def test_respond_to_acknowledge
@@ -36,6 +27,6 @@ class PayboxSystemNotificationTest < Test::Unit::TestCase
 
   private
   def http_raw_data
-    ""
+    "amount=500&error=00000&reference=order-500&sign=ABCDEFGH123456"
   end
 end
