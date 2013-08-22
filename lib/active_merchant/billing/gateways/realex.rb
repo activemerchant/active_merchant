@@ -162,6 +162,7 @@ module ActiveMerchant
           xml.tag! 'refundhash', refund_hash if refund_hash
           xml.tag! 'autosettle', 'flag' => 1
           add_comments(xml, options)
+          add_address_and_customer_info(xml, options)
           add_signed_digest(xml, timestamp, @options[:login], sanitize_order_id(options[:order_id]), amount(money), (options[:currency] || currency(money)), nil)
         end
         xml.target!
