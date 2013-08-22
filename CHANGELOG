@@ -7,7 +7,7 @@
 * PayU: Fix a major bug with status types [melari]
 * SecureNet: Allow production transactions [duff]
 * Stripe: Allow a card_not_present_fee to be specified [melari]
-
+* Moneris: Add verification_value support [duff]
 
 == Version 1.36.0 (August 2, 2013)
 
