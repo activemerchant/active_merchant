@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
 
         data_to_post = post_data(action, parameters)
 
-        Rails.logger.infos("DATA TO POST : #{data_to_post.inspect}")
+        Rails.logger.info("DATA TO POST : #{data_to_post.inspect}")
 
         url = test? ? self.test_url : self.live_url
         response = parse(ssl_post(url, data_to_post))
