@@ -71,14 +71,14 @@ module ActiveMerchant #:nodoc:
         post = {:amount => amount(money)}
         commit_options = generate_meta(options)
 
-        MultiResponse.run do |r|
+        MultiResponse.run(:first) do |r|
           r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, commit_options) }
 
           return r unless options[:refund_fee_amount]
 
           r.process { fetch_application_fees(identification, commit_options) }
           r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r), commit_options) }
-        end.make_first_response_primary
+        end
       end
 
       def application_fee_from_response(response)

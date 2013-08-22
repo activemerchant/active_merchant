@@ -73,7 +73,8 @@ class MultiResponseTest < Test::Unit::TestCase
   end
 
   def test_proxies_first_request_if_marked
-    m = MultiResponse.new.make_first_response_primary
+    m = MultiResponse.new
+    m.primary_response = :first
 
     r1 = Response.new(
       true,
@@ -117,7 +118,8 @@ class MultiResponseTest < Test::Unit::TestCase
   end
 
   def test_primary_response_always_returns_the_last_response_on_failure
-    m = MultiResponse.new.make_first_response_primary
+    m = MultiResponse.new
+    m.primary_response = :first
 
     r1 = Response.new(true, "1", {}, {})
     r2 = Response.new(false, "2", {}, {})
