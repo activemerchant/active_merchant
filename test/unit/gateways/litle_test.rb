@@ -736,6 +736,13 @@ class LitleTest < Test::Unit::TestCase
     end
   end
 
+  def test_deprecated_credit
+    @gateway.expects(:refund).returns true
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.credit(0, '123')
+    end
+  end
+
   private
 
   def with_litle_configuration_restoration(&block)
