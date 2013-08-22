@@ -104,11 +104,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, money, parameters)
-        parameters[:IDENTIFIER]    = @options[:login]
-        parameters[:AMOUNT]        = amount(money)
-        parameters[:VERSION]       = '2.0'
+        parameters[:IDENTIFIER] = @options[:login]
+        parameters[:AMOUNT]     = amount(money)
+        parameters[:VERSION]    = '2.0'
 
         data_to_post = post_data(action, parameters)
+
+        Rails.logger.infos("DATA TO POST : #{data_to_post.inspect}")
 
         url = test? ? self.test_url : self.live_url
         response = parse(ssl_post(url, data_to_post))
