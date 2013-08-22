@@ -145,6 +145,7 @@ module ActiveMerchant #:nodoc:
         post[:name]   = credit_card.name
       end
       
+      # see: http://wiki.usaepay.com/developer/transactionapi#split_payments
       def add_split_payments(post, options)
         return unless options[:split_payments].is_a?(Array)
         options[:split_payments].each_with_index do |payment, index|
@@ -153,6 +154,9 @@ module ActiveMerchant #:nodoc:
           post["#{prefix}amount"]      = amount(payment[:amount])
           post["#{prefix}description"] = payment[:description]
         end
+        
+        # When blank it's 'Stop'. 'Continue' is another one
+        post['onError'] = options[:on_error] || 'Void'
       end
 
       def parse(body)

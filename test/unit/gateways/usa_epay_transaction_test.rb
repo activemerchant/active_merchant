@@ -77,6 +77,22 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
       assert_match /UM03key=def456/,                data
       assert_match /UM03amount=9.11/,               data
       assert_match /UM03description=Third\+payee/,  data
+      
+      assert_match /UMonError=Void/,                data
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+  
+  def test_successful_purchase_split_payment_with_custom_on_error
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(
+        :split_payments => [
+          { :key => 'abc123', :amount => 199, :description => 'Second payee' }
+        ],
+        :on_error => 'Continue'
+      ))
+    end.check_request do |endpoint, data, headers|
+      assert_match /UMonError=Continue/, data
     end.respond_with(successful_purchase_response)
     assert_success response
   end
