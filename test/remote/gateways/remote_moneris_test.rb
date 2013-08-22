@@ -40,6 +40,18 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_authorization_and_capture_and_void
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization
+
+    response = @gateway.capture(@amount, response.authorization)
+    assert_success response
+
+    void = @gateway.void(response.authorization, :purchasecorrection => true)
+    assert_success void
+  end
+
   def test_successful_authorization_and_void
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
@@ -49,11 +61,27 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_success void
   end
 
+  def test_successful_purchase_and_void
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    void = @gateway.void(purchase.authorization, :purchasecorrection => true)
+    assert_success void
+  end
+
+  def test_failed_purchase_and_void
+    purchase = @gateway.purchase(101, @credit_card, @options)
+    assert_failure purchase
+
+    void = @gateway.void(purchase.authorization)
+    assert_failure void
+  end
+
   def test_successful_purchase_and_credit
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    credit = @gateway.credit(@amount, purchase.authorization)
+    credit = @gateway.refund(@amount, purchase.authorization)
     assert_success credit
   end
 

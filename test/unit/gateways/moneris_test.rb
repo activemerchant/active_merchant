@@ -268,4 +268,5 @@ class MonerisTest < Test::Unit::TestCase
   def xml_capture_fixture
    '<request><store_id>store1</store_id><api_token>yesguy</api_token><preauth><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></preauth></request>'
   end
+
 end
