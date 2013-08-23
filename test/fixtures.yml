@@ -14,7 +14,12 @@ authorize_net:
   login: X
   password: Y
 
-# Working credentials, no need to replace
+authorize_net_card_present:
+  login: X
+  password: Y
+  device_type: 1
+
+    # Working credentials, no need to replace
 balanced:
   login: 'e1c5ad38d1c711e1b36c026ba7e239a9'
 

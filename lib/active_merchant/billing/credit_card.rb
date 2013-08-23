@@ -52,6 +52,9 @@ module ActiveMerchant #:nodoc:
 
       cattr_accessor :require_verification_value
       self.require_verification_value = true
+      
+      # Track data for card-present transactions
+      attr_accessor :track1, :track2
 
       # Returns or sets the credit card number.
       #
@@ -186,7 +189,7 @@ module ActiveMerchant #:nodoc:
       def display_number
         self.class.mask(number)
       end
-
+      
       def first_digits
         self.class.first_digits(number)
       end

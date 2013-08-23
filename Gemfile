@@ -1,4 +1,4 @@
-source 'https://rubygems.org'
+source 'https://rubygems.org' 
 gemspec
 
 gem 'activesupport', '>= 3.2.8', '< 4'
