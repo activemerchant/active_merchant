@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
 
           # Paybox gross return is already in cents
           def gross_cents
-            (gross.to_i / 100).round
+            gross.to_i
           end
 
           # Was this a test transaction?

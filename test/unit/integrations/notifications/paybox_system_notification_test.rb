@@ -18,7 +18,7 @@ class PayboxSystemNotificationTest < Test::Unit::TestCase
   end
 
   def test_compositions
-    assert_equal Money.new(5.00, 'EUR'), @paybox_system.amount
+    assert_equal Money.new(@paybox_system.gross.to_i, 'EUR'), @paybox_system.amount
   end
 
   def test_respond_to_acknowledge
