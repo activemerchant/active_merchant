@@ -106,6 +106,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
     assert_equal Response, response.class
     assert_equal ["action",
+                  "authorization_code",
                   "avs_result_code",
                   "card_code",
                   "response_code",
@@ -128,6 +129,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
     assert_equal Response, response.class
     assert_equal ["action",
+                  "authorization_code",
                   "avs_result_code",
                   "card_code",
                   "response_code",
