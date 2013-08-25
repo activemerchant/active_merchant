@@ -25,6 +25,15 @@ module ActiveMerchant #:nodoc:
         raise NotImplementedError.new
       end
 
+      def localized_amount(money, currency = self.default_currency)
+        non_fractional_currency?(currency) ? (amount(money).to_f / 100).floor : amount(money)
+      end
+
+      def add_amount(post, money, options)
+        post[:currency] = (options[:currency] || currency(money)).downcase
+        post[:amount] = localized_amount(money, post[:currency].upcase)
+      end
+
       def json_error(raw_response)
         msg = 'Invalid response received from the WebPay API.  Please contact support@webpay.jp if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
