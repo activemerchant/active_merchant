@@ -26,6 +26,17 @@ class WebpayTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_appropiate_purchase_amount
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal @amount, response.params["amount"]
+  end
+
+
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_purchase_response(true))
 
