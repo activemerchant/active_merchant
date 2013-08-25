@@ -21,6 +21,20 @@ module ActiveMerchant #:nodoc:
         raise NotImplementedError.new
       end
 
+      def refund(money, identification, options = {})
+        post = {:amount => localized_amount(money)}
+        commit_options = generate_meta(options)
+
+        MultiResponse.run do |r|
+          r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, commit_options) }
+
+          return r unless options[:refund_fee_amount]
+
+          r.process { fetch_application_fees(identification, commit_options) }
+          r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r), commit_options) }
+        end
+      end
+
       def refund_fee(identification, options, meta)
         raise NotImplementedError.new
       end
