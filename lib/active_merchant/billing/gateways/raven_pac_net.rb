@@ -76,6 +76,7 @@ module ActiveMerchant #:nodoc:
       def add_creditcard(post, creditcard)
         post['CardNumber'] = creditcard.number
         post['Expiry'] = expdate(creditcard)
+        post['CVV2'] = creditcard.verification_value if creditcard.verification_value
       end
 
       def add_currency_code(post, money, options)
