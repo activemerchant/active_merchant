@@ -182,8 +182,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(xml, options)
-        xml.tag! 'INVOICEDESC', options[:description]
-        xml.tag! 'INVOICENUM', 'inv-8'
+        xml.tag! 'NOTE', options[:description] if options[:description]
+        xml.tag! 'INVOICEDESC', options[:invoice_description] if options[:invoice_description]
+        xml.tag! 'INVOICENUM', options[:invoice_number] if options[:invoice_number]
       end
 
       def add_merchant_key(xml, options)
