@@ -8,6 +8,7 @@
 * SecureNet: Allow production transactions [duff]
 * Stripe: Allow a card_not_present_fee to be specified [melari]
 * Moneris: Add verification_value support [duff]
+* SecureNet: Add INVOICENUM and INVOICEDESC optional fields [duff]
 
 == Version 1.36.0 (August 2, 2013)
 
