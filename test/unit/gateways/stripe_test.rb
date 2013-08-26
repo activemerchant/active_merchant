@@ -87,6 +87,17 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_refund_with_fee_response_gives_a_charge_authorization
+    s = sequence("request")
+    @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(successful_application_fee_list_response).in_sequence(s)
+    @gateway.expects(:ssl_request).returns(successful_refunded_application_fee_response).in_sequence(s)
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_fee_amount => 100)
+    assert_success response
+    assert_equal 'ch_test_charge', response.authorization
+  end
+
   def test_unsuccessful_refund_with_refund_fee_amount_when_application_fee_id_not_found
     s = sequence("request")
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)
