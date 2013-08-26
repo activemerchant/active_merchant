@@ -15,6 +15,7 @@
 * USAEpay Transaction: Use sandbox when in test mode [radar]
 * Braintree Blue: Do not use global config [rdj]
 * eWay Rapid: Add response messages [BenZhang]
+* Paysbuy: Add 'Pending' notification status [divineforest]
 
 == Version 1.38.1 (September 16, 2013)
 
