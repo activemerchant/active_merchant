@@ -68,10 +68,6 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     assert_equal 'US', result["shipping_country"]
   end
 
-  def test_supported_countries
-    assert_equal ['US'], BraintreeOrangeGateway.supported_countries
-  end
-
   def test_adding_store_adds_vault_id_flag
     result = {}
 
