@@ -148,9 +148,9 @@ class RemoteRavenPacNetTest < Test::Unit::TestCase
   ##################
   ##### Void #####
   
-  def test_successful_void
+  def test_purchase_and_void
     purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert void = @gateway.void(purchase.authorization, {'PymtType' =>  purchase.params['PymtType']})
+    assert void = @gateway.void(purchase.authorization, {:pymt_type =>  purchase.params['PymtType']})
     assert_success void
     assert void.params['ApprovalCode']
     assert void.params['TrackingNumber']
@@ -161,9 +161,23 @@ class RemoteRavenPacNetTest < Test::Unit::TestCase
     assert_equal "This transaction has been voided", void.message
   end
 
-  def test_unsuccessful_void
+  def test_authorize_and_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert void = @gateway.void(auth.authorization)
+    assert_failure void
+    assert void.params['ApprovalCode']
+    assert void.params['TrackingNumber']
+    assert_equal 'error:canNotBeVoided', void.params['ErrorCode']
+    assert_equal 'ok', void.params['RequestResult']
+    assert_equal "Error processing transaction because the payment may not be voided.", void.params['Message']
+    assert_equal 'Approved', void.params['Status']
+    assert_equal "Error processing transaction because the payment may not be voided.", void.message
+  end
+  
+  def test_authorize_capture_and_void
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert void = @gateway.void(capture.authorization, {:pymt_type =>  capture.params['PymtType']})
     assert_failure void
     assert void.params['ApprovalCode']
     assert void.params['TrackingNumber']
