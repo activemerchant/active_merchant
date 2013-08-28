@@ -160,10 +160,10 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [QuickBooks Merchant Services](http://payments.intuit.com/) - US
 * [Quantum Gateway](http://www.quantumgateway.com) - US
 * [Quickpay](http://quickpay.dk/) - DK, SE
-* [Realex](http://www.realexpayments.com/) - IE, GB
+* [Realex](http://www.realexpayments.com/) - IE, GB, FR, BE, NL, LU, IT
 * [Redsys](http://www.redsys.es/) - ES
 * [Sage Payment Solutions](http://www.sagepayments.com) - US, CA
-* [SagePay](http://www.sagepay.com) - GB
+* [SagePay](http://www.sagepay.com) - GB, IE
 * [Sage Payment Solutions](http://www.sagepayments.com) - US, CA
 * [Sallie Mae](http://www.salliemae.com/) - US
 * [Samurai](https://samurai.feefighters.com) - US
@@ -183,8 +183,8 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [ViaKLIX](http://viaklix.com) - US
 * [Vindicia](http://www.vindicia.com/) - US, CA, GB, AU, MX, BR, DE, KR, CN, HK
 * [WebPay](https://webpay.jp/) - JP
-* [Wirecard](http://www.wirecard.com) - DE
-* [WorldPay](http://www.worldpay.com/) - HK, US, GB, AU
+* [Wirecard](http://www.wirecard.com) - AD, CY, GI, IM, MT, RO, CH, AT, DK, GR, IT, MC, SM, TR, BE, EE, HU, LV, NL, SK, GB, BG, FI, IS, LI, NO, SI, VA, FR, IL, LT, PL, ES, CZ, DE, IE, LU, PT, SE
+* [WorldPay](http://www.worldpay.com/) - HK, US, GB, AU, AD, BE, CH, CY, CZ, DE, DK, ES, FI, FR, GI, GR, HU, IE, IL, IT, LI, LU, MC, MT, NL, NO, NZ, PL, PT, SE, SG, SI, SM, TR, UM, VA
 
 ## Supported Offsite Payment Gateways
 
