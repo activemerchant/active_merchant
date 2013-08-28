@@ -5,8 +5,8 @@ class WebpayTest < Test::Unit::TestCase
     @gateway = WebpayGateway.new(:login => 'login')
 
     @credit_card = credit_card()
-    @amount = 400
-    @refund_amount = 200
+    @amount = 40000
+    @refund_amount = 20000
 
     @options = {
       :billing_address => address(),
@@ -25,6 +25,17 @@ class WebpayTest < Test::Unit::TestCase
     assert_equal 'ch_test_charge', response.authorization
     assert response.test?
   end
+
+  def test_appropiate_purchase_amount
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal @amount / 100, response.params["amount"]
+  end
+
 
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_purchase_response(true))
