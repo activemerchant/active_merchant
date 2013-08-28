@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def item_id
-            params['texte-libre']
+            params['reference']
           end
 
           def transaction_id
