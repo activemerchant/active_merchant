@@ -144,13 +144,13 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside) - US, CA, SG, AU
 * [PayPal Express Checkout (UK)](https://www.paypal.com/uk/cgi-bin/webscr?cmd=_additional-payment-overview-outside) - GB
 * [PayPal Payflow Pro](https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-pro-overview-outside) - US, CA, SG, AU
-* [PayPal Website Payments Pro (UK)](https://www.paypal.com/uk/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - GB
+* [PayPal Payments Pro (UK)](https://www.paypal.com/uk/webapps/mpp/pro) - GB
 * [PaymentExpress](http://www.paymentexpress.com/) - AU, CA, DE, ES, FR, GB, HK, IE, MY, NL, NZ, SG, US, ZA
 * [PAYMILL](https://paymill.com) - AD, AT, BE, BG, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GI, GR, HU, IE, IL, IS, IT, LI, LT, LU, LV, MT, NL, NO, PL, PT, RO, SE, SI, SK, TR, VA
 * [PayPal Website Payments Pro (CA)](https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - CA
 * [PayPal Express Checkout for Digital Goods](https://www.x.com/community/ppx/xspaces/digital_goods) - AU, CA, CN, FI, GB, ID, IN, IT, MY, NO, NZ, PH, PL, SE, SG, TH, VN
 * [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside) - US
-* [PayPal Website Payments Pro (US)](https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - US
+* [PayPal Payments Pro (US)](https://www.paypal.com/us/webapps/mpp/paypal-payments-pro) - US
 * [Paystation](http://paystation.co.nz) - NZ
 * [Pay Way](http://www.payway.com.au) - AU
 * [Pin](http://www.pin.net.au/) - AU
