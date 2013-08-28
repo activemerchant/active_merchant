@@ -159,7 +159,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        response['ApprovalCode']
+        if %w(cc_settle cc_debit cc_preauth cc_refund).include?(response[:action])
+          !response['ApprovalCode'].nil? and response['ErrorCode'].nil? and response['Status'] == 'Approved'
+        elsif response[:action] = 'void'
+          !response['ApprovalCode'].nil? and response['ErrorCode'].nil? and response['Status'] == 'Voided'
+        end
       end
 
       def message_from(response)
@@ -171,8 +175,6 @@ module ActiveMerchant #:nodoc:
           "This transaction has been declined"
         elsif response['Status'] == 'Voided'
           "This transaction has been voided"
-        elsif response['Status'] == 'Invalid:PreauthNumber'
-          "The TrackingNumber is not valid"
         else
           response['Status']
         end
