@@ -60,40 +60,8 @@ module ActiveMerchant #:nodoc:
             params['code-retour']
           end
 
-          # Acknowledge the transaction to CyberMut. This method has to be called after a new
-          # apc arrives. CyberMut will verify that all the information we received are correct and will return a
-          # ok or a fail.
-          #
-          # Example:
-          #
-          #   def ipn
-          #     notify = CyberMutNotification.new(request.raw_post)
-          #
-          #     if notify.acknowledge
-          #       ... process order ... if notify.complete?
-          #     else
-          #       ... log possible hacking attempt ...
-          #     end
           def acknowledge
-            payload = raw
-
-            uri = URI.parse(CyberMut.service_url)
-
-            request = Net::HTTP::Post.new(uri.path)
-
-            request['Content-Length'] = "#{payload.size}"
-            request['User-Agent'] = "Active Merchant -- http://home.leetsoft.com/am"
-            request['Content-Type'] = "application/x-www-form-urlencoded"
-
-            http = Net::HTTP.new(uri.host, uri.port)
-            http.verify_mode    = OpenSSL::SSL::VERIFY_NONE unless @ssl_strict
-            http.use_ssl        = true
-
-            response = http.request(request, payload)
-
-            # Replace with the appropriate codes
-            raise StandardError.new("Faulty CyberMut result: #{response.body}") unless ["AUTHORISED", "DECLINED"].include?(response.body)
-            response.body == "AUTHORISED"
+            true
           end
 
           private

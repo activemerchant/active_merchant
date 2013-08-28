@@ -22,14 +22,6 @@ class CyberMutNotificationTest < Test::Unit::TestCase
     assert_equal Money.new(6275, 'EUR'), @cyber_mut.amount
   end
 
-  # Replace with real successful acknowledgement code
-  def test_acknowledgement
-
-  end
-
-  def test_send_acknowledgement
-  end
-
   def test_respond_to_acknowledge
     assert @cyber_mut.respond_to?(:acknowledge)
   end
