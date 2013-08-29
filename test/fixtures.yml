@@ -570,6 +570,11 @@ skipjack:
   login: X
   password: Y
 
+# replace with your credentials
+so_easy_pay:
+  login: websiteID
+  password: password
+
 # Working credentials, no need to replace
 spreedly_core:
   login: "4Y9bVkOCpYesPQOfDi7TXQyUw50"
