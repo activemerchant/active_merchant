@@ -158,8 +158,14 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
 
   private
 
-  def minimum_requirements
-    %w(cpversion login tran_key market_type device_type response_format delim_char encap_char amount card_num exp_date type)
+  def minimum_requirements(track_data=nil)
+    reqs = %w(cpversion login tran_key market_type device_type response_format delim_char encap_char amount type)
+    if track_data
+      reqs << 'track1'
+    else
+      reqs << ['card_num', 'exp_date']
+      reqs.flatten
+    end
   end
   
   def failed_credit_response

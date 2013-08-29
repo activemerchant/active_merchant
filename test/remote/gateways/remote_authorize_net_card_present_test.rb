@@ -8,7 +8,6 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
   # seems to be the most accurate reproduction of a real, production transaction.  More information here: http://developer.authorize.net/api/cardpresent/
   
   def setup
-    Base.mode = :production # since we are using the testing endpoint, we do not want to be in "testmode" 
     @gateway = AuthorizeNetCardPresentGateway.new(fixtures(:authorize_net_card_present).merge(test_url: true))
     @amount = 100
     @credit_card = credit_card('4111111111111111')
@@ -77,7 +76,7 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
   end
   
   def test_forced_test_mode_purchase
-    gateway = AuthorizeNetCardPresentGateway.new(fixtures(:authorize_net_card_present).update(:test => true).merge(test_url: true))
+    gateway = AuthorizeNetCardPresentGateway.new(fixtures(:authorize_net_card_present).update(:test => true))
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.test?
@@ -102,7 +101,8 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card)
         
     assert_equal Response, response.class
-    assert_equal %w( authorization_code
+    assert_equal %w( action 
+                     authorization_code
                      avs_result_code
                      card_code
                      card_number
@@ -128,7 +128,8 @@ class AuthorizeNetCardPresentTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card)
         
     assert_equal Response, response.class
-    assert_equal %w( authorization_code
+    assert_equal %w( action 
+                     authorization_code
                      avs_result_code
                      card_code
                      card_number

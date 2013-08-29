@@ -6,7 +6,6 @@ module ActiveMerchant
       # http://www.authorize.net/support/CP_guide.pdf
       API_VERSION = '1.0'
       
-      self.test_url = 'https://test.authorize.net/gateway/transact.dll'
       self.live_url = 'https://cardpresent.authorize.net/gateway/transact.dll'
       
       # Only one supported market type
@@ -31,25 +30,6 @@ module ActiveMerchant
       AUTHORIZATION_CODE, AVS_RESULT_CODE, CARD_CODE_RESPONSE_CODE, TRANSACTION_ID = 4, 5, 6, 7
       CARD_NUMBER, CARD_TYPE = 20, 21      
 
-      # Perform a purchase, which is essentially an authorization and capture in a single operation.
-      #
-      # ==== Parameters
-      #
-      # * <tt>money</tt> -- The amount to be purchased as an Integer value in cents.
-      # * <tt>creditcard</tt> -- The CreditCard details for the transaction.
-      # * <tt>options</tt> -- A hash of optional parameters.
-      def purchase(money, creditcard, options = {track_type: 1})
-        post = {}
-        add_currency_code(post, money, options)
-        add_invoice(post, options)
-        add_creditcard(post, creditcard, options)
-        add_address(post, options)
-        add_customer_data(post, options)
-        add_duplicate_window(post)
-
-        commit('AUTH_CAPTURE', money, post)
-      end
-
       # Captures the funds from an authorized transaction.
       #
       # ==== Parameters
@@ -59,24 +39,22 @@ module ActiveMerchant
       def capture(money, authorization, options = {})
         post = {:ref_trans_id => authorization}
         add_customer_data(post, options)
-        if test? && options[:mock_response] == true
-          credit_card = CreditCard.new(:year => "15", :month => "01", :number => "4" + ("2" * 12))
-          add_creditcard(post, credit_card)
-        end
         commit('PRIOR_AUTH_CAPTURE', money, post)
       end
-
+      
       # Void a previous transaction
       #
       # ==== Parameters
       #
       # * <tt>authorization</tt> - The authorization returned from the previous authorize request.
       def void(authorization, options = {})
+        # Card Present has "x_ref_trans_id" as the paramter key, instead of "x_trans_id"
         post = {:ref_trans_id => authorization}
+        add_duplicate_window(post)
         commit('VOID', nil, post)
       end
 
-      # Refund an account.
+      # Refund a Transaction.
       #
       # This transaction is also referred to as a Refund and indicates to the gateway that
       # money should flow from the merchant to the customer.
@@ -92,60 +70,22 @@ module ActiveMerchant
       # * <tt>:card_number</tt> -- The credit card number the refund is being issued to. (REQUIRED)
       def refund(money, identification, options = {})
         requires!(options, :card_number)
-
-        post = { :ref_trans_id => identification,
-                 :card_num => options[:card_number]
-               }
+        post = { 
+          :ref_trans_id => identification,
+          :card_num => options[:card_number]
+        }
         add_invoice(post, options)
-
         commit('CREDIT', money, post)
-      end      
-
-      def credit(money, identification, options = {})
-        deprecated CREDIT_DEPRECATION_MESSAGE
-        refund(money, identification, options)
       end
-      
+
       private
-      
-      def commit(action, money, parameters)
-        parameters[:amount] = amount(money) unless action == 'VOID'
-
-        # Only activate the test_request when the :test option is passed in
-        parameters[:test_request] = (@options[:test] || test?) ? 'TRUE' : 'FALSE'
-
-        # Submit requests against the testing endpoint if the :test_url option is passed in 
-        url = @options[:test_url].blank? ? self.live_url : self.test_url 
-
-        data = ssl_post url, post_data(action, parameters)
-
-        response = parse(data)
-
-        message = message_from(response)
-
-        # Return the response. The authorization can be taken out of the transaction_id
-        # Test Mode on/off is something we have to parse from the response text.
-        # It usually looks something like this
-        #
-        #   (TESTMODE) Successful Sale
-        test_mode = test? || message =~ /TESTMODE/
-
-        Response.new(success?(response), message, response, 
-          :test => test_mode, 
-          :authorization => response[:transaction_id],
-          #:authorization_code => response[:authorization_code],
-          :fraud_review => fraud_review?(response),
-          :avs_result => { :code => response[:avs_result_code] },
-          :cvv_result => response[:card_code]
-        )
-      end
          
       def parse(body)
         fields = split(body)
 
         results = {
           :response_code => fields[RESPONSE_CODE].to_i,
-          :response_reason_code => fields[RESPONSE_REASON_CODE], 
+          :response_reason_code => fields[RESPONSE_REASON_CODE],
           :response_reason_text => fields[RESPONSE_REASON_TEXT],
           :authorization_code => fields[AUTHORIZATION_CODE],
           :avs_result_code => fields[AVS_RESULT_CODE],
@@ -175,26 +115,11 @@ module ActiveMerchant
       
       # http://www.gae.ucm.es/~padilla/extrawork/tracks.html
       def add_creditcard(post, creditcard, options={})
-        super(post, creditcard)
-        if options[:track_type] == 1
-          post[:track1] = creditcard.track_data
-        elsif options[:track_type] == 2
+        super(post, creditcard, options)
+        if options[:track_type] == 2
           post[:track2] = creditcard.track_data
-        end
-        if !post[:track1].blank? || !post[:track2].blank?
-          post.delete :card_num
-          post.delete :card_code
-          post.delete :exp_date
-        end
-      end
-
-      private
-
-      def expdate(creditcard)
-        if creditcard.year.blank? || creditcard.month.blank?
-          return nil
         else
-          super(creditcard)
+          post[:track1] = creditcard.track_data
         end
       end
 
