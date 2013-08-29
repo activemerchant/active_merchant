@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class MonerisTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     Base.mode = :test
 
@@ -165,6 +167,26 @@ class MonerisTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_passing_cvv
+    @credit_card.verification_value = "452"
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{cvd_indicator>1<}, data)
+      assert_match(%r{cvd_value>452<}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_no_cvv_specified
+    @credit_card.verification_value = ""
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{cvd_indicator>0<}, data)
+      assert_no_match(%r{cvd_value>}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def successful_purchase_response
@@ -262,10 +284,10 @@ class MonerisTest < Test::Unit::TestCase
 
 
   def xml_purchase_fixture
-   '<request><store_id>store1</store_id><api_token>yesguy</api_token><purchase><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></purchase></request>'
+   '<request><store_id>store1</store_id><api_token>yesguy</api_token><purchase><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id><cvd_info><cvd_indicator>0</cvd_indicator></cvd_info></purchase></request>'
   end
 
   def xml_capture_fixture
-   '<request><store_id>store1</store_id><api_token>yesguy</api_token><preauth><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></preauth></request>'
+   '<request><store_id>store1</store_id><api_token>yesguy</api_token><preauth><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id><cvd_info><cvd_indicator>0</cvd_indicator></cvd_info></preauth></request>'
   end
 end

@@ -49,12 +49,12 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_success void
   end
 
-  def test_successful_purchase_and_credit
+  def test_successful_purchase_and_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    credit = @gateway.credit(@amount, purchase.authorization)
-    assert_success credit
+    refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
   end
 
   def test_failed_purchase_from_error
@@ -106,6 +106,18 @@ class MonerisRemoteTest < Test::Unit::TestCase
     test_successful_store
     response = @gateway.authorize(105, @data_key, @options)
     assert_failure response
+  end
+
+  def test_cvv_match
+    assert response = @gateway.purchase(1039, @credit_card, @options)
+    assert_success response
+    assert_equal({'code' => 'M', 'message' => 'Match'}, response.cvv_result)
+  end
+
+  def test_cvv_no_match
+    assert response = @gateway.purchase(1053, @credit_card, @options)
+    assert_success response
+    assert_equal({'code' => 'N', 'message' => 'No Match'}, response.cvv_result)
   end
 
 end

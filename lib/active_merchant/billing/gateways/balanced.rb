@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Balanced'
       self.money_format = :cents
 
-      class Error < StandardError
+      class Error < ActiveMerchant::ActiveMerchantError
         attr_reader :response
 
         def initialize(response, msg=nil)

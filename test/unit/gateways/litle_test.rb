@@ -593,31 +593,31 @@ class LitleTest < Test::Unit::TestCase
     assert_equal 'Error validating xml data against the schema', responseFrom.message
   end
 
-  def test_credit_pass
+  def test_refund_pass
     creditResponseObj = {'response' => '000', 'message' => 'pass', 'litleTxnId'=>'123456789012345678'}
     retObj = {'response'=>'0','creditResponse'=>creditResponseObj}
     LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     identification = "1234;credit"
-    responseFrom = @gateway.credit(0, identification)
+    responseFrom = @gateway.refund(0, identification)
     assert_equal true, responseFrom.success?
     assert_equal '123456789012345678;credit', responseFrom.authorization
   end
 
-  def test_credit_fail
+  def test_refund_fail
     creditResponseObj = {'response' => '111', 'message' => 'fail', 'litleTxnId'=>'123456789012345678'}
     retObj = {'response'=>'0','creditResponse'=>creditResponseObj}
     LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     identification = "1234;credit"
-    responseFrom = @gateway.credit(0, identification)
+    responseFrom = @gateway.refund(0, identification)
     assert_equal false, responseFrom.success?
     assert_equal '123456789012345678;credit', responseFrom.authorization
   end
 
-  def test_credit_fail_schema
+  def test_refund_fail_schema
     retObj = {'response'=>'1','message'=>'Error validating xml data against the schema'}
     LitleOnline::Communications.expects(:http_post => retObj.to_xml(:root => 'litleOnlineResponse'))
     identification = '1234;credit'
-    responseFrom = @gateway.credit(0, identification)
+    responseFrom = @gateway.refund(0, identification)
     assert_equal false, responseFrom.success?
     assert_equal 'Error validating xml data against the schema', responseFrom.message
   end
@@ -733,6 +733,13 @@ class LitleTest < Test::Unit::TestCase
       LitleGateway.new({:merchant_id=>'101', :user=>'active', :password=>'merchant', :version=>'8.10', :url=>'https://www.testlitle.com/sandbox/communicator/online'})
       assert_equal logger, LitleOnline::Configuration.logger
       assert_equal Logger::DEBUG, LitleOnline::Configuration.logger.level
+    end
+  end
+
+  def test_deprecated_credit
+    @gateway.expects(:refund).returns true
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.credit(0, '123')
     end
   end
 

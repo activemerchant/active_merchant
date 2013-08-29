@@ -6,7 +6,8 @@ class RemoteWebpayTest < Test::Unit::TestCase
   def setup
     @gateway = WebpayGateway.new(fixtures(:webpay))
 
-    @amount = 100
+    @amount = 10000
+    @refund_amount = 2000
     @credit_card = credit_card('4242424242424242')
     @declined_card = credit_card('4000')
     @new_credit_card = credit_card('5105105105105100')
@@ -22,6 +23,12 @@ class RemoteWebpayTest < Test::Unit::TestCase
     assert_success response
     assert_equal "charge", response.params["object"]
     assert response.params["paid"]
+  end
+
+  def test_appropriate_purchase_amount
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal @amount / 100, response.params["amount"]
   end
 
   def test_purchase_description
@@ -59,8 +66,17 @@ class RemoteWebpayTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.authorization
-    assert void = @gateway.refund(@amount - 20, response.authorization)
+    assert void = @gateway.refund(@refund_amount, response.authorization)
     assert_success void
+  end
+
+  def test_appropriate_refund_amount
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization
+    assert void = @gateway.refund(@refund_amount, response.authorization)
+    assert_success void
+    assert_equal @refund_amount / 100, void.params["amount_refunded"]
   end
 
   def test_unsuccessful_refund
@@ -97,7 +113,7 @@ class RemoteWebpayTest < Test::Unit::TestCase
     gateway = WebpayGateway.new(:login => 'active_merchant_test')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Invalid API key provided: active_merchant_test", response.message
+    assert_equal "Invalid API key provided. Check your API key is correct.", response.message
   end
 
 end

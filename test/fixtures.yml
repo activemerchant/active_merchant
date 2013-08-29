@@ -626,7 +626,7 @@ vindicia:
   password: PASSWORD
 
 webpay:
-  login: "vtUQeOtUnYr7PGCLQ96Ul4zqpDUO4sOE"
+  login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
 
 # Working test credentials, no need to replace
 wirecard:

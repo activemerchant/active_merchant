@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
         'unchecked' => 'P'
       }
 
-      self.supported_countries = ['US', 'CA']
+      self.supported_countries = ['US', 'CA', 'GB']
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
         post = {:amount => amount(money)}
         commit_options = generate_meta(options)
 
-        MultiResponse.run do |r|
+        MultiResponse.run(:first) do |r|
           r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, commit_options) }
 
           return r unless options[:refund_fee_amount]
