@@ -605,6 +605,10 @@ skipjack:
   login: X
   password: Y
 
+so_easy_pay:
+  login: 110159
+  password: b1fe9de37c234ef8fd53668377076687d6314dc8f6146023338d61b5969719e0
+
 # Working credentials, no need to replace
 spreedly_core:
   login: "4Y9bVkOCpYesPQOfDi7TXQyUw50"
