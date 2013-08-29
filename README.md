@@ -100,7 +100,6 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [ePay](http://epay.dk/) - DK, SE, NO
 * [EVO Canada](http://www.evocanada.com/) - CA
 * [eWAY](http://www.eway.com.au/) - AU, NZ, GB
-* [eWay Managed Payments](http://www.eway.com.au/) - AU
 * [eWAY Rapid 3.0](http://www.eway.com.au/) - AU
 * [E-xact](http://www.e-xact.com) - CA, US
 * [Fat Zebra](https://www.fatzebra.com.au/) - AU
@@ -141,16 +140,15 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [PayJunction](http://www.payjunction.com/) - US
 * [PaySecure](http://www.commsecure.com.au/paysecure.shtml) - AU
 * [Paybox Direct](http://www.paybox.com/) - FR
-* [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside) - US, CA, SG, AU
-* [PayPal Express Checkout (UK)](https://www.paypal.com/uk/cgi-bin/webscr?cmd=_additional-payment-overview-outside) - GB
-* [PayPal Payflow Pro](https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-pro-overview-outside) - US, CA, SG, AU
-* [PayPal Payments Pro (UK)](https://www.paypal.com/uk/webapps/mpp/pro) - GB
 * [PaymentExpress](http://www.paymentexpress.com/) - AU, CA, DE, ES, FR, GB, HK, IE, MY, NL, NZ, SG, US, ZA
 * [PAYMILL](https://paymill.com) - AD, AT, BE, BG, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GI, GR, HU, IE, IL, IS, IT, LI, LT, LU, LV, MT, NL, NO, PL, PT, RO, SE, SI, SK, TR, VA
+* [PayPal Express Checkout](https://www.paypal.com/webapps/mpp/express-checkout) - US, CA, SG, AU
+* [PayPal Express Checkout (UK)](https://www.paypal.com/uk/webapps/mpp/express-checkout) - GB
+* [PayPal Payflow Pro](https://www.paypal.com/webapps/mpp/payflow-payment-gateway) - US, CA, SG, AU
+* [PayPal Payments Pro (US)](https://www.paypal.com/us/webapps/mpp/paypal-payments-pro) - US
+* [PayPal Payments Pro (UK)](https://www.paypal.com/uk/webapps/mpp/pro) - GB
 * [PayPal Website Payments Pro (CA)](https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - CA
 * [PayPal Express Checkout for Digital Goods](https://www.x.com/community/ppx/xspaces/digital_goods) - AU, CA, CN, FI, GB, ID, IN, IT, MY, NO, NZ, PH, PL, SE, SG, TH, VN
-* [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside) - US
-* [PayPal Payments Pro (US)](https://www.paypal.com/us/webapps/mpp/paypal-payments-pro) - US
 * [Paystation](http://paystation.co.nz) - NZ
 * [Pay Way](http://www.payway.com.au) - AU
 * [Pin](http://www.pin.net.au/) - AU
@@ -162,7 +160,6 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Quickpay](http://quickpay.dk/) - DK, SE
 * [Realex](http://www.realexpayments.com/) - IE, GB, FR, BE, NL, LU, IT
 * [Redsys](http://www.redsys.es/) - ES
-* [Sage Payment Solutions](http://www.sagepayments.com) - US, CA
 * [SagePay](http://www.sagepay.com) - GB, IE
 * [Sage Payment Solutions](http://www.sagepayments.com) - US, CA
 * [Sallie Mae](http://www.salliemae.com/) - US
@@ -177,7 +174,6 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [NELiX TransaX](https://www.nelixtransax.com/) - US
 * [Transnational](http://www.tnbci.com/) - US
 * [TrustCommerce](http://www.trustcommerce.com/) - US
-* [USA ePay Advanced SOAP Interface](http://www.usaepay.com/) - US
 * [USA ePay](http://www.usaepay.com/) - US
 * [Verifi](http://www.verifi.com/) - US
 * [ViaKLIX](http://viaklix.com) - US
