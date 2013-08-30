@@ -9,16 +9,9 @@ module ActiveMerchant #:nodoc:
           mapping :order, 'merchantTxnId'
           
 
-          mapping :customer, :first_name => 'firstName',
-            :last_name => 'lastName',
-            :email => 'email',
-            :phone => 'phoneNumber'
+          mapping :customer, :first_name => 'firstName',:last_name => 'lastName',:email => 'email', :phone => 'phoneNumber'
 
-          mapping :billing_address, :city => 'addressCity',
-            :address1 => 'addressStreet1',
-            :state => 'addressState',
-            :zip => 'addressZip',
-            :country => 'addressCountry'
+          mapping :billing_address, :city => 'addressCity', :address1 => 'addressStreet1',:state => 'addressState',:zip => 'addressZip', :country => 'addressCountry'
 
           # Which tab you want to be open default on Citrus
           # CC (CreditCard) or NB (NetBanking)
