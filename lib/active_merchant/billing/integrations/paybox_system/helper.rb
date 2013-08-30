@@ -25,6 +25,9 @@ module ActiveMerchant #:nodoc:
             add_field('PBX_HMAC', hmac(credential2, form_fields.to_query))
             add_field('PBX_SITE', credential3)
             add_field('PBX_RANG', credential4)
+            add_field('PBX_PAYBOX', PayboxSystem.service_url)
+            add_field('PBX_BACKUP1', PayboxSystem.service_url)
+            add_field('PBX_BACKUP2', PayboxSystem.service_url)
           end
 
           mapping :account, 'PBX_IDENTIFIANT'

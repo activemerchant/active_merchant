@@ -24,6 +24,9 @@ class PayboxSystemHelperTest < Test::Unit::TestCase
     assert_field 'PBX_DEVISE', '978'
     assert_field 'PBX_TOTAL', '500'
     assert_field 'PBX_CMD', 'order-500'
+    assert_field 'PBX_PAYBOX', PayboxSystem.service_url
+    assert_field 'PBX_BACKUP1', PayboxSystem.service_url
+    assert_field 'PBX_BACKUP2', PayboxSystem.service_url
   end
 
   def test_options_fields
