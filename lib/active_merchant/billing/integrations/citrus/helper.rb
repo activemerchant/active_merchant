@@ -8,7 +8,6 @@ module ActiveMerchant #:nodoc:
           mapping :credential1, 'merchantAccessKey'
           mapping :order, 'merchantTxnId'
           
-
           mapping :customer, :first_name => 'firstName',:last_name => 'lastName',:email => 'email', :phone => 'phoneNumber'
 
           mapping :billing_address, :city => 'addressCity', :address1 => 'addressStreet1',:state => 'addressState',:zip => 'addressZip', :country => 'addressCountry'
@@ -21,8 +20,8 @@ module ActiveMerchant #:nodoc:
           mapping :return_url, ['surl', 'furl']
           mapping :cancel_return_url, 'curl'
           mapping :checksum, 'hash'
-		  mapping :return_url, 'returnUrl'
-		  mapping :currency, 'currency'
+          mapping :return_url, 'returnUrl'
+          mapping :currency, 'currency'
           
           def initialize(order, account, options = {})
             super
