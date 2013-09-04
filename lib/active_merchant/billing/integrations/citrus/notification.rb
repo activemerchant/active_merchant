@@ -1,165 +1,99 @@
+require 'net/http'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module Citrus
         class Notification < ActiveMerchant::Billing::Integrations::Notification
-
-          def initialize(post, options = {})
-            super(post, options)
-            @access_key = options[:credential1]
-            @secret_key = options[:credential2]
-            @pmt_url = options[:credential3]
-          end
-
           def complete?
-            status == "success"
-          end
-
-          # Status of the transaction. List of possible values:
-          # <tt>invalid</tt>:: transaction id is not present
-          # <tt>tampered</tt>:: transaction data has been tampered
-          # <tt>success</tt>:: transaction successful
-          # <tt>pending</tt>:: transaction is pending for some approval
-          # <tt>failure</tt>:: transaction failure
-          def status
-            @status ||= if checksum_ok?
-              if transaction_id.blank?
-                'invalid'
-              else
-                transaction_status.downcase
-              end
-            else
-              'tampered'
-            end
-          end
-
-          def invoice_ok?( order_id )
-            order_id.to_s == invoice.to_s
-          end
-
-          # Order amount should be equal to gross - discount
-          def amount_ok?( order_amount, order_discount = BigDecimal.new( '0.0' ) )
-            BigDecimal.new( gross ) == order_amount && BigDecimal.new( discount ) == order_discount
-          end
-
-          # Status of transaction return from the PayU. List of possible values:
-          # <tt>SUCCESS</tt>::
-          # <tt>PENDING</tt>::
-          # <tt>FAILURE</tt>::
-          def transaction_status
-            params['status']
-          end
-
-          # ID of this transaction (PayU.in number)
-          def transaction_id
-            params['mihpayid']
-          end
-
-          # Mode of Payment
-          #
-          # 'CC' for credit-card
-          # 'NB' for net-banking
-          # 'CD' for cheque or DD
-          # 'CO' for Cash Pickup
-          def type
-            params['mode']
-          end
-
-          # What currency have we been dealing with
-          def currency
-            'INR'
+            params['']
           end
 
           def item_id
-            params['txnid']
+            params['']
           end
 
-          # This is the invoice which you passed to PayU.in
-          def invoice
-            params['txnid']
+          def transaction_id
+            params['']
           end
 
-          # Merchant Id provided by the PayU.in
-          def account
-            params['key']
+          # When was this payment received by the client.
+          def received_at
+            params['']
           end
 
-          # original amount send by merchant
+          def payer_email
+            params['']
+          end
+
+          def receiver_email
+            params['']
+          end
+
+          def security_key
+            params['']
+          end
+
+          # the money amount we received in X.2 decimal.
           def gross
-            params['amount']
+            params['']
           end
 
-          # This is discount given to user - based on promotion set by merchants.
-          def discount
-            params['discount']
+          # Was this a test transaction?
+          def test?
+            params[''] == 'test'
           end
 
-          # Description offer for what PayU given the offer to user - based on promotion set by merchants.
-          def offer_description
-            params['offer']
+          def status
+            params['']
           end
 
-          # Information about the product as send by merchant
-          def product_info
-            params['productinfo']
-          end
-
-          # Email of the customer
-          def customer_email
-            params['email']
-          end
-
-          # Phone of the customer
-          def customer_phone
-            params['phone']
-          end
-
-          # Firstname of the customer
-          def customer_first_name
-            params['firstname']
-          end
-
-          # Lastname of the customer
-          def customer_last_name
-            params['lastname']
-          end
-
-          # Full address of the customer
-          def customer_address
-            { :address1 => params['address1'], :address2 => params['address2'],
-              :city => params['city'], :state => params['state'],
-              :country => params['country'], :zipcode => params['zipcode'] }
-          end
-
-          def user_defined
-            return @user_defined if @user_defined
-            @user_defined = []
-            10.times{ |i| @user_defined.push( params[ "udf#{i+1}" ] ) }
-            @user_defined
-          end
-
-          def checksum
-            params['hash']
-          end
-
-          def message
-            @message || params['error']
-          end
-
+          # Acknowledge the transaction to Citrus. This method has to be called after a new
+          # apc arrives. Citrus will verify that all the information we received are correct and will return a
+          # ok or a fail.
+          #
+          # Example:
+          #
+          #   def ipn
+          #     notify = CitrusNotification.new(request.raw_post)
+          #
+          #     if notify.acknowledge
+          #       ... process order ... if notify.complete?
+          #     else
+          #       ... log possible hacking attempt ...
+          #     end
           def acknowledge
-            checksum_ok?
+            payload = raw
+
+            uri = URI.parse(Citrus.notification_confirmation_url)
+
+            request = Net::HTTP::Post.new(uri.path)
+
+            request['Content-Length'] = "#{payload.size}"
+            request['User-Agent'] = "Active Merchant -- http://home.leetsoft.com/am"
+            request['Content-Type'] = "application/x-www-form-urlencoded"
+
+            http = Net::HTTP.new(uri.host, uri.port)
+            http.verify_mode    = OpenSSL::SSL::VERIFY_NONE unless @ssl_strict
+            http.use_ssl        = true
+
+            response = http.request(request, payload)
+
+            # Replace with the appropriate codes
+            raise StandardError.new("Faulty Citrus result: #{response.body}") unless ["AUTHORISED", "DECLINED"].include?(response.body)
+            response.body == "AUTHORISED"
           end
 
-          def checksum_ok?
-            fields = user_defined.dup.push( customer_email, customer_first_name, product_info, gross, invoice, :reverse => true )
-            fields.unshift( transaction_status )
-            unless PayuIn.checksum(@merchant_id, @secret_key, *fields ) == checksum
-              @message = 'Return checksum not matching the data provided'
-              return false
+          private
+
+          # Take the posted data and move the relevant data into a hash
+          def parse(post)
+            @raw = post.to_s
+            for line in @raw.split('&')
+              key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
+              params[key] = CGI.unescape(value)
             end
-            true
           end
-
         end
       end
     end
