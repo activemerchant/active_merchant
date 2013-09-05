@@ -1,8 +1,9 @@
 source 'https://rubygems.org'
 gemspec
 
-gem 'activesupport', '>= 4.0.0', '< 5'
-gem 'activeresource', '>= 4.0.0'
-gem 'rails', '>= 4.0.0', '< 5'
+gem 'builder', '~> 3.0'
+gem 'activesupport', '~> 4.0'
+gem 'activeresource', '~> 4.0'
+gem 'rails', '~> 4.0'
 
 eval File.read(File.expand_path("../Gemfile_common", __FILE__))
