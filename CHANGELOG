@@ -1,16 +1,25 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.38.0 (September 6, 2013)
+
+* FirstData E4: Include missing address information for AVS and CVV [melari]
+* Litle: Deprecate credit method in favor of refund [melari]
+* Moneris: Add verification_value support [duff]
+* Webpay: Fixes issues with partial JPY currency [keikubo, melari]
+* SecureNet: Add INVOICENUM and INVOICEDESC optional fields [duff]
+* Balanced: Make BalancedGateway::Error inherit from ActiveMerchantError [duff]
+* Balanced: Fix #void interface [duff]
+* HiTrust: Return correct error message for positive retcodes [melari]
+* Moving to pessimistic versioning [davefp]
+
+== Version 1.37.0 (August 20, 2013)
+
 * MerchantWarrior: Fix handling of amounts [duff]
 * Ipay88: New gateway [kamal, siong1987, jduff]
 * IATS: New gateway [unkown, jduff]
 * MerchantWarrior: Send the CVV to the gateway [duff]
 * PayU: Fix a major bug with status types [melari]
 * SecureNet: Allow production transactions [duff]
-* Stripe: Allow a card_not_present_fee to be specified [melari]
-* Moneris: Add verification_value support [duff]
-* SecureNet: Add INVOICENUM and INVOICEDESC optional fields [duff]
-* Balanced: Make BalancedGateway::Error inherit from ActiveMerchantError [duff]
-* Balanced: Fix #void interface [duff]
 
 == Version 1.36.0 (August 2, 2013)
 
