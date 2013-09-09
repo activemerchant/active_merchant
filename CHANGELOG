@@ -18,6 +18,7 @@
 * Paysbuy: Add 'Pending' notification status [divineforest]
 * Cybersource: Use standard :phone field [cade]
 * Orbital: Fix/tweak AVS codes [boone]
+* Quickpay: Add v7 support [larspind]
 
 == Version 1.38.1 (September 16, 2013)
 
