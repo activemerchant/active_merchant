@@ -18,12 +18,12 @@ class QuickpayHelperTest < Test::Unit::TestCase
   end
 
   def test_generate_md5string
-    assert_equal '6authorize24352435daorder500500USDhttp://example.com/okhttp://example.com/cancelhttp://example.com/notify01mysecretmd5string',
+    assert_equal '7authorize24352435daorder500500USDhttp://example.com/okhttp://example.com/cancelhttp://example.com/notify01mysecretmd5string',
                  @helper.generate_md5string
   end
 
   def test_generate_md5check
-    assert_equal '12e8e7d95eae56ef8766eafa96aff267', @helper.generate_md5check
+    assert_equal '3289787150b63a4fdd544b2ba3d7125f', @helper.generate_md5check
   end
 
   def test_unknown_mapping
