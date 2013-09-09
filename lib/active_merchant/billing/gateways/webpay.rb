@@ -21,6 +21,33 @@ module ActiveMerchant #:nodoc:
         raise NotImplementedError.new
       end
 
+      def refund(money, identification, options = {})
+        post = {:amount => localized_amount(money)}
+        commit_options = generate_meta(options)
+
+        MultiResponse.run do |r|
+          r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, commit_options) }
+
+          return r unless options[:refund_fee_amount]
+
+          r.process { fetch_application_fees(identification, commit_options) }
+          r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r), commit_options) }
+        end
+      end
+
+      def refund_fee(identification, options, meta)
+        raise NotImplementedError.new
+      end
+
+      def localized_amount(money, currency = self.default_currency)
+        non_fractional_currency?(currency) ? (amount(money).to_f / 100).floor : amount(money)
+      end
+
+      def add_amount(post, money, options)
+        post[:currency] = (options[:currency] || currency(money)).downcase
+        post[:amount] = localized_amount(money, post[:currency].upcase)
+      end
+
       def json_error(raw_response)
         msg = 'Invalid response received from the WebPay API.  Please contact support@webpay.jp if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
@@ -31,7 +58,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def headers(meta={})
+      def headers(options = {})
         @@ua ||= JSON.dump({
           :bindings_version => ActiveMerchant::VERSION,
           :lang => 'ruby',
@@ -45,7 +72,7 @@ module ActiveMerchant #:nodoc:
           "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":").strip,
           "User-Agent" => "Webpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "X-Webpay-Client-User-Agent" => @@ua,
-          "X-Webpay-Client-User-Metadata" => meta.to_json
+          "X-Webpay-Client-User-Metadata" => options[:meta].to_json
         }
       end
     end

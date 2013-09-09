@@ -190,6 +190,30 @@ class PaypalTest < Test::Unit::TestCase
     response = @gateway.transfer(*recipients)
     assert_failure response
   end
+
+  def test_successful_email_transfer
+    response = @gateway.purchase(@amount, @creditcard, @params)
+    assert_success response
+
+    response = @gateway.transfer([@amount, 'joe@example.com'], :receiver_type => 'EmailAddress', :subject => 'Your money', :note => 'Thanks for taking care of that')
+    assert_success response
+  end
+
+  def test_successful_userid_transfer
+    response = @gateway.purchase(@amount, @creditcard, @params)
+    assert_success response
+
+    response = @gateway.transfer([@amount, '4ET96X3PQEN8H'], :receiver_type => 'UserID', :subject => 'Your money', :note => 'Thanks for taking care of that')
+    assert_success response
+  end
+
+  def test_failed_userid_transfer
+    response = @gateway.purchase(@amount, @creditcard, @params)
+    assert_success response
+
+    response = @gateway.transfer([@amount, 'joe@example.com'], :receiver_type => 'UserID', :subject => 'Your money', :note => 'Thanks for taking care of that')
+    assert_failure response
+  end
   
   # Makes a purchase then makes another purchase adding $1.00 using just a reference id (transaction id)
   def test_successful_referenced_id_purchase

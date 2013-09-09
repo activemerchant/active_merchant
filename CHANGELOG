@@ -1,5 +1,78 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.38.0 (September 6, 2013)
+
+* FirstData E4: Include missing address information for AVS and CVV [melari]
+* Litle: Deprecate credit method in favor of refund [melari]
+* Moneris: Add verification_value support [duff]
+* Webpay: Fixes issues with partial JPY currency [keikubo, melari]
+* SecureNet: Add INVOICENUM and INVOICEDESC optional fields [duff]
+* Balanced: Make BalancedGateway::Error inherit from ActiveMerchantError [duff]
+* Balanced: Fix #void interface [duff]
+* HiTrust: Return correct error message for positive retcodes [melari]
+* Moving to pessimistic versioning [davefp]
+
+== Version 1.37.0 (August 20, 2013)
+
+* MerchantWarrior: Fix handling of amounts [duff]
+* Ipay88: New gateway [kamal, siong1987, jduff]
+* IATS: New gateway [unkown, jduff]
+* MerchantWarrior: Send the CVV to the gateway [duff]
+* PayU: Fix a major bug with status types [melari]
+* SecureNet: Allow production transactions [duff]
+
+== Version 1.36.0 (August 2, 2013)
+
+* Fat Zebra: More consistent handling of tokens [adrianmacneil]
+* Add Platron integration [alexwl]
+* Litle: Support wiredump_device [pierre]
+* Litle: support paypage registrations [pierre]
+* SecureNet: Cleanup and refactoring [duff]
+* Mercury: Proper refund and void support [opendining]
+* PaymentExpress: Return token in authorization [ntalbott]
+* Stripe: Support for partial application fee refunds [melari, odorcicd]
+* NMI: Support for recurring flag [duff]
+* SecureNet: Use working live url [duff]
+
+== Version 1.35.1 (July 22, 2013)
+
+* Stripe: Allow application_fees to be refunded via the refund_application_fee flag [melari]
+
+== Version 1.35.0 (July 17, 2013)
+
+* Add Barclays ePDQ Extra Plus gateway [ntalbott]
+* PayPal: Add MassPay payment to recipients by UserID [damonmorgan]
+* Authorize.Net: Add authorization_code to response params [noahlh]
+* Make Rails 4 a supported version [sanemat]
+* CyberSource: Add pinless debit card support [JoshMcKin]
+* Verkkomaksut: Add item title field [kaapa]
+* Add MerchantWare V4 gateway [hron]
+* Eway Rapid: Add #store method [adrianmacneil]
+* Barclays ePDQ Extra Plus: Use correct PROD url [ntalbott]
+* Hitrust: update test & live urls [melari]
+* NAB Transact: Add auth & capture support [nagash]
+* Mercury: Support card-less capture and refund [ntalbott]
+* Mercury: Support void [ntalbott]
+
+== Version 1.34.1 (June 28, 2013)
+
+* WorldPay: Add dynamic return URL [jordanwheeler]
+* Merchant One: New gateway [coteyr, melari]
+* Balanced: Fix exception for invalid email [duff]
+* Update supported countries for Paymill & PaymentExpress [duff]
+* Worldpay: Add support for diners club [duff]
+* Stripe: Include address with card data [melari]
+
+== Version 1.34.0 (June 20, 2013)
+
+* PayPal Express gateway: Add unstore support [duff]
+* Stripe: Send application_fee with capture requests [melari]
+* Make #unstore method signature consistent across gateways [duff]
+* Dwolla: Major bug fixes. [capablemonkey, melari]
+* Stripe: Add support for including track data [melari]
+
+== Version 1.33.0 (May 30, 2013)
+
 * Netaxept: Completely revamped to use the "M" service type [rbjordan3, ntalbott]
 * Litle: Void authorizations via an auth reversal [jrust]
 * Add RBK Money integration [england]
@@ -8,6 +81,36 @@
 * PayPal Express gateway: Add reference authorizations [fabiokr]
 * Add Cardstream Modern gateway [ExxKA]
 * Pin: Fix special headers [duff]
+* PayPal Express gateway: Remember the billing agreement id as Response#authorization [duff]
+* PayPal Express gateway: Allow an amount of 0 [duff]
+* PayPal Express gateway: Reduce parameter requirements [duff]
+* Quickpay integration: Update notification parser to handle API v6 [larspind]
+* Sage gateway: Deprecate #credit call [duff]
+* Update notification generator to better match current notification class [lulalala]
+* Paymill gateway: Change .com -> .de [louiskearns]
+* Quickpay integration: Fix v6 response parsing [larspind]
+* First Data e4: Add TransArmor store/tokenization support [gabetax]
+* MerchantWarrior: Format expiration month/year correctly [klebervirgilio]
+* Add iconv for ActiveSupport 2.3 under Ruby 2.0 [sanemat]
+* Add Transnational gateway [bvandenbos]
+* Authorize.Net: Add Check as payment method [andrunix]
+* Merchant e-Solutions: Add ref number and recurring support [carlaares]
+* Bogus gateway: Add authorization to purchase response [hron]
+* Bluepay gateway: Fix Check support; general cleanup [ntalbott]
+* Dwolla: Fix security issues and enable guest checkout [capablemonkey, schonfeld]
+* SagePay gateway: Per-transaction 3D-secure selection [ExxKA]
+* Barclays ePDQ: Handle incorrectly encoded response [jordanwheeler, aprofeit]
+* Orbital: Bug fixes; add CustomerEmail, Retry Logic, Managed Billing, and Destination Address [juicedM3
+* Distinguish invalid vs empty issue_numbers on CreditCards [drasch]
+* Float Gemfiles to latest Rails [sanemat]
+* USA ePay Advanced: Fix Check support [RyanScottLewis]
+* Authorize.Net: Match up Check fields better with eCheck.Net requirements [ntalbott]
+* Bluepay: Updated to bp20post api [cagerton, melari]
+* Net Registry: Deprecate credit method [jduff]
+* Sage: Don't include T_customer_number unless it is numeric [melari]
+* Auth.net: Don't include cust_id unless it is numeric [melari]
+* Epay: Deprecate credit method [melari]
+* New PayU.in Integration [PayU, melari]
 
 == Version 1.32.1 (April 4, 2013)
 

@@ -11,10 +11,7 @@ class PaymentExpressTest < Test::Unit::TestCase
 
     @visa = credit_card
 
-    @solo = credit_card("6334900000000005",
-              :brand   => "solo",
-              :issue_number => '01'
-            )
+    @solo = credit_card("6334900000000005", :brand => "solo", :issue_number => '01')
 
     @options = {
       :order_id => generate_unique_id,
@@ -39,44 +36,45 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_successful_authorization
-     @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
 
-     assert response = @gateway.purchase(@amount, @visa, @options)
-     assert_success response
-     assert response.test?
-     assert_equal 'The Transaction was approved', response.message
-     assert_equal '00000004011a2478', response.authorization
+    assert response = @gateway.purchase(@amount, @visa, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'The Transaction was approved', response.message
+    assert_equal '00000004011a2478', response.authorization
   end
 
   def test_purchase_request_should_include_cvc2_presence
-     @gateway.expects(:commit).with do |type, request|
-       type == :purchase && request.to_s =~ %r{<Cvc2Presence>1<\/Cvc2Presence>}
-     end
+    @gateway.expects(:commit).with do |type, request|
+      type == :purchase && request.to_s =~ %r{<Cvc2Presence>1<\/Cvc2Presence>}
+    end
 
-     @gateway.purchase(@amount, @visa, @options)
+    @gateway.purchase(@amount, @visa, @options)
   end
 
   def test_successful_solo_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
 
-     assert response = @gateway.purchase(@amount, @solo, @options)
-     assert_success response
-     assert response.test?
-     assert_equal 'The Transaction was approved', response.message
-     assert_equal '00000004011a2478', response.authorization
+    assert response = @gateway.purchase(@amount, @solo, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'The Transaction was approved', response.message
+    assert_equal '00000004011a2478', response.authorization
   end
 
   def test_successful_card_store
-    @gateway.expects(:ssl_post).returns( successful_store_response )
+    @gateway.expects(:ssl_post).returns(successful_store_response)
 
     assert response = @gateway.store(@visa)
     assert_success response
     assert response.test?
-    assert_equal '0000030000141581', response.token
+    assert_equal '0000030000141581', response.authorization
+    assert_equal response.authorization, response.token
   end
 
   def test_successful_card_store_with_custom_billing_id
-    @gateway.expects(:ssl_post).returns( successful_store_response(:billing_id => "my-custom-id") )
+    @gateway.expects(:ssl_post).returns(successful_store_response(:billing_id => "my-custom-id"))
 
     assert response = @gateway.store(@visa, :billing_id => "my-custom-id")
     assert_success response
@@ -85,7 +83,7 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_card_store
-    @gateway.expects(:ssl_post).returns( unsuccessful_store_response )
+    @gateway.expects(:ssl_post).returns(unsuccessful_store_response)
 
     @visa.number = 2
 
@@ -94,12 +92,12 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_purchase_using_dps_billing_id_token
-    @gateway.expects(:ssl_post).returns( successful_store_response )
+    @gateway.expects(:ssl_post).returns(successful_store_response)
 
     assert response = @gateway.store(@visa)
     token = response.token
 
-    @gateway.expects(:ssl_post).returns( successful_dps_billing_id_token_purchase_response )
+    @gateway.expects(:ssl_post).returns(successful_dps_billing_id_token_purchase_response)
 
     assert response = @gateway.purchase(@amount, token, @options)
     assert_success response
@@ -114,12 +112,12 @@ class PaymentExpressTest < Test::Unit::TestCase
       :use_custom_payment_token => true
     )
 
-    @gateway.expects(:ssl_post).returns( successful_store_response({:billing_id => 'TEST1234'}) )
+    @gateway.expects(:ssl_post).returns(successful_store_response({:billing_id => 'TEST1234'}))
 
     assert response = @gateway.store(@visa, {:billing_id => 'TEST1234'})
     assert_equal 'TEST1234', response.token
 
-    @gateway.expects(:ssl_post).returns( successful_billing_id_token_purchase_response )
+    @gateway.expects(:ssl_post).returns(successful_billing_id_token_purchase_response)
 
     assert response = @gateway.purchase(@amount, 'TEST1234', @options)
     assert_success response
@@ -128,11 +126,11 @@ class PaymentExpressTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-     assert_equal ['AU','MY','NZ','SG','ZA','GB','US'], PaymentExpressGateway.supported_countries
-   end
+    assert_equal %w(AU CA DE ES FR GB HK IE MY NL NZ SG US ZA), PaymentExpressGateway.supported_countries
+  end
 
   def test_supported_card_types
-   assert_equal [ :visa, :master, :american_express, :diners_club, :jcb ], PaymentExpressGateway.supported_cardtypes
+    assert_equal [ :visa, :master, :american_express, :diners_club, :jcb ], PaymentExpressGateway.supported_cardtypes
   end
 
   def test_avs_result_not_supported
@@ -425,5 +423,4 @@ class PaymentExpressTest < Test::Unit::TestCase
   def successful_billing_id_token_purchase_response
     %(<Txn><Transaction success="1" reco="00" responsetext="APPROVED"><Authorized>1</Authorized><MerchantReference></MerchantReference><CardName>Visa</CardName><Retry>0</Retry><StatusRequired>0</StatusRequired><AuthCode>030817</AuthCode><Amount>10.00</Amount><CurrencyId>554</CurrencyId><InputCurrencyId>554</InputCurrencyId><InputCurrencyName>NZD</InputCurrencyName><CurrencyRate>1.00</CurrencyRate><CurrencyName>NZD</CurrencyName><CardHolderName>LONGBOB LONGSEN</CardHolderName><DateSettlement>20070323</DateSettlement><TxnType>Purchase</TxnType><CardNumber>424242........42</CardNumber><DateExpiry>0808</DateExpiry><ProductId></ProductId><AcquirerDate>20070323</AcquirerDate><AcquirerTime>030817</AcquirerTime><AcquirerId>9000</AcquirerId><Acquirer>Test</Acquirer><TestMode>1</TestMode><CardId>2</CardId><CardHolderResponseText>APPROVED</CardHolderResponseText><CardHolderHelpText>The Transaction was approved</CardHolderHelpText><CardHolderResponseDescription>The Transaction was approved</CardHolderResponseDescription><MerchantResponseText>APPROVED</MerchantResponseText><MerchantHelpText>The Transaction was approved</MerchantHelpText><MerchantResponseDescription>The Transaction was approved</MerchantResponseDescription><UrlFail></UrlFail><UrlSuccess></UrlSuccess><EnablePostResponse>0</EnablePostResponse><PxPayName></PxPayName><PxPayLogoSrc></PxPayLogoSrc><PxPayUserId></PxPayUserId><PxPayXsl></PxPayXsl><PxPayBgColor></PxPayBgColor><AcquirerPort>9999999999-99999999</AcquirerPort><AcquirerTxnRef>12859</AcquirerTxnRef><GroupAccount>9997</GroupAccount><DpsTxnRef>0000000303ace8db</DpsTxnRef><AllowRetry>0</AllowRetry><DpsBillingId></DpsBillingId><BillingId>TEST1234</BillingId><TransactionId>03ace8db</TransactionId><PxHostId>00000003</PxHostId></Transaction><ReCo>00</ReCo><ResponseText>APPROVED</ResponseText><HelpText>The Transaction was approved</HelpText><Success>1</Success><DpsTxnRef>0000000303ace8db</DpsTxnRef><TxnRef></TxnRef></Txn>)
   end
-
 end

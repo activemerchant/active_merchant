@@ -172,7 +172,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def unstore(customer_vault_id)
+      def unstore(customer_vault_id, options = {})
         commit do
           Braintree::Customer.delete(customer_vault_id)
           Response.new(true, "OK")

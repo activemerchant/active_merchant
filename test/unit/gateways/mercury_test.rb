@@ -22,12 +22,14 @@ class MercuryTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_match(/InvoiceNo>1</, data)
+      assert_match(/Frequency>OneTime/, data)
+      assert_match(/RecordNo>RecordNumberRequested/, data)
     end.respond_with(successful_purchase_response)
 
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal '1;0194;000011;KbMCC0742510421  ;|17|410100700000', response.authorization
+    assert_equal '1;0194;000011;KbMCC0742510421  ;|17|410100700000;;100', response.authorization
     assert response.test?
   end
 
@@ -41,23 +43,20 @@ class MercuryTest < Test::Unit::TestCase
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
   end
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
 
     @gateway.expects(:ssl_post).returns(successful_refund_response)
-
-    assert refund_response = @gateway.refund(@amount, response.authorization, :credit_card => @credit_card)
-
-    assert_instance_of Response, refund_response
-    assert_success refund_response
-    assert refund_response.test?
+    refund = @gateway.refund(nil, response.authorization)
+    assert_instance_of Response, refund
+    assert_success refund
+    assert refund.test?
   end
 
   private

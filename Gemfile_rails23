@@ -1,7 +1,14 @@
-source :rubygems
+source 'https://rubygems.org'
 gemspec
 
-gem 'activesupport', '2.3.14'
-gem 'rails', '2.3.14'
+gem 'builder', '~> 3.0'
+gem 'activesupport', '~> 2.3'
+gem 'rails', '~> 2.3'
+platforms :mri_20 do
+  gem 'iconv'
+end
+if RUBY_VERSION < '1.9'
+  gem 'mocha', '~> 0.11.0', :require => false
+end
 
 eval File.read(File.expand_path("../Gemfile_common", __FILE__))

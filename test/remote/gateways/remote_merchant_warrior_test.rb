@@ -4,24 +4,15 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
   def setup
     @gateway = MerchantWarriorGateway.new(fixtures(:merchant_warrior).merge(:test => true))
 
-    @success_amount = '100.00'
+    @success_amount = 100
+    @failure_amount = 205
 
-    # DO NOT USE DECIMALS FOR TOKEN TESTING
-    @token_success_amount = '133.00'
-    @failure_amount = '102.33'
     @credit_card = credit_card(
       '5123456789012346',
       :month => 5,
-      :year => 13,
+      :year => 17,
       :verification_value => '123',
       :brand => 'master'
-    )
-    @expired_card = credit_card(
-      '4564710000000012',
-      :month => 2,
-      :year => 5,
-      :verification_value => '963',
-      :brand => 'visa'
     )
 
     @options = {
@@ -38,7 +29,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
-    assert auth = @gateway.authorize('150.00', @credit_card, @options)
+    assert auth = @gateway.authorize(@success_amount, @credit_card, @options)
     assert_success auth
     assert_equal 'Transaction approved', auth.message
     assert_not_nil auth.params["transaction_id"]
@@ -61,7 +52,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 
   def test_failed_purchase
     assert purchase = @gateway.purchase(@failure_amount, @credit_card, @options)
-    assert_equal 'Card has expired', purchase.message
+    assert_equal 'Transaction declined', purchase.message
     assert_failure purchase
     assert_not_nil purchase.params["transaction_id"]
     assert_equal purchase.params["transaction_id"], purchase.authorization
@@ -77,17 +68,17 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 
   def test_failed_refund
     assert refund = @gateway.refund(@success_amount, 'invalid-transaction-id')
-    assert_equal 'MW - 011:Invalid transactionID', refund.message
+    assert_match /Invalid transactionID/, refund.message
     assert_failure refund
   end
 
-  def test_card_auth_too_much
-    assert auth = @gateway.authorize('150.00', @credit_card, @options)
+  def test_capture_too_much
+    assert auth = @gateway.authorize(300, @credit_card, @options)
     assert_success auth
     assert_equal 'Transaction approved', auth.message
 
-    assert capture = @gateway.capture(150, auth.authorization)
-    assert_equal "MW - 002:Field 'transactionAmount' is invalid", capture.message
+    assert capture = @gateway.capture(400, auth.authorization)
+    assert_match /Capture amount is greater than the transaction amount/, capture.message
     assert_failure capture
   end
 
@@ -96,7 +87,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert_equal 'Operation successful', store.message
     assert_success store
 
-    assert purchase = @gateway.purchase(@token_success_amount, store.authorization, @options)
+    assert purchase = @gateway.purchase(@success_amount, store.authorization, @options)
     assert_equal 'Transaction approved', purchase.message
   end
 
@@ -104,12 +95,12 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert store = @gateway.store(@credit_card)
     assert_success store
 
-    assert auth = @gateway.authorize(@token_success_amount, store.authorization, @options)
+    assert auth = @gateway.authorize(@success_amount, store.authorization, @options)
     assert_success auth
     assert_equal 'Transaction approved', auth.message
     assert_not_nil auth.authorization
 
-    assert capture = @gateway.capture(@token_success_amount, auth.authorization)
+    assert capture = @gateway.capture(@success_amount, auth.authorization)
     assert_success capture
   end
 end

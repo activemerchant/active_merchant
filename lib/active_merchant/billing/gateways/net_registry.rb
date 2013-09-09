@@ -41,7 +41,7 @@ module ActiveMerchant
         :purchase => 'purchase',
         :capture => 'completion',
         :status => 'status',
-        :credit => 'refund'
+        :refund => 'refund'
       }
 
       # Create a new NetRegistry gateway.
@@ -94,13 +94,18 @@ module ActiveMerchant
         commit(:purchase, params)
       end
 
-      def credit(money, identification, options = {})
+      def refund(money, identification, options = {})
         params = {
           'AMOUNT'  => amount(money),
           'TXNREF'  => identification
         }
         add_request_details(params, options)
-        commit(:credit, params)
+        commit(:refund, params)
+      end
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
       end
 
       # Specific to NetRegistry.

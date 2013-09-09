@@ -32,8 +32,9 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
       :currency => "AUD",
       :email => "jim@example.com",
       :billing_address => {
-        :name => "Jim Awesome Smith",
-        :company => "Awesome Co",
+        :title    => "Mr.",
+        :name     => "Jim Awesome Smith",
+        :company  => "Awesome Co",
         :address1 => "1234 My Street",
         :address2 => "Apt 1",
         :city     => "Ottawa",
@@ -44,8 +45,9 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
         :fax      => "(555)555-6666"
       },
       :shipping_address => {
-        :name => "Baker",
-        :company => "Elsewhere Inc.",
+        :title    => "Ms.",
+        :name     => "Baker",
+        :company  => "Elsewhere Inc.",
         :address1 => "4321 Their St.",
         :address2 => "Apt 2",
         :city     => "Chicago",
@@ -91,6 +93,20 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
     assert_failure response
     assert_equal "Do Not Honour", response.message
     assert_equal run_response.authorization, response.authorization
+  end
+
+  def test_successful_store
+    @options[:billing_address].merge!(:title => "Dr.")
+    assert response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal "Transaction Approved", response.message
+  end
+
+  def test_failed_store
+    @options[:billing_address].merge!(:country => nil)
+    assert response = @gateway.store(@credit_card, @options)
+    assert_failure response
+    assert_equal "V6045,V6044", response.message
   end
 
   def test_invalid_login

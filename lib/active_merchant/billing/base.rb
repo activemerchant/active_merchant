@@ -31,7 +31,8 @@ module ActiveMerchant #:nodoc:
       #
       #   ActiveMerchant::Billing::Base.gateway('moneris').new
       def self.gateway(name)
-        Billing.const_get("#{name.to_s.downcase}_gateway".camelize)
+        raise NameError if (name_str = name.to_s.downcase).blank?
+        Billing.const_get("#{name_str}_gateway".camelize)
       end
 
       # Return the matching integration module

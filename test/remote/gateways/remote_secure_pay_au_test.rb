@@ -100,7 +100,7 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
 
     authorization = response.authorization

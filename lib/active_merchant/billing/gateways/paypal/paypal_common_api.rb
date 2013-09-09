@@ -342,6 +342,7 @@ module ActiveMerchant #:nodoc:
       def build_mass_pay_request(*args)
         default_options = args.last.is_a?(Hash) ? args.pop : {}
         recipients = args.first.is_a?(Array) ? args : [args]
+        receiver_type = default_options[:receiver_type]
 
         xml = Builder::XmlMarkup.new
 
@@ -349,11 +350,18 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'MassPayRequest', 'xmlns:n2' => EBAY_NAMESPACE do
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'EmailSubject', default_options[:subject] if default_options[:subject]
+            xml.tag! 'ReceiverType', receiver_type if receiver_type
             recipients.each do |money, recipient, options|
               options ||= default_options
               xml.tag! 'MassPayItem' do
-                xml.tag! 'ReceiverEmail', recipient
-                xml.tag! 'Amount', amount(money), 'currencyID' => options[:currency] || currency(money)
+                if(!receiver_type || receiver_type == 'EmailAddress')
+                  xml.tag! 'ReceiverEmail', recipient
+                elsif receiver_type == 'UserID'
+                  xml.tag! 'ReceiverID', recipient
+                else
+                  raise ArgumentError.new("Unknown receiver_type: #{receiver_type}")
+                end
+                xml.tag! 'Amount', amount(money), 'currencyID' => (options[:currency] || currency(money))
                 xml.tag! 'Note', options[:note] if options[:note]
                 xml.tag! 'UniqueId', options[:unique_id] if options[:unique_id]
               end
@@ -534,7 +542,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:Number', item[:number]
             xml.tag! 'n2:Quantity', item[:quantity]
             if item[:amount]
-              xml.tag! 'n2:Amount', localized_amount(item[:amount], currency_code), 'currencyID' => currency_code
+              xml.tag! 'n2:Amount', item_amount(item[:amount], currency_code), 'currencyID' => currency_code
             end
             xml.tag! 'n2:Description', item[:description]
             xml.tag! 'n2:ItemURL', item[:url]
@@ -617,11 +625,11 @@ module ActiveMerchant #:nodoc:
         response = parse(action, ssl_post(endpoint_url, build_request(request), @options[:headers]))
 
         build_response(successful?(response), message_from(response), response,
-    	    :test => test?,
-    	    :authorization => authorization_from(response),
-    	    :fraud_review => fraud_review?(response),
-    	    :avs_result => { :code => response[:avs_code] },
-    	    :cvv_result => response[:cvv2_code]
+          :test => test?,
+          :authorization => authorization_from(response),
+          :fraud_review => fraud_review?(response),
+          :avs_result => { :code => response[:avs_code] },
+          :cvv_result => response[:cvv2_code]
         )
       end
 
@@ -630,7 +638,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response[:transaction_id] || response[:authorization_id] || response[:refund_transaction_id] # middle one is from reauthorization
+        (
+          response[:transaction_id] ||
+          response[:authorization_id] ||
+          response[:refund_transaction_id] ||
+          response[:billing_agreement_id]
+        )
       end
 
       def successful?(response)
@@ -643,6 +656,14 @@ module ActiveMerchant #:nodoc:
 
       def date_to_iso(date)
         (date.is_a?(Date) ? date.to_time : date).utc.iso8601
+      end
+
+      def item_amount(amount, currency_code)
+        if amount.to_i < 0 && non_fractional_currency?(currency_code)
+          amount(amount).to_f.floor
+        else
+          localized_amount(amount, currency_code)
+        end
       end
     end
   end

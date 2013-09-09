@@ -39,14 +39,18 @@ module ActiveMerchant #:nodoc:
     end
 
     class MultiResponse < Response
-      def self.run(&block)
-        new.tap(&block)
+      def self.run(primary_response = :last, &block)
+        response = new.tap(&block)
+        response.primary_response = primary_response
+        response
       end
 
       attr_reader :responses
+      attr_writer :primary_response
 
       def initialize
         @responses = []
+        @primary_response = :last
       end
 
       def process
@@ -65,10 +69,14 @@ module ActiveMerchant #:nodoc:
         @responses.all?{|r| r.success?}
       end
 
+      def primary_response
+        success? && @primary_response == :first ? @responses.first : @responses.last
+      end
+
       %w(params message test authorization avs_result cvv_result test? fraud_review?).each do |m|
         class_eval %(
           def #{m}
-            (@responses.empty? ? nil : @responses.last.#{m})
+            (@responses.empty? ? nil : primary_response.#{m})
           end
         )
       end

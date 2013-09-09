@@ -18,7 +18,8 @@ module ActiveMerchant #:nodoc:
         'american_express' => 'AMEX-SSL',
         'jcb'              => 'JCB-SSL',
         'maestro'          => 'MAESTRO-SSL',
-        'laser'            => 'LASER-SSL'
+        'laser'            => 'LASER-SSL',
+        'diners_club'      => 'DINERS-SSL'
       }
 
       def initialize(options = {})
