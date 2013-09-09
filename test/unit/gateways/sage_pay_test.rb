@@ -132,6 +132,13 @@ class SagePayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_disable_3d_security_flag_is_submitted
+    stub_comms(:ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({:apply_3d_secure => 1}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/Apply3DSecure=1/, data)
+    end.respond_with(successful_purchase_response)
+  end
 
   private
 

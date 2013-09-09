@@ -51,67 +51,67 @@ class QuickpayNotificationTest < Test::Unit::TestCase
   private
   def http_raw_data
     <<-END_POST
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="msgtype"
 
 authorize
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="ordernumber"
 
 1353061158
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="amount"
 
 123
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="currency"
 
 DKK
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="time"
 
 2012-11-16T10:19:36+00:00
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="state"
 
 1
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="qpstat"
 
 000
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="qpstatmsg"
 
 OK
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="chstat"
 
 000
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="chstatmsg"
 
 OK
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="merchant"
 
 Merchant #1
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="merchantemail"
 
 merchant1@pil.dk
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="transaction"
 
 4262
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="cardtype"
 
 dankort
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="cardnumber"
 
 XXXXXXXXXXXX9999
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="cardhash"
 
 
@@ -123,23 +123,23 @@ nets
 Content-Disposition: form-data; name="splitpayment"
 
 1
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="fraudprobability"
 
 
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="fraudremarks"
 
 
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="fraudreport"
 
 
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="fee"
 
 0
-------------------------------8a827a0e6829 
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="md5check"
 
 d991ae505cbb3bad75eb86e02be97335

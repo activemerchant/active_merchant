@@ -30,11 +30,11 @@ class MonerisUsTest < Test::Unit::TestCase
 
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
-    
+
     assert response = @gateway.authorize(100, @credit_card, @options)
     assert_failure response
   end
-  
+
   def test_deprecated_credit
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/txn_number>123<\//), anything).returns("")
     @gateway.expects(:parse).returns({})
@@ -51,15 +51,15 @@ class MonerisUsTest < Test::Unit::TestCase
 
   def test_amount_style
    assert_equal '10.34', @gateway.send(:amount, 1034)
-   
+
    assert_raise(ArgumentError) do
      @gateway.send(:amount, '10.34')
    end
   end
-  
-  def test_purchase_is_valid_xml
 
-   params = { 
+  def test_preauth_is_valid_xml
+
+   params = {
      :order_id => "order1",
      :amount => "1.01",
      :pan => "4242424242424242",
@@ -70,7 +70,7 @@ class MonerisUsTest < Test::Unit::TestCase
    assert data = @gateway.send(:post_data, 'us_preauth', params)
    assert REXML::Document.new(data)
    assert_equal xml_capture_fixture.size, data.size
-  end  
+  end
 
   def test_purchase_is_valid_xml
 
@@ -88,7 +88,7 @@ class MonerisUsTest < Test::Unit::TestCase
   end
 
   def test_capture_is_valid_xml
- 
+
    params = {
      :order_id => "order1",
      :amount => "1.01",
@@ -100,12 +100,12 @@ class MonerisUsTest < Test::Unit::TestCase
    assert data = @gateway.send(:post_data, 'us_preauth', params)
    assert REXML::Document.new(data)
    assert_equal xml_capture_fixture.size, data.size
-  end  
-  
+  end
+
   def test_supported_countries
     assert_equal ['US'], MonerisUsGateway.supported_countries
   end
-  
+
   def test_supported_card_types
     assert_equal [:visa, :master, :american_express, :diners_club, :discover], MonerisUsGateway.supported_cardtypes
   end
@@ -115,8 +115,8 @@ class MonerisUsTest < Test::Unit::TestCase
       assert_raise(ArgumentError) { @gateway.void(invalid_transaction_param) }
     end
   end
-  
-  private  
+
+  private
   def successful_purchase_response
     <<-RESPONSE
 <?xml version="1.0"?>
@@ -138,10 +138,10 @@ class MonerisUsTest < Test::Unit::TestCase
     <TimedOut>false</TimedOut>
   </receipt>
 </response>
-    
+
     RESPONSE
   end
-  
+
   def failed_purchase_response
     <<-RESPONSE
 <?xml version="1.0"?>
@@ -163,9 +163,9 @@ class MonerisUsTest < Test::Unit::TestCase
     <TimedOut>false</TimedOut>
   </receipt>
 </response>
-    
+
     RESPONSE
-  end  
+  end
 
   def xml_purchase_fixture
    '<request><store_id>monusqa002</store_id><api_token>qatoken</api_token><us_purchase><amount>1.01</amount><pan>4242424242424242</pan><expdate>0303</expdate><crypt_type>7</crypt_type><order_id>order1</order_id></us_purchase></request>'

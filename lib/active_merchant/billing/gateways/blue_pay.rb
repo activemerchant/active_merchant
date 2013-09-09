@@ -3,28 +3,53 @@ require 'digest/md5'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BluePayGateway < Gateway
-      class_attribute :live_url, :rebilling_url, :ignore_http_status
+      class_attribute :rebilling_url, :ignore_http_status
 
       self.live_url      = 'https://secure.bluepay.com/interfaces/bp20post'
       self.rebilling_url = 'https://secure.bluepay.com/interfaces/bp20rebadmin'
 
       self.ignore_http_status = true
 
-      RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT = 0, 2, 3
-      AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE  = 5, 6, 38
-
       CARD_CODE_ERRORS = %w( N S )
       AVS_ERRORS = %w( A E N R W Z )
       AVS_REASON_CODES = %w(27 45)
 
-      class_attribute :duplicate_window
+      FRAUD_REVIEW_STATUSES = %w( E 0 )
+
+      FIELD_MAP = {
+        'TRANS_ID' => :transaction_id,
+        'STATUS' => :response_code,
+        'AVS' => :avs_result_code,
+        'CVV2'=> :card_code,
+        'AUTH_CODE' => :authorization,
+        'MESSAGE' => :message,
+        'REBID' => :rebid,
+        'TRANS_TYPE' => :trans_type,
+        'PAYMENT_ACCOUNT_MASK' => :acct_mask,
+        'CARD_TYPE' => :card_type,
+      }
+
+      REBILL_FIELD_MAP = {
+        'REBILL_ID' => :rebill_id,
+        'ACCOUNT_ID'=> :account_id,
+        'USER_ID' => :user_id,
+        'TEMPLATE_ID' => :template_id,
+        'STATUS' => :status,
+        'CREATION_DATE' => :creation_date,
+        'NEXT_DATE' => :next_date,
+        'LAST_DATE' => :last_date,
+        'SCHED_EXPR' => :schedule,
+        'CYCLES_REMAIN' => :cycles_remain,
+        'REB_AMOUNT' => :rebill_amount,
+        'NEXT_AMOUNT' => :next_amount,
+        'USUAL_DATE' => :undoc_usual_date, # Not found in the bp20rebadmin API doc.
+      }
 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
       self.homepage_url        = 'http://www.bluepay.com/'
       self.display_name        = 'BluePay'
       self.money_format        = :dollars
-
 
       # Creates a new BluepayGateway
       #
@@ -54,24 +79,12 @@ module ActiveMerchant #:nodoc:
       # * <tt>options</tt> -- A hash of optional parameters.
       def authorize(money, payment_object, options = {})
         post = {}
-        post[:MASTER_ID] = ''
-        if payment_object != nil && payment_object.class() != String
-          payment_object.class() == ActiveMerchant::Billing::Check ?
-          add_check(post, payment_object) :
-          add_creditcard(post, payment_object)
-        else
-          post[:MASTER_ID] = payment_object
-        end
+        add_payment_method(post, payment_object)
         add_invoice(post, options)
         add_address(post, options)
         add_customer_data(post, options)
-        if options[:rebill]     != nil
-          post[:DO_REBILL]       = '1'
-          post[:REB_AMOUNT]      = amount(options[:rebill_amount])
-          post[:REB_FIRST_DATE]  = options[:rebill_start_date]
-          post[:REB_EXPR]        = options[:rebill_expression]
-          post[:REB_CYCLES]      = options[:rebill_cycles]
-        end
+        add_rebill(post, options) if options[:rebill]
+        add_duplicate_override(post, options)
         post[:TRANS_TYPE]  = 'AUTH'
         commit('AUTH_ONLY', money, post)
       end
@@ -89,24 +102,12 @@ module ActiveMerchant #:nodoc:
       # * <tt>options</tt> -- A hash of optional parameters.,
       def purchase(money, payment_object, options = {})
         post = {}
-        post[:MASTER_ID] = ''
-        if payment_object != nil && payment_object.class() != String
-         payment_object.class() == ActiveMerchant::Billing::Check ?
-         add_check(post, payment_object) :
-         add_creditcard(post, payment_object)
-        else
-          post[:MASTER_ID] = payment_object
-        end
+        add_payment_method(post, payment_object)
         add_invoice(post, options)
         add_address(post, options)
         add_customer_data(post, options)
-        if options[:rebill]     != nil
-          post[:DO_REBILL]       = '1'
-          post[:REB_AMOUNT]      = amount(options[:rebill_amount])
-          post[:REB_FIRST_DATE]  = options[:rebill_start_date]
-          post[:REB_EXPR]        = options[:rebill_expression]
-          post[:REB_CYCLES]      = options[:rebill_cycles]
-        end
+        add_rebill(post, options) if options[:rebill]
+        add_duplicate_override(post, options)
         post[:TRANS_TYPE]  = 'SALE'
         commit('AUTH_CAPTURE', money, post)
       end
@@ -154,20 +155,17 @@ module ActiveMerchant #:nodoc:
       #   If the payment_object is a token, then the transaction type will reverse a previous capture or purchase transaction, returning the funds to the customer. If the amount is nil, a full credit will be processed. This is referred to a REFUND transaction in BluePay.
       #   If the payment_object is either a CreditCard or Check object, then the transaction type will be an unmatched credit placing funds in the specified account. This is referred to a CREDIT transaction in BluePay.
       # * <tt>options</tt> -- A hash of parameters.
-      def refund(money, payment_object, options = {})
-        post = {}
-        post[:PAYMENT_ACCOUNT] = ''
-        if payment_object != nil && payment_object.class() != String
-           payment_object.class() == ActiveMerchant::Billing::Check ?
-           add_check(post, payment_object) :
-           add_creditcard(post, payment_object)
-           post[:TRANS_TYPE] = 'CREDIT'
-        else
-           post[:MASTER_ID]  = payment_object
-           post[:TRANS_TYPE] = 'REFUND'
+      def refund(money, identification, options = {})
+        if(identification && !identification.kind_of?(String))
+          deprecated "refund should only be used to refund a referenced transaction"
+          return credit(money, identification, options)
         end
 
-        options[:first_name] ? post[:NAME1] = options[:first_name] : post[:NAME1] = ''
+        post = {}
+        post[:PAYMENT_ACCOUNT] = ''
+        post[:MASTER_ID]  = identification
+        post[:TRANS_TYPE] = 'REFUND'
+        post[:NAME1] = (options[:first_name] ? options[:first_name] : "")
         post[:NAME2] = options[:last_name] if options[:last_name]
         post[:ZIP] = options[:zip] if options[:zip]
         add_invoice(post, options)
@@ -176,9 +174,24 @@ module ActiveMerchant #:nodoc:
         commit('CREDIT', money, post)
       end
 
-      def credit(money, identification, options = {})
-        deprecated CREDIT_DEPRECATION_MESSAGE
-        refund(money, identification, options)
+      def credit(money, payment_object, options = {})
+        if(payment_object && payment_object.kind_of?(String))
+          deprecated "credit should only be used to credit a payment method"
+          return refund(money, payment_object, options)
+        end
+
+        post = {}
+        post[:PAYMENT_ACCOUNT] = ''
+        add_payment_method(post, payment_object)
+        post[:TRANS_TYPE] = 'CREDIT'
+
+        post[:NAME1] = (options[:first_name] ? options[:first_name] : "")
+        post[:NAME2] = options[:last_name] if options[:last_name]
+        post[:ZIP] = options[:zip] if options[:zip]
+        add_invoice(post, options)
+        add_address(post, options)
+        add_customer_data(post, options)
+        commit('CREDIT', money, post)
       end
 
       # Create a new recurring payment.
@@ -214,9 +227,12 @@ module ActiveMerchant #:nodoc:
       #   A money object of 1995 cents would be passed into the 'money' parameter.
       def recurring(money, payment_object, options = {})
         requires!(options, :rebill_start_date, :rebill_expression)
-        options[:rebill] = '1'
-        money == nil ? authorize(money, payment_object, options) :
-        purchase(money, payment_object, options)
+        options[:rebill] = true
+        if money
+          purchase(money, payment_object, options)
+        else
+          authorize(money, payment_object, options)
+        end
       end
 
       # View a recurring payment
@@ -252,11 +268,11 @@ module ActiveMerchant #:nodoc:
         requires!(options, :rebill_id)
         post[:REBILL_ID]          = options[:rebill_id]
         post[:TRANS_TYPE]         = 'SET'
-        post[:REB_AMOUNT]         = amount(options[:rebill_amount]) if !options[:rebill_amount].nil?
-        post[:NEXT_DATE]          = options[:rebill_next_date] if !options[:rebill_next_date].nil?
-        post[:REB_EXPR]           = options[:rebill_expression] if !options[:rebill_expression].nil?
-        post[:REB_CYCLES]         = options[:rebill_cycles] if !options[:rebill_cycles].nil?
-        post[:NEXT_AMOUNT]        = options[:rebill_next_amount] if !options[:rebill_next_amount].nil?
+        post[:REB_AMOUNT]         = amount(options[:rebill_amount]) if options[:rebill_amount]
+        post[:NEXT_DATE]          = options[:rebill_next_date]
+        post[:REB_EXPR]           = options[:rebill_expression]
+        post[:REB_CYCLES]         = options[:rebill_cycles]
+        post[:NEXT_AMOUNT]        = options[:rebill_next_amount]
         commit('rebill', 'nil', post)
       end
 
@@ -279,145 +295,155 @@ module ActiveMerchant #:nodoc:
       private
 
       def commit(action, money, fields)
-        fields[:AMOUNT] = amount(money) unless (fields[:TRANS_TYPE] == 'VOID' or action == 'rebill')
-        test? == true || @options[:test] == true ? fields[:MODE] = 'TEST' : fields[:MODE] = 'LIVE'
-        action == 'rebill' ? begin url = rebilling_url; fields[:TAMPER_PROOF_SEAL] = calc_rebill_tps(fields) end : begin url = live_url; fields[:TAMPER_PROOF_SEAL] = calc_tps(amount(money), fields) end
+        fields[:AMOUNT] = amount(money) unless(fields[:TRANS_TYPE] == 'VOID' || action == 'rebill')
+        fields[:MODE] = (test? ? 'TEST' : 'LIVE')
         fields[:ACCOUNT_ID] = @options[:login]
-        data = ssl_post url, post_data(action, fields)
-        response = parse(data)
-        message = message_from(response)
-        test_mode = test? || fields[:MODE] == 'TEST'
-        if (response.has_key?('TRANS_ID'))
-          response_id = response['TRANS_ID'].to_s()
-        elsif (response.has_key?('rebill_id'))
-          response_id = response['rebill_id'][0]
+
+        if action == 'rebill'
+          url = rebilling_url
+          fields[:TAMPER_PROOF_SEAL] = calc_rebill_tps(fields)
         else
-          response_id = response[TRANSACTION_ID]
+          url = live_url
+          fields[:TAMPER_PROOF_SEAL] = calc_tps(amount(money), fields)
         end
-        avs = (response[AVS_RESULT_CODE] != '' ? response[AVS_RESULT_CODE] : '')
-        cvv2 = (!response[CARD_CODE_RESPONSE_CODE].empty? ? response[CARD_CODE_RESPONSE_CODE] : '')
-        Response.new(success?(response), message, response,
-          :test          => test_mode,
-          :authorization => response_id,
-          :fraud_review  => fraud_review?(response),
-          :avs_result    => { :code => avs },
-          :cvv_result    => cvv2
-        )
+        parse(ssl_post(url, post_data(action, fields)))
       end
 
-      def success?(response)
-        if (response['STATUS'] == '1' || message_from(response) =~ /approved/ || response.has_key?('rebill_id') || response[RESPONSE_REASON_TEXT] =~ /approved/)
-          return true
-        else
-          return false
+      def parse_recurring(response_fields, opts={}) # expected status?
+        parsed = {}
+        response_fields.each do |k,v|
+          mapped_key = REBILL_FIELD_MAP.include?(k) ? REBILL_FIELD_MAP[k] : k
+          parsed[mapped_key] = v
         end
-      end
 
-      def fraud_review?(response)
-        response['STATUS'] == 'E' || response['STATUS'] == '0' || response[RESPONSE_REASON_TEXT] =~ /being reviewed/
-      end
+        success = parsed[:status] != 'error'
+        message = parsed[:status]
 
-      def get_rebill_id(response)
-        response['REBID'] if response_has.key?('REBID')
+        Response.new(success, message, parsed,
+          :test          => test?,
+          :authorization => parsed[:rebill_id])
       end
 
       def parse(body)
-        fields = CGI::parse(body)
-        if fields.has_key?('MESSAGE') or fields.has_key?('rebill_id')
-          if fields.has_key?('MESSAGE')
-            fields['MESSAGE'][0] == "Missing ACCOUNT_ID" ? message = "The merchant login ID or password is invalid" : message = fields['MESSAGE']
-            fields['MESSAGE'][0] =~ /Approved/ ? message = "This transaction has been approved" : message = fields['MESSAGE'] if message == fields['MESSAGE']
-            fields['MESSAGE'][0] =~ /Expired/ ? message = "The credit card has expired" : message = fields['MESSAGE'] if message == fields['MESSAGE']
-            fields.delete('MESSAGE')
+        # The bp20api has max one value per form field.
+        response_fields = Hash[CGI::parse(body).map{|k,v| [k.upcase,v.first]}]
+
+        if response_fields.include? "REBILL_ID"
+          return parse_recurring(response_fields)
+        end
+
+        parsed = {}
+        response_fields.each do |k,v|
+          mapped_key = FIELD_MAP.include?(k) ? FIELD_MAP[k] : k
+          parsed[mapped_key] = v
+        end
+
+        # normalize message
+        message = message_from(parsed)
+        success = parsed[:response_code] == '1'
+        Response.new(success, message, parsed,
+          :test          => test?,
+          :authorization => (parsed[:rebid] && parsed[:rebid] != '' ? parsed[:rebid] : parsed[:transaction_id]),
+          :fraud_review  => FRAUD_REVIEW_STATUSES.include?(parsed[:response_code]),
+          :avs_result    => { :code => parsed[:avs_result_code] },
+          :cvv_result    => parsed[:card_code]
+        )
+      end
+
+      def message_from(parsed)
+        message = parsed[:message]
+        if(parsed[:response_code].to_i == 2)
+          if CARD_CODE_ERRORS.include?(parsed[:card_code])
+            message = CVVResult.messages[parsed[:card_code]]
+          elsif AVS_ERRORS.include?(parsed[:avs_result_code])
+            message = AVSResult.messages[ parsed[:avs_result_code] ]
+          else
+            message = message.chomp('.')
           end
-          fields.has_key?('STATUS') ? begin status = fields['STATUS']; fields.delete('STATUS') end : status = ''
-          fields.has_key?('AVS') ? begin avs = fields['AVS']; fields.delete('AVS') end : avs = ''
-          fields.has_key?('CVV2') ? begin cvv2 = fields['CVV2']; fields.delete('CVV2') end : cvv2 = ''
-          fields.has_key?('MASTER_ID') ? begin trans_id = fields['MASTER_ID']; fields.delete('MASTER_ID') end : trans_id = ''
-          fields[:avs_result_code] = avs
-          fields[:card_code] = cvv2
-          fields[:response_code] = status
-          fields[:response_reason_code] = ''
-          fields[:response_reason_text] = message
-          fields[:transaction_id] = trans_id
-          return fields
+        elsif message == "Missing ACCOUNT_ID" 
+          message = "The merchant login ID or password is invalid"
+        elsif message =~ /Approved/
+          message = "This transaction has been approved"
+        elsif message =~  /Expired/
+          message =  "The credit card has expired"
         end
-        # parse response if using other old API
-        hash = Hash.new
-        fields = fields.first[0].split(",")
-        fields.each_index do |x|
-          hash[x] = fields[x].tr('$','')
-        end
-        hash
+        message
       end
 
       def add_invoice(post, options)
-        post[:ORDER_ID]    = options[:order_id] if options.has_key? :order_id
-        post[:INVOICE_ID]  = options[:invoice] if options.has_key? :invoice
-        post[:invoice_num] = options[:order_id] if options.has_key? :order_id
-        post[:MEMO]        = options[:description] if options.has_key? :description
-        post[:description] = options[:description] if options.has_key? :description
+        post[:ORDER_ID]    = options[:order_id]
+        post[:INVOICE_ID]  = options[:invoice]
+        post[:invoice_num] = options[:order_id]
+        post[:MEMO]        = options[:description]
+        post[:description] = options[:description]
+      end
+
+      def add_payment_method(post, payment_object)
+        post[:MASTER_ID] = ''
+        case payment_object
+        when String
+          post[:MASTER_ID] = payment_object
+        when Check
+          add_check(post, payment_object)
+        else
+          add_creditcard(post, payment_object)
+        end
       end
 
       def add_creditcard(post, creditcard)
         post[:PAYMENT_TYPE]    = 'CREDIT'
         post[:PAYMENT_ACCOUNT] = creditcard.number
-        post[:CARD_CVV2]       = creditcard.verification_value if
-                              creditcard.verification_value?
+        post[:CARD_CVV2]       = creditcard.verification_value
         post[:CARD_EXPIRE]     = expdate(creditcard)
         post[:NAME1]           = creditcard.first_name
         post[:NAME2]           = creditcard.last_name
       end
 
+      CHECK_ACCOUNT_TYPES = {
+        "checking" => "C",
+        "savings" => "S"
+      }
+
       def add_check(post, check)
         post[:PAYMENT_TYPE]     = 'ACH'
-        post[:PAYMENT_ACCOUNT]  = check.account_type + ":" + check.routing_number + ":" + check.account_number
+        post[:PAYMENT_ACCOUNT]  = [CHECK_ACCOUNT_TYPES[check.account_type], check.routing_number, check.account_number].join(":")
         post[:NAME1]            = check.first_name
         post[:NAME2]            = check.last_name
       end
 
       def add_customer_data(post, options)
-          post[:EMAIL]     = options[:email] if options.has_key? :email
-          post[:CUSTOM_ID] = options[:customer] if options.has_key? :customer
+          post[:EMAIL]     = options[:email]
+          post[:CUSTOM_ID] = options[:customer]
       end
 
-      def add_duplicate_window(post)
-        unless duplicate_window.nil?
-          post[:duplicate_window] = duplicate_window
-          post[:DUPLICATE_OVERRIDE] = duplicate_window
-        end
+      def add_duplicate_override(post, options)
+        post[:DUPLICATE_OVERRIDE] = options[:duplicate_override]
       end
 
       def add_address(post, options)
-        if address = options[:billing_address] || options[:address]
-          post[:NAME1]        = address[:first_name]
-          post[:NAME2]        = address[:last_name]
+        if address = (options[:shipping_address] || options[:billing_address] || options[:address])
           post[:ADDR1]        = address[:address1]
           post[:ADDR2]        = address[:address2]
           post[:COMPANY_NAME] = address[:company]
           post[:PHONE]        = address[:phone]
           post[:CITY]         = address[:city]
-          post[:STATE]        = address[:state].blank?  ? 'n/a' : address[:state]
+          post[:STATE]        = (address[:state].blank? ? 'n/a' : address[:state])
           post[:ZIP]          = address[:zip]
           post[:COUNTRY]      = address[:country]
         end
-        if address = options[:shipping_address]
-          post[:NAME1]        = address[:first_name]
-          post[:NAME2]        = address[:last_name]
-          post[:ADDR1]        = address[:address1]
-          post[:ADDR1]        = address[:address1]
-          post[:COMPANY_NAME] = address[:company]
-          post[:PHONE]        = address[:phone]
-          post[:ZIP]          = address[:zip]
-          post[:CITY]         = address[:city]
-          post[:COUNTRY]      = address[:country]
-          post[:STATE]        = address[:state].blank?  ? 'n/a' : address[:state]
-        end
+      end
+
+      def add_rebill(post, options)
+        post[:DO_REBILL]       = '1'
+        post[:REB_AMOUNT]      = amount(options[:rebill_amount])
+        post[:REB_FIRST_DATE]  = options[:rebill_start_date]
+        post[:REB_EXPR]        = options[:rebill_expression]
+        post[:REB_CYCLES]      = options[:rebill_cycles]
       end
 
       def post_data(action, parameters = {})
         post = {}
-        post[:version]        = '3.0'
+        post[:version]        = '1'
         post[:login]          = ''
         post[:tran_key]       = ''
         post[:relay_response] = "FALSE"
@@ -427,60 +453,48 @@ module ActiveMerchant #:nodoc:
         post[:encap_char]     = "$"
         post[:card_num]       = '4111111111111111'
         post[:exp_date]       = '1212'
-        post[:solution_ID]    = application_id if application_id.present? && application_id != "ActiveMerchant"
-        request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
-        request
-      end
-
-      def message_from(results)
-        if results[:response_code] == 2
-          return CVVResult.messages[ results[:card_code] ] if CARD_CODE_ERRORS.include?(results[:card_code])
-          if AVS_REASON_CODES.include?(results[:response_reason_code]) && AVS_ERRORS.include?(results[:avs_result_code])
-            return AVSResult.messages[ results[:avs_result_code] ]
-          end
-          return (results[:response_reason_text] ? results[:response_reason_text].chomp('.') : '')
-        end
-        if results.has_key?(:response_reason_text)
-          return results[:response_reason_text].to_s()
-        end
-        if !results.has_key?('STATUS')
-          return results[RESPONSE_REASON_TEXT] ? results[RESPONSE_REASON_TEXT].chomp('.') : ''
-        end
+        post[:solution_ID]    = application_id if(application_id && application_id != "ActiveMerchant")
+        post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
       def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
+        year  = format(creditcard.year, :two_digits)
+        month = format(creditcard.month, :two_digits)
 
-        "#{month}#{year[-2..-1]}"
+        "#{month}#{year}"
       end
 
       def calc_tps(amount, post)
-        post[:NAME1] = '' if post[:NAME1].nil?
-        digest = Digest::MD5.hexdigest(@options[:password] +
-        @options[:login] + post[:TRANS_TYPE] +
-        amount.to_s() + post[:MASTER_ID].to_s() +
-        post[:NAME1].to_s() + post[:PAYMENT_ACCOUNT].to_s())
-        return digest
+        post[:NAME1] ||= ''
+        Digest::MD5.hexdigest(
+          [
+            @options[:password],
+            @options[:login],
+            post[:TRANS_TYPE],
+            amount,
+            post[:MASTER_ID],
+            post[:NAME1],
+            post[:PAYMENT_ACCOUNT]
+          ].join("")
+        )
       end
 
       def calc_rebill_tps(post)
-        digest = Digest::MD5.hexdigest(@options[:password] +
-        @options[:login] + post[:TRANS_TYPE] + post[:REBILL_ID][0].to_s())
-        return digest
+        Digest::MD5.hexdigest(
+          [
+            @options[:password],
+            @options[:login],
+            post[:TRANS_TYPE],
+            post[:REBILL_ID]
+          ].join("")
+        )
       end
 
       def handle_response(response)
-        if ignore_http_status then
+        if ignore_http_status || (200...300).include?(response.code.to_i)
           return response.body
-        else
-          case response.code.to_i
-          when 200...300
-            response.body
-          else
-            raise ResponseError.new(response)
-          end
         end
+        raise ResponseError.new(response)
       end
     end
   end

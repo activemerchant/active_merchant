@@ -1,4 +1,5 @@
-require 'active_support/core_ext/float/rounding.rb' # Float#round(precision)
+require 'active_support/version' # for ActiveSupport2.3
+require 'active_support/core_ext/float/rounding.rb' unless ActiveSupport::VERSION::MAJOR > 3 # Float#round(precision)
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -13,7 +14,7 @@ module ActiveMerchant #:nodoc:
         # in addition to the user being redirected to your return_url, the return_url will
         # be accessed by the PxPay servers directly, immediately after transaction success.
         #
-        #  payment_service_for('order_id', 'pxpay_user_ID', :service => :pxpay, 
+        #  payment_service_for('order_id', 'pxpay_user_ID', :service => :pxpay,
         #                       :amount => 157.0, :currency => 'USD', :credential2 => 'pxpay_key') do |service|
         #
         #   service.customer :email => 'customer@email.com'

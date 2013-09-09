@@ -82,13 +82,6 @@ class EvoCaTest < Test::Unit::TestCase
     assert_equal '1812629062', response.authorization
   end
 
-  def test_successful_refund
-    @gateway.expects(:ssl_post).returns(successful_refund_response)
-    assert response = @gateway.refund(200, '1812631089')
-    assert_success response
-    assert_equal '1812631331', response.authorization
-  end
-
   def test_successful_update
     @gateway.expects(:ssl_post).returns(successful_update_response)
     assert response = @gateway.update('1812639342', :tracking_number => '1234', :shipping_carrier => 'fedex')

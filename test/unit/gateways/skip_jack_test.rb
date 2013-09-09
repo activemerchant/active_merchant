@@ -218,6 +218,20 @@ class SkipJackTest < Test::Unit::TestCase
     assert_equal "1.0000", response.params["TransactionAmount"]
   end
 
+  def test_dont_send_blank_state
+    @billing_address[:state] = nil
+    @shipping_address[:state] = nil
+    @options[:billing_address] = @billing_address
+    @options[:shipping_address] = @shipping_address
+    @gateway.expects(:ssl_post).with do |url, params|
+      url == 'https://developer.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI' &&
+      CGI.parse(params)['State'].first == 'XX' &&
+      CGI.parse(params)['ShipToState'].first == 'XX'
+    end.returns(successful_authorization_response)
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+  end
+
   private
   def successful_authorization_response
     <<-CSV

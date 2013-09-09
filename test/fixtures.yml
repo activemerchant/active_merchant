@@ -26,6 +26,11 @@ barclays_epdq:
   password: test
   client_id: 1234
 
+barclays_epdq_extra_plus:
+  login: merchant number
+  user: username
+  password: password
+
 beanstream:
   login: merchant id
   user: username
@@ -196,7 +201,16 @@ merchant_esolutions:
   login: "94100008043900000004"
   password: "gvQzgKXOTEoDzpzJzROrQQzoKLaEqxjf"
 
+merchant_one:
+  username: 'demo'
+  password: 'password'
+
 merchant_ware:
+ login:
+ password:
+ name:
+
+merchant_ware_version_four:
  login:
  password:
  name:
@@ -208,8 +222,13 @@ merchant_warrior:
 
 # Working credentials, no need to replace
 mercury:
+  login: '395347306=TOKEN'
+  password: '123TOKEN'
+
+mercury_no_tokenization:
   login: '595901'
   password: 'xyz'
+  tokenization: false
 
 metrics_global:
   login: 'demo'
@@ -559,6 +578,7 @@ spreedly_core:
 
 stripe:
   login:
+  fee_refund_login:
 
 trans_first:
   login: LOGIN
@@ -567,6 +587,10 @@ trans_first:
 transax:
   login: transaxdemo
   password: nelix123
+
+transnational:
+  login: demo
+  password: password
 
 # Working credentials, no need to replace
 trust_commerce:
@@ -602,7 +626,7 @@ vindicia:
   password: PASSWORD
 
 webpay:
-  login: "vtUQeOtUnYr7PGCLQ96Ul4zqpDUO4sOE"
+  login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
 
 # Working test credentials, no need to replace
 wirecard:
@@ -612,3 +636,7 @@ wirecard:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+iats_payments:
+  login: TEST88
+  password: TEST88

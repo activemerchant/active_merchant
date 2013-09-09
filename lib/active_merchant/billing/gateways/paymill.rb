@@ -1,13 +1,13 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaymillGateway < Gateway
-      self.supported_countries = %w(AD AT BE CY CZ DE DK EE ES FI FO FR GB GR
-                                    HU IE IL IS IT LI LT LU LV MT NL NO PL PT
-                                    SE SI SK TR VA)
+      self.supported_countries = %w(AD AT BE BG CH CY CZ DE DK EE ES FI FO FR GB
+                                    GI GR HU IE IL IS IT LI LT LU LV MT NL NO PL
+                                    PT RO SE SI SK TR VA)
 
       self.supported_cardtypes = [:visa, :master]
       self.homepage_url = 'https://paymill.com'
-      self.display_name = 'Paymill'
+      self.display_name = 'PAYMILL'
       self.money_format = :cents
       self.default_currency = 'EUR'
 
@@ -154,7 +154,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def save_card_url
-        (test? ? 'https://test-token.paymill.com' : 'https://token-v2.paymill.com')
+        (test? ? 'https://test-token.paymill.com' : 'https://token-v2.paymill.de')
       end
 
       def post_data(params)

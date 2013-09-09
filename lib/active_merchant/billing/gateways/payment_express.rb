@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
       # However, regular accounts with DPS only support VISA and Mastercard
       self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb ]
 
-      self.supported_countries = %w[ AU MY NZ SG ZA GB US ]
+      self.supported_countries = %w[ AU CA DE ES FR GB HK IE MY NL NZ SG US ZA ]
 
       self.homepage_url = 'http://www.paymentexpress.com/'
       self.display_name = 'PaymentExpress'
@@ -285,9 +285,9 @@ module ActiveMerchant #:nodoc:
         response = parse( ssl_post(self.live_url, request.to_s) )
 
         # Return a response
-        PaymentExpressResponse.new(response[:success] == APPROVED, response[:card_holder_help_text], response,
+        PaymentExpressResponse.new(response[:success] == APPROVED, message_from(response), response,
           :test => response[:test_mode] == '1',
-          :authorization => response[:dps_txn_ref]
+          :authorization => authorization_from(action, response)
         )
       end
 
@@ -310,6 +310,19 @@ module ActiveMerchant #:nodoc:
         end
 
         response
+      end
+
+      def message_from(response)
+        (response[:card_holder_help_text] || response[:response_text])
+      end
+
+      def authorization_from(action, response)
+        case action
+        when :validate
+          (response[:billing_id] || response[:dps_billing_id])
+        else
+          response[:dps_txn_ref]
+        end
       end
 
       def format_date(month, year)

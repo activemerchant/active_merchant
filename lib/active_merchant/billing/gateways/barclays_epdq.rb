@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :maestro, :switch ]
       self.money_format = :cents
       self.homepage_url = 'http://www.barclaycard.co.uk/business/accepting-payments/epdq-mpi/'
-      self.display_name = 'Barclays ePDQ'
+      self.display_name = 'Barclays ePDQ MPI'
 
       def initialize(options = {})
         requires!(options, :login, :password, :client_id)
@@ -134,7 +134,14 @@ module ActiveMerchant #:nodoc:
         end
 
         def parse
-          doc = REXML::Document.new(@response)
+          require 'iconv' unless String.method_defined?(:encode)
+          if String.method_defined?(:encode)
+            doc = REXML::Document.new(@response.encode("UTF-8", "ISO-8859-1"))
+          else
+            ic = Iconv.new('UTF-8', 'ISO-8859-1')
+            doc = REXML::Document.new(ic.iconv(@response))
+          end
+
           auth_type = find(doc, "//Transaction/Type").to_s
 
           message = find(doc, "//Message/Text")

@@ -229,7 +229,17 @@ class CreditCardTest < Test::Unit::TestCase
 
     assert_not_valid @solo
     assert @solo.errors.on('start_month')
-    assert @solo.errors.on('issue_number')
+    assert_equal "cannot be empty", @solo.errors.on('issue_number')
+
+    @solo.issue_number = 3
+    assert_valid @solo
+  end
+
+  def test_should_require_a_validate_non_empty_issue_number_for_solo_or_switch
+    @solo.issue_number = "invalid"
+
+    assert_not_valid @solo
+    assert_equal "is invalid", @solo.errors.on('issue_number')
 
     @solo.issue_number = 3
     assert_valid @solo

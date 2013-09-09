@@ -78,4 +78,12 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_match /Unauthorized Request/, response.message
     assert_failure response
   end
+
+  def test_response_contains_cvv_and_avs_results
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'M', response.cvv_result["code"]
+    assert_equal '1', response.avs_result["code"]
+  end
+
 end

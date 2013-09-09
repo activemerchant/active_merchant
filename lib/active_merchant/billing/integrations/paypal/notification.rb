@@ -170,6 +170,22 @@ module ActiveMerchant #:nodoc:
 
             response == "VERIFIED"
           end
+          
+          private
+
+          # Take the posted data and move the relevant data into a hash
+          def parse(post)
+            @raw = post.to_s
+            
+            @raw.match(/(^|&)charset=([^&]*)(&|$)/)
+            encoding = $2 || 'UTF-8'
+            
+            for line in @raw.split('&')    
+              key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
+              params[key] = CGI.unescape(value).force_encoding(encoding).encode('UTF-8')
+            end
+          end
+          
         end
 
         module MassPayNotification
