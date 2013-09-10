@@ -183,7 +183,7 @@ module ActiveMerchant #:nodoc:
           if options[:track_data]
             card[:swipe_data] = options[:track_data]
           else
-            card[:number] = creditcard
+            card = creditcard
           end
           post[:card] = card
         end
