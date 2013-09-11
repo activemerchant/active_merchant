@@ -16,6 +16,7 @@
 * Braintree Blue: Do not use global config [rdj]
 * eWay Rapid: Add response messages [BenZhang]
 * Paysbuy: Add 'Pending' notification status [divineforest]
+* Cybersource: Use standard :phone field [cade]
 
 == Version 1.38.1 (September 16, 2013)
 

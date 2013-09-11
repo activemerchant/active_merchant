@@ -412,7 +412,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'country',               address[:country]
           xml.tag! 'company',               address[:company]                 unless address[:company].blank?
           xml.tag! 'companyTaxID',          address[:companyTaxID]            unless address[:company_tax_id].blank?
-          xml.tag! 'phoneNumber',           address[:phone_number]            unless address[:phone_number].blank?
+          xml.tag! 'phoneNumber',           address[:phone]                   unless address[:phone].blank?
           xml.tag! 'email',                 options[:email]
           xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
           xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?
