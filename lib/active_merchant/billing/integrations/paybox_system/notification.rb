@@ -1,4 +1,6 @@
-require 'net/http'
+require 'cgi'
+require 'openssl'
+require 'base64'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -86,36 +88,17 @@ module ActiveMerchant #:nodoc:
           #       ... log possible hacking attempt ...
           #     end
           def acknowledge
-            payload = raw
+            digest = OpenSSL::Digest::SHA1.new
+            public_key = OpenSSL::PKey::RSA.new(paybox_public_key)
 
-            uri = URI.parse(PayboxSystem.service_url)
-
-            request = Net::HTTP::Post.new(uri.path)
-
-            request['Content-Length'] = "#{payload.size}"
-            request['User-Agent'] = "Active Merchant -- http://home.leetsoft.com/am"
-            request['Content-Type'] = "application/x-www-form-urlencoded"
-
-            http = Net::HTTP.new(uri.host, uri.port)
-            http.verify_mode    = OpenSSL::SSL::VERIFY_NONE unless @ssl_strict
-            http.use_ssl        = true
-
-            response = http.request(request, payload)
-
-            # Replace with the appropriate codes
-            raise StandardError.new("Faulty PayboxSystem result: #{response.body}") unless ["AUTHORISED", "DECLINED"].include?(response.body)
-            response.body == "AUTHORISED"
+            acknowledge_params = "amount=#{params['amount']}&reference=#{params['reference']}&autorization=#{params['autorization']}&error=#{params['error']}"
+            public_key.verify(digest, Base64.decode64(params['sign']), acknowledge_params)
           end
 
           private
 
-          # Take the posted data and move the relevant data into a hash
-          def parse(post)
-            @raw = post.to_s
-            for line in @raw.split('&')
-              key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
-              params[key] = CGI.unescape(value)
-            end
+          def paybox_public_key
+            "-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDe+hkicNP7ROHUssGNtHwiT2Ew\nHFrSk/qwrcq8v5metRtTTFPE/nmzSkRnTs3GMpi57rBdxBBJW5W9cpNyGUh0jNXc\nVrOSClpD5Ri2hER/GcNrxVRP7RlWOqB1C03q4QYmwjHZ+zlM4OUhCCAtSWflB4wC\nKa1g88CjFwRw/PB9kwIDAQAB\n-----END PUBLIC KEY-----\n"
           end
         end
       end
