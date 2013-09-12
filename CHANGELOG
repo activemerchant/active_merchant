@@ -17,6 +17,7 @@
 * eWay Rapid: Add response messages [BenZhang]
 * Paysbuy: Add 'Pending' notification status [divineforest]
 * Cybersource: Use standard :phone field [cade]
+* Orbital: Fix/tweak AVS codes [boone]
 
 == Version 1.38.1 (September 16, 2013)
 
