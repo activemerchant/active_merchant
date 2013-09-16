@@ -1,5 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.38.1 (September 16, 2013)
+
+* Moneris: Remove verification_value support [melari]
+
 == Version 1.38.0 (September 6, 2013)
 
 * FirstData E4: Include missing address information for AVS and CVV [melari]
