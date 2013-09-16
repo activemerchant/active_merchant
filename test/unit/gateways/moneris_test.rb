@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class MonerisTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     Base.mode = :test
 
@@ -163,6 +165,16 @@ class MonerisTest < Test::Unit::TestCase
     test_successful_store
     assert response = @gateway.authorize(100, @data_key, @options)
     assert_failure response
+  end
+
+  # Please do not add cvd support to moneris, as this will cause all transactions to error out for some accounts.
+  def test_cvd_value_is_not_included
+    @credit_card.verification_value = '123'
+    stub_comms(:ssl_post) do
+      @gateway.authorize(100, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match /cvd/, data
+    end.respond_with(successful_purchase_response)
   end
 
   private
