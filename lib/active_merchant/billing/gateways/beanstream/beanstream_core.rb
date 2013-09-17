@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         base.default_currency = 'CAD'
 
         # The countries the gateway supports merchants from as 2 digit ISO country codes
-        base.supported_countries = ['CA']
+        base.supported_countries = ['CA', 'US']
 
         # The card types supported by the payment gateway
         base.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]

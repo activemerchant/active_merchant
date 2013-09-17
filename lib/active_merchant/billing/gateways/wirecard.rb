@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
       VALID_PHONE_FORMAT = /\+\d{1,3}(\(?\d{3}\)?)?\d{3}-\d{4}-\d{3}/
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      self.supported_countries = ['DE']
+      self.supported_countries = %w(AD CY GI IM MT RO CH AT DK GR IT MC SM TR BE EE HU LV NL SK GB BG FI IS LI NO SI VA FR IL LT PL ES CZ DE IE LU PT SE)
 
       # Wirecard supports all major credit and debit cards:
       # Visa, Mastercard, American Express, Diners Club,
