@@ -128,6 +128,7 @@ module ActiveMerchant #:nodoc:
         else
           post[:pan]        = source.number
           post[:expdate]    = expdate(source)
+          post[:cvd_value]  = source.verification_value if source.verification_value?
         end
       end
 
@@ -155,6 +156,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful?(response), message_from(response[:message]), response,
           :test          => test?,
+          :cvv_result    => response[:cvd_result_code].try(:last),
           :authorization => authorization_from(response)
         )
       end
@@ -192,14 +194,35 @@ module ActiveMerchant #:nodoc:
         root  = xml.add_element("request")
         root.add_element("store_id").text  = options[:login]
         root.add_element("api_token").text = options[:password]
-        transaction = root.add_element(action)
+        root.add_element(transaction_element(action, parameters))
+
+        xml.to_s
+      end
+
+      def transaction_element(action, parameters)
+        transaction = REXML::Element.new(action)
 
         # Must add the elements in the correct order
         actions[action].each do |key|
-          transaction.add_element(key.to_s).text = parameters[key] unless parameters[key].blank?
+          if key == :cvd_info
+            transaction.add_element(cvd_element(parameters[:cvd_value]))
+          else
+            transaction.add_element(key.to_s).text = parameters[key] unless parameters[key].blank?
+          end
         end
 
-        xml.to_s
+        transaction
+      end
+
+      def cvd_element(cvd_value)
+        element = REXML::Element.new('cvd_info')
+        if cvd_value
+          element.add_element('cvd_indicator').text = "1"
+          element.add_element('cvd_value').text = cvd_value
+        else
+          element.add_element('cvd_indicator').text = "0"
+        end
+        element
       end
 
       def message_from(message)
@@ -219,8 +242,8 @@ module ActiveMerchant #:nodoc:
 
       def actions
         {
-          "purchase"           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
-          "preauth"            => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
+          "purchase"           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :cvd_info],
+          "preauth"            => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :cvd_info],
           "command"            => [:order_id],
           "refund"             => [:order_id, :amount, :txn_number, :crypt_type],
           "indrefund"          => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
