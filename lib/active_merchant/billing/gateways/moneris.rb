@@ -18,10 +18,21 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.moneris.com/'
       self.display_name = 'Moneris'
 
-      # login is your Store ID
-      # password is your API Token
+      # Initialize the Gateway
+      #
+      # The gateway requires that a valid login and password be passed
+      # in the +options+ hash.
+      #
+      # ==== Options
+      #
+      # * <tt>:login</tt> -- Your Store ID
+      # * <tt>:password</tt> -- Your API Token
+      # * <tt>:cvv_enabled</tt> -- Specify that you would like the CVV passed to the gateway.
+      #                            Only particular account types at Moneris will allow this.
+      #                            Defaults to false.  (optional)
       def initialize(options = {})
         requires!(options, :login, :password)
+        @cvv_enabled = options[:cvv_enabled] || false
         options = { :crypt_type => 7 }.merge(options)
         super
       end
@@ -204,7 +215,7 @@ module ActiveMerchant #:nodoc:
 
         # Must add the elements in the correct order
         actions[action].each do |key|
-          if key == :cvd_info
+          if @cvv_enabled && key == :cvd_info
             transaction.add_element(cvd_element(parameters[:cvd_value]))
           else
             transaction.add_element(key.to_s).text = parameters[key] unless parameters[key].blank?
