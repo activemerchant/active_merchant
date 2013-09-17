@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Moneris: Add optional (off by default) verification_value support [duff]
+
 == Version 1.38.1 (September 16, 2013)
 
 * Moneris: Remove verification_value support [melari]
