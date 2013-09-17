@@ -22,8 +22,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, credit_card_or_token, options = {})
-        requires!(options, :billing_address)
-
         post = {}
         post[:Payment] ||= {}
 
@@ -36,9 +34,9 @@ module ActiveMerchant #:nodoc:
         commit('Transaction', post)
       end
 
+      # store requires that address or billing_address have :country and :name
+      # set due to legacy API
       def store(credit_card, options = {})
-        requires!(options, :billing_address)
-
         post = {}
 
         add_credit_card(post, credit_card)
@@ -86,7 +84,10 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, options)
         post[:Customer] ||= {}
-        post[:Customer].merge! translated_address_hash(post, (options[:billing_address] || options[:address]), { :email => options[:email] })
+
+        if address = options[:billing_address] || options[:address]
+          post[:Customer].merge! translated_address_hash(post, address, { :email => options[:email] })
+        end
 
         if options[:shipping_address]
           post[:ShippingAddress] = translated_address_hash(post, options[:shipping_address])

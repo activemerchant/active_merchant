@@ -9,19 +9,23 @@ class RemoteEwayRapid31Test < Test::Unit::TestCase
 
     @options = {
       :order_id => '1',
-      :billing_address => address,
       :description => 'Store Purchase',
       :email => 'jim.smith@example.com',
       :transaction_type => 'MOTO',
       :ip => '127.0.0.1'
-    }
+      # country and name need to be set because eWAY requires `store` to send
+      # these for legacy reasons
+    }.merge(:billing_address => { :country => 'au', :name => 'Squarebob Spongepants' })
 
+    @options_with_billing_address = @options.merge(:billing_address => address)
+
+    # require 'logger'
     # ActiveMerchant::Billing::Gateway.wiredump_device = Logger.new(STDOUT)
   end
 
   def test_invalid_login
     gateway = EwayRapid31Gateway.new(
-                :login => '',
+                :login    => '',
                 :password => ''
               )
 
@@ -36,6 +40,12 @@ class RemoteEwayRapid31Test < Test::Unit::TestCase
     assert_equal 'Transaction Approved', response.message
   end
 
+  def test_successful_purchase_with_billing_address
+    assert response = @gateway.purchase(@amount, @credit_card, @options_with_billing_address)
+    assert_success response
+    assert_equal 'Transaction Approved', response.message
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount + 1, @credit_card, @options)
     assert_failure response
@@ -44,6 +54,12 @@ class RemoteEwayRapid31Test < Test::Unit::TestCase
 
   def test_successful_store
     assert response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+  end
+
+  def test_successful_store_with_billing_address
+    assert response = @gateway.store(@credit_card, @options_with_billing_address)
     assert_success response
     assert_equal 'Succeeded', response.message
   end
@@ -68,6 +84,14 @@ class RemoteEwayRapid31Test < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, 0, @options)
     assert_failure response
     assert 'V6040,V6021,V6022,V6101,V6102', response.message
+  end
+
+  def test_successful_purchase_with_token_and_billing_address
+    assert store = @gateway.store(@credit_card, @options_with_billing_address)
+    assert_success store
+    assert response = @gateway.purchase(@amount, store.authorization, @options_with_billing_address)
+    assert_success response
+    assert 'Transaction Approved', response.message
   end
 
   def test_successful_refund
@@ -96,25 +120,22 @@ class RemoteEwayRapid31Test < Test::Unit::TestCase
     assert_equal response.params['Customer']['CardDetails']['ExpiryYear'], new_credit_card.year.to_s[2,2]
   end
 
+  def test_successful_update_with_billing_address
+    assert store = @gateway.store(@credit_card, @options_with_billing_address)
+    assert_success store
+
+    new_credit_card = credit_card('4444333322221111', :month => 3, :year => Time.now.year + 5)
+
+    assert response = @gateway.update(store.authorization, new_credit_card, @options_with_billing_address)
+    assert_success response
+    assert_equal 'Succeeded', response.message
+    assert_equal response.params['Customer']['CardDetails']['ExpiryMonth'], sprintf('%02d', new_credit_card.month)
+    assert_equal response.params['Customer']['CardDetails']['ExpiryYear'], new_credit_card.year.to_s[2,2]
+  end
+
   def test_unsuccessful_update
     assert response = @gateway.update(0, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid TokenCustomerID', response.message
   end
-
-  #def test_authorize_and_capture
-  #  amount = @amount
-  #  assert auth = @gateway.authorize(amount, @credit_card, @options)
-  #  assert_success auth
-  #  assert_equal 'Success', auth.message
-  #  assert auth.authorization
-  #  assert capture = @gateway.capture(amount, auth.authorization)
-  #  assert_success capture
-  #end
-
-  #def test_failed_capture
-  #  assert response = @gateway.capture(@amount, '')
-  #  assert_failure response
-  #  assert_equal 'REPLACE WITH GATEWAY FAILURE MESSAGE', response.message
-  #end
 end
