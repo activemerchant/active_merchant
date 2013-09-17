@@ -13,8 +13,8 @@ module ActiveMerchant #:nodoc:
       
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :solo, :switch]
       self.supported_countries = ['GB']
-      self.homepage_url = 'https://www.paypal.com/uk/cgi-bin/webscr?cmd=_wp-pro-overview-outside'
-      self.display_name = 'PayPal Website Payments Pro (UK)'
+      self.homepage_url = 'https://www.paypal.com/uk/webapps/mpp/pro'
+      self.display_name = 'PayPal Payments Pro (UK)'
     end
   end
 end
