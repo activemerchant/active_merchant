@@ -81,102 +81,106 @@ For more in-depth documentation and tutorials, see [GettingStarted.md](GettingSt
 
 The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) contains a [table of features supported by each gateway](http://github.com/Shopify/active_merchant/wikis/gatewayfeaturematrix).
 
-* [Authorize.Net](http://www.authorize.net/) - US
 * [Authorize.Net CIM](http://www.authorize.net/) - US
+* [Authorize.Net](http://www.authorize.net/) - US, CA, GB
 * [Balanced](https://www.balancedpayments.com/) - US
-* [Banwire](https://www.banwire.com/) - MX
-* [Barclays ePDQ MPI](http://www.barclaycard.co.uk/business/accepting-payments/epdq-mpi/) - UK
-* [Barclays ePDQ Extra Plus](http://www.barclaycard.co.uk/business/accepting-payments/epdq-ecomm/) - UK
-* [Beanstream.com](http://www.beanstream.com/) - CA
+* [Banwire](http://www.banwire.com/) - MX
+* [Barclays ePDQ Extra Plus](http://www.barclaycard.co.uk/business/accepting-payments/epdq-ecomm/) - GB
+* [Barclays ePDQ MPI](http://www.barclaycard.co.uk/business/accepting-payments/epdq-mpi/) - GB
+* [Beanstream.com](http://www.beanstream.com/) - CA, US
 * [BluePay](http://www.bluepay.com/) - US
-* [Braintree](http://www.braintreepaymentsolutions.com) - US
-* [CardStream](http://www.cardstream.com/) - UK
-* [CertoDirect](http://www.certodirect.com/) - BE, BG, CZ, DK, DE, EE, IE, EL, ES, FR, IT, CY, LV, LT, LU, HU, MT, NL, AT, PL, PT, RO, SI, SK, FI, SE, UK
-* [CyberSource](http://www.cybersource.com) - US
-* [DataCash](http://www.datacash.com/) - UK
+* [Braintree](http://www.braintreepaymentsolutions.com) - US, CA, AU, AD, AT, BE, BG, CY, CZ, DK, EE, FI, FR, GI, DE, GR, HU, IS, IM, IE, IT, LV, LI, LT, LU, MT, MC, NL, NO, PL, PT, RO, SM, SK, SI, ES, SE, CH, TR, GB
+* [CardSave](http://www.cardsave.net/) - GB
+* [CardStream](http://www.cardstream.com/) - GB
+* [CertoDirect](http://www.certodirect.com/) - BE, BG, CZ, DK, DE, EE, IE, EL, ES, FR, IT, CY, LV, LT, LU, HU, MT, NL, AT, PL, PT, RO, SI, SK, FI, SE, GB
+* [CyberSource](http://www.cybersource.com) - US, BR, CA, CN, DK, FI, FR, DE, JP, MX, NO, SE, GB, SG
+* [DataCash](http://www.datacash.com/) - GB
 * [Efsnet](http://www.concordefsnet.com/) - US
-* [Elavon MyVirtualMerchant](http://www.elavon.com) - US, CA
-* [ePay](http://www.epay.dk/) - DK, SE, NO
+* [Elavon MyVirtualMerchant](http://www.elavon.com/) - US, CA
+* [ePay](http://epay.dk/) - DK, SE, NO
 * [EVO Canada](http://www.evocanada.com/) - CA
-* [eWAY](http://www.eway.com.au/) - AU
-* [eWay Rapid 3.0](http://www.eway.com.au/) - AU
+* [eWAY](http://www.eway.com.au/) - AU, NZ, GB
+* [eWAY Rapid 3.0](http://www.eway.com.au/) - AU
 * [E-xact](http://www.e-xact.com) - CA, US
-* [Fat Zebra](https://www.fatzebra.com.au) - AU
+* [Fat Zebra](https://www.fatzebra.com.au/) - AU
 * [Federated Canada](http://www.federatedcanada.com/) - CA
 * [Finansbank WebPOS](https://www.fbwebpos.com/) - US, TR
+* [First Pay](http://www.first-pay.com) - US
 * [FirstData Global Gateway e4](http://www.firstdata.com) - CA, US
-* [FirstPay](http://www.first-pay.com) - US
-* [Garanti Sanal POS](https://ccpos.garanti.com.tr/ccRaporlar/garanti/ccReports) - US, TR
+* [Garanti Sanal POS](https://sanalposweb.garanti.com.tr) - US, TR
 * [HDFC](http://www.hdfcbank.com/sme/sme-details/merchant-services/guzh6m0i) - IN
-* [Inspire](http://www.inspiregateway.com) - US
+* [IATSPayments](http://www.iatspayments.com/) - US, CA, GB
+* [Inspire Commerce](http://www.inspiregateway.com) - US
 * [InstaPay](http://www.instapayllc.com) - US
-* [Iridium](http://www.iridiumcorp.co.uk/) - UK, ES
+* [Iridium](http://www.iridiumcorp.co.uk/) - GB, ES
 * [iTransact](http://www.itransact.com/) - US
-* [JetPay](http://www.jetpay.com) - US
+* [JetPay](http://www.jetpay.com/) - US
 * [LinkPoint](http://www.linkpoint.com/) - US
-* [Litle](http://www.litle.com/) - US
-* [Merchant e-Solutions](http://merchante-solutions.com/) - US
-* [MerchantWare](http://merchantwarehouse.com/merchantware) - US
-* [Merchant Warrior] (http://merchantwarrior.com) - AU
+* [Litle & Co.](http://www.litle.com/) - US
+* [Merchant e-Solutions](http://www.merchante-solutions.com/) - US
+* [Merchant One Gateway](http://merchantone.com/) - US
+* [MerchantWARE](http://merchantwarehouse.com/merchantware) - US
+* [MerchantWarrior](http://www.merchantwarrior.com/) - AU
 * [Mercury](http://www.mercurypay.com) - US
+* [Metrics Global](http://www.metricsglobal.com) - US
 * [MasterCard Internet Gateway Service (MiGS)](http://mastercard.com/mastercardsps) - AU, AE, BD, BN, EG, HK, ID, IN, JO, KW, LB, LK, MU, MV, MY, NZ, OM, PH, QA, SA, SG, TT, VN
 * [Modern Payments](http://www.modpay.com) - US
 * [Moneris](http://www.moneris.com/) - CA
-* [Moneris US](http://www.monerisusa.com/) - US
-* [NABTransact](http://www.nab.com.au/nabtransact/) - AU
-* [NELiX TransaX Gateway](http://www.nelixtransax.com) - US
-* [Netaxept](http://www.betalingsterminal.no/Netthandel-forside) - NO, DK, SE, FI
-* [NETbilling](http://www.netbilling.com) - US
-* [NetPay](http://www.netpay.com.mx) - MX
+* [Moneris (US)](http://www.monerisusa.com/) - US
+* [NAB Transact](http://transact.nab.com.au) - AU
 * [NetRegistry](http://www.netregistry.com.au) - AU
+* [BBS Netaxept](http://www.betalingsterminal.no/Netthandel-forside/) - NO, DK, SE, FI
+* [NETbilling](http://www.netbilling.com) - US
+* [NETPAY Gateway](http://www.netpay.com.mx) - MX
 * [NMI](http://nmi.com/) - US
-* [Ogone DirectLink](http://www.ogone.com) - BE, DE, FR, NL, AT, CH
-* [Optimal Payments](http://www.optimalpayments.com/) - CA, US, UK
-* [Orbital Paymentech](http://chasepaymentech.com/) - CA, US, UK, GB
-* [PayBox Direct](http://www.paybox.com) - FR
-* [PayFast](https://www.payfast.co.za/) - ZA
+* [Ogone](http://www.ogone.com/) - BE, DE, FR, NL, AT, CH
+* [Optimal Payments](http://www.optimalpayments.com/) - CA, US, GB
+* [Orbital Paymentech](http://chasepaymentech.com/) - US, CA
 * [PayGate PayXML](http://paygate.co.za/) - US, ZA
 * [PayJunction](http://www.payjunction.com/) - US
-* [PaymentExpress](http://www.paymentexpress.com/) - AU, MY, NZ, SG, ZA, UK, US
-* [PAYMILL](https://www.paymill.com) - AD, AT, BE, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GR, HU, IE, IL, IS, IT, LI, LT, LU, LV, MT, NL, NO, PL, PT, SE, SI, SK, TR, VA
-* [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside) - US, CA, SG, AU
-* [PayPal Payflow Pro](https://www.paypal.com/cgi-bin/webscr?cmd=_payflow-pro-overview-outside) - US, CA, SG, AU
-* [PayPal Website Payments Pro (UK)](https://www.paypal.com/uk/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - UK
-* [PayPal Website Payments Pro (CA)](https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - CA
-* [PayPal Express Checkout](https://www.paypal.com/cgi-bin/webscr?cmd=xpt/merchant/ExpressCheckoutIntro-outside) - US
-* [PayPal Website Payments Pro (US)](https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - US
 * [PaySecure](http://www.commsecure.com.au/paysecure.shtml) - AU
-* [PayWay](https://www.payway.com.au) - AU
+* [Paybox Direct](http://www.paybox.com/) - FR
+* [PaymentExpress](http://www.paymentexpress.com/) - AU, CA, DE, ES, FR, GB, HK, IE, MY, NL, NZ, SG, US, ZA
+* [PAYMILL](https://paymill.com) - AD, AT, BE, BG, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GI, GR, HU, IE, IL, IS, IT, LI, LT, LU, LV, MT, NL, NO, PL, PT, RO, SE, SI, SK, TR, VA
+* [PayPal Express Checkout](https://www.paypal.com/webapps/mpp/express-checkout) - US, CA, SG, AU
+* [PayPal Express Checkout (UK)](https://www.paypal.com/uk/webapps/mpp/express-checkout) - GB
+* [PayPal Payflow Pro](https://www.paypal.com/webapps/mpp/payflow-payment-gateway) - US, CA, SG, AU
+* [PayPal Payments Pro (US)](https://www.paypal.com/us/webapps/mpp/paypal-payments-pro) - US
+* [PayPal Payments Pro (UK)](https://www.paypal.com/uk/webapps/mpp/pro) - GB
+* [PayPal Website Payments Pro (CA)](https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - CA
+* [PayPal Express Checkout for Digital Goods](https://www.x.com/community/ppx/xspaces/digital_goods) - AU, CA, CN, FI, GB, ID, IN, IT, MY, NO, NZ, PH, PL, SE, SG, TH, VN
+* [Paystation](http://paystation.co.nz) - NZ
+* [Pay Way](http://www.payway.com.au) - AU
 * [Pin](http://www.pin.net.au/) - AU
 * [Plug'n Pay](http://www.plugnpay.com/) - US
 * [Psigate](http://www.psigate.com/) - CA
-* [PSL Payment Solutions](http://www.paymentsolutionsltd.com/) - UK
-* [Quantum](http://www.quantumgateway.com) - US
+* [PSL Payment Solutions](http://www.paymentsolutionsltd.com/) - GB
 * [QuickBooks Merchant Services](http://payments.intuit.com/) - US
+* [Quantum Gateway](http://www.quantumgateway.com) - US
 * [Quickpay](http://quickpay.dk/) - DK, SE
-* [Rabobank Nederland](http://www.rabobank.nl/) - NL
-* [Realex](http://www.realexpayments.com/) - IE, UK
-* [Redsys](http://www.redsys.es) - ES
-* [SagePay](http://www.sagepay.com) - UK
+* [Realex](http://www.realexpayments.com/) - IE, GB, FR, BE, NL, LU, IT
+* [Redsys](http://www.redsys.es/) - ES
+* [SagePay](http://www.sagepay.com) - GB, IE
 * [Sage Payment Solutions](http://www.sagepayments.com) - US, CA
-* [Sallie Mae](http://www.salliemae.com) - US
-* [SecureNet](http://www.securenet.com) - US
-* [SecurePay](http://securepay.com.au) - AU
-* [SecurePay](http://www.securepay.com/) - US
+* [Sallie Mae](http://www.salliemae.com/) - US
+* [Samurai](https://samurai.feefighters.com) - US
+* [SecureNet](http://www.securenet.com/) - US
+* [SecurePay](http://www.securepay.com/) - US, CA, GB, AU
 * [SecurePayTech](http://www.securepaytech.com/) - NZ
 * [SkipJack](http://www.skipjack.com/) - US, CA
-* [Spreedly Core](https://spreedlycore.com/) - AD, AE, AT, AU, BD, BE, BG, BN, CA, CH, CY, CZ, DE, DK, EE, EG, ES, FI, FR, GB, GI, GR, HK, HU, ID, IE, IL, IM, IN, IS, IT, JO, KW, LB, LI, LK, LT, LU, LV, MC, MT, MU, MV, MX, MY, NL, NO, NZ, OM, PH, PL, PT, QA, RO, SA, SE, SG, SI, SK, SM, TR, TT, UM, US, VA, VN, ZA
+* [Spreedly](https://spreedly.com) - AD, AE, AT, AU, BD, BE, BG, BN, CA, CH, CY, CZ, DE, DK, EE, EG, ES, FI, FR, GB, GI, GR, HK, HU, ID, IE, IL, IM, IN, IS, IT, JO, KW, LB, LI, LK, LT, LU, LV, MC, MT, MU, MV, MX, MY, NL, NO, NZ, OM, PH, PL, PT, QA, RO, SA, SE, SG, SI, SK, SM, TR, TT, UM, US, VA, VN, ZA
 * [Stripe](https://stripe.com/) - US, CA, GB
 * [TransFirst](http://www.transfirst.com/) - US
+* [NELiX TransaX](https://www.nelixtransax.com/) - US
 * [Transnational](http://www.tnbci.com/) - US
 * [TrustCommerce](http://www.trustcommerce.com/) - US
 * [USA ePay](http://www.usaepay.com/) - US
 * [Verifi](http://www.verifi.com/) - US
 * [ViaKLIX](http://viaklix.com) - US
-* [Vindica](http://www.vindicia.com/) - US, CA, UK, AU, MX, BR, DE, KR, CN, HK
+* [Vindicia](http://www.vindicia.com/) - US, CA, GB, AU, MX, BR, DE, KR, CN, HK
 * [WebPay](https://webpay.jp/) - JP
-* [Wirecard](http://www.wirecard.com) - DE
-* [WorldPay](http://www.worldpay.com) - AU, HK, UK, US
+* [Wirecard](http://www.wirecard.com) - AD, CY, GI, IM, MT, RO, CH, AT, DK, GR, IT, MC, SM, TR, BE, EE, HU, LV, NL, SK, GB, BG, FI, IS, LI, NO, SI, VA, FR, IL, LT, PL, ES, CZ, DE, IE, LU, PT, SE
+* [WorldPay](http://www.worldpay.com/) - HK, US, GB, AU, AD, BE, CH, CY, CZ, DE, DK, ES, FI, FR, GI, GR, HU, IE, IL, IT, LI, LU, MC, MT, NL, NO, NZ, PL, PT, SE, SG, SI, SM, TR, UM, VA
 
 ## Supported Offsite Payment Gateways
 
