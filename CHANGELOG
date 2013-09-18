@@ -10,6 +10,7 @@
 * UsaEpayTransaction: Support for split payments [GBH]
 * Add Swipe Checkout gateway [matt-optimizerhq]
 * Spreedly Core: Allow overriding the gateway token when running a transaction [hoenth]
+* Spreedly Core: Add order_id [hoenth]
 
 == Version 1.41.0 (October 24th, 2013)
 
