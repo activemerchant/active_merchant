@@ -9,13 +9,12 @@ module ActiveMerchant #:nodoc:
             @notification = Notification.new(query_string, options)
           end
 
-          # PayU Transaction Id
+          # Citrus Transaction Id
           #
           def transaction_id
             @notification.transaction_id
           end
 
-         
           def status( order_id, order_amount )
             if @notification.invoice_ok?( order_id ) && @notification.amount_ok?( BigDecimal.new(order_amount) )
               @notification.status
@@ -27,7 +26,7 @@ module ActiveMerchant #:nodoc:
           # check success of the transaction
           # check order_id and
           def success?
-            status( @params['txnid'], @params['amount'] ) == 'success'
+            status( @params['TxId'], @params['amount'] ) == 'success'
           end
 
           def message

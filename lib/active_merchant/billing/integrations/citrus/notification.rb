@@ -5,95 +5,142 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Citrus
         class Notification < ActiveMerchant::Billing::Integrations::Notification
+      	  
+      	  def initialize(post, options = {})
+            super(post, options)
+            @secret_key = options[:credential2]
+          end
+
           def complete?
-            params['']
+            status == "success" || status == 'canceled'
           end
 
-          def item_id
-            params['']
-          end
-
-          def transaction_id
-            params['']
-          end
-
-          # When was this payment received by the client.
-          def received_at
-            params['']
-          end
-
-          def payer_email
-            params['']
-          end
-
-          def receiver_email
-            params['']
-          end
-
-          def security_key
-            params['']
-          end
-
-          # the money amount we received in X.2 decimal.
-          def gross
-            params['']
-          end
-
-          # Was this a test transaction?
-          def test?
-            params[''] == 'test'
-          end
-
+          # Status of the transaction. List of possible values:
+          # <tt>invalid</tt>:: transaction id is not present
+          # <tt>tampered</tt>:: transaction data has been tampered
+          # <tt>success</tt>:: transaction successful
+          # <tt>canceled</tt>:: transaction is pending for some approval
           def status
-            params['']
-          end
-
-          # Acknowledge the transaction to Citrus. This method has to be called after a new
-          # apc arrives. Citrus will verify that all the information we received are correct and will return a
-          # ok or a fail.
-          #
-          # Example:
-          #
-          #   def ipn
-          #     notify = CitrusNotification.new(request.raw_post)
-          #
-          #     if notify.acknowledge
-          #       ... process order ... if notify.complete?
-          #     else
-          #       ... log possible hacking attempt ...
-          #     end
-          def acknowledge
-            payload = raw
-
-            uri = URI.parse(Citrus.notification_confirmation_url)
-
-            request = Net::HTTP::Post.new(uri.path)
-
-            request['Content-Length'] = "#{payload.size}"
-            request['User-Agent'] = "Active Merchant -- http://home.leetsoft.com/am"
-            request['Content-Type'] = "application/x-www-form-urlencoded"
-
-            http = Net::HTTP.new(uri.host, uri.port)
-            http.verify_mode    = OpenSSL::SSL::VERIFY_NONE unless @ssl_strict
-            http.use_ssl        = true
-
-            response = http.request(request, payload)
-
-            # Replace with the appropriate codes
-            raise StandardError.new("Faulty Citrus result: #{response.body}") unless ["AUTHORISED", "DECLINED"].include?(response.body)
-            response.body == "AUTHORISED"
-          end
-
-          private
-
-          # Take the posted data and move the relevant data into a hash
-          def parse(post)
-            @raw = post.to_s
-            for line in @raw.split('&')
-              key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
-              params[key] = CGI.unescape(value)
+            @status ||= if checksum_ok?
+              if transaction_id.blank?
+                'invalid'
+              else
+                transaction_status.downcase
+              end
+            else
+              'tampered'
             end
           end
+
+          def invoice_ok?( order_id )
+            order_id.to_s == invoice.to_s
+          end
+
+          # Order amount should be equal to gross - discount
+          def amount_ok?( order_amount )
+            BigDecimal.new( amount ) == order_amount 
+          end
+		  
+		  # capture Citrus response parameters
+		  
+		  # This is the invoice which you passed to Citrus
+          def invoice
+            params['TxId']
+          end
+
+          # Status of transaction return from the Citrus. List of possible values:
+          # <tt>SUCCESS</tt>::
+          # <tt>CANCELED</tt>::
+          def transaction_status
+            params['TxStatus']
+          end
+		  
+          # amount paid by customer
+          def amount
+            params['amount']
+          end
+		  		
+          # ID of this transaction returned by Citrus
+          def transaction_id
+            params['pgTxnNo']
+          end
+		  
+		  # for future use	
+          def issuerrefno
+		  	params['issuerRefNo']
+		  end
+
+		  # authorization code by Citrus
+		  def authidcode
+		  	params['authIdCode']
+		  end
+		  
+		  # gateway resp code by Citrus
+		  def pgrespcode
+		  	params['pgRespCode']
+		  end
+		  
+		  # by Citrus
+		  def checksum
+            params['signature']
+          end
+		  
+		  def paymentmode
+		  	params['paymentMode']
+		  end
+		  
+          # payment currency
+          def currency
+            params['currency']
+          end
+
+		  
+          # Email of the customer
+          def customer_email
+            params['email']
+          end
+
+          # Phone of the customer
+          def customer_phone
+            params['mobileNo']
+          end
+
+          # Firstname of the customer
+          def customer_first_name
+            params['firstName']
+          end
+
+          # Lastname of the customer
+          def customer_last_name
+            params['lastName']
+          end
+
+          # Full address of the customer
+          def customer_address
+            { :address1 => params['addressStreet1'], :address2 => params['addressStreet2'],
+              :city => params['addressCity'], :state => params['addressState'],
+              :country => params['addressCountry'], :zip => params['addressZip'] }
+          end
+
+
+          def message
+            @message || params['TxMsg']
+          end
+          
+          def acknowledge
+            checksum_ok?
+          end
+
+          def checksum_ok?
+            fields = invoice + transaction_status + amount.to_s + transaction_id + issuerrefno + authidcode + customer_first_name + customer_last_name + pgrespcode + customer_address[:zip]
+            
+            unless Citrus.checksum(@secret_key, fields ) == checksum
+              @message = 'checksum mismatch...'
+              return false
+            end
+            true
+          end
+		  
         end
       end
     end
