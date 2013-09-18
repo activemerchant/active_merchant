@@ -16,7 +16,7 @@ class PayboxSystemHelperTest < Test::Unit::TestCase
     assert_field 'PBX_HASH', 'SHA512'
     assert_field 'PBX_RETOUR', "amount:M;reference:R;autorization:A;error:E;sign:K"
     assert_match(/(\d){4}-(\d){2}-(\d){2}T(\d){2}:(\d){2}:(\d){2}Z/, @helper.fields['PBX_TIME'])
-    # TODO tests HMAC generation
+    assert_equal 128, @helper.hmac('test=test').size
   end
 
   def test_basic_helper_fields
@@ -30,7 +30,7 @@ class PayboxSystemHelperTest < Test::Unit::TestCase
   end
 
   def test_options_fields
-    assert_field 'PBX_SITE', @helper.credential3
-    assert_field 'PBX_RANG', @helper.credential4
+    assert_field 'PBX_SITE', '1999888'
+    assert_field 'PBX_RANG', '32'
   end
 end

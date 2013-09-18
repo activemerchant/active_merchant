@@ -22,11 +22,12 @@ module ActiveMerchant #:nodoc:
             add_field('PBX_HASH', 'SHA512')
             add_field('PBX_RETOUR', "amount:M;reference:R;autorization:A;error:E;sign:K")
             add_field('PBX_TIME', Time.now.utc.iso8601)
-            add_field('PBX_SITE', credential3)
-            add_field('PBX_RANG', credential4)
+            add_field('PBX_SITE', options[:credential3])
+            add_field('PBX_RANG', options[:credential4])
             add_field('PBX_PAYBOX', PayboxSystem.service_url)
             add_field('PBX_BACKUP1', PayboxSystem.service_url)
             add_field('PBX_BACKUP2', PayboxSystem.service_url)
+            @secret_key = options[:credential2]
           end
 
           mapping :account, 'PBX_IDENTIFIANT'
@@ -46,7 +47,7 @@ module ActiveMerchant #:nodoc:
           # credential2 = secret_key
           def hmac(query)
             OpenSSL::HMAC.hexdigest(OpenSSL::Digest::Digest.new('sha512'),
-                                    [credential2].pack("H*"), query).upcase
+                                    [@secret_key].pack("H*"), query).upcase
           end
         end
       end
