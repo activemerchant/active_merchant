@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
 
           # Was this a test transaction?
           def test?
-            ActiveMerchant::Billing::Base.integration_mode == :test
+            ActiveMerchant::Billing::Base.mode == :test
           end
 
           # 00000 Opération réussie.

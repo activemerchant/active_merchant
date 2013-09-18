@@ -13,8 +13,7 @@ module ActiveMerchant #:nodoc:
         self.production_url = 'https://tpeweb.paybox.com/cgi/MYchoix_pagepaiement.cgi'
 
         def self.service_url
-          mode = ActiveMerchant::Billing::Base.integration_mode
-          case mode
+          case ActiveMerchant::Billing::Base.mode
           when :production
             self.production_url
           when :test
