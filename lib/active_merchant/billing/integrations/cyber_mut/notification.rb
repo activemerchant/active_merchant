@@ -47,8 +47,7 @@ module ActiveMerchant #:nodoc:
 
           # Was this a test transaction?
           def test?
-            mode = ActiveMerchant::Billing::Base.integration_mode
-            mode == :test
+            ActiveMerchant::Billing::Base.mode == :test
           end
 
           # Status of transaction. List of possible values:

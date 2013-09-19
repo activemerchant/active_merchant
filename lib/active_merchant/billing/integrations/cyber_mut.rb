@@ -15,8 +15,7 @@ module ActiveMerchant #:nodoc:
         self.production_url = 'https://ssl.paiement.cic-banques.fr/paiement.cgi'
 
         def self.service_url
-          mode = ActiveMerchant::Billing::Base.integration_mode
-          case mode
+          case ActiveMerchant::Billing::Base.mode
           when :production
             self.production_url
           when :test
