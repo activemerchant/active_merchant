@@ -110,11 +110,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
+        puts body
         result = {}
         pairs = body.split("&")
         pairs.each do |pair|
           a = pair.split("=")
-          result[a[0].to_sym] = CGI.unescape(a[1])
+          #Make sure there is a value, else set it to empty string
+          result[a[0].to_sym] = a[1] ? CGI.unescape(a[1]) : ""
         end
         result
       end
