@@ -21,6 +21,7 @@ module ActiveMerchant #:nodoc:
           #
           # - payment_service_for(resource.id, "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ", :amount => resource.amount.cents, :currency => resource.amount.currency, :service => :cyber_mut) do |service|
           #   - service.tpe '123456'
+          #   - service.company 'company'
           #   = submit_tag 'OK'
           #
           def initialize(order, account, options = {})

@@ -5,6 +5,35 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module CyberMut
         class Notification < ActiveMerchant::Billing::Integrations::Notification
+          # Parser and handler for incoming Instant payment notifications from CyberMut.
+          # The Example shows a typical handler in a rails application.
+          #
+          # Example
+          #
+          #   class BackendController < ApplicationController
+          #     include ActiveMerchant::Billing::Integrations
+          #
+          #     def cyber_mut
+          #       notify = CyberMut::Notification.new(request.raw_post)
+          #
+          #       order = Order.find(notify.item_id)
+          #
+          #       if notify.acknowledge && notify.complete? && order.total == notify.amount
+          #         order.status = 'success'
+          #
+          #         shop.ship(order)
+          #         receipt = 0
+          #       else
+          #         logger.error("Failed to verify CyberMut's notification, please investigate")
+          #       end
+          #
+          #     rescue => e
+          #       order.status        = 'failed'
+          #       raise
+          #     ensure
+          #       order.save
+          #     end
+          #   end
           def complete?
             if test?
               status == 'payetest'
