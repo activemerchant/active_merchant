@@ -110,7 +110,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        puts body
         result = {}
         pairs = body.split("&")
         pairs.each do |pair|
