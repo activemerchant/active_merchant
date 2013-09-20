@@ -654,3 +654,8 @@ iats_payments:
 
 bit_pay:
   api_key: 'rKrahSl7WRrYeKRUhGzbvW3nBzo0jG4FPaL8uPYaoPk'
+
+wirecard_checkout_page:
+  secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
+  shop_id: ''
+  paymenttype: IDL
