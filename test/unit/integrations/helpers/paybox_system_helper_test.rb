@@ -33,4 +33,9 @@ class PayboxSystemHelperTest < Test::Unit::TestCase
     assert_field 'PBX_SITE', '1999888'
     assert_field 'PBX_RANG', '32'
   end
+
+  def test_params
+    assert_match /^PBX_SITE=1999888&/, @helper.query_to_param
+    assert_match(/&PBX_TIME=(\d){4}-(\d){2}-(\d){2}T(\d){2}:(\d){2}:(\d){2}Z$/, @helper.query_to_param)
+  end
 end
