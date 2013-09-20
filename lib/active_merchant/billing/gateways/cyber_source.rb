@@ -401,8 +401,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, payment_method, address, options, shipTo = false)
-        requires!(options, :email)
-
         xml.tag! shipTo ? 'shipTo' : 'billTo' do
           xml.tag! 'firstName',             payment_method.first_name             if payment_method
           xml.tag! 'lastName',              payment_method.last_name              if payment_method
