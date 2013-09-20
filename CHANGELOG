@@ -4,6 +4,7 @@
 * Authorize.Net: Add cardholder authentication options (CAVV) support [structure]
 * CardStreamModern: Added better checks on inputs from the gateway [ExxKA]
 * Stripe: Send :ip to the gateway instead of :browser_ip [f3ndot]
+* Wirecard Page: new offsite gateway [mbretter]
 
 == Version 1.41.0 (October 24th, 2013)
 
