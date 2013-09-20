@@ -92,12 +92,13 @@ module ActiveMerchant #:nodoc:
             }
           end
 
-          def query_to_param
-            query.to_a.map { |a| a.join("=") }.join("&")
-          end
-
           def query_with_hmac
             query.merge(:PBX_HMAC => hmac(query_to_param))
+          end
+
+          private
+          def query_to_param
+            query.to_a.map { |a| a.join("=") }.join("&")
           end
 
           def hmac(query)
