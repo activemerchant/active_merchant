@@ -47,8 +47,6 @@ module ActiveMerchant #:nodoc:
           raise ArgumentError.new(mess)
         end
         hash = {
-          agent_code: @login,
-          password: @password,
           total: money,
           mop: creditcard.brand,
           zip_code: options[:zip_code],
@@ -76,8 +74,6 @@ module ActiveMerchant #:nodoc:
       # :invoice_num,
       def refund(identification, options = {})
         hash = {
-          agent_code: @login,
-          password: @password,
           total: options[:total],
           transaction_id: identification
         }
@@ -98,6 +94,12 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      # ProcessCrediCardV1
+      def process_credit_card_v1(hash)
+        data = create_xml_for_process(hash)
+        soap_post('ProcessCreditCardV1', data)
+      end
+
       # ProcessCreditCardRefundWithTransactionIdV1
       def process_credit_card_refund_with_transaction_id_v1(hash)
         data = create_xml_for_refund(hash)
@@ -113,51 +115,47 @@ module ActiveMerchant #:nodoc:
       end
 
       def create_xml_for_refund(hash)
-        builder = Nokogiri::XML::Builder.new(encoding: 'utf-8') do |xml|
-          xml.__send__('soap12:Envelope', soap_options) do
-            xml.__send__('soap12:Body') do
-              xml.ProcessCreditCardRefundWithTransactionIdV1(
-                xmlns: 'https://www.iatspayments.com/NetGate/') do
-                xml.agentCode hash[:agent_code]
-                xml.password hash[:password]
-                xml.customerIPAddress hash[:customer_ip_address]
-                xml.transactionId hash[:transaction_id]
-                xml.total hash[:total]
-              end
-            end
-          end
-        end
-        builder.to_xml
+        xml_start('ProcessCreditCardRefundWithTransactionIdV1') do |xml|
+          xml.agentCode @login
+          xml.password @password
+          xml.customerIPAddress hash[:customer_ip_address]
+          xml.transactionId hash[:transaction_id]
+          xml.total hash[:total]
+        end.to_xml
       end
 
-      # ProcessCrediCardV1
-      def process_credit_card_v1(hash)
-        builder = Nokogiri::XML::Builder.new(encoding: 'utf-8') do |xml|
+      def create_xml_for_process(hash)
+        xml_start('ProcessCreditCardV1') do |xml|
+          xml.agentCode @login
+          xml.password @password
+          xml.customerIPAddress hash[:customer_ip_address]
+          xml.invoiceNum hash[:invoice_num]
+          xml.creditCardNum hash[:credit_card_num]
+          xml.creditCardExpiry hash[:credit_card_expiry]
+          xml.cvv2 hash[:cvv2]
+          xml.mop hash[:mop]
+          xml.firstName hash[:first_name]
+          xml.lastName hash[:last_name]
+          xml.address hash[:address]
+          xml.city hash[:city]
+          xml.state hash[:state]
+          xml.zipCode hash[:zip_code]
+          xml.total hash[:total]
+        end.to_xml
+      end
+
+      # root, headers and process name
+      def xml_start(process_card, &block)
+        Nokogiri::XML::Builder.new(encoding: 'utf-8') do |xml|
           xml.__send__('soap12:Envelope', soap_options) do
             xml.__send__('soap12:Body') do
-              xml.ProcessCreditCardV1(
-                xmlns: 'https://www.iatspayments.com/NetGate/') do
-                xml.agentCode hash[:agent_code]
-                xml.password hash[:password]
-                xml.customerIPAddress hash[:customer_ip_address]
-                xml.invoiceNum hash[:invoice_num]
-                xml.creditCardNum hash[:credit_card_num]
-                xml.creditCardExpiry hash[:credit_card_expiry]
-                xml.cvv2 hash[:cvv2]
-                xml.mop hash[:mop]
-                xml.firstName hash[:first_name]
-                xml.lastName hash[:last_name]
-                xml.address hash[:address]
-                xml.city hash[:city]
-                xml.state hash[:state]
-                xml.zipCode hash[:zip_code]
-                xml.total hash[:total]
-              end
+              xml.__send__(
+                process_card,
+                xmlns: 'https://www.iatspayments.com/NetGate/',
+                &block)
             end
           end
         end
-        data = builder.to_xml
-        soap_post('ProcessCreditCardV1', data)
       end
 
       def soap_post(method, data)
@@ -172,15 +170,6 @@ module ActiveMerchant #:nodoc:
         end
         Nokogiri::XML(res.body)
       end
-
-      def make_headers(data, soap_call)
-        {
-          'Content-Type' => 'application/soap+xml; charset=utf-8',
-          'Host' => current_host,
-          'Content-Length' => data.size.to_s
-        }
-      end
-
     end
   end
 end
