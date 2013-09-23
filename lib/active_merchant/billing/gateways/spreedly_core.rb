@@ -149,7 +149,7 @@ module ActiveMerchant #:nodoc:
           doc.merchant_name_descriptor(options[:merchant_name_descriptor])
         end
         if options[:merchant_location_descriptor]
-          doc.merchant_location_descriptor(options[:merchant_name_descriptor])
+          doc.merchant_location_descriptor(options[:merchant_location_descriptor])
         end
       end
 
