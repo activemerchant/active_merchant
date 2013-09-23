@@ -103,7 +103,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(30, response.authorization)
     assert_failure refund
-    assert_equal "A transaction status of 'CAPTURED' or 'SETTLED' is required.", refund.message
+    assert_equal "A transaction status of 'CAPTURED' or 'SETTLED' or 'SETTLED_BY_MERCHANT' is required.", refund.message
   end
 
   def test_refund_nonexistent_transaction
