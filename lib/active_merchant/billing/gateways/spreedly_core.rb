@@ -144,6 +144,13 @@ module ActiveMerchant #:nodoc:
         doc.order_id(options[:order_id])
         doc.ip(options[:ip])
         doc.description(options[:description])
+
+        if options[:merchant_name_descriptor]
+          doc.merchant_name_descriptor(options[:merchant_name_descriptor])
+        end
+        if options[:merchant_location_descriptor]
+          doc.merchant_location_descriptor(options[:merchant_name_descriptor])
+        end
       end
 
       def add_credit_card(doc, credit_card, options)
@@ -154,6 +161,7 @@ module ActiveMerchant #:nodoc:
           doc.last_name(credit_card.last_name)
           doc.month(credit_card.month)
           doc.year(credit_card.year)
+          doc.verification_value(credit_card.verification_value) if credit_card.verification_value?
           doc.email(options[:email])
           doc.address1(options[:billing_address].try(:[], :address1))
           doc.address2(options[:billing_address].try(:[], :address2))
