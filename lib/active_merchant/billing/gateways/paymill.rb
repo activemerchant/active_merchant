@@ -57,6 +57,10 @@ module ActiveMerchant #:nodoc:
         commit(:post, "refunds/#{transaction_id(authorization)}", post)
       end
 
+      def void(authorization, options={})
+        commit(:delete, "preauthorizations/#{preauth(authorization)}")
+      end
+
       def store(credit_card, options={})
         save_card(credit_card)
       end
@@ -97,9 +101,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(parsed_response)
+        parsed_data = parsed_response['data']
+        return '' unless parsed_data.kind_of?(Hash)
+
         [
-          parsed_response['data']['id'],
-          parsed_response['data']['preauthorization'].try(:[], 'id')
+          parsed_data['id'],
+          parsed_data['preauthorization'].try(:[], 'id')
         ].join(";")
       end
 
@@ -158,6 +165,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(params)
+        return nil unless params
+
         no_blanks = params.reject { |key, value| value.blank? }
         no_blanks.map { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
