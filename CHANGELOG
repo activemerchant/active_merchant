@@ -2,6 +2,7 @@
 
 * Moneris: Add optional (off by default) verification_value support [duff]
 * Spreedly: Pass country with other address fields [hoenth]
+* SecureNet: Fix order of xml params [duff]
 
 == Version 1.38.1 (September 16, 2013)
 
