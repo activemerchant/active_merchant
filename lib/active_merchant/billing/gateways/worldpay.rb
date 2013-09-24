@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options = {})
         MultiResponse.run do |r|
-          r.process{inquire_request(authorization, options, "CAPTURED", "SETTLED")}
+          r.process{inquire_request(authorization, options, "CAPTURED", "SETTLED", "SETTLED_BY_MERCHANT")}
           r.process{refund_request(money, authorization, options)}
         end
       end
