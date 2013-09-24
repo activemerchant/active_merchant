@@ -1,6 +1,6 @@
-module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
-    module Integrations #:nodoc:
+module ActiveMerchant
+  module Billing
+    module Integrations
       module Citrus
         class Return < ActiveMerchant::Billing::Integrations::Return
 
@@ -9,8 +9,6 @@ module ActiveMerchant #:nodoc:
             @notification = Notification.new(query_string, options)
           end
 
-          # Citrus Transaction Id
-          #
           def transaction_id
             @notification.transaction_id
           end
@@ -19,18 +17,20 @@ module ActiveMerchant #:nodoc:
             if @notification.invoice_ok?( order_id ) && @notification.amount_ok?( BigDecimal.new(order_amount) )
               @notification.status
             else
-              'mismatch'
+              'Mismatch'
             end
           end
 
-          # check success of the transaction
-          # check order_id and
           def success?
-            status( @params['TxId'], @params['amount'] ) == 'success'
+            status( @params['TxId'], @params['amount'] ) == 'Completed'
           end
 
           def message
             @notification.message
+          end
+
+          def cancelled?
+            @notification.status == 'Cancelled'
           end
 
         end

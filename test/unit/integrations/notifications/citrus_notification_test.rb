@@ -3,16 +3,13 @@ require 'test_helper'
 class CitrusNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
- 
   def setup
     @citrus = Citrus::Notification.new(http_raw_data_success, :credential2 => '2c71a4ea7d2b88e151e60d9da38b2d4552568ba9')
-	#@citrus = Citrus::Notification.new(http_raw_data_canceled, :credential2 => '2c71a4ea7d2b88e151e60d9da38b2d4552568ba9')
-	#@citrus = Citrus::Notification.new(http_raw_data_tampered, :credential2 => '2c71a4ea7d2b88e151e60d9da38b2d4552568ba9')
   end
 
   def test_accessors
     assert @citrus.complete?
-    assert_equal "success", @citrus.status
+    assert_equal "Completed", @citrus.status
     assert_equal "CTX1309180549472058821", @citrus.transaction_id
     assert_equal "SUCCESS", @citrus.transaction_status
     assert_equal "10.00", @citrus.amount
