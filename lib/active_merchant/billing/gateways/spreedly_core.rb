@@ -147,6 +147,7 @@ module ActiveMerchant #:nodoc:
           doc.city(options[:billing_address].try(:[], :city))
           doc.state(options[:billing_address].try(:[], :state))
           doc.zip(options[:billing_address].try(:[], :zip))
+          doc.country(options[:billing_address].try(:[], :country))
         end
       end
 
