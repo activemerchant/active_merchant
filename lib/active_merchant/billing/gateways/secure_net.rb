@@ -93,9 +93,8 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! 'AMOUNT', amount(money)
         add_credit_card(xml, creditcard)
-        add_required_params(xml, action, options)
+        add_params_in_required_order(xml, action, options)
         add_address(xml, creditcard, options)
-        add_invoice(xml, options)
         add_more_required_params(xml, options)
 
         xml.target!
@@ -111,7 +110,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'CARDNUMBER', last_four
         end
 
-        add_required_params(xml, action, options)
+        add_params_in_required_order(xml, action, options)
         xml.tag! 'REF_TRANSID', transaction_id
         add_more_required_params(xml, options)
 
@@ -181,12 +180,6 @@ module ActiveMerchant #:nodoc:
 
       end
 
-      def add_invoice(xml, options)
-        xml.tag! 'NOTE', options[:description] if options[:description]
-        xml.tag! 'INVOICEDESC', options[:invoice_description] if options[:invoice_description]
-        xml.tag! 'INVOICENUM', options[:invoice_number] if options[:invoice_number]
-      end
-
       def add_merchant_key(xml, options)
         xml.tag!("MERCHANT_KEY") do
           xml.tag! 'GROUPID', 0
@@ -195,13 +188,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_required_params(xml, action, options)
+      # SecureNet requires some of the xml params to be in a certain order.  http://cl.ly/image/3K260E0p0a0n/content.png
+      def add_params_in_required_order(xml, action, options)
         xml.tag! 'CODE', TRANSACTIONS[action]
         add_customer_data(xml, options)
         xml.tag! 'DCI', 0 # No duplicate checking will be done, except for ORDERID
         xml.tag! 'INSTALLMENT_SEQUENCENUM', 1
+        xml.tag! 'INVOICEDESC', options[:invoice_description] if options[:invoice_description]
+        xml.tag! 'INVOICENUM', options[:invoice_number] if options[:invoice_number]
         add_merchant_key(xml, options)
         xml.tag! 'METHOD', 'CC'
+        xml.tag! 'NOTE', options[:description] if options[:description]
         xml.tag! 'ORDERID', options[:order_id]
         xml.tag! 'OVERRIDE_FROM', 0 # Docs say not required, but doesn't work without it
       end
