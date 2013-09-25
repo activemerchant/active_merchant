@@ -67,6 +67,19 @@ class PaymillTest < Test::Unit::TestCase
     assert_equal "Transaction approved", response.message
   end
 
+  def test_successful_authorize_and_void
+    @gateway.stubs(:raw_ssl_request).returns(successful_store_response, successful_authorize_response)
+
+    assert response = @gateway.authorize(@amount, @credit_card)
+    assert_success response
+
+    @gateway.expects(:raw_ssl_request).returns(successful_void_response)
+    response = @gateway.void(response.authorization)
+    assert_success response
+    assert response.test?
+    assert_equal "Transaction approved", response.message
+  end
+
   def test_failed_capture
     @gateway.stubs(:raw_ssl_request).returns(successful_store_response, successful_authorize_response)
     assert response = @gateway.authorize(@amount, @credit_card)
@@ -374,6 +387,15 @@ class PaymillTest < Test::Unit::TestCase
           }
         },
         "mode":"test"
+      }
+    JSON
+  end
+
+  def successful_void_response
+    MockResponse.succeeded <<-JSON
+      {
+          "data":[],
+          "mode":"test"
       }
     JSON
   end
