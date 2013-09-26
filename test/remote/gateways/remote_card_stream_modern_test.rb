@@ -13,14 +13,6 @@ class RemoteCardStreamModernTest < Test::Unit::TestCase
       :brand => :american_express
     )
 
-    @uk_maestro = credit_card('6759016800000120097',
-      :month => '12',
-      :year => '2014',
-      :issue_number => '0',
-      :verification_value => '701',
-      :brand => :switch
-    )
-
     @mastercard = credit_card('5301250070000191',
       :month => '12',
       :year => '2014',
@@ -93,17 +85,6 @@ class RemoteCardStreamModernTest < Test::Unit::TestCase
       :description => 'AM test purchase'
     }
 
-    @uk_maestro_options = {
-      :billing_address => {
-        :address1 => 'The Manor',
-        :address2 => "Wolvey Road",
-        :city => "",
-        :state => "Middlesex",
-        :zip => 'TW7 9FF'
-      },
-      :order_id => generate_unique_id,
-      :description => 'AM test purchase'
-    }
   end
 
   def test_successful_visacreditcard_authorization_and_capture
@@ -251,12 +232,6 @@ class RemoteCardStreamModernTest < Test::Unit::TestCase
     assert_equal 'CARD EXPIRED', response.message
     assert_failure response
     assert response.test?
-  end
-
-  def test_successful_maestro_purchase
-    assert response = @gateway.purchase(142, @uk_maestro, @uk_maestro_options)
-    assert_equal 'APPROVED', response.message
-    assert_success response
   end
 
   def test_successful_amex_purchase
