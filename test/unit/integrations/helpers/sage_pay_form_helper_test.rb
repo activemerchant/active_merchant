@@ -1,8 +1,10 @@
+# encoding: utf-8
+
 require 'test_helper'
 
 class SagePayFormHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
-  
+
   def setup
     @key = 'EncryptionKey123'
     @helper = SagePayForm::Helper.new('order-500', 'cody@example.com',
@@ -12,14 +14,14 @@ class SagePayFormHelperTest < Test::Unit::TestCase
     )
     @helper.credential2
   end
- 
+
   def test_basic_helper_fields
     assert_equal 5, @helper.fields.size
     assert_field 'Vendor', 'cody@example.com'
     assert_field 'Amount', '5.00'
     assert_field 'VendorTxCode', 'order-500'
   end
-  
+
   def test_customer_fields
     @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com'
     assert_equal 8, @helper.fields.size
@@ -41,7 +43,7 @@ class SagePayFormHelperTest < Test::Unit::TestCase
       assert !plain.include?('cody@example.com')
     end
   end
-  
+
   def test_us_address_mapping
     @helper.billing_address(
       :address1 => '1 My Street',
@@ -51,7 +53,7 @@ class SagePayFormHelperTest < Test::Unit::TestCase
       :zip => '60606',
       :country  => 'US'
     )
-   
+
     assert_equal 10, @helper.fields.size
     assert_field 'BillingAddress1', '1 My Street'
     assert_field 'BillingCity', 'Chicago'
@@ -73,7 +75,7 @@ class SagePayFormHelperTest < Test::Unit::TestCase
       :zip => 'LS23',
       :country  => 'GB'
     )
-   
+
     assert_equal 10, @helper.fields.size
     assert_field 'BillingAddress1', '1 My Street'
     assert_field 'BillingCity', 'Leeds'
@@ -85,7 +87,7 @@ class SagePayFormHelperTest < Test::Unit::TestCase
       assert !plain.include?('Yorkshire')
     end
   end
-  
+
   def test_shipping_address_falls_back_to_billing_address
     @helper.billing_address(
       :address1 => '1 My Street',
@@ -95,7 +97,7 @@ class SagePayFormHelperTest < Test::Unit::TestCase
       :zip => '60606',
       :country  => 'US'
     )
-   
+
     @helper.form_fields
     assert_equal 19, @helper.fields.size
     assert_field 'DeliveryAddress1', '1 My Street'
@@ -108,7 +110,25 @@ class SagePayFormHelperTest < Test::Unit::TestCase
       assert plain.include?('&DeliveryState=IL')
     end
   end
-  
+
+  def test_description_should_truncate
+    description = 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut la'
+    assert_equal 101, description.size
+    @helper.add_field('Description', description)
+
+    with_crypt_plaintext do |plain|
+      assert plain.include?('Description=Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut l')
+    end
+
+    description = 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut'
+    assert_equal 98, description.size
+    @helper.add_field('Description', description)
+
+    with_crypt_plaintext do |plain|
+      assert plain.include?('Description=Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut')
+    end
+  end
+
   def test_set_shipping_address_wont_be_overridden_by_billing_address
     @helper.billing_address(
       :address1 => '1 My Street',
@@ -126,7 +146,7 @@ class SagePayFormHelperTest < Test::Unit::TestCase
       :zip => '123123',
       :country  => 'US'
     )
-   
+
     @helper.form_fields
     assert_equal 18, @helper.fields.size
     assert_field 'DeliveryAddress1', '1 Shipping Street'
@@ -135,7 +155,7 @@ class SagePayFormHelperTest < Test::Unit::TestCase
     assert_field 'DeliveryPostCode', '123123'
     assert_field 'DeliveryCountry', 'US'
   end
-  
+
   def test_unknown_address_mapping
     @helper.billing_address :farm => 'CA'
     assert_equal 5, @helper.fields.size
@@ -147,41 +167,81 @@ class SagePayFormHelperTest < Test::Unit::TestCase
     end
     assert_equal 5, @helper.fields.size
   end
-  
+
   def test_setting_invalid_address_field
     fields = @helper.fields.dup
     @helper.billing_address :street => 'My Street'
     assert_equal fields, @helper.fields
   end
-  
+
   def test_basic_form_fields
     params = @helper.form_fields
-    
+
     assert_equal '2.23', params['VPSProtocol']
     assert_equal 'PAYMENT', params['TxType']
     assert_equal 'cody@example.com', params['Vendor']
     assert_not_nil params['Crypt']
   end
 
-  def test_crypt_field
-    if defined?(RUBY_ENGINE) && RUBY_ENGINE !~ /rbx|jruby/ # srand behaviour is incompatible on Rubinius/JRuby
-      assert_crypt 'FgEOFyoVEQ1JOC4LHV5AZz0tDBYcTRsbCws5SEwBAhUGGxEAHB4XEFI7GCFfcF9cMAAXT0xeRFk=', 'SomeSeed', 42
-      assert_crypt 'AQcFFCoVEQ1JOC4LHV5AZz0tDBYcTRsbCws5SEwBAhUGGxEAHB4XEFI7GCFfcF9cMAAXT0xeRFk=', 'DiffSeed', 42
-      assert_crypt 'FgEOFyoVEQ1JLyYKDF9GDnBAU0JfMwEbHQslBgAMZ2ABSDUXFxQbGzsWCAodVA9cNwoGAFRFRFk=', 'SomeSeed', 1337
+  def test_unicode_fields
+    @helper.customer :first_name => 'Tobias', :last_name => "Lütke", :email => 'cody@example.com'
+    params = @helper.form_fields
 
-      assert_crypt 'Fg8PBj8FGgobByQLKlReViYaEDMrEVI/CgAvCgtlSnAqCgZPFgIQDB1DflVJF3FGNxwGHBoJSTw8Km0kFF5HXTFTVlxJQA==',             'SaltFunctionSelectsARandomSeedLength', 42
-      assert_crypt 'Fg8PBj8FGgobByQLKlReViYaEDMrERoNAAMYABxVfhUGGxEAHB4XEFI7GCFfcF9cMAAXT0xeRFlJOC4LHV5AZz0tDBYcTRsbCws5SEwBAg==', 'SaltFunctionSelectsARandomSeedLength', 1234
+    assert_equal '2.23', params['VPSProtocol']
+    assert_equal 'PAYMENT', params['TxType']
+    assert_equal 'cody@example.com', params['Vendor']
+    assert_not_nil params['Crypt']
+  end
+
+  def test_crypt_field_is_base64
+    crypt = @helper.form_fields['Crypt']
+    assert_match /^[A-Za-z0-9\+\/]+=*$/, crypt
+  end
+
+  def test_crypt_field_salt
+    random = 'ExpectSomePartOfThisSalt'
+    SecureRandom.expects(:base64).returns(random)
+
+    with_crypt_plaintext do |plain|
+      salt = plain.split('&').first
+      assert random.start_with?(salt)
     end
   end
 
-  private
-  
-  def assert_crypt(value, sr_seed, rand_seed)
-    SecureRandom.expects(:base64).returns(sr_seed)
-    srand(rand_seed)
-
-    assert_equal value, @helper.dup.form_fields['Crypt']
+  def test_crypt_field_is_salted_uniq
+    crypts = (1..5).map { @helper.dup.form_fields['Crypt'] }
+    assert_equal 5, crypts.uniq.count
   end
+
+  def test_not_including_post_code_uses_0000_default
+    @helper.billing_address(
+      :address1 => '1 My Street',
+      :address2 => '',
+      :city => 'Dublin',
+      :country  => 'IE'
+    )
+    @helper.shipping_address(
+      :address1 => '1 Shipping Street',
+      :address2 => '',
+      :city => 'Dublin Shipping',
+      :country  => 'IE'
+    )
+
+    @helper.form_fields
+    assert_equal 16, @helper.fields.size
+
+    assert_field 'BillingAddress1', '1 My Street'
+    assert_field 'BillingCity', 'Dublin'
+    assert_field 'BillingPostCode', '0000'
+    assert_field 'BillingCountry', 'IE'
+
+    assert_field 'DeliveryAddress1', '1 Shipping Street'
+    assert_field 'DeliveryCity', 'Dublin Shipping'
+    assert_field 'DeliveryPostCode', '0000'
+    assert_field 'DeliveryCountry', 'IE'
+  end
+
+  private
 
   def with_crypt_plaintext
     crypt = @helper.dup.form_fields['Crypt']

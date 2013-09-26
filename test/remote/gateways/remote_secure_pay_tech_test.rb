@@ -25,6 +25,22 @@ class RemoteSecurePayTechTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_cvv_check
+    @credit_card.verification_value = '100'
+
+    # Use a different amount to the previous test, otherwise SPT assumes that this is a repost of a previous transaction
+    assert response = @gateway.purchase(@accepted_amount + 100, @credit_card, @options)
+    assert_equal 'Transaction OK', response.message
+    assert_success response
+  end
+
+  def test_unsuccessful_cvv_check
+    @credit_card.verification_value = '104'
+    assert response = @gateway.purchase(@accepted_amount + 200, @credit_card, @options)
+    assert_equal 'Card declined', response.message
+    assert_failure response
+  end
+
   def test_invalid_login
     gateway = SecurePayTechGateway.new(
                 :login => 'foo',

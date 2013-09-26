@@ -17,16 +17,13 @@ module ActiveMerchant #:nodoc:
         end
 
         requires!(options, :login, :password, :processor_token)
-        @options = options
         Samurai.options = {
           :merchant_key       => options[:login],
           :merchant_password  => options[:password],
           :processor_token    => options[:processor_token]
         }
-      end
 
-      def test?
-        @options[:test] || super
+        super
       end
 
       def authorize(money, credit_card_or_vault_id, options = {})
@@ -76,6 +73,7 @@ module ActiveMerchant #:nodoc:
           :zip          => address[:zip],
           :sandbox      => test?
         })
+        result.retain if options[:retain] && result.is_sensitive_data_valid && result.payment_method_token
 
         Response.new(result.is_sensitive_data_valid,
                      message_from_result(result),

@@ -1,8 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class OptimalPaymentGateway < Gateway
-      TEST_URL = 'https://webservices.test.optimalpayments.com/creditcardWS/CreditCardServlet/v1'
-      LIVE_URL = 'https://webservices.optimalpayments.com/creditcardWS/CreditCardServlet/v1'
+      self.test_url = 'https://webservices.test.optimalpayments.com/creditcardWS/CreditCardServlet/v1'
+      self.live_url = 'https://webservices.optimalpayments.com/creditcardWS/CreditCardServlet/v1'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['CA', 'US', 'GB']
@@ -18,7 +18,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         #requires!(options, :login, :password)
-        @options = options
         super
       end
 
@@ -49,11 +48,7 @@ module ActiveMerchant #:nodoc:
         commit('ccSettlement', money, options)
       end
 
-      def test?
-        super || @options[:test]
-      end
-
-    private
+      private
 
       def parse_card_or_auth(card_or_auth, options)
         if card_or_auth.respond_to?(:number)
@@ -91,11 +86,13 @@ module ActiveMerchant #:nodoc:
           raise 'Unknown Action'
         end
         txnRequest = URI.encode(xml)
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, "txnMode=#{action}&txnRequest=#{txnRequest}"))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, "txnMode=#{action}&txnRequest=#{txnRequest}"))
 
         Response.new(successful?(response), message_from(response), hash_from_xml(response),
           :test          => test?,
-          :authorization => authorization_from(response)
+          :authorization => authorization_from(response),
+          :avs_result => { :code => avs_result_from(response) },
+          :cvv_result => cvv_result_from(response)
         )
       end
 
@@ -113,7 +110,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        REXML::XPath.first(response, '//confirmationNumber').text rescue nil
+        get_text_from_document(response, '//confirmationNumber')
+      end
+
+      def avs_result_from(response)
+        get_text_from_document(response, '//avsResponse')
+      end
+
+      def cvv_result_from(response)
+        get_text_from_document(response, '//cvdResponse')
       end
 
       def hash_from_xml(response)
@@ -143,6 +148,11 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
+      def get_text_from_document(document, node)
+        node = REXML::XPath.first(document, node)
+        node && node.text
+      end
+
       def cc_auth_request(money, opts)
         xml_document('ccAuthRequestV1') do |xml|
           build_merchant_account(xml, @options)
@@ -150,6 +160,7 @@ module ActiveMerchant #:nodoc:
           xml.amount(money/100.0)
           build_card(xml, opts)
           build_billing_details(xml, opts)
+          build_shipping_details(xml, opts)
         end
       end
 
@@ -228,8 +239,8 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'month'      , @credit_card.month
             xml.tag! 'year'       , @credit_card.year
           end
-          if type = card_type(@credit_card.type)
-            xml.tag! 'cardType'     , type
+          if brand = card_type(@credit_card.brand)
+            xml.tag! 'cardType'     , brand
           end
           if @credit_card.verification_value
             xml.tag! 'cvdIndicator' , '1' # Value Provided
@@ -240,21 +251,33 @@ module ActiveMerchant #:nodoc:
 
       def build_billing_details(xml, opts)
         xml.tag! 'billingDetails' do
-          addr = opts[:billing_address]
           xml.tag! 'cardPayMethod', 'WEB'
-          if addr[:name]
-            xml.tag! 'firstName', CGI.escape(addr[:name].split(' ').first) # TODO: parse properly
-            xml.tag! 'lastName' , CGI.escape(addr[:name].split(' ').last )
-          end
-          xml.tag! 'street' , CGI.escape(addr[:address1]) if addr[:address1] && !addr[:address1].empty?
-          xml.tag! 'street2', CGI.escape(addr[:address2]) if addr[:address2] && !addr[:address2].empty?
-          xml.tag! 'city'   , CGI.escape(addr[:city]    ) if addr[:city]     && !addr[:city].empty?
-          xml.tag! 'state'  , CGI.escape(addr[:state]   ) if addr[:state]    && !addr[:state].empty?
-          xml.tag! 'country', CGI.escape(addr[:country] ) if addr[:country]  && !addr[:country].empty?
-          xml.tag! 'zip'    , CGI.escape(addr[:zip]     ) # this one's actually required
-          xml.tag! 'phone'  , CGI.escape(addr[:phone]   ) if addr[:phone]    && !addr[:phone].empty?
-          #xml.tag! 'email'        , ''
+          build_address(xml, opts[:billing_address], opts[:email])
         end
+      end
+
+      def build_shipping_details(xml, opts)
+        xml.tag! 'shippingDetails' do
+          build_address(xml, opts[:shipping_address], opts[:email])
+        end if opts[:shipping_address].present?
+      end
+
+      def build_address(xml, addr, email=nil)
+        if addr[:name]
+          xml.tag! 'firstName', CGI.escape(addr[:name].split(' ').first) # TODO: parse properly
+          xml.tag! 'lastName' , CGI.escape(addr[:name].split(' ').last )
+        end
+        xml.tag! 'street' , CGI.escape(addr[:address1]) if addr[:address1].present?
+        xml.tag! 'street2', CGI.escape(addr[:address2]) if addr[:address2].present?
+        xml.tag! 'city'   , CGI.escape(addr[:city]    ) if addr[:city].present?
+        if addr[:state].present?
+          state_tag = %w(US CA).include?(addr[:country]) ? 'state' : 'region'
+          xml.tag! state_tag, CGI.escape(addr[:state])
+        end
+        xml.tag! 'country', CGI.escape(addr[:country] ) if addr[:country].present?
+        xml.tag! 'zip'    , CGI.escape(addr[:zip]     ) if addr[:zip].present?
+        xml.tag! 'phone'  , CGI.escape(addr[:phone]   ) if addr[:phone].present?
+        xml.tag! 'email', CGI.escape(email) if email
       end
 
       def card_type(key)

@@ -10,26 +10,26 @@ class BarclaysEpdqTest < Test::Unit::TestCase
 
     @credit_card = credit_card
     @amount = 100
-    
+
     @options = {
       :billing_address => address
     }
   end
-  
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    
+
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    
+
     # Replace with authorization number from the successful response
-    assert_equal '4d45da6a-5e11-3000-002b-00144ff2e45c', response.authorization
+    assert_equal "150127237", response.authorization
     assert response.test?
   end
 
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
-    
+
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
@@ -40,12 +40,6 @@ class BarclaysEpdqTest < Test::Unit::TestCase
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
       assert_success @gateway.credit(@amount, "asdfasdf:jklljkll")
     end
-  end
-
-  def test_refund
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/>asdfasdf</)).returns(successful_credit_response)
-    assert response = @gateway.refund(@amount, "asdfasdf:jklljkll")
-    assert_success response
   end
 
   def test_credit
@@ -59,6 +53,13 @@ class BarclaysEpdqTest < Test::Unit::TestCase
     assert response = @gateway.refund(@amount, "asdfasdf:jklljkll")
     assert_success response
   end
+
+  def test_handling_incorrectly_encoded_message
+    @gateway.expects(:ssl_post).returns(incorrectly_encoded_response)
+
+    assert_nothing_raised { @gateway.purchase(@amount, @credit_card, @options) }
+  end
+
   private
 
   def successful_purchase_response
@@ -196,7 +197,7 @@ class BarclaysEpdqTest < Test::Unit::TestCase
 </EngineDocList>
 )
   end
-  
+
   def failed_purchase_response
     %(<?xml version="1.0" encoding="UTF-8"?>
 <EngineDocList>
@@ -441,5 +442,9 @@ class BarclaysEpdqTest < Test::Unit::TestCase
 </EngineDocList>
 
 )
+  end
+
+  def incorrectly_encoded_response
+    successful_purchase_response.gsub("Ottawa", "\xD6ttawa")
   end
 end

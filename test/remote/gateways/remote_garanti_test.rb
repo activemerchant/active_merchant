@@ -4,6 +4,11 @@ require 'test_helper'
 class RemoteGarantiTest < Test::Unit::TestCase
 
   def setup
+    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
+      @original_kcode = $KCODE
+      $KCODE = 'u'
+    end
+
     @gateway = GarantiGateway.new(fixtures(:garanti))
 
     @amount = 1 # 1 cents = 0.01$
@@ -15,6 +20,10 @@ class RemoteGarantiTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store Purchase'
     }
+  end
+
+  def teardown
+    $KCODE = @original_kcode if @original_kcode
   end
 
   def test_successful_purchase

@@ -1,19 +1,23 @@
+require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module PayflowCommonAPI
       def self.included(base)
         base.default_currency = 'USD'
-          
+
         base.class_attribute :partner
-        
+
         # Set the default partner to PayPal
         base.partner = 'PayPal'
-        
+
         base.supported_countries = ['US', 'CA', 'SG', 'AU']
-        
+
         base.class_attribute :timeout
         base.timeout = 60
-        
+
+        base.test_url = 'https://pilot-payflowpro.paypal.com'
+        base.live_url = 'https://payflowpro.paypal.com'
+
         # Enable safe retry of failed connections
         # Payflow is safe to retry because retried transactions use the same
         # X-VPS-Request-ID header. If a transaction is detected as a duplicate
@@ -22,11 +26,9 @@ module ActiveMerchant #:nodoc:
         # hash.
         base.retry_safe = true
       end
-      
+
       XMLNS = 'http://www.paypal.com/XMLPay'
-      TEST_URL = 'https://pilot-payflowpro.paypal.com'
-      LIVE_URL = 'https://payflowpro.paypal.com'
-      
+
       CARD_MAPPING = {
         :visa => 'Visa',
         :master => 'MasterCard',
@@ -37,45 +39,40 @@ module ActiveMerchant #:nodoc:
         :switch => 'Switch',
         :solo => 'Solo'
       }
-      
-      TRANSACTIONS = { 
+
+      TRANSACTIONS = {
         :purchase       => "Sale",
         :authorization  => "Authorization",
         :capture        => "Capture",
         :void           => "Void",
-        :credit         => "Credit" 
+        :credit         => "Credit"
       }
-      
+
       CVV_CODE = {
         'Match' => 'M',
         'No Match' => 'N',
-        'Service Not Available' => 'U', 
+        'Service Not Available' => 'U',
         'Service not Requested' => 'P'
       }
-          
+
       def initialize(options = {})
         requires!(options, :login, :password)
-        
-        @options = options
-        @options[:partner] = partner if @options[:partner].blank?
+
+        options[:partner] = partner if options[:partner].blank?
         super
-      end  
-      
-      def test?
-        @options[:test] || super
       end
-      
+
       def capture(money, authorization, options = {})
         request = build_reference_request(:capture, money, authorization, options)
         commit(request, options)
       end
-      
+
       def void(authorization, options = {})
         request = build_reference_request(:void, nil, authorization, options)
         commit(request, options)
       end
-  
-      private      
+
+      private
       def build_request(body, options = {})
         xml = Builder::XmlMarkup.new
         xml.instruct!
@@ -103,30 +100,34 @@ module ActiveMerchant #:nodoc:
         end
         xml.target!
       end
-      
+
       def build_reference_request(action, money, authorization, options)
         xml = Builder::XmlMarkup.new
         xml.tag! TRANSACTIONS[action] do
           xml.tag! 'PNRef', authorization
-        
+
           unless money.nil?
             xml.tag! 'Invoice' do
-              xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
+              xml.tag!('TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money))
+              xml.tag!('Description', options[:description]) unless options[:description].blank?
+              xml.tag!('Comment', options[:comment]) unless options[:comment].blank?
+              xml.tag!('ExtData', 'Name'=> 'COMMENT2', 'Value'=> options[:comment2]) unless options[:comment2].blank?
             end
           end
         end
-        
+
         xml.target!
       end
 
-      def add_address(xml, tag, address, options)  
+      def add_address(xml, tag, address, options)
         return if address.nil?
         xml.tag! tag do
           xml.tag! 'Name', address[:name] unless address[:name].blank?
           xml.tag! 'EMail', options[:email] unless options[:email].blank?
           xml.tag! 'Phone', address[:phone] unless address[:phone].blank?
           xml.tag! 'CustCode', options[:customer] if !options[:customer].blank? && tag == 'BillTo'
-          
+          xml.tag! 'PONum', options[:po_number] if !options[:po_number].blank? && tag == 'BillTo'
+
           xml.tag! 'Address' do
             xml.tag! 'Street', address[:address1] unless address[:address1].blank?
             xml.tag! 'City', address[:city] unless address[:city].blank?
@@ -136,26 +137,27 @@ module ActiveMerchant #:nodoc:
           end
         end
       end
-          
+
       def parse(data)
         response = {}
-        xml = REXML::Document.new(data)
-        root = REXML::XPath.first(xml, "//ResponseData")
-        
+        xml = Nokogiri::XML(data)
+        xml.remove_namespaces!
+        root = xml.xpath("//ResponseData")
+
         # REXML::XPath in Ruby 1.8.6 is now unable to match nodes based on their attributes
-        tx_result = REXML::XPath.first(root, "//TransactionResult")
-        
-        if tx_result && tx_result.attributes['Duplicate'] == "true"
-          response[:duplicate] = true 
+        tx_result = root.xpath(".//TransactionResult").first
+
+        if tx_result && tx_result.attributes['Duplicate'].to_s == "true"
+          response[:duplicate] = true
         end
-        
-        root.elements.to_a.each do |node|
+
+        root.xpath(".//*").each do |node|
           parse_element(response, node)
         end
 
         response
       end
-      
+
       def parse_element(response, node)
         node_name = node.name.underscore.to_sym
         case
@@ -165,19 +167,19 @@ module ActiveMerchant #:nodoc:
           # in an RPPaymentResults element so we'll come here multiple times
           response[node_name] ||= []
           response[node_name] << ( payment_result_response = {} )
-          node.elements.each{ |e| parse_element(payment_result_response, e) }
-        when node.has_elements?
-          node.elements.each{|e| parse_element(response, e) }
+          node.xpath(".//*").each{ |e| parse_element(payment_result_response, e) }
+        when node.xpath(".//*").to_a.any?
+          node.xpath(".//*").each{|e| parse_element(response, e) }
         when node_name.to_s =~ /amt$/
           # *Amt elements don't put the value in the #text - instead they use a Currency attribute
-          response[node_name] = node.attributes['Currency']
+          response[node_name] = node.attributes['Currency'].to_s
         when node_name == :ext_data
-          response[node.attributes['Name'].underscore.to_sym] = node.attributes['Value']
+          response[node.attributes['Name'].to_s.underscore.to_sym] = node.attributes['Value'].to_s
         else
           response[node_name] = node.text
         end
       end
-      
+
       def build_headers(content_length)
         {
           "Content-Type" => "text/xml",
@@ -188,12 +190,12 @@ module ActiveMerchant #:nodoc:
       	  "X-VPS-Request-ID" => Utils.generate_unique_id
     	  }
     	end
-    	
+
     	def commit(request_body, options  = {})
         request = build_request(request_body, options)
         headers = build_headers(request.size)
-        
-    	  response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request, headers))
+
+    	  response = parse(ssl_post(test? ? self.test_url : self.live_url, request, headers))
 
     	  build_response(response[:result] == "0", response[:message], response,
     	    :test => test?,

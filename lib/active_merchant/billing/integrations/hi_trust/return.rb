@@ -7,10 +7,10 @@ module ActiveMerchant #:nodoc:
           CODES = { "00"   => "Operation completed successfully",
                     "-1"  => "Unable to initialize winsock dll.",
                     "-2"  => "Can't create stream socket.",
-                    "-3"  => "No Request Message.", 
+                    "-3"  => "No Request Message.",
                     "-4"  => "Can't connect to server.",
                     "-5"  => "Send socket error.",
-                    "-6"  => "Couldn't receive data.", 
+                    "-6"  => "Couldn't receive data.",
                     "-7"  => "Receive Broken message.",
                     "-8"  => "Unable to initialize Envirnment.",
                     "-9"  => "Can't Read Server RSA File.",
@@ -52,15 +52,16 @@ module ActiveMerchant #:nodoc:
                     "-308" => "Order Number already exists.",
                     "positive" => "Response from Bank. Please contact with Acquirer Bank Service or HiTRUST Call Center."
                   }
-          
+
           def success?
             params['retcode'] == SUCCESS
           end
-          
+
           def message
+            return CODES["positive"] if params['retcode'].to_i > 0
             CODES[ params['retcode'] ]
           end
-	      end
+        end
       end
     end
   end

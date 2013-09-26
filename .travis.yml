@@ -1,10 +1,24 @@
 rvm:
-  - 1.8.7
+  - 2.0.0
+  - 1.9.3
   - 1.9.2
-  - rbx
-  - ree
+
+gemfile:
+  - Gemfile
+  - Gemfile_rails31
+  - Gemfile_rails30
+  - Gemfile_rails23
 
 script: "bundle exec rake test:units"
 
 notifications:
-  disabled: true
+  email:
+    - integrations-team@shopify.com
+    - nathaniel@talbott.ws
+
+matrix:
+  include:
+    - rvm: 2.0.0
+      gemfile: Gemfile_rails40
+    - rvm: 1.9.3
+      gemfile: Gemfile_rails40

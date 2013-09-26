@@ -3,8 +3,8 @@ require 'test_helper'
 class CreditCardTest < Test::Unit::TestCase
   def setup
     CreditCard.require_verification_value = false
-    @visa = credit_card("4779139500118580",   :type => "visa")
-    @solo = credit_card("676700000000000000", :type => "solo", :issue_number => '01')
+    @visa = credit_card("4779139500118580",   :brand => "visa")
+    @solo = credit_card("676700000000000000", :brand => "solo", :issue_number => '01')
   end
 
   def teardown
@@ -18,7 +18,7 @@ class CreditCardTest < Test::Unit::TestCase
     assert_equal 9, c.month
     assert_equal Time.now.year + 1, c.year
     assert_equal "Longbob Longsen", c.name
-    assert_equal "visa", c.type
+    assert_equal "visa", c.brand
     assert_valid c
   end
 
@@ -56,10 +56,10 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   def test_should_be_able_to_liberate_a_bogus_card
-    c = credit_card('', :type => 'bogus')
+    c = credit_card('', :brand => 'bogus')
     assert_valid c
 
-    c.type = 'visa'
+    c.brand = 'visa'
     assert_not_valid c
   end
 
@@ -70,31 +70,35 @@ class CreditCardTest < Test::Unit::TestCase
     @visa.number = "11112222333344ff"
     assert_not_valid @visa
     assert_false @visa.errors.on(:type)
+    assert_false @visa.errors.on(:brand)
     assert       @visa.errors.on(:number)
 
     @visa.number = "111122223333444"
     assert_not_valid @visa
     assert_false @visa.errors.on(:type)
+    assert_false @visa.errors.on(:brand)
     assert       @visa.errors.on(:number)
 
     @visa.number = "11112222333344444"
     assert_not_valid @visa
     assert_false @visa.errors.on(:type)
+    assert_false @visa.errors.on(:brand)
     assert       @visa.errors.on(:number)
   end
 
-  def test_should_have_errors_with_invalid_card_type_for_otherwise_correct_number
-    @visa.type = 'master'
+  def test_should_have_errors_with_invalid_card_brand_for_otherwise_correct_number
+    @visa.brand = 'master'
 
     assert_not_valid @visa
-    assert_not_equal @visa.errors.on(:number), @visa.errors.on(:type)
+    assert_not_equal @visa.errors.on(:number), @visa.errors.on(:brand)
   end
 
-  def test_should_be_invalid_when_type_cannot_be_detected
+  def test_should_be_invalid_when_brand_cannot_be_detected
     @visa.number = nil
-    @visa.type = nil
+    @visa.brand = nil
 
     assert_not_valid @visa
+    assert !@visa.errors.on(:brand)
     assert !@visa.errors.on(:type)
     assert @visa.errors.on(:number)
     assert_equal 'is required', @visa.errors.on(:number)
@@ -166,8 +170,8 @@ class CreditCardTest < Test::Unit::TestCase
     assert_valid @solo
   end
 
-  def test_should_identify_wrong_cardtype
-    c = credit_card(:type => 'master')
+  def test_should_identify_wrong_card_brand
+    c = credit_card(:brand => 'master')
     assert_not_valid c
   end
 
@@ -183,10 +187,10 @@ class CreditCardTest < Test::Unit::TestCase
     assert_equal 'XXXX-XXXX-XXXX-1234', CreditCard.new(:number => '01234').display_number
   end
 
-  def test_should_correctly_identify_card_type
-    assert_equal 'visa',             CreditCard.type?('4242424242424242')
-    assert_equal 'american_express', CreditCard.type?('341111111111111')
-    assert_nil CreditCard.type?('')
+  def test_should_correctly_identify_card_brand
+    assert_equal 'visa',             CreditCard.brand?('4242424242424242')
+    assert_equal 'american_express', CreditCard.brand?('341111111111111')
+    assert_nil CreditCard.brand?('')
   end
 
   def test_should_be_able_to_require_a_verification_value
@@ -225,7 +229,17 @@ class CreditCardTest < Test::Unit::TestCase
 
     assert_not_valid @solo
     assert @solo.errors.on('start_month')
-    assert @solo.errors.on('issue_number')
+    assert_equal "cannot be empty", @solo.errors.on('issue_number')
+
+    @solo.issue_number = 3
+    assert_valid @solo
+  end
+
+  def test_should_require_a_validate_non_empty_issue_number_for_solo_or_switch
+    @solo.issue_number = "invalid"
+
+    assert_not_valid @solo
+    assert_equal "is invalid", @solo.errors.on('issue_number')
 
     @solo.issue_number = 3
     assert_valid @solo
@@ -239,6 +253,16 @@ class CreditCardTest < Test::Unit::TestCase
   def test_bogus_last_digits
     ccn = CreditCard.new(:number => "1")
     assert_equal "1", ccn.last_digits
+  end
+  
+  def test_should_return_first_four_digits_of_card_number
+    ccn = CreditCard.new(:number => "4779139500118580")
+    assert_equal "477913", ccn.first_digits
+  end
+  
+  def test_should_return_first_bogus_digit_of_card_number
+    ccn = CreditCard.new(:number => "1")
+    assert_equal "1", ccn.first_digits
   end
 
   def test_should_be_true_when_credit_card_has_a_first_name
@@ -300,34 +324,34 @@ class CreditCardTest < Test::Unit::TestCase
   end
 
   # The following is a regression for a bug where the keys of the
-  # credit card card_companies hash were not duped when detecting the type
-  def test_create_and_validate_credit_card_from_type
-    credit_card = CreditCard.new(:type => CreditCard.type?('4242424242424242'))
+  # credit card card_companies hash were not duped when detecting the brand
+  def test_create_and_validate_credit_card_from_brand
+    credit_card = CreditCard.new(:brand => CreditCard.brand?('4242424242424242'))
     assert_nothing_raised do
       credit_card.valid?
     end
   end
 
-  def test_autodetection_of_credit_card_type
+  def test_autodetection_of_credit_card_brand
     credit_card = CreditCard.new(:number => '4242424242424242')
     credit_card.valid?
-    assert_equal 'visa', credit_card.type
+    assert_equal 'visa', credit_card.brand
   end
 
-  def test_card_type_should_not_be_autodetected_when_provided
-    credit_card = CreditCard.new(:number => '4242424242424242', :type => 'master')
+  def test_card_brand_should_not_be_autodetected_when_provided
+    credit_card = CreditCard.new(:number => '4242424242424242', :brand => 'master')
     credit_card.valid?
-    assert_equal 'master', credit_card.type
+    assert_equal 'master', credit_card.brand
   end
 
   def test_detecting_bogus_card
     credit_card = CreditCard.new(:number => '1')
     credit_card.valid?
-    assert_equal 'bogus', credit_card.type
+    assert_equal 'bogus', credit_card.brand
   end
 
   def test_validating_bogus_card
-    credit_card = credit_card('1', :type => nil)
+    credit_card = credit_card('1', :brand => nil)
     assert credit_card.valid?
   end
 
@@ -347,8 +371,12 @@ class CreditCardTest < Test::Unit::TestCase
     assert_equal "", card.number
   end
   
-  def test_type_is_aliased_as_brand
-    assert_equal @visa.type, @visa.brand
-    assert_equal @solo.type, @solo.brand
+  def test_brand_is_aliased_as_type
+    assert_deprecation_warning("CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead.", CreditCard) do
+      assert_equal @visa.type, @visa.brand
+    end
+    assert_deprecation_warning("CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead.", CreditCard) do
+      assert_equal @solo.type, @solo.brand
+    end
   end
 end

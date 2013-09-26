@@ -50,6 +50,19 @@ class RemoteSkipJackTest < Test::Unit::TestCase
     capture = @gateway.capture(@amount, authorization.authorization)
     assert_success capture
   end
+
+  def test_successful_authorization_and_partial_capture
+    @amount = 2000
+    authorization = @gateway.authorize(@amount, @credit_card, @options)
+    
+    assert_success authorization
+    assert_false authorization.authorization.blank?
+    
+    capture = @gateway.capture(1000, authorization.authorization)
+
+    assert_success capture
+    assert_equal "1000", capture.params["TransactionAmount"]
+  end
   
   def test_authorization_and_void
     authorization = @gateway.authorize(101, @credit_card, @options)

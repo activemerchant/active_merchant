@@ -5,7 +5,7 @@ class RemoteBraintreeTest < Test::Unit::TestCase
     @gateway = InspireGateway.new(fixtures(:inspire))
 
     @amount = rand(10000) + 1001
-    @credit_card = credit_card('4111111111111111', :type => 'visa')
+    @credit_card = credit_card('4111111111111111', :brand => 'visa')
     @declined_amount = rand(99)
     @options = {  :order_id => generate_unique_id,
                   :billing_address => address

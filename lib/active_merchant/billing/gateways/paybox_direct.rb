@@ -1,11 +1,11 @@
-require 'iconv'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PayboxDirectGateway < Gateway
-      TEST_URL = 'https://preprod-ppps.paybox.com/PPPS.php'
-      LIVE_URL = 'https://ppps.paybox.com/PPPS.php'
-      LIVE_URL_BACKUP = 'https://ppps1.paybox.com/PPPS.php'
+      class_attribute :live_url_backup
+
+      self.test_url   = 'https://preprod-ppps.paybox.com/PPPS.php'
+      self.live_url   = 'https://ppps.paybox.com/PPPS.php'
+      self.live_url_backup = 'https://ppps1.paybox.com/PPPS.php'
 
       # Payment API Version
       API_VERSION = '00103'
@@ -39,7 +39,6 @@ module ActiveMerchant #:nodoc:
 
       SUCCESS_CODES = ['00000']
       UNAVAILABILITY_CODES = ['00001', '00097', '00098']
-      FRAUD_CODES = ['00102','00104','00105','00134','00138','00141','00143','00156','00157','00159']
       SUCCESS_MESSAGE = 'The transaction was approved'
       FAILURE_MESSAGE = 'The transaction failed'
 
@@ -61,7 +60,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
       end
 
@@ -110,10 +108,6 @@ module ActiveMerchant #:nodoc:
         commit('refund', money, post)
       end
 
-      def test?
-        @options[:test] || Base.gateway_mode == :test
-      end
-
       private
 
       def add_invoice(post, options)
@@ -132,7 +126,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        body = Iconv.iconv("UTF-8","LATIN1", body.to_s).join
         results = {}
         body.split(/&/).each do |pair|
           key,val = pair.split(/\=/)
@@ -145,23 +138,19 @@ module ActiveMerchant #:nodoc:
         parameters[:montant] = ('0000000000' + (money ? amount(money) : ''))[-10..-1]
         parameters[:devise] = CURRENCY_CODES[options[:currency] || currency(money)]
         request_data = post_data(action,parameters)
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request_data))
-        response = parse(ssl_post(LIVE_URL_BACKUP, request_data)) if service_unavailable?(response) && !test?
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, request_data))
+        response = parse(ssl_post(self.live_url_backup, request_data)) if service_unavailable?(response) && !test?
         Response.new(success?(response), message_from(response), response.merge(
           :timestamp => parameters[:dateq]),
           :test => test?,
           :authorization => response[:numappel].to_s + response[:numtrans].to_s,
-          :fraud_review => fraud_review?(response),
+          :fraud_review => false,
           :sent_params => parameters.delete_if{|key,value| ['porteur','dateval','cvv'].include?(key.to_s)}
         )
       end
 
       def success?(response)
         SUCCESS_CODES.include?(response[:codereponse])
-      end
-
-      def fraud_review?(response)
-        FRAUD_CODES.include?(response[:codereponse])
       end
 
       def service_unavailable?(response)

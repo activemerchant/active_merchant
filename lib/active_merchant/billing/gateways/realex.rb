@@ -1,4 +1,4 @@
-require 'rexml/document'
+require 'nokogiri'
 require 'digest/sha1'
 
 module ActiveMerchant
@@ -19,7 +19,7 @@ module ActiveMerchant
     # so if validation fails you can not correct and resend using the
     # same order id
     class RealexGateway < Gateway
-      URL = 'https://epage.payandshop.com/epage-remote.cgi'
+      self.live_url = self.test_url = 'https://epage.payandshop.com/epage-remote.cgi'
 
       CARD_MAPPING = {
         'master'            => 'MC',
@@ -34,7 +34,7 @@ module ActiveMerchant
       self.money_format = :cents
       self.default_currency = 'EUR'
       self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :switch, :solo, :laser ]
-      self.supported_countries = [ 'IE', 'GB' ]
+      self.supported_countries = %w(IE GB FR BE NL LU IT)
       self.homepage_url = 'http://www.realexpayments.com/'
       self.display_name = 'Realex'
 
@@ -45,7 +45,6 @@ module ActiveMerchant
       def initialize(options = {})
         requires!(options, :login, :password)
         options[:refund_hash] = Digest::SHA1.hexdigest(options[:rebate_secret]) if options.has_key?(:rebate_secret)
-        @options = options
         super
       end
 
@@ -85,7 +84,7 @@ module ActiveMerchant
 
       private
       def commit(request)
-        response = parse(ssl_post(URL, request))
+        response = parse(ssl_post(self.live_url, request))
 
         Response.new(response[:result] == "00", message_from(response), response,
           :test => response[:message] =~ /\[ test system \]/,
@@ -101,9 +100,8 @@ module ActiveMerchant
       def parse(xml)
         response = {}
 
-        xml = REXML::Document.new(xml)
-        xml.elements.each('//response/*') do |node|
-
+        doc = Nokogiri::XML(xml)
+        doc.xpath('//response/*').each do |node|
           if (node.elements.size == 0)
             response[node.name.downcase.to_sym] = normalize(node.text)
           else
@@ -112,8 +110,7 @@ module ActiveMerchant
               response[name.to_sym] = normalize(childnode.text)
             end
           end
-
-        end unless xml.root.nil?
+        end unless doc.root.nil?
 
         response
       end
@@ -190,7 +187,7 @@ module ActiveMerchant
 
           if billing_address
             xml.tag! 'address', 'type' => 'billing' do
-              xml.tag! 'code', avs_input_code( billing_address )
+              xml.tag! 'code', format_shipping_zip_code(billing_address[:zip])
               xml.tag! 'country', billing_address[:country]
             end
           end
@@ -243,17 +240,8 @@ module ActiveMerchant
         end
       end
 
-      def avs_input_code(address)
-        address.values_at(:zip, :address1).map{ |v| extract_digits(v) }.join('|')
-      end
-
       def format_shipping_zip_code(zip)
         zip.to_s.gsub(/\W/, '')
-      end
-
-      def extract_digits(string)
-        return "" if string.nil?
-        string.gsub(/[\D]/,'')
       end
 
       def new_timestamp

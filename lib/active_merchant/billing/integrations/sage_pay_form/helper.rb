@@ -6,13 +6,13 @@ module ActiveMerchant #:nodoc:
       module SagePayForm
         class Helper < ActiveMerchant::Billing::Integrations::Helper
           include Encryption
-          
+
           mapping :credential2, 'EncryptKey'
-          
+
           mapping :account, 'Vendor'
           mapping :amount, 'Amount'
           mapping :currency, 'Currency'
-        
+
           mapping :order, 'VendorTxCode'
 
           mapping :customer,
@@ -41,6 +41,8 @@ module ActiveMerchant #:nodoc:
           mapping :return_url, 'SuccessURL'
           mapping :description, 'Description'
 
+          class_attribute :referrer_id
+
           def shipping_address(params = {})
             @shipping_address_set = true unless params.empty?
 
@@ -64,19 +66,24 @@ module ActiveMerchant #:nodoc:
 
             fields['FailureURL'] ||= fields['SuccessURL']
 
+            fields['BillingPostCode'] ||= "0000"
+            fields['DeliveryPostCode'] ||= "0000"
+
             crypt_skip = ['Vendor', 'EncryptKey', 'SendEmail']
             crypt_skip << 'BillingState'  unless fields['BillingCountry']  == 'US'
             crypt_skip << 'DeliveryState' unless fields['DeliveryCountry'] == 'US'
             crypt_skip << 'CustomerEMail' unless fields['SendEmail']
             key = fields['EncryptKey']
             @crypt ||= create_crypt_field(fields.except(*crypt_skip), key)
-            
-            {
+
+            result = {
               'VPSProtocol' => '2.23',
               'TxType' => 'PAYMENT',
               'Vendor' => @fields['Vendor'],
               'Crypt'  => @crypt
             }
+            result['ReferrerID'] = referrer_id if referrer_id
+            result
           end
 
           private
@@ -89,7 +96,7 @@ module ActiveMerchant #:nodoc:
 
           def sanitize(key, value)
             reject = exact = nil
-            
+
             case key
             when /URL$/
               # allow all
@@ -107,10 +114,12 @@ module ActiveMerchant #:nodoc:
               exact = /^[A-Z]{3}$/
             when /State$/
               exact = /^[A-Z]{2}$/
+            when 'Description'
+              value = value[0...100]
             else
               reject = /&+/
             end
-            
+
             if exact
               raise ArgumentError, "Invalid value for #{key}: #{value.inspect}" unless value =~ exact
               value

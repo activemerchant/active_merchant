@@ -1,20 +1,8 @@
-source :rubygems
+source 'https://rubygems.org'
 gemspec
 
-group :test do
-  gem 'json-jruby', :platforms => :jruby
-  gem 'jruby-openssl', :platforms => :jruby
+gem 'builder', '~> 3.0'
+gem 'activesupport', '~> 3.2'
+gem 'rails', '~> 3.2'
 
-  # gateway-specific dependencies, keeping these gems out of the gemspec
-  gem 'samurai', '>= 0.2.25'
-end
-
-group :remote_test do
-  gem 'mechanize'
-  gem 'launchy'
-  gem 'mongrel', '1.2.0.pre2', :platforms => :ruby
-
-  # gateway-specific dependencies, keeping these gems out of the gemspec
-  gem 'samurai', '>= 0.2.25'
-end
-
+eval File.read(File.expand_path("../Gemfile_common", __FILE__))

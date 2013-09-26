@@ -5,22 +5,22 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SkipJackGateway < Gateway
       API_VERSION = '?.?'
-      
-      LIVE_HOST = "https://www.skipjackic.com" 
-      TEST_HOST = "https://developer.skipjackic.com"
-      
+
+      self.live_url = "https://www.skipjackic.com"
+      self.test_url = "https://developer.skipjackic.com"
+
       BASIC_PATH = "/scripts/evolvcc.dll"
       ADVANCED_PATH = "/evolvcc/evolvcc.aspx"
-      
+
       ACTIONS = {
         :authorization => 'AuthorizeAPI',
         :change_status => 'SJAPI_TransactionChangeStatusRequest',
         :get_status => 'SJAPI_TransactionStatusRequest'
       }
-      
+
       SUCCESS_MESSAGE = 'The transaction was successful.'
-      
-      MONETARY_CHANGE_STATUSES = ['AUTHORIZE', 'AUTHORIZE ADDITIONAL', 'CREDIT', 'SPLITSETTLE']
+
+      MONETARY_CHANGE_STATUSES = ['SETTLE', 'AUTHORIZE', 'AUTHORIZE ADDITIONAL', 'CREDIT', 'SPLITSETTLE']
 
       CARD_CODE_ERRORS = %w( N S "" )
 
@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
         '4' => 'Pending Manual Settlement',
         '5' => 'Pending Recurring'
       }
-      
+
       RETURN_CODE_MESSAGES = {
         '-1' => 'Data was not by received intact by Skipjack Transaction Network.',
         '0' => 'Communication Failure. Error in Request and Response at IP level.',
@@ -161,17 +161,17 @@ module ActiveMerchant #:nodoc:
         '-116' => 'POS Check Invalid Lane Number POS Check lane or cash register number is invalid. Use a valid lane or cash register number that has been configured in the Skipjack Merchant Account.',
         '-117' => 'POS Check Invalid Cashier Number'
       }
-      
+
       self.supported_countries = ['US', 'CA']
       self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :discover, :diners_club]
       self.homepage_url = 'http://www.skipjack.com/'
       self.display_name = 'SkipJack'
 
       # Creates a new SkipJackGateway
-      # 
+      #
       # The gateway requires that a valid login and password be passed
       # in the +options+ hash.
-      # 
+      #
       # ==== Options
       #
       # * <tt>:login</tt> -- The SkipJack Merchant Serial Number.
@@ -181,14 +181,9 @@ module ActiveMerchant #:nodoc:
       # See the SkipJack Integration Guide for details. (default: +false+)
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
       end
-      
-      def test?
-        @options[:test] || super
-      end
-    
+
       def authorize(money, creditcard, options = {})
         requires!(options, :order_id, :email)
         post = {}
@@ -210,13 +205,13 @@ module ActiveMerchant #:nodoc:
       end
 
       # Captures the funds from an authorized transaction.
-      # 
+      #
       # ==== Parameters
       #
       # * <tt>money</tt> -- The amount to be capture as an Integer in cents.
       # * <tt>authorization</tt> -- The authorization returned from the previous authorize request.
       # * <tt>options</tt> -- A hash of optional parameters.
-      # 
+      #
       # ==== Options
       #
       # * <tt>:force_settlement</tt> -- Force the settlement to occur as soon as possible. This option is not supported by other gateways. See the SkipJack API reference for more details
@@ -252,24 +247,24 @@ module ActiveMerchant #:nodoc:
       def status(order_id)
         commit(:get_status, nil, :szOrderNumber => order_id)
       end
-      
+
       private
-      
+
       def advanced?
         @options[:advanced]
       end
-      
+
       def add_forced_settlement(post, options)
         post[:szForceSettlement] = options[:force_settlment] ? 1 : 0
       end
-      
+
       def add_status_action(post, action)
         post[:szDesiredStatus] = action
       end
-      
+
       def commit(action, money, parameters)
         response = parse( ssl_post( url_for(action), post_data(action, money, parameters) ), action )
-        
+
         # Pass along the original transaction id in the case an update transaction
         Response.new(response[:success], message_from(response, action), response,
           :test => test?,
@@ -278,13 +273,13 @@ module ActiveMerchant #:nodoc:
           :cvv_result => response[:szCVV2ResponseCode]
         )
       end
-      
+
       def url_for(action)
-        result = test? ? TEST_HOST : LIVE_HOST
+        result = test? ? self.test_url : self.live_url
         result += advanced? && action == :authorization ? ADVANCED_PATH : BASIC_PATH
         result += "?#{ACTIONS[action]}"
       end
-      
+
       def add_credentials(params, action)
         if action == :authorization
           params[:SerialNumber] = @options[:login]
@@ -294,7 +289,7 @@ module ActiveMerchant #:nodoc:
           params[:szDeveloperSerialNumber] = @options[:password]
         end
       end
-      
+
       def add_amount(params, action, money)
         if action == :authorization
           params[:TransactionAmount] = amount(money)
@@ -313,7 +308,7 @@ module ActiveMerchant #:nodoc:
           parse_status_response(body, [ :SerialNumber, :TransactionAmount, :DesiredStatus, :StatusResponse, :StatusResponseMessage, :OrderNumber, :AuditID ])
         end
       end
-      
+
       def split_lines(body)
         body.split(/[\r\n]+/)
       end
@@ -321,13 +316,13 @@ module ActiveMerchant #:nodoc:
       def split_line(line)
         line.split(/","/).collect { |key| key.sub(/"*([^"]*)"*/, '\1').strip; }
       end
-      
+
       def authorize_response_map(body)
         lines = split_lines(body)
         keys, values = split_line(lines[0]), split_line(lines[1])
         Hash[*(keys.zip(values).flatten)].symbolize_keys
       end
-      
+
       def parse_authorization_response(body)
         result = authorize_response_map(body)
         result[:success] = (result[:szIsApproved] == '1')
@@ -374,7 +369,7 @@ module ActiveMerchant #:nodoc:
         post[:CustomerCode] = options[:customer].to_s.slice(0, 17)
         post[:InvoiceNumber] = options[:invoice]
         post[:OrderDescription] = options[:description]
-        
+
         if order_items = options[:items]
           post[:OrderString] = order_items.collect { |item| "#{item[:sku]}~#{item[:description].tr('~','-')}~#{item[:declared_value]}~#{item[:quantity]}~#{item[:taxable]}~~~~~~~~#{item[:tax_rate]}~||"}.join
         else
@@ -399,25 +394,25 @@ module ActiveMerchant #:nodoc:
           post[:StreetAddress]  = address[:address1]
           post[:StreetAddress2] = address[:address2]
           post[:City]           = address[:city]
-          post[:State]          = address[:state]
+          post[:State]          = address[:state] || 'XX'
           post[:ZipCode]        = address[:zip]
           post[:Country]        = address[:country]
           post[:Phone]          = address[:phone]
           post[:Fax]            = address[:fax]
         end
-        
+
         if address = options[:shipping_address]
           post[:ShipToName]           = address[:name]
           post[:ShipToStreetAddress]  = address[:address1]
           post[:ShipToStreetAddress2] = address[:address2]
           post[:ShipToCity]           = address[:city]
-          post[:ShipToState]          = address[:state]
+          post[:ShipToState]          = address[:state] || 'XX'
           post[:ShipToZipCode]        = address[:zip]
           post[:ShipToCountry]        = address[:country]
           post[:ShipToPhone]          = address[:phone]
           post[:ShipToFax]            = address[:fax]
         end
-        
+
         # The phone number for the shipping address is required
         # Use the billing address phone number if a shipping address
         # phone number wasn't provided
@@ -449,7 +444,7 @@ module ActiveMerchant #:nodoc:
       def message_from_status(response)
         response[:success] ? SUCCESS_MESSAGE : response[:szErrorMessage]
       end
-      
+
       def sanitize_order_id(value)
         value.to_s.gsub(/[^\w.]/, '')
       end

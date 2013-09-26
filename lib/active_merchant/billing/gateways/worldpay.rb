@@ -1,13 +1,13 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayGateway < Gateway
-      TEST_URL = 'https://secure-test.wp3.rbsworldpay.com/jsp/merchant/xml/paymentService.jsp'
-      LIVE_URL = 'https://secure.wp3.rbsworldpay.com/jsp/merchant/xml/paymentService.jsp'
+      self.test_url = 'https://secure-test.worldpay.com/jsp/merchant/xml/paymentService.jsp'
+      self.live_url = 'https://secure.worldpay.com/jsp/merchant/xml/paymentService.jsp'
 
       self.default_currency = 'GBP'
       self.money_format = :cents
-      self.supported_countries = ['HK', 'US', 'GB', 'AU']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro]
+      self.supported_countries = %w(HK US GB AU AD BE CH CY CZ DE DK ES FI FR GI GR HU IE IL IT LI LU MC MT NL NO NZ PL PT SE SG SI SM TR UM VA)
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :laser]
       self.homepage_url = 'http://www.worldpay.com/'
       self.display_name = 'WorldPay'
 
@@ -16,56 +16,79 @@ module ActiveMerchant #:nodoc:
         'master'           => 'ECMC-SSL',
         'discover'         => 'DISCOVER-SSL',
         'american_express' => 'AMEX-SSL',
+        'jcb'              => 'JCB-SSL',
+        'maestro'          => 'MAESTRO-SSL',
+        'laser'            => 'LASER-SSL',
+        'diners_club'      => 'DINERS-SSL'
       }
 
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
       end
 
       def purchase(money, payment_method, options = {})
-        response = MultiResponse.new
-        response << authorize(money, payment_method, options)
-        response << capture(money, response.authorization, :authorization_validated => true) if response.success?
-        response
+        MultiResponse.run do |r|
+          r.process{authorize(money, payment_method, options)}
+          r.process{capture(money, r.authorization, options.merge(:authorization_validated => true))}
+        end
       end
 
       def authorize(money, payment_method, options = {})
         requires!(options, :order_id)
-        commit 'authorize', build_authorization_request(money, payment_method, options)
+        authorize_request(money, payment_method, options)
       end
 
       def capture(money, authorization, options = {})
-        response = MultiResponse.new
-        response << inquire(authorization, options) unless options[:authorization_validated]
-        response << commit('capture', build_capture_request(money, authorization, options)) if response.success?
-        response
+        MultiResponse.run do |r|
+          r.process{inquire_request(authorization, options, "AUTHORISED")} unless options[:authorization_validated]
+          if r.params
+            authorization_currency = r.params['amount_currency_code']
+            options = options.merge(:currency => authorization_currency) if authorization_currency.present?
+          end
+          r.process{capture_request(money, authorization, options)}
+        end
       end
 
       def void(authorization, options = {})
-        response = MultiResponse.new
-        response << inquire(authorization, options)
-        response << commit('cancel', build_void_request(authorization, options)) if response.success?
-        response        
+        MultiResponse.run do |r|
+          r.process{inquire_request(authorization, options, "AUTHORISED")}
+          r.process{cancel_request(authorization, options)}
+        end
       end
 
       def refund(money, authorization, options = {})
-        response = MultiResponse.new
-        response << inquire(authorization, options)
-        response << commit('refund', build_refund_request(money, authorization, options)) if response.success?
-        response        
+        MultiResponse.run do |r|
+          r.process{inquire_request(authorization, options, "CAPTURED", "SETTLED")}
+          r.process{refund_request(money, authorization, options)}
+        end
       end
 
       private
 
-      def inquire(authorization, options={})
-        commit 'inquiry', build_order_inquiry_request(authorization, options)
+      def authorize_request(money, payment_method, options)
+        commit('authorize', build_authorization_request(money, payment_method, options), "AUTHORISED")
+      end
+
+      def capture_request(money, authorization, options)
+        commit('capture', build_capture_request(money, authorization, options), :ok)
+      end
+
+      def cancel_request(authorization, options)
+        commit('cancel', build_void_request(authorization, options), :ok)
+      end
+
+      def inquire_request(authorization, options, *success_criteria)
+        commit('inquiry', build_order_inquiry_request(authorization, options), *success_criteria)
+      end
+
+      def refund_request(money, authorization, options)
+        commit('refund', build_refund_request(money, authorization, options), :ok)
       end
 
       def build_request
         xml = Builder::XmlMarkup.new :indent => 2
-        xml.instruct!
+        xml.instruct! :xml, :encoding => 'ISO-8859-1'
         xml.declare! :DOCTYPE, :paymentService, :PUBLIC, "-//WorldPay//DTD WorldPay PaymentService v1//EN", "http://dtd.wp3.rbsworldpay.com/paymentService_v1.dtd"
         xml.tag! 'paymentService', 'version' => "1.4", 'merchantCode' => @options[:login] do
           yield xml
@@ -127,16 +150,26 @@ module ActiveMerchant #:nodoc:
       def build_refund_request(money, authorization, options)
         build_order_modify_request(authorization) do |xml|
           xml.tag! 'refund' do
-            add_amount(xml, money, options)
+            add_amount(xml, money, options.merge(:debit_credit_indicator => "credit"))
           end
         end
       end
 
       def add_amount(xml, money, options)
-        xml.tag! 'amount',
-          :value => amount(money),
-          'currencyCode' => (options[:currency] || currency(money)),
+        currency = options[:currency] || currency(money)
+        amount   = localized_amount(money, currency)
+
+        amount_hash = {
+          :value => amount,
+          'currencyCode' => currency,
           'exponent' => 2
+        }
+
+        if options[:debit_credit_indicator]
+          amount_hash.merge!('debitCreditIndicator' => options[:debit_credit_indicator])
+        end
+
+        xml.tag! 'amount', amount_hash
       end
 
       def add_payment_method(xml, amount, payment_method, options)
@@ -204,17 +237,14 @@ module ActiveMerchant #:nodoc:
         raw
       end
 
-      def commit(action, request)
-        xmr = ssl_post((test? ? TEST_URL : LIVE_URL),
-          request,
-          'Content-Type' => 'text/xml',
-          'Authorization' => encoded_credentials)
-
+      def commit(action, request, *success_criteria)
+        xmr = ssl_post(url, request, 'Content-Type' => 'text/xml', 'Authorization' => encoded_credentials)
         raw = parse(action, xmr)
+        success, message = success_and_message_from(raw, success_criteria)
 
         Response.new(
-          success_from(raw),
-          message_from(raw),
+          success,
+          message,
           raw,
           :authorization => authorization_from(raw),
           :test => test?)
@@ -227,15 +257,29 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def success_from(raw)
-        (raw[:last_event] == "AUTHORISED" ||
-          raw[:ok].present?)
+      def url
+        test? ? self.test_url : self.live_url
       end
 
-      def message_from(raw)
-        (raw[:iso8583_return_code_description] ||
-          raw[:error] ||
-          "SUCCESS")
+      # success_criteria can be:
+      #   - a string or an array of strings (if one of many responses)
+      #   - An array of strings if one of many responses could be considered a
+      #     success.
+      def success_and_message_from(raw, success_criteria)
+        success = (success_criteria.include?(raw[:last_event]) || raw[:ok].present?)
+        if success
+          message = "SUCCESS"
+        else
+          message = (raw[:iso8583_return_code_description] || raw[:error] || required_status_message(raw, success_criteria))
+        end
+
+        [ success, message ]
+      end
+
+      def required_status_message(raw, success_criteria)
+        if(!success_criteria.include?(raw[:last_event]))
+          "A transaction status of #{success_criteria.collect{|c| "'#{c}'"}.join(" or ")} is required."
+        end
       end
 
       def authorization_from(raw)
@@ -248,32 +292,11 @@ module ActiveMerchant #:nodoc:
         "Basic #{[credentials].pack('m').strip}"
       end
 
-      class MultiResponse < Response
-        attr_reader :responses
+      def localized_amount(money, currency)
+        amount = amount(money)
+        return amount unless CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
 
-        def initialize
-          @responses = []
-        end
-
-        def <<(response)
-          if response.is_a?(MultiResponse)
-            response.responses.each{|r| @responses << r}
-          else
-            @responses << response
-          end
-        end
-
-        def success?
-          @responses.all?{|r| r.success?}
-        end
-
-        %w(params message test authorization avs_result cvv_result test? fraud_review?).each do |m|
-          class_eval %(
-            def #{m}
-              @responses.last.#{m}
-            end
-          )
-        end
+        amount.to_i / 100 * 100
       end
     end
   end

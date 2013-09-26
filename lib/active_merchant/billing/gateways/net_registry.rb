@@ -22,12 +22,12 @@ module ActiveMerchant
     # response will contain a 'receipt' parameter
     # (response.params['receipt']) if a receipt was issued by the gateway.
     class NetRegistryGateway < Gateway
-      URL = 'https://4tknox.au.com/cgi-bin/themerchant.au.com/ecom/external2.pl'
-      
+      self.live_url = self.test_url = 'https://4tknox.au.com/cgi-bin/themerchant.au.com/ecom/external2.pl'
+
       FILTERED_PARAMS = [ 'card_no', 'card_expiry', 'receipt_array' ]
-      
+
       self.supported_countries = ['AU']
-      
+
       # Note that support for Diners, Amex, and JCB require extra
       # steps in setting up your account, as detailed in
       # "Programming for NetRegistry's E-commerce Gateway."
@@ -35,21 +35,20 @@ module ActiveMerchant
       self.supported_cardtypes = [:visa, :master, :diners_club, :american_express, :jcb]
       self.display_name = 'NetRegistry'
       self.homepage_url = 'http://www.netregistry.com.au'
-      
+
       TRANSACTIONS = {
         :authorization => 'preauth',
         :purchase => 'purchase',
         :capture => 'completion',
         :status => 'status',
-        :credit => 'refund'
+        :refund => 'refund'
       }
-      
+
       # Create a new NetRegistry gateway.
       #
       # Options :login and :password must be given.
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
       end
 
@@ -95,15 +94,20 @@ module ActiveMerchant
         commit(:purchase, params)
       end
 
-      def credit(money, identification, options = {})
+      def refund(money, identification, options = {})
         params = {
           'AMOUNT'  => amount(money),
           'TXNREF'  => identification
         }
         add_request_details(params, options)
-        commit(:credit, params)
+        commit(:refund, params)
       end
-      
+
+      def credit(money, identification, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, identification, options)
+      end
+
       # Specific to NetRegistry.
       #
       # Run a 'status' command.  This lets you view the status of a
@@ -113,7 +117,7 @@ module ActiveMerchant
         params = {
           'TXNREF'  => identification
         }
-        
+
         commit(:status, params)
       end
 
@@ -121,7 +125,7 @@ module ActiveMerchant
       def add_request_details(params, options)
         params['COMMENT'] = options[:description] unless options[:description].blank?
       end
-      
+
       # Return the expiry for the given creditcard in the required
       # format for a command.
       def expiry(credit_card)
@@ -137,45 +141,45 @@ module ActiveMerchant
       # omitted if nil.
       def commit(action, params)
         # get gateway response
-        response = parse( ssl_post(URL, post_data(action, params)) )
-        
-        Response.new(response['status'] == 'approved', message_from(response), response,          
+        response = parse( ssl_post(self.live_url, post_data(action, params)) )
+
+        Response.new(response['status'] == 'approved', message_from(response), response,
           :authorization => authorization_from(response, action)
         )
       end
-      
+
       def post_data(action, params)
         params['COMMAND'] = TRANSACTIONS[action]
         params['LOGIN'] = "#{@options[:login]}/#{@options[:password]}"
         URI.encode(params.map{|k,v| "#{k}=#{v}"}.join('&'))
       end
-      
+
       def parse(response)
         params = {}
-        
+
         lines = response.split("\n")
-        
+
         # Just incase there is no real response returned
         params['status'] = lines[0]
         params['response_text'] = lines[1]
-        
+
         started = false
-        lines.each do |line|          
+        lines.each do |line|
           if started
             key, val = line.chomp.split(/=/, 2)
             params[key] = val unless FILTERED_PARAMS.include?(key)
           end
-          
+
           started = line.chomp =~ /^\.$/ unless started
         end
-        
+
         params
       end
-      
+
       def message_from(response)
         response['response_text']
       end
-      
+
       def authorization_from(response, command)
         case command
         when :purchase

@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
     # * You can exclude CVV with :ignore_cvv => true
     # * All transactions use dollar values.
     class QuantumGateway < Gateway
-      LIVE_URL = 'https://secure.quantumgateway.com/cgi/xml_requester.php'
+      self.live_url = self.test_url = 'https://secure.quantumgateway.com/cgi/xml_requester.php'
 
       # visa, master, american_express, discover
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -37,13 +37,7 @@ module ActiveMerchant #:nodoc:
       #
       def initialize(options = {})
         requires!(options, :login, :password)
-        @options = options
         super
-      end
-
-      # Should run against the test servers or not?
-      def test?
-        @options[:test] || Base.gateway_mode == :test
       end
 
       # Request an authorization for an amount from CyberSource
@@ -210,7 +204,7 @@ module ActiveMerchant #:nodoc:
       # Contact CyberSource, make the SOAP request, and parse the reply into a Response object
       def commit(request, options)
         headers = { 'Content-Type' => 'text/xml' }
-        response = parse(ssl_post(LIVE_URL, build_request(request, options), headers))
+        response = parse(ssl_post(self.live_url, build_request(request, options), headers))
 
         success = response[:request_status] == "Success"
         message = response[:request_message]
@@ -268,11 +262,11 @@ module ActiveMerchant #:nodoc:
         end
         return reply
       end
-      
+
       def authorization_for(reply)
         "#{reply[:TransactionID]};#{reply[:CreditCardNumber]}"
       end
-      
+
       def authorization_parts_from(authorization)
         authorization.split(/;/)
       end

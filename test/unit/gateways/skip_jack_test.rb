@@ -204,10 +204,34 @@ class SkipJackTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     
-    @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', "szTransactionId=#{response.authorization}&szSerialNumber=X&szForceSettlement=0&szDeveloperSerialNumber=Y&szDesiredStatus=SETTLE").returns(successful_capture_response)
+    @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', "szTransactionId=#{response.authorization}&szSerialNumber=X&szForceSettlement=0&szDeveloperSerialNumber=Y&szDesiredStatus=SETTLE&szAmount=1.00").returns(successful_capture_response)
     assert response = @gateway.capture(@amount, response.authorization)    
   end
   
+  def test_successful_partial_capture
+    @amount = 200
+    @gateway.expects(:ssl_post).returns(successful_authorization_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+
+    @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', "szTransactionId=#{response.authorization}&szSerialNumber=X&szForceSettlement=0&szDeveloperSerialNumber=Y&szDesiredStatus=SETTLE&szAmount=1.00").returns(successful_capture_response)
+    assert response = @gateway.capture(@amount/2, response.authorization)
+    assert_equal "1.0000", response.params["TransactionAmount"]
+  end
+
+  def test_dont_send_blank_state
+    @billing_address[:state] = nil
+    @shipping_address[:state] = nil
+    @options[:billing_address] = @billing_address
+    @options[:shipping_address] = @shipping_address
+    @gateway.expects(:ssl_post).with do |url, params|
+      url == 'https://developer.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI' &&
+      CGI.parse(params)['State'].first == 'XX' &&
+      CGI.parse(params)['ShipToState'].first == 'XX'
+    end.returns(successful_authorization_response)
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+  end
+
   private
   def successful_authorization_response
     <<-CSV

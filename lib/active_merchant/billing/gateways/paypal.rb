@@ -1,15 +1,17 @@
 require File.dirname(__FILE__) + '/paypal/paypal_common_api'
+require File.dirname(__FILE__) + '/paypal/paypal_recurring_api'
 require File.dirname(__FILE__) + '/paypal_express'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaypalGateway < Gateway
       include PaypalCommonAPI
+      include PaypalRecurringApi
       
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.supported_countries = ['US']
-      self.homepage_url = 'https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside'
-      self.display_name = 'PayPal Website Payments Pro (US)'
+      self.homepage_url = 'https://www.paypal.com/us/webapps/mpp/paypal-payments-pro'
+      self.display_name = 'PayPal Payments Pro (US)'
       
       def authorize(money, credit_card_or_referenced_id, options = {})
         requires!(options, :ip)
@@ -49,24 +51,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:' + transaction_type + 'RequestDetails' do
               xml.tag! 'n2:ReferenceID', reference_id if transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:PaymentAction', action
-              xml.tag! 'n2:PaymentDetails' do
-                xml.tag! 'n2:OrderTotal', localized_amount(money, currency_code), 'currencyID' => currency_code
-                
-                # All of the values must be included together and add up to the order total
-                if [:subtotal, :shipping, :handling, :tax].all?{ |o| options.has_key?(o) }
-                  xml.tag! 'n2:ItemTotal', localized_amount(options[:subtotal], currency_code), 'currencyID' => currency_code
-                  xml.tag! 'n2:ShippingTotal', localized_amount(options[:shipping], currency_code),'currencyID' => currency_code
-                  xml.tag! 'n2:HandlingTotal', localized_amount(options[:handling], currency_code),'currencyID' => currency_code
-                  xml.tag! 'n2:TaxTotal', localized_amount(options[:tax], currency_code), 'currencyID' => currency_code
-                end
-                
-                xml.tag! 'n2:NotifyURL', options[:notify_url]
-                xml.tag! 'n2:OrderDescription', options[:description]
-                xml.tag! 'n2:InvoiceID', options[:order_id]
-                xml.tag! 'n2:ButtonSource', application_id.to_s.slice(0,32) unless application_id.blank? 
-                
-                add_address(xml, 'n2:ShipToAddress', options[:shipping_address]) if options[:shipping_address]
-              end
+              add_payment_details(xml, money, currency_code, options)
               add_credit_card(xml, credit_card_or_referenced_id, billing_address, options) unless transaction_type == 'DoReferenceTransaction'
               xml.tag! 'n2:IPAddress', options[:ip]
             end

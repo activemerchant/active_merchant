@@ -17,7 +17,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     @mastercard          = credit_card('5100000010001004')
     @declined_mastercard = credit_card('5100000020002000')
     
-    @amex                = credit_card('371100001000131')
+    @amex                = credit_card('371100001000131', {:verification_value => 1234})
     @declined_amex       = credit_card('342400001000180')
     
     # Canadian EFT
@@ -47,6 +47,10 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
       :tax2 => 100,
       :custom => 'reference one'
     }
+
+    @recurring_options = @options.merge(
+      :interval => { :unit => :months, :length => 1 },
+      :occurences => 5)
   end
   
   def test_successful_visa_purchase
@@ -140,6 +144,33 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_success credit
   end
   
+  def test_successful_recurring
+    assert response = @gateway.recurring(@amount, @visa, @recurring_options)
+    assert_success response
+    assert response.test?
+    assert_false response.authorization.blank?
+  end
+  
+  def test_successful_update_recurring
+    assert response = @gateway.recurring(@amount, @visa, @recurring_options)
+    assert_success response
+    assert response.test?
+    assert_false response.authorization.blank?
+    
+    assert response = @gateway.update_recurring(@amount + 500, @visa, @recurring_options.merge(:account_id => response.params["rbAccountId"]))
+    assert_success response
+  end
+  
+  def test_successful_cancel_recurring
+    assert response = @gateway.recurring(@amount, @visa, @recurring_options)
+    assert_success response
+    assert response.test?
+    assert_false response.authorization.blank?
+    
+    assert response = @gateway.cancel_recurring(:account_id => response.params["rbAccountId"])
+    assert_success response
+  end
+
   def test_invalid_login
     gateway = BeanstreamGateway.new(
                 :merchant_id => '',

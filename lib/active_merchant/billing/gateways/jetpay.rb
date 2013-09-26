@@ -1,24 +1,24 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class JetpayGateway < Gateway
-      TEST_URL = 'https://test1.jetpay.com/jetpay'
-      LIVE_URL = 'https://gateway17.jetpay.com/jetpay'
-      
+      self.test_url = 'https://test1.jetpay.com/jetpay'
+      self.live_url = 'https://gateway17.jetpay.com/jetpay'
+
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US']
-      
+
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
-      
+
       # The homepage URL of the gateway
       self.homepage_url = 'http://www.jetpay.com/'
-      
+
       # The name of the gateway
       self.display_name = 'JetPay'
-      
+
       # all transactions are in cents
       self.money_format = :cents
-      
+
       ACTION_CODE_MESSAGES = {
         "001" =>  "Refer to card issuer.",
         "002" =>  "Refer to card issuer, special condition.",
@@ -61,25 +61,24 @@ module ActiveMerchant #:nodoc:
         "996" =>  "Terminal ID Not Found.",
         nil   =>  "No response returned (missing credentials?)."
       }
-      
+
       def initialize(options = {})
         requires!(options, :login)
-        @options = options
         super
-      end  
-      
+      end
+
       def purchase(money, credit_card, options = {})
         commit(money, build_sale_request(money, credit_card, options))
       end
-      
+
       def authorize(money, credit_card, options = {})
         commit(money, build_authonly_request(money, credit_card, options))
       end
-      
+
       def capture(money, reference, options = {})
         commit(money, build_capture_request('CAPT', reference.split(";").first))
       end
-      
+
       def void(reference, options = {})
         transaction_id, approval, amount = reference.split(";")
         commit(amount.to_i, build_void_request(amount.to_i, transaction_id, approval))
@@ -100,9 +99,9 @@ module ActiveMerchant #:nodoc:
         commit(money, build_credit_request('CREDIT', money, transaction_id, credit_card))
       end
 
-      
+
       private
-      
+
       def build_xml_request(transaction_type, transaction_id = nil, &block)
         xml = Builder::XmlMarkup.new
         xml.tag! 'JetPay' do
@@ -110,15 +109,15 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'TerminalID', @options[:login]
           xml.tag! 'TransactionType', transaction_type
           xml.tag! 'TransactionID', transaction_id.nil? ? generate_unique_id.slice(0, 18) : transaction_id
-          
+
           if block_given?
             yield xml
-          else 
+          else
             xml.target!
           end
         end
       end
-      
+
       def build_sale_request(money, credit_card, options)
         build_xml_request('SALE') do |xml|
           add_credit_card(xml, credit_card)
@@ -126,11 +125,11 @@ module ActiveMerchant #:nodoc:
           add_customer_data(xml, options)
           add_invoice_data(xml, options)
           xml.tag! 'TotalAmount', amount(money)
-          
+
           xml.target!
         end
       end
-      
+
       def build_authonly_request(money, credit_card, options)
         build_xml_request('AUTHONLY') do |xml|
           add_credit_card(xml, credit_card)
@@ -138,22 +137,22 @@ module ActiveMerchant #:nodoc:
           add_customer_data(xml, options)
           add_invoice_data(xml, options)
           xml.tag! 'TotalAmount', amount(money)
-          
+
           xml.target!
         end
       end
-      
+
       def build_capture_request(transaction_type, transaction_id)
         build_xml_request(transaction_type, transaction_id)
       end
-      
+
       def build_void_request(money, transaction_id, approval)
         build_xml_request('VOID', transaction_id) do |xml|
           xml.tag! 'Approval', approval
           xml.tag! 'TotalAmount', amount(money)
-          
+
           xml.target!
-        end        
+        end
       end
 
       # `transaction_id` may be nil for unlinked credit transactions.
@@ -161,37 +160,37 @@ module ActiveMerchant #:nodoc:
         build_xml_request(transaction_type, transaction_id) do |xml|
           add_credit_card(xml, card) if card
           xml.tag! 'TotalAmount', amount(money)
-          
+
           xml.target!
         end
       end
-      
+
       def commit(money, request)
-        response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request))
-        
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, request))
+
         success = success?(response)
-        Response.new(success, 
-          success ? 'APPROVED' : message_from(response), 
-          response, 
-          :test => test?, 
+        Response.new(success,
+          success ? 'APPROVED' : message_from(response),
+          response,
+          :test => test?,
           :authorization => authorization_from(response, money),
           :avs_result => { :code => response[:avs] },
           :cvv_result => response[:cvv2]
         )
       end
-      
+
       def parse(body)
         return {} if body.blank?
 
         xml = REXML::Document.new(body)
-        
+
         response = {}
         xml.root.elements.to_a.each do |node|
           parse_element(response, node)
         end
         response
       end
-      
+
       def parse_element(response, node)
         if node.has_elements?
           node.elements.each{|element| parse_element(response, element) }
@@ -199,24 +198,24 @@ module ActiveMerchant #:nodoc:
           response[node.name.underscore.to_sym] = node.text
         end
       end
-      
+
       def format_exp(value)
         format(value, :two_digits)
       end
-      
+
       def success?(response)
         response[:action_code] == "000"
       end
-      
+
       def message_from(response)
         ACTION_CODE_MESSAGES[response[:action_code]]
       end
-      
+
       def authorization_from(response, money)
         original_amount = amount(money) if money
         [ response[:transaction_id], response[:approval], original_amount ].join(";")
       end
-      
+
       def add_credit_card(xml, credit_card)
         xml.tag! 'CardNum', credit_card.number
         xml.tag! 'CardExpMonth', format_exp(credit_card.month)
@@ -230,7 +229,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'CVV2', credit_card.verification_value
         end
       end
-      
+
       def add_addresses(xml, options)
         if billing_address = options[:billing_address] || options[:address]
           xml.tag! 'BillingAddress', [billing_address[:address1], billing_address[:address2]].compact.join(" ")
@@ -240,11 +239,11 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'BillingCountry', lookup_country_code(billing_address[:country])
           xml.tag! 'BillingPhone', billing_address[:phone]
         end
-        
+
         if shipping_address = options[:shipping_address]
           xml.tag! 'ShippingInfo' do
             xml.tag! 'ShippingName', shipping_address[:name]
-            
+
             xml.tag! 'ShippingAddr' do
               xml.tag! 'Address', [shipping_address[:address1], shipping_address[:address2]].compact.join(" ")
               xml.tag! 'City', shipping_address[:city]
@@ -260,14 +259,14 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'Email', options[:email] if options[:email]
         xml.tag! 'UserIPAddress', options[:ip] if options[:ip]
       end
-      
+
       def add_invoice_data(xml, options)
         xml.tag! 'OrderNumber', options[:order_id] if options[:order_id]
         xml.tag! 'TaxAmount', amount(options[:tax]) if options[:tax]
       end
-      
+
       def lookup_country_code(code)
-        country = Country.find(code) rescue nil        
+        country = Country.find(code) rescue nil
         country && country.code(:alpha3)
       end
     end

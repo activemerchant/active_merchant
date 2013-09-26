@@ -4,10 +4,10 @@ class PaypalTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
     
-    @gateway = PaypalGateway.new(fixtures(:paypal_certificate))
+    @gateway = PaypalGateway.new(fixtures(:paypal_signature))
 
     @creditcard = CreditCard.new(
-      :type                => "visa",
+      :brand                => "visa",
       :number              => "4381258770269608", # Use a generated CC from the paypal Sandbox
       :verification_value => "000",
       :month               => 1,
@@ -103,6 +103,19 @@ class PaypalTest < Test::Unit::TestCase
     assert_equal '1.00', response.params['gross_amount']
     assert_equal 'USD', response.params['gross_amount_currency_id']
   end
+
+  def test_successful_incomplete_captures
+    auth = @gateway.authorize(100, @creditcard, @params)
+    assert_success auth
+    response = @gateway.capture(60, auth.authorization, {:complete_type => "NotComplete"})
+    assert_success response
+    assert response.params['transaction_id']
+    assert_equal '0.60', response.params['gross_amount']
+    response_2 = @gateway.capture(40, auth.authorization)
+    assert_success response_2
+    assert response_2.params['transaction_id']
+    assert_equal '0.40', response_2.params['gross_amount']
+  end
   
   # NOTE THIS SETTING: http://skitch.com/jimmybaker/nysus/payment-receiving-preferences-paypal
   # PayPal doesn't return the InvoiceID in the response, so I am unable to check for it. Looking at the transaction
@@ -128,7 +141,7 @@ class PaypalTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @creditcard, @params)
     assert_success purchase
     
-    credit = @gateway.credit(@amount, purchase.authorization, :note => 'Sorry')
+    credit = @gateway.refund(@amount, purchase.authorization, :note => 'Sorry')
     assert_success credit
     assert credit.test?
     assert_equal 'USD',  credit.params['net_refund_amount_currency_id']
@@ -175,6 +188,30 @@ class PaypalTest < Test::Unit::TestCase
     # You can only include up to 250 recipients
     recipients = (1..251).collect {|i| [100, "person#{i}@example.com"]}
     response = @gateway.transfer(*recipients)
+    assert_failure response
+  end
+
+  def test_successful_email_transfer
+    response = @gateway.purchase(@amount, @creditcard, @params)
+    assert_success response
+
+    response = @gateway.transfer([@amount, 'joe@example.com'], :receiver_type => 'EmailAddress', :subject => 'Your money', :note => 'Thanks for taking care of that')
+    assert_success response
+  end
+
+  def test_successful_userid_transfer
+    response = @gateway.purchase(@amount, @creditcard, @params)
+    assert_success response
+
+    response = @gateway.transfer([@amount, '4ET96X3PQEN8H'], :receiver_type => 'UserID', :subject => 'Your money', :note => 'Thanks for taking care of that')
+    assert_success response
+  end
+
+  def test_failed_userid_transfer
+    response = @gateway.purchase(@amount, @creditcard, @params)
+    assert_success response
+
+    response = @gateway.transfer([@amount, 'joe@example.com'], :receiver_type => 'UserID', :subject => 'Your money', :note => 'Thanks for taking care of that')
     assert_failure response
   end
   

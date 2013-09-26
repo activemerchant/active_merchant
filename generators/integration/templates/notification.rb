@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           def complete?
             params['']
-          end 
+          end
 
           def item_id
             params['']
@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
             params['']
           end
 
-          # When was this payment received by the client. 
+          # When was this payment received by the client.
           def received_at
             params['']
           end
@@ -25,10 +25,10 @@ module ActiveMerchant #:nodoc:
           def payer_email
             params['']
           end
-         
+
           def receiver_email
             params['']
-          end 
+          end
 
           def security_key
             params['']
@@ -48,21 +48,21 @@ module ActiveMerchant #:nodoc:
             params['']
           end
 
-          # Acknowledge the transaction to <%= class_name %>. This method has to be called after a new 
-          # apc arrives. <%= class_name %> will verify that all the information we received are correct and will return a 
-          # ok or a fail. 
-          # 
+          # Acknowledge the transaction to <%= class_name %>. This method has to be called after a new
+          # apc arrives. <%= class_name %> will verify that all the information we received are correct and will return a
+          # ok or a fail.
+          #
           # Example:
-          # 
+          #
           #   def ipn
           #     notify = <%= class_name %>Notification.new(request.raw_post)
           #
-          #     if notify.acknowledge 
+          #     if notify.acknowledge
           #       ... process order ... if notify.complete?
           #     else
           #       ... log possible hacking attempt ...
           #     end
-          def acknowledge      
+          def acknowledge
             payload = raw
 
             uri = URI.parse(<%= class_name %>.notification_confirmation_url)
@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
 
             request['Content-Length'] = "#{payload.size}"
             request['User-Agent'] = "Active Merchant -- http://home.leetsoft.com/am"
-            request['Content-Type'] = "application/x-www-form-urlencoded" 
+            request['Content-Type'] = "application/x-www-form-urlencoded"
 
             http = Net::HTTP.new(uri.host, uri.port)
             http.verify_mode    = OpenSSL::SSL::VERIFY_NONE unless @ssl_strict
@@ -83,14 +83,15 @@ module ActiveMerchant #:nodoc:
             raise StandardError.new("Faulty <%= class_name %> result: #{response.body}") unless ["AUTHORISED", "DECLINED"].include?(response.body)
             response.body == "AUTHORISED"
           end
- private
+
+          private
 
           # Take the posted data and move the relevant data into a hash
           def parse(post)
-            @raw = post
-            for line in post.split('&')
-              key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
-              params[key] = value
+            @raw = post.to_s
+            for line in @raw.split('&')
+              key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
+              params[key] = CGI.unescape(value)
             end
           end
         end

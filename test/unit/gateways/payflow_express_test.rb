@@ -116,7 +116,18 @@ class PayflowExpressTest < Test::Unit::TestCase
     assert_equal 'US', address['country']
     assert_nil address['phone']
   end
-  
+
+  def test_get_express_details_with_invalid_xml
+    @gateway.expects(:ssl_post).returns(successful_get_express_details_response(:street => "Main & Magic"))
+    response = @gateway.details_for('EC-2OPN7UJGFWK9OYFV')
+    assert_instance_of PayflowExpressResponse, response
+    assert_success response
+    assert response.test?
+
+    assert address = response.address
+    assert_equal 'Main  Magic', address['address1']
+  end
+
   def test_button_source
     xml = Builder::XmlMarkup.new
     @gateway.send(:add_paypal_details, xml, {})
@@ -126,7 +137,7 @@ class PayflowExpressTest < Test::Unit::TestCase
   
   private
   
-  def successful_get_express_details_response
+  def successful_get_express_details_response(options={:street => "111 Main St."})
     <<-RESPONSE
 <XMLPayResponse xmlns='http://www.verisign.com/XMLPay'>
   <ResponseData>
@@ -145,7 +156,7 @@ class PayflowExpressTest < Test::Unit::TestCase
           <Name>Joe</Name>
           <ShipTo>
             <Address>
-              <Street>111 Main St.</Street>
+              <Street>#{options[:street]}</Street>
               <City>San Jose</City>
               <State>CA</State>
               <Zip>95100</Zip>

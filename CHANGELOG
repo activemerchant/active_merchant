@@ -1,5 +1,467 @@
 = ActiveMerchant CHANGELOG
 
+* Moneris: Add optional (off by default) verification_value support [duff]
+
+== Version 1.38.1 (September 16, 2013)
+
+* Moneris: Remove verification_value support [melari]
+
+== Version 1.38.0 (September 6, 2013)
+
+* FirstData E4: Include missing address information for AVS and CVV [melari]
+* Litle: Deprecate credit method in favor of refund [melari]
+* Moneris: Add verification_value support [duff]
+* Webpay: Fixes issues with partial JPY currency [keikubo, melari]
+* SecureNet: Add INVOICENUM and INVOICEDESC optional fields [duff]
+* Balanced: Make BalancedGateway::Error inherit from ActiveMerchantError [duff]
+* Balanced: Fix #void interface [duff]
+* HiTrust: Return correct error message for positive retcodes [melari]
+* Moving to pessimistic versioning [davefp]
+
+== Version 1.37.0 (August 20, 2013)
+
+* MerchantWarrior: Fix handling of amounts [duff]
+* Ipay88: New gateway [kamal, siong1987, jduff]
+* IATS: New gateway [unkown, jduff]
+* MerchantWarrior: Send the CVV to the gateway [duff]
+* PayU: Fix a major bug with status types [melari]
+* SecureNet: Allow production transactions [duff]
+* Stripe: Allow a card_not_present_fee to be specified [melari]
+
+== Version 1.36.0 (August 2, 2013)
+
+* Fat Zebra: More consistent handling of tokens [adrianmacneil]
+* Add Platron integration [alexwl]
+* Litle: Support wiredump_device [pierre]
+* Litle: support paypage registrations [pierre]
+* SecureNet: Cleanup and refactoring [duff]
+* Mercury: Proper refund and void support [opendining]
+* PaymentExpress: Return token in authorization [ntalbott]
+* Stripe: Support for partial application fee refunds [melari, odorcicd]
+* NMI: Support for recurring flag [duff]
+* SecureNet: Use working live url [duff]
+
+== Version 1.35.1 (July 22, 2013)
+
+* Stripe: Allow application_fees to be refunded via the refund_application_fee flag [melari]
+
+== Version 1.35.0 (July 17, 2013)
+
+* Add Barclays ePDQ Extra Plus gateway [ntalbott]
+* PayPal: Add MassPay payment to recipients by UserID [damonmorgan]
+* Authorize.Net: Add authorization_code to response params [noahlh]
+* Make Rails 4 a supported version [sanemat]
+* CyberSource: Add pinless debit card support [JoshMcKin]
+* Verkkomaksut: Add item title field [kaapa]
+* Add MerchantWare V4 gateway [hron]
+* Eway Rapid: Add #store method [adrianmacneil]
+* Barclays ePDQ Extra Plus: Use correct PROD url [ntalbott]
+* Hitrust: update test & live urls [melari]
+* NAB Transact: Add auth & capture support [nagash]
+* Mercury: Support card-less capture and refund [ntalbott]
+* Mercury: Support void [ntalbott]
+
+== Version 1.34.1 (June 28, 2013)
+
+* WorldPay: Add dynamic return URL [jordanwheeler]
+* Merchant One: New gateway [coteyr, melari]
+* Balanced: Fix exception for invalid email [duff]
+* Update supported countries for Paymill & PaymentExpress [duff]
+* Worldpay: Add support for diners club [duff]
+* Stripe: Include address with card data [melari]
+
+== Version 1.34.0 (June 20, 2013)
+
+* PayPal Express gateway: Add unstore support [duff]
+* Stripe: Send application_fee with capture requests [melari]
+* Make #unstore method signature consistent across gateways [duff]
+* Dwolla: Major bug fixes. [capablemonkey, melari]
+* Stripe: Add support for including track data [melari]
+
+== Version 1.33.0 (May 30, 2013)
+
+* Netaxept: Completely revamped to use the "M" service type [rbjordan3, ntalbott]
+* Litle: Void authorizations via an auth reversal [jrust]
+* Add RBK Money integration [england]
+* Direcpay: Update test url [ashish-d]
+* PayPal Express gateway: Add support for creating billing agreements [fabiokr]
+* PayPal Express gateway: Add reference authorizations [fabiokr]
+* Add Cardstream Modern gateway [ExxKA]
+* Pin: Fix special headers [duff]
+* PayPal Express gateway: Remember the billing agreement id as Response#authorization [duff]
+* PayPal Express gateway: Allow an amount of 0 [duff]
+* PayPal Express gateway: Reduce parameter requirements [duff]
+* Quickpay integration: Update notification parser to handle API v6 [larspind]
+* Sage gateway: Deprecate #credit call [duff]
+* Update notification generator to better match current notification class [lulalala]
+* Paymill gateway: Change .com -> .de [louiskearns]
+* Quickpay integration: Fix v6 response parsing [larspind]
+* First Data e4: Add TransArmor store/tokenization support [gabetax]
+* MerchantWarrior: Format expiration month/year correctly [klebervirgilio]
+* Add iconv for ActiveSupport 2.3 under Ruby 2.0 [sanemat]
+* Add Transnational gateway [bvandenbos]
+* Authorize.Net: Add Check as payment method [andrunix]
+* Merchant e-Solutions: Add ref number and recurring support [carlaares]
+* Bogus gateway: Add authorization to purchase response [hron]
+* Bluepay gateway: Fix Check support; general cleanup [ntalbott]
+* Dwolla: Fix security issues and enable guest checkout [capablemonkey, schonfeld]
+* SagePay gateway: Per-transaction 3D-secure selection [ExxKA]
+* Barclays ePDQ: Handle incorrectly encoded response [jordanwheeler, aprofeit]
+* Orbital: Bug fixes; add CustomerEmail, Retry Logic, Managed Billing, and Destination Address [juicedM3
+* Distinguish invalid vs empty issue_numbers on CreditCards [drasch]
+* Float Gemfiles to latest Rails [sanemat]
+* USA ePay Advanced: Fix Check support [RyanScottLewis]
+* Authorize.Net: Match up Check fields better with eCheck.Net requirements [ntalbott]
+* Bluepay: Updated to bp20post api [cagerton, melari]
+* Net Registry: Deprecate credit method [jduff]
+* Sage: Don't include T_customer_number unless it is numeric [melari]
+* Auth.net: Don't include cust_id unless it is numeric [melari]
+* Epay: Deprecate credit method [melari]
+* New PayU.in Integration [PayU, melari]
+
+== Version 1.32.1 (April 4, 2013)
+
+* CC5 and Garanti: Remove $KCODE modifications [melari]
+* Paymill: Add support for store [ntalbott]
+* USA ePay: Fix misspelling of "Aduth" [joelvh, ntalbott]
+* Orbital: Fix nil address values throwing exceptions during truncation [melari]
+
+== Version 1.32.0 (April 1, 2013)
+
+* Optimal: Submit shipping address with requests [jduff]
+* Iridium: Enable reference transactions for authorize [ntalbott]
+* Stripe: Add authorize and capture methods [melari]
+* Pin: Add a default description if none is specified to fix failures [melari]
+* Litle: Add support for passing optional fields in token based transactions [forest]
+* Add Finansbank gateway [scamurcuoglu]
+* Paymill: Use .com instead of .de for save card url [besi]
+* Worldpay integration: Use more robust endpoint urls [nashbridges]
+* Braintree Blue: Return CC token in transaction hash [cyu]
+* Robokassa: Fix signature for empty amount [ukolovda]
+* Worldpay gateway: Fix error messages for some failures [duff]
+* Worldpay gateway: Allow settled payments to be refunded [dougal]
+* Spreedly: Update urls and terminology [duff]
+* Make card brand error more user friendly [oggy]
+* DataCash: Update test Mastercard number [jamesshipton]
+* DataCash: Update test response fixtures [jamesshipton]
+* Pin: Add Pin.js card token support [nagash]
+* PayPal Express gateway: Fix error when no address information is in response [pierre]
+* Ogone: Use BYPSP for ALIASOPERATION [ntalbott]
+* Paymill: Handle error storing card [duff]
+* SagePay integration: Add referrer field [melari]
+* Pin: Add extra headers [duff]
+* Paymill: Add support for store [ntalbott]
+* USA ePay Advanced: Fix typo in message credit card data options [joelvh]
+
+== Version 1.31.1 (February 25, 2013)
+
+* Cybersource: Bug fixes [natejgreene, jduff]
+
+== Version 1.31.0 (February 20, 2013)
+
+* Worldpay: XML encoding is required to be ISO-8859-1 [dougal]
+* Worldpay: Add card code for more supported card types [dougal]
+* Ogone: Add action option [pwoestelandt]
+* PayPal Express gateway: Add support for BuyerEmailOptInEnable [chrisrbnelson]
+* Add Paymill gateway [duff]
+* Add EVO Canada gateway [alexdunae]
+* Fixed credit card and check interface, used correct method for checking payment type [jduff]
+
+== Version 1.30.0 (February 13, 2013)
+
+* Add FirstData Global Gateway e4 [frobcode]
+* PaymentExpress: Add support for optional fields: ClientType and TxnData [moklett]
+* PaymentExpress: Limit MerchantReference/description to 64 chars [moklett]
+* Wirecard: description must be no more than 32 characters [moklett]
+* Litle: Add support for passing a token to the authorize and purchase methods [forest]
+* PayPal Common: Allow searching for transactions by ProfileID [aq1018]
+* Add Spreedly Core gateway [duff]
+* eWay Gateway: Return proper value for authorization [duff]
+* eWay Gateway: Add support for refunds [duff]
+* Quickpay: Add support for protocols 5 & 6 [twarberg]
+* Banwire gateway: Handle JSON::ParserError [duff]
+* Balanced gateway: Fix unspecified marketplace [duff]
+* QBMS gateway: Allow partial addresses [duff]
+* Authorize.Net CIM: Allow omitting card expiration date [shanebonham]
+* Authorize.Net CIM: Add support for extraOptions to createCustomerProfileTransaction [tpiekos]
+* Add NETPAY gateway [samlown]
+* Balanced gateway: Add amount to the refund method signature [ntalbott]
+* Orbital gateway: Fix void method signature [aprofeit, ntalbott]
+* Eway Managed: Add 'query_customer' API as #retrieve [cdaloisio]
+* NetPay: Fix the signature for void [duff]
+* Cybersource: Add check support [bowmande]
+* Moneris: Use a capture of $0 for void [ntalbott]
+* PayPal Express integration: Fix received_at time zone [ntalbott]
+* NAB Transact: Add refund capability [nagash]
+* Stripe: Add support for application_fee [duff]
+* SagePay: Add support for GiftAidPayment [duff]
+* Wirecard: Add support for partial captures [richardblair]
+* Add Pin gateway [madpilot]
+* Balanced: Added support for on_behalf_of_uri to capture [cwise]
+* Litle: Add support for passing an order_source [forest]
+* Add Merchant Warrior gateway [pronix, Fodoj, ntalbott]
+* Use v4 of the MerchantWare API for voiding transactions [melari]
+* Add support for Authorize.net in CA and GB [melari]
+* Send customer's IP to Beanstream for fraud review [melari]
+
+== Version 1.29.3 (December 7, 2012)
+
+* Braintree Blue: Better wiredump_device support [ntalbott]
+* Braintree: Store sets vault id as authorization [ntalbott]
+* WorldPay: Fix currencies without fractions like JPY and HUF by rounding down amount [Soleone]
+
+== Version 1.29.2 (December 7, 2012)
+
+* Moneris: fix issue with the default options not being merged [jduff]
+* Sage Pay: Make 0000 default post code for everyone if missing [BlakeMesdag]
+
+== Version 1.29.1 (December 5, 2012)
+
+* Add eWay Rapid 3.0 gateway [ntalbott]
+* Fix AVS responses missing attributes [jduff]
+
+== Version 1.29.0 (November 30, 2012)
+
+* Authorize.Net gateway: Support description and order_id for capture [ntalbott]
+* Add Mercury gateway [adr1anx, opendining]
+* Webmoney integration: Add gross, item_id, and amount accessors to notification [fr33z3]
+* Fix running tests under ActiveSupport 2.3.14 [ntalbott]
+* SagePay Form integration: Remove dependency on ActiveSupport's String#truncate [ntalbott]
+* Elavon gateway: Add support for the sales tax parameter [stevestmartin]
+* Add WebPay gateway [keikubo]
+* iTransact gateway: make void API consistent [frobcode]
+* Stripe gateway: Pass city in add_address [npverni]
+* Paypal gateway: Add option to change the outstanding balance of a recurring billing profile [mattwhite]
+* Mercury gateway: Fix authorizations API [ntalbott]
+* Mercury gateway: Support refund properly [ntalbott]
+* Braintree Blue gateway: Add support for the recurring flag [ntalbott]
+* Add HDFC gateway [ntalbott]
+* HDFC gateway: Add more supported currencies [ntalbott]
+* HDFC gateway: Add support for passing ECI value [ntalbott]
+* HDFC gateway: Allow setting test mode via options [ntalbott]
+* HDFC gateway: Pass phone number in UDF3 [ntalbott]
+* HDFC gateway: Fix unescaped '&' entity in XML [ntalbott]
+* HDFC gateway: More robust entity fixing [ntalbott]
+* Add A1Agregator integration [england]
+* Refactored handling of #test? and @options [ntalbott]
+* Realex gateway: Realex gateway: Fix billing address format [ntalbott]
+* Orbital gateway: handle custom AVS response codes [jonm-okc]
+* Orbital gateway: Fix infinite connection retry [jonm-okc, ntalbott]
+* PayPal integration: Add support for MassPay IPN notifications [damonmorgan]
+* Orbital gateway: Fix status of void result [jonm-okc]
+* Add Redsys gateway [samlown]
+* Cybersource gateway: Add support for subscription credit [fabiokr]
+* Use Thor for generators [ntalbott]
+* Psigate gateway: Add void support [samuelreh]
+* Add Liqpay integration [beorc]
+* Paypal Express gateway: Add shipping accessor to response [v-fedorov]
+
+== Version 1.28.0 (August 10, 2012)
+
+* PayPal Express: support non standard locale codes [Soleone]
+* Litle: allow setting test mode per transaction [jduff]
+* Add Banwire gateway [acolin]
+* Authorize.Net CIM gateway: Move cardCode after order to comply with the XSD [davetron5000]
+* Add WebMoney integration [Mehonoshin]
+* EasyPay: Make symmetric with other integrations [nashby]
+* Add Paysbuy integration [divineforest]
+* Bogus gateway: Use last digit for pass/fail [mipearson]
+* Elavon gateway: Separate from Viaklix, implement refund & void [duff]
+* Orbital gateway: Update to API version 5.6 and add support for profile requests [rbarazi]
+
+== Version 1.27.0 (August 10, 2012)
+
+* Add First Data integration [courtland]
+* Add WebPay integration [nashby]
+* Add Suomen Maksuturva integration [akonan]
+* Payway gateway: Fix card storage [BenZhang]
+* Payflow Pro gateway: Add MaxFailPayments support [gregwinn]
+* Add Paxum integration [Mehonoshin]
+* Add Balanced gateway [mjallday]
+* Plug'n Pay gateway: Add tests for partial capture [csaunders]
+* Braintree Blue gateway: Add credit card details to responses [dougbradbury]
+* PayPal gateway: Support for 'Full' refund type [kurenn]
+* Worldpay: fix refund [jduff/omh]
+* Add PxPay offsite integration [boourns]
+* Wirecard: always capture 'authorization' transaction [ntalbott]
+* Add rake task to verify ssl certs [boourns]
+
+== Version 1.26.0 (July 6, 2012)
+
+* Orbital gateway: fix broken requests by ensuring the order of XML elements matches their DTD [Soleone]
+* CyberSource gateway: clean up formatting [ntalbott]
+* Netbilling gateway: Add refund/credit/void support [ntalbott]
+* Add PayGate XML gateway [rubyisbeautiful]
+* Add PayWay gateway [BenZhang]
+* PayWay gateway: Tweaks to make more ActiveMerchant like [ntalbott]
+* Netbilling gateway: Fix error handling [ntalbott]
+* Netbilling gateway: Add refund/credit/void support [zenom, ntalbott]
+
+== Version 1.25.0 (July 3, 2012)
+
+* eWAY gateway: Add support for Diners Club cards [Soleone]
+* Orbital gateway: Never send country code for orders outside of US, CA and GB [Soleone]
+* Add EasyPay integration [nashby]
+* Updating LitleOnline requirement to 8.13.2 to take advantage of better validation and get bugfix for Username [GregDrake]
+* USAepay gateway: Add description support [ntalbott]
+* Add Paypal Payments Advanced integration [csaunders]
+* Authorize.Net gateway: Improve #refund docs [neerajdotname]
+* Wirecard gateway: Fix for missing address hash [ntalbott]
+* Clean up requires of RubyGems and JSON gems. Rename remote Litle test to match naming conventions [codyfauser]
+* Cybersource gateway: Fix updating address only [fabiokr]
+* Cybersource gateway: Move email requirement [fabiokr]
+* Add the Metrics Global gateway [DanKnox]
+* Braintree Blue gateway: Support wiredump_device [moklett]
+* Add Fat Zebra gateway [amasses]
+* Braintree Blue gateway: Always pass CVV on update [shayfrendt]
+* eWAY gateway: Update docs. Require address [juggler]
+* Cybersource gateway: Add support for subscriptions [fabiokr]
+
+== Version 1.24.0 (June 8, 2012)
+
+* PayPal gateway: Support for incomplete captures [mbulat]
+* Moneris gateway: Add support for vault [kenzie]
+* NAB Transact gateway: Add support for card descriptors [nagash]
+* SagePayForm: truncate long description fields [jnormore]
+* Paybox Direct: treat all response codes besides '00000' as failures
+[Soleone]
+* Deprecate CreditCard#type method in favor of CreditCard#brand [jduff]
+* Cybersource gateway: Add subscriptions support [fabiokr, jaredmoody]
+* eWay gateway: Improved docs, and more accurate required parameters [juggler]
+* Braintree Blue gateway: Always pass CVV on card update [shayfrendt]
+* Add Fat Zebra gateway [amasses]
+* Braintree Blue gateway: Add support for wiredump_device [moklett]
+* Add Metrics Global gateway [DanKnox]
+* Cybersource gateway: Do not require email address for subscription operations [fabiokr]
+* Cybersource gateway: Fix passing only an address when updating a subscription [fabiokr]
+* Wirecard gateway: Fix for missing address; general cleanup [ntalbott]
+* Authorize.Net gateway: Document ability to just pass the last four to #refund [neerajdotname]
+* Add EasyPay integration [nashby]
+
+== Version 1.23.0 (May 23, 2012)
+
+* Add Litle gateway [GregDrake]
+* PaymentExpress gateway: add support for BillingId and DpsBillingId for token [mikel]
+* 2checkout integration: Add ability to auto settle [craigchristenson]
+* 2checkout integration: Switch default mode to single page [craigchristenson]
+* Cybersource: Revert - Add retrieve method to pull details on a
+stored card [jduff]
+* Cybersource: Revert - Add recurring payment support [jduff]
+* PaymentExpress: add Cvc2Presence flag when submitting verification
+value [jduff]
+* SecurePayAU: fix CreditCard check [jduff]
+* Barclays: fix order capture [csaunders/ntalbott/jduff]
+
+== Version 1.22.0 (May 17, 2012)
+
+* Remove version restriction for money gem [ylansegal]
+* Add iTransact XML gateway [motske]
+* PayPal Express Gateway: add options[:landing_page] [markus]
+* USA ePay: Fix handling of AVS [duff]
+* Ogone: Add store method to create an alias without making a purchase [joelcogen]
+* Spelling fix: purcahse -> purchase [mnoack]
+* ePay: Added more useful results for authorization errors [Dennis O'Connor]
+* Add Robokassa integration [nashby]
+* PayPal Gateway: Add recurring API [dscataglini]
+* Braintree: Add support for :verify_card option on store [brentmc79]
+* Moneris: cannot void a preauthorization [eddanger]
+* Add Moneris US gateway [eddanger]
+* Add Dotpay integration [kacperix]
+* Payflow: Add description, comment and comment2 tags [ksnyder]
+* Dotpay: Fix field mapping [kacperix]
+* Authorize.Net CIM: Optionally add 'order' details to transactions [pote]
+* Braintree: Allow including billing address when storing a customer [brentmc79]
+* PayPal Gateway: Refactored PaymentDetails & PaymentDetailsItem common code [dscataglini]
+* Viaklix/Elavon: Separate "demo accounts" from "test transactions" [mltsy]
+* PayPal Gateway: Add transaction_details, balance, authorize_transaction, and manage_pending_transaction API calls [dscataglini]
+* PayPal Gateway: Add support for TransactionSearch & DoReferenceTransaction [dscataglini]
+* Cybersource: Add recurring payment support [jaredmoory]
+* Tidy up gateway lists [ashokak]
+* Paybox: remove Iconv usage [ntalbott]
+* Dotpay: Add amount mapping, pin setter, and support for test? [kacperix]
+* Braintree Blue: Make address country map to alpha2 [ntalbott]
+* Use GB as the alpha2 country code for the UK [ntalbott]
+* Realex: Handle XML response with unescaped ampersand [ntalbott]
+* Add Vindicia gateway [steved555]
+* Payment Express: use %w[] for country list [parndt]
+* Braintree Blue: Match remote test up with change to :country [braintreeps]
+* PayPal Integration: Fix received_at method time parsing [subbarao]
+* Add MiGS Gateway [mnoack, nagash]
+* Quickpay integration: Fix payment_service_for helper [TheMaster]
+* Braintree Blue gateway: Improve update method [brentmc79]
+* 2checkout integration: Add mode mapping & line items helper [AlexanderZaytsev]
+* USA ePay Advanced gateway: Fix expiration date format. [cctalbott]
+* Add ePay integration [ePay]
+* 2checkout integration: Add support for single page payment routine [AlexanderZaytsev]
+* Ogone: Add support for 3D Secure [rymai, ZenCocoon]
+* Stripe gateway: Remove authorize and capture methods since they are not supported [jduff]
+* Stripe gateway: default test to false if no livemode parameter is specified [jduff]
+* Paybox Direct gateway: 'card absent' and 'do not honour' should be considered failures, not fraudulent [jduff]
+* Add Verkkomaksut integration [akonan]
+* Remove trailing spaces from generator templates [akonan]
+* Payflow gateway: Allow modification of RetryNumDays [jrust]
+* Payflow gateway: Don't auto-set start_date on modification [jrust]
+* Bluepay gateway: Add ACH & recurring support [jslingerland]
+* Orbital gateway: Don't send AVS address details for any country besides US, CA, GB and UK [Soleone]
+* Payflow Express gateway: Better amount handling [jduff]
+* Barclays gateway: Allow American Express [duff]
+* Ogone gateway: Remove duplicated method [ntalbott]
+* Cybersource gateway: Add retrieve method to pull details on a stored card [fabiokr]
+
+== Version 1.21.0 (March 7, 2012)
+
+* Stripe: Add support for passing IP [collision]
+* Merchant e-Solutions: pass expiration date when purchasing with a stored credit card [chrisyoung]
+* Braintree: Fix passing custom processor ids to old accounts [maxsilver]
+* Authorize.net CIM: Add validation mode option to create_customer_profile_request [jwood]
+* eWay Managed: Include transaction number in response params [jamsi]
+* Fix various hash ordering issues exposed by Ruby 1.8 [ntalbott]
+* Authorize.Net CIM: Add WEB echeck type [deathbob]
+* Move Braintree from the gemspec to the Gemfile [ntalbott]
+* Add CertoDirect gateway [hron]
+* Authorize.Net CIM: Add option for setting a custom delimiter [bmorton]
+* Authorize.Net CIM: Add 3.1 response fields [bmorton]
+* Authorize.Net CIM: Misc fixes and doc improvements [bmorton]
+* Authorize.Net CIM: Fix error when order is blank [KeeperPat]
+* Beanstream: Add recurring payments support [castiglione]
+* Make ePay password optional [ePay]
+* Quickpay: skip testmode if transaction provided [brentmc79]
+* Payflow: add additional fields [thorstadt]
+* Authorize.Net CIM: Add get_customer_profile_ids [howaboutwe]
+* PayPal Express: Add support for BrandName and Custom fields [exviva]
+* Payflow: Handle dates with leading zeros [jcoleman]
+* Authorize.Net CIM: Add CCV code support & improve tests [tgarnett]
+* Add Authorize.Net SIM integration [courtland & rdp]
+* Secure Pay AU: Handle periodic payments [tommeier]
+* Viaklix: Add discover as a supported card type [waelchatila]
+* Improvements to testing infrastructure for integrations [jduff]
+* Add NAB Transact (AU) Gateway [tommeier]
+* PayPal Express: Add Support for Reference Transactions using BAIDs [kenmazaika]
+* Authorize.Net CIM: Add support for optional refund fields [nilmethod]
+* SecurePayTech: Fix EnableCSC parameter so CVV codes are checked. [tlconnor]
+* SecurePayTech: Add remote tests for CSC checking. [tlconnor]
+* Samurai: Add option to retain payment methods once stored [brentmc79]
+* PayPal Express Gateway: Add support for Digital Goods / Micropayments [kenmazaika]
+
+
+== Version 1.20.4 (February 22, 2012)
+
+* Fix json dependency
+
+== Version 1.20.3 (February 7, 2012)
+
+* Various fixes to support Ruby 1.9 [wisq]
+* SkipJack: Fix partial capture [jduff]
+* Optimal Payments: submit region when outside North America [jduff]
+* USA ePay: Add void and refund support [duff/ntalbott]
+* Add first digits to credit card [codyfauser]
+* Orbital: fixes to authentication and order id [Soleone]
+* Stripe: fixes to purchase method [duff/ntalbott]
+
+== Version 1.20.2 (January 16, 2012)
+
+* Remove authorize/capture support for Stripe [gdb]
+
 == Version 1.20.1 (December 22, 2011)
 
 * PayflowExpressUk: Fix parsing street2 from response [odorcicd]
@@ -556,7 +1018,7 @@
 * Fix errors on base of CreditCard [josh.bassett]
 * Update product to use Rubigen instead of stolen Rails generator [cody]
 * Mimic directory structure of unit tests in remote tests [cody]
-* Restructure the location of the remote tests [cody] 
+* Restructure the location of the remote tests [cody]
 * Ensure DataCash order_id is limited to 30 characters [cody]
 * Return the pretty messages from PayJunction based on the return code [cody]
 * make CreditCard.require_verification_value = true the default [cody]
@@ -622,7 +1084,7 @@
 * Enhance credit card error messages [manfred]
 * Use HashWithIndifferentAccess for CreditCard for compatibility with Rails applications [michael.j.mangino]
 * Fix nil exception when no response reason text is found in Authorize.net [cody]
-* Add support for PayJunction [Matt Sanders] 
+* Add support for PayJunction [Matt Sanders]
 * Change billing_address to shipping_address in PayPal Integration helper, as billing_address was incorrect.  Addresses passed to billing_address for the PayPal helper will no longer be added to the form. This will break existing code, as the address will not be passed.
 * Remove switch patterns from card detection that were eliminated on July 1, 2007 [cody]
 * Format the issue number in Payflow requests to always be 2 digits [cody]
@@ -660,7 +1122,7 @@
 * Update and test PslCardGateway [cody]
 * Add Laser card type [cody]
 * Update Nochex documentation [cody]
-* Sanitize the Realex order_id [cody] 
+* Sanitize the Realex order_id [cody]
 * Add support for Irish Realex payment gateway [John Ward, cody]
 * Move credit_card helper method to the test_helper [cody]
 * Update PayflowExpressResponse to match the interface of the PayflowExpressResponse.  Add :no_shipping and :address_override options to PayflowExpress [cody]
@@ -718,7 +1180,7 @@
 * Update DataCash tests and format merchant reference number to meet DataCash's requirements [MoneySpyder, cody]
 * Add Datacash gateway [MoneySpyder, cody]
 * VERIFY_PEER on all SSL requests [cody]
-* Add support for 2Checkout [cody] 
+* Add support for 2Checkout [cody]
 
 == Version 1.0.3
 
@@ -749,7 +1211,7 @@
 * Moneris now uses the same layout as the authorized.net plugin
 * Added authorized.net
 * Changed default to :test mode. Set to production with ActiveMerchant::Billing::Base.gateway_mode = :production
-* More refactoring 
+* More refactoring
 * Refactored a bit so that there is space for billing and shipping area. None of the shipping aids are fleshed out yet. Needs more work.
 * Added Moneris support
 * Credit card in memory object resembling a AR object

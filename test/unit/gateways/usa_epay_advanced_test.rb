@@ -1,7 +1,9 @@
+# encoding: utf-8
 require 'test_helper'
 require 'logger'
 
 class UsaEpayAdvancedTest < Test::Unit::TestCase
+  include CommStub
 
   def setup
     # Optional Logger Setup
@@ -22,33 +24,33 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
       :number => '4000100011112224',
       :month => 12,
       :year => 12,
-      :type => 'visa',
+      :brand => 'visa',
       :verification_value => '123',
       :first_name => "Fred",
       :last_name => "Flintstone"
     )
 
     @check = ActiveMerchant::Billing::Check.new(
-      :number => '123456789012',
+      :account_number => '123456789012',
       :routing_number => '123456789',
       :account_type => 'checking',
       :first_name => "Fred",
       :last_name => "Flintstone"
     )
-    
+
     payment_methods = [
-      { 
+      {
         :name => "My Visa", # optional
         :sort => 2, # optional
         :method => @credit_card
       },
-      { 
+      {
         :name => "My Checking",
         :method => @check
       }
     ]
 
-    payment_method = { 
+    payment_method = {
       :name => "My new Visa", # optional
       :method => @credit_card
     }
@@ -149,7 +151,19 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
   def test_successful_credit
     @gateway.expects(:ssl_post).returns(successful_credit_response)
-    assert response = @gateway.credit(1234, @credit_card, @options)
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+      assert response = @gateway.credit(1234, @credit_card, @options)
+      assert_instance_of Response, response
+      assert response.test?
+      assert_success response
+      assert_equal 'Approved', response.message['result']
+      assert_equal '47602599', response.authorization
+    end
+  end
+
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_credit_response)
+    assert response = @gateway.refund(1234, @credit_card, @options)
 
     assert_instance_of Response, response
     assert response.test?
@@ -367,9 +381,13 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
   def test_successful_run_check_sale
     @options.merge!(@transaction_options)
-    @gateway.expects(:ssl_post).returns(successful_transaction_response('runCheckSale'))
 
-    assert response = @gateway.run_check_sale(@options)
+    response = stub_comms do
+      @gateway.run_check_sale(@options.merge(:payment_method => @check))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/123456789012/, data)
+    end.respond_with(successful_transaction_response('runCheckSale'))
+
     assert_instance_of Response, response
     assert response.test?
     assert_success response
@@ -537,7 +555,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
   def test_mismatch_response
     @gateway.expects(:ssl_post).returns(successful_get_check_trace_response)
-    
+
     assert response = @gateway.get_account_details
     assert_instance_of Response, response
     assert response.test?
@@ -547,7 +565,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
   private
 
   # Standard Gateway ==================================================
-  
+
   def successful_purchase_response
     <<-XML
 <?xml version="1.0" encoding="UTF-8"?>
@@ -718,7 +736,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
     <<-XML
     XML
   end
-  
+
   def failed_override_transaction_response
     <<-XML
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"><SOAP-ENV:Body><SOAP-ENV:Fault><faultcode>SOAP-ENV:Server</faultcode><faultstring>105: Override not available for requested transaction.</faultstring></SOAP-ENV:Fault></SOAP-ENV:Body></SOAP-ENV:Envelope>
@@ -731,7 +749,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:voidTransactionResponse><voidTransactionReturn xsi:type="xsd:boolean">true</voidTransactionReturn></ns1:voidTransactionResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
     XML
   end
-  
+
   def successful_refund_transaction_response
     <<-XML
 <?xml version="1.0" encoding="UTF-8"?>
@@ -740,7 +758,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
   end
 
   # Transaction Response ==============================================
-    
+
   def successful_get_transaction_status_response
     <<-XML
 <?xml version="1.0" encoding="UTF-8"?>
@@ -773,10 +791,11 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
   def successful_get_account_details
     <<-XML
-<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:getAccountDetailsResponse><getAccountDetailsReturn xsi:type="ns1:AccountDetails"><CardholderAuthentication xsi:type="xsd:string">Disabled</CardholderAuthentication><CheckPlatform xsi:type="xsd:string">TestBed</CheckPlatform><CreditCardPlatform xsi:type="xsd:string">Test Bed</CreditCardPlatform><DebitCardSupport xsi:type="xsd:boolean">false</DebitCardSupport><DirectPayPlatform xsi:type="xsd:string">Disabled</DirectPayPlatform><Industry xsi:type="xsd:string">eCommerce</Industry><SupportedCurrencies SOAP-ENC:arrayType="ns1:CurrencyObject[0]" xsi:type="ns1:CurrencyObjectArray"/></getAccountDetailsReturn></ns1:getAccountDetailsResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:usaepay" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><SOAP-ENV:Body><ns1:getAccountDetailsResponse><getAccountDetailsReturn xsi:type="ns1:AccountDetails"><CardholderAuthentication xsi:type="xsd:string">Disabled</CardholderAuthentication>
+<CheckPlatform xsi:type="xsd:string">TestBed</CheckPlatform><CreditCardPlatform xsi:type="xsd:string">Test Bed</CreditCardPlatform><DebitCardSupport xsi:type="xsd:boolean">false</DebitCardSupport><DirectPayPlatform xsi:type="xsd:string">Disabled</DirectPayPlatform><Industry xsi:type="xsd:string">eCommerce</Industry><SupportedCurrencies SOAP-ENC:arrayType="ns1:CurrencyObject[0]" xsi:type="ns1:CurrencyObjectArray"/></getAccountDetailsReturn></ns1:getAccountDetailsResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
     XML
   end
-  
+
   # Assertion Helpers =================================================
 
   def assert_avs_cvv_match(response)

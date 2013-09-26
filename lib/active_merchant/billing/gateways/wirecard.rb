@@ -4,34 +4,33 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WirecardGateway < Gateway
       # Test server location
-      TEST_URL = 'https://c3-test.wirecard.com/secure/ssl-gateway'
-     
+      self.test_url = 'https://c3-test.wirecard.com/secure/ssl-gateway'
+
       # Live server location
-      LIVE_URL = 'https://c3.wirecard.com/secure/ssl-gateway'
+      self.live_url = 'https://c3.wirecard.com/secure/ssl-gateway'
 
       # The Namespaces are not really needed, because it just tells the System, that there's actually no namespace used.
       # It's just specified here for completeness.
       ENVELOPE_NAMESPACES = {
         'xmlns:xsi' => 'http://www.w3.org/1999/XMLSchema-instance',
-				'xsi:noNamespaceSchemaLocation' => 'wirecard.xsd'
-			}
+        'xsi:noNamespaceSchemaLocation' => 'wirecard.xsd'
+      }
 
-			PERMITTED_TRANSACTIONS = %w[ AUTHORIZATION CAPTURE_AUTHORIZATION PURCHASE ]
+      PERMITTED_TRANSACTIONS = %w[ PREAUTHORIZATION CAPTURE PURCHASE ]
 
       RETURN_CODES = %w[ ACK NOK ]
 
-      # Wirecard only allows phone numbers with a format like this: +xxx(yyy)zzz-zzzz-ppp, where: 
-      #   xxx = Country code 
-      #   yyy = Area or city code 
-      #   zzz-zzzz = Local number 
-      #   ppp = PBX extension 
-      # For example, a typical U.S. or Canadian number would be "+1(202)555-1234-739" indicating PBX extension 739 at phone 
+      # Wirecard only allows phone numbers with a format like this: +xxx(yyy)zzz-zzzz-ppp, where:
+      #   xxx = Country code
+      #   yyy = Area or city code
+      #   zzz-zzzz = Local number
+      #   ppp = PBX extension
+      # For example, a typical U.S. or Canadian number would be "+1(202)555-1234-739" indicating PBX extension 739 at phone
       # number 5551234 within area code 202 (country code 1).
       VALID_PHONE_FORMAT = /\+\d{1,3}(\(?\d{3}\)?)?\d{3}-\d{4}-\d{3}/
-      
+
       # The countries the gateway supports merchants from as 2 digit ISO country codes
-      # TODO: Check supported countries
-      self.supported_countries = ['DE']
+      self.supported_countries = %w(AD CY GI IM MT RO CH AT DK GR IT MC SM TR BE EE HU LV NL SK GB BG FI IS LI NO SI VA FR IL LT PL ES CZ DE IE LU PT SE)
 
       # Wirecard supports all major credit and debit cards:
       # Visa, Mastercard, American Express, Diners Club,
@@ -58,46 +57,33 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login, :password)
         # unfortunately Wirecard also requires a BusinessCaseSignature in the XML request
         requires!(options, :signature)
-        @options = options
         super
-      end
-
-      # Should run against the test servers or not?
-      def test?
-        @options[:test] || super
       end
 
       # Authorization
       def authorize(money, creditcard, options = {})
-        prepare_options_hash(options)
-        @options[:credit_card] = creditcard
-        request = build_request(:authorization, money, @options)
-        commit(request)
+        options[:credit_card] = creditcard
+        commit(:preauthorization, money, options)
       end
-
 
       # Capture Authorization
       def capture(money, authorization, options = {})
-        prepare_options_hash(options)
-        @options[:authorization] = authorization
-        request = build_request(:capture_authorization, money, @options)
-        commit(request)
+        options[:preauthorization] = authorization
+        commit(:capture, money, options)
       end
-
 
       # Purchase
       def purchase(money, creditcard, options = {})
-        prepare_options_hash(options)
-        @options[:credit_card] = creditcard
-        request = build_request(:purchase, money, @options)
-        commit(request)
+        options[:credit_card] = creditcard
+        commit(:purchase, money, options)
       end
 
-    private
+      private
 
       def prepare_options_hash(options)
-        @options.update(options)
-        setup_address_hash!(options)
+        result = @options.merge(options)
+        setup_address_hash!(result)
+        result
       end
 
       # Create all address hash key value pairs so that
@@ -111,15 +97,17 @@ module ActiveMerchant #:nodoc:
 
       # Contact WireCard, make the XML request, and parse the
       # reply into a Response object
-      def commit(request)
-	      headers = { 'Content-Type' => 'text/xml',
-	                  'Authorization' => encoded_credentials }
+      def commit(action, money, options)
+        request = build_request(action, money, options)
 
-	      response = parse(ssl_post(test? ? TEST_URL : LIVE_URL, request, headers))
+        headers = { 'Content-Type' => 'text/xml',
+                    'Authorization' => encoded_credentials }
+
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, request, headers))
         # Pending Status also means Acknowledged (as stated in their specification)
-	      success = response[:FunctionResult] == "ACK" || response[:FunctionResult] == "PENDING"
-	      message = response[:Message]
-        authorization = (success && @options[:action] == :authorization) ? response[:GuWID] : nil
+        success = response[:FunctionResult] == "ACK" || response[:FunctionResult] == "PENDING"
+        message = response[:Message]
+        authorization = response[:GuWID]
 
         Response.new(success, message, response,
           :test => test?,
@@ -127,54 +115,58 @@ module ActiveMerchant #:nodoc:
           :avs_result => { :code => response[:avsCode] },
           :cvv_result => response[:cvCode]
         )
+      rescue ResponseError => e
+        if e.response.code == "401"
+          return Response.new(false, "Invalid Login")
+        else
+          raise
+        end
       end
 
       # Generates the complete xml-message, that gets sent to the gateway
-      def build_request(action, money, options = {})
-				xml = Builder::XmlMarkup.new :indent => 2
-				xml.instruct!
-				xml.tag! 'WIRECARD_BXML' do
-				  xml.tag! 'W_REQUEST' do
+      def build_request(action, money, options)
+        options = prepare_options_hash(options)
+        options[:action] = action
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.instruct!
+        xml.tag! 'WIRECARD_BXML' do
+          xml.tag! 'W_REQUEST' do
           xml.tag! 'W_JOB' do
-              # TODO: OPTIONAL, check what value needs to be insert here
-              xml.tag! 'JobID', 'test dummy data'
+              xml.tag! 'JobID', ''
               # UserID for this transaction
               xml.tag! 'BusinessCaseSignature', options[:signature] || options[:login]
               # Create the whole rest of the message
-              add_transaction_data(xml, action, money, options)
-				    end
-				  end
-				end
-				xml.target!
+              add_transaction_data(xml, money, options)
+            end
+          end
+        end
+        xml.target!
       end
 
       # Includes the whole transaction data (payment, creditcard, address)
-      def add_transaction_data(xml, action, money, options = {})
-        options[:action] = action
-        # TODO: require order_id instead of auto-generating it if not supplied
+      def add_transaction_data(xml, money, options)
         options[:order_id] ||= generate_unique_id
-        transaction_type = action.to_s.upcase
 
-        xml.tag! "FNC_CC_#{transaction_type}" do
-          # TODO: OPTIONAL, check which param should be used here
-          xml.tag! 'FunctionID', options[:description] || 'Test dummy FunctionID'
-
+        xml.tag! "FNC_CC_#{options[:action].to_s.upcase}" do
+          xml.tag! 'FunctionID', options[:description].to_s.slice(0,32)
           xml.tag! 'CC_TRANSACTION' do
             xml.tag! 'TransactionID', options[:order_id]
-            if [:authorization, :purchase].include?(action)
+            case options[:action]
+            when :preauthorization, :purchase
               add_invoice(xml, money, options)
               add_creditcard(xml, options[:credit_card])
               add_address(xml, options[:billing_address])
-            elsif action == :capture_authorization
-              xml.tag! 'GuWID', options[:authorization] if options[:authorization]
+            when :capture
+              xml.tag! 'GuWID', options[:preauthorization]
+              add_amount(xml, money)
             end
           end
         end
       end
 
-			# Includes the payment (amount, currency, country) to the transaction-xml
+      # Includes the payment (amount, currency, country) to the transaction-xml
       def add_invoice(xml, money, options)
-        xml.tag! 'Amount', amount(money)
+        add_amount(xml, money)
         xml.tag! 'Currency', options[:currency] || currency(money)
         xml.tag! 'CountryCode', options[:billing_address][:country]
         xml.tag! 'RECURRING_TRANSACTION' do
@@ -182,8 +174,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-			# Includes the credit-card data to the transaction-xml
-			def add_creditcard(xml, creditcard)
+      # Include the amount in the transaction-xml
+      def add_amount(xml, money)
+        xml.tag! 'Amount', amount(money)
+      end
+
+      # Includes the credit-card data to the transaction-xml
+      def add_creditcard(xml, creditcard)
         raise "Creditcard must be supplied!" if creditcard.nil?
         xml.tag! 'CREDIT_CARD_DATA' do
           xml.tag! 'CreditCardNumber', creditcard.number
@@ -194,38 +191,37 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-			# Includes the IP address of the customer to the transaction-xml
+      # Includes the IP address of the customer to the transaction-xml
       def add_customer_data(xml, options)
         return unless options[:ip]
-				xml.tag! 'CONTACT_DATA' do
-					xml.tag! 'IPAddress', options[:ip]
-				end
-			end
+        xml.tag! 'CONTACT_DATA' do
+          xml.tag! 'IPAddress', options[:ip]
+        end
+      end
 
       # Includes the address to the transaction-xml
       def add_address(xml, address)
         return if address.nil?
         xml.tag! 'CORPTRUSTCENTER_DATA' do
-	        xml.tag! 'ADDRESS' do
-	          xml.tag! 'Address1', address[:address1]
-	          xml.tag! 'Address2', address[:address2] if address[:address2]
-	          xml.tag! 'City', address[:city]
-	          xml.tag! 'ZipCode', address[:zip]
-	          
-	          if address[:state] =~ /[A-Za-z]{2}/ && address[:country] =~ /^(us|ca)$/i
-	            xml.tag! 'State', address[:state].upcase
-	          end
-	          
-	          xml.tag! 'Country', address[:country]
+          xml.tag! 'ADDRESS' do
+            xml.tag! 'Address1', address[:address1]
+            xml.tag! 'Address2', address[:address2] if address[:address2]
+            xml.tag! 'City', address[:city]
+            xml.tag! 'ZipCode', address[:zip]
+
+            if address[:state] =~ /[A-Za-z]{2}/ && address[:country] =~ /^(us|ca)$/i
+              xml.tag! 'State', address[:state].upcase
+            end
+
+            xml.tag! 'Country', address[:country]
             xml.tag! 'Phone', address[:phone] if address[:phone] =~ VALID_PHONE_FORMAT
-	          xml.tag! 'Email', address[:email]
-	        end
-	      end
+            xml.tag! 'Email', address[:email]
+          end
+        end
       end
 
-
       # Read the XML message from the gateway and check if it was successful,
-			# and also extract required return values from the response.
+      # and also extract required return values from the response.
       def parse(xml)
         basepath = '/WIRECARD_BXML/W_RESPONSE'
         response = {}
@@ -311,7 +307,6 @@ module ActiveMerchant #:nodoc:
         credentials = [@options[:login], @options[:password]].join(':')
         "Basic " << Base64.encode64(credentials).strip
       end
-      
     end
   end
 end

@@ -10,13 +10,15 @@ end
 
 require 'rake'
 require 'rake/testtask'
-require 'rake/rdoctask'
-require 'rake/gempackagetask'
+require 'rubygems/package_task'
 require 'support/gateway_support'
+require 'support/ssl_verify'
 require 'support/outbound_hosts'
 
 desc "Run the unit test suite"
 task :default => 'test:units'
+
+task :test => 'test:units'
 
 namespace :test do
 
@@ -36,21 +38,12 @@ namespace :test do
 
 end
 
-Rake::RDocTask.new do |rdoc|
-  rdoc.rdoc_dir = 'doc'
-  rdoc.title    = "ActiveMerchant library"
-  rdoc.options << '--line-numbers' << '--inline-source' << '--main=README.rdoc'
-  rdoc.rdoc_files.include('README.rdoc', 'CHANGELOG')
-  rdoc.rdoc_files.include('lib/**/*.rb')
-  rdoc.rdoc_files.exclude('lib/tasks')
-end
-
-desc "Delete tar.gz / zip / rdoc"
-task :cleanup => [ :clobber_package, :clobber_rdoc ]
+desc "Delete tar.gz / zip"
+task :cleanup => [ :clobber_package ]
 
 spec = eval(File.read('activemerchant.gemspec'))
 
-Rake::GemPackageTask.new(spec) do |p|
+Gem::PackageTask.new(spec) do |p|
   p.gem_spec = spec
   p.need_tar = true
   p.need_zip = true
@@ -72,30 +65,40 @@ namespace :gateways do
     support = GatewaySupport.new
     support.to_s
   end
-  
+
   namespace :print do
     desc 'Print the currently supported gateways in RDoc format'
     task :rdoc do
       support = GatewaySupport.new
       support.to_rdoc
     end
-  
+
     desc 'Print the currently supported gateways in Textile format'
     task :textile do
       support = GatewaySupport.new
       support.to_textile
     end
-    
+
+    desc 'Print the currently supported gateways in Markdown format'
+    task :markdown do
+      support = GatewaySupport.new
+      support.to_markdown
+    end
+
     desc 'Print the gateway functionality supported by each gateway'
     task :features do
       support = GatewaySupport.new
       support.features
     end
   end
-  
+
   desc 'Print the list of destination hosts with port'
   task :hosts do
     OutboundHosts.list
   end
-  
+
+  desc 'Test that gateways allow SSL verify_peer'
+  task :ssl_verify do
+    SSLVerify.new.test_gateways
+  end
 end

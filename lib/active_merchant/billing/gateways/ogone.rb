@@ -9,17 +9,23 @@ module ActiveMerchant #:nodoc:
     # communication between Ogone systems and your e-commerce website.
     #
     # This implementation follows the specification provided in the DirectLink integration
-    # guide version 4.2.0 (26 October 2011), available here:
+    # guide version 4.3.0 (25 April 2012), available here:
     # https://secure.ogone.com/ncol/Ogone_DirectLink_EN.pdf
     #
     # It also features aliases, which allow to store/unstore credit cards, as specified in
-    # the Alias Manager Option guide version 3.2.0 (26 October 2011) available here:
+    # the Alias Manager Option guide version 3.2.1 (25 April 2012) available here:
     # https://secure.ogone.com/ncol/Ogone_Alias_EN.pdf
     #
-    # It was last tested on Release 4.89 of Ogone DirectLink + AliasManager (26 October 2011).
+    # It also implements the 3-D Secure feature, as specified in the DirectLink with
+    # 3-D Secure guide version 3.0 (25 April 2012) available here:
+    # https://secure.ogone.com/ncol/Ogone_DirectLink-3-D_EN.pdf
+    #
+    # It was last tested on Release 4.92 of Ogone DirectLink + AliasManager + Direct Link 3D
+    # (25 April 2012).
     #
     # For any questions or comments, please contact one of the following:
-    # - Nicolas Jacobeus (nj@belighted.com),
+    # - Joel Cogen (joel.cogen@belighted.com)
+    # - Nicolas Jacobeus (nicolas.jacobeus@belighted.com),
     # - Sébastien Grosjean (public@zencocoon.com),
     # - Rémy Coutable (remy@jilion.com).
     #
@@ -30,7 +36,7 @@ module ActiveMerchant #:nodoc:
     #               :user                      => "my_ogone_user_id",
     #               :password                  => "my_ogone_pswd",
     #               :signature                 => "my_ogone_sha_signature", # Only if you configured your Ogone environment so.
-    #               :signature_encryptor       => "sha512", # Can be "sha1" (default), "sha256" or "sha512".
+    #               :signature_encryptor       => "sha512", # Can be "none" (default), "sha1", "sha256" or "sha512".
     #                                                       # Must be the same as the one configured in your Ogone account.
     #            )
     #
@@ -52,24 +58,47 @@ module ActiveMerchant #:nodoc:
     #   puts response.success?      # Check whether the transaction was successful
     #   puts response.message       # Retrieve the message returned by Ogone
     #   puts response.authorization # Retrieve the unique transaction ID returned by Ogone
+    #   puts response.order_id      # Retrieve the order ID
     #
     # == Alias feature
     #
-    #   To use the alias feature, simply add :store in the options hash:
+    #   To use the alias feature, simply add :billing_id in the options hash:
     #
     #   # Associate the alias to that credit card
-    #   gateway.purchase(1000, creditcard, :order_id => "1", :store => "myawesomecustomer")
+    #   gateway.purchase(1000, creditcard, :order_id => "1", :billing_id => "myawesomecustomer")
     #
     #   # You can use the alias instead of the credit card for subsequent orders
     #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2")
     #
+    #   # You can also create an alias without making a purchase using store
+    #   gateway.store(creditcard, :billing_id => "myawesomecustomer")
+    #
+    #   # When using store, you can also let Ogone generate the alias for you
+    #   response = gateway.store(creditcard)
+    #   puts response.billing_id  # Retrieve the generated alias
+    #
+    # == 3-D Secure feature
+    #
+    #   To use the 3-D Secure feature, simply add :d3d => true in the options hash:
+    #   gateway.purchase(2000, "myawesomecustomer", :order_id => "2", :d3d => true)
+    #
+    #   Specific 3-D Secure request options are (please refer to the documentation for more infos about these options):
+    #     :win_3ds         => :main_window (default), :pop_up or :pop_ix.
+    #     :http_accept     => "*/*" (default), or any other HTTP_ACCEPT header value.
+    #     :http_user_agent => The cardholder's User-Agent string
+    #     :accept_url      => URL of the web page to show the customer when the payment is authorized.
+    #                         (or waiting to be authorized).
+    #     :decline_url     => URL of the web page to show the customer when the acquirer rejects the authorization
+    #                         more than the maximum permitted number of authorization attempts (10 by default, but can
+    #                         be changed in the "Global transaction parameters" tab, "Payment retry" section of the
+    #                         Technical Information page).
+    #     :exception_url   => URL of the web page to show the customer when the payment result is uncertain.
+    #     :paramplus       => Field to submit the miscellaneous parameters and their values that you wish to be
+    #                         returned in the post sale request or final redirection.
+    #     :complus         => Field to submit a value you wish to be returned in the post sale request or output.
+    #     :language        => Customer's language, for example: "en_EN"
+    #
     class OgoneGateway < Gateway
-
-      URLS = {
-        :order       => 'https://secure.ogone.com/ncol/%s/orderdirect.asp',
-        :maintenance => 'https://secure.ogone.com/ncol/%s/maintenancedirect.asp'
-      }
-
       CVV_MAPPING = { 'OK' => 'M',
                       'KO' => 'N',
                       'NO' => 'P' }
@@ -80,8 +109,18 @@ module ActiveMerchant #:nodoc:
 
       SUCCESS_MESSAGE = "The transaction was successful"
 
-      OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE   = "Signature usage will be required from a future release of ActiveMerchant's Ogone Gateway. Please update your Ogone account to use it."
-      OGONE_LOW_ENCRYPTION_DEPRECATION_MESSAGE = "SHA512 signature encryptor will be required from a future release of ActiveMerchant's Ogone Gateway. Please update your Ogone account to use it."
+      THREE_D_SECURE_DISPLAY_WAYS = { :main_window => 'MAINW',  # display the identification page in the main window
+                                                                # (default value).
+                                      :pop_up      => 'POPUP',  # display the identification page in a pop-up window
+                                                                # and return to the main window at the end.
+                                      :pop_ix      => 'POPIX' } # display the identification page in a pop-up window
+                                                                # and remain in the pop-up window.
+
+      OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE   = "Signature usage will be the default for a future release of ActiveMerchant. You should either begin using it, or update your configuration to explicitly disable it (signature_encryptor: none)"
+      OGONE_STORE_OPTION_DEPRECATION_MESSAGE   = "The 'store' option has been renamed to 'billing_id', and its usage is deprecated."
+
+      self.test_url = "https://secure.ogone.com/ncol/test/"
+      self.live_url = "https://secure.ogone.com/ncol/prod/"
 
       self.supported_countries = ['BE', 'DE', 'FR', 'NL', 'AT', 'CH']
       # also supports Airplus and UATP
@@ -93,7 +132,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login, :user, :password)
-        @options = options
         super
       end
 
@@ -110,23 +148,25 @@ module ActiveMerchant #:nodoc:
 
       # Verify and transfer the specified amount.
       def purchase(money, payment_source, options = {})
-        post = {}
+        post   = {}
+        action = options[:action] || 'SAL'
         add_invoice(post, options)
         add_payment_source(post, payment_source, options)
         add_address(post, payment_source, options)
         add_customer_data(post, options)
         add_money(post, money, options)
-        commit('SAL', post)
+        commit(action, post)
       end
 
       # Complete a previously authorized transaction.
       def capture(money, authorization, options = {})
-        post = {}
+        post   = {}
+        action = options[:action] || 'SAL'
         add_authorization(post, reference_from(authorization))
         add_invoice(post, options)
         add_customer_data(post, options)
         add_money(post, money, options)
-        commit('SAL', post)
+        commit(action, post)
       end
 
       # Cancels a previously authorized transaction.
@@ -152,8 +192,12 @@ module ActiveMerchant #:nodoc:
         perform_reference_credit(money, reference, options)
       end
 
-      def test?
-        @options[:test] || super
+      # Store a credit card by creating an Ogone Alias
+      def store(payment_source, options = {})
+        options.merge!(:alias_operation => 'BYPSP') unless(options.has_key?(:billing_id) || options.has_key?(:store))
+        response = authorize(1, payment_source, options)
+        void(response.authorization) if response.success?
+        response
       end
 
       private
@@ -164,7 +208,7 @@ module ActiveMerchant #:nodoc:
 
       def reference_transaction?(identifier)
         return false unless identifier.is_a?(String)
-        reference, action = identifier.split(";")
+        _, action = identifier.split(";")
         !action.nil?
       end
 
@@ -188,21 +232,44 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_source(post, payment_source, options)
         if payment_source.is_a?(String)
-          add_alias(post, payment_source)
+          add_alias(post, payment_source, options[:alias_operation])
           add_eci(post, options[:eci] || '9')
         else
-          add_alias(post, options[:store])
+          if options.has_key?(:store)
+            deprecated OGONE_STORE_OPTION_DEPRECATION_MESSAGE
+            options[:billing_id] ||= options[:store]
+          end
+          add_alias(post, options[:billing_id], options[:alias_operation])
           add_eci(post, options[:eci] || '7')
+          add_d3d(post, options) if options[:d3d]
           add_creditcard(post, payment_source)
         end
+      end
+
+      def add_d3d(post, options)
+        add_pair post, 'FLAG3D', 'Y'
+        win_3ds = THREE_D_SECURE_DISPLAY_WAYS.key?(options[:win_3ds]) ?
+          THREE_D_SECURE_DISPLAY_WAYS[options[:win_3ds]] :
+          THREE_D_SECURE_DISPLAY_WAYS[:main_window]
+        add_pair post, 'WIN3DS', win_3ds
+
+        add_pair post, 'HTTP_ACCEPT',     options[:http_accept] || "*/*"
+        add_pair post, 'HTTP_USER_AGENT', options[:http_user_agent] if options[:http_user_agent]
+        add_pair post, 'ACCEPTURL',       options[:accept_url]      if options[:accept_url]
+        add_pair post, 'DECLINEURL',      options[:decline_url]     if options[:decline_url]
+        add_pair post, 'EXCEPTIONURL',    options[:exception_url]   if options[:exception_url]
+        add_pair post, 'PARAMPLUS',       options[:paramplus]       if options[:paramplus]
+        add_pair post, 'COMPLUS',         options[:complus]         if options[:complus]
+        add_pair post, 'LANGUAGE',        options[:language]        if options[:language]
       end
 
       def add_eci(post, eci)
         add_pair post, 'ECI', eci.to_s
       end
 
-      def add_alias(post, _alias)
+      def add_alias(post, _alias, alias_operation = nil)
         add_pair post, 'ALIAS', _alias
+        add_pair post, 'ALIASOPERATION', alias_operation unless alias_operation.nil?
       end
 
       def add_authorization(post, authorization)
@@ -242,7 +309,15 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         xml_root = REXML::Document.new(body).root
-        convert_attributes_to_hash(xml_root.attributes)
+        response = convert_attributes_to_hash(xml_root.attributes)
+
+        # Add HTML_ANSWER element (3-D Secure specific to the response's params)
+        # Note: HTML_ANSWER is not an attribute so we add it "by hand" to the response
+        if html_answer = REXML::XPath.first(xml_root, "//HTML_ANSWER")
+          response["HTML_ANSWER"] = html_answer.text
+        end
+
+        response
       end
 
       def commit(action, parameters)
@@ -250,8 +325,7 @@ module ActiveMerchant #:nodoc:
         add_pair parameters, 'USERID', @options[:user]
         add_pair parameters, 'PSWD',   @options[:password]
 
-        url = URLS[parameters['PAYID'] ? :maintenance : :order] % [test? ? "test" : "prod"]
-        response = parse(ssl_post(url, post_data(action, parameters)))
+        response = parse(ssl_post(url(parameters['PAYID']), post_data(action, parameters)))
 
         options = {
           :authorization => [response["PAYID"], action].join(";"),
@@ -259,7 +333,11 @@ module ActiveMerchant #:nodoc:
           :avs_result    => { :code => AVS_MAPPING[response["AAVCheck"]] },
           :cvv_result    => CVV_MAPPING[response["CVCCheck"]]
         }
-        Response.new(successful?(response), message_from(response), response, options)
+        OgoneResponse.new(successful?(response), message_from(response), response, options)
+      end
+
+      def url(payid)
+        (test? ? test_url : live_url) + (payid ? "maintenancedirect.asp" : "orderdirect.asp")
       end
 
       def successful?(response)
@@ -288,12 +366,15 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         add_pair parameters, 'Operation', action
-        @options[:signature] ? add_signature(parameters) : deprecated(OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE)
+        add_signature(parameters)
         parameters.to_query
       end
 
       def add_signature(parameters)
-        deprecated(OGONE_LOW_ENCRYPTION_DEPRECATION_MESSAGE) unless @options[:signature_encryptor] == 'sha512'
+        if @options[:signature].blank?
+           deprecated(OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE) unless(@options[:signature_encryptor] == "none")
+           return
+        end
 
         sha_encryptor = case @options[:signature_encryptor]
                         when 'sha256'
@@ -324,6 +405,16 @@ module ActiveMerchant #:nodoc:
           response_hash[key] = value
         end
         response_hash
+      end
+    end
+
+    class OgoneResponse < Response
+      def order_id
+        @params['orderID']
+      end
+
+      def billing_id
+        @params['ALIAS']
       end
     end
   end
