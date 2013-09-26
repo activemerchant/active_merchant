@@ -26,6 +26,48 @@ module ActiveMerchant #:nodoc:
 
       PROCESS_URL = '/NetGate/ProcessLink.asmx'
 
+      REJECT_MESSAGES = {
+        '1' => 'Agent code has not been set up on the authorization system. Please call iATS at 1-888-955-5455.',
+        '2' => 'Unable to process transaction. Verify and re-enter credit card information.',
+        '3' => 'Invalid Customer Code.',
+        '4' => 'Incorrect expiration date.',
+        '5' => 'Invalid transaction. Verify and re-enter credit card information.',
+        '6' => 'Please have cardholder call the number on the back of the card.',
+        '7' => 'Lost or stolen card.',
+        '8' => 'Invalid card status.',
+        '9' => 'Restricted card status. Usually on corporate cards restricted to specific sales.',
+        '10' => 'Error. Please verify and re-enter credit card information.',
+        '11' => 'General decline code. Please have client call the number on the back of credit card',
+        '12' => 'Incorrect CVV2 or Expiry date',
+        '14' => 'The card is over the limit.',
+        '15' => 'General decline code. Please have client call the number on the back of credit card',
+        '16' => 'Invalid charge card number. Verify and re-enter credit card information.',
+        '17' => 'Unable to authorize transaction. Authorizer needs more information for approval.',
+        '18' => 'Card not supported by institution.',
+        '19' => 'Incorrect CVV2 security code',
+        '22' => 'Bank timeout. Bank lines may be down or busy. Re-try transaction later.',
+        '23' => 'System error. Re-try transaction later.',
+        '24' => 'Charge card expired.',
+        '25' => 'Capture card. Reported lost or stolen.',
+        '26' => 'Invalid transaction, invalid expiry date. Please confirm and retry transaction.',
+        '27' => 'Please have cardholder call the number on the back of the card.',
+        '32' => 'Invalid charge card number.',
+        '39' => 'Contact IATS 1-888-955-5455.',
+        '40' => 'Invalid card number. Card not supported by IATS.',
+        '41' => 'Invalid Expiry date.',
+        '42' => 'CVV2 required.',
+        '43' => 'Incorrect AVS.',
+        '45' => 'Credit card name blocked. Call iATS at 1-888-955-5455.',
+        '46' => 'Card tumbling. Call iATS at 1-888-955-5455.',
+        '47' => 'Name tumbling. Call iATS at 1-888-955-5455.',
+        '48' => 'IP blocked. Call iATS at 1-888-955-5455.',
+        '49' => 'Velocity 1 – IP block. Call iATS at 1-888-955-5455.',
+        '50' => 'Velocity 2 – IP block. Call iATS at 1-888-955-5455.',
+        '51' => 'Velocity 3 – IP block. Call iATS at 1-888-955-5455.',
+        '52' => 'Credit card BIN country blocked. Call iATS at 1-888-955-5455.',
+        '100' => 'DO NOT REPROCESS. Call iATS at 1-888-955-5455.',
+        'Timeout' => 'The system has not responded in the time allotted. Call iATS at 1-888-955-5455.'}
+
       def initialize(options = {})
         requires!(options, :login, :password, :region)
         @region = options[:region]
@@ -53,7 +95,9 @@ module ActiveMerchant #:nodoc:
           credit_card_num: creditcard.number,
           credit_card_expiry: "#{creditcard.month}/#{creditcard.year}"
         }
-        process_credit_card_v1(hash)
+        res = process_credit_card_v1(hash)
+
+        parse_data(res)
       end
 
       def authorize(money, creditcard, options = {})
@@ -77,7 +121,8 @@ module ActiveMerchant #:nodoc:
           total: options[:total],
           transaction_id: identification
         }
-        process_credit_card_refund_with_transaction_id_v1(hash)
+        res = process_credit_card_refund_with_transaction_id_v1(hash)
+        parse_data(res)
       end
 
       def credit(money, identification, options = {})
@@ -93,6 +138,20 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
+      def parse_data(res)
+        success = (res.xpath('//STATUS').text.include?('Success') &&
+          res.xpath('//AUTHORIZATIONRESULT').text.include?('OK:'))
+        message = res.xpath('//AUTHORIZATIONRESULT').text.chomp
+        status_code = message
+        if !success
+          message = REJECT_MESSAGES[message.gsub('REJECT:', '').gsub(' ', '')]
+        end
+        transaction_id = res.xpath('//TRANSACTIONID').text.chomp
+        Response.new(success, message,
+                     { transaction_id: transaction_id,
+                       status_code: status_code })
+      end
 
       # ProcessCrediCardV1
       def process_credit_card_v1(hash)
