@@ -150,7 +150,9 @@ module ActiveMerchant #:nodoc:
         transaction_id = res.xpath('//TRANSACTIONID').text.chomp
         Response.new(success, message,
                      { transaction_id: transaction_id,
-                       status_code: status_code })
+                       status_code: status_code,
+                       xml: res.to_xml
+                      })
       end
 
       # ProcessCrediCardV1
