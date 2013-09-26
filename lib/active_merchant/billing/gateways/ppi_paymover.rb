@@ -323,7 +323,7 @@ module ActiveMerchant #:nodoc:
           :test => test?, 
           :authorization => response['order_id'],
           :fraud_review => fraud_review?(response),
-          :avs_result => response['avs_code'],
+          :avs_result => {:code => response['avs_code']},
           :cvv_result => response['credit_card_verification_response']
         )
       end
