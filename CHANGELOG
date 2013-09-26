@@ -6,6 +6,7 @@
 * Paymill: Add support for void [duff]
 * Add MoneyMovers gateway [jeffutter]
 * Ogone: Add a :store_amount option [rymai]
+* Ogone: Require TLSv1 [ntalbott]
 
 == Version 1.38.1 (September 16, 2013)
 

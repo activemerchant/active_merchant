@@ -141,6 +141,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Ogone'
       self.default_currency = 'EUR'
       self.money_format = :cents
+      self.ssl_version = :TLSv1
 
       def initialize(options = {})
         requires!(options, :login, :user, :password)
