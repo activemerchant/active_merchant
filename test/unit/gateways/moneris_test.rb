@@ -171,7 +171,7 @@ class MonerisTest < Test::Unit::TestCase
     gateway = MonerisGateway.new(login: 'store1', password: 'yesguy', cvv_enabled: true)
 
     @credit_card.verification_value = "452"
-    stub_comms do
+    stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_match(%r{cvd_indicator>1<}, data)
@@ -183,7 +183,7 @@ class MonerisTest < Test::Unit::TestCase
     gateway = MonerisGateway.new(login: 'store1', password: 'yesguy', cvv_enabled: true)
 
     @credit_card.verification_value = ""
-    stub_comms do
+    stub_comms(gateway) do
       gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_match(%r{cvd_indicator>0<}, data)

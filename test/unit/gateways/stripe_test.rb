@@ -157,7 +157,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_application_fee_is_submitted_for_purchase
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge({:application_fee => 144}))
     end.check_request do |method, endpoint, data, headers|
       assert_match(/application_fee=144/, data)
@@ -165,7 +165,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_application_fee_is_submitted_for_capture
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.capture(@amount, "ch_test_charge", @options.merge({:application_fee => 144}))
     end.check_request do |method, endpoint, data, headers|
       assert_match(/application_fee=144/, data)
@@ -173,7 +173,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_client_data_submitted_with_purchase
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       updated_options = @options.merge({:description => "a test customer",:browser_ip => "127.127.127.127", :user_agent => "some browser", :order_id => "42", :email => "foo@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
       @gateway.purchase(@amount,@credit_card,updated_options)
     end.check_request do |method, endpoint, data, headers|
@@ -216,14 +216,14 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_track_data_and_traditional_should_be_mutually_exclusive
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert data =~ /card\[name\]/
       assert data !~ /card\[swipe_data\]/
     end.respond_with(successful_purchase_response)
 
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
@@ -233,7 +233,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_address_is_included_with_card_data
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert data =~ /card\[address_line1\]/

@@ -163,7 +163,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters = {})
-        response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(action, parameters)))
+        data = post_data(action, parameters)
+        url = test? ? self.test_url : self.live_url
+        raw = ssl_post(url, data)
+        response = parse(raw)
 
         Response.new(successful?(response), message_from(response[:message]), response,
           :test          => test?,

@@ -27,11 +27,11 @@ module CommStub
     end
   end
 
-  def stub_comms(method_to_stub=:ssl_post, &action)
+  def stub_comms(gateway=@gateway, method_to_stub=:ssl_post, &action)
     if @last_comm_stub
       assert @last_comm_stub.complete?, "Tried to stub communications when there's a stub already in progress."
     end
-    @last_comm_stub = Stub.new(@gateway, method_to_stub, action)
+    @last_comm_stub = Stub.new(gateway, method_to_stub, action)
   end
 
   def teardown

@@ -110,7 +110,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_requests_include_verification_string
-    stub_comms(:ssl_post) do
+    stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_match "<VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>", data
