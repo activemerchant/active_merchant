@@ -52,6 +52,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_equal 'Purchase', response.params['transaction_type']
     assert_equal '5WxC03VQ0LmmkYvIHl7XsPKIpUb', response.params['payment_method_token']
     assert_equal '6644', response.params['payment_method_last_four_digits']
+    assert_equal 'used', response.params['payment_method_storage_state']
   end
 
   def test_failed_purchase_with_invalid_credit_card
@@ -121,6 +122,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_equal 'Authorization', response.params['transaction_type']
     assert_equal '5WxC03VQ0LmmkYvIHl7XsPKIpUb', response.params['payment_method_token']
     assert_equal '6644', response.params['payment_method_last_four_digits']
+    assert_equal 'used', response.params['payment_method_storage_state']
 
     @gateway.expects(:raw_ssl_request).returns(successful_capture_response)
     response = @gateway.capture(@amount, response.authorization)
@@ -283,6 +285,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
           <data>
             <how_many>2</how_many>
           </data>
+          <storage_state>used</storage_state>
           <payment_method_type>credit_card</payment_method_type>
           <verification_value/>
           <number>XXXX-XXXX-XXXX-6644</number>
@@ -411,6 +414,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
           <data>
             <how_many>2</how_many>
           </data>
+          <storage_state>used</storage_state>
           <payment_method_type>credit_card</payment_method_type>
           <verification_value/>
           <number>XXXX-XXXX-XXXX-6644</number>
