@@ -96,6 +96,10 @@ module ActiveMerchant #:nodoc:
         save_card(true, credit_card, options)
       end
 
+      def store_but_do_not_retain(credit_card, options)
+        save_card(false, credit_card, options)
+      end
+
       # Public: Redact the CreditCard in Spreedly. This wipes the sensitive
       #         payment information from the card.
       #
