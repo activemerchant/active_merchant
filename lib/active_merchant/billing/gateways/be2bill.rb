@@ -98,7 +98,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def successful?(response)
-        response['EXECCODE'].in? %w(0000 0001)
+        %w(0000 0001).include?(response['EXECCODE'])
       end
 
       def message_from(response)
