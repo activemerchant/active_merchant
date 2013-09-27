@@ -36,7 +36,9 @@ module ActiveMerchant #:nodoc:
       #
       # money          - The monetary amount of the transaction in cents.
       # payment_method - The CreditCard or the Spreedly payment method token.
-      # options        - A standard ActiveMerchant options hash
+      # options        - A hash of options:
+      #                  :store - Retain the payment method if the purchase
+      #                           succeeds.  Defaults to false.  (optional)
       def purchase(money, payment_method, options = {})
         if payment_method.is_a?(String)
           purchase_with_token(money, payment_method, options)
@@ -52,7 +54,9 @@ module ActiveMerchant #:nodoc:
       #
       # money          - The monetary amount of the transaction in cents.
       # payment_method - The CreditCard or the Spreedly payment method token.
-      # options        - A standard ActiveMerchant options hash
+      # options        - A hash of options:
+      #                  :store - Retain the payment method if the authorize
+      #                           succeeds.  Defaults to false.  (optional)
       def authorize(money, payment_method, options = {})
         if payment_method.is_a?(String)
           authorize_with_token(money, payment_method, options)
@@ -126,6 +130,7 @@ module ActiveMerchant #:nodoc:
         build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
           doc.payment_method_token(payment_method_token)
+          doc.retain_on_success(true) if options[:store]
         end
       end
 

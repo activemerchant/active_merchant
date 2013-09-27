@@ -8,6 +8,7 @@
 * Ogone: Add a :store_amount option [rymai]
 * Ogone: Require TLSv1 [ntalbott]
 * Moneris: Add support for purchasecorrection [pgib]
+* Spreedly: Add ability to retain on success [duff]
 
 == Version 1.38.1 (September 16, 2013)
 
