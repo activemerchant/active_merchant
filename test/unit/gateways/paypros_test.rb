@@ -1,8 +1,8 @@
 require 'test_helper'
 
-class PpiPaymoverTest < Test::Unit::TestCase
+class PayprosTest < Test::Unit::TestCase
   def setup
-    @gateway = PpiPaymoverGateway.new(
+    @gateway = PayprosGateway.new(
                  :login => 'login'
                )
 
@@ -73,13 +73,13 @@ class PpiPaymoverTest < Test::Unit::TestCase
   def test_override_defaults
     result = {}
     @gateway.send(:add_default_options, result, {})
-    assert_equal PpiPaymoverGateway::DEFAULT_INDUSTRY, result[:industry]
-    assert_equal PpiPaymoverGateway::TRANSACTION_CONDITION_CODES[:secure_ecommerce], result[:transaction_condition_code]
+    assert_equal PayprosGateway::DEFAULT_INDUSTRY, result[:industry]
+    assert_equal PayprosGateway::TRANSACTION_CONDITION_CODES[:secure_ecommerce], result[:transaction_condition_code]
     
     result_ovr = {}
-    @gateway.send(:add_default_options, result, {:industry => 'RESTAURANT', :condition_code => PpiPaymoverGateway::TRANSACTION_CONDITION_CODES[:ach_web]})
+    @gateway.send(:add_default_options, result, {:industry => 'RESTAURANT', :condition_code => PayprosGateway::TRANSACTION_CONDITION_CODES[:ach_web]})
     assert_equal 'RESTAURANT', result[:industry]
-    assert_equal PpiPaymoverGateway::TRANSACTION_CONDITION_CODES[:ach_web], result[:transaction_condition_code]
+    assert_equal PayprosGateway::TRANSACTION_CONDITION_CODES[:ach_web], result[:transaction_condition_code]
   end
   
   def test_successful_credit
@@ -97,11 +97,11 @@ class PpiPaymoverTest < Test::Unit::TestCase
   end
   
   def test_supported_countries
-    assert_equal ['US'], PpiPaymoverGateway.supported_countries
+    assert_equal ['US'], PayprosGateway.supported_countries
   end
   
   def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover], PpiPaymoverGateway.supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :discover], PayprosGateway.supported_cardtypes
   end
   
   def test_response_fraud_review

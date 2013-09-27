@@ -1,10 +1,9 @@
 require 'test_helper'
 
-class RemotePpiPaymoverTest < Test::Unit::TestCase
-  
+class RemotePayprosTest < Test::Unit::TestCase
 
   def setup
-    @gateway = PpiPaymoverGateway.new(fixtures(:ppi_paymover))
+    @gateway = PayprosGateway.new(fixtures(:paypros))
     
     @amounts = {
       :success => 1,
@@ -20,7 +19,7 @@ class RemotePpiPaymoverTest < Test::Unit::TestCase
       :description => 'Store Purchase'
     }
     
-    @card_swipe = fixtures(:ppi_swipe_data)
+    @card_swipe = fixtures(:paypros_swipe_data)
   end
   
   def test_mpd_add_user_with_auth_and_void
@@ -335,7 +334,7 @@ class RemotePpiPaymoverTest < Test::Unit::TestCase
   end
   
   def test_invalid_login
-    gateway = PpiPaymoverGateway.new(
+    gateway = PayprosGateway.new(
                 :login => ''
               )
     assert response = gateway.purchase(@amounts[:success], @credit_card, @options)

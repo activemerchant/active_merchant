@@ -1,6 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class PpiPaymoverGateway < Gateway
+    class PayprosGateway < Gateway
       #
       # -- MANAGED PAYER DATA -- 
       # Now has support for storing cc information via the managed payer data.
@@ -48,19 +48,19 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       
       # The homepage URL of the gateway
-      self.homepage_url = 'http://www.ppipaymover.com/'
+      self.homepage_url = 'http://www.paypros.com/'
       
       # The name of the gateway
-      self.display_name = 'PPI Paymover'
+      self.display_name = 'PayPros'
       
-      # Creates a new PPIPaymoverGateway
+      # Creates a new PayprosGateway
       #
       # The gateway requires that a valid login token is passed
       # in the +options+ hash.
       #
       # ==== Options
       #
-      # * <tt>:login</tt> -- The PPI Paymover Token (REQUIRED)
+      # * <tt>:login</tt> -- The Paypros Token (REQUIRED)
       # * <tt>:version_id</tt> -- The version of your application, passed through with request
       # * <tt>:cartridge_type</tt> -- A unique string that identifies your application.  Defaults to "Rails - ActiveMerchant"
       # * <tt>:industry</tt> -- Set the default industry passed with transactions.  One of "DIRECT_MARKETING", "RETAIL", "LODGING", or "RESTAURANT".  Defaults to "DIRECT MARKETING". You can override this on a per-transaction basis.

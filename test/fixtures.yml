@@ -356,6 +356,11 @@ paypal_signature:
   password: PASSWORD
   signature: SIGNATURE
 
+paypros:
+  login: LOGIN
+
+paypros_swipe_data: ignore
+
 payway:
   username:
   password:
@@ -371,11 +376,6 @@ pin:
 plugnpay:
   login: LOGIN
   password: PASSWORD
-
-ppi_paymover:
-  login: TOKEN
-
-ppi_swipe_data: ignore
 
 pxpay:
   login: LOGIN
