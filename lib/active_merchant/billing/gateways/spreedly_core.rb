@@ -93,7 +93,8 @@ module ActiveMerchant #:nodoc:
       # credit_card    - The CreditCard to store
       # options        - A standard ActiveMerchant options hash
       def store(credit_card, options={})
-        save_card(true, credit_card, options)
+        retain = (options.has_key?(:retain) ? options[:retain] : true)
+        save_card(retain, credit_card, options)
       end
 
       # Public: Redact the CreditCard in Spreedly. This wipes the sensitive
