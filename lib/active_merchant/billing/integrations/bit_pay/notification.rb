@@ -6,46 +6,29 @@ module ActiveMerchant #:nodoc:
       module BitPay
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           def complete?
-            params['']
+            params['status'] = "Completed"
           end
 
           def item_id
-            params['']
+            params['posData']
           end
 
           def transaction_id
-            params['']
+            params['id']
           end
 
           # When was this payment received by the client.
           def received_at
-            params['']
-          end
-
-          def payer_email
-            params['']
-          end
-
-          def receiver_email
-            params['']
-          end
-
-          def security_key
-            params['']
+            params['invoiceTime']
           end
 
           # the money amount we received in X.2 decimal.
           def gross
-            params['']
-          end
-
-          # Was this a test transaction?
-          def test?
-            params[''] == 'test'
+            params['price']
           end
 
           def status
-            params['']
+            params['status']
           end
 
           # Acknowledge the transaction to BitPay. This method has to be called after a new
@@ -62,26 +45,9 @@ module ActiveMerchant #:nodoc:
           #     else
           #       ... log possible hacking attempt ...
           #     end
-          def acknowledge
-            payload = raw
-
-            uri = URI.parse(BitPay.notification_confirmation_url)
-
-            request = Net::HTTP::Post.new(uri.path)
-
-            request['Content-Length'] = "#{payload.size}"
-            request['User-Agent'] = "Active Merchant -- http://home.leetsoft.com/am"
-            request['Content-Type'] = "application/x-www-form-urlencoded"
-
-            http = Net::HTTP.new(uri.host, uri.port)
-            http.verify_mode    = OpenSSL::SSL::VERIFY_NONE unless @ssl_strict
-            http.use_ssl        = true
-
-            response = http.request(request, payload)
-
-            # Replace with the appropriate codes
-            raise StandardError.new("Faulty BitPay result: #{response.body}") unless ["AUTHORISED", "DECLINED"].include?(response.body)
-            response.body == "AUTHORISED"
+          def acknowledge(order)
+            #GET during ack is bad.
+            completed? && item_id == order.id
           end
 
           private
