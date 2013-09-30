@@ -9,6 +9,7 @@
 * Ogone: Require TLSv1 [ntalbott]
 * Moneris: Add support for purchasecorrection [pgib]
 * Spreedly: Add ability to retain on success [duff]
+* Spreedly: Pass verification value [duff]
 
 == Version 1.38.1 (September 16, 2013)
 

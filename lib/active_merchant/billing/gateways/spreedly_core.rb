@@ -142,6 +142,7 @@ module ActiveMerchant #:nodoc:
       def add_credit_card(doc, credit_card, options)
         doc.credit_card do
           doc.number(credit_card.number)
+          doc.verification_value(credit_card.verification_value)
           doc.first_name(credit_card.first_name)
           doc.last_name(credit_card.last_name)
           doc.month(credit_card.month)
