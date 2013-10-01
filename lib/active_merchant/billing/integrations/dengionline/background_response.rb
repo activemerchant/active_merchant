@@ -54,12 +54,13 @@ module ActiveMerchant #:nodoc:
           def send_request
             url = URI.parse(service_url)
             http = Net::HTTP.new(url.hostname, url.port)
-            @body = http.post(url.path, @data)
-            case @resp
+            r = http.post(url.path, @data)
+            case r
             when Net::HTTPOK
               @request_success == true
               begin
-                parse(@body.body)
+                @body = r.body
+                parse(@body)
               rescue
                 @errors << "parse_error"
               end
