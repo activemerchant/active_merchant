@@ -1,0 +1,71 @@
+require "test_helper"
+
+class MolpayHelperTest < Test::Unit::TestCase
+  include ActiveMerchant::Billing::Integrations
+
+  def setup
+    @helper = Molpay::Helper.new("2", "molpaymerchantid", :credential2 => "abcxyz", :amount => 500, :currency => "MYR")
+  end
+
+  def test_basic_helper_fields
+    assert_field "MerchantCode", "molpaymerchantid"
+    assert_field "Amount",       "5.00"
+    assert_field "RefNo",        "2"
+    assert_field "Currency",     "MYR"
+  end
+
+  def test_customer_fields
+    @helper.customer :first_name => "John", :last_name => "Doe", :email => "john@example.com", :phone => "+60128888888"
+    assert_field "name",    "John Doe"
+    assert_field "email",   "john@example.com"
+    assert_field "phone", "+60128888888"
+  end
+
+  def test_supported_currency
+    %w[MYR USD CNY TWD].each do |cur|
+      @helper.currency cur
+      assert_field "Currency", cur 
+    end
+  end
+
+  def test_unsupported_currency
+    assert_raise ArgumentError do
+      @helper.currency "FOO"
+    end
+  end
+
+  def test_supported_lang
+    %w[en cn].each do |lang|
+      @helper.language lang
+      assert_field "Lang", lang
+    end
+  end
+
+  def test_unsupported_lang
+    assert_raise ArgumentError do
+      @helper.language "KLINGON"
+    end
+  end
+
+  def test_return_url
+    @helper.return_url "http://www.example.com"
+    assert_field "return_url", "http://www.example.com"
+  end
+
+  def test_valid_amount
+    @helper.amount = 100
+    assert_field "Amount", "1.00"
+  end
+
+  def test_invalid_amount_as_string
+    assert_raise ArgumentError do
+      @helper.amount = "1.00"
+    end
+  end
+
+  def test_invalid_amount_as_negative_integer_in_cents
+    assert_raise ArgumentError do
+      @helper.amount = -100
+    end
+  end
+end
