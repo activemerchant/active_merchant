@@ -85,6 +85,9 @@ cyber_source:
   login: X
   password: Y
 
+conekta:
+  key: 1tv5yJp3xnVZ7eK67m4h
+
 data_cash:
   login: X
   password: Y
