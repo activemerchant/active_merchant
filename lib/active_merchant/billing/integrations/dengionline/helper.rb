@@ -55,8 +55,12 @@ module ActiveMerchant #:nodoc:
           
           def background_request
             if background? and valid?
-              BackgroundResponse.new params, {:service_url => service_url, :method => pay_method}
+              background_request!
             end
+          end
+          
+          def background_request!
+            BackgroundResponse.new params, {:service_url => service_url, :method => pay_method}
           end
           
           # required
@@ -109,12 +113,9 @@ module ActiveMerchant #:nodoc:
               @errors << 'mode_type'          unless [54, 62, 75].include? m
               @errors << 'order_id'           if params['order_id'].to_s.empty?
               @errors << 'source'             if params['source'].to_s.empty?
-            elsif credit_card?
-              if background?
-                m = params['mode_type'].to_i
-                #@errors << 'mode_type'          unless [108, 109, 110, 263, 342].include? m
-                @errors << 'order_id'           if params['order_id'].to_s.empty?
-              end
+            elsif credit_card? and background?
+              m = params['mode_type'].to_i
+              @errors << 'mode_type'          unless [108, 109, 110, 263, 342].include? m
             elsif alfaclick?
               m = params['mode_type'].to_i
               @errors << 'mode_type'          if params['mode_type'].to_i != 76

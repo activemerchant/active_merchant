@@ -45,22 +45,26 @@ module ActiveMerchant #:nodoc:
             @status == "fail"
           end
           
+          def body
+            @body
+          end
+          
           private
           
           def send_request
             url = URI.parse(service_url)
             http = Net::HTTP.new(url.hostname, url.port)
-            r = http.post(url.path, @data)
-            case r
+            @body = http.post(url.path, @data)
+            case @resp
             when Net::HTTPOK
               @request_success == true
               begin
-                parse(r.body)
+                parse(@body.body)
               rescue
-                @errors << "parse error"
+                @errors << "parse_error"
               end
             else
-              @errors << "http request fail"
+              @errors << "http_request_failed"
             end
           end
           
