@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
           end
           
           def generate_signature
-            Digest::MD5.hexdigest [gross, nickname, payment_id, secret].join(".")
+            Digest::MD5.hexdigest [gross, nickname, payment_id, secret].join
           end
           
           def acknowledged?
