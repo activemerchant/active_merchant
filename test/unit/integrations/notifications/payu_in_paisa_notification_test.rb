@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class PayuInNotificationTest < Test::Unit::TestCase
+class PayuInPaisaNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
