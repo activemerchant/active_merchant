@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add Conekta gateway [leofischer]
+
 == Version 1.40.0 (October 18th, 2013)
 
 * Paymill: Revert Add support for specifying the :customer [melari]

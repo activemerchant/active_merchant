@@ -94,6 +94,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [CardSave](http://www.cardsave.net/) - GB
 * [CardStream](http://www.cardstream.com/) - GB
 * [CertoDirect](http://www.certodirect.com/) - BE, BG, CZ, DK, DE, EE, IE, EL, ES, FR, IT, CY, LV, LT, LU, HU, MT, NL, AT, PL, PT, RO, SI, SK, FI, SE, GB
+* [Conekta](https://conekta.io) - MX
 * [CyberSource](http://www.cybersource.com) - US, BR, CA, CN, DK, FI, FR, DE, JP, MX, NO, SE, GB, SG
 * [DataCash](http://www.datacash.com/) - GB
 * [Efsnet](http://www.concordefsnet.com/) - US
