@@ -6,11 +6,7 @@ module ActiveMerchant #:nodoc:
       module BitPay
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           def complete?
-            params['status'] == "Completed"
-          end
-
-          def item_id
-            params['posData']
+            params['status'].downcase == "complete"
           end
 
           def transaction_id
@@ -19,16 +15,24 @@ module ActiveMerchant #:nodoc:
 
           # When was this payment received by the client.
           def received_at
-            params['invoiceTime']
+            params['invoiceTime'].to_i
           end
 
-          # the money amount we received in X.2 decimal.
-          def gross
+          def currency
+            params['currency']
+          end
+
+          def amount
             params['price']
           end
 
+          # the money amount we received in X.2 decimal.
+          def btcPrice 
+            params['btcPrice'].to_f
+          end
+
           def status
-            params['status']
+            params['status'].downcase
           end
 
           def acknowledge(authcode = nil)
