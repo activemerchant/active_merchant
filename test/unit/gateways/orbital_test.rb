@@ -259,6 +259,30 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_currency_code_and_exponent_are_set_for_profile_purchase
+    @gateway.options[:customer_profiles] = true
+    response = stub_comms do
+      @gateway.purchase(50, nil, :order_id => 1, :customer_ref_num => @customer_ref_num)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<<CustomerRefNum>ABC/, data)
+      assert_match(/<CurrencyCode>124/, data)
+      assert_match(/<CurrencyExponent>2/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_currency_code_and_exponent_are_set_for_profile_authorizations
+    @gateway.options[:customer_profiles] = true
+    response = stub_comms do
+      @gateway.authorize(50, nil, :order_id => 1, :customer_ref_num => @customer_ref_num)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<<CustomerRefNum>ABC/, data)
+      assert_match(/<CurrencyCode>124/, data)
+      assert_match(/<CurrencyExponent>2/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   #   <AVSzip>K1C2N6</AVSzip>
   #   <AVSaddress1>1234 My Street</AVSaddress1>
   #   <AVSaddress2>Apt 1</AVSaddress2>
