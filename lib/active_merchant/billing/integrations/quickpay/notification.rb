@@ -101,7 +101,7 @@ module ActiveMerchant #:nodoc:
 
           # Quickpay doesn't do acknowledgements of callback notifications
           # Instead it uses and MD5 hash of all parameters
-          def acknowledge
+          def acknowledge(authcode = nil)
             generate_md5check == params['md5check']
           end
 

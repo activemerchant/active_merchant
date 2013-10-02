@@ -143,7 +143,7 @@ module ActiveMerchant #:nodoc:
             @message || params['error']
           end
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             checksum_ok?
           end
 

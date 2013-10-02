@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
             Base64.encode64(Digest::SHA1.digest(generate_signature_string)).gsub(/\n/, '')
           end
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             security_key == generate_signature
           end
         end

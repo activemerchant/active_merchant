@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
             params['TestMode'] != "false"
           end
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             true
           end
         

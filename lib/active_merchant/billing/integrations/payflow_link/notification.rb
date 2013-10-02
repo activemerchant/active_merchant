@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
             params["ACCT"]
           end
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             true
           end
         end

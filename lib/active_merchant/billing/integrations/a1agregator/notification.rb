@@ -154,7 +154,7 @@ module ActiveMerchant #:nodoc:
             @notification_type == :additional
           end
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             security_key == signature
           end
 

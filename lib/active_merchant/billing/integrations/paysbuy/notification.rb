@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
             params['result'][0..1] == SUCCESS ? 'Completed' : 'Failed'
           end
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             true
           end
         end

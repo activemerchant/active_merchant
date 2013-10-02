@@ -31,8 +31,8 @@ module ActiveMerchant #:nodoc:
             params['status']
           end
 
-          def acknowledge(token)
-            token == params['posData']
+          def acknowledge(authcode = nil)
+            authcode == params['posData']
           end
 
           private
