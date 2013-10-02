@@ -19,7 +19,7 @@ class RemotePayprosTest < Test::Unit::TestCase
       :description => 'Store Purchase'
     }
     
-    @card_swipe = fixtures(:paypros_swipe_data)
+    @card_swipe = fixtures(:paypros)[:swipe_data]
   end
   
   def test_mpd_add_user_with_auth_and_void
@@ -317,6 +317,7 @@ class RemotePayprosTest < Test::Unit::TestCase
   def test_successful_authorization_swipe
     unless @card_swipe == 'ignore'
       @options.delete(:billing_address)
+      @options[:condition_code] = PayprosGateway::TRANSACTION_CONDITION_CODES[:card_present_swiped]
       assert response = @gateway.authorize(@amounts[:success], @card_swipe, @options)
       assert_success response
       assert !response.fraud_review?

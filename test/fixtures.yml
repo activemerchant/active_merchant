@@ -358,8 +358,7 @@ paypal_signature:
 
 paypros:
   login: LOGIN
-
-paypros_swipe_data: ignore
+  swipe_data: ignore
 
 payway:
   username:
