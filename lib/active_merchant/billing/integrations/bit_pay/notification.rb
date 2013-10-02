@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       module BitPay
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           def complete?
-            params['status'] = "Completed"
+            params['status'] == "Completed"
           end
 
           def item_id
@@ -31,23 +31,8 @@ module ActiveMerchant #:nodoc:
             params['status']
           end
 
-          # Acknowledge the transaction to BitPay. This method has to be called after a new
-          # apc arrives. BitPay will verify that all the information we received are correct and will return a
-          # ok or a fail.
-          #
-          # Example:
-          #
-          #   def ipn
-          #     notify = BitPayNotification.new(request.raw_post)
-          #
-          #     if notify.acknowledge
-          #       ... process order ... if notify.complete?
-          #     else
-          #       ... log possible hacking attempt ...
-          #     end
-          def acknowledge(order)
-            #GET during ack is bad.
-            completed? && item_id == order.id
+          def acknowledge(token)
+            token == params['posData']
           end
 
           private
