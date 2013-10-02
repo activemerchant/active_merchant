@@ -146,7 +146,7 @@ module ActiveMerchant #:nodoc:
       # A – Authorization request
       def authorize(money, creditcard, options = {})
         order = build_new_order_xml(AUTH_ONLY, money, options) do |xml|
-          add_creditcard(xml, creditcard, options[:currency]) unless creditcard.nil? && options[:profile_txn]
+          add_creditcard(xml, creditcard, options[:currency])
           add_address(xml, creditcard, options)
           if @options[:customer_profiles]
             add_customer_data(xml, options)
@@ -159,7 +159,7 @@ module ActiveMerchant #:nodoc:
       # AC – Authorization and Capture
       def purchase(money, creditcard, options = {})
         order = build_new_order_xml(AUTH_AND_CAPTURE, money, options) do |xml|
-          add_creditcard(xml, creditcard, options[:currency]) unless creditcard.nil? && options[:profile_txn]
+          add_creditcard(xml, creditcard, options[:currency])
           add_address(xml, creditcard, options)
           if @options[:customer_profiles]
             add_customer_data(xml, options)
@@ -327,8 +327,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard(xml, creditcard, currency=nil)
-        xml.tag! :AccountNum, creditcard.number
-        xml.tag! :Exp, expiry_date(creditcard)
+        unless creditcard.nil?
+          xml.tag! :AccountNum, creditcard.number
+          xml.tag! :Exp, expiry_date(creditcard)
+        end
 
         xml.tag! :CurrencyCode, currency_code(currency)
         xml.tag! :CurrencyExponent, '2' # Will need updating to support currencies such as the Yen.
@@ -342,10 +344,12 @@ module ActiveMerchant #:nodoc:
         #   Null-fill this attribute OR
         #   Do not submit the attribute at all.
         # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
-        if %w( visa discover ).include?(creditcard.brand)
-          xml.tag! :CardSecValInd, (creditcard.verification_value? ? '1' : '9')
+        unless creditcard.nil?
+          if %w( visa discover ).include?(creditcard.brand)
+            xml.tag! :CardSecValInd, (creditcard.verification_value? ? '1' : '9')
+          end
+          xml.tag! :CardSecVal,  creditcard.verification_value if creditcard.verification_value?
         end
-        xml.tag! :CardSecVal,  creditcard.verification_value if creditcard.verification_value?
       end
 
       def add_refund(xml, currency=nil)
