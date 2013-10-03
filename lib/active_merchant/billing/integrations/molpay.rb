@@ -1,21 +1,16 @@
+require File.dirname(__FILE__) + '/molpay/helper.rb'
+require File.dirname(__FILE__) + '/molpay/notification.rb'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module Molpay
-        autoload :Return,       "active_merchant/billing/integrations/molpay/return.rb"
-        autoload :Helper,       "active_merchant/billing/integrations/molpay/helper.rb"
-				#will be implement IPN callback later
-        #autoload :Notification, "active_merchant/billing/integrations/molpay/notification.rb"
 
-				#MOLPay payment URL
-				#will be change when going to new server
-        def self.service_url
-          "https://www.onlinepayment.com.my/MOLPay/API/shopify/pay.php"
-        end
-				
-				#MOLPay return definition
-        def self.return(query_string, options={})
-          Return.new(query_string, options)
+        mattr_accessor :service_url
+        self.service_url = 'https://www.onlinepayment.com.my/MOLPay/API/shopify/pay.php'
+
+        def self.notification(post)
+          Notification.new(post)
         end
       end
     end

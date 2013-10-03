@@ -1,24 +1,24 @@
-require "test_helper"
+require 'test_helper'
 
 class MolpayHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
-
+  
   def setup
-    @helper = Molpay::Helper.new("2", "molpaymerchantid", :credential2 => "abcxyz", :amount => 500, :currency => "MYR")
+    @helper = Molpay::Helper.new('order-500','cody@example.com', :amount => 500, :currency => 'USD', :credential2 => '1a2d20c7150f42e37cfe1b87879fe5cb')
   end
-
+ 
   def test_basic_helper_fields
-    assert_field "MerchantCode", "molpaymerchantid"
+    assert_field "MerchantCode", "test5620"
     assert_field "Amount",       "5.00"
     assert_field "RefNo",        "2"
     assert_field "Currency",     "MYR"
   end
-
+  
   def test_customer_fields
-    @helper.customer :first_name => "John", :last_name => "Doe", :email => "john@example.com", :phone => "+60128888888"
-    assert_field "name",    "John Doe"
-    assert_field "email",   "john@example.com"
-    assert_field "phone", "+60128888888"
+    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', :phone => "+60128888888"
+    assert_field 'name', 'Cody'
+    assert_field 'email', 'cody@example.com'
+    assert_field 'phone', '+60128888888'
   end
 
   def test_supported_currency
@@ -68,4 +68,5 @@ class MolpayHelperTest < Test::Unit::TestCase
       @helper.amount = -100
     end
   end
+  
 end
