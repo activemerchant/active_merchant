@@ -264,7 +264,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(50, nil, :order_id => 1, :customer_ref_num => @customer_ref_num)
     end.check_request do |endpoint, data, headers|
-      assert_match(/<<CustomerRefNum>ABC/, data)
+      assert_match(/<CustomerRefNum>ABC/, data)
       assert_match(/<CurrencyCode>124/, data)
       assert_match(/<CurrencyExponent>2/, data)
     end.respond_with(successful_purchase_response)
@@ -276,7 +276,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.authorize(50, nil, :order_id => 1, :customer_ref_num => @customer_ref_num)
     end.check_request do |endpoint, data, headers|
-      assert_match(/<<CustomerRefNum>ABC/, data)
+      assert_match(/<CustomerRefNum>ABC/, data)
       assert_match(/<CurrencyCode>124/, data)
       assert_match(/<CurrencyExponent>2/, data)
     end.respond_with(successful_purchase_response)
