@@ -35,7 +35,31 @@ module ActiveMerchant #:nodoc:
         add_details_data(post, options)
         add_reference_id(post, options)
         add_offline_payment(post, method, type)
-        commit('offline', money, post)
+
+        post[:amount] = money
+        commit(:post, 'charges', post)
+      end
+
+      #add the card to an new/existing customer
+      def store(creditcard, options = {})
+        post = {}
+        add_creditcard(post, creditcard, options)
+        post[:name] = options[:name]
+        post[:email] = options[:email]
+
+        path = if options[:customer]
+          "customers/#{CGI.escape(options[:customer])}"
+        else
+          'customers'
+        end
+
+        commit(:post, path, post)
+      end
+
+      #delete de customer
+      def unstore(customer_id, options = {})
+        post = nil 
+        commit(:delete, "customers/#{CGI.escape(customer_id)}", post)
       end
 
       #creditcard can be a card hash or a token
@@ -43,13 +67,13 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         post[:description] = options[:description] if options
-        post[:device_fingerprint] = options[:device_fingerprint] if options
         add_creditcard(post, creditcard)
         add_address(post, options)
         add_details_data(post, options)
 
         add_reference_id(post, options)
-        commit('purchase', money, post)
+        post[:amount] = money
+        commit(:post, 'charges', post)
       end
 
       def refund(money, options)
@@ -58,7 +82,8 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = options[:order_id]
 
         add_reference_id(post, options)
-        commit('refund', money, post)
+        post[:amount] = money
+        commit(:post, "charges/#{options[:order_id]}/refund", post)
       end
 
       def void(money, options)
@@ -67,7 +92,7 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = options[:order_id]
 
         add_reference_id(post, options)
-        commit('void', money, post)
+        commit(:post, "charges/#{options[:order_id]}/refund", post)
       end
 
       def capture(money, options = {})
@@ -76,20 +101,21 @@ module ActiveMerchant #:nodoc:
         post[:order_id] = options[:order_id]
 
         add_reference_id(post, options)
-        commit('capture', money, post)
+        commit(:post, "charges/#{options[:order_id]}/capture", post)
       end
 
       def authorize(money, creditcard, options = {})
         post = {}
 
         post[:description] = options[:description] if options
-        post[:device_fingerprint] = options[:device_fingerprint] if options
         add_creditcard(post, creditcard)
         add_address(post, options)
         add_details_data(post, options)
 
         add_reference_id(post, options)
-        commit('authorize', money, post)
+        post[:capture] = false
+        post[:amount] = money
+        commit(:post, "charges", post)
       end
 
 
@@ -104,6 +130,9 @@ module ActiveMerchant #:nodoc:
         details[:name] = options[:customer]
         details[:email] = options[:email]
         details[:phone] = options[:phone]
+        details[:device_fingerprint] = options[:device_fingerprint] if options
+        details[:ip] = options[:ip] if options
+
         post[:details] = details
         add_billing_address(post, options)
         add_line_items(post, options)
@@ -176,7 +205,7 @@ module ActiveMerchant #:nodoc:
         post[:card][:address] = address if post[:card] and post[:card].respond_to?(:number)
       end
 
-      def add_creditcard(post, creditcard)
+      def add_creditcard(post, creditcard, options={})
         if creditcard.kind_of? String
             post[:card] = creditcard
         elsif creditcard.respond_to?(:number)
@@ -206,40 +235,57 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit(action, money, parameters)
-        parameters[:amount] = money
-        headers = {}
-        headers["Authorization"] = "Basic #{Base64.encode64((self.options[:key] || "" )+ ':')}"
-        headers["RaiseHtmlError"] = "false"
+      def headers(options = {})
+        @@ua ||= JSON.dump({
+          :bindings_version => ActiveMerchant::VERSION,
+          :lang => 'ruby',
+          :lang_version => "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
+          :platform => RUBY_PLATFORM,
+          :publisher => 'active_merchant',
+          :uname => (RUBY_PLATFORM =~ /linux|darwin/i ? `uname -a 2>/dev/null`.strip : nil)
+        })
+
+        key = self.options[:key] || options[:key] || @api_key
         version = if self.options[:version] then self.options[:version] else '0.2.0' end
-        headers["Accept"] = "application/vnd.conekta-v#{version}+json"
-        url = test? ? self.test_url : self.live_url
-        case action
-        when "refund"
-          url = "#{url}charges/#{parameters[:order_id]}/refund"
-        when "void"
-          url = "#{url}charges/#{parameters[:order_id]}/void"
-        when "capture"
-          url = "#{url}charges/#{parameters[:order_id]}/capture"
-        when "purchase"
-          url = "#{url}charges.json"
-        when "offline"
-          url = "#{url}charges.json"
-        else #"authorize"
-          parameters[:capture] = false
-          url = "#{url}charges.json"
+
+        {
+          "Accept" => "application/vnd.conekta-v#{version}+json",
+          "Authorization" => "Basic " + Base64.encode64(key.to_s + ":").strip,
+          "RaiseHtmlError" => "false",
+          "User-Agent" => "Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          "X-Conekta-Client-User-Agent" => @@ua,
+          "X-Conekta-Client-User-Metadata" => options[:meta].to_json
+        }
+      end
+
+      def commit(method, url, parameters=nil, options = {})
+        base_url = test? ? self.test_url : self.live_url
+
+        prepared_parameters = nil
+        if ! parameters.blank?
+          prepared_parameters = parameters.to_query
         end
-        response = parse(ssl_post(url, parameters.to_query, headers))
-        Response.new(success?(response),
+
+        success=false
+        begin
+          raw_response = ssl_request(method, base_url + url, prepared_parameters, headers(options))
+          response = parse(raw_response)
+          success = (response.key?("object") and response["object"] != "error")
+        rescue ResponseError => e
+          raw_response = e.response.body
+          response = response_error(raw_response)
+        rescue JSON::ParserError
+          response = json_error(raw_response)
+        end
+        #response = parse(ssl_post(url, parameters.to_query, headers))
+
+        Response.new(success,
                      response["message"],
                      response,
                      :test => test?,
                      :authorization => '')
       end
 
-      def success?(response)
-        !response["status"].blank?
-      end
 
       def message_from(response)
       end

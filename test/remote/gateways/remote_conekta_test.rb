@@ -125,6 +125,22 @@ class RemoteConektaTest < Test::Unit::TestCase
     assert_equal nil, response.message
   end
 
+  def test_successful_store
+    assert response = @gateway.store(@credit_card, {:name => "John Doe", :email => "email@example.com"})
+    assert_success response
+    assert_equal "customer", response.params["object"]
+    assert_equal "John Doe", response.params["name"]
+    assert_equal "email@example.com", response.params["email"]
+    #assert_equal @credit_card.last_digits, response.params["active_card"]["last4"]
+  end
+
+  def test_successful_unstore
+    creation = @gateway.store(@credit_card, {:name => "John Doe", :email => "email@example.com"})
+    assert response = @gateway.unstore(creation.params['id'])
+    assert_success response
+    assert_equal true, response.params["deleted"]
+  end
+
   def test_unsuccessful_capture
     @options[:order_id] = "1"
     assert response = @gateway.capture(@amount, @options)

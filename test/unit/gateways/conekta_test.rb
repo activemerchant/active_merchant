@@ -41,7 +41,7 @@ class ConektaTest < Test::Unit::TestCase
   end
 
   def test_successful_offline_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
     assert response = @gateway.offline_purchase(2000, "bank", "banorte", @options)
     assert_instance_of Response, response
     assert_success response
@@ -50,14 +50,14 @@ class ConektaTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_offline_purchase
-    @gateway.expects(:ssl_post).returns(failed_bank_purchase_response)
+    @gateway.expects(:ssl_request).returns(failed_bank_purchase_response)
     assert response = @gateway.offline_purchase(1000, "bank", "banorte", @options)
     assert_failure response
     assert response.test?
   end
 
   def test_successful_tokenized_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, 'tok_xxxxxxxxxxxxxxxx', @options)
     assert_instance_of Response, response
     assert_success response
@@ -66,7 +66,7 @@ class ConektaTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
@@ -75,7 +75,7 @@ class ConektaTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_purchase
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    @gateway.expects(:ssl_request).returns(failed_purchase_response)
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert response.test?
@@ -83,7 +83,7 @@ class ConektaTest < Test::Unit::TestCase
 
   def test_unsuccessful_refund
     @options[:order_id] = "1"
-    @gateway.expects(:ssl_post).returns(failed_refund_response)
+    @gateway.expects(:ssl_request).returns(failed_refund_response)
     assert response = @gateway.refund(@amount, @options)
     assert_failure response
     assert response.test?
@@ -91,14 +91,14 @@ class ConektaTest < Test::Unit::TestCase
 
   def test_unsuccessful_void
     @options[:order_id] = "1"
-    @gateway.expects(:ssl_post).returns(failed_void_response)
+    @gateway.expects(:ssl_request).returns(failed_void_response)
     assert response = @gateway.void(@amount, @options)
     assert_failure response
     assert response.test?
   end
 
   def test_successful_authorize
-    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    @gateway.expects(:ssl_request).returns(successful_authorize_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_instance_of Response, response
@@ -107,7 +107,7 @@ class ConektaTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_authorize
-    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+    @gateway.expects(:ssl_request).returns(failed_authorize_response)
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
     assert response.test?
@@ -115,7 +115,7 @@ class ConektaTest < Test::Unit::TestCase
 
   def test_unsuccessful_capture
     @options[:order_id] = "1"
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    @gateway.expects(:ssl_request).returns(failed_purchase_response)
     assert response = @gateway.capture(@amount, @options)
     assert_failure response
     assert response.test?
@@ -123,7 +123,7 @@ class ConektaTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = ConektaGateway.new(:key => 'invalid_token')
-    gateway.expects(:ssl_post).returns(failed_login_response)
+    gateway.expects(:ssl_request).returns(failed_login_response)
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
