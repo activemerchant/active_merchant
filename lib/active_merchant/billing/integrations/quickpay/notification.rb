@@ -55,6 +55,7 @@ module ActiveMerchant #:nodoc:
             cardnumber
             cardhash
             cardexpire
+            acquirer
             splitpayment
             fraudprobability
             fraudremarks
@@ -84,6 +85,7 @@ module ActiveMerchant #:nodoc:
             :cardnumber,
             :cardhash,
             :cardexpire,
+            :acquirer,
             :splitpayment,
             :fraudprobability,
             :fraudremarks,

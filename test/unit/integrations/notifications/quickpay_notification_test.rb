@@ -4,7 +4,7 @@ class QuickpayNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @quickpay = Quickpay::Notification.new(http_raw_data, :credential2 => "test")
+    @quickpay = Quickpay::Notification.new(http_raw_data, :credential2 => "test", version: 7)
   end
 
   def test_accessors
@@ -36,12 +36,12 @@ class QuickpayNotificationTest < Test::Unit::TestCase
   end
 
   def test_generate_md5string
-    assert_equal "authorize1353061158123DKK2012-11-16T10:19:36+00:001000OK000OKMerchant #1merchant1@pil.dk4262dankortXXXXXXXXXXXX999910test",
+    assert_equal "authorize1353061158123DKK2012-11-16T10:19:36+00:001000OK000OKMerchant #1merchant1@pil.dk4262dankortXXXXXXXXXXXX9999nets10test",
                  @quickpay.generate_md5string
   end
 
   def test_generate_md5check
-    assert_equal "7caa0df7d17085206af135ed70d22cc9", @quickpay.generate_md5check
+    assert_equal "d991ae505cbb3bad75eb86e02be97335", @quickpay.generate_md5check
   end
 
   def test_respond_to_acknowledge
@@ -116,6 +116,10 @@ Content-Disposition: form-data; name="cardhash"
 
 
 ------------------------------8a827a0e6829
+Content-Disposition: form-data; name="acquirer"
+
+nets
+------------------------------8a827a0e6829
 Content-Disposition: form-data; name="splitpayment"
 
 1
@@ -138,7 +142,7 @@ Content-Disposition: form-data; name="fee"
 ------------------------------8a827a0e6829
 Content-Disposition: form-data; name="md5check"
 
-7caa0df7d17085206af135ed70d22cc9
+d991ae505cbb3bad75eb86e02be97335
 ------------------------------8a827a0e6829--
 END_POST
   end

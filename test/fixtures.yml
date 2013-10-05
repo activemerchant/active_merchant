@@ -467,7 +467,7 @@ quickpay_with_api_key:
   login: 89898978
   password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
   apikey: "fB46983ZwR5dzy46A3r6ngDx7P37N5YTu1F4S9W2JKCs9v4t5L9m2Q8Mlbjpa2I1"
-  version: 6
+  version: 7
 
 quantum:
   login: X
