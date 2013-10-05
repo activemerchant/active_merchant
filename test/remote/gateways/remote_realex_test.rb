@@ -164,7 +164,7 @@ class RemoteRealexTest < Test::Unit::TestCase
     assert_failure response
 
     assert_equal '509', response.params['result']
-    assert_equal "Expiry date invalid", response.message
+    assert_equal "Invalid Expiry Date", response.message
   end
 
   def test_realex_expiry_year_error
@@ -249,10 +249,10 @@ class RemoteRealexTest < Test::Unit::TestCase
     )
 
     capture_response = @gateway.capture(@amount, auth_response.authorization)
-
+    
     assert_not_nil capture_response
     assert_success capture_response
-    assert capture_response.test?
+    assert auth_response.test?
     assert capture_response.authorization.length > 0
     assert_equal 'Successful', capture_response.message
     assert_match(/Settled Successfully/, capture_response.params['message'])
@@ -274,7 +274,7 @@ class RemoteRealexTest < Test::Unit::TestCase
 
     assert_not_nil void_response
     assert_success void_response
-    assert void_response.test?
+    assert purchase_response.test?
     assert void_response.authorization.length > 0
     assert_equal 'Successful', void_response.message
     assert_match(/Voided Successfully/, void_response.params['message'])
@@ -283,7 +283,7 @@ class RemoteRealexTest < Test::Unit::TestCase
   def test_realex_purchase_then_refund
     order_id = generate_unique_id
 
-    gateway_with_refund_password = RealexGateway.new(fixtures(:realex).merge(:rebate_secret => 'refund'))
+    gateway_with_refund_password = RealexGateway.new(fixtures(:realex).merge(:rebate_secret => 'rebate'))
 
     purchase_response = gateway_with_refund_password.purchase(@amount, @visa,
       :order_id => order_id,
@@ -298,9 +298,8 @@ class RemoteRealexTest < Test::Unit::TestCase
 
     assert_not_nil rebate_response
     assert_success rebate_response
-    assert rebate_response.test?
+    assert purchase_response.test?
     assert rebate_response.authorization.length > 0
     assert_equal 'Successful', rebate_response.message
   end
-
 end

@@ -85,9 +85,9 @@ module ActiveMerchant
       private
       def commit(request)
         response = parse(ssl_post(self.live_url, request))
-
-        Response.new(response[:result] == "00", message_from(response), response,
-          :test => response[:message] =~ /\[ test system \]/,
+        
+        Response.new(response[:result] == "00", message_from(response), response,      
+          :test => response[:message].include?("test system"),
           :authorization => authorization_from(response),
           :cvv_result => response[:cvnresult],
           :avs_result => {
@@ -187,14 +187,14 @@ module ActiveMerchant
 
           if billing_address
             xml.tag! 'address', 'type' => 'billing' do
-              xml.tag! 'code', format_shipping_zip_code(billing_address[:zip])
+              xml.tag! 'code', format_address_code(billing_address[:zip], billing_address[:address1], billing_address[:address2])
               xml.tag! 'country', billing_address[:country]
             end
           end
 
           if shipping_address
             xml.tag! 'address', 'type' => 'shipping' do
-              xml.tag! 'code', format_shipping_zip_code(shipping_address[:zip])
+              xml.tag! 'code', format_address_code(shipping_address[:zip], shipping_address[:address1], shipping_address[:address2])
               xml.tag! 'country', shipping_address[:country]
             end
           end
@@ -240,9 +240,20 @@ module ActiveMerchant
         end
       end
 
-      def format_shipping_zip_code(zip)
-        zip.to_s.gsub(/\W/, '')
+      def format_only_numbers(txt)
+        txt.to_s.gsub(/\D/, '')
       end
+
+      def format_address_code(zip, street1, street2)
+        street1 = street1.to_s
+        street2 = street2.to_s
+
+        if(street1.length > 0 || street2.length > 0)
+          return format_only_numbers(zip)+'|'+format_only_numbers(street1) + format_only_numbers(street2) 
+        else
+          return format_only_numbers(zip)
+        end
+      end  
 
       def new_timestamp
         Time.now.strftime('%Y%m%d%H%M%S')

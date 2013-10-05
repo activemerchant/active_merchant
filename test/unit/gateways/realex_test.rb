@@ -287,7 +287,7 @@ SRC
   end
 
   def test_zip_in_shipping_address
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<code>BT28XX<\/code>/)).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<code>28\|123<\/code>/)).returns(successful_purchase_response)
 
     options = {
       :order_id => '1',
@@ -298,7 +298,7 @@ SRC
   end
 
   def test_zip_in_billing_address
-    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<code>BT28XX<\/code>/)).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<code>28\|123<\/code>/)).returns(successful_purchase_response)
 
     options = {
       :order_id => '1',
