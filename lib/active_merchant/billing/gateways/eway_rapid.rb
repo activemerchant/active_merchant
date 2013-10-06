@@ -234,7 +234,7 @@ module ActiveMerchant #:nodoc:
         success = (http_response.code.to_s == "302")
         message = (success ? "Succeeded" : http_response.body)
         if success
-          authorization = CGI.unescape(http_response["Location"].split("=").last)
+          authorization = CGI.unescape(http_response["Location"].split("?AccessCode=").last)
         end
         Response.new(success, message, {:location => http_response["Location"]}, :authorization => authorization, :test => test?)
       end
