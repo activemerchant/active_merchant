@@ -247,6 +247,7 @@ class RemoteRealexTest < Test::Unit::TestCase
         :country => 'US'
       }
     )
+    assert auth_response.test?
 
     capture_response = @gateway.capture(@amount, auth_response.authorization)
 
@@ -269,6 +270,7 @@ class RemoteRealexTest < Test::Unit::TestCase
         :country => 'US'
       }
     )
+    assert purchase_response.test?
 
     void_response = @gateway.void(purchase_response.authorization)
 
@@ -283,7 +285,7 @@ class RemoteRealexTest < Test::Unit::TestCase
   def test_realex_purchase_then_refund
     order_id = generate_unique_id
 
-    gateway_with_refund_password = RealexGateway.new(fixtures(:realex).merge(:rebate_secret => 'refund'))
+    gateway_with_refund_password = RealexGateway.new(fixtures(:realex).merge(:rebate_secret => 'rebate'))
 
     purchase_response = gateway_with_refund_password.purchase(@amount, @visa,
       :order_id => order_id,
@@ -293,6 +295,7 @@ class RemoteRealexTest < Test::Unit::TestCase
         :country => 'US'
       }
     )
+    assert purchase_response.test?
 
     rebate_response = gateway_with_refund_password.refund(@amount, purchase_response.authorization)
 
@@ -302,5 +305,4 @@ class RemoteRealexTest < Test::Unit::TestCase
     assert rebate_response.authorization.length > 0
     assert_equal 'Successful', rebate_response.message
   end
-
 end

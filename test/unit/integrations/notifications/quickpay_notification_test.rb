@@ -4,7 +4,7 @@ class QuickpayNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @quickpay = Quickpay::Notification.new(http_raw_data, :credential2 => "test")
+    @quickpay = Quickpay::Notification.new(http_raw_data, :credential2 => "test", version: 7)
   end
 
   def test_accessors
@@ -115,6 +115,10 @@ XXXXXXXXXXXX9999
 Content-Disposition: form-data; name="cardhash"
 
 
+------------------------------8a827a0e6829
+Content-Disposition: form-data; name="acquirer"
+
+nets
 ------------------------------8a827a0e6829
 Content-Disposition: form-data; name="splitpayment"
 

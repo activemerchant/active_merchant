@@ -47,11 +47,11 @@ module ActiveMerchant #:nodoc:
           end
 
           def amount=(money)
-            cents = money.respond_to?(:cents) ? money.cents : money
-            if money.is_a?(String) or cents.to_i < 0
+            @amount_in_cents = money.respond_to?(:cents) ? money.cents : money
+            if money.is_a?(String) or @amount_in_cents.to_i < 0
               raise ArgumentError, "money amount must be either a Money object or a positive integer in cents."
             end
-            add_field mappings[:amount], sprintf("%.2f", cents.to_f/100)
+            add_field mappings[:amount], sprintf("%.2f", @amount_in_cents.to_f/100)
           end
 
           def currency(symbol)
@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
             components  = [merchant_key]
             components << fields[mappings[:account]]
             components << fields[mappings[:order]]
-            components << amount_in_cents
+            components << amount_in_cents.to_s.gsub(/[.,]/, '')
             components << fields[mappings[:currency]]
             components.join
           end

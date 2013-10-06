@@ -93,4 +93,11 @@ class Ipay88HelperTest < Test::Unit::TestCase
       @helper.amount = -100
     end
   end
+
+  def test_sig_components_amount_doesnt_include_decimal_points
+    @helper.amount = 0.5
+    assert_equal "abcipay88merchcodeorder-50005MYR", @helper.send(:sig_components)
+    @helper.amount = 12.34
+    assert_equal "abcipay88merchcodeorder-5001234MYR", @helper.send(:sig_components)
+  end
 end

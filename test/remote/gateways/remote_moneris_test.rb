@@ -40,6 +40,18 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_authorization_and_capture_and_void
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization
+
+    response = @gateway.capture(@amount, response.authorization)
+    assert_success response
+
+    void = @gateway.void(response.authorization, :purchasecorrection => true)
+    assert_success void
+  end
+
   def test_successful_authorization_and_void
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
@@ -49,12 +61,28 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_success void
   end
 
-  def test_successful_purchase_and_credit
+  def test_successful_purchase_and_void
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    credit = @gateway.credit(@amount, purchase.authorization)
-    assert_success credit
+    void = @gateway.void(purchase.authorization, :purchasecorrection => true)
+    assert_success void
+  end
+
+  def test_failed_purchase_and_void
+    purchase = @gateway.purchase(101, @credit_card, @options)
+    assert_failure purchase
+
+    void = @gateway.void(purchase.authorization)
+    assert_failure void
+  end
+
+  def test_successful_purchase_and_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
   end
 
   def test_failed_purchase_from_error
@@ -106,6 +134,32 @@ class MonerisRemoteTest < Test::Unit::TestCase
     test_successful_store
     response = @gateway.authorize(105, @data_key, @options)
     assert_failure response
+  end
+
+  def test_cvv_match_when_not_enabled
+    assert response = @gateway.purchase(1039, @credit_card, @options)
+    assert_success response
+    assert_equal({'code' => nil, 'message' => nil}, response.cvv_result)
+  end
+
+  def test_cvv_no_match_when_not_enabled
+    assert response = @gateway.purchase(1053, @credit_card, @options)
+    assert_success response
+    assert_equal({'code' => nil, 'message' => nil}, response.cvv_result)
+  end
+
+  def test_cvv_match_when_enabled
+    gateway = MonerisGateway.new(fixtures(:moneris).merge(cvv_enabled: true))
+    assert response = gateway.purchase(1039, @credit_card, @options)
+    assert_success response
+    assert_equal({'code' => 'M', 'message' => 'Match'}, response.cvv_result)
+  end
+
+  def test_cvv_no_match_when_enabled
+    gateway = MonerisGateway.new(fixtures(:moneris).merge(cvv_enabled: true))
+    assert response = gateway.purchase(1053, @credit_card, @options)
+    assert_success response
+    assert_equal({'code' => 'N', 'message' => 'No Match'}, response.cvv_result)
   end
 
 end

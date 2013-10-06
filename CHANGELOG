@@ -1,7 +1,51 @@
 = ActiveMerchant CHANGELOG
 
+* Moneris: Add optional (off by default) verification_value support [duff]
+* Spreedly: Pass country with other address fields [hoenth]
+* SecureNet: Fix order of xml params [duff]
+* Paymill: Add support for void [duff]
+* Add MoneyMovers gateway [jeffutter]
+* Ogone: Add a :store_amount option [rymai]
+* Ogone: Require TLSv1 [ntalbott]
+* Moneris: Add support for purchasecorrection [pgib]
+* Spreedly: Add ability to retain on success [duff]
+* Spreedly: Pass verification value [duff]
+* Paymill: Add support for specifying the :customer [Sbastien]
+* Realex: Correct AVS input format [ExxKA]
+* USAEpay Transaction: Use sandbox when in test mode [radar]
+* Braintree Blue: Do not use global config [rdj]
+* eWay Rapid: Add response messages [BenZhang]
+* Paysbuy: Add 'Pending' notification status [divineforest]
+* Cybersource: Use standard :phone field [cade]
+* Orbital: Fix/tweak AVS codes [boone]
+* Quickpay: Add v7 support [larspind]
+* Authorize.Net CIM: Add option to not mark transactions as test [alanandrade]
+
+== Version 1.38.1 (September 16, 2013)
+
+* Moneris: Remove verification_value support [melari]
+
+== Version 1.38.0 (September 6, 2013)
+
+* FirstData E4: Include missing address information for AVS and CVV [melari]
+* Litle: Deprecate credit method in favor of refund [melari]
+* Moneris: Add verification_value support [duff]
+* Webpay: Fixes issues with partial JPY currency [keikubo, melari]
+* SecureNet: Add INVOICENUM and INVOICEDESC optional fields [duff]
+* Balanced: Make BalancedGateway::Error inherit from ActiveMerchantError [duff]
+* Balanced: Fix #void interface [duff]
+* HiTrust: Return correct error message for positive retcodes [melari]
+* Moving to pessimistic versioning [davefp]
+
+== Version 1.37.0 (August 20, 2013)
+
 * MerchantWarrior: Fix handling of amounts [duff]
+* Ipay88: New gateway [kamal, siong1987, jduff]
+* IATS: New gateway [unkown, jduff]
 * MerchantWarrior: Send the CVV to the gateway [duff]
+* PayU: Fix a major bug with status types [melari]
+* SecureNet: Allow production transactions [duff]
+* Stripe: Allow a card_not_present_fee to be specified [melari]
 
 == Version 1.36.0 (August 2, 2013)
 

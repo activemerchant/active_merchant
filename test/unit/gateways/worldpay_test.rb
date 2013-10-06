@@ -107,7 +107,7 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.refund(@amount, @options[:order_id], @options)
     end.respond_with(failed_refund_inquiry_response, successful_refund_response)
     assert_failure response
-    assert_equal "A transaction status of 'CAPTURED' or 'SETTLED' is required.", response.message
+    assert_equal "A transaction status of 'CAPTURED' or 'SETTLED' or 'SETTLED_BY_MERCHANT' is required.", response.message
   end
 
   def test_capture

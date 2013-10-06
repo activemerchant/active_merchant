@@ -31,6 +31,10 @@ barclays_epdq_extra_plus:
   user: username
   password: password
 
+be2bill:
+  login: your_test_login
+  password: your_test_password
+
 beanstream:
   login: merchant id
   user: username
@@ -263,6 +267,10 @@ moneris_us:
   login: monusqa002
   password: qatoken
 
+money_movers:
+  login: demo
+  password: password
+
 # Working credentials, no need to replace
 nab_transact:
   login: ABC0001
@@ -459,7 +467,7 @@ quickpay_with_api_key:
   login: 89898978
   password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
   apikey: "fB46983ZwR5dzy46A3r6ngDx7P37N5YTu1F4S9W2JKCs9v4t5L9m2Q8Mlbjpa2I1"
-  version: 6
+  version: 7
 
 quantum:
   login: X
@@ -626,7 +634,7 @@ vindicia:
   password: PASSWORD
 
 webpay:
-  login: "vtUQeOtUnYr7PGCLQ96Ul4zqpDUO4sOE"
+  login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
 
 # Working test credentials, no need to replace
 wirecard:
@@ -636,3 +644,7 @@ wirecard:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+iats_payments:
+  login: TEST88
+  password: TEST88

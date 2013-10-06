@@ -44,7 +44,7 @@ class EwayRapidTest < Test::Unit::TestCase
     end.respond_with(failed_setup_purchase_response)
 
     assert_failure response
-    assert_equal "V6047", response.message
+    assert_equal "RedirectURL Required", response.message
     assert_nil response.authorization
     assert response.test?
   end

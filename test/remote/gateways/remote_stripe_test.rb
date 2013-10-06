@@ -112,11 +112,21 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal true, response.params["deleted"]
   end
 
+  def test_successful_recurring
+    assert response = @gateway.store(@credit_card, {:description => "Active Merchant Test Customer", :email => "email@example.com"})
+    assert_success response
+    assert recharge_options = @options.merge(:customer => response.params["id"])
+    assert response = @gateway.purchase(@amount, nil, recharge_options)
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert response.params["paid"]
+  end
+
   def test_invalid_login
     gateway = StripeGateway.new(:login => 'active_merchant_test')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Invalid API Key provided: active_merchant_test", response.message
+    assert_match "Invalid API Key provided", response.message
   end
 
   def test_application_fee_for_stripe_connect

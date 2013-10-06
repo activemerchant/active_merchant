@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class SecureNetTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = SecureNetGateway.new(
                  :login => 'X',
@@ -124,6 +126,27 @@ class SecureNetTest < Test::Unit::TestCase
     assert_nothing_raised do
       assert_equal '', @gateway.send(:message_from, {})
     end
+  end
+
+  def test_passes_optional_fields
+    options = { description: "Good Stuff", invoice_description: "Sweet Invoice", invoice_number: "48" }
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{NOTE>Good Stuff<}, data)
+      assert_match(%r{INVOICEDESC>Sweet Invoice<}, data)
+      assert_match(%r{INVOICENUM>48<}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_only_passes_optional_fields_if_specified
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, {})
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{NOTE}, data)
+      assert_no_match(%r{INVOICEDESC}, data)
+      assert_no_match(%r{INVOICENUM}, data)
+    end.respond_with(successful_purchase_response)
   end
 
 

@@ -112,9 +112,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def credit(money, identification_or_token, options = {})
-        to_pass = build_credit_request(money, identification_or_token, options)
+      def refund(money, authorization, options = {})
+        to_pass = build_credit_request(money, authorization, options)
         build_response(:credit, @litle.credit(to_pass))
+      end
+
+      def credit(money, authorization, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, authorization, options)
       end
 
       def store(creditcard_or_paypage_registration_id, options = {})

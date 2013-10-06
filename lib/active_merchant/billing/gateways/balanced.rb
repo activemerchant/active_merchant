@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Balanced'
       self.money_format = :cents
 
-      class Error < StandardError
+      class Error < ActiveMerchant::ActiveMerchantError
         attr_reader :response
 
         def initialize(response, msg=nil)
@@ -210,7 +210,7 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>authorization</tt> -- The uri of the authorization returned from
       #   an `authorize` request.
-      def void(authorization)
+      def void(authorization, options = {})
         post = {}
         post[:is_void] = true
 

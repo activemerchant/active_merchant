@@ -3,6 +3,7 @@ require 'test_helper'
 class RemoteBraintreeBlueTest < Test::Unit::TestCase
   def setup
     @gateway = BraintreeGateway.new(fixtures(:braintree_blue))
+    @braintree_backend = @gateway.instance_eval{@braintree_gateway}
 
     @amount = 100
     @declined_amount = 2000_00
@@ -226,7 +227,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal '1000 Approved', response.message
     assert_match(/\A\d{6,7}\z/, response.params["customer_vault_id"])
     assert_equal '510510', response.params["braintree_transaction"]["vault_customer"]["credit_cards"][0]["bin"]
-    assert_equal '510510', Braintree::Customer.find(response.params["customer_vault_id"]).credit_cards[0].bin
+    assert_equal '510510', @braintree_backend.customer.find(response.params["customer_vault_id"]).credit_cards[0].bin
   end
 
   def test_purchase_with_store_using_specified_customer_id
@@ -238,7 +239,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal '1000 Approved', response.message
     assert_equal customer_id, response.params["customer_vault_id"]
     assert_equal '510510', response.params["braintree_transaction"]["vault_customer"]["credit_cards"][0]["bin"]
-    assert_equal '510510', Braintree::Customer.find(response.params["customer_vault_id"]).credit_cards[0].bin
+    assert_equal '510510', @braintree_backend.customer.find(response.params["customer_vault_id"]).credit_cards[0].bin
   end
 
   def test_successful_purchase_with_addresses
@@ -490,7 +491,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_customer_does_not_have_credit_card_failed_update
-    customer_without_credit_card = Braintree::Customer.create!
+    customer_without_credit_card = @braintree_backend.create
     assert response = @gateway.update(customer_without_credit_card.id, credit_card('5105105105105100'))
     assert_failure response
     assert_equal 'Braintree::NotFoundError', response.message

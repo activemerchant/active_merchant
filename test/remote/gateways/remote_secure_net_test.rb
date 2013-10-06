@@ -12,15 +12,15 @@ class SecureNetTest < Test::Unit::TestCase
 
     n = Time.now
     order_id = n.to_i.to_s + n.usec.to_s
-    @options = { 
-      :order_id => order_id,
-      :billing_address => address,
-      :description => 'Store Purchase'
+    @options = {
+      order_id: order_id,
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
   def test_expired_credit_card
-    @credit_card.year = 2004 
+    @credit_card.year = 2004
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
@@ -109,6 +109,20 @@ class SecureNetTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_failure refund
     assert_equal 'CREDIT CANNOT BE COMPLETED ON AN UNSETTLED TRANSACTION', refund.message
+  end
+
+  def test_invoice_description_and_number
+    options = @options.merge({
+      invoice_description: "TheInvoiceDescriptions",
+      invoice_number: "TheInvoiceNumber"
+    })
+
+    assert auth = @gateway.authorize(@amount, @credit_card, options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization, options)
+    assert_success capture
+    assert_equal 'Approved', capture.message
   end
 
 end
