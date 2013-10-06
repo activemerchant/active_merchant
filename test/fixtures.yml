@@ -636,3 +636,9 @@ wirecard:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+wirecard_checkout_page:
+  secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
+  shop_id: ''
+  paymenttype: IDL
+

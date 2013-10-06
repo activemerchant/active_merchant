@@ -14,8 +14,8 @@ module ActiveMerchant #:nodoc:
 
           mapping :order, 'xActiveMerchantOrderId'
 
-          mapping :customer, :first_name => 'consumerBillingFirstname',
-                  :last_name => 'consumerBillingLastname',
+          mapping :customer, :first_name => 'consumerBillingFirstName',
+                  :last_name => 'consumerBillingLastName',
                   :email => 'consumerEmail',
                   :phone => 'consumerBillingPhone',
                   :ipaddress => 'consumerIpAddress',
@@ -123,6 +123,18 @@ module ActiveMerchant #:nodoc:
             result.merge!(add_standard_fields)
             result.merge!(add_request_fingerprint(result))
             result
+          end
+
+          def secret
+            @secret
+          end
+
+          def customer_id
+            @customer_id
+          end
+
+          def shop_id
+            @shop_id
           end
 
         end
