@@ -144,16 +144,46 @@ class StripeTest < Test::Unit::TestCase
     assert_match(/^Invalid response received from the Stripe API/, response.message)
   end
 
+  def test_add_creditcard_with_credit_card
+    post = {}
+    @gateway.send(:add_creditcard, post, @credit_card, {})
+    assert_equal @credit_card.number, post[:card][:number]
+    assert_equal @credit_card.month, post[:card][:exp_month]
+    assert_equal @credit_card.year, post[:card][:exp_year]
+    assert_equal @credit_card.verification_value, post[:card][:cvc]
+    assert_equal @credit_card.name, post[:card][:name]
+  end
+
+  def test_add_creditcard_with_track_data
+    post = {}
+    @credit_card.stubs(:track_data).returns("Tracking data")
+    @gateway.send(:add_creditcard, post, @credit_card, {})
+    assert_equal @credit_card.track_data, post[:card][:swipe_data]
+    assert_nil post[:card][:number]
+    assert_nil post[:card][:exp_year]
+    assert_nil post[:card][:exp_month]
+    assert_nil post[:card][:cvc]
+    assert_nil post[:card][:name]
+  end
+
+  def test_add_creditcard_with_token
+    post = {}
+    credit_card_token = "card_2iD4AezYnNNzkW"
+    @gateway.send(:add_creditcard, post, credit_card_token, {})
+    assert_equal credit_card_token, post[:card]
+  end
+
+  def test_add_creditcard_with_token_and_track_data
+    post = {}
+    credit_card_token = "card_2iD4AezYnNNzkW"
+    @gateway.send(:add_creditcard, post, credit_card_token, :track_data => "Tracking data")
+    assert_equal "Tracking data", post[:card][:swipe_data]
+  end
+
   def test_add_customer
     post = {}
     @gateway.send(:add_customer, post, {:customer => "test_customer"})
     assert_equal "test_customer", post[:customer]
-  end
-
-  def test_doesnt_add_customer_if_card
-    post = { :card => 'foo' }
-    @gateway.send(:add_customer, post, {:customer => "test_customer"})
-    assert !post[:customer]
   end
 
   def test_application_fee_is_submitted_for_purchase
