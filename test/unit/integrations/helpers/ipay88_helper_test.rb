@@ -74,7 +74,7 @@ class Ipay88HelperTest < Test::Unit::TestCase
   end
 
   def test_signature
-    assert_field "Signature", "vDwWN/XHvYnlReq3f1llHFCxDTY="
+    assert_field "Signature", "sz25/58PfRuHloIGafsscRjk3H4="
   end
 
   def test_valid_amount
@@ -95,9 +95,19 @@ class Ipay88HelperTest < Test::Unit::TestCase
   end
 
   def test_sig_components_amount_doesnt_include_decimal_points
-    @helper.amount = 0.5
+    @helper.amount = 50
     assert_equal "abcipay88merchcodeorder-50005MYR", @helper.send(:sig_components)
-    @helper.amount = 12.34
+    @helper.amount = 1234
     assert_equal "abcipay88merchcodeorder-5001234MYR", @helper.send(:sig_components)
+    @helper.amount = 1000
+    assert_equal "abcipay88merchcodeorder-50010MYR", @helper.send(:sig_components)
+    @helper.amount = Money.new(90)
+    assert_equal "abcipay88merchcodeorder-50009MYR", @helper.send(:sig_components)
+    @helper.amount = Money.new(1000)
+    assert_equal "abcipay88merchcodeorder-50010MYR", @helper.send(:sig_components)
+  end
+
+  def test_sign_method
+    assert_equal "rq3VxZp9cjkiqiw4mHnZJH49MzQ=", Ipay88::Helper.sign("L3mn6Bpy4HM0605613619416109MYR")
   end
 end
