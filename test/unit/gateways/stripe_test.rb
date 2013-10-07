@@ -216,7 +216,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_client_data_submitted_with_purchase
     stub_comms(@gateway, :ssl_request) do
-      updated_options = @options.merge({:description => "a test customer",:browser_ip => "127.127.127.127", :user_agent => "some browser", :order_id => "42", :email => "foo@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
+      updated_options = @options.merge({:description => "a test customer",:ip => "127.127.127.127", :user_agent => "some browser", :order_id => "42", :email => "foo@wonderfullyfakedomain.com", :referrer =>"http://www.shopify.com"})
       @gateway.purchase(@amount,@credit_card,updated_options)
     end.check_request do |method, endpoint, data, headers|
       assert_match(/description=a\+test\+customer/, data)
