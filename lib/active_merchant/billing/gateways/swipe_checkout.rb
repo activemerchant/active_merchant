@@ -171,6 +171,8 @@ module ActiveMerchant #:nodoc:
         region = @options[:region]
         url = get_base_url(region) + api
 
+        #puts "#{url}?#{params.to_query}"
+
         # ssl_post() returns the response body as a string on success,
         # or raises a ResponseError exception on failure
         parse( ssl_post( url, params.to_query ) )
