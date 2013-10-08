@@ -186,12 +186,20 @@ module ActiveMerchant #:nodoc:
         post['PymtType']      = action
         post['RAPIVersion']   = '2'
         post['UserName']      = @options[:user]
-        post['Timestamp']     = Time.now.strftime("%Y-%m-%dT%H:%M:%S.Z")
-        post['RequestID']     = (0...21).map{(65+rand(26)).chr}.join.downcase
+        post['Timestamp']     = timestamp
+        post['RequestID']     = request_id
         post['Signature']     = signature(action, post, parameters)
 
         request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
         request
+      end
+      
+      def timestamp
+        Time.now.strftime("%Y-%m-%dT%H:%M:%S.Z")
+      end
+      
+      def request_id
+        (0...21).map{(65+rand(26)).chr}.join.downcase
       end
       
       def signature(action, post, parameters = {})
