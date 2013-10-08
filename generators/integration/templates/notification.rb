@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
           #     else
           #       ... log possible hacking attempt ...
           #     end
-          def acknowledge
+          def acknowledge(authcode = nil)
             payload = raw
 
             uri = URI.parse(<%= class_name %>.notification_confirmation_url)

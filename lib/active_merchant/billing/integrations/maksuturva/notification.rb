@@ -29,7 +29,7 @@ module ActiveMerchant #:nodoc:
             "PAID"
           end
 
-          def acknowledge(authcode)
+          def acknowledge(authcode = nil)
             return_authcode = [params["pmt_action"], params["pmt_version"], params["pmt_id"], params["pmt_reference"], params["pmt_amount"], params["pmt_currency"], params["pmt_sellercosts"], params["pmt_paymentmethod"], params["pmt_escrow"], authcode].join("&")
             (Digest::MD5.hexdigest(return_authcode + "&").upcase == params["pmt_hash"])
           end

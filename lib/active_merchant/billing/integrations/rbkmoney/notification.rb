@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
           alias_method :gross, :recipient_amount
           alias_method :currency, :recipient_currency
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             string = [
               eshop_id,
               order_id,
