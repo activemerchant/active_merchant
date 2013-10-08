@@ -116,7 +116,7 @@ module ActiveMerchant #:nodoc:
           #     else
           #       ... log possible hacking attempt ...
           #     end
-          def acknowledge
+          def acknowledge(authcode = nil)
             if params[PayFast.signature_parameter_name] == generate_signature(:notify)
               response = ssl_post(PayFast.validate_service_url, notify_signature_string,
                 'Content-Type' => "application/x-www-form-urlencoded",

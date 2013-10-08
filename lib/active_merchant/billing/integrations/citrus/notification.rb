@@ -113,7 +113,7 @@ module ActiveMerchant
             @message || params['TxMsg']
           end
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             checksum_ok?
           end
 

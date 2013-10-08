@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
           #     else
           #       ... log possible hacking attempt ...
           #     end
-          def acknowledge
+          def acknowledge(authcode = nil)
             fields = [merchant_id, item_id, Digest::MD5.hexdigest(secret).upcase, merchant_amount, merchant_currency, status_code].join
             md5sig == Digest::MD5.hexdigest(fields).upcase
           end

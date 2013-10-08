@@ -29,7 +29,7 @@ module ActiveMerchant #:nodoc:
             end
           end
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             true
           end
         end

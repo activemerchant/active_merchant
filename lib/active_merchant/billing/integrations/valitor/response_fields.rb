@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
             @options[:credential2]
           end
           
-          def acknowledge
+          def acknowledge(authcode = nil)
             password ? Digest::MD5.hexdigest("#{password}#{order}") == params['RafraenUndirskriftSvar'] : true
           end
         end

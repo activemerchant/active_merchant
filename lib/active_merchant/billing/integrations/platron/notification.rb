@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
             @options[:path]
           end
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             signature == Platron.generate_signature(params, path, secret)
           end
 
