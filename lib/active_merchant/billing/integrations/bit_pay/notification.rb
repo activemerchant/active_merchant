@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       module BitPay
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           def complete?
-            params['status'].downcase == "complete"
+            status == "complete"
           end
 
           def transaction_id
