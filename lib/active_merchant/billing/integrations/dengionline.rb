@@ -5,8 +5,8 @@ module ActiveMerchant #:nodoc:
 
         autoload :Helper, File.dirname(__FILE__) + '/dengionline/helper.rb'
         autoload :Notification, File.dirname(__FILE__) + '/dengionline/notification.rb'
-        autoload :Return, File.dirname(__FILE__) + '/dengionline/return.rb'
         autoload :Common, File.dirname(__FILE__) + '/dengionline/common.rb'
+        autoload :Status, File.dirname(__FILE__) + '/dengionline/status.rb'
 
         mattr_accessor :service_url
         self.service_url = 'http://www.onlinedengi.ru/wmpaycheck.php'
@@ -19,12 +19,8 @@ module ActiveMerchant #:nodoc:
           Notification.new(query_string, options)
         end
 
-        def self.checker(query_string, options = {})
-          Notification.new(query_string, options)
-        end
-
-        def self.return(query_string)
-          Return.new(query_string)
+        def self.status(order, account, options = {})
+          Status.new(order, account, options)
         end
 
       end
