@@ -7,10 +7,17 @@ module ActiveMerchant #:nodoc:
       module BitPay
 
         mattr_accessor :service_url
-        self.service_url = 'https://bitpay.com/api/invoice'
+        self.service_url = 'https://bitpay.com/invoice'
+
+        mattr_accessor :invoicing_url
+        self.invoicing_url = 'https://bitpay.com/api/invoice'
 
         def self.notification(post)
           Notification.new(post)
+        end
+
+        def self.helper(order, account, options = {})
+          Helper.new(order, account, options)
         end
       end
     end
