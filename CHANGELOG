@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 * Moneris: Add optional (off by default) verification_value support [duff]
+* Citrus: New Integration [viatechs, melari]
+* Payu Paisa: New Integration [melari]
 * Spreedly: Pass country with other address fields [hoenth]
 * SecureNet: Fix order of xml params [duff]
 * Paymill: Add support for void [duff]
