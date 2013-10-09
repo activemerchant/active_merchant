@@ -31,6 +31,11 @@ class CitrusNotificationTest < Test::Unit::TestCase
     assert @citrus.acknowledge
   end
 
+  def test_acknowledgement_does_not_crash_if_tampered
+    @citrus.stubs(:transaction_status).returns(nil)
+    assert_nothing_raised { @citrus.acknowledge }
+  end
+
   def test_respond_to_acknowledge
     assert @citrus.respond_to?(:acknowledge)
   end
