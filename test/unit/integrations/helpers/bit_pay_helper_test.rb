@@ -4,6 +4,7 @@ class BitPayHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
   
   def setup
+    BitPay::Helper.any_instance.expects(:generate_invoice_id).once.returns(nil)
     @helper = BitPay::Helper.new(1234, 'cody@example.com', :authcode => "foobar", :amount => 500, :currency => 'USD')
   end
  
