@@ -9,10 +9,6 @@ module ActiveMerchant #:nodoc:
             self.secret = @options[:secret]
           end
           
-          def status
-            'success'
-          end
-          
           def gross
             params["amount"]
           end
