@@ -22,7 +22,7 @@ class CitrusReturnTest < Test::Unit::TestCase
 
   def test_failure_is_successful
     setup_failed_return
-    assert_equal 'Canceled', @citrus.status('ORD483', '10.00')
+    assert_equal 'Cancelled', @citrus.status('ORD483', '10.00')
   end
 
   def test_tampered_is_successful
@@ -32,7 +32,8 @@ class CitrusReturnTest < Test::Unit::TestCase
 
   def test_treat_initial_failures_as_pending
     setup_failed_return
-    assert_equal 'Canceled', @citrus.notification.status
+    assert_equal 'Cancelled', @citrus.notification.status
+    assert @citrus.cancelled?
   end
 
   def test_return_has_notification

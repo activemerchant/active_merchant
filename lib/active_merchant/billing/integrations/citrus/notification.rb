@@ -20,7 +20,7 @@ module ActiveMerchant
               else
                 case transaction_status.downcase
                 when 'success' then 'Completed'
-                when 'canceled' then 'Canceled'
+                when 'canceled' then 'Cancelled'
                 end
               end
             else
