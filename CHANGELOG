@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.39.0 (October 9th, 2013)
+
 * Moneris: Add optional (off by default) verification_value support [duff]
 * Citrus: New Integration [viatechs, melari]
 * Payu Paisa: New Integration [melari]
