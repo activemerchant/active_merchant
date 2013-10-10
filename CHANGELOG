@@ -1,5 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.39.2 (October 10th, 2013)
+
+* Eway Rapid: Fix a bug with access codes that have equal signs in them [odorcic]
+
 == Version 1.39.1 (October 9th, 2013)
 
 * Bitpay: Invoice Fix [orenmazor]
