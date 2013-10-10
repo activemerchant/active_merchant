@@ -79,7 +79,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
 
     assert response = @gateway.send(:run_purchase, "bogus", @credit_card, setup_response.params["formactionurl"])
     assert_failure response
-    assert_match(%r{Not Found}, response.message)
+    assert_match(%r{Access Code Invalid}, response.message)
   end
 
   def test_failed_status
@@ -106,7 +106,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
     @options[:billing_address].merge!(:country => nil)
     assert response = @gateway.store(@credit_card, @options)
     assert_failure response
-    assert_equal "V6045,V6044", response.message
+    assert_equal "V6044", response.message
   end
 
   def test_invalid_login
