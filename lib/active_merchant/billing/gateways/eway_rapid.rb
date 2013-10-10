@@ -129,7 +129,7 @@ module ActiveMerchant #:nodoc:
         }
         add_credit_card(post, payment_method)
 
-        commit_form(endpoint, build_form_request(post))
+        commit_form(endpoint, build_form_request(post), :identification => identification)
       end
 
       def add_metadata(doc, options)
@@ -228,14 +228,13 @@ module ActiveMerchant #:nodoc:
         return EwayRapidResponse.new(false, e.response.message, {:status_code => e.response.code}, :test => test?)
       end
 
-      def commit_form(url, request)
+      def commit_form(url, request, parameters)
         http_response = raw_ssl_request(:post, url, request)
 
         success = (http_response.code.to_s == "302")
         message = (success ? "Succeeded" : http_response.body)
-        if success
-          authorization = CGI.unescape(http_response["Location"].split("=").last)
-        end
+        authorization = parameters[:identification] if success
+
         Response.new(success, message, {:location => http_response["Location"]}, :authorization => authorization, :test => test?)
       end
 
