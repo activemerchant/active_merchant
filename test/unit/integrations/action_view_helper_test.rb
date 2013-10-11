@@ -6,8 +6,8 @@ class ActionViewHelperTest < Test::Unit::TestCase
   def test_basic_payment_service
     payment_service_for('order-1','test', :service => :bogus){}
     assert_match(/^<form.*action="http:\/\/www.bogus.com".*/, @output_buffer)
-    assert_match(/<input id="account" name="account" type="hidden" value="test" \/>/, @output_buffer)
-    assert_match(/<input id="order" name="order" type="hidden" value="order-1" \/>/, @output_buffer)
+    assert_match(/<input id="account" name="account" role="payment-form-account" type="hidden" value="test" \/>/, @output_buffer)
+    assert_match(/<input id="order" name="order" role="payment-form-order" type="hidden" value="order-1" \/>/, @output_buffer)
     assert_match(/<\/form>/, @output_buffer)
   end
 
@@ -60,8 +60,8 @@ if "".respond_to? :html_safe?
         get :payment_action
 
         assert_match(/^<form.*action="http:\/\/www.bogus.com".*/, @response.body)
-        assert_match(/<input id="account" name="account" type="hidden" value="test" \/>/, @response.body)
-        assert_match(/<input id="order" name="order" type="hidden" value="order-1" \/>/, @response.body)
+        assert_match(/<input id="account" name="account" role="payment-form-account" type="hidden" value="test" \/>/, @response.body)
+        assert_match(/<input id="order" name="order" role="payment-form-order" type="hidden" value="order-1" \/>/, @response.body)
         assert_match(/<\/form>/, @response.body)
       end
     end

@@ -73,7 +73,7 @@ class AuthorizeNetSimModuleTest < Test::Unit::TestCase
       service.add_shipping_as_line_item
     }
 
-    all = '<INPUT TYPE=HIDDEN name="x_cust_id" value="8">
+    all = '<INPUT TYPE=HIDDEN name="x_cust_id" role="payment-form-customer_id" value="8">
       <INPUT TYPE=HIDDEN name="x_ship_to_last_name" value="g">
       <INPUT TYPE=HIDDEN name="x_fp_timestamp" value="1206836763">
       <INPUT TYPE=HIDDEN name="x_ship_to_first_name" value="g">
@@ -90,17 +90,17 @@ class AuthorizeNetSimModuleTest < Test::Unit::TestCase
       <INPUT TYPE=HIDDEN name="x_version" value="3.1">
       <INPUT TYPE=HIDDEN name="x_invoice_num" value="516428355">
       <INPUT TYPE=HIDDEN name="x_address" value="g">
-      <INPUT TYPE=HIDDEN name="x_login" value="8wd65QS">
+      <INPUT TYPE=HIDDEN name="x_login" role="payment-form-account" value="8wd65QS">
       <INPUT TYPE=HIDDEN name="x_phone" value="3">
-      <INPUT TYPE=HIDDEN name="x_relay_url" value="http://t/authorize_net_sim/payment_received_notification_sub_step">
-      <INPUT TYPE=HIDDEN name="x_fp_sequence" value="44">
+      <INPUT TYPE=HIDDEN name="x_relay_url" role="payment-form-notify_url" value="http://t/authorize_net_sim/payment_received_notification_sub_step">
+      <INPUT TYPE=HIDDEN name="x_fp_sequence" role="payment-form-order" value="44">
       <INPUT TYPE=HIDDEN name="x_show_form" value="PAYMENT_FORM">
-      <INPUT TYPE=HIDDEN name="x_header_html_payment_form" value="MyFavoritePal">
+      <INPUT TYPE=HIDDEN name="x_header_html_payment_form" role="payment-form-payment_header" value="MyFavoritePal">
       <INPUT TYPE=HIDDEN name="x_email" value="g@g.com">
       <INPUT TYPE=HIDDEN name="x_fp_hash" value="31d572da4e9910b36e999d73925eb01c">
       <INPUT TYPE=HIDDEN name="x_line_item" value="Item 1<|>beauty2 - ayoyo<|>beauty2 - ayoyo<|>1<|>0.0<|>N">
-      <INPUT TYPE=HIDDEN name="x_test_request" value="true">
-      <INPUT TYPE=HIDDEN name="x_freight" value="25.0"/>
+      <INPUT TYPE=HIDDEN name="x_test_request" role="payment-form-test_request" value="true">
+      <INPUT TYPE=HIDDEN name="x_freight" role="payment-form-shipping" value="25.0"/>
       <INPUT TYPE=HIDDEN name="x_line_item" value="Shipping<|>Shipping and Handling Cost<|>Shipping and Handling Cost<|>1<|>25.0<|>N">'
 
     # clean it up a bit for parsing
@@ -214,16 +214,16 @@ class AuthorizeNetSimModuleTest < Test::Unit::TestCase
 
     }
 
-    expected = "<input id=\"x_cust_id\" name=\"x_cust_id\" type=\"hidden\" value=\"8\" />
+    expected = "<input id=\"x_cust_id\" name=\"x_cust_id\" role=\"payment-form-customer_id\" type=\"hidden\" value=\"8\" />
 
     <input id=\"x_city\" name=\"x_city\" type=\"hidden\" value=\"city1\" />
       <input id=\"x_fp_timestamp\" name=\"x_fp_timestamp\" type=\"hidden\" value=\"1206836763\" />
     <input id=\"x_last_name\" name=\"x_last_name\" type=\"hidden\" value=\"Fauser\" />\n<input id=\"x_amount\" name=\"x_amount\" type=\"hidden\" value=\"157.0\" />
     <input id=\"x_country\" name=\"x_country\" type=\"hidden\" value=\"United States of America\" />\n<input id=\"x_zip\" name=\"x_zip\" type=\"hidden\" value=\"90210\" />\n<input id=\"x_duplicate_window\" name=\"x_duplicate_window\" type=\"hidden\" value=\"28800\" />
-    \n<input id=\"x_relay_response\" name=\"x_relay_response\" type=\"hidden\" value=\"TRUE\" />\n<input id=\"x_first_name\" name=\"x_first_name\" type=\"hidden\" value=\"Cody\" />\n<input id=\"x_type\" name=\"x_type\" type=\"hidden\" value=\"AUTH_CAPTURE\" />\n<input id=\"x_version\" name=\"x_version\" type=\"hidden\" value=\"3.1\" />\n<input id=\"x_login\" name=\"x_login\" type=\"hidden\" value=\"8wd65QS\" />\n<input id=\"x_invoice_num\" name=\"x_invoice_num\" type=\"hidden\" value=\"#1000\" />\n<input id=\"x_phone\" name=\"x_phone\" type=\"hidden\" value=\"(555)555-5555\" />\n<input id=\"x_fp_sequence\" name=\"x_fp_sequence\" type=\"hidden\" value=\"44\" />\n<input id=\"x_show_form\" name=\"x_show_form\" type=\"hidden\" value=\"PAYMENT_FORM\" />
+    \n<input id=\"x_relay_response\" name=\"x_relay_response\" type=\"hidden\" value=\"TRUE\" />\n<input id=\"x_first_name\" name=\"x_first_name\" type=\"hidden\" value=\"Cody\" />\n<input id=\"x_type\" name=\"x_type\" type=\"hidden\" value=\"AUTH_CAPTURE\" />\n<input id=\"x_version\" name=\"x_version\" type=\"hidden\" value=\"3.1\" />\n<input id=\"x_login\" name=\"x_login\" role=\"payment-form-account\" type=\"hidden\" value=\"8wd65QS\" />\n<input id=\"x_invoice_num\" name=\"x_invoice_num\" type=\"hidden\" value=\"#1000\" />\n<input id=\"x_phone\" name=\"x_phone\" type=\"hidden\" value=\"(555)555-5555\" />\n<input id=\"x_fp_sequence\" name=\"x_fp_sequence\" role=\"payment-form-order\" type=\"hidden\" value=\"44\" />\n<input id=\"x_show_form\" name=\"x_show_form\" type=\"hidden\" value=\"PAYMENT_FORM\" />
     <input id=\"x_state\" name=\"x_state\" type=\"hidden\" value=\"UT\" />\n<input id=\"x_email\" name=\"x_email\" type=\"hidden\" value=\"g@g.com\" />\n<input id=\"x_fp_hash\" name=\"x_fp_hash\" type=\"hidden\" value=\"31d572da4e9910b36e999d73925eb01c\" />
-    <input id=\"x_tax\" name=\"x_tax\" type=\"hidden\" value=\"31.00\" />
-    <input id=\"x_freight\" name=\"x_freight\" type=\"hidden\" value=\"30.00\" />".split("\n")
+    <input id=\"x_tax\" name=\"x_tax\" role=\"payment-form-tax\" type=\"hidden\" value=\"31.00\" />
+    <input id=\"x_freight\" name=\"x_freight\" role=\"payment-form-shipping\" type=\"hidden\" value=\"30.00\" />".split("\n")
 
     for line in expected
       assert @output_buffer.include?(line.strip), 'missing field' + line + ' in' + "\n"

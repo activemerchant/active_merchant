@@ -55,16 +55,17 @@ module ActiveMerchant #:nodoc:
           result << capture(service, &proc)
 
           service.form_fields.each do |field, value|
-            result << hidden_field_tag(field, value)
+            input_role = service_class.mappings.invert[field]
+            result << hidden_field_tag(field, value, :role => ("payment-form-#{input_role}" if input_role))
           end
-          
+
           service.raw_html_fields.each do |field, value|
             result << "<input id=\"#{field}\" name=\"#{field}\" type=\"hidden\" value=\"#{value}\" />\n"
           end
-          
+
           result << '</form>'
           result= result.join("\n")
-          
+
           concat(result.respond_to?(:html_safe) ? result.html_safe : result)
           nil
         end
