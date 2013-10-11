@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
                                     :country  => 'buyerCountry'
 
           mapping :notify_url, 'notificationURL'
-          mapping :return_url, 'returnURL'
+          mapping :return_url, 'redirectURL'
           mapping :id, 'id'
 
           def generate_invoice_id
