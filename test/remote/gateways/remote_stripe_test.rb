@@ -94,7 +94,9 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "customer", response.params["object"]
     assert_equal "Active Merchant Test Customer", response.params["description"]
     assert_equal "email@example.com", response.params["email"]
-    assert_equal @credit_card.last_digits, response.params["active_card"]["last4"]
+    first_card = response.params["cards"]["data"].first
+    assert_equal response.params["default_card"], first_card["id"]
+    assert_equal @credit_card.last_digits, first_card["last4"]
   end
 
   def test_successful_update
@@ -102,7 +104,9 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response = @gateway.update(creation.params['id'], @new_credit_card)
     assert_success response
     assert_equal "Active Merchant Update Customer", response.params["description"]
-    assert_equal @new_credit_card.last_digits, response.params["active_card"]["last4"]
+    first_card = response.params["cards"]["data"].first
+    assert_equal response.params["default_card"], first_card["id"]
+    assert_equal @new_credit_card.last_digits, first_card["last4"]
   end
 
   def test_successful_unstore
