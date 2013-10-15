@@ -48,6 +48,10 @@ module ActiveMerchant #:nodoc:
         post[:amount] = localized_amount(money, post[:currency].upcase)
       end
 
+      def add_customer(post, options)
+        post[:customer] = options[:customer] if options[:customer] && post[:card].blank?
+      end
+
       def json_error(raw_response)
         msg = 'Invalid response received from the WebPay API.  Please contact support@webpay.jp if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
