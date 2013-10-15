@@ -27,6 +27,7 @@ module ActiveMerchant #:nodoc:
           def signature
             raise ArgumentError, "Secret key is not set" unless @secret
             parts = [@secret, @fields['OrderId'], amount, @fields['ApplicationID']]
+            puts "String to sign: #{parts.join('')}"
             Digest::SHA256.hexdigest(parts.join(''))
           end
 
