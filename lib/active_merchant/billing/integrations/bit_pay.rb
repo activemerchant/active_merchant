@@ -1,5 +1,6 @@
 require File.dirname(__FILE__) + '/bit_pay/helper.rb'
 require File.dirname(__FILE__) + '/bit_pay/notification.rb'
+require File.dirname(__FILE__) + '/bit_pay/return.rb'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -18,6 +19,10 @@ module ActiveMerchant #:nodoc:
 
         def self.helper(order, account, options = {})
           Helper.new(order, account, options)
+        end
+
+        def self.return(query_string, options = {})
+          Return.new(query_string)
         end
       end
     end
