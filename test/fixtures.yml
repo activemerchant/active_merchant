@@ -290,6 +290,15 @@ netaxept:
 netbilling:
   login: '104901072025'
 
+# Working credentials, no need to replace
+# Make payments in the test environment using the following user data:
+# SSN: 1111111119
+# Password: Password1
+# When you finish your payment, you can see your purchase on http://test.netgiro.is/user , same user data.
+netgiro:
+  login: 881E674F-7891-4C20-AFD8-56FE2624C4B5
+  password: YCFd6hiA8lUjZejVcIf/LhRXO4wTDxY0JhOXvQZwnMSiNynSxmNIMjMf1HHwdV6cMN48NX3ZipA9q9hLPb9C1ZIzMH5dvELPAHceiu7LbZzmIAGeOf/OUaDrk2Zq2dbGacIAzU6yyk4KmOXRaSLi8KW8t3krdQSX7Ecm8Qunc/A=
+
 netpay:
   store_id: 14
   login: POS
