@@ -199,6 +199,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [First Data](https://firstdata.zendesk.com/entries/407522-first-data-global-gateway-e4sm-payment-pages-integration-manual)
 * [HiTRUST](http://www.hitrust.com.hk/)
 * [Moneybookers](http://www.moneybookers.com)
+* [Netgíró](http://www.netgiro.is) - IS
 * [Nochex](http://www.nochex.com)
 * [Paxum](https://www.paxum.com/)
 * [PayPal Website Payments Standard](https://www.paypal.com/cgi-bin/webscr?cmd#_wp-standard-overview-outside)

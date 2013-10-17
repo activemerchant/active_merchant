@@ -35,7 +35,7 @@ module RemoteIntegrationHelper
     listener = server.run
     
     mapper = Thread.new do
-      require 'UPnP.rb'
+      require 'UPnP'
       upnp = UPnP::UPnP.new(true, 10)
       begin
         log "[MAPPER] adding port mapping"
