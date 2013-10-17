@@ -39,6 +39,35 @@ module ActiveMerchant #:nodoc:
             nil
           end
 
+          def customer_name
+            params['name']
+          end
+          
+          def customer_address
+            params['address']
+          end
+
+          def customer_address2
+            params['address2']
+          end
+          
+          def customer_zip
+            params['zip']
+          end
+          
+          def customer_city
+            params['city']
+          end
+          
+          def customer_country
+            params['country']
+          end
+          
+          def customer_email
+            params['email']
+          end
+
+
           def currency
             # Netgiro only supports ISK
             'ISK'
