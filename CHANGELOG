@@ -1,5 +1,10 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.40.0 (October 18th, 2013)
+
+* Paymill: Revert Add support for specifying the :customer [melari]
+* Quickpay: Make v7 of the API default [kvs]
+* Bitpay: Add return [tahnok]
 
 == Version 1.39.2 (October 10th, 2013)
 
