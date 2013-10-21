@@ -88,13 +88,13 @@ class WebpayTest < Test::Unit::TestCase
 
   def test_add_customer
     post = {}
-    @gateway.send(:add_customer, post, {:customer => "test_customer"})
+    @gateway.send(:add_customer, post, 'card_token', {:customer => "test_customer"})
     assert_equal "test_customer", post[:customer]
   end
 
   def test_doesnt_add_customer_if_card
-    post = { :card => 'foo' }
-    @gateway.send(:add_customer, post, {:customer => "test_customer"})
+    post = {}
+    @gateway.send(:add_customer, post, @credit_card, {:customer => "test_customer"})
     assert !post[:customer]
   end
 
