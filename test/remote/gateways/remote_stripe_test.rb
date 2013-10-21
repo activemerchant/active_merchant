@@ -173,4 +173,11 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert refund = @gateway.refund(@amount - 20, response.authorization, { :refund_fee_amount => 10 })
     assert_success refund
   end
+
+  def test_creditcard_purchase_with_customer
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:customer => '1234'))
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert response.params["paid"]
+  end
 end

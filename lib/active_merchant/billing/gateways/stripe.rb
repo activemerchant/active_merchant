@@ -127,7 +127,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options)
         add_creditcard(post, creditcard, options)
-        add_customer(post, options)
+        add_customer(post, creditcard, options)
         add_customer_data(post,options)
         post[:description] = options[:description] || options[:email]
         add_flags(post, options)
@@ -189,8 +189,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_customer(post, options)
-        post[:customer] = options[:customer] if options[:customer]
+      def add_customer(post, creditcard, options)
+        post[:customer] = options[:customer] if options[:customer] && !creditcard.respond_to?(:number)
       end
 
       def add_flags(post, options)

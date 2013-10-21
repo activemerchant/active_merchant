@@ -48,8 +48,8 @@ module ActiveMerchant #:nodoc:
         post[:amount] = localized_amount(money, post[:currency].upcase)
       end
 
-      def add_customer(post, options)
-        post[:customer] = options[:customer] if options[:customer] && post[:card].blank?
+      def add_customer(post, creditcard, options)
+        post[:customer] = options[:customer] if options[:customer] && !creditcard.respond_to?(:number)
       end
 
       def json_error(raw_response)
