@@ -77,6 +77,32 @@ class WirecardTest < Test::Unit::TestCase
     assert response.message[/this is a demo/i]
   end
 
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal TEST_PURCHASE_GUWID, response.authorization
+
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+    assert response = @gateway.refund(@amount - 30, response.authorization, @options)
+    assert_success response
+    assert response.test?
+    assert_match /All good!/, response.message
+  end
+
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal TEST_PURCHASE_GUWID, response.authorization
+
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+    assert response = @gateway.void(response.authorization, @options)
+    assert_success response
+    assert response.test?
+    assert_match /Nice one!/, response.message
+  end
+
   def test_successful_authorization_and_partial_capture
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
     assert response = @gateway.authorize(@amount, @credit_card, @options)
@@ -97,6 +123,20 @@ class WirecardTest < Test::Unit::TestCase
     assert_failure response
     assert_equal TEST_CAPTURE_GUWID, response.authorization
     assert response.message["Could not find referenced transaction for GuWID 1234567890123456789012."]
+  end
+
+  def test_failed_refund
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+    assert response = @gateway.refund(@amount - 30, "TheIdentifcation", @options)
+    assert_failure response
+    assert_match /Not prudent/, response.message
+  end
+
+  def test_failed_void
+    @gateway.expects(:ssl_post).returns(failed_void_response)
+    assert response = @gateway.refund(@amount - 30, "TheIdentifcation", @options)
+    assert_failure response
+    assert_match /Not gonna do it/, response.message
   end
 
   def test_no_error_if_no_state_is_provided_in_address
@@ -271,6 +311,123 @@ class WirecardTest < Test::Unit::TestCase
     </WIRECARD_BXML>
     XML
   end
+
+  def successful_refund_response
+    <<-XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+          <W_RESPONSE>
+              <W_JOB>
+                <JobID></JobID>
+                <FNC_CC_BOOKBACK>
+                  <FunctionID></FunctionID>
+                  <CC_TRANSACTION>
+                    <TransactionID>2a486b3ab747df694d5460c3cb444591</TransactionID>
+                    <PROCESSING_STATUS>
+                      <GuWID>C898842138247065382261</GuWID>
+                      <AuthorizationCode>424492</AuthorizationCode>
+                      <Info>All good!</Info>
+                      <StatusType>INFO</StatusType>
+                      <FunctionResult>ACK</FunctionResult>
+                      <TimeStamp>2013-10-22 21:37:33</TimeStamp>
+                    </PROCESSING_STATUS>
+                  </CC_TRANSACTION>
+                </FNC_CC_BOOKBACK>
+              </W_JOB>
+          </W_RESPONSE>
+      </WIRECARD_BXML>
+    XML
+  end
+
+  def failed_refund_response
+    <<-XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+        <W_RESPONSE>
+          <W_JOB>
+            <JobID></JobID>
+            <FNC_CC_BOOKBACK>
+              <FunctionID></FunctionID>
+              <CC_TRANSACTION>
+                  <TransactionID>98680cbeee81d32e94a2b71397ffdf88</TransactionID>
+                  <PROCESSING_STATUS>
+                    <GuWID>C999187138247102291030</GuWID>
+                    <AuthorizationCode></AuthorizationCode>
+                    <StatusType>INFO</StatusType>
+                    <FunctionResult>NOK</FunctionResult>
+                    <ERROR>
+                        <Type>DATA_ERROR</Type>
+                        <Number>20080</Number>
+                        <Message>Not prudent</Message>
+                    </ERROR>
+                    <TimeStamp>2013-10-22 21:43:42</TimeStamp>
+                  </PROCESSING_STATUS>
+              </CC_TRANSACTION>
+            </FNC_CC_BOOKBACK>
+          </W_JOB>
+        </W_RESPONSE>
+      </WIRECARD_BXML>
+    XML
+  end
+
+  def successful_void_response
+    <<-XML
+       <?xml version="1.0" encoding="UTF-8"?>
+       <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+        <W_RESPONSE>
+          <W_JOB>
+            <JobID></JobID>
+            <FNC_CC_REVERSAL>
+              <FunctionID></FunctionID>
+              <CC_TRANSACTION>
+                <TransactionID>5f1a2ab3fb2ed7a6aaa0eea74dc109e2</TransactionID>
+                <PROCESSING_STATUS>
+                  <GuWID>C907807138247383379288</GuWID>
+                  <AuthorizationCode>802187</AuthorizationCode>
+                  <Info>Nice one!</Info>
+                  <StatusType>INFO</StatusType>
+                  <FunctionResult>ACK</FunctionResult>
+                  <TimeStamp>2013-10-22 22:30:33</TimeStamp>
+                </PROCESSING_STATUS>
+              </CC_TRANSACTION>
+            </FNC_CC_REVERSAL>
+          </W_JOB>
+        </W_RESPONSE>
+      </WIRECARD_BXML>
+    XML
+  end
+
+  def failed_void_response
+    <<-XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+          <W_RESPONSE>
+              <W_JOB>
+                <JobID></JobID>
+                <FNC_CC_REVERSAL>
+                  <FunctionID></FunctionID>
+                  <CC_TRANSACTION>
+                    <TransactionID>c11154e9395cf03c49bd68ec5c7087cc</TransactionID>
+                    <PROCESSING_STATUS>
+                      <GuWID>C941776138247400010330</GuWID>
+                      <AuthorizationCode></AuthorizationCode>
+                      <StatusType>INFO</StatusType>
+                      <FunctionResult>NOK</FunctionResult>
+                      <ERROR>
+                          <Type>DATA_ERROR</Type>
+                          <Number>20080</Number>
+                          <Message>Not gonna do it</Message>
+                      </ERROR>
+                      <TimeStamp>2013-10-22 22:33:20</TimeStamp>
+                    </PROCESSING_STATUS>
+                  </CC_TRANSACTION>
+                </FNC_CC_REVERSAL>
+              </W_JOB>
+          </W_RESPONSE>
+      </WIRECARD_BXML>
+    XML
+  end
+
 
   # Purchase failure
   def wrong_creditcard_purchase_response
