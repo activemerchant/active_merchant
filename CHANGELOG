@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Add Conekta gateway [leofischer]
+* Wirecard: Add support for void and refund [duff]
 
 == Version 1.40.0 (October 18th, 2013)
 
