@@ -1,7 +1,11 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.41.0 (October 24th, 2013)
+
+* Stripe: Payments won't fail when specifying a customer with a creditcard number [melari]
 * Add Conekta gateway [leofischer]
 * Wirecard: Add support for void and refund [duff]
+* Orbital: Mandatory field fix [juicedM3, jduff]
 
 == Version 1.40.0 (October 18th, 2013)
 
