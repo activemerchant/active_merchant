@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
       APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
 
       RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT, AUTHORIZATION_CODE = 0, 2, 3, 4
-      AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE  = 5, 6, 38
+      AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE, CARDHOLDER_AUTH_CODE  = 5, 6, 38, 39
 
       self.default_currency = 'USD'
 
@@ -311,7 +311,8 @@ module ActiveMerchant #:nodoc:
           :avs_result_code => fields[AVS_RESULT_CODE],
           :transaction_id => fields[TRANSACTION_ID],
           :card_code => fields[CARD_CODE_RESPONSE_CODE],
-          :authorization_code => fields[AUTHORIZATION_CODE]
+          :authorization_code => fields[AUTHORIZATION_CODE],
+          :cardholder_authentication_code => fields[CARDHOLDER_AUTH_CODE]
         }
         results
       end
@@ -383,6 +384,15 @@ module ActiveMerchant #:nodoc:
         if options.has_key? :ip
           post[:customer_ip] = options[:ip]
         end
+
+        if options.has_key? :cardholder_authentication_value
+          post[:cardholder_authentication_value] = options[:cardholder_authentication_value]
+        end
+
+        if options.has_key? :authentication_indicator
+          post[:authentication_indicator] = options[:authentication_indicator]
+        end
+
       end
 
       # x_duplicate_window won't be sent by default, because sending it changes the response.
