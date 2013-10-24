@@ -4,7 +4,8 @@ class PayuInHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @helper = PayuIn::Helper.new( 'jh34h53kj4h5hj34kh5', 'C0Dr8m', :amount => '10.00', :credential2 => 'Product Info')
+    @helper = PayuIn::Helper.new( 'jh34h53kj4h5hj34kh5', 'C0Dr8m', :amount => '10.00', :credential2 => 'Product Info')    
+    ActiveMerchant::Billing::Integrations::PayuIn.new(:merchant_id => 'C0Dr8m', :secret_key => '3sf0jURk')
   end
 
   def test_basic_helper_fields
@@ -60,7 +61,7 @@ class PayuInHelperTest < Test::Unit::TestCase
     @helper.customer :first_name => 'Payu-Admin', :email => 'test@example.com'
     @helper.user_defined :var1 => 'var_one', :var2 => 'var_two', :var3 => 'var_three', :var4 => 'var_four', :var5 => 'var_five', :var6 => 'var_six', :var7 => 'var_seven', :var8 => 'var_eight', :var9 => 'var_nine', :var10 => 'var_ten'
 
-    assert_equal "032606d7fb5cfe357d9e6b358b4bb8db1d34e9dfa30f039cb7dec75ae6d77f7d1f67a58c123ea0ee358bf040554d5e3048066a369ae63888132e27c14e79ee5a", @helper.form_fields["hash"]
+    assert_equal "c63d8b283165a14cc82fdd501204f1c54f498d29ddbda9d7adeadac4f5b49051c6c52e3439bea420cce77aec3472abccf61c6e62cdc350bcf693961bf5498b7f", @helper.form_fields["hash"]
   end
 
 end

@@ -8,10 +8,15 @@ module ActiveMerchant #:nodoc:
             super(post, options)
             @merchant_id = options[:credential1]
             @secret_key = options[:credential2]
+            @params = options[:params]
           end
 
           def complete?
             status == "Completed"
+          end
+
+          def params
+            @params
           end
 
           def status

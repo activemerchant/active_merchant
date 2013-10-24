@@ -11,9 +11,16 @@ module ActiveMerchant #:nodoc:
 
         mattr_accessor :test_url
         mattr_accessor :production_url
+        mattr_accessor :merchant_id
+        mattr_accessor :secret_key
 
         self.test_url = 'https://test.payu.in/_payment.php'
         self.production_url = 'https://secure.payu.in/_payment.php'
+
+        def self.new(options = {})          
+          self.merchant_id = options[:merchant_id]
+          self.secret_key  = options[:secret_key]
+        end
 
         def self.service_url
           ActiveMerchant::Billing::Base.integration_mode == :production ? self.production_url : self.test_url
