@@ -47,6 +47,18 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_token
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, "tok_xxx")
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/card=tok_xxx/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_purchase_response(true))
 
