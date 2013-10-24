@@ -246,12 +246,7 @@ module ActiveMerchant
       #   -a hash with all of the values returned in the PSL response
       #
       def parse(body)
-
-        fields = {}
-        for line in body.split('&')
-          key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
-          fields[key] = CGI.unescape(value)
-        end
+        fields = Rack::Utils.parse_query(body.force_encoding('ASCII-8BIT'))
         fields.symbolize_keys
       end
 

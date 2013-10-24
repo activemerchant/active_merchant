@@ -110,13 +110,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        result = {}
-        pairs = body.split("&")
-        pairs.each do |pair|
-          a = pair.split("=")
-          result[a[0].to_sym] = CGI.unescape(a[1])
-        end
-        result
+        result = Rack::Utils.parse_query(body.force_encoding('ASCII-8BIT'))
+        result.symbolize_keys
       end
 
       def commit(action, parameters)

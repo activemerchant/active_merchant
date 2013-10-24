@@ -290,13 +290,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        results = {}
-        if !body.nil?
-          body.split(/&/).each do |pair|
-            key, val = pair.split(/\=/)
-            results[key.to_sym] = val.nil? ? nil : CGI.unescape(val)
-          end
-        end
+        results = Rack::Utils.parse_query(body.force_encoding('ASCII-8BIT'))
+        results.symbolize_keys!
 
         # Clean up the message text if there is any
         if results[:messageText]

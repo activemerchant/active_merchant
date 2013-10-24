@@ -44,10 +44,7 @@ module ActiveMerchant #:nodoc:
           # Take the posted data and move the relevant data into a hash
           def parse(post)
             @raw = post.to_s
-            for line in @raw.split('&')
-              key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
-              params[key] = CGI.unescape(value)
-            end
+            params.merge!(Rack::Utils.parse_query(@raw.force_encoding('ASCII-8BIT')))
           end
         end
       end

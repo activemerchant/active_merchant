@@ -144,11 +144,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        fields = {}
-        for line in body.split('&')
-          key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
-          fields[key] = CGI.unescape(value.to_s)
-        end
+        fields = Rack::Utils.parse_query(body.force_encoding('ASCII-8BIT'))
 
         {
           :status => fields['UMstatus'],
