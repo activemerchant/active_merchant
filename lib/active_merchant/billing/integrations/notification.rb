@@ -61,8 +61,8 @@ module ActiveMerchant #:nodoc:
         def parse(post)
           @raw = post.to_s
           for line in @raw.split('&')
-            key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
-            params[key] = CGI.unescape(value)
+            key, value = *line.scan( %r{^([A-Za-z0-9_.-]+)\=(.*)$} ).flatten
+            params[key] = CGI.unescape(value.to_s) if key.present?
           end
         end
       end

@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Fix NoMethodError "tr" for params with dash [TimothyKlim]
+
 == Version 1.41.0 (October 24th, 2013)
 
 * Stripe: Payments won't fail when specifying a customer with a creditcard number [melari]
