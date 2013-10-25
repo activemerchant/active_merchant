@@ -43,10 +43,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def three_d_complete(pa_res, transaction_id, options = {})
-        commit(do_three_d_confirm(pa_res, transaction_id, options), options)
-      end
-
       def capture(money, authorization, options = {})
         commit(do_capture(money, authorization, options), options)
       end
@@ -84,15 +80,6 @@ module ActiveMerchant #:nodoc:
         fill_order_info(soap, options.merge({:amount => amount(money), :currency => (options[:currency] || currency(money))}))
         fill_cardholder(soap, card, options)
         fill_card(soap, card)
-        clear_empty_fields(soap)
-        return soap
-      end
-
-      def do_three_d_confirm(pa_res, transaction_id, options)
-        options.merge!({:soap_action => 'S3DConfirm'})
-        soap = String.new(ThreeDConfirmTemplate)
-        fill_credentials(soap, options)
-        fill_three_d_params(soap, pa_res, transaction_id)
         clear_empty_fields(soap)
         return soap
       end
@@ -153,11 +140,6 @@ module ActiveMerchant #:nodoc:
       def fill_credentials(soap, options)
         soap['${websiteID}'] = @website_id.to_s
         soap['${password}'] = @password.to_s
-      end
-
-      def fill_three_d_params(soap, pa_res, transaction_id)
-        soap['${transactionID}'] = transaction_id.to_s
-        soap['${paRES}'] = pa_res.to_s
       end
 
       def fill_cardholder(soap, card, options)
@@ -309,21 +291,6 @@ module ActiveMerchant #:nodoc:
   </soap:Body>
 </soap:Envelope>'
 
-      ThreeDConfirmTemplate = '<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="urn:Interface" xmlns:types="urn:Interface/encodedTypes" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-    <tns:S3DConfirm>
-      <S3DConfirmRequest href="#id1" />
-    </tns:S3DConfirm>
-    <tns:S3DConfirmRequest id="id1" xsi:type="tns:S3DConfirmRequest">
-      <websiteID xsi:type="xsd:string">${websiteID}</websiteID>
-      <password xsi:type="xsd:string">${password}</password>
-      <transactionID xsi:type="xsd:string">${transactionID}</transactionID>
-      <paRES xsi:type="xsd:string">${paRES}</paRES>
-    </tns:S3DConfirmRequest>
-  </soap:Body>
-</soap:Envelope>'
-
       ReauthorizeTemplate = '<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns="urn:Interface" xmlns:types="urn:Interface/encodedTypes" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
@@ -407,6 +374,7 @@ module ActiveMerchant #:nodoc:
     </tns:CancelTransactionRequest>
   </soap:Body>
 </soap:Envelope>'
+
     end
   end
 end
