@@ -14,6 +14,7 @@
 * Spreedly Core: Allow store without retain [hoenth]
 * Stripe: Support multiple cards on account [pierre]
 * Stripe: Add card_id parameter to unstore call [pierre]
+* Remove usage of `uname -a` [ntalbott]
 
 == Version 1.41.0 (October 24th, 2013)
 
