@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
 
         class Notification < ActiveMerchant::Billing::Integrations::Notification
 
-          self.production_ips = ['']
+          self.production_ips = ['103.10.128.11', '103.10.128.14']
 
           def complete?
             status.present?
