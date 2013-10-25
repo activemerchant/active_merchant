@@ -1,0 +1,67 @@
+require 'net/http'
+
+module ActiveMerchant #:nodoc:
+  module Billing #:nodoc:
+    module Integrations #:nodoc:
+      module Doku
+        # # Example:
+        # ## app/controllers/doku_controller.rb
+        # class DokuController < ApplicationController
+        #   include ActiveMerchant::Billing::Integrations
+        #
+        #   def notify
+        #     parser = Doku::Notification.new(request.raw_post)
+        #     order = Order.find_by_order_number(parser.transaction_id)
+        #     if order && order.total == parser.gross
+        #       # update order status according to parser.status (Success | Fail)
+        #       render text: 'Continue'
+        #     else
+        #       render text: 'Stop'
+        #     end
+        #   end
+        # end
+        #
+
+        class Notification < ActiveMerchant::Billing::Integrations::Notification
+
+          self.production_ips = ['']
+
+          def complete?
+            status.present?
+          end
+
+          def transaction_id
+            params['TRANSIDMERCHANT']
+          end
+
+          def gross
+            params['AMOUNT']
+          end
+
+          def status
+            params['RESULT']
+          end
+
+          def currency
+            'IDR'
+          end
+
+          def acknowledge(authcode = nil)
+            true
+          end
+
+          private
+
+          def parse(post)
+            @raw = post.to_s
+            for line in @raw.split('&')
+              key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
+              params[key] = CGI.unescape(value)
+            end
+          end
+
+        end
+      end
+    end
+  end
+end
