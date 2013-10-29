@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
                     xml.tag! 'a:ID1', @options[:property_address].to_s.gsub(/[^A-Za-z0-9\.# ]/, '')[0..49]
                     xml.tag! 'a:ID2', @options[:property_unit].to_s.gsub(/[^A-Za-z0-9\.# ]/, '')[0..49]
                     xml.tag! 'a:ID3', @options[:applicant_name].to_s.gsub(/[^A-Za-z0-9\.# ]/, '')[0..49]
-                    xml.tag! 'a:ID4', @options[:payment_id].to_s.gsub(/[^A-Za-z0-9\.# ]/, '')[0..49]
+                    xml.tag! 'a:ID4', @options[:property_name].to_s.gsub(/[^A-Za-z0-9\.# ]/, '')[0..49]
                     xml.tag! 'a:AmountToApplyToBill', amount(money)
                     xml.tag! 'a:CustomerEnteredElement1', {'i:nil' => "true"}
                     xml.tag! 'a:CustomerEnteredElement2', {'i:nil' => "true"}
@@ -160,7 +160,7 @@ module ActiveMerchant #:nodoc:
         end
         xml = xml.target!
         
-        # useful for testing         
+        # # useful for testing         
         # f = File.new('test-bill-type', 'w')
         # f << xml
         # f.close
@@ -199,7 +199,7 @@ module ActiveMerchant #:nodoc:
           end
         end
         return response
-      end     
+      end
       
       
    end 
