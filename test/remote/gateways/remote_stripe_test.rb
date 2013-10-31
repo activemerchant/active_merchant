@@ -113,9 +113,20 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_successful_unstore
     creation = @gateway.store(@credit_card, {:description => "Active Merchant Unstore Customer"})
-    assert response = @gateway.unstore(creation.params['id'])
+    customer_id = creation.params['id']
+    card_id = creation.params['cards']['data'].first['id']
+
+    # Unstore the card
+    assert response = @gateway.unstore(customer_id, card_id)
     assert_success response
-    assert_equal true, response.params["deleted"]
+    assert_equal card_id, response.params['id']
+    assert_equal true, response.params['deleted']
+
+    # Unstore the customer
+    assert response = @gateway.unstore(customer_id)
+    assert_success response
+    assert_equal customer_id, response.params['id']
+    assert_equal true, response.params['deleted']
   end
 
   def test_successful_recurring
