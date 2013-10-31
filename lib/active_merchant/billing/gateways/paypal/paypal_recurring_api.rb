@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       # This transaction creates a recurring payment profile
       # ==== Parameters
       #
-      # * <tt>money</tt> -- The amount to be charged to the customer at each interval as an Integer value in cents.
+      # * <tt>amount</tt> -- The amount to be charged to the customer at each interval as an Integer value in cents.
       # * <tt>credit_card</tt> -- The CreditCard details for the transaction.
       # * <tt>options</tt> -- A hash of parameters.
       #
