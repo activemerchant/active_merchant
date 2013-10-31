@@ -12,7 +12,8 @@
 * Spreedly Core: Allow overriding the gateway token when running a transaction [hoenth]
 * Spreedly Core: Add order_id [hoenth]
 * Spreedly Core: Allow store without retain [hoenth]
-* Stripe: support multiple cards on account [pierre]
+* Stripe: Support multiple cards on account [pierre]
+* Stripe: Add card_id parameter to unstore call [pierre]
 
 == Version 1.41.0 (October 24th, 2013)
 
