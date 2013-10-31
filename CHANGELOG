@@ -19,6 +19,7 @@
 * Webpay: Add authorize & capture [keikubo]
 * MerchantWarrior: Pass description [duff]
 * Stripe: Separate email from description [duff]
+* Add Payscout gateway [llopez]
 
 == Version 1.42.2 (November 13th, 2013)
 

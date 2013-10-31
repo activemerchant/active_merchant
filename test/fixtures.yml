@@ -474,6 +474,10 @@ psl_visa_debit_address:
   state:
   zip:
 
+payscout:
+  username: demo
+  password: password
+
 # Quickpay offers a test account.
 # To log in to the manager, use demo@quickpay.net and test234
 quickpay:
