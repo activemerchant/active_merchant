@@ -1,9 +1,9 @@
 require 'test_helper'
 
-class RemoteRavenPacNetTest < Test::Unit::TestCase
+class RemotePacNetRavenGatewayTest < Test::Unit::TestCase
 
   def setup
-    @gateway = RavenPacNetGateway.new(fixtures(:raven_pac_net))
+    @gateway = PacNetRavenGateway.new(fixtures(:raven_pac_net))
 
     @amount = 100
     @credit_card = credit_card('4000000000000028')

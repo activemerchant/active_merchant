@@ -1,8 +1,8 @@
 require 'test_helper'
 
-class RavenPacNetTest < Test::Unit::TestCase
+class PacNetRavenGatewayTest < Test::Unit::TestCase
   def setup
-    @gateway = RavenPacNetGateway.new(
+    @gateway = PacNetRavenGateway.new(
                  :user => 'user',
                  :secret => 'secret',
                  :prn => 123456
@@ -150,21 +150,21 @@ class RavenPacNetTest < Test::Unit::TestCase
   
   def test_argument_error_prn
     exception = assert_raises(ArgumentError){
-      RavenPacNetGateway.new(:user => 'user', :secret => 'secret')
+      PacNetRavenGateway.new(:user => 'user', :secret => 'secret')
     }
     assert_equal 'Missing required parameter: prn', exception.message
   end
   
   def test_argument_error_user
     exception = assert_raises(ArgumentError){
-      RavenPacNetGateway.new(:secret => 'secret', :prn => 123456)
+      PacNetRavenGateway.new(:secret => 'secret', :prn => 123456)
     }
     assert_equal 'Missing required parameter: user', exception.message
   end
   
   def test_argument_error_secret
     exception = assert_raises(ArgumentError){
-      RavenPacNetGateway.new(:user => 'user', :prn => 123456)
+      PacNetRavenGateway.new(:user => 'user', :prn => 123456)
     }
     assert_equal 'Missing required parameter: secret', exception.message
   end

@@ -1,6 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class RavenPacNetGateway < Gateway
+    class PacNetRavenGateway < Gateway
       self.test_url = 'https://raven.pacnetservices.com/realtime/'
       self.live_url = 'https://raven.pacnetservices.com/realtime/'
 
@@ -192,3 +192,4 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
+
