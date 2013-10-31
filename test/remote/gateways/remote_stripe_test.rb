@@ -6,15 +6,16 @@ class RemoteStripeTest < Test::Unit::TestCase
     @gateway = StripeGateway.new(fixtures(:stripe))
 
     @amount = 100
+    # You may have to update the currency, depending on your tenant
+    @currency = 'CAD'
     @credit_card = credit_card('4242424242424242')
     @declined_card = credit_card('4000')
     @new_credit_card = credit_card('5105105105105100')
 
     @options = {
-      :currency => 'CAD',
+      :currency => @currency,
       :description => 'ActiveMerchant Test Purchase',
-      :email => 'wow@example.com',
-      :currency => 'CAD'
+      :email => 'wow@example.com'
     }
   end
 
@@ -26,13 +27,13 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_purchase_description
-    assert response = @gateway.purchase(@amount, @credit_card, { :currency => 'CAD', :description => "TheDescription", :email => "email@example.com" })
+    assert response = @gateway.purchase(@amount, @credit_card, { :currency => @currency, :description => "TheDescription", :email => "email@example.com" })
     assert_equal "TheDescription", response.params["description"], "Use the description if it's specified."
 
-    assert response = @gateway.purchase(@amount, @credit_card, { :currency => 'CAD', :email => "email@example.com" })
+    assert response = @gateway.purchase(@amount, @credit_card, { :currency => @currency, :email => "email@example.com" })
     assert_equal "email@example.com", response.params["description"], "Use the email if no description is specified."
 
-    assert response = @gateway.purchase(@amount, @credit_card, { :currency => 'CAD' })
+    assert response = @gateway.purchase(@amount, @credit_card, { :currency => @currency })
     assert_nil response.params["description"], "No description or email specified."
   end
 
@@ -89,7 +90,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    assert response = @gateway.store(@credit_card, {:currency => 'CAD', :description => "Active Merchant Test Customer", :email => "email@example.com"})
+    assert response = @gateway.store(@credit_card, {:currency => @currency, :description => "Active Merchant Test Customer", :email => "email@example.com"})
     assert_success response
     assert_equal "customer", response.params["object"]
     assert_equal "Active Merchant Test Customer", response.params["description"]
@@ -103,9 +104,10 @@ class RemoteStripeTest < Test::Unit::TestCase
     creation = @gateway.store(@credit_card, {:description => "Active Merchant Update Customer"})
     assert response = @gateway.update(creation.params['id'], @new_credit_card)
     assert_success response
-    assert_equal "Active Merchant Update Customer", response.params["description"]
-    first_card = response.params["cards"]["data"].first
-    assert_equal response.params["default_card"], first_card["id"]
+    customer_response = response.responses.last
+    assert_equal "Active Merchant Update Customer", customer_response.params["description"]
+    first_card = customer_response.params["cards"]["data"].first
+    assert_equal customer_response.params["default_card"], first_card["id"]
     assert_equal @new_credit_card.last_digits, first_card["last4"]
   end
 
