@@ -154,6 +154,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [PayPal Payments Pro (UK)](https://www.paypal.com/uk/webapps/mpp/pro) - GB
 * [PayPal Website Payments Pro (CA)](https://www.paypal.com/cgi-bin/webscr?cmd=_wp-pro-overview-outside) - CA
 * [PayPal Express Checkout for Digital Goods](https://www.x.com/community/ppx/xspaces/digital_goods) - AU, CA, CN, FI, GB, ID, IN, IT, MY, NO, NZ, PH, PL, SE, SG, TH, VN
+* [Payscout](http://www.payscout.com/) - US
 * [Paystation](http://paystation.co.nz) - NZ
 * [Pay Way](http://www.payway.com.au) - AU
 * [Pin](http://www.pin.net.au/) - AU
