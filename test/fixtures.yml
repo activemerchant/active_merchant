@@ -336,6 +336,11 @@ pay_gate_xml:
   login: '10011021600'
   password: 'test'
 
+payex:
+  account: ACCOUNT
+  # encryption key is generated via the PayEx Admin console
+  encryption_key: ENCRYPTION_KEY
+
 payflow:
   login: LOGIN
   password: PASSWORD
