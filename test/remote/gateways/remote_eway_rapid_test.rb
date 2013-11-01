@@ -106,7 +106,8 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
     @options[:billing_address].merge!(:country => nil)
     assert response = @gateway.store(@credit_card, @options)
     assert_failure response
-    assert_equal "V6044", response.message
+    assert_equal "V6044", response.params["errors"]
+    assert_equal "Customer CountryCode Required", response.message
   end
 
   def test_invalid_login
