@@ -77,6 +77,11 @@ module ActiveMerchant #:nodoc:
         commit('VoidSale', request)
       end
 
+      def store(credit_card, options={})
+        request = build_card_lookup_request(credit_card, options)
+        commit('CardLookup', request)
+      end
+
       private
 
       def build_non_authorized_request(action, money, credit_card, options)
@@ -127,6 +132,23 @@ module ActiveMerchant #:nodoc:
           end
         end
         xml = xml.target!
+      end
+
+      def build_card_lookup_request(credit_card, options)
+        xml = Builder::XmlMarkup.new
+
+        xml.tag! "TStream" do
+          xml.tag! "Transaction" do
+            xml.tag! 'TranType', 'CardLookup'
+            xml.tag! 'RecordNo', 'RecordNumberRequested'
+            xml.tag! 'Frequency', 'OneTime'
+
+            xml.tag! 'Memo', options[:description]
+            add_customer_data(xml, options)
+            add_credit_card(xml, credit_card, options)
+          end
+        end
+        xml.target!
       end
 
       def add_invoice(xml, invoice_no, ref_no, options)
