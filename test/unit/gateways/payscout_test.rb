@@ -260,15 +260,16 @@ class PayscoutTest < Test::Unit::TestCase
   def test_parse
     data = @gateway.send(:parse, approved_authorization_response)
 
-    assert_include data.keys, 'response'
-    assert_include data.keys, 'responsetext'
-    assert_include data.keys, 'authcode'
-    assert_include data.keys, 'transactionid'
-    assert_include data.keys, 'avsresponse'
-    assert_include data.keys, 'cvvresponse'
-    assert_include data.keys, 'orderid'
-    assert_include data.keys, 'type'
-    assert_include data.keys, 'response_code'
+    assert data.keys.include?('response')
+    assert data.keys.include?('responsetext')
+    assert data.keys.include?('authcode')
+    assert data.keys.include?('transactionid')
+    assert data.keys.include?('avsresponse')
+    assert data.keys.include?('cvvresponse')
+    assert data.keys.include?('orderid')
+    assert data.keys.include?('type')
+    assert data.keys.include?('response_code')
+    
     assert_equal '1', data['response']
     assert_equal 'SUCCESS', data['responsetext']
     assert_equal '123456', data['authcode']
