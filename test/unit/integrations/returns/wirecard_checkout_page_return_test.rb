@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'rails'
 
 class WirecardCheckoutPageReturnTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
