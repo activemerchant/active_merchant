@@ -129,8 +129,8 @@ eway_managed:
 
 # Working credentials, no need to replace
 eway_rapid:
-  login: "F9802CIVgUgNaD8y/H52MBMnL5OvMoy4cYimpi1L/dCXeNNR6or3vLPoC9GjeLVdA7ymi+"
-  password: "sandbox1"
+  login: LOGIN
+  password: PASSWORD
 
 # Working credentials, no need to replace
 exact:
