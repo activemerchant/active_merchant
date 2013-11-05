@@ -57,7 +57,6 @@ module ActiveMerchant #:nodoc:
             params.each { |key, value|
               logstr += "#{key} #{value}\n"
             }
-            Rails.logger.debug "verify_response\n#{logstr}" if Rails.logger
 
             @paymentstate = 'FAILURE'
 
@@ -86,7 +85,6 @@ module ActiveMerchant #:nodoc:
                 values += f == 'secret' ? secret : params[f]
               }
 
-              Rails.logger.debug "Fingerprint his: " + params['responseFingerprint'] + " mine: " + Digest::MD5.hexdigest(values) if Rails.logger
 
               if Digest::MD5.hexdigest(values) != params['responseFingerprint']
                 @message = "responseFingerprint verification failed"
