@@ -1,5 +1,4 @@
-require "nokogiri"
-require "cgi"
+require 'json'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -11,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ["AU"]
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
       self.homepage_url = "http://www.eway.com.au/"
-      self.display_name = "eWAY Rapid 3.0"
+      self.display_name = "eWAY Rapid 3.1"
       self.default_currency = "AUD"
 
       def initialize(options = {})
@@ -19,262 +18,219 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      # Public: Run a purchase transaction. Treats the Rapid 3.0 transparent
-      # redirect as an API endpoint in order to conform to the standard
-      # ActiveMerchant #purchase API.
+      # Public: Run a purchase transaction.
       #
-      # amount  - The monetary amount of the transaction in cents.
-      # options - A standard ActiveMerchant options hash:
-      #           :order_id         - A merchant-supplied identifier for the
-      #                               transaction (optional).
-      #           :description      - A merchant-supplied description of the
-      #                               transaction (optional).
-      #           :currency         - Three letter currency code for the
-      #                               transaction (default: "AUD")
-      #           :billing_address  - Standard ActiveMerchant address hash
-      #                               (optional).
-      #           :shipping_address - Standard ActiveMerchant address hash
-      #                               (optional).
-      #           :ip               - The ip of the consumer initiating the
-      #                               transaction (optional).
-      #           :application_id   - A string identifying the application
-      #                               submitting the transaction
-      #                               (default: "https://github.com/Shopify/active_merchant")
+      # amount         - The monetary amount of the transaction in cents.
+      # payment_method - The payment method or nil if :customer_token is provided
+      # options        - A standard ActiveMerchant options hash:
+      #                  :transaction_type - One of: Purchase (default), MOTO
+      #                                      or Recurring
+      #                  :order_id         - A merchant-supplied identifier for the
+      #                                      transaction (optional).
+      #                  :customer_token   - The customer token to use for TokenPayments (optional).
+      #                  :description      - A merchant-supplied description of the
+      #                                      transaction (optional).
+      #                  :currency         - Three letter currency code for the
+      #                                      transaction (default: "AUD")
+      #                  :billing_address  - Standard ActiveMerchant address hash
+      #                                      (optional).
+      #                  :shipping_address - Standard ActiveMerchant address hash
+      #                                      (optional).
+      #                  :ip               - The ip of the consumer initiating the
+      #                                      transaction (optional).
+      #                  :application_id   - A string identifying the application
+      #                                      submitting the transaction
+      #                                      (default: "https://github.com/Shopify/active_merchant")
+      #
+      # Returns an ActiveMerchant::Billing::Response object where authorization is set to the Transaction ID
+      def purchase(amount, payment_method, options={})
+        method = options[:customer_token] ? 'TokenPayment' : 'ProcessPayment'
+        params = {}
+        add_metadata(params, options)
+        add_invoice(params, amount, options)
+        add_customer_data(params, payment_method, options)
+        commit(url_for('Transaction'), params)
+      end
+
+      # Public: Refund a transaction.
+      #
+      # money          - The monetary amount of the transaction in cents
+      # identification - The transaction id which is returned in the
+      #                  authorization of the successful purchase transaction
+      # options        - A standard ActiveMerchant options hash:
       #
       # Returns an ActiveMerchant::Billing::Response object
-      def purchase(amount, payment_method, options={})
-        MultiResponse.new.tap do |r|
-          # Rather than follow the redirect, we detect the 302 and capture the
-          # token out of the Location header in the run_purchase step. But we
-          # still need a placeholder url to pass to eWay, and that is what
-          # example.com is used for here.
-          r.process{setup_purchase(amount, options.merge(:redirect_url => "http://example.com/"))}
-          r.process{run_purchase(r.authorization, payment_method, r.params["formactionurl"])}
-          r.process{status(r.authorization)}
-        end
-      end
-
-      # Public: Acquire the token necessary to run a transparent redirect.
-      #
-      # amount  - The monetary amount of the transaction in cents.
-      # options - A supplemented ActiveMerchant options hash:
-      #           :redirect_url     - The url to return the customer to after
-      #                               the transparent redirect is completed
-      #                               (required).
-      #           :order_id         - A merchant-supplied identifier for the
-      #                               transaction (optional).
-      #           :description      - A merchant-supplied description of the
-      #                               transaction (optional).
-      #           :currency         - Three letter currency code for the
-      #                               transaction (default: "AUD")
-      #           :billing_address  - Standard ActiveMerchant address hash
-      #                               (optional).
-      #           :shipping_address - Standard ActiveMerchant address hash
-      #                               (optional).
-      #           :ip               - The ip of the consumer initiating the
-      #                               transaction (optional).
-      #           :application_id   - A string identifying the application
-      #                               submitting the transaction
-      #                               (default: "https://github.com/Shopify/active_merchant")
-      #
-      # Returns an EwayRapidResponse object, which conforms to the
-      # ActiveMerchant::Billing::Response API, but also exposes #form_url.
-      def setup_purchase(amount, options={})
-        requires!(options, :redirect_url)
-        request = build_xml_request("CreateAccessCodeRequest") do |doc|
+      def refund(money, identification, options = {})
+        request = build_xml_request('Refund') do |doc|
           add_metadata(doc, options)
-          add_invoice(doc, amount, options)
-          add_customer_data(doc, options)
+          add_invoice(doc, money, options)
+          add_customer_data(doc, payment_method, options)
         end
-
-        commit(url_for("CreateAccessCode"), request)
-      end
-
-      # Public: Retrieve the status of a transaction.
-      #
-      # identification - The Eway Rapid 3.0 access code for the transaction
-      #                  (returned as the response.authorization by
-      #                  #setup_purchase).
-      #
-      # Returns an EwayRapidResponse object.
-      def status(identification)
-        request = build_xml_request("GetAccessCodeResultRequest") do |doc|
-          doc.AccessCode identification
-        end
-        commit(url_for("GetAccessCodeResult"), request)
+        commit(url_for('DirectPayment'), request)
       end
 
       # Public: Store card details and return a valid token
       #
-      # options - A supplemented ActiveMerchant options hash:
-      #           :order_id         - A merchant-supplied identifier for the
-      #                               transaction (optional).
-      #           :billing_address  - Standard ActiveMerchant address hash
-      #                               (required).
-      #           :ip               - The ip of the consumer initiating the
-      #                               transaction (optional).
-      #           :application_id   - A string identifying the application
-      #                               submitting the transaction
-      #                               (default: "https://github.com/Shopify/active_merchant")
+      # payment_method - The payment method or nil if :customer_token is provided
+      # options        - A supplemented ActiveMerchant options hash:
+      #                  :order_id         - A merchant-supplied identifier for the
+      #                                      transaction (optional).
+      #                  :billing_address  - Standard ActiveMerchant address hash
+      #                                      (required).
+      #                  :ip               - The ip of the consumer initiating the
+      #                                      transaction (optional).
+      #                  :application_id   - A string identifying the application
+      #                                      submitting the transaction
+      #                                      (default: "https://github.com/Shopify/active_merchant")
+      #
+      # Returns an ActiveMerchant::Billing::Response object where the authorization
+      # is the customer_token on success
       def store(payment_method, options = {})
         requires!(options, :billing_address)
-        purchase(0, payment_method, options.merge(:request_method => "CreateTokenCustomer"))
+        request = build_xml_request('CreateTokenCustomer') do |doc|
+          add_metadata(doc, options)
+          add_invoice(doc, 0, options)
+          add_customer_data(doc, payment_method, options)
+        end
+        commit(url_for('DirectPayment'), request, 'customer_tokencustomerid')
+      end
+
+      # Public: Update a customer's data
+      #
+      # customer_token - The customer token returned in the authorization of
+      #                  a successful store transaction.
+      # payment_method - The payment method or nil if :customer_token is provided
+      # options        - A supplemented ActiveMerchant options hash:
+      #                  :order_id         - A merchant-supplied identifier for the
+      #                                      transaction (optional).
+      #                  :billing_address  - Standard ActiveMerchant address hash
+      #                                      (optional).
+      #                  :ip               - The ip of the consumer initiating the
+      #                                      transaction (optional).
+      #                  :application_id   - A string identifying the application
+      #                                      submitting the transaction
+      #                                      (default: "https://github.com/Shopify/active_merchant")
+      # Returns an ActiveMerchant::Billing::Response object
+      def update(customer_token, payment_method, options = {})
+        request = build_xml_request('UpdateTokenCustomer') do |doc|
+          add_metadata(doc, options)
+          add_invoice(doc, 0, options)
+          add_customer_data(doc, payment_method, options)
+        end
+        commit(url_for('DirectPayment'), request)
       end
 
       private
 
-      def run_purchase(identification, payment_method, endpoint)
-        post = {
-          "accesscode" => identification
+      def add_metadata(params, options)
+        params['RedirectUrl'] = options[:redirect_url] || 'http://example.com'
+        params['CustomerIP'] = options[:ip] if options[:ip]
+        params['Method'] = options[:request_method] || "ProcessPayment"
+        params['TransactionType'] = options[:transaction_type] || 'Purchase'
+        params['DeviceID'] = options[:application_id] || application_id
+      end
+
+      def add_invoice(params, money, options)
+        refund_transaction_id = options[:refund_transaction_id]
+        type = refund_transaction_id ? 'Refund' : 'Payment'
+        currency_code = options[:currency] || currency(money)
+        params[type] = fields = {
+          'TotalAmount' => localized_amount(money, currency_code),
+          'InvoiceReference' => options[:order_id],
+          'InvoiceDescription' => options[:description],
+          'CurrencyCode' => currency_code,
         }
-        add_credit_card(post, payment_method)
-
-        commit_form(endpoint, build_form_request(post), :identification => identification)
+        # must include the original transaction id for refunds
+        fields['TransactionID'] = refund_transaction_id if refund_transaction_id
       end
 
-      def add_metadata(doc, options)
-        doc.RedirectUrl(options[:redirect_url])
-        doc.CustomerIP options[:ip] if options[:ip]
-        doc.Method options[:request_method] || "ProcessPayment"
-        doc.DeviceID(options[:application_id] || application_id)
+      def add_customer_data(params, credit_card, options)
+        params['Customer'] = customer = {}
+        add_address(customer, (options[:billing_address] || options[:address]), {:email => options[:email]})
+        customer['CardDetails'] = card_details = {}
+        add_credit_card(card_details, credit_card, options)
+        params['ShippingAddress'] = shipping_address = {}
+        add_address(shipping_address, options[:shipping_address], {:skip_company => true})
       end
 
-      def add_invoice(doc, money, options)
-        doc.Payment do
-          currency_code = options[:currency] || currency(money)
-          doc.TotalAmount localized_amount(money, currency_code)
-          doc.InvoiceReference options[:order_id]
-          doc.InvoiceDescription options[:description]
-          doc.CurrencyCode currency_code
-        end
-      end
-
-      def add_customer_data(doc, options)
-        doc.Customer do
-          add_address(doc, (options[:billing_address] || options[:address]), {:email => options[:email]})
-        end
-        doc.ShippingAddress do
-          add_address(doc, options[:shipping_address], {:skip_company => true})
-        end
-      end
-
-      def add_address(doc, address, options={})
+      def add_address(params, address, options={})
         return unless address
         if name = address[:name]
           parts = name.split(/\s+/)
-          doc.FirstName parts.shift if parts.size > 1
-          doc.LastName parts.join(" ")
+          params['FirstName'] = parts.shift if parts.size > 1
+          params['LastName'] = parts.join(" ")
         end
-        doc.Title address[:title]
-        doc.CompanyName address[:company] unless options[:skip_company]
-        doc.Street1 address[:address1]
-        doc.Street2 address[:address2]
-        doc.City address[:city]
-        doc.State address[:state]
-        doc.PostalCode address[:zip]
-        doc.Country address[:country].to_s.downcase
-        doc.Phone address[:phone]
-        doc.Fax address[:fax]
-        doc.Email options[:email]
+        params['Title'] = address[:title]
+        params['CompanyName'] = address[:company] unless options[:skip_company]
+        params['Street1'] = address[:address1]
+        params['Street2'] = address[:address2]
+        params['City'] = address[:city]
+        params['State'] = address[:state]
+        params['PostalCode'] = address[:zip]
+        params['Country'] = address[:country].to_s.downcase
+        params['Phone'] = address[:phone]
+        params['Fax'] = address[:fax]
+        params['Email'] = options[:email]
       end
 
-      def add_credit_card(post, credit_card)
-        post["cardname"] = credit_card.name
-        post["cardnumber"] = credit_card.number
-        post["cardexpirymonth"] = credit_card.month
-        post["cardexpiryyear"] = credit_card.year
-        post["cardcvn"] = credit_card.verification_value
-      end
-
-      def build_xml_request(root)
-        builder = Nokogiri::XML::Builder.new
-        builder.__send__(root) do |doc|
-          yield(doc)
-        end
-        builder.to_xml
-      end
-
-      def build_form_request(post)
-        request = []
-        post.each do |key, value|
-          request << "EWAY_#{key.upcase}=#{CGI.escape(value.to_s)}"
-        end
-        request.join("&")
+      def add_credit_card(params, credit_card, options)
+        return unless credit_card
+        params['Name'] = credit_card.name
+        params['Number'] = credit_card.number
+        params['ExpiryMonth'] = "%02d" % credit_card.month if credit_card.month
+        params['ExpiryYear'] = "%02d" % credit_card.year if credit_card.year
+        params['CVN'] = credit_card.verification_value
       end
 
       def url_for(action)
-        (test? ? test_url : live_url) + action + ".xml"
+        (test? ? test_url : live_url) + action
       end
 
-      def commit(url, request, form_post=false)
+      def commit(url, params, authorization_type = :transaction)
         headers = {
           "Authorization" => ("Basic " + Base64.strict_encode64(@options[:login].to_s + ":" + @options[:password].to_s).chomp),
-          "Content-Type" => "text/xml"
+          "Content-Type" => "application/json"
         }
-
+        request = params.to_json
         raw = parse(ssl_post(url, request, headers))
 
         succeeded = success?(raw)
-        EwayRapidResponse.new(
+        ActiveMerchant::Billing::Response.new(
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(raw),
+          :authorization => authorization_from(raw, authorization_type),
           :test => test?,
           :avs_result => avs_result_from(raw),
           :cvv_result => cvv_result_from(raw)
         )
       rescue ActiveMerchant::ResponseError => e
-        return EwayRapidResponse.new(false, e.response.message, {:status_code => e.response.code}, :test => test?)
+        return ActiveMerchant::Billing::Response.new(false, e.response.message, {:status_code => e.response.code}, :test => test?)
       end
 
-      def commit_form(url, request, parameters)
-        http_response = raw_ssl_request(:post, url, request)
-
-        success = (http_response.code.to_s == "302")
-        message = (success ? "Succeeded" : http_response.body)
-        authorization = parameters[:identification] if success
-
-        Response.new(success, message, {:location => http_response["Location"]}, :authorization => authorization, :test => test?)
-      end
-
-      def parse(xml)
-        response = {}
-
-        doc = Nokogiri::XML(xml)
-        doc.root.xpath("*").each do |node|
-          if (node.elements.size == 0)
-            response[node.name.downcase.to_sym] = node.text
-          else
-            node.elements.each do |childnode|
-              name = "#{node.name.downcase}_#{childnode.name.downcase}"
-              response[name.to_sym] = childnode.text
-            end
-          end
-        end unless doc.root.nil?
-
-        response
+      def parse(data)
+        JSON.parse(data)
       end
 
       def success?(response)
-        if response[:errors]
+        if response['Errors']
           false
-        elsif response[:responsecode] == "00"
+        elsif response['ResponseCode'] == "00"
           true
-        elsif response[:transactionstatus]
-          (response[:transactionstatus] == "true")
+        elsif response['TransactionStatus']
+          (response['TransactionStatus'] == "true")
         else
           true
         end
       end
 
       def message_from(succeeded, response)
-        if response[:errors]
-          (MESSAGES[response[:errors]] || response[:errors])
+        if response['Errors']
+          (MESSAGES[response['Errors']] || response['Errors'])
         elsif response[:responsecode]
-          ActiveMerchant::Billing::EwayGateway::MESSAGES[response[:responsecode]]
-        elsif response[:responsemessage]
-          (MESSAGES[response[:responsemessage]] || response[:responsemessage])
+          ActiveMerchant::Billing::EwayGateway::MESSAGES[response['ResponseCode']]
+        elsif response['ResponseMessage']
+          (MESSAGES[response['ResponseMessage']] || response['ResponseMessage'])
         elsif succeeded
           "Succeeded"
         else
@@ -282,8 +238,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorization_from(response)
-        response[:accesscode]
+      def authorization_from(response, type)
+        if type == :transaction
+          response['TransactionID']
+        elsif type == :customer_token
+          response['Customer']['TokenCustomerID'] rescue nil
+        else
+          raise "Unknown authorization type: #{type}"
+        end
       end
 
       def avs_result_from(response)
@@ -309,16 +271,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      class EwayRapidResponse < ActiveMerchant::Billing::Response
-        def form_url
-          params["formactionurl"]
-        end
-      end
-
       MESSAGES = {
         'V6000' => 'Validation error',
         'V6001' => 'Invalid CustomerIP',
         'V6002' => 'Invalid DeviceID',
+        'V6003' => 'Invalid Request PartnerID',
+        'V6004' => 'Invalid Request Method',
+        'V6010' => 'Invalid TransactionType, account not certified for eCome only MOTO or Recurring available',
         'V6011' => 'Invalid Payment TotalAmount',
         'V6012' => 'Invalid Payment InvoiceDescription',
         'V6013' => 'Invalid Payment InvoiceNumber',
@@ -385,7 +344,8 @@ module ActiveMerchant #:nodoc:
         'V6107' => 'Invalid EWAY_ACCESSCODE',
         'V6108' => 'Invalid CustomerHostAddress',
         'V6109' => 'Invalid UserAgent',
-        'V6110' => 'Invalid EWAY_CARDNUMBER'
+        'V6110' => 'Invalid EWAY_CARDNUMBER',
+        'V6111' => 'Unauthorised API Access, Account Not PCI Certified'
       }
     end
   end

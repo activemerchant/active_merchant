@@ -67,34 +67,6 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
     assert_equal "Do Not Honour", response.message
   end
 
-  def test_failed_setup_purchase
-    assert response = @gateway.setup_purchase(@amount, :redirect_url => "")
-    assert_failure response
-    assert_equal "V6047", response.message
-  end
-
-  def test_failed_run_purchase
-    setup_response = @gateway.setup_purchase(@amount, @options)
-    assert_success setup_response
-
-    assert response = @gateway.send(:run_purchase, "bogus", @credit_card, setup_response.params["formactionurl"])
-    assert_failure response
-    assert_match(%r{Access Code Invalid}, response.message)
-  end
-
-  def test_failed_status
-    setup_response = @gateway.setup_purchase(@failed_amount, @options)
-    assert_success setup_response
-
-    assert run_response = @gateway.send(:run_purchase, setup_response.authorization, @credit_card, setup_response.params["formactionurl"])
-    assert_success run_response
-
-    response = @gateway.status(run_response.authorization)
-    assert_failure response
-    assert_equal "Do Not Honour", response.message
-    assert_equal run_response.authorization, response.authorization
-  end
-
   def test_successful_store
     @options[:billing_address].merge!(:title => "Dr.")
     assert response = @gateway.store(@credit_card, @options)
