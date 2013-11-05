@@ -210,6 +210,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [SagePay Form](http://www.sagepay.com/products_services/sage_pay_go/integration/form)
 * [Suomen Maksuturva](https://www.maksuturva.fi/services/vendor_services/integration_guidelines.html)
 * [Valitor](http://www.valitor.is/) - IS
+* [Veritrans Indonesia](https://www.veritrans.co.id/) - ID
 * [Verkkomaksut](http://www.verkkomaksut.fi) - FI
 * [WebMoney](http://www.webmoney.ru) - RU
 * [WebPay](http://webpay.by/)
