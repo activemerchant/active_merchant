@@ -71,8 +71,8 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert_equal "0.50", response.params["purchase"]
   end
 
-  def test_request_token
-    response = @gateway.request_token(@credit_card, @options)
+  def test_store
+    response = @gateway.store(@credit_card, @options)
 
     assert_success response
     assert response.params.has_key?("record_no")

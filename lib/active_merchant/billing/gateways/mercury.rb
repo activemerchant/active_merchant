@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
         commit('VoidSale', request)
       end
 
-      def request_token(credit_card, options={})
+      def store(credit_card, options={})
         request = build_card_lookup_request(credit_card, options)
         commit('CardLookup', request)
       end
