@@ -141,10 +141,10 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(doc, money, options)
         doc.Payment do
-          doc.TotalAmount amount(money)
+          currency_code = options[:currency] || currency(money)
+          doc.TotalAmount localized_amount(money, currency_code)
           doc.InvoiceReference options[:order_id]
           doc.InvoiceDescription options[:description]
-          currency_code = (options[:currency] || currency(money) || default_currency)
           doc.CurrencyCode currency_code
         end
       end

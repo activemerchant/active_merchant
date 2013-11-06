@@ -108,8 +108,10 @@ module ActiveMerchant #:nodoc:
       def build_purchase_request(money, credit_card, options)
         xml = Builder::XmlMarkup.new
 
-        xml.tag! 'amount', amount(money)
-        xml.tag! 'currency', options[:currency] || currency(money)
+        currency = options[:currency] || currency(money)
+
+        xml.tag! 'amount', localized_amount(money, currency)
+        xml.tag! 'currency', currency
         xml.tag! 'purchaseOrderNo', options[:order_id].to_s.gsub(/[ ']/, '')
 
         xml.tag! 'CreditCardInfo' do
