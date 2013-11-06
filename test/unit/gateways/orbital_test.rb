@@ -22,6 +22,26 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
   end
 
+  def test_currency_exponents
+    stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => '1')
+    end.check_request do |endpoint, data, headers|
+      assert_match /<CurrencyExponent>2<\/CurrencyExponent>/, data
+    end.respond_with(successful_purchase_response)
+
+    stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => '1', :currency => 'CAD')
+    end.check_request do |endpoint, data, headers|
+      assert_match /<CurrencyExponent>2<\/CurrencyExponent>/, data
+    end.respond_with(successful_purchase_response)
+
+    stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => '1', :currency => 'JPY')
+    end.check_request do |endpoint, data, headers|
+      assert_match /<CurrencyExponent>0<\/CurrencyExponent>/, data
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_unauthenticated_response
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
