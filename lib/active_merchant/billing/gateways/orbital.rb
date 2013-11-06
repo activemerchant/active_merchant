@@ -80,6 +80,25 @@ module ActiveMerchant #:nodoc:
         "EUR" => '978'
       }
 
+      CURRENCY_EXPONENTS = {
+        "AUD" => '2',
+        "CAD" => '2',
+        "CZK" => '2',
+        "DKK" => '2',
+        "HKD" => '2',
+        "ICK" => '2',
+        "JPY" => '0',
+        "MXN" => '2',
+        "NZD" => '2',
+        "NOK" => '2',
+        "SGD" => '2',
+        "SEK" => '2',
+        "CHF" => '2',
+        "GBP" => '2',
+        "USD" => '2',
+        "EUR" => '2'
+      }
+
       # INDUSTRY TYPES
       ECOMMERCE_TRANSACTION = 'EC'
       RECURRING_PAYMENT_TRANSACTION = 'RC'
@@ -333,7 +352,7 @@ module ActiveMerchant #:nodoc:
         end
 
         xml.tag! :CurrencyCode, currency_code(currency)
-        xml.tag! :CurrencyExponent, '2' # Will need updating to support currencies such as the Yen.
+        xml.tag! :CurrencyExponent, currency_exponents(currency)
 
         # If you are trying to collect a Card Verification Number
         # (CardSecVal) for a Visa or Discover transaction, pass one of these values:
@@ -356,7 +375,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! :AccountNum, nil
 
         xml.tag! :CurrencyCode, currency_code(currency)
-        xml.tag! :CurrencyExponent, '2' # Will need updating to support currencies such as the Yen.
+        xml.tag! :CurrencyExponent, currency_exponents(currency)
       end
 
       def add_managed_billing(xml, options)
@@ -542,6 +561,10 @@ module ActiveMerchant #:nodoc:
 
       def currency_code(currency)
         CURRENCY_CODES[(currency || self.default_currency)].to_s
+      end
+
+      def currency_exponents(currency)
+        CURRENCY_EXPONENTS[(currency || self.default_currency)].to_s
       end
 
       def expiry_date(credit_card)
