@@ -38,6 +38,20 @@ class EwayRapidTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_localized_currency
+    stub_comms do
+      @gateway.setup_purchase(100, :currency => 'CAD', :redirect_url => '')
+    end.check_request do |endpoint, data, headers|
+      assert_match /<TotalAmount>100<\/TotalAmount>/, data
+    end.respond_with(successful_setup_purchase_response)
+
+    stub_comms do
+      @gateway.setup_purchase(100, :currency => 'JPY', :redirect_url => '')
+    end.check_request do |endpoint, data, headers|
+      assert_match /<TotalAmount>1<\/TotalAmount>/, data
+    end.respond_with(successful_setup_purchase_response)
+  end
+
   def test_failed_setup_purchase
     response = stub_comms do
       @gateway.setup_purchase(@amount, :redirect_url => "http://bogus")
