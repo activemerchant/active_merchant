@@ -161,14 +161,14 @@ module ActiveMerchant #:nodoc:
 
       def localized_amount(money, currency)
         amount = amount(money)
-        if non_fractional_currency?(currency)
-          if self.money_format == :cents
-            return (amount.to_f/100).floor.to_s
-          else
-            return amount.split('.').first
-          end
+
+        return amount unless non_fractional_currency?(currency)
+
+        if self.money_format == :cents
+          sprintf("%.0f", amount.to_f / 100)
+        else
+          amount.split('.').first
         end
-        amount
       end
 
       def non_fractional_currency?(currency)
