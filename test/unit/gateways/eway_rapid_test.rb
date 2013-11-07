@@ -42,13 +42,13 @@ class EwayRapidTest < Test::Unit::TestCase
     stub_comms do
       @gateway.setup_purchase(100, :currency => 'CAD', :redirect_url => '')
     end.check_request do |endpoint, data, headers|
-      assert_match /<TotalAmount>100/, data
+      assert_match /<TotalAmount>100<\/TotalAmount>/, data
     end.respond_with(successful_setup_purchase_response)
 
     stub_comms do
       @gateway.setup_purchase(100, :currency => 'JPY', :redirect_url => '')
     end.check_request do |endpoint, data, headers|
-      assert_match /<TotalAmount>1/, data
+      assert_match /<TotalAmount>1<\/TotalAmount>/, data
     end.respond_with(successful_setup_purchase_response)
   end
 
