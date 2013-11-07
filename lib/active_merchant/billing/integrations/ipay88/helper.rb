@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
             components  = [merchant_key]
             components << fields[mappings[:account]]
             components << fields[mappings[:order]]
-            components << amount_in_dollars.to_s.gsub(/0+$/, '').gsub(/[.,]/, '')
+            components << amount_in_dollars.gsub(/[.,]/, '')
             components << fields[mappings[:currency]]
             components.join
           end
