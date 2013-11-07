@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency('activesupport', '>= 2.3.14', '< 5.0.0')
   s.add_dependency('i18n', '~> 0.5')
-  s.add_dependency('money', '< 6.0.0')
+  s.add_dependency('money', '< 7.0.0')
   s.add_dependency('builder', '>= 2.1.2', '< 4.0.0')
   s.add_dependency('json', '~> 1.7')
   s.add_dependency('active_utils', '~> 2.0', '>= 2.0.1')
