@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
         post = create_post_for_auth_or_purchase(money, creditcard, options)
         post[:capture] = "false"
 
-        commit(:post, 'charges', post, generate_meta(options))
+        commit(:post, 'charges', post, generate_options(options))
       end
 
       # To create a charge on a card or a token, call
@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, creditcard, options = {})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
 
-        commit(:post, 'charges', post, generate_meta(options))
+        commit(:post, 'charges', post, generate_options(options))
       end
 
       def capture(money, authorization, options = {})
@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, identification, options = {})
         post = {:amount => amount(money)}
-        commit_options = generate_meta(options)
+        commit_options = generate_options(options)
 
         MultiResponse.run(:first) do |r|
           r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, commit_options) }
@@ -109,7 +109,7 @@ module ActiveMerchant #:nodoc:
           'customers'
         end
 
-        commit(:post, path, post, generate_meta(options))
+        commit(:post, path, post, generate_options(options))
       end
 
       def update(customer_id, creditcard, options = {})
@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def unstore(customer_id, options = {})
-        commit(:delete, "customers/#{CGI.escape(customer_id)}", nil, generate_meta(options))
+        commit(:delete, "customers/#{CGI.escape(customer_id)}", nil, generate_options(options))
       end
 
       private
@@ -224,6 +224,11 @@ module ActiveMerchant #:nodoc:
         end.compact.join("&")
       end
 
+      def generate_options(raw_options)
+        options = generate_meta(raw_options)
+        options.merge!(raw_options.slice(:version))
+      end
+
       def generate_meta(options)
         {:meta => {:ip => options[:ip]}}
       end
@@ -240,12 +245,14 @@ module ActiveMerchant #:nodoc:
 
         key = options[:key] || @api_key
 
-        {
+        headers = {
           "Authorization" => "Basic " + Base64.encode64(key.to_s + ":").strip,
           "User-Agent" => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "X-Stripe-Client-User-Agent" => @@ua,
           "X-Stripe-Client-User-Metadata" => options[:meta].to_json
         }
+        headers.merge!("Stripe-Version" => options[:version]) if options[:version]
+        headers
       end
 
       def commit(method, url, parameters=nil, options = {})
