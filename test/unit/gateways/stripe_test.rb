@@ -293,6 +293,14 @@ class StripeTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options.merge(:ip => '1.1.1.1'))
   end
 
+  def test_optional_version_header
+    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+      headers && headers['Stripe-Version'] == '2013-10-29'
+    }.returns(successful_purchase_response)
+
+    @gateway.purchase(@amount, @credit_card, @options.merge(:version => '2013-10-29'))
+  end
+
   def test_track_data_and_traditional_should_be_mutually_exclusive
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
