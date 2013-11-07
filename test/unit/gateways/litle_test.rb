@@ -377,6 +377,7 @@ class LitleTest < Test::Unit::TestCase
     assert_equal 'successful', responseFrom.message
     assert_equal '1234;authorization', responseFrom.authorization
     assert_equal '1111222233334444', responseFrom.params['litleOnlineResponse']['authorizationResponse']['litleToken']
+    assert_equal '000', responseFrom.params['response_code']
   end
 
   def test_avs
