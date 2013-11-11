@@ -96,6 +96,10 @@ module ActiveMerchant #:nodoc:
         save_card(true, credit_card, options)
       end
 
+      def store_but_do_not_retain(credit_card, options)
+        save_card(false, credit_card, options)
+      end
+
       # Public: Redact the CreditCard in Spreedly. This wipes the sensitive
       #         payment information from the card.
       #
@@ -103,6 +107,15 @@ module ActiveMerchant #:nodoc:
       # options        - A standard ActiveMerchant options hash
       def unstore(authorization, options={})
         commit("payment_methods/#{authorization}/redact.xml", '', :put)
+      end
+
+      def retrieve(authorization, options={})
+        commit("payment_methods/#{authorization}.xml", nil, :get)
+      end
+
+      def add_gateway(gateway_type,options={})
+        request = add_gateway_body(gateway_type, options)
+        commit_gateway("gateways.xml",request)
       end
 
       private
@@ -118,7 +131,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase_with_token(money, payment_method_token, options)
         request = auth_purchase_request(money, payment_method_token, options)
-        commit("gateways/#{@options[:gateway_token]}/purchase.xml", request)
+        commit("gateways/#{options[:gateway_token] || @options[:gateway_token]}/purchase.xml", request)
       end
 
       def authorize_with_token(money, payment_method_token, options)
@@ -137,6 +150,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(doc, money, options)
         doc.amount amount(money)
         doc.currency_code(options[:currency] || currency(money) || default_currency)
+        doc.order_id(options[:order_id])
       end
 
       def add_credit_card(doc, credit_card, options)
@@ -213,10 +227,10 @@ module ActiveMerchant #:nodoc:
           raw_response = e.response.body
         end
 
-        response_from(raw_response, authorization_field)
+        method != :get ? response_from_transaction(raw_response, authorization_field) : response_from_request(raw_response)
       end
 
-      def response_from(raw_response, authorization_field)
+      def response_from_transaction(raw_response, authorization_field)
         parsed = parse(raw_response)
         options = {
           :authorization => parsed[authorization_field],
@@ -228,6 +242,32 @@ module ActiveMerchant #:nodoc:
         Response.new(parsed[:succeeded] == 'true', parsed[:message] || parsed[:error], parsed, options)
       end
 
+      def response_from_request(raw_response)
+        parsed = parse(raw_response)
+        Response.new(parsed[:error].blank?, parsed[:message] || parsed[:error], parsed)
+      end
+
+      def add_gateway_body(gateway_type, options)
+        build_xml_request('gateway') do |doc|
+          doc.gateway_type gateway_type
+          data_to_doc(doc, options)
+        end
+      end
+
+      def commit_gateway(relative_url, request,authorization_field = :token)
+        begin
+          raw_response = ssl_request(:post, "#{live_url}/#{relative_url}", request, headers)
+        rescue ResponseError => e
+          raw_response = e.response.body
+        end
+        response_from_gateway(raw_response,authorization_field)
+      end
+      
+      def response_from_gateway(raw_response, authorization_field)
+        parsed = parse(raw_response)
+        Response.new(parsed[:error].blank?, parsed[:message] || parsed[:error], parsed)
+      end
+      
       def headers
         {
           'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:login]}:#{@options[:password]}").chomp),
