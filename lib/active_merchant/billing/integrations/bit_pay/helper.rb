@@ -6,20 +6,14 @@ module ActiveMerchant #:nodoc:
           def initialize(order_id, account, options)
             super
             @account = account
-            add_field('orderID', order_id)
-            add_field('posData', options[:authcode])
-            add_field('currency', options[:currency])
-            add_field('fullNotifications', 'true')
-            add_field('transactionSpeed', options[:transactionSpeed] || "high")
-            add_field('address1', options[:address1])
 
-            generate_invoice_id
+            add_field('posData', {'orderId' => order_id}.to_json)
+            add_field('fullNotifications', true)
+            add_field('transactionSpeed', 'high')
           end
 
-          # Replace with the real mapping
           mapping :amount, 'price'
-
-          mapping :order, 'orderID'        
+          mapping :order, 'orderID'
           mapping :currency, 'currency'
 
           mapping :customer, :first_name => 'buyerName',
@@ -37,20 +31,20 @@ module ActiveMerchant #:nodoc:
           mapping :return_url, 'redirectURL'
           mapping :id, 'id'
 
-          def generate_invoice_id
-            invoice_data = ssl_post(BitPay.invoicing_url)
-
-            add_field('id', JSON.parse(invoice_data.body)['id'])
-          end
-
           def form_method
             "GET"
           end
 
+          def form_fields
+            invoice = create_invoice
+
+            {"id" => invoice['id']}
+          end
+
           private
 
-          def ssl_post(url, options = {})
-            uri = URI.parse(url)
+          def create_invoice
+            uri = URI.parse(BitPay.invoicing_url)
             http = Net::HTTP.new(uri.host, uri.port)
             http.use_ssl = true
 
@@ -59,7 +53,8 @@ module ActiveMerchant #:nodoc:
             request.body = @fields.to_json
             request.basic_auth @account, ''
 
-            http.request(request)
+            response = http.request(request)
+            JSON.parse(response.body)
           end
         end
       end
