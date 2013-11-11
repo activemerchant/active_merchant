@@ -4,14 +4,12 @@ class BitPayHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
   
   def setup
-    BitPay::Helper.any_instance.expects(:generate_invoice_id).once.returns(nil)
-    @helper = BitPay::Helper.new(1234, 'cody@example.com', :authcode => "foobar", :amount => 500, :currency => 'USD')
+    @helper = BitPay::Helper.new(1234, 'cody@example.com', :amount => 500, :currency => 'USD')
   end
  
   def test_basic_helper_fields
     assert_field 'orderID', "1234"
     assert_field 'price', "500"
-    assert_field 'posData', 'foobar'
     assert_field 'currency', 'USD'
   end
   
@@ -45,5 +43,11 @@ class BitPayHelperTest < Test::Unit::TestCase
     fields = @helper.fields.dup
     @helper.billing_address :street => 'My Street'
     assert_equal fields, @helper.fields
+  end
+
+  def test_form_fields_uses_invoice_id
+    Net::HTTP.any_instance.expects(:request).returns(stub(:body => '{"id": "98kui1gJ7FocK41gUaBZxG"}'))
+
+    assert_equal '98kui1gJ7FocK41gUaBZxG', @helper.form_fields['id']
   end
 end
