@@ -595,6 +595,12 @@ stripe:
   login:
   fee_refund_login:
 
+# Working credentials, no need to replace
+swipe_checkout:
+  login: 2077103073D8B5
+  api_key: f2fe4efd5033edfaed9e4aad319ef4d34536a10eea07f90f182616d7216ae2b8
+  region: NZ
+
 trans_first:
   login: LOGIN
   password: PASSWORD
