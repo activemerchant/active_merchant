@@ -42,18 +42,28 @@ module ActiveMerchant #:nodoc:
           end
 
           def acknowledge(authcode = nil)
-            authcode == params['posData']
+            uri = URI.parse("#{ActiveMerchant::Billing::Integrations::BitPay.invoicing_url}/#{transaction_id}")
+
+            http = Net::HTTP.new(uri.host, uri.port)
+            http.use_ssl = true
+            http.set_debug_output($stdout)
+
+            request = Net::HTTP::Get.new(uri.path)
+            request.basic_auth @options[:credential1], ''
+
+            response = http.request(request)
+
+            posted_json = JSON.parse(@raw).tap { |j| j.delete('currentTime') }
+            parse(response.body)
+            retrieved_json = JSON.parse(@raw).tap { |j| j.delete('currentTime') }
+
+            raise StandardError.new("Faulty BitPay result: #{response.body}") unless posted_json == retrieved_json
+            true
           end
 
-          private
-
-          # Take the posted data and move the relevant data into a hash
-          def parse(post)
-            @raw = post.to_s
-            for line in @raw.split('&')
-              key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
-              params[key] = CGI.unescape(value)
-            end
+          def parse(body)
+            @raw = body
+            @params = JSON.parse(@raw)
           end
         end
       end
