@@ -15,6 +15,11 @@ module ActiveMerchant #:nodoc:
             params['result'][2..-1]
           end
 
+          # the money amount we received in X.2 decimal.
+          def gross
+            params['amt']
+          end
+
           def status
             status_code = params['result'][0..1]
             case status_code
