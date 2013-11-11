@@ -16,6 +16,42 @@ class StripeTest < Test::Unit::TestCase
     }
   end
 
+  def test_successful_new_customer_with_card
+    @gateway.expects(:ssl_request).returns(successful_new_customer_response)
+
+    assert response = @gateway.store(@credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'cus_3sgheFxeBgTQ3M', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_new_card
+    @gateway.expects(:ssl_request).returns(successful_new_card_response)
+
+    assert response = @gateway.store(@credit_card, @options.merge(:customer => 'cus_3sgheFxeBgTQ3M'))
+    assert_instance_of MultiResponse, response
+    assert_success response
+
+    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_new_default_card
+    @gateway.expects(:ssl_request).twice.returns(successful_new_card_response, successful_new_customer_response)
+
+    assert response = @gateway.store(@credit_card, @options.merge(:customer => 'cus_3sgheFxeBgTQ3M', :set_default => true))
+    assert_instance_of MultiResponse, response
+    assert_success response
+
+    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 2, response.responses.size
+    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M', response.responses[1].authorization
+    assert response.test?
+  end
+
   def test_successful_authorization
     @gateway.expects(:ssl_request).returns(successful_authorization_response)
 
@@ -283,6 +319,83 @@ class StripeTest < Test::Unit::TestCase
   end
 
   private
+
+  # Create new customer and set default credit card
+  def successful_new_customer_response
+    <<-RESPONSE
+{
+  "object": "customer",
+  "created": 1383137317,
+  "id": "cus_3sgheFxeBgTQ3M",
+  "livemode": false,
+  "description": null,
+  "email": null,
+  "delinquent": false,
+  "metadata": {},
+  "subscription": null,
+  "discount": null,
+  "account_balance": 0,
+  "cards":
+  {
+    "object": "list",
+    "count": 1,
+    "url": "/v1/customers/cus_3sgheFxeBgTQ3M/cards",
+    "data":
+    [
+      {
+        "id": "card_483etw4er9fg4vF3sQdrt3FG",
+        "object": "card",
+        "last4": "4242",
+        "type": "Visa",
+        "exp_month": 11,
+        "exp_year": 2020,
+        "fingerprint": "5dgRQ3dVRGaQWDFb",
+        "customer": "cus_3sgheFxeBgTQ3M",
+        "country": "US",
+        "name": "John Doe",
+        "address_line1": null,
+        "address_line2": null,
+        "address_city": null,
+        "address_state": null,
+        "address_zip": null,
+        "address_country": null,
+        "cvc_check": null,
+        "address_line1_check": null,
+        "address_zip_check": null
+      }
+    ]
+  },
+  "default_card": "card_483etw4er9fg4vF3sQdrt3FG"
+}
+    RESPONSE
+  end
+
+  def successful_new_card_response
+    <<-RESPONSE
+{
+  "id": "card_483etw4er9fg4vF3sQdrt3FG",
+  "livemode": false,
+  "object": "card",
+  "last4": "4242",
+  "type": "Visa",
+  "exp_month": 11,
+  "exp_year": 2020,
+  "fingerprint": "5dgRQ3dVRGaQWDFb",
+  "customer": "cus_3sgheFxeBgTQ3M",
+  "country": "US",
+  "name": "John Doe",
+  "address_line1": null,
+  "address_line2": null,
+  "address_city": null,
+  "address_state": null,
+  "address_zip": null,
+  "address_country": null,
+  "cvc_check": null,
+  "address_line1_check": null,
+  "address_zip_check": null
+}
+    RESPONSE
+  end
 
   def successful_authorization_response
     <<-RESPONSE
