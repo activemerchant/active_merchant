@@ -11,13 +11,13 @@ class BitPayNotificationTest < Test::Unit::TestCase
     assert @bit_pay.complete?
     assert_equal "Completed", @bit_pay.status
     assert_equal "98kui1gJ7FocK41gUaBZxG", @bit_pay.transaction_id
-    assert_equal 0.0083, @bit_pay.gross
+    assert_equal 10.00, @bit_pay.gross
     assert_equal "USD", @bit_pay.currency
     assert_equal 1370539476654, @bit_pay.received_at
   end
 
   def test_compositions
-    assert_equal Money.new(1, 'USD'), @bit_pay.amount
+    assert_equal Money.new(1000, 'USD'), @bit_pay.amount
   end
 
   def test_successful_acknowledgement
@@ -40,13 +40,13 @@ class BitPayNotificationTest < Test::Unit::TestCase
       "orderID"=>"123",
       "url"=>"https://bitpay.com/invoice/98kui1gJ7FocK41gUaBZxG",
       "status"=>"confirmed",
-      "btcPrice"=>"0.0083",
-      "price"=>"1",
+      "btcPrice"=>"0.0295",
+      "price"=>"10.00",
       "currency"=>"USD",
       "invoiceTime"=>"1370539476654",
       "expirationTime"=>"1370540376654",
       "currentTime"=>"1370539573956",
-      "posData" => "asdf"
+      "posData" => "custom"
     }.to_json
   end
 end

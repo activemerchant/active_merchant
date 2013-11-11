@@ -38,7 +38,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def gross
-            params['btcPrice'].to_f
+            params['price'].to_f
           end
 
           def acknowledge(authcode = nil)
