@@ -20,8 +20,17 @@ class BitPayNotificationTest < Test::Unit::TestCase
     assert_equal Money.new(1, 'USD'), @bit_pay.amount
   end
 
-  def test_acknowledgement
-    assert @bit_pay.acknowledge('foobar')
+  def test_successful_acknowledgement
+    Net::HTTP.any_instance.expects(:request).returns(stub(:body => http_raw_data))
+    assert @bit_pay.acknowledge
+  end
+
+  def test_failed_acknowledgement
+    Net::HTTP.any_instance.expects(:request).returns(stub(:body => '{"error":"Doesnt match"}'))
+    exception = assert_raise StandardError do
+      @bit_pay.acknowledge
+    end
+    assert_equal 'Faulty BitPay result: {"error":"Doesnt match"}', exception.message
   end
 
   private
