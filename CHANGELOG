@@ -16,7 +16,8 @@
 * Stripe: Add card_id parameter to unstore call [pierre]
 * Remove usage of `uname -a` [ntalbott]
 * Litle: Allow easier access to the response code [duff]
-* Stripe: Add the option to pass a version header
+* Stripe: Add the option to pass a version header [odorcicd]
+* Elavon: Update supported countries [duff]
 
 == Version 1.41.0 (October 24th, 2013)
 
