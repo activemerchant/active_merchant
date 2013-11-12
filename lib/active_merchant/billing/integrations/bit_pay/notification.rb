@@ -14,7 +14,8 @@ module ActiveMerchant #:nodoc:
           end
 
           def item_id
-            params['posData']['orderId']
+            JSON.parse(params['posData'])['orderId']
+          rescue JSON::ParserError
           end
 
           def status
@@ -57,13 +58,15 @@ module ActiveMerchant #:nodoc:
             parse(response.body)
             retrieved_json = JSON.parse(@raw).tap { |j| j.delete('currentTime') }
 
-            raise StandardError.new("Faulty BitPay result: #{response.body}") unless posted_json == retrieved_json
-            true
+            posted_json == retrieved_json
+          rescue JSON::ParserError
           end
 
+          private
           def parse(body)
             @raw = body
             @params = JSON.parse(@raw)
+          rescue JSON::ParserError
           end
         end
       end

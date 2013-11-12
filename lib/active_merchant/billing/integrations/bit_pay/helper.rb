@@ -55,6 +55,7 @@ module ActiveMerchant #:nodoc:
 
             response = http.request(request)
             JSON.parse(response.body)
+          rescue JSON::ParseError
           end
         end
       end
