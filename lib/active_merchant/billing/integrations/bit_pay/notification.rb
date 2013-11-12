@@ -47,7 +47,6 @@ module ActiveMerchant #:nodoc:
 
             http = Net::HTTP.new(uri.host, uri.port)
             http.use_ssl = true
-            http.set_debug_output($stdout)
 
             request = Net::HTTP::Get.new(uri.path)
             request.basic_auth @options[:credential1], ''
