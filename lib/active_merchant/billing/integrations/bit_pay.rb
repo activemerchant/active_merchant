@@ -13,8 +13,8 @@ module ActiveMerchant #:nodoc:
         mattr_accessor :invoicing_url
         self.invoicing_url = 'https://bitpay.com/api/invoice'
 
-        def self.notification(post)
-          Notification.new(post)
+        def self.notification(post, options = {})
+          Notification.new(post, options)
         end
 
         def self.helper(order, account, options = {})
