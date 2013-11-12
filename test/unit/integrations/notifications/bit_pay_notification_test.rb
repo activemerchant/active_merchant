@@ -14,6 +14,21 @@ class BitPayNotificationTest < Test::Unit::TestCase
     assert_equal 10.00, @bit_pay.gross
     assert_equal "USD", @bit_pay.currency
     assert_equal 1370539476654, @bit_pay.received_at
+    assert_equal 123, @bit_pay.item_id
+  end
+
+  def test_invalid_data
+    hash = JSON.parse(http_raw_data)
+    @bit_pay = BitPay::Notification.new('{"invalid":json}')
+
+    assert @bit_pay.params.empty?
+  end
+
+  def test_item_id_invalid_json
+    hash = JSON.parse(http_raw_data)
+    @bit_pay = BitPay::Notification.new(hash.merge('posData' => 'Invalid JSON').to_json)
+
+    assert_nil @bit_pay.item_id
   end
 
   def test_compositions
@@ -27,10 +42,12 @@ class BitPayNotificationTest < Test::Unit::TestCase
 
   def test_failed_acknowledgement
     Net::HTTP.any_instance.expects(:request).returns(stub(:body => '{"error":"Doesnt match"}'))
-    exception = assert_raise StandardError do
-      @bit_pay.acknowledge
-    end
-    assert_equal 'Faulty BitPay result: {"error":"Doesnt match"}', exception.message
+    assert_nil @bit_pay.acknowledge
+  end
+
+  def test_failed_acknowledgement
+    Net::HTTP.any_instance.expects(:request).returns(stub(:body => '{invalid json'))
+    assert_nil @bit_pay.acknowledge
   end
 
   private
@@ -46,7 +63,7 @@ class BitPayNotificationTest < Test::Unit::TestCase
       "invoiceTime"=>"1370539476654",
       "expirationTime"=>"1370540376654",
       "currentTime"=>"1370539573956",
-      "posData" => "custom"
+      "posData" => '{"orderId":123}'
     }.to_json
   end
 end
