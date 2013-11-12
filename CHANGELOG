@@ -19,6 +19,7 @@
 * Stripe: Add the option to pass a version header [odorcicd]
 * Elavon: Update supported countries [duff]
 * Add Raven PacNet gateway [llopez]
+* BitPay: Fix BitPay issues and implement Notification#acknowledge [odorcicd]
 
 == Version 1.41.0 (October 24th, 2013)
 
