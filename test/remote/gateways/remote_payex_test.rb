@@ -11,11 +11,7 @@ class RemotePayexTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
 
     @options = {
-      # :billing_address => address,
-      :description => 'Store Purchase',
-      :client_ip_address => '1.2.3.4',
       :order_id => '1234',
-      :product_number => '4321'
     }
   end
 
@@ -81,21 +77,21 @@ class RemotePayexTest < Test::Unit::TestCase
   end
 
   def test_successful_store_and_purchase
-    assert response = @gateway.store(@credit_card, @options.merge({merchant_ref: '9876'}))
+    assert response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_equal 'OK', response.message
 
-    assert response = @gateway.purchase(@amount, nil, @options.merge({agreement_ref: response.authorization, order_id: '5678'}))
+    assert response = @gateway.purchase(@amount, response.authorization, @options.merge({order_id: '5678'}))
     assert_success response
     assert_equal 'OK', response.message
   end
 
   def test_successful_store_and_authorize_and_capture
-    assert response = @gateway.store(@credit_card, @options.merge({merchant_ref: '9876'}))
+    assert response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_equal 'OK', response.message
 
-    assert response = @gateway.authorize(@amount, nil, @options.merge({agreement_ref: response.authorization, order_id: '5678'}))
+    assert response = @gateway.authorize(@amount, response.authorization, @options.merge({order_id: '5678'}))
     assert_success response
     assert_equal 'OK', response.message
     assert response.authorization
@@ -105,7 +101,7 @@ class RemotePayexTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore
-    assert response = @gateway.store(@credit_card, @options.merge({merchant_ref: '9876'}))
+    assert response = @gateway.store(@credit_card, @options)
     assert_equal 'OK', response.message
     assert response = @gateway.unstore(response.authorization)
     assert_success response

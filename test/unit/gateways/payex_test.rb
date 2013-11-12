@@ -11,11 +11,7 @@ class PayexTest < Test::Unit::TestCase
     @amount = 1000
 
     @options = {
-      # :billing_address => address,
-      :description => 'Store Purchase',
-      :client_ip_address => '1.2.3.4',
       :order_id => '1234',
-      :product_number => '4321'
     }
   end
 
@@ -119,7 +115,7 @@ class PayexTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_stored_card
     @gateway.expects(:ssl_post).returns(successful_autopay_response)
-    assert response = @gateway.purchase(@amount, nil, @options.merge({agreement_ref: 'fakeauth', order_id: '5678'}))
+    assert response = @gateway.purchase(@amount, 'fakeauth', @options.merge({order_id: '5678'}))
     assert_success response
     assert_equal 'OK', response.message
     assert_equal '2624657', response.authorization

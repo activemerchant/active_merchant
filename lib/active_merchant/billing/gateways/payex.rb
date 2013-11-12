@@ -24,19 +24,13 @@ module ActiveMerchant #:nodoc:
         failure:    '5',
         capture:    '6',
       }
+
       SOAP_ACTIONS = {
         initialize: { name: 'Initialize8', url: 'pxorder/pxorder.asmx', xmlns: 'http://external.payex.com/PxOrder/' },
-        # add billing address details to a transaction (not implemented)
-        add_order_address: { name: 'AddOrderAddress2', url: 'pxorder/pxorder.asmx', xmlns: 'http://external.payex.com/PxOrder/' },
         purchasecc: { name: 'PurchaseCC', url: 'pxconfined/pxorder.asmx', xmlns: 'http://confined.payex.com/PxOrder/', confined: true},
         cancel: { name: 'Cancel2', url: 'pxorder/pxorder.asmx', xmlns: 'http://external.payex.com/PxOrder/' },
         capture: { name: 'Capture5', url: 'pxorder/pxorder.asmx', xmlns: 'http://external.payex.com/PxOrder/' },
-        complete: { name: 'Complete', url: 'pxorder/pxorder.asmx', xmlns: 'http://external.payex.com/PxOrder/' },
-
-        # void transaction
         credit: { name: 'Credit5', url: 'pxorder/pxorder.asmx', xmlns: 'http://external.payex.com/PxOrder/' },
-
-        # store / unstore
         create_agreement: { name: 'CreateAgreement3', url: 'pxagreement/pxagreement.asmx', xmlns: 'http://external.payex.com/PxAgreement/' },
         delete_agreement: { name: 'DeleteAgreement', url: 'pxagreement/pxagreement.asmx', xmlns: 'http://external.payex.com/PxAgreement/' },
         autopay: { name: 'AutoPay3', url: 'pxagreement/pxagreement.asmx', xmlns: 'http://external.payex.com/PxAgreement/' },
@@ -50,48 +44,57 @@ module ActiveMerchant #:nodoc:
       # Public: Send an authorize Payex request
       #
       # amount         - The monetary amount of the transaction in cents.
-      # payment_method - The credit card
+      # payment_method - The Active Merchant payment method or the +store+ authorization for stored transactions.
       # options        - A standard ActiveMerchant options hash:
       #                  :currency          - Three letter currency code for the transaction (default: "EUR")
       #                  :order_id          - The unique order ID for this transaction (required).
-      #                  :product_number    - The merchant product number (required).
-      #                  :description       - The merchant description for this product (required).
-      #                  :client_ip_address - The client IP address (required).
+      #                  :product_number    - The merchant product number (default: '1').
+      #                  :description       - The merchant description for this product (default: The :order_id).
+      #                  :ip                - The client IP address (default: '127.0.0.1').
       #                  :vat               - The vat amount (optional).
-      #                  :agreement_ref     - The authorization returned from the store - used for stored cards (optional)
       #
       # Returns an ActiveMerchant::Billing::Response object
       def authorize(amount, payment_method, options = {})
+        requires!(options, :order_id)
         amount = amount(amount)
-        return send_autopay(amount, true, options) if options[:agreement_ref]
-
-        MultiResponse.new.tap do |r|
-          r.process {send_initialize(amount, true, options)}
-          r.process {send_purchasecc(payment_method, r.params['orderref'])}
+        if payment_method.respond_to?(:number)
+          # credit card authorization
+          MultiResponse.new.tap do |r|
+            r.process {send_initialize(amount, true, options)}
+            r.process {send_purchasecc(payment_method, r.params['orderref'])}
+          end
+        else
+          # stored authorization
+          send_autopay(amount, payment_method, true, options)
         end
+
       end
 
       # Public: Send a purchase Payex request
       #
       # amount         - The monetary amount of the transaction in cents.
-      # payment_method - The Active Merchant payment method.
+      # payment_method - The Active Merchant payment method or the +store+ authorization for stored transactions.
       # options        - A standard ActiveMerchant options hash:
       #                  :currency          - Three letter currency code for the transaction (default: "EUR")
       #                  :order_id          - The unique order ID for this transaction (required).
-      #                  :product_number    - The merchant product number (required).
-      #                  :description       - The merchant description for this product (required).
-      #                  :client_ip_address - The client IP address (required).
+      #                  :product_number    - The merchant product number (default: '1').
+      #                  :description       - The merchant description for this product (default: The :order_id).
+      #                  :ip                - The client IP address (default: '127.0.0.1').
       #                  :vat               - The vat amount (optional).
-      #                  :agreement_ref     - The authorization returned from the store - used for stored cards (optional)
       #
       # Returns an ActiveMerchant::Billing::Response object
       def purchase(amount, payment_method, options = {})
+        requires!(options, :order_id)
         amount = amount(amount)
-        return send_autopay(amount, false, options) if options[:agreement_ref]
-
-        MultiResponse.new.tap do |r|
-          r.process {send_initialize(amount, false, options)}
-          r.process {send_purchasecc(payment_method, r.params['orderref'])}
+        if payment_method.respond_to?(:number)
+          # credit card purchase
+          MultiResponse.new.tap do |r|
+            r.process {send_initialize(amount, false, options)}
+            r.process {send_purchasecc(payment_method, r.params['orderref'])}
+          end
+        else
+          # stored purchase
+          send_autopay(amount, payment_method, false, options)
         end
       end
 
@@ -126,7 +129,7 @@ module ActiveMerchant #:nodoc:
       #
       # Returns an ActiveMerchant::Billing::Response object
       def refund(money, authorization, options = {})
-
+        requires!(options, :order_id)
         amount = amount(money)
         send_credit(authorization, amount, options)
       end
@@ -135,16 +138,18 @@ module ActiveMerchant #:nodoc:
       #
       # creditcard - The credit card to store.
       # options    - A standard ActiveMerchant options hash:
-      #               :merchant_ref      - A reference that links this agreement to something the merchant takes money for.
-      #               :currency          - Three letter currency code for the transaction (default: "EUR")
       #               :order_id          - The unique order ID for this transaction (required).
-      #               :product_number    - The merchant product number (required).
-      #               :description       - The merchant description for this product (required).
-      #               :client_ip_address - The client IP address (required).
+      #               :merchant_ref      - A reference that links this agreement to something the merchant takes money for (default: '1')
+      #               :currency          - Three letter currency code for the transaction (default: "EUR")
+      #               :product_number    - The merchant product number (default: '1').
+      #               :description       - The merchant description for this product (default: The :order_id).
+      #               :ip                - The client IP address (default: '127.0.0.1').
       #               :max_amount        - The maximum amount to allow to be charged (default: 100000).
       #               :vat               - The vat amount (optional).
       #
+      # Returns an ActiveMerchant::Billing::Response object where the authorization is set to the agreement_ref which is used for stored payments.
       def store(creditcard, options = {})
+        requires!(options, :order_id)
         amount = amount(1) # 1 cent for authorization
         MultiResponse.run(:first) do |r|
           r.process {send_create_agreement(options)}
@@ -157,6 +162,8 @@ module ActiveMerchant #:nodoc:
       # Public: Unstores a customer's credit card and deletes their Payex agreement.
       #
       # authorization - The authorization token from the store request.
+      #
+      # Returns an ActiveMerchant::Billing::Response object
       def unstore(authorization, options = {})
         send_delete_agreement(authorization)
       end
@@ -164,7 +171,6 @@ module ActiveMerchant #:nodoc:
       private
 
       def send_initialize(amount, is_auth, options = {})
-        requires!(options, :order_id, :product_number, :description, :client_ip_address)
         properties = {
           accountNumber: @options[:account],
           purchaseOperation: is_auth ? 'AUTHORIZATION' : 'SALE',
@@ -173,15 +179,15 @@ module ActiveMerchant #:nodoc:
           currency: (options[:currency] || default_currency),
           vat: options[:vat] || 0,
           orderID: options[:order_id],
-          productNumber: options[:product_number],
-          description: options[:description],
-          clientIPAddress: options[:client_ip_address],
+          productNumber: options[:product_number] || '1',
+          description: options[:description] || options[:order_id],
+          clientIPAddress: options[:client_ip_address] || '127.0.0.1',
           clientIdentifier: nil,
           additionalValues: nil,
           externalID: nil,
           returnUrl: 'http://example.net', # set to dummy value since this is not used but is required
           view: 'CREDITCARD',
-          agreementRef: options[:agreement_ref], # used for recurring payments
+          agreementRef: options[:agreement_ref], # this is used to attach a stored agreement to a transaction as part of the store card
           cancelUrl: nil,
           clientLanguage: nil
         }
@@ -214,14 +220,13 @@ module ActiveMerchant #:nodoc:
         commit(soap_action, request)
       end
 
-      def send_autopay(amount, is_auth, options = {})
-        requires!(options, :agreement_ref, :order_id, :product_number, :description)
+      def send_autopay(amount, authorization, is_auth, options = {})
         properties = {
           accountNumber: @options[:account],
-          agreementRef: options[:agreement_ref],
+          agreementRef: authorization,
           price: amount,
-          productNumber: options[:product_number],
-          description: options[:description],
+          productNumber: options[:product_number] || '1',
+          description: options[:description] || options[:order_id],
           orderId: options[:order_id],
           purchaseOperation: is_auth ? 'AUTHORIZATION' : 'SALE',
           currency: (options[:currency] || default_currency),
@@ -252,7 +257,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def send_credit(transaction_number, amount, options = {})
-        requires!(options, :order_id)
         properties = {
           accountNumber: @options[:account],
           transactionNumber: transaction_number,
@@ -283,11 +287,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def send_create_agreement(options)
-        requires!(options, :merchant_ref, :description)
         properties = {
           accountNumber: @options[:account],
-          merchantRef: options[:merchant_ref],
-          description: options[:description],
+          merchantRef: options[:merchant_ref] || '1',
+          description: options[:description] || options[:order_id],
           purchaseOperation: 'SALE',
           maxAmount: options[:max_amount] || 100000, # default to 1,000
           notifyUrl: '',
@@ -311,20 +314,6 @@ module ActiveMerchant #:nodoc:
         add_request_hash(properties, hash_fields)
 
         soap_action = SOAP_ACTIONS[:delete_agreement]
-        request = build_xml_request(soap_action, properties)
-        commit(soap_action, request)
-      end
-
-      # this is needed as part of the store card chain
-      def send_complete(order_ref)
-        properties = {
-          accountNumber: @options[:account],
-          orderRef: order_ref,
-        }
-        hash_fields = [:accountNumber, :orderRef]
-        add_request_hash(properties, hash_fields)
-
-        soap_action = SOAP_ACTIONS[:complete]
         request = build_xml_request(soap_action, properties)
         commit(soap_action, request)
       end
