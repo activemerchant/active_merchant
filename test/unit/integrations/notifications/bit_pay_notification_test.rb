@@ -56,7 +56,7 @@ class BitPayNotificationTest < Test::Unit::TestCase
       "id"=>"98kui1gJ7FocK41gUaBZxG",
       "orderID"=>"123",
       "url"=>"https://bitpay.com/invoice/98kui1gJ7FocK41gUaBZxG",
-      "status"=>"confirmed",
+      "status"=>"complete",
       "btcPrice"=>"0.0295",
       "price"=>"10.00",
       "currency"=>"USD",
