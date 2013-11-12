@@ -17,27 +17,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_method, options = {})
-        case payment_method
-        when String
-          purchase_with_token(money, payment_method, options)
-        else
-          MultiResponse.run do |r|
-            r.process { save_card(payment_method) }
-            r.process { purchase_with_token(money, r.authorization, options) }
-          end
-        end
+        action_with_token(:purchase, money, payment_method, options)
       end
 
       def authorize(money, payment_method, options = {})
-        case payment_method
-        when String
-          authorize_with_token(money, payment_method, options)
-        else
-          MultiResponse.run do |r|
-            r.process { save_card(payment_method) }
-            r.process { authorize_with_token(money, r.authorization, options) }
-          end
-        end
+        action_with_token(:authorize, money, payment_method, options)
       end
 
       def capture(money, authorization, options = {})
@@ -110,6 +94,18 @@ module ActiveMerchant #:nodoc:
         ].join(";")
       end
 
+      def action_with_token(action, money, payment_method, options)
+        case payment_method
+        when String
+          self.send("#{action}_with_token", money, payment_method, options)
+        else
+          MultiResponse.run do |r|
+            r.process { save_card(payment_method) }
+            r.process { self.send("#{action}_with_token", money, r.authorization, options) }
+          end
+        end
+      end
+
       def purchase_with_token(money, card_token, options)
         post = {}
 
@@ -147,17 +143,12 @@ module ActiveMerchant #:nodoc:
       def response_for_save_from(raw_response)
         options = { :test => test? }
 
-        parsed = JSON.parse(raw_response.sub(/jsonPFunction\(/, '').sub(/\)\z/, ''))
-        if parsed['error']
-          succeeded = false
-          message = parsed['error']['message']
-        else
-          succeeded = parsed['transaction']['processing']['result'] == 'ACK'
-          message = parsed['transaction']['processing']['return']['message']
-          options[:authorization] = parsed['transaction']['identification']['uniqueId'] if succeeded
-        end
+        parser = ResponseParser.new(raw_response, options)
+        parser.generate_response
+      end
 
-        Response.new(succeeded, message, parsed, options)
+      def parse_reponse(response)
+        JSON.parse(response.sub(/jsonPFunction\(/, '').sub(/\)\z/, ''))
       end
 
       def save_card_url
@@ -182,6 +173,47 @@ module ActiveMerchant #:nodoc:
 
       def transaction_id(authorization)
         authorization.split(';').first
+      end
+
+      class ResponseParser
+        def initialize(raw_response="", options={})
+          @raw_response = raw_response
+          @options = options
+        end
+
+        def generate_response
+          parse_response
+          if parsed['error']
+            handle_response_parse_error
+          else
+            handle_response_correct_parsing
+          end
+
+          Response.new(succeeded, message, parsed, options)
+        end
+
+        private
+        attr_reader :raw_response, :parsed, :succeeded, :message, :options
+
+        def parse_response
+          @parsed = JSON.parse(raw_response.sub(/jsonPFunction\(/, '').sub(/\)\z/, ''))
+        end
+
+        def handle_response_parse_error
+          @succeeded = false
+          @message = parsed['error']['message']
+        end
+
+        def handle_response_correct_parsing
+          @message = parsed['transaction']['processing']['return']['message']
+          if @succeeded = is_ack?
+            @options[:authorization] = parsed['transaction']['identification']['uniqueId']
+          end
+        end
+
+        def is_ack?
+          parsed['transaction']['processing']['result'] == 'ACK'
+        end
       end
     end
   end
