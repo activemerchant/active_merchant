@@ -21,9 +21,9 @@ module ActiveMerchant #:nodoc:
           def status
             case params['status']
             when 'complete'
-              'Pending'
-            when 'confirmed'
               'Completed'
+            when 'confirmed'
+              'Pending'
             when 'invalid'
               'Failed'
             end
