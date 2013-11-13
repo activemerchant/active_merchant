@@ -1,5 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.42.1 (November 13th, 2013)
+
+* Signed version of 1.42.0
+
 == Version 1.42.0 (November 13th, 2013)
 
 * Fix NoMethodError "tr" for params with dash [TimothyKlim]
