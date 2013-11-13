@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
         #
         #   def notify
         #     parser = Doku::Notification.new(request.raw_post)
-        #     order = Order.find_by_order_number(parser.transaction_id)
+        #     order = Order.find_by_order_number(parser.item_id)
         #     if order && order.total == parser.gross
         #       # update order status according to parser.status (Success | Fail)
         #       render text: 'Continue'
@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
             status.present?
           end
 
-          def transaction_id
+          def item_id
             params['TRANSIDMERCHANT']
           end
 
@@ -39,7 +39,12 @@ module ActiveMerchant #:nodoc:
           end
 
           def status
-            params['RESULT']
+            case params['RESULT']
+            when 'Success'
+              'Completed'
+            when 'Fail'
+              'Failed'
+            end
           end
 
           def currency

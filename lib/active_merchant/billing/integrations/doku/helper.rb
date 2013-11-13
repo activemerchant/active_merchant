@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
           ITEM_FORMAT = "%{name},%{price},%{quantity},%{sub_total}".freeze
 
           def initialize(order, account, options = {})
-            @shared_key      = options.delete(:shared_key)
+            @shared_key      = options.delete(:credential2)
             @transidmerchant = order
             @items           = []
             super
@@ -57,26 +57,26 @@ module ActiveMerchant #:nodoc:
             @items << item
           end
 
-          mapping :account, 'STOREID'
-          mapping :amount,  'AMOUNT'
-          mapping :url,     'URL'
+          mapping :account,           'STOREID'
+          mapping :amount,            'AMOUNT'
+          mapping :cancel_return_url, 'URL'
 
 
-          mapping :customer, :name              => 'CNAME',
+          mapping :customer, :last_name              => 'CNAME',
                              :email             => 'CEMAIL',
+                             :phone             => 'CHPHONE',
                              :mobile_phone      => 'CMPHONE',
                              :working_phone     => 'CWPHONE',
-                             :home_phone        => 'CHPHONE',
                              :birth_date        => 'BIRTHDATE'
 
           mapping :billing_address, :city     => 'CCITY',
-                                    :address  => 'CADDRESS',
+                                    :address1 => 'CADDRESS',
                                     :state    => 'CSTATE',
                                     :zip      => 'CZIPCODE',
                                     :country  => 'CCOUNTRY'
 
           mapping :shipping_address,  :city     => 'SCITY',
-                                      :address  => 'SADDRESS',
+                                      :address1 => 'SADDRESS',
                                       :state    => 'SSTATE',
                                       :zip      => 'SZIPCODE',
                                       :country  => 'SCOUNTRY'
