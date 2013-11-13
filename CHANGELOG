@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.42.0 (November 12th, 2013)
+
 * Fix NoMethodError "tr" for params with dash [TimothyKlim]
 * Authorize.Net: Add cardholder authentication options (CAVV) support [structure]
 * CardStreamModern: Added better checks on inputs from the gateway [ExxKA]
@@ -1283,4 +1285,3 @@ value [jduff]
 * Credit card validation methods as static methods of the credit card object
 
 == PlanetArgon fork for integrating Merchant eSolutions gateway
-
