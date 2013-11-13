@@ -1,4 +1,5 @@
 $:.unshift File.expand_path('../lib', __FILE__)
+require 'active_merchant/version'
 
 begin
   require 'bundler'
@@ -10,14 +11,28 @@ end
 
 require 'rake'
 require 'rake/testtask'
-require 'rubygems/package_task'
 require 'support/gateway_support'
 require 'support/ssl_verify'
 require 'support/outbound_hosts'
 
+task :gem => :build
+task :build do
+  system "gem build activemerchant.gemspec"
+end
+
+task :install => :build do
+  system "gem install activemerchant-#{ActiveMerchant::VERSION}.gem"
+end
+
+task :release => :build do
+  system "git tag -a v#{ActiveMerchant::VERSION} -m 'Tagging #{ActiveMerchant::VERSION}'"
+  system "git push --tags"
+  system "gem push activemerchant-#{ActiveMerchant::VERSION}.gem"
+  system "rm activemerchant-#{ActiveMerchant::VERSION}.gem"
+end
+
 desc "Run the unit test suite"
 task :default => 'test:units'
-
 task :test => 'test:units'
 
 namespace :test do
@@ -34,28 +49,6 @@ namespace :test do
     t.ruby_opts << '-rubygems'
     t.libs << 'test'
     t.verbose = true
-  end
-
-end
-
-desc "Delete tar.gz / zip"
-task :cleanup => [ :clobber_package ]
-
-spec = eval(File.read('activemerchant.gemspec'))
-
-Gem::PackageTask.new(spec) do |p|
-  p.gem_spec = spec
-  p.need_tar = true
-  p.need_zip = true
-end
-
-desc "Release the gems and docs to RubyForge"
-task :release => [ 'gemcutter:publish' ]
-
-namespace :gemcutter do
-  desc "Publish to gemcutter"
-  task :publish => :package do
-    sh "gem push pkg/activemerchant-#{ActiveMerchant::VERSION}.gem"
   end
 end
 
