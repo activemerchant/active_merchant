@@ -17,6 +17,7 @@ require 'support/outbound_hosts'
 
 task :gem => :build
 task :build do
+  raise "Please set a private key to sign the gem" unless ENV['GEM_PRIVATE_KEY']
   system "gem build activemerchant.gemspec"
 end
 
