@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def currency
-            params['total_native']['currency']
+            params['total_native']['currency_iso']
           end
 
           # Was this a test transaction?

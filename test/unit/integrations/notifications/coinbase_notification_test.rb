@@ -28,6 +28,6 @@ class CoinbaseNotificationTest < Test::Unit::TestCase
 
   private
   def http_raw_data
-    '{"order":{"id":"ABC123","custom":"test123","created_at":"1970-01-01T00:00:00Z","total_native":{"cents":100,"currency":"USD"},"status":"completed"}}'
+    '{"order":{"id":"ABC123","custom":"test123","created_at":"1970-01-01T00:00:00Z","total_native":{"cents":100,"currency_iso":"USD"},"status":"completed"}}'
   end
 end
