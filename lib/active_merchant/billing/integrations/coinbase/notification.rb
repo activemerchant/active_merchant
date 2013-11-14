@@ -27,6 +27,10 @@ module ActiveMerchant #:nodoc:
             params['total_native']['cents'].to_f / 100
           end
 
+          def currency
+            params['total_native']['currency']
+          end
+
           # Was this a test transaction?
           def test?
             false

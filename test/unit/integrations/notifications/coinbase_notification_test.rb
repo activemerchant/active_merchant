@@ -9,25 +9,17 @@ class CoinbaseNotificationTest < Test::Unit::TestCase
 
   def test_accessors
     assert @coinbase.complete?
-    assert_equal "", @coinbase.status
-    assert_equal "", @coinbase.transaction_id
-    assert_equal "", @coinbase.item_id
-    assert_equal "", @coinbase.gross
-    assert_equal "", @coinbase.currency
-    assert_equal "", @coinbase.received_at
-    assert @coinbase.test?
+    assert_equal "completed", @coinbase.status
+    assert_equal "ABC123", @coinbase.transaction_id
+    assert_equal "test123", @coinbase.item_id
+    assert_equal 1.00, @coinbase.gross
+    assert_equal "USD", @coinbase.currency
+    assert_equal 0, @coinbase.received_at
   end
 
-  def test_compositions
-    assert_equal Money.new(3166, 'USD'), @coinbase.amount
-  end
-
-  # Replace with real successful acknowledgement code
   def test_acknowledgement
-
-  end
-
-  def test_send_acknowledgement
+    Net::HTTP.any_instance.expects(:request).returns(stub(:body => http_raw_data))
+    assert @coinbase.acknowledge
   end
 
   def test_respond_to_acknowledge
@@ -36,6 +28,6 @@ class CoinbaseNotificationTest < Test::Unit::TestCase
 
   private
   def http_raw_data
-    ""
+    '{"order":{"id":"ABC123","custom":"test123","created_at":"1970-01-01T00:00:00Z","total_native":{"cents":100,"currency":"USD"},"status":"completed"}}'
   end
 end
