@@ -51,6 +51,7 @@ module ActiveMerchant #:nodoc:
       CARD_CODE_ERRORS = %w( N S )
       AVS_ERRORS = %w( A E N R W Z )
       AVS_REASON_CODES = %w(27 45)
+      TRANSACTION_ALREADY_ACTIONED = %w(310 311)
 
       AUTHORIZE_NET_ARB_NAMESPACE = 'AnetApi/xml/v1/schema/AnetApiSchema.xsd'
 
@@ -294,7 +295,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        response[:response_code] == APPROVED
+        response[:response_code] == APPROVED && TRANSACTION_ALREADY_ACTIONED.exclude?(response[:response_reason_code])
       end
 
       def fraud_review?(response)
