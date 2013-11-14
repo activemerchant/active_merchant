@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Balanced: Add support for appears_on_statement_as [duff]
+* Authorize.Net: Make already actioned responses failures [odorcicd]
 
 == Version 1.42.2 (November 13th, 2013)
 

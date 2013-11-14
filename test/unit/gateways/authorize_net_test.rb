@@ -101,6 +101,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal '508141794', response.authorization
   end
 
+  def test_failed_already_actioned_capture
+    @gateway.expects(:ssl_post).returns(already_actioned_capture_response)
+
+    assert response = @gateway.capture(50, '123456789')
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
   def test_add_address_outsite_north_america
     result = {}
 
@@ -429,6 +437,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def failed_authorization_response
     '$2$,$1$,$1$,$This transaction was declined.$,$advE7f$,$Y$,$508141794$,$5b3fe66005f3da0ebe51$,$$,$1.00$,$CC$,$auth_only$,$$,$Longbob$,$Longsen$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$2860A297E0FE804BCB9EF8738599645C$,$P$,$2$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
+  end
+
+  def already_actioned_capture_response
+    '$1$,$2$,$311$,$This transaction has already been captured.$,$$,$P$,$0$,$$,$$,$1.00$,$CC$,$credit$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$39265D8BA0CDD4F045B5F4129B2AAA01$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
   end
 
   def fraud_review_response
