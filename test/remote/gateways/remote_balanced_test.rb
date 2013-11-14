@@ -42,6 +42,14 @@ class RemoteBalancedTest < Test::Unit::TestCase
     assert_match /Account Frozen/, response.message
   end
 
+  def test_passing_appears_on_statement
+    options = @options.merge(appears_on_statement_as: "Homer Electric")
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+
+    assert_success response
+    assert_equal "Homer Electric", response.params['appears_on_statement_as']
+  end
+
   def test_authorize_and_capture
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
