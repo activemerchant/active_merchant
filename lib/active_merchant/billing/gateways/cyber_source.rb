@@ -313,18 +313,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_create_subscription_request(payment_method, options)
-        # Set default subscription parameters
         default_subscription_params = {:frequency => "on-demand", :amount => 0, :automatic_renew => false}
         options[:subscription] = (options[:subscription] || {})
 
-        # Override subscription parameters and give priority to parameters passed in
         options[:subscription] = default_subscription_params.update(options[:subscription])
 
         xml = Builder::XmlMarkup.new :indent => 2
         add_address(xml, payment_method, options[:billing_address], options)
         add_purchase_data(xml, options[:setup_fee] || 0, true, options)
 
-        # Fix for #719, cybersource recurring payments expects the xml elements to have a specific order 
         if card_brand(payment_method) == 'check'
           add_check(xml, payment_method)
           add_check_payment_method(xml)
