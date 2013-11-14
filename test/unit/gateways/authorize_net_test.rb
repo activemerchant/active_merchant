@@ -55,7 +55,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal '508141795', response.authorization
   end
 
-  def test_passing_recurring_flag
+  def test_echeck_passing_recurring_flag
     response = stub_comms do
       @gateway.purchase(@amount, @check, :recurring => true)
     end.check_request do |endpoint, data, headers|
@@ -99,6 +99,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
     assert_equal '508141794', response.authorization
+  end
+
+  def test_failed_already_actioned_capture
+    @gateway.expects(:ssl_post).returns(already_actioned_capture_response)
+
+    assert response = @gateway.capture(50, '123456789')
+    assert_instance_of Response, response
+    assert_failure response
   end
 
   def test_add_address_outsite_north_america
@@ -150,6 +158,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 0, result[:duplicate_window]
   end
 
+  def test_add_cardholder_authentication_value
+    result = {}
+    params = {:cardholder_authentication_value => 'E0Mvq8AAABEiMwARIjNEVWZ3iJk=', :authentication_indicator => '2'}
+    @gateway.send(:add_customer_data, result, params)
+    assert_equal 'E0Mvq8AAABEiMwARIjNEVWZ3iJk=', result[:cardholder_authentication_value]
+    assert_equal '2', result[:authentication_indicator]
+  end
+
   def test_purchase_is_valid_csv
    params = { :amount => '1.01' }
 
@@ -184,6 +200,13 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
    response = @gateway.capture(50, '123456789')
    assert_equal('d1GENk', response.params['authorization_code'] )
+  end
+
+  def test_cardholder_authorization_code_included_in_params
+   @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+   response = @gateway.capture(50, '123456789')
+   assert_equal('2', response.params['cardholder_authentication_code'] )
   end
 
   def test_capture_passing_extra_info
@@ -414,6 +437,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def failed_authorization_response
     '$2$,$1$,$1$,$This transaction was declined.$,$advE7f$,$Y$,$508141794$,$5b3fe66005f3da0ebe51$,$$,$1.00$,$CC$,$auth_only$,$$,$Longbob$,$Longsen$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$2860A297E0FE804BCB9EF8738599645C$,$P$,$2$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
+  end
+
+  def already_actioned_capture_response
+    '$1$,$2$,$311$,$This transaction has already been captured.$,$$,$P$,$0$,$$,$$,$1.00$,$CC$,$credit$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$39265D8BA0CDD4F045B5F4129B2AAA01$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
   end
 
   def fraud_review_response

@@ -1,8 +1,9 @@
 source 'https://rubygems.org'
 gemspec
 
-gem 'activesupport', '>= 2.3.14', '< 3'
-gem 'rails', '>= 2.3.14', '< 3'
+gem 'builder', '~> 3.0'
+gem 'activesupport', '~> 2.3'
+gem 'rails', '~> 2.3'
 platforms :mri_20 do
   gem 'iconv'
 end

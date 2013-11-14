@@ -1,5 +1,129 @@
 = ActiveMerchant CHANGELOG
 
+* Balanced: Add support for appears_on_statement_as [duff]
+* Authorize.Net: Make already actioned responses failures [odorcicd]
+* Add Payex gateway [atomgiant]
+
+== Version 1.42.2 (November 13th, 2013)
+
+* Renew public certificate
+
+== Version 1.42.1 (November 13th, 2013)
+
+* Signed version of 1.42.0
+
+== Version 1.42.0 (November 13th, 2013)
+
+* Fix NoMethodError "tr" for params with dash [TimothyKlim]
+* Authorize.Net: Add cardholder authentication options (CAVV) support [structure]
+* CardStreamModern: Added better checks on inputs from the gateway [ExxKA]
+* Stripe: Send :ip to the gateway instead of :browser_ip [f3ndot]
+* Wirecard Page: new offsite gateway [mbretter]
+* Mercury: Add support for requesting a token [kcdragon]
+* Add App55 gateway [ianbutler55]
+* UsaEpayTransaction: Support for split payments [GBH]
+* Add Swipe Checkout gateway [matt-optimizerhq]
+* Spreedly Core: Allow overriding the gateway token when running a transaction [hoenth]
+* Spreedly Core: Add order_id [hoenth]
+* Spreedly Core: Allow store without retain [hoenth]
+* Stripe: Support multiple cards on account [pierre]
+* Stripe: Add card_id parameter to unstore call [pierre]
+* Remove usage of `uname -a` [ntalbott]
+* Litle: Allow easier access to the response code [duff]
+* Stripe: Add the option to pass a version header [odorcicd]
+* Elavon: Update supported countries [duff]
+* Add Raven PacNet gateway [llopez]
+* BitPay: Fix BitPay issues and implement Notification#acknowledge [odorcicd]
+
+== Version 1.41.0 (October 24th, 2013)
+
+* Stripe: Payments won't fail when specifying a customer with a creditcard number [melari]
+* Add Conekta gateway [leofischer]
+* Wirecard: Add support for void and refund [duff]
+* Orbital: Mandatory field fix [juicedM3, jduff]
+
+== Version 1.40.0 (October 18th, 2013)
+
+* Paymill: Revert Add support for specifying the :customer [melari]
+* Quickpay: Make v7 of the API default [kvs]
+* Bitpay: Add return [tahnok]
+
+== Version 1.39.2 (October 10th, 2013)
+
+* Eway Rapid: Fix a bug with access codes that have equal signs in them [odorcic]
+
+== Version 1.39.1 (October 9th, 2013)
+
+* Bitpay: Invoice Fix [orenmazor]
+
+== Version 1.39.0 (October 9th, 2013)
+
+* Moneris: Add optional (off by default) verification_value support [duff]
+* Citrus: New Integration [viatechs, melari]
+* Payu Paisa: New Integration [melari]
+* Spreedly: Pass country with other address fields [hoenth]
+* SecureNet: Fix order of xml params [duff]
+* Paymill: Add support for void [duff]
+* Add MoneyMovers gateway [jeffutter]
+* Ogone: Add a :store_amount option [rymai]
+* Ogone: Require TLSv1 [ntalbott]
+* Moneris: Add support for purchasecorrection [pgib]
+* Spreedly: Add ability to retain on success [duff]
+* Spreedly: Pass verification value [duff]
+* Paymill: Add support for specifying the :customer [Sbastien]
+* Realex: Correct AVS input format [ExxKA]
+* USAEpay Transaction: Use sandbox when in test mode [radar]
+* Braintree Blue: Do not use global config [rdj]
+* eWay Rapid: Add response messages [BenZhang]
+* Paysbuy: Add 'Pending' notification status [divineforest]
+* Cybersource: Use standard :phone field [cade]
+* Orbital: Fix/tweak AVS codes [boone]
+* Quickpay: Add v7 support [larspind]
+* Authorize.Net CIM: Add option to not mark transactions as test [alanandrade]
+
+== Version 1.38.1 (September 16, 2013)
+
+* Moneris: Remove verification_value support [melari]
+
+== Version 1.38.0 (September 6, 2013)
+
+* FirstData E4: Include missing address information for AVS and CVV [melari]
+* Litle: Deprecate credit method in favor of refund [melari]
+* Moneris: Add verification_value support [duff]
+* Webpay: Fixes issues with partial JPY currency [keikubo, melari]
+* SecureNet: Add INVOICENUM and INVOICEDESC optional fields [duff]
+* Balanced: Make BalancedGateway::Error inherit from ActiveMerchantError [duff]
+* Balanced: Fix #void interface [duff]
+* HiTrust: Return correct error message for positive retcodes [melari]
+* Moving to pessimistic versioning [davefp]
+
+== Version 1.37.0 (August 20, 2013)
+
+* MerchantWarrior: Fix handling of amounts [duff]
+* Ipay88: New gateway [kamal, siong1987, jduff]
+* IATS: New gateway [unkown, jduff]
+* MerchantWarrior: Send the CVV to the gateway [duff]
+* PayU: Fix a major bug with status types [melari]
+* SecureNet: Allow production transactions [duff]
+* Stripe: Allow a card_not_present_fee to be specified [melari]
+
+== Version 1.36.0 (August 2, 2013)
+
+* Fat Zebra: More consistent handling of tokens [adrianmacneil]
+* Add Platron integration [alexwl]
+* Litle: Support wiredump_device [pierre]
+* Litle: support paypage registrations [pierre]
+* SecureNet: Cleanup and refactoring [duff]
+* Mercury: Proper refund and void support [opendining]
+* PaymentExpress: Return token in authorization [ntalbott]
+* Stripe: Support for partial application fee refunds [melari, odorcicd]
+* NMI: Support for recurring flag [duff]
+* SecureNet: Use working live url [duff]
+
+== Version 1.35.1 (July 22, 2013)
+
+* Stripe: Allow application_fees to be refunded via the refund_application_fee flag [melari]
+
 == Version 1.35.0 (July 17, 2013)
 
 * Add Barclays ePDQ Extra Plus gateway [ntalbott]
@@ -1173,4 +1297,3 @@ value [jduff]
 * Credit card validation methods as static methods of the credit card object
 
 == PlanetArgon fork for integrating Merchant eSolutions gateway
-

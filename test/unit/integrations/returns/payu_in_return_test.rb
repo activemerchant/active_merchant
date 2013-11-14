@@ -13,24 +13,24 @@ class PayuInReturnTest < Test::Unit::TestCase
 
   def test_success
     assert @payu.success?
-    assert_equal 'success', @payu.status('4ba4afe87f7e73468f2a','10.00')
+    assert_equal 'Completed', @payu.status('4ba4afe87f7e73468f2a','10.00')
   end
 
   def test_failure_is_successful
     setup_failed_return
-    assert_equal 'failure', @payu.status('8ae1034d1abf47fde1cf', '10.00')
+    assert_equal 'Failed', @payu.status('8ae1034d1abf47fde1cf', '10.00')
   end
 
   def test_treat_initial_failures_as_pending
     setup_failed_return
-    assert_equal 'failure', @payu.notification.status
+    assert_equal 'Failed', @payu.notification.status
   end
 
   def test_return_has_notification
     notification = @payu.notification
 
     assert notification.complete?
-    assert_equal 'success', notification.status
+    assert_equal 'Completed', notification.status
     assert notification.invoice_ok?('4ba4afe87f7e73468f2a')
     assert notification.amount_ok?(BigDecimal.new('10.00'),BigDecimal.new('0.00'))
     assert_equal "success", notification.transaction_status

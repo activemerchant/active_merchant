@@ -542,7 +542,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:Number', item[:number]
             xml.tag! 'n2:Quantity', item[:quantity]
             if item[:amount]
-              xml.tag! 'n2:Amount', localized_amount(item[:amount], currency_code), 'currencyID' => currency_code
+              xml.tag! 'n2:Amount', item_amount(item[:amount], currency_code), 'currencyID' => currency_code
             end
             xml.tag! 'n2:Description', item[:description]
             xml.tag! 'n2:ItemURL', item[:url]
@@ -656,6 +656,14 @@ module ActiveMerchant #:nodoc:
 
       def date_to_iso(date)
         (date.is_a?(Date) ? date.to_time : date).utc.iso8601
+      end
+
+      def item_amount(amount, currency_code)
+        if amount.to_i < 0 && non_fractional_currency?(currency_code)
+          amount(amount).to_f.floor
+        else
+          localized_amount(amount, currency_code)
+        end
       end
     end
   end

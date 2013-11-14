@@ -18,6 +18,20 @@ class BaseTest < Test::Unit::TestCase
     assert_equal LinkpointGateway,     Base.gateway(:linkpoint)
   end
 
+  def test_should_raise_when_invalid_gateway_is_passed
+    assert_raise NameError do
+      Base.gateway(:nil)
+    end
+
+    assert_raise NameError do
+      Base.gateway('')
+    end
+
+    assert_raise NameError do
+      Base.gateway(:hotdog)
+    end
+  end
+
   def test_should_return_an_integration_by_name
     chronopay = Base.integration(:chronopay)
     

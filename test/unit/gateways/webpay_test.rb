@@ -5,8 +5,8 @@ class WebpayTest < Test::Unit::TestCase
     @gateway = WebpayGateway.new(:login => 'login')
 
     @credit_card = credit_card()
-    @amount = 400
-    @refund_amount = 200
+    @amount = 40000
+    @refund_amount = 20000
 
     @options = {
       :billing_address => address(),
@@ -26,6 +26,17 @@ class WebpayTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_appropiate_purchase_amount
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal @amount / 100, response.params["amount"]
+  end
+
+
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_purchase_response(true))
 
@@ -42,7 +53,6 @@ class WebpayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
-    assert_instance_of Response, response
     assert_success response
 
     # Replace with authorization number from the successful response
@@ -54,7 +64,6 @@ class WebpayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response(:livemode => true))
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
-    assert_instance_of Response, response
     assert_success response
 
     assert !response.test?
@@ -79,13 +88,13 @@ class WebpayTest < Test::Unit::TestCase
 
   def test_add_customer
     post = {}
-    @gateway.send(:add_customer, post, {:customer => "test_customer"})
+    @gateway.send(:add_customer, post, 'card_token', {:customer => "test_customer"})
     assert_equal "test_customer", post[:customer]
   end
 
   def test_doesnt_add_customer_if_card
-    post = { :card => 'foo' }
-    @gateway.send(:add_customer, post, {:customer => "test_customer"})
+    post = {}
+    @gateway.send(:add_customer, post, @credit_card, {:customer => "test_customer"})
     assert !post[:customer]
   end
 

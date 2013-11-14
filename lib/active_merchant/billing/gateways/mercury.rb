@@ -59,12 +59,27 @@ module ActiveMerchant #:nodoc:
       def refund(money, authorization, options = {})
         requires!(options, :credit_card) unless @use_tokenization
 
-        request = build_authorized_request('VoidSale', money, authorization, options[:credit_card], options)
-        commit(options[:void], request)
+        request = build_authorized_request('Return', money, authorization, options[:credit_card], options)
+        commit('Return', request)
       end
 
       def void(authorization, options={})
-        refund(nil, authorization, options.merge(:void => true))
+        requires!(options, :credit_card) unless @use_tokenization
+
+        if options[:try_reversal]
+          request = build_authorized_request('VoidSale', nil, authorization, options[:credit_card], options.merge(:reversal => true))
+          response = commit('VoidSale', request)
+
+          return response if response.success?
+        end
+
+        request = build_authorized_request('VoidSale', nil, authorization, options[:credit_card], options)
+        commit('VoidSale', request)
+      end
+
+      def store(credit_card, options={})
+        request = build_card_lookup_request(credit_card, options)
+        commit('CardLookup', request)
       end
 
       private
@@ -94,7 +109,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new
 
         invoice_no, ref_no, auth_code, acq_ref_data, process_data, record_no, amount = split_authorization(authorization)
-        ref_no = invoice_no if options[:void]
+        ref_no = invoice_no if options[:reversal]
 
         xml.tag! "TStream" do
           xml.tag! "Transaction" do
@@ -111,17 +126,34 @@ module ActiveMerchant #:nodoc:
             add_address(xml, options)
             xml.tag! 'TranInfo' do
               xml.tag! "AuthCode", auth_code
-              xml.tag! "AcqRefData", acq_ref_data
-              xml.tag! "ProcessData", process_data
+              xml.tag! "AcqRefData", acq_ref_data if options[:reversal]
+              xml.tag! "ProcessData", process_data if options[:reversal]
             end
           end
         end
         xml = xml.target!
       end
 
+      def build_card_lookup_request(credit_card, options)
+        xml = Builder::XmlMarkup.new
+
+        xml.tag! "TStream" do
+          xml.tag! "Transaction" do
+            xml.tag! 'TranType', 'CardLookup'
+            xml.tag! 'RecordNo', 'RecordNumberRequested'
+            xml.tag! 'Frequency', 'OneTime'
+
+            xml.tag! 'Memo', options[:description]
+            add_customer_data(xml, options)
+            add_credit_card(xml, credit_card, options)
+          end
+        end
+        xml.target!
+      end
+
       def add_invoice(xml, invoice_no, ref_no, options)
         if /^\d+$/ !~ invoice_no.to_s
-          raise ArgumentError.new("#{invoice_no} is not numeric as required by Mercury")
+          raise ArgumentError.new("order_id '#{invoice_no}' is not numeric as required by Mercury")
         end
 
         xml.tag! 'InvoiceNo', invoice_no

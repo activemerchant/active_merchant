@@ -57,7 +57,15 @@ module ActiveMerchant #:nodoc:
         begin
           require 'LitleOnline'
         rescue LoadError
-          raise "Could not load the LitleOnline gem (>= 08.13.2).  Use `gem install LitleOnline` to install it."
+          raise "Could not load the LitleOnline gem (> 08.15.0).  Use `gem install LitleOnline` to install it."
+        end
+
+        if wiredump_device
+          LitleOnline::Configuration.logger = ((Logger === wiredump_device) ? wiredump_device : Logger.new(wiredump_device))
+          LitleOnline::Configuration.logger.level = Logger::DEBUG
+        else
+          LitleOnline::Configuration.logger = Logger.new(STDOUT)
+          LitleOnline::Configuration.logger.level = Logger::WARN
         end
 
         @litle = LitleOnline::LitleOnlineRequest.new
@@ -104,13 +112,18 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def credit(money, identification_or_token, options = {})
-        to_pass = build_credit_request(money, identification_or_token, options)
+      def refund(money, authorization, options = {})
+        to_pass = build_credit_request(money, authorization, options)
         build_response(:credit, @litle.credit(to_pass))
       end
 
-      def store(creditcard, options = {})
-        to_pass = create_token_hash(creditcard, options)
+      def credit(money, authorization, options = {})
+        deprecated CREDIT_DEPRECATION_MESSAGE
+        refund(money, authorization, options)
+      end
+
+      def store(creditcard_or_paypage_registration_id, options = {})
+        to_pass = create_token_hash(creditcard_or_paypage_registration_id, options)
         build_response(:registerToken, @litle.register_token_request(to_pass), %w(000 801 802))
       end
 
@@ -158,11 +171,11 @@ module ActiveMerchant #:nodoc:
           Response.new(
               valid_responses.include?(detail['response']),
               detail['message'],
-              { :litleOnlineResponse => response },
-              :authorization => authorization_from(detail, kind),
-              :avs_result    => { :code => fraud['avs'] },
-              :cvv_result    => fraud['cvv'],
-              :test          => test?
+              { litleOnlineResponse: response, response_code: detail['response'] },
+              authorization: authorization_from(detail, kind),
+              avs_result: { :code => fraud['avs'] },
+              cvv_result: fraud['cvv'],
+              test: test?
           )
         else
           Response.new(false, response['message'], :litleOnlineResponse => response, :test => test?)
@@ -286,9 +299,15 @@ module ActiveMerchant #:nodoc:
         hash
       end
 
-      def create_token_hash(creditcard, options)
+      def create_token_hash(creditcard_or_paypage_registration_id, options)
         hash                  = create_hash(0, options)
-        hash['accountNumber'] = creditcard.number
+
+        if creditcard_or_paypage_registration_id.is_a?(String)
+          hash['paypageRegistrationId'] = creditcard_or_paypage_registration_id
+        else
+          hash['accountNumber'] = creditcard_or_paypage_registration_id.number
+        end
+
         hash
       end
 

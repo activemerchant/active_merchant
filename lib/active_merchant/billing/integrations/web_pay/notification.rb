@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
             @options[:secret]
           end
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             (security_key == generate_signature(:notify))
           end
 

@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
           def initialize(order, account, options = {})
             md5secret options.delete(:credential2)
             super
-            add_field('protocol', '6')
+            add_field('protocol', '7')
             add_field('msgtype', 'authorize')
             add_field('language', 'da')
             add_field('autocapture', 0)
@@ -37,10 +37,26 @@ module ActiveMerchant #:nodoc:
           end
 
           MD5_CHECK_FIELDS = [
-            :protocol, :msgtype, :merchant, :language, :ordernumber,
-            :amount, :currency, :continueurl, :cancelurl, :callbackurl,
-            :autocapture, :cardtypelock, :description, :ipaddress, :testmode,
-            :deadline, :cardhash
+            :protocol,
+            :msgtype,
+            :merchant,
+            :language,
+            :ordernumber,
+            :amount,
+            :currency,
+            :continueurl,
+            :cancelurl,
+            :callbackurl,
+            :autocapture,
+            :autofee,
+            :cardtypelock,
+            :description,
+            :group,
+            :testmode,
+            :splitpayment,
+            :forcemobile,
+            :deadline,
+            :cardhash
           ]
 
           mapping :protocol, 'protocol'
@@ -55,11 +71,17 @@ module ActiveMerchant #:nodoc:
           mapping :notify_url, 'callbackurl'
 
           mapping :autocapture, 'autocapture'
+          mapping :autofee, 'autofee'
           mapping :cardtypelock, 'cardtypelock'
 
-          mapping :description, 'description'
           mapping :ipaddress, 'ipaddress'
+
+          mapping :description, 'description'
+          mapping :group, 'group'
           mapping :testmode, 'testmode'
+
+          mapping :splitpayment, 'splitpayment'
+          mapping :forcemobile, 'forcemobile'
           mapping :deadline, 'deadline'
           mapping :cardhash, 'cardhash'
 

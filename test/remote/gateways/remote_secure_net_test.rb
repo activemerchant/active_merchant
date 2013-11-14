@@ -12,15 +12,15 @@ class SecureNetTest < Test::Unit::TestCase
 
     n = Time.now
     order_id = n.to_i.to_s + n.usec.to_s
-    @options = { 
-      :order_id => order_id,
-      :billing_address => address,
-      :description => 'Store Purchase'
+    @options = {
+      order_id: order_id,
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
   def test_expired_credit_card
-    @credit_card.year = 2004 
+    @credit_card.year = 2004
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
@@ -49,7 +49,7 @@ class SecureNetTest < Test::Unit::TestCase
     assert_equal 'Approved', auth.message
     assert auth.authorization
 
-    assert capture = @gateway.capture(@amount, @credit_card, auth.authorization, @options)
+    assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
     assert_equal 'Approved', capture.message
   end
@@ -60,7 +60,7 @@ class SecureNetTest < Test::Unit::TestCase
     assert_equal 'Approved', auth.message
     assert auth.authorization
 
-    assert void = @gateway.void(@amount, @credit_card, auth.authorization, @options)
+    assert void = @gateway.void(auth.authorization)
     assert_success void
     assert_equal 'Approved', void.message
   end
@@ -77,27 +77,27 @@ class SecureNetTest < Test::Unit::TestCase
     assert_equal 'Approved', auth.message
     assert auth.authorization
 
-    assert void = @gateway.void(@amount, @credit_card, '123456', @options)
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+
+    assert void = @gateway.void(auth.authorization)
     assert_failure void
-    assert_equal 'TRANSACTION ID DOES NOT EXIST FOR VOID', void.message
+    assert_equal 'TRANSACTION HAS ALREADY BEEN VOIDED', void.message
   end
 
   def test_unsuccessful_capture
-    assert response = @gateway.capture(@amount, @credit_card, '', @options)
-    assert_failure response
-    assert_equal 'PREVIOUS TRANSACTION ID IS REQUIRED', response.message
-  end
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
 
-  def test_unsuccessful_credit_with_no_previous_transaction
-    assert credit = @gateway.credit(@amount, @credit_card, '', @options)
-    assert_failure credit
-    assert_equal 'PREVIOUS TRANSACTION ID IS REQUIRED', credit.message
+    assert response = @gateway.capture(@amount + 200, auth.authorization)
+    assert_failure response
+    assert_equal 'CAPTURE AMOUNT CANNOT BE GREATER THAN PREVIOUSLY AUTHORIZED AMOUNT', response.message
   end
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @bad_card_number, @options)
     assert_failure response
-    assert_equal "CARD TYPE COULDN'T BE IDENTIFIED.", response.message
+    assert_equal "CARD TYPE COULD NOT BE IDENTIFIED", response.message
   end
 
   def test_unsuccessful_purchase_and_credit
@@ -106,9 +106,23 @@ class SecureNetTest < Test::Unit::TestCase
     assert_equal 'Approved', purchase.message
     assert purchase.authorization
 
-    assert credit = @gateway.credit(@amount, @credit_card, purchase.authorization, @options)
-    assert_failure credit
-    assert_equal 'CREDIT CANNOT BE COMPLETED ON AN UNSETTLED TRANSACTION', credit.message
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_failure refund
+    assert_equal 'CREDIT CANNOT BE COMPLETED ON AN UNSETTLED TRANSACTION', refund.message
+  end
+
+  def test_invoice_description_and_number
+    options = @options.merge({
+      invoice_description: "TheInvoiceDescriptions",
+      invoice_number: "TheInvoiceNumber"
+    })
+
+    assert auth = @gateway.authorize(@amount, @credit_card, options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization, options)
+    assert_success capture
+    assert_equal 'Approved', capture.message
   end
 
 end

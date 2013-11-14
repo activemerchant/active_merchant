@@ -41,7 +41,18 @@ class RemotePaymillTest < Test::Unit::TestCase
 
     assert capture_response = @gateway.capture(@amount, response.authorization)
     assert_failure capture_response
-    assert_equal 'Preauthorization has already been used', capture_response.message
+    assert_equal 'Transaction duplicate', capture_response.message
+  end
+
+  def test_successful_authorize_and_void
+    assert response = @gateway.authorize(@amount, @credit_card)
+    assert_success response
+    assert_equal 'Transaction approved', response.message
+    assert response.authorization
+
+    assert void_response = @gateway.void(response.authorization)
+    assert_success void_response
+    assert_equal 'Transaction approved', void_response.message
   end
 
   def test_successful_refund

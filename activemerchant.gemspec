@@ -7,6 +7,7 @@ Gem::Specification.new do |s|
   s.version      = ActiveMerchant::VERSION
   s.summary      = 'Framework and tools for dealing with credit card transactions.'
   s.description  = 'Active Merchant is a simple payment abstraction library used in and sponsored by Shopify. It is written by Tobias Luetke, Cody Fauser, and contributors. The aim of the project is to feel natural to Ruby users and to abstract as many parts as possible away from the user to offer a consistent interface across all supported gateways.'
+  s.license      = "MIT"
 
   s.author = 'Tobias Luetke'
   s.email = 'tobi@leetsoft.com'
@@ -18,13 +19,13 @@ Gem::Specification.new do |s|
 
   s.has_rdoc = true if Gem::VERSION < '1.7.0'
 
-  s.add_dependency('activesupport', '>= 2.3.14')
-  s.add_dependency('i18n')
-  s.add_dependency('money')
-  s.add_dependency('builder', '>= 2.0.0')
-  s.add_dependency('json', '>= 1.5.1')
-  s.add_dependency('active_utils', '>= 1.0.2')
-  s.add_dependency('nokogiri', "< 1.6.0")
+  s.add_dependency('activesupport', '>= 2.3.14', '< 5.0.0')
+  s.add_dependency('i18n', '~> 0.5')
+  s.add_dependency('money', '< 7.0.0')
+  s.add_dependency('builder', '>= 2.1.2', '< 4.0.0')
+  s.add_dependency('json', '~> 1.7')
+  s.add_dependency('active_utils', '~> 2.0', '>= 2.0.1')
+  s.add_dependency('nokogiri', "~> 1.4")
 
   s.add_development_dependency('rake')
   s.add_development_dependency('mocha', '~> 0.13.0')

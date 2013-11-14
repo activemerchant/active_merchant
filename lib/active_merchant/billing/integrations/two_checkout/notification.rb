@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
           end
 
           # Checks against MD5 Hash
-          def acknowledge
+          def acknowledge(authcode = nil)
             return false if security_key.blank?
 
             Digest::MD5.hexdigest("#{secret}#{params['sid']}#{transaction_id}#{gross}").upcase == security_key.upcase

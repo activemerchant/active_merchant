@@ -55,6 +55,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded!', response.message
     assert_equal 'Purchase', response.params['transaction_type']
+    assert_equal 'used', response.params['payment_method_storage_state']
   end
 
   def test_successful_purchase_with_card_and_address
@@ -86,6 +87,15 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_failure response
     assert_equal "First name can't be blank", response.message
+  end
+
+  def test_successful_purchase_with_store
+    assert response = @gateway.purchase(@amount, @credit_card, store: true)
+    assert_success response
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'Purchase', response.params['transaction_type']
+    assert_equal 'retained', response.params['payment_method_storage_state']
+    assert !response.params['payment_method_token'].blank?
   end
 
   def test_successful_authorize_and_capture_with_credit_card
@@ -130,6 +140,15 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card)
     assert_failure response
     assert_equal "First name can't be blank", response.message
+  end
+
+  def test_successful_authorize_with_store
+    assert response = @gateway.authorize(@amount, @credit_card, store: true)
+    assert_success response
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'Authorization', response.params['transaction_type']
+    assert_equal 'retained', response.params['payment_method_storage_state']
+    assert !response.params['payment_method_token'].blank?
   end
 
   def test_successful_store
@@ -224,6 +243,6 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
 
     assert response = gateway.purchase(@amount, @existing_payment_method)
     assert_failure response
-    assert_equal 'HTTP Basic: Access denied.', response.message
+    assert_match /Unable to authenticate/, response.message
   end
 end

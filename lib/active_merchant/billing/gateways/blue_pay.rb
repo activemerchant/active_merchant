@@ -14,8 +14,6 @@ module ActiveMerchant #:nodoc:
       AVS_ERRORS = %w( A E N R W Z )
       AVS_REASON_CODES = %w(27 45)
 
-      FRAUD_REVIEW_STATUSES = %w( E 0 )
-
       FIELD_MAP = {
         'TRANS_ID' => :transaction_id,
         'STATUS' => :response_code,
@@ -344,7 +342,6 @@ module ActiveMerchant #:nodoc:
         Response.new(success, message, parsed,
           :test          => test?,
           :authorization => (parsed[:rebid] && parsed[:rebid] != '' ? parsed[:rebid] : parsed[:transaction_id]),
-          :fraud_review  => FRAUD_REVIEW_STATUSES.include?(parsed[:response_code]),
           :avs_result    => { :code => parsed[:avs_result_code] },
           :cvv_result    => parsed[:card_code]
         )

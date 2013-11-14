@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           RESPONSE_PARAMS = ['DirecPay Reference ID', 'Flag', 'Country', 'Currency', 'Other Details', 'Merchant Order No', 'Amount']
           
-          def acknowledge
+          def acknowledge(authcode = nil)
             true
           end
 

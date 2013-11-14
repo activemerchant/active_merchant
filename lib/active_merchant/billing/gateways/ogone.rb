@@ -32,13 +32,13 @@ module ActiveMerchant #:nodoc:
     # == Usage
     #
     #   gateway = ActiveMerchant::Billing::OgoneGateway.new(
-    #               :login                     => "my_ogone_psp_id",
-    #               :user                      => "my_ogone_user_id",
-    #               :password                  => "my_ogone_pswd",
-    #               :signature                 => "my_ogone_sha_signature", # Only if you configured your Ogone environment so.
-    #               :signature_encryptor       => "sha512", # Can be "none" (default), "sha1", "sha256" or "sha512".
+    #     :login               => "my_ogone_psp_id",
+    #     :user                => "my_ogone_user_id",
+    #     :password            => "my_ogone_pswd",
+    #     :signature           => "my_ogone_sha_signature", # Only if you configured your Ogone environment so.
+    #     :signature_encryptor => "sha512"                  # Can be "none" (default), "sha1", "sha256" or "sha512".
     #                                                       # Must be the same as the one configured in your Ogone account.
-    #            )
+    #   )
     #
     #   # set up credit card object as in main ActiveMerchant example
     #   creditcard = ActiveMerchant::Billing::CreditCard.new(
@@ -75,7 +75,19 @@ module ActiveMerchant #:nodoc:
     #
     #   # When using store, you can also let Ogone generate the alias for you
     #   response = gateway.store(creditcard)
-    #   puts response.billing_id  # Retrieve the generated alias
+    #   puts response.billing_id # Retrieve the generated alias
+    #
+    #   # By default, Ogone tries to authorize 0.01 EUR but you can change this
+    #   # amount using the :store_amount option when creating the gateway object:
+    #   gateway = ActiveMerchant::Billing::OgoneGateway.new(
+    #     :login               => "my_ogone_psp_id",
+    #     :user                => "my_ogone_user_id",
+    #     :password            => "my_ogone_pswd",
+    #     :signature           => "my_ogone_sha_signature",
+    #     :signature_encryptor => "sha512",
+    #     :store_amount        => 100 # The store method will try to authorize 1 EUR instead of 0.01 EUR
+    #   )
+    #   response = gateway.store(creditcard) # authorize 1 EUR and void the authorization right away
     #
     # == 3-D Secure feature
     #
@@ -129,6 +141,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Ogone'
       self.default_currency = 'EUR'
       self.money_format = :cents
+      self.ssl_version = :TLSv1
 
       def initialize(options = {})
         requires!(options, :login, :user, :password)
@@ -195,7 +208,7 @@ module ActiveMerchant #:nodoc:
       # Store a credit card by creating an Ogone Alias
       def store(payment_source, options = {})
         options.merge!(:alias_operation => 'BYPSP') unless(options.has_key?(:billing_id) || options.has_key?(:store))
-        response = authorize(1, payment_source, options)
+        response = authorize(@options[:store_amount] || 1, payment_source, options)
         void(response.authorization) if response.success?
         response
       end

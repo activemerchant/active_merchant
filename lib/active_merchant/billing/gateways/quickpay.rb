@@ -119,7 +119,36 @@ module ActiveMerchant #:nodoc:
           :status    => %w(protocol msgtype merchant transaction apikey),
 
           :chstatus  => %w(protocol msgtype merchant apikey)
-        }
+        },
+        
+        7 => {
+          :authorize => %w(protocol msgtype merchant ordernumber amount
+                           currency autocapture cardnumber expirationdate cvd
+                           acquirer cardtypelock testmode fraud_remote_addr
+                           fraud_http_accept fraud_http_accept_language
+                           fraud_http_accept_encoding fraud_http_accept_charset
+                           fraud_http_referer fraud_http_user_agent apikey),
+
+          :capture   => %w(protocol msgtype merchant amount transaction
+                           apikey),
+
+          :cancel    => %w(protocol msgtype merchant transaction apikey),
+
+          :refund    => %w(protocol msgtype merchant amount transaction apikey),
+
+          :subscribe => %w(protocol msgtype merchant ordernumber cardnumber
+                           expirationdate cvd acquirer cardtypelock description testmode
+                           fraud_remote_addr fraud_http_accept fraud_http_accept_language
+                           fraud_http_accept_encoding fraud_http_accept_charset
+                           fraud_http_referer fraud_http_user_agent apikey),
+
+          :recurring => %w(protocol msgtype merchant ordernumber amount currency
+                           autocapture transaction apikey),
+
+          :status    => %w(protocol msgtype merchant transaction apikey),
+
+          :chstatus  => %w(protocol msgtype merchant apikey)
+        }        
       }
 
       APPROVED = '000'
@@ -127,10 +156,10 @@ module ActiveMerchant #:nodoc:
       # The login is the QuickpayId
       # The password is the md5checkword from the Quickpay manager
       # To use the API-key from the Quickpay manager, specify :api-key
-      # Using the API-key, requires that you use version 4+. Specify :version => 4/5/6 in options.
+      # Using the API-key, requires that you use version 4+. Specify :version => 4/5/6/7 in options.
       def initialize(options = {})
         requires!(options, :login, :password)
-        @protocol = options.delete(:version) || 3 # default to protocol version 3
+        @protocol = options.delete(:version) || 7 # default to protocol version 7
         super
       end
 
@@ -225,6 +254,7 @@ module ActiveMerchant #:nodoc:
         post[:cvd]            = credit_card.verification_value
         post[:expirationdate] = expdate(credit_card)
         post[:cardtypelock]   = options[:cardtypelock] unless options[:cardtypelock].blank?
+        post[:acquirer]       = options[:acquirer] unless options[:acquirer].blank?
       end
 
       def add_reference(post, identification)

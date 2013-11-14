@@ -22,6 +22,26 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_equal '4A5398CF9B87744GG84A1D30F2F2321C66249416;1', response.authorization
   end
 
+  def test_currency_exponents
+    stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => '1')
+    end.check_request do |endpoint, data, headers|
+      assert_match /<CurrencyExponent>2<\/CurrencyExponent>/, data
+    end.respond_with(successful_purchase_response)
+
+    stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => '1', :currency => 'CAD')
+    end.check_request do |endpoint, data, headers|
+      assert_match /<CurrencyExponent>2<\/CurrencyExponent>/, data
+    end.respond_with(successful_purchase_response)
+
+    stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => '1', :currency => 'JPY')
+    end.check_request do |endpoint, data, headers|
+      assert_match /<CurrencyExponent>0<\/CurrencyExponent>/, data
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_unauthenticated_response
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
@@ -255,6 +275,30 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match(/<CustomerRefNum>ABC/, data)
       assert_match(/<CustomerProfileFromOrderInd>S/, data)
       assert_match(/<CustomerProfileOrderOverrideInd>NO/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_currency_code_and_exponent_are_set_for_profile_purchase
+    @gateway.options[:customer_profiles] = true
+    response = stub_comms do
+      @gateway.purchase(50, nil, :order_id => 1, :customer_ref_num => @customer_ref_num)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<CustomerRefNum>ABC/, data)
+      assert_match(/<CurrencyCode>124/, data)
+      assert_match(/<CurrencyExponent>2/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_currency_code_and_exponent_are_set_for_profile_authorizations
+    @gateway.options[:customer_profiles] = true
+    response = stub_comms do
+      @gateway.authorize(50, nil, :order_id => 1, :customer_ref_num => @customer_ref_num)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<CustomerRefNum>ABC/, data)
+      assert_match(/<CurrencyCode>124/, data)
+      assert_match(/<CurrencyExponent>2/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end

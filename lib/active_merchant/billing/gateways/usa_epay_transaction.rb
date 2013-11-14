@@ -2,19 +2,20 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
 
     class UsaEpayTransactionGateway < Gateway
-      self.test_url = self.live_url = 'https://www.usaepay.com/gate.php'
+      self.live_url = 'https://www.usaepay.com/gate'
+      self.test_url = 'https://sandbox.usaepay.com/gate'
 
-      self.supported_cardtypes = [:visa, :master, :american_express]
-      self.supported_countries = ['US']
-      self.homepage_url = 'http://www.usaepay.com/'
-      self.display_name = 'USA ePay'
+      self.supported_cardtypes  = [:visa, :master, :american_express]
+      self.supported_countries  = ['US']
+      self.homepage_url         = 'http://www.usaepay.com/'
+      self.display_name         = 'USA ePay'
 
       TRANSACTIONS = {
-        :authorization => 'authonly',
-        :purchase => 'sale',
-        :capture => 'capture',
-        :refund => 'refund',
-        :void => 'void'
+        :authorization  => 'cc:authonly',
+        :purchase       => 'cc:sale',
+        :capture        => 'cc:capture',
+        :refund         => 'cc:refund',
+        :void           => 'cc:void'
       }
 
       def initialize(options = {})
@@ -30,6 +31,7 @@ module ActiveMerchant #:nodoc:
         add_credit_card(post, credit_card)
         add_address(post, credit_card, options)
         add_customer_data(post, options)
+        add_split_payments(post, options)
 
         commit(:authorization, post)
       end
@@ -42,6 +44,7 @@ module ActiveMerchant #:nodoc:
         add_credit_card(post, credit_card)
         add_address(post, credit_card, options)
         add_customer_data(post, options)
+        add_split_payments(post, options)
 
         commit(:purchase, post)
       end
@@ -65,7 +68,7 @@ module ActiveMerchant #:nodoc:
         commit(:void, post)
       end
 
-      private
+    private
 
       def add_amount(post, money)
         post[:amount] = amount(money)
@@ -107,16 +110,16 @@ module ActiveMerchant #:nodoc:
       def add_address_for_type(type, post, credit_card, address)
         prefix = address_key_prefix(type)
 
-        post[address_key(prefix, 'fname')] = credit_card.first_name
-        post[address_key(prefix, 'lname')] = credit_card.last_name
-        post[address_key(prefix, 'company')] = address[:company] unless address[:company].blank?
-        post[address_key(prefix, 'street')] = address[:address1] unless address[:address1].blank?
-        post[address_key(prefix, 'street2')] = address[:address2] unless address[:address2].blank?
-        post[address_key(prefix, 'city')] = address[:city] unless address[:city].blank?
-        post[address_key(prefix, 'state')] = address[:state] unless address[:state].blank?
-        post[address_key(prefix, 'zip')] = address[:zip] unless address[:zip].blank?
-        post[address_key(prefix, 'country')] = address[:country] unless address[:country].blank?
-        post[address_key(prefix, 'phone')] = address[:phone] unless address[:phone].blank?
+        post[address_key(prefix, 'fname')]    = credit_card.first_name
+        post[address_key(prefix, 'lname')]    = credit_card.last_name
+        post[address_key(prefix, 'company')]  = address[:company]   unless address[:company].blank?
+        post[address_key(prefix, 'street')]   = address[:address1]  unless address[:address1].blank?
+        post[address_key(prefix, 'street2')]  = address[:address2]  unless address[:address2].blank?
+        post[address_key(prefix, 'city')]     = address[:city]      unless address[:city].blank?
+        post[address_key(prefix, 'state')]    = address[:state]     unless address[:state].blank?
+        post[address_key(prefix, 'zip')]      = address[:zip]       unless address[:zip].blank?
+        post[address_key(prefix, 'country')]  = address[:country]   unless address[:country].blank?
+        post[address_key(prefix, 'phone')]    = address[:phone]     unless address[:phone].blank?
       end
 
       def address_key_prefix(type)
@@ -131,15 +134,29 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, options)
-        post[:invoice] = options[:order_id]
-        post[:description] = options[:description]
+        post[:invoice]      = options[:order_id]
+        post[:description]  = options[:description]
       end
 
       def add_credit_card(post, credit_card)
-        post[:card]  = credit_card.number
-        post[:cvv2] = credit_card.verification_value if credit_card.verification_value?
+        post[:card]   = credit_card.number
+        post[:cvv2]   = credit_card.verification_value if credit_card.verification_value?
         post[:expir]  = expdate(credit_card)
-        post[:name] = credit_card.name
+        post[:name]   = credit_card.name
+      end
+
+      # see: http://wiki.usaepay.com/developer/transactionapi#split_payments
+      def add_split_payments(post, options)
+        return unless options[:split_payments].is_a?(Array)
+        options[:split_payments].each_with_index do |payment, index|
+          prefix = '%02d' % (index + 2)
+          post["#{prefix}key"]         = payment[:key]
+          post["#{prefix}amount"]      = amount(payment[:amount])
+          post["#{prefix}description"] = payment[:description]
+        end
+
+        # When blank it's 'Stop'. 'Continue' is another one
+        post['onError'] = options[:on_error] || 'Void'
       end
 
       def parse(body)
@@ -150,31 +167,32 @@ module ActiveMerchant #:nodoc:
         end
 
         {
-          :status => fields['UMstatus'],
-          :auth_code => fields['UMauthCode'],
-          :ref_num => fields['UMrefNum'],
-          :batch => fields['UMbatch'],
-          :avs_result => fields['UMavsResult'],
-          :avs_result_code => fields['UMavsResultCode'],
-          :cvv2_result => fields['UMcvv2Result'],
+          :status           => fields['UMstatus'],
+          :auth_code        => fields['UMauthCode'],
+          :ref_num          => fields['UMrefNum'],
+          :batch            => fields['UMbatch'],
+          :avs_result       => fields['UMavsResult'],
+          :avs_result_code  => fields['UMavsResultCode'],
+          :cvv2_result      => fields['UMcvv2Result'],
           :cvv2_result_code => fields['UMcvv2ResultCode'],
           :vpas_result_code => fields['UMvpasResultCode'],
-          :result => fields['UMresult'],
-          :error => fields['UMerror'],
-          :error_code => fields['UMerrorcode'],
-          :acs_url => fields['UMacsurl'],
-          :payload => fields['UMpayload']
+          :result           => fields['UMresult'],
+          :error            => fields['UMerror'],
+          :error_code       => fields['UMerrorcode'],
+          :acs_url          => fields['UMacsurl'],
+          :payload          => fields['UMpayload']
         }.delete_if{|k, v| v.nil?}
       end
 
       def commit(action, parameters)
-        response = parse( ssl_post(self.live_url, post_data(action, parameters)) )
+        url = (test? ? self.test_url : self.live_url)
+        response = parse(ssl_post(url, post_data(action, parameters)))
 
         Response.new(response[:status] == 'Approved', message_from(response), response,
-          :test => test?,
-          :authorization => response[:ref_num],
-          :cvv_result => response[:cvv2_result_code],
-          :avs_result => { :code => response[:avs_result_code] }
+          :test           => test?,
+          :authorization  => response[:ref_num],
+          :cvv_result     => response[:cvv2_result_code],
+          :avs_result     => { :code => response[:avs_result_code] }
         )
       end
 
@@ -189,7 +207,7 @@ module ActiveMerchant #:nodoc:
 
       def post_data(action, parameters = {})
         parameters[:command]  = TRANSACTIONS[action]
-        parameters[:key] = @options[:login]
+        parameters[:key]      = @options[:login]
         parameters[:software] = 'Active Merchant'
         parameters[:testmode] = (@options[:test] ? 1 : 0)
 

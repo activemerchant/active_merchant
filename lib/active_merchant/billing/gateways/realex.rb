@@ -34,7 +34,7 @@ module ActiveMerchant
       self.money_format = :cents
       self.default_currency = 'EUR'
       self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :switch, :solo, :laser ]
-      self.supported_countries = [ 'IE', 'GB' ]
+      self.supported_countries = %w(IE GB FR BE NL LU IT)
       self.homepage_url = 'http://www.realexpayments.com/'
       self.display_name = 'Realex'
 
@@ -86,8 +86,11 @@ module ActiveMerchant
       def commit(request)
         response = parse(ssl_post(self.live_url, request))
 
-        Response.new(response[:result] == "00", message_from(response), response,
-          :test => response[:message] =~ /\[ test system \]/,
+        Response.new(
+          (response[:result] == "00"),
+          message_from(response),
+          response,
+          :test => (response[:message] =~ %r{\[ test system \]}),
           :authorization => authorization_from(response),
           :cvv_result => response[:cvnresult],
           :avs_result => {
@@ -187,14 +190,14 @@ module ActiveMerchant
 
           if billing_address
             xml.tag! 'address', 'type' => 'billing' do
-              xml.tag! 'code', format_shipping_zip_code(billing_address[:zip])
+              xml.tag! 'code', format_address_code(billing_address)
               xml.tag! 'country', billing_address[:country]
             end
           end
 
           if shipping_address
             xml.tag! 'address', 'type' => 'shipping' do
-              xml.tag! 'code', format_shipping_zip_code(shipping_address[:zip])
+              xml.tag! 'code', format_address_code(shipping_address)
               xml.tag! 'country', shipping_address[:country]
             end
           end
@@ -240,8 +243,9 @@ module ActiveMerchant
         end
       end
 
-      def format_shipping_zip_code(zip)
-        zip.to_s.gsub(/\W/, '')
+      def format_address_code(address)
+        code = [address[:zip].to_s, address[:address1].to_s + address[:address2].to_s]
+        code.collect{|e| e.gsub(/\D/, "")}.reject{|e| e.empty?}.join("|")
       end
 
       def new_timestamp

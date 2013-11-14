@@ -32,12 +32,12 @@ module ActiveMerchant #:nodoc:
             'JB' => 'International street address match. Postal code not verified',
             'JC' => 'International street address and postal code not verified',
             'JD' => 'International postal code match. Street address not verified',
-            'M1' => 'Merchant Override Decline',
+            'M1' => 'Cardholder name matches',
             'M2' => 'Cardholder name, billing address, and postal code matches',
             'M3' => 'Cardholder name and billing code matches',
-            'M4' => 'Cardholder name and billing address matches',
+            'M4' => 'Cardholder name and billing address match',
             'M5' => 'Cardholder name incorrect, billing address and postal code match',
-            'M6' => 'Cardholder name incorrect, billing address matches',
+            'M6' => 'Cardholder name incorrect, billing postal code matches',
             'M7' => 'Cardholder name incorrect, billing address matches',
             'M8' => 'Cardholder name, billing address and postal code are all incorrect',
             'N3' => 'Address matches, ZIP not verified',
@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
             'N8' => 'Address and ZIP code match (International only)',
             'N9' => 'Address and ZIP code match (UK only)',
             'R'  => 'Issuer does not participate in AVS',
-            'UX' => 'Unknown',
+            'UK' => 'Unknown',
             'X'  => 'Zip Match/Zip 4 Match/Address Match',
             'Z'  => 'Zip Match/Locale no match',
         }
@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
             'Y' => %w( 9 A B C H JA JD M2 M3 M5 N5 N8 N9 X Z ),
             'N' => %w( D E F G M8 ),
             'X' => %w( 4 J R ),
-            nil => %w( 1 2 3 5 6 7 8 JB JC M1 M4 M6 M7 N3 N4 N6 N7 UX )
+            nil => %w( 1 2 3 5 6 7 8 JB JC M1 M4 M6 M7 N3 N4 N6 N7 UK )
         }.inject({}) do |map, (type, codes)|
           codes.each { |code| map[code] = type }
           map
@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
             'Y' => %w( 9 B D F H JA JB M2 M4 M5 M6 M7 N3 N5 N7 N8 N9 X ),
             'N' => %w( A C E G M8 Z ),
             'X' => %w( 4 J R ),
-            nil => %w( 1 2 3 5 6 7 8 JC JD M1 M3 N4 N6 UX )
+            nil => %w( 1 2 3 5 6 7 8 JC JD M1 M3 N4 N6 UK )
         }.inject({}) do |map, (type, codes)|
           codes.each { |code| map[code] = type }
           map

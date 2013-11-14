@@ -125,7 +125,7 @@ class SagePayTest < Test::Unit::TestCase
   end
 
   def test_gift_aid_payment_is_submitted
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge({:gift_aid_payment => 1}))
     end.check_request do |method, endpoint, data, headers|
       assert_match(/GiftAidPayment=1/, data)
@@ -133,7 +133,7 @@ class SagePayTest < Test::Unit::TestCase
   end
 
   def test_disable_3d_security_flag_is_submitted
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge({:apply_3d_secure => 1}))
     end.check_request do |method, endpoint, data, headers|
       assert_match(/Apply3DSecure=1/, data)

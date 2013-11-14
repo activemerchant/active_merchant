@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Balanced'
       self.money_format = :cents
 
-      class Error < StandardError
+      class Error < ActiveMerchant::ActiveMerchantError
         attr_reader :response
 
         def initialize(response, msg=nil)
@@ -131,6 +131,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:amount] = money
         post[:description] = options[:description]
+        post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
 
         create_or_find_account(post, options)
         add_credit_card(post, credit_card, options)
@@ -168,6 +169,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:amount] = money
         post[:description] = options[:description]
+        post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
 
         create_or_find_account(post, options)
         add_credit_card(post, credit_card, options)
@@ -197,6 +199,7 @@ module ActiveMerchant #:nodoc:
         post[:hold_uri] = authorization
         post[:amount] = money if money
         post[:description] = options[:description] if options[:description]
+        post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
         post[:on_behalf_of_uri] = options[:on_behalf_of_uri] if options[:on_behalf_of_uri]
 
         create_transaction(:post, @debits_uri, post)
@@ -210,9 +213,10 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>authorization</tt> -- The uri of the authorization returned from
       #   an `authorize` request.
-      def void(authorization)
+      def void(authorization, options = {})
         post = {}
         post[:is_void] = true
+        post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
 
         create_transaction(:put, authorization, post)
       rescue Error => ex
@@ -246,6 +250,7 @@ module ActiveMerchant #:nodoc:
         post[:debit_uri] = debit_uri
         post[:amount] = amount
         post[:description] = options[:description]
+        post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
         create_transaction(:post, @refunds_uri, post)
       rescue Error => ex
         failed_response(ex.response)
@@ -261,11 +266,17 @@ module ActiveMerchant #:nodoc:
         post = {}
         account_uri = create_or_find_account(post, options)
         if credit_card.respond_to? :number
-          add_credit_card(post, credit_card, options)
+          card_uri = add_credit_card(post, credit_card, options)
         else
-          associate_card_to_account(account_uri, credit_card)
-          credit_card
+          card_uri = associate_card_to_account(account_uri, credit_card)
         end
+
+        is_test = false
+        if @marketplace_uri
+          is_test = (@marketplace_uri.index("TEST") ? true : false)
+        end
+
+        Response.new(true, "Card stored", {}, :test => is_test, :authorization => [card_uri, account_uri].compact.join(';'))
       rescue Error => ex
         failed_response(ex.response)
       end

@@ -285,9 +285,9 @@ module ActiveMerchant #:nodoc:
         response = parse( ssl_post(self.live_url, request.to_s) )
 
         # Return a response
-        PaymentExpressResponse.new(response[:success] == APPROVED, response[:card_holder_help_text], response,
+        PaymentExpressResponse.new(response[:success] == APPROVED, message_from(response), response,
           :test => response[:test_mode] == '1',
-          :authorization => response[:dps_txn_ref]
+          :authorization => authorization_from(action, response)
         )
       end
 
@@ -310,6 +310,19 @@ module ActiveMerchant #:nodoc:
         end
 
         response
+      end
+
+      def message_from(response)
+        (response[:card_holder_help_text] || response[:response_text])
+      end
+
+      def authorization_from(action, response)
+        case action
+        when :validate
+          (response[:billing_id] || response[:dps_billing_id])
+        else
+          response[:dps_txn_ref]
+        end
       end
 
       def format_date(month, year)

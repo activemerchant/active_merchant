@@ -9,7 +9,7 @@ class PayuInNotificationTest < Test::Unit::TestCase
 
   def test_accessors
     assert @payu.complete?
-    assert_equal "success", @payu.status
+    assert_equal "Completed", @payu.status
     assert_equal "403993715508030204", @payu.transaction_id
     assert_equal "success", @payu.transaction_status
     assert_equal "10.00", @payu.gross

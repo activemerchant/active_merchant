@@ -1,4 +1,5 @@
 $:.unshift File.expand_path('../lib', __FILE__)
+require 'active_merchant/version'
 
 begin
   require 'bundler'
@@ -10,14 +11,29 @@ end
 
 require 'rake'
 require 'rake/testtask'
-require 'rubygems/package_task'
 require 'support/gateway_support'
-require 'support/ssl_verify' 
+require 'support/ssl_verify'
 require 'support/outbound_hosts'
+
+task :gem => :build
+task :build do
+  raise "Please set a private key to sign the gem" unless ENV['GEM_PRIVATE_KEY']
+  system "gem build activemerchant.gemspec"
+end
+
+task :install => :build do
+  system "gem install activemerchant-#{ActiveMerchant::VERSION}.gem"
+end
+
+task :release => :build do
+  system "git tag -a v#{ActiveMerchant::VERSION} -m 'Tagging #{ActiveMerchant::VERSION}'"
+  system "git push --tags"
+  system "gem push activemerchant-#{ActiveMerchant::VERSION}.gem"
+  system "rm activemerchant-#{ActiveMerchant::VERSION}.gem"
+end
 
 desc "Run the unit test suite"
 task :default => 'test:units'
-
 task :test => 'test:units'
 
 namespace :test do
@@ -35,28 +51,6 @@ namespace :test do
     t.libs << 'test'
     t.verbose = true
   end
-
-end
-
-desc "Delete tar.gz / zip"
-task :cleanup => [ :clobber_package ]
-
-spec = eval(File.read('activemerchant.gemspec'))
-
-Gem::PackageTask.new(spec) do |p|
-  p.gem_spec = spec
-  p.need_tar = true
-  p.need_zip = true
-end
-
-desc "Release the gems and docs to RubyForge"
-task :release => [ 'gemcutter:publish' ]
-
-namespace :gemcutter do
-  desc "Publish to gemcutter"
-  task :publish => :package do
-    sh "gem push pkg/activemerchant-#{ActiveMerchant::VERSION}.gem"
-  end
 end
 
 namespace :gateways do
@@ -65,34 +59,40 @@ namespace :gateways do
     support = GatewaySupport.new
     support.to_s
   end
-  
+
   namespace :print do
     desc 'Print the currently supported gateways in RDoc format'
     task :rdoc do
       support = GatewaySupport.new
       support.to_rdoc
     end
-  
+
     desc 'Print the currently supported gateways in Textile format'
     task :textile do
       support = GatewaySupport.new
       support.to_textile
     end
-    
+
+    desc 'Print the currently supported gateways in Markdown format'
+    task :markdown do
+      support = GatewaySupport.new
+      support.to_markdown
+    end
+
     desc 'Print the gateway functionality supported by each gateway'
     task :features do
       support = GatewaySupport.new
       support.features
     end
   end
-  
+
   desc 'Print the list of destination hosts with port'
   task :hosts do
     OutboundHosts.list
   end
- 
+
   desc 'Test that gateways allow SSL verify_peer'
   task :ssl_verify do
     SSLVerify.new.test_gateways
-  end 
+  end
 end

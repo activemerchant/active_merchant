@@ -129,7 +129,7 @@ module ActiveMerchant #:nodoc:
         }
         add_credit_card(post, payment_method)
 
-        commit_form(endpoint, build_form_request(post))
+        commit_form(endpoint, build_form_request(post), :identification => identification)
       end
 
       def add_metadata(doc, options)
@@ -141,10 +141,10 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(doc, money, options)
         doc.Payment do
-          doc.TotalAmount amount(money)
+          currency_code = options[:currency] || currency(money)
+          doc.TotalAmount localized_amount(money, currency_code)
           doc.InvoiceReference options[:order_id]
           doc.InvoiceDescription options[:description]
-          currency_code = (options[:currency] || currency(money) || default_currency)
           doc.CurrencyCode currency_code
         end
       end
@@ -228,14 +228,13 @@ module ActiveMerchant #:nodoc:
         return EwayRapidResponse.new(false, e.response.message, {:status_code => e.response.code}, :test => test?)
       end
 
-      def commit_form(url, request)
+      def commit_form(url, request, parameters)
         http_response = raw_ssl_request(:post, url, request)
 
         success = (http_response.code.to_s == "302")
         message = (success ? "Succeeded" : http_response.body)
-        if success
-          authorization = CGI.unescape(http_response["Location"].split("=").last)
-        end
+        authorization = parameters[:identification] if success
+
         Response.new(success, message, {:location => http_response["Location"]}, :authorization => authorization, :test => test?)
       end
 
@@ -271,11 +270,11 @@ module ActiveMerchant #:nodoc:
 
       def message_from(succeeded, response)
         if response[:errors]
-          response[:errors]
+          (MESSAGES[response[:errors]] || response[:errors])
         elsif response[:responsecode]
           ActiveMerchant::Billing::EwayGateway::MESSAGES[response[:responsecode]]
         elsif response[:responsemessage]
-          response[:responsemessage]
+          (MESSAGES[response[:responsemessage]] || response[:responsemessage])
         elsif succeeded
           "Succeeded"
         else
@@ -315,6 +314,79 @@ module ActiveMerchant #:nodoc:
           params["formactionurl"]
         end
       end
+
+      MESSAGES = {
+        'V6000' => 'Validation error',
+        'V6001' => 'Invalid CustomerIP',
+        'V6002' => 'Invalid DeviceID',
+        'V6011' => 'Invalid Payment TotalAmount',
+        'V6012' => 'Invalid Payment InvoiceDescription',
+        'V6013' => 'Invalid Payment InvoiceNumber',
+        'V6014' => 'Invalid Payment InvoiceReference',
+        'V6015' => 'Invalid Payment CurrencyCode',
+        'V6016' => 'Payment Required',
+        'V6017' => 'Payment CurrencyCode Required',
+        'V6018' => 'Unknown Payment CurrencyCode',
+        'V6021' => 'EWAY_CARDHOLDERNAME Required',
+        'V6022' => 'EWAY_CARDNUMBER Required',
+        'V6023' => 'EWAY_CARDCVN Required',
+        'V6033' => 'Invalid Expiry Date',
+        'V6034' => 'Invalid Issue Number',
+        'V6035' => 'Invalid Valid From Date',
+        'V6040' => 'Invalid TokenCustomerID',
+        'V6041' => 'Customer Required',
+        'V6042' => 'Customer FirstName Required',
+        'V6043' => 'Customer LastName Required',
+        'V6044' => 'Customer CountryCode Required',
+        'V6045' => 'Customer Title Required',
+        'V6046' => 'TokenCustomerID Required',
+        'V6047' => 'RedirectURL Required',
+        'V6051' => 'Invalid Customer FirstName',
+        'V6052' => 'Invalid Customer LastName',
+        'V6053' => 'Invalid Customer CountryCode',
+        'V6058' => 'Invalid Customer Title',
+        'V6059' => 'Invalid RedirectURL',
+        'V6060' => 'Invalid TokenCustomerID',
+        'V6061' => 'Invalid Customer Reference',
+        'V6062' => 'Invalid Customer CompanyName',
+        'V6063' => 'Invalid Customer JobDescription',
+        'V6064' => 'Invalid Customer Street1',
+        'V6065' => 'Invalid Customer Street2',
+        'V6066' => 'Invalid Customer City',
+        'V6067' => 'Invalid Customer State',
+        'V6068' => 'Invalid Customer PostalCode',
+        'V6069' => 'Invalid Customer Email',
+        'V6070' => 'Invalid Customer Phone',
+        'V6071' => 'Invalid Customer Mobile',
+        'V6072' => 'Invalid Customer Comments',
+        'V6073' => 'Invalid Customer Fax',
+        'V6074' => 'Invalid Customer URL',
+        'V6075' => 'Invalid ShippingAddress FirstName',
+        'V6076' => 'Invalid ShippingAddress LastName',
+        'V6077' => 'Invalid ShippingAddress Street1',
+        'V6078' => 'Invalid ShippingAddress Street2',
+        'V6079' => 'Invalid ShippingAddress City',
+        'V6080' => 'Invalid ShippingAddress State',
+        'V6081' => 'Invalid ShippingAddress PostalCode',
+        'V6082' => 'Invalid ShippingAddress Email',
+        'V6083' => 'Invalid ShippingAddress Phone',
+        'V6084' => 'Invalid ShippingAddress Country',
+        'V6085' => 'Invalid ShippingAddress ShippingMethod',
+        'V6086' => 'Invalid ShippingAddress Fax ',
+        'V6091' => 'Unknown Customer CountryCode',
+        'V6092' => 'Unknown ShippingAddress CountryCode',
+        'V6100' => 'Invalid EWAY_CARDNAME',
+        'V6101' => 'Invalid EWAY_CARDEXPIRYMONTH',
+        'V6102' => 'Invalid EWAY_CARDEXPIRYYEAR',
+        'V6103' => 'Invalid EWAY_CARDSTARTMONTH',
+        'V6104' => 'Invalid EWAY_CARDSTARTYEAR',
+        'V6105' => 'Invalid EWAY_CARDISSUENUMBER',
+        'V6106' => 'Invalid EWAY_CARDCVN',
+        'V6107' => 'Invalid EWAY_ACCESSCODE',
+        'V6108' => 'Invalid CustomerHostAddress',
+        'V6109' => 'Invalid UserAgent',
+        'V6110' => 'Invalid EWAY_CARDNUMBER'
+      }
     end
   end
 end

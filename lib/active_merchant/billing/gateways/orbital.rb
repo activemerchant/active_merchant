@@ -80,6 +80,25 @@ module ActiveMerchant #:nodoc:
         "EUR" => '978'
       }
 
+      CURRENCY_EXPONENTS = {
+        "AUD" => '2',
+        "CAD" => '2',
+        "CZK" => '2',
+        "DKK" => '2',
+        "HKD" => '2',
+        "ICK" => '2',
+        "JPY" => '0',
+        "MXN" => '2',
+        "NZD" => '2',
+        "NOK" => '2',
+        "SGD" => '2',
+        "SEK" => '2',
+        "CHF" => '2',
+        "GBP" => '2',
+        "USD" => '2',
+        "EUR" => '2'
+      }
+
       # INDUSTRY TYPES
       ECOMMERCE_TRANSACTION = 'EC'
       RECURRING_PAYMENT_TRANSACTION = 'RC'
@@ -146,7 +165,7 @@ module ActiveMerchant #:nodoc:
       # A – Authorization request
       def authorize(money, creditcard, options = {})
         order = build_new_order_xml(AUTH_ONLY, money, options) do |xml|
-          add_creditcard(xml, creditcard, options[:currency]) unless creditcard.nil? && options[:profile_txn]
+          add_creditcard(xml, creditcard, options[:currency])
           add_address(xml, creditcard, options)
           if @options[:customer_profiles]
             add_customer_data(xml, options)
@@ -159,7 +178,7 @@ module ActiveMerchant #:nodoc:
       # AC – Authorization and Capture
       def purchase(money, creditcard, options = {})
         order = build_new_order_xml(AUTH_AND_CAPTURE, money, options) do |xml|
-          add_creditcard(xml, creditcard, options[:currency]) unless creditcard.nil? && options[:profile_txn]
+          add_creditcard(xml, creditcard, options[:currency])
           add_address(xml, creditcard, options)
           if @options[:customer_profiles]
             add_customer_data(xml, options)
@@ -327,11 +346,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard(xml, creditcard, currency=nil)
-        xml.tag! :AccountNum, creditcard.number
-        xml.tag! :Exp, expiry_date(creditcard)
+        unless creditcard.nil?
+          xml.tag! :AccountNum, creditcard.number
+          xml.tag! :Exp, expiry_date(creditcard)
+        end
 
         xml.tag! :CurrencyCode, currency_code(currency)
-        xml.tag! :CurrencyExponent, '2' # Will need updating to support currencies such as the Yen.
+        xml.tag! :CurrencyExponent, currency_exponents(currency)
 
         # If you are trying to collect a Card Verification Number
         # (CardSecVal) for a Visa or Discover transaction, pass one of these values:
@@ -342,17 +363,19 @@ module ActiveMerchant #:nodoc:
         #   Null-fill this attribute OR
         #   Do not submit the attribute at all.
         # - http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
-        if %w( visa discover ).include?(creditcard.brand)
-          xml.tag! :CardSecValInd, (creditcard.verification_value? ? '1' : '9')
+        unless creditcard.nil?
+          if %w( visa discover ).include?(creditcard.brand)
+            xml.tag! :CardSecValInd, (creditcard.verification_value? ? '1' : '9')
+          end
+          xml.tag! :CardSecVal,  creditcard.verification_value if creditcard.verification_value?
         end
-        xml.tag! :CardSecVal,  creditcard.verification_value if creditcard.verification_value?
       end
 
       def add_refund(xml, currency=nil)
         xml.tag! :AccountNum, nil
 
         xml.tag! :CurrencyCode, currency_code(currency)
-        xml.tag! :CurrencyExponent, '2' # Will need updating to support currencies such as the Yen.
+        xml.tag! :CurrencyExponent, currency_exponents(currency)
       end
 
       def add_managed_billing(xml, options)
@@ -538,6 +561,10 @@ module ActiveMerchant #:nodoc:
 
       def currency_code(currency)
         CURRENCY_CODES[(currency || self.default_currency)].to_s
+      end
+
+      def currency_exponents(currency)
+        CURRENCY_EXPONENTS[(currency || self.default_currency)].to_s
       end
 
       def expiry_date(credit_card)

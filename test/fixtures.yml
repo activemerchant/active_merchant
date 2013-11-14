@@ -10,6 +10,11 @@
 #
 # Paste any required PEM certificates after the pem key.
 #
+
+app55:
+  api_key: "QDtACYMCFqtuKOQ22QtCkGR1TzD7XM8i"
+  api_secret: "yT1FRpuusBIQoEBIfIQ8bPStkl7yzdTz"
+
 authorize_net:
   login: X
   password: Y
@@ -30,6 +35,10 @@ barclays_epdq_extra_plus:
   login: merchant number
   user: username
   password: password
+
+be2bill:
+  login: your_test_login
+  password: your_test_password
 
 beanstream:
   login: merchant id
@@ -80,6 +89,9 @@ certo_direct:
 cyber_source:
   login: X
   password: Y
+
+conekta:
+  key: 1tv5yJp3xnVZ7eK67m4h
 
 data_cash:
   login: X
@@ -263,6 +275,10 @@ moneris_us:
   login: monusqa002
   password: qatoken
 
+money_movers:
+  login: demo
+  password: password
+
 # Working credentials, no need to replace
 nab_transact:
   login: ABC0001
@@ -319,6 +335,11 @@ orbital_gateway:
 pay_gate_xml:
   login: '10011021600'
   password: 'test'
+
+payex:
+  account: ACCOUNT
+  # encryption key is generated via the PayEx Admin console
+  encryption_key: ENCRYPTION_KEY
 
 payflow:
   login: LOGIN
@@ -459,11 +480,16 @@ quickpay_with_api_key:
   login: 89898978
   password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
   apikey: "fB46983ZwR5dzy46A3r6ngDx7P37N5YTu1F4S9W2JKCs9v4t5L9m2Q8Mlbjpa2I1"
-  version: 6
+  version: 7
 
 quantum:
   login: X
   password: Y
+
+raven_pac_net:
+  user: ernest
+  secret: "all good men die young"
+  prn: 840033
 
 realex:
   login: X
@@ -578,6 +604,13 @@ spreedly_core:
 
 stripe:
   login:
+  fee_refund_login:
+
+# Working credentials, no need to replace
+swipe_checkout:
+  login: 2077103073D8B5
+  api_key: f2fe4efd5033edfaed9e4aad319ef4d34536a10eea07f90f182616d7216ae2b8
+  region: NZ
 
 trans_first:
   login: LOGIN
@@ -625,7 +658,7 @@ vindicia:
   password: PASSWORD
 
 webpay:
-  login: "vtUQeOtUnYr7PGCLQ96Ul4zqpDUO4sOE"
+  login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
 
 # Working test credentials, no need to replace
 wirecard:
@@ -635,3 +668,15 @@ wirecard:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+iats_payments:
+  login: TEST88
+  password: TEST88
+
+bit_pay:
+  api_key: 'rKrahSl7WRrYeKRUhGzbvW3nBzo0jG4FPaL8uPYaoPk'
+
+wirecard_checkout_page:
+  secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
+  shop_id: ''
+  paymenttype: IDL

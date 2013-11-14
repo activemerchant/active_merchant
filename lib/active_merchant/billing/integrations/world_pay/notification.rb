@@ -106,7 +106,7 @@ module ActiveMerchant #:nodoc:
             return avs_value_to_symbol(params['AVS'][3].chr)
           end
 
-          def acknowledge
+          def acknowledge(authcode = nil)
             return true
           end
           

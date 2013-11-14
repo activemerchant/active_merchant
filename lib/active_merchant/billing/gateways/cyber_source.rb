@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
 
       # visa, master, american_express, discover
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
-      self.supported_countries = ['US']
+      self.supported_countries = %w(US BR CA CN DK FI FR DE JP MX NO SE GB SG)
       self.default_currency = 'USD'
       self.homepage_url = 'http://www.cybersource.com'
       self.display_name = 'CyberSource'
@@ -411,8 +411,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, payment_method, address, options, shipTo = false)
-        requires!(options, :email)
-
         xml.tag! shipTo ? 'shipTo' : 'billTo' do
           xml.tag! 'firstName',             payment_method.first_name             if payment_method
           xml.tag! 'lastName',              payment_method.last_name              if payment_method
@@ -424,7 +422,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'country',               address[:country]
           xml.tag! 'company',               address[:company]                 unless address[:company].blank?
           xml.tag! 'companyTaxID',          address[:companyTaxID]            unless address[:company_tax_id].blank?
-          xml.tag! 'phoneNumber',           address[:phone_number]            unless address[:phone_number].blank?
+          xml.tag! 'phoneNumber',           address[:phone]                   unless address[:phone].blank?
           xml.tag! 'email',                 options[:email]
           xml.tag! 'driversLicenseNumber',  options[:drivers_license_number]  unless options[:drivers_license_number].blank?
           xml.tag! 'driversLicenseState',   options[:drivers_license_state]   unless options[:drivers_license_state].blank?
