@@ -15,18 +15,10 @@ module ActiveMerchant #:nodoc:
           end
 
           def status
-            @status ||= if checksum_ok?
-              if transaction_id.blank?
-                'Invalid'
-              else
-                case transaction_status.downcase
-                when 'success' then 'Completed'
-                when 'failure' then 'Failed'
-                when 'pending' then 'Pending'
-                end
-              end
-            else
-              'Tampered'
+            case transaction_status.downcase
+            when 'success' then 'Completed'
+            when 'failure' then 'Failed'
+            when 'pending' then 'Pending'
             end
           end
 
