@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
 
           def initialize(order, account, options = {})
             super
+            @options = options
             self.pg = 'CC'
           end
 
@@ -51,19 +52,13 @@ module ActiveMerchant #:nodoc:
             @fields.merge(mappings[:checksum] => generate_checksum)
           end
 
-          def generate_checksum(  options = {} )
-            checksum_fields = [ :order, :amount, :credential2, { :customer => [ :first_name, :email ] },
-              { :user_defined => [ :var1, :var2, :var3, :var4, :var5, :var6, :var7, :var8, :var9, :var10 ] } ]
-            checksum_payload_items = checksum_fields.inject( [] ) do | items, field |
-              if Hash === field then
-                key = field.keys.first
-                field[key].inject( items ){ |s,x| items.push( @fields[ mappings[key][x] ] ) }
-              else
-                items.push( @fields[ mappings[field] ] )
-              end
-            end
-            checksum_payload_items.push( options )
-            PayuIn.checksum(@fields["key"], @fields["productinfo"], *checksum_payload_items )
+          def generate_checksum
+            checksum_payload_items = [
+              'txnid', 'amount', 'productinfo', 'firstname', 'email',
+              'udf1', 'udf2', 'udf3', 'udf4', 'udf5', 'udf6', 'udf7', 'udf8', 'udf9', 'udf10'
+            ].map { |field| @fields[field] }
+
+            PayuIn.checksum(@fields["key"], @options[:credential2], checksum_payload_items )
           end
 
         end

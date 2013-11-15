@@ -27,15 +27,8 @@ module ActiveMerchant #:nodoc:
           Return.new(post, options)
         end
 
-        def self.checksum(merchant_id, secret_key, *payload_items )
-          options = payload_items.pop if Hash === payload_items.last
-          options ||= {}
-          payload = if options[:reverse] then
-            payload_items.dup.push( merchant_id || "" ).unshift( secret_key || "" ).collect{ |x| x.to_s }.join("|")
-          else
-            payload_items.dup.unshift( merchant_id || "" ).push( secret_key || "" ).collect{ |x| x.to_s }.join("|")
-          end
-          Digest::SHA512.hexdigest( payload )
+        def self.checksum(merchant_id, secret_key, payload_items )
+          Digest::SHA512.hexdigest([merchant_id, *payload_items, secret_key].join("|"))
         end
       end
     end
