@@ -148,9 +148,9 @@ module ActiveMerchant #:nodoc:
           end
 
           def checksum_ok?
-            fields = user_defined.dup.push( customer_email, customer_first_name, product_info, gross, invoice, :reverse => true )
-            fields.unshift( transaction_status )
-            unless PayuIn.checksum(@merchant_id, @secret_key, *fields ) == checksum
+            checksum_fields = [transaction_status, *user_defined.reverse, customer_email, customer_first_name, product_info, gross, invoice]
+
+            unless Digest::SHA512.hexdigest([@secret_key, *checksum_fields, @merchant_id].join("|")) == checksum
               @message = 'Return checksum not matching the data provided'
               return false
             end
