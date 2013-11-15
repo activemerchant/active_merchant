@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
           mapping :amount, 'amount'
           mapping :account, 'key'
           mapping :order, 'txnid'
-          mapping :credential2, 'productinfo'
+          mapping :description, 'productinfo'
 
           mapping :customer, :first_name => 'firstname',
             :last_name  => 'lastname',
