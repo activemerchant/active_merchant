@@ -129,10 +129,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def user_defined
-            return @user_defined if @user_defined
-            @user_defined = []
-            10.times{ |i| @user_defined.push( params[ "udf#{i+1}" ] ) }
-            @user_defined
+            @user_defined ||= 10.times.map { |i| params["udf#{i + 1}"] }
           end
 
           def checksum
