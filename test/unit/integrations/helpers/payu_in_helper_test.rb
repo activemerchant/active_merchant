@@ -63,4 +63,12 @@ class PayuInHelperTest < Test::Unit::TestCase
     assert_equal Digest::SHA512.hexdigest(['merchant_id', *fields, 'secret_key'].join("|")), @helper.form_fields["hash"]
   end
 
+  def test_sanitize_fields_in_form_fields
+    @helper.description '{[Valid Description!]}'
+    @helper.form_fields
+
+    assert_equal 'Valid Description', @helper.fields['productinfo']
+    assert_nil @helper.fields['email']
+  end
+
 end

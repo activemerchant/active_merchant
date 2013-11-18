@@ -49,6 +49,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def form_fields
+            sanitize_fields
             @fields.merge(mappings[:checksum] => generate_checksum)
           end
 
@@ -59,6 +60,12 @@ module ActiveMerchant #:nodoc:
             ].map { |field| @fields[field] }
 
             PayuIn.checksum(@fields["key"], @options[:credential2], checksum_payload_items )
+          end
+
+          def sanitize_fields
+            ['address1', 'address2', 'city', 'state', 'country', 'productinfo', 'email', 'phone'].each do |field|
+              @fields[field].gsub!(/[^a-zA-Z0-9\-_@\/\s.]/, '') if @fields[field]
+            end
           end
 
         end
