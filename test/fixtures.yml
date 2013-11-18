@@ -377,6 +377,10 @@ paypal_signature:
   password: PASSWORD
   signature: SIGNATURE
 
+payu_in:
+  login: C0Dr8m
+  secret: 3sf0jURk
+
 payway:
   username:
   password:
