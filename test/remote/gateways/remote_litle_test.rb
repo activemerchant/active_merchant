@@ -65,7 +65,6 @@ class RemoteLitleTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    #Litle sale
     assert response = @gateway.purchase(10010, @credit_card1, @options)
     assert_success response
     assert_equal 'Approved', response.message
@@ -89,28 +88,31 @@ class RemoteLitleTest < Test::Unit::TestCase
   end
 
   def test_authorization_capture_refund_void
-    #Auth
-    assert auth_response = @gateway.authorize(10010, @credit_card1, @options)
+    assert auth = @gateway.authorize(10010, @credit_card1, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
 
-    assert_success auth_response
-    assert_equal 'Approved', auth_response.message
+    assert capture = @gateway.capture(nil, auth.authorization)
+    assert_success capture
+    assert_equal 'Approved', capture.message
 
-    #Capture the auth
-    assert capture_response = @gateway.capture(10010, auth_response.authorization)
-    assert_success capture_response
-    assert_equal 'Approved', capture_response.message
+    assert refund = @gateway.refund(nil, capture.authorization)
+    assert_success refund
+    assert_equal 'Approved', refund.message
 
-    #Credit against the Capture
-    capture_litle_txn_id = capture_response.params['litleOnlineResponse']['captureResponse']['litleTxnId']
-    assert credit_response = @gateway.refund(10010, capture_litle_txn_id)
-    assert_success credit_response
-    assert_equal 'Approved', credit_response.message
+    assert void = @gateway.void(refund.authorization)
+    assert_success void
+    assert_equal 'Approved', void.message
+  end
 
-    #Void that credit
-    credit_litle_txn_id = credit_response.params['litleOnlineResponse']['creditResponse']['litleTxnId']
-    assert void_response = @gateway.void(credit_litle_txn_id)
-    assert_success void_response
-    assert_equal 'Approved', void_response.message
+  def test_partial_capture
+    assert auth = @gateway.authorize(10010, @credit_card1, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    assert capture = @gateway.capture(5005, auth.authorization)
+    assert_success capture
+    assert_equal 'Approved', capture.message
   end
 
   def test_capture_unsuccessful
