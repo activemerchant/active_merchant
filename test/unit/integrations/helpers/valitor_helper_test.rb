@@ -20,7 +20,7 @@ class ValitorHelperTest < Test::Unit::TestCase
     assert_field 'Tilvisunarnumer', 'order-500'
     assert_field 'Gjaldmidill', 'USD'
     
-    assert_equal Digest::MD5.hexdigest(['123', '0', '1', '1000', '0', 'cody@example.com', 'order-500', 'USD'].join('')),
+    assert_equal Digest::MD5.hexdigest(['123', '0', '1', '1000.00', '0', 'cody@example.com', 'order-500', 'USD'].join('')),
                  @helper.form_fields['RafraenUndirskrift']
   end
   
@@ -30,18 +30,18 @@ class ValitorHelperTest < Test::Unit::TestCase
     
     assert_field 'Vara_1_Lysing', 'one'
     assert_field 'Vara_1_Fjoldi', '2'
-    assert_field 'Vara_1_Verd', '100'
+    assert_field 'Vara_1_Verd', '100.00'
     assert_field 'Vara_1_Afslattur', '50'
     
     assert_field 'Vara_2_Lysing', 'two'
     assert_field 'Vara_2_Fjoldi', '1'
-    assert_field 'Vara_2_Verd', '200'
+    assert_field 'Vara_2_Verd', '200.00'
     assert_field 'Vara_2_Afslattur', '0'
 
     assert_equal Digest::MD5.hexdigest(
       ['123', '0',
-        '2', '100', '50',
-        '1', '200', '0',
+        '2', '100.00', '50',
+        '1', '200.00', '0',
         'cody@example.com', 'order-500', 'USD'].join('')),
       @helper.form_fields['RafraenUndirskrift']
   end
@@ -100,7 +100,7 @@ class ValitorHelperTest < Test::Unit::TestCase
 
     assert_equal Digest::MD5.hexdigest(
       ['123', '0',
-         '1', '1000', '0',
+         '1', '1000.00', '0',
         'cody@example.com', 'order-500', 'http://example.com/return', 'http://example.com/notify', 'USD'].join('')),
       @helper.form_fields['RafraenUndirskrift']
   end
@@ -127,9 +127,15 @@ class ValitorHelperTest < Test::Unit::TestCase
     assert_field 'Lang', 'en'
   end
   
-  def test_amount_gets_sent_without_decimals
+  def test_amount_gets_sent_without_decimals_for_non_decimal_currencies
     @helper = Valitor::Helper.new('order-500', 'cody@example.com', :currency => 'ISK', :credential2 => '123', :amount => 115.10)
     @helper.form_fields
     assert_field "Vara_1_Verd", '115'
+  end
+
+  def test_amount_gets_sent_with_decimals_for_decimal_currencies
+    @helper = Valitor::Helper.new('order-500', 'cody@example.com', :currency => 'USD', :credential2 => '123', :amount => 115.10)
+    @helper.form_fields
+    assert_field "Vara_1_Verd", '115.10'
   end
 end
