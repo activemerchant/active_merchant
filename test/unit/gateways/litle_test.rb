@@ -1,7 +1,6 @@
 require 'test_helper'
 
 class LitleTest < Test::Unit::TestCase
-
   def setup
     @gateway = LitleGateway.new({merchant_id: '101', user: 'active', password: 'merchant', version: '8.10', url: 'https://www.testlitle.com/sandbox/communicator/online'})
     @credit_card_options = {
@@ -246,6 +245,16 @@ class LitleTest < Test::Unit::TestCase
   def test_create_hash_money_empty_string
     hash = @gateway.send(:create_hash, '', {})
     assert_nil hash['amount']
+  end
+
+  def test_create_capture_hash_partial_nil
+    hashFromGateway = @gateway.send(:create_capture_hash, nil, '1234')
+    assert !hashFromGateway['partial']
+  end
+
+  def test_create_capture_hash_partial
+    hashFromGateway = @gateway.send(:create_capture_hash, 1, '1234')
+    assert hashFromGateway['partial']
   end
 
   def test_recognize_ax_and_some_empties

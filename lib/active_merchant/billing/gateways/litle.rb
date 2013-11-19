@@ -283,18 +283,19 @@ module ActiveMerchant #:nodoc:
         exp_date    = exp_date_mo + exp_date_yr
 
         card_info = {
-            'type'              => cc_type,
-            'number'            => creditcard.number,
-            'expDate'           => exp_date,
-            'cardValidationNum' => creditcard.verification_value
+          'type'              => cc_type,
+          'number'            => creditcard.number,
+          'expDate'           => exp_date,
+          'cardValidationNum' => creditcard.verification_value
         }
 
         hash['card'] = card_info
         hash
       end
 
-      def create_capture_hash(money, authorization, options)
+      def create_capture_hash(money, authorization, options={})
         hash               = create_hash(money, options)
+        hash['partial']    = true if money
         hash['litleTxnId'] = authorization
         hash
       end
@@ -340,55 +341,54 @@ module ActiveMerchant #:nodoc:
 
         if options[:billing_address]
           bill_to_address = {
-              'name'         => options[:billing_address][:name],
-              'companyName'  => options[:billing_address][:company],
-              'addressLine1' => options[:billing_address][:address1],
-              'addressLine2' => options[:billing_address][:address2],
-              'city'         => options[:billing_address][:city],
-              'state'        => options[:billing_address][:state],
-              'zip'          => options[:billing_address][:zip],
-              'country'      => options[:billing_address][:country],
-              'email'        => options[:email],
-              'phone'        => options[:billing_address][:phone]
+            'name'         => options[:billing_address][:name],
+            'companyName'  => options[:billing_address][:company],
+            'addressLine1' => options[:billing_address][:address1],
+            'addressLine2' => options[:billing_address][:address2],
+            'city'         => options[:billing_address][:city],
+            'state'        => options[:billing_address][:state],
+            'zip'          => options[:billing_address][:zip],
+            'country'      => options[:billing_address][:country],
+            'email'        => options[:email],
+            'phone'        => options[:billing_address][:phone]
           }
         end
         if options[:shipping_address]
           ship_to_address = {
-              'name'         => options[:shipping_address][:name],
-              'companyName'  => options[:shipping_address][:company],
-              'addressLine1' => options[:shipping_address][:address1],
-              'addressLine2' => options[:shipping_address][:address2],
-              'city'         => options[:shipping_address][:city],
-              'state'        => options[:shipping_address][:state],
-              'zip'          => options[:shipping_address][:zip],
-              'country'      => options[:shipping_address][:country],
-              'email'        => options[:email],
-              'phone'        => options[:shipping_address][:phone]
+            'name'         => options[:shipping_address][:name],
+            'companyName'  => options[:shipping_address][:company],
+            'addressLine1' => options[:shipping_address][:address1],
+            'addressLine2' => options[:shipping_address][:address2],
+            'city'         => options[:shipping_address][:city],
+            'state'        => options[:shipping_address][:state],
+            'zip'          => options[:shipping_address][:zip],
+            'country'      => options[:shipping_address][:country],
+            'email'        => options[:email],
+            'phone'        => options[:shipping_address][:phone]
           }
         end
 
         hash = {
-            'billToAddress'  => bill_to_address,
-            'shipToAddress'  => ship_to_address,
-            'orderId'        => truncated_order_id(options),
-            'customerId'     => options[:customer],
-            'reportGroup'    => (options[:merchant] || @options[:merchant]),
-            'merchantId'     => (options[:merchant_id] || @options[:merchant_id]),
-            'orderSource'    => (options[:order_source] || 'ecommerce'),
-            'enhancedData'   => enhanced_data,
-            'fraudCheckType' => fraud_check_type,
-            'user'           => (options[:user] || @options[:user]),
-            'password'       => (options[:password] || @options[:password]),
-            'version'        => (options[:version] || @options[:version]),
-            'url'            => (options[:url] || url),
-            'proxy_addr'     => (options[:proxy_addr] || @options[:proxy_addr]),
-            'proxy_port'     => (options[:proxy_port] || @options[:proxy_port]),
-            'id'             => (options[:id] || options[:order_id] || @options[:order_id])
+          'billToAddress'  => bill_to_address,
+          'shipToAddress'  => ship_to_address,
+          'orderId'        => truncated_order_id(options),
+          'customerId'     => options[:customer],
+          'reportGroup'    => (options[:merchant] || @options[:merchant]),
+          'merchantId'     => (options[:merchant_id] || @options[:merchant_id]),
+          'orderSource'    => (options[:order_source] || 'ecommerce'),
+          'enhancedData'   => enhanced_data,
+          'fraudCheckType' => fraud_check_type,
+          'user'           => (options[:user] || @options[:user]),
+          'password'       => (options[:password] || @options[:password]),
+          'version'        => (options[:version] || @options[:version]),
+          'url'            => (options[:url] || url),
+          'proxy_addr'     => (options[:proxy_addr] || @options[:proxy_addr]),
+          'proxy_port'     => (options[:proxy_port] || @options[:proxy_port]),
+          'id'             => (options[:id] || options[:order_id] || @options[:order_id])
         }
 
-        if (!money.nil? && money.to_s.length > 0)
-          hash.merge!({ 'amount' => money })
-        end
+        hash.merge!('amount' => money) if(money && (money != ""))
+
         hash
       end
 
