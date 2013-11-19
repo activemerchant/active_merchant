@@ -295,6 +295,7 @@ module ActiveMerchant #:nodoc:
 
       def create_capture_hash(money, authorization, options)
         hash               = create_hash(money, options)
+        hash['partial']    = options[:partial] if options.has_key?(:partial)
         hash['litleTxnId'] = authorization
         hash
       end
