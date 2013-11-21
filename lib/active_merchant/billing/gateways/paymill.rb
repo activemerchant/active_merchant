@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
           raw_response = ssl_request(method, "https://api.paymill.com/v2/#{url}", post_data(parameters), headers)
         rescue ResponseError => e
           parsed = JSON.parse(e.response.body)
-          return Response.new(false, parsed['error'], parsed, {})
+          return Response.new(false, response_message(parsed), parsed, {})
         end
 
         response_from(raw_response)
@@ -75,13 +75,13 @@ module ActiveMerchant #:nodoc:
 
       def response_from(raw_response)
         parsed = JSON.parse(raw_response)
-
         options = {
           :authorization => authorization_from(parsed),
           :test => (parsed['mode'] == 'test'),
         }
 
-        Response.new(true, 'Transaction approved', parsed, options)
+        succeeded = (parsed['data'] == []) || (parsed['data']['response_code'] == 20000)
+        Response.new(succeeded, response_message(parsed), parsed, options)
       end
 
       def authorization_from(parsed_response)
@@ -174,6 +174,58 @@ module ActiveMerchant #:nodoc:
       def transaction_id(authorization)
         authorization.split(';').first
       end
+
+      RESPONSE_CODES = {
+        10001 => "General undefined response.",
+        10002 => "Still waiting on something.",
+
+        20000 => "General success response.",
+
+        40000 => "General problem with data.",
+        40001 => "General problem with payment data.",
+        40100 => "Problem with credit card data.",
+        40101 => "Problem with cvv.",
+        40102 => "Card expired or not yet valid.",
+        40103 => "Limit exceeded.",
+        40104 => "Card invalid.",
+        40105 => "Expiry date not valid.",
+        40106 => "Credit card brand required.",
+        40200 => "Problem with bank account data.",
+        40201 => "Bank account data combination mismatch.",
+        40202 => "User authentication failed.",
+        40300 => "Problem with 3d secure data.",
+        40301 => "Currency / amount mismatch",
+        40400 => "Problem with input data.",
+        40401 => "Amount too low or zero.",
+        40402 => "Usage field too long.",
+        40403 => "Currency not allowed.",
+
+        50000 => "General problem with backend.",
+        50001 => "Country blacklisted.",
+        50100 => "Technical error with credit card.",
+        50101 => "Error limit exceeded.",
+        50102 => "Card declined by authorization system.",
+        50103 => "Manipulation or stolen card.",
+        50104 => "Card restricted.",
+        50105 => "Invalid card configuration data.",
+        50200 => "Technical error with bank account.",
+        50201 => "Card blacklisted.",
+        50300 => "Technical error with 3D secure.",
+        50400 => "Decline because of risk issues.",
+        50500 => "General timeout.",
+        50501 => "Timeout on side of the acquirer.",
+        50502 => "Risk management transaction timeout.",
+        50600 => "Duplicate transaction."
+      }
+
+      def response_message(parsed_response)
+        return parsed_response["error"] if parsed_response["error"]
+        return "Transaction approved." if (parsed_response['data'] == [])
+
+        code = parsed_response["data"]["response_code"]
+        RESPONSE_CODES[code] || code.to_s
+      end
+
 
       class ResponseParser
         def initialize(raw_response="", options={})

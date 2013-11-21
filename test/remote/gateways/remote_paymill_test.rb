@@ -5,31 +5,44 @@ class RemotePaymillTest < Test::Unit::TestCase
     @gateway = PaymillGateway.new(fixtures(:paymill))
 
     @amount = 100
-    @credit_card = credit_card('5105105105105100')
+    @credit_card = credit_card('5500000000000004')
+    @declined_card = credit_card('5105105105105100', month: 5, year: 2020)
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_success response
-    assert_equal 'Transaction approved', response.message
+    assert_equal 'General success response.', response.message
   end
 
-  def test_failed_purchase_with_invalid_card
+  def test_failed_store_card_attempting_purchase
     @credit_card.number = ''
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_failure response
     assert_equal 'Account or Bank Details Incorrect', response.message
   end
 
+  def test_failed_purchase
+    assert response = @gateway.purchase(@amount, @declined_card)
+    assert_failure response
+    assert_equal 'Card declined by authorization system.', response.message
+  end
+
   def test_successful_authorize_and_capture
     assert response = @gateway.authorize(@amount, @credit_card)
     assert_success response
-    assert_equal 'Transaction approved', response.message
+    assert_equal 'General success response.', response.message
     assert response.authorization
 
     assert capture_response = @gateway.capture(@amount, response.authorization)
     assert_success capture_response
-    assert_equal 'Transaction approved', capture_response.message
+    assert_equal 'General success response.', capture_response.message
+  end
+
+  def test_failed_authorize
+    assert response = @gateway.authorize(@amount, @declined_card)
+    assert_failure response
+    assert_equal 'Card declined by authorization system.', response.message
   end
 
   def test_failed_capture
@@ -47,12 +60,12 @@ class RemotePaymillTest < Test::Unit::TestCase
   def test_successful_authorize_and_void
     assert response = @gateway.authorize(@amount, @credit_card)
     assert_success response
-    assert_equal 'Transaction approved', response.message
+    assert_equal 'General success response.', response.message
     assert response.authorization
 
     assert void_response = @gateway.void(response.authorization)
     assert_success void_response
-    assert_equal 'Transaction approved', void_response.message
+    assert_equal 'Transaction approved.', void_response.message
   end
 
   def test_successful_refund
@@ -62,7 +75,7 @@ class RemotePaymillTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount, response.authorization)
     assert_success refund
-    assert_equal 'Transaction approved', refund.message
+    assert_equal 'General success response.', refund.message
   end
 
   def test_failed_refund
@@ -107,10 +120,4 @@ class RemotePaymillTest < Test::Unit::TestCase
     assert_success authorize
   end
 
-  # Paymill doesn't yet offer a way to trigger a decline on a test account.
-  # def test_failed_purchase_with_declined_credit_card
-    # assert response = @gateway.purchase(@amount, @declined_card)
-    # assert_failure response
-    # assert_equal 'Unable to process the purchase transaction.', response.message
-  # end
 end
