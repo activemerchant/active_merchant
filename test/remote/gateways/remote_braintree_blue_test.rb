@@ -491,7 +491,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_customer_does_not_have_credit_card_failed_update
-    customer_without_credit_card = @braintree_backend.create
+    customer_without_credit_card = @braintree_backend.customer.create.customer
     assert response = @gateway.update(customer_without_credit_card.id, credit_card('5105105105105100'))
     assert_failure response
     assert_equal 'Braintree::NotFoundError', response.message
