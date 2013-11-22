@@ -240,7 +240,7 @@ module ActiveMerchant #:nodoc:
 
       def generate_options(raw_options)
         options = generate_meta(raw_options)
-        options.merge!(raw_options.slice(:version))
+        options.merge!(raw_options.slice(:version, :key))
       end
 
       def generate_meta(options)
