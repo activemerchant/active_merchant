@@ -326,6 +326,10 @@ class StripeTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def generate_options_should_allow_key
+    assert_equal({:key => '12345'}, generate_options({:key => '12345'}))
+  end
+
   private
 
   # Create new customer and set default credit card
