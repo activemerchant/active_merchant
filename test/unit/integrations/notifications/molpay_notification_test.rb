@@ -1,3 +1,4 @@
+#MOLPay notification test
 require 'test_helper'
 
 class MolpayNotificationTest < Test::Unit::TestCase
@@ -41,21 +42,21 @@ class MolpayNotificationTest < Test::Unit::TestCase
     base = { "domain" 	    =>  "test5620",
              "orderid"      =>  "6",
              "amount"       =>  "5.00",
-             "currency"     =>  "MYR",
-             "tranID"       =>  "12345",
-	     "appcode"      =>  "auth123",
-             "skey"         =>  "2541c99f9fa3cd9971637f5f67bdf02a",
-             "status"       =>  00,
-	     "paydate"	    =>  "2013/09/30",
-             "channel"      =>  "m2u" }
+             "currency"     =>  "RM",
+             "tranID"       =>  "1234567",
+             "appcode"      =>  "auth123",
+             "skey"         =>  '2541c99f9fa3cd9971637f5f67bdf02a',
+             "status"       =>  '00',
+             "paydate"	    =>  "2013-11-28 09:43:34",
+             "channel"      =>  "Trial" }
 
     case mode
-    when :success
-      parameterize(base.merge("status" => 00))
-    when :payment_failed
-      parameterize(base.merge("status" => 11))
-    else
-      ""
+      when :success
+        parameterize(base.merge("status" => '00'))
+      when :payment_failed
+        parameterize(base.merge("status" => '11'))
+      else
+        ""
     end
   end
 

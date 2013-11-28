@@ -1,22 +1,23 @@
+#MOLPay helper test
 require 'test_helper'
 
 class MolpayHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
   
   def setup
-    @helper = Molpay::Helper.new('order-500','cody@example.com', :amount => 500, :currency => 'USD', :credential2 => '1a2d20c7150f42e37cfe1b87879fe5cb')
+    @helper = Molpay::Helper.new( '6', 'test5620', :amount => 500, :currency => 'MYR', :credential2 => '1a2d20c7150f42e37cfe1b87879fe5cb' )
   end
  
   def test_basic_helper_fields
     assert_field "MerchantCode", "test5620"
     assert_field "Amount",       "5.00"
-    assert_field "RefNo",        "2"
+    assert_field "RefNo",        "6"
     assert_field "Currency",     "MYR"
   end
   
   def test_customer_fields
     @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', :phone => "+60128888888"
-    assert_field 'name', 'Cody'
+    assert_field 'name',  'Cody'
     assert_field 'email', 'cody@example.com'
     assert_field 'phone', '+60128888888'
   end
@@ -48,8 +49,8 @@ class MolpayHelperTest < Test::Unit::TestCase
   end
 
   def test_return_url
-    @helper.return_url "http://www.example.com"
-    assert_field "return_url", "http://www.example.com"
+    @helper.return_url "http://www.example.com/returns"
+    assert_field "return_url", "http://www.example.com/returns"
   end
 
   def test_valid_amount
@@ -67,6 +68,5 @@ class MolpayHelperTest < Test::Unit::TestCase
     assert_raise ArgumentError do
       @helper.amount = -100
     end
-  end
-  
+  end  
 end
