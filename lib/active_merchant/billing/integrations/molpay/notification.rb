@@ -8,83 +8,84 @@ module ActiveMerchant #:nodoc:
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           include ActiveMerchant::PostsData
 	  
-	  #initialize
-	  def initialize(data, options)
+          #Initialize
+          def initialize(data, options)
             if options[:credential2].nil?
               raise ArgumentError, "You need to provide the md5 secret as the option :credential2 to verify that the notification originated from Molpay"
             end
             super
           end
 	
-	  #order id
-	  def order
+          #Order id
+          def order
             params["orderid"]
           end
 					
-	  #approval code
-	  def appcode
+          #Approval code
+          def appcode
             params["appcode"]
           end
 					
-	  #transaction id
-	  def transaction
+          #Transaction id
+          def transaction
             params["tranID"]
           end
 					
-	  #account / merchant id
+          #Account / merchant id
           def account
             params["domain"]
           end
 					
-	  #return status
+          #Return status
           def status
             params["status"]
           end
 					
-	  #amount buying
+          #Amount buying
           def amount
             params["amount"]
           end
 					
-	  #currency					
+          #Currency used (mostly MYR)			
           def currency
             params["currency"]
           end
 					
-	  #day payment were done
-	  def paydate
+          #Day payment were done
+          def paydate
             params["paydate"]
           end
 					
-	  #authorization code / skey
+          #Authorization code / skey
           def auth_code
             params["skey"]
           end
 					
-	  #channel buyer used
-	  def channel
+          #Channel buyer used
+          def channel
             params["channel"]
           end
     
-    	  def secret
+          #MOLPay vcode
+          def secret
             @options[:credential2]
           end
 					
-	  #check authorization code prevent authorize callback
-          def acknowledge()
-	    require 'digest/md5'
-						
-	    key1 = Digest::MD5.hexdigest( self.transaction + self.order + self.status + self.account + self.amount + self.currency )
-	    key2 = self.paydate + self.account + key1 + self.appcode + self.secret
+          #Check authorization code prevent authorize callback
+          def acknowledge()						
+            key1 = Digest::MD5.hexdigest( self.transaction + self.order + self.status + self.account + self.amount + self.currency )
+            key2 = self.paydate + self.account + key1 + self.appcode + self.secret
 	 			
-	    Digest::MD5.hexdigest( key2 )
+            Digest::MD5.hexdigest( key2 )
           end
 					
-	  #if return status were success
+          #If return status were success
           def success?
-            if( self.status == '00' ) true
-	    else false
-	    end
+            if( self.status == '00' ) 
+              true
+            else 
+              false
+            end
           end
         end
       end

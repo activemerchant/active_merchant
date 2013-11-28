@@ -7,8 +7,11 @@ module ActiveMerchant #:nodoc:
       module Molpay
 
         mattr_accessor :service_url
+        
+        #Define the MOLPay shopify URL payment
         self.service_url = 'https://www.onlinepayment.com.my/MOLPay/API/shopify/pay.php'
 
+        #Initialize the notification object
         def self.notification(post)
           Notification.new(post)
         end
