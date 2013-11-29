@@ -19,6 +19,8 @@ module ActiveMerchant #:nodoc:
 
       # The name of the gateway
       self.display_name = 'Payscout'
+      
+      self.ssl_version = 'SSLv3'
 
       def initialize(options = {})
         requires!(options, :username, :password)
@@ -169,18 +171,6 @@ module ActiveMerchant #:nodoc:
 
         request = post.merge(parameters).collect { |key, value| "#{key}=#{URI.escape(value.to_s)}" }.join("&")
         request
-      end
-      
-      def ssl_post(endpoint, data)
-        request = Curl::Easy.new(endpoint) { |c|
-          c.connect_timeout = 15
-          c.timeout = 15
-          c.header_in_body = false
-          c.ssl_verify_peer = true
-          c.post_body = data
-        }
-        request.perform
-        request.body_str
       end
       
       def expdate(creditcard)
