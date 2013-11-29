@@ -1,5 +1,3 @@
-require 'curb'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PayscoutGateway < Gateway

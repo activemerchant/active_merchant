@@ -27,9 +27,6 @@ Gem::Specification.new do |s|
   s.add_dependency('active_utils', '~> 2.0', '>= 2.0.1')
   s.add_dependency('nokogiri', "~> 1.4")
 
-  s.add_dependency('curb', "~> 0.8.5")
-
-
   s.add_development_dependency('rake')
   s.add_development_dependency('mocha', '~> 0.13.0')
   s.add_development_dependency('rails', '>= 2.3.14')
