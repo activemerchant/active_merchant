@@ -168,7 +168,11 @@ module ActiveMerchant #:nodoc:
 
       def unstore(customer_vault_id, options = {})
         commit do
-          @braintree_gateway.customer.delete(customer_vault_id)
+          if(!customer_vault_id && options[:credit_card_token])
+            @braintree_gateway.credit_card.delete(options[:credit_card_token])
+          else
+            @braintree_gateway.customer.delete(customer_vault_id)
+          end
           Response.new(true, "OK")
         end
       end

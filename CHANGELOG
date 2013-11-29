@@ -8,6 +8,7 @@
 * Braintree Blue: Allow specifying the customer id [ntalbott]
 * Braintree Blue: Scrub invalid emails and zips [ntalbott]
 * Braintree Blue: Return :credit_card_token as a top level param [ntalbott]
+* Braintree Blue: Allow unstoring just a credit card [ntalbott]
 
 == Version 1.42.2 (November 13th, 2013)
 
