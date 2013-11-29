@@ -120,7 +120,8 @@ module ActiveMerchant #:nodoc:
               :number => creditcard.number,
               :cvv => creditcard.verification_value,
               :expiration_month => creditcard.month.to_s.rjust(2, "0"),
-              :expiration_year => creditcard.year.to_s
+              :expiration_year => creditcard.year.to_s,
+              :token => options[:credit_card_token]
             }
           }
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
@@ -289,7 +290,8 @@ module ActiveMerchant #:nodoc:
             "token" => cc.token,
             "last_4" => cc.last_4,
             "card_type" => cc.card_type,
-            "masked_number" => cc.masked_number
+            "masked_number" => cc.masked_number,
+            "token" => cc.token
           }
         end
 

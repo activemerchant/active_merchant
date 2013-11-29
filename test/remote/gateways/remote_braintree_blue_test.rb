@@ -148,6 +148,14 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal purchase_response.params['braintree_transaction']['billing_details'], response_billing_details
   end
 
+  def test_successful_store_with_credit_card_token
+    credit_card = credit_card('5105105105105100')
+    assert response = @gateway.store(credit_card, credit_card_token: "cctoken")
+    assert_success response
+    assert_equal 'OK', response.message
+    assert_equal "cctoken", response.params["braintree_customer"]["credit_cards"][0]["token"]
+  end
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
