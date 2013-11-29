@@ -87,8 +87,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_store_with_verify_card_true
-    customer = mock(
-      :credit_cards => [],
+    customer = stub(
+      :credit_cards => [stub_everything],
       :email => 'email',
       :first_name => 'John',
       :last_name => 'Smith'
@@ -108,7 +108,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
   def test_passes_email
     customer = stub(
-      :credit_cards => [],
+      :credit_cards => [stub_everything],
       :email => "bob@example.com",
       :first_name => 'John',
       :last_name => 'Smith',
@@ -126,7 +126,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
   def test_scrubs_invalid_email
     customer = stub(
-      :credit_cards => [],
+      :credit_cards => [stub_everything],
       :email => nil,
       :first_name => 'John',
       :last_name => 'Smith',
@@ -143,8 +143,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_store_with_verify_card_false
-    customer = mock(
-      :credit_cards => [],
+    customer = stub(
+      :credit_cards => [stub_everything],
       :email => 'email',
       :first_name => 'John',
       :last_name => 'Smith'
@@ -164,7 +164,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
 
   def test_store_with_billing_address_options
     customer_attributes = {
-      :credit_cards => [],
+      :credit_cards => [stub_everything],
       :email => 'email',
       :first_name => 'John',
       :last_name => 'Smith'
@@ -177,7 +177,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       :zip => "60622",
       :country_name => "US"
     }
-    customer = mock(customer_attributes)
+    customer = stub(customer_attributes)
     customer.stubs(:id).returns('123')
     result = Braintree::SuccessfulResult.new(:customer => customer)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
@@ -192,7 +192,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_store_with_credit_card_token
-    customer = mock(
+    customer = stub(
       :email => 'email',
       :first_name => 'John',
       :last_name => 'Smith'
@@ -211,14 +211,15 @@ class BraintreeBlueTest < Test::Unit::TestCase
     response = @gateway.store(credit_card("41111111111111111111"), :credit_card_token => "cctoken")
     assert_success response
     assert_equal "cctoken", response.params["braintree_customer"]["credit_cards"][0]["token"]
+    assert_equal "cctoken", response.params["credit_card_token"]
   end
 
   def test_store_with_customer_id
-    customer = mock(
+    customer = stub(
       :email => 'email',
       :first_name => 'John',
       :last_name => 'Smith',
-      :credit_cards => []
+      :credit_cards => [stub_everything]
     )
     customer.stubs(:id).returns("customerid")
 
@@ -249,8 +250,8 @@ class BraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_update_with_verify_card_true
-    stored_credit_card = mock(:token => "token", :default? => true)
-    customer = mock(:credit_cards => [stored_credit_card], :id => '123')
+    stored_credit_card = stub(:token => "token", :default? => true)
+    customer = stub(:credit_cards => [stored_credit_card], :id => '123')
     Braintree::CustomerGateway.any_instance.stubs(:find).with('vault_id').returns(customer)
     BraintreeBlueGateway.any_instance.stubs(:customer_hash)
 
