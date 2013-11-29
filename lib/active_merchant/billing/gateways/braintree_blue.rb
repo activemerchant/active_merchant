@@ -111,29 +111,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(creditcard, options = {})
-        commit do
-          parameters = {
-            :first_name => creditcard.first_name,
-            :last_name => creditcard.last_name,
-            :email => scrub_email(options[:email]),
-            :id => options[:customer],
-            :credit_card => {
-              :number => creditcard.number,
-              :cvv => creditcard.verification_value,
-              :expiration_month => creditcard.month.to_s.rjust(2, "0"),
-              :expiration_year => creditcard.year.to_s,
-              :token => options[:credit_card_token]
-            }
-          }
-          result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
-          Response.new(result.success?, message_from_result(result),
-            {
-              :braintree_customer => (customer_hash(result.customer) if result.success?),
-              :customer_vault_id => (result.customer.id if result.success?),
-              :credit_card_token => (result.customer.credit_cards[0].token if result.success?)
-            },
-            :authorization => (result.customer.id if result.success?)
-          )
+        if options[:customer].present?
+          MultiResponse.new.tap do |r|
+            customer_exists_response = nil
+            r.process{customer_exists_response = check_customer_exists(options[:customer])}
+            r.process do
+              if customer_exists_response.params["exists"]
+                add_credit_card_to_customer(creditcard, options)
+              else
+                add_customer_with_credit_card(creditcard, options)
+              end
+            end
+          end
+        else
+          add_customer_with_credit_card(creditcard, options)
         end
       end
 
@@ -160,7 +151,7 @@ module ActiveMerchant #:nodoc:
             :credit_card => credit_card_params
           )
           Response.new(result.success?, message_from_result(result),
-            :braintree_customer => (customer_hash(@braintree_gateway.customer.find(vault_id)) if result.success?),
+            :braintree_customer => (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
             :customer_vault_id => (result.customer.id if result.success?)
           )
         end
@@ -179,6 +170,69 @@ module ActiveMerchant #:nodoc:
       alias_method :delete, :unstore
 
       private
+
+      def check_customer_exists(customer_vault_id)
+        commit do
+          begin
+            @braintree_gateway.customer.find(customer_vault_id)
+            ActiveMerchant::Billing::Response.new(true, "Customer found", {exists: true}, authorization: customer_vault_id)
+          rescue Braintree::NotFoundError
+            ActiveMerchant::Billing::Response.new(true, "Customer not found", {exists: false})
+          end
+        end
+      end
+
+      def add_customer_with_credit_card(creditcard, options)
+        commit do
+          parameters = {
+            :first_name => creditcard.first_name,
+            :last_name => creditcard.last_name,
+            :email => scrub_email(options[:email]),
+            :id => options[:customer],
+            :credit_card => {
+              :number => creditcard.number,
+              :cvv => creditcard.verification_value,
+              :expiration_month => creditcard.month.to_s.rjust(2, "0"),
+              :expiration_year => creditcard.year.to_s,
+              :token => options[:credit_card_token]
+            }
+          }
+          result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
+          Response.new(result.success?, message_from_result(result),
+            {
+              :braintree_customer => (customer_hash(result.customer, :include_credit_cards) if result.success?),
+              :customer_vault_id => (result.customer.id if result.success?),
+              :credit_card_token => (result.customer.credit_cards[0].token if result.success?)
+            },
+            :authorization => (result.customer.id if result.success?)
+          )
+        end
+      end
+
+      def add_credit_card_to_customer(credit_card, options)
+        commit do
+          parameters = {
+            customer_id: options[:customer],
+            token: options[:credit_card_token],
+            number: credit_card.number,
+            cvv: credit_card.verification_value,
+            expiration_month: credit_card.month.to_s.rjust(2, "0"),
+            expiration_year: credit_card.year.to_s,
+          }
+          parameters[:billing_address] = map_address(options[:billing_address]) if options[:billing_address]
+
+          result = @braintree_gateway.credit_card.create(parameters)
+          ActiveMerchant::Billing::Response.new(
+            result.success?,
+            message_from_result(result),
+            {
+              customer_vault_id: (result.credit_card.customer_id if result.success?),
+              credit_card_token: (result.credit_card.token if result.success?)
+            },
+            authorization: (result.credit_card.customer_id if result.success?)
+          )
+        end
+      end
 
       def scrub_email(email)
         return nil unless email.present?
@@ -306,26 +360,29 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def customer_hash(customer)
-        credit_cards = customer.credit_cards.map do |cc|
-          {
-            "bin" => cc.bin,
-            "expiration_date" => cc.expiration_date,
-            "token" => cc.token,
-            "last_4" => cc.last_4,
-            "card_type" => cc.card_type,
-            "masked_number" => cc.masked_number,
-            "token" => cc.token
-          }
-        end
-
-        {
+      def customer_hash(customer, include_credit_cards=false)
+        hash = {
           "email" => customer.email,
           "first_name" => customer.first_name,
           "last_name" => customer.last_name,
-          "credit_cards" => credit_cards,
           "id" => customer.id
         }
+
+        if include_credit_cards
+          hash["credit_cards"] = customer.credit_cards.map do |cc|
+            {
+              "bin" => cc.bin,
+              "expiration_date" => cc.expiration_date,
+              "token" => cc.token,
+              "last_4" => cc.last_4,
+              "card_type" => cc.card_type,
+              "masked_number" => cc.masked_number,
+              "token" => cc.token
+            }
+          end
+        end
+
+        hash
       end
 
       def transaction_hash(transaction)

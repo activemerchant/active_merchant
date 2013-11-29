@@ -143,7 +143,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal credit_card_token, response.params["braintree_customer"]["credit_cards"][0]["token"]
   end
 
-  def test_successful_store_with_customer_id
+  def test_successful_store_with_new_customer_id
     credit_card = credit_card('5105105105105100')
     customer_id = generate_unique_id
     assert response = @gateway.store(credit_card, customer: customer_id)
@@ -151,6 +151,21 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'OK', response.message
     assert_equal customer_id, response.authorization
     assert_equal customer_id, response.params["braintree_customer"]["id"]
+  end
+
+  def test_successful_store_with_existing_customer_id
+    credit_card = credit_card('5105105105105100')
+    customer_id = generate_unique_id
+    assert response = @gateway.store(credit_card, customer: customer_id)
+    assert_success response
+    assert_equal 1, @braintree_backend.customer.find(customer_id).credit_cards.size
+
+    assert response = @gateway.store(credit_card, customer: customer_id)
+    assert_success response
+    assert_equal 2, @braintree_backend.customer.find(customer_id).credit_cards.size
+    assert_equal customer_id, response.params["customer_vault_id"]
+    assert_equal customer_id, response.authorization
+    assert_not_nil response.params["credit_card_token"]
   end
 
   def test_successful_purchase
