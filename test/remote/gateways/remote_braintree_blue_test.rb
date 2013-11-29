@@ -490,7 +490,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   def test_failed_credit
     assert response = @gateway.credit(@amount, credit_card('5105105105105101'), @options)
     assert_failure response
-    assert_equal 'Credit card number is invalid. (81715)', response.message, "You must get credits enabled in your Sandbox account for this to pass."
+    assert_equal 'Credit card number is invalid. (81715)', response.message, "You must get credits enabled in your Sandbox account for this to pass"
   end
 
   def test_successful_credit_with_merchant_account_id
