@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
           parameters = {
             :first_name => creditcard.first_name,
             :last_name => creditcard.last_name,
-            :email => options[:email],
+            :email => scrub_email(options[:email]),
             :id => options[:customer],
             :credit_card => {
               :number => creditcard.number,
@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
           result = @braintree_gateway.customer.update(vault_id,
             :first_name => creditcard.first_name,
             :last_name => creditcard.last_name,
-            :email => options[:email],
+            :email => scrub_email(options[:email]),
             :credit_card => credit_card_params
           )
           Response.new(result.success?, message_from_result(result),
@@ -174,6 +174,24 @@ module ActiveMerchant #:nodoc:
       alias_method :delete, :unstore
 
       private
+
+      def scrub_email(email)
+        return nil unless email.present?
+        return nil if (
+          email !~ /^.+@[^\.]+(\.[^\.]+)+[a-z]$/i ||
+          email =~ /\.(con|met)$/i
+        )
+        email
+      end
+
+      def scrub_zip(zip)
+        return nil unless zip.present?
+        return nil if(
+          zip.gsub(/[^a-z0-9]/i, '').length > 9 ||
+          zip =~ /[^a-z0-9\- ]/i
+        )
+        zip
+      end
 
       def merge_credit_card_options(parameters, options)
         valid_options = {}
@@ -195,7 +213,7 @@ module ActiveMerchant #:nodoc:
           :company => address[:company],
           :locality => address[:city],
           :region => address[:state],
-          :postal_code => address[:zip],
+          :postal_code => scrub_zip(address[:zip]),
         }
         if(address[:country] || address[:country_code_alpha2])
           mapped[:country_code_alpha2] = (address[:country] || address[:country_code_alpha2])
@@ -368,7 +386,7 @@ module ActiveMerchant #:nodoc:
           :order_id => options[:order_id],
           :customer => {
             :id => options[:store] == true ? "" : options[:store],
-            :email => options[:email]
+            :email => scrub_email(options[:email])
           },
           :options => {
             :store_in_vault => options[:store] ? true : false,

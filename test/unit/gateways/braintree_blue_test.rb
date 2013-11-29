@@ -106,6 +106,42 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal response.params["customer_vault_id"], response.authorization
   end
 
+  def test_passes_email
+    customer = stub(
+      :credit_cards => [],
+      :email => "bob@example.com",
+      :first_name => 'John',
+      :last_name => 'Smith',
+      id: "123"
+    )
+    result = Braintree::SuccessfulResult.new(:customer => customer)
+    Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
+      assert_equal "bob@example.com", params[:email]
+      params
+    end.returns(result)
+
+    response = @gateway.store(credit_card("41111111111111111111"), :email => "bob@example.com")
+    assert_success response
+  end
+
+  def test_scrubs_invalid_email
+    customer = stub(
+      :credit_cards => [],
+      :email => nil,
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :id => "123"
+    )
+    result = Braintree::SuccessfulResult.new(:customer => customer)
+    Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
+      assert_equal nil, params[:email]
+      params
+    end.returns(result)
+
+    response = @gateway.store(credit_card("41111111111111111111"), :email => "bogus")
+    assert_success response
+  end
+
   def test_store_with_verify_card_false
     customer = mock(
       :credit_cards => [],
@@ -308,6 +344,18 @@ class BraintreeBlueTest < Test::Unit::TestCase
       (params[:billing][:country_code_numeric] == 840)
     end.returns(braintree_result)
     @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:country_code_numeric => 840})
+  end
+
+  def test_address_zip_handling
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:billing][:postal_code] == "12345")
+    end.returns(braintree_result)
+    @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:zip => "12345"})
+
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:billing][:postal_code] == nil)
+    end.returns(braintree_result)
+    @gateway.purchase(100, credit_card("41111111111111111111"), :billing_address => {:zip => "1234567890"})
   end
 
   def test_passes_recurring_flag
