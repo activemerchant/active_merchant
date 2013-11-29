@@ -177,6 +177,26 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal "cctoken", response.params["braintree_customer"]["credit_cards"][0]["token"]
   end
 
+  def test_store_with_customer_id
+    customer = mock(
+      :email => 'email',
+      :first_name => 'John',
+      :last_name => 'Smith',
+      :credit_cards => []
+    )
+    customer.stubs(:id).returns("customerid")
+
+    result = Braintree::SuccessfulResult.new(:customer => customer)
+    Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
+      assert_equal "customerid", params[:id]
+      params
+    end.returns(result)
+
+    response = @gateway.store(credit_card("41111111111111111111"), :customer => "customerid")
+    assert_success response
+    assert_equal "customerid", response.params["braintree_customer"]["id"]
+  end
+
   def test_update_with_cvv
     stored_credit_card = mock(:token => "token", :default? => true)
     customer = mock(:credit_cards => [stored_credit_card], :id => '123')

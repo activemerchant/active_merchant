@@ -5,6 +5,7 @@
 * Add Payex gateway [atomgiant]
 * Paymill: Fix authorizations [duff]
 * Braintree Blue: Allow specifying the credit card token [ntalbott]
+* Braintree Blue: Allow specifying the customer id [ntalbott]
 
 == Version 1.42.2 (November 13th, 2013)
 
