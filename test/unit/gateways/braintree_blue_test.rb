@@ -224,6 +224,9 @@ class BraintreeBlueTest < Test::Unit::TestCase
     customer.stubs(:id).returns("customerid")
 
     result = Braintree::SuccessfulResult.new(:customer => customer)
+    Braintree::CustomerGateway.any_instance.expects(:find).
+      with("customerid").
+      raises(Braintree::NotFoundError)
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_equal "customerid", params[:id]
       params
@@ -232,6 +235,27 @@ class BraintreeBlueTest < Test::Unit::TestCase
     response = @gateway.store(credit_card("41111111111111111111"), :customer => "customerid")
     assert_success response
     assert_equal "customerid", response.params["braintree_customer"]["id"]
+  end
+
+  def test_store_with_existing_customer_id
+    credit_card = stub(
+      customer_id: "customerid",
+      token: "cctoken"
+    )
+
+    result = Braintree::SuccessfulResult.new(credit_card: credit_card)
+    Braintree::CustomerGateway.any_instance.expects(:find).with("customerid")
+    Braintree::CreditCardGateway.any_instance.expects(:create).with do |params|
+      assert_equal "customerid", params[:customer_id]
+      assert_equal "41111111111111111111", params[:number]
+      params
+    end.returns(result)
+
+    response = @gateway.store(credit_card("41111111111111111111"), customer: "customerid")
+    assert_success response
+    assert_nil response.params["braintree_customer"]
+    assert_equal "customerid", response.params["customer_vault_id"]
+    assert_equal "cctoken", response.params["credit_card_token"]
   end
 
   def test_update_with_cvv
