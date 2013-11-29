@@ -366,12 +366,21 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal nil, response.params["customer_vault_id"]
   end
 
-  def test_unstore
+  def test_unstore_customer
     assert response = @gateway.store(@credit_card)
     assert_success response
     assert_equal 'OK', response.message
     assert customer_vault_id = response.params["customer_vault_id"]
     assert delete_response = @gateway.unstore(customer_vault_id)
+    assert_success delete_response
+  end
+
+  def test_unstore_credit_card
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert_equal 'OK', response.message
+    assert credit_card_token = response.params["credit_card_token"]
+    assert delete_response = @gateway.unstore(nil, credit_card_token: credit_card_token)
     assert_success delete_response
   end
 
