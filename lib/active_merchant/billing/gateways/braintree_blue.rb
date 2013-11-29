@@ -116,6 +116,7 @@ module ActiveMerchant #:nodoc:
             :first_name => creditcard.first_name,
             :last_name => creditcard.last_name,
             :email => options[:email],
+            :id => options[:customer],
             :credit_card => {
               :number => creditcard.number,
               :cvv => creditcard.verification_value,
