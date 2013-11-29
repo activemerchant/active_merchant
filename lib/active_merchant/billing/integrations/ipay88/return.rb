@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
           def requery
             data   = { "MerchantCode" => self.account, "RefNo" => self.order, "Amount" => self.amount }
             params = parameterize(data)
-            ssl_post Ipay88.service_url, params, { "Content-Length" => params.size.to_s, "User-Agent" => "Active Merchant -- http://activemerchant.org" }
+            ssl_post Ipay88.requery_url, params, { "Content-Length" => params.size.to_s, "User-Agent" => "Active Merchant -- http://activemerchant.org" }
           end
 
           private
