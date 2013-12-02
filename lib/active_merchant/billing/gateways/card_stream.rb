@@ -121,8 +121,9 @@ module ActiveMerchant #:nodoc:
 
         return if address.nil?
 
-        add_pair(post, :BillingStreet, address[:address1])
-        add_pair(post, :BillingHouseNumber, address[:address2])
+        add_pair(post, :BillingHouseNumber, address[:address1])
+        add_pair(post, :BillingStreet, address[:address2])
+        
         add_pair(post, :BillingCity, address[:city])
         add_pair(post, :BillingState, address[:state])
         add_pair(post, :BillingPostCode, address[:zip])
