@@ -4,64 +4,14 @@ module ActiveMerchant #:nodoc:
       self.test_url = self.live_url = 'https://gateway.cardstream.com/direct/'
       self.money_format = :cents
       self.default_currency = 'GBP'
-      self.supported_countries = ['GB', 'USD', 'EUR', 'CHF', 'SEK', 'SGD', 'NOK', 'JPY', 'ICK', 'HKD', 'DKK', 'CZK', 'CAD', 'AUD']
+      self.supported_countries = ['GB']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro, :solo, :switch]
       self.homepage_url = 'http://www.cardstream.com/'
       self.display_name = 'CardStream'
 
-      CURRENCY_CODES = {
-          "AUD" => '036',
-          "CAD" => '124',
-          "CZK" => '203',
-          "DKK" => '208',
-          "HKD" => '344',
-          "ICK" => '352',
-          "JPY" => '392',
-          "NOK" => '578',
-          "SGD" => '702',
-          "SEK" => '752',
-          "CHF" => '756',
-          "GBP" => '826',
-          "USD" => '840',
-          "EUR" => '978'
-      }
-
-      CVV_CODE = {
-          '0' => 'U',
-          '1' => 'P',
-          '2' => 'M',
-          '4' => 'N'
-      }
-
-      # 0 - No additional information available.
-      # 1 - Postcode not checked.
-      # 2 - Postcode matched.
-      # 4 - Postcode not matched.
-      # 8 - Postcode partially matched.
-      AVS_POSTAL_MATCH = {
-          "0" => nil,
-          "1" => nil,
-          "2" => "Y",
-          "4" => "N",
-          "8" => "N"
-      }
-
-      # 0 - No additional information available.
-      # 1 - Address numeric not checked.
-      # 2 - Address numeric matched.
-      # 4 - Address numeric not matched.
-      # 8 - Address numeric partially matched.
-      AVS_STREET_MATCH = {
-          "0" => nil,
-          "1" => nil,
-          "2" => "Y",
-          "4" => "N",
-          "8" => "N"
-      }
-
       def initialize(options = {})
         requires!(options, :login)
-        if (options[:threeDSRequired])
+        if(options[:threeDSRequired])
           @threeDSRequired = options[:threeDSRequired]
         else
           @threeDSRequired = 'N'
@@ -113,7 +63,7 @@ module ActiveMerchant #:nodoc:
 
       def add_amount(post, money, options)
         add_pair(post, :amount, amount(money), :required => true)
-        add_pair(post, :currencyCode, currency_code(options[:currency] || currency(money)) || currency_code(self.default_currency))
+        add_pair(post, :currencyCode, options[:currency] || self.default_currency)
       end
 
       def add_customer_data(post, options)
@@ -128,16 +78,16 @@ module ActiveMerchant #:nodoc:
 
         return if address.nil?
 
-        add_pair(post, :customerAddress, address[:address1] + " " + (address[:address2].nil? ? "" : address[:address2]))
+        add_pair(post, :customerAddress, address[:address1] + " " + (address[:address2].nil? ? "" : address[:address2]) )
         add_pair(post, :customerPostCode, address[:zip])
       end
 
       def add_invoice(post, credit_card, money, options)
         add_pair(post, :transactionUnique, options[:order_id], :required => true)
         add_pair(post, :orderRef, options[:description] || options[:order_id], :required => true)
-        if ['american_express', 'diners_club'].include?(card_brand(credit_card).to_s)
-          add_pair(post, :item1Quantity, 1)
-          add_pair(post, :item1Description, (options[:description] || options[:order_id]).slice(0, 15))
+        if [ 'american_express', 'diners_club' ].include?(card_brand(credit_card).to_s)
+          add_pair(post, :item1Quantity,  1)
+          add_pair(post, :item1Description,  (options[:description] || options[:order_id]).slice(0, 15))
           add_pair(post, :item1GrossValue, amount(money))
         end
       end
@@ -159,59 +109,40 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :cardCVV, credit_card.verification_value)
       end
 
-      def add_hmac(post)
-        # create a KEY=escape(VALUE)&KEY=escape(VALUE) string sorted by key
-        result = post.sort.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
-        # take the above string, attach the preshared key
-        result = Digest::SHA512.hexdigest("#{result}#{@options[:password]}")
-        # add signature to post
-        add_pair(post, :signature, result)
-      end
-
       def parse(body)
         result = {}
         pairs = body.split("&")
         pairs.each do |pair|
           a = pair.split("=")
-          # because some values pairs dont have a value
-          result[a[0].to_sym] = a[1] == nil ? '' : CGI.unescape(a[1])
+          result[a[0].to_sym] = CGI.unescape(a[1])
         end
         result
       end
 
       def commit(action, parameters)
-
-        parameters.update(
-            :merchantID => @options[:login],
-            :action => action,
-            :type => '1', #Ecommerce
-            :countryCode => self.supported_countries[0],
-            :threeDSRequired => @threeDSRequired #Disable 3d secure by default
-        )
-        # adds a signature to the post hash/array
-        add_hmac(parameters)
-
-        response = parse(ssl_post(self.live_url, post_data(action, parameters)))
+        response = parse( ssl_post(self.live_url, post_data(action, parameters)) )
 
         Response.new(response[:responseCode] == "0",
-                     response[:responseCode] == "0" ? "APPROVED" : response[:responseMessage],
-                     response,
-                     :test => test?,
-                     :authorization => response[:xref],
-                     :cvv_result => CVV_CODE[response[:cv2Check].to_s[0, 1]],
-                     :avs_result => {
-                         :street_match => AVS_STREET_MATCH[response[:addressCheck].to_s[2, 1]],
-                         :postal_match => AVS_POSTAL_MATCH[response[:postcodeCheck].to_s[1, 1]]
-                     }
+          response[:responseCode] == "0" ? "APPROVED" : response[:responseMessage],
+          response,
+          :test => test?,
+          :authorization => response[:xref],
+          :avs_result => {
+            :street_match => response[:addressCheck],
+            :postal_match => response[:postcodeCheck],
+          },
+          :cvv_result => response[:cv2Check]
         )
-      end
-
-      def currency_code(currency)
-        CURRENCY_CODES[currency]
       end
 
       def post_data(action, parameters = {})
-        #puts parameters
+        parameters.update(
+          :merchantID => @options[:login],
+          :action => action,
+          :type => '1', #Ecommerce
+          :countryCode => self.supported_countries[0],
+          :threeDSRequired => @threeDSRequired #Disable 3d secure by default
+        )
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
@@ -221,4 +152,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
