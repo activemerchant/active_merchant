@@ -78,7 +78,7 @@ class RemotePaystationTest < Test::Unit::TestCase
   end
   
   def test_capture_without_cvv
-    # for some merchant accounts, paystation requires you send through the card vertification value
+    # for some merchant accounts, paystation requires you send through the card verification value
     # on a capture request
     
     assert auth = @gateway.authorize(@successful_amount, @credit_card, @options.merge(:order_id => get_uid))

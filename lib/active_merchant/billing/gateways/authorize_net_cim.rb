@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test server.
       #   Otherwise, perform transactions against the production server.
       # * <tt>:test_requests</tt> -- +true+ or +false+. If true, perform transactions without the
-      #   test flag. This is useful when you need to generate card declines, AVS or CVV erros.
+      #   test flag. This is useful when you need to generate card declines, AVS or CVV errors.
       #   Will hold the same value as :test by default.
       # * <tt>:delimiter</tt> -- The delimiter used in the direct response.  Default is ',' (comma).
       def initialize(options = {})
@@ -340,7 +340,7 @@ module ActiveMerchant #:nodoc:
       # ==== Transaction
       #
       # * <tt>:type</tt> -- The type of transaction. Can be either <tt>:auth_only</tt>, <tt>:capture_only</tt>, <tt>:auth_capture</tt>, <tt>:prior_auth_capture</tt>, <tt>:refund</tt> or <tt>:void</tt>. (REQUIRED)
-      # * <tt>:amount</tt> -- The amount for the tranaction. Formatted with a decimal. For example "4.95" (CONDITIONAL)
+      # * <tt>:amount</tt> -- The amount for the transaction. Formatted with a decimal. For example "4.95" (CONDITIONAL)
       #     - :type == :void (NOT USED)
       #     - :type == :refund (OPTIONAL)
       #     - :type == (:auth_only, :capture_only, :auth_capture, :prior_auth_capture) (REQUIRED)
@@ -369,8 +369,8 @@ module ActiveMerchant #:nodoc:
       #     - :type = (:prior_auth_capture) (OPTIONAL)
       #
       # ==== For :type == :refund only
-      # * <tt>:credit_card_number_masked</tt> -- (CONDITIONAL - requied for credit card refunds is :customer_profile_id AND :customer_payment_profile_id are missing)
-      # * <tt>:bank_routing_number_masked && :bank_account_number_masked</tt> -- (CONDITIONAL - requied for electronic check refunds is :customer_profile_id AND :customer_payment_profile_id are missing) (NOT ABLE TO TEST - I keep getting "ACH transactions are not accepted by this merchant." when trying to make a payment and, until that's possible I can't refund (wiseleyb@gmail.com))
+      # * <tt>:credit_card_number_masked</tt> -- (CONDITIONAL - required for credit card refunds is :customer_profile_id AND :customer_payment_profile_id are missing)
+      # * <tt>:bank_routing_number_masked && :bank_account_number_masked</tt> -- (CONDITIONAL - required for electronic check refunds is :customer_profile_id AND :customer_payment_profile_id are missing) (NOT ABLE TO TEST - I keep getting "ACH transactions are not accepted by this merchant." when trying to make a payment and, until that's possible I can't refund (wiseleyb@gmail.com))
       def create_customer_profile_transaction(options)
         requires!(options, :transaction)
         requires!(options[:transaction], :type)
@@ -410,13 +410,13 @@ module ActiveMerchant #:nodoc:
       # * <tt>:customer_profile_id</tt> -- The Customer Profile ID of the customer to use in this transaction. (CONDITIONAL :customer_payment_profile_id must be included if used)
       # * <tt>:customer_payment_profile_id</tt> -- The Customer Payment Profile ID of the Customer Payment Profile to use in this transaction. (CONDITIONAL :customer_profile_id must be included if used)
       #
-      # * <tt>:credit_card_number_masked</tt> -- Four Xs follwed by the last four digits of the credit card (CONDITIONAL - used if customer_profile_id and customer_payment_profile_id aren't given)
+      # * <tt>:credit_card_number_masked</tt> -- Four Xs followed by the last four digits of the credit card (CONDITIONAL - used if customer_profile_id and customer_payment_profile_id aren't given)
       #
       # * <tt>:bank_routing_number_masked</tt> -- The last four gidits of the routing number to be refunded (CONDITIONAL - must be used with :bank_account_number_masked)
       # * <tt>:bank_account_number_masked</tt> -- The last four digis of the bank account number to be refunded, Ex. XXXX1234 (CONDITIONAL - must be used with :bank_routing_number_masked)
       #
       # * <tt>:tax</tt> - A hash containing tax information for the refund (OPTIONAL - <tt>:amount</tt>, <tt>:name</tt> (31 characters), <tt>:description</tt> (255 characters))
-      # * <tt>:duty</tt> - A hash containting duty information for the refund (OPTIONAL - <tt>:amount</tt>, <tt>:name</tt> (31 characters), <tt>:description</tt> (255 characters))
+      # * <tt>:duty</tt> - A hash containing duty information for the refund (OPTIONAL - <tt>:amount</tt>, <tt>:name</tt> (31 characters), <tt>:description</tt> (255 characters))
       # * <tt>:shipping</tt> - A hash containing shipping information for the refund (OPTIONAL - <tt>:amount</tt>, <tt>:name</tt> (31 characters), <tt>:description</tt> (255 characters))
       def create_customer_profile_transaction_for_refund(options)
         requires!(options, :transaction)

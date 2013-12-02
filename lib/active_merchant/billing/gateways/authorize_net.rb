@@ -200,7 +200,7 @@ module ActiveMerchant #:nodoc:
       #   For example, to charge the customer once every three months the hash would be
       #   +:interval => { :unit => :months, :length => 3 }+ (REQUIRED)
       # * <tt>:duration</tt> -- A hash containing keys for the <tt>:start_date</tt> the subscription begins (also the date the
-      #   initial billing occurs) and the total number of billing <tt>:occurences</tt> or payments for the subscription. (REQUIRED)
+      #   initial billing occurs) and the total number of billing <tt>:occurrences</tt> or payments for the subscription. (REQUIRED)
       def recurring(money, creditcard, options={})
         requires!(options, :interval, :duration, :billing_address)
         requires!(options[:interval], :length, [:unit, :days, :months])

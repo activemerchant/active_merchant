@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
             %w[1 2 3 success failure error].include?(number.to_s)
         end
         
-        # Checks the validity of a card number by use of the the Luhn Algorithm. 
+        # Checks the validity of a card number by use of the Luhn Algorithm.
         # Please see http://en.wikipedia.org/wiki/Luhn_algorithm for details.
         def valid_checksum?(number) #:nodoc:
           sum = 0

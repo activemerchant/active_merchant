@@ -242,7 +242,7 @@ module ActiveMerchant #:nodoc:
         commit 'DoAuthorization', build_do_authorize(transaction_id, money, options)
       end
 
-      # The ManagePendingTransactionStatus API operation accepts or denys a
+      # The ManagePendingTransactionStatus API operation accepts or denies a
       # pending transaction held by Fraud Management Filters.
       #
       # ==== Parameters:

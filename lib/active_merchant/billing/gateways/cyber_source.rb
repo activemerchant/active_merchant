@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
     #   CyberSource what kind of item you are selling.  It is used when
     #   calculating tax/VAT.
     # * All transactions use dollar values.
-    # * To process pinless debit cards throught the pinless debit card
+    # * To process pinless debit cards through the pinless debit card
     #   network, your Cybersource merchant account must accept pinless
     #   debit card payments.
     class CyberSourceGateway < Gateway
@@ -102,7 +102,7 @@ module ActiveMerchant #:nodoc:
       # :vat_reg_number => your VAT registration number
       #
       # :nexus => "WI CA QC" sets the states/provinces where you have a physical
-      #           presense for tax purposes
+      #           presence for tax purposes
       #
       # :ignore_avs => true   don't want to use AVS so continue processing even
       #                       if AVS would have failed
