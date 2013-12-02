@@ -345,7 +345,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     assert response.params['refund_transaction_return']
   end
 
-  # TODO how to test override_transction
+  # TODO how to test override_transaction
   def test_override_transaction
     options = @options.merge(@run_check_sale_options)
     response = @gateway.run_check_sale(options)

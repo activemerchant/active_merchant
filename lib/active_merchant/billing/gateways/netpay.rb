@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
     # transaction. After this, a refund should be performed instead.
     #
     # In addition to the regular ActiveMerchant transaction options, NETPAY
-    # also supports a `:mode` parameter. This allows testing to be peformed
+    # also supports a `:mode` parameter. This allows testing to be performed
     # in production and force specific results.
     #
     #  * 'P' - Production

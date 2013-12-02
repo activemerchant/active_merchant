@@ -111,7 +111,7 @@ module ActiveMerchant #:nodoc:
         }.merge(options)
       end
 
-      # Splits an +authorization+ param and retrives the order id and
+      # Splits an +authorization+ param and retrieves the order id and
       # transaction number in that order.
       def split_authorization(authorization)
         if authorization.nil? || authorization.empty? || authorization !~ /;/

@@ -131,7 +131,7 @@ module ActiveMerchant #:nodoc:
       end
 
       #Generate payment request XML
-      # - API is set to allow multiple Txn's but currentlu only allows one
+      # - API is set to allow multiple Txn's but currently only allows one
       # - txnSource = 23 - (XML)
       def build_request(action, body)
         xml = Builder::XmlMarkup.new

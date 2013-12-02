@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency    = 'EUR'
       self.money_format        = :cents
 
-      # Not all card types may be actived by the bank!
+      # Not all card types may be activated by the bank!
       self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :diners_club]
 
       # Homepage URL of the gateway for reference

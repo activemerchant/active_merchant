@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
             if params.has_key?(:phone)
               phone = params.delete(:phone).to_s
           
-              # Whipe all non digits
+              # Wipe all non digits
               phone.gsub!(/\D+/, '')
               
               if ['US', 'CA'].include?(country_code) && phone =~ /(\d{3})(\d{3})(\d{4})$/

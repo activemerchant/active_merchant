@@ -12,7 +12,7 @@ module ActiveMerchant
     # login - The unique id of the merchant
     # password - The secret is used to digitally sign the request
     # account - This is an optional third part of the authentication process
-    # and is used if the merchant wishes do distuinguish cc traffic from the different sources
+    # and is used if the merchant wishes do distinguish cc traffic from the different sources
     # by using a different account. This must be created in advance
     #
     # the Realex team decided to make the orderid unique per request,

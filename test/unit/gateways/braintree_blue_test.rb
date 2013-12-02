@@ -420,7 +420,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
       assert Braintree::Configuration.logger.level != Logger::DEBUG
       Braintree::Configuration.logger.level = Logger::DEBUG
 
-      # Re-instatiate a gateway to show it doesn't touch the global
+      # Re-instantiate a gateway to show it doesn't touch the global
       gateway = BraintreeBlueGateway.new(
         :merchant_id => 'test',
         :public_key => 'test',

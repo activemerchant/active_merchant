@@ -73,16 +73,16 @@ module ActiveMerchant #:nodoc:
     #
     # PayJunction Field       ActiveMerchant Use
     #
-    # dc_logon                provide as :login value to gateway instantation
+    # dc_logon                provide as :login value to gateway instantiation
     # dc_password             provide as :password value to gateway instantiation
     #
     # dc_name                 will be retrieved from credit_card.name
-    # dc_first_name           :first_name on CreditCard object instantation
-    # dc_last_name            :last_name  on CreditCard object instantation
-    # dc_number               :number     on CreditCard object instantation
-    # dc_expiration_month     :month      on CreditCard object instantation
-    # dc_expiration_year      :year       on CreditCard object instantation
-    # dc_verification_number  :verification_value on CC object instantation
+    # dc_first_name           :first_name on CreditCard object instantiation
+    # dc_last_name            :last_name  on CreditCard object instantiation
+    # dc_number               :number     on CreditCard object instantiation
+    # dc_expiration_month     :month      on CreditCard object instantiation
+    # dc_expiration_year      :year       on CreditCard object instantiation
+    # dc_verification_number  :verification_value on CC object instantiation
     #
     # dc_transaction_amount   include as argument to method for your transaction type
     # dc_transaction_type     do nothing, set by your transaction type

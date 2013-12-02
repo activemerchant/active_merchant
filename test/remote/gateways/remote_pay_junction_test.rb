@@ -98,7 +98,7 @@ class PayJunctionTest < Test::Unit::TestCase
   end
 
   def test_successful_instant_purchase
-    # this takes advatange of the PayJunction feature where another
+    # this takes advantage of the PayJunction feature where another
     # transaction can be executed if you have the transaction ID of a
     # previous successful transaction.
 

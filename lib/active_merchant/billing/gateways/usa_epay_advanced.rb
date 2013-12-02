@@ -355,7 +355,7 @@ module ActiveMerchant #:nodoc:
 
       # Enable a customer for recurring billing.
       #
-      # Note: Customer does not need to have all recurring paramerters to succeed.
+      # Note: Customer does not need to have all recurring parameters to succeed.
       #
       # ==== Required
       # * <tt>:customer_number</tt>
@@ -454,7 +454,7 @@ module ActiveMerchant #:nodoc:
         commit(__method__, request)
       end
 
-      # Delete one the payment methods beloning to a customer
+      # Delete one the payment methods belonging to a customer
       #
       # ==== Required
       # * <tt>:customer_number</tt>
@@ -547,7 +547,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:command</tt> -- sale, credit, void, creditvoid, authonly, capture, postauth, check, checkcredit; defaults to sale; only required for run_transaction when other than sale
       # * <tt>:reference_number</tt> -- for the original transaction; obtained by sale or authonly
       # * <tt>:authorization_code</tt> -- required for postauth; obtained offline
-      # * <tt>:ignore_duplicate</tt> -- set +true+ if you want to override the duplicate tranaction handling
+      # * <tt>:ignore_duplicate</tt> -- set +true+ if you want to override the duplicate transaction handling
       # * <tt>:account_holder</tt> -- name of account holder
       # * <tt>:customer_id</tt> -- merchant assigned id
       # * <tt>:customer_receipt</tt> -- set +true+ to email receipt to billing email address
@@ -680,7 +680,7 @@ module ActiveMerchant #:nodoc:
         commit(__method__, request)
       end
 
-      # Override transaction flagged for mananager approval.
+      # Override transaction flagged for manager approval.
       #
       # Note: Checks only!
       #
