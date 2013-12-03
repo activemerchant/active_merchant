@@ -4,6 +4,9 @@ module ActiveMerchant #:nodoc:
       module PayuIn
         class Helper < ActiveMerchant::Billing::Integrations::Helper
 
+          CHECKSUM_FIELDS = [ 'txnid', 'amount', 'productinfo', 'firstname', 'email', 'udf1', 'udf2', 'udf3', 'udf4',
+                              'udf5', 'udf6', 'udf7', 'udf8', 'udf9', 'udf10']
+
           mapping :amount, 'amount'
           mapping :account, 'key'
           mapping :order, 'txnid'
@@ -54,10 +57,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def generate_checksum
-            checksum_payload_items = [
-              'txnid', 'amount', 'productinfo', 'firstname', 'email',
-              'udf1', 'udf2', 'udf3', 'udf4', 'udf5', 'udf6', 'udf7', 'udf8', 'udf9', 'udf10'
-            ].map { |field| @fields[field] }
+            checksum_payload_items = CHECKSUM_FIELDS.map { |field| @fields[field] }
 
             PayuIn.checksum(@fields["key"], @options[:credential2], checksum_payload_items )
           end
