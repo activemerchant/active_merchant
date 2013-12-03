@@ -10,6 +10,10 @@ module ActiveMerchant #:nodoc:
           "https://www.mobile88.com/epayment/entry.asp"
         end
 
+        def self.requery_url
+          "https://www.mobile88.com/epayment/enquiry.asp"
+        end
+
         def self.return(query_string, options={})
           Return.new(query_string, options)
         end
