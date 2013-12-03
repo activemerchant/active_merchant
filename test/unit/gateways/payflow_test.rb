@@ -12,6 +12,7 @@ class PayflowTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4242424242424242')
     @options = { :billing_address => address.merge(:first_name => "Longbob", :last_name => "Longsen") }
+    @check = check( :name => 'Jim Smith' )
   end
 
   def test_successful_authorization
@@ -76,6 +77,18 @@ class PayflowTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'M', response.cvv_result['code']
+  end
+
+  def test_ach_purchase
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<AcctNum>#{@check.account_number}<\//), anything).returns("")
+    @gateway.expects(:parse).returns({})
+    @gateway.purchase(@amount, @check)
+  end
+
+  def test_ach_credit
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<AcctNum>#{@check.account_number}<\//), anything).returns("")
+    @gateway.expects(:parse).returns({})
+    @gateway.credit(@amount, @check)
   end
 
   def test_using_test_mode
