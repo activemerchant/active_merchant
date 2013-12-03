@@ -681,3 +681,7 @@ wirecard_checkout_page:
   secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
   shop_id: ''
   paymenttype: IDL
+
+first_giving:
+  application_key: ''
+  security_token:  ''
