@@ -19,8 +19,8 @@ module ActiveMerchant #:nodoc:
         commit(request, options)
       end
 
-      def purchase(money, credit_card_or_reference, options = {})
-        request = build_sale_or_authorization_request(:purchase, money, credit_card_or_reference, options)
+      def purchase(money, funding_source, options = {})
+        request = build_sale_or_authorization_request(:purchase, money, funding_source, options)
 
         commit(request, options)
       end
@@ -76,11 +76,15 @@ module ActiveMerchant #:nodoc:
       end
 
       private
-      def build_sale_or_authorization_request(action, money, credit_card_or_reference, options)
-        if credit_card_or_reference.is_a?(String)
-          build_reference_sale_or_authorization_request(action, money, credit_card_or_reference, options)
-        else
-          build_credit_card_request(action, money, credit_card_or_reference, options)
+      def build_sale_or_authorization_request(action, money, funding_source, options)
+        case
+        when funding_source.is_a?(String) 
+          build_reference_sale_or_authorization_request(action, money, funding_source, options)
+        when funding_source.is_a?(CreditCard)
+          build_credit_card_request(action, money, funding_source, options)
+        when funding_source.is_a?(Check)
+          build_check_request(action, money, funding_source, options)
+        else raise ArgumentError, "Unsupported funding source provided"
         end
       end
 
@@ -141,6 +145,31 @@ module ActiveMerchant #:nodoc:
 
             xml.tag! 'Tender' do
               add_credit_card(xml, credit_card)
+            end
+          end
+        end
+        xml.target!
+      end
+
+      def build_check_request(action, money, check, options)
+        xml = Builder::XmlMarkup.new
+        xml.tag! TRANSACTIONS[action] do
+          xml.tag! 'PayData' do
+            xml.tag! 'Invoice' do
+              xml.tag! 'CustIP', options[:ip] unless options[:ip].blank?
+              xml.tag! 'InvNum', options[:order_id].to_s.gsub(/[^\w.]/, '') unless options[:order_id].blank?
+              xml.tag! 'Description', options[:description] unless options[:description].blank?
+              xml.tag! 'BillTo' do
+                xml.tag! 'Name', check.name
+              end
+              xml.tag! 'TotalAmt', amount(money), 'Currency' => options[:currency] || currency(money)
+            end
+            xml.tag! 'Tender' do
+              xml.tag! 'ACH' do
+                xml.tag! 'AcctType', check.account_type == 'checking' ? 'C' : 'S'
+                xml.tag! 'AcctNum', check.account_number
+                xml.tag! 'ABA', check.routing_number
+              end
             end
           end
         end

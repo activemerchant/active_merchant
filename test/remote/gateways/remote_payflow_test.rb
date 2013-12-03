@@ -14,6 +14,8 @@ class RemotePayflowTest < Test::Unit::TestCase
                  :email => 'cody@example.com',
                  :customer => 'codyexample'
                }
+
+    @check = check( :routing_number => '111111118', :account_number => '1234567801' )
   end
   
   def test_successful_purchase
@@ -29,6 +31,20 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_equal 'Declined', response.message
     assert_failure response
     assert response.test?
+  end
+
+  # Additional steps are required to enable ACH in a Payflow Pro account.
+  # See the "Payflow ACH Payment Service Guide" for more details: 
+  #     http://www.paypalobjects.com/webstatic/en_US/developer/docs/pdf/pp_achpayment_guide.pdf
+  #
+  # Also, when testing against the pilot-payflowpro.paypal.com endpoint, ACH must be enabled by Payflow support.
+  # This can be accomplished by sending an email to payflow-support@paypal.com with your vendor ID.
+  def test_successful_ach_purchase
+    assert response = @gateway.purchase(50, @check)
+    assert_equal "Approved", response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
   end
   
   def test_successful_authorization
