@@ -113,6 +113,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Finansbank WebPOS](https://www.fbwebpos.com/) - US, TR
 * [First Pay](http://www.first-pay.com) - US
 * [FirstData Global Gateway e4](http://www.firstdata.com) - CA, US
+* [FirstGiving](http://www.firstgiving.com/) - US
 * [Garanti Sanal POS](https://sanalposweb.garanti.com.tr) - US, TR
 * [HDFC](http://www.hdfcbank.com/sme/sme-details/merchant-services/guzh6m0i) - IN
 * [IATSPayments](http://www.iatspayments.com/) - US, CA, GB

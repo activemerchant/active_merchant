@@ -166,6 +166,11 @@ firstdata_e4:
   login:
   password:
 
+first_giving:
+  application_key: ''
+  security_token:  ''
+  charity_id: "1234"
+
 garanti:
   login: "PROVAUT"
   terminal_id: 111995
