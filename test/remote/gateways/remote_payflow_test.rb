@@ -46,6 +46,14 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert response.test?
     assert_not_nil response.authorization
   end
+
+  def test_successful_ach_credit
+    assert response = @gateway.credit(50, @check)
+    assert_equal "Approved", response.message
+    assert_success response
+    assert response.test?
+    assert_not_nil response.authorization
+  end
   
   def test_successful_authorization
     assert response = @gateway.authorize(100, @credit_card, @options)

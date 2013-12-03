@@ -85,6 +85,12 @@ class PayflowTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @check)
   end
 
+  def test_ach_credit 
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<AcctNum>#{@check.account_number}<\//), anything).returns("")
+    @gateway.expects(:parse).returns({})
+    @gateway.credit(@amount, @check)
+  end
+
   def test_using_test_mode
     assert @gateway.test?
   end

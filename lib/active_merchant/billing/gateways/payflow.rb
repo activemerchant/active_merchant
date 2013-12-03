@@ -25,15 +25,20 @@ module ActiveMerchant #:nodoc:
         commit(request, options)
       end
 
-      def credit(money, identification_or_credit_card, options = {})
-        if identification_or_credit_card.is_a?(String)
+      def credit(money, funding_source, options = {})
+        case
+        when funding_source.is_a?(String) 
           deprecated CREDIT_DEPRECATION_MESSAGE
           # Perform referenced credit
-          refund(money, identification_or_credit_card, options)
-        else
+          refund(money, funding_source, options)
+        when funding_source.is_a?(CreditCard)
           # Perform non-referenced credit
-          request = build_credit_card_request(:credit, money, identification_or_credit_card, options)
+          request = build_credit_card_request(:credit, money, funding_source, options)
           commit(request, options)
+        when funding_source.is_a?(Check)
+          request = build_check_request(:credit, money, funding_source, options)
+          commit(request, options)
+        else raise ArgumentError, "Unsupported funding source provided"
         end
       end
 
