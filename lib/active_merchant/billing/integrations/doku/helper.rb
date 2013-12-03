@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
           mapping :cancel_return_url, 'URL'
 
 
-          mapping :customer, :last_name              => 'CNAME',
+          mapping :customer, :last_name         => 'CNAME',
                              :email             => 'CEMAIL',
                              :phone             => 'CHPHONE',
                              :mobile_phone      => 'CMPHONE',
