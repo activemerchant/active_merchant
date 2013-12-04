@@ -456,6 +456,8 @@ module ActiveMerchant #:nodoc:
           }
         }
 
+        parameters[:custom_fields] = options[:custom_fields]
+        parameters[:device_data] = options[:device_data] if options[:device_data]
         if merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
           parameters[:merchant_account_id] = merchant_account_id
         end
