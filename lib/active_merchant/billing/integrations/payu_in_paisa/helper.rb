@@ -7,7 +7,7 @@ module ActiveMerchant
           mapping :service_provider, 'service_provider'
 
           def initialize(order, account, options = {})
-            super order, account, options
+            super
             self.service_provider = 'payu_paisa'
             self.user_defined = { :var2 => order }
           end

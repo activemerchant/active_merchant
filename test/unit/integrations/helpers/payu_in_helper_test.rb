@@ -4,14 +4,13 @@ class PayuInHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @helper = PayuIn::Helper.new( 'jh34h53kj4h5hj34kh5', 'C0Dr8m', :amount => '10.00', :credential2 => 'Product Info')
+    @helper = PayuIn::Helper.new( 'order_id', 'merchant_id', :amount => '10.00', :credential2 => 'secret_key')
   end
 
   def test_basic_helper_fields
     assert_equal '10.00', @helper.fields['amount']
-    assert_equal 'C0Dr8m', @helper.fields['key']
-    assert_equal 'jh34h53kj4h5hj34kh5', @helper.fields['txnid']
-    assert_equal 'Product Info', @helper.fields['productinfo']
+    assert_equal 'merchant_id', @helper.fields['key']
+    assert_equal 'order_id', @helper.fields['txnid']
   end
 
   def test_customer_fields
@@ -56,11 +55,20 @@ class PayuInHelperTest < Test::Unit::TestCase
   end
 
   def test_add_checksum_method
-    options = { :mode => 'CC' }
     @helper.customer :first_name => 'Payu-Admin', :email => 'test@example.com'
+    @helper.description "Product Info"
     @helper.user_defined :var1 => 'var_one', :var2 => 'var_two', :var3 => 'var_three', :var4 => 'var_four', :var5 => 'var_five', :var6 => 'var_six', :var7 => 'var_seven', :var8 => 'var_eight', :var9 => 'var_nine', :var10 => 'var_ten'
 
-    assert_equal "032606d7fb5cfe357d9e6b358b4bb8db1d34e9dfa30f039cb7dec75ae6d77f7d1f67a58c123ea0ee358bf040554d5e3048066a369ae63888132e27c14e79ee5a", @helper.form_fields["hash"]
+    fields = ["txnid", "amount", "productinfo", "firstname", "email", "udf1", "udf2", "udf3", "udf4", "udf5", "udf6", "udf7", "udf8", "udf9", "udf10"].map { |field| @helper.fields[field] }
+    assert_equal Digest::SHA512.hexdigest(['merchant_id', *fields, 'secret_key'].join("|")), @helper.form_fields["hash"]
+  end
+
+  def test_sanitize_fields_in_form_fields
+    @helper.description '{[Valid Description!]}'
+    @helper.form_fields
+
+    assert_equal 'Valid Description', @helper.fields['productinfo']
+    assert_nil @helper.fields['email']
   end
 
 end

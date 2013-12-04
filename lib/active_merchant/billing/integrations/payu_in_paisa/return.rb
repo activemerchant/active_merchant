@@ -5,7 +5,7 @@ module ActiveMerchant
 
         class Return < PayuIn::Return
           def initialize(query_string, options = {})
-            super query_string, options
+            super
             @notification = Notification.new(query_string, options)
           end
         end
