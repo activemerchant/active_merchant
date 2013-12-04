@@ -127,6 +127,8 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'purchaseOrderNo', order_id
         xml.tag! 'preauthID', preauth_id
 
+        add_metadata(xml, options)
+
         xml.target!
       end
 
