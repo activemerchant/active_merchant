@@ -65,6 +65,16 @@ class Ipay88ReturnTest < Test::Unit::TestCase
     assert !ipay.success?
   end
 
+  def test_message_returns_error_description
+    ipay = build_return(parameterize({"ErrDesc" => "Invalid merchant"}))
+    assert_equal 'Invalid merchant', ipay.message
+  end
+
+  def test_cancelled
+    ipay = build_return(parameterize({"ErrDesc" => "Customer Cancel Transaction"}))
+    assert ipay.cancelled?
+  end
+
   private
   def http_raw_data(mode=:success)
     base = { "MerchantCode" => "ipay88merchcode",

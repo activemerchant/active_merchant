@@ -59,6 +59,14 @@ module ActiveMerchant #:nodoc:
             self.secure? && self.requery == "00" && self.status == "1"
           end
 
+          def cancelled?
+            error == 'Customer Cancel Transaction'
+          end
+
+          def message
+            params["ErrDesc"]
+          end
+
           protected
 
           def generated_signature
