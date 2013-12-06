@@ -232,7 +232,7 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      # Parse the <ProcessingStatus> Element which containts all important information
+      # Parse the <ProcessingStatus> Element which contains all important information
       def parse_response(response, root)
         status = nil
         # get the root element for this Transaction

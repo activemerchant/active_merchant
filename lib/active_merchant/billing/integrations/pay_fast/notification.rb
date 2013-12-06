@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
             params['amount_gross']
           end
 
-          # The total in fees which was deducated from the amount.
+          # The total in fees which was deducted from the amount.
           def fee
             params['amount_fee']
           end

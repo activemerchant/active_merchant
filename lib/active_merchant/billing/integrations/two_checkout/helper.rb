@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
           end
 
           # Uses Pass Through Product Parameters to pass in lineitems.
-          # (must mark tanigble sales as shipped to settle the transaction)
+          # (must mark tangible sales as shipped to settle the transaction)
           def line_item(params = {})
             add_field('mode', '2CO')
             (max_existing_line_item_id = form_fields.keys.map do |key|

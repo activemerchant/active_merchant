@@ -227,7 +227,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # The options hash may contain optional data which will be passed
-      # through the the specialized optional fields at PaymentExpress
+      # through the specialized optional fields at PaymentExpress
       # as follows:
       #
       #     {
