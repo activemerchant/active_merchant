@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module Doku
-        # # Example:
+        # # Example:****
         # ## app/controllers/doku_controller.rb
         # class DokuController < ApplicationController
         #   include ActiveMerchant::Billing::Integrations
@@ -53,6 +53,10 @@ module ActiveMerchant #:nodoc:
 
           def acknowledge(authcode = nil)
             true
+          end
+
+          def test?
+            false
           end
 
           private

@@ -57,17 +57,26 @@ module ActiveMerchant #:nodoc:
             @items << item
           end
 
+          def customer(params = {})
+            add_field mappings[:customer][:name], "#{params[:first_name]} #{params[:last_name]}"
+            add_field mappings[:customer][:email], params[:email]
+            add_field mappings[:customer][:phone], params[:phone]
+            add_field mappings[:customer][:mobile_phone], params[:mobile_phone]
+            add_field mappings[:customer][:working_phone], params[:working_phone]
+            add_field mappings[:customer][:birth_date], params[:birth_date]
+          end
+
           mapping :account,           'STOREID'
           mapping :amount,            'AMOUNT'
           mapping :cancel_return_url, 'URL'
 
 
-          mapping :customer, :last_name         => 'CNAME',
-                             :email             => 'CEMAIL',
-                             :phone             => 'CHPHONE',
-                             :mobile_phone      => 'CMPHONE',
-                             :working_phone     => 'CWPHONE',
-                             :birth_date        => 'BIRTHDATE'
+          mapping :customer, :name          => 'CNAME',
+                             :email         => 'CEMAIL',
+                             :phone         => 'CHPHONE',
+                             :mobile_phone  => 'CMPHONE',
+                             :working_phone => 'CWPHONE',
+                             :birth_date    => 'BIRTHDATE'
 
           mapping :billing_address, :city     => 'CCITY',
                                     :address1 => 'CADDRESS',
@@ -80,7 +89,6 @@ module ActiveMerchant #:nodoc:
                                       :state    => 'SSTATE',
                                       :zip      => 'SZIPCODE',
                                       :country  => 'SCOUNTRY'
-
           private
 
           def basket

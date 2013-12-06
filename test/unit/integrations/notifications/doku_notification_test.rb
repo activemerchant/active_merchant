@@ -9,8 +9,8 @@ class DokuNotificationTest < Test::Unit::TestCase
 
   def test_accessors
     assert @doku.complete?
-    assert_equal "Success", @doku.status
-    assert_equal "ORD12345", @doku.transaction_id
+    assert_equal "Completed", @doku.status
+    assert_equal "ORD12345", @doku.item_id
     assert_equal "165000", @doku.gross
     assert_equal "IDR", @doku.currency
   end

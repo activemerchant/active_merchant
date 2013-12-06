@@ -4,22 +4,27 @@ class DokuHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @helper = Doku::Helper.new('ORD12345', 'STORE123456', :amount => 165000, :currency => 'IDR', :shared_key => 'DOKU_SHARED_KEY')
+    @store_id = '00107259'
+    @shared_key = 'GX7L65D8U1AY'
+    @transidmerchant = 'ORD12345'
+    @amount = '165000.00'
+    @words = Digest::SHA1.hexdigest "#{@amount}#{@shared_key}#{@transidmerchant}"
+    @helper = Doku::Helper.new(@transidmerchant, @store_id, :amount => @amount, :currency => 'IDR', :credential2 => @shared_key)
   end
 
   def test_basic_helper_fields
-    assert_field 'STOREID', 'STORE123456'
-
-    assert_field 'AMOUNT', '165000.00'
-    assert_field 'TRANSIDMERCHANT', 'ORD12345'
+    assert_field 'STOREID', @store_id
+    assert_field 'AMOUNT', @amount
+    assert_field 'TRANSIDMERCHANT', @transidmerchant
   end
 
   def test_customer_fields
-    @helper.customer :name              => 'Ismail Danuarta',
+    @helper.customer :first_name        => 'Ismail',
+                     :last_name         => 'Danuarta',
                      :email             => 'ismail.danuarta@gmail.com',
                      :mobile_phone      => '085779280093',
                      :working_phone     => '0215150555',
-                     :home_phone        => '0215150555',
+                     :phone             => '0215150555',
                      :birth_date        => '1991-09-11'
 
     assert_field 'CNAME', 'Ismail Danuarta'
@@ -32,7 +37,7 @@ class DokuHelperTest < Test::Unit::TestCase
 
   def test_address_mapping
     @helper.billing_address :city     => 'Jakarta Selatan',
-                            :address  => 'Jl. Jendral Sudirman kav 59, Plaza Asia Office Park Unit 3',
+                            :address1 => 'Jl. Jendral Sudirman kav 59, Plaza Asia Office Park Unit 3',
                             :state    => 'DKI Jakarta',
                             :zip      => '12190',
                             :country  => 'ID'
@@ -46,7 +51,7 @@ class DokuHelperTest < Test::Unit::TestCase
 
   def test_shipping_mapping
     @helper.shipping_address :city     => 'Jakarta Selatan',
-                             :address  => 'Jl. Jendral Sudirman kav 59, Plaza Asia Office Park Unit 3',
+                             :address1 => 'Jl. Jendral Sudirman kav 59, Plaza Asia Office Park Unit 3',
                              :state    => 'DKI Jakarta',
                              :zip      => '12190',
                              :country  => 'ID'
@@ -72,7 +77,7 @@ class DokuHelperTest < Test::Unit::TestCase
 
   def test_words
     assert_equal true, @helper.form_fields.include?('WORDS')
-    assert_equal '9bce0d4b77799c22f4f14e3c949a2a25dd6c33e2', @helper.form_fields['WORDS']
+    assert_equal @words, @helper.form_fields['WORDS']
   end
 
   def test_unknown_mapping
