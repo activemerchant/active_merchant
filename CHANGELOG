@@ -22,6 +22,7 @@
 * Add Payscout gateway [llopez]
 * Merchant Warrior: Use billing_address [duff]
 * Add SoEasyPay gateway [ir-soeasycorp]
+* Bogus: Add check support [npverni]
 
 == Version 1.42.2 (November 13th, 2013)
 

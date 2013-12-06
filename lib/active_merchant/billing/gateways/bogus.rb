@@ -7,67 +7,67 @@ module ActiveMerchant #:nodoc:
       SUCCESS_MESSAGE = "Bogus Gateway: Forced success"
       FAILURE_MESSAGE = "Bogus Gateway: Forced failure"
       ERROR_MESSAGE = "Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error"
-      CREDIT_ERROR_MESSAGE = "Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error"
       UNSTORE_ERROR_MESSAGE = "Bogus Gateway: Use trans_id ending in 1 for success, 2 for exception and anything else for error"
       CAPTURE_ERROR_MESSAGE = "Bogus Gateway: Use authorization number ending in 1 for exception, 2 for error and anything else for success"
       VOID_ERROR_MESSAGE = "Bogus Gateway: Use authorization number ending in 1 for exception, 2 for error and anything else for success"
       REFUND_ERROR_MESSAGE = "Bogus Gateway: Use trans_id number ending in 1 for exception, 2 for error and anything else for success"
+      CHECK_ERROR_MESSAGE = "Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error"
 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:bogus]
       self.homepage_url = 'http://example.com'
       self.display_name = 'Bogus'
 
-      def authorize(money, credit_card_or_reference, options = {})
+      def authorize(money, paysource, options = {})
         money = amount(money)
-        case normalize(credit_card_or_reference)
+        case normalize(paysource)
         when /1$/
           Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money, :error => FAILURE_MESSAGE }, :test => true)
         else
-          raise Error, ERROR_MESSAGE
+          raise Error, error_message(paysource)
         end
       end
 
-      def purchase(money, credit_card_or_reference, options = {})
+      def purchase(money, paysource, options = {})
         money = amount(money)
-        case normalize(credit_card_or_reference)
+        case normalize(paysource)
         when /1$/, AUTHORIZATION
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true, :authorization => AUTHORIZATION)
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE },:test => true)
         else
-          raise Error, ERROR_MESSAGE
+          raise Error, error_message(paysource)
         end
       end
 
-      def recurring(money, credit_card_or_reference, options = {})
+      def recurring(money, paysource, options = {})
         money = amount(money)
-        case normalize(credit_card_or_reference)
+        case normalize(paysource)
         when /1$/
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE },:test => true)
         else
-          raise Error, ERROR_MESSAGE
+          raise Error, error_message(paysource)
         end
       end
 
-      def credit(money, credit_card_or_reference, options = {})
-        if credit_card_or_reference.is_a?(String)
+      def credit(money, paysource, options = {})
+        if paysource.is_a?(String)
           deprecated CREDIT_DEPRECATION_MESSAGE
-          return refund(money, credit_card_or_reference, options)
+          return refund(money, paysource, options)
         end
 
         money = amount(money)
-        case normalize(credit_card_or_reference)
+        case normalize(paysource)
         when /1$/
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true )
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true)
         else
-          raise Error, CREDIT_ERROR_MESSAGE
+          raise Error, error_message(paysource)
         end
       end
 
@@ -106,14 +106,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def store(credit_card_or_reference, options = {})
-        case normalize(credit_card_or_reference)
+      def store(paysource, options = {})
+        case normalize(paysource)
         when /1$/
           Response.new(true, SUCCESS_MESSAGE, {:billingid => '1'}, :test => true, :authorization => AUTHORIZATION)
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:billingid => nil, :error => FAILURE_MESSAGE }, :test => true)
         else
-          raise Error, ERROR_MESSAGE
+          raise Error, error_message(paysource)
         end
       end
 
@@ -130,11 +130,21 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def normalize(credit_card_or_reference)
-        if credit_card_or_reference.respond_to?(:number)
-          credit_card_or_reference.number
+      def normalize(paysource)
+        if paysource.respond_to?(:account_number) && (paysource.try(:number).blank? || paysource.number.blank?)
+          paysource.account_number
+        elsif paysource.respond_to?(:number)
+          paysource.number
         else
-          credit_card_or_reference.to_s
+          paysource.to_s
+        end
+      end
+
+      def error_message(paysource)
+        if paysource.respond_to?(:account_number)
+          CHECK_ERROR_MESSAGE
+        elsif paysource.respond_to?(:number)
+          ERROR_MESSAGE
         end
       end
     end
