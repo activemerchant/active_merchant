@@ -16,6 +16,7 @@
 * USA ePay Advanced: Fix capture amount [nearapogee]
 * NAB Transact: Fix merchant descriptor with capture/refund requests [nagash]
 * Braintree Blue: Add custom_fields & device_data parameters [parallel588]
+* Webpay: Add authorize & capture [keikubo]
 
 == Version 1.42.2 (November 13th, 2013)
 
