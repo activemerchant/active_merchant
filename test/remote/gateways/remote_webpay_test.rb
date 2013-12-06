@@ -48,6 +48,24 @@ class RemoteWebpayTest < Test::Unit::TestCase
     assert_equal 'Your card number is incorrect', response.message
   end
 
+  def test_authorization_and_capture
+    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+    assert !authorization.params["captured"]
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+  end
+
+  def test_authorization_and_void
+    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+    assert !authorization.params["captured"]
+
+    assert void = @gateway.void(authorization.authorization)
+    assert_success void
+  end
+
   def test_successful_void
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
