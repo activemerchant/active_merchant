@@ -4,8 +4,8 @@ class DokuHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @store_id = '00107259'
-    @shared_key = 'GX7L65D8U1AY'
+    @store_id = 'STORE123456'
+    @shared_key = 'DOKU_SHARED_KEY'
     @transidmerchant = 'ORD12345'
     @amount = '165000.00'
     @words = Digest::SHA1.hexdigest "#{@amount}#{@shared_key}#{@transidmerchant}"
