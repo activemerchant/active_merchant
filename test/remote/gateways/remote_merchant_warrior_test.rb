@@ -24,7 +24,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
         :address1 => '123 test st',
         :zip => '4000'
       },
-      :transaction_product => 'TestProduct'
+      :description => 'TestProduct'
     }
   end
 

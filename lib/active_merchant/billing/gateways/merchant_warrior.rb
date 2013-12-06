@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_product(post, options)
-        post['transactionProduct'] = options[:transaction_product]
+        post['transactionProduct'] = options[:description]
       end
 
       def add_payment_method(post, payment_method)
