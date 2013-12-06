@@ -369,8 +369,8 @@ module ActiveMerchant #:nodoc:
       #     - :type = (:prior_auth_capture) (OPTIONAL)
       #
       # ==== For :type == :refund only
-      # * <tt>:credit_card_number_masked</tt> -- (CONDITIONAL - required for credit card refunds is :customer_profile_id AND :customer_payment_profile_id are missing)
-      # * <tt>:bank_routing_number_masked && :bank_account_number_masked</tt> -- (CONDITIONAL - required for electronic check refunds is :customer_profile_id AND :customer_payment_profile_id are missing) (NOT ABLE TO TEST - I keep getting "ACH transactions are not accepted by this merchant." when trying to make a payment and, until that's possible I can't refund (wiseleyb@gmail.com))
+      # * <tt>:credit_card_number_masked</tt> -- (CONDITIONAL - required for credit card refunds if :customer_profile_id AND :customer_payment_profile_id are missing)
+      # * <tt>:bank_routing_number_masked && :bank_account_number_masked</tt> -- (CONDITIONAL - required for electronic check refunds if :customer_profile_id AND :customer_payment_profile_id are missing) (NOT ABLE TO TEST - I keep getting "ACH transactions are not accepted by this merchant." when trying to make a payment and, until that's possible I can't refund (wiseleyb@gmail.com))
       def create_customer_profile_transaction(options)
         requires!(options, :transaction)
         requires!(options[:transaction], :type)
@@ -412,8 +412,8 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>:credit_card_number_masked</tt> -- Four Xs followed by the last four digits of the credit card (CONDITIONAL - used if customer_profile_id and customer_payment_profile_id aren't given)
       #
-      # * <tt>:bank_routing_number_masked</tt> -- The last four gidits of the routing number to be refunded (CONDITIONAL - must be used with :bank_account_number_masked)
-      # * <tt>:bank_account_number_masked</tt> -- The last four digis of the bank account number to be refunded, Ex. XXXX1234 (CONDITIONAL - must be used with :bank_routing_number_masked)
+      # * <tt>:bank_routing_number_masked</tt> -- The last four digits of the routing number to be refunded (CONDITIONAL - must be used with :bank_account_number_masked)
+      # * <tt>:bank_account_number_masked</tt> -- The last four digits of the bank account number to be refunded, Ex. XXXX1234 (CONDITIONAL - must be used with :bank_routing_number_masked)
       #
       # * <tt>:tax</tt> - A hash containing tax information for the refund (OPTIONAL - <tt>:amount</tt>, <tt>:name</tt> (31 characters), <tt>:description</tt> (255 characters))
       # * <tt>:duty</tt> - A hash containing duty information for the refund (OPTIONAL - <tt>:amount</tt>, <tt>:name</tt> (31 characters), <tt>:description</tt> (255 characters))
