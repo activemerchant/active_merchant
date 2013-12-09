@@ -18,6 +18,7 @@
 * Braintree Blue: Add custom_fields & device_data parameters [parallel588]
 * Webpay: Add authorize & capture [keikubo]
 * MerchantWarrior: Pass description [duff]
+* Stripe: Separate email from description [duff]
 
 == Version 1.42.2 (November 13th, 2013)
 

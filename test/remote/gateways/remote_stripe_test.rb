@@ -24,17 +24,8 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success response
     assert_equal "charge", response.params["object"]
     assert response.params["paid"]
-  end
-
-  def test_purchase_description
-    assert response = @gateway.purchase(@amount, @credit_card, { :currency => @currency, :description => "TheDescription", :email => "email@example.com" })
-    assert_equal "TheDescription", response.params["description"], "Use the description if it's specified."
-
-    assert response = @gateway.purchase(@amount, @credit_card, { :currency => @currency, :email => "email@example.com" })
-    assert_equal "email@example.com", response.params["description"], "Use the email if no description is specified."
-
-    assert response = @gateway.purchase(@amount, @credit_card, { :currency => @currency })
-    assert_nil response.params["description"], "No description or email specified."
+    assert_equal "ActiveMerchant Test Purchase", response.params["description"]
+    assert_equal "wow@example.com", response.params["metadata"]["email"]
   end
 
   def test_unsuccessful_purchase
@@ -47,6 +38,8 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
     assert !authorization.params["captured"]
+    assert_equal "ActiveMerchant Test Purchase", authorization.params["description"]
+    assert_equal "wow@example.com", authorization.params["metadata"]["email"]
 
     assert capture = @gateway.capture(@amount, authorization.authorization)
     assert_success capture
