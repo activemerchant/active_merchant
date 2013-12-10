@@ -31,8 +31,15 @@ module ActiveMerchant #:nodoc:
       #
       #   ActiveMerchant::Billing::Base.gateway('moneris').new
       def self.gateway(name)
-        raise NameError if (name_str = name.to_s.downcase).blank?
-        Billing.const_get("#{name_str}_gateway".camelize)
+        name_str = name.to_s.strip.downcase
+
+        raise(ArgumentError, 'A gateway provider must be specified') if name_str.blank?
+
+        begin
+          Billing.const_get("#{name_str}_gateway".camelize)
+        rescue
+          raise ArgumentError, "The specified gateway is not valid (#{name_str})"
+        end
       end
 
       # Return the matching integration module
