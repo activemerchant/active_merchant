@@ -179,7 +179,6 @@ module ActiveMerchant #:nodoc:
       } #:nodoc:
 
       CHECK_DATA_OPTIONS = {
-        :check_number => [:integer, 'CheckNumber'],
         :drivers_license => [:string, 'DriversLicense'],
         :drivers_license_state => [:string, 'DriversLicenseState'],
         :record_type => [:string, 'RecordType'],
@@ -339,10 +338,11 @@ module ActiveMerchant #:nodoc:
         commit(__method__, request)
       end
 
-      # Update a customer by replacing all of the customer details..
+      # Update a customer by replacing all of the customer details.
       #
-      # Use quickUpdateCustomer to just update a few attributes.
-      #
+      # ==== Required
+      # * <tt>:customer_number</tt> -- customer to update
+      # 
       # ==== Options
       #  * Same as add_customer
       #
@@ -543,7 +543,7 @@ module ActiveMerchant #:nodoc:
       # will be returned in the response.
       #
       # ==== Options
-      # * <tt>:method</tt> -- credit_card or check
+      # * <tt>:payment_method</tt> -- credit_card or check
       # * <tt>:command</tt> -- sale, credit, void, creditvoid, authonly, capture, postauth, check, checkcredit; defaults to sale; only required for run_transaction when other than sale
       # * <tt>:reference_number</tt> -- for the original transaction; obtained by sale or authonly
       # * <tt>:authorization_code</tt> -- required for postauth; obtained offline
@@ -1166,7 +1166,7 @@ module ActiveMerchant #:nodoc:
         soap.tag! "ns1:captureTransaction" do |soap|
           build_token soap, options
           build_tag soap, :integer, 'RefNum', options[:reference_number]
-          build_tag soap, :double, 'RefNum', amount(options[:amount])
+          build_tag soap, :double, 'Amount', amount(options[:amount])
         end
       end
 
@@ -1243,17 +1243,19 @@ module ActiveMerchant #:nodoc:
         case
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::CreditCard)
           build_tag soap, :string, 'CardNumber', payment_method[:method].number
-          build_tag soap, :string, 'CardExpiration',
-            "#{"%02d" % payment_method[:method].month}#{payment_method[:method].year}"
+          build_tag soap, :string, 'CardExpiration', 
+            "#{"%02d" % payment_method[:method].month}#{payment_method[:method].year.to_s[-2..-1]}"
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
             build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
           end
           build_tag soap, :string, 'CardCode', payment_method[:method].verification_value
         when payment_method[:method].kind_of?(ActiveMerchant::Billing::Check)
-          build_tag soap, :string, 'Account', payment_method[:method].number
+          build_tag soap, :string, 'Account', payment_method[:method].account_number
           build_tag soap, :string, 'Routing', payment_method[:method].routing_number
-          build_tag soap, :string, 'AccountType', payment_method[:method].account_type.capitalize
+          unless payment_method[:method].account_type.nil?
+            build_tag soap, :string, 'AccountType', payment_method[:method].account_type.capitalize
+          end
           build_tag soap, :string, 'DriversLicense', options[:drivers_license]
           build_tag soap, :string, 'DriversLicenseState', options[:drivers_license_state]
           build_tag soap, :string, 'RecordType', options[:record_type]
@@ -1323,8 +1325,7 @@ module ActiveMerchant #:nodoc:
       def build_credit_card_data(soap, options)
         soap.CreditCardData 'xsi:type' => "ns1:CreditCardData" do |soap|
           build_tag soap, :string, 'CardNumber', options[:payment_method].number
-          build_tag soap, :string, 'CardExpiration',
-            "#{"%02d" % options[:payment_method].month}#{options[:payment_method].year}"
+          build_tag soap, :string, 'CardExpiration', build_card_expiration(options)
           if options[:billing_address]
             build_tag soap, :string, 'AvsStreet', options[:billing_address][:address1]
             build_tag soap, :string, 'AvsZip', options[:billing_address][:zip]
@@ -1337,8 +1338,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def build_card_expiration(options)
+        month = options[:payment_method].month
+        year  = options[:payment_method].year
+        unless month.nil? || year.nil?
+          "#{"%02d" % month}#{year.to_s[-2..-1]}"
+        end
+      end
+
       def build_check_data(soap, options)
         soap.CheckData 'xsi:type' => "ns1:CheckData" do |soap|
+          build_tag soap, :integer, 'CheckNumber', options[:payment_method].number
           build_tag soap, :string, 'Account', options[:payment_method].account_number
           build_tag soap, :string, 'Routing', options[:payment_method].routing_number
           build_tag soap, :string, 'AccountType', options[:payment_method].account_type.capitalize
@@ -1458,13 +1468,14 @@ module ActiveMerchant #:nodoc:
             success = true
           end
           message = case action
-          when :get_customer_payment_methods
-            p['item']
-          when :get_transaction_custom
-            p['item'].inject({}) { |map, field| map[field['field']] = field['value']; map }
-          else
-            p
-          end
+                    when :get_customer_payment_methods
+                      p['item']
+                    when :get_transaction_custom
+                      items = p['item'].kind_of?(Array) ? p['item'] : [p['item']]
+                      items.inject({}) { |hash, item| hash[item['field']] = item['value']; hash }
+                    else
+                      p
+                    end
         elsif response.respond_to?(:[]) && p = response[:response]
           message = p # when response is html
         end
