@@ -51,24 +51,30 @@ module ActiveMerchant #:nodoc:
             'IDR'
           end
 
-          def acknowledge(authcode = nil)
-            true
+          def words
+            params['WORDS']
           end
 
-          def test?
-            false
-          end
-
-          private
-
-          def parse(post)
-            @raw = post.to_s
-            for line in @raw.split('&')
-              key, value = *line.scan( %r{^([A-Za-z0-9_.]+)\=(.*)$} ).flatten
-              params[key] = CGI.unescape(value)
+          def type
+            if words
+              'verify'
+            elsif status
+              'notify'
+            else
+              false
             end
           end
 
+          def acknowledge(authcode = nil)
+            case type
+            when 'verify'
+              words == Digest::SHA1.hexdigest("#{gross}#{@options[:credential2]}#{item_id}")
+            when 'notify'
+              true
+            else
+              false
+            end
+          end
         end
       end
     end
