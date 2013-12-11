@@ -40,14 +40,14 @@ class BitPayNotificationTest < Test::Unit::TestCase
     assert @bit_pay.acknowledge
   end
 
-  def test_failed_acknowledgement
+  def test_acknowledgement_error
     Net::HTTP.any_instance.expects(:request).returns(stub(:body => '{"error":"Doesnt match"}'))
-    assert_nil @bit_pay.acknowledge
+    assert !@bit_pay.acknowledge
   end
 
-  def test_failed_acknowledgement
+  def test_acknowledgement_invalid_json
     Net::HTTP.any_instance.expects(:request).returns(stub(:body => '{invalid json'))
-    assert_nil @bit_pay.acknowledge
+    assert !@bit_pay.acknowledge
   end
 
   private

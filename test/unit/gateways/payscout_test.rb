@@ -508,7 +508,7 @@ class PayscoutTest < Test::Unit::TestCase
     ).join('&')
   end
 
-  def test_invalid_transaction_id_void
+  def invalid_transaction_id_void_response
     %w(
       response=3
       responsetext=Invalid+Transaction+ID+/+Object+ID+specified:++REFID:4054572
