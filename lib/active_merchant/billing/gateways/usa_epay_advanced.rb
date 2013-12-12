@@ -1127,7 +1127,7 @@ module ActiveMerchant #:nodoc:
             fields['CardNumber']  = credit_card.number
             fields['CardExp']     = "#{"%02d" % credit_card.month}#{credit_card.year}"
           elsif (check = options[:check]).kind_of?(ActiveMerchant::Billing::Check)
-            fields['Account']     = check.number
+            fields['Account']     = check.account_number
             fields['Routing']     = check.routing_number
           end
           
