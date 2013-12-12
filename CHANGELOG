@@ -8,6 +8,7 @@
 * Openpay: Simplify test versus production mode [duff]
 * Wirecard: Handle a utf-8 description [duff]
 * Litle: Partial capture support [ttdonovan]
+* Ogone: Allow D3D for alias purchases [pwoestelandt]
 
 == Version 1.42.5 (February 7th, 2014)
 
