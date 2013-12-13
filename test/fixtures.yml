@@ -685,3 +685,7 @@ wirecard_checkout_page:
   secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
   shop_id: ''
   paymenttype: IDL
+
+payhub:
+  orgid: 10000
+  mode: demo

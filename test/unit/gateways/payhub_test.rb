@@ -9,6 +9,7 @@ class PayhubTest < Test::Unit::TestCase
     
     @credit_card = credit_card
     @amount = 100
+    @credit_card.verification_value = "999"
 
     @options = {
       :order_id => '1',
@@ -42,12 +43,39 @@ class PayhubTest < Test::Unit::TestCase
 
   # Place raw successful response from gateway here
   def successful_purchase_response
-    "{\"CARD_TOKEN_NO\":\"9999000000001697\",\"AVS_RESULT_CODE\":\"N\",\"TRANSACTION_ID\":\"18918\",\"CUSTOMER_ID\":\"\",\"VERIFICATION_RESULT_CODE\":\"M\",\"RESPONSE_CODE\":\"00\",\"RISK_STATUS_RESPONSE_CODE\":\"\",\"TRANSACTION_DATE_TIME\":\"2013-12-12 11:16:30\",\"RISK_STATUS_RESPONSE_TEXT\":\"\",\"APPROVAL_CODE\":\"TAS765\",\"BATCH_ID\":\"1039\",\"RESPONSE_TEXT\":\"SUCCESS\",\"CIS_NOTE\":\"\"}"
-
+    %({
+      "CARD_TOKEN_NO": "9999000000001698",
+      "AVS_RESULT_CODE": "N",
+      "TRANSACTION_ID": "18952",
+      "CUSTOMER_ID": "",
+      "VERIFICATION_RESULT_CODE": "M",
+      "RESPONSE_CODE": "00",
+      "RISK_STATUS_RESPONSE_CODE": "",
+      "TRANSACTION_DATE_TIME": "2013-12-13 14:04:38",
+      "RISK_STATUS_RESPONSE_TEXT": "",
+      "APPROVAL_CODE": "TAS960",
+      "BATCH_ID": "1042",
+      "RESPONSE_TEXT": "SUCCESS",
+      "CIS_NOTE": ""
+    })
   end
 
   # Place raw failed response from gateway here
   def failed_purchase_response
-    "{\"CARD_TOKEN_NO\":\"9999000000001697\",\"AVS_RESULT_CODE\":\"N\",\"TRANSACTION_ID\":\"18920\",\"CUSTOMER_ID\":\"\",\"VERIFICATION_RESULT_CODE\":\"N\",\"RESPONSE_CODE\":\"N7\",\"RISK_STATUS_RESPONSE_CODE\":\"\",\"TRANSACTION_DATE_TIME\":\"2013-12-12 11:18:20\",\"RISK_STATUS_RESPONSE_TEXT\":\"\",\"APPROVAL_CODE\":\"      \",\"BATCH_ID\":\"1039\",\"RESPONSE_TEXT\":\"Please retry the previous transaction or contact a PayHub Admin at 415-306-9476.\",\"CIS_NOTE\":\"\"}"
+    %({
+      "CARD_TOKEN_NO": "9999000000001698",
+      "AVS_RESULT_CODE": "N",
+      "TRANSACTION_ID": "18947",
+      "CUSTOMER_ID": "",
+      "VERIFICATION_RESULT_CODE": "N",
+      "RESPONSE_CODE": "N7",
+      "RISK_STATUS_RESPONSE_CODE": "",
+      "TRANSACTION_DATE_TIME": "2013-12-13 12:16:41",
+      "RISK_STATUS_RESPONSE_TEXT": "",
+      "APPROVAL_CODE": "      ",
+      "BATCH_ID": "1042",
+      "RESPONSE_TEXT": "Please retry the previous transaction or contact a PayHub Admin at 415-306-9476.",
+      "CIS_NOTE": ""
+    })
   end
 end
