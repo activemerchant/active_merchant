@@ -4,28 +4,31 @@ class DokuNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @doku_verify = Doku::Notification.new(http_raw_data_verify)
-    @doku_notify = Doku::Notification.new(http_raw_data_notify)
     @shared_key = "SHARED_KEY"
+    @transidmerchant = "000001"
+    @amount = "100"
+    @words = Digest::SHA1.hexdigest("#{@amount}#{@shared_key}#{@transidmerchant}")
+
+    @doku_verify = Doku::Notification.new(http_raw_data_verify, :credential2 => @words)
+    @doku_notify = Doku::Notification.new(http_raw_data_notify, :credential2 => @words)
   end
 
   def test_accessors_notify
-    assert @doku_notify.complete?
-    assert_equal "Completed", @doku_notify.status
-    assert_equal "ORD12345", @doku_notify.item_id
-    assert_equal "165000", @doku_notify.gross
-    assert_equal "IDR", @doku_notify.currency
+    assert @doku_notify.complete?, "should be marked complete"
+
+    assert_equal @transidmerchant,  @doku_notify.item_id
+    assert_equal @amount,           @doku_notify.gross
+    assert_equal "Completed",       @doku_notify.status
+    assert_equal "IDR",             @doku_notify.currency
   end
 
   def test_accessors_verify
     words_seed = "#{@doku_verify.gross}#{@shared_key}#{@doku_verify.item_id}"
     expected_words = Digest::SHA1.hexdigest(words_seed)
 
-    assert @doku_verify.complete?
-    assert !@doku.status
-    assert_equal "000001", @doku_notify.item_id
-    assert_equal "100", @doku_notify.gross
-    assert_equal expected_words, @doku_verify.words
+    assert_equal @transidmerchant,  @doku_notify.item_id
+    assert_equal @amount,           @doku_notify.gross
+    assert_equal expected_words,    @doku_verify.words
   end
 
   def test_type
@@ -34,24 +37,24 @@ class DokuNotificationTest < Test::Unit::TestCase
   end
 
   def test_acknowledge_on_verify
-    assert @doku_verify.acknowledge
+    assert @doku_verify.acknowledge, "should successfully acknowledge"
   end
 
   def test_acknowledge_on_notify
-    assert @doku_notify.acknowledge
+    assert @doku_notify.acknowledge, "should successfully acknowledge"
   end
 
   def test_acknowledge_on_corrupt
     bad_request = Doku::Notification.new("GARBAGEPARAM=garbage")
-    assert !bad_request.acknowledge
+    assert !bad_request.acknowledge, "should not acknowledge"
   end
 
   private
   def http_raw_data_notify
-    "TRANSIDMERCHANT=ORD12345&AMOUNT=165000&RESULT=Success"
+    "TRANSIDMERCHANT=#{@transidmerchant}&AMOUNT=#{@amount}&RESULT=Success"
   end
 
   def http_raw_data_verify
-    "STOREID=STORE0123&TRANSIDMERCHANT=000001&AMOUNT=100&WORDS=26e5fb7ec6d1e839fd68b24abb822e174a9f852a"
+    "STOREID=STORE0123&TRANSIDMERCHANT=#{@transidmerchant}&AMOUNT=#{@amount}&WORDS=#{@words}"
   end
 end
