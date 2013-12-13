@@ -27,7 +27,10 @@ module ActiveMerchant #:nodoc:
           self.production_ips = ['103.10.128.11', '103.10.128.14']
 
           def complete?
-            status.present?
+            if type == 'verify'
+              params['STOREID'].present? && words.present?
+            end
+            status.present? if type == 'notify'
           end
 
           def item_id
@@ -60,8 +63,6 @@ module ActiveMerchant #:nodoc:
               'verify'
             elsif status
               'notify'
-            else
-              false
             end
           end
 
@@ -75,6 +76,7 @@ module ActiveMerchant #:nodoc:
               false
             end
           end
+
         end
       end
     end
