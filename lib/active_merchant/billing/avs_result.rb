@@ -69,6 +69,7 @@ module ActiveMerchant
       
       def initialize(attrs)
         attrs ||= {}
+        attrs = attrs.to_hash
         
         @code = attrs[:code].upcase unless attrs[:code].blank?
         @message = self.class.messages[code]
