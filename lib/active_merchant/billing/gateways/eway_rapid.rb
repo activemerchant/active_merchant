@@ -21,13 +21,13 @@ module ActiveMerchant #:nodoc:
       # Public: Run a purchase transaction.
       #
       # amount         - The monetary amount of the transaction in cents.
-      # payment_method - The payment method or nil if :customer_token is provided
+      # payment_method - The payment method or authorization token returned from store.
       # options        - A standard ActiveMerchant options hash:
       #                  :transaction_type - One of: Purchase (default), MOTO
-      #                                      or Recurring
+      #                                      or Recurring.  For stored card payments (aka - TokenPayments),
+      #                                      this must be either MOTO or Recurring.
       #                  :order_id         - A merchant-supplied identifier for the
       #                                      transaction (optional).
-      #                  :customer_token   - The customer token to use for TokenPayments (optional).
       #                  :description      - A merchant-supplied description of the
       #                                      transaction (optional).
       #                  :currency         - Three letter currency code for the
@@ -42,13 +42,13 @@ module ActiveMerchant #:nodoc:
       #                                      submitting the transaction
       #                                      (default: "https://github.com/Shopify/active_merchant")
       #
-      # Returns an ActiveMerchant::Billing::Response object where authorization is set to the Transaction ID
+      # Returns an ActiveMerchant::Billing::Response object where authorization is the Transaction ID on success
       def purchase(amount, payment_method, options={})
-        method = options[:customer_token] ? 'TokenPayment' : 'ProcessPayment'
         params = {}
         add_metadata(params, options)
         add_invoice(params, amount, options)
-        add_customer_data(params, payment_method, options)
+        add_customer_data(params, options)
+        add_credit_card(params, payment_method, options)
         commit(url_for('Transaction'), params)
       end
 
@@ -58,15 +58,29 @@ module ActiveMerchant #:nodoc:
       # identification - The transaction id which is returned in the
       #                  authorization of the successful purchase transaction
       # options        - A standard ActiveMerchant options hash:
+      #                  :order_id         - A merchant-supplied identifier for the
+      #                                      transaction (optional).
+      #                  :description      - A merchant-supplied description of the
+      #                                      transaction (optional).
+      #                  :currency         - Three letter currency code for the
+      #                                      transaction (default: "AUD")
+      #                  :billing_address  - Standard ActiveMerchant address hash
+      #                                      (optional).
+      #                  :shipping_address - Standard ActiveMerchant address hash
+      #                                      (optional).
+      #                  :ip               - The ip of the consumer initiating the
+      #                                      transaction (optional).
+      #                  :application_id   - A string identifying the application
+      #                                      submitting the transaction
+      #                                      (default: "https://github.com/Shopify/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object
       def refund(money, identification, options = {})
-        request = build_xml_request('Refund') do |doc|
-          add_metadata(doc, options)
-          add_invoice(doc, money, options)
-          add_customer_data(doc, payment_method, options)
-        end
-        commit(url_for('DirectPayment'), request)
+        params = {}
+        add_metadata(params, options)
+        add_invoice(params, money, options.merge(refund_transaction_id: identification))
+        add_customer_data(params, options)
+        commit(url_for("Transaction/#{identification}/Refund"), params)
       end
 
       # Public: Store card details and return a valid token
@@ -74,6 +88,8 @@ module ActiveMerchant #:nodoc:
       # payment_method - The payment method or nil if :customer_token is provided
       # options        - A supplemented ActiveMerchant options hash:
       #                  :order_id         - A merchant-supplied identifier for the
+      #                                      transaction (optional).
+      #                  :description      - A merchant-supplied description of the
       #                                      transaction (optional).
       #                  :billing_address  - Standard ActiveMerchant address hash
       #                                      (required).
@@ -83,16 +99,16 @@ module ActiveMerchant #:nodoc:
       #                                      submitting the transaction
       #                                      (default: "https://github.com/Shopify/active_merchant")
       #
-      # Returns an ActiveMerchant::Billing::Response object where the authorization
-      # is the customer_token on success
+      # Returns an ActiveMerchant::Billing::Response object where the authorization is the customer_token on success
       def store(payment_method, options = {})
         requires!(options, :billing_address)
-        request = build_xml_request('CreateTokenCustomer') do |doc|
-          add_metadata(doc, options)
-          add_invoice(doc, 0, options)
-          add_customer_data(doc, payment_method, options)
-        end
-        commit(url_for('DirectPayment'), request, 'customer_tokencustomerid')
+        params = {}
+        add_metadata(params, options)
+        add_invoice(params, 0, options)
+        add_customer_data(params, options)
+        add_credit_card(params, payment_method, options)
+        params['Method'] = 'CreateTokenCustomer'
+        commit(url_for("Transaction"), params)
       end
 
       # Public: Update a customer's data
@@ -103,6 +119,8 @@ module ActiveMerchant #:nodoc:
       # options        - A supplemented ActiveMerchant options hash:
       #                  :order_id         - A merchant-supplied identifier for the
       #                                      transaction (optional).
+      #                  :description      - A merchant-supplied description of the
+      #                                      transaction (optional).
       #                  :billing_address  - Standard ActiveMerchant address hash
       #                                      (optional).
       #                  :ip               - The ip of the consumer initiating the
@@ -110,14 +128,17 @@ module ActiveMerchant #:nodoc:
       #                  :application_id   - A string identifying the application
       #                                      submitting the transaction
       #                                      (default: "https://github.com/Shopify/active_merchant")
-      # Returns an ActiveMerchant::Billing::Response object
+      #
+      # Returns an ActiveMerchant::Billing::Response object where the authorization is the customer_token on success
       def update(customer_token, payment_method, options = {})
-        request = build_xml_request('UpdateTokenCustomer') do |doc|
-          add_metadata(doc, options)
-          add_invoice(doc, 0, options)
-          add_customer_data(doc, payment_method, options)
-        end
-        commit(url_for('DirectPayment'), request)
+        params = {}
+        add_metadata(params, options)
+        add_invoice(params, 0, options)
+        add_customer_data(params, options)
+        add_credit_card(params, payment_method, options)
+        add_customer_token(params, customer_token)
+        params['Method'] = 'UpdateTokenCustomer'
+        commit(url_for("Transaction"), params)
       end
 
       private
@@ -125,38 +146,39 @@ module ActiveMerchant #:nodoc:
       def add_metadata(params, options)
         params['RedirectUrl'] = options[:redirect_url] || 'http://example.com'
         params['CustomerIP'] = options[:ip] if options[:ip]
-        params['Method'] = options[:request_method] || "ProcessPayment"
         params['TransactionType'] = options[:transaction_type] || 'Purchase'
         params['DeviceID'] = options[:application_id] || application_id
       end
 
       def add_invoice(params, money, options)
-        refund_transaction_id = options[:refund_transaction_id]
-        type = refund_transaction_id ? 'Refund' : 'Payment'
         currency_code = options[:currency] || currency(money)
-        params[type] = fields = {
+        invoice = {
           'TotalAmount' => localized_amount(money, currency_code),
           'InvoiceReference' => options[:order_id],
           'InvoiceDescription' => options[:description],
           'CurrencyCode' => currency_code,
         }
-        # must include the original transaction id for refunds
-        fields['TransactionID'] = refund_transaction_id if refund_transaction_id
+        if options[:refund_transaction_id]
+          # must include the original transaction id for refunds
+          invoice['TransactionID'] = options[:refund_transaction_id] if options[:refund_transaction_id]
+          params['Refund'] = invoice
+        else
+          params['Payment'] = invoice
+        end
       end
 
-      def add_customer_data(params, credit_card, options)
-        params['Customer'] = customer = {}
-        add_address(customer, (options[:billing_address] || options[:address]), {:email => options[:email]})
-        customer['CardDetails'] = card_details = {}
-        add_credit_card(card_details, credit_card, options)
-        params['ShippingAddress'] = shipping_address = {}
-        add_address(shipping_address, options[:shipping_address], {:skip_company => true})
+      def add_customer_data(params, options)
+        params['Customer'] ||= {}
+        add_address(params['Customer'], (options[:billing_address] || options[:address]), {:email => options[:email]})
+        params['ShippingAddress'] = {}
+        add_address(params['ShippingAddress'], options[:shipping_address], {:skip_company => true})
       end
 
       def add_address(params, address, options={})
         return unless address
-        if name = address[:name]
-          parts = name.split(/\s+/)
+
+        if address[:name]
+          parts = address[:name].split(/\s+/)
           params['FirstName'] = parts.shift if parts.size > 1
           params['LastName'] = parts.join(" ")
         end
@@ -175,18 +197,31 @@ module ActiveMerchant #:nodoc:
 
       def add_credit_card(params, credit_card, options)
         return unless credit_card
-        params['Name'] = credit_card.name
-        params['Number'] = credit_card.number
-        params['ExpiryMonth'] = "%02d" % credit_card.month if credit_card.month
-        params['ExpiryYear'] = "%02d" % credit_card.year if credit_card.year
-        params['CVN'] = credit_card.verification_value
+        params['Customer'] ||= {}
+        if credit_card.respond_to? :number
+          params['Method'] = 'ProcessPayment'
+          card_details = params['Customer']['CardDetails'] = {}
+          card_details['Name'] = credit_card.name
+          card_details['Number'] = credit_card.number
+          card_details['ExpiryMonth'] = "%02d" % (credit_card.month || 0)
+          card_details['ExpiryYear'] = "%02d" % (credit_card.year || 0)
+          card_details['CVN'] = credit_card.verification_value
+        else
+          params['Method'] = 'TokenPayment'
+          add_customer_token(params, credit_card)
+        end
+      end
+
+      def add_customer_token(params, token)
+        params['Customer'] ||= {}
+        params['Customer']['TokenCustomerID'] = token
       end
 
       def url_for(action)
         (test? ? test_url : live_url) + action
       end
 
-      def commit(url, params, authorization_type = :transaction)
+      def commit(url, params)
         headers = {
           "Authorization" => ("Basic " + Base64.strict_encode64(@options[:login].to_s + ":" + @options[:password].to_s).chomp),
           "Content-Type" => "application/json"
@@ -199,7 +234,7 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, raw),
           raw,
-          :authorization => authorization_from(raw, authorization_type),
+          :authorization => authorization_from(raw),
           :test => test?,
           :avs_result => avs_result_from(raw),
           :cvv_result => cvv_result_from(raw)
@@ -218,7 +253,7 @@ module ActiveMerchant #:nodoc:
         elsif response['ResponseCode'] == "00"
           true
         elsif response['TransactionStatus']
-          (response['TransactionStatus'] == "true")
+          (response['TransactionStatus'] == true)
         else
           true
         end
@@ -227,7 +262,7 @@ module ActiveMerchant #:nodoc:
       def message_from(succeeded, response)
         if response['Errors']
           (MESSAGES[response['Errors']] || response['Errors'])
-        elsif response[:responsecode]
+        elsif response['Responsecode']
           ActiveMerchant::Billing::EwayGateway::MESSAGES[response['ResponseCode']]
         elsif response['ResponseMessage']
           (MESSAGES[response['ResponseMessage']] || response['ResponseMessage'])
@@ -238,18 +273,15 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorization_from(response, type)
-        if type == :transaction
-          response['TransactionID']
-        elsif type == :customer_token
-          response['Customer']['TokenCustomerID'] rescue nil
-        else
-          raise "Unknown authorization type: #{type}"
-        end
+      def authorization_from(response)
+        # Note: TransactionID is always null for store requests, but TokenCustomerID is also sent back for purchase from
+        # stored card transactions so we give precendence to TransactionID
+        response['TransactionID'] || response['Customer']['TokenCustomerID']
       end
 
       def avs_result_from(response)
-        code = case response[:verification_address]
+        verification = response['Verification'] || {}
+        code = case verification['Address']
         when "Valid"
           "M"
         when "Invalid"
@@ -261,7 +293,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def cvv_result_from(response)
-        case response[:verification_cvn]
+        verification = response['Verification'] || {}
+        case verification['CVN']
         when "Valid"
           "M"
         when "Invalid"
@@ -272,6 +305,18 @@ module ActiveMerchant #:nodoc:
       end
 
       MESSAGES = {
+        'A2000' => 'Transaction Approved Successful',
+        'A2008' => 'Honour With Identification Successful',
+        'A2010' => 'Approved For Partial Amount Successful',
+        'A2011' => 'Approved, VIP Successful',
+        'A2016' => 'Approved, Update Track 3 Successful',
+        'S5000' => 'System Error',
+        'S5085' => 'Started 3dSecure',
+        'S5086' => 'Routed 3dSecure',
+        'S5087' => 'Completed 3dSecure',
+        'S5088' => 'PayPal Transaction Created',
+        'S5099' => 'Incomplete (Access Code in progress/incomplete)',
+        'S5010' => 'Unknown error returned by gateway',
         'V6000' => 'Validation error',
         'V6001' => 'Invalid CustomerIP',
         'V6002' => 'Invalid DeviceID',
