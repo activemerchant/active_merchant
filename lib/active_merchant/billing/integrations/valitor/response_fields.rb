@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
           end
           
           def gross
-            "%0.2f" % params['Upphaed'].to_s.sub(',', '.')
+            Money.parse(params['Upphaed']).to_s
           end
           
           def card_type
