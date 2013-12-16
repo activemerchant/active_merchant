@@ -10,12 +10,12 @@ module ActiveMerchant #:nodoc:
           'https://apps.myshortcart.com/payment/request-payment/'
         end
 
-        def self.notification(post)
-          Notification.new(post)
+        def self.notification(post, options = {})
+          Notification.new(post, options)
         end
 
-        def self.return(post)
-          Return.new(post)
+        def self.return(post, options = {})
+          Return.new(post, options)
         end
 
       end
