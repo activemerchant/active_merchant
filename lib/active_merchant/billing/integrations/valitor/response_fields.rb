@@ -15,12 +15,12 @@ module ActiveMerchant #:nodoc:
           end
           
           def item_id
-            params['Tilvisunarnumer']
+            params['ReferenceNumber']
           end
           alias :order :item_id
           
           def transaction_id
-            params['VefverslunSalaID']
+            params['SaleID']
           end
           
           def currency
@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def received_at
-            Time.parse(params['Dagsetning'].to_s)
+            Time.parse(params['Date'].to_s)
           end
           
           def gross
@@ -40,47 +40,47 @@ module ActiveMerchant #:nodoc:
           end
           
           def card_type
-            params['Kortategund']
+            params['CardType']
           end
           
           def card_last_four
-            params['KortnumerSidustu']
+            params['CardNumberMasked']
           end
           
           def authorization_number
-            params['Heimildarnumer']
+            params['AuthorizationNumber']
           end
           
           def transaction_number
-            params['Faerslunumer']
+            params['TransactionNumber']
           end
           
           def customer_name
-            params['Nafn']
+            params['Name']
           end
           
           def customer_address
-            params['Heimilisfang']
+            params['Address']
           end
           
           def customer_zip
-            params['Postnumer']
+            params['PostalCode']
           end
           
           def customer_city
-            params['Stadur']
+            params['City']
           end
           
           def customer_country
-            params['Land']
+            params['Country']
           end
           
           def customer_email
-            params['Tolvupostfang']
+            params['Email']
           end
           
           def customer_comment
-            params['Athugasemdir']
+            params['Comments']
           end
           
           def password
@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
           end
           
           def acknowledge(authcode = nil)
-            password ? Digest::MD5.hexdigest("#{password}#{order}") == params['RafraenUndirskriftSvar'] : true
+            password ? Digest::MD5.hexdigest("#{password}#{order}") == params['DigitalSignatureResponse'] : true
           end
         end
       end

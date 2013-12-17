@@ -7,10 +7,10 @@ module ActiveMerchant #:nodoc:
         autoload :Notification, 'active_merchant/billing/integrations/valitor/notification.rb'
 
         mattr_accessor :test_url
-        self.test_url = 'https://testvefverslun.valitor.is/1_1/'
+        self.test_url = 'https://testgreidslusida.valitor.is/'
 
         mattr_accessor :production_url 
-        self.production_url = 'https://vefverslun.valitor.is/1_1/'
+        self.production_url = 'https://greidslusida.valitor.is/'
         
         def self.test?
           (ActiveMerchant::Billing::Base.integration_mode == :test)
