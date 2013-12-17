@@ -1,8 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PayhubGateway < Gateway
-      #self.test_url = 'https://checkout.payhub.com/transaction/sale/?mode=staging'
-      self.test_url = 'http://localhost:3000/transaction/sale'
+      self.test_url = 'https://checkout.payhub.com/transaction/sale/?mode=demo'
       self.live_url = 'https://checkout.payhub.com/transaction/sale/'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
