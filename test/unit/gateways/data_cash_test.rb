@@ -115,6 +115,11 @@ class DataCashTest < Test::Unit::TestCase
     assert response.test?
     assert_equal 'ACCEPTED', response.message
   end
+
+  def test_capturemethod_is_set_to_ecomm
+    xml = REXML::Document.new(@gateway.send(:build_void_or_capture_request, 'fulfill', 100, 'authorization', {}))
+    assert_equal 'ecomm', REXML::XPath.first(xml, '//TxnDetails/capturemethod').text
+  end
   
   private
   def failed_purchase_response
