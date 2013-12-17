@@ -335,7 +335,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if options[:description]
-          enhanced_data['customerReference'] = options[:description]
+          enhanced_data['customerReference'] = options[:description][0..16]
         end
 
         if options[:billing_address]

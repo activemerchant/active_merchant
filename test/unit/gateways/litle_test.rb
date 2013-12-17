@@ -744,6 +744,20 @@ class LitleTest < Test::Unit::TestCase
     end
   end
 
+  def test_refund_should_not_error_on_customer_reference_length
+    return_object = {
+      'response' => '0',
+      'creditResponse' => {
+        'response'    => '000',
+        'message'     => 'pass',
+        'litleTxnId'  =>'123456789012345678'
+      }
+    }
+    LitleOnline::Communications.expects(:http_post => return_object.to_xml(:root => 'litleOnlineResponse'))
+    response = @gateway.refund(0, "1234;credit", {:description => 'A lengthy refund description'})
+    assert response.success?
+  end
+
   private
 
   def with_litle_configuration_restoration(&block)
