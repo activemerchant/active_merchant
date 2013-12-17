@@ -1,7 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PayhubGateway < Gateway
-      self.test_url = 'https://checkout.payhub.com/transaction/sale/?mode=staging'
+      #self.test_url = 'https://checkout.payhub.com/transaction/sale/?mode=staging'
+      self.test_url = 'http://localhost:3000/transaction/sale'
       self.live_url = 'https://checkout.payhub.com/transaction/sale/'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
@@ -30,11 +31,12 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, creditcard, options = {})
         post = {}
-        add_invoice(post, options)
+        add_other(post, options)
         add_creditcard(post, creditcard)
         add_address(post, creditcard, options)
         add_customer_data(post, options)
         add_amount(post, money, options)
+        add_credentials(post, options)
         
         commit('sale', money, post)
       end
@@ -42,28 +44,42 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard, options = {})
         post = {}
-        add_invoice(post, options)
+        add_other(post, options)
         add_creditcard(post, creditcard)
         add_address(post, creditcard, options)
         add_customer_data(post, options)
+        add_amount(post, money, options)
+        add_credentials(post, options)
+        post['trans_type'] = "auth"
 
         commit('authonly', money, post)
       end
 
 
-      def capture(money, authorization, options = {})
+      def capture(money, trans_id, options = {})
+        post = {}
+        add_credentials(post, options)
+        add_amount(post, money, options)
+        
+        post['trans_type'] = "capture"
+        post['trans_id'] = trans_id
+
         commit('capture', money, post)
       end
 
 
       private
 
+      def add_credentials(post, options)
+        post['orgid'] = options[:orgid]
+        post['mode'] = options[:mode]
+      end
+      
       def add_amount(post, money, options)
         post['amount'] = options[:currency] || amount(money) 
       end
 
       def add_customer_data(post, options)
-        puts options[:billing_address].inspect
         post['first_name'] = options[:billing_address][:name]
       end
 
@@ -78,7 +94,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_invoice(post, options)
+      def add_other(post, options)
         post[:note] = options[:description]
         post[:invoice] = options[:order_id]
       end
@@ -93,23 +109,22 @@ module ActiveMerchant #:nodoc:
 
       def parse(response, post_params)
         response = JSON.parse(response)
-        puts JSON.pretty_generate(response)
         response = Hash[response.map{|k,v| [k.downcase, v]}]
         
         success = (response['response_code'] == '00')
         message = "#{response['response_code']}:  #{response['response_text']}"
+
         options = @options.merge(:test => test?, :authorization => response['approval_code'])
+        post_params['trans_id'] = response['transaction_id']
 
         Response.new(success, message, post_params, options)
       end
 
       def commit(action, money, parameters)
-        parameters['orgid'] = options[:orgid]
-        parameters['mode'] = options[:mode]
-
         post = parameters.to_query
         parse(ssl_post(url, post), parameters)
       end
+
 
     end
   end

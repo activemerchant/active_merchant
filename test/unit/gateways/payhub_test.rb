@@ -14,7 +14,8 @@ class PayhubTest < Test::Unit::TestCase
     @options = {
       :order_id => '1',
       :billing_address => address,
-      :description => 'Store Purchase'
+      :description => 'Store Purchase',
+      :trans_id => '123456'
     }
   end
 
@@ -29,6 +30,27 @@ class PayhubTest < Test::Unit::TestCase
 
     assert_match /^[0-9A-Z]{6,8}$/, response.authorization
     assert response.test?
+  end
+
+  def test_successful_authorization
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_instance_of Response, response
+    assert_success response
+
+    # Replace with authorization number from the successful response
+
+    assert_match /^[0-9A-Z]{6,8}$/, response.authorization
+    assert response.test?
+  end
+
+  def test_successful_capture
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    assert response = @gateway.capture(@amount, @options[:trans_id], @options)
+    assert_success response
   end
 
   def test_unsuccessful_request

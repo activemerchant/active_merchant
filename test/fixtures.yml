@@ -687,5 +687,5 @@ wirecard_checkout_page:
   paymenttype: IDL
 
 payhub:
-  orgid: 10000
-  mode: demo
+  orgid: 10102
+  mode: staging
