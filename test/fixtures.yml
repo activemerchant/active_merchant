@@ -128,9 +128,10 @@ eway_managed:
   username: 'test@eway.com.au'
   password: 'test123'
 
+# Working credentials, no need to replace
 eway_rapid:
-  login: LOGIN
-  password: PASSWORD
+  login: "F9802CIVgUgNaD8y/H52MBMnL5OvMoy4cYimpi1L/dCXeNNR6or3vLPoC9GjeLVdA7ymi+"
+  password: "sandbox1"
 
 # Working credentials, no need to replace
 exact:

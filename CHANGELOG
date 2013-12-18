@@ -24,7 +24,6 @@
 * Add SoEasyPay gateway [ir-soeasycorp]
 * Bogus: Add check support [npverni]
 * Payflow: Add Check support [crazyivan]
-* eWay Rapid: Upgrade to 3.1 [atomgiant]
 * Stripe: Allow expanding objects inline [odorcicd]
 
 == Version 1.42.2 (November 13th, 2013)
