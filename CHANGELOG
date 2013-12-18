@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.42.3 (December 18th, 2013)
+
 * Balanced: Add support for appears_on_statement_as [duff]
 * Authorize.Net: Make already actioned responses failures [odorcicd]
 * Add Payex gateway [atomgiant]
