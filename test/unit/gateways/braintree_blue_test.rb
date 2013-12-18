@@ -93,15 +93,16 @@ class BraintreeBlueTest < Test::Unit::TestCase
       :public_key => 'public_key',
       :private_key => 'private_key'
     )
-    customer = mock(
-      :credit_cards => [],
+    customer = stub(
+      :credit_cards => [stub_everything],
       :email => 'email',
       :first_name => 'John',
       :last_name => 'Smith'
     )
     customer.stubs(:id).returns('123')
     result = Braintree::SuccessfulResult.new(:customer => customer)
-    Braintree::Customer.expects(:create).with do |params|
+
+    Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_equal 'merchant_account_id', params[:credit_card][:options][:verification_merchant_account_id]
     end.returns(result)
 
@@ -115,15 +116,15 @@ class BraintreeBlueTest < Test::Unit::TestCase
       :public_key => 'public_key',
       :private_key => 'private_key'
     )
-    customer = mock(
-      :credit_cards => [],
+    customer = stub(
+      :credit_cards => [stub_everything],
       :email => 'email',
       :first_name => 'John',
       :last_name => 'Smith'
     )
     customer.stubs(:id).returns('123')
     result = Braintree::SuccessfulResult.new(:customer => customer)
-    Braintree::Customer.expects(:create).with do |params|
+    Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       assert_equal 'value_from_options', params[:credit_card][:options][:verification_merchant_account_id]
     end.returns(result)
 
