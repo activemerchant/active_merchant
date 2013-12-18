@@ -36,7 +36,8 @@ module ActiveMerchant #:nodoc:
           end
           
           def gross
-            "%0.2f" % params['Upphaed'].to_s.sub(',', '.')
+            # Valitor does not return the amount
+            nil
           end
           
           def card_type
