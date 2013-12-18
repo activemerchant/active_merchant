@@ -38,10 +38,9 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard, options = {})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
-        add_expand_parameters(post, options)
         post[:capture] = "false"
 
-        commit(:post, 'charges', post, generate_options(options))
+        commit(:post, 'charges', post, options)
       end
 
       # To create a charge on a card or a token, call
@@ -53,37 +52,31 @@ module ActiveMerchant #:nodoc:
       #   purchase(money, nil, { :customer => id, ... })
       def purchase(money, creditcard, options = {})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
-        add_expand_parameters(post, options)
 
-        commit(:post, 'charges', post, generate_options(options))
+        commit(:post, 'charges', post, options)
       end
 
       def capture(money, authorization, options = {})
         post = {:amount => amount(money)}
         add_application_fee(post, options)
-        add_expand_parameters(post, options)
 
-        commit(:post, "charges/#{CGI.escape(authorization)}/capture", post)
+        commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
       end
 
       def void(identification, options = {})
-        post = {}
-        add_expand_parameters(post, options)
-
-        commit(:post, "charges/#{CGI.escape(identification)}/refund", post)
+        commit(:post, "charges/#{CGI.escape(identification)}/refund", {}, options)
       end
 
       def refund(money, identification, options = {})
         post = {:amount => amount(money)}
-        commit_options = generate_options(options)
 
         MultiResponse.run(:first) do |r|
-          r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, commit_options) }
+          r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, options) }
 
           return r unless options[:refund_fee_amount]
 
-          r.process { fetch_application_fees(identification, commit_options) }
-          r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r), commit_options) }
+          r.process { fetch_application_fees(identification, options) }
+          r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r), options) }
         end
       end
 
@@ -107,21 +100,19 @@ module ActiveMerchant #:nodoc:
       def store(creditcard, options = {})
         post = {}
         add_creditcard(post, creditcard, options)
-        add_expand_parameters(post, options)
         post[:description] = options[:description]
         post[:email] = options[:email]
 
-        commit_options = generate_options(options)
         if options[:customer]
           MultiResponse.run(:first) do |r|
-            r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", post, commit_options) }
+            r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/cards", post, options) }
 
             return r unless options[:set_default] and r.success? and !r.params["id"].blank?
 
             r.process { update_customer(options[:customer], :default_card => r.params["id"]) }
           end
         else
-          commit(:post, 'customers', post, commit_options)
+          commit(:post, 'customers', post, options)
         end
       end
 
@@ -131,14 +122,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def update_customer(customer_id, options = {})
-        commit(:post, "customers/#{CGI.escape(customer_id)}", options, generate_options(options))
+        commit(:post, "customers/#{CGI.escape(customer_id)}", options, options)
       end
 
       def unstore(customer_id, card_id = nil, options = {})
         if card_id.nil?
-          commit(:delete, "customers/#{CGI.escape(customer_id)}", nil, generate_options(options))
+          commit(:delete, "customers/#{CGI.escape(customer_id)}", nil, options)
         else
-          commit(:delete, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(card_id)}", nil, generate_options(options))
+          commit(:delete, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(card_id)}", nil, options)
         end
       end
 
@@ -252,15 +243,6 @@ module ActiveMerchant #:nodoc:
         end.compact.join("&")
       end
 
-      def generate_options(raw_options)
-        options = generate_meta(raw_options)
-        options.merge!(raw_options.slice(:version, :key))
-      end
-
-      def generate_meta(options)
-        {:meta => {:ip => options[:ip]}}
-      end
-
       def headers(options = {})
         @@ua ||= JSON.dump({
           :bindings_version => ActiveMerchant::VERSION,
@@ -276,13 +258,15 @@ module ActiveMerchant #:nodoc:
           "Authorization" => "Basic " + Base64.encode64(key.to_s + ":").strip,
           "User-Agent" => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "X-Stripe-Client-User-Agent" => @@ua,
-          "X-Stripe-Client-User-Metadata" => options[:meta].to_json
+          "X-Stripe-Client-User-Metadata" => {:ip => options[:ip]}.to_json
         }
         headers.merge!("Stripe-Version" => options[:version]) if options[:version]
         headers
       end
 
       def commit(method, url, parameters=nil, options = {})
+        add_expand_parameters(parameters, options) if parameters
+
         raw_response = response = nil
         success = false
         begin
