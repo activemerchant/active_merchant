@@ -21,15 +21,14 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, identification, options = {})
         post = {:amount => localized_amount(money)}
-        commit_options = generate_meta(options)
 
         MultiResponse.run do |r|
-          r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, commit_options) }
+          r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, options) }
 
           return r unless options[:refund_fee_amount]
 
-          r.process { fetch_application_fees(identification, commit_options) }
-          r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r), commit_options) }
+          r.process { fetch_application_fees(identification, options) }
+          r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r), options) }
         end
       end
 
@@ -56,17 +55,16 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         post[:email] = options[:email]
 
-        commit_options = generate_options(options)
         if options[:customer]
           MultiResponse.run(:first) do |r|
-            r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/", post, commit_options) }
+            r.process { commit(:post, "customers/#{CGI.escape(options[:customer])}/", post, options) }
 
             return r unless options[:set_default] and r.success? and !r.params["id"].blank?
 
             r.process { update_customer(options[:customer], :default_card => r.params["id"]) }
           end
         else
-          commit(:post, 'customers', post, commit_options)
+          commit(:post, 'customers', post, options)
         end
       end
 
@@ -93,7 +91,7 @@ module ActiveMerchant #:nodoc:
           "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":").strip,
           "User-Agent" => "Webpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "X-Webpay-Client-User-Agent" => @@ua,
-          "X-Webpay-Client-User-Metadata" => options[:meta].to_json
+          "X-Webpay-Client-User-Metadata" => {:ip => options[:ip]}.to_json
         }
       end
     end
