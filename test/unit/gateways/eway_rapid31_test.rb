@@ -23,7 +23,7 @@ class EwayRapid31Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       assert @response = @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert JSON.parse(expected_purchase_request(100)) == JSON.parse(data)
@@ -35,7 +35,7 @@ class EwayRapid31Test < Test::Unit::TestCase
   end
 
   def test_unsuccessful_purchase
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       assert @response = @gateway.purchase(@amount + 1, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert JSON.parse(expected_purchase_request(101)) == JSON.parse(data)
@@ -47,7 +47,7 @@ class EwayRapid31Test < Test::Unit::TestCase
   end
 
   def test_successful_store
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       assert @response = @gateway.store(@credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert JSON.parse(expected_store_request(:month => @credit_card.month)) == JSON.parse(data)
@@ -62,7 +62,7 @@ class EwayRapid31Test < Test::Unit::TestCase
   def test_unsuccessful_store
     bad_credit_card = credit_card('4444333322221111', :month => 13)
 
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       assert @response = @gateway.store(bad_credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert JSON.parse(expected_store_request(:month => bad_credit_card.month)) == JSON.parse(data)
@@ -76,7 +76,7 @@ class EwayRapid31Test < Test::Unit::TestCase
 
 
   def test_successful_purchase_with_token
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       assert @response = @gateway.purchase(@amount, 918260741894, @options)
     end.check_request do |method, endpoint, data, headers|
       assert JSON.parse(expected_purchase_with_token_request(918260741894)) == JSON.parse(data)
@@ -89,7 +89,7 @@ class EwayRapid31Test < Test::Unit::TestCase
   end
 
   def test_unsuccessful_purchase_with_token
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       assert @response = @gateway.purchase(@amount, 0, @options)
     end.check_request do |method, endpoint, data, headers|
       assert JSON.parse(expected_purchase_with_token_request(0)) == JSON.parse(data)
@@ -101,7 +101,7 @@ class EwayRapid31Test < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       assert @response = @gateway.refund(@amount, '10326714', @options)
     end.check_request do |method, endpoint, data, headers|
       assert JSON.parse(expected_refund_request(10326714)) == JSON.parse(data)
@@ -113,7 +113,7 @@ class EwayRapid31Test < Test::Unit::TestCase
   end
 
   def test_unsuccessful_refund
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       assert @response = @gateway.refund(@amount, 0, @options)
     end.check_request do |method, endpoint, data, headers|
       assert JSON.parse(expected_refund_request(0)) == JSON.parse(data)
@@ -126,7 +126,7 @@ class EwayRapid31Test < Test::Unit::TestCase
   end
 
   def test_successful_update
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       assert @response = @gateway.update(915845997420, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert JSON.parse(expected_update_request(915845997420)) == JSON.parse(data)
@@ -137,7 +137,7 @@ class EwayRapid31Test < Test::Unit::TestCase
   end
 
   def test_unsuccessful_update
-    stub_comms(:ssl_request) do
+    stub_comms(@gateway, :ssl_request) do
       assert @response = @gateway.update(0, @credit_card, @options)
     end.check_request do |method, endpoint, data, headers|
       assert JSON.parse(expected_update_request(0)) == JSON.parse(data)
