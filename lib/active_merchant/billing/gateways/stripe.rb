@@ -38,6 +38,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard, options = {})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
+        add_expand_parameters(post, options)
         post[:capture] = "false"
 
         commit(:post, 'charges', post, generate_options(options))
@@ -52,6 +53,7 @@ module ActiveMerchant #:nodoc:
       #   purchase(money, nil, { :customer => id, ... })
       def purchase(money, creditcard, options = {})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
+        add_expand_parameters(post, options)
 
         commit(:post, 'charges', post, generate_options(options))
       end
@@ -59,12 +61,16 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {:amount => amount(money)}
         add_application_fee(post, options)
+        add_expand_parameters(post, options)
 
         commit(:post, "charges/#{CGI.escape(authorization)}/capture", post)
       end
 
       def void(identification, options = {})
-        commit(:post, "charges/#{CGI.escape(identification)}/refund", {})
+        post = {}
+        add_expand_parameters(post, options)
+
+        commit(:post, "charges/#{CGI.escape(identification)}/refund", post)
       end
 
       def refund(money, identification, options = {})
@@ -101,6 +107,7 @@ module ActiveMerchant #:nodoc:
       def store(creditcard, options = {})
         post = {}
         add_creditcard(post, creditcard, options)
+        add_expand_parameters(post, options)
         post[:description] = options[:description]
         post[:email] = options[:email]
 
@@ -157,6 +164,10 @@ module ActiveMerchant #:nodoc:
 
       def add_application_fee(post, options)
         post[:application_fee] = options[:application_fee] if options[:application_fee]
+      end
+
+      def add_expand_parameters(post, options)
+        post[:expand] = Array.wrap(options[:expand])
       end
 
       def add_customer_data(post, options)
@@ -233,6 +244,8 @@ module ActiveMerchant #:nodoc:
               h["#{key}[#{k}]"] = v unless v.blank?
             end
             post_data(h)
+          elsif value.is_a?(Array)
+            value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join("&")
           else
             "#{key}=#{CGI.escape(value.to_s)}"
           end

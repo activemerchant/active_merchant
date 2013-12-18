@@ -186,4 +186,11 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "charge", response.params["object"]
     assert response.params["paid"]
   end
+
+  def test_expanding_objects
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:expand => 'balance_transaction'))
+    assert_success response
+    assert response.params['balance_transaction'].is_a?(Hash)
+    assert_equal 'balance_transaction', response.params['balance_transaction']['object']
+  end
 end
