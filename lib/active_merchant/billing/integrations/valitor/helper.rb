@@ -6,7 +6,14 @@ module ActiveMerchant #:nodoc:
       module Valitor
         class Helper < ActiveMerchant::Billing::Integrations::Helper
           include RequiresParameters
-          
+
+          # Languages supported by Valitor Web Payments Page
+          #   IS   (Icelandic)
+          #   EN   (English)
+          #   DA   (Danish)
+          #   DE   (German)
+          SUPPORTED_LANGS = %w[IS EN DA DE]
+
           DEFAULT_SUCCESS_TEXT = "The transaction has been completed."
           
           def initialize(order, account, options={})
