@@ -331,6 +331,26 @@ class StripeTest < Test::Unit::TestCase
     assert_equal({:key => '12345'}, generate_options({:key => '12345'}))
   end
 
+  def test_passing_expand_parameters
+    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+      assert post.include?("expand[]=balance_transaction")
+    end.returns(successful_authorization_response)
+
+    @options.merge!(:expand => :balance_transaction)
+
+    @gateway.authorize(@amount, @credit_card, @options)
+  end
+
+  def test_passing_expand_parameters_as_array
+    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+      assert post.include?("expand[]=balance_transaction&expand[]=customer")
+    end.returns(successful_authorization_response)
+
+    @options.merge!(:expand => [:balance_transaction, :customer])
+
+    @gateway.authorize(@amount, @credit_card, @options)
+  end
+
   private
 
   # Create new customer and set default credit card
