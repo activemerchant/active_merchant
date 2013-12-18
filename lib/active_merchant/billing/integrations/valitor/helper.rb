@@ -12,6 +12,7 @@ module ActiveMerchant #:nodoc:
           def initialize(order, account, options={})
             options[:currency] ||= 'ISK'
             super
+            # This field must be zero
             add_field 'AuthorizationOnly', '0'
             add_field 'DisplayBuyerInfo', '0'
             @security_number = options[:credential2]
@@ -31,10 +32,6 @@ module ActiveMerchant #:nodoc:
           mapping :success_text, 'PaymentSuccessfulURLText'
           
           mapping :language, 'Language'
-          
-          def authorize_only
-            add_field 'AuthorizationOnly', '1'
-          end
           
           def collect_customer_info
             add_field 'DisplayBuyerInfo', '1'

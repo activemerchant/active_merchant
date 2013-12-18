@@ -76,11 +76,6 @@ class ValitorHelperTest < Test::Unit::TestCase
     end
   end
   
-  def test_authorize_only
-    @helper.authorize_only
-    assert_field 'AuthorizationOnly', '1'
-  end
-  
   def test_missing_password
     @helper.instance_eval{@security_number = nil}
     assert_raise ArgumentError do
