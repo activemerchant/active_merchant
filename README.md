@@ -103,7 +103,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [ePay](http://epay.dk/) - DK, SE, NO
 * [EVO Canada](http://www.evocanada.com/) - CA
 * [eWAY](http://www.eway.com.au/) - AU, NZ, GB
-* [eWAY Rapid 3.1](http://www.eway.com.au/) - AU
+* [eWAY Rapid 3.0](http://www.eway.com.au/) - AU
 * [E-xact](http://www.e-xact.com) - CA, US
 * [Fat Zebra](https://www.fatzebra.com.au/) - AU
 * [Federated Canada](http://www.federatedcanada.com/) - CA
