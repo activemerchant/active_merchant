@@ -7,7 +7,7 @@ class RemoteSrPagoTest < Test::Unit::TestCase
     @gateway = SrPagoGateway.new(fixtures(:sr_pago))
 
     @amount = 100
-    @credit_card = credit_card('4000100011112224')
+    @credit_card = credit_card('5453750000000011')
     @declined_card = credit_card('4000300011112220')
 
     @options = {
