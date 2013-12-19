@@ -1,10 +1,8 @@
 require 'test_helper'
-require 'rest-client'
 
 class RemoteSlidepayTest < Test::Unit::TestCase
 
   def setup
-    # RestClient.proxy = "https://127.0.0.1:8888"
     @gateway = SlidepayGateway.new(fixtures(:slidepay))
 
     @amount = 101
@@ -21,29 +19,11 @@ class RemoteSlidepayTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    # assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
   end
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    # assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
-  end
-
-  def test_invalid_login
-    # reset SlidePay variables
-    SlidePay.token = nil
-    SlidePay.api_key = nil
-    SlidePay.endpoint = nil
-
-    #Should raise an exception when the gateway tries to authenticate
-    assert_raise SlidepayGateway::SlidePayAuthenticationError do
-      gateway = SlidepayGateway.new(
-                  :email => '',
-                  :password => '',
-                  :is_test => true
-                )
-    end
   end
 
   def credit_card(number = '4242424242424242', options = {})

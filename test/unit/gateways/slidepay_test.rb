@@ -1,9 +1,7 @@
 require 'test_helper'
-require 'rest-client'
 
 class SlidepayTest < Test::Unit::TestCase
   def setup
-    # RestClient.proxy = "https://127.0.0.1:8888"
     @gateway = SlidepayGateway.new(
       :api_key => "API_KEY",
       :endpoint => "ENDPOINT"
@@ -24,9 +22,7 @@ class SlidepayTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    # Replace with authorization number from the successful response
     assert response.success?
-    # assert response.test?
   end
 
   def test_unsuccessful_purchase
@@ -34,6 +30,12 @@ class SlidepayTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+  end
+
+  def test_missing_endpoint
+    assert_raise SlidePayEndpointMissingError do
+      gateway = SlidepayGateway.new(:api_key => "API_KEY")
+    end
   end
 
   private
