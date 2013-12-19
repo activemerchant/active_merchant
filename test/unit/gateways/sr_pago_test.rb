@@ -24,7 +24,7 @@ class SrPagoTest < Test::Unit::TestCase
     assert_success response
 
     # Replace with authorization number from the successful response
-    assert_equal '', response.authorization
+    assert_equal '777', response.authorization
     assert response.test?
   end
 
