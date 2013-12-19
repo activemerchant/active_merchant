@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Currently do not support partial refunds, so the money parameter will be ignored.
-      def credit(money, identification, options)
+      def credit(identification, options = {})
         commit(:post, "payment/refund/#{identification}", {}, options)
       end
 
@@ -127,16 +127,8 @@ module ActiveMerchant #:nodoc:
 
           response = SlidePayResponse.new(response_json)
         end
-        if response.is_a? SlidePayResponse
-          message = success ? "Successful" : response.data
-        elsif response.is_a? String
-          message = success ? "Success: #{response}" : "Failure: #{response}"
-        else
-          message = "Response - #{response}"
-        end
 
-
-        Response.new(success,message)
+        response
       end
 
       def parse(body)

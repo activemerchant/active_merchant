@@ -19,7 +19,7 @@ class SlidepayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of Response, response
+    assert response.is_a? Response
     assert_success response
 
     assert response.success?
