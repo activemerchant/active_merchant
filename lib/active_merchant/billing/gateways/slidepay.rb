@@ -1,4 +1,5 @@
-require 'slidepay'
+require File.dirname(__FILE__) + '/slidepay/slidepay_response'
+require File.dirname(__FILE__) + '/slidepay/slidepay_errors'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -22,38 +23,18 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'SlidePay'
 
       def initialize(options = {})
-        #requires!(options, :email, :password)
-        @email      = options[:email] unless options[:email] == nil
-        @password   = options[:password] unless options[:password] == nil
+        # requires!(options, :endpoint)
         @token      = options[:token] unless options[:token] == nil
         @api_key    = options[:api_key] unless options[:api_key] == nil
-        # @endpoint   = options[:endpoint]
+        @endpoint   = options[:endpoint]
 
         # Need to somehow include endpoint discovery in this one.
         if options[:is_test]
-          @endpoint           = self.test_url
-          SlidePay.endpoint   = self.test_url
+          @endpoint   = self.test_url
         elsif options[:endpoint]
           @endpoint   = options[:endpoint]
         else
-          @endpoint   = self.live_url
-        end
-
-        if @api_key and @endpoint
-          SlidePay.api_key = @api_key
-          SlidePay.endpoint = @endpoint
-        elsif @token and @endpoint
-          SlidePay.api_key = @api_key
-          SlidePay.endpoint = @endpoint
-        elsif @email and @password
-
-          if SlidePay.authenticate(@email, @password) == true
-            @token = SlidePay.token
-          else
-            raise SlidePayAuthenticationError.new("Could not retrieve a SlidePay token for that email and password.")
-          end
-        else
-          raise ArgumentError.new("To initialize SlidePay, you must supply one of the following three value pairs: an api_key and endpoint, a token and endpoint, or an email and password.")
+          raise SlidePayEndpointMissingError.new("Either an endpoint or the is_test parameter is required.")
         end
 
         super
@@ -103,10 +84,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def parse(body)
-        JSON.parse(body)
-      end
-
       def headers(options={})
         api_key = options[:api_key] || @api_key
         token = options[:token] || @token
@@ -125,18 +102,16 @@ module ActiveMerchant #:nodoc:
         success = false
 
         begin
-
           # Actually make the network request
           raw_response = ssl_request(method, url(path), request_data(data), headers(options))
 
-          response = SlidePay::Response.new(raw_response)
+          response = SlidePayResponse.new(raw_response)
           success = response.was_successful?
-
 
         rescue ResponseError => e
 
           raw_response = e.response.body
-          response = SlidePay::Response.new(raw_response)
+          response = SlidePayResponse.new(raw_response)
 
         rescue JSON::ParserError
 
@@ -150,9 +125,9 @@ module ActiveMerchant #:nodoc:
             data: {error_text: "Something went wrong."}
           }.to_json
 
-          response = SlidePay::Response.new(response_json)
+          response = SlidePayResponse.new(response_json)
         end
-        if response.is_a? SlidePay::Response
+        if response.is_a? SlidePayResponse
           message = success ? "Successful" : response.data
         elsif response.is_a? String
           message = success ? "Success: #{response}" : "Failure: #{response}"
@@ -164,16 +139,16 @@ module ActiveMerchant #:nodoc:
         Response.new(success,message)
       end
 
+      def parse(body)
+        JSON.parse(body)
+      end
+
       def url(path)
         "#{@endpoint}#{path}"
       end
 
       def request_data(data)
-
         data.to_json
-      end
-
-      class SlidePayAuthenticationError < StandardError
       end
     end
   end
