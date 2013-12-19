@@ -110,9 +110,11 @@ module ActiveMerchant #:nodoc:
         parser = REXML::Document.new(body)
         result = REXML::XPath.first(parser, "//PAGO")
         response = {}
-        result.each do |element|
-                if element.respond_to?(:name)
-                        response[:"#{element.try(:name)}"] = "#{element.try(:text)}"
+        if result.respond_to?("each")
+                result.each do |element|
+                        if element.respond_to?(:name)
+                                response[:"#{element.try(:name)}"] = "#{element.try(:text)}"
+                        end
                 end
         end
 
