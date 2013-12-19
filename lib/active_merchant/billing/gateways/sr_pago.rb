@@ -1,7 +1,7 @@
 begin
-  require 'xmlsimple'
+  require 'xml'
 rescue LoadError
-  # nothing to do
+  puts "libxml not installed"
 end
 
 module ActiveMerchant #:nodoc:
@@ -114,17 +114,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-	result = XmlSimple.xml_in(body.to_s)
-	pay = result["PAGO"]
-	response = {}
-	pay.each do |element|
-		element.each do |key, value|
-			#puts "key: #{key}- value: #{value[0]}"
-			response[:"#{key}"] = "#{value[0]}"
-		end
-	end
-	
-	response
+        parser = XML::Parser.string(body.to_s)
+        result = parser.parse
+        pay = result.root.find_first("PAGO")
+        response = {}
+        pay.each do |element|
+                response[:"#{element.name}"] = "#{element.content}"
+        end
+
+        response
       end
 
       def commit(action, money, parameters)
