@@ -115,6 +115,12 @@ class DataCashTest < Test::Unit::TestCase
     assert response.test?
     assert_equal 'ACCEPTED', response.message
   end
+
+  def test_capture_method_is_ecomm
+    @gateway.expects(:ssl_post).with(anything, regexp_matches(/<capturemethod>ecomm<\/capturemethod>/)).returns(successful_purchase_response)
+    response = @gateway.purchase(100, @credit_card, @options)
+    assert_success response
+  end
   
   private
   def failed_purchase_response
