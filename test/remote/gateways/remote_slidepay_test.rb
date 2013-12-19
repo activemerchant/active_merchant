@@ -16,13 +16,30 @@ class RemoteSlidepayTest < Test::Unit::TestCase
     }
   end
 
+  # purchase
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
   end
 
-  def test_unsuccessful_purchase
-    assert response = @gateway.purchase(@amount, @declined_card, @options)
+  # def test_unsuccessful_purchase
+  #   assert response = @gateway.purchase(@amount, @declined_card, @options)
+  #   assert_failure response
+  # end
+
+  # credit
+  def test_successful_credit
+    purchase_response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase_response
+
+    payment_id = purchase_response.params["payment_id"]
+    response = @gateway.credit(payment_id)
+    assert_success response
+  end
+
+  def test_unsuccessful_credit
+    bad_payment_id = "11626"
+    response = @gateway.credit(bad_payment_id)
     assert_failure response
   end
 
