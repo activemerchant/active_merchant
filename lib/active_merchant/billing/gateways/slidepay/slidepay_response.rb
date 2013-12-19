@@ -1,14 +1,21 @@
 require 'json'
 
-class SlidePayResponse < String
+class SlidePayResponse < ActiveMerchant::Billing::Response
   attr_accessor :success, :custom, :operation, :endpoint, :timezone,
-                :method, :obj, :id, :milliseconds, :data, :data_md5
+                :method, :obj, :id, :milliseconds, :data, :data_md5, :response_string
 
   def initialize(response_json=nil)
     if response_json
       # Fill the contents of this object with the response JSON
-      replace response_json
+      # replace response_json
+      @response_string = response_json
       parse_object_from_json
+
+      # set_active_merchant_response_fields
+
+      message = @success ? "Successful" : "Unsuccessful"
+
+      super(was_successful?, message, @data)
     end
   end
 
@@ -22,8 +29,12 @@ class SlidePayResponse < String
     JSON.parse(body)
   end
 
+  def set_active_merchant_response_fields
+
+  end
+
   def parse_object_from_json
-    object = parse(self)
+    object = parse(@response_string)
 
     @success = object['success']
     @custom = object['custom']
