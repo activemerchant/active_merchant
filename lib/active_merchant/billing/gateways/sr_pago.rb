@@ -1,9 +1,3 @@
-begin
-  require 'xml'
-rescue LoadError
-  puts "libxml not installed"
-end
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SrPagoGateway < Gateway
@@ -42,7 +36,6 @@ module ActiveMerchant #:nodoc:
       #UID parameter is mandatory, if you don´t know which is your uid
       #please contact a 'Sr.Pago' advisor
       def purchase(money, creditcard, options = {})
-	puts cardType(card_brand(creditcard).to_s)
         post = {
 		:wapps  	=> "WPOS",
 		:XML    	=> "SI",
@@ -114,12 +107,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        parser = XML::Parser.string(body.to_s)
-        result = parser.parse
-        pay = result.root.find_first("PAGO")
+        parser = REXML::Document.new(body)
+        result = REXML::XPath.first(parser, "//PAGO")
         response = {}
-        pay.each do |element|
-                response[:"#{element.name}"] = "#{element.content}"
+        result.each do |element|
+                if element.respond_to?(:name)
+                        response[:"#{element.try(:name)}"] = "#{element.try(:text)}"
+                end
         end
 
         response
@@ -134,7 +128,6 @@ module ActiveMerchant #:nodoc:
 	parameters.delete(:test)
 
 	stringify_params(parameters)
-	puts extractParams(parameters)
 
 	data = parse(ssl_post(url, extractParams(parameters)))
 	if data[:ESTADO].eql?("OK")
@@ -151,8 +144,6 @@ module ActiveMerchant #:nodoc:
 		avs = nil
 	end
 	
-	puts data
-
         Response.new(success, message, data,
           :test => true,
           :authorization => authorization,
