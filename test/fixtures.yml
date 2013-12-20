@@ -614,6 +614,10 @@ spreedly_core:
   password: "Y2i7AjgU03SUjwY4xnOPqzdsv4dMbPDCQzorAk8Bcoy0U8EIVE4innGjuoMQv7MN"
   gateway_token: "3gLeg4726V5P0HK7cq7QzHsL0a6"
 
+sr_pago:
+  login:
+  password:
+  
 stripe:
   login:
   fee_refund_login:
