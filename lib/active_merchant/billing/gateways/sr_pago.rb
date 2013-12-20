@@ -24,7 +24,28 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, creditcard, options = {})
-        post = {}
+        card_type = if options[:test].eql?(true)
+            "MAST"
+        else
+            cardType(card_brand(creditcard))
+        end
+        ref = if options[:ref] != nil?
+            options[:ref]
+        else
+            "Cargo de prueba"
+        end
+        post = {
+            :wapps  	=> "WPOS",
+            :XML    	=> "SI",
+    		:ecom_id	=> options[:uid],
+            :acc		=> "Guardar",
+    		:Referencia	=> "Cargo de prueba",
+    		:Importe	=> amount(money),
+    		:TipoTarjeta	=> "MAST"
+        }
+        if options[:test].eql?(true)
+            post[:test] = options[:test]
+        end
         add_invoice(post, options)
         add_creditcard(post, creditcard)
         add_address(post, creditcard, options)
@@ -36,18 +57,28 @@ module ActiveMerchant #:nodoc:
       #UID parameter is mandatory, if you don´t know which is your uid
       #please contact a 'Sr.Pago' advisor
       def purchase(money, creditcard, options = {})
+        card_type = if options[:test].eql?(true)
+            "MAST"
+        else
+            cardType(card_brand(creditcard))
+        end
+        ref = if options[:ref] != nil?
+            options[:ref]
+        else
+            "Cargo de prueba"
+        end
         post = {
-		:wapps  	=> "WPOS",
-		:XML    	=> "SI",
+            :wapps  	=> "WPOS",
+            :XML    	=> "SI",
     		:ecom_id	=> options[:uid],
-		:acc		=> "Guardar",
-    		:Referencia	=> "Cargo de prueba",
+            :acc		=> "Guardar",
+    		:Referencia	=> ref,
     		:Importe	=> amount(money),
-    		:TipoTarjeta	=> cardType(card_brand(creditcard))
-	}
-	if options[:test].eql?(true)
-		post[:test] = options[:test]
-	end
+    		:TipoTarjeta	=> card_type
+        }
+        if options[:test].eql?(true)
+            post[:test] = options[:test]
+        end
 
         add_invoice(post, options)
         add_creditcard(post, creditcard)
@@ -58,14 +89,24 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
+          post = {
+              :wapps  	=> "WPOS",
+              :XML    	=> "SI",
+              :ecom_id	=> options[:uid],
+              :acc		=> "Guardar",
+              :Referencia	=> "Cargo de prueba",
+              :Importe	=> amount(money),
+              :TipoTarjeta	=> "MAST",
+              :authorization => authorization
+          }
         commit('capture', money, post)
       end
 
       private
 
       def add_customer_data(params, options)
-	params[:email] = options[:email] unless options[:email].blank?
-	params[:ip] = options[:ip] unless options[:ip].blank?
+          params[:email] = options[:email] unless options[:email].blank?
+          params[:ip] = options[:ip] unless options[:ip].blank?
       end
 
       def add_address(params, creditcard, options)
@@ -101,51 +142,60 @@ module ActiveMerchant #:nodoc:
         params[:Nombre] = creditcard.name
         params[:NoTarjeta] = creditcard.number
         params[:exp] = expdate(creditcard)
-	params[:Mes] = sprintf("%.2i", creditcard.month)
-	params[:Agnio] = creditcard.year.to_s
+        params[:Mes] = sprintf("%.2i", creditcard.month)
+        params[:Agnio] = creditcard.year.to_s
         params[:CodigoSeguridad] = creditcard.verification_value if creditcard.verification_value?
       end
 
       def parse(body)
-        parser = REXML::Document.new(body)
-        result = REXML::XPath.first(parser, "//PAGO")
-        response = {}
-        if result.respond_to?("each")
-                result.each do |element|
-                        if element.respond_to?(:name)
-                                response[:"#{element.try(:name)}"] = "#{element.try(:text)}"
-                        end
-                end
-        end
-
-        response
+          parser = REXML::Document.new(body)
+          result = REXML::XPath.first(parser, "//PAGO")
+          response = {}
+          if result.respond_to?("each")
+              result.each do |element|
+                  if element.respond_to?(:name)
+                      response[:"#{element.try(:name)}"] = "#{element.try(:text)}"
+                  end
+              end
+          end
+	
+          response
       end
 
       def commit(action, money, parameters)
-	url = if parameters[:test].eql?(true)
-		self.test_url
-	else
-		self.live_url
-	end
-	parameters.delete(:test)
+          if action.eql?("capture")
+              success = if parameters[:authorization].eql?("") then false else true end
+              message = if parameters[:authorization].eql?("") then "No capturado" else "Success" end
+              authorization = parameters[:authorization]
+              cvv = nil
+              avs = parameters[:authorization]
+              data = {}
+          else
+              url = if parameters[:test].eql?(true)
+                self.test_url
+              else
+                self.live_url
+              end
+              parameters.delete(:test)
 
-	stringify_params(parameters)
+              stringify_params(parameters)
 
-	data = parse(ssl_post(url, extractParams(parameters)))
-	if data[:ESTADO].eql?("OK")
-		success = true
-		message = data[:COMERCIO]
-		authorization = data[:AUTHNO]
-		cvv = nil
-		avs = data[:FOLIO]
-	else
-		success = false
-		message = data[:AUTHNO]
-		authorization = nil
-		cvv = nil
-		avs = nil
-	end
-	
+            data = parse(ssl_post(url, extractParams(parameters)))
+            if data[:ESTADO].eql?("OK")
+                success = true
+                message = data[:COMERCIO]
+                authorization = data[:AUTHNO]
+                cvv = nil
+                avs = data[:FOLIO]
+            else
+                success = false
+                message = data[:AUTHNO]
+                authorization = nil
+                cvv = nil
+                avs = nil
+            end
+        end
+
         Response.new(success, message, data,
           :test => true,
           :authorization => authorization,
@@ -158,26 +208,26 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, parameters = {})
-	parameters.collect{|key, value| "#{key}=#{CGI.escape(value.to_s)}"}.join("&")
+          parameters.collect{|key, value| "#{key}=#{CGI.escape(value.to_s)}"}.join("&")
       end
 
       def extractParams(parameters)
-	params = ""
-	if parameters.respond_to?("each")
-		parameters.each do |key, value|
-			params = "#{params}#{key}=#{CGI.escape(value)}&"
-		end
-	end
-	params
+          params = ""
+          if parameters.respond_to?("each")
+              parameters.each do |key, value|
+                  params = "#{params}#{key}=#{CGI.escape(value)}&"
+              end
+          end
+          params
       end
 
       def stringify_params (parameters)
-	parameters.keys.reverse.each do |key|
-		if parameters[key]
-			parameters[key.to_s] = parameters[key]
-		end
-		parameters.delete(key)
-	end
+          parameters.keys.reverse.each do |key|
+              if parameters[key]
+                  parameters[key.to_s] = parameters[key]
+              end
+              parameters.delete(key)
+          end
       end
 
       def expdate(creditcard)
@@ -188,15 +238,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def cardType(type)
-	returned = case type
-	when "visa"
-		"VISA"
-	when "master"
-		"MAST"
-	end
+          returned = case type
+          when "visa"
+            "VISA"
+          when "master"
+            "MAST"
+          end
       end
 
     end
   end
 end
-
