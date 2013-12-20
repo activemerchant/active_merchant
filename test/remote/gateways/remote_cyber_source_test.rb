@@ -4,7 +4,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
   def setup
     Base.gateway_mode = :test
 
-    @gateway = CyberSourceGateway.new(fixtures(:cyber_source))
+    @gateway = CyberSourceGateway.new({nexus: "NC"}.merge(fixtures(:cyber_source)))
 
     @credit_card = credit_card('4111111111111111')
     @declined_card = credit_card('801111111111111')
@@ -13,7 +13,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      :billing_address => address,
+      :billing_address => address(country: "US", state: "NC"),
 
       :order_id => generate_unique_id,
       :line_items => [
@@ -107,29 +107,6 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal 'Successful transaction', response.message
     assert response.params['totalTaxAmount']
     assert_not_equal "0", response.params['totalTaxAmount']
-    assert_success response
-    assert response.test?
-  end
-
-  def test_successful_tax_calculation_with_nexus
-    total_line_items_value = @options[:line_items].inject(0) do |sum, item|
-                               sum += item[:declared_value] * item[:quantity]
-                             end
-
-    canada_gst_rate = 0.05
-    ontario_pst_rate = 0.08
-
-
-    total_pst = total_line_items_value.to_f * ontario_pst_rate / 100
-    total_gst = total_line_items_value.to_f * canada_gst_rate / 100
-    total_tax = total_pst + total_gst
-
-    assert response = @gateway.calculate_tax(@credit_card, @options.merge(:nexus => 'ON'))
-    assert_equal 'Successful transaction', response.message
-    assert response.params['totalTaxAmount']
-    assert_equal total_pst, response.params['totalCountyTaxAmount'].to_f
-    assert_equal total_gst, response.params['totalStateTaxAmount'].to_f
-    assert_equal total_tax, response.params['totalTaxAmount'].to_f
     assert_success response
     assert response.test?
   end
