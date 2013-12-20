@@ -87,6 +87,9 @@ certo_direct:
   login: 1
   password: vP6OwK3
 
+# To get 100% passing Cybersource remote tests, you must ask
+# Cybersource support to enable the recurring and pinless debit
+# services on your test account.
 cyber_source:
   login: X
   password: Y

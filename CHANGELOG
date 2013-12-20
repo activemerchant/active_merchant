@@ -27,6 +27,7 @@
 * Bogus: Add check support [npverni]
 * Payflow: Add Check support [crazyivan]
 * Stripe: Allow expanding objects inline [odorcicd]
+* Cybersource: Fix subscriptions with a setup fee [ntalbott]
 
 == Version 1.42.2 (November 13th, 2013)
 

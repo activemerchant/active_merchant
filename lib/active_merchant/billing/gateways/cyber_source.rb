@@ -321,13 +321,18 @@ module ActiveMerchant #:nodoc:
         if card_brand(payment_method) == 'check'
           add_check(xml, payment_method)
           add_check_payment_method(xml)
-          add_check_service(xml, options) if options[:setup_fee]
         else
           add_creditcard(xml, payment_method)
           add_creditcard_payment_method(xml)
-          add_purchase_service(xml, options) if options[:setup_fee]
         end
         add_subscription(xml, options)
+        if options[:setup_fee]
+          if card_brand(payment_method) == 'check'
+            add_check_service(xml, options)
+          else
+            add_purchase_service(xml, options)
+          end
+        end
         add_subscription_create_service(xml, options)
         add_business_rules_data(xml)
         xml.target!
