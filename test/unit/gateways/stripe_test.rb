@@ -30,11 +30,25 @@ class StripeTest < Test::Unit::TestCase
   def test_successful_new_card
     @gateway.expects(:ssl_request).returns(successful_new_card_response)
 
-    assert response = @gateway.store(@credit_card, @options.merge(:customer => 'cus_3sgheFxeBgTQ3M'))
+    assert response = @gateway.store(@credit_card, :customer => 'cus_3sgheFxeBgTQ3M')
     assert_instance_of MultiResponse, response
     assert_success response
 
     assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_new_card_and_customer_update
+    @gateway.expects(:ssl_request).twice.returns(successful_new_card_response, successful_new_customer_response)
+
+    assert response = @gateway.store(@credit_card, :customer => 'cus_3sgheFxeBgTQ3M', :email => 'test@test.com')
+    assert_instance_of MultiResponse, response
+    assert_success response
+
+    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 2, response.responses.size
+    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M', response.responses[1].authorization
     assert response.test?
   end
 
