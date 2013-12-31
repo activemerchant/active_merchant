@@ -93,6 +93,25 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal @credit_card.last_digits, first_card["last4"]
   end
 
+  def test_successful_store_with_existing_customer
+    assert response = @gateway.store(@credit_card, {:currency => @currency, :description => "Active Merchant Test Customer"})
+    assert_success response
+
+    assert response = @gateway.store(@new_credit_card, {:customer => response.params['id'], :currency => @currency, :description => "Active Merchant Test Customer", :email => "email@example.com"})
+    assert_success response
+    assert_equal 2, response.responses.size
+
+    card_response = response.responses[0]
+    assert_equal "card", card_response.params["object"]
+    assert_equal @new_credit_card.last_digits, card_response.params["last4"]
+
+    customer_response = response.responses[1]
+    assert_equal "customer", customer_response.params["object"]
+    assert_equal "Active Merchant Test Customer", customer_response.params["description"]
+    assert_equal "email@example.com", customer_response.params["email"]
+    assert_equal 2, customer_response.params["cards"]["count"]
+  end
+
   def test_successful_update
     creation = @gateway.store(@credit_card, {:description => "Active Merchant Update Customer"})
     assert response = @gateway.update(creation.params['id'], @new_credit_card)
