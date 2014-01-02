@@ -40,7 +40,27 @@ module ActiveMerchant #:nodoc:
         "Interface-Version" => "Ruby|ActiveMerchant|Proprietary Gateway"
       }
 
-      SUCCESS, APPROVED = '0', '00'
+      SUCCESS = '0'
+
+      APPROVED = [
+        '00', # Approved
+        '08', # Approved authorization, honor with ID
+        '11', # Approved authorization, VIP approval
+        '24', # Validated
+        '26', # Pre-noted
+        '27', # No reason to decline
+        '28', # Received and stored
+        '29', # Provided authorization
+        '31', # Request received
+        '32', # BIN alert
+        '34', # Approved for partial
+        '91', # Approved low fraud
+        '92', # Approved medium fraud
+        '93', # Approved high fraud
+        '94', # Approved fraud service unavailable
+        'E7', # Stored
+        'PA'  # Partial approval
+      ]
 
       class_attribute :secondary_test_url, :secondary_live_url
 
@@ -459,7 +479,7 @@ module ActiveMerchant #:nodoc:
           response[:profile_proc_status] == SUCCESS
         else
           response[:proc_status] == SUCCESS &&
-          response[:resp_code] == APPROVED
+          APPROVED.include?(response[:resp_code])
         end
       end
 
