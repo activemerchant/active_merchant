@@ -194,7 +194,7 @@ private
   end
   
   def purchase_request
-    "UMamount=1.00&UMinvoice=&UMdescription=&UMcard=4242424242424242&UMcvv2=123&UMexpir=0914&UMname=Longbob+Longsen&UMbillfname=Longbob&UMbilllname=Longsen&UMbillcompany=Widgets+Inc&UMbillstreet=1234+My+Street&UMbillstreet2=Apt+1&UMbillcity=Ottawa&UMbillstate=ON&UMbillzip=K1C2N6&UMbillcountry=CA&UMbillphone=%28555%29555-5555&UMshipfname=Longbob&UMshiplname=Longsen&UMshipcompany=Widgets+Inc&UMshipstreet=1234+My+Street&UMshipstreet2=Apt+1&UMshipcity=Ottawa&UMshipstate=ON&UMshipzip=K1C2N6&UMshipcountry=CA&UMshipphone=%28555%29555-5555&UMstreet=1234+My+Street&UMzip=K1C2N6&UMcommand=cc%3Asale&UMkey=LOGIN&UMsoftware=Active+Merchant&UMtestmode=0"
+    "UMamount=1.00&UMinvoice=&UMdescription=&UMcard=4242424242424242&UMcvv2=123&UMexpir=09#{@credit_card.year.to_s[-2..-1]}&UMname=Longbob+Longsen&UMbillfname=Longbob&UMbilllname=Longsen&UMbillcompany=Widgets+Inc&UMbillstreet=1234+My+Street&UMbillstreet2=Apt+1&UMbillcity=Ottawa&UMbillstate=ON&UMbillzip=K1C2N6&UMbillcountry=CA&UMbillphone=%28555%29555-5555&UMshipfname=Longbob&UMshiplname=Longsen&UMshipcompany=Widgets+Inc&UMshipstreet=1234+My+Street&UMshipstreet2=Apt+1&UMshipcity=Ottawa&UMshipstate=ON&UMshipzip=K1C2N6&UMshipcountry=CA&UMshipphone=%28555%29555-5555&UMstreet=1234+My+Street&UMzip=K1C2N6&UMcommand=cc%3Asale&UMkey=LOGIN&UMsoftware=Active+Merchant&UMtestmode=0"
   end
 
   def successful_purchase_response
