@@ -41,7 +41,6 @@ module ActiveMerchant #:nodoc:
           def initialize(order, account, options = {})
             @shared_key      = options.delete(:credential2)
             @transidmerchant = order
-            @items           = []
             super
             self.amount      = money_format(options[:amount])
             add_field 'TRANSIDMERCHANT', order
@@ -92,14 +91,7 @@ module ActiveMerchant #:nodoc:
           private
 
           def basket
-            @items.map do |item|
-              ITEM_FORMAT % {
-                name: item[:name],
-                price: money_format(item[:price]),
-                quantity: item[:quantity],
-                sub_total: money_format(item[:price] * item[:quantity])
-              }
-            end.join(';')
+            "ORDER #{@transidmerchant},#{@fields['AMOUNT']},1"
           end
 
           def words

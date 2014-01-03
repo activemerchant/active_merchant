@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
           def acknowledge(authcode = nil)
             case type
             when 'verify'
-              words == @options[:credential2]
+              words == Digest::SHA1.hexdigest("#{gross}#{@options[:credential2]}#{item_id}")
             when 'notify'
               true
             else
