@@ -9,8 +9,8 @@ class DokuNotificationTest < Test::Unit::TestCase
     @amount = "100"
     @words = Digest::SHA1.hexdigest("#{@amount}#{@shared_key}#{@transidmerchant}")
 
-    @doku_verify = Doku::Notification.new(http_raw_data_verify, :credential2 => @words)
-    @doku_notify = Doku::Notification.new(http_raw_data_notify, :credential2 => @words)
+    @doku_verify = Doku::Notification.new(http_raw_data_verify, :credential2 => @shared_key)
+    @doku_notify = Doku::Notification.new(http_raw_data_notify, :credential2 => @shared_key)
   end
 
   def test_accessors_notify
