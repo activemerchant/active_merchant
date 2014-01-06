@@ -43,6 +43,49 @@ class RemoteSlidepayTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  # authorize
+  def test_successful_authorize
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_unsuccessful_authorize
+    assert response = @gateway.authorize(@amount, @declined_card, @options)
+    assert_failure response
+  end
+
+  # capture
+  def test_successful_capture
+    authorize_response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize_response
+
+    payment_id = authorize_response.params["payment_id"]
+    response = @gateway.capture(payment_id)
+    assert_success response
+  end
+
+  def test_unsuccessful_capture
+    bad_payment_id = "000000000"
+    response = @gateway.capture(bad_payment_id)
+    assert_failure response
+  end
+
+  # void
+  # def test_successful_void
+  #   authorize_response = @gateway.authorize(@amount, @credit_card, @options)
+  #   assert_success authorize_response
+
+  #   payment_id = authorize_response.params["payment_id"]
+  #   response = @gateway.void(payment_id)
+  #   assert_success response
+  # end
+
+  def test_unsuccessful_void
+    bad_payment_id = "000000000"
+    response = @gateway.void(bad_payment_id)
+    assert_failure response
+  end
+
   def credit_card(number = '4242424242424242', options = {})
     defaults = {
       :number => number,

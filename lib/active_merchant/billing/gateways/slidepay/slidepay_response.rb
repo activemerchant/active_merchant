@@ -11,11 +11,9 @@ class SlidePayResponse < ActiveMerchant::Billing::Response
       @response_string = response_json
       parse_object_from_json
 
-      # set_active_merchant_response_fields
-
       message = @success ? "Successful" : "Unsuccessful"
 
-      super(was_successful?, message, @data)
+      super(was_successful?, message, @data || {})
     end
   end
 
@@ -27,10 +25,6 @@ class SlidePayResponse < ActiveMerchant::Billing::Response
 
   def parse(body)
     JSON.parse(body)
-  end
-
-  def set_active_merchant_response_fields
-
   end
 
   def parse_object_from_json

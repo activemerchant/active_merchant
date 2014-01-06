@@ -34,12 +34,13 @@ module ActiveMerchant #:nodoc:
         elsif options[:endpoint]
           @endpoint   = options[:endpoint]
         else
-          raise SlidePayEndpointMissingError.new("Either an endpoint or the is_test parameter is required.")
+          raise SlidePayEndpointMissingError.new("Either an endpoint url or the is_test parameter is required.")
         end
 
         super
       end
 
+      # payments
       def purchase(money, creditcard, options = {})
         post = {}
         add_amount(post, money)
@@ -53,10 +54,44 @@ module ActiveMerchant #:nodoc:
         commit(:post, "payment/refund/#{identification}", {}, options)
       end
 
-      # TO IMPLEMENT:
-      # def authorize(money, creditcard, options = {}) end
-      # def capture(money, identification, options = {}) end
-      # def void(identification, options = {}) end
+      # authorizations
+      def authorize(money, creditcard, options = {})
+        post = {}
+        add_amount(post, money)
+        add_creditcard(post, creditcard, options)
+
+        commit(:post, 'authorization/simple', post, options)
+      end
+
+      def capture(identification, options = {})
+        # for manual
+        capture_type = "auto"
+        if options[:capture_type] == "manual"
+          capture_type = options[:capture_type]
+        end
+
+        post = {}
+        if identification.is_a? Array
+          post = identification
+          path = "capture/#{capture_type}"
+        else
+          path = "capture/#{capture_type}/#{identification}"
+        end
+
+        commit(:post, path, post, options)
+      end
+
+      def void(identification, options = {})
+        post = {}
+        if identification.is_a? Array
+          post = identification
+          path = "authorization/void"
+        else
+          path = "authorization/void/#{identification}"
+        end
+
+        commit(:post, path, post, options)
+      end
 
       private
 
@@ -119,7 +154,6 @@ module ActiveMerchant #:nodoc:
           response += "please provide the raw response that follows: #{raw_response}"
 
         rescue Exception => e
-
           response_json = {
             success: false,
             data: {error_text: "Something went wrong."}
