@@ -696,10 +696,12 @@ wirecard_checkout_page:
   secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
   shop_id: ''
   paymenttype: IDL
+
 iats_transaction:
   region: uk
   login: TEST88
   password: TEST88
+
 iats_transaction_us:
   region: us
   login: TEST88
