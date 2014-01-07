@@ -139,6 +139,15 @@ class StripeTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_refund_with_refund_application_fee
+    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+      assert post.include?("refund_application_fee=true")
+    end.returns(successful_partially_refunded_response)
+
+    assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_application_fee => true)
+    assert_success response
+  end
+
   def test_successful_refund_with_refund_fee_amount
     s = sequence("request")
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)

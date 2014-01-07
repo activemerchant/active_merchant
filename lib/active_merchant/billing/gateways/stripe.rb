@@ -69,6 +69,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, identification, options = {})
         post = {:amount => amount(money)}
+        post[:refund_application_fee] = true if options[:refund_application_fee]
 
         MultiResponse.run(:first) do |r|
           r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, options) }
