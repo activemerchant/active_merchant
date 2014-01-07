@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
       include Utils
 
       DEBIT_CARDS = [ :switch, :solo ]
-      CURRENCIES_WITHOUT_FRACTIONS = [ 'JPY', 'HUF', 'TWD', 'ISK' ]
+      CURRENCIES_WITHOUT_FRACTIONS = [ 'BIF', 'BYR', 'CLP', 'CVE', 'DJF', 'GNF', 'HUF', 'ISK', 'JPY', 'KMF', 'KRW', 'PYG', 'RWF', 'TWD', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF' ]
       CREDIT_DEPRECATION_MESSAGE = "Support for using credit to refund existing transactions is deprecated and will be removed from a future release of ActiveMerchant. Please use the refund method instead."
 
       cattr_reader :implementations
