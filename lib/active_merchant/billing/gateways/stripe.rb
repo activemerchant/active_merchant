@@ -33,6 +33,8 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login)
         @api_key = options[:login]
         @fee_refund_api_key = options[:fee_refund_login]
+        @version = options[:version]
+
         super
       end
 
@@ -258,7 +260,8 @@ module ActiveMerchant #:nodoc:
           :publisher => 'active_merchant'
         })
 
-        key = options[:key] || @api_key
+        key     = options[:key] || @api_key
+        version = options[:version] || @version
 
         headers = {
           "Authorization" => "Basic " + Base64.encode64(key.to_s + ":").strip,
@@ -266,7 +269,7 @@ module ActiveMerchant #:nodoc:
           "X-Stripe-Client-User-Agent" => @@ua,
           "X-Stripe-Client-User-Metadata" => {:ip => options[:ip]}.to_json
         }
-        headers.merge!("Stripe-Version" => options[:version]) if options[:version]
+        headers.merge!("Stripe-Version" => version) if version
         headers
       end
 
