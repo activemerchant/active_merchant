@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :application_key, :security_token)
-        super
+        super(options)
       end
 
       def purchase(money, creditcard, options = {})
