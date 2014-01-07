@@ -1,5 +1,10 @@
 = ActiveMerchant CHANGELOG
 
+* DataCash: Set 'ecomm' as capturemethod [DavidGeukers]
+* Cybersource: Fix subscriptions with a setup fee [ntalbott]
+* Stripe: Do not pass customer details to the /cards endpoint [michellebu]
+* Stripe: Allow Stripe API version to be initialized with the gateway [odorcicd]
+
 == Version 1.42.3 (December 18th, 2013)
 
 * Balanced: Add support for appears_on_statement_as [duff]
@@ -27,7 +32,6 @@
 * Bogus: Add check support [npverni]
 * Payflow: Add Check support [crazyivan]
 * Stripe: Allow expanding objects inline [odorcicd]
-* Cybersource: Fix subscriptions with a setup fee [ntalbott]
 
 == Version 1.42.2 (November 13th, 2013)
 
