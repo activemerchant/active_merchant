@@ -2,6 +2,7 @@
 
 * SagePay: Add support for ReferrerID [markabe]
 * Cecabank: Fix expiration date formatting [duff]
+* Add WePay gateway [faizalzakaria]
 
 == Version 1.42.6 (February 24, 2014)
 
