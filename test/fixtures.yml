@@ -690,6 +690,12 @@ webpay:
   login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
 
 # Working test credentials, no need to replace
+wepay:
+  client_id: "187493"
+  account_id: "1311201206"
+  access_token: "STAGE_4c6a319f9b6ef50e596ee3ea0b845f2fecd50fa0d8bc0b7483bd61c2018dbf5c"
+
+# Working test credentials, no need to replace
 wirecard:
   login: 56500
   password: TestXAPTER
