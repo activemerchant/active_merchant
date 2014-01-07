@@ -170,7 +170,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response.params['fee_details'], 'This test will only work if your gateway login is a Stripe Connect access_token.'
     assert refund = @gateway.refund(@amount, response.authorization, :refund_application_fee => true)
     assert_success refund
-    assert_equal 12, refund.params["fee_details"].first["amount_refunded"]
+    assert_equal 0, refund.params["fee"]
   end
 
   def test_refund_partial_application_fee
