@@ -2,56 +2,85 @@ require 'test_helper'
 
 class RemoteWepayTest < Test::Unit::TestCase
 
-
   def setup
     @gateway = WepayGateway.new(fixtures(:wepay))
 
-    @amount = 100
-    @credit_card = credit_card('4000100011112224')
+    # cents
+    @amount = 1000000
+    @credit_card = credit_card('5496198584584769', mock_creditcard)
     @declined_card = credit_card('4000300011112220')
 
     @options = {
       :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      :billing_address => address(mock_address),
+      :description => 'Store Purchase',
+      :type => "GOODS"
     }
+
+    @options.merge!(mock_user)
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_equal 'Success', response.message
   end
 
   def test_unsuccessful_purchase
-    assert response = @gateway.purchase(@amount, @declined_card, @options)
-    assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
+    options = @options.dup
+    options[:type] = "TOTO"
+    assert_raise(ActiveMerchant::ResponseError) { @gateway.purchase(@amount, @declined_card, options) }
   end
 
   def test_authorize_and_capture
     amount = @amount
-    assert auth = @gateway.authorize(amount, @credit_card, @options)
-    assert_success auth
-    assert_equal 'Success', auth.message
-    assert auth.authorization
-    assert capture = @gateway.capture(amount, auth.authorization)
-    assert_success capture
+    assert_raise(NotImplementedError) { @gateway.authorize(@amount, @declined_card, @options) }
   end
 
   def test_failed_capture
-    assert response = @gateway.capture(@amount, '')
-    assert_failure response
-    assert_equal 'REPLACE WITH GATEWAY FAILURE MESSAGE', response.message
+    assert_raise(NotImplementedError) { @gateway.capture(@amount, '') }
   end
 
   def test_invalid_login
     gateway = WepayGateway.new(
-                :login => '',
-                :password => ''
-              )
-    assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_equal 'REPLACE WITH FAILURE MESSAGE', response.message
+                           :client_id => '',
+                           :account_id => '',
+                           :access_token => '',
+                           :use_staging => true
+                           )
+    assert_raise(ActiveMerchant::ResponseError) { gateway.purchase(@amount, @credit_card, @options) }
   end
+
+  private
+
+  def mock_creditcard
+    creditcard = {
+      :brand              => "visa",
+      :month              => "4",
+      :year               => "15",
+      :verification_value => "123",
+      :first_name         => "Smith",
+      :last_name          => "John"
+    }
+    creditcard
+  end
+
+  def mock_address
+    address = {
+      :address1  => "1 Main St.",
+      :city      => "Burlington",
+      :state     => "MA",
+      :zip       => "01803",
+      :country   => "US"
+    }
+    address
+  end
+
+  def mock_user
+    user = {
+      :email  => "test@example.com",
+      :ip     => "10.10.73.61"
+    }
+  end
+
 end

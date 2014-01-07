@@ -1,6 +1,12 @@
+require 'debugger'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WepayGateway < Gateway
+
+      class WepayPostData < PostData
+        self.required_fields = [ :amount, :account_id ]
+      end
+
       self.test_url = 'https://stage.wepayapi.com/v2'
       self.live_url = 'https://wepayapi.com/v2'
 
@@ -29,14 +35,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def initialize(options = {})
-        requires!(options, :account_id, :access_token, :use_staging)
+        requires!(options, :client_id, :account_id, :access_token, :use_staging)
         if options[:use_staging]
           @api_endpoint = self.test_url
         else
           @api_endpoint = self.live_url
         end
         @use_ssl = true
-        super
+        super(options)
       end
 
       def authorize(money, creditcard, options = {})
@@ -44,14 +50,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, creditcard, options = {})
-        post = {:account_id => @options[:account_id]}
+        post = WepayPostData.new
+        post[:account_id] = @options[:account_id]
         add_invoice(post, options)
-        add_creditcard(post, creditcard)
+        add_creditcard(post, creditcard, options)
         add_address(post, creditcard, options)
         add_customer_data(post, options)
         add_product_data(post, money, options)
 
-        service_call(Actions::CHECKOUT_CREATE, money, post)
+        commit(Actions::CHECKOUT_CREATE, money, post)
       end
 
       def capture(money, authorization, options = {})
@@ -65,8 +72,8 @@ module ActiveMerchant #:nodoc:
 
       def add_product_data(post, money, options)
         post[:amount] = amount(money)
-        post[:short_description] = "A brand new soccer ball"
-        post[:type] = "GOODS"
+        post[:short_description] = options[:description] || "A brand new soccer ball"
+        post[:type] = options[:type] if options[:type]
       end
 
       def add_address(post, creditcard, options)
@@ -75,36 +82,60 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, options)
       end
 
-      def add_creditcard(post, creditcard)
+      def add_creditcard(post, creditcard, options)
+        cc_post = {}
+        cc_post[:client_id] = @options[:client_id]
+        cc_post[:user_name] = "#{creditcard.first_name} #{creditcard.last_name}"
+        cc_post[:email] = options[:email] if options[:email]
+        cc_post[:cc_number] = creditcard.number
+        cc_post[:cvv] = creditcard.verification_value
+        cc_post[:expiration_month] = creditcard.month
+        cc_post[:expiration_year] = creditcard.year
+        if billing_address = options[:billing_address] || options[:address]
+          cc_post[:address] = {
+            "address1" => billing_address[:address1],
+            "city"     => billing_address[:city],
+            "state"    => billing_address[:state],
+            "country"  => billing_address[:country],
+            "zip"      => billing_address[:zip]
+          }
+        end
+
+        response = service_call(Actions::CREDIT_CARD_CREATE, cc_post)
+        post[:payment_method_id] = response["credit_card_id"]
+        post[:payment_method_type] = "credit_card"
       end
 
-      def parse(body)
+      def parse(response)
+        JSON.parse(response)
       end
 
-      def commit(action, money, parameters)
-        result = service_call action, parameters
+      def commit(action, money, params)
+        response = service_call action, params
+
+        success = false
+        success = true unless response["error"]
+        Response.new(success, "Success", response, :authorization => response["checkout_id"], :test => test?)
       end
 
       def message_from(response)
       end
 
-      def post_data(action, parameters = {})
+      def post_data(parameters = {})
+        parameters.to_json
       end
 
-      def service_call(action, money, post)
-        url = URI.parse(@api_endpoint + action)
-
+      def headers
         headers = {
           "Content-Type"          => "application/json",
           "User-Agent"            => "WePay Ruby SDK",
-          "Authorization"         => "Bearer #{options[:access_token]}"
+          "Authorization"         => "Bearer #{@options[:access_token]}"
         }
+      end
 
-        response = ssl_post(url, post_data(post, money), headers)
-        response = JSON.parse(response)
-        success = false
-        success = true unless response["error"]
-        Response.new(success, "Success", response, :authorization => response["checkout_id"], :test => test?)
+      def service_call(action, params)
+        url = URI.parse(@api_endpoint + action)
+        response = parse( ssl_post(url, post_data(params), headers) )
       end
 
     end
