@@ -119,8 +119,8 @@ module ActiveMerchant #:nodoc:
         headers = {
           "Content-Type"      => "application/json",
           "User-Agent"        => "FirstGiving Ruby SDK",
-          "JG_APPLICATIONKEY" => "#{options[:application_key]}",
-          "JG_SECURITYTOKEN"  => "#{options[:security_token]}"
+          "JG_APPLICATIONKEY" => "#{@options[:application_key]}",
+          "JG_SECURITYTOKEN"  => "#{@options[:security_token]}"
         }
 
         url = test? ? self.test_url : self.live_url
