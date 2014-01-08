@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.42.4 (January 8th, 2014)
+
 * DataCash: Set 'ecomm' as capturemethod [DavidGeukers]
 * Cybersource: Fix subscriptions with a setup fee [ntalbott]
 * Stripe: Do not pass customer details to the /cards endpoint [michellebu]
