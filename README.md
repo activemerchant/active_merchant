@@ -220,6 +220,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [WebMoney](http://www.webmoney.ru) - RU
 * [WebPay](http://webpay.by/)
 * [WorldPay](http://www.worldpay.com)
+* [Paysera](https://www.paysera.com)
 
 ## Contributing
 
