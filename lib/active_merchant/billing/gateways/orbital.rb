@@ -438,7 +438,7 @@ module ActiveMerchant #:nodoc:
           {
              :authorization => authorization_string(response[:tx_ref_num], response[:order_id]),
              :test => self.test?,
-             :avs_result => OrbitalGateway::AVSResult.new(response[:avs_resp_code]),
+             :avs_result => OrbitalGateway::AVSResult.new(response[:avs_resp_code]).to_hash,
              :cvv_result => response[:cvv2_resp_code]
           }
         )
