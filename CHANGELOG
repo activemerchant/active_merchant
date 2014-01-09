@@ -11,6 +11,7 @@
 * Ogone: Allow D3D for alias purchases [pwoestelandt]
 * USAePay Advanced: Fix verification_value mapping [dppcode]
 * Orbital: Add additional success conditions [boone]
+* Orbital: Handle special CVV responses [boone]
 
 == Version 1.42.5 (February 7th, 2014)
 
