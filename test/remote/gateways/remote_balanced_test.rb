@@ -77,7 +77,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert response.message.index('Missing required field') != nil
+    assert_match /Exactly one of.*must be specified/, response.message
   end
 
   def test_void_authorization
@@ -107,10 +107,10 @@ class RemoteBalancedTest < Test::Unit::TestCase
 
   def test_store
     new_email_address = '%d@example.org' % Time.now
-    assert card_uri = @gateway.store(@credit_card, {
+    assert response = @gateway.store(@credit_card, {
         :email => new_email_address
     })
-    assert_instance_of String, card_uri
+    assert_equal "Card stored", response.message
   end
 
   def test_invalid_login
