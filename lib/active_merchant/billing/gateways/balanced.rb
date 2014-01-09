@@ -131,7 +131,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:amount] = money
         post[:description] = options[:description]
-        post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
+        add_common_params(post, options)
 
         create_or_find_account(post, options)
         add_credit_card(post, credit_card, options)
@@ -175,7 +175,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:amount] = money
         post[:description] = options[:description]
-        post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
+        add_common_params(post, options)
 
         create_or_find_account(post, options)
         add_credit_card(post, credit_card, options)
@@ -205,8 +205,7 @@ module ActiveMerchant #:nodoc:
         post[:hold_uri] = authorization
         post[:amount] = money if money
         post[:description] = options[:description] if options[:description]
-        post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
-        post[:on_behalf_of_uri] = options[:on_behalf_of_uri] if options[:on_behalf_of_uri]
+        add_common_params(post, options)
 
         create_transaction(:post, @debits_uri, post)
       rescue Error => ex
@@ -222,7 +221,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         post = {}
         post[:is_void] = true
-        post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
+        add_common_params(post, options)
 
         create_transaction(:put, authorization, post)
       rescue Error => ex
@@ -256,7 +255,7 @@ module ActiveMerchant #:nodoc:
         post[:debit_uri] = debit_uri
         post[:amount] = amount
         post[:description] = options[:description]
-        post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
+        add_common_params(post, options)
         create_transaction(:post, @refunds_uri, post)
       rescue Error => ex
         failed_response(ex.response)
@@ -318,6 +317,7 @@ module ActiveMerchant #:nodoc:
         if account_uri == nil
           post[:name] = options[:name] if options[:name]
           post[:email_address] = options[:email]
+          post[:meta] = options[:meta] if options[:meta]
 
           # create an account
           response = http_request(:post, @accounts_uri, post)
@@ -345,6 +345,15 @@ module ActiveMerchant #:nodoc:
           credit_card[:postal_code] = address[:zip] if address[:zip]
           credit_card[:country] = address[:country] if address[:country]
         end
+      end
+
+      def add_common_params(post, options)
+        common_params = [
+          :appears_on_statement_as,
+          :on_behalf_of_uri,
+          :meta
+        ]
+        post.update(options.select{|key, _| common_params.include?(key)})
       end
 
       def add_credit_card(post, credit_card, options)

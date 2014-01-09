@@ -59,6 +59,14 @@ class RemoteBalancedTest < Test::Unit::TestCase
     assert_equal options[:name], response.params['account']['name']
   end
 
+  def test_passing_meta
+    options = @options.merge(meta: { "order_number" => '12345' })
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+
+    assert_success response
+    assert_equal options[:meta], response.params['meta']
+  end
+
   def test_authorize_and_capture
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
