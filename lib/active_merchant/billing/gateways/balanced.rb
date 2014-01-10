@@ -361,6 +361,7 @@ module ActiveMerchant #:nodoc:
 
           post[:card_uri] = card_uri
         elsif credit_card.kind_of?(String)
+          associate_card_to_account(post[:account_uri], credit_card) unless options[:account_uri]
           post[:card_uri] = credit_card
         end
 
