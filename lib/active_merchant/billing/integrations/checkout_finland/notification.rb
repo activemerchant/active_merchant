@@ -15,6 +15,11 @@ module ActiveMerchant #:nodoc:
             params['STATUS'] == "3"
           end
 
+          # Did the customer cancel the payment
+          def cancelled?
+            params['STATUS'] == "-1"
+          end
+
           # Payment requires manual activation (fraud check etc)
           def activation?
             params['STATUS'] == "7"

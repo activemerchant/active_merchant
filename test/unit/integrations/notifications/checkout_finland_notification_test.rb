@@ -15,6 +15,7 @@ class CheckoutFinlandNotificationTest < Test::Unit::TestCase
     assert_equal "2657BA96CC7879C79192547EB6C9D4082EA39CA52FE1DAD09CB1C632ECFDAE67", @checkout_finland.mac
     assert @checkout_finland.delayed?
     assert_equal false, @checkout_finland.activation?
+    assert_equal false, @checkout_finland.cancelled?
   end
 
   def test_acknowledgement
