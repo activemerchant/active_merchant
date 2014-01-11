@@ -20,13 +20,13 @@ class TwoCheckoutHelperTest < Test::Unit::TestCase
   def test_extra_helper_fields
     @helper.currency 'ZAR'
     @helper.invoice '123'
-    @helper.return_url 'https://www.2checkout.com'
-    @helper.notification_url 'https://www.2checkout.com/test'
+    @helper.return_url 'https://return.url/'
+    @helper.notify_url 'https://notify.url/'
 
     assert_field 'currency_code', 'ZAR'
     assert_field 'cart_order_id', '123'
-    assert_field 'return_url', 'https://www.2checkout.com'
-    assert_field 'x_receipt_link_url', 'https://www.2checkout.com/test'
+    assert_field 'notify_url', 'https://notify.url/'
+    assert_field 'x_receipt_link_url', 'https://return.url/'
   end
 
   def test_customer_fields
