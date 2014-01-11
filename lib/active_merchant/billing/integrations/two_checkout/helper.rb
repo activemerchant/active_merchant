@@ -44,11 +44,11 @@ module ActiveMerchant #:nodoc:
                   :zip      => 'ship_zip',
                   :country  => 'ship_country'
 
-          # Does nothing, since we've disabled the Continue Shopping button by using the fixed = Y field
-          mapping :return_url, 'return_url'
+          # Overrides Approved URL for return process redirects
+          mapping :return_url, 'x_receipt_link_url'
 
-          # Approved URL path
-          mapping :notification_url, 'x_receipt_link_url'
+          # notifications are sent via static URLs in the Instant Notification Settings of 2Checkout admin
+          mapping :notify_url, 'notify_url'
 
           def customer(params = {})
             add_field(mappings[:customer][:email], params[:email])
