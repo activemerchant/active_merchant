@@ -1,6 +1,3 @@
-#require File.dirname(__FILE__) + '/active_merchant_ccavenue/helper.rb'
-#require File.dirname(__FILE__) + '/active_merchant_ccavenue/return.rb'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
