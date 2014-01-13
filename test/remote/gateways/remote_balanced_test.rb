@@ -50,6 +50,15 @@ class RemoteBalancedTest < Test::Unit::TestCase
     assert_equal "Homer Electric", response.params['appears_on_statement_as']
   end
 
+  def test_passing_customer_name
+    options = @options.merge(name: 'Test User')
+    options[:email] = 'john.buyer+withname@example.org'
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+
+    assert_success response
+    assert_equal options[:name], response.params['account']['name']
+  end
+
   def test_authorize_and_capture
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
