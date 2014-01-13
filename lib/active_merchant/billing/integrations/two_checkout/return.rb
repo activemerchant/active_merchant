@@ -41,14 +41,27 @@ module ActiveMerchant #:nodoc:
           # li_#_option_#_surcharge - Amount in account pricing currency.
 
           #Third Party Cart Only
-          # cart_order_id - The order ID you had assigned to the order.
+          # cart_order_id - The order ID you had assigned to the order
+
+          def initialize(query_string, options = {})
+            super
+            @notification = Notification.new(query_string, options)
+            # Checks against MD5 Hash specifically for the return process
+            def @notification.acknowledge
+              return false unless params['key']
+
+              # Use '1' for the order number when computing the hash on demo sales
+              order_number = params['demo'] == 'Y' ? 1 : params['merchant_order_id']
+              Digest::MD5.hexdigest("#{ secret }#{ params['sid'] }#{ order_number }#{ params['total'] }").upcase == params['key'].upcase
+            end
+          end
 
           def success?
             params['credit_card_processed'] == 'Y'
           end
-          
+
           def message
-            
+
           end
 
           # Allow seller to define default currency (should match 2Checkout account pricing currency)
@@ -113,16 +126,6 @@ module ActiveMerchant #:nodoc:
           # Secret Word defined in 2Checkout account
           def secret
             @options[:credential2]
-          end
-
-          # Checks against MD5 Hash
-          def acknowledge
-            return false if security_key.blank?
-
-            # Use '1' for the order number when computing the hash on demo sales
-            oid = test? ? 1 : transaction_id
-
-            Digest::MD5.hexdigest("#{secret}#{params['sid']}#{oid}#{gross}").upcase == security_key.upcase
           end
         end
       end

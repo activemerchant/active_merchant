@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
 
           # The value passed with 'merchant_order_id' is passed back as 'vendor_order_id'
           def item_id
-            params['vendor_order_id']
+            params['vendor_order_id'] || params['merchant_order_id']
           end
 
           # 2Checkout Sale ID
@@ -110,12 +110,13 @@ module ActiveMerchant #:nodoc:
 
           # The money amount we received in X.2 decimal.
           def gross
-            params['invoice_list_amount']
+            params['invoice_list_amount'] || params['total']
           end
 
           # Returns 'pass', 'fail' or 'wait'
           def status
-            params['fraud_status']
+            params['fraud_status'] ||
+            params['credit_card_processed'] == 'Y' ? "Completed" : "Failed"
           end
 
           # Secret Word defined in 2Checkout account
@@ -139,7 +140,6 @@ module ActiveMerchant #:nodoc:
               params[key] = CGI.unescape(value || '')
             end
           end
-
         end
       end
     end
