@@ -13,6 +13,7 @@
 * Orbital: Add additional success conditions [boone]
 * Orbital: Handle special CVV responses [boone]
 * Balanced: Allow working with balanced.js [michaelherold]
+* Balanced: Allow passing customer name [michaelherold]
 
 == Version 1.42.5 (February 7th, 2014)
 
