@@ -121,6 +121,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [JetPay](http://www.jetpay.com/) - US
 * [LinkPoint](http://www.linkpoint.com/) - US
 * [Litle & Co.](http://www.litle.com/) - US
+* [maxiPago!](http://www.maxipago.com/) - BR
 * [Merchant e-Solutions](http://www.merchante-solutions.com/) - US
 * [Merchant One Gateway](http://merchantone.com/) - US
 * [MerchantWARE](http://merchantwarehouse.com/merchantware) - US
