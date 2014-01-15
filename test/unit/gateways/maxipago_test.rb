@@ -25,7 +25,7 @@ class MaxipagoTest < Test::Unit::TestCase
     assert_success response
 
     # Replace with authorization number from the successful response
-    assert_equal '123456789', response.authorization
+    assert_equal '555555', response.authorization
     assert response.test?
   end
 
