@@ -18,6 +18,16 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
     }
   end
 
+  def test_prepaid_voucher
+    @options[:name] = @credit_card.name
+    @options[:payment_id] = '1234567890'
+    @options[:billing_address][:country] = 'BR'
+    @options[:billing_address][:zip] = '22930-020'
+    assert response = @gateway.prepaid_voucher(@amount, @options)
+    assert_success response
+    assert_equal 'ISSUED', response.message
+  end
+
   def test_successful_authorize
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response

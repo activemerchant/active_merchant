@@ -33,7 +33,8 @@ module ActiveMerchant #:nodoc:
         add_aux_data(post, options)
         add_amount(post, money)
         add_creditcard(post, creditcard)
-        add_address(post, creditcard, options)
+        add_name(post, creditcard)
+        add_address(post, options)
         #add_customer_data(post, options)
 
         commit('authonly', money, post)
@@ -44,7 +45,8 @@ module ActiveMerchant #:nodoc:
         add_aux_data(post, options)
         add_amount(post, money)
         add_creditcard(post, creditcard)
-        add_address(post, creditcard, options)
+        add_name(post, creditcard)
+        add_address(post, options)
         #add_customer_data(post, options)
 
         commit('sale', money, post)
@@ -55,6 +57,16 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money)
         add_aux_data(post, options)
         commit('capture', money, post)
+      end
+
+      def prepaid_voucher(money, options = {})
+        post = {}
+        post[:billing_name] = options[:name]
+        post[:referenceNum] = options[:order_id]
+        post[:voucher_number] = options[:payment_id]
+        add_amount(post, money)
+        add_address(post, options)
+        commit('voucher', money, post)
       end
 
       private
@@ -97,8 +109,11 @@ module ActiveMerchant #:nodoc:
         post[:card_cvv] = creditcard.verification_value
       end
 
-      def add_address(post, creditcard, options)
+      def add_name(post, creditcard)
         post[:billing_name] = creditcard.name
+      end
+
+      def add_address(post, options)
         post[:billing_address] = options[:billing_address][:address1]
         post[:billing_address2] = options[:billing_address][:address2]
         post[:billing_city] = options[:billing_address][:city]
@@ -153,6 +168,37 @@ module ActiveMerchant #:nodoc:
         end
       end
       alias_method :build_sale_request, :build_authonly_request
+
+      def build_voucher_request(params)
+        build_request(params) do |xml|
+          xml.sale {
+            xml.processorID '12' # Bradesco
+            xml.referenceNum params[:referenceNum] # spree_order
+            xml.billing {
+              xml.name params[:billing_name] # add_name
+              xml.address params[:billing_address] if params[:billing_address].present?
+              xml.address2 params[:billing_address2] if params[:billing_address2].present?
+              xml.city params[:billing_city] if params[:billing_city].present?
+              xml.state params[:billing_state] if params[:billing_state].present?
+              xml.postalcode params[:billing_postalcode] if params[:billing_postalcode].present?
+              xml.country params[:billing_country] if params[:billing_country].present?
+              xml.phone params[:billing_phone] if params[:billing_phone].present?
+            }
+            xml.transactionDetail {
+              xml.payType {
+                xml.boleto {
+                  xml.expirationDate I18n.l(Date.current + 55.days, format: '%Y-%m-%d')
+                  xml.number params[:voucher_number]
+                  xml.instructions 'Sr. Caixa, nao aceitar apos o vencimento.'
+                }
+              }
+            }
+            xml.payment {
+              xml.chargeTotal params[:amount]
+            }
+          }
+        end
+      end
 
       def build_request(params)
         builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
