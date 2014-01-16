@@ -16,7 +16,10 @@ module ActiveMerchant #:nodoc:
     # BeanStream supports payment profiles (vaults). This allows you to store cc information with BeanStream and process subsequent transactions with a customer id.
     # Secure Payment Profiles must be enabled on your account (must be done over the phone).
     # Your API Access Passcode must be set in Administration => account settings => order settings.
-    # To learn more about storing credit cards with the Beanstream gateway, please read the BEAN_Payment_Profiles.pdf (I had to phone BeanStream to request it.)
+    # To learn more about storing credit cards with the Beanstream gateway, documentation can be found at http://developer.beanstream.com/documentation/classic-apis
+    #
+    # To store a credit card using Beanstream's Legato Javascript Library (http://developer.beanstream.com/documentation/legato) you must pass the singleUseToken in
+    # the store method's option parameter. Example: @gateway.store("gt6-0c78c25b-3637-4ba0-90e2-26105287f198")
     #
     # == Notes
     # * Adding of order products information is not implemented.
@@ -131,11 +134,17 @@ module ActiveMerchant #:nodoc:
 
       # To match the other stored-value gateways, like TrustCommerce,
       # store and unstore need to be defined
-      def store(credit_card, options = {})
+      def store(payment_method, options = {})
         post = {}
         add_address(post, options)
-        add_credit_card(post, credit_card)
-        add_secure_profile_variables(post,options)
+
+        if payment_method.respond_to?(:number)
+          add_credit_card(post, payment_method)
+        else
+          post[:singleUseToken] = payment_method
+        end
+        add_secure_profile_variables(post, options)
+
         commit(post, true)
       end
 
@@ -150,10 +159,14 @@ module ActiveMerchant #:nodoc:
       # Update the values (such as CC expiration) stored at
       # the gateway.  The CC number must be supplied in the
       # CreditCard object.
-      def update(vault_id, credit_card, options = {})
+      def update(vault_id, payment_method, options = {})
         post = {}
         add_address(post, options)
-        add_credit_card(post, credit_card)
+        if payment_method.respond_to?(:number)
+          add_credit_card(post, payment_method)
+        else
+          post[:singleUseToken] = payment_method
+        end
         options.merge!({:vault_id => vault_id, :operation => secure_profile_action(:modify)})
         add_secure_profile_variables(post,options)
         commit(post, true)

@@ -9,6 +9,7 @@
 * Spreedly: Add support for :ip [megamoose]
 * PayPal Express: Improve received_at handling [jwarchol]
 * PayPal Express: Add ReqBillingAddress flag [johnb-razoo]
+* Beanstream: Add support for Legato single use tokens [tylerrooney]
 
 == Version 1.43.1 (May 1, 2014)
 
