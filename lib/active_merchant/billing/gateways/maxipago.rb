@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
 
       def prepaid_voucher(money, options = {})
         post = {}
-        post[:billing_name] = options[:name]
+        post[:billing_name] = options[:billing_address][:name]
         post[:referenceNum] = options[:order_id]
         post[:voucher_number] = options[:payment_id]
         add_amount(post, money)
