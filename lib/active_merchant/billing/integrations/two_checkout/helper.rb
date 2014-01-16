@@ -5,7 +5,6 @@ module ActiveMerchant #:nodoc:
         class Helper < ActiveMerchant::Billing::Integrations::Helper
           def initialize(order, account, options = {})
             super
-
             if ActiveMerchant::Billing::Base.integration_mode == :test || options[:test]
               add_field('demo', 'Y')
             end
