@@ -113,10 +113,17 @@ module ActiveMerchant #:nodoc:
             params['invoice_list_amount'] || params['total']
           end
 
-          # Returns 'pass', 'fail' or 'wait'
+          # Determine status based on parameter set, if the params include a fraud status we know we're being
+          # notified of the finalization of an order. If the params include 'credit_card_processed' we know
+          # we're being notified of a new order being inbound.
           def status
-            params['fraud_status'] ||
-            params['credit_card_processed'] == 'Y' ? "Completed" : "Failed"
+            if params['fraud_status'] == 'pass'
+              'Completed'
+            elsif params['fraud_status'] == 'wait' || params['credit_card_processed'] == 'Y'
+              'Pending'
+            else
+              'Failed'
+            end
           end
 
           # Secret Word defined in 2Checkout account

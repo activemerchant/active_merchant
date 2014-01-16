@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
           def initialize(query_string, options = {})
             super
             @notification = Notification.new(query_string, options)
-            # Checks against MD5 Hash specifically for the return process
+            # Checks against MD5 Hash specifically for the return process.
             def @notification.acknowledge
               return false unless params['key']
 
@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
           def status
             case params['credit_card_processed']
               when 'Y'
-                'Completed'
+                'Pending' # wait for fraud status to pass to mark the purchase paid
               else
                 'Failed'
             end
@@ -126,6 +126,10 @@ module ActiveMerchant #:nodoc:
           # Secret Word defined in 2Checkout account
           def secret
             @options[:credential2]
+          end
+
+          def acknowledge
+            @notification.acknowledge
           end
         end
       end
