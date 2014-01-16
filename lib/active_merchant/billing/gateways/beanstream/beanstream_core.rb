@@ -3,6 +3,7 @@ module ActiveMerchant #:nodoc:
     module BeanstreamCore
       RECURRING_URL = 'https://www.beanstream.com/scripts/recurring_billing.asp'
       SECURE_PROFILE_URL = 'https://www.beanstream.com/scripts/payment_profile.asp'
+      SINGLE_USE_TOKEN_URL = 'https://beanstream.com/WebService/Tokenization.svc/newtoken'
 
       SP_SERVICE_VERSION = '1.1'
 
@@ -231,6 +232,8 @@ module ActiveMerchant #:nodoc:
         post[:operationType] = options[:operationType] || options[:operation] || secure_profile_action(:new)
         post[:customerCode] = options[:billing_id] || options[:vault_id] || false
         post[:status] = options[:status]
+
+        post[:singleUseToken] = options[:singleUseToken]
       end
 
       def add_recurring_amount(post, money)
