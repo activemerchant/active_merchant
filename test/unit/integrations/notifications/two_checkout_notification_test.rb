@@ -10,7 +10,7 @@ class TwoCheckoutNotificationTest < Test::Unit::TestCase
   def test_accessors
     assert @live_notification.complete?
     assert_equal 'FRAUD_STATUS_CHANGED', @live_notification.type
-    assert_equal "pass", @live_notification.status
+    assert_equal "Completed", @live_notification.status
     assert_equal "4742525399", @live_notification.transaction_id
     assert_equal "4759791636", @live_notification.invoice_id
     assert_equal "test123", @live_notification.item_id
@@ -28,7 +28,7 @@ class TwoCheckoutNotificationTest < Test::Unit::TestCase
     live_notification = TwoCheckout::Notification.new(live_http_raw_data, :credential2 => 'tango')
     assert live_notification.acknowledge
   end
-  
+
 
   private
   def live_http_raw_data
