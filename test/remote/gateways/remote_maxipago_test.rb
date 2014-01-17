@@ -19,7 +19,7 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
   end
 
   def test_prepaid_voucher
-    @options[:payment_id] = '1234567890'
+    @options[:nosso_numero] = '1234567890'
     @options[:billing_address][:country] = 'BR'
     @options[:billing_address][:zip] = '22930-020'
     assert response = @gateway.prepaid_voucher(@amount, @options)
