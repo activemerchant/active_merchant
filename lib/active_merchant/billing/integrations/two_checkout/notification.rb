@@ -76,7 +76,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def complete?
-            status == 'pass'
+            status == 'Completed'
           end
 
           # The value passed with 'merchant_order_id' is passed back as 'vendor_order_id'
@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
 
           # 2Checkout Sale ID
           def transaction_id
-            params['sale_id']
+            params['sale_id'] || params['order_number']
           end
 
           # 2Checkout Invoice ID
@@ -105,7 +105,7 @@ module ActiveMerchant #:nodoc:
 
           # The MD5 Hash
           def security_key
-            params['md5_hash']
+            params['md5_hash'] || params['key']
           end
 
           # The money amount we received in X.2 decimal.
@@ -114,8 +114,9 @@ module ActiveMerchant #:nodoc:
           end
 
           # Determine status based on parameter set, if the params include a fraud status we know we're being
-          # notified of the finalization of an order. If the params include 'credit_card_processed' we know
-          # we're being notified of a new order being inbound.
+          # notified of the finalization of an order (an INS message)
+          # If the params include 'credit_card_processed' we know we're being notified of a new order being inbound,
+          # which we handle in the deferred demo sale scenario.
           def status
             if params['fraud_status'] == 'pass'
               'Completed'
@@ -134,7 +135,14 @@ module ActiveMerchant #:nodoc:
           # Checks against MD5 Hash
           def acknowledge(authcode = nil)
             return false if security_key.blank?
-            Digest::MD5.hexdigest("#{transaction_id}#{params['vendor_id']}#{invoice_id}#{secret}").upcase == security_key.upcase
+            if ins_message?
+              Digest::MD5.hexdigest("#{ transaction_id }#{ params['vendor_id'] }#{ invoice_id }#{ secret }").upcase == security_key.upcase
+            elsif passback?
+              order_number = params['demo'] == 'Y' ? 1 : params['order_number']
+              Digest::MD5.hexdigest("#{ secret }#{ params['sid'] }#{ order_number }#{ gross }").upcase == params['key'].upcase
+            else
+              false
+            end
           end
 
           private
@@ -146,6 +154,14 @@ module ActiveMerchant #:nodoc:
               key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
               params[key] = CGI.unescape(value || '')
             end
+          end
+
+          def ins_message?
+            params.include? 'message_type'
+          end
+
+          def passback?
+            params.include? 'credit_card_processed'
           end
         end
       end

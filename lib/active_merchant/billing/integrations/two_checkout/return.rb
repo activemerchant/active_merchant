@@ -46,90 +46,10 @@ module ActiveMerchant #:nodoc:
           def initialize(query_string, options = {})
             super
             @notification = Notification.new(query_string, options)
-            # Checks against MD5 Hash specifically for the return process.
-            def @notification.acknowledge
-              return false unless params['key']
-
-              # Use '1' for the order number when computing the hash on demo sales
-              order_number = params['demo'] == 'Y' ? 1 : params['merchant_order_id']
-              Digest::MD5.hexdigest("#{ secret }#{ params['sid'] }#{ order_number }#{ params['total'] }").upcase == params['key'].upcase
-            end
           end
 
           def success?
-            params['credit_card_processed'] == 'Y'
-          end
-
-          def message
-
-          end
-
-          # Allow seller to define default currency (should match 2Checkout account pricing currency)
-          def currency
-            'USD'
-          end
-
-          def complete?
-            status == 'Completed'
-          end
-
-          # Pass Through Product parameters will only return 'merchant_order_id'
-          # Third Party Cart parameters will return 'card_order_id' and 'merchant_order_id'
-          def item_id
-            params['merchant_order_id']
-          end
-
-          # 2Checkout Sale ID
-          def transaction_id
-            params['order_number']
-          end
-
-          def received_at
-            params['']
-          end
-
-          #Customer Email
-          def payer_email
-            params['email']
-          end
-
-          def receiver_email
-            params['email']
-          end
-
-          # The MD5 Hash
-          def security_key
-            params['key']
-          end
-
-          # The money amount we received in X.2 decimal.
-          def gross
-            params['total']
-          end
-
-          # Was this a test transaction? # Use the hash
-          # Please note 2Checkout forces the order number computed in the hash to '1' on demo sales.
-          def test?
-            params['demo'] == 'Y'
-          end
-
-          # 2Checkout only returns 'Y' for this parameter. If the sale is not authorized, no passback occurs.
-          def status
-            case params['credit_card_processed']
-              when 'Y'
-                'Pending' # wait for fraud status to pass to mark the purchase paid
-              else
-                'Failed'
-            end
-          end
-
-          # Secret Word defined in 2Checkout account
-          def secret
-            @options[:credential2]
-          end
-
-          def acknowledge
-            @notification.acknowledge
+            @notification.status != 'Failed'
           end
         end
       end
