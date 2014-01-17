@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:billing_name] = options[:billing_address][:name]
         post[:referenceNum] = options[:order_id]
-        post[:voucher_number] = options[:payment_id]
+        post[:nosso_numero] = options[:nosso_numero]
         add_amount(post, money)
         add_address(post, options)
         commit('voucher', money, post)
@@ -188,7 +188,7 @@ module ActiveMerchant #:nodoc:
               xml.payType {
                 xml.boleto {
                   xml.expirationDate I18n.l(Date.current + 55.days, format: '%Y-%m-%d')
-                  xml.number params[:voucher_number]
+                  xml.number params[:nosso_numero]
                   xml.instructions 'Sr. Caixa, nao aceitar apos o vencimento.'
                 }
               }
