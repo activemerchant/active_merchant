@@ -11,12 +11,29 @@ class IatsTransactionTest < Test::Unit::TestCase
       brand: 'visa',
       number: '4111111111111111'
     )
+    
+   @options = {
+		:ip => '123.123.123.123',
+		:email => 'iats@example.com',
+		:billing_address => {
+		  :name => 'Test UK',
+        	  :phone => '555-555-5555',
+		  :address1 => 'example address1',
+	          :address2 => 'example address2',
+	          :city => 'xyz',
+	          :state => 'AP',
+		  :country => 'FR',
+	          :zip => '1312423'
+	       },
+	       :zip_code => 'ww'
+	     }	
+
   end
 
   def test_expiration_validation
     @card.year = 2010
     assert_raises(ArgumentError) do
-      @gateway.purchase(100, @card, { zip_code: 'ww' })
+      @gateway.purchase(100, @card, @options)
     end
   end
 
@@ -36,7 +53,8 @@ class IatsTransactionTest < Test::Unit::TestCase
 
   def test_success_purchase
     @gateway.expects(:process_credit_card_v1).returns(Nokogiri::XML(success_purchase_xml))
-    assert response = @gateway.purchase(100, @card, { zip_code: 234 })
+    @options.update(:zip_code => 234)
+    assert response = @gateway.purchase(100, @card, @options)
     assert_instance_of Response, response
     assert_success response
     assert_equal ' OK: 678594:Z', response.message
@@ -45,7 +63,8 @@ class IatsTransactionTest < Test::Unit::TestCase
   def test_reject_purchase
     @gateway.expects(:process_credit_card_v1).returns(
       Nokogiri::XML(reject_purchase_xml))
-    assert response = @gateway.purchase(100, @card, { zip_code: 234 })
+    @options.update(:zip_code => 234)
+    assert response = @gateway.purchase(100, @card, @options)
     assert_instance_of Response, response
     assert_failure response
     assert_equal  ActiveMerchant::Billing::IatsTransactionGateway::REJECT_MESSAGES['15'],
@@ -55,7 +74,8 @@ class IatsTransactionTest < Test::Unit::TestCase
   def test_success_refund
     @gateway.expects(:process_credit_card_refund_with_transaction_id_v1).
       returns(Nokogiri::XML(success_refund_xml))
-    assert response = @gateway.refund(100, {total: 123 })
+    @options.update(:total => 123)
+    assert response = @gateway.refund(100, @options)
     assert_instance_of Response, response
     assert_success response
     assert_equal ' OK: 1234', response.message
@@ -64,7 +84,8 @@ class IatsTransactionTest < Test::Unit::TestCase
   def test_reject_refund
     @gateway.expects(:process_credit_card_refund_with_transaction_id_v1).
       returns(Nokogiri::XML(reject_refund_xml))
-    assert response = @gateway.refund(100, {total: 123 })
+    @options.update(:total => 123)
+    assert response = @gateway.refund(100, @options)
     assert_instance_of Response, response
     assert_failure response
     assert_equal ActiveMerchant::Billing::IatsTransactionGateway::REJECT_MESSAGES['39'],

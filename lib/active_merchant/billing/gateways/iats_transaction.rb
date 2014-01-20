@@ -10,14 +10,17 @@ module ActiveMerchant #:nodoc:
       #
 
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :maestro]
       self.supported_countries = %w(  US UK AU CA FI DK FR DE IT HK GR IE TR
-                                      CH SE ES SG PT NO NL JP NZ)
+                                      CH SE ES SG PT NO NL JP NZ AT BE LU)
       self.default_currency = 'USD'
       # The homepage URL of the gateway
       self.homepage_url = 'http://iatspayments.com'
       # The name of the gateway
       self.display_name = 'IATS'
+      
+      NA_COUNTRIES = %w( US CA)
+      UK_COUNTRIES = %w(UK AU FI DK FR DE IT HK GR IE TR CH SE ES SG PT NO NL JP NZ AT BE LU)
 
       UK_HOST = 'www.uk.iatspayments.com'
       NA_HOST = 'www.iatspayments.com'
@@ -96,8 +99,8 @@ module ActiveMerchant #:nodoc:
         if !options[:cvv2].nil?
 	   hash[:cvv2] = options[:cvv2]
 	end
+	select_region(options)
         res = process_credit_card_v1(hash)
-
         parse_data(res)
       end
 
@@ -125,12 +128,24 @@ module ActiveMerchant #:nodoc:
           total: options[:total],
           transaction_id: identification
         }
+	select_region(options)
         res = process_credit_card_refund_with_transaction_id_v1(hash)
         parse_data(res)
       end
 
       def credit(money, identification, options = {})
         raise NotImplementedError.new
+      end
+
+      def select_region(options = {})
+	address = options[:billing_address] || options[:address]
+	unless address[:country].nil?
+	   if NA_COUNTRIES.include?(address[:country])
+	    @region = 'na'
+	   elsif UK_COUNTRIES.include?(address[:country])
+	    @region = 'uk'
+	   end
+	end
       end
 
       def current_host
