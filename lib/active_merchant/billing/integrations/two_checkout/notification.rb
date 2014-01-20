@@ -109,8 +109,9 @@ module ActiveMerchant #:nodoc:
           end
 
           # The money amount we received in X.2 decimal.
+          # passback || INS gross amount for new orders || default INS gross
           def gross
-            params['invoice_list_amount'] || params['total']
+            params['invoice_list_amount'] || params['total'] || params['item_list_amount_1']
           end
 
           # Determine status based on parameter set, if the params include a fraud status we know we're being
@@ -118,9 +119,9 @@ module ActiveMerchant #:nodoc:
           # If the params include 'credit_card_processed' we know we're being notified of a new order being inbound,
           # which we handle in the deferred demo sale scenario.
           def status
-            if params['fraud_status'] == 'pass'
+            if params['fraud_status'] == 'pass' || params['credit_card_processed'] == 'Y'
               'Completed'
-            elsif params['fraud_status'] == 'wait' || params['credit_card_processed'] == 'Y'
+            elsif params['fraud_status'] == 'wait'
               'Pending'
             else
               'Failed'
