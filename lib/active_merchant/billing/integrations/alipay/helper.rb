@@ -73,6 +73,14 @@ module ActiveMerchant #:nodoc:
             super
           end
 
+          def add_field(name, value)
+            if ![Array, Hash].include?(name.class) and value.nil?
+              @fields[name.to_s]
+            else
+              origin_add_field(name, value)
+            end
+          end
+
           def sign
             add_field('sign',
                       Digest::MD5.hexdigest((@fields.sort.collect{|s|s[0]+"="+CGI.unescape(s[1])}).join("&")+KEY)
