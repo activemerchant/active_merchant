@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def sanitize_commodity_name name
-            name.gsub(/[^\w\s\d]/, '').strip.first(26)
+            name.gsub(/[^\w\s\d]/, '').strip.first(20)
           end
         end
       end
