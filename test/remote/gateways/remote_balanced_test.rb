@@ -47,7 +47,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, options)
 
     assert_success response
-    assert_equal "Homer Electric", response.params['appears_on_statement_as']
+    assert_equal "BAL*Homer Electric", response.params['debits'][0]['appears_on_statement_as']
   end
 
   def test_authorize_and_capture
