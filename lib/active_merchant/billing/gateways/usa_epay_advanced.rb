@@ -124,7 +124,8 @@ module ActiveMerchant #:nodoc:
         :merchant_receipt => [:boolean, 'MerchReceipt'],
         :merchant_email => [:boolean, 'MerchReceiptEmail'],
         :merchant_template => [:boolean, 'MerchReceiptName'],
-        :verification_value => [:boolean, 'isRecurring'],
+        :recurring => [:boolean, 'isRecurring'],
+        :verification_value => [:string, 'CardCode'],
         :software => [:string, 'Software']
       } #:nodoc:
 

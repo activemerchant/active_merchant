@@ -9,6 +9,7 @@
 * Wirecard: Handle a utf-8 description [duff]
 * Litle: Partial capture support [ttdonovan]
 * Ogone: Allow D3D for alias purchases [pwoestelandt]
+* USAePay Advanced: Fix verification_value mapping [dppcode]
 
 == Version 1.42.5 (February 7th, 2014)
 
