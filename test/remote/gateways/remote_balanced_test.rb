@@ -39,7 +39,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_match /Account Frozen/, response.message
+    assert_match /Account Frozen/, response.params['errors'][0]['description']
   end
 
   def test_passing_appears_on_statement
