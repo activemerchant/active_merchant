@@ -21,7 +21,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Transaction approved', response.message
-    assert_equal @amount, response.params['amount']
+    assert_equal @amount, response.params['debits'][0]['amount']
   end
 
   def test_invalid_card
@@ -84,7 +84,8 @@ class RemoteBalancedTest < Test::Unit::TestCase
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
     assert_success auth
-    assert void = @gateway.void(auth.authorization)
+    number = auth.params["card_holds"][0]["href"]
+    assert void = @gateway.void(number)
     assert_success void
     assert void.params['is_void']
   end
