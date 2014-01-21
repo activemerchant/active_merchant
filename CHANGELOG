@@ -5,6 +5,7 @@
 * SagePay: Truncate description field [duff]
 * Add Cecabank gateway [molpe]
 * Add Openpay [darkaz]
+* Balanced: Update to API 1.1 [steveklabnik]
 
 == Version 1.42.5 (February 7th, 2014)
 
