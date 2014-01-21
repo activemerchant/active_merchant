@@ -243,19 +243,15 @@ module ActiveMerchant #:nodoc:
       # * <tt>`:amount`<tt> -- specify an amount if you want to perform a
       #   partial refund. This value will default to the total amount of the
       #   debit that has not been refunded so far.
-      def refund(amount, debit_uri = "deprecated", options = {})
-        if(debit_uri == "deprecated" || debit_uri.kind_of?(Hash))
-          deprecated "Calling the refund method without an amount parameter is deprecated and will be removed in a future version."
-          return refund(options[:amount], amount, options)
-        end
-
+      def refund(amount, debit_uri, options = {})
         requires!(debit_uri)
+        requires!(amount)
         post = {}
-        post[:debit_uri] = debit_uri
         post[:amount] = amount
         post[:description] = options[:description]
         post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
-        create_transaction(:post, @refunds_uri, post)
+
+        create_transaction(:post, debit_uri, post)
       rescue Error => ex
         failed_response(ex.response)
       end

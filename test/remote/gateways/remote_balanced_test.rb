@@ -106,9 +106,13 @@ class RemoteBalancedTest < Test::Unit::TestCase
   def test_refund_purchase
     assert debit = @gateway.purchase(@amount, @credit_card, @options)
     assert_success debit
-    assert refund = @gateway.refund(nil, debit.authorization)
+
+    debit_id = debit.params["debits"][0]["id"]
+    capture_url = debit.params["links"]["debits.refunds"].gsub("{debits.id}", debit_id)
+
+    assert refund = @gateway.refund(@amount, capture_url)
     assert_success refund
-    assert_equal @amount, refund.params['amount']
+    assert_equal @amount, refund.params['refunds'][0]['amount']
   end
 
   def test_refund_partial_purchase
