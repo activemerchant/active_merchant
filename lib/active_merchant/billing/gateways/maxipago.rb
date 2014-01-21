@@ -187,7 +187,7 @@ module ActiveMerchant #:nodoc:
             xml.transactionDetail {
               xml.payType {
                 xml.boleto {
-                  xml.expirationDate I18n.l(Date.current + 55.days, format: '%Y-%m-%d')
+                  xml.expirationDate I18n.l(Date.current + 7.days, format: '%Y-%m-%d')
                   xml.number params[:nosso_numero]
                   xml.instructions 'Sr. Caixa, nao aceitar apos o vencimento.'
                 }
