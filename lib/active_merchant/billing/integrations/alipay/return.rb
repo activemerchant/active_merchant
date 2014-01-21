@@ -1,4 +1,4 @@
-require 'active_merchant/billing/integrations/alipay/sign.rb'
+require 'active_merchant/billing/integrations/alipay/notification.rb'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
