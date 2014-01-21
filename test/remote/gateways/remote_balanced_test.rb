@@ -33,7 +33,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
   def test_invalid_email
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:email => 'invalid_email'))
     assert_failure response
-    assert_match /Invalid field.*email_address/, response.message
+    assert_match /Invalid field.*email/, response.params['errors'][0]['description']
   end
 
   def test_unsuccessful_purchase

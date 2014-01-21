@@ -322,10 +322,14 @@ module ActiveMerchant #:nodoc:
         end
 
         if customer_uri == nil
-          post[:email_address] = options[:email]
+          post[:email] = options[:email]
 
           # create an account
           response = http_request(:post, @customer_uri, post)
+
+          if error?(response)
+            raise Error.new(response)
+          end
 
           customer_uri = response['customers'][0]['href']
         end
