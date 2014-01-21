@@ -201,13 +201,12 @@ module ActiveMerchant #:nodoc:
       #   Balanced dashboard
       def capture(money, authorization, options = {})
         post = {}
-        post[:hold_uri] = authorization
         post[:amount] = money if money
         post[:description] = options[:description] if options[:description]
         post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
         post[:on_behalf_of_uri] = options[:on_behalf_of_uri] if options[:on_behalf_of_uri]
 
-        create_transaction(:post, @debits_uri, post)
+        create_transaction(:post, authorization, post)
       rescue Error => ex
         failed_response(ex.response)
       end

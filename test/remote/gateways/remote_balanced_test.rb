@@ -55,11 +55,18 @@ class RemoteBalancedTest < Test::Unit::TestCase
     assert auth = @gateway.authorize(amount, @credit_card, @options)
     assert_success auth
     assert_equal 'Transaction approved', auth.message
-    assert auth.authorization
-    assert capture = @gateway.capture(amount, auth.authorization)
+
+    hold_id = auth.params["card_holds"][0]["id"]
+    capture_url = auth.params["links"]["card_holds.debits"].gsub("{card_holds.id}", hold_id)
+
+    assert capture = @gateway.capture(amount, capture_url)
     assert_success capture
-    assert_equal amount, capture.params['amount']
-    assert_equal auth.authorization, capture.params['hold']['uri']
+    assert_equal amount, capture.params['debits'][0]['amount']
+
+    auth_card_id = auth.params['card_holds'][0]['links']['card']
+    capture_source_id = capture.params['debits'][0]['links']['source']
+
+    assert_equal auth_card_id, capture_source_id
   end
 
   def test_authorize_and_capture_partial
