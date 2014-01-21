@@ -444,7 +444,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def error?(response)
-        response.key?('status_code')
+        response.key?('errors')
       end
 
       def post_data(params)
