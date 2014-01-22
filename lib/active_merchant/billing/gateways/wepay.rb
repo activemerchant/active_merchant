@@ -30,6 +30,7 @@ module ActiveMerchant #:nodoc:
         CHECKOUT_FIND      = '/checkout/find'
         CHECKOUT_CANCEL    = '/checkout/cancel'
         CHECKOUT_REFUND    = '/checkout/refund'
+        CHECKOUT_CAPTURE   = '/checkout/capture'
         CREDIT_CARD_CREATE = '/credit_card/create'
       end
 
@@ -45,31 +46,44 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, creditcard, options = {})
-        raise NotImplementedError
+        post = WepayPostData.new
+        post[:account_id] = @options[:account_id]
+        post[:auto_capture] = 0
+        add_creditcard(post, creditcard, options)
+        add_product_data(post, money, options)
+        commit(Actions::CHECKOUT_CREATE, post)
+      end
+
+      def capture(checkout_id, options = {})
+        post = WepayPostData.new
+        post[:checkout_id] = checkout_id
+        commit(Actions::CHECKOUT_CAPTURE, post)
+      end
+
+      def void(checkout_id, options = {})
+        post = WepayPostData.new
+        post[:checkout_id] = checkout_id
+        post[:cancel_reason] = options[:cancel_reason]
+        commit(Actions::CHECKOUT_CANCEL, post)
       end
 
       def purchase(money, creditcard, options = {})
         post = WepayPostData.new
         post[:account_id] = @options[:account_id]
-        add_invoice(post, options)
         add_creditcard(post, creditcard, options)
         add_product_data(post, money, options)
-        commit(Actions::CHECKOUT_CREATE, money, post)
-      end
-
-      def capture(money, authorization, options = {})
-        raise NotImplementedError
+        commit(Actions::CHECKOUT_CREATE, post)
       end
 
       def refund(money, checkout_id, options = {})
         post = WepayPostData.new
-        post[:checkout_id]   = checkout_id
-        post[:refund_reason] = options[:refund_reason] || "Test"
-
-        post[:app_fee] = options[:app_fee] if options[:app_fee]
-        post[:payer_email_message] = options[:payer_email_message] if options[:payer_email_message]
-        post[:payee_email_message] = options[:payee_email_message] if options[:payee_email_message]
-        commit(Actions::CHECKOUT_REFUND, money, post)
+        post[:checkout_id] = checkout_id
+        post[:amount] = amount(money) unless options[:full_refund]
+        post[:refund_reason] = options[:refund_reason]
+        post[:app_fee] = options[:app_fee]
+        post[:payer_name] = options[:payer_name]
+        post[:payee_email_message] = options[:payee_email_message]
+        commit(Actions::CHECKOUT_REFUND, post)
       end
 
       private
@@ -78,9 +92,13 @@ module ActiveMerchant #:nodoc:
         post[:amount] = amount(money)
         post[:short_description] = options[:description]
         post[:type] = options[:type]
-      end
-
-      def add_invoice(post, options)
+        post[:currency] = options[:currency]
+        post[:long_description] = options[:long_description]
+        post[:payer_email_message] = options[:payer_email_message]
+        post[:payee_email_message] = options[:payee_email_message]
+        post[:reference_id] = options[:reference_id]
+        post[:app_fee] = options[:app_fee]
+        post[:fee_payer] = options[:fee_payer]
       end
 
       def add_creditcard(post, creditcard, options)
@@ -102,8 +120,7 @@ module ActiveMerchant #:nodoc:
           }
         end
 
-        # Money is ignored
-        response = commit(Actions::CREDIT_CARD_CREATE, 0, cc_post)
+        response = commit(Actions::CREDIT_CARD_CREATE, cc_post)
         post[:payment_method_id] = response.params["credit_card_id"]
         post[:payment_method_type] = "credit_card"
       end
@@ -112,7 +129,7 @@ module ActiveMerchant #:nodoc:
         JSON.parse(response)
       end
 
-      def commit(action, money, params)
+      def commit(action, params)
         success = false
         begin
           response = service_call(action, params)

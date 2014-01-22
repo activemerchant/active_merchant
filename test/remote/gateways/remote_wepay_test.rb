@@ -6,7 +6,7 @@ class RemoteWepayTest < Test::Unit::TestCase
     @gateway = WepayGateway.new(fixtures(:wepay))
 
     # cents
-    @amount = 1000000
+    @amount = 2000
     @credit_card = credit_card('5496198584584769', mock_creditcard)
     @declined_card = credit_card('4000300011112220')
 
@@ -36,19 +36,39 @@ class RemoteWepayTest < Test::Unit::TestCase
   def test_successful_refund
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
+    # Need to wait for the payment to go to captured state
     sleep 30
-    assert response = @gateway.refund(@amount, response.authorization, @options)
+    assert response = @gateway.refund(@amount - 100, response.authorization, { :refund_reason => "Refund" })
     assert_success response
     assert_equal 'Success', response.message
   end
 
-  def test_authorize_and_capture
-    amount = @amount
-    assert_raise(NotImplementedError) { @gateway.authorize(@amount, @declined_card, @options) }
+  def test_failed_capture
+    assert response = @gateway.capture(@amount, '123')
+    assert_failure response
   end
 
-  def test_failed_capture
-    assert_raise(NotImplementedError) { @gateway.capture(@amount, '') }
+  def test_failed_void
+    assert response = @gateway.void('123')
+    assert_failure response
+  end
+
+  def test_authorize_and_capture
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    # Need to wait for the payment to go to captured state
+    sleep 30
+    assert capture = @gateway.capture(response.authorization)
+    assert_success capture
+    assert_equal "Success", capture.message
+  end
+
+  def test_authorize_and_void
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert void = @gateway.void(response.authorization, { :cancel_reason => "Cancel" })
+    assert_success void
+    assert_equal "Success", void.message
   end
 
   def test_invalid_login
