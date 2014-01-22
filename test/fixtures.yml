@@ -80,6 +80,12 @@ card_stream:
   login: X
   password: Y
 
+cecabank:
+  merchant_id: MERCHANTID
+  acquirer_bin: ACQUIRERBIN
+  terminal_id: TERMINALID
+  key: KEY
+
 certo_direct:
   login: 1
   password: vP6OwK3
