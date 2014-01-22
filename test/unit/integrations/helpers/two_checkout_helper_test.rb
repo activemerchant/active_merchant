@@ -14,7 +14,19 @@ class TwoCheckoutHelperTest < Test::Unit::TestCase
   def test_basic_helper_fields
     assert_field 'sid', 'cody@example.com'
     assert_field 'total', '5.00'
-    assert_field 'cart_order_id', 'order-500'
+    assert_field 'merchant_order_id', 'order-500'
+  end
+
+  def test_extra_helper_fields
+    @helper.currency 'ZAR'
+    @helper.invoice '123'
+    @helper.return_url 'https://return.url/'
+    @helper.notify_url 'https://notify.url/'
+
+    assert_field 'currency_code', 'ZAR'
+    assert_field 'cart_order_id', '123'
+    assert_field 'notify_url', 'https://notify.url/'
+    assert_field 'x_receipt_link_url', 'https://return.url/'
   end
 
   def test_customer_fields
@@ -35,9 +47,9 @@ class TwoCheckoutHelperTest < Test::Unit::TestCase
     assert_field 'li_2_price', '15.0'
   end
 
-  def test_auto_settle_fields
-    @helper.auto_settle :prod => "1,1", :name => 'Example Product Name'
-    @helper.auto_settle :description => 'Example Product Description', :price => '15.0'
+  def test_third_party_cart_fields
+    @helper.third_party_cart :prod => "1,1", :name => 'Example Product Name'
+    @helper.third_party_cart :description => 'Example Product Description', :price => '15.0'
 
     assert_field 'c_prod_1', '1,1'
     assert_field 'c_name_1', 'Example Product Name'
