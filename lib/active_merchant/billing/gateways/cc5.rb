@@ -33,6 +33,18 @@ module ActiveMerchant #:nodoc:
         commit(build_capture_request(money, authorization, options))
       end
 
+      def void(authorization, options = {})
+        commit(build_void_request(authorization, options))
+      end
+
+      def refund(money, authorization, options = {})
+        commit(build_authorization_credit_request(money, authorization, options))
+      end
+
+      def credit(money, creditcard, options = {})
+        commit(build_creditcard_credit_request(money, creditcard, options))
+      end
+
       protected
 
       def build_sale_request(type, money, creditcard, options = {})
@@ -71,6 +83,39 @@ module ActiveMerchant #:nodoc:
           add_login_tags(xml)
           xml.tag! 'OrderId', authorization
           xml.tag! 'Type', 'PostAuth'
+          add_amount_tags(money, options, xml)
+        end
+      end
+
+      def build_void_request(authorization, options = {})
+        xml = Builder::XmlMarkup.new :indent => 2
+
+        xml.tag! 'CC5Request' do
+          add_login_tags(xml)
+          xml.tag! 'OrderId', authorization
+          xml.tag! 'Type', 'Void'
+        end
+      end
+
+      def build_authorization_credit_request(money, authorization, options = {})
+        xml = Builder::XmlMarkup.new :indent => 2
+
+        xml.tag! 'CC5Request' do
+          add_login_tags(xml)
+          xml.tag! 'OrderId', authorization
+          xml.tag! 'Type', 'Credit'
+          add_amount_tags(money, options, xml)
+        end
+      end
+
+      def build_creditcard_credit_request(money, creditcard, options = {})
+        xml = Builder::XmlMarkup.new :indent => 2
+
+        xml.tag! 'CC5Request' do
+          add_login_tags(xml)
+          xml.tag! 'Type', 'Credit'
+          xml.tag! 'Number', creditcard.number
+
           add_amount_tags(money, options, xml)
         end
       end

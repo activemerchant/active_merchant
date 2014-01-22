@@ -175,9 +175,9 @@ federated_canada:
   password: password
 
 finansbank:
-  login: TEST
-  password: TEST
-  client_id: TEST
+  login: FINANSAPI
+  password: FINANS06
+  client_id: 600100000
 
 first_giving:
   application_key: ''

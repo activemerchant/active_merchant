@@ -39,6 +39,7 @@
 * FirstData e4: Send correct card type [npverni]
 * Elavon: Add store/update support [npverni]
 * Wirecard: Catch an empty ERROR <Message> Element [timtait]
+* Finansbank (CC5): Add void/refund/credit support [muhammetdilek]
 
 == Version 1.43.2 (May 12, 2014)
 
