@@ -276,7 +276,7 @@ module ActiveMerchant #:nodoc:
           is_test = (@marketplace_uri.index("TEST") ? true : false)
         end
 
-        Response.new(true, "Card stored", {}, :test => is_test, :authorization => [card_uri, customer_uri].compact.join(';'))
+        Response.new(true, "Card stored", {}, :test => is_test, :authorization => card_uri)
       rescue Error => ex
         failed_response(ex.response)
       end
