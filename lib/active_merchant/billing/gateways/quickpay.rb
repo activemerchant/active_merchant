@@ -124,7 +124,7 @@ module ActiveMerchant #:nodoc:
         7 => {
           :authorize => %w(protocol msgtype merchant ordernumber amount
                            currency autocapture cardnumber expirationdate cvd
-                           acquirer cardtypelock testmode fraud_remote_addr
+                           acquirers cardtypelock testmode fraud_remote_addr
                            fraud_http_accept fraud_http_accept_language
                            fraud_http_accept_encoding fraud_http_accept_charset
                            fraud_http_referer fraud_http_user_agent apikey),
@@ -137,7 +137,7 @@ module ActiveMerchant #:nodoc:
           :refund    => %w(protocol msgtype merchant amount transaction apikey),
 
           :subscribe => %w(protocol msgtype merchant ordernumber cardnumber
-                           expirationdate cvd acquirer cardtypelock description testmode
+                           expirationdate cvd acquirers cardtypelock description testmode
                            fraud_remote_addr fraud_http_accept fraud_http_accept_language
                            fraud_http_accept_encoding fraud_http_accept_charset
                            fraud_http_referer fraud_http_user_agent apikey),
@@ -254,7 +254,7 @@ module ActiveMerchant #:nodoc:
         post[:cvd]            = credit_card.verification_value
         post[:expirationdate] = expdate(credit_card)
         post[:cardtypelock]   = options[:cardtypelock] unless options[:cardtypelock].blank?
-        post[:acquirer]       = options[:acquirer] unless options[:acquirer].blank?
+        post[:acquirers]      = options[:acquirers] unless options[:acquirers].blank?
       end
 
       def add_reference(post, identification)

@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class RemoteQuickpayV6Test < Test::Unit::TestCase
+class RemoteQuickpayV7Test < Test::Unit::TestCase
   # These test assumes that you have not added your development IP in
   # the Quickpay Manager.
   def setup
@@ -61,6 +61,18 @@ class RemoteQuickpayV6Test < Test::Unit::TestCase
     assert_equal 'USD', response.params['currency']
     assert_success response
     assert !response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_acquirers
+    assert response = @gateway.purchase(@amount, @visa, @options.update(:acquirers => "nets"))
+    assert_equal 'OK', response.message
+    assert_success response
+  end
+
+  def test_unsuccessful_purchase_with_invalid_acquirers
+    assert response = @gateway.purchase(@amount, @visa, @options.update(:acquirers => "invalid"))
+    assert_equal 'Error in field: acquirers', response.message
+    assert_failure response
   end
 
   def test_successful_dankort_authorization
@@ -196,6 +208,11 @@ class RemoteQuickpayV6Test < Test::Unit::TestCase
     assert_success store
     assert purchase = @gateway.purchase(@amount, store.authorization, @options.merge(:order_id => generate_unique_id[0...10]))
     assert_success purchase
+  end
+
+  def test_successful_store_with_acquirers
+    assert store = @gateway.store(@visa, @options.merge(:description => "New subscription", :acquirers => "nets"))
+    assert_success store
   end
 
   def test_invalid_login
