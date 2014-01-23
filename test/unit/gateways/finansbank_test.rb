@@ -76,6 +76,22 @@ class FinansbankTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_void
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+
+    assert response = @gateway.void(@options[:order_id])
+    assert_success response
+    assert response.test?
+  end
+
+  def test_failed_void
+    @gateway.expects(:ssl_post).returns(failed_void_response)
+
+    assert response = @gateway.void(@options[:order_id])
+    assert_failure response
+    assert response.test?
+  end
+
   private
 
   def successful_purchase_response
@@ -169,6 +185,48 @@ class FinansbankTest < Test::Unit::TestCase
     <TRXDATE>20130221 19:45:25</TRXDATE>
     <ERRORCODE>CORE-2115</ERRORCODE>
     <NUMCODE>992115</NUMCODE>
+  </Extra>
+</CC5Response>
+    EOF
+  end
+
+  def successful_void_response
+    <<-EOF
+<CC5Response>
+  <OrderId>1</OrderId>
+  <GroupId>1</GroupId>
+  <Response>Approved</Response>
+  <AuthCode>794573</AuthCode>
+  <HostRefNum>402310197597</HostRefNum>
+  <ProcReturnCode>00</ProcReturnCode>
+  <TransId>14023KVGD18549</TransId>
+  <ErrMsg></ErrMsg>
+    <Extra>
+    <SETTLEID>1363</SETTLEID>
+    <TRXDATE>20140123 10:21:05</TRXDATE>
+    <ERRORCODE></ERRORCODE>
+    <NUMCODE>00</NUMCODE>
+    </Extra>
+</CC5Response>
+  EOF
+  end
+
+  def failed_void_response
+    <<-EOF
+<CC5Response>
+  <OrderId></OrderId>
+  <GroupId></GroupId>
+  <Response>Error</Response>
+  <AuthCode></AuthCode>
+  <HostRefNum></HostRefNum>
+  <ProcReturnCode>99</ProcReturnCode>
+  <TransId>14023KvNI18702</TransId>
+  <ErrMsg>İptal edilmeye uygun satış işlemi bulunamadı.</ErrMsg>
+  <Extra>
+    <SETTLEID></SETTLEID>
+    <TRXDATE>20140123 10:47:13</TRXDATE>
+    <ERRORCODE>CORE-2008</ERRORCODE>
+    <NUMCODE>992008</NUMCODE>
   </Extra>
 </CC5Response>
     EOF
