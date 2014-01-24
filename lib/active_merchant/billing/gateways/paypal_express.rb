@@ -79,6 +79,11 @@ module ActiveMerchant #:nodoc:
         commit 'DoReferenceTransaction', build_reference_transaction_request('Sale', money, options)
       end
 
+      # Voids authorization requests.
+      def void(authorization, options = {})
+        commit 'DoVoid', build_void_request(authorization, options)
+      end
+
       private
       def build_get_details_request(token)
         xml = Builder::XmlMarkup.new :indent => 2
@@ -220,6 +225,22 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:PaymentType', options[:payment_type] || 'Any'
               add_payment_details(xml, money, currency_code, options)
               xml.tag! 'n2:IPAddress', options[:ip]
+            end
+          end
+        end
+
+        xml.target!
+      end
+
+      def build_void_request(authorization, options)
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.tag! 'DoVoidReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'DoVoidRequest', 'xmlns:n2' => EBAY_NAMESPACE do
+            xml.tag! 'n2:Version', API_VERSION
+            xml.tag! 'n2:DoVoidRequestDetails' do
+              xml.tag! 'n2:AuthorizationID', authorization
+              xml.tag! 'n2:Note', options[:note]
+              xml.tag! 'n2:MsgSubId', options[:description]
             end
           end
         end
