@@ -37,9 +37,15 @@ module ActiveMerchant #:nodoc:
         commit(build_void_request(authorization, options))
       end
 
-      def credit(money, authorization, options = {})
-        commit(build_credit_request(money, authorization, options))
+      def credit_with_authorization(money, authorization, options = {})
+        commit(build_authorization_credit_request(money, authorization, options))
       end
+
+      def credit_with_creditcard(money, creditcard, options = {})
+        commit(build_creditcard_credit_request(money, creditcard, options))
+      end
+
+
 
       protected
 
@@ -93,13 +99,25 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_credit_request(money, authorization, options = {})
+      def build_authorization_credit_request(money, authorization, options = {})
         xml = Builder::XmlMarkup.new :indent => 2
 
         xml.tag! 'CC5Request' do
           add_login_tags(xml)
           xml.tag! 'OrderId', authorization
           xml.tag! 'Type', 'Credit'
+          add_amount_tags(money, options, xml)
+        end
+      end
+
+      def build_creditcard_credit_request(money, creditcard, options = {})
+        xml = Builder::XmlMarkup.new :indent => 2
+
+        xml.tag! 'CC5Request' do
+          add_login_tags(xml)
+          xml.tag! 'Type', 'Credit'
+          xml.tag! 'Number', creditcard.number
+
           add_amount_tags(money, options, xml)
         end
       end

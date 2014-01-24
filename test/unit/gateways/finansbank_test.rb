@@ -92,6 +92,38 @@ class FinansbankTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_credit_with_authorize
+    @gateway.expects(:ssl_post).returns(success_credit_with_authorization_response)
+
+    assert response = @gateway.credit_with_authorization(5 * 100, @options[:order_id])
+    assert_success response
+    assert response.test?
+  end
+
+  def test_failed_credit_with_authorize
+    @gateway.expects(:ssl_post).returns(failed_credit_with_authorization_response)
+
+    assert response = @gateway.credit_with_authorization(5 * 100, @options[:order_id])
+    assert_failure response
+    assert response.test?
+  end
+
+  def test_successful_credit_with_creditcard
+    @gateway.expects(:ssl_post).returns(success_credit_with_creditcard_response)
+
+    assert response = @gateway.credit_with_creditcard(5 * 100, @credit_card)
+    assert_success response
+    assert response.test?
+  end
+
+  def test_failed_credit_with_creditcard
+    @gateway.expects(:ssl_post).returns(failed_credit_with_creditcard_response)
+
+    assert response = @gateway.credit_with_creditcard(5 * 100, @credit_card)
+    assert_failure response
+    assert response.test?
+  end
+
   private
 
   def successful_purchase_response
@@ -227,6 +259,94 @@ class FinansbankTest < Test::Unit::TestCase
     <TRXDATE>20140123 10:47:13</TRXDATE>
     <ERRORCODE>CORE-2008</ERRORCODE>
     <NUMCODE>992008</NUMCODE>
+  </Extra>
+</CC5Response>
+    EOF
+  end
+
+  def success_credit_with_authorization_response
+    <<-EOF
+<CC5Response>
+  <OrderId>1</OrderId>
+  <GroupId>1</GroupId>
+  <Response>Approved</Response>
+  <AuthCode>811778</AuthCode>
+  <HostRefNum>402410197809</HostRefNum>
+  <ProcReturnCode>00</ProcReturnCode>
+  <TransId>14024KACE13836</TransId>
+  <ErrMsg></ErrMsg>
+  <Extra>
+    <SETTLEID>1364</SETTLEID>
+    <TRXDATE>20140124 10:00:02</TRXDATE>
+    <ERRORCODE></ERRORCODE>
+    <PARAPUANTRL>000000001634</PARAPUANTRL>
+    <PARAPUAN>000000001634</PARAPUAN>
+    <NUMCODE>00</NUMCODE>
+    <CAVVRESULTCODE>3</CAVVRESULTCODE>
+  </Extra>
+</CC5Response>
+    EOF
+  end
+
+  def failed_credit_with_authorization_response
+    <<-EOF
+<CC5Response>
+  <OrderId></OrderId>
+  <GroupId></GroupId>
+  <Response>Error</Response>
+  <AuthCode></AuthCode>
+  <HostRefNum></HostRefNum>
+  <ProcReturnCode>99</ProcReturnCode>
+  <TransId>14024KEwH13882</TransId>
+  <ErrMsg>Iade yapilamaz, siparis gunsonuna girmemis.</ErrMsg>
+  <Extra>
+    <SETTLEID></SETTLEID>
+    <TRXDATE>20140124 10:04:48</TRXDATE>
+    <ERRORCODE>CORE-2508</ERRORCODE>
+    <NUMCODE>992508</NUMCODE>
+  </Extra>
+</CC5Response>
+    EOF
+  end
+
+  def success_credit_with_creditcard_response
+    <<-EOF
+<CC5Response>
+  <OrderId>ORDER-14024KUGB13953</OrderId>
+  <GroupId>ORDER-14024KUGB13953</GroupId>
+  <Response>Approved</Response>
+  <AuthCode>718160</AuthCode>
+  <HostRefNum>402410197818</HostRefNum>
+  <ProcReturnCode>00</ProcReturnCode>
+  <TransId>14024KUGD13955</TransId>
+  <ErrMsg></ErrMsg>
+  <Extra>
+    <SETTLEID>1364</SETTLEID>
+    <TRXDATE>20140124 10:20:06</TRXDATE>
+    <ERRORCODE></ERRORCODE>
+    <NUMCODE>00</NUMCODE>
+    <CAVVRESULTCODE>3</CAVVRESULTCODE>
+  </Extra>
+</CC5Response>
+    EOF
+  end
+
+  def failed_credit_with_creditcard_response
+    <<-EOF
+<CC5Response>
+  <OrderId></OrderId>
+  <GroupId></GroupId>
+  <Response>Error</Response>
+  <AuthCode></AuthCode>
+  <HostRefNum></HostRefNum>
+  <ProcReturnCode>99</ProcReturnCode>
+  <TransId>14024KUtG13966</TransId>
+  <ErrMsg>Kredi karti numarasi gecerli formatta degil.</ErrMsg>
+  <Extra>
+    <SETTLEID></SETTLEID>
+    <TRXDATE>20140124 10:20:45</TRXDATE>
+    <ERRORCODE>CORE-2012</ERRORCODE>
+    <NUMCODE>992012</NUMCODE>
   </Extra>
 </CC5Response>
     EOF
