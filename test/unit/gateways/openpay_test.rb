@@ -163,7 +163,7 @@ class OpenpayTest < Test::Unit::TestCase
       "line2":"Roble 207",
       "line3":"col carrillo",
       "state":"Queretaro",
-      "city":"Querétaro",
+      "city":"Queretaro",
       "postal_code":"76900",
       "country_code":"MX"
    },
