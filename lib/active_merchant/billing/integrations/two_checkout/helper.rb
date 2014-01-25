@@ -37,7 +37,8 @@ module ActiveMerchant #:nodoc:
                   :zip      => 'zip',
                   :country  => 'country'
 
-          mapping :shipping_address, :city     => 'ship_city',
+          mapping :shipping_address, :name => 'ship_name',
+                  :city     => 'ship_city',
                   :address1 => 'ship_street_address',
                   :state    => 'ship_state',
                   :zip      => 'ship_zip',
@@ -48,6 +49,12 @@ module ActiveMerchant #:nodoc:
 
           # notifications are sent via static URLs in the Instant Notification Settings of 2Checkout admin
           mapping :notify_url, 'notify_url'
+
+          # Allow seller to indicate the purchase plete on the checkout page
+          mapping :purchase_step, 'purchase_step'
+
+          # Allow referral partners to indicate their shopping cart
+          mapping :cart_type, '2co_cart_type'
 
           def customer(params = {})
             add_field(mappings[:customer][:email], params[:email])
