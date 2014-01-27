@@ -27,18 +27,23 @@ module ActiveMerchant #:nodoc:
           # This value is visible to the buyer and will be listed as the sale's lineitem.
           mapping :invoice, 'cart_order_id'
 
-          mapping :customer, :email      => 'email',
+          mapping :customer,
+                  :email      => 'email',
                   :phone      => 'phone'
 
-          mapping :billing_address, :city     => 'city',
+          mapping :billing_address,
+                  :city     => 'city',
                   :address1 => 'street_address',
                   :address2 => 'street_address2',
                   :state    => 'state',
                   :zip      => 'zip',
                   :country  => 'country'
 
-          mapping :shipping_address, :city     => 'ship_city',
+          mapping :shipping_address,
+                  :name     => 'ship_name',
+                  :city     => 'ship_city',
                   :address1 => 'ship_street_address',
+                  :address2 => 'ship_street_address2',
                   :state    => 'ship_state',
                   :zip      => 'ship_zip',
                   :country  => 'ship_country'
@@ -49,10 +54,22 @@ module ActiveMerchant #:nodoc:
           # notifications are sent via static URLs in the Instant Notification Settings of 2Checkout admin
           mapping :notify_url, 'notify_url'
 
+          # Allow seller to indicate the step of the checkout page
+          # Possible values: ‘review-cart’, ‘shipping-information’, ‘shipping-method’, ‘billing-information’ and ‘payment-method’
+          mapping :purchase_step, 'purchase_step'
+
+          # Allow referral partners to indicate their shopping cart
+          mapping :cart_type, '2co_cart_type'
+
           def customer(params = {})
             add_field(mappings[:customer][:email], params[:email])
             add_field(mappings[:customer][:phone], params[:phone])
             add_field('card_holder_name', "#{params[:first_name]} #{params[:last_name]}")
+          end
+
+          def shipping_address(params = {})
+            super
+            add_field(mappings[:shipping_address][:name], "#{params[:first_name]} #{params[:last_name]}")
           end
 
           # Uses Pass Through Product Parameters to pass in lineitems.
