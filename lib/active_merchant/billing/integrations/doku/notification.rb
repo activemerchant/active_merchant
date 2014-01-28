@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module Doku
-          class Notification < ActiveMerchant::Billing::Integrations::Notification
+        class Notification < ActiveMerchant::Billing::Integrations::Notification
 
           self.production_ips = ['103.10.128.11', '103.10.128.14']
 
@@ -54,8 +54,8 @@ module ActiveMerchant #:nodoc:
             else
               false
             end
-          end
 
+          end
         end
       end
     end

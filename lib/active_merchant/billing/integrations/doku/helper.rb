@@ -7,10 +7,6 @@ module ActiveMerchant #:nodoc:
         #
         #  payment_service_for('ORDER_ID', 'DOKU_STORE_ID', :service => :doku,  :amount => 155_000, :shared_key => 'DOKU_SHARED_KEY') do |service|
         #
-        #    service.add_item :name => 'Item 1',    :price => 70_000,   :quantity => 2
-        #    service.add_item :name => 'Item 2',    :price => 25_000,   :quantity => 1
-        #    service.add_item :name => 'Discount',  :price => -10_000,  :quantity => 1
-        #
         #    service.customer :name              => 'Ismail Danuarta',
         #                     :email             => 'ismail.danuarta@gmail.com',
         #                     :mobile_phone      => '085779280093',
