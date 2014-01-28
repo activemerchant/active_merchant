@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, "charges/#{identifier}/capture", post)
       end
 
-      def refund(identifier, money, options)
+      def refund(money, identifier, options)
         post = {}
 
         post[:order_id] = identifier
@@ -79,6 +79,7 @@ module ActiveMerchant #:nodoc:
       def add_order(post, money, options)
         post[:description] = options[:description]
         post[:reference_id] = options[:order_id]
+        post[:currency] = (options[:currency] || currency(money)).downcase
         post[:amount] = amount(money)
       end
 

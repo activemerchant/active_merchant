@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Litle: Truncate order_id [duff]
+* Conekta: Fix #refund; respect :currency [leofischer]
 
 == Version 1.42.5 (February 7th, 2014)
 
