@@ -69,10 +69,7 @@ class DokuHelperTest < Test::Unit::TestCase
   end
 
   def test_basket
-    @helper.add_item(:name => 'Item 1', :quantity => 2, :price => 70_000)
-    @helper.add_item(:name => 'Item 2', :quantity => 1, :price => 25_000)
-    assert_equal true, @helper.form_fields.include?('BASKET')
-    assert_equal 'Item 1,70000.00,2,140000.00;Item 2,25000.00,1,25000.00', @helper.form_fields['BASKET']
+    assert_equal "ORDER #{@transidmerchant},#{@amount},1", @helper.form_fields['BASKET']
   end
 
   def test_words
