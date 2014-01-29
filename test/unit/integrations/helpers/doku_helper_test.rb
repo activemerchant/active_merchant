@@ -69,7 +69,7 @@ class DokuHelperTest < Test::Unit::TestCase
   end
 
   def test_basket
-    assert_equal "ORDER #{@transidmerchant},#{@amount},1", @helper.form_fields['BASKET']
+    assert_equal "ORDER #{@transidmerchant},#{@amount},1,#{@amount}", @helper.form_fields['BASKET']
   end
 
   def test_words

@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'debugger'
 
 class RemoteDokuIntegrationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations

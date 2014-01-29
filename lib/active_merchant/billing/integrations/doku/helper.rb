@@ -32,24 +32,17 @@ module ActiveMerchant #:nodoc:
         #
 
         class Helper < ActiveMerchant::Billing::Integrations::Helper
-          ITEM_FORMAT = "%{name},%{price},%{quantity},%{sub_total}".freeze
-
           def initialize(order, account, options = {})
             @shared_key      = options.delete(:credential2)
             @transidmerchant = order
             super
-            self.amount      = money_format(options[:amount])
-            add_field 'TRANSIDMERCHANT', order
           end
 
           def form_fields
             add_field 'WORDS', words
             add_field 'BASKET', basket
+            add_field 'TRANSIDMERCHANT', @transidmerchant
             @fields
-          end
-
-          def add_item(item={})
-            @items << item
           end
 
           def customer(params = {})
@@ -87,15 +80,11 @@ module ActiveMerchant #:nodoc:
           private
 
           def basket
-            "ORDER #{@transidmerchant},#{@fields['AMOUNT']},1"
+            "Checkout #{@transidmerchant},#{@fields['AMOUNT']},1,#{@fields['AMOUNT']}"
           end
 
           def words
             @words ||= Digest::SHA1.hexdigest("#{ @fields['AMOUNT'] }#{ @shared_key }#{ @transidmerchant }")
-          end
-
-          def money_format(money)
-            '%.2f' % money.to_f
           end
 
           def add_address(key, params)
