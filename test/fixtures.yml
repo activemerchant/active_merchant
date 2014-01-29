@@ -696,3 +696,8 @@ wirecard_checkout_page:
   secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
   shop_id: ''
   paymenttype: IDL
+
+go_coin:
+  auth_token: '18e84e31408d576c4ccb4640ce203a998f4d685bceb459736f87dce76f11d233'
+  merchant_id: 'c3437c64-f0c4-48f2-bfe3-bf9b0f98fb19'
+  
