@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
 
           # Gross amount of the invoice in base currency
           def gross
-            params['payload']['base_price'].to_f
+            BigDecimal.new(params['payload']['base_price'], 8)
           end
 
           # Gross amount charged to customer in crypto-currency
