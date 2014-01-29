@@ -134,6 +134,10 @@ module ActiveMerchant #:nodoc:
         commit(:post, "customers/#{CGI.escape(customer_id)}", options, options)
       end
 
+      def update_credit_card(customer_id, card_id, options = {})
+        commit(:post, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(card_id)}", options, options)
+      end
+      
       def unstore(customer_id, card_id = nil, options = {})
         if card_id.nil?
           commit(:delete, "customers/#{CGI.escape(customer_id)}", nil, options)
