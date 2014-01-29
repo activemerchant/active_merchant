@@ -15,7 +15,7 @@ class DokuHelperTest < Test::Unit::TestCase
   def test_basic_helper_fields
     assert_field 'STOREID', @store_id
     assert_field 'AMOUNT', @amount
-    assert_field 'TRANSIDMERCHANT', @transidmerchant
+    assert_equal @transidmerchant, @helper.form_fields['TRANSIDMERCHANT']
   end
 
   def test_customer_fields
@@ -65,11 +65,11 @@ class DokuHelperTest < Test::Unit::TestCase
 
   def test_unknown_address_mapping
     @helper.billing_address :farm => 'CA'
-    assert_equal 3, @helper.fields.size
+    assert_equal 2, @helper.fields.size
   end
 
   def test_basket
-    assert_equal "ORDER #{@transidmerchant},#{@amount},1,#{@amount}", @helper.form_fields['BASKET']
+    assert_equal "Checkout #{@transidmerchant},#{@amount},1,#{@amount}", @helper.form_fields['BASKET']
   end
 
   def test_words
