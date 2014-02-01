@@ -213,6 +213,17 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Operation Successful', response.message
   end
+
+  def test_update_vault_with_single_use_token
+    test_add_to_vault_with_custom_vault_id_with_store_method
+    single_use_token_options = {
+      :singleUseToken => generate_single_use_token(@mastercard)
+    }
+    puts @options[:vault_id]
+    assert response = @gateway.update(@options[:vault_id], nil, single_use_token_options)
+    assert_success response
+    assert_equal 'Operation Successful', response.message
+  end
   
   def test_delete_from_vault
     test_add_to_vault_with_custom_vault_id_with_store_method
