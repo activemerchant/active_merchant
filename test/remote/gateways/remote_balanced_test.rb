@@ -100,7 +100,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
     number = auth.params["card_holds"][0]["href"]
     assert void = @gateway.void(number)
     assert_success void
-    assert void.params['is_void']
+    assert void.params["card_holds"][0]['voided_at']
   end
 
   def test_refund_purchase

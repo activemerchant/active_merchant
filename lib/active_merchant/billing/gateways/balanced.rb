@@ -218,11 +218,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>authorization</tt> -- The uri of the authorization returned from
       #   an `authorize` request.
       def void(authorization, options = {})
-        post = {}
-        post[:is_void] = true
-        post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
-
-        create_transaction(:put, authorization, post)
+        create_transaction(:delete, authorization, nil)
       rescue Error => ex
         failed_response(ex.response)
       end
