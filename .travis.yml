@@ -5,6 +5,7 @@ rvm:
   - 1.9.2
 
 gemfile:
+  - Gemfile_rails40
   - Gemfile
   - Gemfile_rails31
   - Gemfile_rails30
@@ -18,8 +19,6 @@ notifications:
     - nathaniel@talbott.ws
 
 matrix:
-  include:
-    - rvm: 2.0.0
-      gemfile: Gemfile_rails40
-    - rvm: 1.9.3
+  exclude:
+    - rvm: 1.9.2
       gemfile: Gemfile_rails40
