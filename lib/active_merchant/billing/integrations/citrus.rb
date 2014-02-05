@@ -42,7 +42,7 @@ module ActiveMerchant
         end
 
         def self.checksum(secret_key, payload_items )
-          digest = OpenSSL::Digest::Digest.new('sha1')
+          digest = OpenSSL::Digest.new('sha1')
 		      OpenSSL::HMAC.hexdigest(digest, secret_key, payload_items)
         end
       end

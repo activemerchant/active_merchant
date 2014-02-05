@@ -201,7 +201,7 @@ module ActiveMerchant #:nodoc:
             raise unless options[:order_timestamp]
             amount = @fields['x_amount']
             data = "#{@fields['x_login']}^#{@fields['x_fp_sequence']}^#{options[:order_timestamp].to_i}^#{amount}^#{@fields['x_currency_code']}"
-            hmac = OpenSSL::HMAC.hexdigest(OpenSSL::Digest::Digest.new('md5'), options[:transaction_key], data)
+            hmac = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('md5'), options[:transaction_key], data)
             add_field 'x_fp_hash', hmac
             add_field 'x_fp_timestamp', options[:order_timestamp].to_i
           end
