@@ -90,7 +90,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response[:response_message]
+        return response[:error_message] if response[:error_message].present?
+        return response[:processor_message] if response[:processor_message].present?
+        return response[:response_message] if response[:response_message].present?
+        return success?(response) ? 'success' : 'error'
       end
 
       def add_aux_data(post, options)
