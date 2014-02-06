@@ -397,7 +397,7 @@ module ActiveMerchant #:nodoc:
         success = !error?(response)
 
         Response.new(success,
-                     (success ? "Transaction approved" : response["description"]),
+                     (success ? "Transaction approved" : response["errors"][0]["description"]),
                      response,
                      :test => (@marketplace_uri.index("TEST") ? true : false),
                      :authorization => response["uri"]
@@ -411,7 +411,7 @@ module ActiveMerchant #:nodoc:
         end
 
         Response.new(false,
-                     response["description"],
+                     response["errors"][0]["description"],
                      response,
                      :test => is_test
         )
