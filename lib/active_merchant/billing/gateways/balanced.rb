@@ -57,7 +57,8 @@ module ActiveMerchant #:nodoc:
     #   debit up to the original total.
     #
     class BalancedGateway < Gateway
-      VERSION = '1.1.0'
+      # This is version 2.0 of the gateway, but uses version 1.1 of the Balanced API.
+      VERSION = '2.0.0'
 
       TEST_URL = LIVE_URL = 'https://api.balancedpayments.com'
 
