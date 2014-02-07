@@ -37,6 +37,15 @@ module ActiveMerchant #:nodoc:
         commit('authorization', money, post)
       end
 
+      def oneclick_purchase(money, options = {})
+        post = {}
+        add_invoice(post, options)
+        add_invoice(post, options)
+        add_customer_data(post, options)
+
+        commit('payment', money, post)
+      end
+
       def purchase(money, creditcard, options = {})
         post = {}
         add_invoice(post, options)
@@ -62,6 +71,12 @@ module ActiveMerchant #:nodoc:
         post[:CLIENTIP]        = options[:ip]
         post[:CLIENTEMAIL]     = options[:email]
         post[:CLIENTIDENT]     = options[:customer_id]
+        post[:CREATEALIAS]     = options[:oneclick_register] ? 'YES' : 'NO'
+      end
+
+      def add_alias(post, options)
+        post[:ALIAS]     = options[:alias]
+        post[:ALIASMODE] = options[:alias_mode]
       end
 
       def add_invoice(post, options)
@@ -94,7 +109,7 @@ module ActiveMerchant #:nodoc:
           response,
           :authorization => response['TRANSACTIONID'],
           :test          => test?
-        )
+          )
       end
 
       def successful?(response)
@@ -113,19 +128,19 @@ module ActiveMerchant #:nodoc:
         {
           :method => action,
           :params => parameters.merge(HASH: signature(parameters, action))
-        }.to_query
-      end
-
-      def signature(parameters, action)
-        parameters[:OPERATIONTYPE] = action unless parameters[:OPERATIONTYPE]
-
-        signature = @options[:password]
-        parameters.sort.each do |key, value|
-          signature += ("#{key.upcase}=#{value}" + @options[:password])
+          }.to_query
         end
 
-        Digest::SHA256.hexdigest(signature)
+        def signature(parameters, action)
+          parameters[:OPERATIONTYPE] = action unless parameters[:OPERATIONTYPE]
+
+          signature = @options[:password]
+          parameters.sort.each do |key, value|
+            signature += ("#{key.upcase}=#{value}" + @options[:password])
+          end
+
+          Digest::SHA256.hexdigest(signature)
+        end
       end
     end
   end
-end
