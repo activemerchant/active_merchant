@@ -195,8 +195,18 @@ class BalancedTest < Test::Unit::TestCase
     assert void.params["card_holds"][0]['voided_at']
   end
 
-=begin
   def test_refund_purchase
+    @gateway.expects(:ssl_request).times(5).returns(
+      customers_response
+    ).then.returns(
+      cards_response
+    ).then.returns(
+      customers_response
+    ).then.returns(
+      debits_response
+    ).then.returns(
+      refunds_response
+    )
     assert debit = @gateway.purchase(@amount, @credit_card, @options)
     assert_success debit
 
@@ -208,6 +218,7 @@ class BalancedTest < Test::Unit::TestCase
     assert_equal @amount, refund.params['refunds'][0]['amount']
   end
 
+=begin
   def test_refund_partial_purchase
     assert debit = @gateway.purchase(@amount, @credit_card, @options)
     assert_success debit
@@ -732,6 +743,38 @@ RESPONSE
     "card_holds.debits": "/card_holds/{card_holds.id}/debits",
     "card_holds.debit": "/debits/{card_holds.debit}"
   }
+}
+RESPONSE
+  end
+
+  def refunds_response
+    <<-RESPONSE
+{
+  "links": {
+    "refunds.dispute": "/disputes/{refunds.dispute}",
+    "refunds.events": "/refunds/{refunds.id}/events",
+    "refunds.debit": "/debits/{refunds.debit}",
+    "refunds.order": "/orders/{refunds.order}"
+  },
+  "refunds": [
+    {
+      "status": "succeeded",
+      "description": "Shopify Purchase",
+      "links": {
+        "debit": "WDAtJcbjh3EJLW0tp7CUxAk",
+        "order": null,
+        "dispute": null
+      },
+      "href": "/refunds/RFJ4N00zLaQFrfBkC8cbN68",
+      "created_at": "2014-02-07T22:35:06.424855Z",
+      "transaction_number": "RF424-240-3258",
+      "updated_at": "2014-02-07T22:35:07.655276Z",
+      "currency": "USD",
+      "amount": 100,
+      "meta": {},
+      "id": "RFJ4N00zLaQFrfBkC8cbN68"
+    }
+  ]
 }
 RESPONSE
   end
