@@ -47,13 +47,20 @@ class BalancedTest < Test::Unit::TestCase
     assert_equal @amount, response.params['debits'][0]['amount']
   end
 
-=begin
   def test_invalid_card
+    @gateway.expects(:ssl_request).times(4).returns(
+      customers_response
+    ).then.returns(
+      cards_response
+    ).then.returns(
+      declined_response
+    )
     assert response = @gateway.purchase(@amount, @invalid_card, @options)
     assert_failure response
     assert_match /Customer call bank/, response.message
   end
 
+=begin
   def test_invalid_email
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:email => 'invalid_email'))
     assert_failure response
@@ -354,6 +361,25 @@ RESPONSE
     "debits.refunds": "/debits/{debits.id}/refunds",
     "debits.events": "/debits/{debits.id}/events"
   }
+}
+RESPONSE
+  end
+
+  def declined_response
+    <<-RESPONSE
+{
+  "errors": [
+    {
+      "status": "Payment Required",
+      "category_code": "card-declined",
+      "additional": "Customer call bank",
+      "status_code": 402,
+      "category_type": "banking",
+      "extras": {},
+      "request_id": "OHMc8d80eb4903011e390c002a1fe53e539",
+      "description": "R530: Customer call bank. Your request id is OHMc8d80eb4903011e390c002a1fe53e539."
+    }
+  ]
 }
 RESPONSE
   end
