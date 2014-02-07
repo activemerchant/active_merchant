@@ -34,6 +34,7 @@ module ActiveMerchant #:nodoc:
         add_credit_card(post, credit_card)
         add_address(post, credit_card, options)
         add_customer_data(post, options)
+        add_typical_options(post, options)
 
         commit(:authorization, post)
       end
@@ -45,6 +46,7 @@ module ActiveMerchant #:nodoc:
         add_credit_card(post, credit_card)
         add_address(post, credit_card, options)
         add_customer_data(post, options)
+        add_typical_options(post, options)
 
         commit(:purchase, post)
       end
@@ -69,6 +71,7 @@ module ActiveMerchant #:nodoc:
         add_credit_card(post, credit_card)
         add_address(post, credit_card, options)
         add_customer_data(post, options)
+        add_typical_options(post, options)
 
         commit(:credit, post)
       end
@@ -133,6 +136,18 @@ module ActiveMerchant #:nodoc:
         post[:card_cvv2] = credit_card.verification_value
       end
 
+      def add_typical_options(post, options)
+        post[:disable_cvv2]           = options[:disable_cvv2] if options.has_key?(:disable_cvv2)
+        post[:disable_avs]            = options[:disable_avs] if options.has_key?(:disable_avs)
+        post[:disable_fraud_checks]   = options[:disable_fraud_checks] if options.has_key?(:disable_fraud_checks)
+        post[:disable_negative_db]    = options[:disable_negative_db] if options.has_key?(:disable_negative_db)
+        post[:disable_email_receipts] = options[:disable_cvv2] if options.has_key?(:disable_email_receipts)
+        post[:force_code]             = options[:disable_cvv2] if options.has_key?(:force_code)
+        post['3ds_cavv']              = options['3ds_cavv'] if options.has_key?('3ds_cavv')
+        post['3ds_xid']               = options['3ds_xid'] if options.has_key?('3ds_xid')
+        post['3ds_eci']               = options['3ds_eci'] if options.has_key?('3ds_eci')
+      end
+
       def parse(body)
         results = {}
         body.split(/&/).each do |pair|
@@ -194,4 +209,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
