@@ -60,13 +60,16 @@ class BalancedTest < Test::Unit::TestCase
     assert_match /Customer call bank/, response.message
   end
 
-=begin
   def test_invalid_email
+    @gateway.expects(:ssl_request).times(1).returns(
+      bad_email_response
+    )
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:email => 'invalid_email'))
     assert_failure response
     assert_match /Invalid field.*email/, response.message
   end
 
+=begin
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
@@ -378,6 +381,27 @@ RESPONSE
       "extras": {},
       "request_id": "OHMc8d80eb4903011e390c002a1fe53e539",
       "description": "R530: Customer call bank. Your request id is OHMc8d80eb4903011e390c002a1fe53e539."
+    }
+  ]
+}
+RESPONSE
+  end
+
+  def bad_email_response
+    <<-'RESPONSE'
+{
+  "errors": [
+    {
+      "status": "Bad Request",
+      "category_code": "request",
+      "additional": null,
+      "status_code": 400,
+      "category_type": "request",
+      "extras": {
+        "email": "\"invalid_email\" must be a valid email address as specified by RFC-2822"
+      },
+      "request_id": "OHM9107a4bc903111e390c002a1fe53e539",
+      "description": "Invalid field [email] - \"invalid_email\" must be a valid email address as specified by RFC-2822 Your request id is OHM9107a4bc903111e390c002a1fe53e539."
     }
   ]
 }
