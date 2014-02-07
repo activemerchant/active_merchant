@@ -215,11 +215,12 @@ class BalancedTest < Test::Unit::TestCase
     })
     assert_instance_of String, response.authorization
   end
+=end
 
   def test_invalid_login
     begin
       BalancedGateway.new(
-        :login => ''
+        :login => 'lol'
       )
     rescue BalancedGateway::Error => ex
       msg = ex.message
@@ -228,7 +229,6 @@ class BalancedTest < Test::Unit::TestCase
     end
     assert_equal 'Invalid login credentials supplied', msg
   end
-=end
 
   private
 
@@ -666,6 +666,23 @@ RESPONSE
       "status_code": 405,
       "category_type": "request",
       "request_id": "OHMfaf5570a904211e3bcab026ba7f8ec28"
+    }
+  ]
+}
+RESPONSE
+  end
+
+  def unauthorized_response
+    <<-RESPONSE
+{
+  "errors": [
+    {
+      "status": "Unauthorized",
+      "category_code": "authentication-required",
+      "description": "<p>The server could not verify that you are authorized to access the URL requested.  You either supplied the wrong credentials (e.g. a bad password), or your browser doesn't understand how to supply the credentials required.</p><p>In case you are allowed to request the document, please check your user-id and password and try again.</p> Your request id is OHM56702560904311e3988c026ba7cd33d0.",
+      "status_code": 401,
+      "category_type": "permission",
+      "request_id": "OHM56702560904311e3988c026ba7cd33d0"
     }
   ]
 }
