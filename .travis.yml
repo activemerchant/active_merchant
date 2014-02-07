@@ -22,3 +22,5 @@ matrix:
   exclude:
     - rvm: 1.9.2
       gemfile: Gemfile_rails40
+    - rvm: 2.1.0
+      gemfile: Gemfile_rails23
