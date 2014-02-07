@@ -164,12 +164,16 @@ class BalancedTest < Test::Unit::TestCase
     assert_equal auth_card_id, capture_source_id
   end
 
-=begin
   def test_failed_capture
+    @gateway.expects(:ssl_request).times(1).returns(
+      method_not_allowed_response
+    )
+
     assert response = @gateway.capture(@amount, '')
     assert_failure response
   end
 
+=begin
   def test_void_authorization
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
@@ -647,6 +651,23 @@ RESPONSE
     "card_holds.debits": "/card_holds/{card_holds.id}/debits",
     "card_holds.debit": "/debits/{card_holds.debit}"
   }
+}
+RESPONSE
+  end
+
+  def method_not_allowed_response
+    <<-RESPONSE
+{
+  "errors": [
+    {
+      "status": "Method Not Allowed",
+      "category_code": "method-not-allowed",
+      "description": "Your request id is OHMfaf5570a904211e3bcab026ba7f8ec28.",
+      "status_code": 405,
+      "category_type": "request",
+      "request_id": "OHMfaf5570a904211e3bcab026ba7f8ec28"
+    }
+  ]
 }
 RESPONSE
   end
