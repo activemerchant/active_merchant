@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
 
       def oneclick_purchase(money, options = {})
         post = {}
-        add_invoice(post, options)
+        add_alias(post, options)
         add_invoice(post, options)
         add_customer_data(post, options)
 
@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           :authorization => response['TRANSACTIONID'],
-          :test          => test?
+          :test          => test?,
           )
       end
 
