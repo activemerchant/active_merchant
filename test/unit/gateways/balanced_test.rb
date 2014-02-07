@@ -85,8 +85,16 @@ class BalancedTest < Test::Unit::TestCase
     assert_match /Account Frozen/, response.message
   end
 
-=begin
   def test_passing_appears_on_statement
+    @gateway.expects(:ssl_request).times(4).returns(
+      customers_response
+    ).then.returns(
+      cards_response
+    ).then.returns(
+      customers_response
+    ).then.returns(
+      appears_on_response
+    )
     options = @options.merge(appears_on_statement_as: "Homer Electric")
     assert response = @gateway.purchase(@amount, @credit_card, options)
 
@@ -94,6 +102,7 @@ class BalancedTest < Test::Unit::TestCase
     assert_equal "BAL*Homer Electric", response.params['debits'][0]['appears_on_statement_as']
   end
 
+=begin
   def test_authorize_and_capture
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
@@ -464,6 +473,44 @@ RESPONSE
       "id": "WD7cjQ5gizGWMDWbxDndgm7w"
     }
   ]
+}
+RESPONSE
+  end
+
+  def appears_on_response
+    <<-RESPONSE
+{
+  "debits": [
+    {
+      "status": "succeeded",
+      "description": "Shopify Purchase",
+      "links": {
+        "customer": null,
+        "source": "CC4SKo0WY3lhfWc6CgMyPo34",
+        "order": null,
+        "dispute": null
+      },
+      "updated_at": "2014-02-07T21:20:13.950392Z",
+      "created_at": "2014-02-07T21:20:12.737821Z",
+      "transaction_number": "W337-477-3752",
+      "failure_reason": null,
+      "currency": "USD",
+      "amount": 100,
+      "failure_reason_code": null,
+      "meta": {},
+      "href": "/debits/WD4UDDm6iqtYMEd21UBaa50H",
+      "appears_on_statement_as": "BAL*Homer Electric",
+      "id": "WD4UDDm6iqtYMEd21UBaa50H"
+    }
+  ],
+  "links": {
+    "debits.customer": "/customers/{debits.customer}",
+    "debits.dispute": "/disputes/{debits.dispute}",
+    "debits.source": "/resources/{debits.source}",
+    "debits.order": "/orders/{debits.order}",
+    "debits.refunds": "/debits/{debits.id}/refunds",
+    "debits.events": "/debits/{debits.id}/events"
+  }
 }
 RESPONSE
   end
