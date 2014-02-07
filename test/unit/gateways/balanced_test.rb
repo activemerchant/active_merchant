@@ -69,13 +69,23 @@ class BalancedTest < Test::Unit::TestCase
     assert_match /Invalid field.*email/, response.message
   end
 
-=begin
   def test_unsuccessful_purchase
+    @gateway.expects(:ssl_request).times(4).returns(
+      customers_response
+    ).then.returns(
+      cards_response
+    ).then.returns(
+      customers_response
+    ).then.returns(
+      account_frozen_response
+    )
+
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_match /Account Frozen/, response.message
   end
 
+=begin
   def test_passing_appears_on_statement
     options = @options.merge(appears_on_statement_as: "Homer Electric")
     assert response = @gateway.purchase(@amount, @credit_card, options)
@@ -402,6 +412,56 @@ RESPONSE
       },
       "request_id": "OHM9107a4bc903111e390c002a1fe53e539",
       "description": "Invalid field [email] - \"invalid_email\" must be a valid email address as specified by RFC-2822 Your request id is OHM9107a4bc903111e390c002a1fe53e539."
+    }
+  ]
+}
+RESPONSE
+  end
+
+  def account_frozen_response
+    <<-RESPONSE
+{
+  "errors": [
+    {
+      "status": "Payment Required",
+      "category_code": "card-declined",
+      "additional": "Account Frozen",
+      "status_code": 402,
+      "category_type": "banking",
+      "extras": {},
+      "request_id": "OHMec50b6be903c11e387cb026ba7cac9da",
+      "description": "R758: Account Frozen. Your request id is OHMec50b6be903c11e387cb026ba7cac9da."
+    }
+  ],
+  "links": {
+    "debits.customer": "/customers/{debits.customer}",
+    "debits.dispute": "/disputes/{debits.dispute}",
+    "debits.source": "/resources/{debits.source}",
+    "debits.order": "/orders/{debits.order}",
+    "debits.refunds": "/debits/{debits.id}/refunds",
+    "debits.events": "/debits/{debits.id}/events"
+  },
+  "debits": [
+    {
+      "status": "failed",
+      "description": "Shopify Purchase",
+      "links": {
+        "customer": null,
+        "source": "CC7a41DYIaSSyGoau6rZ8VcG",
+        "order": null,
+        "dispute": null
+      },
+      "updated_at": "2014-02-07T21:15:10.107464Z",
+      "created_at": "2014-02-07T21:15:09.206335Z",
+      "transaction_number": "W202-883-1157",
+      "failure_reason": "R758: Account Frozen.",
+      "currency": "USD",
+      "amount": 100,
+      "failure_reason_code": "card-declined",
+      "meta": {},
+      "href": "/debits/WD7cjQ5gizGWMDWbxDndgm7w",
+      "appears_on_statement_as": "BAL*example.com",
+      "id": "WD7cjQ5gizGWMDWbxDndgm7w"
     }
   ]
 }
