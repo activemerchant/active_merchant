@@ -243,15 +243,21 @@ class BalancedTest < Test::Unit::TestCase
     assert_equal @amount / 2, refund.params['refunds'][0]['amount']
   end
 
-=begin
   def test_store
+    @gateway.expects(:ssl_request).times(4).returns(
+      customers_response
+    ).then.returns(
+      cards_response
+    ).then.returns(
+      customers_response
+    )
+
     new_email_address = '%d@example.org' % Time.now
     assert response = @gateway.store(@credit_card, {
         :email => new_email_address
     })
     assert_instance_of String, response.authorization
   end
-=end
 
   def test_invalid_login
     begin
