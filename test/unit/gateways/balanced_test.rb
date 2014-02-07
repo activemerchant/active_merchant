@@ -173,8 +173,19 @@ class BalancedTest < Test::Unit::TestCase
     assert_failure response
   end
 
-=begin
   def test_void_authorization
+    @gateway.expects(:ssl_request).times(5).returns(
+      customers_response
+    ).then.returns(
+      cards_response
+    ).then.returns(
+      customers_response
+    ).then.returns(
+      holds_response
+    ).then.returns(
+      voided_hold_response
+    )
+
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
     assert_success auth
@@ -184,6 +195,7 @@ class BalancedTest < Test::Unit::TestCase
     assert void.params["card_holds"][0]['voided_at']
   end
 
+=begin
   def test_refund_purchase
     assert debit = @gateway.purchase(@amount, @credit_card, @options)
     assert_success debit
@@ -685,6 +697,41 @@ RESPONSE
       "request_id": "OHM56702560904311e3988c026ba7cd33d0"
     }
   ]
+}
+RESPONSE
+  end
+
+  def voided_hold_response
+    <<-RESPONSE
+{
+  "card_holds": [
+    {
+      "status": "succeeded",
+      "description": "Shopify Purchase",
+      "links": {
+        "card": "CC52ACcRnrG5eupOERKK4OAq",
+        "debit": null
+      },
+      "updated_at": "2014-02-07T22:10:28.923304Z",
+      "created_at": "2014-02-07T22:10:27.904233Z",
+      "transaction_number": "HL728-165-8425",
+      "expires_at": "2014-02-14T22:10:28.045745Z",
+      "failure_reason": null,
+      "currency": "USD",
+      "amount": 100,
+      "meta": {},
+      "href": "/card_holds/HL54qindwhlErSujLo5IcP5J",
+      "failure_reason_code": null,
+      "voided_at": "2014-02-07T22:10:28.923308Z",
+      "id": "HL54qindwhlErSujLo5IcP5J"
+    }
+  ],
+  "links": {
+    "card_holds.events": "/card_holds/{card_holds.id}/events",
+    "card_holds.card": "/resources/{card_holds.card}",
+    "card_holds.debits": "/card_holds/{card_holds.id}/debits",
+    "card_holds.debit": "/debits/{card_holds.debit}"
+  }
 }
 RESPONSE
   end
