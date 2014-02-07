@@ -102,8 +102,19 @@ class BalancedTest < Test::Unit::TestCase
     assert_equal "BAL*Homer Electric", response.params['debits'][0]['appears_on_statement_as']
   end
 
-=begin
   def test_authorize_and_capture
+    @gateway.expects(:ssl_request).times(5).returns(
+      customers_response
+    ).then.returns(
+      cards_response
+    ).then.returns(
+      customers_response
+    ).then.returns(
+      holds_response
+    ).then.returns(
+      authorized_debits_response
+    )
+
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
     assert_success auth
@@ -123,6 +134,18 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_capture_partial
+    @gateway.expects(:ssl_request).times(5).returns(
+      customers_response
+    ).then.returns(
+      cards_response
+    ).then.returns(
+      customers_response
+    ).then.returns(
+      holds_response
+    ).then.returns(
+      authorized_partial_debits_response
+    )
+
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
     assert_success auth
@@ -141,6 +164,7 @@ class BalancedTest < Test::Unit::TestCase
     assert_equal auth_card_id, capture_source_id
   end
 
+=begin
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
@@ -387,6 +411,83 @@ RESPONSE
 RESPONSE
   end
 
+  def authorized_debits_response
+    <<-RESPONSE
+{
+  "debits": [
+    {
+      "status": "succeeded",
+      "description": "Shopify Purchase",
+      "links": {
+        "customer": null,
+        "source": "CC2uKKcUhaSFRrl2mnGPSbDO",
+        "order": null,
+        "dispute": null
+      },
+      "updated_at": "2014-02-06T23:19:29.690815Z",
+      "created_at": "2014-02-06T23:19:28.709143Z",
+      "transaction_number": "W250-112-1883",
+      "failure_reason": null,
+      "currency": "USD",
+      "amount": 100,
+      "failure_reason_code": null,
+      "meta": {},
+      "href": "/debits/WDYZhc3mWCkxvOwIokeUz6M",
+      "appears_on_statement_as": "BAL*example.com",
+      "id": "WDYZhc3mWCkxvOwIokeUz6M"
+    }
+  ],
+  "links": {
+    "debits.customer": "/customers/{debits.customer}",
+    "debits.dispute": "/disputes/{debits.dispute}",
+    "debits.source": "/resources/{debits.source}",
+    "debits.order": "/orders/{debits.order}",
+    "debits.refunds": "/debits/{debits.id}/refunds",
+    "debits.events": "/debits/{debits.id}/events"
+  }
+}
+RESPONSE
+  end
+
+  def authorized_partial_debits_response
+    <<-RESPONSE
+{
+  "debits": [
+    {
+      "status": "succeeded",
+      "description": "Shopify Purchase",
+      "links": {
+        "customer": null,
+        "source": "CC2uKKcUhaSFRrl2mnGPSbDO",
+        "order": null,
+        "dispute": null
+      },
+      "updated_at": "2014-02-06T23:19:29.690815Z",
+      "created_at": "2014-02-06T23:19:28.709143Z",
+      "transaction_number": "W250-112-1883",
+      "failure_reason": null,
+      "currency": "USD",
+      "amount": 50,
+      "failure_reason_code": null,
+      "meta": {},
+      "href": "/debits/WDYZhc3mWCkxvOwIokeUz6M",
+      "appears_on_statement_as": "BAL*example.com",
+      "id": "WDYZhc3mWCkxvOwIokeUz6M"
+    }
+  ],
+  "links": {
+    "debits.customer": "/customers/{debits.customer}",
+    "debits.dispute": "/disputes/{debits.dispute}",
+    "debits.source": "/resources/{debits.source}",
+    "debits.order": "/orders/{debits.order}",
+    "debits.refunds": "/debits/{debits.id}/refunds",
+    "debits.events": "/debits/{debits.id}/events"
+  }
+}
+RESPONSE
+  end
+
+
   def declined_response
     <<-RESPONSE
 {
@@ -510,6 +611,41 @@ RESPONSE
     "debits.order": "/orders/{debits.order}",
     "debits.refunds": "/debits/{debits.id}/refunds",
     "debits.events": "/debits/{debits.id}/events"
+  }
+}
+RESPONSE
+  end
+
+  def holds_response
+    <<-RESPONSE
+{
+  "card_holds": [
+    {
+      "status": "succeeded",
+      "description": "Shopify Purchase",
+      "links": {
+        "card": "CC2uKKcUhaSFRrl2mnGPSbDO",
+        "debit": null
+      },
+      "updated_at": "2014-02-07T21:46:39.678439Z",
+      "created_at": "2014-02-07T21:46:39.303526Z",
+      "transaction_number": "HL343-028-3032",
+      "expires_at": "2014-02-14T21:46:39.532363Z",
+      "failure_reason": null,
+      "currency": "USD",
+      "amount": 100,
+      "meta": {},
+      "href": "/card_holds/HL2wPXf6ByqkLMiWGab7QRsq",
+      "failure_reason_code": null,
+      "voided_at": null,
+      "id": "HL2wPXf6ByqkLMiWGab7QRsq"
+    }
+  ],
+  "links": {
+    "card_holds.events": "/card_holds/{card_holds.id}/events",
+    "card_holds.card": "/resources/{card_holds.card}",
+    "card_holds.debits": "/card_holds/{card_holds.id}/debits",
+    "card_holds.debit": "/debits/{card_holds.debit}"
   }
 }
 RESPONSE
