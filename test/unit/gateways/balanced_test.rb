@@ -244,7 +244,7 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_store
-    @gateway.expects(:ssl_request).times(4).returns(
+    @gateway.expects(:ssl_request).times(3).returns(
       customers_response
     ).then.returns(
       cards_response
