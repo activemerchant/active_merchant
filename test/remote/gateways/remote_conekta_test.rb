@@ -111,7 +111,7 @@ class RemoteConektaTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = ConektaGateway.new(key: 'invalid_token')
+    gateway = ConektaGateway.new(login: 'invalid_token')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal "Unrecognized authentication key", response.message
