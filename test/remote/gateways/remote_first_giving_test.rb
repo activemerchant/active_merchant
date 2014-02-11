@@ -9,6 +9,7 @@ class RemoteFirstGivingTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card("4457010000000009", mock_creditcard)
     @declined_card = credit_card("445701000000000", mock_creditcard)
+    @invalid_transaction_id = 0
 
     @options = {
       :order_id => '1',
@@ -33,6 +34,20 @@ class RemoteFirstGivingTest < Test::Unit::TestCase
     assert_equal "Unfortunately, we were unable to perform credit card number validation. The credit card number validator responded with the following message  ccNumber failed data validation for the following reasons :  creditcardLength: 445701000000000 contains an invalid amount of digits.", response.message
   end
 
+  # TODO: Firstgiving not support refund API in Sandbox!
+  #def test_successful_refund
+    # donationId from report
+  #  donation_id = 504614
+  #  transaction_id = ""
+  #  assert response = @gateway.refund(@amount, transaction_id, donation_id, @options)
+  #  assert_equal 'Success', response.message
+  #end
+
+  def test_unsuccessful_refund
+    assert response = @gateway.refund(@amount, @invalid_transaction_id, @options)
+    assert_failure response
+  end
+
   def test_invalid_login
     gateway = FirstGivingGateway.new(
                 :application_key => '25151616',
@@ -49,7 +64,7 @@ class RemoteFirstGivingTest < Test::Unit::TestCase
     creditcard = {
       :brand              => "visa",
       :month              => "01",
-      :year               => "14",
+      :year               => "24",
       :verification_value => "349",
       :first_name         => "Smith",
       :last_name          => "John"

@@ -30,6 +30,7 @@ module ActiveMerchant #:nodoc:
       module Actions
         DONATION_CREDITCARD = '/donation/creditcard'
         DONATION_VERIFY     = '/verify'
+        DONATION_REFUND     = '/transaction_refundrequest'
       end
 
       def initialize(options = {})
@@ -53,6 +54,14 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         raise NotImplementedError
+      end
+
+      def refund(money, transaction_id, donation_id, options = {})
+        post = FirstGivingPostData.new
+        post[:transactionId] =  transaction_id if transaction_id
+        post[:donationId] = donation_id if donation_id
+        post[:transtype] = 'REFUNDRQUEST'
+        commit(Actions::DONATION_REFUND, money, post, is_get = true)
       end
 
       private
@@ -115,23 +124,39 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def commit(action, money, post)
+      def commit(action, money, post, is_get=false)
         begin
           url = test? ? self.test_url : self.live_url
           url += action
-          response = parse( ssl_post(url, post_data(post, money), headers) )
+          unless is_get
+            response = parse( ssl_post(url, post_data(post, money), headers) )
+          else
+            post['money'] = money if money
+            response = parse( ssl_get(build_url(url, post), headers) )
+          end
         rescue ResponseError => e
           response = parse(e.response.body)
         end
-
         Response.new(response[:response] == 'CAPTURED', response[:message], response,
                  :test => test?,
                  :authorization => response[:authorization])
-
       end
 
       def post_data(post, money)
         return post.to_post_data
+      end
+
+      def build_url(base, parameters=nil)
+        url = base
+        if parameters
+          url << '?'
+          url << encode(parameters)
+        end
+        url
+      end
+
+      def encode(hash)
+        hash.collect{|(k,v)| "#{CGI.escape(k.to_s)}=#{CGI.escape(v.to_s)}"}.join('&')
       end
 
       def creditcard_type(brand)
