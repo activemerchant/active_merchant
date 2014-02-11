@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'MXN'
 
       def initialize(options = {})
-        requires!(options, :key)
+        requires!(options, :login)
         options[:version] ||= '0.2.0'
         super
       end
@@ -184,7 +184,7 @@ module ActiveMerchant #:nodoc:
 
         {
           "Accept" => "application/vnd.conekta-v#{options[:version]}+json",
-          "Authorization" => "Basic " + Base64.encode64("#{options[:key]}:"),
+          "Authorization" => "Basic " + Base64.encode64("#{options[:login]}:"),
           "RaiseHtmlError" => "false",
           "User-Agent" => "Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "X-Conekta-Client-User-Agent" => @@ua,
