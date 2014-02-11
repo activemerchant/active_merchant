@@ -46,7 +46,7 @@ class RemoteConektaTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "The card was declined", response.message
+    assert_equal "The card's issuing bank has declined to process this charge.", response.message
   end
 
   def test_successful_refund
@@ -75,7 +75,7 @@ class RemoteConektaTest < Test::Unit::TestCase
   def test_unsuccessful_authorize
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "The card was declined", response.message
+    assert_equal "The card's issuing bank has declined to process this charge.", response.message
   end
 
   def test_successful_capture
@@ -111,9 +111,9 @@ class RemoteConektaTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = ConektaGateway.new(key: 'invalid_token')
+    gateway = ConektaGateway.new(login: 'invalid_token')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Unrecognized authentication token", response.message
+    assert_equal "Unrecognized authentication key", response.message
   end
 end
