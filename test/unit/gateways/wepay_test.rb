@@ -59,17 +59,16 @@ class WepayTest < Test::Unit::TestCase
   def test_successful_authorize
     @gateway.expects(:ssl_post).at_most(2).returns(successful_authorize_response)
 
-    assert response = @gateway.refund(@amount, @credit_card, @options)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
-    assert_equal "authorized", response.params[:state.to_s]
     assert response.test?
   end
 
   def test_unsuccessful_authorize
     @gateway.expects(:ssl_post).at_most(2).returns(failed_authorize_response)
 
-    assert response = @gateway.refund(@amount, @credit_card, @options)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal "invalid_request", response.params[:error.to_s]
     assert response.test?
@@ -78,17 +77,17 @@ class WepayTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).at_most(2).returns(successful_capture_response)
 
-    assert response = @gateway.refund(@amount, @credit_card, @options)
+    assert response = @gateway.capture(@amount, @options)
     assert_instance_of Response, response
     assert_success response
-    assert_equal "reserved", response.params[:state.to_s]
+    assert_equal "captured", response.params[:state.to_s]
     assert response.test?
   end
 
   def test_unsuccessful_capture
     @gateway.expects(:ssl_post).at_most(2).returns(failed_capture_response)
 
-    assert response = @gateway.refund(@amount, @credit_card, @options)
+    assert response = @gateway.capture(@amount, @options)
     assert_failure response
     assert_equal "invalid_request", response.params[:error.to_s]
     assert response.test?
@@ -97,7 +96,7 @@ class WepayTest < Test::Unit::TestCase
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    assert response = @gateway.refund(@amount, @credit_card, @options)
+    assert response = @gateway.void(@amount, @options)
     assert_instance_of Response, response
     assert_success response
     assert_equal "cancelled", response.params[:state.to_s]
@@ -107,7 +106,7 @@ class WepayTest < Test::Unit::TestCase
   def test_unsuccessful_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    assert response = @gateway.refund(@amount, @credit_card, @options)
+    assert response = @gateway.void(@amount, @options)
     assert_failure response
     assert_equal "invalid_request", response.params[:error.to_s]
     assert response.test?
@@ -140,7 +139,7 @@ class WepayTest < Test::Unit::TestCase
   end
 
   def successful_authorize_response
-    "{\"checkout_id\":640816095,\"state\":\"authorized\"}"
+    "{\"checkout_id\":640816095,\"checkout_uri\":\"https:\/\/stage.wepay.com\/api\/checkout\/640816095\/974ff0c0\"}"
   end
 
   def failed_authorize_response
@@ -148,7 +147,7 @@ class WepayTest < Test::Unit::TestCase
   end
 
   def successful_capture_response
-    "{\"checkout_id\":1852898602,\"state\":\"reserved\"}"
+    "{\"checkout_id\":1852898602,\"state\":\"captured\"}"
   end
 
   def failed_capture_response
