@@ -34,17 +34,18 @@ class RemoteFirstGivingTest < Test::Unit::TestCase
     assert_equal "Unfortunately, we were unable to perform credit card number validation. The credit card number validator responded with the following message  ccNumber failed data validation for the following reasons :  creditcardLength: 445701000000000 contains an invalid amount of digits.", response.message
   end
 
-  # TODO: Firstgiving not support refund API in Sandbox!
+  # TODO: Firstgiving cannot refund in sandbox!
   #def test_successful_refund
     # donationId from report
-  #  donation_id = 504614
-  #  transaction_id = ""
-  #  assert response = @gateway.refund(@amount, transaction_id, donation_id, @options)
+  #  assert response = @gateway.purchase(@amount, @credit_card, @options)
+  #  assert_success response
+  #  transaction_id = response.authorization
+  #  assert response = @gateway.refund(@amount, {:transaction_id => response.authorization})
   #  assert_equal 'Success', response.message
   #end
 
   def test_unsuccessful_refund
-    assert response = @gateway.refund(@amount, @invalid_transaction_id, @options)
+    assert response = @gateway.refund(@amount, {:transaction_id => @invlid_transaction_id})
     assert_failure response
   end
 

@@ -38,7 +38,7 @@ class FirstGivingTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:ssl_get).returns(successful_refund_response)
 
-    assert response = @gateway.refund(@amount, @transaction_id, @options)
+    assert response = @gateway.refund(@amount, @options)
     assert_instance_of Response, response
     assert_success response
     # Replace with authorization number from the successful response
@@ -49,7 +49,7 @@ class FirstGivingTest < Test::Unit::TestCase
   def test_unsuccessful_refund
     @gateway.expects(:ssl_get).returns(failed_refund_response)
 
-    assert response = @gateway.refund(@amount, @transaction_id, @options)
+    assert response = @gateway.refund(@amount, @options)
     assert_failure response
     assert response.test?
   end

@@ -56,11 +56,11 @@ module ActiveMerchant #:nodoc:
         raise NotImplementedError
       end
 
-      def refund(money, transaction_id, donation_id, options = {})
+      def refund(money, options = {})
         post = FirstGivingPostData.new
-        post[:transactionId] =  transaction_id if transaction_id
-        post[:donationId] = donation_id if donation_id
-        post[:transtype] = 'REFUNDRQUEST'
+        post[:transactionId] = options[:transaction_id] if options[:transaction_id]
+        post[:donationId]    = options[:donation_id]    if options[:donation_id]
+        post[:transtype]     = 'REFUNDRQUEST'
         commit(Actions::DONATION_REFUND, money, post, is_get = true)
       end
 
