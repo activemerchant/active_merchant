@@ -128,19 +128,19 @@ module ActiveMerchant #:nodoc:
         {
           :method => action,
           :params => parameters.merge(HASH: signature(parameters, action))
-          }.to_query
+        }.to_query
+      end
+
+      def signature(parameters, action)
+        parameters[:OPERATIONTYPE] = action unless parameters[:OPERATIONTYPE]
+
+        signature = @options[:password]
+        parameters.sort.each do |key, value|
+          signature += ("#{key.upcase}=#{value}" + @options[:password])
         end
 
-        def signature(parameters, action)
-          parameters[:OPERATIONTYPE] = action unless parameters[:OPERATIONTYPE]
-
-          signature = @options[:password]
-          parameters.sort.each do |key, value|
-            signature += ("#{key.upcase}=#{value}" + @options[:password])
-          end
-
-          Digest::SHA256.hexdigest(signature)
-        end
+        Digest::SHA256.hexdigest(signature)
       end
     end
   end
+end
