@@ -108,8 +108,8 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           :authorization => response['TRANSACTIONID'],
-          :test          => test?,
-          )
+          :test          => test?
+        )
       end
 
       def successful?(response)
