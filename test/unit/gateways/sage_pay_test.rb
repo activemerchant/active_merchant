@@ -32,7 +32,6 @@ class SagePayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of Response, response
     assert_equal "1;B8AE1CF6-9DEF-C876-1BB4-9B382E6CE520;4193753;OHMETD7DFK;purchase", response.authorization
     assert_success response
   end
@@ -41,7 +40,6 @@ class SagePayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of Response, response
     assert_failure response
   end
 
@@ -159,6 +157,16 @@ class SagePayTest < Test::Unit::TestCase
     ActiveMerchant::Billing::SagePayGateway.application_id = nil
   end
 
+  def test_successful_store
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.store(@credit_card)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/TxType=TOKEN/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_equal '1', response.authorization
+  end
+
   private
 
   def successful_purchase_response
@@ -174,6 +182,7 @@ AddressResult=NOTMATCHED
 PostCodeResult=MATCHED
 CV2Result=NOTMATCHED
 3DSecureStatus=NOTCHECKED
+Token=1
     RESP
   end
 

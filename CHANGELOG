@@ -14,6 +14,7 @@
 * Maxipago: Add installment support [alexandremcosta]
 * Deprecate recurring API support [ntalbott]
 * NMI: fix CreditCard check [bslobodin]
+* SagePay: Add tokenization support [kernow]
 
 == Version 1.43.1 (May 1, 2014)
 
