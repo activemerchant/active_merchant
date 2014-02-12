@@ -66,7 +66,7 @@ class ConektaTest < Test::Unit::TestCase
 
   def test_unsuccessful_refund
     @gateway.expects(:ssl_request).returns(failed_refund_response)
-    assert response = @gateway.refund("1", @amount, @options)
+    assert response = @gateway.refund(@amount, "1", @options)
     assert_failure response
     assert response.test?
   end
