@@ -44,19 +44,6 @@ class RemoteSagePayTest < Test::Unit::TestCase
       :brand => 'visa'
     )
 
-    @solo = CreditCard.new(
-      :number => '6334900000000005',
-      :month => 6,
-      :year => next_year,
-      :issue_number => 1,
-      :start_month => 12,
-      :start_year => next_year - 2,
-      :verification_value => 227,
-      :first_name => 'Tekin',
-      :last_name => 'Suleyman',
-      :brand => 'solo'
-    )
-
     @mastercard = CreditCard.new(
       :number => '5404000000000001',
       :month => 12,
@@ -174,13 +161,6 @@ class RemoteSagePayTest < Test::Unit::TestCase
 
   def test_successful_maestro_purchase
     assert response = @gateway.purchase(@amount, @maestro, @options)
-    assert_success response
-    assert response.test?
-    assert !response.authorization.blank?
-  end
-
-  def test_successful_solo_purchase
-    assert response = @gateway.purchase(@amount, @solo, @options)
     assert_success response
     assert response.test?
     assert !response.authorization.blank?
