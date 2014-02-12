@@ -18,7 +18,9 @@ module ActiveMerchant #:nodoc:
         :authorization => 'DEFERRED',
         :capture => 'RELEASE',
         :void => 'VOID',
-        :abort => 'ABORT'
+        :abort => 'ABORT',
+        :store => 'TOKEN',
+        :unstore => 'REMOVETOKEN'
       }
 
       CREDIT_CARDS = {
@@ -55,14 +57,14 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, credit_card, options = {})
+      def purchase(money, credit_card_or_token, options = {})
         requires!(options, :order_id)
 
         post = {}
 
         add_amount(post, money, options)
         add_invoice(post, options)
-        add_credit_card(post, credit_card)
+        add_credit_card_or_token(post, credit_card_or_token, options)
         add_address(post, options)
         add_customer_data(post, options)
         add_optional_data(post, options)
@@ -70,14 +72,14 @@ module ActiveMerchant #:nodoc:
         commit(:purchase, post)
       end
 
-      def authorize(money, credit_card, options = {})
+      def authorize(money, credit_card_or_token, options = {})
         requires!(options, :order_id)
 
         post = {}
 
         add_amount(post, money, options)
         add_invoice(post, options)
-        add_credit_card(post, credit_card)
+        add_credit_card_or_token(post, credit_card_or_token, options)
         add_address(post, options)
         add_customer_data(post, options)
         add_optional_data(post, options)
@@ -122,6 +124,20 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
+      def store(credit_card, options = {})
+        post = {}
+        add_credit_card(post, credit_card)
+        add_currency(post, 0, options)
+
+        commit(:store, post)
+      end
+
+      def unstore(token, options = {})
+        post = {}
+        add_token(post, token)
+        commit(:unstore, post)
+      end
+
       private
       def add_reference(post, identification)
         order_id, transaction_id, authorization, security_key = identification.split(';')
@@ -147,6 +163,11 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :Currency, currency, :required => true)
       end
 
+      def add_currency(post, money, options)
+        currency = options[:currency] || currency(money)
+        add_pair(post, :Currency, currency, :required => true)
+      end
+
       # doesn't actually use the currency -- dodgy!
       def add_release_amount(post, money, options)
         add_pair(post, :ReleaseAmount, amount(money), :required => true)
@@ -161,6 +182,7 @@ module ActiveMerchant #:nodoc:
       def add_optional_data(post, options)
         add_pair(post, :GiftAidPayment, options[:gift_aid_payment]) unless options[:gift_aid_payment].blank?
         add_pair(post, :Apply3DSecure, options[:apply_3d_secure]) unless options[:apply_3d_secure].blank?
+        add_pair(post, :CreateToken, 1) unless options[:create_token].blank?
       end
 
       def add_address(post, options)
@@ -194,6 +216,14 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :Description, options[:description] || options[:order_id])
       end
 
+      def add_credit_card_or_token(post, credit_card_or_token, options)
+        if credit_card_or_token.is_a? String
+          add_token_details(post, credit_card_or_token, options)
+        else
+          add_credit_card(post, credit_card_or_token)
+        end
+      end
+
       def add_credit_card(post, credit_card)
         add_pair(post, :CardHolder, credit_card.name, :required => true)
         add_pair(post, :CardNumber, credit_card.number, :required => true)
@@ -207,6 +237,15 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :CardType, map_card_type(credit_card))
 
         add_pair(post, :CV2, credit_card.verification_value)
+      end
+
+      def add_token_details(post, token, options)
+        add_token(post, token)
+        add_pair(post, :StoreToken, options[:store_token])
+      end
+
+      def add_token(post, token)
+        add_pair(post, :Token, token)
       end
 
       def sanitize_order_id(order_id)
@@ -239,7 +278,7 @@ module ActiveMerchant #:nodoc:
       def commit(action, parameters)
         response = parse( ssl_post(url_for(action), post_data(action, parameters)) )
 
-        Response.new(response["Status"] == APPROVED, message_from(response), response,
+        SagePayResponse.new(response["Status"] == APPROVED, message_from(response), response,
           :test => test?,
           :authorization => authorization_from(response, parameters, action),
           :avs_result => {
@@ -268,7 +307,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_url(action)
-        endpoint = [ :purchase, :authorization ].include?(action) ? "vspdirect-register" : TRANSACTIONS[action].downcase
+        endpoint = case action
+          when :purchase, :authorization then "vspdirect-register"
+          when :store then 'directtoken'
+          else TRANSACTIONS[action].downcase
+        end
         "#{test? ? self.test_url : self.live_url}/#{endpoint}.vsp"
       end
 
@@ -285,7 +328,7 @@ module ActiveMerchant #:nodoc:
         parameters.update(
           :Vendor => @options[:login],
           :TxType => TRANSACTIONS[action],
-          :VPSProtocol => "2.23"
+          :VPSProtocol => "3.00"
         )
 
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
@@ -317,6 +360,13 @@ module ActiveMerchant #:nodoc:
       def localized_amount(money, currency)
         amount = amount(money)
         CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s) ? amount.split('.').first : amount
+      end
+    end
+
+    class SagePayResponse < Response
+
+      def token
+        @params['Token']
       end
     end
   end

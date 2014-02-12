@@ -2,15 +2,15 @@ require 'test_helper'
 
 # Some of the standard tests have been removed at SagePay test
 # server is pants and accepts anything and says Status=OK. (shift)
-# The tests for American Express will only pass if your account is 
+# The tests for American Express will only pass if your account is
 # American express enabled.
 class RemoteSagePayTest < Test::Unit::TestCase
   # set to true to run the tests in the simulated environment
   SagePayGateway.simulate = false
-  
+
   def setup
     @gateway = SagePayGateway.new(fixtures(:sage_pay))
-    
+
     @amex = CreditCard.new(
       :number => '374200000000004',
       :month => 12,
@@ -44,19 +44,6 @@ class RemoteSagePayTest < Test::Unit::TestCase
       :brand => 'visa'
     )
 
-    @solo = CreditCard.new(
-      :number => '6334900000000005',
-      :month => 6,
-      :year => next_year,
-      :issue_number => 1,
-      :start_month => 12,
-      :start_year => next_year - 2,
-      :verification_value => 227,
-      :first_name => 'Tekin',
-      :last_name => 'Suleyman',
-      :brand => 'solo'
-    )
-
     @mastercard = CreditCard.new(
       :number => '5404000000000001',
       :month => 12,
@@ -66,7 +53,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
       :last_name => 'Suleyman',
       :brand => 'master'
     )
-    
+
     @electron = CreditCard.new(
       :number => '4917300000000008',
       :month => 12,
@@ -86,8 +73,8 @@ class RemoteSagePayTest < Test::Unit::TestCase
       :brand => 'visa'
     )
 
-    @options = { 
-      :billing_address => { 
+    @options = {
+      :billing_address => {
         :name => 'Tekin Suleyman',
         :address1 => 'Flat 10 Lapwing Court',
         :address2 => 'West Didsbury',
@@ -96,7 +83,7 @@ class RemoteSagePayTest < Test::Unit::TestCase
         :country => 'GB',
         :zip => 'M20 2PS'
       },
-      :shipping_address => { 
+      :shipping_address => {
         :name => 'Tekin Suleyman',
         :address1 => '120 Grosvenor St',
         :city => "Manchester",
@@ -110,61 +97,61 @@ class RemoteSagePayTest < Test::Unit::TestCase
       :email => 'tekin@tekin.co.uk',
       :phone => '0161 123 4567'
     }
- 
+
     @amount = 100
   end
 
   def test_successful_mastercard_purchase
     assert response = @gateway.purchase(@amount, @mastercard, @options)
     assert_success response
-    
+
     assert response.test?
     assert !response.authorization.blank?
   end
-  
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    
+
     assert response.test?
   end
-  
+
   def test_successful_authorization_and_capture
     assert auth = @gateway.authorize(@amount, @mastercard, @options)
     assert_success auth
-    
+
     assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
   end
-  
+
   def test_successful_authorization_and_void
     assert auth = @gateway.authorize(@amount, @mastercard, @options)
-    assert_success auth    
-     
+    assert_success auth
+
     assert abort = @gateway.void(auth.authorization)
     assert_success abort
   end
-  
+
   def test_successful_purchase_and_void
     assert purchase = @gateway.purchase(@amount, @mastercard, @options)
-    assert_success purchase    
-     
+    assert_success purchase
+
     assert void = @gateway.void(purchase.authorization)
     assert_success void
   end
-  
+
   def test_successful_purchase_and_credit
     assert purchase = @gateway.purchase(@amount, @mastercard, @options)
-    assert_success purchase    
-    
+    assert_success purchase
+
     assert credit = @gateway.credit(@amount, purchase.authorization,
-      :description => 'Crediting trx', 
+      :description => 'Crediting trx',
       :order_id => generate_unique_id
     )
-    
+
     assert_success credit
   end
-  
+
   def test_successful_visa_purchase
     assert response = @gateway.purchase(@amount, @visa, @options)
     assert_success response
@@ -179,30 +166,23 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
-  def test_successful_solo_purchase
-    assert response = @gateway.purchase(@amount, @solo, @options)
-    assert_success response
-    assert response.test?
-    assert !response.authorization.blank?
-  end
-  
   def test_successful_amex_purchase
     assert response = @gateway.purchase(@amount, @amex, @options)
     assert_success response
     assert response.test?
     assert !response.authorization.blank?
   end
-  
+
   def test_successful_electron_purchase
     assert response = @gateway.purchase(@amount, @electron, @options)
     assert_success response
     assert response.test?
     assert !response.authorization.blank?
   end
-  
+
   def test_invalid_login
-    message = SagePayGateway.simulate ? 'VSP Simulator cannot find your vendor name.  Ensure you have have supplied a Vendor field with your VSP Vendor name assigned to it.' : '3034 : The Vendor or VendorName value is required.' 
-    
+    message = SagePayGateway.simulate ? 'VSP Simulator cannot find your vendor name.  Ensure you have have supplied a Vendor field with your VSP Vendor name assigned to it.' : '3034 : The Vendor or VendorName value is required.'
+
     gateway = SagePayGateway.new(
         :login => ''
     )
@@ -210,7 +190,43 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert_equal message, response.message
     assert_failure response
   end
-  
+
+  def test_successful_store_and_purchace
+    assert response = @gateway.store(@visa)
+    assert_success response
+    assert !response.token.blank?
+    assert purchase = @gateway.purchase(@amount, response.token, @options)
+    assert_success purchase
+  end
+
+  def test_successful_store_and_authorize
+    assert response = @gateway.store(@visa)
+    assert_success response
+    assert !response.token.blank?
+    assert authorize = @gateway.authorize(@amount, response.token, @options)
+    assert_success authorize
+  end
+
+  def test_successful_token_creation_from_purchase
+    assert response = @gateway.purchase(@amount, @visa, @options.merge(:create_token => true))
+    assert_success response
+    assert !response.token.blank?
+  end
+
+  def test_successful_token_creation_from_authorize
+    assert response = @gateway.authorize(@amount, @visa, @options.merge(:create_token => true))
+    assert_success response
+    assert !response.token.blank?
+  end
+
+  def test_successful_unstore
+    assert response = @gateway.store(@visa)
+    assert_success response
+    assert !response.token.blank?
+    assert unstore = @gateway.unstore(response.token)
+    assert_success unstore
+  end
+
   private
 
   def next_year
