@@ -370,7 +370,7 @@ module ActiveMerchant #:nodoc:
         hash = {
             'billToAddress'  => bill_to_address,
             'shipToAddress'  => ship_to_address,
-            'orderId'        => (options[:order_id] || @options[:order_id]),
+            'orderId'        => truncated_order_id(options),
             'customerId'     => options[:customer],
             'reportGroup'    => (options[:merchant] || @options[:merchant]),
             'merchantId'     => (options[:merchant_id] || @options[:merchant_id]),
@@ -390,6 +390,12 @@ module ActiveMerchant #:nodoc:
           hash.merge!({ 'amount' => money })
         end
         hash
+      end
+
+      def truncated_order_id(options)
+        order_id = options[:order_id] || @options[:order_id]
+        return unless order_id
+        order_id[0..24]
       end
 
       def fraud_result(authorization_response)
