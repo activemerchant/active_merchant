@@ -175,7 +175,7 @@ module ActiveMerchant #:nodoc:
       def build_voucher_request(params)
         build_request(params) do |xml|
           xml.sale {
-            xml.processorID '12' # Bradesco
+            xml.processorID '15' # Santander
             xml.referenceNum params[:referenceNum] # spree_order
             xml.billing {
               xml.name params[:billing_name] # add_name
