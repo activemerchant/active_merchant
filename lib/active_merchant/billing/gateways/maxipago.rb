@@ -63,6 +63,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:billing_name] = options[:billing_address][:name]
         post[:referenceNum] = options[:order_id]
+        post[:processorID] = text? ? 12 : 15 # 12 for test, 15 for Santander Bank
         post[:nosso_numero] = options[:nosso_numero]
         add_amount(post, money)
         add_address(post, options)
@@ -175,7 +176,7 @@ module ActiveMerchant #:nodoc:
       def build_voucher_request(params)
         build_request(params) do |xml|
           xml.sale {
-            xml.processorID '15' # Santander
+            xml.processorID params[:processorID] # Santander
             xml.referenceNum params[:referenceNum] # spree_order
             xml.billing {
               xml.name params[:billing_name] # add_name
