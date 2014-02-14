@@ -219,7 +219,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>authorization</tt> -- The uri of the authorization returned from
       #   an `authorize` request.
       def void(authorization, options = {})
-        authorization = authorization.split("|")[0] if authorization.include?("|")
+        authorization = authorization.split("|")[2] if authorization.include?("|")
         create_transaction(:delete, authorization, nil)
       rescue Error => ex
         failed_response(ex.response)
@@ -409,7 +409,11 @@ module ActiveMerchant #:nodoc:
           url = url.gsub("{debits.id}", response["debits"][0]["id"])
         end
 
-        authorization = [capture_url, refund_url].map(&:to_s).join("|")
+        void_url = if response.has_key?("card_holds")
+          url =  response["card_holds"][0]["href"]
+        end
+
+        authorization = [capture_url, refund_url, void_url].map(&:to_s).join("|")
 
         Response.new(
           success,

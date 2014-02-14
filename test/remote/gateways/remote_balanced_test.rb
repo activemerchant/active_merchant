@@ -102,6 +102,16 @@ class RemoteBalancedTest < Test::Unit::TestCase
     assert void.params["card_holds"][0]['voided_at']
   end
 
+  def test_void_authorization_via_authorization
+    amount = @amount
+    assert auth = @gateway.authorize(amount, @credit_card, @options)
+    assert_success auth
+    assert auth.authorization
+    assert void = @gateway.void(auth.authorization)
+    assert_success void
+    assert void.params["card_holds"][0]['voided_at']
+  end
+
   def test_authorize_authorization
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
