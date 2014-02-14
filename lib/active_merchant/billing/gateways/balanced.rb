@@ -210,6 +210,8 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description] if options[:description]
         add_common_params(post, options)
 
+        authorization = authorization.split("|")[0] if authorization.include?("|")
+
         create_transaction(:post, authorization, post)
       rescue Error => ex
         failed_response(ex.response)
@@ -226,6 +228,7 @@ module ActiveMerchant #:nodoc:
         post[:is_void] = true
         add_common_params(post, options)
 
+        authorization = authorization.split("|")[2] if authorization.include?("|")
         create_transaction(:put, authorization, post)
       rescue Error => ex
         failed_response(ex.response)
@@ -254,6 +257,7 @@ module ActiveMerchant #:nodoc:
         post[:amount] = amount
         post[:description] = options[:description]
         add_common_params(post, options)
+        debit_uri = debit_uri.split("|")[1] if debit_uri.include?("|")
         create_transaction(:post, debit_uri, post)
       rescue Error => ex
         failed_response(ex.response)
@@ -416,12 +420,28 @@ module ActiveMerchant #:nodoc:
         response = http_request(method, url, parameters, meta)
         success = !error?(response)
 
+        capture_url = if response.has_key?("card_holds")
+          url = response["links"]["card_holds.debits"]
+          url = url.gsub("{card_holds.id}", response["card_holds"][0]["id"])
+        end
+
+        refund_url = if response.has_key?("debits")
+          url = response["links"]["debits.refunds"]
+          url = url.gsub("{debits.id}", response["debits"][0]["id"])
+        end
+
+        void_url = if response.has_key?("card_holds")
+          url =  response["card_holds"][0]["href"]
+        end
+
+        authorization = [capture_url, refund_url, void_url].map(&:to_s).join("|")
+
         Response.new(
           success,
           (success ? "Transaction approved" : response["errors"][0]["description"]),
           response,
           test: (@marketplace_uri.index("TEST") ? true : false),
-          authorization: response["uri"]
+          authorization: authorization
         )
       end
 
