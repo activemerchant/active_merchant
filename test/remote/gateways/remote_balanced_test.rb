@@ -102,6 +102,15 @@ class RemoteBalancedTest < Test::Unit::TestCase
     assert void.params["card_holds"][0]['voided_at']
   end
 
+  def test_authorization
+    amount = @amount
+    assert auth = @gateway.authorize(amount, @credit_card, @options)
+    assert_success auth
+    assert auth.authorization
+    assert capture = @gateway.capture(amount, auth.authorization)
+    assert_success capture
+  end
+
   def test_refund_purchase
     assert debit = @gateway.purchase(@amount, @credit_card, @options)
     assert_success debit

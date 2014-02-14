@@ -394,12 +394,17 @@ module ActiveMerchant #:nodoc:
         response = http_request(method, url, parameters, meta)
         success = !error?(response)
 
+        capture_url = if response.has_key?("card_holds")
+          url = response["links"]["card_holds.debits"]
+          url = url.gsub("{card_holds.id}", response["card_holds"][0]["id"])
+        end
+
         Response.new(
           success,
           (success ? "Transaction approved" : response["errors"][0]["description"]),
           response,
           test: (@marketplace_uri.index("TEST") ? true : false),
-          authorization: response["uri"]
+          authorization: capture_url
         )
       end
 
