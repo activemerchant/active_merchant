@@ -399,12 +399,17 @@ module ActiveMerchant #:nodoc:
           url = url.gsub("{card_holds.id}", response["card_holds"][0]["id"])
         end
 
+        refund_url = if response.has_key?("debits")
+          url = response["links"]["debits.refunds"]
+          url = url.gsub("{debits.id}", response["debits"][0]["id"])
+        end
+
         Response.new(
           success,
           (success ? "Transaction approved" : response["errors"][0]["description"]),
           response,
           test: (@marketplace_uri.index("TEST") ? true : false),
-          authorization: capture_url
+          authorization: capture_url || refund_url
         )
       end
 
