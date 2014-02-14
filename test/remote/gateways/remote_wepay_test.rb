@@ -8,7 +8,7 @@ class RemoteWepayTest < Test::Unit::TestCase
     # cents
     @amount = 2000
     @credit_card = credit_card('5496198584584769', mock_creditcard)
-    @declined_card = credit_card('4000300011112220')
+    @declined_card = credit_card('')
 
     @options = {
       :order_id => '1',
@@ -29,7 +29,7 @@ class RemoteWepayTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     options = @options.dup
     options[:type] = "TOTO"
-    assert response = @gateway.purchase(@amount, @declined_card, options)
+    assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
   end
 

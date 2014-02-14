@@ -48,7 +48,8 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         post = WepayPostData.new
         post[:auto_capture] = 0
-        add_creditcard(post, creditcard, options)
+        response = add_creditcard(post, creditcard, options) if creditcard
+        return response unless response.success?
         add_product_data(post, money, options)
         commit(Actions::CHECKOUT_CREATE, post)
       end
@@ -68,7 +69,8 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, creditcard, options = {})
         post = WepayPostData.new
-        add_creditcard(post, creditcard, options)
+        response = add_creditcard(post, creditcard, options) if creditcard
+        return response unless response.success?
         add_product_data(post, money, options)
         commit(Actions::CHECKOUT_CREATE, post)
       end
@@ -137,8 +139,11 @@ module ActiveMerchant #:nodoc:
         end
 
         response = commit(Actions::CREDIT_CARD_CREATE, cc_post)
-        post[:payment_method_id] = response.params["credit_card_id"]
-        post[:payment_method_type] = "credit_card"
+        if response.success?
+          post[:payment_method_id] = response.params["credit_card_id"] if response.params["credit_card_id"]
+          post[:payment_method_type] = "credit_card" if response.params["credit_card_id"]
+        end
+        response
       end
 
       def parse(response)
@@ -149,14 +154,12 @@ module ActiveMerchant #:nodoc:
         success = false
         begin
           response = service_call(action, params)
-
           success = true unless response["error"]
         rescue ResponseError => e
           response = parse(e.response.body)
         end
         Response.new(success, (success)? "Success" : "Failed", response,
                  :authorization => response["checkout_id"], :test => test?)
-
       end
 
       def post_data(parameters = {})
