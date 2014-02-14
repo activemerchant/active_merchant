@@ -205,6 +205,8 @@ module ActiveMerchant #:nodoc:
         post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
         post[:on_behalf_of_uri] = options[:on_behalf_of_uri] if options[:on_behalf_of_uri]
 
+        authorization = authorization.split("|")[0] if authorization.include?("|")
+
         create_transaction(:post, authorization, post)
       rescue Error => ex
         failed_response(ex.response)
@@ -217,6 +219,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>authorization</tt> -- The uri of the authorization returned from
       #   an `authorize` request.
       def void(authorization, options = {})
+        authorization = authorization.split("|")[0] if authorization.include?("|")
         create_transaction(:delete, authorization, nil)
       rescue Error => ex
         failed_response(ex.response)
@@ -245,6 +248,8 @@ module ActiveMerchant #:nodoc:
         post[:amount] = amount
         post[:description] = options[:description]
         post[:appears_on_statement_as] = options[:appears_on_statement_as] if options[:appears_on_statement_as]
+
+        debit_uri = debit_uri.split("|")[1] if debit_uri.include?("|")
 
         create_transaction(:post, debit_uri, post)
       rescue Error => ex
@@ -398,18 +403,20 @@ module ActiveMerchant #:nodoc:
           url = response["links"]["card_holds.debits"]
           url = url.gsub("{card_holds.id}", response["card_holds"][0]["id"])
         end
-
+ 
         refund_url = if response.has_key?("debits")
           url = response["links"]["debits.refunds"]
           url = url.gsub("{debits.id}", response["debits"][0]["id"])
         end
+
+        authorization = [capture_url, refund_url].map(&:to_s).join("|")
 
         Response.new(
           success,
           (success ? "Transaction approved" : response["errors"][0]["description"]),
           response,
           test: (@marketplace_uri.index("TEST") ? true : false),
-          authorization: capture_url || refund_url
+          authorization: authorization
         )
       end
 
