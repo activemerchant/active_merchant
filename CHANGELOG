@@ -5,6 +5,7 @@
 * SagePay: Truncate description field [duff]
 * Add Cecabank gateway [molpe]
 * Add Openpay [darkaz]
+* Openpay: Simplify test versus production mode [duff]
 
 == Version 1.42.5 (February 7th, 2014)
 

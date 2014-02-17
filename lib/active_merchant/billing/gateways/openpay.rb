@@ -21,7 +21,6 @@ module ActiveMerchant #:nodoc:
         requires!(options, :key, :merchant_id)
         @api_key = options[:key]
         @merchant_id = options[:merchant_id]
-        @production = options.has_key?(:production) ? options[:production] : false
         super
       end
 
@@ -155,13 +154,13 @@ module ActiveMerchant #:nodoc:
         Response.new(success,
           (success ? response['error_code'] : response['description']),
           response,
-          :test => !@production,
+          :test => test?,
           :authorization => response['id']
         )
       end
 
       def http_request(method, resource, parameters={}, options={})
-        url = (@production ? self.live_url : self.test_url) + @merchant_id + '/' + resource
+        url = (test? ? self.test_url : self.live_url) + @merchant_id + '/' + resource
         raw_response = nil
         begin
           raw_response = ssl_request(method, url, (parameters ? parameters.to_json : nil), headers(options))
