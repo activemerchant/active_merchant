@@ -4,13 +4,17 @@ class PaydollarHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @helper = Paydollar::Helper.new('order-500', '0987654321', :amount => '123.45', :currency => 'HKD')
+    @orderReference = 'order-500'
+    @merchantId = '0987654321'
+    @amount = '123.45'
+    @currencyCode = 'HKD'
+    @helper = Paydollar::Helper.new(@orderReference, @merchantId, :amount => @amount, :currency => @currencyCode)
   end
 
   def test_basic_helper_fields
-    assert_field 'merchantId', '0987654321'
-    assert_field 'amount', '123.45'
-    assert_field 'orderRef', 'order-500'
+    assert_field 'merchantId', @merchantId
+    assert_field 'amount', @amount
+    assert_field 'orderRef', @orderReference
     assert_field 'currCode', '344'
   end
 

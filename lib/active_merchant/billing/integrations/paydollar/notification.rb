@@ -8,7 +8,7 @@ module ActiveMerchant #:nodoc:
         class Notification < ActiveMerchant::Billing::Integrations::Notification
 
           def complete?
-            status = 'Completed'
+            status == 'Completed'
           end
 
           def item_id
