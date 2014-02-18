@@ -24,9 +24,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def currency=(currency_code)
-            code = CURRENCY_MAP[currency_code]
-            raise StandardError, "Invalid currency code #{currency_code} specified" if code.nil?
-            add_field(mappings[:currency], code)
+            add_field(mappings[:currency], CURRENCY_MAP[currency_code])
           end
 
           mapping :account, 'merchantId'
