@@ -6,6 +6,7 @@
 * Add Cecabank gateway [molpe]
 * Add Openpay [darkaz]
 * Openpay: Simplify test versus production mode [duff]
+* Wirecard: Handle a utf-8 description [duff]
 
 == Version 1.42.5 (February 7th, 2014)
 
