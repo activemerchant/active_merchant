@@ -7,6 +7,7 @@ module ActiveMerchant #:nodoc:
           def initialize(order, account, options = {})
             super
             add_field('payType', 'N') # normal sale and not just auth
+            @secret = options[:credential2]
           end
 
           def form_fields
@@ -19,7 +20,7 @@ module ActiveMerchant #:nodoc:
                       @fields[mappings[:currency]],
                       @fields[mappings[:amount]],
                       @fields['payType']]
-            Paydollar.sign(fields, @options[:credential2])
+            Paydollar.sign(fields, @secret)
           end
 
           def currency=(currency_code)

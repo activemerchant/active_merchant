@@ -11,22 +11,26 @@ class PaydollarModuleTest < Test::Unit::TestCase
     assert_instance_of Paydollar::Return, Paydollar.return('')
   end
 
-  def test_urls
+  def test_production_urls
     ActiveMerchant::Billing::Base.integration_mode = :production
     assert_equal 'https://www.paydollar.com/b2c2/eng/payment/payForm.jsp', Paydollar.service_url
     assert_equal 'https://www.paydollar.com/b2c2/eng/merchant/api/orderApi.jsp', Paydollar.api_url
+  end
+
+  def test_test_urls
     ActiveMerchant::Billing::Base.integration_mode = :test
     assert_equal 'https://test.paydollar.com/b2cDemo/eng/payment/payForm.jsp', Paydollar.service_url
     assert_equal 'https://test.paydollar.com/b2cDemo/eng/merchant/api/orderApi.jsp', Paydollar.api_url
   end
 
   def test_currency_map
-    assert_equal Paydollar::CURRENCY_MAP['HKD'], '344'
+    assert_equal '344', Paydollar::CURRENCY_MAP['HKD']
     assert Paydollar::CURRENCY_MAP['XYZ'].nil?
   end
 
   def test_sign
-    assert_equal Paydollar.sign(['abc','def'],'opq'), '2984bd4ad923dc046ea842bb056b9657e91d3146'
+    expected = Digest::SHA1.hexdigest('abc|def|opq')
+    assert_equal expected, Paydollar.sign(['abc','def'],'opq')
   end
 
 end
