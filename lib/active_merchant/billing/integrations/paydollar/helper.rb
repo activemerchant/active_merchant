@@ -33,8 +33,8 @@ module ActiveMerchant #:nodoc:
           mapping :amount, 'amount'
           mapping :order, 'orderRef'
           mapping :currency, 'currCode'
-          mapping :return_url, ['successUrl','failUrl']
-          mapping :cancel_return_url, 'cancelUrl'
+          mapping :return_url, 'successUrl'
+          mapping :cancel_return_url, ['cancelUrl','failUrl']
 
         end
       end
