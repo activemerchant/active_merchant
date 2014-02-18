@@ -11,16 +11,14 @@ class PaydollarModuleTest < Test::Unit::TestCase
     assert_instance_of Paydollar::Return, Paydollar.return('')
   end
 
-  def test_production_urls
+  def test_production_url
     ActiveMerchant::Billing::Base.integration_mode = :production
     assert_equal 'https://www.paydollar.com/b2c2/eng/payment/payForm.jsp', Paydollar.service_url
-    assert_equal 'https://www.paydollar.com/b2c2/eng/merchant/api/orderApi.jsp', Paydollar.api_url
   end
 
-  def test_test_urls
+  def test_test_url
     ActiveMerchant::Billing::Base.integration_mode = :test
     assert_equal 'https://test.paydollar.com/b2cDemo/eng/payment/payForm.jsp', Paydollar.service_url
-    assert_equal 'https://test.paydollar.com/b2cDemo/eng/merchant/api/orderApi.jsp', Paydollar.api_url
   end
 
   def test_currency_map
