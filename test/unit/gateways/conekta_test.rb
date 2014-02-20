@@ -2,7 +2,7 @@ require 'test_helper'
 
 class ConektaTest < Test::Unit::TestCase
   def setup
-    @gateway = ConektaGateway.new(:login => "1tv5yJp3xnVZ7eK67m4h")
+    @gateway = ConektaGateway.new(:key => "1tv5yJp3xnVZ7eK67m4h")
 
     @amount = 300
 
@@ -94,8 +94,8 @@ class ConektaTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_invalid_login
-    gateway = ConektaGateway.new(:login => 'invalid_token')
+  def test_invalid_key
+    gateway = ConektaGateway.new(:key => 'invalid_token')
     gateway.expects(:ssl_request).returns(failed_login_response)
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
