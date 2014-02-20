@@ -89,7 +89,7 @@ class ConektaTest < Test::Unit::TestCase
 
   def test_unsuccessful_capture
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
-    assert response = @gateway.capture("1", @amount, @options)
+    assert response = @gateway.capture(@amount, "1", @options)
     assert_failure response
     assert response.test?
   end

@@ -83,7 +83,7 @@ class RemoteConektaTest < Test::Unit::TestCase
     assert_success response
     assert_equal nil, response.message
 
-    assert response = @gateway.capture(response.authorization, @amount, @options)
+    assert response = @gateway.capture(@amount, response.authorization, @options)
     assert_success response
     assert_equal nil, response.message
   end
@@ -104,8 +104,7 @@ class RemoteConektaTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_capture
-    @options[:order_id] = "1"
-    assert response = @gateway.capture(@amount, @options)
+    assert response = @gateway.capture(@amount, "1", @options)
     assert_failure response
     assert_equal "The charge does not exist or it is not suitable for this operation", response.message
   end

@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
         commit(:post, "charges", post)
       end
 
-      def capture(identifier, money, options = {})
+      def capture(money, identifier, options = {})
         post = {}
 
         post[:order_id] = identifier
@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_order(post, money, options)
-        post[:description] = options[:description]
+        post[:description] = options[:description] || "Active Merchant Purchase"
         post[:reference_id] = options[:order_id]
         post[:currency] = (options[:currency] || currency(money)).downcase
         post[:amount] = amount(money)
