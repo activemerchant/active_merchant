@@ -80,6 +80,12 @@ card_stream:
   login: X
   password: Y
 
+cecabank:
+  merchant_id: MERCHANTID
+  acquirer_bin: ACQUIRERBIN
+  terminal_id: TERMINALID
+  key: KEY
+
 certo_direct:
   login: 1
   password: vP6OwK3
@@ -92,7 +98,7 @@ cyber_source:
   password: Y
 
 conekta:
-  key: 1tv5yJp3xnVZ7eK67m4h
+  login: 1tv5yJp3xnVZ7eK67m4h
 
 data_cash:
   login: X
@@ -317,6 +323,11 @@ ogone:
   user: USER
   password: PASSWORD
   signature: SIGNATURE
+
+# Working credentials, no need to replace
+openpay:
+  key: 'sk_e568c42a6c384b7ab02cd47d2e407cab'
+  merchant_id: 'mzdtln0bmtms6o3kck8f'
 
 optimal_payment:
   login: test
@@ -693,3 +704,7 @@ wirecard_checkout_page:
   secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
   shop_id: ''
   paymenttype: IDL
+
+pay_vector:
+    login: LOGIN
+    password: PASSWORD
