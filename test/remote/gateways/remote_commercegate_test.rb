@@ -3,6 +3,7 @@ require 'test_helper'
 class RemoteCommercegateTest < Test::Unit::TestCase
 
   # Contact Support at it_support@commercegate.com
+
   def setup
     @gateway = CommercegateGateway.new(
       :login => 'XXXXXX',  # Contact support for username / password
@@ -26,17 +27,15 @@ class RemoteCommercegateTest < Test::Unit::TestCase
       :verification_value => '123') # Any 3 digit code will work
 
                     
-    @amount = '10.00' # Must match the offerID
+    @amount = 1000 # Must match the offerID
     
     @commerce_gate_options = {
-      :siteID => 'XXXXXXXXXXXX', # Contact support for test site ID
-      :offerID => 'XXXXXXXXXXXX', # Contact support for test OFFER ID
     }
     
     @address = {
       :address1 => '', # conditional, required if country is USA or Canada
       :city => '', # conditional, required if country is USA or Canada
-      :state => '',# conditional, required if country is USA or Canada
+      :state => '',# conditional, required if country is USA or Canada      
       :zip => '90230', # conditional, required if country is USA or Canada
       :country => 'US' # required
     }
@@ -44,10 +43,12 @@ class RemoteCommercegateTest < Test::Unit::TestCase
     @options = {
       :ip => '192.168.7.175', # conditional, required for authorize and purchase, #Any valid IP will work
       :email => 'john_doe01@yahoo.com', # required
-      :merchant => '', # conditional, required only when you have multiple merchant accounts
+      :merchant => '', # conditional, required only when you have multiple merchant accounts  
       :currency => 'EUR', # required, Must match the offerID
-      :address => @address,
-      :gateway_specific_options => @commerce_gate_options # conditional, required for authorize and purchase
+      :address => @address,   
+      # conditional, required for authorize and purchase
+      :site_id => 'XXXXXXXXXXXX', # Contact support for test site ID
+      :offer_id =>'XXXXXXXXXXXX', # Contact support for test OFFER ID
     }
                 
   end
@@ -56,12 +57,16 @@ class RemoteCommercegateTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response, response_message(response)
     assert response.params['action'] == 'AUTH'
+    assert_equal 'U', response.params['avsCode']
+    assert_equal 'S', response.params['cvvCode']
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response, response_message(response)
     assert response.params['action'] == 'SALE'
+    assert_equal 'U', response.params['avsCode']
+    assert_equal 'S', response.params['cvvCode']    
   end
 
   def test_unsuccessful_purchase
@@ -76,12 +81,12 @@ class RemoteCommercegateTest < Test::Unit::TestCase
     assert_success auth
     assert_equal 'Success', auth.message
     assert auth.authorization
-    assert capture = @gateway.capture(amount, auth.authorization)
+    assert capture = @gateway.capture(amount, auth.authorization, @options)
     assert_success capture
   end
 
   def test_failed_capture
-    assert response = @gateway.capture(@amount, '123')
+    assert response = @gateway.capture(@amount, '123', @options)
     assert_failure response
     assert_equal 'Previous transaction not found', response.message
   end
@@ -95,13 +100,13 @@ class RemoteCommercegateTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Unauthorized Use: You do not have privilege to use this action.', response.message
   end
-
+  
   def test_successful_refund
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response, response_message(response)
     assert trans_id = response.params['transID']
     
-    assert response = @gateway.refund(@amount, trans_id)
+    assert response = @gateway.refund(@amount, trans_id, @options)
     assert_success response, response_message(response)
     assert response.params['action'] == 'REFUND'
   end
@@ -109,14 +114,14 @@ class RemoteCommercegateTest < Test::Unit::TestCase
   def test_successful_void
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response, response_message(response)
-    assert trans_id = response.params['transID']
+    assert trans_id = response.params['transID']   
     assert response = @gateway.void(trans_id)
     assert_success response, response_message(response)
     assert response.params['action'] == 'VOID_AUTH'
   end
 
   private
-
+  
   def response_message(response = {})
     "Return code = " + response.params['returnCode'] + " " + response.params['returnText']
   end

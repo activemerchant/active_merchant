@@ -4,7 +4,10 @@ module ActiveMerchant #:nodoc:
     class CommercegateGateway < Gateway
       self.test_url = self.live_url = 'https://secure.commercegate.com/gateway/nvp'
       
-      self.supported_countries = 'All except Iran, Iraq, Syria, North Korea'
+      self.supported_countries = %w(AD AE AT AU BA BE BG BN CA CH CY CZ DE DK EE EG ES FI FR GB
+                                    GI GL GR HK HR HU ID IE IL IM IN IS IT LI LK LT LU LV MC MT 
+                                    MU MV MX MY NL NO NZ PH PL PT QA RO RU SA SE SG SI SK SM TR 
+                                    UA UM US VA)
       self.money_format = :dollars
       self.default_currency = 'EUR'
 
@@ -29,15 +32,22 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         post = {}
         add_creditcard(post, creditcard)
-        add_auth_purchase_options(post, money, options)
+        add_auth_purchase_options(post, amount(money), options)
         commit('AUTH', post)
       end
 
       # A capture will complete or settle a previous authorization, completing the transaction processor and money movement. 
       # The amount captured is equal to the authorization amount.
-      # For CG gateway money should be nil, authorization is transaction ID returned by authorize method
       def capture(money, authorization, options = {})
-        post = options
+        post = {}
+        
+        unless options[:currency].nil? or options[:currency] == ''        
+          post[:currencyCode] = options[:currency] 
+        end
+        unless money.nil? or money == ''        
+          post[:amount] = amount(money) 
+        end
+        
         post[:transID] = authorization
         commit('CAPTURE', post)
       end
@@ -46,16 +56,21 @@ module ActiveMerchant #:nodoc:
       def purchase(money, creditcard, options = {})
         post = {}        
         add_creditcard(post, creditcard)
-        add_auth_purchase_options(post, money, options)
+        add_auth_purchase_options(post, amount(money), options)
         commit('SALE', post)        
       end
 
       # A refund is returning funds back to the card after a successful purchase or auth/capture that has
       # refund or matched credit since the original authorization code is used to match the transaction being refunded. 
-      # A refund is returning all the original funds back to the card.
-      # For CG gateway money should be nil, identification is transaction ID returned by capture|purchase methods     
+      # A refund is returning all the original funds back to the card.     
       def refund(money, identification, options = {})
-        post = options
+        post = {}
+        unless options[:currency].nil? or options[:currency] == ''        
+          post[:currencyCode] = options[:currency] 
+        end
+        unless money.nil? or money == ''        
+          post[:amount] = amount(money) 
+        end
         post[:transID] = identification
         commit('REFUND', post)        
       end
@@ -72,9 +87,29 @@ module ActiveMerchant #:nodoc:
 
       private
       
-      def add_gateway_specific_options(post, gateway_specific_options)
-        post[:siteID]  = gateway_specific_options[:siteID]
-        post[:offerID] = gateway_specific_options[:offerID]        
+      def amount(money)
+        return nil if money.nil?
+        cents = if money.respond_to?(:cents)
+          deprecated "Support for Money objects is deprecated and will be removed from a future release of ActiveMerchant. Please use an Integer value in cents"
+          money.cents
+        else
+          money
+        end
+
+        if money.is_a?(String)
+          raise ArgumentError, 'money amount must be a positive Integer in cents.'
+        end
+
+        if self.money_format == :cents
+          cents.to_s
+        else
+          sprintf("%.2f", cents.to_f / 100)
+        end
+      end
+      
+      def add_gateway_specific_options(post, options)
+        post[:siteID]  = options[:site_id]
+        post[:offerID] = options[:offer_id]        
       end
         
       def add_address(post, address)
@@ -87,7 +122,7 @@ module ActiveMerchant #:nodoc:
         
       def add_auth_purchase_options(post, money, options)
         add_address(post, options[:address])
-        add_gateway_specific_options(post, options[:gateway_specific_options])
+        add_gateway_specific_options(post, options)
         
         post[:customerIP]  = options[:ip]        
         post[:amount]      = money
@@ -98,11 +133,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard(params, creditcard)
-        params[:firstName]   = creditcard.first_name()
-        params[:lastName]    = creditcard.last_name()
-        params[:cardNumber]  = creditcard.number()
-        params[:expiryMonth] = creditcard.month()
-        params[:expiryYear]  = creditcard.year()
+        params[:firstName]   = creditcard.first_name
+        params[:lastName]    = creditcard.last_name
+        params[:cardNumber]  = creditcard.number
+        params[:expiryMonth] = creditcard.month
+        params[:expiryYear]  = creditcard.year
         params[:cvv]         = creditcard.verification_value if creditcard.verification_value?
       end
       
@@ -133,11 +168,18 @@ module ActiveMerchant #:nodoc:
         rescue ResponseError => e
           response = parse_error_response(e, action)  
         end
-          
-        Response.new(successful?(response), message_from(response), response,
-          :test => false,
-          :authorization => response['transID']
-        )
+        
+        options = {
+          :authorization => response['transID'],
+          :test => test?
+        }
+        
+        if action == 'AUTH' or action == 'SALE'          
+          options[:avs_result] = { :code => response[:avsCode] }
+          options[:cvv_result] = response[:cvvCode]
+        end
+        
+        Response.new(successful?(response), message_from(response), response, options)
 
       end
       
@@ -150,7 +192,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        CGI.unescape(response['returnText'])
+        unless response['returnText'].nil? or response['returnText'] == ''
+          CGI.unescape(response['returnText'])
+        else
+          "Unknown error. Ask support for details."
+        end
       end
       
       def post_data(parameters)

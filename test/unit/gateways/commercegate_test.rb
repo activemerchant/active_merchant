@@ -15,11 +15,9 @@ class CommercegateTest < Test::Unit::TestCase
                 :year               => '2019',
                 :verification_value => '123')
                 
-    @amount = '10.00'
+    @amount = 1000
     
     @commerce_gate_options = {
-      :siteID => '123', # required
-      :offerID => '321' # required
     }
     
     @address = {
@@ -36,7 +34,9 @@ class CommercegateTest < Test::Unit::TestCase
       :merchant => '', # conditional, required only when you have multiple merchant accounts  
       :currency => 'EUR', # required
       :address => @address,   
-      :gateway_specific_options => @commerce_gate_options # conditional, required for authorize and purchase
+      # conditional, required for authorize and purchase
+      :site_id => '123', # required
+      :offer_id => '321' # required
     }
                 
   end
