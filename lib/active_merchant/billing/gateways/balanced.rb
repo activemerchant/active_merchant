@@ -161,6 +161,12 @@ module ActiveMerchant #:nodoc:
       #   purchase.
       # * <tt>account_uri</tt> -- `account_uri` is the URI of an existing
       #   Balanced account.
+      #
+      # If you are passing a new card URI from balanced.js, you should pass
+      # the customer's name
+      #
+      # * <tt>name</tt> -- the customer's name, to appear on the Account
+      #   on Balanced.
       def purchase(money, credit_card, options = {})
         if credit_card.respond_to?('number')
           requires!(options, :email) unless options[:account_uri]
@@ -310,6 +316,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if account_uri == nil
+          post[:name] = options[:name] if options[:name]
           post[:email_address] = options[:email]
 
           # create an account
