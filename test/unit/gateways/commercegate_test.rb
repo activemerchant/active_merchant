@@ -17,9 +17,6 @@ class CommercegateTest < Test::Unit::TestCase
                 
     @amount = 1000
     
-    @commerce_gate_options = {
-    }
-    
     @address = {
       :address1 => '', # conditional, required if country is USA or Canada
       :city => '', # conditional, required if country is USA or Canada

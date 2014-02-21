@@ -28,10 +28,7 @@ class RemoteCommercegateTest < Test::Unit::TestCase
 
                     
     @amount = 1000 # Must match the offerID
-    
-    @commerce_gate_options = {
-    }
-    
+
     @address = {
       :address1 => '', # conditional, required if country is USA or Canada
       :city => '', # conditional, required if country is USA or Canada
