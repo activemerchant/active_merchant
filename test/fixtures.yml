@@ -215,6 +215,10 @@ litle:
   password: MERCHANT
   merchant_id: 101
 
+maxipago:
+  login: "100"
+  password: "21g8u6gh6szw1gywfs165vui"
+
 # Working test credentials, no need to replace
 merchant_esolutions:
   login: "94100008043900000004"
