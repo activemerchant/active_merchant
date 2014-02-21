@@ -15,6 +15,8 @@
 * Balanced: Allow working with balanced.js [michaelherold]
 * Balanced: Allow passing customer name [michaelherold]
 * Balanced: Add support for meta [michaelherold]
+* Improve gateway generator [ntalbott]
+* Add maxiPago gateway [alexandremcosta]
 
 == Version 1.42.5 (February 7th, 2014)
 
