@@ -19,7 +19,6 @@ Gem::Specification.new do |s|
 
   s.has_rdoc = true if Gem::VERSION < '1.7.0'
 
-  s.add_dependency('activesupport', '>= 2.3.14', '< 5.0.0')
   s.add_dependency('i18n', '~> 0.5')
   s.add_dependency('money', '< 7.0.0')
   s.add_dependency('builder', '>= 2.1.2', '< 4.0.0')
