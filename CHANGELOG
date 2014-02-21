@@ -1,12 +1,16 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.42.6 (February 21, 2014)
+
 * Litle: Truncate order_id [duff]
 * Conekta: Fix #refund; respect :currency [leofischer]
+* Conekta: Fix tests; set default description [bslobodin]
 * SagePay: Truncate description field [duff]
 * Add Cecabank gateway [molpe]
 * Add Openpay [darkaz]
 * Openpay: Simplify test versus production mode [duff]
 * Wirecard: Handle a utf-8 description [duff]
+* Add PayDollar offsite [bslobodin]
 
 == Version 1.42.5 (February 7th, 2014)
 
