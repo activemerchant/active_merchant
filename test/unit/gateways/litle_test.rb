@@ -248,6 +248,16 @@ class LitleTest < Test::Unit::TestCase
     assert_nil hash['amount']
   end
 
+  def test_create_catpure_hash_partial_nil
+    hashFromGateway = @gateway.send(:create_capture_hash, 0, '1234', {:partial => nil})
+    assert_nil hashFromGateway['partial']
+  end
+
+  def test_create_capture_hash_partial_true
+    hashFromGateway = @gateway.send(:create_capture_hash, 0, '1234', {:partial => true})
+    assert hashFromGateway['partial']
+  end
+
   def test_recognize_ax_and_some_empties
     creditcard = CreditCard.new(@credit_card_options.merge(brand: 'american_express'))
     hash = @gateway.send(:build_purchase_request, 0, creditcard, {})
