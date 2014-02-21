@@ -1,5 +1,18 @@
 = ActiveMerchant CHANGELOG
 
+* Litle: Truncate order_id [duff]
+* Conekta: Fix #refund; respect :currency [leofischer]
+* SagePay: Truncate description field [duff]
+* Add Cecabank gateway [molpe]
+* Add Openpay [darkaz]
+* Openpay: Simplify test versus production mode [duff]
+* Wirecard: Handle a utf-8 description [duff]
+
+== Version 1.42.5 (February 7th, 2014)
+
+* Add Doku Indonesia [bizla]
+* Cardstream: Update gateway to use latest API [odorcicd]
+
 == Version 1.42.4 (January 8th, 2014)
 
 * DataCash: Set 'ecomm' as capturemethod [DavidGeukers]
