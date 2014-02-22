@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
           # Replace with the real mapping
           mapping :account, ''
           mapping :amount, ''
-        
+
           mapping :order, ''
 
           mapping :customer, :first_name => '',
