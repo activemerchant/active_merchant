@@ -208,13 +208,13 @@ class RemoteSagePayTest < Test::Unit::TestCase
   end
 
   def test_successful_token_creation_from_purchase
-    assert response = @gateway.purchase(@amount, @visa, @options.merge(:create_token => true))
+    assert response = @gateway.purchase(@amount, @visa, @options.merge(:store => true))
     assert_success response
     assert !response.token.blank?
   end
 
   def test_successful_token_creation_from_authorize
-    assert response = @gateway.authorize(@amount, @visa, @options.merge(:create_token => true))
+    assert response = @gateway.authorize(@amount, @visa, @options.merge(:store => true))
     assert_success response
     assert !response.token.blank?
   end
