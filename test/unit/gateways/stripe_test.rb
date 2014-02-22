@@ -383,9 +383,9 @@ class StripeTest < Test::Unit::TestCase
     @gateway.authorize(@amount, @credit_card, @options)
   end
 
-  def test_new_attributes_are_included_in_update_credit_card
+  def test_new_attributes_are_included_in_update
     stub_comms(@gateway, :ssl_request) do
-      @gateway.send(:update_credit_card, "cus_3sgheFxeBgTQ3M", "card_483etw4er9fg4vF3sQdrt3FG", { :name => "John Smith", :exp_year => 2021, :exp_month => 6 })
+      @gateway.send(:update, "cus_3sgheFxeBgTQ3M", "card_483etw4er9fg4vF3sQdrt3FG", { :name => "John Smith", :exp_year => 2021, :exp_month => 6 })
     end.check_request do |method, endpoint, data, headers|
       assert data == "name=John+Smith&exp_year=2021&exp_month=6" 
       assert endpoint.include? "/customers/cus_3sgheFxeBgTQ3M/cards/card_483etw4er9fg4vF3sQdrt3FG"
