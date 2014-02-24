@@ -115,6 +115,26 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', capture.message
   end
 
+  def test_full_amount_capture
+    assert auth = @gateway.authorize(10010, @credit_card1, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    assert capture = @gateway.capture(10010, auth.authorization)
+    assert_success capture
+    assert_equal 'Approved', capture.message
+  end
+
+  def test_nil_amount_capture
+    assert auth = @gateway.authorize(10010, @credit_card1, @options)
+    assert_success auth
+    assert_equal 'Approved', auth.message
+
+    assert capture = @gateway.capture(nil, auth.authorization)
+    assert_success capture
+    assert_equal 'Approved', capture.message
+  end
+
   def test_capture_unsuccessful
     assert capture_response = @gateway.capture(10010, 123456789012345360)
     assert_failure capture_response
