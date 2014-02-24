@@ -39,15 +39,9 @@ module ActiveMerchant #:nodoc:
       # A capture will complete or settle a previous authorization, completing the transaction processor and money movement. 
       # The amount captured is equal to the authorization amount.
       def capture(money, authorization, options = {})
-        post = {}
-        
-        unless options[:currency].nil? or options[:currency] == ''        
-          post[:currencyCode] = options[:currency] 
-        end
-        unless money.nil? or money == ''        
-          post[:amount] = amount(money) 
-        end
-        
+        post = {}        
+        post[:currencyCode] = options[:currency] || currency(money) 
+        post[:amount] = amount(money) 
         post[:transID] = authorization
         commit('CAPTURE', post)
       end
@@ -64,13 +58,9 @@ module ActiveMerchant #:nodoc:
       # refund or matched credit since the original authorization code is used to match the transaction being refunded. 
       # A refund is returning all the original funds back to the card.     
       def refund(money, identification, options = {})
-        post = {}
-        unless options[:currency].nil? or options[:currency] == ''        
-          post[:currencyCode] = options[:currency] 
-        end
-        unless money.nil? or money == ''        
-          post[:amount] = amount(money) 
-        end
+        post = {}     
+        post[:currencyCode] = options[:currency] || currency(money) 
+        post[:amount] = amount(money)         
         post[:transID] = identification
         commit('REFUND', post)        
       end
@@ -133,7 +123,7 @@ module ActiveMerchant #:nodoc:
 
         body.split(/\&/).each do |pair|
           key,val = pair.split(/=/)
-          results[key] = val
+          results[key] = CGI.unescape(val)
         end
 
         results
@@ -173,7 +163,7 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         unless response['returnText'].nil? or response['returnText'] == ''
-          CGI.unescape(response['returnText'])
+          response['returnText']
         else
           "Unknown error. Ask support for details."
         end
