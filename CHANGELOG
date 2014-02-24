@@ -4,6 +4,7 @@
 * Auth.Net CIM: Fix ordering of order/trans_id [pdamer]
 * Add PagoFacil gateway [bhserna]
 * Stripe: Allow for updating of stored card [speric]
+* Authorize.Net: Deprecate ARB [ntalbott]
 
 == Version 1.43.1 (May 1, 2014)
 

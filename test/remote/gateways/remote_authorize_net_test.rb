@@ -13,21 +13,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store purchase'
     }
-
-    @recurring_options = {
-      :amount => 100,
-      :subscription_name => 'Test Subscription 1',
-      :credit_card => @credit_card,
-      :billing_address => address.merge(:first_name => 'Jim', :last_name => 'Smith'),
-      :interval => {
-        :length => 1,
-        :unit => :months
-      },
-      :duration => {
-        :start_date => Date.today,
-        :occurrences => 1
-      }
-    }
   end
 
   def test_successful_purchase
@@ -109,55 +94,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_match(/The merchant login ID or password is invalid/, response.message)
 
     assert_equal false, response.success?
-  end
-
-  def test_using_test_request
-    gateway = AuthorizeNetGateway.new(
-      :login => 'X',
-      :password => 'Y'
-    )
-
-    assert response = gateway.purchase(@amount, @credit_card)
-
-    assert_equal Response, response.class
-    assert_equal ["action",
-                  "authorization_code",
-                  "avs_result_code",
-                  "card_code",
-                  "cardholder_authentication_code",
-                  "response_code",
-                  "response_reason_code",
-                  "response_reason_text",
-                  "transaction_id"], response.params.keys.sort
-
-    assert_match(/The merchant login ID or password is invalid/, response.message)
-
-    assert_equal false, response.success?
-  end
-
-  def test_successful_recurring
-    assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
-    assert_success response
-    assert response.test?
-
-    subscription_id = response.authorization
-
-    assert response = @gateway.update_recurring(:subscription_id => subscription_id, :amount => @amount * 2)
-    assert_success response
-
-    assert response = @gateway.status_recurring(subscription_id)
-    assert_success response
-
-    assert response = @gateway.cancel_recurring(subscription_id)
-    assert_success response
-  end
-
-  def test_recurring_should_fail_expired_credit_card
-    @credit_card.year = 2004
-    assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
-    assert_failure response
-    assert response.test?
-    assert_equal 'E00018', response.params['code']
   end
 
   def test_successful_purchase_with_solution_id
