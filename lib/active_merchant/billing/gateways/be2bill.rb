@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_customer_data(post, options)
-        if options[:oneclick]
+        if options[:alias]
           add_alias(post, options)
         else
           add_creditcard(post, creditcard)
@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
 
       def add_alias(post, options)
         post[:ALIAS]     = options[:alias]
-        post[:ALIASMODE] = options[:alias_mode]
+        post[:ALIASMODE] = options[:alias_mode] || 'ONECLICK'
       end
 
       def add_invoice(post, options)
