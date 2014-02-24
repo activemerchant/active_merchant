@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.42.6 (February 24, 2014)
+
 * Litle: Truncate order_id [duff]
 * Conekta: Fix #refund; respect :currency [leofischer]
 * SagePay: Truncate description field [duff]
@@ -18,6 +20,8 @@
 * Improve gateway generator [ntalbott]
 * Add maxiPago gateway [alexandremcosta]
 * Authorize.Net: Remove x_test_request support [ntalbott]
+* Conekta: Add default description [bslobodin]
+* Add PayDollar integration [bslobodin]
 
 == Version 1.42.5 (February 7th, 2014)
 
