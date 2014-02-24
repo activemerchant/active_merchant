@@ -86,27 +86,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
-      
-      def amount(money)
-        return nil if money.nil?
-        cents = if money.respond_to?(:cents)
-          deprecated "Support for Money objects is deprecated and will be removed from a future release of ActiveMerchant. Please use an Integer value in cents"
-          money.cents
-        else
-          money
-        end
-
-        if money.is_a?(String)
-          raise ArgumentError, 'money amount must be a positive Integer in cents.'
-        end
-
-        if self.money_format == :cents
-          cents.to_s
-        else
-          sprintf("%.2f", cents.to_f / 100)
-        end
-      end
-      
+            
       def add_gateway_specific_options(post, options)
         post[:siteID]  = options[:site_id]
         post[:offerID] = options[:offer_id]        
