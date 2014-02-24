@@ -50,6 +50,19 @@ module ActiveMerchant #:nodoc:
         :void => 'CCVOID'
       }
 
+      NON_STANDARD_LOCALE_CODES = {
+        'US' => 'USA'
+        'CA' => 'CAN'
+        'PR' => 'PRI'
+        'DE' => 'DEU'
+        'IE' => 'IRL'
+        'NO' => 'NOR'
+        'PL' => 'POL'
+        'LU' => 'LUX'
+        'BE' => 'BEL'
+        'NL' => 'NLD'
+      }
+
       # Initialize the Gateway
       #
       # The gateway requires that a valid login and password be passed
@@ -228,7 +241,7 @@ module ActiveMerchant #:nodoc:
           form[:state]          = billing_address[:state].to_s.slice(0, 10)
           form[:company]        = billing_address[:company].to_s.slice(0, 50)
           form[:phone]          = billing_address[:phone].to_s.slice(0, 20)
-          form[:country]        = billing_address[:country].to_s.slice(0, 50)
+          form[:country]        = locale_code(options[:country]).to_s.slice(0, 50) unless options[:country].blank?
         end
 
         if shipping_address = options[:shipping_address]
@@ -240,7 +253,7 @@ module ActiveMerchant #:nodoc:
           form[:ship_to_city]           = shipping_address[:city].to_s.slice(0, 30)
           form[:ship_to_state]          = shipping_address[:state].to_s.slice(0, 10)
           form[:ship_to_company]        = shipping_address[:company].to_s.slice(0, 50)
-          form[:ship_to_country]        = shipping_address[:country].to_s.slice(0, 50)
+          form[:ship_to_country]        = locale_code(options[:country]).to_s.slice(0, 50) unless options[:country].blank?
           form[:ship_to_zip]            = shipping_address[:zip].to_s.slice(0, 10)
         end
       end
@@ -304,6 +317,10 @@ module ActiveMerchant #:nodoc:
             resp[key.strip.gsub(/^ssl_/, '')] = value.to_s.strip
           }
         resp
+      end
+
+      def locale_code(country_code)
+        NON_STANDARD_LOCALE_CODES[country_code] || country_code
       end
 
     end
