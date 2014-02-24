@@ -145,7 +145,7 @@ class SagePayTest < Test::Unit::TestCase
       assert_match(/TxType=TOKEN/, data)
     end.respond_with(successful_purchase_response)
 
-    assert_equal '1', response.token
+    assert_equal '1', response.authorization
   end
 
   private

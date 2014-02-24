@@ -278,7 +278,7 @@ module ActiveMerchant #:nodoc:
       def commit(action, parameters)
         response = parse( ssl_post(url_for(action), post_data(action, parameters)) )
 
-        SagePayResponse.new(response["Status"] == APPROVED, message_from(response), response,
+        Response.new(response["Status"] == APPROVED, message_from(response), response,
           :test => test?,
           :authorization => authorization_from(response, parameters, action),
           :avs_result => {
@@ -290,11 +290,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response, params, action)
+        case action
+        when :store
+          response['Token']
+        else
          [ params[:VendorTxCode],
            response["VPSTxId"],
            response["TxAuthNo"],
            response["SecurityKey"],
            action ].join(";")
+         end
       end
 
       def abort_or_void_from(identification)
@@ -363,12 +368,6 @@ module ActiveMerchant #:nodoc:
       end
     end
 
-    class SagePayResponse < Response
-
-      def token
-        @params['Token']
-      end
-    end
   end
 end
 

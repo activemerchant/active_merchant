@@ -194,36 +194,36 @@ class RemoteSagePayTest < Test::Unit::TestCase
   def test_successful_store_and_purchace
     assert response = @gateway.store(@visa)
     assert_success response
-    assert !response.token.blank?
-    assert purchase = @gateway.purchase(@amount, response.token, @options)
+    assert !response.authorization.blank?
+    assert purchase = @gateway.purchase(@amount, response.authorization, @options)
     assert_success purchase
   end
 
   def test_successful_store_and_authorize
     assert response = @gateway.store(@visa)
     assert_success response
-    assert !response.token.blank?
-    assert authorize = @gateway.authorize(@amount, response.token, @options)
+    assert !response.authorization.blank?
+    assert authorize = @gateway.authorize(@amount, response.authorization, @options)
     assert_success authorize
   end
 
   def test_successful_token_creation_from_purchase
     assert response = @gateway.purchase(@amount, @visa, @options.merge(:store => true))
     assert_success response
-    assert !response.token.blank?
+    assert !response.authorization.blank?
   end
 
   def test_successful_token_creation_from_authorize
     assert response = @gateway.authorize(@amount, @visa, @options.merge(:store => true))
     assert_success response
-    assert !response.token.blank?
+    assert !response.authorization.blank?
   end
 
   def test_successful_unstore
     assert response = @gateway.store(@visa)
     assert_success response
-    assert !response.token.blank?
-    assert unstore = @gateway.unstore(response.token)
+    assert !response.authorization.blank?
+    assert unstore = @gateway.unstore(response.authorization)
     assert_success unstore
   end
 
