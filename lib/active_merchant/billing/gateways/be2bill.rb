@@ -37,20 +37,15 @@ module ActiveMerchant #:nodoc:
         commit('authorization', money, post)
       end
 
-      def oneclick_purchase(money, options = {})
-        post = {}
-        add_alias(post, options)
-        add_invoice(post, options)
-        add_customer_data(post, options)
-
-        commit('payment', money, post)
-      end
-
       def purchase(money, creditcard, options = {})
         post = {}
         add_invoice(post, options)
-        add_creditcard(post, creditcard)
         add_customer_data(post, options)
+        if options[:oneclick]
+          add_alias(post, options)
+        else
+          add_creditcard(post, creditcard)
+        end
 
         commit('payment', money, post)
       end
@@ -71,7 +66,7 @@ module ActiveMerchant #:nodoc:
         post[:CLIENTIP]        = options[:ip]
         post[:CLIENTEMAIL]     = options[:email]
         post[:CLIENTIDENT]     = options[:customer_id]
-        post[:CREATEALIAS]     = options[:oneclick_register] ? 'YES' : 'NO'
+        post[:CREATEALIAS]     = options[:store] ? 'YES' : 'NO'
       end
 
       def add_alias(post, options)
