@@ -17,6 +17,7 @@
 * Balanced: Add support for meta [michaelherold]
 * Improve gateway generator [ntalbott]
 * Add maxiPago gateway [alexandremcosta]
+* Authorize.Net: Remove x_test_request support [ntalbott]
 
 == Version 1.42.5 (February 7th, 2014)
 
