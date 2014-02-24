@@ -10,8 +10,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
     )
     @amount = 100
     @credit_card = credit_card
-    @subscription_id = '100748'
-    @subscription_status = 'active'
     @check = check
   end
 
@@ -311,66 +309,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal "Failure", @gateway.message_from(result)
   end
 
-  # ARB Unit Tests
-
-  def test_successful_recurring
-    @gateway.expects(:ssl_post).returns(successful_recurring_response)
-
-    response = @gateway.recurring(@amount, @credit_card,
-      :billing_address => address.merge(:first_name => 'Jim', :last_name => 'Smith'),
-      :interval => {
-        :length => 10,
-        :unit => :days
-      },
-      :duration => {
-        :start_date => Time.now.strftime("%Y-%m-%d"),
-        :occurrences => 30
-      }
-   )
-
-    assert_instance_of Response, response
-    assert response.success?
-    assert response.test?
-    assert_equal @subscription_id, response.authorization
-  end
-
-  def test_successful_update_recurring
-    @gateway.expects(:ssl_post).returns(successful_update_recurring_response)
-
-    response = @gateway.update_recurring(:subscription_id => @subscription_id, :amount => @amount * 2)
-
-    assert_instance_of Response, response
-    assert response.success?
-    assert response.test?
-    assert_equal @subscription_id, response.authorization
-  end
-
-  def test_successful_cancel_recurring
-    @gateway.expects(:ssl_post).returns(successful_cancel_recurring_response)
-
-    response = @gateway.cancel_recurring(@subscription_id)
-
-    assert_instance_of Response, response
-    assert response.success?
-    assert response.test?
-    assert_equal @subscription_id, response.authorization
-  end
-
-  def test_successful_status_recurring
-    @gateway.expects(:ssl_post).returns(successful_status_recurring_response)
-
-    response = @gateway.status_recurring(@subscription_id)
-    assert_instance_of Response, response
-    assert response.success?
-    assert response.test?
-    assert_equal @subscription_status, response.params['status']
-  end
-
-  def test_expdate_formatting
-    assert_equal '2009-09', @gateway.send(:arb_expdate, credit_card('4111111111111111', :month => "9", :year => "2009"))
-    assert_equal '2013-11', @gateway.send(:arb_expdate, credit_card('4111111111111111', :month => "11", :year => "2013"))
-  end
-
   def test_solution_id_is_added_to_post_data_parameters
     assert !@gateway.send(:post_data, 'AUTH_ONLY').include?("x_solution_ID=A1000000")
     ActiveMerchant::Billing::AuthorizeNetGateway.application_id = 'A1000000'
@@ -411,6 +349,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   private
+
   def post_data_fixture
     'x_encap_char=%24&x_card_num=4242424242424242&x_exp_date=0806&x_card_code=123&x_type=AUTH_ONLY&x_first_name=Longbob&x_version=3.1&x_login=X&x_last_name=Longsen&x_tran_key=Y&x_relay_response=FALSE&x_delim_data=TRUE&x_delim_char=%2C&x_amount=1.01'
   end
@@ -449,69 +388,5 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def bad_currency_response
     "$3$,$1$,$39$,$The supplied currency code is either invalid, not supported, not allowed for this merchant or doesn't have an exchange rate.$,$$,$P$,$0$,$$,$$,$1.00$,$$,$auth_capture$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$207BCBBF78E85CF174C87AE286B472D2$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$"
-  end
-
-  def successful_recurring_response
-    <<-XML
-<ARBCreateSubscriptionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
-  <refId>Sample</refId>
-  <messages>
-    <resultCode>Ok</resultCode>
-    <message>
-      <code>I00001</code>
-      <text>Successful.</text>
-    </message>
-  </messages>
-  <subscriptionId>#{@subscription_id}</subscriptionId>
-</ARBCreateSubscriptionResponse>
-    XML
-  end
-
-  def successful_update_recurring_response
-    <<-XML
-<ARBUpdateSubscriptionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
-  <refId>Sample</refId>
-  <messages>
-    <resultCode>Ok</resultCode>
-    <message>
-      <code>I00001</code>
-      <text>Successful.</text>
-    </message>
-  </messages>
-  <subscriptionId>#{@subscription_id}</subscriptionId>
-</ARBUpdateSubscriptionResponse>
-    XML
-  end
-
-  def successful_cancel_recurring_response
-    <<-XML
-<ARBCancelSubscriptionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
-  <refId>Sample</refId>
-  <messages>
-    <resultCode>Ok</resultCode>
-    <message>
-      <code>I00001</code>
-      <text>Successful.</text>
-    </message>
-  </messages>
-  <subscriptionId>#{@subscription_id}</subscriptionId>
-</ARBCancelSubscriptionResponse>
-    XML
-  end
-
-  def successful_status_recurring_response
-    <<-XML
-<ARBGetSubscriptionStatusResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
-  <refId>Sample</refId>
-  <messages>
-    <resultCode>Ok</resultCode>
-    <message>
-      <code>I00001</code>
-      <text>Successful.</text>
-    </message>
-  </messages>
-  <Status>#{@subscription_status}</Status>
-</ARBGetSubscriptionStatusResponse>
-    XML
   end
 end
