@@ -349,6 +349,12 @@ orbital_gateway:
   merchant_id: MERCHANTID
 
 # Working credentials, no need to replace
+pago_facil:
+  branch_id: 60f961360ca187d533d5adba7d969d6334771370
+  merchant_id: 62ad6f592ecf2faa87ef2437ed85a4d175e73c58
+  service_id: 3
+
+# Working credentials, no need to replace
 pay_gate_xml:
   login: '10011021600'
   password: 'test'
