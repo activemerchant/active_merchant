@@ -6,14 +6,14 @@ class RemoteCommercegateTest < Test::Unit::TestCase
 
   def setup
     @gateway = CommercegateGateway.new(
-      :login => 'XXXXXX',  # Contact support for username / password
-      :password => 'XXXXXX'
+      :login => fixtures(:commercegate).fetch(:login),  # Contact support for username / password
+      :password => fixtures(:commercegate).fetch(:password)
     )
 
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
       :first_name         => 'John', #Any name will work
       :last_name          => 'Doe',
-      :number             => 'XXXXXXXXXXXXXXXXX', # Contact support for test card number(s)
+      :number             => fixtures(:commercegate).fetch(:card_number), # Contact support for test card number(s)
       :month              => '01', # Any future date will work
       :year               => '2019',
       :verification_value => '123') # Any 3 digit code will work
@@ -21,14 +21,14 @@ class RemoteCommercegateTest < Test::Unit::TestCase
     @declined_card = ActiveMerchant::Billing::CreditCard.new(
       :first_name         => 'John', #Any name will work
       :last_name          => 'Doe',
-      :number             => 'XXXXXXXXXXXXXXXXX', # Contact support for test card number(s)
+      :number             => fixtures(:commercegate).fetch(:card_number), # Contact support for test card number(s)
       :month              => '01', # Any future date will work
       :year               => '2012', # expired date
       :verification_value => '123') # Any 3 digit code will work
 
                     
     @amount = 1000 # Must match the offerID
-
+    
     @address = {
       :address1 => '', # conditional, required if country is USA or Canada
       :city => '', # conditional, required if country is USA or Canada
@@ -44,13 +44,13 @@ class RemoteCommercegateTest < Test::Unit::TestCase
       :currency => 'EUR', # required, Must match the offerID
       :address => @address,   
       # conditional, required for authorize and purchase
-      :site_id => 'XXXXXXXXXXXX', # Contact support for test site ID
-      :offer_id =>'XXXXXXXXXXXX', # Contact support for test OFFER ID
+      :site_id => fixtures(:commercegate).fetch(:site_id), # Contact support for test site ID
+      :offer_id => fixtures(:commercegate).fetch(:offer_id) # Contact support for test OFFER ID
     }
                 
   end
 
-  def test_sucessful_authorize
+  def test_successful_authorize
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response, response_message(response)
     assert response.params['action'] == 'AUTH'

@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         post = {}
         add_creditcard(post, creditcard)
-        add_auth_purchase_options(post, amount(money), options)
+        add_auth_purchase_options(post, money, options)
         commit('AUTH', post)
       end
 
@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
       def purchase(money, creditcard, options = {})
         post = {}        
         add_creditcard(post, creditcard)
-        add_auth_purchase_options(post, amount(money), options)
+        add_auth_purchase_options(post, money, options)
         commit('SALE', post)        
       end
 
@@ -95,9 +95,9 @@ module ActiveMerchant #:nodoc:
         add_gateway_specific_options(post, options)
         
         post[:customerIP]  = options[:ip]        
-        post[:amount]      = money
+        post[:amount]      = amount(money)
         post[:email]       = options[:email]
-        post[:currencyCode]= options[:currency]
+        post[:currencyCode]= options[:currency] || currency(money)
         post[:merchAcc]    = options[:merchant]
 
       end
@@ -109,13 +109,6 @@ module ActiveMerchant #:nodoc:
         params[:expiryMonth] = creditcard.month
         params[:expiryYear]  = creditcard.year
         params[:cvv]         = creditcard.verification_value if creditcard.verification_value?
-      end
-      
-      def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
-
-        "#{month}#{year[-2..-1]}"
       end
       
       def parse(body)
@@ -162,10 +155,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        unless response['returnText'].nil? or response['returnText'] == ''
+        if response['returnText'].present?
           response['returnText']
         else
-          "Unknown error. Ask support for details."
+          "Invalid response received from the CommerceGate API. Please contact CommerceGate support if you continue to receive this message. (The raw response returned by the API was #{response.inspect})"
         end
       end
       
