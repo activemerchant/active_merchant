@@ -74,13 +74,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        JSON.parse(body)
+        JSON.parse(body)["WebServices_Transacciones"]["transaccion"]
       end
 
       def commit(action, parameters)
         url = (test? ? test_url : live_url)
         response = parse(ssl_post(url, post_data(parameters)))
-        raise response.inspect
         Response.new(
           success_from(response),
           message_from(response),
@@ -91,12 +90,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
+        response["autorizado"] == "1"
       end
 
       def message_from(response)
+        response["texto"]
       end
 
       def authorization_from(response)
+        response["autorizacion"]
       end
 
       def post_data(parameters = {})

@@ -16,7 +16,7 @@ class RemotePagoFacilTest < Test::Unit::TestCase
     )
 
     @declined_card = ActiveMerchant::Billing::CreditCard.new(
-      number: '4000300011112220',
+      number: '1111111111111111',
       verification_value: '123',
       first_name: 'Juan',
       last_name: 'Reyes Garza',
@@ -45,7 +45,6 @@ class RemotePagoFacilTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    raise response.inspect
     assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
   end
 
