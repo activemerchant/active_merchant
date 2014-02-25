@@ -136,8 +136,8 @@ module ActiveMerchant #:nodoc:
 
           :refund    => %w(protocol msgtype merchant amount transaction apikey),
 
-          :subscribe => %w(protocol msgtype merchant ordernumber cardnumber
-                           expirationdate cvd acquirer cardtypelock description testmode
+          :subscribe => %w(protocol msgtype merchant ordernumber amount currency cardnumber
+                           expirationdate cvd acquirers cardtypelock description testmode
                            fraud_remote_addr fraud_http_accept fraud_http_accept_language
                            fraud_http_accept_encoding fraud_http_accept_charset
                            fraud_http_referer fraud_http_user_agent apikey),
@@ -225,6 +225,7 @@ module ActiveMerchant #:nodoc:
       def store(creditcard, options = {})
         post = {}
 
+        add_amount(post, 0, options) if @protocol >= 7 # `currency` is a required field since v7
         add_creditcard(post, creditcard, options)
         add_invoice(post, options)
         add_description(post, options)
