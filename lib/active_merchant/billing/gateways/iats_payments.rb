@@ -121,9 +121,12 @@ module ActiveMerchant #:nodoc:
       # optional data in options :customer_ip_address,
       # :invoice_num,
       def refund(identification, options = {})
-	if options[:total].to_i > 0
-  	   options[:total] = options[:total].to_i * -1
+	if options[:total].nil?
+	  mess = "Please provide the amount"
+	  raise ArgumentError.new(mess)
 	end
+	options[:total] = options[:total].to_f > 0 ? -options[:total].to_f : options[:total].to_f
+
         hash = {
           total: options[:total],
           transaction_id: identification
