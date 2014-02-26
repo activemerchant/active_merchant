@@ -3,10 +3,10 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CommercegateGateway < Gateway
       self.test_url = self.live_url = 'https://secure.commercegate.com/gateway/nvp'
-      
+
       self.supported_countries = %w(AD AE AT AU BA BE BG BN CA CH CY CZ DE DK EE EG ES FI FR GB
-                                    GI GL GR HK HR HU ID IE IL IM IN IS IT LI LK LT LU LV MC MT 
-                                    MU MV MX MY NL NO NZ PH PL PT QA RO RU SA SE SG SI SK SM TR 
+                                    GI GL GR HK HR HU ID IE IL IM IN IS IT LI LK LT LU LV MC MT
+                                    MU MV MX MY NL NO NZ PH PL PT QA RO RU SA SE SG SI SK SM TR
                                     UA UM US VA)
       self.money_format = :dollars
       self.default_currency = 'EUR'
@@ -19,16 +19,12 @@ module ActiveMerchant #:nodoc:
 
       # The name of the gateway
       self.display_name = 'CommerceGate'
-      
+
       def initialize(options = {})
         requires!(options, :login, :password)
         super
       end
 
-      # An auth or authorization is also known as a pre-auth or hold. 
-      # The funds on a card are held until the auth expires or is captured. An authorization can be captured (settled) or not. 
-      # Most processors/ acquirers have a time limit on how long auth can stay available for capture. 
-      # Please check with technical support on the length of time an auth is available for your acount. 
       def authorize(money, creditcard, options = {})
         post = {}
         add_creditcard(post, creditcard)
@@ -36,39 +32,29 @@ module ActiveMerchant #:nodoc:
         commit('AUTH', post)
       end
 
-      # A capture will complete or settle a previous authorization, completing the transaction processor and money movement. 
-      # The amount captured is equal to the authorization amount.
       def capture(money, authorization, options = {})
-        post = {}        
-        post[:currencyCode] = options[:currency] || currency(money) 
-        post[:amount] = amount(money) 
+        post = {}
+        post[:currencyCode] = options[:currency] || currency(money)
+        post[:amount] = amount(money)
         post[:transID] = authorization
         commit('CAPTURE', post)
       end
 
-      # A purchase is “basically” the same as a pre-auth (auth) and a capture (settle) in one transaction. 
       def purchase(money, creditcard, options = {})
-        post = {}        
+        post = {}
         add_creditcard(post, creditcard)
         add_auth_purchase_options(post, money, options)
-        commit('SALE', post)        
+        commit('SALE', post)
       end
 
-      # A refund is returning funds back to the card after a successful purchase or auth/capture that has
-      # refund or matched credit since the original authorization code is used to match the transaction being refunded. 
-      # A refund is returning all the original funds back to the card.     
       def refund(money, identification, options = {})
-        post = {}     
-        post[:currencyCode] = options[:currency] || currency(money) 
-        post[:amount] = amount(money)         
+        post = {}
+        post[:currencyCode] = options[:currency] || currency(money)
+        post[:amount] = amount(money)
         post[:transID] = identification
-        commit('REFUND', post)        
+        commit('REFUND', post)
       end
 
-      # A void will inform the processor this authorization will not be capture
-      # and in most cases will release the held funds on the card. 
-      # Please check with technical support on the length of time an authorization can be voided.
-      # For CG gateway identificationis transaction ID returned by authorize method
       def void(identification, options = {})
         post = {}
         post[:transID] = identification
@@ -76,25 +62,25 @@ module ActiveMerchant #:nodoc:
       end
 
       private
-            
+
       def add_gateway_specific_options(post, options)
         post[:siteID]  = options[:site_id]
-        post[:offerID] = options[:offer_id]        
+        post[:offerID] = options[:offer_id]
       end
-        
+
       def add_address(post, address)
         post[:address]     = address[:address1]
         post[:city]        = address[:city]
         post[:state]       = address[:state]
         post[:postalCode]  = address[:zip]
         post[:countryCode] = address[:country]
-      end  
-        
+      end
+
       def add_auth_purchase_options(post, money, options)
         add_address(post, options[:address])
         add_gateway_specific_options(post, options)
-        
-        post[:customerIP]  = options[:ip]        
+
+        post[:customerIP]  = options[:ip]
         post[:amount]      = amount(money)
         post[:email]       = options[:email]
         post[:currencyCode]= options[:currency] || currency(money)
@@ -110,7 +96,7 @@ module ActiveMerchant #:nodoc:
         params[:expiryYear]  = creditcard.year
         params[:cvv]         = creditcard.verification_value if creditcard.verification_value?
       end
-      
+
       def parse(body)
         results = {}
 
@@ -121,7 +107,7 @@ module ActiveMerchant #:nodoc:
 
         results
       end
-      
+
       def commit(action, parameters)
         parameters[:apiUsername] = @options[:login]
         parameters[:apiPassword] = @options[:password]
@@ -129,27 +115,22 @@ module ActiveMerchant #:nodoc:
         begin
           response = parse(ssl_post(self.live_url, post_data(parameters)))
         rescue ResponseError => e
-          response = parse_error_response(e, action)  
+          response = parse_error_response(e, action)
         end
-        
+
         options = {
           :authorization => response['transID'],
-          :test => test?
+          :test => test?,
+          :avs_result => { :code => response['avsCode'] },
+          :cvv_result => response['cvvCode']
         }
-        
-        if action == 'AUTH' or action == 'SALE'          
-          options[:avs_result] = { :code => response[:avsCode] }
-          options[:cvv_result] = response[:cvvCode]
-        end
-        
         Response.new(successful?(response), message_from(response), response, options)
-
       end
-      
+
       def parse_error_response(response_error, action)
         response = {:action => action, :returnCode => '-1', :returnText => response_error}
       end
-      
+
       def successful?(response)
         response['returnCode'] == '0'
       end
@@ -161,11 +142,10 @@ module ActiveMerchant #:nodoc:
           "Invalid response received from the CommerceGate API. Please contact CommerceGate support if you continue to receive this message. (The raw response returned by the API was #{response.inspect})"
         end
       end
-      
+
       def post_data(parameters)
         parameters.collect { |key, value| "#{key}=#{ CGI.escape(value.to_s)}" }.join("&")
       end
     end
   end
 end
-

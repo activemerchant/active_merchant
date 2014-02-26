@@ -12,30 +12,22 @@ class CommercegateTest < Test::Unit::TestCase
                 :last_name          => 'Doe',
                 :number             => '5333339469130529',
                 :month              => '01',
-                :year               => '2019',
+                :year               => Time.now.year + 1,
                 :verification_value => '123')
-                
+
     @amount = 1000
-    
-    @address = {
-      :address1 => '', # conditional, required if country is USA or Canada
-      :city => '', # conditional, required if country is USA or Canada
-      :state => '',# conditional, required if country is USA or Canada      
-      :zip => '', # conditional, required if country is USA or Canada
-      :country => 'US' # required
-    }
-    
+
     @options = {
       :ip => '192.168.7.175', # conditional, required for authorize and purchase
       :email => 'john_doe01@yahoo.com', # required
-      :merchant => '', # conditional, required only when you have multiple merchant accounts  
+      :merchant => '', # conditional, required only when you have multiple merchant accounts
       :currency => 'EUR', # required
-      :address => @address,   
+      :address => address,
       # conditional, required for authorize and purchase
       :site_id => '123', # required
       :offer_id => '321' # required
     }
-                
+
   end
 
   def test_successful_authorize
@@ -44,41 +36,41 @@ class CommercegateTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
     assert_equal '100130291387', response.authorization
-    assert_equal 'U', response.params['avsCode']
-    assert_equal 'S', response.params['cvvCode']
+    assert_equal 'U', response.avs_result["code"]
+    assert_equal 'S', response.cvv_result["code"]
   end
 
   def test_successful_capture
     trans_id = '100130291387'
     @gateway.expects(:ssl_post).returns(successful_capture_response)
-    assert response = @gateway.capture(nil, trans_id, @options)
+    assert response = @gateway.capture(@amount, trans_id, @options)
     assert_instance_of Response, response
-    assert_success response    
+    assert_success response
     assert_equal '100130291402', response.authorization
     assert_equal '10.00', response.params['amount']
     assert_equal 'EUR', response.params['currencyCode']
   end
-  
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
     assert_equal '100130291412', response.authorization
-    assert_equal 'U', response.params['avsCode']
-    assert_equal 'S', response.params['cvvCode']
+    assert_equal 'U', response.avs_result["code"]
+    assert_equal 'S', response.cvv_result["code"]
     assert_equal 'rdkhkRXjPVCXf5jU2Zz5NCcXBihGuaNz', response.params['token']
   end
-     
+
   def test_successful_refund
     trans_id = '100130291387'
     @gateway.expects(:ssl_post).returns(successful_refund_response)
-    assert response = @gateway.refund(nil, trans_id, @options)
+    assert response = @gateway.refund(@amount, trans_id, @options)
     assert_instance_of Response, response
-    assert_success response    
+    assert_success response
     assert_equal '100130291425', response.authorization
     assert_equal '10.00', response.params['amount']
-    assert_equal 'EUR', response.params['currencyCode']    
+    assert_equal 'EUR', response.params['currencyCode']
   end
 
 
@@ -87,10 +79,10 @@ class CommercegateTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_void_response)
     assert response = @gateway.void(trans_id, @options)
     assert_instance_of Response, response
-    assert_success response    
+    assert_success response
     assert_equal '100130425094', response.authorization
     assert_equal '10.00', response.params['amount']
-    assert_equal 'EUR', response.params['currencyCode']      
+    assert_equal 'EUR', response.params['currencyCode']
   end
 
   def test_unsuccessful_authorize
@@ -100,25 +92,25 @@ class CommercegateTest < Test::Unit::TestCase
     assert_failure response
     assert_equal '-103', response.params['returnCode']
   end
-  
+
   def test_unsuccessful_capture_empty_trans_id
     @gateway.expects(:ssl_post).returns(failed_request_response)
-    assert response = @gateway.capture(nil, '', @options)
+    assert response = @gateway.capture(@amount, '', @options)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal '-125', response.params['returnCode']    
+    assert_equal '-125', response.params['returnCode']
   end
 
   def test_unsuccessful_capture_trans_id_not_found
     @gateway.expects(:ssl_post).returns(failed_capture_response_invalid_trans_id)
-    assert response = @gateway.capture(nil, '', @options)
+    assert response = @gateway.capture(@amount, '', @options)
     assert_instance_of Response, response
     assert_failure response
-    assert_equal '-121', response.params['returnCode']   
+    assert_equal '-121', response.params['returnCode']
   end
-  
+
   private
-  
+
   def failed_request_response
     "returnCode=-125&returnText=Invalid+operation"
   end
@@ -126,7 +118,7 @@ class CommercegateTest < Test::Unit::TestCase
   def successful_purchase_response
     "action=SALE&returnCode=0&returnText=Success&authCode=040404&avsCode=U&cvvCode=S&amount=10.00&currencyCode=EUR&transID=100130291412&token=rdkhkRXjPVCXf5jU2Zz5NCcXBihGuaNz"
   end
-  
+
   def successful_authorize_response
     "action=AUTH&returnCode=0&returnText=Success&authCode=726293&avsCode=U&cvvCode=S&amount=10.00&currencyCode=EUR&transID=100130291387&token=Hf4lDYcKdJsdX92WJ2CpNlEUdh05utsI"
   end
@@ -138,7 +130,7 @@ class CommercegateTest < Test::Unit::TestCase
   def successful_capture_response
     "action=CAPTURE&returnCode=0&returnText=Success&amount=10.00&currencyCode=EUR&transID=100130291402"
   end
-  
+
   def failed_capture_response_invalid_trans_id
     "action=CAPTURE&returnCode=-121&returnText=Previous+transaction+not+found"
   end
