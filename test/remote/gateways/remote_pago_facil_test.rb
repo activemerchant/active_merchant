@@ -27,7 +27,6 @@ class RemotePagoFacilTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: {
-        name: 'Juan Reyes Garza',
         address1: 'Anatole France 311',
         address2: 'Polanco',
         city: 'Miguel Hidalgo',
@@ -37,7 +36,6 @@ class RemotePagoFacilTest < Test::Unit::TestCase
         phone: '5550220910'
       },
       email: 'comprador@correo.com',
-      description: 'Store Purchase',
       cellphone: '5550123456'
     }
   end
@@ -45,21 +43,32 @@ class RemotePagoFacilTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert response.authorization
+    assert_equal "Transaction has been successful!-Approved", response.message
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
+    assert_equal 'Errores en los datos de entrada Validaciones', response.message
   end
 
   def test_invalid_login
     gateway = PagoFacilGateway.new(
-      login: '',
-      password: ''
+      branch_id: '',
+      merchant_id: '',
+      service_id: 3
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+  end
+
+  def test_succesful_purchase_usd
+    options = @options.merge(currency: 'USD')
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal 'USD', response.params["dataVal"]["divisa"]
+    assert response.authorization
+    assert_equal "Transaction has been successful!-Approved", response.message
   end
 end

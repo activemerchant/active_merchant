@@ -18,7 +18,6 @@ class PagoFacilTest < Test::Unit::TestCase
     @options = {
       order_id: '1',
       billing_address: {
-        name: 'Juan Reyes Garza',
         address1: 'Anatole France 311',
         address2: 'Polanco',
         city: 'Miguel Hidalgo',
@@ -28,7 +27,6 @@ class PagoFacilTest < Test::Unit::TestCase
         phone: '5550220910'
       },
       email: 'comprador@correo.com',
-      description: 'Store Purchase',
       cellphone: '5550123456'
     }
   end
@@ -51,6 +49,13 @@ class PagoFacilTest < Test::Unit::TestCase
     assert_equal 'Errores en los datos de entrada Validaciones', response.message
   end
 
+  def test_invalid_json
+    @gateway.expects(:ssl_post).returns(invalid_json_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match /Invalid response received from the PagoFacil API/, response.message
+  end
 
   private
 
@@ -208,5 +213,9 @@ class PagoFacilTest < Test::Unit::TestCase
         }
       }
     }.to_json
+  end
+
+  def invalid_json_response
+    "<b>Notice</b>\n#{failed_purchase_response}"
   end
 end

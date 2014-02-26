@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_merchant_data(post)
 
-        commit('sale', post)
+        commit(post)
       end
 
       private
@@ -52,9 +52,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_currency(post, money, options)
-        #currency = options.fetch(:currency, currency(money))  
-        unless currency(money) == self.class.default_currency
-          post[:divisa] = currency(money)
+        currency = options.fetch(:currency, currency(money))
+        unless currency == self.class.default_currency
+          post[:divisa] = currency
         end
       end
 
@@ -75,9 +75,11 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         JSON.parse(body)["WebServices_Transacciones"]["transaccion"]
+      rescue JSON::ParserError
+        json_error(body)
       end
 
-      def commit(action, parameters)
+      def commit(parameters)
         url = (test? ? test_url : live_url)
         response = parse(ssl_post(url, post_data(parameters)))
         Response.new(
@@ -106,6 +108,13 @@ module ActiveMerchant #:nodoc:
           method: 'transaccion',
           data: parameters
         }.to_query
+      end
+
+      def json_error(response)
+        {
+          "texto" => 'Invalid response received from the PagoFacil API.',
+          "raw_response" => response
+        }
       end
     end
   end
