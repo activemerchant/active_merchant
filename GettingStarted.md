@@ -3,7 +3,7 @@
 Before getting started using Active Merchant, a bit of terminology is needed.
 
 In order to process credit card payments, your application needs to interface with a payment
-gateway. In Active Merchant, these are represented as subclasses of {ActiveMerchant::Billing::Gateway}.
+gateway. In Active Merchant, these are represented as subclasses of `ActiveMerchant::Billing::Gateway`.
 
 ## Gateway Operations
 
