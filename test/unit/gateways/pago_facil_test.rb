@@ -41,6 +41,16 @@ class PagoFacilTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_amex
+    @gateway.expects(:ssl_post).returns(successful_purchase_response_amex)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "305638", response.authorization
+    assert_equal "Transaction has been successful!-Approved", response.message
+    assert response.test?
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
@@ -217,5 +227,13 @@ class PagoFacilTest < Test::Unit::TestCase
 
   def invalid_json_response
     "<b>Notice</b>\n#{failed_purchase_response}"
+  end
+
+  def successful_purchase_response_amex
+    response = JSON.parse(successful_purchase_response)
+    response.
+      fetch("WebServices_Transacciones").
+      fetch("transaccion")["autorizado"] = true
+    response.to_json
   end
 end

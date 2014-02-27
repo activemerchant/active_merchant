@@ -92,7 +92,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response["autorizado"] == "1"
+        response["autorizado"] == "1" ||
+          response["autorizado"] == true
       end
 
       def message_from(response)
