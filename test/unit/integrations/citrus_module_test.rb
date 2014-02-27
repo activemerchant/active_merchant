@@ -15,16 +15,6 @@ class CitrusModuleTest < Test::Unit::TestCase
     }
   end
 
-  def test_credential_based_url_method
-	  ActiveMerchant::Billing::Base.integration_mode = :test
-    assert_equal 'https://sandbox.citruspay.com/gqwnliur74', Citrus.credential_based_url(@options)
-  end
-
-  def test_production_service_url_method
-	  ActiveMerchant::Billing::Base.integration_mode = :production
-    assert_equal 'https://www.citruspay.com/gqwnliur74', Citrus.credential_based_url(@options)
-  end
-
   def test_helper_method
     assert_instance_of Citrus::Helper, Citrus.helper('ORD01','G0JW45KCS3630NX335YX', @options.merge(:amount => 10.0, :currency => 'USD'))
   end
