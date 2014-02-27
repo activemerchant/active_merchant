@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
           service = service_class.new(order, account, options)
           form_options[:method] = service.form_method
           result = []
-          service_url = integration_module.respond_to?(:credential_based_url) ? integration_module.credential_based_url(options) : integration_module.service_url
+          service_url = service.respond_to?(:credential_based_url) ? service.credential_based_url : integration_module.service_url
           result << form_tag(service_url, form_options)
 
           result << capture(service, &proc)
