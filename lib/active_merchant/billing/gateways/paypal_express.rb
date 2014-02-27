@@ -3,9 +3,6 @@ require File.dirname(__FILE__) + '/paypal/paypal_express_response'
 require File.dirname(__FILE__) + '/paypal/paypal_recurring_api'
 require File.dirname(__FILE__) + '/paypal_express_common'
 
-require 'rubygems'
-require 'active_merchant'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PaypalExpressGateway < Gateway
@@ -35,7 +32,6 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'PayPal Express Checkout'
 
       def setup_authorization(money, options = {})
-        puts "here in the local file"
         requires!(options, :return_url, :cancel_return_url)
 
         commit 'SetExpressCheckout', build_setup_request('Authorization', money, options)
