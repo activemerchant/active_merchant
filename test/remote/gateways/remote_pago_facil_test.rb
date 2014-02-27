@@ -42,9 +42,11 @@ class RemotePagoFacilTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-    assert response.authorization
-    assert_equal "Transaction has been successful!-Approved", response.message
+
+    assert_random_response_success(response) do |random_response|
+      assert random_response.authorization
+      assert_equal 'Transaction has been successful!-Approved', random_response.message
+    end
   end
 
   def test_failed_purchase
@@ -66,9 +68,23 @@ class RemotePagoFacilTest < Test::Unit::TestCase
   def test_succesful_purchase_usd
     options = @options.merge(currency: 'USD')
     response = @gateway.purchase(@amount, @credit_card, options)
-    assert_success response
-    assert_equal 'USD', response.params["dataVal"]["divisa"]
-    assert response.authorization
-    assert_equal "Transaction has been successful!-Approved", response.message
+
+    assert_random_response_success(response) do |random_response|
+      assert_equal 'USD', random_response.params['dataVal']['divisa']
+      assert random_response.authorization
+      assert_equal 'Transaction has been successful!-Approved', random_response.message
+    end
+  end
+
+  # Even when all the parameters are correct the PagoFacil's test service will
+  # respond randomly (can be approved or declined). When for this reason the
+  # service returns a "declined" response, the response should have the error
+  # message 'Declined_(General)'
+  def assert_random_response_success(random_response)
+    if random_response.success?
+      yield random_response
+    else
+      assert_equal 'Declined_(General).', random_response.params.fetch('error')
+    end
   end
 end
