@@ -7,6 +7,12 @@ module ActiveMerchant #:nodoc:
       module Moneybookers
         class Notification < ActiveMerchant::Billing::Integrations::Notification
 
+          def initialize(data, options)
+            if options[:credential2].nil?
+              raise ArgumentError, "You need to provide the md5 secret as the option :credential2 to verify that the notification originated from Moneybookers"
+            end
+            super
+          end
 
           def complete?
             status == 'Completed'
@@ -33,11 +39,11 @@ module ActiveMerchant #:nodoc:
               'Error'
             end
           end
-          
+
           def status_code
             params['status']
           end
-          
+
           def item_id
             params['transaction_id']
           end
@@ -46,7 +52,7 @@ module ActiveMerchant #:nodoc:
             params['mb_transaction_id']
           end
 
-          # When was this payment received by the client. 
+          # When was this payment received by the client.
           def received_at
             nil
           end
@@ -54,10 +60,10 @@ module ActiveMerchant #:nodoc:
           def payer_email
             params['pay_from_email']
           end
-         
+
           def receiver_email
             params['pay_to_email']
-          end 
+          end
 
           def md5sig
             params['md5sig']
@@ -88,22 +94,25 @@ module ActiveMerchant #:nodoc:
             params['mb_amount']
           end
 
+          def amount
+            params['mb_amount']
+          end
           # Was this a test transaction?
           def test?
             false
           end
-          
+
           def secret
             @options[:credential2]
           end
-          
-          # Acknowledge the transaction to MoneyBooker. This method has to be called after a new 
+
+          # Acknowledge the transaction to MoneyBooker. This method has to be called after a new
           # apc arrives. It will verify that all the information we received is correct and will return a
           # ok or a fail. The secret (second credential) has to be provided in the parameter :credential2
           # when instantiating the Notification object.
-          # 
+          #
           # Example:
-          # 
+          #
           #   def ipn
           #     notify = Moneybookers.notification(request.raw_post, :credential2 => 'secret')
           #
