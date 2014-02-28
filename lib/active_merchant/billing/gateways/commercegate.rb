@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
         post[:amount]      = amount(money)
         post[:email]       = options[:email]
         post[:currencyCode]= options[:currency] || currency(money)
-        post[:merchAcc]    = options[:merchant]
+        post[:merchAcct]   = options[:merchant]
 
       end
 
