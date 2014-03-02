@@ -98,7 +98,7 @@ cyber_source:
   password: Y
 
 conekta:
-  key: 1tv5yJp3xnVZ7eK67m4h
+  login: 1tv5yJp3xnVZ7eK67m4h
 
 data_cash:
   login: X
@@ -616,7 +616,7 @@ secure_pay_au:
   login: ABC0030
   password: abc123
 
-#  Replace with your serial numbers for the skipjack test environment
+# Replace with your serial numbers for the skipjack test environment
 skipjack:
   login: X
   password: Y
@@ -709,3 +709,7 @@ wirecard_checkout_page:
   secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
   shop_id: ''
   paymenttype: IDL
+
+pay_vector:
+    login: LOGIN
+    password: PASSWORD
