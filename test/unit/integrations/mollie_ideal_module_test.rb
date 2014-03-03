@@ -4,25 +4,46 @@ class MollieIdealModuleTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def test_notification_method
-    assert_instance_of MollieIdeal::Notification, MollieIdeal.notification("transaction_id=482d599bbcc7795727650330ad65fe9b", :partner_id => '1234')
+    assert_instance_of MollieIdeal::Notification, MollieIdeal.notification("id=482d599bbcc7795727650330ad65fe9b", :credential1 => '1234')
   end
 
-  def test_mollie_api_uri
-    MollieIdeal.stubs(:testmode).returns(false)
-	uri = MollieIdeal.mollie_api_uri(:banklist, {})
-	assert_equal 'https://secure.mollie.nl/xml/ideal?a=banklist', uri.to_s
-
-	uri = MollieIdeal.mollie_api_uri(:fetch,
-		:partner_id => '1487031', :bank_id => 9999, :amount => 123, :description => 'order #123',
-		:reporturl => 'https://pingback.com', :returnurl => 'https://return.com'
-	)
-
-	assert_equal 'partner_id=1487031&bank_id=9999&amount=123&description=order+%23123&reporturl=https%3A%2F%2Fpingback.com&returnurl=https%3A%2F%2Freturn.com&a=fetch', uri.query
+  def test_return_method
+    assert_instance_of MollieIdeal::Return, MollieIdeal.return("", :credential1 => '1234')
   end
 
-  def test_mollie_api_url_include_testmode
-    MollieIdeal.stubs(:testmode).returns(true)
-    uri = MollieIdeal.mollie_api_uri(:banklist, {})
-    assert_equal 'https://secure.mollie.nl/xml/ideal?testmode=true&a=banklist', uri.to_s
+  def test_live?
+    ActiveMerchant::Billing::Base.stubs(:integration_mode).returns(:development)
+    assert !MollieIdeal.live?
+
+    ActiveMerchant::Billing::Base.stubs(:integration_mode).returns(:production)
+    assert MollieIdeal.live?
   end
+
+  def test_required_redirect_parameter
+    ActiveMerchant::Billing::Base.stubs(:integration_mode).returns(:development)
+
+    assert MollieIdeal.requires_redirect_param?
+    assert_equal [["TBM Bank", "ideal_TESTNL99"]], MollieIdeal.redirect_param_options
+  end
+
+  def test_retrieve_issuers
+    MollieIdeal.expects(:mollie_api_request).returns(ISSERS_RESPONSE_JSON)
+    issuers = MollieIdeal.retrieve_issuers(@api_key, 'ideal')
+    assert_equal [["TBM Bank", "ideal_TESTNL99"]], issuers
+  end
+
+  ISSERS_RESPONSE_JSON = JSON.parse(<<-JSON)
+    {
+      "totalCount":1,
+      "offset":0,
+      "count":1,
+      "data":[
+        {
+          "id":"ideal_TESTNL99",
+          "name":"TBM Bank",
+          "method":"ideal"
+        }
+      ]
+    }
+  JSON
 end

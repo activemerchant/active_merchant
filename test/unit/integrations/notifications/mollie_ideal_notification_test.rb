@@ -3,58 +3,34 @@ require 'test_helper'
 class MollieIdealNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
-  CHECK_XML_RESPONSE = <<-XML
-      <?xml version="1.0"?>
-      <response>
-          <order>
-              <transaction_id>482d599bbcc7795727650330ad65fe9b</transaction_id>
-              <amount>123</amount>
-              <currency>EUR</currency>
-              <payed>true</payed>
-              <status>Success</status>
-              <consumer>
-                  <consumerName>Hr J Janssen</consumerName>
-                  <consumerAccount>P001234567</consumerAccount>
-                  <consumerCity>Amsterdam</consumerCity>
-              </consumer>
-              <message>This iDEAL-order has successfuly been payed for, and this is the first time you check it.</message>
-          </order>
-      </response>
-  XML
-
   def setup
-    @required_options = { :partner_id => '1234567' }
-    @notification = MollieIdeal::Notification.new("transaction_id=482d599bbcc7795727650330ad65fe9b", @required_options)
+    @required_options = { :credential1 => '1234567' }
+    @notification = MollieIdeal::Notification.new("id=tr_h2PhlwFaX8", @required_options)
   end
 
   def test_accessors
     assert @notification.complete?
-    assert_equal "482d599bbcc7795727650330ad65fe9b", @notification.transaction_id
-    assert_equal "1234567", @notification.partner_id
+    assert_equal "tr_h2PhlwFaX8", @notification.transaction_id
+    assert_equal "1234567", @notification.api_key
   end
 
-  def test_acknowledgement_sets_parameters
-    MollieIdeal.expects(:mollie_api_request).returns(REXML::Document.new(CHECK_XML_RESPONSE))
+  def test_no_acknowledgement_of_pending_transaction
+    MollieIdeal.expects(:mollie_api_request).returns(PENDING_CHECK_PAYMENT_STATUS_RESPONSE)
+    assert !@notification.acknowledge
+    assert_equal 'Pending', @notification.status
+  end
+
+  def test_acknowledgement_sets_params
+    MollieIdeal.expects(:mollie_api_request).returns(SUCCESSFUL_CHECK_PAYMENT_STATUS_RESPONSE)
     assert @notification.acknowledge
 
     assert_equal 'Completed', @notification.status
     assert_equal "EUR", @notification.currency
-    assert_equal 123, @notification.gross_cents
+    assert_equal 12345, @notification.gross_cents
+    assert_equal "123.45", @notification.gross
+    assert_equal Money.new(12345, 'EUR'), @notification.amount
 
-    assert_equal "Hr J Janssen", @notification.params['consumer_name']
-    assert_equal "P001234567", @notification.params['consumer_account']
-    assert_equal "Amsterdam", @notification.params['consumer_city']
-    assert_equal "true", @notification.params['paid']
-  end
-
-  def test_duplicate_acknowledgement
-    duplicate_check_response = CHECK_XML_RESPONSE.
-      sub('<status>Success</status>', '<status>CheckedBefore</status>').
-      sub('<payed>true</payed>', '<payed>false</payed>')
-
-    MollieIdeal.expects(:mollie_api_request).returns(REXML::Document.new(duplicate_check_response))
-    assert !@notification.acknowledge
-    assert_equal 'Failed', @notification.status
+    assert_equal "123", @notification.item_id
   end
 
   def test_respond_to_acknowledge
@@ -62,12 +38,47 @@ class MollieIdealNotificationTest < Test::Unit::TestCase
   end
 
   def test_raises_without_required_options
-    assert_raises(ArgumentError) { MollieIdeal::Notification.new("", :partner_id => '123') }
-    assert_raises(ArgumentError) { MollieIdeal::Notification.new('transaction_id=123', {}) }
+    assert_raises(ArgumentError) { MollieIdeal::Notification.new("", :credential1 => '123') }
+    assert_raises(ArgumentError) { MollieIdeal::Notification.new('id=123', {}) }
   end
 
-  def test_accepts_crential1_instead_of_partner_id
-    notification = MollieIdeal::Notification.new('transaction_id=123', :credential1 => '123')
-    assert_equal '123', notification.partner_id
-  end
+  SUCCESSFUL_CHECK_PAYMENT_STATUS_RESPONSE = JSON.parse(<<-JSON)
+    {
+      "id":"tr_h2PhlwFaX8",
+      "mode":"test",
+      "createdDatetime":"2014-03-03T10:17:05.0Z",
+      "status":"paid",
+      "amount":"123.45",
+      "description":"My order description",
+      "method":"ideal",
+      "metadata":{
+        "order":"123"
+      },
+      "details":null,
+      "links":{
+        "paymentUrl":"https://www.mollie.nl/paymentscreen/ideal/testmode?transaction_id=20a5a25c2bce925b4fabefd0410927ca&bank_trxid=0148703115482464",
+        "redirectUrl":"https://example.com/return"
+      }
+    }
+  JSON
+
+  PENDING_CHECK_PAYMENT_STATUS_RESPONSE = JSON.parse(<<-JSON)
+    {
+      "id":"tr_h2PhlwFaX8",
+      "mode":"test",
+      "createdDatetime":"2014-03-03T10:17:05.0Z",
+      "status":"open",
+      "amount":"123.45",
+      "description":"My order description",
+      "method":"ideal",
+      "metadata":{
+        "order":"123"
+      },
+      "details":null,
+      "links":{
+        "paymentUrl":"https://www.mollie.nl/paymentscreen/ideal/testmode?transaction_id=20a5a25c2bce925b4fabefd0410927ca&bank_trxid=0148703115482464",
+        "redirectUrl":"https://example.com/return"
+      }
+    }
+  JSON
 end

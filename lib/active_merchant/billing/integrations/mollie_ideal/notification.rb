@@ -6,11 +6,11 @@ module ActiveMerchant #:nodoc:
       module MollieIdeal
         class Notification < ActiveMerchant::Billing::Integrations::Notification
 
-          def initialize(query_string, options = {})
+          def initialize(post_arguments, options = {})
             super
 
             raise ArgumentError, "The transaction_id needs to be included in the query string." if transaction_id.nil?
-            raise ArgumentError, "The partner_id or credential1 option needs to be set." if partner_id.blank?
+            raise ArgumentError, "The credential1 option needs to be set to the Mollie API key." if api_key.blank?
           end
 
           def complete?
@@ -18,49 +18,56 @@ module ActiveMerchant #:nodoc:
           end
 
           def item_id
-            params['item_id']
+            params['metadata']['order']
           end
 
           def transaction_id
-            params['transaction_id']
+            params['id']
+          end
+
+          def api_key
+            @options[:credential1]
+          end
+
+          def currency
+            "EUR"
+          end
+
+          def amount
+            Money.new(gross_cents, "EUR")
           end
 
           # the money amount we received in X.2 decimal.
           def gross
-            BigDecimal.new(gross_cents) / 100
+            @params['amount']
           end
 
           def gross_cents
-            params['amount']
+            (BigDecimal.new(@params['amount'], 2) * 100).to_i
           end
 
           def status
-            return 'Pending' if params['paid'].nil?
-            params['paid'] == 'true' ? 'Completed' : 'Failed'
+            case @params['status']
+              when 'open';                 'Pending'
+              when 'cancelled', 'expired'; 'Failure'
+              when 'paidout', 'paid';      'Completed'
+              else                         'Failure'
+            end
           end
 
-          def currency
-            params['currency']
-          end
 
-          def partner_id
-            @options[:partner_id] || @options[:credential1]
+
+          def test?
+            @params['mode'] == 'test'
           end
 
           def acknowledge(authcode = nil)
-            xml = MollieIdeal.mollie_api_request(:check, :partner_id => partner_id, :transaction_id => transaction_id)
+            @params = check_payment_status(transaction_id)
+            status == 'Completed'
+          end
 
-            params['amount']           = MollieIdeal.extract_response_parameter(xml, 'amount').to_i
-            params['paid']             = MollieIdeal.extract_response_parameter(xml, 'payed')
-            params['currency']         = MollieIdeal.extract_response_parameter(xml, 'currency')
-            params['consumer_name']    = MollieIdeal.extract_response_parameter(xml, 'consumerName')
-            params['consumer_account'] = MollieIdeal.extract_response_parameter(xml, 'consumerAccount')
-            params['consumer_city']    = MollieIdeal.extract_response_parameter(xml, 'consumerCity')
-            params['message']          = MollieIdeal.extract_response_parameter(xml, 'city')
-            params['status']           = MollieIdeal.extract_response_parameter(xml, 'status')
-            params['message']          = MollieIdeal.extract_response_parameter(xml, 'message')
-
-            params['status'] != 'CheckedBefore'
+          def check_payment_status(transaction_id)
+            MollieIdeal.check_payment_status(@options[:credential1], transaction_id)
           end
         end
       end

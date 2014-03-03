@@ -7,48 +7,30 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module MollieIdeal
 
-        MOLLIE_IDEAL_API_URL = 'https://secure.mollie.nl/xml/ideal'.freeze
+        MOLLIE_API_V1_URI = 'https://api.mollie.nl/v1/'.freeze
 
-        mattr_accessor :production_banklist
-        self.production_banklist = [
-          ['ABN AMRO', '0031'],
-          ['ASN Bank', '0761'],
-          ['Friesland Bank', '0091'],
-          ['ING', '0721'],
-          ['Knab', '0801'],
-          ['Rabobank', '0021'],
-          ['RegioBank', '0771'],
-          ['SNS Bank', '0751'],
-          ['Triodos Bank', '0511'],
-          ['van Lanschot', '0161']
-        ]
+        mattr_accessor :live_issuers
+        self.live_issuers = {
+          'ideal' => [
+            ["ABN AMRO", "ideal_ABNANL2A"],
+            ["ASN Bank", "ideal_ASNBNL21"],
+            ["Friesland Bank", "ideal_FRBKNL2L"],
+            ["ING", "ideal_INGBNL2A"],
+            ["Knab", "ideal_KNABNL2H"],
+            ["Rabobank", "ideal_RABONL2U"],
+            ["RegioBank", "ideal_RBRBNL21"],
+            ["SNS Bank", "ideal_SNSBNL2A"],
+            ["Triodos Bank", "ideal_TRIONL2U"],
+            ["van Lanschot", "ideal_FVLBNL22"]
+          ]
+        }
 
-        mattr_accessor :testmode_banklist
-        self.testmode_banklist = [
-          ['TBM Bank', '9999']
-        ]
-
-        def self.mollie_api_uri(action, get_params)
-          get_params = get_params.merge('testmode' => 'true') if testmode
-          params = get_params.merge('a' => action).map do |key, value|
-            "#{CGI.escape(key.to_s)}=#{CGI.escape(value.to_s)}"
-          end
-
-          URI.parse("#{MOLLIE_IDEAL_API_URL}?#{params.join('&')}")
-        end
-
-        def self.mollie_api_request(action, get_params)
-          uri = mollie_api_uri(action, get_params)
-          site = Net::HTTP.new(uri.host, uri.port)
-          site.use_ssl = (uri.scheme == 'https')
-          site.verify_mode = OpenSSL::SSL::VERIFY_NONE
-          response = site.get(uri.to_s)
-          REXML::Document.new(response.body)
-        end
-
-        def self.extract_response_parameter(xml, name)
-          REXML::XPath.first(xml, "//#{name}").try(:text)
-        end
+        mattr_accessor :test_issuers
+        self.test_issuers = {
+          'ideal' => [
+            ["TBM Bank", "ideal_TESTNL99"]
+          ]
+        }
 
         def self.notification(post, options = {})
           Notification.new(post, options)
@@ -58,24 +40,60 @@ module ActiveMerchant #:nodoc:
           Return.new(post, options)
         end
 
-        def self.testmode
-          ActiveMerchant::Billing::Base.integration_mode != :production
+        def self.live?
+          ActiveMerchant::Billing::Base.integration_mode == :production
         end
 
-        def self.banklist(test = nil)
-          test = self.testmode if test.nil?
-          xml = mollie_api_request(:banklist, {})
-          bank_list = []
-          REXML::XPath.each(xml, "//bank") do |match|
-            name    = REXML::XPath.first(match, "./bank_name").text
-            bank_id = REXML::XPath.first(match, "./bank_id").text
-            bank_list << [name, bank_id]
+        def self.requires_redirect_param?
+          true
+        end
+
+        def self.redirect_param_options(method = 'ideal')
+          live? ? live_issuers[method] : test_issuers[method]
+        end
+
+        def self.retrieve_issuers(token, method = 'ideal')
+          response = mollie_api_request(token, :get, "issuers")
+          response['data']
+            .select { |issuer| issuer['method'] == method }
+            .map { |issuer| [issuer['name'], issuer['id']] }
+        end
+
+        def self.create_payment(token, params)
+          MollieIdeal.mollie_api_request(token, :post, 'payments', params)
+        end
+
+        def self.check_payment_status(token, payment_id)
+          MollieIdeal.mollie_api_request(token, :get, "payments/#{payment_id}")
+        end
+
+        def self.mollie_api_request(token, http_method, resource, params = nil)
+          uri = URI.parse(MOLLIE_API_V1_URI + resource)
+
+          http = Net::HTTP.new(uri.host, uri.port)
+          http.use_ssl = (uri.scheme == 'https')
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+          request = case http_method
+            when :get;  Net::HTTP::Get.new(uri.path)
+            when :post; Net::HTTP::Post.new(uri.path)
+            else raise ActiveMerchant::Billing::Error, "Request method #{http_method} not supported"
           end
-          bank_list
-        end
 
-        def self.redirect_param_options
-          testmode ? self.testmode_banklist : self.production_banklist
+          request["Authorization"] = "Bearer #{token}"
+          request.body = JSON.dump(params) unless params.nil?
+
+          response = http.request(request)
+          case response
+          when Net::HTTPSuccess
+            puts response.body
+            JSON.parse(response.body)
+          when Net::HTTPClientError
+            message = JSON.parse(response.body).fetch('error', {}).fetch('message', 'Unknown Mollie error')
+            raise ActiveMerchant::Billing::Error, "Mollie returned error #{response.code}: #{message}"
+          else
+            raise ActiveMerchant::Billing::Error, "Mollie returned unexpected response status #{response.code}."
+          end
         end
       end
     end
