@@ -3,15 +3,12 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Klarna
         class Helper < ActiveMerchant::Billing::Integrations::Helper
+          attr_reader :cart_items
+
           mapping :country, 'purchase_country'
           mapping :currency, 'purchase_currency'
           mapping :return_url, 'merchant_confirmation_uri'
           mapping :notify_url, 'merchant_push_uri'
-
-          # Add these until we have proper cart/line item support from Shopify
-          mapping :order, 'cart_item-1_reference'
-          mapping :invoice, 'cart_item-1_name'
-          mapping :amount, 'cart_item-1_unit_price'
 
           %w(locale platform_type merchant_digest merchant_id).each do |field|
             mapping field.to_sym, field
@@ -20,15 +17,14 @@ module ActiveMerchant #:nodoc:
           def initialize(order, account, options = {})
             super
             @shared_secret = options[:credential2]
-            @line_items = options[:line_items]
 
+            self.platform_type = application_id
             self.country = options[:country]
             self.locale = guess_locale_based_on_country(options[:country])
-            self.merchant_digest = generate_merchant_digest
+            self.cart_items = options[:cart_items]
             self.merchant_id = account
 
-            self.platform_type = 'a57b5192-7080-443c-9867-c5346b649dc0'
-            STDERR.puts "Need to confirm actual platform_type value"
+            self.merchant_digest = generate_merchant_digest
           end
 
           def cancel_return_url(url)
@@ -37,16 +33,23 @@ module ActiveMerchant #:nodoc:
             end
           end
 
+          def cart_items=(items)
+            @cart_items = items ||= []
+
+            items.each_with_index do |item, i|
+              add_field("cart_item-#{i+1}_type", item.type.to_s)
+              add_field("cart_item-#{i+1}_reference", item.reference.to_s)
+              add_field("cart_item-#{i+1}_name", item.name.to_s)
+              add_field("cart_item-#{i+1}_quantity", item.quantity.to_s)
+              add_field("cart_item-#{i+1}_unit_price", item.unit_price.to_s)
+              add_field("cart_item-#{i+1}_tax_rate", item.tax_rate.to_s)
+            end
+          end
+
           private
 
-          def generate_merchant_digest
-            # Workaround for not having easy access to cart line items
-            cart_items = [{'type' => 'physical',
-                           'reference' => order,
-                           'quantity' => 1,
-                           'unit_price' => amount,
-                           'tax_rate' => 0}]
-            Klarna.sign(@fields, cart_items, @shared_secret)
+          def generate_merchant_digest            
+            Klarna.sign(@fields, @cart_items, @shared_secret)
           end
 
           def guess_locale_based_on_country(country_code)
