@@ -100,8 +100,9 @@ module ActiveMerchant #:nodoc:
 
         def method_missing(method_id, *args)
           method_id = method_id.to_s.gsub(/=$/, '').to_sym
-          # Return and do nothing if the mapping was not found. This allows
-          # For easy substitution of the different integrations
+          
+          # Return and do nothing if the mapping was not found. This allows 
+          # for easy substitution of the different integrations
           return if mappings[method_id].nil?
 
           mapping = mappings[method_id]
