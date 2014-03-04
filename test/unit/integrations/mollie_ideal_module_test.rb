@@ -27,7 +27,7 @@ class MollieIdealModuleTest < Test::Unit::TestCase
   end
 
   def test_retrieve_issuers
-    MollieIdeal.expects(:mollie_api_request).returns(ISSERS_RESPONSE_JSON)
+    MollieIdeal.expects(:get_request).returns(ISSERS_RESPONSE_JSON)
     issuers = MollieIdeal.retrieve_issuers(@api_key, 'ideal')
     assert_equal [["TBM Bank", "ideal_TESTNL99"]], issuers
   end

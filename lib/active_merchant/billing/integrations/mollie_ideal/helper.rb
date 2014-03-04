@@ -4,6 +4,8 @@ module ActiveMerchant #:nodoc:
       module MollieIdeal
         class Helper < ActiveMerchant::Billing::Integrations::Helper
 
+          attr_reader :transaction_id
+
           def initialize(order, account, options = {})
             @order           = order
             @account         = account
@@ -18,8 +20,11 @@ module ActiveMerchant #:nodoc:
           end
 
           def credential_based_url
-            uri = request_redirect_uri
-            set_form_fields_from_uri(uri)
+            response = request_redirect
+            @transaction_id = response['id']
+
+            uri = URI.parse(response['links']['paymentUrl'])
+            set_form_fields_for_redirect(uri)
             uri.query = ''
             uri.to_s.sub(/\?\z/, '')
           end
@@ -28,7 +33,7 @@ module ActiveMerchant #:nodoc:
             "GET"
           end
 
-          def set_form_fields_from_uri(uri)
+          def set_form_fields_for_redirect(uri)
             CGI.parse(uri.query).each do |key, value|
               if value.is_a?(Array) && value.length == 1
                 @fields[key] = value.first
@@ -38,8 +43,8 @@ module ActiveMerchant #:nodoc:
             end
           end
 
-          def request_redirect_uri
-            response = MollieIdeal.create_payment(@account,
+          def request_redirect
+            MollieIdeal.create_payment(@account,
 
               # In decimal notation, e.g. 123.45
               :amount => @options[:amount],
@@ -54,8 +59,6 @@ module ActiveMerchant #:nodoc:
               :redirectUrl => @options[:return_url],
               :metadata => { :order => order }
             )
-
-            URI.parse(response['links']['paymentUrl'])
           end
         end
       end
