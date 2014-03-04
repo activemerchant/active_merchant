@@ -8,6 +8,7 @@ class KlarnaNotificationTest < Test::Unit::TestCase
   end
 
   def test_accessors
+    skip "Implement once we have a remote test harness for Klarna"
     assert @klarna.complete?
     assert_equal "", @klarna.status
     assert_equal "", @klarna.transaction_id
@@ -19,6 +20,7 @@ class KlarnaNotificationTest < Test::Unit::TestCase
   end
 
   def test_compositions
+    skip "Implement once we have a remote test harness for Klarna"
     assert_equal Money.new(3166, 'USD'), @klarna.amount
   end
 
@@ -31,6 +33,7 @@ class KlarnaNotificationTest < Test::Unit::TestCase
   end
 
   def test_respond_to_acknowledge
+    skip "Implement once we have a remote test harness for Klarna"
     assert @klarna.respond_to?(:acknowledge)
   end
 
