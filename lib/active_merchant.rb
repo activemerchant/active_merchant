@@ -27,6 +27,7 @@ require 'active_support/core_ext/hash/indifferent_access'
 require 'active_support/core_ext/hash/conversions'
 require 'active_support/core_ext/object/conversions'
 require 'active_support/core_ext/class/attribute'
+require 'active_support/core_ext/enumerable.rb'
 
 if(!defined?(ActiveSupport::VERSION) || (ActiveSupport::VERSION::STRING < "4.1"))
   require 'active_support/core_ext/class/attribute_accessors'
