@@ -153,16 +153,16 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert_success void
   end
 
-  def test_successful_purchase_and_credit
+  def test_successful_purchase_and_refund
     assert purchase = @gateway.purchase(@amount, @mastercard, @options)
     assert_success purchase
 
-    assert credit = @gateway.credit(@amount, purchase.authorization,
+    assert refund = @gateway.refund(@amount, purchase.authorization,
       :description => 'Crediting trx',
       :order_id => generate_unique_id
     )
 
-    assert_success credit
+    assert_success refund
   end
 
   def test_successful_visa_purchase
