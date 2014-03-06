@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* SagePay: Add support for ReferrerID [markabe]
+
 == Version 1.42.6 (February 24, 2014)
 
 * Litle: Truncate order_id [duff]
