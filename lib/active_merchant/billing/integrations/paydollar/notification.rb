@@ -37,7 +37,8 @@ module ActiveMerchant #:nodoc:
           def acknowledge(authcode = nil)
             # paydollar supports multiple signature keys, therefore we need to check if any
             # of their signatures matches ours
-            @params['secureHash'].split(',').include? generate_secure_hash
+            return false unless hash = @params['secureHash']
+            hash.split(',').include? generate_secure_hash
           end
 
           private
