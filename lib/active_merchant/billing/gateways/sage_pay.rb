@@ -293,6 +293,10 @@ module ActiveMerchant #:nodoc:
           :VPSProtocol => "2.23"
         )
 
+        if (application_id.present? && application_id != "ActiveMerchant")
+          parameters.update( :ReferrerID => application_id)
+        end
+
         parameters.collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
