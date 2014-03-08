@@ -42,7 +42,7 @@ module ActiveMerchant #:nodoc:
               add_field("cart_item-#{i+1}_name", item.name.to_s)
               add_field("cart_item-#{i+1}_quantity", item.quantity.to_s)
               add_field("cart_item-#{i+1}_unit_price", item.unit_price.to_s)
-              add_field("cart_item-#{i+1}_tax_rate", item.tax_rate.to_s)
+              add_field("cart_item-#{i+1}_tax_rate", sprintf("%.2f", item.tax_rate))
             end
           end
 

@@ -52,7 +52,7 @@ class KlarnaHelperTest < Test::Unit::TestCase
     assert_field 'cart_item-1_name', item.name.to_s
     assert_field 'cart_item-1_quantity', item.quantity.to_s
     assert_field 'cart_item-1_unit_price', item.unit_price.to_s
-    assert_field 'cart_item-1_tax_rate', item.tax_rate.to_s
+    assert_field 'cart_item-1_tax_rate', sprintf("%.2f", item.tax_rate)
   end
 
   private
