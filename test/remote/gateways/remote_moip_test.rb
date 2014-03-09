@@ -36,6 +36,15 @@ class RemoteMoipTest < Test::Unit::TestCase
             :identity_document => '52211670695',
         }
     }
+
+    @payment_slip_options = {
+        :payment_slip => {
+            :expiration_days => 3,
+            :instruction_line_1 => 'Instruction line 1',
+            :instruction_line_2 => 'Instruction line 2',
+            :instruction_line_3 => 'Instruction line 3'
+        }
+    }
   end
 
   def test_successful_authorize
@@ -62,7 +71,7 @@ class RemoteMoipTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_payment_slip
-    assert response = @gateway.purchase(@amount, 'boleto_bancario', @options)
+    assert response = @gateway.purchase(@amount, 'boleto_bancario', @options.merge(@payment_slip_options))
     assert_success response
     assert_equal 'Requisição processada com sucesso', response.message
   end
