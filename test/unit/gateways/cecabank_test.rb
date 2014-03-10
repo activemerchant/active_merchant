@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class CecabankTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = CecabankGateway.new(
       :merchant_id  => '12345678',
@@ -26,6 +28,14 @@ class CecabankTest < Test::Unit::TestCase
     assert_success response
     assert_equal '12345678901234567890|202215722', response.authorization
     assert response.test?
+  end
+
+  def test_expiration_date_sent_correctly
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/Caducidad=\d{4}09&/, data, "Expected expiration date format is yyyymm")
+    end.respond_with(successful_purchase_response)
   end
 
   def test_unsuccessful_request
