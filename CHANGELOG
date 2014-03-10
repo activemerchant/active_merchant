@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * SagePay: Add support for ReferrerID [markabe]
+* Cecabank: Fix expiration date formatting [duff]
 
 == Version 1.42.6 (February 24, 2014)
 
