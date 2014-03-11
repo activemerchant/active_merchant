@@ -22,6 +22,7 @@
 * Wirecard: Add support for reference purchases [timtait]
 * Worldpay: Add support for external references [matsubo]
 * Balanced: Voiding a capture is not allowed [duff]
+* Add HPS gateway (Heartland Payment Systems) [SecureSubmit]
 
 == Version 1.43.1 (May 1, 2014)
 
