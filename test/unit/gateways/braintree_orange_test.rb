@@ -115,6 +115,14 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     assert_equal 'N', response.cvv_result['code']
   end
 
+  def test_add_eci
+    @gateway.expects(:commit).with { |_, _, parameters| !parameters.has_key?(:billing_method) }
+    @gateway.purchase(@amount, @credit_card, {})
+
+    @gateway.expects(:commit).with { |_, _, parameters| parameters[:billing_method] == 'recurring' }
+    @gateway.purchase(@amount, @credit_card, {:eci => 'recurring'})
+  end
+
   private
 
   def successful_purchase_response
