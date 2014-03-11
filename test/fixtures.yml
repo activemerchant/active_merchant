@@ -709,3 +709,10 @@ wirecard_checkout_page:
   secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
   shop_id: ''
   paymenttype: IDL
+
+wepay:
+  client_id: 187493
+  account_id: '1311201206'
+  access_token:  'STAGE_4c6a319f9b6ef50e596ee3ea0b845f2fecd50fa0d8bc0b7483bd61c2018dbf5c'
+  use_staging: true
+
