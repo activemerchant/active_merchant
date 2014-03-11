@@ -45,13 +45,29 @@ module ActiveMerchant #:nodoc:
         super(options)
       end
 
-      def authorize(money, creditcard, options = {})
+      def purchase(money, payment_method, options = {})
+        post = WepayPostData.new
+        if payment_method.is_a?(String)
+          purchase_with_token(post, money, payment_method, options)
+        else
+          MultiResponse.run do |r|
+            r.process { add_card(payment_method, options) }
+            r.process { purchase_with_token(post, money, r.authorization, options) }
+          end
+        end
+      end
+
+      def authorize(money, payment_method, options = {})
         post = WepayPostData.new
         post[:auto_capture] = 0
-        response = add_creditcard(post, creditcard, options) if creditcard
-        return response unless response.success?
-        add_product_data(post, money, options)
-        commit(Actions::CHECKOUT_CREATE, post)
+        if payment_method.is_a?(String)
+          purchase_with_token(post, money, payment_method, options)
+        else
+          MultiResponse.run do |r|
+            r.process { add_card(payment_method, options) }
+            r.process { purchase_with_token(post, money, r.authorization, options) }
+          end
+        end
       end
 
       def capture(checkout_id, options = {})
@@ -67,14 +83,6 @@ module ActiveMerchant #:nodoc:
         commit(Actions::CHECKOUT_CANCEL, post)
       end
 
-      def purchase(money, creditcard, options = {})
-        post = WepayPostData.new
-        response = add_creditcard(post, creditcard, options) if creditcard
-        return response unless response.success?
-        add_product_data(post, money, options)
-        commit(Actions::CHECKOUT_CREATE, post)
-      end
-
       def refund(money, checkout_id, options = {})
         post = WepayPostData.new
         post[:checkout_id] = checkout_id
@@ -86,7 +94,37 @@ module ActiveMerchant #:nodoc:
         commit(Actions::CHECKOUT_REFUND, post)
       end
 
+      # https://www.wepay.com/developer/reference/credit_card#create
+      def add_card(creditcard, options = {})
+        post = WepayPostData.new
+        post[:client_id] = @options[:client_id]
+        post[:user_name] = "#{creditcard.first_name} #{creditcard.last_name}"
+        post[:email] = options[:email]
+        post[:cc_number] = creditcard.number
+        post[:cvv] = creditcard.verification_value
+        post[:expiration_month] = creditcard.month
+        post[:expiration_year] = creditcard.year
+        post[:original_ip] = options[:ip] if options[:ip]
+        post[:original_device] = options[:device_fingerprint] if options[:device_fingerprint]
+        if billing_address = options[:billing_address] || options[:address]
+          post[:address] = {
+            "address1" => billing_address[:address1],
+            "city"     => billing_address[:city],
+            "state"    => billing_address[:state],
+            "country"  => billing_address[:country],
+            "zip"      => billing_address[:zip]
+          }
+        end
+        commit(Actions::CREDIT_CARD_CREATE, post, "credit_card_id")
+      end
+
       private
+
+      def purchase_with_token(post, money, token, options)
+        add_token(post, token)
+        add_product_data(post, money, options)
+        commit(Actions::CHECKOUT_CREATE, post)
+      end
 
       def add_product_data(post, money, options)
         # https://www.wepay.com/developer/reference/checkout#create
@@ -112,45 +150,18 @@ module ActiveMerchant #:nodoc:
         post[:preapproval_id] = options[:preapproval_id] if options[:preapproval_id]
         post[:prefill_info] = options[:prefill_info] if options[:prefill_info]
         post[:funding_sources] = options[:funding_sources] if options[:funding_sources]
-        post[:payment_method_id] = options[:payment_method_id] if options[:payment_method_id]
-        post[:payment_method_type] = options[:payment_method_type] if options[:payment_method_type]
       end
 
-      def add_creditcard(post, creditcard, options)
-        # https://www.wepay.com/developer/reference/credit_card#create
-        cc_post = WepayPostData.new
-        cc_post[:client_id] = @options[:client_id]
-        cc_post[:user_name] = "#{creditcard.first_name} #{creditcard.last_name}"
-        cc_post[:email] = options[:email]
-        cc_post[:cc_number] = creditcard.number
-        cc_post[:cvv] = creditcard.verification_value
-        cc_post[:expiration_month] = creditcard.month
-        cc_post[:expiration_year] = creditcard.year
-        cc_post[:original_ip] = options[:ip] if options[:ip]
-        cc_post[:original_device] = options[:device_fingerprint] if options[:device_fingerprint]
-        if billing_address = options[:billing_address] || options[:address]
-          cc_post[:address] = {
-            "address1" => billing_address[:address1],
-            "city"     => billing_address[:city],
-            "state"    => billing_address[:state],
-            "country"  => billing_address[:country],
-            "zip"      => billing_address[:zip]
-          }
-        end
-
-        response = commit(Actions::CREDIT_CARD_CREATE, cc_post)
-        if response.success?
-          post[:payment_method_id] = response.params["credit_card_id"] if response.params["credit_card_id"]
-          post[:payment_method_type] = "credit_card" if response.params["credit_card_id"]
-        end
-        response
+      def add_token(post, token)
+        post[:payment_method_id]   = token
+        post[:payment_method_type] = "credit_card"
       end
 
       def parse(response)
         JSON.parse(response)
       end
 
-      def commit(action, params)
+      def commit(action, params, authorization_field = "checkout_id")
         success = false
         begin
           response = service_call(action, params)
@@ -159,7 +170,7 @@ module ActiveMerchant #:nodoc:
           response = parse(e.response.body)
         end
         Response.new(success, (success)? "Success" : "Failed", response,
-                 :authorization => response["checkout_id"], :test => test?)
+                 :authorization => response[authorization_field], :test => test?)
       end
 
       def post_data(parameters = {})

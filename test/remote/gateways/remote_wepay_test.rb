@@ -33,6 +33,34 @@ class RemoteWepayTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_purchase_with_token
+    assert response = @gateway.add_card(@credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+    payment_method = "#{response.authorization}"
+    assert response = @gateway.purchase(@amount, payment_method, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_unsuccessful_purchase_with_token
+    payment_method = "12345"
+    assert response = @gateway.purchase(@amount, payment_method, @options)
+    assert_failure response
+  end
+
+  def test_successful_add_card
+    assert response = @gateway.add_card(@credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_unsuccessful_add_card
+    options = @options.dup
+    assert response = @gateway.add_card(@declined_card, @options)
+    assert_failure response
+  end
+
   def test_successful_refund
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
