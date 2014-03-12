@@ -9,15 +9,18 @@ class MollieIdealHelperTest < Test::Unit::TestCase
       :amount => 500,
       :currency => 'EUR',
       :redirect_param => 'ideal_TESTNL99',
-      :return_url => 'https://return.com',
-      :metadata => { :my_reference => 'unicorn' }
+      :return_url => 'https://return.com'
     }
 
     @helper = MollieIdeal::Helper.new('order-500','1234567', @required_options)
   end
 
   def test_credential_based_url
-    MollieIdeal.expects(:post_request).returns(CREATE_PAYMENT_RESPONSE_JSON)
+    MollieIdeal.expects(:post_request)
+      .with('1234567', 'payments', :amount => 500, :description => 'My shop', :method => 'ideal', :issuer => 'ideal_TESTNL99', :redirectUrl => 'https://return.com', :metadata => {:order => 'order-500'})
+      .returns(CREATE_PAYMENT_RESPONSE_JSON)
+
+    assert_equal Hash.new, @helper.fields
     uri = @helper.credential_based_url
 
     assert_equal 'tr_djsfilasX', @helper.transaction_id

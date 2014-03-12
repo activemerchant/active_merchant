@@ -33,10 +33,6 @@ module ActiveMerchant #:nodoc:
             "EUR"
           end
 
-          def amount
-            Money.new(gross_cents, "EUR")
-          end
-
           # the money amount we received in X.2 decimal.
           def gross
             @params['amount']
@@ -49,13 +45,10 @@ module ActiveMerchant #:nodoc:
           def status
             case @params['status']
               when 'open';                 'Pending'
-              when 'cancelled', 'expired'; 'Failure'
               when 'paidout', 'paid';      'Completed'
               else                         'Failure'
             end
           end
-
-
 
           def test?
             @params['mode'] == 'test'

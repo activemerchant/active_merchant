@@ -18,17 +18,20 @@ module ActiveMerchant #:nodoc:
         end
 
         def initialize(order, account, options = {})
-          options.assert_valid_keys([:amount, :currency, :test, :credential2, :credential3, :credential4, :country, :account_name, :transaction_type, :authcode])
-          @fields          = {}
-          @raw_html_fields = []
-          @test            = options[:test]
-          self.order       = order
-          self.account     = account
-          self.amount      = options[:amount]
-          self.currency    = options[:currency]
-          self.credential2 = options[:credential2]
-          self.credential3 = options[:credential3]
-          self.credential4 = options[:credential4]
+          options.assert_valid_keys([:amount, :currency, :test, :credential2, :credential3, :credential4, :country, :account_name, :transaction_type, :authcode, :notify_url, :return_url, :redirect_param])
+          @fields             = {}
+          @raw_html_fields    = []
+          @test               = options[:test]
+          self.order          = order
+          self.account        = account
+          self.amount         = options[:amount]
+          self.currency       = options[:currency]
+          self.credential2    = options[:credential2]
+          self.credential3    = options[:credential3]
+          self.credential4    = options[:credential4]
+          self.notify_url     = options[:notify_url]
+          self.return_url     = options[:return_url]
+          self.redirect_param = options[:redirect_param]
         end
 
         def self.mapping(attribute, options = {})
