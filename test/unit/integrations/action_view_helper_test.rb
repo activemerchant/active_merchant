@@ -15,6 +15,14 @@ class ActionViewHelperTest < Test::Unit::TestCase
     assert_raise(ArgumentError){ payment_service_for }
   end
 
+  def test_payment_service_rendering_error
+    ActiveMerchant::Billing::Integrations::Bogus::Helper.any_instance.stubs(:form_fields).raises(StandardError.new('Standard Error'))
+
+    assert_raise(ActiveMerchant::Billing::Integrations::ActionViewHelperError) do
+      payment_service_for('order-1', 'test', :service => :bogus){}
+    end
+  end
+
   protected
   def protect_against_forgery?
     false
