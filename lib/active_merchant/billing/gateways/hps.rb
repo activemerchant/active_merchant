@@ -16,8 +16,12 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options={})
         requires!(options, :secret_api_key)
-        @secret = options[:secret_api_key]
-        @service = initialize_service
+        @secret_api_key = options[:secret_api_key]
+        @developer_id = options[:developer_id] if options[:developer_id]
+        @version_number = options[:version_number] if options[:version_number]
+        @site_trace = options[:site_trace] if options[:site_trace]
+
+        @exception_mapper = Hps::ExceptionMapper.new()
         super
       end
 
