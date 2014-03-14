@@ -3,7 +3,7 @@
 * SagePay: Add support for ReferrerID [markabe]
 * Cecabank: Fix expiration date formatting [duff]
 * Add WePay gateway [faizalzakaria]
-* SmartPs: Add ECI option to SmartPs
+* SmartPs: Add ECI option to SmartPs [odorcicd]
 
 == Version 1.42.6 (February 24, 2014)
 
