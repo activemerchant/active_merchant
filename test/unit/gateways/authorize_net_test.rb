@@ -255,7 +255,9 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['US', 'CA', 'GB'], AuthorizeNetGateway.supported_countries
+    ['US', 'CA', 'AU', 'VA'].each do |country|
+      assert AuthorizeNetGateway.supported_countries.include?(country)
+    end
   end
 
   def test_supported_card_types
