@@ -85,7 +85,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 
 * [App55](https://www.app55.com/) - AU, BR, CA, CH, CL, CN, CO, CZ, DK, EU, GB, HK, HU, ID, IS, JP, KE, KR, MX, MY, NO, NZ, PH, PL, TH, TW, US, VN, ZA
 * [Authorize.Net CIM](http://www.authorize.net/) - US
-* [Authorize.Net](http://www.authorize.net/) - US, CA, GB
+* [Authorize.Net](http://www.authorize.net/) - US, CA, GB, AU, AD, GR, PT, AT, HU, RO, BE, IE, SM, BG, IT, SK, CY, LI, SI, CZ, LU, ES, DK, MT, SE, FI, MC, CH, FR, NL, TR, DE, NO, GB, GI, PL, VA
 * [Balanced](https://www.balancedpayments.com/) - US
 * [Banwire](http://www.banwire.com/) - MX
 * [Barclays ePDQ Extra Plus](http://www.barclaycard.co.uk/business/accepting-payments/epdq-ecomm/) - GB
