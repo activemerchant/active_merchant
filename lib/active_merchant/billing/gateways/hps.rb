@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://developer.heartlandpaymentsystems.com/SecureSubmit/'
       self.display_name = 'Heartland Payment Systems'
 
-      self.money_format = :dollars
+      self.money_format = :cents
 
       def initialize(options={})
         requires!(options, :secret_api_key)
