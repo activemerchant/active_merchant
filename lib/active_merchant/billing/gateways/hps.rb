@@ -1,4 +1,5 @@
-require File.dirname(__FILE__) + '/hps/hps'
+require File.dirname(__FILE__) + '/hps/infrastructure/hps_exception_mapper'
+require File.dirname(__FILE__) + '/hps/infrastructure/sdk_codes'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
