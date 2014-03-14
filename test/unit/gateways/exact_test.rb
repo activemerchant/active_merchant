@@ -84,8 +84,16 @@ class ExactTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card)
     assert_equal 'M', response.cvv_result['code']
   end
-  
-  
+
+  def test_address_add_verification_strings
+    @gateway.expects(:commit).with do |action, request|
+      request.include?("<VerificationStr2>123</VerificationStr2>") &&
+      request.include?("<VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>")
+    end
+
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+
   private
   def successful_purchase_response
     <<-RESPONSE
