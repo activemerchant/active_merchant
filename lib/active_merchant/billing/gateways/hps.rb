@@ -73,16 +73,19 @@ module ActiveMerchant #:nodoc:
         get(transaction_id)
       end
 
+      def get(transaction_id)
 
+        if transaction_id.nil? or transaction_id == 0
+          return ActiveMerchant::Billing::Response.new(false,@exception_mapper.map_sdk_exception(Hps::SdkCodes.invalid_transaction_id).message )
         end
-      end
 
-      def capture(money, authorization)
-        begin
-          commit @service.capture(authorization, money)
-        rescue Hps::HpsException => e
-          build_error_response(e)
+        xml = Builder::XmlMarkup.new
+        xml.hps :Transaction do
+          xml.hps :ReportTxnDetail do
+            xml.hps :TxnId, transaction_id
+          end
         end
+        submit_get xml.target!
       end
 
       def refund(money, authorization, options={})
