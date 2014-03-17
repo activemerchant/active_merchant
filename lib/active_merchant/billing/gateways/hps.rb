@@ -518,13 +518,43 @@ module ActiveMerchant #:nodoc:
           false
         end
       end
+      
+      def process_charge_gateway_response(response_code, response_text, transaction_id, money)
+        if response_code.eql? '30'
 
-      def message_from(response)
-        response.transaction_header.gateway_response_message
+          begin
+
+            reverse_transaction(money, transaction_id)
+
+          rescue => e
+            return @exception_mapper.map_sdk_exception(Hps::SdkCodes.reversal_error_after_gateway_timeout, e)
+          end
+
+        end
+
+        @exception_mapper.map_gateway_exception(transaction_id, response_code, response_text)
       end
 
-      def authorization_from(response)
-        response.transaction_id
+      def process_charge_issuer_response(response_code, response_text, transaction_id, money)
+
+        if response_code.eql? '91'
+
+          begin
+
+            reverse_transaction(money, transaction_id)
+
+          rescue => e
+            @exception_mapper.map_sdk_exception(Hps::SdkCodes.reversal_error_after_issuer_timeout, e)
+          end
+
+          @exception_mapper.map_sdk_exception(Hps::SdkCodes.processing_error)
+
+        elsif !response_code.eql? "00"
+
+          @exception_mapper.map_issuer_exception(transaction_id, response_code, response_text)
+
+        end
+
       end
 
     end
