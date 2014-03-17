@@ -25,9 +25,6 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def initialize_service
-        Hps::HpsChargeService.new({:secret_api_key=>@secret})
-      end
 
       def purchase(money, payment, options={})
 
