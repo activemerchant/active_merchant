@@ -240,31 +240,82 @@ module ActiveMerchant #:nodoc:
         multi_use
       end
 
-      def commit(response)
-        build_response(successful?(response), message_from(response),
-          {
-            :card_type => (response.card_type if response.respond_to?(:card_type) ) ,
-            :response_code => (response.response_code if response.respond_to?(:response_code) ),
-            :response_text => (response.response_text if response.respond_to?(:response_text) ),
-            :transaction_header => (response.transaction_header if response.respond_to?(:transaction_header) ),
-            :transaction_id => (response.transaction_id if response.respond_to?(:transaction_id) ),
-            :token_data => (response.token_data if response.respond_to?(:token_data) ),
-            :full_response => response
-          },
-          {
-            :test => test?,
-            :authorization => authorization_from(response),
-            :avs_result => {
-              :code => (response.avs_result_code if response.respond_to?(:avs_result_code) ),
-              :message => (response.avs_result_text if response.respond_to?(:avs_result_text) )
-                            },
-            :cvv_result => (response.cvv_result_code if response.respond_to?(:cvv_result_code) )
-          }
-        )
+      def valid_amount?(money)
+        if money.nil? or money <= 0
+          false
+        end
+        true
       end
 
-      def build_response(success, message, response, options = {})
-        Response.new(success, message, response, options)
+      def submit_auth_or_purchase(action, xml, money)
+        response = do_transaction(xml)
+
+        if response.is_a? ActiveMerchant::Billing::Response
+          response
+        else
+          header = response['Header']
+
+          if successful?(response)
+            transaction = response['Transaction'][action]
+
+            if header['GatewayRspCode'].eql?('30') || !header['GatewayRspCode'].eql?('0')
+              build_error_response process_charge_gateway_response(header['GatewayRspCode'], header['GatewayRspMsg'], header['GatewayTxnId'],money)
+            elsif ! transaction['RspCode'].eql? '00'
+              transaction = response['Transaction'][action]
+              build_error_response process_charge_issuer_response(transaction['RspCode'],transaction['RspText'],header['GatewayTxnId'], money)
+            else
+              build_response(header,transaction, response)
+            end
+          else
+            build_error_response(@exception_mapper.map_gateway_exception(header['GatewayTxnId'],header['GatewayRspCode'], header['GatewayRspMsg']))
+          end
+        end
+
+      end
+
+      def submit_get(xml)
+
+        response = do_transaction(xml)
+
+        if response.is_a? ActiveMerchant::Billing::Response
+          response
+        else
+          transaction = response['Transaction']['ReportTxnDetail']
+
+          header = response['Header']
+          result = {
+              'CardType' => transaction['Data']['CardType'],
+              'CVVRsltCode' => transaction['Data']['CVVRsltCode'],
+              'RspCode' => transaction['Data']['RspCode'],
+              'RspText' => transaction['Data']['RspText'],
+              'AVSRsltCode' => transaction['Data']['AVSRsltCode'],
+              'AVSRsltText' => transaction['Data']['AVSRsltText'],
+          }
+
+          header_response_code = response['Header']['GatewayRspCode']
+          data_response_code = transaction['Data']['RspCode']
+
+          if header_response_code != '0' or data_response_code != '00'
+            exception = Exception.new('Unknown Error')
+            if header_response_code != '0'
+              message = response['Header']['GatewayRspMsg']
+              exception = @exception_mapper.map_gateway_exception(transaction['GatewayTxnId'], header_response_code, message)
+            end
+
+            if data_response_code != '0'
+              message = transaction['Data']['RspText']
+              exception = @exception_mapper.map_issuer_exception(transaction_id, data_response_code, message)
+            end
+
+            build_error_response(exception.message)
+
+          else
+            build_response(header,result, response)
+          end
+        end
+
+      end
+
       def submit_refund(xml)
         response = do_transaction(xml)
 
@@ -336,17 +387,133 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def build_error_response(e)
-        Response.new(false,e.message)
+      def submit_void(xml)
+        response = do_transaction(xml)
+
+        if response.is_a? ActiveMerchant::Billing::Response
+          response
+        else
+          header = response['Header']
+
+          if successful?(response)
+            transaction ={
+                'RspCode' => '00',
+                'RspText' => ''
+            }
+            build_response(header,transaction,response)
+          else
+            build_error_response( @exception_mapper.map_gateway_exception(header['GatewayTxnId'], header['GatewayRspCode'], header['GatewayRspMsg']) )
+          end
+        end
+
+      end
+      def build_response( header, transaction, response)
+        response = {
+            :card_type => (transaction['CardType'] if transaction['CardType'] ) ,
+            :response_code => (transaction['RspCode'] if transaction['RspCode']),
+            :response_text => (transaction['RspText'] if transaction['RspText'] ),
+            :transaction_header => header,
+            :transaction_id => (header['GatewayTxnId'] if header['GatewayTxnId'] ),
+            :token_data => {
+                :response_message => (header['TokenData']['TokenRspMsg'] if (header['TokenData'] && header['TokenData']['TokenRspMsg']) ),
+                :token_value =>(header['TokenData']['TokenValue'] if (header['TokenData'] && header['TokenData']['TokenValue']) ),
+            },
+            :full_response => response
+        }
+        options = {
+           :test => test?,
+           :authorization => authorization_from(transaction),
+           :avs_result => {
+               :code => (transaction['AVSRsltCode'] if transaction['AVSRsltCode'] ),
+               :message => (transaction['AVSRsltText'] if transaction['AVSRsltText'] )
+           },
+           :cvv_result => (transaction['CVVRsltCode'] if transaction['CVVRsltCode'] )
+        }
+        ActiveMerchant::Billing::Response.new(true, message_from(header), response, options)
+      end
+
+      def build_error_response(exception)
+
+        ActiveMerchant::Billing::Response.new(false,exception.message)
       end
 
       def successful?(response)
-        if response.response_code == '00'
-          true
-        elsif response.is_a? Hps::HpsAccountVerify
-          if response.response_code == '85'
-            true
+        response['Header']['GatewayRspCode'].eql? '0'
+      end
+
+      def message_from(header)
+        header['GatewayRspMsg']
+      end
+
+      def authorization_from(response)
+        response['AuthCode']
+      end
+
+      def do_transaction(transaction)
+
+        if configuration_invalid?
+          return build_error_response(@exception_mapper.map_sdk_exception(Hps::SdkCodes.unable_to_process_transaction))
+        end
+
+        xml = Builder::XmlMarkup.new
+        xml.instruct!(:xml, :encoding => 'UTF-8')
+        xml.SOAP :Envelope, {
+            'xmlns:SOAP' => 'http://schemas.xmlsoap.org/soap/envelope/',
+            'xmlns:hps' => 'http://Hps.Exchange.PosGateway' } do
+          xml.SOAP :Body do
+            xml.hps :PosRequest do
+              xml.hps 'Ver1.0'.to_sym do
+                xml.hps :Header do
+                  xml.hps :SecretAPIKey, @secret_api_key
+                  xml.hps :DeveloperID, @developer_id unless @developer_id.nil?
+                  xml.hps :VersionNbr, @version_number unless @version_number.nil?
+                  xml.hps :SiteTrace, @site_trace unless @site_trace.nil?
+                end
+
+                xml << transaction
+
+              end
+            end
           end
+        end
+
+        begin
+
+          uri = URI.parse(gateway_url_for_key)
+          http = Net::HTTP.new uri.host, uri.port
+          http.use_ssl = true
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+          data = xml.target!
+
+          response = ssl_post(gateway_url_for_key, data, 'Content-type' => 'text/xml')
+          soap_hash = Hash.from_xml(response)
+          # NOTE: Peel away the layers and return only the PosRespose
+          soap_hash['Envelope']['Body']['PosResponse']['Ver1.0']
+
+        rescue Timeout::Error, Errno::EINVAL, Errno::ECONNRESET, EOFError,
+            Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError, ResponseError => e
+
+          return build_error_response(@exception_mapper.map_sdk_exception(Hps::SdkCodes.unable_to_process_transaction, e))
+        end
+
+      end
+
+      def configuration_invalid?
+        @secret_api_key.nil? || @secret_api_key.eql?('')
+      end
+
+      def gateway_url_for_key
+        gateway_url = 'https://posgateway.secureexchange.net/Hps.Exchange.PosGateway/PosGatewayService.asmx?wsdl'
+
+        if @secret_api_key.include? '_cert_'
+          gateway_url = 'https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway/PosGatewayService.asmx?wsdl'
+        end
+        gateway_url
+      end
+
+      def test?
+        if @secret_api_key.include? '_cert_'
+          true
         else
           false
         end
