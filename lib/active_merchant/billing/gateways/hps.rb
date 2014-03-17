@@ -88,14 +88,28 @@ module ActiveMerchant #:nodoc:
         submit_get xml.target!
       end
 
-      def refund(money, authorization, options={})
-        card_holder = add_customer_data(options["Payment"],options)
-        details = add_details(options)
+      def purchase(money, card_or_token, options={})
+        if valid_amount?(money)
+          request_multi_use_token = add_multi_use(options)
 
-        begin
-          commit @service.refund_transaction(money, default_currency, authorization, card_holder, details)
-        rescue Hps::HpsException => e
-          build_error_response(e)
+          xml = Builder::XmlMarkup.new
+          xml.hps :Transaction do
+            xml.hps :CreditSale do
+              xml.hps :Block1 do
+                xml.hps :AllowDup, 'Y'
+                xml.hps :Amt, amount(money)
+                xml << add_customer_data(card_or_token,options)
+                xml << add_details(options)
+                xml.hps :CardData do
+                  xml << add_payment(card_or_token)
+                  xml.hps :TokenRequest, request_multi_use_token ? 'Y' : 'N'
+                end
+              end
+            end
+          end
+          submit_auth_or_purchase 'CreditSale', xml.target!, money
+        else
+          build_error_response @exception_mapper.map_sdk_exception(Hps::SdkCodes.invalid_amount).message
         end
       end
 
