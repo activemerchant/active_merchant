@@ -151,59 +151,87 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def void(transaction_id)
+        xml = Builder::XmlMarkup.new
+        xml.hps :Transaction do
+          xml.hps :CreditVoid do
+            xml.hps :GatewayTxnId, transaction_id
+          end
+        end
+
+        submit_void xml.target!
+      end
+
+      def verify(card_or_token, options={})
+        request_multi_use_token = add_multi_use(options)
+        
+        xml = Builder::XmlMarkup.new
+        xml.hps :Transaction do
+          xml.hps :CreditAccountVerify do
+            xml.hps :Block1 do
+              xml << add_customer_data(card_or_token,options)
+              xml.hps :CardData do
+                xml << add_payment(card_or_token)
+                xml.hps :TokenRequest, request_multi_use_token ? 'Y' : 'N'
+              end
+            end
+          end
+        end
+
+        submit_verify(xml.target!)
+      end
+
       private
 
-      def add_customer_data(payment,options)
-        card_holder = nil
-        if payment.is_a? Billing::CreditCard
-          card_holder = Hps::HpsCardHolder.new()
-          card_holder.address = add_address(options)
-          card_holder.first_name = payment.first_name
-          card_holder.last_name = payment.last_name
-          card_holder.email_address = options[:email] if options[:email]
-          card_holder.phone = options[:phone] if options[:phone]
+      def add_customer_data(card_or_token,options)
+        xml = Builder::XmlMarkup.new
+        if card_or_token.is_a? Billing::CreditCard
+          billing_address = options[:billing_address] || options[:address]
+
+          xml.hps :CardHolderData do
+            xml.hps :CardHolderFirstName, card_or_token.first_name
+            xml.hps :CardHolderLastName, card_or_token.last_name
+            xml.hps :CardHolderEmail, options[:email] if options[:email]
+            xml.hps :CardHolderPhone, options[:phone] if options[:phone]
+            xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1]
+            xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
+            xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
+            xml.hps :CardHolderZip, billing_address[:zip] if billing_address[:zip]
+          end
         end
-        card_holder
+
+        xml.target!
       end
 
-      def add_address(options)
-        address = Hps::HpsAddress.new()
-        billing_address = options[:billing_address] || options[:address]
+      def add_payment(card_or_token)
+        xml = Builder::XmlMarkup.new
+        if card_or_token.is_a? Billing::CreditCard
+          xml.hps :ManualEntry do
+            xml.hps :CardNbr, card_or_token.number
+            xml.hps :ExpMonth, card_or_token.month
+            xml.hps :ExpYear, card_or_token.year
+            xml.hps :CVV2, card_or_token.verification_value
+            xml.hps :CardPresent, 'N'
+            xml.hps :ReaderPresent, 'N'
+          end
 
-        unless billing_address.nil?
-          address.address = billing_address[:address1] if billing_address[:address1]
-          address.address = "#{billing_address[:address1]} #{billing_address[:address2]}" if billing_address[:address2]
-          address.city = billing_address[:city] if billing_address[:city]
-          address.state = billing_address[:state] if billing_address[:state]
-          address.country = billing_address[:country] if billing_address[:country]
-          address.zip = billing_address[:zip] if billing_address[:zip]
+        else
+          xml.hps :TokenData do
+            xml.hps :TokenValue, card_or_token
+          end
         end
 
-        address
+        xml.target!
       end
 
-      def add_payment(payment)
-        card = nil
-        if payment.is_a? Billing::CreditCard
-          card = Hps::HpsCreditCard.new()
-          card.number = payment.number
-          card.exp_month = payment.month
-          card.exp_year = payment.year
-          card.cvv = payment.verification_value
+      def add_details(options={})
+        xml = Builder::XmlMarkup.new
+        xml.hps :AdditionalTxnFields do
+          xml.hps :Description, options[:description] if options[:description]
+          xml.hps :InvoiceNbr, options[:order_id] if options[:order_id]
+          xml.hps :CustomerID, options[:customer_id] if options[:customer_id]
         end
-
-        if payment.is_a? String
-          card = payment
-        end
-        card
-      end
-
-      def add_details(options)
-        details = Hps::HpsTransactionDetails.new()
-        details.memo = options[:description] if options[:description]
-        details.invoice_number = options[:order_id] if options[:order_id]
-        details.customer_id = options[:customer_id] if options[:customer_id]
-        details
+        xml.target!
       end
 
       def add_multi_use(options)
