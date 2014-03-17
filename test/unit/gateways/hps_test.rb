@@ -15,164 +15,90 @@ class HpsTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    service = mock()
-    service.stubs(:charge).returns(successful_charge_response)
-    HpsGateway.any_instance.stubs(:initialize_service).returns(service)
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
 
-    gateway = HpsGateway.new({:secret_api_key => '12'})
-
-
-    response = gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
-    assert_equal '00', response.params["response_code"]
+    assert_equal '00', response.params['response_code']
   end
 
   def test_failed_purchase
-    service = mock()
-    service.stubs(:charge).raises(failed_charge_response)
-    HpsGateway.any_instance.stubs(:initialize_service).returns(service)
+    @gateway.expects(:ssl_post).returns(failed_charge_response)
 
-    gateway = HpsGateway.new({:secret_api_key => '12'})
-
-    response = gateway.purchase(10.34, @credit_card, @options)
+    response = @gateway.purchase(10.34, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
   end
 
   def test_successful_authorize
-    service = mock()
-    service.stubs(:authorize).returns(successful_authorize_response)
-    HpsGateway.any_instance.stubs(:initialize_service).returns(service)
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
-    gateway = HpsGateway.new({:secret_api_key => '12'})
-
-    response = gateway.authorize(@amount, @credit_card, @options)
+    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
-    assert_equal '00', response.params["response_code"]
+    assert_equal '00', response.params['response_code']
   end
 
   def test_failed_authorize
-    service = mock()
-      service.stubs(:authorize).raises(failed_authorize_response)
-      HpsGateway.any_instance.stubs(:initialize_service).returns(service)
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
-      gateway = HpsGateway.new({:secret_api_key => '12'})
-
-    response = gateway.authorize(10.34, @credit_card, @options)
+    response = @gateway.authorize(10.34, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
   end
 
   def test_successful_capture
-    service = mock()
-    service.stubs(:authorize).returns(successful_authorize_response)
-    service.stubs(:capture).returns(successful_capture_response)
-    HpsGateway.any_instance.stubs(:initialize_service).returns(service)
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    gateway = HpsGateway.new({:secret_api_key => '12'})
-
-    response = gateway.authorize(@amount, @credit_card, @options)
-    assert_instance_of Response, response
-    assert_success response
-    assert_equal '00', response.params["response_code"]
-
-    capture_response = gateway.capture(@amount, response.params["transaction_id"])
+    capture_response = @gateway.capture(@amount, 16072899)
     assert_instance_of Response, capture_response
     assert_success capture_response
-    assert_equal '00', capture_response.params["response_code"]
+    assert_equal '00', capture_response.params['response_code']
   end
 
   def test_failed_capture
-    service = mock()
-    service.stubs(:authorize).returns(successful_authorize_response)
-    service.stubs(:capture).raises(failed_capture_response)
-    HpsGateway.any_instance.stubs(:initialize_service).returns(service)
+    @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    gateway = HpsGateway.new({:secret_api_key => '12'})
-
-    response = gateway.authorize(@amount, @credit_card, @options)
-    assert_instance_of Response, response
-    assert_success response
-    assert_equal '00', response.params["response_code"]
-
-    capture_response = gateway.capture(@amount, "Bad_Transaction_Id")
+    capture_response = @gateway.capture(@amount, 216072899)
     assert_instance_of Response, capture_response
     assert_failure capture_response
-    assert_equal 'Unable to process the payment transaction.', capture_response.message
+    assert_equal 'Transaction rejected because the referenced original transaction is invalid. Subject \'216072899\'.  Original transaction not found.', capture_response.message
   end
 
   def test_successful_refund
-    service = mock()
-    service.stubs(:charge).returns(successful_charge_response)
-    service.stubs(:refund_transaction).returns(successful_refund_response)
-    HpsGateway.any_instance.stubs(:initialize_service).returns(service)
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    gateway = HpsGateway.new({:secret_api_key => '12'})
-
-    response = gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of Response, response
-    assert_success response
-    assert_equal '00', response.params['response_code']
-
-    refund = gateway.refund(@amount,response.params['transaction_id'])
+    refund = @gateway.refund(@amount,'transaction_id')
     assert_instance_of Response, refund
     assert_success refund
     assert_equal '00', refund.params['response_code']
+    assert_equal '0', refund.params['transaction_header']['GatewayRspCode']
   end
 
   def test_failed_refund
-    service = mock()
-    service.stubs(:charge).returns(successful_charge_response)
-    service.stubs(:refund_transaction).raises(failed_refund_response)
-    HpsGateway.any_instance.stubs(:initialize_service).returns(service)
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    gateway = HpsGateway.new({:secret_api_key => '12'})
-
-    response = gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of Response, response
-    assert_success response
-    assert_equal '00', response.params['response_code']
-
-    refund = gateway.refund(@amount,'Bad_Transaction_Id')
+    refund = @gateway.refund(@amount,'169054') #bad transaction id
     assert_instance_of Response, refund
     assert_failure refund
     assert_equal nil, refund.params['response_code']
   end
 
   def test_successful_void
-    service = mock()
-    service.stubs(:charge).returns(successful_charge_response)
-    service.stubs(:void).returns(successful_void_response)
-    HpsGateway.any_instance.stubs(:initialize_service).returns(service)
+    @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    gateway = HpsGateway.new({:secret_api_key => '12'})
-
-    response = gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of Response, response
-    assert_success response
-    assert_equal '00', response.params['response_code']
-
-    void = gateway.void(response.params['transaction_id'])
+    void = @gateway.void('169054')
     assert_instance_of Response, void
     assert_success void
     assert_equal '00', void.params['response_code']
   end
 
   def test_failed_void
-    service = mock()
-    service.stubs(:charge).returns(successful_charge_response)
-    service.stubs(:void).raises(failed_void_response)
-    HpsGateway.any_instance.stubs(:initialize_service).returns(service)
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    gateway = HpsGateway.new({:secret_api_key => '12'})
-    response = gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of Response, response
-    assert_success response
-    assert_equal '00', response.params['response_code']
-
-    void = gateway.void('Bad_Transaction_Id')
+    void = @gateway.void('169054')
     assert_instance_of Response, void
     assert_failure void
     assert_equal nil , void.params['response_code']
@@ -181,241 +107,377 @@ class HpsTest < Test::Unit::TestCase
   private
 
   def successful_charge_response
-      header = {
-          "LicenseId" => '21229',
-          "SiteId" => '21232',
-          "DeviceId" => '1525997',
-          "GatewayTxnId" => '15578618',
-          "GatewayRspCode" => '0',
-          "GatewayRspMsg" => 'Success',
-          "RspDT" => '2014-02-28T15:52:52.6459775'
-      }
-
-      creditSaleRsp = {
-          "AuthAmt" => '100',
-          "AuthCode" => '00',
-          "AVSRsltCode" => '00',
-          "AVSRsltText" => 'AVS Not Requested',
-          "CardType" => 'Visa',
-          "CPCInd" => 0,
-          "CVVRsltCode" => 'ACCEPT',
-          "CVVRsltText" => 'Match',
-          "RefNbr" => '405914102783',
-          "RspCode" => '00',
-          "RspText" => 'APPROVAL'
-      }
-
-      hpsTransactionHeader = Hps::HpsTransactionHeader.new
-      hpsTransactionHeader.gateway_response_code = header["GatewayRspCode"]
-      hpsTransactionHeader.gateway_response_message = header["GatewayRspMsg"]
-      hpsTransactionHeader.response_dt = header["RspDT"]
-      hpsTransactionHeader.client_txn_id = header["GatewayTxnId"]
-
-      result = Hps::HpsCharge.new(hpsTransactionHeader)
-      result.transaction_id = header["GatewayTxnId"]
-      result.authorized_amount = creditSaleRsp["AuthAmt"]
-      result.authorization_code = creditSaleRsp["AuthCode"]
-      result.avs_result_code = creditSaleRsp["AVSRsltCode"]
-      result.avs_result_text = creditSaleRsp["AVSRsltText"]
-      result.card_type = creditSaleRsp["CardType"]
-      result.cpc_indicator = creditSaleRsp["CPCInd"]
-      result.cvv_result_code = creditSaleRsp["CVVRsltCode"]
-      result.cvv_result_text = creditSaleRsp["CVVRsltText"]
-      result.reference_number = creditSaleRsp["RefNbr"]
-      result.response_code = creditSaleRsp["RspCode"]
-      result.response_text = creditSaleRsp["RspText"]
-      result
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>95878</LicenseId>
+               <SiteId>95881</SiteId>
+               <DeviceId>2409000</DeviceId>
+               <GatewayTxnId>15927453</GatewayTxnId>
+               <GatewayRspCode>0</GatewayRspCode>
+               <GatewayRspMsg>Success</GatewayRspMsg>
+               <RspDT>2014-03-14T15:40:25.4686202</RspDT>
+            </Header>
+            <Transaction>
+               <CreditSale>
+                  <RspCode>00</RspCode>
+                  <RspText>APPROVAL</RspText>
+                  <AuthCode>36987A</AuthCode>
+                  <AVSRsltCode>0</AVSRsltCode>
+                  <CVVRsltCode>M</CVVRsltCode>
+                  <RefNbr>407313649105</RefNbr>
+                  <AVSResultCodeAction>ACCEPT</AVSResultCodeAction>
+                  <CVVResultCodeAction>ACCEPT</CVVResultCodeAction>
+                  <CardType>Visa</CardType>
+                  <AVSRsltText>AVS Not Requested.</AVSRsltText>
+                  <CVVRsltText>Match.</CVVRsltText>
+               </CreditSale>
+            </Transaction>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    RESPONSE
   end
 
   def failed_charge_response
-    exception = Hps::CardException.new('transaction_id','card_declined','The card was declined')
-    exception
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>21229</LicenseId>
+               <SiteId>21232</SiteId>
+               <DeviceId>1525997</DeviceId>
+               <GatewayTxnId>16099851</GatewayTxnId>
+               <GatewayRspCode>0</GatewayRspCode>
+               <GatewayRspMsg>Success</GatewayRspMsg>
+               <RspDT>2014-03-17T13:01:55.851307</RspDT>
+            </Header>
+            <Transaction>
+               <CreditSale>
+                  <RspCode>02</RspCode>
+                  <RspText>CALL</RspText>
+                  <AuthCode />
+                  <AVSRsltCode>0</AVSRsltCode>
+                  <RefNbr>407613674802</RefNbr>
+                  <CardType>Visa</CardType>
+                  <AVSRsltText>AVS Not Requested.</AVSRsltText>
+               </CreditSale>
+            </Transaction>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    RESPONSE
   end
 
   def successful_authorize_response
-    header = {
-        "LicenseId" => '21229',
-        "SiteId" => '21232',
-        "DeviceId" => '1525997',
-        "GatewayTxnId" => '15578618',
-        "GatewayRspCode" => '0',
-        "GatewayRspMsg" => 'Success',
-        "RspDT" => '2014-02-28T15:52:52.6459775'
-    }
-
-    auth_response = {
-        "AuthAmt" => nil,
-        "AuthCode" => '23364A',
-        "AVSRsltCode" => '0',
-        "AVSRsltText" => 'AVS Not Requested',
-        "CardType" => 'Visa',
-        "CPCInd" => nil,
-        "CVVRsltCode" => 'M',
-        "CVVRsltText" => 'Match.',
-        "RefNbr" => '405914102783',
-        "RspCode" => '00',
-        "RspText" => 'APPROVAL'
-    }
-
-    hpsTransactionHeader = Hps::HpsTransactionHeader.new
-    hpsTransactionHeader.gateway_response_code = header["GatewayRspCode"]
-    hpsTransactionHeader.gateway_response_message = header["GatewayRspMsg"]
-    hpsTransactionHeader.response_dt = header["RspDT"]
-    hpsTransactionHeader.client_txn_id = header["GatewayTxnId"]
-
-    result = Hps::HpsAuthorization.new(hpsTransactionHeader)
-    result.transaction_id = header["GatewayTxnId"]
-    result.authorized_amount = auth_response["AuthAmt"]
-    result.authorization_code = auth_response["AuthCode"]
-    result.avs_result_code = auth_response["AVSRsltCode"]
-    result.avs_result_text = auth_response["AVSRsltText"]
-    result.card_type = auth_response["CardType"]
-    result.cpc_indicator = auth_response["CPCInd"]
-    result.cvv_result_code = auth_response["CVVRsltCode"]
-    result.cvv_result_text = auth_response["CVVRsltText"]
-    result.reference_number = auth_response["RefNbr"]
-    result.response_code = auth_response["RspCode"]
-    result.response_text = auth_response["RspText"]
-
-    unless header["TokenData"].nil?
-      result.token_data = HpsTokenData.new()
-      result.token_data.response_code = header["TokenData"]["TokenRspCode"];
-      result.token_data.response_message = header["TokenData"]["TokenRspMsg"]
-      result.token_data.token_value = header["TokenData"]["TokenValue"]
-    end
-
-    result
+   <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>21229</LicenseId>
+               <SiteId>21232</SiteId>
+               <DeviceId>1525997</DeviceId>
+               <GatewayTxnId>16072891</GatewayTxnId>
+               <GatewayRspCode>0</GatewayRspCode>
+               <GatewayRspMsg>Success</GatewayRspMsg>
+               <RspDT>2014-03-17T13:05:34.5819712</RspDT>
+            </Header>
+            <Transaction>
+               <CreditAuth>
+                  <RspCode>00</RspCode>
+                  <RspText>APPROVAL</RspText>
+                  <AuthCode>43204A</AuthCode>
+                  <AVSRsltCode>0</AVSRsltCode>
+                  <CVVRsltCode>M</CVVRsltCode>
+                  <RefNbr>407613674895</RefNbr>
+                  <AVSResultCodeAction>ACCEPT</AVSResultCodeAction>
+                  <CVVResultCodeAction>ACCEPT</CVVResultCodeAction>
+                  <CardType>Visa</CardType>
+                  <AVSRsltText>AVS Not Requested.</AVSRsltText>
+                  <CVVRsltText>Match.</CVVRsltText>
+               </CreditAuth>
+            </Transaction>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+   RESPONSE
   end
 
   def failed_authorize_response
-    exception = Hps::CardException.new('transaction_id','card_declined','The card was declined')
-    exception
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>21229</LicenseId>
+               <SiteId>21232</SiteId>
+               <DeviceId>1525997</DeviceId>
+               <GatewayTxnId>16088893</GatewayTxnId>
+               <GatewayRspCode>0</GatewayRspCode>
+               <GatewayRspMsg>Success</GatewayRspMsg>
+               <RspDT>2014-03-17T13:06:45.449707</RspDT>
+            </Header>
+            <Transaction>
+               <CreditAuth>
+                  <RspCode>54</RspCode>
+                  <RspText>EXPIRED CARD</RspText>
+                  <AuthCode />
+                  <AVSRsltCode>0</AVSRsltCode>
+                  <RefNbr>407613674811</RefNbr>
+                  <CardType>Visa</CardType>
+                  <AVSRsltText>AVS Not Requested.</AVSRsltText>
+               </CreditAuth>
+            </Transaction>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    RESPONSE
   end
 
   def successful_capture_response
-    header = {
-        "LicenseId" => '21229',
-        "SiteId" => '21232',
-        "DeviceId" => '1525997',
-        "GatewayTxnId" => '15578618',
-        "GatewayRspCode" => '0',
-        "GatewayRspMsg" => 'Success',
-        "RspDT" => '2014-02-28T15:52:52.6459775'
-    }
-
-    detail = {
-        "GatewayTxnId" => '15578618',
-        "OriginalGatewayTxnId" => '0',
-        "ServiceName" => '0',
-        "Data" => {
-            "AuthAmt" => '100.00',
-            "AuthCode" => '23364A',
-            "AVSRsltCode" => '0',
-            "AVSRsltText" => 'AVS Not Requested',
-            "CardType" => nil,
-            "MaskedCardNbr" => '424242******4242',
-            "CPCInd" => nil,
-            "CVVRsltCode" => 'M',
-            "CVVRsltText" => 'Match.',
-            "RefNbr" => '405914102783',
-            "RspCode" => '00',
-            "RspText" => 'APPROVAL',
-            "TokenizationMsg" => nil
-        }
-    }
-
-    hpsTransactionHeader = Hps::HpsTransactionHeader.new
-    hpsTransactionHeader.gateway_response_code = header["GatewayRspCode"]
-    hpsTransactionHeader.gateway_response_message = header["GatewayRspMsg"]
-    hpsTransactionHeader.response_dt = header["RspDT"]
-    hpsTransactionHeader.client_txn_id = header["GatewayTxnId"]
-
-    result = Hps::HpsReportTransactionDetails.new(hpsTransactionHeader)
-    result.transaction_id = detail["GatewayTxnId"]
-    result.original_transaction_id = detail["OriginalGatewayTxnId"]
-    result.authorized_amount = detail["Data"]["AuthAmt"]
-    result.authorization_code = detail["Data"]["AuthCode"]
-    result.avs_result_code = detail["Data"]["AVSRsltCode"]
-    result.avs_result_text = detail["Data"]["AVSRsltText"]
-    result.card_type = detail["Data"]["CardType"]
-    result.masked_card_number = detail["Data"]["MaskedCardNbr"]
-    result.transaction_type = detail["ServiceName"]
-    result.transaction_date = detail["RspUtcDT"]
-    result.cpc_indicator = detail["Data"]["CPCInd"]
-    result.cvv_result_code = detail["Data"]["CVVRsltCode"]
-    result.cvv_result_text = detail["Data"]["CVVRsltText"]
-    result.reference_number = detail["Data"]["RefNbr"]
-    result.response_code = detail["Data"]["RspCode"]
-    result.response_text = detail["Data"]["RspText"]
-
-    tokenization_message = detail["Data"]["TokenizationMsg"]
-
-    unless tokenization_message.nil?
-      result.token_data = Hps::HpsTokenData.new(tokenization_message)
-    end
-
-    result
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>21229</LicenseId>
+               <SiteId>21232</SiteId>
+               <DeviceId>1525997</DeviceId>
+               <GatewayTxnId>16105018</GatewayTxnId>
+               <GatewayRspCode>0</GatewayRspCode>
+               <GatewayRspMsg>Success</GatewayRspMsg>
+               <RspDT>2014-03-17T13:58:09.476107</RspDT>
+            </Header>
+            <Transaction>
+               <ReportTxnDetail>
+                  <GatewayTxnId>16101568</GatewayTxnId>
+                  <ClientTxnId>0</ClientTxnId>
+                  <SiteId>21232</SiteId>
+                  <MerchName>TEST ACCOUNT 1 POS13</MerchName>
+                  <DeviceId>1525997</DeviceId>
+                  <UserName>7822SK</UserName>
+                  <ServiceName>CreditAuth</ServiceName>
+                  <GatewayRspCode>0</GatewayRspCode>
+                  <GatewayRspMsg>Success</GatewayRspMsg>
+                  <ReqUtcDT>2014-03-17T18:58:08.837Z</ReqUtcDT>
+                  <ReqDT>2014-03-17T18:58:08.837</ReqDT>
+                  <RspUtcDT>2014-03-17T18:58:08.96Z</RspUtcDT>
+                  <RspDT>2014-03-17T18:58:08.96</RspDT>
+                  <SiteTrace />
+                  <OriginalGatewayTxnId>0</OriginalGatewayTxnId>
+                  <MerchNbr>777700007822</MerchNbr>
+                  <TermOrdinal>1</TermOrdinal>
+                  <MerchAddr1>1437 YOUNGSTOWN</MerchAddr1>
+                  <MerchAddr2 />
+                  <MerchCity>JEFFERSONVILL</MerchCity>
+                  <MerchState>IN</MerchState>
+                  <MerchZip>47130</MerchZip>
+                  <MerchPhone />
+                  <TzConversion>UTC</TzConversion>
+                  <UniqueDeviceId />
+                  <Data>
+                     <TxnStatus>A</TxnStatus>
+                     <CardType>Visa</CardType>
+                     <MaskedCardNbr>401200******0016</MaskedCardNbr>
+                     <CardPresent>N</CardPresent>
+                     <ReaderPresent>N</ReaderPresent>
+                     <CardSwiped>N</CardSwiped>
+                     <DebitCreditInd>C</DebitCreditInd>
+                     <SaleReturnInd>S</SaleReturnInd>
+                     <CVVReq>Y</CVVReq>
+                     <CVVRsltCode>M</CVVRsltCode>
+                     <Amt>50.00</Amt>
+                     <AuthAmt>50.00</AuthAmt>
+                     <GratuityAmtInfo>0</GratuityAmtInfo>
+                     <CashbackAmtInfo>0</CashbackAmtInfo>
+                     <CardHolderLastName>Johnson</CardHolderLastName>
+                     <CardHolderFirstName>Bill</CardHolderFirstName>
+                     <CardHolderAddr>One Heartland Way</CardHolderAddr>
+                     <CardHolderCity>Jeffersonville</CardHolderCity>
+                     <CardHolderState>IN</CardHolderState>
+                     <CardHolderZip>47130</CardHolderZip>
+                     <CardHolderPhone />
+                     <CardHolderEmail />
+                     <AVSRsltCode>0</AVSRsltCode>
+                     <CPCReq>N</CPCReq>
+                     <CPCInd />
+                     <RspCode>00</RspCode>
+                     <RspText>APPROVAL</RspText>
+                     <AuthCode>43296A</AuthCode>
+                     <ReqACI>Y</ReqACI>
+                     <RspACI>N</RspACI>
+                     <MktSpecDataId>N</MktSpecDataId>
+                     <TxnCode>56</TxnCode>
+                     <AcctDataSrc>@</AcctDataSrc>
+                     <AuthSrcCode>5</AuthSrcCode>
+                     <IssTxnId>407613674523000</IssTxnId>
+                     <IssValidationCode />
+                     <CardHolderIdCode>N</CardHolderIdCode>
+                     <NetworkIdCode />
+                     <RefNbr>407613674523</RefNbr>
+                     <TxnSeqNbr>512</TxnSeqNbr>
+                     <DirectMktInvoiceNbr />
+                     <DirectMktShipMonth>0</DirectMktShipMonth>
+                     <DirectMktShipDay>0</DirectMktShipDay>
+                     <CPCCardHolderPONbr />
+                     <CPCTaxType />
+                     <CPCTaxAmt>0</CPCTaxAmt>
+                     <SettlementAmt>50.00</SettlementAmt>
+                     <AllowPartialAuth>N</AllowPartialAuth>
+                     <AVSRsltText>AVS Not Requested.</AVSRsltText>
+                     <CVVRsltText>Match.</CVVRsltText>
+                     <TokenizationMsg />
+                     <CryptoTypeIn>Clear</CryptoTypeIn>
+                     <CryptoTypeOut>Clear</CryptoTypeOut>
+                     <AllowDup>Y</AllowDup>
+                  </Data>
+               </ReportTxnDetail>
+            </Transaction>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    RESPONSE
   end
 
   def failed_capture_response
-    exception = Hps::ApiConnectionException.new('Unable to process the payment transaction.',0,'sdk_exception')
-    exception
+    <<-Response
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>21229</LicenseId>
+               <SiteId>21232</SiteId>
+               <DeviceId>1525997</DeviceId>
+               <GatewayTxnId>16104055</GatewayTxnId>
+               <GatewayRspCode>3</GatewayRspCode>
+               <GatewayRspMsg>Transaction rejected because the referenced original transaction is invalid. Subject '216072899'.  Original transaction not found.</GatewayRspMsg>
+               <RspDT>2014-03-17T14:20:32.355307</RspDT>
+            </Header>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    Response
   end
 
   def successful_refund_response
-    header = {
-        "LicenseId" => '21229',
-        "SiteId" => '21232',
-        "DeviceId" => '1525997',
-        "GatewayTxnId" => '15578618',
-        "GatewayRspCode" => '0',
-        "GatewayRspMsg" => 'Success',
-        "RspDT" => '2014-02-28T15:52:52.6459775'
-    }
-    hpsTransactionHeader = Hps::HpsTransactionHeader.new
-    hpsTransactionHeader.gateway_response_code = header["GatewayRspCode"]
-    hpsTransactionHeader.gateway_response_message = header["GatewayRspMsg"]
-    hpsTransactionHeader.response_dt = header["RspDT"]
-    hpsTransactionHeader.client_txn_id = header["GatewayTxnId"]
-
-    result = Hps::HpsRefund.new(hpsTransactionHeader)
-    result.transaction_id = header["GatewayTxnId"]
-    result.response_code = "00"
-    result.response_text = ""
-
-    result
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>21229</LicenseId>
+               <SiteId>21232</SiteId>
+               <DeviceId>1525997</DeviceId>
+               <SiteTrace />
+               <GatewayTxnId>16092738</GatewayTxnId>
+               <GatewayRspCode>0</GatewayRspCode>
+               <GatewayRspMsg>Success</GatewayRspMsg>
+               <RspDT>2014-03-17T13:31:42.0231712</RspDT>
+            </Header>
+            <Transaction>
+               <CreditReturn />
+            </Transaction>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    RESPONSE
   end
 
   def failed_refund_response
-    exception = Hps::ApiConnectionException.new('Unable to process the payment transaction.',0,'sdk_exception')
-    exception
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>21229</LicenseId>
+               <SiteId>21232</SiteId>
+               <DeviceId>1525997</DeviceId>
+               <SiteTrace />
+               <GatewayTxnId>16092766</GatewayTxnId>
+               <GatewayRspCode>3</GatewayRspCode>
+               <GatewayRspMsg>Transaction rejected because the referenced original transaction is invalid.</GatewayRspMsg>
+               <RspDT>2014-03-17T13:48:55.3203712</RspDT>
+            </Header>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    RESPONSE
   end
 
   def successful_void_response
-    header = {
-        "LicenseId" => '21229',
-        "SiteId" => '21232',
-        "DeviceId" => '1525997',
-        "GatewayTxnId" => '15578618',
-        "GatewayRspCode" => '0',
-        "GatewayRspMsg" => 'Success',
-        "RspDT" => '2014-02-28T15:52:52.6459775'
-    }
-    hpsTransactionHeader = Hps::HpsTransactionHeader.new
-    hpsTransactionHeader.gateway_response_code = header["GatewayRspCode"]
-    hpsTransactionHeader.gateway_response_message = header["GatewayRspMsg"]
-    hpsTransactionHeader.response_dt = header["RspDT"]
-    hpsTransactionHeader.client_txn_id = header["GatewayTxnId"]
-
-    result = Hps::HpsVoid.new(hpsTransactionHeader)
-    result.transaction_id = header["GatewayTxnId"]
-    result.response_code = "00"
-    result.response_text = ""
-    result
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>21229</LicenseId>
+               <SiteId>21232</SiteId>
+               <DeviceId>1525997</DeviceId>
+               <GatewayTxnId>16092767</GatewayTxnId>
+               <GatewayRspCode>0</GatewayRspCode>
+               <GatewayRspMsg>Success</GatewayRspMsg>
+               <RspDT>2014-03-17T13:53:43.6863712</RspDT>
+            </Header>
+            <Transaction>
+               <CreditVoid />
+            </Transaction>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    RESPONSE
   end
 
   def failed_void_response
-    exception = Hps::ApiConnectionException.new('Unable to process the payment transaction.',0,'sdk_exception')
-    exception
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>21229</LicenseId>
+               <SiteId>21232</SiteId>
+               <DeviceId>1525997</DeviceId>
+               <GatewayTxnId>16103858</GatewayTxnId>
+               <GatewayRspCode>3</GatewayRspCode>
+               <GatewayRspMsg>Transaction rejected because the referenced original transaction is invalid. Subject '169054'.  Original transaction not found.</GatewayRspMsg>
+               <RspDT>2014-03-17T13:55:56.8947712</RspDT>
+            </Header>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    RESPONSE
   end
 end
