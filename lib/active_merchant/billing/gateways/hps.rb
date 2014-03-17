@@ -133,15 +133,21 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def verify(payment, options={})
-        card = add_payment(payment)
-        card_holder = add_customer_data(payment,options)
-        request_multi_use_token = add_multi_use(options)
-
-        begin
-          commit @service.verify(card,card_holder,request_multi_use_token)
-        rescue Hps::HpsException => e
-          build_error_response(e)
+      def reverse_transaction(money, transaction_id, options={})
+        if valid_amount?(money)
+          xml = Builder::XmlMarkup.new
+          xml.hps :Transaction do
+            xml.hps :CreditReversal do
+              xml.hps :Block1 do
+                xml.hps :Amt, amount(money)
+                xml.hps :GatewayTxnId, transaction_id
+                xml << add_details(options)
+              end
+            end
+          end
+          submit_reverse xml.target!
+        else
+          build_error_response @exception_mapper.map_sdk_exception(Hps::SdkCodes.invalid_amount).message
         end
       end
 
