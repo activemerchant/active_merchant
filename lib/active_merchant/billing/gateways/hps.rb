@@ -52,18 +52,25 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def purchase(money, payment, options={})
+      def capture(money, transaction_id)
 
-        card_or_token = add_payment(payment)
-        card_holder = add_customer_data(payment,options)
-        request_multi_use_token = add_multi_use(options)
-        details = add_details(options)
-
-        begin
-          commit @service.charge(money, default_currency, card_or_token, card_holder, request_multi_use_token, details)
-        rescue Hps::HpsException => e
-          build_error_response(e)
+        xml = Builder::XmlMarkup.new
+        xml.hps :Transaction do
+          xml.hps :CreditAddToBatch do
+            xml.hps :GatewayTxnId, transaction_id
+            xml.hps :Amt, amount(money) if money
+          end
         end
+
+        response = do_transaction(xml.target!)
+        if response.is_a? ActiveMerchant::Billing::Response
+          return response
+        end
+        header = response['Header']
+
+        return ActiveMerchant::Billing::Response.new(false, @exception_mapper.map_gateway_exception(transaction_id, header['GatewayRspCode'], header['GatewayRspMsg']).message ) unless header['GatewayRspCode'].eql? '0'
+
+        get(transaction_id)
       end
 
 
