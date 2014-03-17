@@ -22,10 +22,31 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal '00', response.params['response_code']
   end
 
+  def test_successful_purchase_with_details
+    @options[:description] = 'Description'
+    @options[:order_id] = '12345'
+    @options[:customer_id] = '654321'
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+    assert_equal '00', response.params['response_code']
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@declined_amount, @credit_card, @options)
     assert_failure response
     assert_equal 'The card was declined.', response.message
+  end
+
+  def test_successful_authorize_with_details
+    @options[:description] = 'Description'
+    @options[:order_id] = '12345'
+    @options[:customer_id] = '654321'
+
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal '00', auth.params['response_code']
   end
 
   def test_successful_authorize_and_capture
