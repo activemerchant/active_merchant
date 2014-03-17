@@ -720,3 +720,11 @@ wirecard_checkout_page:
   secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
   shop_id: ''
   paymenttype: IDL
+
+# Contact Support at it_support@commercegate.com for credentials and offer/site
+commercegate:
+  login: "XXXXXXX"
+  password: "XXXXXXX"
+  site_id: "XXXXXXX"
+  offer_id: "XXXXXXX"
+  card_number: "XXXXXXXXXXXXXXXX"
