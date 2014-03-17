@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
 
           cart_items.each do |item|
             payload << ['type', 'reference', 'quantity', 'unit_price', 'tax_rate'].inject("") do |s, field_name|
-              s += item[field_name].to_s
+              s += item.public_send(field_name).to_s
             end
           end
 
