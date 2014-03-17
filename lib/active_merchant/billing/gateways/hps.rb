@@ -24,7 +24,33 @@ module ActiveMerchant #:nodoc:
         @exception_mapper = Hps::ExceptionMapper.new()
         super
       end
+      
+      def authorize(money, card_or_token, options={})
+        request_multi_use_token = add_multi_use(options)
 
+        if valid_amount?(money)
+          xml = Builder::XmlMarkup.new
+          xml.hps :Transaction do
+            xml.hps :CreditAuth do
+              xml.hps :Block1 do
+                xml.hps :AllowDup, 'Y'
+                xml.hps :Amt, amount(money)
+                xml << add_customer_data(card_or_token,options)
+                xml << add_details(options)
+                xml.hps :CardData do
+                  xml << add_payment(card_or_token)
+
+                  xml.hps :TokenRequest, request_multi_use_token ? 'Y' : 'N'
+
+                end
+              end
+            end
+          end
+          submit_auth_or_purchase 'CreditAuth', xml.target!, money
+        else
+          @exception_mapper.map_sdk_exception(Hps::SdkCodes.invalid_amount)
+        end
+      end
 
       def purchase(money, payment, options={})
 
@@ -40,16 +66,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorize(money, payment, options={})
-        card_or_token = add_payment(payment)
-        card_holder = add_customer_data(payment,options)
-        request_multi_use_token = add_multi_use(options)
-        details = add_details(options)
 
-        begin
-          commit @service.authorize(money, default_currency, card_or_token, card_holder, request_multi_use_token, details)
-        rescue Hps::HpsException => e
-          build_error_response(e)
         end
       end
 
