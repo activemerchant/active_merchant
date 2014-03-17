@@ -113,11 +113,23 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def void(authorization)
-        begin
-          commit @service.void(authorization)
-        rescue Hps::HpsException => e
-          build_error_response(e)
+      def refund(money, transaction_id, options={})
+        if valid_amount?(money)
+          xml = Builder::XmlMarkup.new
+          xml.hps :Transaction do
+            xml.hps :CreditReturn do
+              xml.hps :Block1 do
+                xml.hps :AllowDup, 'Y'
+                xml.hps :Amt, amount(money)
+                xml.hps :GatewayTxnId, transaction_id
+                xml << add_customer_data(transaction_id,options)
+                xml << add_details(options)
+              end
+            end
+          end
+          submit_refund xml.target!
+        else
+          build_error_response @exception_mapper.map_sdk_exception(Hps::SdkCodes.invalid_amount).message
         end
       end
 
