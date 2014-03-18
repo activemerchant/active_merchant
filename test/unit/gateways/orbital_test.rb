@@ -462,6 +462,15 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end
   end
 
+  def test_account_num_is_removed_from_response
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    response = @gateway.purchase(50, credit_card, :order_id => '1')
+    assert_instance_of Response, response
+    assert_success response
+    assert_nil response.params['account_num']
+  end
+
   private
 
   def successful_purchase_response(resp_code = '00')
