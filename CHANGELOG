@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.42.7 (March 18, 2014)
+
 * SagePay: Add support for ReferrerID [markabe]
 * Cecabank: Fix expiration date formatting [duff]
 * Add WePay gateway [faizalzakaria]
