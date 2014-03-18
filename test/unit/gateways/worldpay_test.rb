@@ -24,6 +24,26 @@ class WorldpayTest < Test::Unit::TestCase
     assert_equal 'R50704213207145707', response.authorization
   end
 
+  def test_successful_authorize_by_reference
+    response = stub_comms do
+      @gateway.authorize(@amount, @options[:order_id].to_s, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/payAsOrder/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+    assert_equal 'R50704213207145707', response.authorization
+  end
+
+  def test_successful_reference_transaction_authorize_with_merchant_code
+    response = stub_comms do
+      @gateway.authorize(@amount, @options[:order_id].to_s, @options.merge({ :merchant_code => 'testlogin2'}))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/testlogin2/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+    assert_equal 'R50704213207145707', response.authorization
+  end
+
   def test_failed_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)

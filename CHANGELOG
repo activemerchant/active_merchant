@@ -20,6 +20,7 @@
 * Add Cashnet gateway [hoenth]
 * Conekta: Standardize address options [MauricioMurga]
 * Wirecard: Add support for reference purchases [timtait]
+* Worldpay: Add support for external references [matsubo]
 
 == Version 1.43.1 (May 1, 2014)
 

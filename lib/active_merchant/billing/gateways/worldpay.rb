@@ -88,8 +88,8 @@ module ActiveMerchant #:nodoc:
 
       def build_request
         xml = Builder::XmlMarkup.new :indent => 2
-        xml.instruct! :xml, :encoding => 'ISO-8859-1'
-        xml.declare! :DOCTYPE, :paymentService, :PUBLIC, "-//WorldPay//DTD WorldPay PaymentService v1//EN", "http://dtd.wp3.rbsworldpay.com/paymentService_v1.dtd"
+        xml.instruct! :xml, :encoding => 'UTF-8'
+        xml.declare! :DOCTYPE, :paymentService, :PUBLIC, "-//WorldPay//DTD WorldPay PaymentService v1//EN", "http://dtd.worldpay.com/paymentService_v1.dtd"
         xml.tag! 'paymentService', 'version' => "1.4", 'merchantCode' => @options[:login] do
           yield xml
         end
@@ -174,8 +174,14 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(xml, amount, payment_method, options)
         if payment_method.is_a?(String)
-          xml.tag! 'payAsOrder', 'orderCode' => payment_method do
-            add_amount(xml, amount, options)
+          if options[:merchant_code]
+            xml.tag! 'payAsOrder', 'orderCode' => payment_method, 'merchantCode' => options[:merchant_code] do
+              add_amount(xml, amount, options)
+            end
+          else
+            xml.tag! 'payAsOrder', 'orderCode' => payment_method do
+              add_amount(xml, amount, options)
+            end
           end
         else
           xml.tag! 'paymentDetails' do
