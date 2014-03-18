@@ -32,6 +32,8 @@ module ActiveMerchant #:nodoc:
 
         authorize = Samurai::Processor.authorize(token, amount(money), processor_options(options))
         handle_result(authorize)
+      rescue ActiveResource::ServerError => e
+        Response.new(false, e.message, {}, test: test?)
       end
 
       def purchase(money, credit_card_or_vault_id, options = {})
@@ -40,21 +42,29 @@ module ActiveMerchant #:nodoc:
 
         purchase = Samurai::Processor.purchase(token, amount(money), processor_options(options))
         handle_result(purchase)
+      rescue ActiveResource::ServerError => e
+        Response.new(false, e.message, {}, test: test?)
       end
 
       def capture(money, authorization_id, options = {})
         transaction = Samurai::Transaction.find(authorization_id)
         handle_result(transaction.capture(amount(money)))
+      rescue ActiveResource::ServerError => e
+        Response.new(false, e.message, {}, test: test?)
       end
 
       def refund(money, transaction_id, options = {})
         transaction = Samurai::Transaction.find(transaction_id)
         handle_result(transaction.credit(amount(money)))
+      rescue ActiveResource::ServerError => e
+        Response.new(false, e.message, {}, test: test?)
       end
 
       def void(transaction_id, options = {})
         transaction = Samurai::Transaction.find(transaction_id)
         handle_result(transaction.void)
+      rescue ActiveResource::ServerError => e
+        Response.new(false, e.message, {}, test: test?)
       end
 
       def store(creditcard, options = {})
@@ -78,6 +88,8 @@ module ActiveMerchant #:nodoc:
         Response.new(result.is_sensitive_data_valid,
                      message_from_result(result),
                      { :payment_method_token => result.is_sensitive_data_valid && result.payment_method_token })
+      rescue ActiveResource::ServerError => e
+        Response.new(false, e.message, {}, test: test?)
       end
 
       private
