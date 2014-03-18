@@ -55,4 +55,9 @@ class GoCoinHelperTest < Test::Unit::TestCase
     Net::HTTP.any_instance.expects(:request).returns(stub(:body => '{"id": "12345invoice_id"}'))
     assert_equal '12345invoice_id', @helper.form_fields['invoice_id']
   end
+
+  def test_raises_when_invalid_json_returned
+    Net::HTTP.any_instance.expects(:request).returns(stub(:body => 'Invalid JSON'))
+    assert_raises(StandardError) { @helper.form_fields['id'] }
+  end
 end
