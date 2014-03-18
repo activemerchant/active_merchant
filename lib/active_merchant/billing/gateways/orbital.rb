@@ -177,6 +177,8 @@ module ActiveMerchant #:nodoc:
       USE_ORDER_ID         = 'O' #  Use OrderID field
       USE_COMMENTS         = 'D' #  Use Comments field
 
+      SENSITIVE_FIELDS = [:account_num]
+
       def initialize(options = {})
         requires!(options, :merchant_id)
         requires!(options, :login, :password) unless options[:ip_authentication]
@@ -431,7 +433,8 @@ module ActiveMerchant #:nodoc:
             recurring_parse_element(response, node)
           end
         end
-        response
+
+        response.delete_if { |k,_| SENSITIVE_FIELDS.include?(k) }
       end
 
       def recurring_parse_element(response, node)
