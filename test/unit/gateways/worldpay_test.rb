@@ -12,6 +12,7 @@ class WorldpayTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4242424242424242')
     @options = {:order_id => 1}
+    @subsequent_order_options = {:order_id => 1}
   end
 
   def test_successful_authorize
@@ -19,6 +20,27 @@ class WorldpayTest < Test::Unit::TestCase
       @gateway.authorize(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_match(/4242424242424242/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+    assert_equal 'R50704213207145707', response.authorization
+  end
+
+  def test_successful_recurring_authorize
+    response = stub_comms do
+      @gateway.authorize(@amount, @options[:order_id].to_s, @subsequent_order_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/payAsOrder/, data)
+    end.respond_with(successful_authorize_response)
+    assert_success response
+    assert_equal 'R50704213207145707', response.authorization
+  end
+
+
+  def test_successful_recurring_authorize_with_merchant_code
+    response = stub_comms do
+      @gateway.authorize(@amount, @options[:order_id].to_s, @subsequent_order_options.merge({ :merchant_code => 'testlogin2'}))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/testlogin2/, data)
     end.respond_with(successful_authorize_response)
     assert_success response
     assert_equal 'R50704213207145707', response.authorization
