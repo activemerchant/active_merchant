@@ -92,6 +92,7 @@ module ActiveMerchant #:nodoc:
         add_amount(xml, money)
         add_credit_card(xml, credit_card)
         add_customer_data(xml, options)
+        add_verification_strings(xml, credit_card, options)
         add_invoice(xml, options)
 
         xml.target!
@@ -134,7 +135,16 @@ module ActiveMerchant #:nodoc:
 
         if credit_card.verification_value?
           xml.tag! 'CVD_Presence_Ind', '1'
+        end
+      end
+
+      def add_verification_strings(xml, credit_card, options)
+        if credit_card.verification_value?
           xml.tag! 'VerificationStr2', credit_card.verification_value
+        end
+
+        if address = options[:billing_address] || options[:address]
+          xml.tag! "VerificationStr1", [:address1, :zip, :city, :state, :country].map { |field| address[field].to_s }.join("|")
         end
       end
 
@@ -160,14 +170,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, request)
-         response = parse(ssl_post(self.live_url, build_request(action, request), POST_HEADERS))
+        response = parse(ssl_post(self.live_url, build_request(action, request), POST_HEADERS))
 
-         Response.new(successful?(response), message_from(response), response,
-           :test => test?,
-           :authorization => authorization_from(response),
-           :avs_result => { :code => response[:avs] },
-           :cvv_result => response[:cvv2]
-         )
+        Response.new(successful?(response), message_from(response), response,
+         :test => test?,
+         :authorization => authorization_from(response),
+         :avs_result => { :code => response[:avs] },
+         :cvv_result => response[:cvv2]
+        )
       end
 
       def successful?(response)
