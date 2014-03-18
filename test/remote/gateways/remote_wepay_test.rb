@@ -57,8 +57,17 @@ class RemoteWepayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_full_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    sleep 30 # Wait for purchase to clear. Doesn't always work.
+    response = @gateway.refund(@amount, purchase.authorization)
+    assert_success response
+  end
+
   def test_failed_capture
-    response = @gateway.capture(@amount, '123')
+    response = @gateway.capture(nil, '123')
     assert_failure response
   end
 
@@ -72,7 +81,7 @@ class RemoteWepayTest < Test::Unit::TestCase
     assert_success authorize
 
     sleep 30  # Wait for authorization to clear. Doesn't always work.
-    assert capture = @gateway.capture(authorize.authorization)
+    assert capture = @gateway.capture(nil, authorize.authorization)
     assert_success capture
   end
 
@@ -80,15 +89,15 @@ class RemoteWepayTest < Test::Unit::TestCase
     authorize = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorize
 
-    assert void = @gateway.void(authorize.authorization, { :cancel_reason => "Cancel" })
+    void = @gateway.void(authorize.authorization, cancel_reason: "Cancel")
     assert_success void
   end
 
   def test_invalid_login
     gateway = WepayGateway.new(
-      :client_id => 12515,
-      :account_id => 'abc',
-      :access_token => 'def'
+      client_id: 12515,
+      account_id: 'abc',
+      access_token: 'def'
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response

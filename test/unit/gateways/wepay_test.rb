@@ -22,7 +22,7 @@ class WepayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal "1117213582", response.authorization
+    assert_equal "1117213582|200.00", response.authorization
   end
 
   def test_failed_purchase
@@ -38,7 +38,7 @@ class WepayTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, "1422891921", @options)
     assert_success response
 
-    assert_equal "1117213582", response.authorization
+    assert_equal "1117213582|200.00", response.authorization
   end
 
   def test_failed_purchase_with_token
@@ -96,14 +96,14 @@ class WepayTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).at_most(2).returns(successful_capture_response)
 
-    response = @gateway.capture(@amount, @options)
+    response = @gateway.capture(@amount, "auth|amount", @options)
     assert_success response
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_post).at_most(2).returns(failed_capture_response)
 
-    response = @gateway.capture(@amount, @options)
+    response = @gateway.capture("auth|amount", @options)
     assert_failure response
     assert_equal "Checkout object must be in state 'Reserved' to capture. Currently it is in state captured", response.message
   end
@@ -111,14 +111,14 @@ class WepayTest < Test::Unit::TestCase
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    response = @gateway.void(@amount, @options)
+    response = @gateway.void("auth|amount", @options)
     assert_success response
   end
 
   def test_failed_void
     @gateway.expects(:ssl_post).returns(failed_void_response)
 
-    response = @gateway.void(@amount, @options)
+    response = @gateway.void("auth|amount", @options)
     assert_failure response
     assert_equal "this checkout has already been cancelled", response.message
   end
