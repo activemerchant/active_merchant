@@ -5,6 +5,8 @@
 * Add WePay gateway [faizalzakaria]
 * SmartPs: Add ECI option to SmartPs [odorcicd]
 * Rescue and re-raise ActionViewHelperError when offsite helpers raise an error [odorcicd]
+* Add FirstGiving gateway [faizalzakaria]
+* FirstGiving: Fix refunds [ntalbott]
 
 == Version 1.42.6 (February 24, 2014)
 
