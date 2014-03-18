@@ -8,6 +8,7 @@
 * Add FirstGiving gateway [faizalzakaria]
 * FirstGiving: Fix refunds [ntalbott]
 * Samurai: Handle server errors [ntalbott]
+* WePay: Fix refund [duff]
 
 == Version 1.42.6 (February 24, 2014)
 

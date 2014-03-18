@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
         else
           MultiResponse.run do |r|
             r.process { store(payment_method, options) }
-            r.process { purchase_with_token(post, money, r.authorization, options) }
+            r.process { purchase_with_token(post, money, split_authorization(r.authorization).first, options) }
           end
         end
       end
@@ -34,28 +34,32 @@ module ActiveMerchant #:nodoc:
         else
           MultiResponse.run do |r|
             r.process { store(payment_method, options) }
-            r.process { purchase_with_token(post, money, r.authorization, options) }
+            r.process { purchase_with_token(post, money, split_authorization(r.authorization).first, options) }
           end
         end
       end
 
-      def capture(identifier, options = {})
+      def capture(money, identifier, options = {})
         post = {}
-        post[:checkout_id] = identifier
+        post[:checkout_id] = split_authorization(identifier).first
         commit('/checkout/capture', post)
       end
 
       def void(identifier, options = {})
         post = {}
-        post[:checkout_id] = identifier
+        post[:checkout_id] = split_authorization(identifier).first
         post[:cancel_reason] = (options[:description] || "Void")
         commit('/checkout/cancel', post)
       end
 
       def refund(money, identifier, options = {})
+        checkout_id, original_amount = split_authorization(identifier)
+
         post = {}
-        post[:checkout_id] = identifier
-        post[:amount] = amount(money) if money
+        post[:checkout_id] = checkout_id
+        if(money && (original_amount != amount(money)))
+          post[:amount] = amount(money)
+        end
         post[:refund_reason] = (options[:description] || "Refund")
         post[:app_fee] = options[:application_fee] if options[:application_fee]
         post[:payer_email_message] = options[:payer_email_message] if options[:payer_email_message]
@@ -89,7 +93,7 @@ module ActiveMerchant #:nodoc:
             post[:address]["postcode"] = billing_address[:zip]
           end
         end
-        commit('/credit_card/create', post, authorization_field: "credit_card_id")
+        commit('/credit_card/create', post)
       end
 
       private
@@ -148,7 +152,7 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response),
           response,
-          authorization: authorization_from(response, options),
+          authorization: authorization_from(response, params),
           test: test?
         )
       end
@@ -161,8 +165,15 @@ module ActiveMerchant #:nodoc:
         (response["error"] ? response["error_description"] : "Success")
       end
 
-      def authorization_from(response, options)
-        response[options[:authorization_field] || "checkout_id"].to_s
+      def authorization_from(response, params)
+        return response["credit_card_id"].to_s if response["credit_card_id"]
+
+        [response["checkout_id"], params[:amount]].join('|')
+      end
+
+      def split_authorization(authorization)
+        auth, original_amount = authorization.to_s.split("|")
+        [auth, original_amount]
       end
 
       def headers
