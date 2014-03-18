@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, identifier, options = {})
         get = {}
         get[:transactionId] = identifier
-        get[:transType]     = 'REFUNDRQUEST'
+        get[:tranType]     = 'REFUNDREQUEST'
         commit("/transaction/refundrequest?" + encode(get))
       end
 

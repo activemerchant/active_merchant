@@ -32,19 +32,18 @@ class RemoteFirstGivingTest < Test::Unit::TestCase
     )
   end
 
-  # TODO: Firstgiving cannot refund in sandbox!
-  # def test_successful_refund
-  #  assert purchase = @gateway.purchase(@amount, @credit_card, @options)
-  #  assert_success purchase
+  def test_successful_refund
+   assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+   assert_success purchase
 
-  #  assert response = @gateway.refund(@amount, purchase.authorization)
-  #  assert_equal "Success", response.message
-  # end
+   assert response = @gateway.refund(@amount, purchase.authorization)
+   assert_equal "REFUND_REQUESTED_AWAITING_REFUND", response.message
+  end
 
   def test_failed_refund
     assert response = @gateway.refund(@amount, "1234")
     assert_failure response
-    assert_equal "Object reference not set to an instance of an object.", response.message
+    assert_equal "An error occurred. Please check your input and try again.", response.message
   end
 
   def test_invalid_login
