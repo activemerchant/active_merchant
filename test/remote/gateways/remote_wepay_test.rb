@@ -57,8 +57,17 @@ class RemoteWepayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_full_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    sleep 30 # Wait for purchase to clear. Doesn't always work.
+    response = @gateway.refund(@amount, purchase.authorization)
+    assert_success response
+  end
+
   def test_failed_capture
-    response = @gateway.capture(@amount, '123')
+    response = @gateway.capture('123')
     assert_failure response
   end
 
