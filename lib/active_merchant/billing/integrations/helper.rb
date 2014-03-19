@@ -44,6 +44,15 @@ module ActiveMerchant #:nodoc:
           end
         end
 
+        def add_array_field(top_level_key, subkey, index, params)
+          return unless top_level = mappings[top_level_key]
+
+          params.each do |k, v|
+            field = mappings[subkey][k]
+            add_field("#{top_level}[#{index}][#{field}]", v) unless field.blank?
+          end
+        end
+
         # Add a field that has characters that CGI::escape would mangle. Allows
         # for multiple fields with the same name (e.g., to support line items).
         def add_raw_html_field(name, value)
@@ -62,7 +71,19 @@ module ActiveMerchant #:nodoc:
         def shipping_address(params = {})
           add_address(:shipping_address, params)
         end
-        
+
+        def line_item(params = {})
+          add_array_field(:line_items, :line_item, next_line_item_number, params)
+        end
+
+        def next_line_item_number
+          if @line_item_number
+            @line_item_number += 1
+          else
+            @line_item_number = 0
+          end
+        end
+
         def form_fields
           @fields
         end

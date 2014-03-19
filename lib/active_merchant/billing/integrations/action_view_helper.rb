@@ -13,11 +13,11 @@ module ActiveMerchant #:nodoc:
         #
         # The helper creates a scope around a payment service helper
         # which provides the specific mapping for that service.
-        # 
+        #
         #  <% payment_service_for 1000, 'paypalemail@mystore.com',
-        #                               :amount => 50.00, 
-        #                               :currency => 'CAD', 
-        #                               :service => :paypal, 
+        #                               :amount => 50.00,
+        #                               :currency => 'CAD',
+        #                               :service => :paypal,
         #                               :html => { :id => 'payment-form' } do |service| %>
         #
         #    <% service.customer :first_name => 'Cody',
@@ -31,6 +31,20 @@ module ActiveMerchant #:nodoc:
         #                              :state => 'ON',
         #                              :country => 'CA',
         #                              :zip => 'K1J1E5' %>
+        #
+        #    <% service.line_item :reference => '1234',
+        #                         :name => 'T-shirt',
+        #                         :unit_price => 10.00,
+        #                         :quantity => 2,
+        #                         :tax_rate => 0.13,
+        #                         :url => 'http://myshop.com/products/1234' %>
+        #
+        #    <% service.line_item :reference => '1235',
+        #                         :name => 'Pants',
+        #                         :unit_price => 30.00,
+        #                         :quantity => 1,
+        #                         :tax_rate => 0.13,
+        #                         :url => 'http://myshop.com/products/1235' %>
         #
         #    <% service.invoice '#1000' %>
         #    <% service.shipping '0.00' %>
@@ -59,14 +73,14 @@ module ActiveMerchant #:nodoc:
           service.form_fields.each do |field, value|
             result << hidden_field_tag(field, value)
           end
-          
+
           service.raw_html_fields.each do |field, value|
             result << "<input id=\"#{field}\" name=\"#{field}\" type=\"hidden\" value=\"#{value}\" />\n"
           end
-          
+
           result << '</form>'
           result= result.join("\n")
-          
+
           concat(result.respond_to?(:html_safe) ? result.html_safe : result)
           nil
         rescue => e
