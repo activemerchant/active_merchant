@@ -7,15 +7,26 @@ class KlarnaModuleTest < Test::Unit::TestCase
     assert_instance_of Klarna::Notification, Klarna.notification('name=cody')
   end
 
-  def test_merchant_digest_fields
-    fields = {}
-    secret = 'Example secret'
-    cart_items = [{'type' => 'physical',
-                   'reference' => '#001',
-                   'quantity' => 1,
-                   'unit_price' => Money.new(1.00),
-                   'tax_rate' => 0}]
+  def test_sign
+    fields = {
+      'purchase_country' => 'SE',
+      'purchase_currency' => 'SEK',
+      'locale' => 'sv-se',
+      'merchant_id' => '1860',
 
-    assert_equal 'fbe93ded85c3fda77dbb0764ae8697a6700d0f4a04dba05fa6c4bdee0117741c', Klarna.sign(fields, cart_items, secret)
+      'merchant_terms_uri' => 'http://some-webstore.se?URI=tc',
+      'merchant_checkout_uri' => 'http://some-webstore.se?URI=checkout',
+      'merchant_base_uri' => 'http://some-webstore.se?URI=home',
+      'merchant_confirmation_uri' => 'http://some-webstore.se?URI=confirmation'
+    }
+
+    cart_items = [CartItem.new('physical', '12345', '1', '10000', '1000')]
+
+    shared_secret = 'example-shared-secret'
+
+    calculated_digest = "eEvBSNj7drZoBk6JX83ioAkpLSsYmHSDZWH2jkHvY+g="
+    assert_equal calculated_digest, Klarna.sign(fields, cart_items, shared_secret)
   end
+
+  CartItem = Struct.new(:type, :reference, :quantity, :unit_price, :discount_rate)
 end

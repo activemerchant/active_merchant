@@ -8,7 +8,7 @@ class KlarnaHelperTest < Test::Unit::TestCase
     @credential1 = "Example Merchant ID"
     @options = {
       :amount           =>  Money.new(10.00),
-      :currency         => 'EUR',
+      :currency         => 'SEK',
       :country          => 'SE',
       :account_name     => 'Example Shop Name',
       :credential2      => 'Example shared secret',
@@ -26,12 +26,15 @@ class KlarnaHelperTest < Test::Unit::TestCase
     assert_field 'purchase_country', @options[:country]
     assert_field 'purchase_currency', @options[:currency]
 
-    assert_field 'locale', "Sv Se"
+    assert_field 'locale', "sv-se"
     
     assert_field 'merchant_id', @credential1
     assert_field 'platform_type', @helper.application_id
 
-    assert_field 'merchant_digest', '74af1e1a5ec330c8536cb05eea5d0d81ab5983d444a0be5693ac5b8b096d2f5f'
+    # Call hook to populate merchant_digest field
+    @helper.form_fields
+
+    assert_field 'merchant_digest', 'pvTfIvYNeswmGrUz8VwcZ0H1jEvLsxy3JYAZQW20OWM='
   end
 
   def test_merchant_uri_fields
@@ -45,20 +48,20 @@ class KlarnaHelperTest < Test::Unit::TestCase
   end
 
   def test_cart_items
-    item = @helper.cart_items[0]
+    item = @options[:cart_items][0]
 
-    assert_field 'cart_item-1_type', item.type.to_s
-    assert_field 'cart_item-1_reference', item.reference.to_s
-    assert_field 'cart_item-1_name', item.name.to_s
-    assert_field 'cart_item-1_quantity', item.quantity.to_s
-    assert_field 'cart_item-1_unit_price', item.unit_price.to_s
-    assert_field 'cart_item-1_tax_rate', sprintf("%.2f", item.tax_rate)
+    assert_field 'cart_item-0_type', item.type.to_s
+    assert_field 'cart_item-0_reference', item.reference.to_s
+    assert_field 'cart_item-0_name', item.name.to_s
+    assert_field 'cart_item-0_quantity', item.quantity.to_s
+    assert_field 'cart_item-0_unit_price', item.unit_price.to_s
+    assert_field 'cart_item-0_tax_rate', item.tax_rate.to_s
   end
 
   private
 
-  Item = Struct.new(:type, :reference, :name, :quantity, :unit_price, :tax_rate)
+  CartItem = Struct.new(:type, :reference, :name, :quantity, :unit_price, :tax_rate)
   def example_cart_item(order_number = 1)
-    item = Item.new('physical', "##{order_number}", 'example item description', 1, Money.new(1.00), 0)
+    item = CartItem.new('physical', "##{order_number}", 'example item description', 1, Money.new(1.00), 0)
   end
 end
