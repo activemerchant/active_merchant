@@ -112,17 +112,6 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal 2, customer_response.params["cards"]["count"]
   end
 
-  def test_successful_update
-    creation = @gateway.store(@credit_card, {:description => "Active Merchant Update Customer"})
-    assert response = @gateway.update(creation.params['id'], @new_credit_card)
-    assert_success response
-    customer_response = response.responses.last
-    assert_equal "Active Merchant Update Customer", customer_response.params["description"]
-    first_card = customer_response.params["cards"]["data"].first
-    assert_equal customer_response.params["default_card"], first_card["id"]
-    assert_equal @new_credit_card.last_digits, first_card["last4"]
-  end
-
   def test_successful_unstore
     creation = @gateway.store(@credit_card, {:description => "Active Merchant Unstore Customer"})
     customer_id = creation.params['id']
@@ -211,5 +200,21 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success response
     assert response.params['balance_transaction'].is_a?(Hash)
     assert_equal 'balance_transaction', response.params['balance_transaction']['object']
+  end
+
+  def test_successful_update
+    creation    = @gateway.store(@credit_card, {:description => "Active Merchant Update Credit Card"})
+    customer_id = creation.params['id']
+    card_id     = creation.params['cards']['data'].first['id']
+
+    assert response = @gateway.update(customer_id, card_id, { :name => "John Doe", :address_line1 => "123 Main Street", :address_city => "Pleasantville", :address_state => "NY", :address_zip => "12345", :exp_year => Time.now.year + 2, :exp_month => 6 })
+    assert_success response
+    assert_equal "John Doe",        response.params["name"]
+    assert_equal "123 Main Street", response.params["address_line1"]
+    assert_equal "Pleasantville",   response.params["address_city"]
+    assert_equal "NY",              response.params["address_state"]
+    assert_equal "12345",           response.params["address_zip"]
+    assert_equal Time.now.year + 2, response.params["exp_year"]
+    assert_equal 6,                 response.params["exp_month"]
   end
 end

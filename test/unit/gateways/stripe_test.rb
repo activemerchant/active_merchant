@@ -383,6 +383,15 @@ class StripeTest < Test::Unit::TestCase
     @gateway.authorize(@amount, @credit_card, @options)
   end
 
+  def test_new_attributes_are_included_in_update
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.send(:update, "cus_3sgheFxeBgTQ3M", "card_483etw4er9fg4vF3sQdrt3FG", { :name => "John Smith", :exp_year => 2021, :exp_month => 6 })
+    end.check_request do |method, endpoint, data, headers|
+      assert data == "name=John+Smith&exp_year=2021&exp_month=6" 
+      assert endpoint.include? "/customers/cus_3sgheFxeBgTQ3M/cards/card_483etw4er9fg4vF3sQdrt3FG"
+    end.respond_with(successful_update_credit_card_response)
+  end
+
   private
 
   # Create new customer and set default credit card
@@ -636,6 +645,31 @@ class StripeTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_update_credit_card_response
+    <<-RESPONSE
+    {
+      "id": "card_483etw4er9fg4vF3sQdrt3FG",
+      "object": "card",
+      "last4": "4242",
+      "type": "Visa",
+      "exp_month": 6,
+      "exp_year": 2021,
+      "fingerprint": "5dgRQ3dVRGaQWDFb",
+      "customer": "cus_3sgheFxeBgTQ3M",
+      "country": "US",
+      "name": "John Smith",
+      "address_line1": null,
+      "address_line2": null,
+      "address_city": null,
+      "address_state": null,
+      "address_zip": null,
+      "address_country": null,
+      "cvc_check": null,
+      "address_line1_check": null,
+      "address_zip_check": null
+    }
+    RESPONSE
+  end
   # Place raw invalid JSON from gateway here
   def invalid_json_response
     <<-RESPONSE

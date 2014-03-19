@@ -125,15 +125,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def update(customer_id, creditcard, options = {})
-        options = options.merge(:customer => customer_id, :set_default => true)
-        store(creditcard, options)
+      def update(customer_id, card_id, options = {})
+        commit(:post, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(card_id)}", options, options)
       end
 
       def update_customer(customer_id, options = {})
         commit(:post, "customers/#{CGI.escape(customer_id)}", options, options)
       end
-
+      
       def unstore(customer_id, card_id = nil, options = {})
         if card_id.nil?
           commit(:delete, "customers/#{CGI.escape(customer_id)}", nil, options)
