@@ -6,6 +6,8 @@ class MollieIdealNotificationTest < Test::Unit::TestCase
   def setup
     @required_options = { :credential1 => '1234567' }
     @notification = MollieIdeal::Notification.new("id=tr_h2PhlwFaX8", @required_options)
+
+    MollieIdeal::API.stubs(:new).with('1234567').returns(@mock_api = mock())
   end
 
   def test_accessors
@@ -15,13 +17,13 @@ class MollieIdealNotificationTest < Test::Unit::TestCase
   end
 
   def test_no_acknowledgement_of_pending_transaction
-    MollieIdeal.expects(:get_request).returns(PENDING_CHECK_PAYMENT_STATUS_RESPONSE)
+    @mock_api.expects(:get_request).returns(PENDING_CHECK_PAYMENT_STATUS_RESPONSE)
     assert !@notification.acknowledge
     assert_equal 'Pending', @notification.status
   end
 
   def test_acknowledgement_sets_params
-    MollieIdeal.expects(:get_request).returns(SUCCESSFUL_CHECK_PAYMENT_STATUS_RESPONSE)
+    @mock_api.expects(:get_request).returns(SUCCESSFUL_CHECK_PAYMENT_STATUS_RESPONSE)
     assert @notification.acknowledge
 
     assert_equal 'Completed', @notification.status
