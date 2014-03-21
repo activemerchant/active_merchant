@@ -13,6 +13,10 @@ module ActiveMerchant #:nodoc:
         class_attribute :application_id
         self.application_id = 'ActiveMerchant'
 
+        def self.inherited(subclass)
+          subclass.mappings = {}
+        end
+
         def initialize(order, account, options = {})
           options.assert_valid_keys([:amount, :currency, :test, :credential2, :credential3, :credential4, :country, :account_name, :transaction_type, :authcode])
           @fields          = {}
@@ -28,7 +32,6 @@ module ActiveMerchant #:nodoc:
         end
 
         def self.mapping(attribute, options = {})
-          self.mappings ||= {}
           self.mappings[attribute] = options
         end
 
