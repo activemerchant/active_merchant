@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       module MollieIdeal
         class Helper < ActiveMerchant::Billing::Integrations::Helper
 
-          attr_accessor :order, :amount, :redirect_param, :account_name,
+          attr_accessor :redirect_paramaters, :amount, :redirect_param, :account_name,
               :return_url, :notify_url, :redirect_param, :account, :account_name
 
           attr_reader :transaction_id
