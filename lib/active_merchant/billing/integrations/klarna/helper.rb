@@ -1,9 +1,3 @@
-class Hash
-  def add_stringified_keys!
-    keys.each {|key| self[key.to_s] = self[key] }
-  end
-end
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
@@ -34,7 +28,6 @@ module ActiveMerchant #:nodoc:
 
           def line_item(item)
             @line_items ||= []
-            item.add_stringified_keys!
             @line_items << item
 
             i = @line_items.size - 1
