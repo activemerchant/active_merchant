@@ -3,9 +3,6 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Klarna
         class Helper < ActiveMerchant::Billing::Integrations::Helper
-          # change to line_items?
-          attr_reader :cart_items
-
           mapping :currency, 'purchase_currency'
           mapping :return_url, 'merchant_confirmation_uri'
           mapping :notify_url, 'merchant_push_uri'
@@ -21,8 +18,6 @@ module ActiveMerchant #:nodoc:
 
             add_field('platform_type', application_id)
             add_field('locale', guess_locale_based_on_country(options[:country]))
-
-            self.cart_items = options[:cart_items]
           end
 
           def line_item(item)
@@ -49,20 +44,6 @@ module ActiveMerchant #:nodoc:
             add_field('test_mode', 'true') if test?
 
             super
-          end
-
-          def cart_items=(items)
-            @cart_items = items ||= []
-
-            items.each_with_index do |item, i|
-              add_field("cart_item-#{i}_type", item.type.to_s)
-              add_field("cart_item-#{i}_reference", item.reference.to_s)
-              add_field("cart_item-#{i}_name", item.name.to_s)
-              add_field("cart_item-#{i}_quantity", item.quantity.to_s)
-              add_field("cart_item-#{i}_unit_price", item.unit_price.to_s)
-              add_field("cart_item-#{i}_discount_rate", item.discount_rate.to_s) if item.respond_to?(:discount_rate)
-              add_field("cart_item-#{i}_tax_rate", item.tax_rate)
-            end
           end
 
           private

@@ -12,8 +12,7 @@ class KlarnaHelperTest < Test::Unit::TestCase
       :country          => 'SE',
       :account_name     => 'Example Shop Name',
       :credential2      => 'Example shared secret',
-      :test             => false,
-      :cart_items       => [example_cart_item]
+      :test             => false
     }
 
     # For remote tests later
@@ -64,17 +63,6 @@ class KlarnaHelperTest < Test::Unit::TestCase
     assert_field 'merchant_checkout_uri', example_cancel_url
     assert_field 'merchant_base_uri', example_cancel_url
     assert_field 'merchant_confirmation_uri', example_cancel_url
-  end
-
-  def test_cart_items
-    item = @options[:cart_items][0]
-
-    assert_field 'cart_item-0_type', item.type.to_s
-    assert_field 'cart_item-0_reference', item.reference.to_s
-    assert_field 'cart_item-0_name', item.name.to_s
-    assert_field 'cart_item-0_quantity', item.quantity.to_s
-    assert_field 'cart_item-0_unit_price', item.unit_price.to_s
-    assert_field 'cart_item-0_tax_rate', item.tax_rate.to_s
   end
 
   private
