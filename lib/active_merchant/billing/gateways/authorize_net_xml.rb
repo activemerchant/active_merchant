@@ -29,8 +29,8 @@ module ActiveMerchant #:nodoc:
 
       class_attribute :arb_test_url, :arb_live_url
 
-      @test_url = "https://test.authorize.net/gateway/transact.dll"
-      @live_url = "https://secure.authorize.net/gateway/transact.dll"
+      self.test_url = "https://test.authorize.net/gateway/transact.dll"
+      self.live_url = "https://secure.authorize.net/gateway/transact.dll"
 
       self.arb_test_url = 'https://apitest.authorize.net/xml/v1/request.api'
       self.arb_live_url = 'https://api.authorize.net/xml/v1/request.api'
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
       APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
 
       RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT, AUTHORIZATION_CODE = 0, 2, 3, 4
-      AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE, CARDHOLDER_AUTH_CODE  = 5, 6, 38, 39
+      AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE, CARDHOLDER_AUTH_CODE = 5, 6, 38, 39
 
       self.default_currency = 'USD'
 
@@ -48,7 +48,6 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net'
-      sel
 
       CARD_CODE_ERRORS = %w( N S )
       AVS_ERRORS = %w( A E N R W Z )
@@ -179,8 +178,8 @@ module ActiveMerchant #:nodoc:
       def refund(money, identification, options = {})
         requires!(options, :card_number)
 
-        post = { :trans_id => identification,
-                 :card_num => options[:card_number]
+        post = {:trans_id => identification,
+                :card_num => options[:card_number]
         }
 
         post[:first_name] = options[:first_name] if options[:first_name]
@@ -283,50 +282,40 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters)
         parameters[:amount] = amount(money) unless action == 'VOID'
 
-        #url = test? ? self.test_url : self.live_url
         gateway = test? ? AuthorizeNet::AIM::Transaction::Gateway::TEST : AuthorizeNet::AIM::Transaction::Gateway::LIVE
 
-        #data = ssl_post url, post_data(action, parameters)
-        transaction = AuthorizeNet::AIM::Transaction.new(@options[:login],@options[:password], :transaction_type => action, :gateway => gateway, :test => test?)
-        #do_transaction replaces ssl_post call
+        transaction = AuthorizeNet::AIM::Transaction.new(@options[:login], @options[:password], :transaction_type => action, :gateway => gateway, :test => test?)
+
         response = do_transaction(transaction, action, parameters)
 
-        #build_response replaces parse
-        #response = build_response(anet_response)
-        #response[:action] = action
-
-        #message = message_from(response)
-=begin
-        Response.new(
-            success,
-            raw_response["message"],
-            raw_response,
-            :test => test?,
-            :authorization => raw_response["id"]
-        )
-        Response.new(success?(response), message, response,
+        response_fields= response.instance_variable_get(:@fields)
+        Response.new(response.success?, response_fields[:response_reason_text], response_fields,
                      :test => test?,
-                     :authorization => response[:transaction_id],
-                     :fraud_review => fraud_review?(response),
-                     :avs_result => { :code => response[:avs_result_code] },
-                     :cvv_result => response[:card_code]
-        )
-
-        Response.new(success, message, response, options)
-=end
-        Response.new(response.success?, 'This transaction has been approved', {:key => "string"},
-                     :test => test?,
-                     :authorization => response.authorization_code,
-                     #:avs_result => response.avs_response
-                     #{:cvv_result => response.card_code}
+                     :authorization => response.authorization_code
+        #:avs_result => response.avs_response
+        #{:cvv_result => response.card_code}
         )
       end
-=begin
-      transaction = AuthorizeNet::AIM::Transaction.new(@api_login, @api_key, :transaction_type => @type, :gateway => @gateway, :test => @test_mode)
-      transaction.purchase(@amount, @credit_card).should be_kind_of(AuthorizeNet::AIM::Response)
-      transaction.response.fields[:amount].should == @amount
-      transaction.response.success?.should be_true
-=end
+
+      def do_transaction(transaction, action, parameters)
+        if action.eql? 'AUTH_CAPTURE'
+          response = transaction.purchase(parameters[:amount], @payment_source)
+        elsif action.eql? 'AUTH_ONLY'
+          response = transaction.authorize(parameters[:amount], @payment_source)
+        elsif action.eql? 'CAPTURE_ONLY'
+          response = transaction.capture(parameters[:amount], @payment_source)
+        elsif action.eql? 'CREDIT'
+          response = transaction.refund(parameters[:amount], @payment_source)
+        elsif action.eql? 'PRIOR_AUTH_CAPTURE'
+          response = transaction.prior_auth_capture(parameters[:amount], @payment_source)
+        elsif action.eql? 'VOID'
+          response = transaction.void(parameters[:amount], @payment_source)
+        else
+          raise TypeError, 'An undefined transaction type: #{action} was used'
+        end
+        response
+      end
+
       def success?(response)
         response[:response_code] == APPROVED && TRANSACTION_ALREADY_ACTIONED.exclude?(response[:response_reason_code])
       end
@@ -338,58 +327,6 @@ module ActiveMerchant #:nodoc:
       def get_action_type(action)
         type = ACTION_TYPES[action]
       end
-
-      def do_transaction(transaction, action, parameters)
-=begin
-        post[:card_num]   = creditcard.number
-        post[:card_code]  = creditcard.verification_value if creditcard.verification_value?
-        post[:exp_date]   = expdate(creditcard)
-        post[:first_name] = creditcard.first_name
-        post[:last_name]  = creditcard.last_name
-=end
-
-        if action.eql? 'AUTH_CAPTURE'
-          response = transaction.purchase(parameters[:amount], credit_card)
-        end
-        response
-      end
-
-      #converts AuthorizeNet::AIM::Response to Intermediary response
-      def build_response(anet_response)
-        #fields = split(body)
-
-
-        results = {
-            #:response_code => fields[RESPONSE_CODE].to_i,
-            #:response_reason_code => fields[RESPONSE_REASON_CODE],
-            #:response_reason_text => fields[RESPONSE_REASON_TEXT],
-            :avs_result_code => anet_response.avs_response,
-            :transaction_id => anet_response.transaction_id,
-            #:card_code => fields[CARD_CODE_RESPONSE_CODE],
-            :authorization_code => anet_response.authorization_code,
-            #:cardholder_authentication_code => fields[CARDHOLDER_AUTH_CODE]
-        }
-        results
-      end
-
-=begin
-      def post_data(action, parameters = {})
-        post = {}
-
-        post[:version]        = API_VERSION
-        post[:login]          = @options[:login]
-        post[:tran_key]       = @options[:password]
-        post[:relay_response] = "FALSE"
-        post[:type]           = action
-        post[:delim_data]     = "TRUE"
-        post[:delim_char]     = ","
-        post[:encap_char]     = "$"
-        post[:solution_ID]    = application_id if application_id.present? && application_id != "ActiveMerchant"
-
-        request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
-        request
-      end
-=end
 
       def add_currency_code(post, money, options)
         post[:currency_code] = options[:currency] || currency(money)
@@ -407,8 +344,9 @@ module ActiveMerchant #:nodoc:
         post[:exp_date]   = expdate(creditcard)
         post[:first_name] = creditcard.first_name
         post[:last_name]  = creditcard.last_name
+        :card_number, :expiration, :card_code, :card_type, :track_1, :track_2
 =end
-        payment_source = AuthorilzeNet::CreditCard.new(parameters[:card_num], parameters[:exp_date], parameters)
+        @payment_source = AuthorizeNet::CreditCard.new(creditcard.number, expdate(creditcard), options)
       end
 
       def add_payment_source(params, source, options={})
@@ -420,6 +358,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_check(post, check, options)
+        @payment_source = AuthorizeNet::ECheck.new(check.routing_number, check.account_number, check.bank_name, check.name)
+
+=begin
+        #initialize(routing_number, account_number, bank_name, account_holder_name, options = {})
         post[:method] = "ECHECK"
         post[:bank_name] = check.bank_name
         post[:bank_aba_code] = check.routing_number
@@ -429,6 +371,7 @@ module ActiveMerchant #:nodoc:
         post[:bank_acct_name] = check.name
         post[:bank_check_number] = check.number if check.number.present?
         post[:recurring_billing] = (options[:recurring] ? "TRUE" : "FALSE")
+=end
       end
 
       def add_customer_data(post, options)
@@ -468,11 +411,11 @@ module ActiveMerchant #:nodoc:
         if address = options[:billing_address] || options[:address]
           post[:address] = address[:address1].to_s
           post[:company] = address[:company].to_s
-          post[:phone]   = address[:phone].to_s
-          post[:zip]     = address[:zip].to_s
-          post[:city]    = address[:city].to_s
+          post[:phone] = address[:phone].to_s
+          post[:zip] = address[:zip].to_s
+          post[:city] = address[:city].to_s
           post[:country] = address[:country].to_s
-          post[:state]   = address[:state].blank?  ? 'n/a' : address[:state]
+          post[:state] = address[:state].blank? ? 'n/a' : address[:state]
         end
 
         if address = options[:shipping_address]
@@ -480,30 +423,35 @@ module ActiveMerchant #:nodoc:
           post[:ship_to_last_name] = address[:last_name].to_s
           post[:ship_to_address] = address[:address1].to_s
           post[:ship_to_company] = address[:company].to_s
-          post[:ship_to_phone]   = address[:phone].to_s
-          post[:ship_to_zip]     = address[:zip].to_s
-          post[:ship_to_city]    = address[:city].to_s
+          post[:ship_to_phone] = address[:phone].to_s
+          post[:ship_to_zip] = address[:zip].to_s
+          post[:ship_to_city] = address[:city].to_s
           post[:ship_to_country] = address[:country].to_s
-          post[:ship_to_state]   = address[:state].blank?  ? 'n/a' : address[:state]
+          post[:ship_to_state] = address[:state].blank? ? 'n/a' : address[:state]
         end
       end
 
       # Make a ruby type out of the response string
       def normalize(field)
         case field
-          when "true"   then true
-          when "false"  then false
-          when ""       then nil
-          when "null"   then nil
-          else field
+          when "true" then
+            true
+          when "false" then
+            false
+          when "" then
+            nil
+          when "null" then
+            nil
+          else
+            field
         end
       end
 
       def message_from(results)
         if results[:response_code] == DECLINED
-          return CVVResult.messages[ results[:card_code] ] if CARD_CODE_ERRORS.include?(results[:card_code])
+          return CVVResult.messages[results[:card_code]] if CARD_CODE_ERRORS.include?(results[:card_code])
           if AVS_REASON_CODES.include?(results[:response_reason_code]) && AVS_ERRORS.include?(results[:avs_result_code])
-            return AVSResult.messages[ results[:avs_result_code] ]
+            return AVSResult.messages[results[:avs_result_code]]
           end
         end
 
@@ -511,7 +459,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
+        year = sprintf("%.4i", creditcard.year)
         month = sprintf("%.2i", creditcard.month)
 
         "#{month}#{year[-2..-1]}"
@@ -785,7 +733,7 @@ module ActiveMerchant #:nodoc:
 
       def recurring_parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|e| recurring_parse_element(response, e) }
+          node.elements.each { |e| recurring_parse_element(response, e) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
