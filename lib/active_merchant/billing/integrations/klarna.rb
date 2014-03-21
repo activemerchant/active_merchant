@@ -4,6 +4,18 @@ require File.dirname(__FILE__) + '/klarna/return.rb'
 
 require 'digest'
 
+require 'delegate'
+class Hashy < SimpleDelegator
+  def method_missing(method_name, *args, &block)
+    key = method_name.to_sym.to_s
+    if __getobj__.respond_to?(:has_key?) && __getobj__.has_key?(key)
+      __getobj__.fetch(key, nil)
+    else
+      super
+    end
+  end
+end
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
@@ -29,10 +41,12 @@ module ActiveMerchant #:nodoc:
                     fields['locale'].to_s
 
           cart_items.each do |item|
-            payload << item.type.to_s + 
-                       item.reference.to_s + 
-                       item.quantity.to_s + 
-                       item.unit_price.to_s
+            item = Hashy.new(item)
+
+            payload << item[:type].to_s +
+                       item[:reference].to_s +
+                       item[:quantity].to_s +
+                       item[:unit_price].to_s
 
             # Part of me wants to get rid of this, but this digest will fail if
             # a discount_rate is ever passed in as a cart item property, which

@@ -30,11 +30,30 @@ class KlarnaHelperTest < Test::Unit::TestCase
     
     assert_field 'merchant_id', @credential1
     assert_field 'platform_type', @helper.application_id
+  end
+
+  def test_merchant_digest
+    item = example_line_item
+    @helper.line_item(item)
+
+    @helper.cancel_return_url("http://example-cancel-url")
 
     # Call hook to populate merchant_digest field
     @helper.form_fields
 
-    assert_field 'merchant_digest', 'pvTfIvYNeswmGrUz8VwcZ0H1jEvLsxy3JYAZQW20OWM='
+    assert_field 'merchant_digest', "YEmynIXEziC4IKkCnsRXOhyA5HSihUVFZsxwqFBCjdk="
+  end
+
+  def test_line_item
+    item = example_line_item
+    @helper.line_item(item)
+
+    assert_field 'cart_item-0_type', item[:type].to_s
+    assert_field 'cart_item-0_reference', item[:reference].to_s
+    assert_field 'cart_item-0_name', item[:name].to_s
+    assert_field 'cart_item-0_quantity', item[:quantity].to_s
+    assert_field 'cart_item-0_unit_price', item[:unit_price].to_s
+    assert_field 'cart_item-0_tax_rate', item[:tax_rate].to_s
   end
 
   def test_merchant_uri_fields
@@ -63,5 +82,18 @@ class KlarnaHelperTest < Test::Unit::TestCase
   CartItem = Struct.new(:type, :reference, :name, :quantity, :unit_price, :tax_rate)
   def example_cart_item(order_number = 1)
     item = CartItem.new('physical', "##{order_number}", 'example item description', 1, Money.new(1.00), 0)
+  end
+
+  def example_line_item(order_number = 1)
+    cart_item = example_cart_item(order_number)
+    item = {
+      :type => cart_item.type,
+      :reference => cart_item.reference,
+      :name => cart_item.name,
+      :quantity => cart_item.quantity,
+      :unit_price => cart_item.unit_price,
+      :discount_rate => (cart_item.respond_to?(:discount_rate) ? cart_item.discount_rate : nil),
+      :tax_rate => cart_item.tax_rate
+    }
   end
 end
