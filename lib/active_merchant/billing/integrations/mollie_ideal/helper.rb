@@ -52,9 +52,16 @@ module ActiveMerchant #:nodoc:
               :metadata => { :order => order }
             }
 
-            options[:webhookUrl] = notify_url unless notify_url.blank?
+            request_params[:webhookUrl] = notify_url unless notify_url.blank?
 
             MollieIdeal.create_payment(account, request_params)
+          rescue ResponseError => e
+            if e.response.code == '422'
+              error = JSON.parse(e.response.body)['error']['message']
+              raise RedirectError, error
+            else
+              raise
+            end
           end
         end
       end
