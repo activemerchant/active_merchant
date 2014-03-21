@@ -1,162 +1,110 @@
+require 'nokogiri'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    # For more information on the Authorize.Net Gateway please visit their {Integration Center}[http://developer.authorize.net/]
-    #
-    # The login and password are not the username and password you use to
-    # login to the Authorize.Net Merchant Interface. Instead, you will
-    # use the API Login ID as the login and Transaction Key as the
-    # password.
-    #
-    # ==== How to Get Your API Login ID and Transaction Key
-    #
-    # 1. Log into the Merchant Interface
-    # 2. Select Settings from the Main Menu
-    # 3. Click on API Login ID and Transaction Key in the Security section
-    # 4. Type in the answer to the secret question configured on setup
-    # 5. Click Submit
-    #
     class AuthorizeNetGateway < Gateway
-      API_VERSION = '3.1'
+      include Empty
 
-      self.test_url = "https://test.authorize.net/gateway/transact.dll"
-      self.live_url = "https://secure.authorize.net/gateway/transact.dll"
+      self.test_url = 'https://apitest.authorize.net/xml/v1/request.api'
+      self.live_url = 'https://api.authorize.net/xml/v1/request.api'
+
+      self.supported_countries = %w(AD AT AU BE BG CA CH CY CZ DE DK ES FI FR GB GB GI GR HU IE IT LI LU MC MT NL NO PL PT RO SE SI SK SM TR US VA)
+      self.default_currency = 'USD'
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
+
+      self.homepage_url = 'http://www.authorize.net/'
+      self.display_name = 'Authorize.Net'
 
       class_attribute :duplicate_window
 
       APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
-
-      RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT, AUTHORIZATION_CODE = 0, 2, 3, 4
-      AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE, CARDHOLDER_AUTH_CODE  = 5, 6, 38, 39
-
-      self.default_currency = 'USD'
-
-      self.supported_countries = %w(AD AT AU BE BG CA CH CY CZ DE DK ES FI FR GB GB GI GR HU IE IT LI LU MC MT NL NO PL PT RO SE SI SK SM TR US VA)
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
-      self.homepage_url = 'http://www.authorize.net/'
-      self.display_name = 'Authorize.Net'
-
-      CARD_CODE_ERRORS = %w( N S )
-      AVS_ERRORS = %w( A E N R W Z )
-      AVS_REASON_CODES = %w(27 45)
       TRANSACTION_ALREADY_ACTIONED = %w(310 311)
 
-      # Creates a new AuthorizeNetGateway
-      #
-      # The gateway requires that a valid login and password be passed
-      # in the +options+ hash.
-      #
-      # ==== Options
-      #
-      # * <tt>:login</tt> -- The Authorize.Net API Login ID (REQUIRED)
-      # * <tt>:password</tt> -- The Authorize.Net Transaction Key. (REQUIRED)
-      # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test server.
-      #   Otherwise, perform transactions against the production server.
-      def initialize(options = {})
+      CARD_CODE_ERRORS = %w(N S)
+      AVS_ERRORS = %w(A E N R W Z)
+      AVS_REASON_CODES = %w(27 45)
+
+      TRACKS = {
+          1 => /^%(?<format_code>.)(?<pan>[\d]{1,19}+)\^(?<name>.{2,26})\^(?<expiration>[\d]{0,4}|\^)(?<service_code>[\d]{0,3}|\^)(?<discretionary_data>.*)\?\Z/,
+          2 => /\A;(?<pan>[\d]{1,19}+)=(?<expiration>[\d]{0,4}|=)(?<service_code>[\d]{0,3}|=)(?<discretionary_data>.*)\?\Z/
+      }.freeze
+
+      def initialize(options={})
         requires!(options, :login, :password)
         super
       end
 
-      # Performs an authorization, which reserves the funds on the customer's credit card, but does not
-      # charge the card.
-      #
-      # ==== Parameters
-      #
-      # * <tt>money</tt> -- The amount to be authorized as an Integer value in cents.
-      # * <tt>paysource</tt> -- The CreditCard or Check details for the transaction.
-      # * <tt>options</tt> -- A hash of optional parameters.
-      def authorize(money, paysource, options = {})
-        post = {}
-        add_currency_code(post, money, options)
-        add_invoice(post, options)
-        add_payment_source(post, paysource, options)
-        add_address(post, options)
-        add_customer_data(post, options)
-        add_duplicate_window(post)
-
-        commit('AUTH_ONLY', money, post)
+      def purchase(amount, payment, options = {})
+        commit("AUTH_CAPTURE") do |xml|
+          xml.refId options[:order_id]
+          xml.transactionRequest do
+            xml.transactionType 'authCaptureTransaction'
+            xml.amount amount
+            add_payment_source(xml, payment)
+            add_invoice(xml, options)
+            add_customer_data(xml, payment, options)
+            add_settings(xml, payment, options)
+            add_user_fields(xml, amount, options)
+          end
+        end
       end
 
-      # Perform a purchase, which is essentially an authorization and capture in a single operation.
-      #
-      # ==== Parameters
-      #
-      # * <tt>money</tt> -- The amount to be purchased as an Integer value in cents.
-      # * <tt>paysource</tt> -- The CreditCard or Check details for the transaction.
-      # * <tt>options</tt> -- A hash of optional parameters.
-      def purchase(money, paysource, options = {})
-        post = {}
-        add_currency_code(post, money, options)
-        add_invoice(post, options)
-        add_payment_source(post, paysource, options)
-        add_address(post, options)
-        add_customer_data(post, options)
-        add_duplicate_window(post)
-
-        commit('AUTH_CAPTURE', money, post)
+      def authorize(amount, payment, options={})
+        commit("AUTH_ONLY") do |xml|
+          xml.refId options[:order_id]
+          xml.transactionRequest do
+            xml.transactionType 'authOnlyTransaction'
+            xml.amount amount
+            add_payment_source(xml, payment)
+            add_invoice(xml, options)
+            add_customer_data(xml, payment, options)
+            add_settings(xml, payment, options)
+            add_user_fields(xml, amount, options)
+          end
+        end
       end
 
-      # Captures the funds from an authorized transaction.
-      #
-      # ==== Parameters
-      #
-      # * <tt>money</tt> -- The amount to be captured as an Integer value in cents.
-      # * <tt>authorization</tt> -- The authorization returned from the previous authorize request.
-      def capture(money, authorization, options = {})
-        post = {:trans_id => authorization}
-        add_customer_data(post, options)
-        add_invoice(post, options)
-        commit('PRIOR_AUTH_CAPTURE', money, post)
+      def capture(amount, authorization, options={})
+        commit("PRIOR_AUTH_CAPTURE") do |xml|
+          xml.refId options[:order_id]
+          xml.transactionRequest do
+            xml.transactionType 'priorAuthCaptureTransaction'
+            xml.amount amount
+            xml.refTransId split_authorization(authorization)[0]
+            add_invoice(xml, options)
+            add_user_fields(xml, amount, options)
+          end
+        end
       end
 
-      # Void a previous transaction
-      #
-      # ==== Parameters
-      #
-      # * <tt>authorization</tt> - The authorization returned from the previous authorize request.
-      def void(authorization, options = {})
-        post = {:trans_id => authorization}
-        add_duplicate_window(post)
-        commit('VOID', nil, post)
+      def refund(amount, authorization, options={})
+        transaction_id, card_number = split_authorization(authorization)
+        commit("CREDIT") do |xml|
+          xml.transactionRequest do
+            xml.transactionType 'refundTransaction'
+            xml.amount (amount.nil? ? 0 : amount)
+            xml.payment do
+              xml.creditCard do
+                xml.cardNumber(card_number || options[:card_number])
+                xml.expirationDate 'XXXX'
+              end
+            end
+            xml.refTransId transaction_id
+            add_customer_data(xml, nil, options)
+            add_user_fields(xml, amount, options)
+          end
+        end
       end
 
-      # Refund a transaction.
-      #
-      # This transaction indicates to the gateway that
-      # money should flow from the merchant to the customer.
-      #
-      # ==== Parameters
-      #
-      # * <tt>money</tt> -- The amount to be credited to the customer as an Integer value in cents.
-      # * <tt>identification</tt> -- The ID of the original transaction against which the refund is being issued.
-      # * <tt>options</tt> -- A hash of parameters.
-      #
-      # ==== Options
-      #
-      # * <tt>:card_number</tt> -- The credit card number the refund is being issued to. (REQUIRED)
-      #   You can either pass the last four digits of the card number or the full card number.
-      # * <tt>:first_name</tt> -- The first name of the account being refunded.
-      # * <tt>:last_name</tt> -- The last name of the account being refunded.
-      # * <tt>:zip</tt> -- The postal code of the account being refunded.
-      def refund(money, identification, options = {})
-        requires!(options, :card_number)
-
-        post = { :trans_id => identification,
-                 :card_num => options[:card_number]
-               }
-
-        post[:first_name] = options[:first_name] if options[:first_name]
-        post[:last_name] = options[:last_name] if options[:last_name]
-        post[:zip] = options[:zip] if options[:zip]
-
-        add_invoice(post, options)
-        add_duplicate_window(post)
-
-        commit('CREDIT', money, post)
-      end
-
-      def credit(money, identification, options = {})
-        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
-        refund(money, identification, options)
+      def void(authorization, options={})
+        commit("VOID") do |xml|
+          xml.refId options[:order_id]
+          xml.transactionRequest do
+            xml.transactionType 'voidTransaction'
+            xml.refTransId split_authorization(authorization)[0]
+            add_user_fields(xml, nil, options)
+          end
+        end
       end
 
       def verify(credit_card, options = {})
@@ -168,174 +116,268 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def commit(action, money, parameters)
-        parameters[:amount] = amount(money) unless action == 'VOID'
-
-        url = test? ? self.test_url : self.live_url
-        data = ssl_post url, post_data(action, parameters)
-
-        response          = parse(data)
-        response[:action] = action
-
-        message = message_from(response)
-
-        Response.new(success?(response), message, response,
-          :test => test?,
-          :authorization => response[:transaction_id],
-          :fraud_review => fraud_review?(response),
-          :avs_result => { :code => response[:avs_result_code] },
-          :cvv_result => response[:card_code]
-        )
-      end
-
-      def success?(response)
-        response[:response_code] == APPROVED && TRANSACTION_ALREADY_ACTIONED.exclude?(response[:response_reason_code])
-      end
-
-      def fraud_review?(response)
-        response[:response_code] == FRAUD_REVIEW
-      end
-
-      def parse(body)
-        fields = split(body)
-
-        results = {
-          :response_code => fields[RESPONSE_CODE].to_i,
-          :response_reason_code => fields[RESPONSE_REASON_CODE],
-          :response_reason_text => fields[RESPONSE_REASON_TEXT],
-          :avs_result_code => fields[AVS_RESULT_CODE],
-          :transaction_id => fields[TRANSACTION_ID],
-          :card_code => fields[CARD_CODE_RESPONSE_CODE],
-          :authorization_code => fields[AUTHORIZATION_CODE],
-          :cardholder_authentication_code => fields[CARDHOLDER_AUTH_CODE]
-        }
-        results
-      end
-
-      def post_data(action, parameters = {})
-        post = {}
-
-        post[:version]        = API_VERSION
-        post[:login]          = @options[:login]
-        post[:tran_key]       = @options[:password]
-        post[:relay_response] = "FALSE"
-        post[:type]           = action
-        post[:delim_data]     = "TRUE"
-        post[:delim_char]     = ","
-        post[:encap_char]     = "$"
-        post[:solution_ID]    = application_id if application_id.present? && application_id != "ActiveMerchant"
-
-        request = post.merge(parameters).collect { |key, value| "x_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
-        request
-      end
-
-      def add_currency_code(post, money, options)
-        post[:currency_code] = options[:currency] || currency(money)
-      end
-
-      def add_invoice(post, options)
-        post[:invoice_num] = options[:order_id]
-        post[:description] = options[:description]
-      end
-
-      def add_creditcard(post, creditcard, options={})
-        post[:card_num]   = creditcard.number
-        post[:card_code]  = creditcard.verification_value if creditcard.verification_value?
-        post[:exp_date]   = expdate(creditcard)
-        post[:first_name] = creditcard.first_name
-        post[:last_name]  = creditcard.last_name
-      end
-
-      def add_payment_source(params, source, options={})
-        if card_brand(source) == "check"
-          add_check(params, source, options)
+      def add_payment_source(xml, source)
+        return unless source
+        if card_brand(source) == 'check'
+          add_check(xml, source)
         else
-          add_creditcard(params, source, options)
+          add_credit_card(xml, source)
         end
       end
 
-      def add_check(post, check, options)
-        post[:method] = "ECHECK"
-        post[:bank_name] = check.bank_name
-        post[:bank_aba_code] = check.routing_number
-        post[:bank_acct_num] = check.account_number
-        post[:bank_acct_type] = check.account_type
-        post[:echeck_type] = "WEB"
-        post[:bank_acct_name] = check.name
-        post[:bank_check_number] = check.number if check.number.present?
-        post[:recurring_billing] = (options[:recurring] ? "TRUE" : "FALSE")
-      end
-
-      def add_customer_data(post, options)
-        if options.has_key? :email
-          post[:email] = options[:email]
-          post[:email_customer] = false
-        end
-
-        if options.has_key? :customer
-          post[:cust_id] = options[:customer] if Float(options[:customer]) rescue nil
-        end
-
-        if options.has_key? :ip
-          post[:customer_ip] = options[:ip]
-        end
-
-        if options.has_key? :cardholder_authentication_value
-          post[:cardholder_authentication_value] = options[:cardholder_authentication_value]
-        end
-
-        if options.has_key? :authentication_indicator
-          post[:authentication_indicator] = options[:authentication_indicator]
-        end
-
-      end
-
-      # x_duplicate_window won't be sent by default, because sending it changes the response.
-      # "If this field is present in the request with or without a value, an enhanced duplicate transaction response will be sent."
-      # (as of 2008-12-30) http://www.authorize.net/support/AIM_guide_SCC.pdf
-      def add_duplicate_window(post)
-        unless duplicate_window.nil?
-          post[:duplicate_window] = duplicate_window
+      def add_settings(xml, source, options)
+        xml.transactionSettings do
+          if(card_brand(source) == "check" && options[:recurring])
+            xml.setting do
+              xml.settingName "recurringBilling"
+              xml.settingValue "true"
+            end
+          end
+          if(self.class.duplicate_window)
+            xml.setting do
+              xml.settingName "duplicateWindow"
+              xml.settingValue self.class.duplicate_window
+            end
+          end
         end
       end
 
-      def add_address(post, options)
-        if address = options[:billing_address] || options[:address]
-          post[:address] = address[:address1].to_s
-          post[:company] = address[:company].to_s
-          post[:phone]   = address[:phone].to_s
-          post[:zip]     = address[:zip].to_s
-          post[:city]    = address[:city].to_s
-          post[:country] = address[:country].to_s
-          post[:state]   = address[:state].blank?  ? 'n/a' : address[:state]
-        end
-
-        if address = options[:shipping_address]
-          post[:ship_to_first_name] = address[:first_name].to_s
-          post[:ship_to_last_name] = address[:last_name].to_s
-          post[:ship_to_address] = address[:address1].to_s
-          post[:ship_to_company] = address[:company].to_s
-          post[:ship_to_phone]   = address[:phone].to_s
-          post[:ship_to_zip]     = address[:zip].to_s
-          post[:ship_to_city]    = address[:city].to_s
-          post[:ship_to_country] = address[:country].to_s
-          post[:ship_to_state]   = address[:state].blank?  ? 'n/a' : address[:state]
+      def add_user_fields(xml, amount, options)
+        xml.userFields do
+          if(currency = (options[:currency] || currency(amount)))
+            xml.userField do
+              xml.name "x_currency_code"
+              xml.value currency
+            end
+          end
+          if(application_id.present? && application_id != "ActiveMerchant")
+            xml.userField do
+              xml.name "x_solution_id"
+              xml.value application_id
+            end
+          end
         end
       end
 
-      def message_from(results)
-        if results[:response_code] == DECLINED
-          return CVVResult.messages[ results[:card_code] ] if CARD_CODE_ERRORS.include?(results[:card_code])
-          if AVS_REASON_CODES.include?(results[:response_reason_code]) && AVS_ERRORS.include?(results[:avs_result_code])
-            return AVSResult.messages[ results[:avs_result_code] ]
+      def add_credit_card(xml, credit_card)
+        if credit_card.track_data
+          add_swipe_data(xml, credit_card)
+        else
+          xml.payment do
+            xml.creditCard do
+              xml.cardNumber credit_card.number
+              xml.expirationDate (format(credit_card.month, :two_digits) + '/' + format(credit_card.year, :four_digits))
+              unless empty?(credit_card.verification_value)
+                xml.cardCode credit_card.verification_value
+              end
+            end
+          end
+        end
+      end
+
+      def add_swipe_data(xml, credit_card)
+        if TRACKS[1].match(credit_card.track_data)
+          xml.payment do
+            xml.trackData do
+              xml.track1 credit_card.track_data
+            end
+          end
+        elsif TRACKS[2].match(credit_card.track_data)
+          xml.payment do
+            xml.trackData do
+              xml.track2 credit_card.track_data
+            end
+          end
+        end
+      end
+
+      def add_check(xml, check)
+        xml.payment do
+          xml.bankAccount do
+            xml.routingNumber check.routing_number
+            xml.accountNumber check.account_number
+            xml.nameOnAccount check.name
+            xml.echeckType "WEB"
+            xml.bankName check.bank_name
+            xml.checkNumber check.number
+          end
+        end
+      end
+
+      def add_customer_data(xml, payment_source, options)
+        billing_address = options[:billing_address] || options[:address] || {}
+        shipping_address = options[:shipping_address] || options[:address] || {}
+
+        xml.customerIP(options[:ip]) unless empty?(options[:ip])
+        xml.customer do
+          xml.id(options[:customer]) unless empty?(options[:customer]) || options[:customer] !~ /^\d+$/
+          xml.email(options[:email]) unless empty?(options[:email])
+        end
+
+        xml.billTo do
+          first_name, last_name = names_from(payment_source, billing_address, options)
+          xml.firstName(first_name) unless empty?(first_name)
+          xml.lastName(last_name) unless empty?(last_name)
+
+          xml.company(billing_address[:company]) unless empty?(options[:company])
+          xml.address(billing_address[:address1])
+          xml.city(billing_address[:city])
+          xml.state(empty?(billing_address[:state]) ? 'n/a' : billing_address[:state])
+          xml.zip(billing_address[:zip] || options[:zip])
+          xml.country(billing_address[:country])
+        end
+
+        if shipping_address.blank?
+          xml.shipTo do
+            first_name, last_name = names_from(payment_source, shipping_address, options)
+            xml.firstName(first_name) unless empty?(first_name)
+            xml.lastName(last_name) unless empty?(last_name)
+
+            xml.company(shipping_address[:company]) unless empty?(options[:company])
+            xml.address(shipping_address[:address1])
+            xml.city(shipping_address[:city])
+            xml.state(shipping_address[:state])
+            xml.zip(shipping_address[:zip])
+            xml.country(shipping_address[:country])
           end
         end
 
-        (results[:response_reason_text] ? results[:response_reason_text].chomp('.') : '')
+        xml.cardholderAuthentication do
+          xml.authenticationIndicator options[:authentication_indicator]
+          xml.cardholderAuthenticationValue options[:cardholder_authentication_value]
+        end
       end
 
-      def split(response)
-        response[1..-2].split(/\$,\$/)
+      def add_address(post, creditcard, options)
+      end
+
+      def add_invoice(xml, options)
+        xml.order do
+          xml.invoiceNumber options[:order_id]
+          xml.description options[:description]
+        end
+      end
+
+      def names_from(payment_source, address, options)
+        if(payment_source)
+          first_name, last_name = (address[:name] || "").split
+          [(payment_source.first_name || first_name), (payment_source.last_name || last_name)]
+        else
+          [options[:first_name], options[:last_name]]
+        end
+      end
+
+      def commit(action, &payload)
+        url = (test? ? test_url : live_url)
+        response = parse(action, ssl_post(url, post_data(&payload), 'Content-Type' => 'text/xml'))
+
+        avs_result = AVSResult.new(code: response[:avs_result_code])
+        cvv_result = CVVResult.new(response[:card_code])
+        Response.new(
+          success_from(response),
+          message_from(response, avs_result, cvv_result),
+          response,
+          authorization: authorization_from(response),
+          test: test?,
+          avs_result: avs_result,
+          cvv_result: cvv_result,
+          fraud_review: fraud_review?(response)
+        )
+      end
+
+      def post_data
+        Nokogiri::XML::Builder.new do |xml|
+          xml.createTransactionRequest('xmlns' => 'AnetApi/xml/v1/schema/AnetApiSchema.xsd') do
+            xml.merchantAuthentication do
+              xml.name @options[:login]
+              xml.transactionKey @options[:password]
+            end
+            yield(xml)
+          end
+        end.to_xml(ident: 0)
+      end
+
+      def parse(action, body)
+        doc = Nokogiri::XML(body)
+        doc.remove_namespaces!
+
+        response = {action: action}
+
+        response[:response_code] = if(element = doc.at_xpath("//transactionResponse/responseCode"))
+          (empty?(element.content) ? nil : element.content.to_i)
+        end
+
+        if(element = doc.at_xpath("//errors/error"))
+          response[:response_reason_code] = element.at_xpath("errorCode").content[/0*(\d+)$/, 1]
+          response[:response_reason_text] = element.at_xpath("errorText").content.chomp('.')
+        elsif(element = doc.at_xpath("//transactionResponse/messages/message"))
+          response[:response_reason_code] = element.at_xpath("code").content[/0*(\d+)$/, 1]
+          response[:response_reason_text] = element.at_xpath("description").content.chomp('.')
+        elsif(element = doc.at_xpath("//messages/message"))
+          response[:response_reason_code] = element.at_xpath("code").content[/0*(\d+)$/, 1]
+          response[:response_reason_text] = element.at_xpath("text").content.chomp('.')
+        else
+          response[:response_reason_code] = nil
+          response[:response_reason_text] = ""
+        end
+
+        response[:avs_result_code] = if(element = doc.at_xpath("//avsResultCode"))
+          (empty?(element.content) ? nil : element.content)
+        end
+
+        response[:transaction_id] = if(element = doc.at_xpath("//transId"))
+          (empty?(element.content) ? nil : element.content)
+        end
+
+        response[:card_code] = if(element = doc.at_xpath("//cvvResultCode"))
+          (empty?(element.content) ? nil : element.content)
+        end
+
+        response[:authorization_code] = if(element = doc.at_xpath("//authCode"))
+          (empty?(element.content) ? nil : element.content)
+        end
+
+        response[:cardholder_authentication_code] = if(element = doc.at_xpath("//cavvResultCode"))
+          (empty?(element.content) ? nil : element.content)
+        end
+
+        response[:account_number] = if(element = doc.at_xpath("//accountNumber"))
+          (empty?(element.content) ? nil : element.content[-4..-1])
+        end
+
+        response
+      end
+
+      def success_from(response)
+        (
+          response[:response_code] == APPROVED &&
+          TRANSACTION_ALREADY_ACTIONED.exclude?(response[:response_reason_code])
+        )
+      end
+
+      def message_from(response, avs_result, cvv_result)
+        if response[:response_code] == DECLINED
+          if CARD_CODE_ERRORS.include?(cvv_result.code)
+            return cvv_result.message
+          elsif(AVS_REASON_CODES.include?(response[:response_reason_code]) && AVS_ERRORS.include?(avs_result.code))
+            return avs_result.message
+          end
+        end
+
+        response[:response_reason_text]
+      end
+
+      def authorization_from(response)
+        [response[:transaction_id], response[:account_number]].join("#")
+      end
+
+      def split_authorization(authorization)
+        transaction_id, card_number = authorization.split("#")
+        [transaction_id, card_number]
+      end
+
+      def fraud_review?(response)
+        (response[:response_code] == FRAUD_REVIEW)
       end
     end
   end
