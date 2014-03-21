@@ -10,6 +10,7 @@ rescue LoadError => e
 end
 
 require 'rake'
+require 'bundler/gem_tasks'
 require 'rake/testtask'
 require 'support/gateway_support'
 require 'support/ssl_verify'
@@ -51,6 +52,21 @@ namespace :test do
     t.libs << 'test'
     t.verbose = true
   end
+
+  Rake::TestTask.new(:anet_units) do |t|
+    t.pattern = 'test/unit/gateways/authorize_net_xml_test.rb'
+    t.ruby_opts << '-rubygems'
+    t.libs << 'test'
+    t.verbose = true
+  end
+
+  Rake::TestTask.new(:anet_remote) do |t|
+    t.pattern = 'test/remote/gateways/remote_authorize_net_xml_test.rb'
+    t.ruby_opts << '-rubygems'
+    t.libs << 'test'
+    t.verbose = true
+  end
+
 end
 
 namespace :gateways do
