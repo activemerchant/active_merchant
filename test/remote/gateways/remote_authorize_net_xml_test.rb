@@ -35,7 +35,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.test?
-    assert_equal 'This transaction has been approved', response.message
+    assert_equal '(TESTMODE) This transaction has been approved.', response.message
     assert response.authorization
   end
 
@@ -43,29 +43,29 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @check, @options)
     assert_success response
     assert response.test?
-    assert_equal 'This transaction has been approved', response.message
+    assert_equal '(TESTMODE) This transaction has been approved.', response.message
     assert response.authorization
   end
-=begin
+
   def test_expired_credit_card
     @credit_card.year = 2004
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
-    assert_equal 'The credit card has expired', response.message
+    assert_equal '(TESTMODE) The credit card has expired.', response.message
   end
 
   def test_successful_authorization
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'This transaction has been approved', response.message
+    assert_equal '(TESTMODE) This transaction has been approved.', response.message
     assert response.authorization
   end
 
   def test_successfule_echeck_authorization
     assert response = @gateway.authorize(@amount, @check, @options)
     assert_success response
-    assert_equal 'This transaction has been approved', response.message
+    assert_equal '(TESTMODE) This transaction has been approved.', response.message
     assert response.authorization
   end
 
@@ -75,16 +75,16 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, authorization.authorization)
     assert_success capture
-    assert_equal 'This transaction has been approved', capture.message
+    assert_equal '(TESTMODE) This transaction has been approved.', capture.message
   end
-
+=begin
   def test_authorization_and_void
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
 
     assert void = @gateway.void(authorization.authorization)
     assert_success void
-    assert_equal 'This transaction has been approved', void.message
+    assert_equal '(TESTMODE) This transaction has been approved.', void.message
   end
 
   def test_bad_login
