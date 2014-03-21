@@ -10,6 +10,8 @@ module ActiveMerchant #:nodoc:
           include PostsData
         end
 
+        RedirectError = Class.new(ActiveMerchantError)
+
         MOLLIE_API_V1_URI = 'https://api.mollie.nl/v1/'.freeze
 
         mattr_accessor :live_issuers
