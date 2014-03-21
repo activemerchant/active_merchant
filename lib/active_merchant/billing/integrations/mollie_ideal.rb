@@ -13,27 +13,23 @@ module ActiveMerchant #:nodoc:
         MOLLIE_API_V1_URI = 'https://api.mollie.nl/v1/'.freeze
 
         mattr_accessor :live_issuers
-        self.live_issuers = {
-          'ideal' => [
-            ["ABN AMRO", "ideal_ABNANL2A"],
-            ["ASN Bank", "ideal_ASNBNL21"],
-            ["Friesland Bank", "ideal_FRBKNL2L"],
-            ["ING", "ideal_INGBNL2A"],
-            ["Knab", "ideal_KNABNL2H"],
-            ["Rabobank", "ideal_RABONL2U"],
-            ["RegioBank", "ideal_RBRBNL21"],
-            ["SNS Bank", "ideal_SNSBNL2A"],
-            ["Triodos Bank", "ideal_TRIONL2U"],
-            ["van Lanschot", "ideal_FVLBNL22"]
-          ]
-        }
+        self.live_issuers = [
+          ["ABN AMRO", "ideal_ABNANL2A"],
+          ["ASN Bank", "ideal_ASNBNL21"],
+          ["Friesland Bank", "ideal_FRBKNL2L"],
+          ["ING", "ideal_INGBNL2A"],
+          ["Knab", "ideal_KNABNL2H"],
+          ["Rabobank", "ideal_RABONL2U"],
+          ["RegioBank", "ideal_RBRBNL21"],
+          ["SNS Bank", "ideal_SNSBNL2A"],
+          ["Triodos Bank", "ideal_TRIONL2U"],
+          ["van Lanschot", "ideal_FVLBNL22"]
+        ]
 
         mattr_accessor :test_issuers
-        self.test_issuers = {
-          'ideal' => [
-            ["TBM Bank", "ideal_TESTNL99"]
-          ]
-        }
+        self.test_issuers = [
+          ["TBM Bank", "ideal_TESTNL99"]
+        ]
 
         def self.notification(post, options = {})
           Notification.new(post, options)
@@ -51,14 +47,18 @@ module ActiveMerchant #:nodoc:
           true
         end
 
-        def self.redirect_param_options(method = 'ideal')
-          live? ? live_issuers[method] : test_issuers[method]
+        def self.redirect_param_label
+          "Please select your bank"
         end
 
-        def self.retrieve_issuers(token, method = 'ideal')
+        def self.redirect_param_options
+          live? ? live_issuers : test_issuers
+        end
+
+        def self.retrieve_issuers(token)
           response = get_request(token, "issuers")
           response['data']
-            .select { |issuer| issuer['method'] == method }
+            .select { |issuer| issuer['method'] == 'ideal' }
             .map { |issuer| [issuer['name'], issuer['id']] }
         end
 
