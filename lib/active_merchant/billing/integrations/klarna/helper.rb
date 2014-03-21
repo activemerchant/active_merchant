@@ -11,11 +11,10 @@ module ActiveMerchant #:nodoc:
           mapping :notify_url, 'merchant_push_uri'
           mapping :cancel_return_url, ['merchant_terms_uri', 'merchant_checkout_uri', 'merchant_base_uri', 'merchant_confirmation_uri']
           mapping :account, 'merchant_id'
-          mapping :credential2, 'shared_secret'
 
           def initialize(order, account, options = {})
             super
-            @shared_secret = @fields['shared_secret']
+            @shared_secret = options[:credential2]
 
             # I feel like the reason I'm doing this is a bug in AM
             add_field('purchase_country', options[:country])
