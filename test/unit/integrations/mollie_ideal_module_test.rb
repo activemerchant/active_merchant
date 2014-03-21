@@ -23,7 +23,11 @@ class MollieIdealModuleTest < Test::Unit::TestCase
     ActiveMerchant::Billing::Base.stubs(:integration_mode).returns(:development)
 
     assert MollieIdeal.requires_redirect_param?
-    assert_equal [["TBM Bank", "ideal_TESTNL99"]], MollieIdeal.redirect_param_options
+    assert_equal [["TBM Bank", "ideal_TESTNL99"]], MollieIdeal.redirect_param_options(:credential1 => "test_blah")
+
+    live_issuers = MollieIdeal.redirect_param_options(:credential1 => "live_blah")
+    assert !live_issuers.include?(["TBM Bank", "ideal_TESTNL99"])
+    assert live_issuers.include?(["Rabobank", "ideal_RABONL2U"])
   end
 
   def test_retrieve_issuers

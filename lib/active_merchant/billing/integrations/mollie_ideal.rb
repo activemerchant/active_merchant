@@ -73,8 +73,9 @@ module ActiveMerchant #:nodoc:
           "Select your bank"
         end
 
-        def self.redirect_param_options
-          live? ? live_issuers : test_issuers
+        def self.redirect_param_options(options = {})
+          return test_issuers if options[:credential1].blank?
+          options[:credential1].start_with?('live_') ? live_issuers : test_issuers
         end
 
         def self.retrieve_issuers(token)
