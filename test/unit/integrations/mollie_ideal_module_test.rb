@@ -4,11 +4,11 @@ class MollieIdealModuleTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def test_notification_method
-    assert_instance_of MollieIdeal::Notification, MollieIdeal.notification("id=482d599bbcc7795727650330ad65fe9b", :credential1 => '1234')
+    assert_instance_of MollieIdeal::Notification, MollieIdeal.notification("id=482d599bbcc7795727650330ad65fe9b", :credential1 => '1234567')
   end
 
   def test_return_method
-    assert_instance_of MollieIdeal::Return, MollieIdeal.return("", :credential1 => '1234')
+    assert_instance_of MollieIdeal::Return, MollieIdeal.return("", :credential1 => '1234567')
   end
 
   def test_live?
@@ -27,8 +27,10 @@ class MollieIdealModuleTest < Test::Unit::TestCase
   end
 
   def test_retrieve_issuers
-    MollieIdeal.expects(:get_request).returns(ISSERS_RESPONSE_JSON)
-    issuers = MollieIdeal.retrieve_issuers(@api_key, 'ideal')
+    MollieIdeal::API.stubs(:new).with('1234567').returns(@mock_api = mock())
+
+    @mock_api.expects(:get_request).returns(ISSERS_RESPONSE_JSON)
+    issuers = MollieIdeal.retrieve_issuers('1234567')
     assert_equal [["TBM Bank", "ideal_TESTNL99"]], issuers
   end
 

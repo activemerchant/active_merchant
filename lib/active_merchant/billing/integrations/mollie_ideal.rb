@@ -6,8 +6,28 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module MollieIdeal
-        class << self
+        class API
           include PostsData
+
+          attr_reader :token
+
+          def initialize(token)
+            @token = token
+          end
+
+          def get_request(resource, params = nil)
+            uri = URI.parse(MOLLIE_API_V1_URI + resource)
+            uri.query = params.map { |k,v| "#{CGI.escape(k)}=#{CGI.escape(v)}}"}.join('&') if params
+            headers = { "Authorization" => "Bearer #{token}", "Content-Type" => "application/json" }
+            JSON.parse(ssl_get(uri.to_s, headers))
+          end
+
+          def post_request(resource, params = nil)
+            uri = URI.parse(MOLLIE_API_V1_URI + resource)
+            headers = { "Authorization" => "Bearer #{token}", "Content-Type" => "application/json" }
+            data = params.nil? ? nil : JSON.dump(params)
+            JSON.parse(ssl_post(uri.to_s, data, headers))
+          end
         end
 
         RedirectError = Class.new(ActiveMerchantError)
@@ -50,7 +70,7 @@ module ActiveMerchant #:nodoc:
         end
 
         def self.redirect_param_label
-          "Please select your bank"
+          "Select your bank"
         end
 
         def self.redirect_param_options
@@ -58,32 +78,18 @@ module ActiveMerchant #:nodoc:
         end
 
         def self.retrieve_issuers(token)
-          response = get_request(token, "issuers")
+          response = API.new(token).get_request("issuers")
           response['data']
             .select { |issuer| issuer['method'] == 'ideal' }
             .map { |issuer| [issuer['name'], issuer['id']] }
         end
 
         def self.create_payment(token, params)
-          post_request(token, 'payments', params)
+          API.new(token).post_request('payments', params)
         end
 
         def self.check_payment_status(token, payment_id)
-          get_request(token, "payments/#{payment_id}")
-        end
-
-        def self.get_request(token, resource, params = nil)
-          uri = URI.parse(MOLLIE_API_V1_URI + resource)
-          uri.query = params.map { |k,v| "#{CGI.escape(k)}=#{CGI.escape(v)}}"}.join('&') if params
-          headers = { "Authorization" => "Bearer #{token}", "Content-Type" => "application/json" }
-          JSON.parse(ssl_get(uri.to_s, headers))
-        end
-
-        def self.post_request(token, resource, params = nil)
-          uri = URI.parse(MOLLIE_API_V1_URI + resource)
-          headers = { "Authorization" => "Bearer #{token}", "Content-Type" => "application/json" }
-          data = params.nil? ? nil : JSON.dump(params)
-          JSON.parse(ssl_post(uri.to_s, data, headers))
+          API.new(token).get_request("payments/#{payment_id}")
         end
       end
     end

@@ -13,11 +13,13 @@ class MollieIdealHelperTest < Test::Unit::TestCase
     }
 
     @helper = MollieIdeal::Helper.new('order-500','1234567', @required_options)
+
+    MollieIdeal::API.stubs(:new).with('1234567').returns(@mock_api = mock())
   end
 
   def test_credential_based_url
-    MollieIdeal.expects(:post_request)
-      .with('1234567', 'payments', :amount => 500, :description => 'My shop', :method => 'ideal', :issuer => 'ideal_TESTNL99', :redirectUrl => 'https://return.com', :metadata => {:order => 'order-500'})
+    @mock_api.expects(:post_request)
+      .with('payments', :amount => 500, :description => 'My shop', :method => 'ideal', :issuer => 'ideal_TESTNL99', :redirectUrl => 'https://return.com', :metadata => {:order => 'order-500'})
       .returns(CREATE_PAYMENT_RESPONSE_JSON)
 
     assert_equal Hash.new, @helper.fields

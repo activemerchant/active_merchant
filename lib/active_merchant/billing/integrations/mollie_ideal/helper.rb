@@ -4,18 +4,26 @@ module ActiveMerchant #:nodoc:
       module MollieIdeal
         class Helper < ActiveMerchant::Billing::Integrations::Helper
 
-          attr_accessor :redirect_paramaters, :amount, :redirect_param, :account_name,
-              :return_url, :notify_url, :redirect_param, :account, :account_name
-
-          attr_reader :transaction_id
+          attr_reader :transaction_id, :redirect_paramaters, :token
 
           def initialize(order, account, options = {})
-            self.account_name = options.delete(:account_name)
+            @token = account
+            @redirect_paramaters = {
+              :amount => options[:amount],
+              :description => options[:account_name],
+              :issuer => options[:redirect_param],
+              :redirectUrl => options[:return_url],
+              :method => 'ideal',
+              :metadata => { :order => order }
+            }
+
+            @redirect_paramaters[:webhookUrl] = options[:notify_url] if options[:notify_url]
+
             super
 
-            raise ArgumentError, "The redirect_param option needs to be set to the bank_id the customer selected." if redirect_param.blank?
-            raise ArgumentError, "The return_url option needs to be set." if return_url.blank?
-            raise ArgumentError, "The account_name option needs to be set." if account_name.blank?
+            raise ArgumentError, "The redirect_param option needs to be set to the bank_id the customer selected." if options[:redirect_param].blank?
+            raise ArgumentError, "The return_url option needs to be set." if options[:return_url].blank?
+            raise ArgumentError, "The account_name option needs to be set." if options[:account_name].blank?
           end
 
           def credential_based_url
@@ -43,18 +51,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def request_redirect
-            request_params = {
-              :amount => amount,            # In decimal notation, e.g. 123.45
-              :description => account_name, # Using the name of the account name as description is not great - can we incldue an order description?
-              :method => 'ideal',           # For now, this is hardcoded to be iDeal
-              :issuer => redirect_param,    # Should be the issuer ID.
-              :redirectUrl => return_url,
-              :metadata => { :order => order }
-            }
-
-            request_params[:webhookUrl] = notify_url unless notify_url.blank?
-
-            MollieIdeal.create_payment(account, request_params)
+            MollieIdeal.create_payment(token, redirect_paramaters)
           rescue ResponseError => e
             if e.response.code == '422'
               error = JSON.parse(e.response.body)['error']['message']
