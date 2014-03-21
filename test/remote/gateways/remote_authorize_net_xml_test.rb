@@ -77,7 +77,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_success capture
     assert_equal '(TESTMODE) This transaction has been approved.', capture.message
   end
-=begin
+
   def test_authorization_and_void
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
@@ -165,7 +165,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.test?
-    assert_equal 'This transaction has been approved', response.message
+    assert_equal '(TESTMODE) This transaction has been approved.', response.message
     assert response.authorization
   ensure
     ActiveMerchant::Billing::AuthorizeNetGateway.application_id = nil
@@ -184,5 +184,5 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_success response
     assert response.authorization
   end
-=end
+
 end
