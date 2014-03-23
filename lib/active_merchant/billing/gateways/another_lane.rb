@@ -93,7 +93,7 @@ module ActiveMerchant #:nodoc:
       #
       # void the purchase
       #
-      def void(transaction_id)
+      def void(transaction_id, options = {})
 
         post = {}
         add_credential(post)
