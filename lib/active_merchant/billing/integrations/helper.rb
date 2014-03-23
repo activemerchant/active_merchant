@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
         self.application_id = 'ActiveMerchant'
 
         def self.inherited(subclass)
-          subclass.mappings = {}
+          subclass.mappings ||= {}
         end
 
         def initialize(order, account, options = {})
