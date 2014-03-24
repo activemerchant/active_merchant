@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       module Universal
 
         def self.credential_based_url(options)
-          options[:credential3]
+          options[:forward_url]
         end
 
         def self.notification(post, options = {})
