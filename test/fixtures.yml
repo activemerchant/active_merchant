@@ -720,3 +720,6 @@ wirecard_checkout_page:
   secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
   shop_id: ''
   paymenttype: IDL
+
+mollie_ideal:
+  api_key: 'test_8isBjQoJXJoiXRSzjhwKPO1Bo9AkVA'

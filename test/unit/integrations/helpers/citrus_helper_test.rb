@@ -67,4 +67,14 @@ class CitrusHelperTest < Test::Unit::TestCase
     @helper.billing_address :street => 'My Street'
     assert_equal fields, @helper.fields
   end
+
+  def test_credential_based_url_method
+    ActiveMerchant::Billing::Base.integration_mode = :test
+    assert_equal 'https://sandbox.citruspay.com/gqwnliur74', @helper.credential_based_url
+  end
+
+  def test_production_service_url_method
+    ActiveMerchant::Billing::Base.integration_mode = :production
+    assert_equal 'https://www.citruspay.com/gqwnliur74', @helper.credential_based_url
+  end
 end

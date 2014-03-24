@@ -18,6 +18,23 @@ module ActiveMerchant
           mapping :checksum, 'secSignature'
           mapping :return_url, 'returnUrl'
 
+          SANDBOX_URL = 'https://sandbox.citruspay.com/'.freeze
+          STAGING_URL = 'https://stg.citruspay.com/'.freeze
+          PRODUCTION_URL = 'https://www.citruspay.com/'.freeze
+
+          def credential_based_url
+            pmt_url = @fields['pmt_url']
+            case ActiveMerchant::Billing::Base.integration_mode
+            when :production
+              PRODUCTION_URL + pmt_url
+            when :test
+              SANDBOX_URL    + pmt_url
+            when :staging
+              STAGING_URL    + pmt_url
+            else
+              raise StandardError, "Integration mode set to an invalid value: #{mode}"
+            end
+          end
 
           def initialize(order, account, options = {})
             super
