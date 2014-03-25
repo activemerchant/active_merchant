@@ -62,7 +62,8 @@ class WirecardTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
     assert_equal TEST_AUTHORIZATION_GUWID, response.authorization
-    assert response.message[/credit card number not allowed in demo mode/i]
+    assert_match /credit card number not allowed in demo mode/i, response.message
+    assert_equal '24997', response.params['ErrorCode']
   end
 
   def test_successful_authorization_and_capture
