@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
 
           def acknowledge(authcode = nil)
             @params = check_payment_status(transaction_id)
-            status == 'Completed'
+            true
           end
 
           def check_payment_status(transaction_id)
