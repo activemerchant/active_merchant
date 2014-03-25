@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Cecabank: Handle invalid xml response body [duff]
+* Wirecard: Capture error code in the response [duff]
 
 == Version 1.42.7 (March 18, 2014)
 
