@@ -16,12 +16,6 @@ class MollieIdealNotificationTest < Test::Unit::TestCase
     assert_equal "1234567", @notification.api_key
   end
 
-  def test_no_acknowledgement_of_pending_transaction
-    @mock_api.expects(:get_request).returns(PENDING_CHECK_PAYMENT_STATUS_RESPONSE)
-    assert !@notification.acknowledge
-    assert_equal 'Pending', @notification.status
-  end
-
   def test_acknowledgement_sets_params
     @mock_api.expects(:get_request).returns(SUCCESSFUL_CHECK_PAYMENT_STATUS_RESPONSE)
     assert @notification.acknowledge
