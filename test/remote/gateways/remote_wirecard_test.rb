@@ -128,6 +128,7 @@ class RemoteWirecardTest < Test::Unit::TestCase
     assert response.test?
     assert_failure response
     assert response.message[ /Credit card number not allowed in demo mode/ ], "Got wrong response message"
+    assert_equal "24997", response.params['ErrorCode']
   end
 
   def test_unauthorized_capture

@@ -239,22 +239,27 @@ module ActiveMerchant #:nodoc:
       # Parse the <ProcessingStatus> Element which contains all important information
       def parse_response(response, root)
         status = nil
-        # get the root element for this Transaction
+
         root.elements.to_a.each do |node|
           if node.name =~ /FNC_CC_/
             status = REXML::XPath.first(node, "CC_TRANSACTION/PROCESSING_STATUS")
           end
         end
+
         message = ""
         if status
           if info = status.elements['Info']
             message << info.text
           end
-          # Get basic response information
+
           status.elements.to_a.each do |node|
             response[node.name.to_sym] = (node.text || '').strip
           end
+
+          error_code = REXML::XPath.first(status, "ERROR/Number")
+          response['ErrorCode'] = error_code.text if error_code
         end
+
         parse_error(root, message)
         response[:Message] = message
       end
