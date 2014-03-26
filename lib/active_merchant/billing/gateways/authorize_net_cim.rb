@@ -363,6 +363,10 @@ module ActiveMerchant #:nodoc:
       #     - :type = (:void, :refund, :prior_auth_capture) (NOT USED)
       #     - :type = (:auth_only, :capture_only, :auth_capture) (OPTIONAL)
       #
+      # * <tt>:recurring_billing</tt> -- The recurring billing status (OPTIONAL)
+      #     - :type = (:void, :refund, :prior_auth_capture) (NOT USED)
+      #     - :type = (:auth_only, :capture_only, :auth_capture) (OPTIONAL)
+      #
       # * <tt>:customer_shipping_address_id</tt> -- Payment gateway assigned ID associated with the customer shipping address (CONDITIONAL)
       #     - :type = (:void, :refund) (OPTIONAL)
       #     - :type = (:auth_only, :capture_only, :auth_capture) (NOT USED)
@@ -686,6 +690,9 @@ module ActiveMerchant #:nodoc:
                 xml.tag!('approvalCode', transaction[:approval_code]) if transaction[:type] == :capture_only
             end
             add_order(xml, transaction[:order]) if transaction[:order].present?
+            if [:auth_capture, :auth_only, :capture_only].include?(transaction[:type])
+              xml.tag!('recurringBilling', transaction[:recurring_billing]) if transaction.has_key?(:recurring_billing)
+            end
             unless [:void,:refund,:prior_auth_capture].include?(transaction[:type])
               tag_unless_blank(xml, 'cardCode', transaction[:card_code])
             end
