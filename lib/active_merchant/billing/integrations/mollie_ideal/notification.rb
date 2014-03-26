@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
             case @params['status']
               when 'open';                 'Pending'
               when 'paidout', 'paid';      'Completed'
-              else                         'Failure'
+              else                         'Failed'
             end
           end
 
