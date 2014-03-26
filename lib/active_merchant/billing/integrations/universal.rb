@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
         end
 
         def self.sign(fields, key)
-          Digest::HMAC.hexdigest(fields.sort.join, key, Digest::SHA1)
+          Digest::HMAC.hexdigest(fields.sort.join, key, Digest::SHA256)
         end
 
       end

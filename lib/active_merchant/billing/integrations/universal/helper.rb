@@ -7,6 +7,9 @@ module ActiveMerchant #:nodoc:
           def initialize(order, account, options = {})
             super
             @key = options[:credential2]
+            self.country = options[:country]
+            self.account_name = options[:account_name]
+            self.transaction_type = options[:transaction_type]
           end
 
           def generate_signature
@@ -15,12 +18,12 @@ module ActiveMerchant #:nodoc:
 
           def form_fields
             @fields.merge!(standard_fields)
-            @fields.merge('x-signature' => generate_signature)
+            @fields.merge!('x-signature' => generate_signature)
           end
 
           def standard_fields
             fields = {}
-            fields[mappings[:test]] = @test
+            fields[mappings[:test]] = @test.to_s
             fields
           end
 
