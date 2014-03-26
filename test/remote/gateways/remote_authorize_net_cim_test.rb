@@ -100,7 +100,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response.test?
     assert_success response
     assert_equal response.authorization, response.params['direct_response']['transaction_id']
-    assert_equal "This transaction has been approved.", response.params['direct_response']['message']
+    assert_match %r{(?:(TESTMODE) )?This transaction has been approved.}, response.params['direct_response']['message']
     assert response.params['direct_response']['approval_code'] =~ /\w{6}/
     assert_equal "auth_only", response.params['direct_response']['transaction_type']
     assert_equal "100.00", response.params['direct_response']['amount']
@@ -123,7 +123,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response.test?
     assert_success response
     assert_equal response.authorization, response.params['direct_response']['transaction_id']
-    assert_equal "This transaction has been approved.", response.params['direct_response']['message']
+    assert_match %r{(?:(TESTMODE) )?This transaction has been approved.}, response.params['direct_response']['message']
     assert_equal approval_code, response.params['direct_response']['approval_code']
     assert_equal "capture_only", response.params['direct_response']['transaction_type']
     assert_equal "100.00", response.params['direct_response']['amount']
@@ -146,6 +146,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
           :description => 'Test Order Description',
           :purchase_order_number => '4321'
         },
+        :recurring_billing => true,
         :card_code => '900', # authorize.net says this is a matching CVV
         :amount => @amount
       }
@@ -154,7 +155,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response.test?
     assert_success response
     assert_equal response.authorization, response.params['direct_response']['transaction_id']
-    assert_equal "This transaction has been approved.", response.params['direct_response']['message']
+    assert_match %r{(?:(TESTMODE) )?This transaction has been approved.}, response.params['direct_response']['message']
     assert response.params['direct_response']['approval_code'] =~ /\w{6}/
     assert_equal "auth_capture", response.params['direct_response']['transaction_type']
     assert_equal "100.00", response.params['direct_response']['amount']
@@ -484,7 +485,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response.test?
     assert_success response
     assert_equal response.authorization, response.params['direct_response']['transaction_id']
-    assert_equal "This transaction has been approved.", response.params['direct_response']['message']
+    assert_match %r{(?:(TESTMODE) )?This transaction has been approved.}, response.params['direct_response']['message']
   end
 
   def test_validate_customer_payment_profile_request_live_requires_billing_address
@@ -725,7 +726,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response.test?
     assert_success response
     assert_equal response.authorization, response.params['direct_response']['transaction_id']
-    assert_equal "This transaction has been approved.", response.params['direct_response']['message']
+    assert_match %r{(?:(TESTMODE) )?This transaction has been approved.}, response.params['direct_response']['message']
     assert response.params['direct_response']['approval_code'] =~ /\w{6}/
     assert_equal "auth_capture", response.params['direct_response']['transaction_type']
     assert_equal "100.00", response.params['direct_response']['amount']

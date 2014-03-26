@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class AuthorizeNetCimTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = AuthorizeNetCimGateway.new(
       :login => 'X',
@@ -551,6 +553,34 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     )
     assert_instance_of Response, response
     assert_success response
+    assert_equal response.authorization, response.params['direct_response']['transaction_id']
+    assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
+  end
+
+  def test_should_create_customer_profile_trasnaction_passing_recurring_flag
+    response = stub_comms do
+      @gateway.create_customer_profile_transaction(
+        :transaction => {
+          :customer_profile_id => @customer_profile_id,
+          :customer_payment_profile_id => @customer_payment_profile_id,
+          :type => :auth_capture,
+          :order => {
+            :invoice_number => '1234',
+            :description => 'Test Order Description',
+            :purchase_order_number => '4321'
+          },
+          :amount => @amount,
+          :card_code => '123',
+          :recurring_billing => true
+        }
+      )
+    end.check_request do |endpoint, data, headers|
+      assert_match %r{<recurringBilling>true</recurringBilling>}, data
+    end.respond_with(successful_create_customer_profile_transaction_response(:auth_capture))
+
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal 'M', response.params['direct_response']['card_code'] # M => match
     assert_equal response.authorization, response.params['direct_response']['transaction_id']
     assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
   end
