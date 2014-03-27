@@ -139,6 +139,8 @@ module ActiveMerchant #:nodoc:
         doc.amount amount(money)
         doc.currency_code(options[:currency] || currency(money) || default_currency)
         doc.order_id(options[:order_id])
+        doc.ip(options[:ip])
+        doc.description(options[:description])
       end
 
       def add_credit_card(doc, credit_card, options)
