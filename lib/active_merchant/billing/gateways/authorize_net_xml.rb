@@ -309,7 +309,7 @@ module ActiveMerchant #:nodoc:
         elsif action.eql? 'PRIOR_AUTH_CAPTURE'
           response = transaction.prior_auth_capture(parameters[:amount], @payment_source)
         elsif action.eql? 'VOID'
-          response = transaction.void(parameters[:amount], @payment_source)
+          response = transaction.void(parameters[:trans_id])
         else
           raise TypeError, 'An undefined transaction type: #{action} was used'
         end
