@@ -33,7 +33,7 @@ class UniversalHelperTest < Test::Unit::TestCase
     @helper.description 'Box of Red Wine'
     @helper.invoice 'Invoice #1A'
 
-    assert_field 'x_id', @account
+    assert_field 'x_account_id', @account
     assert_field 'x_currency', @currency
     assert_field 'x_amount', @amount.to_s
     assert_field 'x_amount_shipping', '678'
@@ -114,7 +114,7 @@ class UniversalHelperTest < Test::Unit::TestCase
   end
 
   def test_signature
-    expected_signature = Digest::HMAC.hexdigest('x_amount12345x_currencyUSDx_idzorkx_referenceorder-500x_shop_countryUSx_shop_nameWidgets Incx_testfalsex_transaction_typesale', @key, Digest::SHA256)
+    expected_signature = Digest::HMAC.hexdigest('x_account_idzorkx_amount12345x_currencyUSDx_referenceorder-500x_shop_countryUSx_shop_nameWidgets Incx_testfalsex_transaction_typesale', @key, Digest::SHA256)
     @helper.sign_fields
     assert_field 'x_signature', expected_signature
   end

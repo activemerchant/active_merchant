@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
             Universal.sign(@fields, @key)
           end
 
-          mapping          :account, 'x_id'
+          mapping          :account, 'x_account_id'
           mapping         :currency, 'x_currency'
           mapping           :amount, 'x_amount'
           mapping         :shipping, 'x_amount_shipping'
