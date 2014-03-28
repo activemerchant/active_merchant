@@ -63,25 +63,32 @@ module ActiveMerchant #:nodoc:
           #       ... log possible hacking attempt ...
           #     end
           def acknowledge(authcode = nil)
-            payload = raw
+            
 
-            uri = URI.parse(Klarna.notification_confirmation_url)
 
-            request = Net::HTTP::Post.new(uri.path)
+            # In Klarna HPP case, this should be a no-op; all we have to do is respond to a POST with 200 OK
+            true
 
-            request['Content-Length'] = "#{payload.size}"
-            request['User-Agent'] = "Active Merchant -- http://home.leetsoft.com/am"
-            request['Content-Type'] = "application/x-www-form-urlencoded"
 
-            http = Net::HTTP.new(uri.host, uri.port)
-            http.verify_mode    = OpenSSL::SSL::VERIFY_NONE unless @ssl_strict
-            http.use_ssl        = true
+            # payload = raw
 
-            response = http.request(request, payload)
+            # uri = URI.parse(Klarna.notification_confirmation_url)
 
-            # Replace with the appropriate codes
-            raise StandardError.new("Faulty Klarna result: #{response.body}") unless ["AUTHORISED", "DECLINED"].include?(response.body)
-            response.body == "AUTHORISED"
+            # request = Net::HTTP::Post.new(uri.path)
+
+            # request['Content-Length'] = "#{payload.size}"
+            # request['User-Agent'] = "Active Merchant -- http://home.leetsoft.com/am"
+            # request['Content-Type'] = "application/x-www-form-urlencoded"
+
+            # http = Net::HTTP.new(uri.host, uri.port)
+            # http.verify_mode    = OpenSSL::SSL::VERIFY_NONE unless @ssl_strict
+            # http.use_ssl        = true
+
+            # response = http.request(request, payload)
+
+            # # Replace with the appropriate codes
+            # raise StandardError.new("Faulty Klarna result: #{response.body}") unless ["AUTHORISED", "DECLINED"].include?(response.body)
+            # response.body == "AUTHORISED"
           end
 
           private

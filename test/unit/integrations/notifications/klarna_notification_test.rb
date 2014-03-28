@@ -38,6 +38,7 @@ class KlarnaNotificationTest < Test::Unit::TestCase
   end
 
   private
+  
   def http_raw_data
     ""
   end
