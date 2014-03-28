@@ -60,7 +60,7 @@ class UniversalHelperTest < Test::Unit::TestCase
   end
 
   def test_billing_address_fields
-    @helper.billing_address :city => 'Leeds',
+    @helper.billing_address :city => 'Ottawa',
                             :company => 'Shopify Ottawa',
                             :address1 => '126 York St',
                             :address2 => '2nd floor',
@@ -69,7 +69,7 @@ class UniversalHelperTest < Test::Unit::TestCase
                             :country => 'CA',
                             :phone => '(613) 987-6543'
 
-    assert_field 'x_customer_billing_city', 'Leeds'
+    assert_field 'x_customer_billing_city', 'Ottawa'
     assert_field 'x_customer_billing_company', 'Shopify Ottawa'
     assert_field 'x_customer_billing_address1', '126 York St'
     assert_field 'x_customer_billing_address2', '2nd floor'
