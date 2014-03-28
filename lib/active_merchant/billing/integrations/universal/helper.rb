@@ -6,11 +6,16 @@ module ActiveMerchant #:nodoc:
 
           def initialize(order, account, options = {})
             super
+            @forward_url = options[:forward_url]
             @key = options[:credential2]
             self.country = options[:country]
             self.account_name = options[:account_name]
             self.transaction_type = options[:transaction_type]
             add_field 'x_test', @test.to_s
+          end
+
+          def credential_based_url
+            @forward_url
           end
 
           def form_fields
