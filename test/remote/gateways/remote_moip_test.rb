@@ -48,14 +48,13 @@ class RemoteMoipTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert response = @gateway.authorize(@amount, @options)
     assert_success response
     assert_equal 'Sucesso', response.message
   end
 
   def test_authorize_and_capture
-    amount = @amount
-    assert auth = @gateway.authorize(amount, @credit_card, @options)
+    assert auth = @gateway.authorize(@amount, @options)
     assert_success auth
     assert_equal 'Sucesso', auth.message
     assert auth.authorization
@@ -89,7 +88,7 @@ class RemoteMoipTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_authorize
-    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(:order_id => 1))
+    assert response = @gateway.authorize(@amount, @options.merge(:order_id => 1))
     assert_failure response
     assert_equal 'Id Próprio já foi utilizado em outra Instrução', response.message
   end

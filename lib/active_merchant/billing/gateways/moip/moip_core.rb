@@ -33,17 +33,13 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def build_authorize_request(money, payment_method, options)
+      def build_authorize_request(money, options)
         xml = Builder::XmlMarkup.new
         xml.tag! 'EnviarInstrucao' do
           xml.tag! 'InstrucaoUnica', TipoValidacao: 'Transparente' do
 
             xml.tag! 'IdProprio', options[:order_id]
             xml.tag! 'Razao',     options[:reason]
-
-            xml.tag! 'Pagamento' do
-              xml.tag! 'FormaPagamento', payment_methods(payment_method)
-            end
 
             xml.tag! 'Valores' do
               currency = options[:currency] || default_currency
@@ -199,7 +195,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(success?(response),
                      message_from(response),
-                     response,
+                     params_from(response),
                      :test => test?,
                      :authorization => response[:token] || response['CodigoMoIP'])
       end
@@ -242,6 +238,14 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         response['Mensagem'] || response[:erro] || response[:status]
+      end
+
+      def params_from(response)
+        if response[:token]
+          return response.merge(url: "#{test? ? self.test_url : self.live_url}/Instrucao.do?token=#{response[:token]}")
+        else
+          return response
+        end
       end
 
       def add_authentication

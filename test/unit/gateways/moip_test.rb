@@ -53,7 +53,7 @@ class MoipTest < Test::Unit::TestCase
   def test_successful_authorize
     @gateway.expects(:ssl_request).returns(successful_authorize_response)
 
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert response = @gateway.authorize(@amount, @options)
     assert_instance_of Response, response
     assert_success response
 
@@ -72,7 +72,7 @@ class MoipTest < Test::Unit::TestCase
   def test_unsuccessful_authorize
     @gateway.expects(:ssl_request).returns(unsuccessful_authorize_response)
 
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert response = @gateway.authorize(@amount, @options)
     assert_failure response
     assert response.test?
   end
