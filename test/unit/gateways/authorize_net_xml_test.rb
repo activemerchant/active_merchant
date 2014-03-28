@@ -8,12 +8,15 @@ class AuthorizeNetTest < Test::Unit::TestCase
       :login => 'X',
       :password => 'Y'
     )
+
+    @transaction = @gateway.send(:get_transaction, 'AUTH_CAPTURE')
     @amount = 100
     @credit_card = credit_card
     @subscription_id = '100748'
     @subscription_status = 'active'
     @check = check
   end
+
 =begin
   def test_successful_echeck_authorization
     response = stub_comms do
@@ -82,7 +85,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_success response
     assert_equal '508141794', response.authorization
   end
-=end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -91,7 +94,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_success response
     assert_equal '508141795', response.authorization
   end
-=begin
   def test_failed_authorization
     @gateway.expects(:ssl_post).returns(failed_authorization_response)
 
@@ -108,63 +110,71 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response
   end
+=end
 
   def test_add_address_outsite_north_america
-    result = {}
+    @gateway.send(:add_address, @transaction, :billing_address => {:address1 => '164 Waverley Street', :country => 'DE', :state => ''} )
 
-    @gateway.send(:add_address, result, :billing_address => {:address1 => '164 Waverley Street', :country => 'DE', :state => ''} )
-
-    assert_equal ["address", "city", "company", "country", "phone", "state", "zip"], result.stringify_keys.keys.sort
-    assert_equal 'n/a', result[:state]
-    assert_equal '164 Waverley Street', result[:address]
-    assert_equal 'DE', result[:country]
+    assert_equal ["address", "city", "company", "country", "phone", "state", "zip"], @transaction.fields.stringify_keys.keys.sort
+    assert_equal 'n/a', @transaction.fields[:state]
+    assert_equal '164 Waverley Street', @transaction.fields[:address]
+    assert_equal 'DE', @transaction.fields[:country]
   end
 
   def test_add_address
-    result = {}
+    @gateway.send(:add_address, @transaction, :billing_address => {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'} )
 
-    @gateway.send(:add_address, result, :billing_address => {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'} )
-
-    assert_equal ["address", "city", "company", "country", "phone", "state", "zip"], result.stringify_keys.keys.sort
-    assert_equal 'CO', result[:state]
-    assert_equal '164 Waverley Street', result[:address]
-    assert_equal 'US', result[:country]
-
+    assert_equal ["address", "city", "company", "country", "phone", "state", "zip"], @transaction.fields.stringify_keys.keys.sort
+    assert_equal 'CO', @transaction.fields[:state]
+    assert_equal '164 Waverley Street', @transaction.fields[:address]
+    assert_equal 'US', @transaction.fields[:country]
   end
 
   def test_add_invoice
-    result = {}
-    @gateway.send(:add_invoice, result, :order_id => '#1001')
-    assert_equal '#1001', result[:invoice_num]
-  end
+    @gateway.send(:add_invoice, @transaction, :order_id => '#1001', :description => 'My Purchase is great')
 
-  def test_add_description
-    result = {}
-    @gateway.send(:add_invoice, result, :description => 'My Purchase is great')
-    assert_equal 'My Purchase is great', result[:description]
+    assert_equal '#1001', @transaction.fields[:invoice_num]
+    assert_equal 'My Purchase is great', @transaction.fields[:description]
   end
 
   def test_add_duplicate_window_without_duplicate_window
-    result = {}
     @gateway.class.duplicate_window = nil
-    @gateway.send(:add_duplicate_window, result)
-    assert_nil result[:duplicate_window]
+    @gateway.send(:add_duplicate_window, @transaction)
+
+    assert_nil @transaction.fields[:duplicate_window]
   end
 
   def test_add_duplicate_window_with_duplicate_window
-    result = {}
     @gateway.class.duplicate_window = 0
-    @gateway.send(:add_duplicate_window, result)
-    assert_equal 0, result[:duplicate_window]
+    @gateway.send(:add_duplicate_window, @transaction)
+
+    assert_equal 0, @transaction.fields[:duplicate_window]
   end
 
-  def test_add_cardholder_authentication_value
-    result = {}
-    params = {:cardholder_authentication_value => 'E0Mvq8AAABEiMwARIjNEVWZ3iJk=', :authentication_indicator => '2'}
-    @gateway.send(:add_customer_data, result, params)
-    assert_equal 'E0Mvq8AAABEiMwARIjNEVWZ3iJk=', result[:cardholder_authentication_value]
-    assert_equal '2', result[:authentication_indicator]
+  def test_add_customer_data
+    options = {:cardholder_authentication_value => 'E0Mvq8AAABEiMwARIjNEVWZ3iJk=',
+               :authentication_indicator => '2',
+               :ip => 'what is this?',
+               :customer => 7.5,
+               :email => 'none@noway.com'}
+    @gateway.send(:add_customer_data, @transaction, options)
+
+    assert_equal 'E0Mvq8AAABEiMwARIjNEVWZ3iJk=', @transaction.fields[:cardholder_authentication_value]
+    assert_equal '2', @transaction.fields[:authentication_indicator]
+    assert_equal 'what is this?', @transaction.fields[:customer_ip]
+    assert_equal  7.5, @transaction.fields[:cust_id]
+    assert_equal 'none@noway.com', @transaction.fields[:email]
+    assert_equal false, @transaction.fields[:email_customer]
   end
+
+  def test_add_customer_data_with_bad_data
+    options = {:customer => 'x'}
+    @gateway.send(:add_customer_data, @transaction, options)
+
+    assert_equal  nil, @transaction.fields[:cust_id]
+  end
+
+=begin
 
   def test_purchase_is_valid_csv
    params = { :amount => '1.01' }
@@ -379,6 +389,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     ActiveMerchant::Billing::AuthorizeNetGateway.application_id = nil
   end
 
+
   def test_bad_currency
     @gateway.expects(:ssl_post).returns(bad_currency_response)
 
@@ -386,7 +397,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'The supplied currency code is either invalid, not supported, not allowed for this merchant or doesn\'t have an exchange rate', response.message
   end
-
   def test_alternate_currency
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
