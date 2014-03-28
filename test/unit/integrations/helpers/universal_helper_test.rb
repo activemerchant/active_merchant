@@ -25,7 +25,6 @@ class UniversalHelperTest < Test::Unit::TestCase
                 :forward_url => @forward_url,
               }
     @helper = Universal::Helper.new(@order, @account, @options)
-    @helper.form_fields # initialize some additional fields
   end
 
   def test_core_fields
@@ -34,46 +33,74 @@ class UniversalHelperTest < Test::Unit::TestCase
     @helper.description 'Box of Red Wine'
     @helper.invoice 'Invoice #1A'
 
-    assert_field 'x-id', @account
-    assert_field 'x-currency', @currency
-    assert_field 'x-amount', @amount.to_s
-    assert_field 'x-amount-shipping', '678'
-    assert_field 'x-amount-tax', '90'
-    assert_field 'x-reference', @order
-    assert_field 'x-shop-country', @country
-    assert_field 'x-shop-name', @account_name
-    assert_field 'x-transaction-type', @transaction_type
-    assert_field 'x-description', 'Box of Red Wine'
-    assert_field 'x-invoice', 'Invoice #1A'
-    assert_field 'x-test', @test.to_s
+    assert_field 'x_id', @account
+    assert_field 'x_currency', @currency
+    assert_field 'x_amount', @amount.to_s
+    assert_field 'x_amount_shipping', '678'
+    assert_field 'x_amount_tax', '90'
+    assert_field 'x_reference', @order
+    assert_field 'x_shop_country', @country
+    assert_field 'x_shop_name', @account_name
+    assert_field 'x_transaction_type', @transaction_type
+    assert_field 'x_description', 'Box of Red Wine'
+    assert_field 'x_invoice', 'Invoice #1A'
+    assert_field 'x_test', @test.to_s
   end
 
   def test_customer_fields
-    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', :phone => '(123) 456-7890'
-    assert_field 'x-customer-first-name', 'Cody'
-    assert_field 'x-customer-last-name', 'Fauser'
-    assert_field 'x-customer-email', 'cody@example.com'
-    assert_field 'x-customer-phone', '(123) 456-7890'
+    @helper.customer :first_name => 'Cody',
+                     :last_name => 'Fauser',
+                     :email => 'cody@example.com',
+                     :phone => '(613) 456-7890'
+
+    assert_field 'x_customer_first_name', 'Cody'
+    assert_field 'x_customer_last_name', 'Fauser'
+    assert_field 'x_customer_email', 'cody@example.com'
+    assert_field 'x_customer_phone', '(613) 456-7890'
   end
 
-  def test_address_fields
+  def test_billing_address_fields
     @helper.billing_address :city => 'Leeds',
-                            :company => 'Shopify Inc',
-                            :address1 => '1 My Street',
+                            :company => 'Shopify Ottawa',
+                            :address1 => '126 York St',
                             :address2 => '2nd floor',
-                            :state => 'Yorkshire',
-                            :zip => 'LS2 7EE',
+                            :state => 'ON',
+                            :zip => 'K1N 5T5',
                             :country => 'CA',
-                            :phone => '(987) 645-3210'
+                            :phone => '(613) 987-6543'
 
-    assert_field 'x-customer-city', 'Leeds'
-    assert_field 'x-customer-company', 'Shopify Inc'
-    assert_field 'x-customer-address1', '1 My Street'
-    assert_field 'x-customer-address2', '2nd floor'
-    assert_field 'x-customer-state', 'Yorkshire'
-    assert_field 'x-customer-zip', 'LS2 7EE'
-    assert_field 'x-customer-country', 'CA'
-    assert_field 'x-customer-phone', '(987) 645-3210'
+    assert_field 'x_customer_billing_city', 'Leeds'
+    assert_field 'x_customer_billing_company', 'Shopify Ottawa'
+    assert_field 'x_customer_billing_address1', '126 York St'
+    assert_field 'x_customer_billing_address2', '2nd floor'
+    assert_field 'x_customer_billing_state', 'ON'
+    assert_field 'x_customer_billing_zip', 'K1N 5T5'
+    assert_field 'x_customer_billing_country', 'CA'
+    assert_field 'x_customer_billing_phone', '(613) 987-6543'
+  end
+
+  def test_shipping_address_fields
+    @helper.shipping_address :first_name => 'John',
+                             :last_name => 'Doe',
+                             :city => 'Toronto',
+                             :company => 'Shopify Toronto',
+                             :address1 => '241 Spadina Ave',
+                             :address2 => 'Front Entrance',
+                             :state => 'ON',
+                             :zip => 'M5T 3A8',
+                             :country => 'CA',
+                             :phone => '(416) 123-4567'
+
+    assert_field 'x_customer_shipping_first_name', 'John'
+    assert_field 'x_customer_shipping_last_name', 'Doe'
+    assert_field 'x_customer_shipping_city', 'Toronto'
+    assert_field 'x_customer_shipping_company', 'Shopify Toronto'
+    assert_field 'x_customer_shipping_address1', '241 Spadina Ave'
+    assert_field 'x_customer_shipping_address2', 'Front Entrance'
+    assert_field 'x_customer_shipping_state', 'ON'
+    assert_field 'x_customer_shipping_zip', 'M5T 3A8'
+    assert_field 'x_customer_shipping_country', 'CA'
+    assert_field 'x_customer_shipping_phone', '(416) 123-4567'
   end
 
   def test_url_fields
@@ -81,9 +108,15 @@ class UniversalHelperTest < Test::Unit::TestCase
     @helper.return_url 'https://zork.com/return'
     @helper.cancel_return_url 'https://zork.com/cancel'
 
-    assert_field 'x-url-callback', 'https://zork.com/notify'
-    assert_field 'x-url-complete', 'https://zork.com/return'
-    assert_field 'x-url-cancel', 'https://zork.com/cancel'
+    assert_field 'x_url_callback', 'https://zork.com/notify'
+    assert_field 'x_url_complete', 'https://zork.com/return'
+    assert_field 'x_url_cancel', 'https://zork.com/cancel'
+  end
+
+  def test_signature
+    expected_signature = Digest::HMAC.hexdigest('x_amount12345x_currencyUSDx_idzorkx_referenceorder-500x_shop_countryUSx_shop_nameWidgets Incx_testfalsex_transaction_typesale', @key, Digest::SHA256)
+    @helper.sign_fields
+    assert_field 'x_signature', expected_signature
   end
 
 end

@@ -12,28 +12,28 @@ module ActiveMerchant #:nodoc:
           end
 
           def acknowledge(authcode = nil)
-            signature = @params.delete('x-signature')
-            signature == generate_signature
+            signature = @params.delete('x_signature')
+            signature && signature.casecmp(generate_signature) == 0
           end
 
           def item_id
-            @params['x-reference']
+            @params['x_reference']
           end
 
           def currency
-            @params['x-currency']
+            @params['x_currency']
           end
 
           def gross
-            @params['x-amount']
+            @params['x_amount']
           end
 
           def transaction_id
-            @params['x-gateway-reference']
+            @params['x_gateway_reference']
           end
 
           def status
-            case @params['x-result']
+            case @params['x_result']
               when 'success'; 'Completed'
               when 'failure'; 'Failed'
               when 'pending'; 'Pending'
@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def test?
-            @params['x-test'] == 'true'
+            @params['x_test'] == 'true'
           end
 
           private
