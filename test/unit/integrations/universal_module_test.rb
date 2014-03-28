@@ -3,10 +3,6 @@ require 'test_helper'
 class UniversalModuleTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
-  def test_credential_based_url
-    assert_equal 'zork', Universal.credential_based_url({:forward_url => 'zork'})
-  end
-
   def test_notification
     assert_instance_of Universal::Notification, Universal.notification('name=zork')
   end

@@ -27,6 +27,10 @@ class UniversalHelperTest < Test::Unit::TestCase
     @helper = Universal::Helper.new(@order, @account, @options)
   end
 
+  def test_credential_based_url
+    assert_equal @forward_url, @helper.credential_based_url
+  end
+
   def test_core_fields
     @helper.shipping 678
     @helper.tax 90
