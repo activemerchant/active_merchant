@@ -10,6 +10,7 @@
 * Wirecard: Fix CVV & AVS response handling [alevett]
 * Consolidate deprecation handling [ntalbott]
 * Authorize.Net CIM: Do not send x_test_request [danrabinowitz]
+* Authorize.Net CIM: Pass delimiter through [jsoma]
 
 == Version 1.43.2 (May 12, 2014)
 
