@@ -38,15 +38,15 @@ class UniversalNotificationTest < Test::Unit::TestCase
   private
 
   def http_raw_data
-    'x_account_id=zork&x_reference=order-500&x_currency=USD&x_test=true&x_amount=123.45&x_gateway_reference=blorb123&x_timestamp=2014-03-24T12:15:41Z&x_result=success&x_signature=4365fef32f5309845052b728c8cbe962e583ecaf62bf1cdec91f248162b7f65e'
+    'x_account_id=zork&x_reference=order-500&x_currency=USD&x_test=true&x_amount=123.45&x_gateway_reference=blorb123&x_timestamp=2014-03-24T12:15:41Z&x_result=completed&x_signature=d8797220f2f0ccef90c1ee80e82494cd709fb10ab1f50a016578208c3fb5a0c1'
   end
 
   def http_raw_data_uppercase_signature
-    'x_account_id=zork&x_reference=order-500&x_currency=USD&x_test=true&x_amount=123.45&x_gateway_reference=blorb123&x_timestamp=2014-03-24T12:15:41Z&x_result=success&x_signature=4365FEF32F5309845052B728C8CBE962E583ECAF62BF1CDEC91F248162B7F65E'
+    'x_account_id=zork&x_reference=order-500&x_currency=USD&x_test=true&x_amount=123.45&x_gateway_reference=blorb123&x_timestamp=2014-03-24T12:15:41Z&x_result=completed&x_signature=D8797220F2F0CCEF90C1EE80E82494CD709FB10AB1F50A016578208C3FB5A0C1'
   end
 
   def http_raw_data_invalid_signature
-    'x_account_id=zork&x_reference=order-500&x_currency=USD&x_test=true&x_amount=123.45&x_gateway_reference=blorb123&x_timestamp=2014-03-24T12:15:41Z&x_result=success&x_signature=4365fef32f5309845052b728c8cbe962e583ecaf62bf1cdec91f248162b7f65f'
+    'x_account_id=zork&x_reference=order-500&x_currency=USD&x_test=true&x_amount=123.45&x_gateway_reference=blorb123&x_timestamp=2014-03-24T12:15:41Z&x_result=completed&x_signature=d8797220f2f0ccef90c1ee80e82494cd709fb10ab1f50a016578208c3fb5a0c2'
   end
 
 end
