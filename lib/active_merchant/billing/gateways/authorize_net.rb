@@ -26,6 +26,9 @@ module ActiveMerchant #:nodoc:
     class AuthorizeNetGateway < Gateway
       API_VERSION = '3.1'
 
+      def success?(response)
+        response[:response_code] == APPROVED && TRANSACTION_ALREADY_ACTIONED.exclude?(response[:response_reason_code])
+      end
       class_attribute :arb_test_url, :arb_live_url
 
       self.test_url = "https://test.authorize.net/gateway/transact.dll"
@@ -284,29 +287,26 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def success?(response)
-        response[:response_code] == APPROVED && TRANSACTION_ALREADY_ACTIONED.exclude?(response[:response_reason_code])
-      end
 
       def fraud_review?(response)
         response[:response_code] == FRAUD_REVIEW
       end
-
       def parse(body)
         fields = split(body)
 
         results = {
-          :response_code => fields[RESPONSE_CODE].to_i,
-          :response_reason_code => fields[RESPONSE_REASON_CODE],
-          :response_reason_text => fields[RESPONSE_REASON_TEXT],
-          :avs_result_code => fields[AVS_RESULT_CODE],
-          :transaction_id => fields[TRANSACTION_ID],
-          :card_code => fields[CARD_CODE_RESPONSE_CODE],
-          :authorization_code => fields[AUTHORIZATION_CODE],
-          :cardholder_authentication_code => fields[CARDHOLDER_AUTH_CODE]
+            :response_code => fields[RESPONSE_CODE].to_i,
+            :response_reason_code => fields[RESPONSE_REASON_CODE],
+            :response_reason_text => fields[RESPONSE_REASON_TEXT],
+            :avs_result_code => fields[AVS_RESULT_CODE],
+            :transaction_id => fields[TRANSACTION_ID],
+            :card_code => fields[CARD_CODE_RESPONSE_CODE],
+            :authorization_code => fields[AUTHORIZATION_CODE],
+            :cardholder_authentication_code => fields[CARDHOLDER_AUTH_CODE]
         }
         results
       end
+
 
       def post_data(action, parameters = {})
         post = {}

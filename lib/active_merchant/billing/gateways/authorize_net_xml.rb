@@ -122,20 +122,17 @@ module ActiveMerchant #:nodoc:
       # * <tt>paysource</tt> -- The CreditCard or Check details for the transaction.
       # * <tt>options</tt> -- A hash of optional parameters.
       def purchase(money, paysource, options = {})
-        post = {}
         transaction = get_transaction('AUTH_CAPTURE')
         add_currency_code(transaction, money, options)
-        add_invoice(post, options)
+        add_invoice(transaction, options)
         add_address(transaction, options)
-        add_customer_data(post, options)
-        add_duplicate_window(post)
+        add_customer_data(transaction, options)
+        add_duplicate_window(transaction)
 
         anet_payment_source = get_payment_source(paysource, options)
 
-        #transaction.set_address
-
         anet_response = transaction.purchase(money, anet_payment_source)
-        build_active_merchant_response(anet_response)
+#        build_active_merchant_response(anet_response)
       end
 
       # Captures the funds from an authorized transaction.
@@ -151,7 +148,7 @@ module ActiveMerchant #:nodoc:
         commit('PRIOR_AUTH_CAPTURE', money, post)
 
         anet_response = get_transaction('PRIOR_AUTH_CAPTURE').prior_auth_capture(money, @payment_source)
-        build_active_merchant_response(anet_response)
+  #      build_active_merchant_response(anet_response)
       end
 
       # Void a previous transaction
@@ -295,8 +292,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_response(anet_response)
-        response_fields= anet_response.instance_variable_get(:@fields)
-        Response.new(anet_response.success?, response_fields[:response_reason_text], response_fields,
+        Response.new(anet_response.success?, anet_response.fields[:response_reason_text], anet_response.fields,
                      :test => test?,
                      :authorization => anet_response.authorization_code
         #:avs_result => response.avs_response
@@ -353,13 +349,13 @@ module ActiveMerchant #:nodoc:
         type = ACTION_TYPES[action]
       end
 
-      def add_currency_code(post, money, options)
-        post[:currency_code] = options[:currency] || currency(money)
+      def add_currency_code(transaction, money, options)
+       # post[:currency_code] = options[:currency] || currency(money)
       end
 
-      def add_invoice(post, options)
-        post[:invoice_num] = options[:order_id]
-        post[:description] = options[:description]
+      def add_invoice(transaction, options)
+        transaction.fields[:invoice_num] = options[:order_id]
+        transaction.fields[:description] = options[:description]
       end
 
       def add_creditcard(post, creditcard, options={})
@@ -371,14 +367,14 @@ module ActiveMerchant #:nodoc:
         post[:last_name]  = creditcard.last_name
         :card_number, :expiration, :card_code, :card_type, :track_1, :track_2
 =end
-        @payment_source = AuthorizeNet::CreditCard.new(creditcard.number, expdate(creditcard), options)
+       # @payment_source = AuthorizeNet::CreditCard.new(creditcard.number, expdate(creditcard), options)
       end
 
       def get_payment_source(source, options={})
         if card_brand(source) == "check"
-          add_check(params, source, options)
+          add_check(source, options)
         else
-          add_creditcard(params, source, options)
+          add_creditcard(source, options)
         end
       end
 
@@ -399,26 +395,26 @@ module ActiveMerchant #:nodoc:
 =end
       end
 
-      def add_customer_data(post, options)
+      def add_customer_data(transaction, options)
         if options.has_key? :email
-          post[:email] = options[:email]
-          post[:email_customer] = false
+          transaction.fields[:email] = options[:email]
+          transaction.fields[:email_customer] = false
         end
 
         if options.has_key? :customer
-          post[:cust_id] = options[:customer] if Float(options[:customer]) rescue nil
+          transaction.fields[:cust_id] = options[:customer] if Float(options[:customer]) rescue nil
         end
 
         if options.has_key? :ip
-          post[:customer_ip] = options[:ip]
+          transaction.fields[:customer_ip] = options[:ip]
         end
 
         if options.has_key? :cardholder_authentication_value
-          post[:cardholder_authentication_value] = options[:cardholder_authentication_value]
+          transaction.fields[:cardholder_authentication_value] = options[:cardholder_authentication_value]
         end
 
         if options.has_key? :authentication_indicator
-          post[:authentication_indicator] = options[:authentication_indicator]
+          transaction.fields[:authentication_indicator] = options[:authentication_indicator]
         end
 
       end
@@ -426,34 +422,44 @@ module ActiveMerchant #:nodoc:
       # x_duplicate_window won't be sent by default, because sending it changes the response.
       # "If this field is present in the request with or without a value, an enhanced duplicate transaction response will be sent."
       # (as of 2008-12-30) http://www.authorize.net/support/AIM_guide_SCC.pdf
-      def add_duplicate_window(post)
+      def add_duplicate_window(transaction)
         unless duplicate_window.nil?
-          post[:duplicate_window] = duplicate_window
+          transaction.fields[:duplicate_window] = duplicate_window
         end
       end
 
-      def add_address(post, options)
-        if address = options[:billing_address] || options[:address]
-          post[:address] = address[:address1].to_s
-          post[:company] = address[:company].to_s
-          post[:phone] = address[:phone].to_s
-          post[:zip] = address[:zip].to_s
-          post[:city] = address[:city].to_s
-          post[:country] = address[:country].to_s
-          post[:state] = address[:state].blank? ? 'n/a' : address[:state]
+      def add_address(transaction, options)
+        if address_hash = options[:billing_address] || options[:address]
+          address_to_add = AuthorizeNet::Address.new
+
+          address_to_add.street_address = address_hash[:address1].to_s
+          address_to_add.company = address_hash[:company].to_s
+          address_to_add.phone = address_hash[:phone].to_s
+          address_to_add.zip = address_hash[:zip].to_s
+          address_to_add.city = address_hash[:city].to_s
+          address_to_add.country = address_hash[:country].to_s
+          address_to_add.state = address_hash[:state].blank? ? 'n/a' : address_hash[:state]
+
+          transaction.set_address(address_to_add)
         end
 
-        if address = options[:shipping_address]
-          post[:ship_to_first_name] = address[:first_name].to_s
-          post[:ship_to_last_name] = address[:last_name].to_s
-          post[:ship_to_address] = address[:address1].to_s
-          post[:ship_to_company] = address[:company].to_s
-          post[:ship_to_phone] = address[:phone].to_s
-          post[:ship_to_zip] = address[:zip].to_s
-          post[:ship_to_city] = address[:city].to_s
-          post[:ship_to_country] = address[:country].to_s
-          post[:ship_to_state] = address[:state].blank? ? 'n/a' : address[:state]
+        if address_hash = options[:shipping_address]
+          address_to_add = AuthorizeNet::ShippingAddress.new
+
+          address_to_add.first_name = address_hash[:first_name].to_s
+          address_to_add.last_name = address_hash[:last_name].to_s
+
+          address_to_add.street_address = address_hash[:address1].to_s
+          address_to_add.company = address_hash[:company].to_s
+          address_to_add.phone = address_hash[:phone].to_s
+          address_to_add.zip = address_hash[:zip].to_s
+          address_to_add.city = address_hash[:city].to_s
+          address_to_add.country = address_hash[:country].to_s
+          address_to_add.state = address_hash[:state].blank? ? 'n/a' : address_hash[:state]
+
+          transaction.set_shipping_address(address_to_add)
         end
+
       end
 
       # Make a ruby type out of the response string
