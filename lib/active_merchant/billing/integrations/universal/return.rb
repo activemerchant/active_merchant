@@ -3,7 +3,6 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Universal
         class Return < ActiveMerchant::Billing::Integrations::Return
-
           def initialize(query_string, options = {})
             super
             @notification = Notification.new(query_string, options)
@@ -12,7 +11,6 @@ module ActiveMerchant #:nodoc:
           def success?
             @notification.acknowledge
           end
-
         end
       end
     end
