@@ -5,7 +5,6 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Universal
         class Notification < ActiveMerchant::Billing::Integrations::Notification
-
           def initialize(post, options = {})
             super
             @key = options[:credential2]
@@ -42,10 +41,10 @@ module ActiveMerchant #:nodoc:
           end
 
           private
+
           def generate_signature
             Universal.sign(@params, @key)
           end
-
         end
       end
     end

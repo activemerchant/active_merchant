@@ -14,16 +14,14 @@ class UniversalHelperTest < Test::Unit::TestCase
     @account_name = 'Widgets Inc'
     @transaction_type = 'sale'
     @forward_url = 'https://bork.com/pay'
-    @options = {
-                :amount => @amount,
+    @options = {:amount => @amount,
                 :currency => @currency,
                 :test => @test,
                 :credential2 => @key,
                 :country => @country,
                 :account_name => @account_name,
                 :transaction_type => @transaction_type,
-                :forward_url => @forward_url,
-              }
+                :forward_url => @forward_url}
     @helper = Universal::Helper.new(@order, @account, @options)
   end
 
@@ -53,58 +51,58 @@ class UniversalHelperTest < Test::Unit::TestCase
 
   def test_customer_fields
     @helper.customer :first_name => 'Cody',
-                     :last_name => 'Fauser',
-                     :email => 'cody@example.com',
-                     :phone => '(613) 456-7890'
+                     :last_name  => 'Fauser',
+                     :email      => 'cody@example.com',
+                     :phone      => '(613) 456-7890'
 
     assert_field 'x_customer_first_name', 'Cody'
-    assert_field 'x_customer_last_name', 'Fauser'
-    assert_field 'x_customer_email', 'cody@example.com'
-    assert_field 'x_customer_phone', '(613) 456-7890'
+    assert_field 'x_customer_last_name',  'Fauser'
+    assert_field 'x_customer_email',      'cody@example.com'
+    assert_field 'x_customer_phone',      '(613) 456-7890'
   end
 
   def test_billing_address_fields
-    @helper.billing_address :city => 'Ottawa',
-                            :company => 'Shopify Ottawa',
+    @helper.billing_address :city =>     'Ottawa',
+                            :company =>  'Shopify Ottawa',
                             :address1 => '126 York St',
                             :address2 => '2nd floor',
-                            :state => 'ON',
-                            :zip => 'K1N 5T5',
-                            :country => 'CA',
-                            :phone => '(613) 987-6543'
+                            :state =>    'ON',
+                            :zip =>      'K1N 5T5',
+                            :country =>  'CA',
+                            :phone =>    '(613) 987-6543'
 
-    assert_field 'x_customer_billing_city', 'Ottawa'
-    assert_field 'x_customer_billing_company', 'Shopify Ottawa'
+    assert_field 'x_customer_billing_city',     'Ottawa'
+    assert_field 'x_customer_billing_company',  'Shopify Ottawa'
     assert_field 'x_customer_billing_address1', '126 York St'
     assert_field 'x_customer_billing_address2', '2nd floor'
-    assert_field 'x_customer_billing_state', 'ON'
-    assert_field 'x_customer_billing_zip', 'K1N 5T5'
-    assert_field 'x_customer_billing_country', 'CA'
-    assert_field 'x_customer_billing_phone', '(613) 987-6543'
+    assert_field 'x_customer_billing_state',    'ON'
+    assert_field 'x_customer_billing_zip',      'K1N 5T5'
+    assert_field 'x_customer_billing_country',  'CA'
+    assert_field 'x_customer_billing_phone',    '(613) 987-6543'
   end
 
   def test_shipping_address_fields
     @helper.shipping_address :first_name => 'John',
-                             :last_name => 'Doe',
-                             :city => 'Toronto',
-                             :company => 'Shopify Toronto',
-                             :address1 => '241 Spadina Ave',
-                             :address2 => 'Front Entrance',
-                             :state => 'ON',
-                             :zip => 'M5T 3A8',
-                             :country => 'CA',
-                             :phone => '(416) 123-4567'
+                             :last_name  => 'Doe',
+                             :city       => 'Toronto',
+                             :company    => 'Shopify Toronto',
+                             :address1   => '241 Spadina Ave',
+                             :address2   => 'Front Entrance',
+                             :state      => 'ON',
+                             :zip        => 'M5T 3A8',
+                             :country    => 'CA',
+                             :phone      => '(416) 123-4567'
 
     assert_field 'x_customer_shipping_first_name', 'John'
-    assert_field 'x_customer_shipping_last_name', 'Doe'
-    assert_field 'x_customer_shipping_city', 'Toronto'
-    assert_field 'x_customer_shipping_company', 'Shopify Toronto'
-    assert_field 'x_customer_shipping_address1', '241 Spadina Ave'
-    assert_field 'x_customer_shipping_address2', 'Front Entrance'
-    assert_field 'x_customer_shipping_state', 'ON'
-    assert_field 'x_customer_shipping_zip', 'M5T 3A8'
-    assert_field 'x_customer_shipping_country', 'CA'
-    assert_field 'x_customer_shipping_phone', '(416) 123-4567'
+    assert_field 'x_customer_shipping_last_name',  'Doe'
+    assert_field 'x_customer_shipping_city',       'Toronto'
+    assert_field 'x_customer_shipping_company',    'Shopify Toronto'
+    assert_field 'x_customer_shipping_address1',   '241 Spadina Ave'
+    assert_field 'x_customer_shipping_address2',   'Front Entrance'
+    assert_field 'x_customer_shipping_state',      'ON'
+    assert_field 'x_customer_shipping_zip',        'M5T 3A8'
+    assert_field 'x_customer_shipping_country',    'CA'
+    assert_field 'x_customer_shipping_phone',      '(416) 123-4567'
   end
 
   def test_url_fields
@@ -120,7 +118,7 @@ class UniversalHelperTest < Test::Unit::TestCase
   def test_signature
     expected_signature = Digest::HMAC.hexdigest('x_account_idzorkx_amount12345x_currencyUSDx_referenceorder-500x_shop_countryUSx_shop_nameWidgets Incx_testfalsex_transaction_typesale', @key, Digest::SHA256)
     @helper.sign_fields
+
     assert_field 'x_signature', expected_signature
   end
-
 end

@@ -13,6 +13,7 @@ class UniversalModuleTest < Test::Unit::TestCase
 
   def test_sign
     expected = Digest::HMAC.hexdigest('a1b2', 'zork', Digest::SHA256)
+
     assert_equal expected, Universal.sign({:b => '2', :a => '1'}, 'zork')
   end
 
