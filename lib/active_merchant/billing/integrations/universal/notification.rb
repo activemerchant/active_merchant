@@ -33,11 +33,8 @@ module ActiveMerchant #:nodoc:
           end
 
           def status
-            case @params['x_result']
-              when 'success'; 'Completed'
-              when 'failure'; 'Failed'
-              when 'pending'; 'Pending'
-            end
+            result = @params['x_result']
+            result && result.capitalize
           end
 
           def test?
