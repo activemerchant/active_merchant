@@ -1,33 +1,35 @@
 require 'test_helper'
 
-class AuthorizeNetTest < Test::Unit::TestCase
+class AuthorizeNetXmlTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
 
     @gateway = ActiveMerchant::Billing::AuthorizeNetXmlGateway.new(fixtures(:authorize_net))
+    @gateway.duplicate_window = 0
+
     @amount = 100
     @credit_card = credit_card('4242424242424242')
     @check = check
     @options = {
-      :gateway => :sandbox,
-      :order_id => generate_unique_id,
-      :billing_address => address,
-      :description => 'Store purchase'
+        :gateway => :sandbox,
+        :order_id => generate_unique_id,
+        :billing_address => address,
+        :description => 'Store purchase'
     }
 
     @recurring_options = {
-      :amount => 100,
-      :subscription_name => 'Test Subscription 1',
-      :credit_card => @credit_card,
-      :billing_address => address.merge(:first_name => 'Jim', :last_name => 'Smith'),
-      :interval => {
-        :length => 1,
-        :unit => :months
-      },
-      :duration => {
-        :start_date => Date.today,
-        :occurrences => 1
-      }
+        :amount => 100,
+        :subscription_name => 'Test Subscription 1',
+        :credit_card => @credit_card,
+        :billing_address => address.merge(:first_name => 'Jim', :last_name => 'Smith'),
+        :interval => {
+            :length => 1,
+            :unit => :months
+        },
+        :duration => {
+            :start_date => Date.today,
+            :occurrences => 1
+        }
     }
   end
 
@@ -35,15 +37,15 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.test?
-    assert_equal '(TESTMODE) This transaction has been approved.', response.message
+    assert_equal 'This transaction has been approved.', response.message
     assert response.authorization
   end
-=begin
+
   def test_successful_echeck_purchase
     assert response = @gateway.purchase(@amount, @check, @options)
     assert_success response
     assert response.test?
-    assert_equal '(TESTMODE) This transaction has been approved.', response.message
+    assert_equal 'This transaction has been approved.', response.message
     assert response.authorization
   end
 
@@ -52,20 +54,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
-    assert_equal '(TESTMODE) The credit card has expired.', response.message
+    assert_equal 'The credit card has expired.', response.message
   end
 
   def test_successful_authorization
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_equal '(TESTMODE) This transaction has been approved.', response.message
+    assert_equal 'This transaction has been approved.', response.message
     assert response.authorization
   end
 
   def test_successfule_echeck_authorization
     assert response = @gateway.authorize(@amount, @check, @options)
     assert_success response
-    assert_equal '(TESTMODE) This transaction has been approved.', response.message
+    assert_equal 'This transaction has been approved.', response.message
     assert response.authorization
   end
 
@@ -73,18 +75,27 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
 
-    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert capture = @gateway.capture(@amount, authorization.params['transaction_id'])
     assert_success capture
-    assert_equal '(TESTMODE) This transaction has been approved.', capture.message
+    assert_equal 'This transaction has been approved.', capture.message
   end
 
   def test_authorization_and_void
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
 
-    assert void = @gateway.void(authorization.authorization)
+    assert void = @gateway.void(authorization.params['transaction_id'])
     assert_success void
-    assert_equal '(TESTMODE) This transaction has been approved.', void.message
+    assert_equal 'This transaction has been approved.', void.message
+  end
+
+  def test_successful_purchase_and_refund
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.params['transaction_id'])
+    assert_success refund
+    assert_equal 'This transaction has been approved.', refund.message
   end
 
   def test_bad_login
@@ -159,16 +170,17 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response.test?
     assert_equal 'E00018', response.params['code']
   end
-
+=begin
+  I don't see any mapping to a solution id in the SDK
   def test_successful_purchase_with_solution_id
-    ActiveMerchant::Billing::AuthorizeNetGateway.application_id = 'A1000000'
+    ActiveMerchant::Billing::AuthorizeNetXmlGateway.application_id = 'A1000000'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.test?
-    assert_equal '(TESTMODE) This transaction has been approved.', response.message
+    assert_equal 'This transaction has been approved.', response.message
     assert response.authorization
   ensure
-    ActiveMerchant::Billing::AuthorizeNetGateway.application_id = nil
+    ActiveMerchant::Billing::AuthorizeXmlNetGateway.application_id = nil
   end
 =end
 =begin

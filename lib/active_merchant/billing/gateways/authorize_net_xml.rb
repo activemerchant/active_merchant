@@ -35,7 +35,9 @@ module ActiveMerchant #:nodoc:
       self.arb_test_url = 'https://apitest.authorize.net/xml/v1/request.api'
       self.arb_live_url = 'https://api.authorize.net/xml/v1/request.api'
 
-      class_attribute :duplicate_window
+      class_attribute :duplicate_window, :partial_test_mode
+
+      self.partial_test_mode = false;
 
       APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
 
@@ -63,15 +65,6 @@ module ActiveMerchant #:nodoc:
           :status => 'ARBGetSubscriptionStatus'
       }
 
-=begin
-        AUTHORIZE_AND_CAPTURE = "AUTH_CAPTURE"
-        AUTHORIZE_ONLY = "AUTH_ONLY"
-        CAPTURE_ONLY = "CAPTURE_ONLY"
-        CREDIT = "CREDIT"
-        PRIOR_AUTHORIZATION_AND_CAPTURE = "PRIOR_AUTH_CAPTURE"
-        VOID = "VOID"
-=end
-
       # Creates a new AuthorizeNetGateway
       #
       # The gateway requires that a valid login and password be passed
@@ -84,12 +77,6 @@ module ActiveMerchant #:nodoc:
       # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test server.
       #   Otherwise, perform transactions against the production server.
       def initialize(options = {})
-        begin
-          require 'samurai'
-        rescue LoadError
-          raise "Could not load the samurai gem (>= 0.2.25).  Use `gem install samurai` to install it."
-        end
-
         requires!(options, :login, :password)
         super
       end
@@ -103,15 +90,17 @@ module ActiveMerchant #:nodoc:
       # * <tt>paysource</tt> -- The CreditCard or Check details for the transaction.
       # * <tt>options</tt> -- A hash of optional parameters.
       def authorize(money, paysource, options = {})
-        post = {}
-        add_currency_code(post, money, options)
-        add_invoice(post, options)
-        add_payment_source(post, paysource, options)
-        add_address(post, options)
-        add_customer_data(post, options)
-        add_duplicate_window(post)
+        transaction = get_transaction
+        add_currency_code(transaction, money, options)
+        add_invoice(transaction, options)
 
-        commit('AUTH_ONLY', money, post)
+        add_address(transaction, options)
+        add_customer_data(transaction, options)
+        add_duplicate_window(transaction)
+
+        anet_payment_source = get_payment_source(paysource, options)
+        anet_response = transaction.authorize(money, anet_payment_source)
+        build_active_merchant_response(anet_response)
       end
 
       # Perform a purchase, which is essentially an authorization and capture in a single operation.
@@ -122,7 +111,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>paysource</tt> -- The CreditCard or Check details for the transaction.
       # * <tt>options</tt> -- A hash of optional parameters.
       def purchase(money, paysource, options = {})
-        transaction = get_transaction('AUTH_CAPTURE')
+        transaction = get_transaction
         add_currency_code(transaction, money, options)
         add_invoice(transaction, options)
         add_address(transaction, options)
@@ -130,9 +119,8 @@ module ActiveMerchant #:nodoc:
         add_duplicate_window(transaction)
 
         anet_payment_source = get_payment_source(paysource, options)
-
         anet_response = transaction.purchase(money, anet_payment_source)
-#        build_active_merchant_response(anet_response)
+        build_active_merchant_response(anet_response)
       end
 
       # Captures the funds from an authorized transaction.
@@ -142,13 +130,12 @@ module ActiveMerchant #:nodoc:
       # * <tt>money</tt> -- The amount to be captured as an Integer value in cents.
       # * <tt>authorization</tt> -- The authorization returned from the previous authorize request.
       def capture(money, authorization, options = {})
-        post = {:trans_id => authorization}
-        add_customer_data(post, options)
-        add_invoice(post, options)
-        commit('PRIOR_AUTH_CAPTURE', money, post)
+        transaction = get_transaction
+        add_customer_data(transaction, options)
+        add_invoice(transaction, options)
 
-        anet_response = get_transaction('PRIOR_AUTH_CAPTURE').prior_auth_capture(money, @payment_source)
-  #      build_active_merchant_response(anet_response)
+        anet_response = transaction.prior_auth_capture(authorization, money)
+        build_active_merchant_response(anet_response)
       end
 
       # Void a previous transaction
@@ -157,9 +144,10 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>authorization</tt> - The authorization returned from the previous authorize request.
       def void(authorization, options = {})
-        post = {:trans_id => authorization}
-        add_duplicate_window(post)
-        commit('VOID', nil, post)
+        transaction = get_transaction
+        add_duplicate_window(transaction)
+        anet_response = transaction.void(authorization)
+        build_active_merchant_response(anet_response)
       end
 
       # Refund a transaction.
@@ -285,56 +273,19 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def get_transaction(transaction_type)
-        #gateway = test? ? AuthorizeNet::AIM::Transaction::Gateway::TEST : AuthorizeNet::AIM::Transaction::Gateway::LIVE
+      def get_transaction
         gateway = test? ? :sandbox : :live
-        transaction = AuthorizeNet::AIM::Transaction.new(@options[:login], @options[:password], :transaction_type => transaction_type, :gateway => gateway, :test => test?)
+        test_mode = test? ? partial_test_mode : true
+        transaction = AuthorizeNet::AIM::Transaction.new(@options[:login], @options[:password], :gateway => gateway, :test => test_mode)
       end
 
-      def build_response(anet_response)
+      def build_active_merchant_response(anet_response)
         Response.new(anet_response.success?, anet_response.fields[:response_reason_text], anet_response.fields,
                      :test => test?,
                      :authorization => anet_response.authorization_code
         #:avs_result => response.avs_response
         #{:cvv_result => response.card_code}
         )
-      end
-
-      def commit(action, money, parameters)
-        parameters[:amount] = amount(money) unless action == 'VOID'
-
-        gateway = test? ? AuthorizeNet::AIM::Transaction::Gateway::TEST : AuthorizeNet::AIM::Transaction::Gateway::LIVE
-
-        transaction = AuthorizeNet::AIM::Transaction.new(@options[:login], @options[:password], :transaction_type => action, :gateway => gateway, :test => test?)
-
-        response = do_transaction(transaction, action, parameters)
-
-        response_fields= response.instance_variable_get(:@fields)
-        Response.new(response.success?, response_fields[:response_reason_text], response_fields,
-                     :test => test?,
-                     :authorization => response.authorization_code
-        #:avs_result => response.avs_response
-        #{:cvv_result => response.card_code}
-        )
-      end
-
-      def do_transaction(transaction, action, parameters)
-        if action.eql? 'AUTH_CAPTURE'
-          response = transaction.purchase(parameters[:amount], @payment_source)
-        elsif action.eql? 'AUTH_ONLY'
-          response = transaction.authorize(parameters[:amount], @payment_source)
-        elsif action.eql? 'CAPTURE_ONLY'
-          response = transaction.capture(parameters[:amount], @payment_source)
-        elsif action.eql? 'CREDIT'
-          response = transaction.refund(parameters[:amount], @payment_source)
-        elsif action.eql? 'PRIOR_AUTH_CAPTURE'
-          response = transaction.prior_auth_capture(parameters[:amount], @payment_source)
-        elsif action.eql? 'VOID'
-          response = transaction.void(parameters[:amount], @payment_source)
-        else
-          raise TypeError, 'An undefined transaction type: #{action} was used'
-        end
-        response
       end
 
       def success?(response)
@@ -350,24 +301,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_currency_code(transaction, money, options)
-       # post[:currency_code] = options[:currency] || currency(money)
+        # post[:currency_code] = options[:currency] || currency(money)
       end
 
       def add_invoice(transaction, options)
-        transaction.fields[:invoice_num] = options[:order_id]
-        transaction.fields[:description] = options[:description]
+        #todol this is failing in remote, it must not be mapped correctly
+        #transaction.fields[:invoice_num] = options[:order_id]
+        #transaction.fields[:description] = options[:description]
       end
 
-      def add_creditcard(post, creditcard, options={})
-=begin
-        post[:card_num]   = creditcard.number
-        post[:card_code]  = creditcard.verification_value if creditcard.verification_value?
-        post[:exp_date]   = expdate(creditcard)
-        post[:first_name] = creditcard.first_name
-        post[:last_name]  = creditcard.last_name
-        :card_number, :expiration, :card_code, :card_type, :track_1, :track_2
-=end
-       # @payment_source = AuthorizeNet::CreditCard.new(creditcard.number, expdate(creditcard), options)
+      def add_creditcard(creditcard, options={})
+        options[:card_type] = creditcard.brand
+        options[:card_code] = creditcard.verification_value if creditcard.verification_value?
+        #options[:first_name] = creditcard.first_name
+        #options[:last_name] = creditcard.last_name
+        @payment_source = AuthorizeNet::CreditCard.new(creditcard.number, expdate(creditcard), options)
       end
 
       def get_payment_source(source, options={})
@@ -378,21 +326,11 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_check(post, check, options)
-        @payment_source = AuthorizeNet::ECheck.new(check.routing_number, check.account_number, check.bank_name, check.name)
-
-=begin
-        #initialize(routing_number, account_number, bank_name, account_holder_name, options = {})
-        post[:method] = "ECHECK"
-        post[:bank_name] = check.bank_name
-        post[:bank_aba_code] = check.routing_number
-        post[:bank_acct_num] = check.account_number
-        post[:bank_acct_type] = check.account_type
-        post[:echeck_type] = "WEB"
-        post[:bank_acct_name] = check.name
-        post[:bank_check_number] = check.number if check.number.present?
-        post[:recurring_billing] = (options[:recurring] ? "TRUE" : "FALSE")
-=end
+      def add_check(check, options={})
+        options[:echeck_type] = "WEB"
+        options[:check_number] = check.number if check.number.present?
+        options[:recurring] = (options[:recurring] ? "TRUE" : "FALSE")
+        @payment_source = AuthorizeNet::ECheck.new(check.routing_number, check.account_number, check.bank_name, check.name, options)
       end
 
       def add_customer_data(transaction, options)

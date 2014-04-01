@@ -5,11 +5,11 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def setup
     @gateway = AuthorizeNetXmlGateway.new(
-      :login => 'X',
-      :password => 'Y'
+        :login => 'X',
+        :password => 'Y'
     )
 
-    @transaction = @gateway.send(:get_transaction, 'AUTH_CAPTURE')
+    @transaction = @gateway.send(:get_transaction)
     @amount = 100
     @credit_card = credit_card
     @subscription_id = '100748'
@@ -113,7 +113,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 =end
 
   def test_add_address_outsite_north_america
-    @gateway.send(:add_address, @transaction, :billing_address => {:address1 => '164 Waverley Street', :country => 'DE', :state => ''} )
+    @gateway.send(:add_address, @transaction, :billing_address => {:address1 => '164 Waverley Street', :country => 'DE', :state => ''})
 
     assert_equal ["address", "city", "company", "country", "phone", "state", "zip"], @transaction.fields.stringify_keys.keys.sort
     assert_equal 'n/a', @transaction.fields[:state]
@@ -122,7 +122,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_add_address
-    @gateway.send(:add_address, @transaction, :billing_address => {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'} )
+    @gateway.send(:add_address, @transaction, :billing_address => {:address1 => '164 Waverley Street', :country => 'US', :state => 'CO'})
 
     assert_equal ["address", "city", "company", "country", "phone", "state", "zip"], @transaction.fields.stringify_keys.keys.sort
     assert_equal 'CO', @transaction.fields[:state]
@@ -162,7 +162,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'E0Mvq8AAABEiMwARIjNEVWZ3iJk=', @transaction.fields[:cardholder_authentication_value]
     assert_equal '2', @transaction.fields[:authentication_indicator]
     assert_equal 'what is this?', @transaction.fields[:customer_ip]
-    assert_equal  7.5, @transaction.fields[:cust_id]
+    assert_equal 7.5, @transaction.fields[:cust_id]
     assert_equal 'none@noway.com', @transaction.fields[:email]
     assert_equal false, @transaction.fields[:email_customer]
   end
@@ -171,20 +171,31 @@ class AuthorizeNetTest < Test::Unit::TestCase
     options = {:customer => 'x'}
     @gateway.send(:add_customer_data, @transaction, options)
 
-    assert_equal  nil, @transaction.fields[:cust_id]
+    assert_equal nil, @transaction.fields[:cust_id]
+  end
+
+  def test_add_credit_card
+    anet_credit_card = @gateway.send(:add_creditcard, @credit_card)
+
+    assert_instance_of AuthorizeNet::CreditCard, anet_credit_card
+    assert_equal '4242424242424242', anet_credit_card.card_number
+    assert_equal "#{sprintf("%.2i", @credit_card.month)}#{sprintf("%.4i", @credit_card.year)[-2..-1]}", anet_credit_card.expiration
+    assert_equal @credit_card.verification_value, anet_credit_card.card_code
+  end
+
+  def test_add_check
+    anet_check = @gateway.send(:add_check, @check)
+
+    assert_instance_of AuthorizeNet::ECheck, anet_check
+    assert_equal check.routing_number, anet_check.routing_number
+    assert_equal check.account_number, anet_check.account_number
+    assert_equal check.bank_name, anet_check.bank_name
+    assert_equal check.name, anet_check.account_holder_name
+    assert_equal check.account_type.upcase, anet_check.account_type
+    assert_equal check.number, anet_check.check_number
   end
 
 =begin
-
-  def test_purchase_is_valid_csv
-   params = { :amount => '1.01' }
-
-   @gateway.send(:add_creditcard, params, @credit_card)
-
-   assert data = @gateway.send(:post_data, 'AUTH_ONLY', params)
-   assert_equal post_data_fixture.size, data.size
-  end
-
   def test_purchase_meets_minimum_requirements
     params = {
       :amount => "1.01",
@@ -300,6 +311,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card)
     assert_equal 'M', response.cvv_result['code']
   end
+
 
   def test_message_from
     @gateway.class_eval {
