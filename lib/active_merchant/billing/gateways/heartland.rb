@@ -32,7 +32,9 @@ module ActiveMerchant #:nodoc:
 
       
       def authorize(money, creditcard, options = {})
-        raise 'Hearland does not support authorize'
+        setup_address_hash(options)
+        soap = build_auth_request money, creditcard, options[:billing_address], options
+        commit :auth, soap
       end
 
       
@@ -43,7 +45,8 @@ module ActiveMerchant #:nodoc:
 
       # Capture an authorization that has previously been requested
       def capture(money, authorization, options = {})
-        raise 'Hearland does not support authorize'
+        soap = build_capture_request money, authorization, options
+        commit :capture, soap
       end
 
 
@@ -52,8 +55,8 @@ module ActiveMerchant #:nodoc:
       def purchase(money, creditcard, options = {})
         # requires!(options, :email)
         setup_address_hash(options)
-        soap = build_request money, creditcard, options[:billing_address], options
-        commit soap
+        soap = build_purchase_request money, creditcard, options[:billing_address], options
+        commit :purchase, soap
       end
 
       
@@ -83,7 +86,7 @@ module ActiveMerchant #:nodoc:
 
 
       # Where we actually build the full SOAP request using builder
-      def build_request(money, creditcard, address, options)
+      def build_purchase_request(money, creditcard, address, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
         xml.tag! 's:Envelope', {'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/'} do
@@ -167,14 +170,148 @@ module ActiveMerchant #:nodoc:
         
         return xml
       end
+
+
+      # Where we actually build the full SOAP request using builder
+      def build_auth_request(money, authorization, options)
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.instruct!
+        xml.tag! 's:Envelope', {'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/'} do
+          xml.tag! 's:Body' do
+            xml.tag! 'PreAuthorizePayment', {'xmlns' => "https://test.heartlandpaymentservices.net/BillingDataManagement/v3/BillingDataManagementService"} do
+              xml.tag! 'PreAuthorizePaymentRequest', {'xmlns:a' => "http://schemas.datacontract.org/2004/07/BDMS.NewModel", 'xmlns:i' => "http://www.w3.org/2001/XMLSchema-instance"} do
+                xml.tag! 'a:Credential' do
+                  xml.tag! 'a:ApplicationID', 13
+                  xml.tag! 'a:Password', @options[:password]
+                  xml.tag! 'a:UserName', @options[:login]
+                  xml.tag! 'a:MerchantName', @options[:gateway_id]
+                end
+                xml.tag! 'a:AESCreditCardToAuthorize', {'i:nil' => "true"}
+                xml.tag! 'a:Amount', amount(money)
+                xml.tag! 'a:ClearTextCreditCardToAuthorize' do
+                  xml.tag! 'a:Amount', amount(money)
+                  xml.tag! 'a:CardProcessingMethod', 'Credit'
+                  xml.tag! 'a:ExpectedFeeAmount', '0.00'
+                  xml.tag! 'a:ClearTextCreditCard', 'xmlns:b' => "http://schemas.datacontract.org/2004/07/POSGateway.Wrapper" do
+                    xml.tag! 'b:CardHolderData' do
+                      xml.tag! 'b:Address', address[:address1]
+                      xml.tag! 'b:City', address[:city]
+                      xml.tag! 'b:Email', {'i:nil' => "true"}
+                      xml.tag! 'b:FirstName', creditcard.first_name
+                      xml.tag! 'b:LastName', creditcard.last_name
+                      xml.tag! 'b:Phone', {'i:nil' => "true"}
+                      xml.tag! 'b:State', address[:state]
+                      xml.tag! 'b:Zip', address[:zip]
+                    end
+                    xml.tag! 'b:CardNumber', creditcard.number
+                    xml.tag! 'b:ExpirationMonth', creditcard.month
+                    xml.tag! 'b:ExpirationYear', format(creditcard.year, :four_digits)
+                    xml.tag! 'b:VerificationCode', creditcard.verification_value
+                  end
+                end
+                xml.tag! 'a:E3CreditCardToAuthorize', {'i:nil' => "true"}
+                xml.tag! 'a:FeeAmount', '0.00'
+              end
+            end
+          end
+        end
+        xml = xml.target!
+        
+        # useful for testing         
+        f = File.new('heartland-capture', 'w')
+        f << xml
+        f.close
+        
+        return xml
+      end
+
+
+      # Where we actually build the full SOAP request using builder
+      def build_capture_request(money, creditcard, address, options)
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.instruct!
+        xml.tag! 's:Envelope', {'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/'} do
+          xml.tag! 's:Body' do
+            xml.tag! 'CapturePreAuthorizedPayment', {'xmlns' => "https://test.heartlandpaymentservices.net/BillingDataManagement/v3/BillingDataManagementService"} do
+              xml.tag! 'CapturePreAuthorizedPaymentRequest', {'xmlns:a' => "http://schemas.datacontract.org/2004/07/BDMS.NewModel", 'xmlns:i' => "http://www.w3.org/2001/XMLSchema-instance"} do
+                xml.tag! 'a:Credential' do
+                  xml.tag! 'a:ApplicationID', 13
+                  xml.tag! 'a:Password', @options[:password]
+                  xml.tag! 'a:UserName', @options[:login]
+                  xml.tag! 'a:MerchantName', @options[:gateway_id]
+                end
+                xml.tag! 'a:BillTransactions' do
+                  xml.tag! 'a:BillTransaction' do
+                    xml.tag! 'a:BillType', @options[:payee_id]
+                    xml.tag! 'a:ID1', @options[:property_address].to_s.gsub(/[^A-Za-z0-9\.# ]/, '')[0..49]
+                    xml.tag! 'a:ID2', @options[:property_unit].to_s.gsub(/[^A-Za-z0-9\.# ]/, '')[0..49]
+                    xml.tag! 'a:ID3', @options[:applicant_name].to_s.gsub(/[^A-Za-z0-9\.# ]/, '')[0..49]
+                    xml.tag! 'a:ID4', @options[:property_name].to_s.gsub(/[^A-Za-z0-9\.# ]/, '')[0..49]
+                    xml.tag! 'a:AmountToApplyToBill', amount(money)
+                    xml.tag! 'a:CustomerEnteredElement1', {'i:nil' => "true"}
+                    xml.tag! 'a:CustomerEnteredElement2', {'i:nil' => "true"}
+                    xml.tag! 'a:CustomerEnteredElement3', {'i:nil' => "true"}
+                    xml.tag! 'a:CustomerEnteredElement4', {'i:nil' => "true"}
+                    xml.tag! 'a:CustomerEnteredElement5', {'i:nil' => "true"}
+                    xml.tag! 'a:CustomerEnteredElement6', {'i:nil' => "true"}
+                    xml.tag! 'a:CustomerEnteredElement7', {'i:nil' => "true"}
+                    xml.tag! 'a:CustomerEnteredElement8', {'i:nil' => "true"}
+                    xml.tag! 'a:CustomerEnteredElement9', {'i:nil' => "true"}
+                  end
+                end
+                xml.tag! 'a:IncludeReceiptInResponse', false
+                xml.tag! 'a:Transaction' do
+                  xml.tag! 'a:Amount', amount(money)
+                  xml.tag! 'a:FeeAmount', '0.00'
+                  xml.tag! 'a:MerchantInvoiceNumber', {'i:nil' => "true"}
+                  xml.tag! 'a:MerchantPONumber', {'i:nil' => "true"}
+                  xml.tag! 'a:MerchantTransactionDescription', {'i:nil' => "true"}
+                  xml.tag! 'a:MerchantTransactionID', {'i:nil' => "true"}
+                  xml.tag! 'a:PayorAddress', {'i:nil' => "true"}
+                  xml.tag! 'a:PayorCity', {'i:nil' => "true"}
+                  xml.tag! 'a:PayorCountry', {'i:nil' => "true"}
+                  xml.tag! 'a:PayorEmailAddress', {'i:nil' => "true"}
+                  xml.tag! 'a:PayorFirstName', {'i:nil' => "true"}
+                  xml.tag! 'a:PayorLastName', {'i:nil' => "true"}
+                  xml.tag! 'a:PayorMiddleName', {'i:nil' => "true"}
+                  xml.tag! 'a:PayorPhoneNumber', {'i:nil' => "true"}
+                  xml.tag! 'a:PayorPostalCode', {'i:nil' => "true"}
+                  xml.tag! 'a:PayorState', {'i:nil' => "true"}
+                  xml.tag! 'a:ReferenceTransactionID', {'i:nil' => "true"}
+                  xml.tag! 'a:TransactionDate', '0001-01-01T00:00:00'                    
+                end
+                xml.tag! 'a:TransactionAuthorization_ID', authorization
+              end
+            end
+          end
+        end
+        xml = xml.target!
+        
+        # useful for testing         
+        f = File.new('heartland-capture', 'w')
+        f << xml
+        f.close
+        
+        return xml
+      end
       
       
-      def commit(request)
+      def commit(type, request)
         url = test? ? TEST_URL : LIVE_URL
+        # chance the SOAPAction based on the type of request
+        if type == :purchase
+          soap_action = 'https://test.heartlandpaymentservices.net/BillingDataManagement/v3/BillingDataManagementService/IBillingDataManagementService/MakeBlindPayment'
+        elsif type == :auth
+          soap_action = 'https://test.heartlandpaymentservices.net/BillingDataManagement/v3/BillingDataManagementService/IBillingDataManagementService/PreAuthorizePayment'
+        elsif type == :capture
+          soap_action = 'https://test.heartlandpaymentservices.net/BillingDataManagement/v3/BillingDataManagementService/IBillingDataManagementService/CapturePreAuthorizedPayment'
+        end
+        # run the request and parse the response
         response = parse(ssl_post(url, request, 
           'Content-Type' => 'text/xml; charset=utf-8', 
-          'SOAPAction' => 'https://test.heartlandpaymentservices.net/BillingDataManagement/v3/BillingDataManagementService/IBillingDataManagementService/MakeBlindPayment'
+          'SOAPAction' => soap_action
         ))
+        # return a response object
         Response.new(response[:success], response[:message], response, 
           :test => test?, 
           :authorization => response[:authorization],
