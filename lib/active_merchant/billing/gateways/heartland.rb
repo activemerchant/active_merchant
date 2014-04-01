@@ -327,6 +327,9 @@ module ActiveMerchant #:nodoc:
           response[:success] = node.text =~ /true/i ? true : false
         end
         if response[:success]
+          if node = REXML::XPath.first(xml, "//a:PreAuthorizedTransaction_ID")
+            response[:authorization] = node.text
+          end
           if node = REXML::XPath.first(xml, "//a:Transaction_ID")
             response[:authorization] = node.text
           end
