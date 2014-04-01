@@ -173,7 +173,7 @@ module ActiveMerchant #:nodoc:
 
 
       # Where we actually build the full SOAP request using builder
-      def build_auth_request(money, authorization, address, options)
+      def build_auth_request(money, creditcard, address, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
         xml.tag! 's:Envelope', {'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/'} do
@@ -227,7 +227,7 @@ module ActiveMerchant #:nodoc:
 
 
       # Where we actually build the full SOAP request using builder
-      def build_capture_request(money, creditcard, options)
+      def build_capture_request(money, authorization, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
         xml.tag! 's:Envelope', {'xmlns:s' => 'http://schemas.xmlsoap.org/soap/envelope/'} do
