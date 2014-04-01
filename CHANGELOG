@@ -9,6 +9,7 @@
 * Universal: Add universal offsite API implementation [bslobodin]
 * Iridium: Add more currencies [bslobodin]
 * iDeal: Add Mollie iDeal offsite implementation [wvanbergen, maartenvg]
+* Spreedly: Add ip, description and gateway_specific_fields [faizalzakaria]
 
 == Version 1.42.7 (March 18, 2014)
 

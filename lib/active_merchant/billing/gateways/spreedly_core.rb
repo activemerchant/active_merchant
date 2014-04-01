@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
       def save_card(retain, credit_card, options)
         request = build_xml_request('payment_method') do |doc|
           add_credit_card(doc, credit_card, options)
-          add_data(doc, options)
+          add_extra_options(:data, doc, options)
           doc.retained(true) if retain
         end
 
@@ -130,6 +130,8 @@ module ActiveMerchant #:nodoc:
       def auth_purchase_request(money, payment_method_token, options)
         build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
+          doc.ip(options[:ip])
+          add_extra_options(:gateway_specific_fields, doc, options)
           doc.payment_method_token(payment_method_token)
           doc.retain_on_success(true) if options[:store]
         end
@@ -139,6 +141,7 @@ module ActiveMerchant #:nodoc:
         doc.amount amount(money)
         doc.currency_code(options[:currency] || currency(money) || default_currency)
         doc.order_id(options[:order_id])
+        doc.description(options[:description])
       end
 
       def add_credit_card(doc, credit_card, options)
@@ -159,17 +162,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_data(doc, options)
-        doc.data do
-          data_to_doc(doc, options[:data])
+      def add_extra_options(type, doc, options)
+        doc.send(type) do
+          extra_options_to_doc(doc, options[type])
         end
       end
 
-      def data_to_doc(doc, value)
+      def extra_options_to_doc(doc, value)
         return doc.text value unless value.kind_of? Hash
         value.each do |k, v|
           doc.send(k) do
-            data_to_doc(doc, v)
+            extra_options_to_doc(doc, v)
           end
         end
       end
