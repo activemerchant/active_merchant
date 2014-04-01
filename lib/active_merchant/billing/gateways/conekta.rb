@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'MXN'
 
       def initialize(options = {})
-        requires!(options, :key)
+        requires!(options, *self.class.required_login_params)
         options[:version] ||= '0.2.0'
         super
       end
@@ -72,6 +72,10 @@ module ActiveMerchant #:nodoc:
 
       def unstore(customer_id, options = {})
         commit(:delete, "customers/#{CGI.escape(customer_id)}", nil)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:key]
       end
 
       private

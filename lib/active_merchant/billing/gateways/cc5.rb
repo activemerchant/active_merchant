@@ -1,5 +1,5 @@
 module ActiveMerchant #:nodoc:
-  module Billing #:nodoc:
+  module Billing #:nodoc
     # CC5 API is used by many banks in Turkey. Extend this base class to provide
     # concrete implementations.
     class CC5Gateway < Gateway
@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        requires!(options, :login, :password, :client_id)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -31,6 +31,10 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         commit(build_capture_request(money, authorization, options))
+      end
+
+      def self.required_login_params
+        @@required_params ||= super + [:client_id]
       end
 
       protected

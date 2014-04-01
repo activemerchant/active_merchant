@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:user</tt> -- Specify a subuser of the account (optional)
       # * <tt>:test => +true+ or +false+</tt> -- Force test transactions
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

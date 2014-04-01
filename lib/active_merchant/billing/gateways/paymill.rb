@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'EUR'
 
       def initialize(options = {})
-        requires!(options, :public_key, :private_key)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -47,6 +47,10 @@ module ActiveMerchant #:nodoc:
 
       def store(credit_card, options={})
         save_card(credit_card)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:public_key, :private_key]
       end
 
       private

@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
       #                       globally and then you won't need to
       #                       include this option
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *Gateway.required_login_params)
 
         headers = {'X-PP-AUTHORIZATION' => options.delete(:auth_signature), 'X-PAYPAL-MESSAGE-PROTOCOL' => 'SOAP11'} if options[:auth_signature]
         options = {

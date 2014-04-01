@@ -179,7 +179,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:terminal</tt> -- The Redsys Terminal. Defaults to 1. (OPTIONAL)
       # * <tt>:test</tt> -- +true+ or +false+. Defaults to +false+. (OPTIONAL)
       def initialize(options = {})
-        requires!(options, :login, :secret_key)
+        requires!(options, *self.class.required_login_params)
         options[:terminal] ||= 1
         super
       end
@@ -236,6 +236,10 @@ module ActiveMerchant #:nodoc:
         add_order(data, order_id)
 
         commit data
+      end
+
+      def self.required_login_params
+        @@required_params ||= [super.first, :secret_key]
       end
 
       private

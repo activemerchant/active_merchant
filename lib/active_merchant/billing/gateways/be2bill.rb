@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
       #             :email       => user.email }
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

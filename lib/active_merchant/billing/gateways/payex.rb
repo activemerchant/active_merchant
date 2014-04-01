@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        requires!(options, :account, :encryption_key)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -166,6 +166,10 @@ module ActiveMerchant #:nodoc:
       # Returns an ActiveMerchant::Billing::Response object
       def unstore(authorization, options = {})
         send_delete_agreement(authorization)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:account, :encryption_key]
       end
 
       private

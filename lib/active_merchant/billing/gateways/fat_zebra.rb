@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       # You can find your username and token at https://dashboard.fatzebra.com.au
       # Under the Your Account section
       def initialize(options = {})
-        requires!(options, :username, :token)
+        requires!(options, *self.class.required_login_params)
         @username = options[:username]
         @token    = options[:token]
         super
@@ -67,6 +67,10 @@ module ActiveMerchant #:nodoc:
         add_creditcard(post, creditcard)
 
         commit(:post, "credit_cards", post)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:username, :token]
       end
 
       private

@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:login</tt> - The Sage Payment Solutions Merchant ID Number.
       # * <tt>:password</tt> - The Sage Payment Solutions Merchant Key Number.
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Raven PacNet'
 
       def initialize(options = {})
-        requires!(options, :user, :secret, :prn)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -60,6 +60,10 @@ module ActiveMerchant #:nodoc:
         add_currency_code(post, money, options)
 
         commit('cc_refund', money, post)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:user, :secret, :prn]
       end
 
       private

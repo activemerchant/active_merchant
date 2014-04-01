@@ -180,8 +180,11 @@ module ActiveMerchant #:nodoc:
       SENSITIVE_FIELDS = [:account_num]
 
       def initialize(options = {})
-        requires!(options, :merchant_id)
-        requires!(options, :login, :password) unless options[:ip_authentication]
+        if options[:ip_authentication]
+          requires!(options, self.class.required_login_params.last)
+        else
+          requires!(options, *self.class.required_login_params)
+        end
         super
       end
 
@@ -284,6 +287,10 @@ module ActiveMerchant #:nodoc:
         options = {:customer_profile_action => DELETE, :customer_ref_num => customer_ref_num}
         order = build_customer_request_xml(nil, options)
         commit(order, :delete_customer_profile)
+      end
+
+      def self.required_login_params
+        @@required_params ||= super + [:merchant_id]
       end
 
       private

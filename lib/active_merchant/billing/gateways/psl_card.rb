@@ -88,7 +88,7 @@ module ActiveMerchant
       #   -options:
       #     :login -    the PslCard account login (required)
       def initialize(options = {})
-        requires!(options, :login)
+        requires!(options, *self.class.required_login_params)
 
         super
       end
@@ -163,6 +163,10 @@ module ActiveMerchant
         add_purchase_details(post)
 
         commit(post)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [super.first]
       end
 
       private

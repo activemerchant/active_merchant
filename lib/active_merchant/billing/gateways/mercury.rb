@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'USD'
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         @use_tokenization = (!options.has_key?(:tokenization) || options[:tokenization])
         super
       end

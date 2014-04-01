@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
       #   Will hold the same value as :test by default.
       # * <tt>:delimiter</tt> -- The delimiter used in the direct response.  Default is ',' (comma).
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
         @options[:test_requests] = test? if @options[:test_requests].nil?
       end

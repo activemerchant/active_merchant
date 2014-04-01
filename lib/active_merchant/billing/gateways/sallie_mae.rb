@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Sallie Mae'
 
       def initialize(options = {})
-        requires!(options, :login)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -48,6 +48,10 @@ module ActiveMerchant #:nodoc:
         post = PostData.new
         post[:postonly] = authorization
         commit(:capture, money, post)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [super.first]
       end
 
       private

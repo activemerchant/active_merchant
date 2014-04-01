@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       SUCCESS_MESSAGE = "The transaction has been approved"
 
       def initialize(options = {})
-        requires!(options, :login)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -52,6 +52,10 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money)
         add_reference(post, authorization)
         commit('ns_quicksale_cc', post)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [super.first]
       end
 
       private

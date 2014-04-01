@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:password</tt> - The MerchantWARE Key.
       # * <tt>:name</tt> - The MerchantWARE Name.
       def initialize(options = {})
-        requires!(options, :login, :password, :name)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -114,6 +114,10 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, reference, options = {})
         perform_reference_credit(money, reference, options)
+      end
+
+      def self.required_login_params
+        @@required_params ||= super + [:name]
       end
 
       private

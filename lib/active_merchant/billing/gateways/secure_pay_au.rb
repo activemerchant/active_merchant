@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
       SUCCESS_CODES = [ '00', '08', '11', '16', '77' ]
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

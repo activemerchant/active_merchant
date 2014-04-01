@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
       # then the token will be sent as the DPS specified "DpsBillingId".  This is per the documentation at
       # http://www.paymentexpress.com/technical_resources/ecommerce_nonhosted/pxpost.html#Tokenbilling
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

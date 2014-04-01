@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
       AVS_ERRORS = %w( A E N R W Z )
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

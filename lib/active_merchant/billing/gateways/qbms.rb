@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
       #   Otherwise, perform transactions against the production server.
       #
       def initialize(options = {})
-        requires!(options, :login, :ticket)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -111,6 +111,10 @@ module ActiveMerchant #:nodoc:
       # Query the merchant account status
       def query
         commit(:query, nil, {})
+      end
+
+      def self.required_login_params
+        @@required_params ||= [super.first, :ticket]
       end
 
       private

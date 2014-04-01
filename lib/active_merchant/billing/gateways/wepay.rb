@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'WePay'
 
       def initialize(options = {})
-        requires!(options, :client_id, :account_id, :access_token)
+        requires!(options, *self.class.required_login_params)
         super(options)
       end
 
@@ -94,6 +94,10 @@ module ActiveMerchant #:nodoc:
           end
         end
         commit('/credit_card/create', post)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:client_id, :account_id, :access_token]
       end
 
       private

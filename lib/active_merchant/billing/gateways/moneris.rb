@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
       #                            Only particular account types at Moneris will allow this.
       #                            Defaults to false.  (optional)
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         @cvv_enabled = options[:cvv_enabled]
         options = { :crypt_type => 7 }.merge(options)
         super

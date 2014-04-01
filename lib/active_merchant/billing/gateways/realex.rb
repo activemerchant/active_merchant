@@ -43,7 +43,7 @@ module ActiveMerchant
       ERROR = CLIENT_DEACTIVATED = "Gateway Error"
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         options[:refund_hash] = Digest::SHA1.hexdigest(options[:rebate_secret]) if options.has_key?(:rebate_secret)
         super
       end

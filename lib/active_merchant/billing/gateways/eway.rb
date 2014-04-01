@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
       #           :password  - Your XML Refund Password that you
       #                        specified on the Eway site. (optional)
       def initialize(options = {})
-        requires!(options, :login)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -50,6 +50,10 @@ module ActiveMerchant #:nodoc:
         post[:CardExpiryYear] = nil
 
         commit(refund_url, money, post)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [super.first]
       end
 
       private

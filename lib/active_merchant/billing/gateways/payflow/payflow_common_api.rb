@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *Gateway.required_login_params)
 
         options[:partner] = partner if options[:partner].blank?
         super

@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
       #                         (Found in your administration terminal settings)
       # * <tt>:password</tt> -- The terminal password (not your account password)
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         @options = options
 
         super

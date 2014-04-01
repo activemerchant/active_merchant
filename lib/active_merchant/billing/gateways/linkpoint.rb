@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'LinkPoint'
 
       def initialize(options = {})
-        requires!(options, :login)
+        requires!(options, *self.class.required_login_params)
 
         @options = {
           :result => 'LIVE',
@@ -241,6 +241,10 @@ module ActiveMerchant #:nodoc:
       def credit(money, identification, options = {})
         deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, identification, options)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [super.first]
       end
 
       private

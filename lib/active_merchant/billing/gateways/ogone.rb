@@ -144,7 +144,7 @@ module ActiveMerchant #:nodoc:
       self.ssl_version = :TLSv1
 
       def initialize(options = {})
-        requires!(options, :login, :user, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -211,6 +211,10 @@ module ActiveMerchant #:nodoc:
         response = authorize(@options[:store_amount] || 1, payment_source, options)
         void(response.authorization) if response.success?
         response
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:user] + super
       end
 
       private

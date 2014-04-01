@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:password</tt> -- The Inspire Passowrd.
       # See the Inspire Integration Guide for details. (default: +false+)
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options,*self.class.required_login_params)
         super
       end
 

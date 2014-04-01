@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Pin'
 
       def initialize(options = {})
-        requires!(options, :api_key)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -48,6 +48,10 @@ module ActiveMerchant #:nodoc:
       # kept for compatibility reasons
       def refund(money, token, options = {})
         commit("charges/#{CGI.escape(token)}/refunds", { :amount => amount(money) }, options)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:api_key]
       end
 
       private

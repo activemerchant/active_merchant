@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        requires!(options, :login)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -97,6 +97,10 @@ module ActiveMerchant #:nodoc:
         transaction_id = reference.split(";").first
         credit_card = options[:credit_card]
         commit(money, build_credit_request('CREDIT', money, transaction_id, credit_card))
+      end
+
+      def self.required_login_params
+        @@required_params ||= [super.first]
       end
 
 
