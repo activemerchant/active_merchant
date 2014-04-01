@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test server.
       #   Otherwise, perform transactions against the production server.
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

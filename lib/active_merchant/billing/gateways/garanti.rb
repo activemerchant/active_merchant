@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
 
 
       def initialize(options = {})
-        requires!(options, :login, :password, :terminal_id, :merchant_id)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -48,6 +48,10 @@ module ActiveMerchant #:nodoc:
       def capture(money, ref_id, options = {})
         options = options.merge(:gvp_order_type => "postauth")
         commit(money, build_capture_request(money, ref_id, options))
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:terminal_id, :merchant_id]
       end
 
       private

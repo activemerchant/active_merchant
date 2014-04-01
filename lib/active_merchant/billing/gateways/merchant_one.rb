@@ -21,7 +21,7 @@ module ActiveMerchant #:nodoc:
       self.money_format = :dollars
 
       def initialize(options = {})
-        requires!(options, :username, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -54,6 +54,10 @@ module ActiveMerchant #:nodoc:
 
       def new_connection(endpoint)
         MerchantOneSslConnection.new(endpoint)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:username, super.last]
       end
 
       private

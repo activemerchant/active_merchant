@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       # login is your Store ID
       # password is your Store Key
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

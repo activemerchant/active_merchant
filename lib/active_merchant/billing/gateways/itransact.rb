@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:test_mode</tt> - <tt>true</tt> or <tt>false</tt>. Run *all* transactions with the 'TestMode' element set to 'TRUE'.
       #
       def initialize(options = {})
-        requires!(options, :login, :password, :gateway_id)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -262,6 +262,10 @@ module ActiveMerchant #:nodoc:
         end.doc
 
         commit(payload)
+      end
+
+      def self.required_login_params
+        @@required_params ||= super + [:gateway_id]
       end
 
       private

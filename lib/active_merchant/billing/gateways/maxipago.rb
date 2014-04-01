@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'maxiPago!'
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

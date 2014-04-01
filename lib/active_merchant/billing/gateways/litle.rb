@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
         options[:merchant] ||= 'Default Report Group'
         options[:user]     ||= options[:login]
 
-        requires!(options, :merchant_id, :user, :password, :merchant, :version)
+        requires!(options, *self.class.required_login_params)
 
         super
       end
@@ -125,6 +125,10 @@ module ActiveMerchant #:nodoc:
       def store(creditcard_or_paypage_registration_id, options = {})
         to_pass = create_token_hash(creditcard_or_paypage_registration_id, options)
         build_response(:registerToken, @litle.register_token_request(to_pass), %w(000 801 802))
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:merchant_id, :user, :password, :merchant, :version]
       end
 
       private

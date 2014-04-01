@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        requires!(options, :login, :shared_secret)
+        requires!(options, *self.class.required_login_params)
         if (options[:threeDSRequired])
           @threeDSRequired = options[:threeDSRequired]
         else
@@ -107,6 +107,10 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_pair(post, :xref, authorization)
         commit('REFUND', post)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:login, :shared_secret]
       end
 
       private

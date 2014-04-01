@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Barclays ePDQ MPI'
 
       def initialize(options = {})
-        requires!(options, :login, :password, :client_id)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -82,6 +82,10 @@ module ActiveMerchant #:nodoc:
         end
 
         commit(document)
+      end
+
+      def self.required_login_params
+        @@login_params ||= super + [:client_id]
       end
 
       private

@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'AUD'
 
       def initialize(options = {})
-        requires!(options, :merchant_uuid, :api_key, :api_passphrase)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -66,6 +66,10 @@ module ActiveMerchant #:nodoc:
           'cardExpiryYear'  => format(creditcard.year, :two_digits)
         }
         commit('addCard', post)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:merchant_uuid, :api_key, :api_passphrase]
       end
 
       private

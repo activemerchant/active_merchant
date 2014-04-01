@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.ssl_version = 'SSLv3'
 
       def initialize(options = {})
-        requires!(options, :username, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -56,6 +56,10 @@ module ActiveMerchant #:nodoc:
         post[:transactionid] = authorization
 
         commit('void', nil, post)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:username, super.last]
       end
 
       private

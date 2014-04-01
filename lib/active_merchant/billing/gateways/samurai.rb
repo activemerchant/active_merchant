@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
           raise "Could not load the samurai gem (>= 0.2.25).  Use `gem install samurai` to install it."
         end
 
-        requires!(options, :login, :password, :processor_token)
+        requires!(options, *self.class.required_login_params)
         Samurai.options = {
           :merchant_key       => options[:login],
           :merchant_password  => options[:password],
@@ -90,6 +90,10 @@ module ActiveMerchant #:nodoc:
                      { :payment_method_token => result.is_sensitive_data_valid && result.payment_method_token })
       rescue ActiveResource::ServerError => e
         Response.new(false, e.message, {}, test: test?)
+      end
+
+      def self.required_login_params
+        @@required_params ||= super + [:processor_token]
       end
 
       private

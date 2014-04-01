@@ -48,7 +48,7 @@ module ActiveMerchant
       #
       # Options :login and :password must be given.
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

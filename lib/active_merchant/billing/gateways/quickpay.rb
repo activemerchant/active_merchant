@@ -120,7 +120,7 @@ module ActiveMerchant #:nodoc:
 
           :chstatus  => %w(protocol msgtype merchant apikey)
         },
-        
+
         7 => {
           :authorize => %w(protocol msgtype merchant ordernumber amount
                            currency autocapture cardnumber expirationdate cvd
@@ -148,7 +148,7 @@ module ActiveMerchant #:nodoc:
           :status    => %w(protocol msgtype merchant transaction apikey),
 
           :chstatus  => %w(protocol msgtype merchant apikey)
-        }        
+        }
       }
 
       APPROVED = '000'
@@ -158,7 +158,7 @@ module ActiveMerchant #:nodoc:
       # To use the API-key from the Quickpay manager, specify :api-key
       # Using the API-key, requires that you use version 4+. Specify :version => 4/5/6/7 in options.
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         @protocol = options.delete(:version) || 7 # default to protocol version 7
         super
       end

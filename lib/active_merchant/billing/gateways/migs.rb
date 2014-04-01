@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:advanced_login</tt> -- The MiGS AMA User
       # * <tt>:advanced_password</tt> -- The MiGS AMA User's password
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

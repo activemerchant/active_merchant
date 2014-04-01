@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
       self.money_format        = :cents
 
       def initialize(options = {})
-        requires!(options, :paystation_id, :gateway_id)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -76,6 +76,10 @@ module ActiveMerchant #:nodoc:
         store_credit_card(post, options)
 
         commit(post)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:paystation_id, :gateway_id]
       end
 
       private

@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Stripe'
 
       def initialize(options = {})
-        requires!(options, :login)
+        requires!(options, *self.class.required_login_params)
         @api_key = options[:login]
         @fee_refund_api_key = options[:fee_refund_login]
         @version = options[:version]
@@ -140,6 +140,10 @@ module ActiveMerchant #:nodoc:
         else
           commit(:delete, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(card_id)}", nil, options)
         end
+      end
+
+      def self.required_login_params
+        @@required_params ||= [super.first]
       end
 
       private

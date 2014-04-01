@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
       # 2. Sign up
       # 3. Activate your account clicking on the email confirmation
       def initialize(options = {})
-        requires!(options, :key, :merchant_id)
+        requires!(options, *self.class.required_login_params)
         @api_key = options[:key]
         @merchant_id = options[:merchant_id]
         super
@@ -81,6 +81,10 @@ module ActiveMerchant #:nodoc:
         else
           commit(:delete, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(card_id)}", nil, options)
         end
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:key, :merchant_id]
       end
 
       private

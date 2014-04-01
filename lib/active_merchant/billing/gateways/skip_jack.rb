@@ -180,7 +180,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:advanced => +true+ or +false+</tt> -- Set to true if you're using an advanced processor
       # See the SkipJack Integration Guide for details. (default: +false+)
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

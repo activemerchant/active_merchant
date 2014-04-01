@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
       #           :gateway_token - The token of the gateway you've created in
       #                            Spreedly.
       def initialize(options = {})
-        requires!(options, :login, :password, :gateway_token)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -104,6 +104,10 @@ module ActiveMerchant #:nodoc:
       # options        - A standard ActiveMerchant options hash
       def unstore(authorization, options={})
         commit("payment_methods/#{authorization}/redact.xml", '', :put)
+      end
+
+      def self.required_login_params
+        @@required_params ||= super + [:gateway_token]
       end
 
       private

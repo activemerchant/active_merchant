@@ -87,7 +87,7 @@ module ActiveMerchant
         @options = options
 
         @options[:merchant] ||= 'TEST' if test?
-        requires!(options, :username, :password, :merchant, :pem)
+        requires!(options, *self.class.required_login_params)
 
         @options[:eci] ||= 'SSL'
       end
@@ -141,6 +141,10 @@ module ActiveMerchant
         requires!(options, :order_id)
 
         commit(:status, 'customer.orderNumber' => options[:order_id])
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:username, super.last, :merchant, :pem]
       end
 
       private

@@ -20,7 +20,7 @@ module ActiveMerchant #:nodoc:
       API_VERSION = '1.1.0'
 
       def initialize(options = {})
-        requires!(options, :login, :password, :pem)
+        requires!(options, *self.class.required_login_params)
 
         options[:pem_password] = options[:password]
         super
@@ -43,6 +43,10 @@ module ActiveMerchant #:nodoc:
       # Get list of issuers from response.issuer_list
       def issuers
         commit(build_directory_request)
+      end
+
+      def self.required_login_params
+        @@required_params ||= super + [:pem]
       end
 
       private

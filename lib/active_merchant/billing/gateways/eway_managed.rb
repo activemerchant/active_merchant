@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'eWay Managed Payments'
 
       def initialize(options = {})
-        requires!(options, :login, :username, :password)
+        requires!(options, *self.class.required_login_params)
 
         # eWay returns 500 code for faults, which AM snaffles.
         # So, we tell it to allow them.
@@ -99,6 +99,10 @@ module ActiveMerchant #:nodoc:
         post[:managedCustomerID] = billing_id.to_s
 
         commit("QueryCustomer", post)
+      end
+
+      def self.required_login_params
+        @@required_params ||= super + [:username]
       end
 
       # TODO: eWay API also provides QueryPayment

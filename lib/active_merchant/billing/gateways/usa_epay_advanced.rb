@@ -235,7 +235,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:soap_response</tt> -- set to +true+ to add :soap_response to the params hash containing the entire soap xml message
       #
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
 
         if options[:software_id]
           self.live_url = "#{LIVE_URL_BASE}#{options[:software_id].to_s}"

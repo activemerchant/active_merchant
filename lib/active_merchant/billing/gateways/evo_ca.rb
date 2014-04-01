@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:username</tt>
       # * <tt>:password</tt>
       def initialize(options = {})
-        requires!(options, :username, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -195,6 +195,10 @@ module ActiveMerchant #:nodoc:
         post = {:transactionid => identification}
         add_order(post, options)
         commit('update', nil, post)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:username, super.last]
       end
 
       private

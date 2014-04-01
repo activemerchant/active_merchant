@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
       # and swipehq.ca respectively). Merchants must use the region that they
       # signed up in for authentication with their merchant ID and API key to succeed.
       def initialize(options = {})
-        requires!(options, :login, :api_key, :region)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -44,6 +44,10 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
 
         commit('sale', money, post)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [super.first, :api_key, :region]
       end
 
       private

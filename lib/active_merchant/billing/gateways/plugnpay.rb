@@ -98,7 +98,7 @@ module ActiveMerchant
       self.display_name = "Plug'n Pay"
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

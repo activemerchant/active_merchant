@@ -41,7 +41,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Braintree (Blue Platform)'
 
       def initialize(options = {})
-        requires!(options, :merchant_id, :public_key, :private_key)
+        requires!(options, *self.class.required_login_params)
         @merchant_account_id = options[:merchant_account_id]
 
         super
@@ -168,6 +168,10 @@ module ActiveMerchant #:nodoc:
         end
       end
       alias_method :delete, :unstore
+
+      def self.required_login_params
+        @@required_params ||= [:merchant_id, :public_key, :private_key]
+      end
 
       private
 

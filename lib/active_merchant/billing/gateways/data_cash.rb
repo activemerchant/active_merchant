@@ -48,7 +48,7 @@ module ActiveMerchant
       # * <tt>:test => +true+ or +false+</tt> -- Use the test or live Datacash url.
       #
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

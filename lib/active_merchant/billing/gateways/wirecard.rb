@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
       #           :password      - The password
       #           :signature     - The BusinessCaseSignature
       def initialize(options = {})
-        requires!(options, :login, :password, :signature)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -69,6 +69,9 @@ module ActiveMerchant #:nodoc:
         commit(:bookback, money, options)
       end
 
+      def self.required_login_params
+        @@required_params ||= super + [:signature]
+      end
 
       private
       def clean_description(description)

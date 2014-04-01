@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
 
       def initialize(options = {})
-        requires!(options, :login)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -81,6 +81,10 @@ module ActiveMerchant #:nodoc:
 
       def test?
         (@options[:login] == TEST_LOGIN || super)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [super.first]
       end
 
       private

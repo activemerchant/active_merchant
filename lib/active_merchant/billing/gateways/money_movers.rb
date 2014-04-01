@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.ssl_version = :SSLv3
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         @options = options
         super
       end

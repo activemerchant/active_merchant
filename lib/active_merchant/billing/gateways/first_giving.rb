@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'FirstGiving'
 
       def initialize(options = {})
-        requires!(options, :application_key, :security_token, :charity_id)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -32,6 +32,10 @@ module ActiveMerchant #:nodoc:
         get[:transactionId] = identifier
         get[:tranType]     = 'REFUNDREQUEST'
         commit("/transaction/refundrequest?" + encode(get))
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:application_key, :security_token, :charity_id]
       end
 
       private

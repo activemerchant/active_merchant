@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       self.default_currency = "AUD"
 
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

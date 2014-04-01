@@ -133,6 +133,10 @@ module ActiveMerchant #:nodoc:
         (@options.has_key?(:test) ? @options[:test] : Base.test?)
       end
 
+      def self.required_login_params
+        @@required_login_params ||= [:login, :password]
+      end
+
       private # :nodoc: all
 
       def name

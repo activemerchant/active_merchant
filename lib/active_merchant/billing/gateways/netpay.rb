@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
       RESPONSE_KEYS = ['ResponseMsg', 'ResponseText', 'ResponseCode', 'TimeIn', 'TimeOut', 'AuthCode', 'OrderId', 'CardTypeName', 'MerchantId', 'IssuerAuthDate']
 
       def initialize(options = {})
-        requires!(options, :store_id, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -112,6 +112,10 @@ module ActiveMerchant #:nodoc:
 
         #commit('Refund', post, options)
         commit('Credit', post, options)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [:store_id] + super
       end
 
       private

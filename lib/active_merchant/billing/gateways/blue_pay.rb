@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:secret_key</tt> -- The BluePay gateway Secret Key (REQUIRED)
       # * <tt>:test</tt> -- set to true for TEST mode or false for LIVE mode
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -357,7 +357,7 @@ module ActiveMerchant #:nodoc:
           else
             message = message.chomp('.')
           end
-        elsif message == "Missing ACCOUNT_ID" 
+        elsif message == "Missing ACCOUNT_ID"
           message = "The merchant login ID or password is invalid"
         elsif message =~ /Approved/
           message = "This transaction has been approved"

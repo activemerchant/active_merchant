@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
       # and password to your account under administration -> account settings ->
       # order settings -> Use username/password validation
       def initialize(options = {})
-        requires!(options, :login)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

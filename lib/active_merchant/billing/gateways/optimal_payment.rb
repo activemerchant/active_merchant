@@ -17,7 +17,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Optimal Payments'
 
       def initialize(options = {})
-        #requires!(options, :login, :password)
+        #requires!(options, *self.class.required_login_params)
         super
       end
 

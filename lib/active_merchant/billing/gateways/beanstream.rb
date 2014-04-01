@@ -159,6 +159,10 @@ module ActiveMerchant #:nodoc:
         commit(post, true)
       end
 
+      def self.required_login_params
+        @@login_params ||= [super.first]
+      end
+
       private
       def build_response(*args)
         Response.new(*args)

@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :discover, :diners_club]
 
       def initialize(options={})
-        requires!(options, :login, :password)
+        requires!(options, *self.class.required_login_params)
         super
       end
 

@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test server.
       #   Otherwise, perform transactions against the production server.
       def initialize(options = {})
-        requires!(options, :merchant_id, :acquirer_bin, :terminal_id, :key)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -92,6 +92,10 @@ module ActiveMerchant #:nodoc:
                 'TipoMoneda' => CECA_CURRENCIES_DICTIONARY[options[:currency] || currency(money)]}
 
         commit(CECA_ACTION_REFUND, post)
+      end
+
+      def self.required_login_params
+        @required_params ||= [:merchant_id, :acquirer_bin, :terminal_id, :key]
       end
 
       private

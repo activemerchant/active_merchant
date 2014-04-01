@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        requires!(options, :login)
+        requires!(options, *self.class.required_login_params)
         super
       end
 
@@ -66,6 +66,10 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         post = { :refNum => authorization }
         commit(:void, post)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [super.first]
       end
 
     private

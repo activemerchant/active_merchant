@@ -90,7 +90,7 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>:login</tt> -- The Balanced API Secret (REQUIRED)
       def initialize(options = {})
-        requires!(options, :login)
+        requires!(options, *self.class.required_login_params)
         super
         initialize_marketplace(options[:marketplace] || load_marketplace)
       end
@@ -284,6 +284,10 @@ module ActiveMerchant #:nodoc:
         Response.new(true, "Card stored", {}, :test => is_test, :authorization => [card_uri, account_uri].compact.join(';'))
       rescue Error => ex
         failed_response(ex.response)
+      end
+
+      def self.required_login_params
+        @@required_params ||= [super.first]
       end
 
       private
