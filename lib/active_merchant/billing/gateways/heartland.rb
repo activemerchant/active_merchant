@@ -218,9 +218,9 @@ module ActiveMerchant #:nodoc:
         xml = xml.target!
         
         # useful for testing         
-        f = File.new('heartland-capture', 'w')
-        f << xml
-        f.close
+        # f = File.new('heartland-capture', 'w')
+        # f << xml
+        # f.close
         
         return xml
       end
@@ -288,9 +288,9 @@ module ActiveMerchant #:nodoc:
         xml = xml.target!
         
         # useful for testing         
-        f = File.new('heartland-capture', 'w')
-        f << xml
-        f.close
+        # f = File.new('heartland-capture', 'w')
+        # f << xml
+        # f.close
         
         return xml
       end
