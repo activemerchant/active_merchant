@@ -191,14 +191,14 @@ module ActiveMerchant #:nodoc:
       def add_address(doc, address)
         return unless address
 
-        doc.companyName(address[:company])
-        doc.addressLine1(address[:address1])
-        doc.addressLine2(address[:address2])
-        doc.city(address[:city])
-        doc.state(address[:state])
-        doc.zip(address[:zip])
-        doc.country(address[:country])
-        doc.phone(address[:phone])
+        doc.companyName(address[:company]) unless address[:company].blank?
+        doc.addressLine1(address[:address1]) unless address[:address1].blank?
+        doc.addressLine2(address[:address2]) unless address[:address2].blank?
+        doc.city(address[:city]) unless address[:city].blank?
+        doc.state(address[:state]) unless address[:state].blank?
+        doc.zip(address[:zip]) unless address[:zip].blank?
+        doc.country(address[:country]) unless address[:country].blank?
+        doc.phone(address[:phone]) unless address[:phone].blank?
       end
 
       def exp_date(payment_method)
