@@ -1,8 +1,24 @@
 require 'test_helper'
 
 class AuthorizeNetXmlTest < Test::Unit::TestCase
+  def shipping_address(options = {})
+    {
+        :ship_to_first_name => 'Sammy',
+        :ship_to_last_name => 'Baugh',
+        :ship_to_company => 'Washington Redskins',
+        :ship_to_address => '1 Redskin Drive',
+        :ship_to_city     => 'Ottawa',
+        :ship_to_state    => 'ON',
+        :ship_to_zip      => 'K1C2N6',
+        :ship_to_country  => 'CA',
+        :phone    => '(555)555-5555',
+        :fax      => '(555)555-6666'
+    }.update(options)
+  end
+
   def setup
     Base.mode = :test
+
 
     @gateway = ActiveMerchant::Billing::AuthorizeNetXmlGateway.new(fixtures(:authorize_net))
     @gateway.duplicate_window = 0
@@ -14,6 +30,9 @@ class AuthorizeNetXmlTest < Test::Unit::TestCase
         :gateway => :sandbox,
         :order_id => generate_unique_id,
         :billing_address => address,
+        :shipping_address => shipping_address,
+        :email_address => 'sbaugh@gmail.com',
+        :fax => '(801)555-5546',
         :description => 'Store purchase'
     }
 
@@ -89,13 +108,13 @@ class AuthorizeNetXmlTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved.', void.message
   end
 
-  def test_successful_purchase_and_refund
+  def test_call_to_purchase_and_refund
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount, purchase.params['transaction_id'])
-    assert_success refund
-    assert_equal 'This transaction has been approved.', refund.message
+    assert refund = @gateway.refund(@amount, purchase.params['transaction_id'], @credit_card)
+    assert_failure refund
+    assert_equal 'The referenced transaction does not meet the criteria for issuing a credit.', refund.message
   end
 
   def test_bad_login
@@ -170,6 +189,7 @@ class AuthorizeNetXmlTest < Test::Unit::TestCase
     assert response.test?
     assert_equal 'E00018', response.params['code']
   end
+
 =begin
   I don't see any mapping to a solution id in the SDK
   def test_successful_purchase_with_solution_id
