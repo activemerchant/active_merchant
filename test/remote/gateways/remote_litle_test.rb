@@ -75,6 +75,17 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_some_empty_address_parts
+    assert response = @gateway.purchase(10010, @credit_card1, {
+      order_id: '1',
+      email: 'wow@example.com',
+      billing_address: {
+      }
+    })
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(60060, @credit_card2, {
         :order_id=>'6',
