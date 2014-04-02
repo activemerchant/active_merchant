@@ -11,7 +11,6 @@ end
 
 require 'test/unit'
 require 'minitest/autorun'
-require 'pry-rescue/minitest'
 
 require 'money'
 require 'mocha/version'
