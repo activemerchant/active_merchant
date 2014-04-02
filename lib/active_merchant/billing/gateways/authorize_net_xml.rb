@@ -159,6 +159,7 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>money</tt> -- The amount to be credited to the customer as an Integer value in cents.
       # * <tt>identification</tt> -- The ID of the original transaction against which the refund is being issued.
+      # * <tt>credit_card</tt> -- The ActiveMerchant::Billing::CreditCard used in the original transaction against which the refund is being issued.
       # * <tt>options</tt> -- A hash of parameters.
       #
       # ==== Options
@@ -167,22 +168,16 @@ module ActiveMerchant #:nodoc:
       #   You can either pass the last four digits of the card number or the full card number.
       # * <tt>:first_name</tt> -- The first name of the account being refunded.
       # * <tt>:last_name</tt> -- The last name of the account being refunded.
-      # * <tt>:zip</tt> -- The postal code of the account being refunded.
-      def refund(money, identification, options = {})
-        requires!(options, :card_number)
+      # * <tt>:zip<l/tt> -- The postal code of the account being refunded.
+      def refund(money, identification, credit_card, options = {})
+        transaction = get_transaction
 
-        post = {:trans_id => identification,
-                :card_num => options[:card_number]
-        }
+        add_invoice(transaction, options)
+        add_duplicate_window(transaction)
 
-        post[:first_name] = options[:first_name] if options[:first_name]
-        post[:last_name] = options[:last_name] if options[:last_name]
-        post[:zip] = options[:zip] if options[:zip]
-
-        add_invoice(post, options)
-        add_duplicate_window(post)
-
-        commit('CREDIT', money, post)
+        anet_payment_source = get_payment_source(credit_card)
+        anet_response = transaction.refund(money, identification, anet_payment_source)
+        build_active_merchant_response(anet_response)
       end
 
       def credit(money, identification, options = {})
@@ -305,9 +300,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(transaction, options)
-        #todol this is failing in remote, it must not be mapped correctly
-        #transaction.fields[:invoice_num] = options[:order_id]
-        #transaction.fields[:description] = options[:description]
+        transaction.fields[:invoice_num] = options[:order_id]
+        transaction.fields[:description] = options[:description]
       end
 
       def add_creditcard(creditcard, options={})
