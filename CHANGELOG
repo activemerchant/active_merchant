@@ -2,6 +2,7 @@
 
 * Cecabank: Handle invalid xml response body [duff]
 * Wirecard: Capture error code in the response [duff]
+* Worldpay gateway: Add support for Switch cards. [dougal]
 
 == Version 1.42.7 (March 18, 2014)
 
