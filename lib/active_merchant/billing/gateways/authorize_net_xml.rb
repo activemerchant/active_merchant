@@ -28,8 +28,8 @@ module ActiveMerchant #:nodoc:
       API_VERSION = '4.0'
 
       TRACKS = {
-          1 => /\A%(?<format>[A-Z])(?<pan>[0-9 ]{1,19})\^(?<name>[^^]*)\^\s?(?<expiration>\d{4}|\^)(?<service_code>\d{3}|\^)(?<discretionary_data>[^\?]*)\?\Z/,
-          2 => /\A;(?<format>[A-Z])(?<pan>[0-9 ]{1,19})=(?<expiration>\d{4}|=)(?<service_code>\d{3}|=)(?<discretionary_data>[^\?]*)\?\Z/
+          1 => /^%(?<format_code>.)(?<pan>[\d]{1,19}+)\^(?<name>.{2,26})\^(?<expiration>[\d]{0,4}|\^)(?<service_code>[\d]{0,3}|\^)(?<discretionary_data>.*)\?\Z/,
+          2 => /\A;(?<pan>[\d]{1,19}+)=(?<expiration>[\d]{0,4}|=)(?<service_code>[\d]{0,3}|=)(?<discretionary_data>.*)\?\Z/
       }.freeze
 
       class_attribute :arb_test_url, :arb_live_url
@@ -313,7 +313,8 @@ module ActiveMerchant #:nodoc:
         if card_brand(source) == "check"
           add_check(source, options)
         else
-          add_creditcard(source, options)
+          anet_credit_card = add_creditcard(source, options)
+          add_swipe_data(source, anet_credit_card)
         end
       end
 
@@ -325,11 +326,10 @@ module ActiveMerchant #:nodoc:
         @payment_source = AuthorizeNet::CreditCard.new(creditcard.number, expdate(creditcard), options)
       end
 
-      #TODO: implement this method.
       def add_swipe_data(active_merchant_credit_card, anet_credit_card)
         if(TRACKS[1].match(active_merchant_credit_card.track_data))
           anet_credit_card.track_1 = active_merchant_credit_card.track_data
-        else
+        elsif (TRACKS[2].match(active_merchant_credit_card.track_data))
           anet_credit_card.track_2 = active_merchant_credit_card.track_data
         end
         anet_credit_card
