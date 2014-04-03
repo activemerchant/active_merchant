@@ -27,6 +27,11 @@ module ActiveMerchant #:nodoc:
     class AuthorizeNetXmlGateway < Gateway
       API_VERSION = '4.0'
 
+      TRACKS = {
+          1 => /\A%(?<format>[A-Z])(?<pan>[0-9 ]{1,19})\^(?<name>[^^]*)\^\s?(?<expiration>\d{4}|\^)(?<service_code>\d{3}|\^)(?<discretionary_data>[^\?]*)\?\Z/,
+          2 => /\A;(?<format>[A-Z])(?<pan>[0-9 ]{1,19})=(?<expiration>\d{4}|=)(?<service_code>\d{3}|=)(?<discretionary_data>[^\?]*)\?\Z/
+      }.freeze
+
       class_attribute :arb_test_url, :arb_live_url
 
       self.test_url = "https://test.authorize.net/gateway/transact.dll"
@@ -159,7 +164,7 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>money</tt> -- The amount to be credited to the customer as an Integer value in cents.
       # * <tt>identification</tt> -- The ID of the original transaction against which the refund is being issued.
-      # * <tt>credit_card</tt> -- The ActiveMerchant::Billing::CreditCard used in the original transaction against which the refund is being issued.
+      # * <tt>credit_clard</tt> -- The ActiveMerchant::Billing::CreditCard used in the original transaction against which the refund is being issued.
       # * <tt>options</tt> -- A hash of parameters.
       #
       # ==== Options
@@ -304,6 +309,14 @@ module ActiveMerchant #:nodoc:
         transaction.fields[:description] = options[:description]
       end
 
+      def get_payment_source(source, options={})
+        if card_brand(source) == "check"
+          add_check(source, options)
+        else
+          add_creditcard(source, options)
+        end
+      end
+
       def add_creditcard(creditcard, options={})
         options[:card_type] = creditcard.brand
         options[:card_code] = creditcard.verification_value if creditcard.verification_value?
@@ -312,12 +325,14 @@ module ActiveMerchant #:nodoc:
         @payment_source = AuthorizeNet::CreditCard.new(creditcard.number, expdate(creditcard), options)
       end
 
-      def get_payment_source(source, options={})
-        if card_brand(source) == "check"
-          add_check(source, options)
+      #TODO: implement this method.
+      def add_swipe_data(active_merchant_credit_card, anet_credit_card)
+        if(TRACKS[1].match(active_merchant_credit_card.track_data))
+          anet_credit_card.track_1 = active_merchant_credit_card.track_data
         else
-          add_creditcard(source, options)
+          anet_credit_card.track_2 = active_merchant_credit_card.track_data
         end
+        anet_credit_card
       end
 
       def add_check(check, options={})
