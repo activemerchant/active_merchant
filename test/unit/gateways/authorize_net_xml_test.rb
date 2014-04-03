@@ -94,7 +94,8 @@ class AuthorizeNetTest < Test::Unit::TestCase
     anet_credit_card = @gateway.send(:add_swipe_data, @credit_card, anet_credit_card)
 
     assert_instance_of AuthorizeNet::CreditCard, anet_credit_card
-    assert_equal '%B378282246310005^LONGSON/LONGBOB^1705101130504392?', anet_credit_card.track_1
+    assert_equal nil, anet_credit_card.track_1
+    assert_equal nil, anet_credit_card.track_2
   end
 
   def test_add_swipe_data_with_track_1
@@ -104,15 +105,17 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
     assert_instance_of AuthorizeNet::CreditCard, anet_credit_card
     assert_equal '%B378282246310005^LONGSON/LONGBOB^1705101130504392?', anet_credit_card.track_1
+    assert_equal nil, anet_credit_card.track_2
   end
 
   def test_add_swipe_data_with_track_2
-    @credit_card.track_data = '"B4111111111111111^DOE/JOHN^1803101000000000020000831000000"'
+    @credit_card.track_data = ';4111111111111111=1803101000020000831?'
     anet_credit_card = @gateway.send(:add_creditcard, @credit_card)
     anet_credit_card = @gateway.send(:add_swipe_data, @credit_card, anet_credit_card)
 
     assert_instance_of AuthorizeNet::CreditCard, anet_credit_card
-    assert_equal '"B4111111111111111^DOE/JOHN^1803101000000000020000831000000"', anet_credit_card.track_2
+    assert_equal ';4111111111111111=1803101000020000831?', anet_credit_card.track_2
+    assert_equal nil, anet_credit_card.track_1
   end
 
   def test_add_check
@@ -127,21 +130,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal check.number, anet_check.check_number
   end
 
-=begin
-  def test_purchase_meets_minimum_requirements
-    params = {
-      :amount => "1.01",
-    }
-
-    @gateway.send(:add_creditcard, params, @credit_card)
-
-    assert data = @gateway.send(:post_data, 'AUTH_ONLY', params)
-    minimum_requirements.each do |key|
-      assert_not_nil(data =~ /x_#{key}=/)
-    end
-  end
-=end
-
   def test_supported_countries
     assert_equal ['US', 'CA', 'GB'], AuthorizeNetGateway.supported_countries
   end
@@ -151,7 +139,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   # ARB Unit Tests
-
   def test_successful_recurring
     @gateway.expects(:ssl_post).returns(successful_recurring_response)
 
