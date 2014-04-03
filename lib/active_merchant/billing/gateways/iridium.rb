@@ -204,7 +204,8 @@ module ActiveMerchant #:nodoc:
 		"ZAR" => '710',
 		"ZMK" => '894',
 		"ZWD" => '716',
-	  }
+      }
+
       def initialize(options = {})
         requires!(options, :login, :password)
         super
