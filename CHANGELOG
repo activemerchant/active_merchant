@@ -4,6 +4,7 @@
 * Wirecard: Capture error code in the response [duff]
 * Litle: Remove gem dependency [duff]
 * Litle: Fix case of missing address parts [duff]
+* Universal: Add universal offsite API implementation [bslobodin]
 
 == Version 1.42.7 (March 18, 2014)
 
