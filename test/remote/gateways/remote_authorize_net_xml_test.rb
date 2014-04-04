@@ -67,6 +67,23 @@ class AuthorizeNetXmlTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved.', response.message
     assert response.authorization
   end
+#this test will fail until consolidated accounts is activated.
+=begin
+  def test_card_present_purchase_with_track_data_only
+    track_credit_card = ActiveMerchant::Billing::CreditCard.new(:track_data => '%B378282246310005^LONGSON/LONGBOB^1705101130504392?')
+    assert response = @gateway.purchase(@amount, track_credit_card, @options)
+    assert response.test?
+    assert_equal 'This transaction has been approved.', response.message
+    assert response.authorization
+  end
+=end
+  def test_card_present_purchase_with_no_data
+    no_data_credit_card = ActiveMerchant::Billing::CreditCard.new()
+    assert response = @gateway.purchase(@amount, no_data_credit_card, @options)
+    assert response.test?
+    assert_equal 'Credit card number is required.', response.message
+    assert response.authorization
+  end
 
   def test_successful_echeck_purchase
     assert response = @gateway.purchase(@amount, @check, @options)

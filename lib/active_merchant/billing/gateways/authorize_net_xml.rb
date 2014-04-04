@@ -426,10 +426,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def expdate(creditcard)
-        year = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
+        unless creditcard.year == nil
+          year = sprintf("%.4i", creditcard.year)
+          month = sprintf("%.2i", creditcard.month)
 
-        "#{month}#{year[-2..-1]}"
+          "#{month}#{year[-2..-1]}"
+        end
       end
 
       def split(response)

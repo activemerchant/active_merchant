@@ -197,6 +197,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal '2013-11', @gateway.send(:arb_expdate, credit_card('4111111111111111', :month => "11", :year => "2013"))
   end
 
+
   private
 
   def successful_recurring_response
