@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
               parsed_time_fields[:hour],
               parsed_time_fields[:min],
               parsed_time_fields[:sec]
-            ) + Time.zone_offset(parsed_time_fields[:zone])
+            ) - Time.zone_offset(parsed_time_fields[:zone])
           end
 
           # Status of transaction. List of possible values:

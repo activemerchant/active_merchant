@@ -113,10 +113,13 @@ class PaypalNotificationTest < Test::Unit::TestCase
   end
 
   def test_received_at_time_parsing
-    assert_match %r{15/04/2005 08:23:54 (UTC|GMT)}, @paypal.received_at.strftime("%d/%m/%Y %H:%M:%S %Z")
+    assert_match %r{15/04/2005 22:23:54 (UTC|GMT)}, @paypal.received_at.strftime("%d/%m/%Y %H:%M:%S %Z")
 
-    paypal = Paypal::Notification.new("payment_date=13%3A38%3A14+Jan+22%2C+2013+PST")
-    assert_match %r{22/01/2013 05:38:14 (UTC|GMT)}, paypal.received_at.strftime("%d/%m/%Y %H:%M:%S %Z")
+    paypal = Paypal::Notification.new("payment_date=14%3A07%3A35+Apr+09%2C+2014+PDT")
+    assert_match %r{09/04/2014 21:07:35 (UTC|GMT)}, paypal.received_at.strftime("%d/%m/%Y %H:%M:%S %Z")
+
+    paypal = Paypal::Notification.new("payment_date=16%3A30%3A42+Feb+28%2C+2014+PST")
+    assert_match %r{01/03/2014 00:30:42 (UTC|GMT)}, paypal.received_at.strftime("%d/%m/%Y %H:%M:%S %Z")
   end
 
   private
