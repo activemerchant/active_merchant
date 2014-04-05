@@ -386,6 +386,7 @@ module ActiveMerchant #:nodoc:
           address_to_add.city = address_hash[:city].to_s
           address_to_add.country = address_hash[:country].to_s
           address_to_add.state = address_hash[:state].blank? ? 'n/a' : address_hash[:state]
+          address_to_add.fax = address_hash[:fax].to_s
 
           transaction.set_address(address_to_add)
         end
@@ -393,16 +394,16 @@ module ActiveMerchant #:nodoc:
         if address_hash = options[:shipping_address]
           address_to_add = AuthorizeNet::ShippingAddress.new
 
-          address_to_add.first_name = address_hash[:first_name].to_s
-          address_to_add.last_name = address_hash[:last_name].to_s
+          address_to_add.first_name = address_hash[:ship_to_first_name].to_s
+          address_to_add.last_name = address_hash[:ship_to_last_name].to_s
 
-          address_to_add.street_address = address_hash[:address1].to_s
-          address_to_add.company = address_hash[:company].to_s
-          address_to_add.phone = address_hash[:phone].to_s
-          address_to_add.zip = address_hash[:zip].to_s
-          address_to_add.city = address_hash[:city].to_s
-          address_to_add.country = address_hash[:country].to_s
-          address_to_add.state = address_hash[:state].blank? ? 'n/a' : address_hash[:state]
+          address_to_add.street_address = address_hash[:ship_to_address].to_s
+          address_to_add.company = address_hash[:ship_to_company].to_s
+          address_to_add.phone = address_hash[:ship_to_phone].to_s
+          address_to_add.zip = address_hash[:ship_to_zip].to_s
+          address_to_add.city = address_hash[:ship_to_city].to_s
+          address_to_add.country = address_hash[:ship_to_country].to_s
+          address_to_add.state = address_hash[:ship_to_state].blank? ? 'n/a' : address_hash[:ship_to_state]
 
           transaction.set_shipping_address(address_to_add)
         end
