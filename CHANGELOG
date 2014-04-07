@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Add BridgePay gateway. [markabe]
+
 == Version 1.42.9 (April 15, 2014)
 
 * Spreedly: Add ip, description and gateway_specific_fields [faizalzakaria]

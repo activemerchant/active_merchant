@@ -71,6 +71,11 @@ braintree_blue_with_processing_rules:
   public_key: Y
   private_key: Z
 
+# Working credentials, no need to replace
+bridge_pay:
+  user_name: Spre3676
+  password: H3392nc5
+
 #Username/Password given in sign up email. Not MMS credentials
 card_save:
   login: merchant_id
