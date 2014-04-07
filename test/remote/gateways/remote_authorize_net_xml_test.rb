@@ -53,10 +53,86 @@ class AuthorizeNetXmlTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
+    #invoice fields
+    @options[:order_id] = 41
+    @options[:description] = 'the invoice description'
+
+    #customer_data fields
+    @options[:customer] = 8.5
+    @options[:email] = 'bstarr@gbp.com'
+
+    #other misc fields
+    @options[:duplicate_window] = 3
+
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.test?
     assert_equal 'This transaction has been approved.', response.message
+
+    assert_equal '41', response.params['invoice_number']
+    assert_equal 'the invoice description', response.params['description']
+
+    assert_equal '8.5', response.params['customer_id']
+    assert_equal 'bstarr@gbp.com', response.params['email_address']
+
+    assert_equal 'Widgets Inc', response.params['company']
+    assert_equal '1234 My Street', response.params['address']
+    assert_equal 'Ottawa', response.params['city']
+    assert_equal 'ON', response.params['state']
+    assert_equal 'K1C2N6', response.params['zip_code']
+    assert_equal 'CA', response.params['country']
+    assert_equal '(555)555-5555', response.params['phone']
+    assert_equal '(555)555-6666', response.params['fax']
+
+    assert_equal 'Sammy', response.params['ship_to_first_name']
+    assert_equal 'Baugh', response.params['ship_to_last_name']
+    assert_equal '1 Redskin Drive', response.params['ship_to_address']
+    assert_equal 'Washington Redskins', response.params['ship_to_company']
+    assert_equal 'K1C2N6', response.params['ship_to_zip_code']
+    assert_equal 'Ottawa', response.params['ship_to_city']
+    assert_equal 'CA', response.params['ship_to_country']
+    assert_equal 'ON', response.params['ship_to_state']
+
+    assert response.authorization
+  end
+
+  def test_successful_purchase_without_billing_address
+    @options[:billing_address] = nil
+    @options[:address] =
+        {
+            :company => 'Cullen Enterprises',
+            :address1 => '100 Twilight Dr.',
+            :city => 'Fork',
+            :state => 'WA',
+            :zip => '88822',
+            :country => 'US',
+            :phone => '(444)444-4444',
+            :fax => '(777)666-5555'
+        }
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved.', response.message
+
+    assert_equal 'Cullen Enterprises', response.params['company']
+    assert_equal '100 Twilight Dr.', response.params['address']
+    assert_equal 'Fork', response.params['city']
+    assert_equal 'WA', response.params['state']
+    assert_equal '88822', response.params['zip_code']
+    assert_equal 'US', response.params['country']
+    assert_equal '(444)444-4444', response.params['phone']
+    assert_equal '(777)666-5555', response.params['fax']
+
+    assert_equal 'Sammy', response.params['ship_to_first_name']
+    assert_equal 'Baugh', response.params['ship_to_last_name']
+    assert_equal '1 Redskin Drive', response.params['ship_to_address']
+    assert_equal 'Washington Redskins', response.params['ship_to_company']
+    assert_equal 'K1C2N6', response.params['ship_to_zip_code']
+    assert_equal 'Ottawa', response.params['ship_to_city']
+    assert_equal 'CA', response.params['ship_to_country']
+    assert_equal 'ON', response.params['ship_to_state']
+
     assert response.authorization
   end
 
