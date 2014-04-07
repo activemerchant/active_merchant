@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module PayVector
         class ISOCountries
-
+          #array of countries
           @@countries = Array.new
           @@countries << {:iso_code => 826, :country_short_2 => "GB", :country_short_3 =>  "GBR", :country_name => "United Kingdom", :list_priority => 3}
           @@countries << {:iso_code => 840, :country_short_2 => "US", :country_short_3 =>"USA", :country_name => "United States", :list_priority => 2}
