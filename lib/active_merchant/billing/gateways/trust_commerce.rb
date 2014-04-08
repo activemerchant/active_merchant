@@ -301,13 +301,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
-
-        "#{month}#{year[-2..-1]}"
-      end
-
       def add_creditcard(params, creditcard)
         params[:media]     = "cc"
         params[:name]      = creditcard.name

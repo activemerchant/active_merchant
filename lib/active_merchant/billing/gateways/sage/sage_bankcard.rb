@@ -59,17 +59,11 @@ module ActiveMerchant #:nodoc:
       end
 
       private
-      def exp_date(credit_card)
-        year  = sprintf("%.4i", credit_card.year)
-        month = sprintf("%.2i", credit_card.month)
-
-        "#{month}#{year[-2..-1]}"
-      end
 
       def add_credit_card(post, credit_card)
         post[:C_name]       = credit_card.name
         post[:C_cardnumber] = credit_card.number
-        post[:C_exp]        = exp_date(credit_card)
+        post[:C_exp]        = expdate(credit_card)
         post[:C_cvv]        = credit_card.verification_value if credit_card.verification_value?
       end
 

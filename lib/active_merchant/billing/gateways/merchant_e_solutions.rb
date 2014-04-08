@@ -148,12 +148,6 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
-        "#{month}#{year[-2..-1]}"
-      end
-
       def message_from(response)
         if response["error_code"] == "000"
           "This transaction has been approved"
