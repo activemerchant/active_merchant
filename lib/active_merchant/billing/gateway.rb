@@ -145,6 +145,16 @@ module ActiveMerchant #:nodoc:
 
       protected # :nodoc: all
 
+      def normalize(field)
+        case field
+          when "true"   then true
+          when "false"  then false
+          when ""       then nil
+          when "null"   then nil
+          else field
+        end
+      end
+
       def user_agent
         @@ua ||= JSON.dump({
           :bindings_version => ActiveMerchant::VERSION,
