@@ -441,13 +441,6 @@ module ActiveMerchant #:nodoc:
         (results[:response_reason_text] ? results[:response_reason_text].chomp('.') : '')
       end
 
-      def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
-
-        "#{month}#{year[-2..-1]}"
-      end
-
       def split(response)
         response[1..-2].split(/\$,\$/)
       end

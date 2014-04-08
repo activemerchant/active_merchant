@@ -125,13 +125,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
-
-        "#{month}#{year[-2..-1]}"
-      end
-
       def add_customer_data(xml, options)
         if options.has_key? :customer
           xml.tag! 'CUSTOMERID', options[:customer]

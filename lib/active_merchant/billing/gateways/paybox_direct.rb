@@ -183,14 +183,6 @@ module ActiveMerchant #:nodoc:
 
         "0000000000#{randkey}"[-10..-1]
       end
-
-      def expdate(credit_card)
-        year  = sprintf("%.4i", credit_card.year)
-        month = sprintf("%.2i", credit_card.month)
-
-        "#{month}#{year[-2..-1]}"
-      end
-
     end
   end
 end

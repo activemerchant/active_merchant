@@ -168,13 +168,6 @@ module ActiveMerchant #:nodoc:
         success?(response) ? SUCCESS_MESSAGE : (response[:auth_msg] || FAILURE_MESSAGE)
       end
 
-      def expdate(credit_card)
-        year  = sprintf("%.4i", credit_card.year)
-        month = sprintf("%.2i", credit_card.month)
-
-        "#{month}#{year[-2..-1]}"
-      end
-
       def post_data(action, parameters = {})
         parameters[:account_id] = @options[:login]
         parameters[:site_tag] = @options[:site_tag] if @options[:site_tag].present?

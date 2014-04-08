@@ -99,12 +99,6 @@ module ActiveMerchant #:nodoc:
         post[:cvv] = creditcard.verification_value
       end
 
-      def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
-        "#{month}#{year[-2..-1]}"
-      end
-
       def parse(body)
         body.split('&').inject({}) do |memo, x|
           k, v = x.split('=')

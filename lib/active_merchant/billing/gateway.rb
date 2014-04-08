@@ -133,6 +133,15 @@ module ActiveMerchant #:nodoc:
         (@options.has_key?(:test) ? @options[:test] : Base.test?)
       end
 
+      protected # :nodoc: all
+
+      def expdate(credit_card)
+        year  = sprintf("%.4i", credit_card.year)
+        month = sprintf("%.2i", credit_card.month)
+
+        "#{month}#{year[-2..-1]}"
+      end
+
       private # :nodoc: all
 
       def name

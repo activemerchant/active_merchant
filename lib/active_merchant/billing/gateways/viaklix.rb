@@ -169,12 +169,6 @@ module ActiveMerchant #:nodoc:
         result.collect { |key, value| "ssl_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
-      def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
-        "#{month}#{year[2..3]}"
-      end
-
       # Parse the response message
       def parse(msg)
         resp = {}

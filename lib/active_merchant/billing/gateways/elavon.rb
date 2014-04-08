@@ -211,12 +211,6 @@ module ActiveMerchant #:nodoc:
         form[:salestax] = options[:tax] if options[:tax].present?
       end
 
-      def expdate(creditcard)
-        year  = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
-        "#{month}#{year[2..3]}"
-      end
-
       def add_address(form,options)
         billing_address = options[:billing_address] || options[:address]
 
