@@ -142,6 +142,16 @@ module ActiveMerchant #:nodoc:
         "#{month}#{year[-2..-1]}"
       end
 
+      def normalize(field)
+        case field
+          when "true"   then true
+          when "false"  then false
+          when ""       then nil
+          when "null"   then nil
+          else field
+        end
+      end
+
       private # :nodoc: all
 
       def name

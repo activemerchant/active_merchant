@@ -428,17 +428,6 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      # Make a ruby type out of the response string
-      def normalize(field)
-        case field
-        when "true"   then true
-        when "false"  then false
-        when ""       then nil
-        when "null"   then nil
-        else field
-        end
-      end
-
       def format_creditcard_expiry_year(year)
         sprintf("%.4i", year)[-2..-1]
       end

@@ -203,17 +203,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      # Make a ruby type out of the response string
-      def normalize(field)
-        case field
-        when "true"   then true
-        when "false"  then false
-        when ""       then nil
-        when "null"   then nil
-        else field
-        end
-      end
-
       def split_authorization(authorization)
         order_id, trans_ref_number = authorization.split(';')
         [order_id, trans_ref_number]

@@ -136,17 +136,6 @@ module ActiveMerchant #:nodoc:
         MESSAGES[message[0,2]] || message
       end
 
-      # Make a ruby type out of the response string
-      def normalize(field)
-        case field
-        when "true"   then true
-        when "false"  then false
-        when ""       then nil
-        when "null"   then nil
-        else field
-        end
-      end
-
       def purchase_url(cvn)
         suffix = test? ? 'xmltest/testpage.asp' : 'xmlpayment.asp'
         gateway_part = cvn ? 'gateway_cvn' : 'gateway'

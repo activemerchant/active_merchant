@@ -379,18 +379,6 @@ module ActiveMerchant #:nodoc:
         end
         response
       end
-
-      # Make a ruby type out of the response string
-      def normalize(field)
-        case field
-        when "true"   then true
-        when "false"  then false
-        when ""       then nil
-        when "null"   then nil
-        else field
-        end
-      end
-
     end
   end
 end

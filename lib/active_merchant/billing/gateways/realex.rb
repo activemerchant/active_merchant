@@ -265,16 +265,6 @@ module ActiveMerchant
         "#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}"
       end
 
-      def normalize(field)
-        case field
-        when "true"   then true
-        when "false"  then false
-        when ""       then nil
-        when "null"   then nil
-        else field
-        end
-      end
-
       def message_from(response)
         message = nil
         case response[:result]

@@ -268,17 +268,6 @@ module ActiveMerchant
         post[:currency] = options[:currency] || currency(money)
       end
 
-      # Make a ruby type out of the response string
-      def normalize(field)
-        case field
-        when "true"   then true
-        when "false"  then false
-        when ""       then nil
-        when "null"   then nil
-        else field
-        end
-      end
-
       def message_from(results)
         PAYMENT_GATEWAY_RESPONSES[results[:resp_code]]
       end
