@@ -253,21 +253,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(options = {})
-        @@ua ||= JSON.dump({
-          :bindings_version => ActiveMerchant::VERSION,
-          :lang => 'ruby',
-          :lang_version => "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
-          :platform => RUBY_PLATFORM,
-          :publisher => 'active_merchant'
-        })
-
         key     = options[:key] || @api_key
         version = options[:version] || @version
 
         headers = {
           "Authorization" => "Basic " + Base64.encode64(key.to_s + ":").strip,
           "User-Agent" => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "X-Stripe-Client-User-Agent" => @@ua,
+          "X-Stripe-Client-User-Agent" => user_agent,
           "X-Stripe-Client-User-Metadata" => {:ip => options[:ip]}.to_json
         }
         headers.merge!("Stripe-Version" => version) if version

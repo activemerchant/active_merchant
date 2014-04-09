@@ -127,18 +127,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(options = {})
-        @@ua ||= JSON.dump(
-          :bindings_version => ActiveMerchant::VERSION,
-          :lang => 'ruby',
-          :lang_version => "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
-          :platform => RUBY_PLATFORM,
-          :publisher => 'active_merchant'
-        )
         {
           "Content-Type" => "application/json",
           "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":").strip,
           "User-Agent" => "Openpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "X-Openpay-Client-User-Agent" => @@ua
+          "X-Openpay-Client-User-Agent" => user_agent
         }
       end
 

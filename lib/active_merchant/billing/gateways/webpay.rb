@@ -79,18 +79,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(options = {})
-        @@ua ||= JSON.dump({
-          :bindings_version => ActiveMerchant::VERSION,
-          :lang => 'ruby',
-          :lang_version => "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
-          :platform => RUBY_PLATFORM,
-          :publisher => 'active_merchant'
-        })
-
         {
           "Authorization" => "Basic " + Base64.encode64(@api_key.to_s + ":").strip,
           "User-Agent" => "Webpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "X-Webpay-Client-User-Agent" => @@ua,
+          "X-Webpay-Client-User-Agent" => user_agent,
           "X-Webpay-Client-User-Metadata" => {:ip => options[:ip]}.to_json
         }
       end
