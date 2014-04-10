@@ -72,7 +72,7 @@ class FirstDataModuleTest < Test::Unit::TestCase
       service.add_shipping_as_line_item
     end
 
-    check_inclusion %(<input id="x_cust_id" name="x_cust_id" type="hidden" value="8" />),
+    check_inclusion %(<input id="x_cust_id" name="x_cust_id" role="payment-form-customer_id" type="hidden" value="8" />),
       %(<input id="x_ship_to_last_name" name="x_ship_to_last_name" type="hidden" value="g" />),
       %(<input id="x_fp_timestamp" name="x_fp_timestamp" type="hidden" value="1206836763" />),
       %(<input id="x_ship_to_first_name" name="x_ship_to_first_name" type="hidden" value="g" />),
@@ -89,17 +89,17 @@ class FirstDataModuleTest < Test::Unit::TestCase
       %(<input id="x_version" name="x_version" type="hidden" value="3.1" />),
       %(<input id="x_invoice_num" name="x_invoice_num" type="hidden" value="516428355" />),
       %(<input id="x_address" name="x_address" type="hidden" value="g" />),
-      %(<input id="x_login" name="x_login" type="hidden" value="8wd65QS" />),
+      %(<input id="x_login" name="x_login" role="payment-form-account" type="hidden" value="8wd65QS" />),
       %(<input id="x_phone" name="x_phone" type="hidden" value="3" />),
-      %(<input id="x_relay_url" name="x_relay_url" type="hidden" value="http://t/first_data/payment_received_notification_sub_step" />),
-      %(<input id="x_fp_sequence" name="x_fp_sequence" type="hidden" value="44" />),
+      %(<input id="x_relay_url" name="x_relay_url" role="payment-form-notify_url" type="hidden" value="http://t/first_data/payment_received_notification_sub_step" />),
+      %(<input id="x_fp_sequence" name="x_fp_sequence" role="payment-form-order" type="hidden" value="44" />),
       %(<input id="x_show_form" name="x_show_form" type="hidden" value="PAYMENT_FORM" />),
-      %(<input id="x_header_html_payment_form" name="x_header_html_payment_form" type="hidden" value="MyFavoritePal" />),
+      %(<input id="x_header_html_payment_form" name="x_header_html_payment_form" role="payment-form-payment_header" type="hidden" value="MyFavoritePal" />),
       %(<input id="x_email" name="x_email" type="hidden" value="g@g.com" />),
       %(<input id="x_fp_hash" name="x_fp_hash" type="hidden" value="31d572da4e9910b36e999d73925eb01c" />),
       %(<input id="x_line_item" name="x_line_item" type="hidden" value="Item 1<|>beauty2 - ayoyo<|>beauty2 - ayoyo<|>1<|>0.0<|>N" />),
-      %(<input id="x_test_request" name="x_test_request" type="hidden" value="true" />),
-      %(<input id="x_freight" name="x_freight" type="hidden" value="25.0" />),
+      %(<input id="x_test_request" name="x_test_request" role="payment-form-test_request" type="hidden" value="true" />),
+      %(<input id="x_freight" name="x_freight" role="payment-form-shipping" type="hidden" value="25.0" />),
       %(<input id="x_line_item" name="x_line_item" type="hidden" value="Shipping<|>Shipping and Handling Cost<|>Shipping and Handling Cost<|>1<|>25.0<|>N" />)
   end
 
@@ -196,7 +196,7 @@ class FirstDataModuleTest < Test::Unit::TestCase
        service.test_request 'true'
     end
 
-    check_inclusion %(<input id="x_cust_id" name="x_cust_id" type="hidden" value="8" />),
+    check_inclusion %(<input id="x_cust_id" name="x_cust_id" role="payment-form-customer_id" type="hidden" value="8" />),
       %(<input id="x_city" name="x_city" type="hidden" value="city1" />),
       %(<input id="x_fp_timestamp" name="x_fp_timestamp" type="hidden" value="1206836763" />),
       %(<input id="x_last_name" name="x_last_name" type="hidden" value="Fauser" />),
@@ -208,16 +208,16 @@ class FirstDataModuleTest < Test::Unit::TestCase
       %(<input id="x_first_name" name="x_first_name" type="hidden" value="Cody" />),
       %(<input id="x_type" name="x_type" type="hidden" value="AUTH_CAPTURE" />),
       %(<input id="x_version" name="x_version" type="hidden" value="3.1" />),
-      %(<input id="x_login" name="x_login" type="hidden" value="8wd65QS" />),
+      %(<input id="x_login" name="x_login" role="payment-form-account" type="hidden" value="8wd65QS" />),
       %(<input id="x_invoice_num" name="x_invoice_num" type="hidden" value="#1000" />),
       %(<input id="x_phone" name="x_phone" type="hidden" value="(555)555-5555" />),
-      %(<input id="x_fp_sequence" name="x_fp_sequence" type="hidden" value="44" />),
+      %(<input id="x_fp_sequence" name="x_fp_sequence" role="payment-form-order" type="hidden" value="44" />),
       %(<input id="x_show_form" name="x_show_form" type="hidden" value="PAYMENT_FORM" />),
       %(<input id="x_state" name="x_state" type="hidden" value="UT" />),
       %(<input id="x_email" name="x_email" type="hidden" value="g@g.com" />),
       %(<input id="x_fp_hash" name="x_fp_hash" type="hidden" value="31d572da4e9910b36e999d73925eb01c" />),
-      %(<input id="x_tax" name="x_tax" type="hidden" value="31.00" />),
-      %(<input id="x_freight" name="x_freight" type="hidden" value="30.00" />)
+      %(<input id="x_tax" name="x_tax" role="payment-form-tax" type="hidden" value="31.00" />),
+      %(<input id="x_freight" name="x_freight" role="payment-form-shipping" type="hidden" value="30.00" />)
   end
 
   def test_test_mode
