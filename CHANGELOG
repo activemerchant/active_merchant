@@ -8,6 +8,7 @@
 * Authorize.Net CIM: Add recurring billing flag [gabealmer]
 * Spreedly: Add support for :ip [megamoose]
 * PayPal Express: Improve received_at handling [jwarchol]
+* PayPal Express: Add ReqBillingAddress flag [johnb-razoo]
 
 == Version 1.43.1 (May 1, 2014)
 
