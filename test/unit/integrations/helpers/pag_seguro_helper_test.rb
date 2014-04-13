@@ -2,11 +2,11 @@ require 'test_helper'
 
 class PagSeguroHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
-  
+
   def setup
     @helper = PagSeguro::Helper.new('order-500','cody@example.com', :credential2 => "USER_TOKEN", :amount => 55)
   end
- 
+
   def test_basic_helper_fields
     assert_field 'email', 'cody@example.com'
     assert_field 'token', 'USER_TOKEN'
@@ -18,12 +18,63 @@ class PagSeguroHelperTest < Test::Unit::TestCase
     assert_field 'shippingType', '3'
     assert_field 'currency', 'BRL'
   end
-  
+
   def test_customer_fields
-    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', phone: "7199223522"
+    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', phone: "71 99223522"
     assert_field 'senderName', 'Cody Fauser'
-    assert_field 'senderPhone', '7199223522'
+    assert_field 'senderAreaCode', '71'
+    assert_field 'senderPhone', '99223522'
     assert_field 'senderEmail', 'cody@example.com'
+  end
+
+  def test_area_code_and_number_formats
+    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', phone: "71 99223522"
+    assert_field 'senderAreaCode', '71'
+    assert_field 'senderPhone', '99223522'
+
+    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', phone: "71 99223522"
+    assert_field 'senderAreaCode', '71'
+    assert_field 'senderPhone', '99223522'
+
+    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', phone: "71 99223522"
+    assert_field 'senderAreaCode', '71'
+    assert_field 'senderPhone', '99223522'
+
+    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', phone: "71 99223522"
+    assert_field 'senderAreaCode', '71'
+    assert_field 'senderPhone', '99223522'
+
+    @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "(11) 99552345"
+    assert_field 'senderAreaCode', "11"
+    assert_field 'senderPhone', "99552345"
+
+    @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "(11) 9955-2345"
+    assert_field 'senderAreaCode', "11"
+    assert_field 'senderPhone', "9955-2345"
+
+    @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "(11) 99955-2345"
+    assert_field 'senderAreaCode', "11"
+    assert_field 'senderPhone', "99955-2345"
+
+    @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "(11) 9995-52345"
+    assert_field 'senderAreaCode', "11"
+    assert_field 'senderPhone', "9995-52345"
+
+    @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "11 99552345"
+    assert_field 'senderAreaCode', "11"
+    assert_field 'senderPhone', "99552345"
+
+    @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "11 9955-2345"
+    assert_field 'senderAreaCode', "11"
+    assert_field 'senderPhone', "9955-2345"
+
+    @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "11 99955-2345"
+    assert_field 'senderAreaCode', "11"
+    assert_field 'senderPhone', "99955-2345"
+
+    @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "11 9995-52345"
+    assert_field 'senderAreaCode', "11"
+    assert_field 'senderPhone', "9995-52345"
   end
 
   def test_address_mapping
@@ -33,14 +84,14 @@ class PagSeguroHelperTest < Test::Unit::TestCase
                             :state => 'SP',
                             :zip => 'LS2 7EE',
                             :country  => 'CA'
-   
+
     assert_field 'shippingAddressStreet', '1 My Street'
     assert_field 'shippingAddressDistrict', 'Leeds'
     assert_field 'shippingAddressState', 'SP'
     assert_field 'shippingAddressPostalCode', 'LS2 7EE'
     assert_field 'shippingAddressCountry', 'CA'
   end
-  
+
   def test_unknown_address_mapping
     @helper.billing_address :farm => 'CA'
     assert_equal 8, @helper.fields.size
@@ -51,7 +102,7 @@ class PagSeguroHelperTest < Test::Unit::TestCase
       @helper.company_address :address => '500 Dwemthy Fox Road'
     end
   end
-  
+
   def test_setting_invalid_address_field
     fields = @helper.fields.dup
     @helper.billing_address :street => 'My Street'
@@ -73,7 +124,31 @@ class PagSeguroHelperTest < Test::Unit::TestCase
   end
 
   def test_get_token_should_get_the_token
-    Net::HTTP.any_instance.expects(:request).returns(stub(:body => '<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"yes\"?><checkout><code>E20521EF6C6C159994DFFF8F5A4C3ED7</code><date>2014-02-12T02:10:25.000-02:00</date></checkout>"'))
+    Net::HTTP.any_instance.expects(:request).returns(stub(code: "200" , body: '<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"yes\"?><checkout><code>E20521EF6C6C159994DFFF8F5A4C3ED7</code><date>2014-02-12T02:10:25.000-02:00</date></checkout>"'))
     assert "E20521EF6C6C159994DFFF8F5A4C3ED7", @helper.fetch_token
+  end
+
+  def test_fetch_token_raises_error_if_error_present
+    Net::HTTP.any_instance.expects(:request).returns(stub(code: "400" , body: '<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?><errors><error><code>11014</code><message>senderPhone invalid value: 1232312356273440</message></error></errors>'))
+
+    assert_raise StandardError do
+      @helper.fetch_token
+    end
+  end
+
+  def test_fetch_token_raises_error_if_error_present
+    Net::HTTP.any_instance.expects(:request).returns(stub(code: "401" , body: '<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?><errors><error><code>11014</code><message>senderPhone invalid value: 1232312356273440</message></error></errors>'))
+
+    assert_raise StandardError do
+      @helper.fetch_token
+    end
+  end
+
+  def test_fetch_token_raises_error_if_pagseguro_fails
+    Net::HTTP.any_instance.expects(:request).returns(stub(code: "500", body: ""))
+
+    assert_raise ActiveMerchant::ResponseError do
+      @helper.fetch_token
+    end
   end
 end

@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
         self.invoicing_url = 'https://ws.pagseguro.uol.com.br/v2/checkout/'
 
         mattr_accessor :notification_url
-        self.invoicing_url = 'https://ws.pagseguro.uol.com.br/v2/transactions/notifications/'
+        self.notification_url = 'https://ws.pagseguro.uol.com.br/v2/transactions/notifications/'
 
         def self.notification(post)
           Notification.new(post)

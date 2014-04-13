@@ -1,4 +1,5 @@
 require 'net/http'
+require 'nokogiri'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -29,7 +30,6 @@ module ActiveMerchant #:nodoc:
             params["transaction"]["code"]
           end
 
-          # When was this payment received by the client.
           def received_at
             params["transaction"]["date"]
           end
@@ -38,17 +38,20 @@ module ActiveMerchant #:nodoc:
             params["sender"]["email"]
           end
 
-          # the money amount we received in X.2 decimal.
           def gross
             params["transaction"]["grossAmount"]
+          end
+
+          def currency
+            # PagSeguro is exclusive to Brazil's currency
+            "BRL"
           end
 
           def status
             #
             # This needs revision. We may not need all the statuses
             #
-
-            case @params.css("transaction status").text
+            case params["transaction"]["status"]
             when "1"
               "Waiting payment"
             when "2"
@@ -78,7 +81,7 @@ module ActiveMerchant #:nodoc:
             http = Net::HTTP.new(uri.host, uri.port)
             http.use_ssl = true
 
-            request = Net::HTTP::Get.new(uri.request_uri) 
+            request = Net::HTTP::Get.new(uri.request_uri)
             request.content_type = "application/x-www-form-urlencoded"
             request.set_form_data(params)
 
@@ -88,8 +91,8 @@ module ActiveMerchant #:nodoc:
 
           # Take the posted data and move the relevant data into a hash
           def parse(post)
-            @raw = post.to_s
-            @params = Hash.from_xml(Nokogiri::XML.parse(response.body).to_s)
+            @raw = post
+            @params = Hash.from_xml(post)
           end
         end
       end

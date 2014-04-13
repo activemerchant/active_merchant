@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'nokogiri'
 
 module ActiveMerchant #:nodoc:
@@ -18,7 +19,7 @@ module ActiveMerchant #:nodoc:
 
           mapping :account, 'email'
           mapping :credential2, 'token'
-        
+
           mapping :order, 'reference'
 
           mapping :billing_address, :city     => 'shippingAddressDistrict',
@@ -43,7 +44,10 @@ module ActiveMerchant #:nodoc:
           end
 
           def customer(params = {})
-            add_field("senderPhone", params[:phone])
+            phone = area_code_and_number(params[:phone])
+
+            add_field("senderAreaCode", phone[0])
+            add_field("senderPhone", phone[1])
             add_field("senderEmail", params[:email])
             add_field('senderName', "#{params[:first_name]} #{params[:last_name]}")
           end
