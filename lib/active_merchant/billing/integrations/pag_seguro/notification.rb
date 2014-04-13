@@ -43,7 +43,6 @@ module ActiveMerchant #:nodoc:
           end
 
           def currency
-            # PagSeguro is exclusive to Brazil's currency
             "BRL"
           end
 
