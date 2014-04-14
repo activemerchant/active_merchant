@@ -1,5 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.42.9 (April 10, 2014)
+
+* PayPal: Add add ReqBillingAddress flag to the request [johnb-razoo]
+
 == Version 1.42.8 (April 4, 2014)
 
 * Cecabank: Handle invalid xml response body [duff]
