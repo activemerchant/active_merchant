@@ -1,11 +1,35 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PacNetRavenGateway < Gateway
+
+      AVS_ADDRESS_CODES = {
+        'avs_address_unavailable'   => 'N',
+        'avs_address_not_checked'   => 'N',
+        'avs_address_matched'       => 'Y',
+        'avs_address_not_matched'   => 'N',
+        'avs_address_partial_match' => 'N'
+      }
+
+      AVS_POSTAL_CODES = {
+        'avs_postal_unavailable'   => 'N',
+        'avs_postal_not_checked'   => 'N',
+        'avs_postal_matched'       => 'Y',
+        'avs_postal_not_matched'   => 'N',
+        'avs_postal_partial_match' => 'N'
+      }
+
+      CVV2_CODES = {
+        'cvv2_matched'     => 'Y',
+        'cvv2_not_matched' => 'N',
+        'cvv2_unavailable' => 'N',
+        'cvv2_not_checked' => 'N'
+      }
+
       self.test_url = 'https://demo.deepcovelabs.com/realtime/'
       self.live_url = 'https://raven.pacnetservices.com/realtime/'
 
       self.supported_countries = ['US']
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :master]
       self.money_format = :cents
       self.default_currency = 'USD'
       self.homepage_url = 'http://www.pacnetservices.com/'
@@ -102,8 +126,11 @@ module ActiveMerchant #:nodoc:
           :test => test_mode,
           :authorization => response['TrackingNumber'],
           :fraud_review => fraud_review?(response),
-          :avs_result => { :postal_match => response['AVSPostalResponseCode'], :street_match => response['AVSAddressResponseCode'] },
-          :cvv_result => response['CVV2ResponseCode']
+          :avs_result => {
+                          :postal_match => AVS_POSTAL_CODES[response['AVSPostalResponseCode']],
+                          :street_match => AVS_ADDRESS_CODES[response['AVSAddressResponseCode']]
+                         },
+          :cvv_result => CVV2_CODES[response['CVV2ResponseCode']]
         )
       end
 
