@@ -3,16 +3,16 @@ module ActiveMerchant #:nodoc:
     class PacNetRavenGateway < Gateway
 
       AVS_ADDRESS_CODES = {
-        'avs_address_unavailable'   => 'N',
-        'avs_address_not_checked'   => 'N',
+        'avs_address_unavailable'   => 'X',
+        'avs_address_not_checked'   => 'X',
         'avs_address_matched'       => 'Y',
         'avs_address_not_matched'   => 'N',
         'avs_address_partial_match' => 'N'
       }
 
       AVS_POSTAL_CODES = {
-        'avs_postal_unavailable'   => 'N',
-        'avs_postal_not_checked'   => 'N',
+        'avs_postal_unavailable'   => 'X',
+        'avs_postal_not_checked'   => 'X',
         'avs_postal_matched'       => 'Y',
         'avs_postal_not_matched'   => 'N',
         'avs_postal_partial_match' => 'N'
@@ -21,8 +21,8 @@ module ActiveMerchant #:nodoc:
       CVV2_CODES = {
         'cvv2_matched'     => 'Y',
         'cvv2_not_matched' => 'N',
-        'cvv2_unavailable' => 'N',
-        'cvv2_not_checked' => 'N'
+        'cvv2_unavailable' => 'X',
+        'cvv2_not_checked' => 'X'
       }
 
       self.test_url = 'https://demo.deepcovelabs.com/realtime/'
@@ -188,7 +188,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def request_id
-        (0...21).map{(65+rand(26)).chr}.join.downcase
+        SecureRandom.uuid
       end
 
       def signature(action, post, parameters = {})
