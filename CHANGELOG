@@ -1,5 +1,10 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.42.9 (April 15, 2014)
+
+* Spreedly: Add ip, description and gateway_specific_fields [faizalzakaria]
+* Sage (US): Support store/unstore of cards. [rwdaigle]
+* Pin: Add american express to supported cards [nagash]
 * Raven: Update handling of CVV/AVS [bslobodin]
 * Raven: Use UUID for RequestID [bslobodin]
 
@@ -12,8 +17,6 @@
 * Universal: Add universal offsite API implementation [bslobodin]
 * Iridium: Add more currencies [bslobodin]
 * iDeal: Add Mollie iDeal offsite implementation [wvanbergen, maartenvg]
-* Spreedly: Add ip, description and gateway_specific_fields [faizalzakaria]
-* Sage (US): Support store/unstore of cards. [rwdaigle]
 
 == Version 1.42.7 (March 18, 2014)
 
