@@ -1,11 +1,15 @@
+# encoding: utf-8
 require 'test_helper'
 
 class PagSeguroNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    Net::HTTP.any_instance.expects(:request).returns(stub(code: "200" , body: http_raw_data))
-    @pag_seguro = PagSeguro::Notification.new(http_raw_data)
+    uri = URI.parse(PagSeguro.notification_url)
+    URI.expects(:parse).with("#{PagSeguro.notification_url}#{notification_code}").returns(uri)
+    Net::HTTP.expects(:get_response).returns(stub(body: http_raw_data))
+
+    @pag_seguro = PagSeguro::Notification.new(notification_data)
   end
 
   def test_accessors
@@ -15,6 +19,8 @@ class PagSeguroNotificationTest < Test::Unit::TestCase
     assert_equal "REF1234", @pag_seguro.item_id
     assert_equal "49.12", @pag_seguro.gross
     assert_equal "BRL", @pag_seguro.currency
+    assert_equal "1", @pag_seguro.payment_method_type
+    assert_equal "101", @pag_seguro.payment_method_code
     assert_equal "2011-02-10T16:13:41.000-03:00", @pag_seguro.received_at
   end
 
@@ -22,12 +28,18 @@ class PagSeguroNotificationTest < Test::Unit::TestCase
     assert_equal Money.new(4912, 'BRL'), @pag_seguro.amount
   end
 
-  # Is this really needed?
   def test_respond_to_acknowledge
     assert @pag_seguro.respond_to?(:acknowledge)
   end
 
   private
+  def notification_code
+    "766B9C-AD4B044B04DA-77742F5FA653-E1AB24"
+  end
+  def notification_data
+    "notificationCode=#{notification_code}&notificationType=transaction"
+  end
+
   def http_raw_data
     <<-DATA
       <?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>

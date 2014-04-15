@@ -8,18 +8,16 @@ module ActiveMerchant #:nodoc:
         class Notification < ActiveMerchant::Billing::Integrations::Notification
 
           def initialize(post, options = {})
-            super
-
-            notify_code = post["notificationCode"]
+            notify_code = parse_http_query(post)["notificationCode"]
             email = options[:credential1]
             token = options[:credential2]
 
             url = "#{PagSeguro.notification_url}#{notify_code}"
-            parse(web_get(url, email: email, token: token))
+            parse_xml(web_get(url, email: email, token: token))
           end
 
           def complete?
-            params["transaction"]["type"] == "1"
+            status == "Completed"
           end
 
           def item_id
@@ -46,10 +44,15 @@ module ActiveMerchant #:nodoc:
             "BRL"
           end
 
+          def payment_method_type
+            params["transaction"]["paymentMethod"]["type"]
+          end
+
+          def payment_method_code
+            params["transaction"]["paymentMethod"]["code"]
+          end
+
           def status
-            #
-            # This needs revision. We may not need all the statuses
-            #
             case params["transaction"]["status"]
             when "1"
               "Waiting payment"
@@ -76,22 +79,28 @@ module ActiveMerchant #:nodoc:
           private
 
           def web_get(url, params)
+            # What if PegSeguro 500?
+            # should we raise error?
             uri = URI.parse(url)
-            http = Net::HTTP.new(uri.host, uri.port)
-            http.use_ssl = true
+            uri.query = URI.encode_www_form(params)
 
-            request = Net::HTTP::Get.new(uri.request_uri)
-            request.content_type = "application/x-www-form-urlencoded"
-            request.set_form_data(params)
-
-            response = http.request(request)
+            response = Net::HTTP.get_response(uri)
             response.body
           end
 
           # Take the posted data and move the relevant data into a hash
-          def parse(post)
-            @raw = post
+          def parse_xml(post)
             @params = Hash.from_xml(post)
+          end
+
+          def parse_http_query(post)
+            @raw = post
+            params = {}
+            for line in post.split('&')
+              key, value = *line.scan( %r{^(\w+)\=(.*)$} ).flatten
+              params[key] = value
+            end
+            params
           end
         end
       end

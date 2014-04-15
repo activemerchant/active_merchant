@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
 
           mapping :order, 'reference'
 
-          mapping :billing_address, :city     => 'shippingAddressDistrict',
+          mapping :billing_address, :city     => 'shippingAddressCity',
                                     :address1 => 'shippingAddressStreet',
                                     :address2 => 'shippingAddressNumber',
                                     :state    => 'shippingAddressState',
@@ -63,7 +63,55 @@ module ActiveMerchant #:nodoc:
 
             response = http.request(request)
             xml = Nokogiri::XML.parse(response.body)
+
+            check_for_errors(response, xml)
+
+            extract_token(xml)
+          rescue Timeout::Error => e
+            raise StandardError, "Erro ao se conectar ao PagSeguro."
+          end
+
+          def area_code_and_number(phone)
+            phone.gsub!(/[^\d]/, '')
+
+            ddd    = phone.slice(0..1)
+            number = phone.slice(2..12)
+
+            [ddd, number]
+          end
+
+          def check_for_errors(response, xml)
+            return if response.code == "200"
+
+            case response.code
+            when "400"
+              raise StandardError, humanize_errors(xml)
+            when "401"
+              raise StandardError, "Token do PagSeguro inválido."
+            else
+              raise ActiveMerchant::ResponseError, response
+            end
+          end
+
+          def extract_token(xml)
             xml.css("code").text
+          end
+
+          def humanize_errors(xml)
+            # reference: https://pagseguro.uol.com.br/v2/guia-de-integracao/codigos-de-erro.html
+
+            xml.css("errors").children.map do |error|
+              case error.css('code').text
+              when "11013"
+                "Código de área inválido"
+              when "11014"
+                "Número de telefone inválido. Formato esperado: (DD) XXXX-XXXX"
+              when "11017"
+                "Código postal (CEP) inválido."
+              else
+                error.css('message').text
+              end
+            end.join(", ")
           end
 
         end
