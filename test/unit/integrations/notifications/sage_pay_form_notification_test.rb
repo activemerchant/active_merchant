@@ -18,7 +18,7 @@ class SagePayFormNotificationTest < Test::Unit::TestCase
     assert_equal '28', n.item_id
     assert_equal '{2D370B0B-692D-4D07-B616-91B86CCDF85A}', n.transaction_id
     assert_equal '7349', n.auth_id
-    assert_equal '31.47', n.gross
+    assert_equal '1231.47', n.gross
     assert_equal 'ALL MATCH', n.avs_cv2_result
     assert_equal 'MATCHED', n.address_result
     assert_equal 'MATCHED', n.post_code_result
@@ -96,7 +96,7 @@ class SagePayFormNotificationTest < Test::Unit::TestCase
 
   def test_compositions
     n = SagePayForm::Notification.new(successful_purchase, @options)
-    assert_equal Money.new(3147, nil), n.amount
+    assert_equal Money.new(123147, nil), n.amount
   end
 
   def test_bogus_crypt
@@ -120,7 +120,7 @@ class SagePayFormNotificationTest < Test::Unit::TestCase
   private
 
   def successful_purchase
-    'utm_nooverride=1&crypt=FhoCBgwDSSYkSBgRGEVHQAELFxMQHEk6Gg0oAApCVEYpAhpSOAUAAQAcIhYcVRJnNw8NARgTAAAAAG0zHF9WXDc6GzEWFBFUXVZtMyliZksMCl4JSzRHXl8seydUBwsBAUNXNklHWStZX31IQABwC3MtIDY/SEEoEkgfHThERlsLAV5FSkRNTy4DJBAXRQ8AdEBXRV8xIjosOHlYOH1+EwgvNzExVjUNCxwuFgpjV0AwAhdPNDEgKicrD0MpXkFHBgEHFysVBxwDGnYoOGVxewAqRTEvQiYMHBsnEUR8c2cGJiY2XzcdDxsvIgFEARQAAT0GEQwCETobDz8QCgx9eGMtIiQvTTknKFYRJDN1eGEQJTRLSTczMDUgHy1fclNBIToaAhxNIiA8L20pGEJGBwEHBBsNA0lRXFt9'
+    'utm_nooverride=1&crypt=FhoCBgwDSSYkSBgRGEVHQAELFxMQHEk6Gg0oAApCVEYpAhpSOAUAAQAcIhYcVRJnNw8NARgTAAAAAG0zHF9WXDc6GzEWFBFUXVZtMyliZksMCl4JSzRHXl8seydUBwsBAUNXNklHWStZX31IQABwC3MtIDY/SEEoEkgfHThERlsLAV5FSkRNTy4DJBAXRQ8CaVxQQ1dEQ08uOBgmLwMPcgkiQz84JDchSS8vAQtUQUAXCxAHFQRJJC46CC08dRRjKh0XMRYUETsKHT4JDQx/chEtKzc9Vjc/XTwuFgxdRg4ILzcxMTUwTygHLRE4WFYOdUhQNioVFxwdCxgRGEVHQHghKFQ6MSI/UiMFIkFrc3kBJDEnMidNWSgpEj83ZXoVBg8RFi0JBAxSOAI2OBd+UjYaVzYQFx0dHFNzVkwH'
   end
 
   def failed_purchase
