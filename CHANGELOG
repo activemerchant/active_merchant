@@ -1,5 +1,8 @@
 = ActiveMerchant CHANGELOG
 
+* Raven: Update handling of CVV/AVS [bslobodin]
+* Raven: Use UUID for RequestID [bslobodin]
+
 == Version 1.42.8 (April 4, 2014)
 
 * Cecabank: Handle invalid xml response body [duff]
