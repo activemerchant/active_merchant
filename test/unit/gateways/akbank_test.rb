@@ -1,30 +1,21 @@
 require 'test_helper'
 
-class FinansbankTest < Test::Unit::TestCase
+class AkbankTest < Test::Unit::TestCase
   def setup
-    if RUBY_VERSION < '1.9' && $KCODE == "NONE"
-      @original_kcode = $KCODE
-      $KCODE = 'u'
-    end
-
-    @gateway = FinansbankGateway.new(
-      :login => 'login',
-      :password => 'password',
-      :client_id => 'client_id'
+    @gateway = AkbankGateway.new(
+      login: 'login',
+      password: 'password',
+      client_id: 'client_id'
     )
 
     @credit_card = credit_card
     @amount = 100
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
-  end
-
-  def teardown
-    $KCODE = @original_kcode if @original_kcode
   end
 
   def test_successful_purchase
