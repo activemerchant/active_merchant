@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
 
           # Total amount (no fees).
           def gross
-            params['Amount']
+            params['Amount'].gsub(/,(?=\d{3}\b)/, '')
           end
           
           # AVS and CV2 check results.  Possible values:
