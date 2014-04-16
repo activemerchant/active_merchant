@@ -1,8 +1,8 @@
 require 'test_helper'
 
-class TransnationalTest < Test::Unit::TestCase
+class NetworkMerchantsTest < Test::Unit::TestCase
   def setup
-    @gateway = TransnationalGateway.new(
+    @gateway = NetworkMerchantsGateway.new(
                  :login => 'login',
                  :password => 'password'
                )
@@ -144,7 +144,7 @@ class TransnationalTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = TransnationalGateway.new(:login => '', :password => '')
+    gateway = NetworkMerchantsGateway.new(:login => '', :password => '')
     gateway.expects(:ssl_post).returns(failed_login)
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
