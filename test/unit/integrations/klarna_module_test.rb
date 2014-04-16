@@ -4,7 +4,8 @@ class KlarnaModuleTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def test_notification_method
-    assert_instance_of Klarna::Notification, Klarna.notification('name=cody')
+    Klarna::Notification.expects(:new).with('post_body', authorization_header: 'auth header')
+    Klarna.notification('post_body', authorization_header: 'auth header')
   end
 
   def test_sign
