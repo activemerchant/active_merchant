@@ -100,12 +100,32 @@ class BeanstreamTest < Test::Unit::TestCase
     assert_equal '10000028;15.00;P', response.authorization
   end
 
-  def test_successful_purchase_with_vault
+  def test_successful_purchase_with_vault_deprecated_source
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     vault = rand(100000)+10001
 
     assert response = @gateway.purchase(@amount, vault, @options)
+    assert_success response
+    assert_equal '10000028;15.00;P', response.authorization
+  end
+
+  def test_successful_purchase_with_vault
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    vault = rand(100000)+10001
+
+    assert response = @gateway.purchase(@amount, {payment_profile: vault}, @options)
+    assert_success response
+    assert_equal '10000028;15.00;P', response.authorization
+  end
+
+  def test_successful_purchase_with_legato
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    token = rand(100000)+10001
+
+    assert response = @gateway.purchase(@amount, {legato: token}, @options)
     assert_success response
     assert_equal '10000028;15.00;P', response.authorization
   end
