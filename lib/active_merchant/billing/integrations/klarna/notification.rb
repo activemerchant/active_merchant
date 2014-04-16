@@ -1,104 +1,107 @@
 require 'net/http'
+require 'json'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module Klarna
         class Notification < ActiveMerchant::Billing::Integrations::Notification
+          def initialize(post, options = {})
+            super
+            verify_request
+          end
+
           def complete?
-            params['']
+            status == 'Complete'
           end
 
           def item_id
-            params['']
+            params["reservation"]
           end
 
           def transaction_id
-            params['']
+            params["reference"]
           end
 
-          # When was this payment received by the client.
+          # When this payment received by the client
           def received_at
-            params['']
+            params["completed_at"]
           end
 
           def payer_email
-            params['']
+            params["billing_address"]["email"]
           end
 
           def receiver_email
-            params['']
+            params["shipping_address"]["email"]
           end
 
-          def security_key
-            params['']
+          def currency
+            params["purchase_currency"]
           end
 
-          # the money amount we received in X.2 decimal.
+          # The money amount we received in X.2 decimal
           def gross
-            params['']
+            Float(gross_cents) / 100
+          end
+
+          def gross_cents
+            Integer(params["cart"]["total_price_including_tax"])
           end
 
           # Was this a test transaction?
           def test?
-            params[''] == 'test'
+            false
           end
 
           def status
-            params['']
+            case params['status']
+            when 'checkout_complete'
+              'Complete'
+            else
+              params['status']
+            end
           end
 
-          # Acknowledge the transaction to Klarna. This method has to be called after a new
-          # apc arrives. Klarna will verify that all the information we received are correct and will return a
-          # ok or a fail.
-          #
-          # Example:
-          #
-          #   def ipn
-          #     notify = KlarnaNotification.new(request.raw_post)
-          #
-          #     if notify.acknowledge
-          #       ... process order ... if notify.complete?
-          #     else
-          #       ... log possible hacking attempt ...
-          #     end
           def acknowledge(authcode = nil)
-            
-
-
-            # In Klarna HPP case, this should be a no-op; all we have to do is respond to a POST with 200 OK
             true
-
-
-            # payload = raw
-
-            # uri = URI.parse(Klarna.notification_confirmation_url)
-
-            # request = Net::HTTP::Post.new(uri.path)
-
-            # request['Content-Length'] = "#{payload.size}"
-            # request['User-Agent'] = "Active Merchant -- http://home.leetsoft.com/am"
-            # request['Content-Type'] = "application/x-www-form-urlencoded"
-
-            # http = Net::HTTP.new(uri.host, uri.port)
-            # http.verify_mode    = OpenSSL::SSL::VERIFY_NONE unless @ssl_strict
-            # http.use_ssl        = true
-
-            # response = http.request(request, payload)
-
-            # # Replace with the appropriate codes
-            # raise StandardError.new("Faulty Klarna result: #{response.body}") unless ["AUTHORISED", "DECLINED"].include?(response.body)
-            # response.body == "AUTHORISED"
           end
 
           private
 
-          # Take the posted data and move the relevant data into a hash
           def parse(post)
             @raw = post.to_s
-            for line in @raw.split('&')
-              key, value = *line.scan( %r{^([A-Za-z0-9_.-]+)\=(.*)$} ).flatten
-              params[key] = CGI.unescape(value.to_s) if key.present?
+            @params = JSON.parse(post)
+          end
+
+          def verify_request
+            shared_secret = @options[:credential2]
+            Verifier.new(@options[:authorization_header], @raw, shared_secret).verify
+          end
+
+          class VerificationError < StandardError; end
+
+          class Verifier
+            attr_reader :header, :payload, :digest, :shared_secret
+            def initialize(header, payload, shared_secret)
+              @header, @payload, @shared_secret = header, payload, shared_secret
+
+              @digest = extract_digest
+            end
+
+            def verify
+              raise VerificationError, "Klarna notification failed signature verification" unless digest_matches?
+            end
+
+            private
+
+            def extract_digest
+              match = header.match(/^Klarna (?<digest>.+)$/)
+              match && match[:digest]
+            end
+
+            def digest_matches?
+              Digest::SHA256.base64digest(payload + shared_secret) == digest
             end
           end
         end
