@@ -121,7 +121,7 @@ class PxpayModuleTest < Test::Unit::TestCase
   def test_created_form_is_invalid_when_credentials_are_wrong
     Pxpay::Helper.any_instance.stubs(:ssl_post).returns('<Request valid="1"><Reco>IP</Reco><ResponseText>Invalid Access Info</ResponseText></Request>')
 
-    assert_raise_with_message(ActionViewHelperError, "error - failed to get token - message was Invalid Access Info") do
+    assert_raise(ActionViewHelperError) do
       payment_service_for('44',@username, :service => :pxpay, :amount => 157.0){|service|
          service.credential2 @key
          service.return_url "http://store.shopify.com/done"
