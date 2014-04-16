@@ -18,6 +18,23 @@ module ActiveMerchant #:nodoc:
     # Your API Access Passcode must be set in Administration => account settings => order settings.
     # To learn more about storing credit cards with the Beanstream gateway, please read the BEAN_Payment_Profiles.pdf (I had to phone BeanStream to request it.)
     #
+    # == Legato:
+    # Legato is Beanstream's JavaScript library. When your customer submits their payment information, the credit card’s number, CVD,
+    # and expiry date will NOT go through the merchant server. As a result, the scope of your PCI compliance is limited.
+    # Using Legato, Beanstream will return a token. Use this token in place of a CreditCard instance.
+    # A JavaScript implementation example can be found at http://developer.beanstream.com/documentation/legato.
+    #
+    #   Example:
+    #
+    #   twenty = 2000
+    #   gateway = BeanstreamGateway.new(
+    #     :login => '100200000',
+    #     :user => 'xiaobozz',
+    #     :password => 'password'
+    #   )
+    #   response = gateway.purchase(twenty, {legato: 'singleUseToken'}, options)
+    #
+    #
     # == Notes
     # * Adding of order products information is not implemented.
     # * Ensure that country and province data is provided as a code such as "CA", "US", "QC".
