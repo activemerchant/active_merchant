@@ -37,16 +37,35 @@ module ActiveMerchant #:nodoc:
             @fields
           end
 
+          def shipping_address(shipping_fields)
+            add_field('shipping_address_given_name', shipping_fields[:first_name])
+            add_field('shipping_address_family_name', shipping_fields[:last_name])
+
+            street_address = [shipping_fields[:address1], shipping_fields[:address2]].join(', ')
+            add_field('shipping_address_street_address', street_address)
+
+            add_field('shipping_address_postal_code', shipping_fields[:zip])
+            add_field('shipping_address_city', shipping_fields[:city])
+            add_field('shipping_address_country', shipping_fields[:country])
+            add_field('shipping_address_phone', shipping_fields[:phone])
+          end
+
           def form_fields
             merchant_digest = Klarna.sign(@fields, @line_items, @shared_secret)
             add_field('merchant_digest', merchant_digest)
 
             add_field('test_mode', 'true') if test?
 
+            add_field('shipping_address_street_address', street_address)
+
             super
           end
 
           private
+
+          def street_address
+            [address1, address2].join(', ')
+          end
 
           def guess_locale_based_on_country(country_code)
             case country_code

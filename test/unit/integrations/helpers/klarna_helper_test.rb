@@ -15,9 +15,6 @@ class KlarnaHelperTest < Test::Unit::TestCase
       :test             => false
     }
 
-    # For remote tests later
-    # ActiveMerchant::Billing::Integrations::Klarna::Helper.application_id = 'a57b5192-7080-443c-9867-c5346b649dc0'
-
     @helper = Klarna::Helper.new(@order_id, @credential1, @options)
   end
 
@@ -29,6 +26,27 @@ class KlarnaHelperTest < Test::Unit::TestCase
     
     assert_field 'merchant_id', @credential1
     assert_field 'platform_type', @helper.application_id
+  end
+
+  def test_shipping_fields
+    @helper.shipping_address :first_name => 'First name',
+                             :last_name  => 'Last name',
+                             :city       => 'City',
+                             :company    => 'Company',
+                             :address1   => 'Street Address',
+                             :address2   => 'Second Floor',
+                             :state      => 'State',
+                             :country    => 'Country',
+                             :zip        => 'A1B 2C3',
+                             :phone      => '+1 (555) 555-5555'
+
+    assert_field 'shipping_address_given_name', 'First name'
+    assert_field 'shipping_address_family_name', 'Last name'
+    assert_field 'shipping_address_street_address', 'Street Address, Second Floor'
+    assert_field 'shipping_address_postal_code', 'A1B 2C3'
+    assert_field 'shipping_address_city', 'City'
+    assert_field 'shipping_address_country', 'Country'
+    assert_field 'shipping_address_phone', '+1 (555) 555-5555'
   end
 
   def test_merchant_digest
