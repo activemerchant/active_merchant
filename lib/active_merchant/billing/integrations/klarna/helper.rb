@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
           mapping :currency, 'purchase_currency'
           mapping :return_url, 'merchant_confirmation_uri'
           mapping :notify_url, 'merchant_push_uri'
-          mapping :cancel_return_url, ['merchant_terms_uri', 'merchant_checkout_uri', 'merchant_base_uri', 'merchant_confirmation_uri']
+          mapping :cancel_return_url, ['merchant_terms_uri', 'merchant_checkout_uri', 'merchant_base_uri']
           mapping :account, 'merchant_id'
 
           def initialize(order, account, options = {})

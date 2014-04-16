@@ -53,12 +53,13 @@ class KlarnaHelperTest < Test::Unit::TestCase
     item = example_line_item
     @helper.line_item(item)
 
+    @helper.return_url("http://example-return-url")
     @helper.cancel_return_url("http://example-cancel-url")
 
     # Call hook to populate merchant_digest field
     @helper.form_fields
 
-    assert_field 'merchant_digest', "YEmynIXEziC4IKkCnsRXOhyA5HSihUVFZsxwqFBCjdk="
+    assert_field 'merchant_digest', "gp0QyvG+TiHL9EZdFzZTs7dSC2I05w4JFMp1peHrzz4="
   end
 
   def test_line_item
@@ -74,13 +75,18 @@ class KlarnaHelperTest < Test::Unit::TestCase
   end
 
   def test_merchant_uri_fields
+    @helper.notify_url = 'http://example-notify-url'
+    @helper.return_url = 'http://example-return-url'
+
     example_cancel_url = "http://example-cancel-url"
     @helper.cancel_return_url("http://example-cancel-url")
+
+    assert_field 'merchant_push_uri', 'http://example-notify-url'
+    assert_field 'merchant_confirmation_uri', 'http://example-return-url'
 
     assert_field 'merchant_terms_uri', example_cancel_url
     assert_field 'merchant_checkout_uri', example_cancel_url
     assert_field 'merchant_base_uri', example_cancel_url
-    assert_field 'merchant_confirmation_uri', example_cancel_url
   end
 
   private
