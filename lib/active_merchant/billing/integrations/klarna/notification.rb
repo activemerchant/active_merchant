@@ -23,7 +23,6 @@ module ActiveMerchant #:nodoc:
             params["reference"]
           end
 
-          # When this payment received by the client
           def received_at
             params["completed_at"]
           end
@@ -40,7 +39,6 @@ module ActiveMerchant #:nodoc:
             params["purchase_currency"]
           end
 
-          # The money amount we received in X.2 decimal
           def gross
             Float(gross_cents) / 100
           end
@@ -49,7 +47,6 @@ module ActiveMerchant #:nodoc:
             Integer(params["cart"]["total_price_including_tax"])
           end
 
-          # Was this a test transaction?
           def test?
             false
           end
