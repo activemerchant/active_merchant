@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
           private
 
           def street_address
-            [address1, address2].join(', ')
+            [address1, address2].compact.join(', ')
           end
 
           def guess_locale_based_on_country(country_code)
