@@ -90,17 +90,18 @@ module ActiveMerchant #:nodoc:
 
           def request_secure_redirect
             request = generate_request
-
             response = ssl_post(Pxpay.token_url, request)
             xml = REXML::Document.new(response)
             root = REXML::XPath.first(xml, "//Request")
             valid = root.attributes["valid"]
-            redirect = root.elements["URI"].text
+            redirect = root.elements["URI"].try(:text)
+            valid, redirect = "0", root.elements["ResponseText"].try(:text) unless redirect
 
-            # example positive response:
+            # example valid response:
             # <Request valid="1"><URI>https://sec.paymentexpress.com/pxpay/pxpay.aspx?userid=PxpayUser&amp;request=REQUEST_TOKEN</URI></Request>
+            # <Request valid='1'><Reco>IP</Reco><ResponseText>Invalid Access Info</ResponseText></Request>
 
-            # example negative response:
+            # example invalid response:
             # <Request valid="0"><URI>Invalid TxnType</URI></Request>
 
             {:valid => valid, :redirect => redirect}
