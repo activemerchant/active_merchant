@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'nokogiri'
 
 class PxpayModuleTest < Test::Unit::TestCase
   include CommStub
@@ -116,4 +117,17 @@ class PxpayModuleTest < Test::Unit::TestCase
 
     assert_match /method=\"GET\"/i, @output_buffer
   end
+
+  def test_created_form_is_invalid_when_credentials_are_wrong
+    Pxpay::Helper.any_instance.stubs(:ssl_post).returns('<Request valid="1"><Reco>IP</Reco><ResponseText>Invalid Access Info</ResponseText></Request>')
+
+    assert_raise(ActionViewHelperError) do
+      payment_service_for('44',@username, :service => :pxpay, :amount => 157.0){|service|
+         service.credential2 @key
+         service.return_url "http://store.shopify.com/done"
+         service.cancel_return_url "http://store.shopify.com/cancel"
+      }
+    end
+  end
+
 end
