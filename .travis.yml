@@ -15,7 +15,7 @@ script: "bundle exec rake test:units"
 
 notifications:
   email:
-    - integrations-team@shopify.com
+    - payments-dev@shopify.com
     - nathaniel@talbott.ws
 
 matrix:
