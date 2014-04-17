@@ -16,7 +16,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
 		:ip => '123.123.123.123',
 		:email => 'iats@example.com',
 		:billing_address => {
-		  :first_name => 'Test',
+		  :first_name => 'iats',
 		  :last_name => 'UK',
         	  :phone => '555-555-5555',
 		  :address1 => 'example address1',
