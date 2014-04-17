@@ -89,12 +89,17 @@ module ActiveMerchant #:nodoc:
           mess = "Require zip code in options #{options.inspect}"
           raise ArgumentError.new(mess)
         end
+	card_exp_month = "%02d" % creditcard.month.to_i
+	card_exp_year =  creditcard.year.to_i % 100
+	address = (options[:billing_address] || options[:address])
         hash = {
           total: money,
           mop: creditcard.brand,
           zip_code: options[:zip_code],
           credit_card_num: creditcard.number,
-          credit_card_expiry: "#{creditcard.month}/#{creditcard.year}"
+          credit_card_expiry: "#{card_exp_month}/#{card_exp_year}",
+	  first_name: address[:first_name],
+	  last_name: address[:last_name]
         }
         if !options[:cvv2].nil?
 	   hash[:cvv2] = options[:cvv2]

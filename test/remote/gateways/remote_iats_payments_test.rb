@@ -16,7 +16,8 @@ def setup
 		:ip => '123.123.123.123',
 		:email => 'iats@example.com',
 		:billing_address => {
-		  :name => 'Test UK',
+		  :first_name => 'Test',
+		  :last_name => 'UK',
         	  :phone => '555-555-5555',
 		  :address1 => 'example address1',
 	          :address2 => 'example address2',
