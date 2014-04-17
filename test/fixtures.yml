@@ -659,7 +659,7 @@ transax:
   login: transaxdemo
   password: nelix123
 
-transnational:
+network_merchants:
   login: demo
   password: password
 

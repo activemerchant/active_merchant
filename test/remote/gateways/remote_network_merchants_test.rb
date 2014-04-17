@@ -1,8 +1,8 @@
 require 'test_helper'
 
-class RemoteTransnationalTest < Test::Unit::TestCase
+class RemoteNetworkMerchantsTest < Test::Unit::TestCase
   def setup
-    @gateway = TransnationalGateway.new(fixtures(:transnational))
+    @gateway = NetworkMerchantsGateway.new(fixtures(:network_merchants))
 
     @amount = 100
     @decline_amount = 1
@@ -122,7 +122,7 @@ class RemoteTransnationalTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = TransnationalGateway.new(
+    gateway = NetworkMerchantsGateway.new(
                 :login => '',
                 :password => ''
               )

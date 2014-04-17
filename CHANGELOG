@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
-* Add BridgePay gateway. [markabe]
+* Add BridgePay gateway [markabe]
+* Transnational gateway renamed to Network Merchants [bslobodin]
 
 == Version 1.42.9 (April 15, 2014)
 
