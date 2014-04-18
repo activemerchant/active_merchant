@@ -1,3 +1,5 @@
+require "digest/md5"
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
@@ -61,12 +63,12 @@ module ActiveMerchant #:nodoc:
           # For further information read the tech note at the address below:
           # http://support.worldpay.com/kb/integration_guides/junior/integration/help/tech_notes/sjig_tn_009.html
           def sign(secret, fields = [:amount, :currency, :account, :order])
-            signature_fields = fields.collect{ |field| mappings[field] }
-            add_field('signatureFields', signature_fields.join(':'))
+            fields = fields.collect{ |field| mappings.fetch(field, field) }
+            add_field('signatureFields', fields.join(':'))
 
-            field_values = fields.collect{ |field| form_fields[mappings[field]] }
-            signature    = "#{secret}:#{field_values.join(':')}"            
-            add_field('signature', Digest::MD5.hexdigest(signature))
+            values = fields.collect{ |field| form_fields[field] }
+            values.unshift(secret)
+            add_field('signature', Digest::MD5.hexdigest(values.join(':')))
           end
           alias_method :encrypt, :sign
           

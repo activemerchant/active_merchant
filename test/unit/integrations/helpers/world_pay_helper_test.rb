@@ -68,6 +68,13 @@ class WorldPayHelperTest < Test::Unit::TestCase
     assert_field 'signature', 'adbfc78d82c9a23cbc075f4dfe05daed'
   end
 
+  def test_sign_arbitrary_field
+    @helper.sign 'secret', ["paymentType"]
+    
+    assert_field 'signatureFields', 'paymentType'
+    assert_field 'signature', '9982564d0561f9a0109756415b4e78d4'
+  end
+
   def test_valid_from_time
     @helper.valid_from Time.utc('2007-01-01 00:00:00')
     assert_field 'authValidFrom', '1167609600000'
