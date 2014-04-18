@@ -2,6 +2,7 @@
 
 * Add BridgePay gateway [markabe]
 * Transnational gateway renamed to Network Merchants [bslobodin]
+* BridgePay: Switch method of success detection. [markabe]
 
 == Version 1.42.9 (April 15, 2014)
 

@@ -133,7 +133,7 @@ module ActiveMerchant #:nodoc:
         raw = parse(ssl_post(url, data))
 
         Response.new(
-          success_from(raw[:message]),
+          success_from(raw[:respmsg]),
           message_from(raw),
           raw,
           authorization: authorization_from(raw),
@@ -143,7 +143,7 @@ module ActiveMerchant #:nodoc:
 
       def success_from(result)
         case result
-        when "APPROVAL"
+        when "Approved"
           true
         else
           false
