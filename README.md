@@ -97,6 +97,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [BridgePay](http://www.bridgepaynetwork.com/) - CA, US
 * [CardSave](http://www.cardsave.net/) - GB
 * [CardStream](http://www.cardstream.com/) - GB
+* [Cashnet](http://www.higherone.com/) - US
 * [Cecabank](http://www.ceca.es/es/) - ES
 * [CertoDirect](http://www.certodirect.com/) - BE, BG, CZ, DK, DE, EE, IE, EL, ES, FR, IT, CY, LV, LT, LU, HU, MT, NL, AT, PL, PT, RO, SI, SK, FI, SE, GB
 * [Conekta](https://conekta.io) - MX

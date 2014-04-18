@@ -85,6 +85,13 @@ card_stream:
   login: X
   password: Y
 
+# Cashnet doesn't provide public testing data
+cashnet:
+  merchant: 'X'
+  operator: 'X'
+  password: 'X'
+  merchant_gateway_name: 'X'
+
 cecabank:
   merchant_id: MERCHANTID
   acquirer_bin: ACQUIRERBIN

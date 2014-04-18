@@ -17,6 +17,7 @@
 * SagePay: Add tokenization support [kernow]
 * PayPal Express: Reference transaction details [lrostovsky]
 * Balanced: Update to API 1.1 [steveklabnik]
+* Add Cashnet gateway [hoenth]
 
 == Version 1.43.1 (May 1, 2014)
 
