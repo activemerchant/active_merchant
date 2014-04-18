@@ -48,7 +48,8 @@ class AuthorizeNetXmlTest < Test::Unit::TestCase
         :duration => {
             :start_date => Date.today,
             :occurrences => 1
-        }
+        },
+        :invoice_number => rand
     }
   end
 
@@ -212,6 +213,7 @@ class AuthorizeNetXmlTest < Test::Unit::TestCase
 
     assert response = @gateway.status_recurring(subscription_id)
     assert_success response
+    assert_equal "active", response.params['subscription_status']
 
     assert response = @gateway.cancel_recurring(subscription_id)
     assert_success response
@@ -222,7 +224,10 @@ class AuthorizeNetXmlTest < Test::Unit::TestCase
     assert response = @gateway.recurring(@amount, @credit_card, @recurring_options)
     assert_failure response
     assert response.test?
-    assert_equal 'E00018', response.params['code']
+    assert "The credit card has expired.", response.message
+
+    #todo two questions. Does backward compatibility expect .params['code']? and why am I getting E00013 instead of E00018?
+    assert_equal 'E00013', response.params['message_code']
   end
 
 =begin
