@@ -130,13 +130,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal check.number, anet_check.check_number
   end
 
-  def test_supported_countries
-    assert_equal ['US', 'CA', 'GB'], AuthorizeNetGateway.supported_countries
-  end
-
-  def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover, :diners_club, :jcb], AuthorizeNetGateway.supported_cardtypes
-  end
-
   # ARB Unit Tests
+  #todo add new arb unit tests?  Might not need any really
 end
