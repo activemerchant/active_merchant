@@ -61,8 +61,8 @@ class WorldPayHelperTest < Test::Unit::TestCase
     assert_equal fields, @helper.fields
   end
   
-  def test_encryption
-    @helper.encrypt 'secret', [:amount, :currency, :account, :order]
+  def test_sign
+    @helper.sign 'secret', [:amount, :currency, :account, :order]
     
     assert_field 'signatureFields', 'amount:currency:instId:cartId'
     assert_field 'signature', 'adbfc78d82c9a23cbc075f4dfe05daed'
