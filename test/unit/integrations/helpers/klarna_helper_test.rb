@@ -7,7 +7,7 @@ class KlarnaHelperTest < Test::Unit::TestCase
     @order_id = 1
     @credential1 = "Example Merchant ID"
     @options = {
-      :amount           =>  Money.new(10.00),
+      :amount           => Money.new(10.00),
       :currency         => 'SEK',
       :country          => 'SE',
       :account_name     => 'Example Shop Name',
@@ -19,11 +19,8 @@ class KlarnaHelperTest < Test::Unit::TestCase
   end
 
   def test_basic_helper_fields
-    assert_field 'purchase_country', @options[:country]
     assert_field 'purchase_currency', @options[:currency]
 
-    assert_field 'locale', "sv-se"
-    
     assert_field 'merchant_id', @credential1
     assert_field 'platform_type', @helper.application_id
   end
@@ -49,12 +46,18 @@ class KlarnaHelperTest < Test::Unit::TestCase
     assert_field 'shipping_address_phone', '+1 (555) 555-5555'
   end
 
-  def test_merchant_digest
-    item = example_line_item
-    @helper.line_item(item)
+  def test_billing_fields
+    @helper.billing_address :country => 'SE'
 
+    assert_field 'locale', "sv-se"
+    assert_field 'purchase_country', 'SE'
+  end
+
+  def test_merchant_digest
+    @helper.line_item(example_line_item)
     @helper.return_url("http://example-return-url")
     @helper.cancel_return_url("http://example-cancel-url")
+    @helper.billing_address :country => 'SE'
 
     # Call hook to populate merchant_digest field
     @helper.form_fields

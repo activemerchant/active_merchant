@@ -13,11 +13,7 @@ module ActiveMerchant #:nodoc:
             super
             @shared_secret = options[:credential2]
 
-            # I feel like the reason I'm doing this is a bug in AM
-            add_field('purchase_country', options[:country])
-
             add_field('platform_type', application_id)
-            add_field('locale', guess_locale_based_on_country(options[:country]))
             add_field('test_mode', test?)
           end
 
@@ -36,6 +32,13 @@ module ActiveMerchant #:nodoc:
             add_field("cart_item-#{i}_tax_rate", item.fetch(:tax_rate, ''))
 
             @fields
+          end
+
+          def billing_address(billing_fields)
+            country = billing_fields[:country]
+            
+            add_field('purchase_country', country)
+            add_field('locale', guess_locale_based_on_country(country))
           end
 
           def shipping_address(shipping_fields)
