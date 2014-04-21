@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
              merchant_checkout_uri
              merchant_base_uri
              merchant_confirmation_uri).each do |required_field|
-            raise ArgumentError, "Missing required field #{required_field}" unless fields.has_key?(required_field)
+            raise ArgumentError, "Missing required field #{required_field}" if fields[required_field].nil?
           end
         end
       end
