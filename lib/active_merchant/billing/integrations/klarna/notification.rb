@@ -47,10 +47,6 @@ module ActiveMerchant #:nodoc:
             Integer(params["cart"]["total_price_including_tax"])
           end
 
-          def test?
-            false
-          end
-
           def status
             case params['status']
             when 'checkout_complete'
