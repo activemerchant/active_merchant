@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
 
           def billing_address(billing_fields)
             country = billing_fields[:country]
-            
+
             add_field('purchase_country', country)
             add_field('locale', guess_locale_based_on_country(country))
           end
@@ -55,10 +55,14 @@ module ActiveMerchant #:nodoc:
           end
 
           def form_fields
+            sign_fields
+
+            super
+          end
+
+          def sign_fields
             merchant_digest = Klarna.sign(@fields, @line_items, @shared_secret)
             add_field('merchant_digest', merchant_digest)
-            
-            super
           end
 
           private

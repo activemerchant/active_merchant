@@ -113,9 +113,7 @@ class KlarnaHelperTest < Test::Unit::TestCase
     helper.return_url("http://example-return-url")
     helper.cancel_return_url("http://example-cancel-url")
     helper.billing_address :country => 'SE'
-
-    # Call hook to populate merchant_digest field
-    helper.form_fields
+    helper.sign_fields
 
     helper
   end
