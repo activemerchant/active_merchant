@@ -54,13 +54,7 @@ class KlarnaHelperTest < Test::Unit::TestCase
   end
 
   def test_merchant_digest
-    @helper.line_item(example_line_item)
-    @helper.return_url("http://example-return-url")
-    @helper.cancel_return_url("http://example-cancel-url")
-    @helper.billing_address :country => 'SE'
-
-    # Call hook to populate merchant_digest field
-    @helper.form_fields
+    @helper = valid_helper
 
     assert_field 'merchant_digest', "gp0QyvG+TiHL9EZdFzZTs7dSC2I05w4JFMp1peHrzz4="
   end
@@ -110,5 +104,19 @@ class KlarnaHelperTest < Test::Unit::TestCase
       :discount_rate => (cart_item.respond_to?(:discount_rate) ? cart_item.discount_rate : nil),
       :tax_rate => cart_item.tax_rate
     }
+  end
+
+  def valid_helper
+    helper = Klarna::Helper.new(@order_id, @credential1, @options)
+
+    helper.line_item(example_line_item)
+    helper.return_url("http://example-return-url")
+    helper.cancel_return_url("http://example-cancel-url")
+    helper.billing_address :country => 'SE'
+
+    # Call hook to populate merchant_digest field
+    helper.form_fields
+
+    helper
   end
 end
