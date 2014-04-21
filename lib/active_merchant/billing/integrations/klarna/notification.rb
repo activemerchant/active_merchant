@@ -8,6 +8,7 @@ module ActiveMerchant #:nodoc:
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           def initialize(post, options = {})
             super
+            @shared_secret = @options[:credential2]
           end
 
           def complete?
@@ -60,7 +61,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def acknowledge(authcode = nil)
-            request_valid?
+            valid?
           end
 
           private
@@ -70,8 +71,8 @@ module ActiveMerchant #:nodoc:
             @params = JSON.parse(post)
           end
 
-          def request_valid?
-            shared_secret = @options[:credential2]
+          def valid?
+            shared_secret = @shared_secret
             Verifier.new(@options[:authorization_header], @raw, shared_secret).verify
           end
 
