@@ -4,7 +4,7 @@ class KlarnaNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @options = {authorization_header: authorization_header, credential2: 'someValidSharedSecret'}
+    @options = {authorization_header: authorization_header, credential2: 'Example shared secret'}
     @klarna = Klarna::Notification.new(request_body, @options)
   end
 
@@ -39,7 +39,7 @@ class KlarnaNotificationTest < Test::Unit::TestCase
   private
 
   def authorization_header
-    'Klarna rKWAQFAnyfwiI33PXcF+zG+iuEvjdXnrVXC+Lc39k7g='
+    'Klarna ZNOFMRaomg8AorjJBuWiTtx/oawCQneRvZlzwE2ypac='
   end
   
   def request_body
