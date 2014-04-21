@@ -17,9 +17,7 @@ module ActiveMerchant #:nodoc:
           Return.new(query_string, options)
         end
 
-        def self.sign(fields, cart_items, secret)
-          raise ArgumentError, "A secret is required to sign" if secret.blank?
-
+        def self.cart_items_payload(fields, cart_items)
           check_required_fields!(fields)
           
           payload = fields['purchase_country'].to_s + 
@@ -40,9 +38,17 @@ module ActiveMerchant #:nodoc:
                      fields['merchant_base_uri'].to_s +
                      fields['merchant_confirmation_uri'].to_s
 
-          payload << secret.to_s
+          payload
+        end
 
-          digest = Digest::SHA256.base64digest(payload)
+        def self.sign(fields, cart_items, shared_secret)
+          payload = cart_items_payload(fields, cart_items)
+
+          digest(payload, shared_secret)
+        end
+
+        def self.digest(payload, shared_secret)
+          Digest::SHA256.base64digest(payload + shared_secret.to_s)
         end
 
         private

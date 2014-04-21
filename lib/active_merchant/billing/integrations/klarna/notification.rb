@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
             end
 
             def digest_matches?
-              Digest::SHA256.base64digest(payload + shared_secret) == digest
+              Klarna.digest(payload, shared_secret) == digest
             end
           end
         end
