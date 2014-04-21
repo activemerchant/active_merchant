@@ -8,7 +8,6 @@ module ActiveMerchant #:nodoc:
         class Notification < ActiveMerchant::Billing::Integrations::Notification
           def initialize(post, options = {})
             super
-            verify_request
           end
 
           def complete?
@@ -61,7 +60,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def acknowledge(authcode = nil)
-            true
+            request_valid?
           end
 
           private
@@ -71,12 +70,10 @@ module ActiveMerchant #:nodoc:
             @params = JSON.parse(post)
           end
 
-          def verify_request
+          def request_valid?
             shared_secret = @options[:credential2]
             Verifier.new(@options[:authorization_header], @raw, shared_secret).verify
           end
-
-          class VerificationError < StandardError; end
 
           class Verifier
             attr_reader :header, :payload, :digest, :shared_secret
@@ -87,7 +84,7 @@ module ActiveMerchant #:nodoc:
             end
 
             def verify
-              raise VerificationError, "Klarna notification failed signature verification" unless digest_matches?
+              digest_matches?
             end
 
             private

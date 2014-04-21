@@ -24,11 +24,16 @@ class KlarnaNotificationTest < Test::Unit::TestCase
     assert_equal Money.new(111098, 'SEK'), @klarna.amount
   end
 
-  def test_verification
-    assert_raise ActiveMerchant::Billing::Integrations::Klarna::Notification::VerificationError do
-      @options[:authorization_header] = 'not a valid verification header'
-      @klarna = Klarna::Notification.new(request_body, @options)
-    end
+  def test_acknowledge
+    @klarna = Klarna::Notification.new(request_body, @options)
+
+    assert @klarna.acknowledge
+
+
+    @options[:authorization_header] = 'not a valid verification header'
+    @klarna = Klarna::Notification.new(request_body, @options)
+
+    assert !@klarna.acknowledge
   end
 
   private
