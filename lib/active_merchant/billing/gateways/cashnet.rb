@@ -1,8 +1,10 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class CashnetGateway < Gateway
-      
-      self.live_url      = 'https://commerce.cashnet.com/'
+      class_attribute :ignore_http_status
+
+      self.live_url      = 'https://commerce.cashnet.com/cashnete/Gateway/htmlgw.aspx'
+      self.ignore_http_status = true
 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
@@ -47,7 +49,8 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, money, fields)
         fields[:amount] = amount(money) 
-        url = live_url + @options[:merchant_gateway_name]
+        url = live_url 
+        fields[:client] = @options[:merchant_gateway_name]
         parse(ssl_post(url, post_data(action, fields)))
       end
 
@@ -95,7 +98,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        response_data = body.match(/<cashnet>(.*)<\/cashnet>/)[1]
+        puts body.inspect
+        response_data = body.match(/<cngateway>(.*)<\/cngateway>/)[1]
         response_fields = Hash[CGI::parse(response_data).map{|k,v| [k.to_sym,v.first]}]
 
         # normalize message
@@ -105,6 +109,13 @@ module ActiveMerchant #:nodoc:
           :test          => test?,
           :authorization => success ? response_fields[:txno] : ''
         )
+      end
+
+      def handle_response(response)
+        if ignore_http_status || (200...300).include?(response.code.to_i)
+          return response.body
+        end
+        raise ResponseError.new(response)
       end
 
       CASHNET_CODES = {

@@ -726,11 +726,11 @@ mollie_ideal:
 
 # Cashnet doesn't provide public testing data
 cashnet:
-  gateway_merchant_name: 'X'
+  merchant_name: 'X'
   station: 'X'
   operator: 'X'
   password: 'X'
   credit_card_payment_code: 'X'
   customer_code: 'X'
   item_code: 'X'
-  site_name: 'X'  
+  merchant_gateway_name: 'X'  
