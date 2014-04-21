@@ -30,8 +30,8 @@ class KlarnaHelperTest < Test::Unit::TestCase
                              :last_name  => 'Last name',
                              :city       => 'City',
                              :company    => 'Company',
-                             :address1   => 'Street Address',
-                             :address2   => 'Second Floor',
+                             :address1   => 'Street address',
+                             :address2   => 'Second floor',
                              :state      => 'State',
                              :country    => 'Country',
                              :zip        => 'A1B 2C3',
@@ -39,7 +39,7 @@ class KlarnaHelperTest < Test::Unit::TestCase
 
     assert_field 'shipping_address_given_name', 'First name'
     assert_field 'shipping_address_family_name', 'Last name'
-    assert_field 'shipping_address_street_address', 'Street Address, Second Floor'
+    assert_field 'shipping_address_street_address', 'Street address, Second floor'
     assert_field 'shipping_address_postal_code', 'A1B 2C3'
     assert_field 'shipping_address_city', 'City'
     assert_field 'shipping_address_country', 'Country'
