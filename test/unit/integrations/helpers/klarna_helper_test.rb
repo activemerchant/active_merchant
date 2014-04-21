@@ -88,21 +88,15 @@ class KlarnaHelperTest < Test::Unit::TestCase
 
   private
 
-  CartItem = Struct.new(:type, :reference, :name, :quantity, :unit_price, :tax_rate)
-  def example_cart_item(order_number = 1)
-    item = CartItem.new('physical', "##{order_number}", 'example item description', 1, Money.new(1.00), 0)
-  end
-
   def example_line_item(order_number = 1)
-    cart_item = example_cart_item(order_number)
     item = {
-      :type => cart_item.type,
-      :reference => cart_item.reference,
-      :name => cart_item.name,
-      :quantity => cart_item.quantity,
-      :unit_price => cart_item.unit_price,
-      :discount_rate => (cart_item.respond_to?(:discount_rate) ? cart_item.discount_rate : nil),
-      :tax_rate => cart_item.tax_rate
+      :type => 'physical',
+      :reference => "##{order_number}",
+      :name => 'example item description',
+      :quantity => 1,
+      :unit_price => Money.new(1.00),
+      :discount_rate => nil,
+      :tax_rate => 0
     }
   end
 
