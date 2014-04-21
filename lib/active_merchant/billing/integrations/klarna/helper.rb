@@ -18,6 +18,7 @@ module ActiveMerchant #:nodoc:
 
             add_field('platform_type', application_id)
             add_field('locale', guess_locale_based_on_country(options[:country]))
+            add_field('test_mode', test?)
           end
 
           def line_item(item)
@@ -53,11 +54,7 @@ module ActiveMerchant #:nodoc:
           def form_fields
             merchant_digest = Klarna.sign(@fields, @line_items, @shared_secret)
             add_field('merchant_digest', merchant_digest)
-
-            add_field('test_mode', 'true') if test?
-
-            add_field('shipping_address_street_address', street_address)
-
+            
             super
           end
 
