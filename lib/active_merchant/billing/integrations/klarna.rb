@@ -1,7 +1,5 @@
 require File.dirname(__FILE__) + '/klarna/helper.rb'
 require File.dirname(__FILE__) + '/klarna/notification.rb'
-require File.dirname(__FILE__) + '/klarna/return.rb'
-
 require 'digest'
 
 module ActiveMerchant #:nodoc:
