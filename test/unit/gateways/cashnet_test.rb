@@ -66,7 +66,6 @@ class Cashnet < Test::Unit::TestCase
     result = {}
     @gateway.send(:add_invoice, result, :order_id => '#1001')
     assert_equal '#1001', result[:order_number]
-    assert_equal 'X', result[:itemcode]
   end
 
   def test_add_creditcard
@@ -112,23 +111,23 @@ class Cashnet < Test::Unit::TestCase
   private 
 
   def minimum_requirements
-    %w(command merchant operator station password amount custcode)
+    %w(command merchant operator station password amount custcode itemcode)
   end
 
   def successful_refund_response
-    "<cashnet>result=0&respmessage=Success&txno=1234</cashnet>"
+    "<cngateway>result=0&respmessage=Success&tx=1234</cngateway>"
   end
 
   def failed_refund_response
-    "<cashnet>result=305&respmessage=Failed</cashnet>"
+    "<cngateway>result=305&respmessage=Failed</cngateway>"
   end
 
   def successful_purchase_response
-    "<cashnet>result=0&respmessage=Success&txno=1234</cashnet>"
+    "<cngateway>result=0&respmessage=Success&tx=1234</cngateway>"
   end
 
   def failed_purchase_response
-    "<cashnet>result=7&respmessage=Failed</cashnet>"
+    "<cngateway>result=7&respmessage=Failed</cngateway>"
   end
 
 end

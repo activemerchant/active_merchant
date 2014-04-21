@@ -18,7 +18,7 @@ class CashnetTest < Test::Unit::TestCase
     assert response.test?
     assert_equal 'Success', response.message
     assert response.authorization
-    assert response = @gateway.purchase(@amount, response.authorization, {})
+    assert response = @gateway.refund(@amount, response.authorization, {})
     assert_success response
     assert response.test?
     assert_equal 'Success', response.message

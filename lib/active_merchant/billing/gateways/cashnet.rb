@@ -49,7 +49,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, money, fields)
         fields[:amount] = amount(money) 
-        url = live_url 
+        url = live_url #+ @options[:merchant_gateway_name]
         fields[:client] = @options[:merchant_gateway_name]
         parse(ssl_post(url, post_data(action, fields)))
       end
@@ -62,6 +62,7 @@ module ActiveMerchant #:nodoc:
         post[:station]        = @options[:station]
         post[:password]       = @options[:password]
         post[:custcode]       = @options[:customer_code]
+        post[:itemcode]       = @options[:item_code]
         post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
@@ -74,7 +75,6 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         post[:order_number]    = options[:order_id] if options[:order_id].present?
-        post[:itemcode]        = @options[:item_code]
       end
 
       def add_address(post, options)
@@ -98,7 +98,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        puts body.inspect
         response_data = body.match(/<cngateway>(.*)<\/cngateway>/)[1]
         response_fields = Hash[CGI::parse(response_data).map{|k,v| [k.to_sym,v.first]}]
 
@@ -107,7 +106,7 @@ module ActiveMerchant #:nodoc:
         success = response_fields[:result] == '0'
         Response.new(success, message, response_fields,
           :test          => test?,
-          :authorization => success ? response_fields[:txno] : ''
+          :authorization => success ? response_fields[:tx] : ''
         )
       end
 
