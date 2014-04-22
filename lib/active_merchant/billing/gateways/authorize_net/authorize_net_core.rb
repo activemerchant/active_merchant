@@ -54,12 +54,12 @@ module AuthorizeNetCore #:nodoc:
     if card_brand(source) == "check"
       add_check(source, options)
     else
-      anet_credit_card = add_creditcard(source, options)
+      anet_credit_card = add_credit_card(source, options)
       add_swipe_data(source, anet_credit_card)
     end
   end
 
-  def add_creditcard(creditcard, options={})
+  def add_credit_card(creditcard, options={})
     options[:card_type] = creditcard.brand
     options[:card_code] = creditcard.verification_value if creditcard.verification_value?
     #options[:first_name] = creditcard.first_name
