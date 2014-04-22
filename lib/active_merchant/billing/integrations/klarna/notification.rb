@@ -40,11 +40,12 @@ module ActiveMerchant #:nodoc:
           end
 
           def gross
-            Float(gross_cents) / 100
+            amount = Float(gross_cents) / 100
+            sprintf("%.2f", amount)
           end
 
           def gross_cents
-            Integer(params["cart"]["total_price_including_tax"])
+            params["cart"]["total_price_including_tax"]
           end
 
           def status

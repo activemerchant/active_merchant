@@ -13,11 +13,17 @@ class KlarnaNotificationTest < Test::Unit::TestCase
     assert_equal "Complete", @klarna.status
     assert_equal "14565D2494490B11C39E7220000", @klarna.transaction_id
     assert_equal "2348456980", @klarna.item_id
-    assert_equal 1110.98, @klarna.gross
+    assert_equal "1110.98", @klarna.gross
     assert_equal "sek", @klarna.currency
     assert_equal "2014-04-15T16:38:04+02:00", @klarna.received_at
     assert_equal "checkout-se@testdrive.klarna.com", @klarna.payer_email
     assert_equal "checkout-se@testdrive.klarna.com", @klarna.receiver_email
+  end
+
+  def test_x2ness_of_gross_amount
+    @klarna.stubs(gross_cents: 100)
+
+    assert_equal '1.00', @klarna.gross
   end
 
   def test_compositions
