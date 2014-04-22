@@ -5,12 +5,12 @@ class PagSeguroNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    uri = URI.parse(PagSeguro.notification_url)
-    URI.expects(:parse).with("#{PagSeguro.notification_url}#{notification_code}").returns(uri)
+    @uri = stub(:query=)
+    URI.expects(:join).with(PagSeguro.notification_url, notification_code).returns(@uri)
   end
 
   def test_accessors
-    Net::HTTP.expects(:get_response).returns(stub(body: http_raw_data))
+    Net::HTTP.expects(:get_response).with(@uri).returns(stub(body: http_raw_data))
     pag_seguro = PagSeguro::Notification.new(notification_data)
 
     assert pag_seguro.complete?
@@ -25,19 +25,19 @@ class PagSeguroNotificationTest < Test::Unit::TestCase
   end
 
   def test_compositions
-    Net::HTTP.expects(:get_response).returns(stub(body: http_raw_data))
+    Net::HTTP.expects(:get_response).with(@uri).returns(stub(body: http_raw_data))
     pag_seguro = PagSeguro::Notification.new(notification_data)
     assert_equal Money.new(4912, 'BRL'), pag_seguro.amount
   end
 
   def test_respond_to_acknowledge
-    Net::HTTP.expects(:get_response).returns(stub(body: http_raw_data))
+    Net::HTTP.expects(:get_response).with(@uri).returns(stub(body: http_raw_data))
     pag_seguro = PagSeguro::Notification.new(notification_data)
     assert pag_seguro.respond_to?(:acknowledge)
   end
 
   def test_pending_state_when_status_1
-    Net::HTTP.expects(:get_response).returns(stub(body: http_raw_data_status_only(1)))
+    Net::HTTP.expects(:get_response).with(@uri).returns(stub(body: http_raw_data_status_only(1)))
     pag_seguro = PagSeguro::Notification.new(notification_data)
 
     refute pag_seguro.complete?
@@ -45,7 +45,7 @@ class PagSeguroNotificationTest < Test::Unit::TestCase
   end
 
   def test_pending_state_when_status_2
-    Net::HTTP.expects(:get_response).returns(stub(body: http_raw_data_status_only(2)))
+    Net::HTTP.expects(:get_response).with(@uri).returns(stub(body: http_raw_data_status_only(2)))
     pag_seguro = PagSeguro::Notification.new(notification_data)
 
     refute pag_seguro.complete?

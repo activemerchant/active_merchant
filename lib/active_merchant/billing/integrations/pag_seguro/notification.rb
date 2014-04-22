@@ -12,8 +12,8 @@ module ActiveMerchant #:nodoc:
             email = options[:credential1]
             token = options[:credential2]
 
-            url = "#{PagSeguro.notification_url}#{notify_code}"
-            parse_xml(web_get(url, email: email, token: token))
+            uri = URI.join(PagSeguro.notification_url, notify_code)
+            parse_xml(web_get(uri, email: email, token: token))
           end
 
           def complete?
@@ -76,8 +76,7 @@ module ActiveMerchant #:nodoc:
 
           private
 
-          def web_get(url, params)
-            uri = URI.parse(url)
+          def web_get(uri, params)
             uri.query = URI.encode_www_form(params)
 
             response = Net::HTTP.get_response(uri)

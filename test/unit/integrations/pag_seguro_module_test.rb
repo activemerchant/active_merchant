@@ -5,7 +5,7 @@ class PagSeguroModuleTest < Test::Unit::TestCase
 
   def test_notification_method
     Net::HTTP.expects(:get_response).returns(stub(body: "<xml></xml>"))
-    assert_instance_of PagSeguro::Notification, PagSeguro.notification('name=cody')
+    assert_instance_of PagSeguro::Notification, PagSeguro.notification('notificationCode=1234')
   end
 
   def test_return_method
