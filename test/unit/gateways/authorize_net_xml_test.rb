@@ -173,36 +173,4 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal @recurring_options[:billing_address].first_name, subscription.billing_address.first_name
     assert_equal 'Smith', subscription.billing_address.last_name
   end
-=begin
-  def test_build_active_merchant_subscription_response
-    transaction = AuthorizeNet::ARB::Transaction.new("login_key","transaction_key")
-
-    anet_subscription_response = AuthorizeNet::ARB::Response.new("raw_transaction", transaction)
-
-    #<ActiveMerchant::Billing::Response:0x00000003630738>
-    nil
-    Hash (4 element(s))
-    Hash (2 element(s))
-    nil
-    "The credit card has expired."
-    Hash (9 element(s))
-    #<Net::HTTPOK:0x000000036840e0>
-    #<AuthorizeNet::ARB::Transaction:0x000000036ab4d8>
-    <ARBCreateSubscriptionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">   <messages>     <resultCode>Error</resultCode>     <message>       <code>E00013</code>       <text>The credit card has expired.</text>     </message>     <message>       <code>E00018</code>       <text>Credit Card expires before the start of the subscription.</text>     </message>   </messages> </ARBCreateSubscriptionResponse>
-Error
-E00013
-The credit card has expired.
-nil
-nil
-nil
-false
-true
-
-    response = @gateway.send(:build_active_merchant_subscription_response, anet_subscription_response)
-
-    assert_instance_of ActiveMerchant::Billing::Response, response
-    #assert_equals
-
-  end
-=end
 end
