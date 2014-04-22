@@ -30,14 +30,42 @@ module AuthorizeNetArb #:nodoc:
   end
 
   def update_recurring_data(options)
-    #todo finish the mapping
-    mapped_options = Hash[options.map { |key, value| [key, value] }]
+    mapped_options = Hash(options)
 
+    if options[:subscription_name]
+      mapped_options[:name] = options[:subscription_name]
+    end
+
+    if options[:interval] && options[:interval][:length]
+      mapped_options[:length] = options[:interval][:length]
+    end
+
+    if options[:interval] && options[:interval][:unit]
+      mapped_options[:unit] = options[:interval][:unit]
+    end
+
+    if options[:duration] && options[:duration][:start_date]
+      mapped_options[:start_date] = options[:duration][:start_date]
+    end
+
+    if options[:duration] && options[:duration][:occurrences]
+      mapped_options[:total_occurrences] = options[:duration][:occurrences]
+    end
+
+    if options[:billing_address]
+      mapped_options[:billing_address] = AuthorizeNet::Address.new(options[:billing_address])
+    end
+
+    if options[:credit_card]
+      mapped_options[:credit_card] = add_credit_card(options[:credit_card])
+    end
     subscription = AuthorizeNet::ARB::Subscription.new(mapped_options)
   end
 
   def build_active_merchant_subscription_response(anet_subscription_response)
-    ActiveMerchant::Billing::Response.new(anet_subscription_response.success?, anet_subscription_response.message_text, get_hash(anet_subscription_response),
+    hashed_response = get_hash(anet_subscription_response)
+    hashed_response['code'] = hashed_response['message_code']
+    ActiveMerchant::Billing::Response.new(anet_subscription_response.success?, anet_subscription_response.message_text, hashed_response,
                                           :test => test?,
                                           :authorization => anet_subscription_response.subscription_id
     )
