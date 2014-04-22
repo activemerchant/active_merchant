@@ -54,9 +54,7 @@ module ActiveMerchant #:nodoc:
 
           def status
             case params["transaction"]["status"]
-            when "1"
-              "Waiting payment"
-            when "2"
+            when "1", "2"
               "Pending"
             when "3"
               "Completed"
@@ -65,9 +63,9 @@ module ActiveMerchant #:nodoc:
             when "5"
               "Dispute"
             when "6"
-              "Failed"
+              "Reversed"
             when "7"
-              "Cancelled"
+              "Failed"
             end
           end
 
@@ -79,8 +77,6 @@ module ActiveMerchant #:nodoc:
           private
 
           def web_get(url, params)
-            # What if PegSeguro 500?
-            # should we raise error?
             uri = URI.parse(url)
             uri.query = URI.encode_www_form(params)
 

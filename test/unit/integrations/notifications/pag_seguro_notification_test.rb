@@ -7,29 +7,49 @@ class PagSeguroNotificationTest < Test::Unit::TestCase
   def setup
     uri = URI.parse(PagSeguro.notification_url)
     URI.expects(:parse).with("#{PagSeguro.notification_url}#{notification_code}").returns(uri)
-    Net::HTTP.expects(:get_response).returns(stub(body: http_raw_data))
-
-    @pag_seguro = PagSeguro::Notification.new(notification_data)
   end
 
   def test_accessors
-    assert @pag_seguro.complete?
-    assert_equal "Completed", @pag_seguro.status
-    assert_equal "9E884542-81B3-4419-9A75-BCC6FB495EF1", @pag_seguro.transaction_id
-    assert_equal "REF1234", @pag_seguro.item_id
-    assert_equal "49.12", @pag_seguro.gross
-    assert_equal "BRL", @pag_seguro.currency
-    assert_equal "1", @pag_seguro.payment_method_type
-    assert_equal "101", @pag_seguro.payment_method_code
-    assert_equal "2011-02-10T16:13:41.000-03:00", @pag_seguro.received_at
+    Net::HTTP.expects(:get_response).returns(stub(body: http_raw_data))
+    pag_seguro = PagSeguro::Notification.new(notification_data)
+
+    assert pag_seguro.complete?
+    assert_equal "Completed", pag_seguro.status
+    assert_equal "9E884542-81B3-4419-9A75-BCC6FB495EF1", pag_seguro.transaction_id
+    assert_equal "REF1234", pag_seguro.item_id
+    assert_equal "49.12", pag_seguro.gross
+    assert_equal "BRL", pag_seguro.currency
+    assert_equal "1", pag_seguro.payment_method_type
+    assert_equal "101", pag_seguro.payment_method_code
+    assert_equal "2011-02-10T16:13:41.000-03:00", pag_seguro.received_at
   end
 
   def test_compositions
-    assert_equal Money.new(4912, 'BRL'), @pag_seguro.amount
+    Net::HTTP.expects(:get_response).returns(stub(body: http_raw_data))
+    pag_seguro = PagSeguro::Notification.new(notification_data)
+    assert_equal Money.new(4912, 'BRL'), pag_seguro.amount
   end
 
   def test_respond_to_acknowledge
-    assert @pag_seguro.respond_to?(:acknowledge)
+    Net::HTTP.expects(:get_response).returns(stub(body: http_raw_data))
+    pag_seguro = PagSeguro::Notification.new(notification_data)
+    assert pag_seguro.respond_to?(:acknowledge)
+  end
+
+  def test_pending_state_when_status_1
+    Net::HTTP.expects(:get_response).returns(stub(body: http_raw_data_status_only(1)))
+    pag_seguro = PagSeguro::Notification.new(notification_data)
+
+    refute pag_seguro.complete?
+    assert_equal "Pending", pag_seguro.status
+  end
+
+  def test_pending_state_when_status_2
+    Net::HTTP.expects(:get_response).returns(stub(body: http_raw_data_status_only(2)))
+    pag_seguro = PagSeguro::Notification.new(notification_data)
+
+    refute pag_seguro.complete?
+    assert_equal "Pending", pag_seguro.status
   end
 
   private
@@ -38,6 +58,17 @@ class PagSeguroNotificationTest < Test::Unit::TestCase
   end
   def notification_data
     "notificationCode=#{notification_code}&notificationType=transaction"
+  end
+
+  def http_raw_data_status_only(status)
+    <<-DATA
+      <?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+      <transaction>
+          <code>9E884542-81B3-4419-9A75-BCC6FB495EF1</code>
+          <type>1</type>
+          <status>#{status}</status>
+      </transaction>
+    DATA
   end
 
   def http_raw_data
