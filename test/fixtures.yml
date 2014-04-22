@@ -715,8 +715,9 @@ world_pay_gateway:
   password: PASSWORD
 
 iats_payments:
-  login: TEST88
+  agent_code: TEST88
   password: TEST88
+  region: na
 
 bit_pay:
   api_key: 'rKrahSl7WRrYeKRUhGzbvW3nBzo0jG4FPaL8uPYaoPk'

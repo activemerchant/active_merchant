@@ -6,7 +6,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
 
     @gateway = IatsPaymentsGateway.new(fixtures(:iats_payments))
     @amount = 100
-    @credit_card = credit_card('4111111111111111')
+    @credit_card = credit_card('4222222222222220')
     @check = check
     @options = {
       :order_id => generate_unique_id,
@@ -19,37 +19,43 @@ class IatsPaymentsTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.test?
-    assert_equal 'This transaction has been approved', response.message
+    assert_equal 'Success', response.message
     assert response.authorization
   end
 
   def test_failed_purchase
-    assert response = @gateway.purchase(200, @credit_card, @options)
+    credit_card = credit_card('4111111111111111')
+    assert response = @gateway.purchase(200, credit_card, @options)
     assert_failure response
     assert response.test?
-    assert_equal 'This transaction has been declined', response.message
+    assert response.message.include?('REJECT')
   end
 
-  def test_bad_login
+  def test_successful_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
+  end
+
+  def test_failed_refund
+    credit_card = credit_card('4111111111111111')
+    purchase = @gateway.purchase(@amount, credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount, purchase.authorization)
+    assert_failure refund
+  end
+
+  def test_invalid_login
     gateway = IatsPaymentsGateway.new(
-      :login => 'X',
-      :password => 'Y'
+      :agent_code => 'X',
+      :password => 'Y',
+      :region => 'na'
     )
 
     assert response = gateway.purchase(@amount, @credit_card)
-
-    assert_equal Response, response.class
-    assert_equal ["action",
-                  "authorization_code",
-                  "avs_result_code",
-                  "card_code",
-                  "response_code",
-                  "response_reason_code",
-                  "response_reason_text",
-                  "transaction_id"], response.params.keys.sort
-
-    assert_match(/The merchant API Login ID is invalid or the account is inactive/, response.message)
-
-    assert_equal false, response.success?
+    assert_failure response
   end
 end
