@@ -5,7 +5,6 @@ module ActiveMerchant #:nodoc:
 
         autoload :Helper, 'active_merchant/billing/integrations/pag_seguro/helper.rb'
         autoload :Notification, 'active_merchant/billing/integrations/pag_seguro/notification.rb'
-        autoload :Return, 'active_merchant/billing/integrations/pag_seguro/return.rb'
 
         mattr_accessor :service_production_url
         self.service_production_url = 'https://pagseguro.uol.com.br/v2/checkout/payment.html'

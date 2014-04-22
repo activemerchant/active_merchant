@@ -9,7 +9,7 @@ class PagSeguroModuleTest < Test::Unit::TestCase
   end
 
   def test_return_method
-    assert_instance_of PagSeguro::Return, PagSeguro.return('{"name":"cody"}', {})
+    assert_instance_of ActiveMerchant::Billing::Integrations::Return, PagSeguro.return('{"name":"cody"}', {})
   end
 
 end
