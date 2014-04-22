@@ -8,6 +8,7 @@ module ActiveMerchant #:nodoc:
           mapping :notify_url, 'merchant_push_uri'
           mapping :cancel_return_url, ['merchant_terms_uri', 'merchant_checkout_uri', 'merchant_base_uri']
           mapping :account, 'merchant_id'
+          mapping :customer, email: 'shipping_address_email'
 
           def initialize(order, account, options = {})
             super

@@ -25,6 +25,12 @@ class KlarnaHelperTest < Test::Unit::TestCase
     assert_field 'platform_type', @helper.application_id
   end
 
+  def test_customer_fields
+    @helper.customer :email => 'email@example.com'
+
+    assert_field 'shipping_address_email', 'email@example.com'
+  end
+
   def test_shipping_fields
     @helper.shipping_address :first_name => 'First name',
                              :last_name  => 'Last name',
