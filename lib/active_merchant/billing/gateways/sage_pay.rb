@@ -290,7 +290,7 @@ module ActiveMerchant #:nodoc:
         parameters.update(
           :Vendor => @options[:login],
           :TxType => TRANSACTIONS[action],
-          :VPSProtocol => "2.23"
+          :VPSProtocol => "3.00"
         )
 
         if(application_id && (application_id != Gateway.application_id))
