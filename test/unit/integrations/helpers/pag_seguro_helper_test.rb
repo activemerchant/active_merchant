@@ -20,92 +20,50 @@ class PagSeguroHelperTest < Test::Unit::TestCase
   end
 
   def test_customer_fields
-    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', phone: "71 99223522"
+    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', phone: "71 98765432"
     assert_field 'senderName', 'Cody Fauser'
     assert_field 'senderAreaCode', '71'
-    assert_field 'senderPhone', '99223522'
+    assert_field 'senderPhone', '98765432'
     assert_field 'senderEmail', 'cody@example.com'
   end
 
-  def test_area_code_and_number_formats_1
-    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', phone: "71 99223522"
+  def test_area_code_and_number_formats_nine_digits_no_brackets
+    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', phone: "71 987654321"
     assert_field 'senderAreaCode', '71'
-    assert_field 'senderPhone', '99223522'
+    assert_field 'senderPhone', '987654321'
   end
 
-  def test_area_code_and_number_formats_2
-    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', phone: "71 99223522"
+  def test_area_code_and_number_formats_eight_digits_no_sapce_no_brackets
+    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', phone: "7198765432"
     assert_field 'senderAreaCode', '71'
-    assert_field 'senderPhone', '99223522'
+    assert_field 'senderPhone', '98765432'
   end
 
-  def test_area_code_and_number_formats_3
-    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', phone: "71 99223522"
+  def test_area_code_and_number_formats_nine_digits_no_space_no_brackets
+    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', phone: "71987654321"
     assert_field 'senderAreaCode', '71'
-    assert_field 'senderPhone', '99223522'
+    assert_field 'senderPhone', '987654321'
   end
 
-  def test_area_code_and_number_formats_4
-    @helper.customer :first_name => 'Cody', :last_name => 'Fauser', :email => 'cody@example.com', phone: "71 99223522"
-    assert_field 'senderAreaCode', '71'
-    assert_field 'senderPhone', '99223522'
-  end
-
-  def test_area_code_and_number_formats_5
+  def test_area_code_and_number_formats_eight_digits_with_space_and_brackets
     @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "(11) 99552345"
     assert_field 'senderAreaCode', "11"
     assert_field 'senderPhone', "99552345"
   end
 
-  def test_area_code_and_number_formats_6
-    @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "(11) 9955-2345"
-    assert_field 'senderAreaCode', "11"
-    assert_field 'senderPhone', "99552345"
-  end
-
-  def test_area_code_and_number_formats_7
+  def test_area_code_and_number_formats_nine_digits_with_space_and_brackets_and_standard_dash
     @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "(11) 99955-2345"
     assert_field 'senderAreaCode', "11"
     assert_field 'senderPhone', "999552345"
   end
 
-  def test_area_code_and_number_formats_8
-    @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "(11) 9995-52345"
-    assert_field 'senderAreaCode', "11"
-    assert_field 'senderPhone', "999552345"
-  end
-
-  def test_area_code_and_number_formats_9
-    @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "11 99552345"
-    assert_field 'senderAreaCode', "11"
-    assert_field 'senderPhone', "99552345"
-  end
-
-  def test_area_code_and_number_formats_10
+  def test_area_code_and_number_formats_eight_digits_with_space_and_dash_and_no_brackets
     @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "11 9955-2345"
     assert_field 'senderAreaCode', "11"
     assert_field 'senderPhone', "99552345"
   end
 
-  def test_area_code_and_number_formats_11
-    @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "11 99955-2345"
-    assert_field 'senderAreaCode', "11"
-    assert_field 'senderPhone', "999552345"
-  end
-
-  def test_area_code_and_number_formats_12
-    @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "11 9995-52345"
-    assert_field 'senderAreaCode', "11"
-    assert_field 'senderPhone', "999552345"
-  end
-
-  def test_area_code_and_number_formats_13
-    @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "9995-52345"
-    assert_field 'senderAreaCode', "99"
-    assert_field 'senderPhone', "9552345"
-  end
-
-  def test_area_code_and_number_formats_13
+  def test_area_code_and_number_formats_few_digits
     @helper.customer :first_name => 'Cody', :last_name => "Fauser", :email => 'cody@example.com', phone: "1234"
     assert_field 'senderAreaCode', "12"
     assert_field 'senderPhone', "34"
@@ -159,7 +117,7 @@ class PagSeguroHelperTest < Test::Unit::TestCase
 
   def test_get_token_should_get_the_token
     Net::HTTP.any_instance.expects(:request).returns(stub(code: "200" , body: '<?xml version=\"1.0\" encoding=\"ISO-8859-1\" standalone=\"yes\"?><checkout><code>E20521EF6C6C159994DFFF8F5A4C3ED7</code><date>2014-02-12T02:10:25.000-02:00</date></checkout>"'))
-    assert "E20521EF6C6C159994DFFF8F5A4C3ED7", @helper.fetch_token
+    assert_equal "E20521EF6C6C159994DFFF8F5A4C3ED7", @helper.fetch_token
   end
 
   def test_fetch_token_raises_error_if_400_error_present
