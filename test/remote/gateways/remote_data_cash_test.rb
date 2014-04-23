@@ -261,7 +261,20 @@ class RemoteDataCashTest < Test::Unit::TestCase
     assert_success refund
     assert !refund.params['datacash_reference'].blank?
     assert !refund.params['merchantreference'].blank?
-    
+
+    assert refund.test?
+  end
+
+  def test_successful_transaction_refund_using_authorization
+    purchase = @gateway.purchase(@amount, @mastercard, @params)
+    assert_success purchase
+    assert purchase.test?
+
+    refund = @gateway.credit(@amount, purchase.authorization)
+    assert_success refund
+    assert !refund.params['datacash_reference'].blank?
+    assert !refund.params['merchantreference'].blank?
+
     assert refund.test?
   end
 
