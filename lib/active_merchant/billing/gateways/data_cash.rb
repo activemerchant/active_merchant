@@ -371,7 +371,8 @@ module ActiveMerchant
       #   </Transaction>
       # </Request>
       #
-      def build_transaction_refund_request(money, reference)
+      def build_transaction_refund_request(money, authorization)
+        reference = authorization.to_s.split(';').first
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
         xml.tag! :Request do
