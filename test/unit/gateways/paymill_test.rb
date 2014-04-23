@@ -50,7 +50,14 @@ class PaymillTest < Test::Unit::TestCase
     @gateway.stubs(:raw_ssl_request).returns(successful_store_response, MockResponse.failed(''))
     response = @gateway.purchase(@amount, @credit_card)
     assert_failure response
-    assert_equal 'Unknown Error', response.message
+    assert_equal "Unable to parse error response: ''", response.message
+  end
+
+  def test_invalid_server_response
+    @gateway.stubs(:raw_ssl_request).returns(successful_store_response, MockResponse.failed('not-json'))
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_failure response
+    assert_equal "Unable to parse error response: 'not-json'", response.message
   end
 
   def test_invalid_login_on_storing_card
