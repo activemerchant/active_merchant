@@ -46,6 +46,13 @@ class PaymillTest < Test::Unit::TestCase
     assert_equal 'Access Denied', response.message
   end
 
+  def test_empty_server_response
+    @gateway.stubs(:raw_ssl_request).returns(successful_store_response, MockResponse.failed(''))
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_failure response
+    assert_equal 'Unknown Error', response.message
+  end
+
   def test_invalid_login_on_storing_card
     @gateway.stubs(:raw_ssl_request).returns(failed_store_invalid_credentials_response, successful_purchase_response)
     response = @gateway.purchase(@amount, @credit_card)

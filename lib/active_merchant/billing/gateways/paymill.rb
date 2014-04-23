@@ -66,7 +66,11 @@ module ActiveMerchant #:nodoc:
         begin
           raw_response = ssl_request(method, "https://api.paymill.com/v2/#{url}", post_data(parameters), headers)
         rescue ResponseError => e
-          parsed = JSON.parse(e.response.body)
+          begin
+            parsed = JSON.parse(e.response.body)
+          rescue JSON::ParserError
+            return Response.new(false, 'Unknown Error')
+          end
           return Response.new(false, response_message(parsed), parsed, {})
         end
 
