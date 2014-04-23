@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
           begin
             parsed = JSON.parse(e.response.body)
           rescue JSON::ParserError
-            return Response.new(false, 'Unknown Error')
+            return Response.new(false, "Unable to parse error response: '#{e.response.body}'")
           end
           return Response.new(false, response_message(parsed), parsed, {})
         end
