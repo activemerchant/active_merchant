@@ -7,6 +7,7 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'http://www.securepay.com/'
       self.display_name = 'SecurePay'
+      self.supported_countries = %w(US CA GB AU)
 
       # Limit support to purchase() for the time being
       # JRuby chokes here

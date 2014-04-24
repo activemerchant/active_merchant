@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Merchant Warrior: Scrub names [duff]
+* Validate Gateway.supported_countries [rwdaigle]
 
 == Version 1.43.0 (April 24, 2014)
 

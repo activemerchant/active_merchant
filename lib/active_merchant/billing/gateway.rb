@@ -82,10 +82,6 @@ module ActiveMerchant #:nodoc:
       # The default currency for the transactions if no currency is provided
       class_attribute :default_currency
 
-      # The countries of merchants the gateway supports
-      class_attribute :supported_countries
-      self.supported_countries = []
-
       # The supported card types for the gateway
       class_attribute :supported_cardtypes
       self.supported_cardtypes = []
@@ -114,6 +110,23 @@ module ActiveMerchant #:nodoc:
       def self.card_brand(source)
         result = source.respond_to?(:brand) ? source.brand : source.type
         result.to_s.downcase
+      end
+
+      def self.supported_countries=(country_codes)
+        country_codes.each do |country_code|
+          unless ActiveMerchant::Country.find(country_code)
+            raise ActiveMerchant::InvalidCountryCodeError, "No country could be found for the country #{country_code}"
+          end
+        end
+        @supported_countries = country_codes.dup
+      end
+
+      def self.supported_countries
+        @supported_countries ||= []
+      end
+
+      def supported_countries
+        self.class.supported_countries
       end
 
       def card_brand(source)
