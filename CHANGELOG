@@ -1,10 +1,16 @@
 = ActiveMerchant CHANGELOG
 
-* Add BridgePay gateway [markabe]
-* Transnational gateway renamed to Network Merchants [bslobodin]
+== Version 1.43.0 (April 24, 2014)
+
+* PagSeguro: New offsite integration [celsodantas]
+* Sage Pay: Fix amount parsing in notifications [berkcaputcu]
+* Sage Pay: Use API v3.00 [bslobodin]
 * BridgePay: Switch method of success detection [markabe]
-* BridgePay: BridgePay: Use Return as TransType for refunds [markabe]
+* BridgePay: Use Return as TransType for refunds [markabe]
 * IATS: Complete rewrite using first class API [rwdaigle]
+* DataCash: Fix refund processing using original authorization [bslobodin]
+* Transnational gateway renamed to Network Merchants [bslobodin]
+* PayMill: Handle non-JSON server responses [bslobodin]
 
 == Version 1.42.9 (April 15, 2014)
 
