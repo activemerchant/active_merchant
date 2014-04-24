@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
 
       def store(creditcard, options = {})
         post = {
-          'cardName' => creditcard.name,
+          'cardName' => scrub_name(creditcard.name),
           'cardNumber' => creditcard.number,
           'cardExpiryMonth' => format(creditcard.month, :two_digits),
           'cardExpiryYear'  => format(creditcard.year, :two_digits)
@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
       def add_address(post, options)
         return unless(address = (options[:billing_address] || options[:address]))
 
-        post['customerName'] = address[:name]
+        post['customerName'] = scrub_name(address[:name])
         post['customerCountry'] = address[:country]
         post['customerState'] = address[:state]
         post['customerCity'] = address[:city]
@@ -103,9 +103,13 @@ module ActiveMerchant #:nodoc:
 
       def add_creditcard(post, creditcard)
         post['paymentCardNumber'] = creditcard.number
-        post['paymentCardName'] = creditcard.name
+        post['paymentCardName'] = scrub_name(creditcard.name)
         post['paymentCardExpiry'] = creditcard.expiry_date.expiration.strftime("%m%y")
         post['paymentCardCSC'] = creditcard.verification_value if creditcard.verification_value?
+      end
+
+      def scrub_name(name)
+        name.gsub(/[^a-zA-Z\. -]/, '')
       end
 
       def add_amount(post, money, options)

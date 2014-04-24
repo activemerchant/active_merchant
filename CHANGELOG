@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Merchant Warrior: Scrub names [duff]
+
 == Version 1.43.0 (April 24, 2014)
 
 * PagSeguro: New offsite integration [celsodantas]

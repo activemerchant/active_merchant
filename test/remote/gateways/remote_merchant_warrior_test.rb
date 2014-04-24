@@ -103,4 +103,14 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert capture = @gateway.capture(@success_amount, auth.authorization)
     assert_success capture
   end
+
+  def test_successful_purchase_with_funky_names
+    @credit_card.first_name = "Phillips & Sons"
+    @credit_card.last_name = "Other-Things; MW. doesn't like"
+    @options[:billing_address][:name] = "Merchant Warrior wants % alphanumerics"
+
+    assert purchase = @gateway.purchase(@success_amount, @credit_card, @options)
+    assert_equal 'Transaction approved', purchase.message
+    assert_success purchase
+  end
 end
