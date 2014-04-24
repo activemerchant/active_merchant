@@ -8,6 +8,7 @@
 * BridgePay: Switch method of success detection [markabe]
 * BridgePay: Use Return as TransType for refunds [markabe]
 * IATS: Complete rewrite using first class API [rwdaigle]
+* IATS: Fix invalid country code UK -> GB [rwdaigle]
 * DataCash: Fix refund processing using original authorization [bslobodin]
 * Transnational gateway renamed to Network Merchants [bslobodin]
 * PayMill: Handle non-JSON server responses [bslobodin]
