@@ -1,31 +1,35 @@
 require 'test_helper'
 
 class PaypalDigitalGoodsTest < Test::Unit::TestCase
-  TEST_REDIRECT_URL        = 'https://www.sandbox.paypal.com/incontext?token=1234567890&useraction=commit'
-  LIVE_REDIRECT_URL        = 'https://www.paypal.com/incontext?token=1234567890&useraction=commit'
-  
+  TEST_REDIRECT_URL         = 'https://www.sandbox.paypal.com/incontext?cmd=_express-checkout&token=1234567890&useraction=commit'
+  MOBILE_TEST_REDIRECT_URL  = 'https://www.sandbox.paypal.com/incontext?cmd=_express-checkout-mobile&token=1234567890&useraction=commit'
+  LIVE_REDIRECT_URL         = 'https://www.paypal.com/incontext?cmd=_express-checkout&token=1234567890&useraction=commit'
+  MOBILE_LIVE_REDIRECT_URL  = 'https://www.paypal.com/incontext?cmd=_express-checkout-mobile&token=1234567890&useraction=commit'
+
   def setup
     @gateway = PaypalDigitalGoodsGateway.new(
-      :login => 'cody', 
+      :login => 'cody',
       :password => 'test',
       :pem => 'PEM'
     )
 
     Base.gateway_mode = :test
-  end 
-  
+  end
+
   def teardown
     Base.gateway_mode = :test
-  end 
+  end
 
   def test_live_redirect_url
     Base.gateway_mode = :production
     assert_equal LIVE_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
+    assert_equal MOBILE_LIVE_REDIRECT_URL, @gateway.redirect_url_for('1234567890', mobile: true)
   end
 
   def test_test_redirect_url
     assert_equal :test, Base.gateway_mode
     assert_equal TEST_REDIRECT_URL, @gateway.redirect_url_for('1234567890')
+    assert_equal MOBILE_TEST_REDIRECT_URL, @gateway.redirect_url_for('1234567890', mobile: true)
   end
 
   def test_setup_request_invalid_requests
@@ -34,7 +38,7 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
       :ip                => "127.0.0.1",
       :description       => "Test Title",
       :return_url        => "http://return.url",
-      :cancel_return_url => "http://cancel.url")                                      
+      :cancel_return_url => "http://cancel.url")
    end
 
    assert_raise ArgumentError do
@@ -73,7 +77,7 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
 
   def test_build_setup_request_valid
     @gateway.expects(:ssl_post).returns(successful_setup_response)
-    
+
     @gateway.setup_purchase(100,
       :ip                => "127.0.0.1",
       :description       => "Test Title",
@@ -117,6 +121,6 @@ class PaypalDigitalGoodsTest < Test::Unit::TestCase
 		</SOAP-ENV:Body>
 	</SOAP-ENV:Envelope>"
   end
-  
+
 end
 
