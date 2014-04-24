@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = self.live_url = 'https://gateway.cardstream.com/direct/'
       self.money_format = :cents
       self.default_currency = 'GBP'
-      self.supported_countries = ['GB', 'USD', 'EUR', 'CHF', 'SEK', 'SGD', 'NOK', 'JPY', 'ICK', 'HKD', 'DKK', 'CZK', 'CAD', 'AUD']
+      self.supported_countries = ['GB', 'US', 'CH', 'SE', 'SG', 'NO', 'JP', 'IS', 'HK', 'NL', 'CZ', 'CA', 'AU']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :jcb, :maestro, :solo, :switch]
       self.homepage_url = 'http://www.cardstream.com/'
       self.display_name = 'CardStream'
@@ -218,4 +218,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
