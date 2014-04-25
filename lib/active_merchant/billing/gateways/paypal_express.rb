@@ -133,6 +133,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'n2:BrandName', options[:brand_name] unless options[:brand_name].blank?
               # Customization of the payment page
               xml.tag! 'n2:PageStyle', options[:page_style] unless options[:page_style].blank?
+              xml.tag! 'n2:cpp-logo-image', options[:logo_image] unless options[:logo_image].blank?
               xml.tag! 'n2:cpp-header-image', options[:header_image] unless options[:header_image].blank?
               xml.tag! 'n2:cpp-header-border-color', options[:header_border_color] unless options[:header_border_color].blank?
               xml.tag! 'n2:cpp-header-back-color', options[:header_background_color] unless options[:header_background_color].blank?
