@@ -11,6 +11,7 @@
 * PayPal Express: Add ReqBillingAddress flag [johnb-razoo]
 * Beanstream: Add support for Legato single use tokens [tylerrooney]
 * PayPal Digital Goods: Allow mobile [tomprats]
+* Maxipago: Add installment support [alexandremcosta]
 
 == Version 1.43.1 (May 1, 2014)
 

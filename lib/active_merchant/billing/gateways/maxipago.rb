@@ -77,6 +77,7 @@ module ActiveMerchant #:nodoc:
       def add_aux_data(post, options)
         post[:processorID] = (test? ? 1 : 4) # test: 1, redecard: 2, cielo: 4
         post[:referenceNum] = options[:order_id]
+        post[:installments] = options[:installments] if options.has_key?(:installments) && options[:installments] > 1 # only send installments if it is a deferred payment
       end
 
       def add_amount(post, money)
@@ -136,6 +137,12 @@ module ActiveMerchant #:nodoc:
             }
             xml.payment {
               xml.chargeTotal params[:amount]
+              if params[:installments].present?
+                xml.creditInstallment {
+                  xml.numberOfInstallments params[:installments]
+                  xml.chargeInterest 'N'
+                }
+              end
             }
             xml.billing {
               xml.name params[:billing_name]
