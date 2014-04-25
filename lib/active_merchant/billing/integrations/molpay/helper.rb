@@ -1,0 +1,101 @@
+module ActiveMerchant #:nodoc:
+  module Billing #:nodoc:
+    module Integrations #:nodoc:
+      module Molpay
+
+        # Example.
+        #
+        #  payment_service_for('ORDER_ID', 'MOLPAY_MERCHANT_ID', :service => :molpay,  :amount => 1.01, :currency => 'MYR', :credential2 => 'MOLPAY_VERIFICATION_KEY') do |service|
+        #
+        #    service.customer :name              => 'Your Name',
+        #                     :email             => 'name@molpay.com',
+        #                     :phone             => '60355218438'
+        #
+        #    service.description "Payment for Item 001"
+        #
+        #    service.country "MY"
+        #
+        #    service.language "en"
+        #
+        #    service.return_url 'http://yourstore.com/return'
+        #
+        # end
+        #
+        class Helper < ActiveMerchant::Billing::Integrations::Helper
+          
+          #Currencies supported
+          #MYR (Malaysian Ringgit - Malaysia Payment Gateway (Credit Card & local debit payment), Union Pay, Alipay)
+          #USD (US Dollar)
+          #CNY (Chinese Renminbi)
+          #TWD (Taiwan Dollar)
+          SUPPORTED_CURRENCIES = [ 'MYR', 'USD', 'CNY', 'TWD']
+
+          #Languages supported
+          #en English (default)
+          #cn Simplified Chinese
+          SUPPORTED_LANGUAGES = ['en', 'cn']
+
+          SERVICE_URL = 'https://www.onlinepayment.com.my/MOLPay/pay/'.freeze
+
+          mapping :account, 'merchantid'
+          mapping :amount, 'amount'
+          mapping :order, 'orderid'
+          mapping :customer, :name  => 'bill_name',
+                             :email => 'bill_email',
+                             :phone => 'bill_mobile'
+
+          mapping :description, 'bill_desc'
+          mapping :language, 'langcode'
+          mapping :country, 'country'
+          mapping :currency, 'cur'
+          mapping :return_url, 'returnurl'
+          mapping :signature, 'vcode'
+
+
+          attr_reader :amount_in_cents, :verify_key
+
+          def credential_based_url
+            SERVICE_URL + @fields[mappings[:account]] + "/"
+          end
+
+          def initialize(order, account, options = {})
+            @verify_key = options[:credential2] if options[:credential2]
+            @amount_in_cents = options[:amount]
+            super
+            raise 'missing parameter' unless account and options[:currency]
+          end
+
+          def form_fields
+            add_field mappings[:signature], signature
+            @fields
+          end
+
+          def amount=(money)
+            #Molpay minimum amount is 1.01
+            if money.is_a?(String) or money.to_f < 1.01
+              raise ArgumentError, "money amount must be either a Money object or a positive integer."
+            end
+            add_field mappings[:amount], sprintf("%.2f", money.to_f)
+          end
+
+          def currency(cur)
+            raise ArgumentError, "unsupported currency" unless SUPPORTED_CURRENCIES.include?(cur)
+            add_field mappings[:currency], cur
+          end
+
+          def language(lang)
+            raise ArgumentError, "unsupported language" unless SUPPORTED_LANGUAGES.include?(lang)
+            add_field mappings[:language], lang
+          end
+
+
+          private
+
+          def signature
+            Digest::MD5.hexdigest("#{@fields[mappings[:amount]]}#{@fields[mappings[:account]]}#{@fields[mappings[:order]]}#{@verify_key}")
+          end
+        end
+      end
+    end
+  end
+end
