@@ -29,9 +29,7 @@ module ActiveMerchant #:nodoc:
         add_name(post, creditcard)
         add_address(post, options)
 
-        r = build_sale_request(post)
-        pp r
-        commit(r)
+        commit(build_sale_request(post))
       end
 
       def authorize(money, creditcard, options = {})
