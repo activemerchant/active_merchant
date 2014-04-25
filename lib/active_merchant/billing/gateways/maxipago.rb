@@ -1,5 +1,4 @@
 require 'nokogiri'
-require 'pp'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
