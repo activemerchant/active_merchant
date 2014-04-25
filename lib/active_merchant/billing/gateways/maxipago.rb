@@ -1,4 +1,5 @@
 require 'nokogiri'
+require 'pp'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -28,7 +29,9 @@ module ActiveMerchant #:nodoc:
         add_name(post, creditcard)
         add_address(post, options)
 
-        commit(build_sale_request(post))
+        r = build_sale_request(post)
+        pp r
+        commit(r)
       end
 
       def authorize(money, creditcard, options = {})
@@ -88,6 +91,8 @@ module ActiveMerchant #:nodoc:
         post[:card_exp_month] = creditcard.month
         post[:card_exp_year] = creditcard.year
         post[:card_cvv] = creditcard.verification_value
+        post[:card_installments] = creditcard.try(:installments)
+        post[:card_installments] = '' if post[:card_installments] == 1 # should be blank if it isnt a deferred payment
       end
 
       def add_name(post, creditcard)
@@ -131,6 +136,7 @@ module ActiveMerchant #:nodoc:
                   xml.expMonth params[:card_exp_month]
                   xml.expYear params[:card_exp_year]
                   xml.cvvNumber params[:card_cvv]
+                  xml.numberOfInstallments params[:card_installments]
                 }
               }
             }
