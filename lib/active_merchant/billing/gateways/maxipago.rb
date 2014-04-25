@@ -91,8 +91,8 @@ module ActiveMerchant #:nodoc:
         post[:card_exp_month] = creditcard.month
         post[:card_exp_year] = creditcard.year
         post[:card_cvv] = creditcard.verification_value
-        post[:card_installments] = creditcard.try(:installments)
-        post[:card_installments] = '' if post[:card_installments] == 1 # should be blank if it isnt a deferred payment
+        post[:card_installments] = if creditcard.respond_to?(:installments) then creditcard.installments else '' end
+        post[:card_installments] = '' if post[:card_installments] == 1 # blank if it isnt a deferred payment, as the documentation suggests
       end
 
       def add_name(post, creditcard)
@@ -136,12 +136,17 @@ module ActiveMerchant #:nodoc:
                   xml.expMonth params[:card_exp_month]
                   xml.expYear params[:card_exp_year]
                   xml.cvvNumber params[:card_cvv]
-                  xml.numberOfInstallments params[:card_installments]
                 }
               }
             }
             xml.payment {
               xml.chargeTotal params[:amount]
+              unless params[:card_installments].blank?
+                xml.creditInstallment {
+                  xml.numberOfInstallments params[:card_installments]
+                  xml.chargeInterest 'N'
+                }
+              end
             }
             xml.billing {
               xml.name params[:billing_name]
