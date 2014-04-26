@@ -16,7 +16,7 @@ module ActiveMerchant #:nodoc:
 
         def self.credential_based_url(options)
           case ActiveMerchant::Billing::Base.integration_mode
-	  when :live
+          when :live
             self.live_url
           when :test
             self.test_url
@@ -37,9 +37,10 @@ module ActiveMerchant #:nodoc:
           Return.new(post, options)
         end
 
-         def self.checksum(secret_key, payload_items)
+        def self.checksum(secret_key, payload_items)
           digest = OpenSSL::Digest.new('sha256')
-	  OpenSSL::HMAC.hexdigest(digest, secret_key, payload_items)
+          OpenSSL::HMAC.hexdigest(digest, secret_key, payload_items)
+
         end
       end
     end
