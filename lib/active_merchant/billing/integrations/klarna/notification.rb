@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def acknowledge(authcode = nil)
-            valid?
+            Verifier.new(@options[:authorization_header], @raw, @shared_secret).verify
           end
 
           private
@@ -66,11 +66,6 @@ module ActiveMerchant #:nodoc:
           def parse(post)
             @raw = post.to_s
             @params = JSON.parse(post)
-          end
-
-          def valid?
-            shared_secret = @shared_secret
-            Verifier.new(@options[:authorization_header], @raw, shared_secret).verify
           end
 
           class Verifier
