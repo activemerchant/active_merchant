@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Klarna
         mattr_accessor :service_url
-        self.service_url = 'https://hpp-staging-eu.herokuapp.com/api/v1/checkout'
+        self.service_url = 'https://api.hostedcheckout.io/api/v1/checkout'
 
         def self.notification(post_body, options = {})
           Notification.new(post_body, options)
