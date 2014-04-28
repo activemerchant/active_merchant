@@ -34,8 +34,9 @@ class KlarnaNotificationTest < Test::Unit::TestCase
     @klarna = Klarna::Notification.new(request_body, @options)
 
     assert @klarna.acknowledge
+  end
 
-
+  def test_invalid_acknowledgement
     @options[:authorization_header] = 'not a valid verification header'
     @klarna = Klarna::Notification.new(request_body, @options)
 
