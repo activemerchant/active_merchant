@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
             @token = account
             @redirect_paramaters = {
               :amount => options[:amount],
-              :description => options[:account_name],
+              :description => options[:description],
               :issuer => options[:redirect_param],
               :redirectUrl => options[:return_url],
               :method => 'ideal',
@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
 
             raise ArgumentError, "The redirect_param option needs to be set to the bank_id the customer selected." if options[:redirect_param].blank?
             raise ArgumentError, "The return_url option needs to be set." if options[:return_url].blank?
-            raise ArgumentError, "The account_name option needs to be set." if options[:account_name].blank?
+            raise ArgumentError, "The description option needs to be set." if options[:description].blank?
           end
 
           def credential_based_url
