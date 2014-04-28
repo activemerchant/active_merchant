@@ -108,15 +108,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shipment_address(post, options)
-        address = {}
-        address[:street1] = options[:address1]
-        address[:street2] = options[:address2]
-        address[:street3] = options[:address3]
-        address[:city] = options[:city]
-        address[:state] = options[:state]
-        address[:country] = options[:country]
-        address[:zip] = options[:zip]
-        post[:address] = address
+		if address = options[:shipping_address]
+			post[:address] = {}
+			post[:address][:street1] = address[:address1]
+			post[:address][:street2] = address[:address2]
+			post[:address][:street3] = address[:address3]
+			post[:address][:city] = address[:city]
+			post[:address][:state] = address[:state]
+			post[:address][:country] = address[:country]
+			post[:address][:zip] = address[:zip]
+		end
       end
 
       def add_line_items(post, options)
@@ -126,32 +127,34 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_billing_address(post, options)
-        address = {}
-        address[:street1] = options[:address1]
-        address[:street2] = options[:address2]
-        address[:street3] = options[:address3]
-        address[:city] = options[:city]
-        address[:state] = options[:state]
-        address[:country] = options[:country]
-        address[:zip] = options[:zip]
-        address[:company_name] = options[:company_name]
-        address[:tax_id] = options[:tax_id]
-        address[:name] = options[:name]
-        address[:phone] = options[:phone]
-        address[:email] = options[:email]
-        post[:billing_address] = address
+		if address = options[:billing_address] || options[:address]
+			post[:billing_address] = {}
+			post[:billing_address][:street1] = address[:address1]
+			post[:billing_address][:street2] = address[:address2]
+			post[:billing_address][:street3] = address[:address3]
+			post[:billing_address][:city] = address[:city]
+			post[:billing_address][:state] = address[:state]
+			post[:billing_address][:country] = address[:country]
+			post[:billing_address][:zip] = address[:zip]
+			post[:billing_address][:company_name] = address[:company_name]
+			post[:billing_address][:tax_id] = address[:tax_id]
+			post[:billing_address][:name] = address[:name]
+			post[:billing_address][:phone] = address[:phone]
+			post[:billing_address][:email] = address[:email]
+		end
       end
 
       def add_address(post, options)
-        address = {}
-        address[:street1] = options[:address1]
-        address[:street2] = options[:address2]
-        address[:street3] = options[:address3]
-        address[:city] = options[:city]
-        address[:state] = options[:state]
-        address[:country] = options[:country]
-        address[:zip] = options[:zip]
-        post[:address] = address
+		if address = options[:billing_address] || options[:address]
+			post[:address] = {}
+			post[:address][:street1] = address[:address1]
+			post[:address][:street2] = address[:address2]
+			post[:address][:street3] = address[:address3]
+			post[:address][:city] = address[:city]
+			post[:address][:state] = address[:state]
+			post[:address][:country] = address[:country]
+			post[:address][:zip] = address[:zip]
+		end
       end
 
       def add_payment_source(post, payment_source, options)
