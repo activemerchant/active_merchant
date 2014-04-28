@@ -3,7 +3,6 @@ module ActiveMerchant #:nodoc:
     module BeanstreamCore
       RECURRING_URL = 'https://www.beanstream.com/scripts/recurring_billing.asp'
       SECURE_PROFILE_URL = 'https://www.beanstream.com/scripts/payment_profile.asp'
-      SINGLE_USE_TOKEN_URL = 'https://beanstream.com/WebService/Tokenization.svc/newtoken'
 
       SP_SERVICE_VERSION = '1.1'
 

@@ -264,19 +264,18 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
   private
 
   def generate_single_use_token(credit_card)
-    uri = URI.parse(BeanstreamCore::SINGLE_USE_TOKEN_URL)
+    uri = URI.parse('https://www.beanstream.com/scripts/tokenization/tokens')
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
     request = Net::HTTP::Post.new(uri.path)
     request.content_type = "application/json"
-    request.body = {"request" => {
-        "cardNumber" => credit_card.number,
-        "cardExpiryMonth" => "01",
-        "cardExpiryYear" => (Time.now.year + 1) % 100,
-        "cvd" => credit_card.verification_value
-      }
+    request.body = {
+      "number"       => credit_card.number,
+      "expiry_month" => "01",
+      "expiry_year"  => (Time.now.year + 1) % 100,
+      "cvd"          => credit_card.verification_value,
     }.to_json
 
     response = http.request(request)
