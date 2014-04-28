@@ -20,7 +20,6 @@ class KlarnaHelperTest < Test::Unit::TestCase
 
   def test_basic_helper_fields
     assert_field 'purchase_currency', @options[:currency]
-
     assert_field 'merchant_id', @credential1
     assert_field 'platform_type', @helper.application_id
   end

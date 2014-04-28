@@ -46,7 +46,7 @@ class KlarnaModuleTest < Test::Unit::TestCase
       'merchant_confirmation_uri' => 'http://some-webstore.se?URI=confirmation'
     }
 
-    cart_items =[{:type => 'physical',
+    cart_items = [{:type => 'physical',
                   :reference => '12345',
                   :quantity => '1',
                   :unit_price => '10000'}]
