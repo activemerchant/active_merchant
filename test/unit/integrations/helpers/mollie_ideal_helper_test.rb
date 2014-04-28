@@ -6,6 +6,7 @@ class MollieIdealHelperTest < Test::Unit::TestCase
   def setup
     @required_options = {
       :account_name => "My shop",
+      :description => 'Order #111',
       :amount => 500,
       :currency => 'EUR',
       :redirect_param => 'ideal_TESTNL99',
@@ -19,7 +20,7 @@ class MollieIdealHelperTest < Test::Unit::TestCase
 
   def test_credential_based_url
     @mock_api.expects(:post_request)
-      .with('payments', :amount => 500, :description => 'My shop', :method => 'ideal', :issuer => 'ideal_TESTNL99', :redirectUrl => 'https://return.com', :metadata => {:order => 'order-500'})
+      .with('payments', :amount => 500, :description => 'Order #111', :method => 'ideal', :issuer => 'ideal_TESTNL99', :redirectUrl => 'https://return.com', :metadata => {:order => 'order-500'})
       .returns(CREATE_PAYMENT_RESPONSE_JSON)
 
     assert_equal Hash.new, @helper.fields
@@ -34,7 +35,7 @@ class MollieIdealHelperTest < Test::Unit::TestCase
   def test_raises_without_required_options
     assert_raises(ArgumentError) { MollieIdeal::Helper.new('order-500','1234567', @required_options.merge(:redirect_param => nil)) }
     assert_raises(ArgumentError) { MollieIdeal::Helper.new('order-500','1234567', @required_options.merge(:return_url => nil)) }
-    assert_raises(ArgumentError) { MollieIdeal::Helper.new('order-500','1234567', @required_options.merge(:account_name => nil)) }
+    assert_raises(ArgumentError) { MollieIdeal::Helper.new('order-500','1234567', @required_options.merge(:description => nil)) }
   end
 
   CREATE_PAYMENT_RESPONSE_JSON = JSON.parse(<<-JSON)
