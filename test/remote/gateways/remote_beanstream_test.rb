@@ -219,7 +219,6 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     single_use_token_options = {
       :singleUseToken => generate_single_use_token(@mastercard)
     }
-    puts @options[:vault_id]
     assert response = @gateway.update(@options[:vault_id], nil, single_use_token_options)
     assert_success response
     assert_equal 'Operation Successful', response.message
