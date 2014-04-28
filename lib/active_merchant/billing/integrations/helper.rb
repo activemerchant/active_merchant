@@ -19,16 +19,16 @@ module ActiveMerchant #:nodoc:
 
         def initialize(order, account, options = {})
           options.assert_valid_keys([:amount, :currency, :test, :credential2, :credential3, :credential4, :country, :account_name, :transaction_type, :authcode, :notify_url, :return_url, :redirect_param, :forward_url])
-          @fields          = {}
-          @raw_html_fields = []
-          @test            = options[:test]
-          self.order       = order
-          self.account     = account
-          self.amount      = options[:amount]
-          self.currency    = options[:currency]
-          self.credential2 = options[:credential2]
-          self.credential3 = options[:credential3]
-          self.credential4 = options[:credential4]
+          @fields             = {}
+          @raw_html_fields    = []
+          @test               = options[:test]
+          self.order          = order
+          self.account        = account
+          self.amount         = options[:amount]
+          self.currency       = options[:currency]
+          self.credential2    = options[:credential2]
+          self.credential3    = options[:credential3]
+          self.credential4    = options[:credential4]
           self.notify_url     = options[:notify_url]
           self.return_url     = options[:return_url]
           self.redirect_param = options[:redirect_param]
@@ -100,8 +100,7 @@ module ActiveMerchant #:nodoc:
 
         def method_missing(method_id, *args)
           method_id = method_id.to_s.gsub(/=$/, '').to_sym
-          
-          # Return and do nothing if the mapping was not found. This allows 
+          # Return and do nothing if the mapping was not found. This allows
           # for easy substitution of the different integrations
           return if mappings[method_id].nil?
 
