@@ -56,4 +56,9 @@ class KlarnaModuleTest < Test::Unit::TestCase
     calculated_digest = "U7HXXlQ6J1Spybv5QA/jZrUP1ud5pWoNxAgYczpQifg="
     assert_equal calculated_digest, Klarna.sign(fields, cart_items, shared_secret)
   end
+
+  def test_sign
+    expected = Digest::SHA256.base64digest('abcdefopq')
+    assert_equal expected, Klarna.digest('abcdef', 'opq')
+  end
 end
