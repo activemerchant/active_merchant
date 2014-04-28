@@ -46,7 +46,7 @@ module ActiveMerchant #:nodoc:
             add_field('shipping_address_given_name', shipping_fields[:first_name])
             add_field('shipping_address_family_name', shipping_fields[:last_name])
 
-            street_address = [shipping_fields[:address1], shipping_fields[:address2]].join(', ')
+            street_address = [shipping_fields[:address1], shipping_fields[:address2]].compact.join(', ')
             add_field('shipping_address_street_address', street_address)
 
             add_field('shipping_address_postal_code', shipping_fields[:zip])
@@ -67,10 +67,6 @@ module ActiveMerchant #:nodoc:
           end
 
           private
-
-          def street_address
-            [address1, address2].compact.join(', ')
-          end
 
           def guess_locale_based_on_country(country_code)
             case country_code
