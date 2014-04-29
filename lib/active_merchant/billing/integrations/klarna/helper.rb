@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
             when /se/i
               "sv-se"
             else
-              raise StandardError, "Unable to guess locale based on country #{country_code}"
+              "sv-se"
             end
           end
 
