@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
             subtotal_price = subtotal_price.to_f
             tax_amount = tax_amount.to_f
 
-            tax_rate = tax_amount / (subtotal_price + tax_amount)
+            tax_rate = tax_amount / subtotal_price
             tax_rate = tax_rate.round(4)
 
             percentage_to_two_decimal_precision_whole_number(tax_rate)

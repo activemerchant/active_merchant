@@ -73,7 +73,7 @@ class KlarnaHelperTest < Test::Unit::TestCase
     assert_field 'cart_item-0_name', item[:name].to_s
     assert_field 'cart_item-0_quantity', item[:quantity].to_s
     assert_field 'cart_item-0_unit_price', item[:unit_price].to_s
-    assert_field 'cart_item-0_tax_rate', '1000'
+    assert_field 'cart_item-0_tax_rate', '1111'
   end
 
   def test_merchant_uri_fields
