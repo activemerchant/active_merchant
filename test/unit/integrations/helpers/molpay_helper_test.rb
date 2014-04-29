@@ -4,14 +4,23 @@ class MolpayHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
   
   def setup
-    @helper = Molpay::Helper.new('order-5.00','cody@example.com', :amount => 5.00, :currency => 'MYR', :credential2 => 'testcredential')
+    @helper = Molpay::Helper.new('order-5.00','molpaytech', :amount => 5.00, :currency => 'MYR', :credential2 => 'testcredential')
   end
  
  def test_basic_helper_fields
-    assert_field "merchantid", "cody@example.com"
+    assert_field "merchantid", "molpaytech"
     assert_field "amount",       "5.00"
     assert_field "orderid",        "order-5.00"
     assert_field "cur",     "MYR"
+  end
+
+  def test_credential_based_url
+    assert_equal 'https://www.onlinepayment.com.my/MOLPay/pay/molpaytech/', @helper.credential_based_url
+  end
+
+  def test_credential_based_url_optional
+    molpay = Molpay::Helper.new('order-5.00','molpaytech', :amount => 5.00, :currency => 'MYR', :credential2 => 'testcredential', :channel => 'maybank2u.php')
+    assert_equal 'https://www.onlinepayment.com.my/MOLPay/pay/molpaytech/maybank2u.php', molpay.credential_based_url 
   end
 
   def test_customer_fields
@@ -27,7 +36,7 @@ class MolpayHelperTest < Test::Unit::TestCase
   end
 
   def test_supported_currency
-    [ 'MYR', 'USD', 'CNY', 'TWD'].each do |cur|
+    [ 'MYR', 'USD', 'SGD', 'PHP', 'VND', 'IDR', 'AUD'].each do |cur|
       @helper.currency cur
       assert_field "cur", cur 
     end
@@ -58,7 +67,7 @@ class MolpayHelperTest < Test::Unit::TestCase
   end
 
   def test_signature
-    assert_equal '074f3eec96f1ae612a68ed18a32b263b', @helper.form_fields["vcode"]
+    assert_equal '16d122e1cf4d4fac19f3c839db12b6a5', @helper.form_fields["vcode"]
   end
 
   def test_valid_amount

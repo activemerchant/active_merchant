@@ -5,7 +5,10 @@ module ActiveMerchant #:nodoc:
 
         # Example.
         #
-        #  payment_service_for('ORDER_ID', 'MOLPAY_MERCHANT_ID', :service => :molpay,  :amount => 1.01, :currency => 'MYR', :credential2 => 'MOLPAY_VERIFICATION_KEY') do |service|
+        #  (Optional Parameter) = channel //will generate URL to go directly to specific channel, e.g maybank2u, cimb 
+        #  Please refer MOLPay API spec for the channel routing
+        #
+        #  payment_service_for('ORDER_ID', 'MOLPAY_MERCHANT_ID', :service => :molpay,  :amount => 1.01, :currency => 'MYR', :credential2 => 'MOLPAY_VERIFICATION_KEY', :channel => 'maybank2u.php') do |service|
         #
         #    service.customer :name              => 'Your Name',
         #                     :email             => 'name@molpay.com',
@@ -26,9 +29,12 @@ module ActiveMerchant #:nodoc:
           #Currencies supported
           #MYR (Malaysian Ringgit - Malaysia Payment Gateway (Credit Card & local debit payment), Union Pay, Alipay)
           #USD (US Dollar)
-          #CNY (Chinese Renminbi)
-          #TWD (Taiwan Dollar)
-          SUPPORTED_CURRENCIES = [ 'MYR', 'USD', 'CNY', 'TWD']
+          #SGD (Singapore Dollar)
+          #PHP (Philippines Peso)
+          #VND (Vietnamese Dong)
+          #IDR (Indonesian Rupiah)
+          #AUD (Australian Dollar)
+          SUPPORTED_CURRENCIES = [ 'MYR', 'USD', 'SGD', 'PHP', 'VND', 'IDR', 'AUD']
 
           #Languages supported
           #en English (default)
@@ -52,15 +58,19 @@ module ActiveMerchant #:nodoc:
           mapping :signature, 'vcode'
 
 
-          attr_reader :amount_in_cents, :verify_key
+          attr_reader :amount_in_cents, :verify_key, :channel
 
           def credential_based_url
-            SERVICE_URL + @fields[mappings[:account]] + "/"
+            service_url = SERVICE_URL + @fields[mappings[:account]] + "/"
+            service_url = service_url + @channel unless @channel.blank?
+            service_url
           end
 
           def initialize(order, account, options = {})
             @verify_key = options[:credential2] if options[:credential2]
             @amount_in_cents = options[:amount]
+            @channel = options[:channel] if options[:channel]
+            options.delete(:channel)
             super
             raise 'missing parameter' unless account and options[:currency]
           end
