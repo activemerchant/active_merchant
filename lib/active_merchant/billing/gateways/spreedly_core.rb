@@ -107,6 +107,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+      
       def save_card(retain, credit_card, options)
         request = build_xml_request('payment_method') do |doc|
           add_credit_card(doc, credit_card, options)
