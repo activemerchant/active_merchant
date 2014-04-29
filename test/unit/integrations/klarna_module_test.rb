@@ -21,11 +21,11 @@ class KlarnaModuleTest < Test::Unit::TestCase
       'merchant_confirmation_uri' => 'http://some-webstore.se?URI=confirmation'
     }
 
-    cart_items =[{:type => 'physical',
-                  :reference => '12345',
-                  :quantity => '1',
-                  :unit_price => '10000',
-                  :discount_rate => '1000'}]
+    cart_items = [{:type => 'physical',
+                   :reference => '12345',
+                   :quantity => '1',
+                   :unit_price => '10000',
+                   :discount_rate => '1000'}]
 
     shared_secret = 'example-shared-secret'
 
@@ -39,7 +39,6 @@ class KlarnaModuleTest < Test::Unit::TestCase
       'purchase_currency' => 'SEK',
       'locale' => 'sv-se',
       'merchant_id' => '1860',
-
       'merchant_terms_uri' => 'http://some-webstore.se?URI=tc',
       'merchant_checkout_uri' => 'http://some-webstore.se?URI=checkout',
       'merchant_base_uri' => 'http://some-webstore.se?URI=home',
