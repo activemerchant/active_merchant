@@ -7,19 +7,12 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Mobikwikwallet
 
-        mattr_accessor :live_url
-        mattr_accessor :test_url
-        
-        self.live_url = 'https://www.mobikwik.com/wallet'
-
-        self.test_url = 'https://test.mobikwik.com/mobikwik/wallet'
-
-        def self.credential_based_url(options)
+        def self.service_url
           case ActiveMerchant::Billing::Base.integration_mode
-          when :live
-            self.live_url
+          when :production
+            'https://www.mobikwik.com/wallet'
           when :test
-            self.test_url
+            'https://test.mobikwik.com/mobikwik/wallet'
           else
             raise StandardError, "Integration mode set to an invalid value: #{mode}"
           end

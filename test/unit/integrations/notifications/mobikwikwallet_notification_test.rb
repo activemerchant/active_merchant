@@ -4,7 +4,7 @@ class MobikwikwalletNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @mobikwikwallet = Mobikwikwallet::Notification.new(http_raw_data, :credential3 => 'ju6tygh7u7tdg554k098ujd5468o')
+    @mobikwikwallet = Mobikwikwallet::Notification.new(http_raw_data, :credential2 => 'ju6tygh7u7tdg554k098ujd5468o')
   end
 
   def test_accessors

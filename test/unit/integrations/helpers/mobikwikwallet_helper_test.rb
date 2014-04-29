@@ -4,7 +4,7 @@ class MobikwikwalletHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
   
   def setup
-    @helper = Mobikwikwallet::Helper.new('order-500','G0JW45KCS3630NX335YX', :credential2 => 'MBK9002', :credential3 => 'ju6tygh7u7tdg554k098ujd5468o', :credential4 => 'Test Merchant', :amount => 10)
+    @helper = Mobikwikwallet::Helper.new('order-500','MBK9002', :credential2 => 'ju6tygh7u7tdg554k098ujd5468o', :credential3 => 'Test Merchant', :amount => 10)
   end
  
   def test_basic_helper_fields

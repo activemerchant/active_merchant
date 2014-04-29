@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
 
           def initialize(post, options = {})
             super(post, options)
-            @secret_key = options[:credential3]
+            @secret_key = options[:credential2]
           end
 
           def complete?
@@ -65,12 +65,12 @@ module ActiveMerchant #:nodoc:
             gross
           end
 
-          def invoice_ok?( order_id )
+          def invoice_ok?(order_id)
             order_id.to_s == invoice.to_s
           end
 
-          def amount_ok?( order_amount )
-            BigDecimal.new( amount ) == order_amount
+          def amount_ok?(order_amount)
+            BigDecimal.new(amount) == order_amount
           end
 
           def message

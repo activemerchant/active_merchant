@@ -4,15 +4,15 @@ class MobikwikwalletReturnTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @mobikwikwallet = Mobikwikwallet::Return.new(http_raw_data_success, :credential3 => 'ju6tygh7u7tdg554k098ujd5468o')
+    @mobikwikwallet = Mobikwikwallet::Return.new(http_raw_data_success, :credential2 => 'ju6tygh7u7tdg554k098ujd5468o')
   end
 
   def setup_failed_return
-    @mobikwikwallet = Mobikwikwallet::Return.new(http_raw_data_canceled, :credential3 => 'ju6tygh7u7tdg554k098ujd5468o')
+    @mobikwikwallet = Mobikwikwallet::Return.new(http_raw_data_canceled, :credential2 => 'ju6tygh7u7tdg554k098ujd5468o')
   end
 
   def setup_tampered_return
-    @mobikwikwallet = Mobikwikwallet::Return.new(http_raw_data_tampered, :credential3 => 'ju6tygh7u7tdg554k098ujd5468o')
+    @mobikwikwallet = Mobikwikwallet::Return.new(http_raw_data_tampered, :credential2 => 'ju6tygh7u7tdg554k098ujd5468o')
   end
 
   def test_success

@@ -5,12 +5,12 @@ module ActiveMerchant #:nodoc:
         class Helper < ActiveMerchant::Billing::Integrations::Helper
           def initialize(order, account, options = {})
             super
-            @key = options[:credential3]
+            @key = options[:credential2]
           end
 
           mapping :amount, 'amount'
-          mapping :credential2, 'mid'
-          mapping :credential4, 'merchantname'
+          mapping :account, 'mid'
+          mapping :credential3, 'merchantname'
           
           mapping :order, 'orderid'
 
@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
 
           def generate_checksum
             checksum_fields = "'" + @fields["cell"] + "''" + @fields["email"] + "''" + @fields["amount"].to_s + "''" + @fields["orderid"] + "''" + @fields["redirecturl"] + "''" + @fields["mid"] + "'"
-            Mobikwikwallet.checksum(@key,  checksum_fields )
+            Mobikwikwallet.checksum(@key,  checksum_fields)
           end
 
         end
