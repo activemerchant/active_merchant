@@ -14,14 +14,15 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'WebPay'
 
       def capture(money, authorization, options = {})
-        post = {:amount => localized_amount(money)}
+        post = {}
+        add_amount(post, money, options)
         add_application_fee(post, options)
         commit(:post, "charges/#{CGI.escape(authorization)}/capture", post)
       end
 
       def refund(money, identification, options = {})
-        post = {:amount => localized_amount(money)}
-
+        post = {}
+        add_amount(post, money, options)
         MultiResponse.run do |r|
           r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, options) }
 
@@ -34,15 +35,6 @@ module ActiveMerchant #:nodoc:
 
       def refund_fee(identification, options, meta)
         raise NotImplementedError.new
-      end
-
-      def localized_amount(money, currency = self.default_currency)
-        non_fractional_currency?(currency) ? (amount(money).to_f / 100).floor : amount(money)
-      end
-
-      def add_amount(post, money, options)
-        post[:currency] = (options[:currency] || currency(money)).downcase
-        post[:amount] = localized_amount(money, post[:currency].upcase)
       end
 
       def add_customer(post, creditcard, options)
