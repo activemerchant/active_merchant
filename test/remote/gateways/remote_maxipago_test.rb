@@ -13,6 +13,7 @@ class RemoteMaxipagoTest < Test::Unit::TestCase
       order_id: '12345',
       billing_address: address,
       description: 'Store Purchase',
+      installments: 3
     }
   end
 
