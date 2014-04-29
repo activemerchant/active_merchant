@@ -97,6 +97,16 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_amount_localization
+    @gateway.expects(:post_data).with do |params|
+      assert_equal '4', params[:amount]
+    end
+
+    @options[:currency] = 'JPY'
+
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+
   def test_successful_purchase_with_token
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, "tok_xxx")
