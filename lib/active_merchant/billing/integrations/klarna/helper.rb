@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
             add_field("cart_item-#{i}_quantity", item.fetch(:quantity, ''))
             add_field("cart_item-#{i}_unit_price", item.fetch(:unit_price, ''))
             add_field("cart_item-#{i}_discount_rate", item.fetch(:discount_rate, ''))
-            add_field("cart_item-#{i}_tax_rate", item.fetch(:tax_rate, ''))
+            add_tax_rate_field(item)
 
             @fields
           end
@@ -79,6 +79,26 @@ module ActiveMerchant #:nodoc:
             else
               raise StandardError, "Unable to guess locale based on country #{country_code}"
             end
+          end
+
+          def tax_rate(subtotal_price, tax_amount)
+            tax_amount = tax_amount.to_f
+            subtotal_price = subtotal_price.to_f
+
+            tax_rate = tax_amount / (subtotal_price + tax_amount)
+            tax_rate = tax_rate.round(4)
+
+            percentage_to_two_decimal_precision_whole_number(tax_rate)
+          end
+
+          def percentage_to_two_decimal_precision_whole_number(percentage)
+            (percentage * 10000).to_i
+          end
+
+          def add_tax_rate_field(item)
+            total_price = item.fetch(:unit_price, 0) * item.fetch(:quantity, 0)
+            tax_amount = item.fetch(:tax_amount, 0)
+            add_field("cart_item-#{i}_tax_rate", tax_rate(total_price, tax_amount))
           end
         end
       end

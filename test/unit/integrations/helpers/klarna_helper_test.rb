@@ -61,7 +61,7 @@ class KlarnaHelperTest < Test::Unit::TestCase
   def test_merchant_digest
     @helper = valid_helper
 
-    assert_field 'merchant_digest', "gp0QyvG+TiHL9EZdFzZTs7dSC2I05w4JFMp1peHrzz4="
+    assert_field 'merchant_digest', "kRaYK5keBNEk7pashIU0+WdK0M+MGjTHB/boLQco0B0="
   end
 
   def test_line_item
@@ -73,7 +73,14 @@ class KlarnaHelperTest < Test::Unit::TestCase
     assert_field 'cart_item-0_name', item[:name].to_s
     assert_field 'cart_item-0_quantity', item[:quantity].to_s
     assert_field 'cart_item-0_unit_price', item[:unit_price].to_s
-    assert_field 'cart_item-0_tax_rate', item[:tax_rate].to_s
+    assert_field 'cart_item-0_tax_rate', '1000'
+  end
+
+  def test_tax_rate_calculated
+    subtotal = 900
+    tax_amount = 100
+    
+    assert_equal 1000, @helper.send(:tax_rate, subtotal, tax_amount)
   end
 
   def test_merchant_uri_fields
@@ -99,9 +106,9 @@ class KlarnaHelperTest < Test::Unit::TestCase
       :reference => "##{order_number}",
       :name => 'example item description',
       :quantity => 1,
-      :unit_price => Money.new(1.00),
+      :unit_price => Money.new(10.00),
       :discount_rate => nil,
-      :tax_rate => 0
+      :tax_amount => Money.new(1.00)
     }
   end
 
