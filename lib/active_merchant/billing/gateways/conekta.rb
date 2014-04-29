@@ -1,7 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class ConektaGateway < Gateway
-      self.live_url = 'https://api.conekta.io/'
+      #self.live_url = 'https://api.conekta.io/'
+      self.live_url = 'http://localhost:3000/'
 
       self.supported_countries = ['MX']
       self.supported_cardtypes = [:visa, :master]
@@ -12,7 +13,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :key)
-        options[:version] ||= '0.2.0'
+        options[:version] ||= '0.3.0'
         super
       end
 
@@ -57,15 +58,25 @@ module ActiveMerchant #:nodoc:
 
       def store(creditcard, options = {})
         post = {}
-        add_payment_source(post, creditcard, options)
         post[:name] = options[:name]
         post[:email] = options[:email]
+        add_payment_source(post, creditcard, options)
+        post[:cards] = [post[:card]]
+        post.delete(:card)
+        
+        customer = {}
+        customer[:customer] = post
+        post = {}
+        post = customer
 
-        path = if options[:customer]
-          "customers/#{CGI.escape(options[:customer])}"
-        else
-          'customers'
-        end
+		# I don't know what is this for
+        #path = if post[:customer]
+          #"customers/#{CGI.escape(options[:customer])}"
+        #else
+          #'customers'
+        #end
+        
+        path = 'customers'
 
         commit(:post, path, post)
       end
@@ -190,7 +201,7 @@ module ActiveMerchant #:nodoc:
           "Accept" => "application/vnd.conekta-v#{options[:version]}+json",
           "Authorization" => "Basic " + Base64.encode64("#{options[:key]}:"),
           "RaiseHtmlError" => "false",
-          "User-Agent" => "Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          "Conekta-Client-User-Agent" => {"agent"=>"Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}"}.to_json,
           "X-Conekta-Client-User-Agent" => @@ua,
           "X-Conekta-Client-User-Metadata" => meta.to_json
         }
