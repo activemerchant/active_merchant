@@ -116,6 +116,20 @@ module ActiveMerchant #:nodoc:
         result.to_s.downcase
       end
 
+      class << self
+
+        def supported_countries_with_validation=(country_codes)
+          country_codes.each do |country_code|
+            country = ActiveMerchant::Country.find(country_code)
+            raise ActiveMerchant::InvalidCountryCodeError,
+              "No country could be found for the country #{country_code}" unless country
+          end
+          self.supported_countries_without_validation = country_codes
+        end
+
+        alias_method_chain :supported_countries=, :validation
+      end
+
       def card_brand(source)
         self.class.card_brand(source)
       end

@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://sandbox.app55.com/v1/'
       self.live_url = 'https://api.app55.com/v1/'
 
-      self.supported_countries = ['AU', 'BR', 'CA', 'CH', 'CL', 'CN', 'CO', 'CZ', 'DK', 'EU', 'GB', 'HK', 'HU', 'ID', 'IS', 'JP', 'KE', 'KR', 'MX', 'MY', 'NO', 'NZ', 'PH', 'PL', 'TH', 'TW', 'US', 'VN', 'ZA']
+      self.supported_countries = ['AU', 'BR', 'CA', 'CH', 'CL', 'CN', 'CO', 'CZ', 'DK', 'GB', 'HK', 'HU', 'ID', 'IS', 'JP', 'KE', 'KR', 'MX', 'MY', 'NO', 'NZ', 'PH', 'PL', 'TH', 'TW', 'US', 'VN', 'ZA']
       self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :maestro, :solo]
       self.default_currency = 'UKP'
       self.money_format = :dollars
@@ -182,4 +182,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-
