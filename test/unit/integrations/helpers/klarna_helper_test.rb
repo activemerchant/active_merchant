@@ -98,10 +98,10 @@ class KlarnaHelperTest < Test::Unit::TestCase
       :type => 'physical',
       :reference => "##{order_number}",
       :name => 'example item description',
-      :quantity => 1,
-      :unit_price => Money.new(9.00),
+      :quantity => 1.to_s,
+      :unit_price => Money.new(9.00).to_s,
       :discount_rate => nil,
-      :tax_amount => Money.new(1.00)
+      :tax_amount => Money.new(1.00).to_s
     }
   end
 

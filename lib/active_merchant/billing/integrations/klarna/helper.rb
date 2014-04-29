@@ -82,11 +82,8 @@ module ActiveMerchant #:nodoc:
           end
 
           def tax_rate_for(item)
-            subtotal_price = item.fetch(:unit_price, 0) * item.fetch(:quantity, 0)
-            tax_amount = item.fetch(:tax_amount, 0)
-
-            subtotal_price = subtotal_price.to_f
-            tax_amount = tax_amount.to_f
+            subtotal_price = item.fetch(:unit_price, 0).to_f * item.fetch(:quantity, 0).to_f
+            tax_amount = item.fetch(:tax_amount, 0).to_f
 
             tax_rate = tax_amount / subtotal_price
             tax_rate = tax_rate.round(4)
