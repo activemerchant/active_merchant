@@ -2,6 +2,7 @@
 
 * Merchant Warrior: Scrub names [duff]
 * Validate Gateway.supported_countries [rwdaigle]
+* Stripe: Add recurring flag support [bslobodin]
 
 == Version 1.43.0 (April 24, 2014)
 

@@ -383,6 +383,54 @@ class StripeTest < Test::Unit::TestCase
     @gateway.authorize(@amount, @credit_card, @options)
   end
 
+  def test_recurring_flag_not_set_by_default
+    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+      assert !post.include?("recurring")
+    end.returns(successful_authorization_response)
+
+    @gateway.authorize(@amount, @credit_card, @options)
+  end
+
+  def test_passing_recurring_eci_sets_recurring_flag
+    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+      assert post.include?("recurring=true")
+    end.returns(successful_authorization_response)
+
+    @options.merge!(eci: 'recurring')
+
+    @gateway.authorize(@amount, @credit_card, @options)
+  end
+
+  def test_passing_unknown_eci_does_not_set_recurring_flag
+    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+      assert !post.include?("recurring")
+    end.returns(successful_authorization_response)
+
+    @options.merge!(eci: 'installment')
+
+    @gateway.authorize(@amount, @credit_card, @options)
+  end
+
+  def test_passing_recurring_true_option_sets_recurring_flag
+    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+      assert post.include?("recurring=true")
+    end.returns(successful_authorization_response)
+
+    @options.merge!(recurring: true)
+
+    @gateway.authorize(@amount, @credit_card, @options)
+  end
+
+  def test_passing_recurring_false_option_does_not_set_recurring_flag
+    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+      assert !post.include?("recurring")
+    end.returns(successful_authorization_response)
+
+    @options.merge!(recurring: false)
+
+    @gateway.authorize(@amount, @credit_card, @options)
+  end
+
   private
 
   # Create new customer and set default credit card

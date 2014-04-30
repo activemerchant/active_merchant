@@ -221,6 +221,7 @@ module ActiveMerchant #:nodoc:
 
       def add_flags(post, options)
         post[:uncaptured] = true if options[:uncaptured]
+        post[:recurring] = true if (options[:eci] == 'recurring' || options[:recurring])
       end
 
       def fetch_application_fees(identification, options = {})
