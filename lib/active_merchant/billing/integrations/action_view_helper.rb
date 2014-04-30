@@ -46,13 +46,13 @@ module ActiveMerchant #:nodoc:
 
           integration_module = ActiveMerchant::Billing::Integrations.const_get(options.delete(:service).to_s.camelize)
           service_class = integration_module.const_get('Helper')
-
+          disable_form_tag = options.delete(:disable_form_tag) || false
           form_options = options.delete(:html) || {}
           service = service_class.new(order, account, options)
           form_options[:method] = service.form_method
           result = []
           service_url = service.respond_to?(:credential_based_url) ? service.credential_based_url : integration_module.service_url
-          result << form_tag(service_url, form_options)
+          result << form_tag(service_url, form_options) unless disable_form_tag
 
           result << capture(service, &proc)
 
@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
             result << "<input id=\"#{field}\" name=\"#{field}\" type=\"hidden\" value=\"#{value}\" />\n"
           end
           
-          result << '</form>'
+          result << '</form>' unless disable_form_tag
           result= result.join("\n")
           
           concat(result.respond_to?(:html_safe) ? result.html_safe : result)
