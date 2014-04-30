@@ -152,7 +152,7 @@ module ActiveMerchant #:nodoc:
 
       def create_post_for_auth_or_purchase(money, creditcard, options)
         post = {}
-        add_amount(post, money, options, :include_currency => true)
+        add_amount(post, money, options, true)
         add_creditcard(post, creditcard, options)
         add_customer(post, creditcard, options)
         add_customer_data(post,options)
