@@ -24,12 +24,12 @@ module ActiveMerchant #:nodoc:
                     fields['purchase_currency'].to_s + 
                     fields['locale'].to_s
 
-          cart_items.each do |item|
-            payload << item[:type].to_s +
-                       item[:reference].to_s +
-                       item[:quantity].to_s +
-                       item[:unit_price].to_s +
-                       item.fetch(:discount_rate, nil).to_s
+          cart_items.each_with_index do |item, i|
+            payload << fields["cart_item-#{i}_type"].to_s +
+                       fields["cart_item-#{i}_reference"].to_s +
+                       fields["cart_item-#{i}_quantity"].to_s +
+                       fields["cart_item-#{i}_unit_price"].to_s +
+                       fields.fetch("cart_item-#{i}_discount_rate", '').to_s
           end
 
           payload << fields['merchant_id'].to_s +

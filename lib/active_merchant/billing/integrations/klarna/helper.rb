@@ -4,8 +4,6 @@ module ActiveMerchant #:nodoc:
       module Klarna
         class Helper < ActiveMerchant::Billing::Integrations::Helper
           mapping :currency, 'purchase_currency'
-          mapping :return_url, 'merchant_confirmation_uri'
-          mapping :notify_url, 'merchant_push_uri'
           mapping :cancel_return_url, ['merchant_terms_uri', 'merchant_checkout_uri', 'merchant_base_uri']
           mapping :account, 'merchant_id'
           mapping :customer, email: 'shipping_address_email'
@@ -13,9 +11,20 @@ module ActiveMerchant #:nodoc:
           def initialize(order, account, options = {})
             super
             @shared_secret = options[:credential2]
+            @order = order
 
             add_field('platform_type', application_id)
             add_field('test_mode', test?)
+          end
+
+          def notify_url(url)
+            url = append_order_query_param(url)
+            add_field('merchant_push_uri', url)
+          end
+
+          def return_url(url)
+            url = append_order_query_param(url)
+            add_field('merchant_confirmation_uri', url)
           end
 
           def line_item(item)
@@ -28,9 +37,9 @@ module ActiveMerchant #:nodoc:
             add_field("cart_item-#{i}_reference", item.fetch(:reference, ''))
             add_field("cart_item-#{i}_name", item.fetch(:name, ''))
             add_field("cart_item-#{i}_quantity", item.fetch(:quantity, ''))
-            add_field("cart_item-#{i}_unit_price", item.fetch(:unit_price, ''))
+            add_field("cart_item-#{i}_unit_price", tax_included_unit_price(item)).to_s
             add_field("cart_item-#{i}_discount_rate", item.fetch(:discount_rate, ''))
-            add_field("cart_item-#{i}_tax_rate", tax_rate_for(item))
+            add_field("cart_item-#{i}_tax_rate", tax_rate_for(item)).to_s
 
             @fields
           end
@@ -68,6 +77,15 @@ module ActiveMerchant #:nodoc:
 
           private
 
+          def append_order_query_param(url)
+            u = URI.parse(url)
+            params = Rack::Utils.parse_nested_query(u.query)
+            params["order"] = @order
+            u.query = params.to_query
+
+            u.to_s
+          end
+
           def guess_locale_based_on_country(country_code)
             case country_code
             when /no/i
@@ -81,8 +99,12 @@ module ActiveMerchant #:nodoc:
             end
           end
 
+          def tax_included_unit_price(item)
+            item.fetch(:unit_price, '').to_i + item.fetch(:tax_amount, '').to_i
+          end
+
           def tax_rate_for(item)
-            subtotal_price = item.fetch(:unit_price, 0).to_f * item.fetch(:quantity, 0).to_f
+            subtotal_price = item.fetch(:unit_price, 0).to_f * item.fetch(:quantity, 0).to_i
             tax_amount = item.fetch(:tax_amount, 0).to_f
 
             tax_rate = tax_amount / subtotal_price

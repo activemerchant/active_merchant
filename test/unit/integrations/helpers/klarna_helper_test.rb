@@ -61,7 +61,7 @@ class KlarnaHelperTest < Test::Unit::TestCase
   def test_merchant_digest
     @helper = valid_helper
 
-    assert_field 'merchant_digest', "/fUAJJiWEluzrwL1AX8pptGFYP3T1gWIv+tafLnARzY="
+    assert_field 'merchant_digest', "k2BENClM8CRy3h1njQNtUHC+Jd4lVoCCkHMGu5RBAkM="
   end
 
   def test_line_item
@@ -72,20 +72,19 @@ class KlarnaHelperTest < Test::Unit::TestCase
     assert_field 'cart_item-0_reference', item[:reference].to_s
     assert_field 'cart_item-0_name', item[:name].to_s
     assert_field 'cart_item-0_quantity', item[:quantity].to_s
-    assert_field 'cart_item-0_unit_price', item[:unit_price].to_s
+    assert_field 'cart_item-0_unit_price', (item[:unit_price].to_i + item[:tax_amount].to_i).to_s
     assert_field 'cart_item-0_tax_rate', '1111'
   end
 
   def test_merchant_uri_fields
-    @helper.notify_url = 'http://example-notify-url'
-    @helper.return_url = 'http://example-return-url'
+    @helper.notify_url('http://example-notify-url')
+    @helper.return_url('http://example-return-url.com/?something=else')
 
     example_cancel_url = "http://example-cancel-url"
     @helper.cancel_return_url("http://example-cancel-url")
 
-    assert_field 'merchant_push_uri', 'http://example-notify-url'
-    assert_field 'merchant_confirmation_uri', 'http://example-return-url'
-
+    assert_field 'merchant_push_uri', 'http://example-notify-url?order=1'
+    assert_field 'merchant_confirmation_uri', 'http://example-return-url.com/?order=1&something=else'
     assert_field 'merchant_terms_uri', example_cancel_url
     assert_field 'merchant_checkout_uri', example_cancel_url
     assert_field 'merchant_base_uri', example_cancel_url
@@ -99,9 +98,9 @@ class KlarnaHelperTest < Test::Unit::TestCase
       :reference => "##{order_number}",
       :name => 'example item description',
       :quantity => 1.to_s,
-      :unit_price => Money.new(9.00).to_s,
+      :unit_price => Money.new(9.00).cents.to_s,
       :discount_rate => nil,
-      :tax_amount => Money.new(1.00).to_s
+      :tax_amount => Money.new(1.00).cents.to_s
     }
   end
 

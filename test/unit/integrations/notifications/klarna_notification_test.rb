@@ -4,17 +4,17 @@ class KlarnaNotificationTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def setup
-    @options = {:authorization_header => authorization_header, :credential2 => 'Example shared secret'}
+    @options = {:authorization_header => authorization_header, :credential2 => 'Example shared secret', :query_string => 'order=123'}
     @klarna = Klarna::Notification.new(request_body, @options)
   end
 
   def test_accessors
     assert @klarna.complete?
-    assert_equal "Complete", @klarna.status
+    assert_equal "Completed", @klarna.status
     assert_equal "14565D2494490B11C39E7220000", @klarna.transaction_id
-    assert_equal "2348456980", @klarna.item_id
+    assert_equal "123", @klarna.item_id
     assert_equal "1110.98", @klarna.gross
-    assert_equal "sek", @klarna.currency
+    assert_equal "SEK", @klarna.currency
     assert_equal "2014-04-15T16:38:04+02:00", @klarna.received_at
     assert_equal "checkout-se@testdrive.klarna.com", @klarna.payer_email
     assert_equal "checkout-se@testdrive.klarna.com", @klarna.receiver_email
