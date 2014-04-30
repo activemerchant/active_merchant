@@ -383,6 +383,24 @@ class StripeTest < Test::Unit::TestCase
     @gateway.authorize(@amount, @credit_card, @options)
   end
 
+  def test_recurring_flag_not_set_by_default
+    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+      assert !post.include?("recurring")
+    end.returns(successful_authorization_response)
+
+    @gateway.authorize(@amount, @credit_card, @options)
+  end
+
+  def test_passing_eci_sets_recurring_flag
+    @gateway.expects(:ssl_request).with do |method, url, post, headers|
+      assert post.include?("recurring=true")
+    end.returns(successful_authorization_response)
+
+    @options.merge!(eci: 'zork')
+
+    @gateway.authorize(@amount, @credit_card, @options)
+  end
+
   private
 
   # Create new customer and set default credit card
