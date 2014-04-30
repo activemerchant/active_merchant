@@ -15,6 +15,7 @@
 * Deprecate recurring API support [ntalbott]
 * NMI: fix CreditCard check [bslobodin]
 * SagePay: Add tokenization support [kernow]
+* PayPal Express: Reference transaction details [lrostovsky]
 
 == Version 1.43.1 (May 1, 2014)
 

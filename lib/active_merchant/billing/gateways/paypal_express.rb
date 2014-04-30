@@ -67,6 +67,10 @@ module ActiveMerchant #:nodoc:
         commit 'BAUpdate', build_cancel_billing_agreement_request(token)
       end
 
+      def agreement_details(reference_id, options = {})
+        commit 'BAUpdate', build_details_billing_agreement_request(reference_id)
+      end
+
       def authorize_reference_transaction(money, options = {})
         requires!(options, :reference_id, :payment_type, :invoice_id, :description, :ip)
 
@@ -201,6 +205,18 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'n2:Version', API_VERSION
             xml.tag! 'ReferenceID', token
             xml.tag! 'BillingAgreementStatus', "Canceled"
+          end
+        end
+
+        xml.target!
+      end
+
+      def build_details_billing_agreement_request(reference_id)
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.tag! 'BillAgreementUpdateReq', 'xmlns' => PAYPAL_NAMESPACE do
+          xml.tag! 'BAUpdateRequest', 'xmlns:n2' => EBAY_NAMESPACE do
+            xml.tag! 'n2:Version', API_VERSION
+            xml.tag! 'ReferenceID', reference_id
           end
         end
 
