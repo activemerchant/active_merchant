@@ -58,8 +58,9 @@ module ActiveMerchant #:nodoc:
 
       def store(creditcard, options = {})
         post = {}
-        post[:name] = options[:name]
-        post[:email] = options[:email]
+        post[:id] = options[:id] if options[:id]
+        post[:name] = options[:name] if options[:name]
+        post[:email] = options[:email] if options[:email]
         add_payment_source(post, creditcard, options)
         post[:cards] = [post[:card]]
         post.delete(:card)
@@ -68,17 +69,16 @@ module ActiveMerchant #:nodoc:
         customer[:customer] = post
         post = {}
         post = customer
-
-		# I don't know what is this for
-        #path = if post[:customer]
-          #"customers/#{CGI.escape(options[:customer])}"
-        #else
-          #'customers'
-        #end
         
-        path = 'customers'
+        path = if post[:customer][:id]
+          action = :put
+          "customers/#{CGI.escape(post[:customer][:id])}"
+        else
+          action = :post
+          'customers'
+        end
 
-        commit(:post, path, post)
+        commit(action, path, post)
       end
 
       def unstore(customer_id, options = {})
@@ -89,18 +89,18 @@ module ActiveMerchant #:nodoc:
 
       def add_order(post, money, options)
         post[:description] = options[:description] || "Active Merchant Purchase"
-        post[:reference_id] = options[:order_id]
+        post[:reference_id] = options[:order_id] if options[:order_id]
         post[:currency] = (options[:currency] || currency(money)).downcase
         post[:amount] = amount(money)
       end
 
       def add_details_data(post, options)
         details = {}
-        details[:name] = options[:customer]
-        details[:email] = options[:email]
-        details[:phone] = options[:phone]
-        details[:device_fingerprint] = options[:device_fingerprint]
-        details[:ip] = options[:ip]
+        details[:name] = options[:customer] if options[:customer]
+        details[:email] = options[:email] if options[:email]
+        details[:phone] = options[:phone] if options[:phone]
+        details[:device_fingerprint] = options[:device_fingerprint] if options[:device_fingerprint]
+        details[:ip] = options[:ip] if options[:ip]
         add_billing_address(details, options)
         add_line_items(details, options)
         add_shipment(details, options)
@@ -110,10 +110,10 @@ module ActiveMerchant #:nodoc:
 
       def add_shipment(post, options)
         shipment = {}
-        shipment[:carrier] = options[:carrier]
-        shipment[:service] = options[:service]
-        shipment[:tracking_number] = options[:tracking_number]
-        shipment[:price] = options[:price]
+        shipment[:carrier] = options[:carrier] if options[:carrier]
+        shipment[:service] = options[:service] if options[:service]
+        shipment[:tracking_number] = options[:tracking_number] if options[:tracking_number]
+        shipment[:price] = options[:price] if options[:price]
         add_shipment_address(shipment, options)
         post[:shipment] = shipment
       end
@@ -121,13 +121,13 @@ module ActiveMerchant #:nodoc:
       def add_shipment_address(post, options)
 		if address = options[:shipping_address]
 			post[:address] = {}
-			post[:address][:street1] = address[:address1]
-			post[:address][:street2] = address[:address2]
-			post[:address][:street3] = address[:address3]
-			post[:address][:city] = address[:city]
-			post[:address][:state] = address[:state]
-			post[:address][:country] = address[:country]
-			post[:address][:zip] = address[:zip]
+			post[:address][:street1] = address[:address1] if address[:address1]
+			post[:address][:street2] = address[:address2] if address[:address2]
+			post[:address][:street3] = address[:address3] if address[:address3]
+			post[:address][:city] = address[:city] if address[:city]
+			post[:address][:state] = address[:state] if address[:state]
+			post[:address][:country] = address[:country] if address[:country]
+			post[:address][:zip] = address[:zip] if address[:zip]
 		end
       end
 
@@ -140,31 +140,31 @@ module ActiveMerchant #:nodoc:
       def add_billing_address(post, options)
 		if address = options[:billing_address] || options[:address]
 			post[:billing_address] = {}
-			post[:billing_address][:street1] = address[:address1]
-			post[:billing_address][:street2] = address[:address2]
-			post[:billing_address][:street3] = address[:address3]
-			post[:billing_address][:city] = address[:city]
-			post[:billing_address][:state] = address[:state]
-			post[:billing_address][:country] = address[:country]
-			post[:billing_address][:zip] = address[:zip]
-			post[:billing_address][:company_name] = address[:company_name]
-			post[:billing_address][:tax_id] = address[:tax_id]
-			post[:billing_address][:name] = address[:name]
-			post[:billing_address][:phone] = address[:phone]
-			post[:billing_address][:email] = address[:email]
+			post[:billing_address][:street1] = address[:address1] if address[:address1]
+			post[:billing_address][:street2] = address[:address2] if address[:address2]
+			post[:billing_address][:street3] = address[:address3] if address[:address3]
+			post[:billing_address][:city] = address[:city] if address[:city]
+			post[:billing_address][:state] = address[:state] if address[:state]
+			post[:billing_address][:country] = address[:country] if address[:country]
+			post[:billing_address][:zip] = address[:zip] if address[:zip]
+			post[:billing_address][:company_name] = address[:company_name] if address[:company_name]
+			post[:billing_address][:tax_id] = address[:tax_id] if address[:tax_id]
+			post[:billing_address][:name] = address[:name] if address[:name]
+			post[:billing_address][:phone] = address[:phone] if address[:phone]
+			post[:billing_address][:email] = address[:email] if address[:email]
 		end
       end
 
       def add_address(post, options)
 		if address = options[:billing_address] || options[:address]
 			post[:address] = {}
-			post[:address][:street1] = address[:address1]
-			post[:address][:street2] = address[:address2]
-			post[:address][:street3] = address[:address3]
-			post[:address][:city] = address[:city]
-			post[:address][:state] = address[:state]
-			post[:address][:country] = address[:country]
-			post[:address][:zip] = address[:zip]
+			post[:address][:street1] = address[:address1] if address[:address1]
+			post[:address][:street2] = address[:address2] if address[:address2]
+			post[:address][:street3] = address[:address3] if address[:address3]
+			post[:address][:city] = address[:city] if address[:city]
+			post[:address][:state] = address[:state] if address[:state]
+			post[:address][:country] = address[:country] if address[:country]
+			post[:address][:zip] = address[:zip] if address[:zip]
 		end
       end
 

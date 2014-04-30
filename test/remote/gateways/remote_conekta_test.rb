@@ -46,7 +46,6 @@ class RemoteConektaTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    #assert_equal "The card issuing bank declined to process this charge.", response.message
   end
 
   def test_successful_refund
@@ -75,7 +74,6 @@ class RemoteConektaTest < Test::Unit::TestCase
   def test_unsuccessful_authorize
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    #assert_equal "The card issuing bank declined to process this charge.", response.message
   end
 
   def test_successful_capture
@@ -91,8 +89,11 @@ class RemoteConektaTest < Test::Unit::TestCase
   def test_successful_store
     assert response = @gateway.store("tok_test_visa_4242", {name: "John Doe", email: "email@example.com"})
     assert_success response
+    assert response = @gateway.store("tok_test_visa_1881", {id: response.params["id"]})
     assert_equal "customer", response.params["object"]
     assert_equal "John Doe", response.params["name"]
+    assert_equal "4242", response.params["cards"][0]["last4"]
+    assert_equal "1881", response.params["cards"][1]["last4"]
     assert_equal "email@example.com", response.params["email"]
   end
 

@@ -2,12 +2,12 @@ require 'test_helper'
 
 class ConektaTest < Test::Unit::TestCase
   def setup
-    @gateway = ConektaGateway.new(:key => "1tv5yJp3xnVZ7eK67m4h")
+    @gateway = ConektaGateway.new(:key => "key_eYvWV7gSDkNYXsmr")
 
     @amount = 300
 
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
-      :number             => "4111111111111111",
+      :number             => "4242424242424242",
       :verification_value => "183",
       :month              => "01",
       :year               => "2018",
