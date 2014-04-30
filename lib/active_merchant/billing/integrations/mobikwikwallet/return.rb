@@ -3,7 +3,6 @@ module ActiveMerchant
     module Integrations
       module Mobikwikwallet
         class Return < ActiveMerchant::Billing::Integrations::Return
-
           def initialize(query_string, options = {})
             super
             @notification = Notification.new(query_string, options)
@@ -28,7 +27,6 @@ module ActiveMerchant
           def message
             @notification.message
           end
-
         end
       end
     end

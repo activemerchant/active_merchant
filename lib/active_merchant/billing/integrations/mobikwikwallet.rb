@@ -6,7 +6,6 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module Integrations #:nodoc:
       module Mobikwikwallet
-
         def self.service_url
           case ActiveMerchant::Billing::Base.integration_mode
           when :production
@@ -33,7 +32,6 @@ module ActiveMerchant #:nodoc:
         def self.checksum(secret_key, payload_items)
           digest = OpenSSL::Digest.new('sha256')
           OpenSSL::HMAC.hexdigest(digest, secret_key, payload_items)
-
         end
       end
     end

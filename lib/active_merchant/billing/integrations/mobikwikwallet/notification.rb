@@ -3,7 +3,6 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Mobikwikwallet
         class Notification < ActiveMerchant::Billing::Integrations::Notification
-
           def initialize(post, options = {})
             super(post, options)
             @secret_key = options[:credential2]
@@ -89,7 +88,7 @@ module ActiveMerchant #:nodoc:
    
           def acknowledge(authcode = nil)
             checksum_ok?
-          end          
+          end
         end
       end
     end
