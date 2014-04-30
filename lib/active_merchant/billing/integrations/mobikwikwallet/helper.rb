@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
 
           def generate_checksum
             checksum_fields = "'" + @fields["cell"] + "''" + @fields["email"] + "''" + @fields["amount"].to_s + "''" + @fields["orderid"] + "''" + @fields["redirecturl"] + "''" + @fields["mid"] + "'"
-            Mobikwikwallet.checksum(@secret_key,  checksum_fields)
+            Mobikwikwallet.checksum(@secret_key, checksum_fields)
           end
         end
       end
