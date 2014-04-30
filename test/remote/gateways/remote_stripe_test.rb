@@ -29,7 +29,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_recurring_flag
-    custom_options = @options.merge(:eci => 'zork')
+    custom_options = @options.merge(:eci => 'recurring')
     assert response = @gateway.purchase(@amount, @credit_card, custom_options)
     assert_success response
     assert_equal "charge", response.params["object"]
