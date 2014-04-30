@@ -12,11 +12,11 @@ module ActiveMerchant #:nodoc:
           end
 
           def complete?
-            status == 'Complete'
+            status == 'Completed'
           end
 
           def item_id
-            params["reservation"]
+            order
           end
 
           def transaction_id
@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def currency
-            params["purchase_currency"]
+            params["purchase_currency"].upcase
           end
 
           def gross
@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
           def status
             case params['status']
             when 'checkout_complete'
-              'Complete'
+              'Completed'
             else
               params['status']
             end
@@ -62,6 +62,10 @@ module ActiveMerchant #:nodoc:
           end
 
           private
+
+          def order
+            Rack::Utils.parse_nested_query(@options[:query_string])["order"]
+          end
 
           def parse(post)
             @raw = post.to_s

@@ -52,7 +52,7 @@ class KlarnaModuleTest < Test::Unit::TestCase
 
     shared_secret = 'example-shared-secret'
 
-    calculated_digest = "U7HXXlQ6J1Spybv5QA/jZrUP1ud5pWoNxAgYczpQifg="
+    calculated_digest = "AB4kuszp2Y4laIP4pfbHTJTPAsR7gFRxh4ml5LEDZxg="
     assert_equal calculated_digest, Klarna.sign(fields, cart_items, shared_secret)
   end
 
