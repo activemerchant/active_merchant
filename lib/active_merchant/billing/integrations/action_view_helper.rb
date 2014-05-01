@@ -69,8 +69,6 @@ module ActiveMerchant #:nodoc:
           
           concat(result.respond_to?(:html_safe) ? result.html_safe : result)
           nil
-        rescue => e
-          raise ActionViewHelperError.new(e)
         end
       end
     end

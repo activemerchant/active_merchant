@@ -20,7 +20,7 @@ class GestpayHelperTest < Test::Unit::TestCase
   end
   
   def test_invalid_currency
-    assert_raise(StandardError) do
+    assert_raise(ActionViewHelperError) do
       Gestpay::Helper.new('order-500','1234567', :amount => '5.00', :currency => 'CAD')
     end
   end
@@ -39,7 +39,7 @@ class GestpayHelperTest < Test::Unit::TestCase
   def test_get_encryption_string_fails
     @helper.expects(:ssl_get).returns('#error#1132-Not accepted call: shop is not in active state#/error#\r\n')
     
-    assert_raise(StandardError) do
+    assert_raise(ActionViewHelperError) do
       @helper.send(:get_encrypted_string)
     end
   end
@@ -47,7 +47,7 @@ class GestpayHelperTest < Test::Unit::TestCase
   def test_get_encryption_string_returns_empty_response
     @helper.expects(:ssl_get).returns('')
     
-    assert_raise(StandardError) do
+    assert_raise(ActionViewHelperError) do
       @helper.send(:get_encrypted_string)
     end
   end

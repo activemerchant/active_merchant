@@ -89,7 +89,7 @@ class Ipay88HelperTest < Test::Unit::TestCase
   end
 
   def test_invalid_amount_as_negative_integer_in_cents
-    assert_raise ArgumentError do
+    assert_raise ActionViewHelperError do
       @helper.amount = -100
     end
   end

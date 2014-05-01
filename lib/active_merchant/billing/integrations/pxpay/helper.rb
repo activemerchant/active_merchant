@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
             raise "error - must specify cancel_return_url" if @fields['UrlFail'].blank?
 
             result = request_secure_redirect
-            raise "error - failed to get token - message was #{result[:redirect]}" unless result[:valid] == "1"
+            raise ActionViewHelperError, "error - failed to get token - message was #{result[:redirect]}" unless result[:valid] == "1"
 
             url = URI.parse(result[:redirect])
 

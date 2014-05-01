@@ -68,7 +68,7 @@ module ActiveMerchant #:nodoc:
 
             extract_token(xml)
           rescue Timeout::Error => e
-            raise StandardError, "Erro ao se conectar ao PagSeguro."
+            raise ActionViewHelperError, "Erro ao se conectar ao PagSeguro."
           end
 
           def area_code_and_number(phone)
@@ -85,9 +85,9 @@ module ActiveMerchant #:nodoc:
 
             case response.code
             when "400"
-              raise StandardError, humanize_errors(xml)
+              raise ActionViewHelperError, humanize_errors(xml)
             when "401"
-              raise StandardError, "Token do PagSeguro inválido."
+              raise ActionViewHelperError, "Token do PagSeguro inválido."
             else
               raise ActiveMerchant::ResponseError, response
             end
