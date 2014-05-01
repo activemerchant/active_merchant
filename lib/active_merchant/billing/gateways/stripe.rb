@@ -21,6 +21,9 @@ module ActiveMerchant #:nodoc:
         'unchecked' => 'P'
       }
 
+      # Source: https://support.stripe.com/questions/which-zero-decimal-currencies-does-stripe-support
+      CURRENCIES_WITHOUT_FRACTIONS = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'VUV', 'XAF', 'XOF', 'XPF']
+
       self.supported_countries = %w(US CA GB AU IE FR NL BE DE ES)
       self.default_currency = 'USD'
       self.money_format = :cents
@@ -59,7 +62,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        post = {:amount => amount(money)}
+        post = {}
+        add_amount(post, money, options)
         add_application_fee(post, options)
 
         commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
@@ -70,7 +74,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, identification, options = {})
-        post = {:amount => amount(money)}
+        post = {}
+        add_amount(post, money, options)
         post[:refund_application_fee] = true if options[:refund_application_fee]
 
         MultiResponse.run(:first) do |r|
@@ -93,7 +98,8 @@ module ActiveMerchant #:nodoc:
       def refund_application_fee(money, identification, options = {})
         return Response.new(false, "Application fee id could not be found") unless identification
 
-        post = {:amount => amount(money)}
+        post = {}
+        add_amount(post, money, options)
         options.merge!(:key => @fee_refund_api_key)
 
         commit(:post, "application_fees/#{CGI.escape(identification)}/refund", post, options)
@@ -146,7 +152,7 @@ module ActiveMerchant #:nodoc:
 
       def create_post_for_auth_or_purchase(money, creditcard, options)
         post = {}
-        add_amount(post, money, options)
+        add_amount(post, money, options, true)
         add_creditcard(post, creditcard, options)
         add_customer(post, creditcard, options)
         add_customer_data(post,options)
@@ -157,9 +163,10 @@ module ActiveMerchant #:nodoc:
         post
       end
 
-      def add_amount(post, money, options)
-        post[:amount] = amount(money)
-        post[:currency] = (options[:currency] || currency(money)).downcase
+      def add_amount(post, money, options, include_currency = false)
+        currency = options[:currency] || currency(money)
+        post[:amount] = localized_amount(money, currency)
+        post[:currency] = currency.downcase if include_currency
       end
 
       def add_application_fee(post, options)
@@ -320,6 +327,10 @@ module ActiveMerchant #:nodoc:
             "message" => msg
           }
         }
+      end
+
+      def non_fractional_currency?(currency)
+        CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
       end
     end
   end
