@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
           # Need to format the amount to have 2 decimal places
           def amount=(money)
             cents = money.respond_to?(:cents) ? money.cents : money
-            raise ArgumentError, "amount must be a Money object or respond to cents" if money.is_a?(String)
+            raise ArgumentError, "amount must be a Money object or an integer" if money.is_a?(String)
             raise ActionViewHelperError, "amount must be greater than $0.00" if cents.to_i <= 0
 
             add_field(mappings[:amount], sprintf("%.2f", cents.to_f/100))
