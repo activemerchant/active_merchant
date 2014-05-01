@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
           rescue ResponseError => e
             if e.response.code == '422'
               error = JSON.parse(e.response.body)['error']['message']
-              raise RedirectError, error
+              raise ActionViewHelperError, error
             else
               raise
             end

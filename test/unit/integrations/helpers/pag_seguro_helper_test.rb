@@ -123,7 +123,7 @@ class PagSeguroHelperTest < Test::Unit::TestCase
   def test_fetch_token_raises_error_if_400_error_present
     Net::HTTP.any_instance.expects(:request).returns(stub(code: "400" , body: '<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?><errors><error><code>11014</code><message>senderPhone invalid value: 1232312356273440</message></error></errors>'))
 
-    assert_raise StandardError do
+    assert_raise ActionViewHelperError do
       @helper.fetch_token
     end
   end
@@ -131,7 +131,7 @@ class PagSeguroHelperTest < Test::Unit::TestCase
   def test_fetch_token_raises_error_if_401_error_present
     Net::HTTP.any_instance.expects(:request).returns(stub(code: "401" , body: '<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?><errors><error><code>11014</code><message>senderPhone invalid value: 1232312356273440</message></error></errors>'))
 
-    assert_raise StandardError do
+    assert_raise ActionViewHelperError do
       @helper.fetch_token
     end
   end

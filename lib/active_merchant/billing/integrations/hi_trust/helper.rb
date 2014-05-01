@@ -31,11 +31,9 @@ module ActiveMerchant #:nodoc:
           
           def amount=(money)
             cents = money.respond_to?(:cents) ? money.cents : money 
+            raise ArgumentError, "amount must be a Money object or an integer" if money.is_a?(String)
+            raise ActionViewHelperError, "amount must be greater than $0.00" if cents.to_i <= 0
 
-            if money.is_a?(String) or cents.to_i < 0
-              raise ArgumentError, 'money amount must be either a Money object or a positive integer in cents.' 
-            end
-            
             add_field(mappings[:amount], cents)
           end
           # Supported currencies include:

@@ -3,6 +3,8 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Gestpay
         module Common
+          GestpayEncryptionResponseError = Class.new(StandardError)
+
           VERSION = "2.0"
           ENCRYPTION_PATH = "/CryptHTTPS/Encrypt.asp"
           DECRYPTION_PATH = "/CryptHTTPS/Decrypt.asp"
@@ -16,15 +18,17 @@ module ActiveMerchant #:nodoc:
             'JPY' => '71',
             'HKD' => '103'
           }
+
+
           
           def parse_response(response)
             case response
             when /#cryptstring#(.*)#\/cryptstring#/, /#decryptstring#(.*)#\/decryptstring#/
               $1
             when /#error#(.*)#\/error#/
-              raise StandardError, "An error occurred retrieving the encrypted string from GestPay: #{$1}"
+              raise GestpayEncryptionResponseError, "An error occurred retrieving the encrypted string from GestPay: #{$1}"
             else
-              raise StandardError, "No response was received by GestPay"
+              raise GestpayEncryptionResponseError, "No response was received by GestPay"
             end
           end
           

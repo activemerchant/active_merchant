@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
           
           def currency=(currency_code)
             code = CURRENCY_MAPPING[currency_code]
-  					raise StandardError, "Invalid currency code #{currency_code} specified" if code.nil?
+  					raise ActionViewHelperError, "Invalid currency code #{currency_code} specified" if code.nil?
   					
   					add_field(mappings[:currency], code)
           end
@@ -54,6 +54,8 @@ module ActiveMerchant #:nodoc:
           def get_encrypted_string
             response = ssl_get(Gestpay.service_url, encryption_query_string)
             parse_response(response)
+          rescue GestpayEncryptionResponseError => e
+            raise ActionViewHelperError.new(e)
           end
           
           def encryption_query_string

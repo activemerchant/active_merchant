@@ -54,6 +54,6 @@ class BitPayHelperTest < Test::Unit::TestCase
   def test_raises_when_invalid_json_returned
     Net::HTTP.any_instance.expects(:request).returns(stub(:body => 'Invalid JSON'))
 
-    assert_raises(StandardError) { @helper.form_fields['id'] }
+    assert_raises(ActionViewHelperError) { @helper.form_fields['id'] }
   end
 end
