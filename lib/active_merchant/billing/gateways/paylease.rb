@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'TransactionAction', CC_TRANSACTION
             xml.tag! 'CreditCardAction', CAPTURE
             xml.tag! 'TransactionId', authorization
-            xml.tag! 'GatewayPayerId', 0
+            xml.tag! 'GatewayPayerId', 1
             # xml.tag! 'GatewayPayerId', options[:transaction_id]
           end
         end
