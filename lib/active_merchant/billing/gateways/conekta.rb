@@ -1,8 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class ConektaGateway < Gateway
-      #self.live_url = 'https://api.conekta.io/'
-      self.live_url = 'http://localhost:3000/'
+      self.live_url = 'https://api.conekta.io/'
 
       self.supported_countries = ['MX']
       self.supported_cardtypes = [:visa, :master]
