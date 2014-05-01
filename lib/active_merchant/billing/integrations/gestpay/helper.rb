@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
           def get_encrypted_string
             response = ssl_get(Gestpay.service_url, encryption_query_string)
             parse_response(response)
-          rescue StandardError => e
+          rescue GestpayEncryptionResponseError => e
             raise ActionViewHelperError.new(e)
           end
           
