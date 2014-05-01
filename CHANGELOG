@@ -1,9 +1,14 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.43.1 (May 1, 2014)
+
 * Merchant Warrior: Scrub names [duff]
 * Validate Gateway.supported_countries [rwdaigle]
 * Stripe: Add recurring flag support [bslobodin]
 * Stripe: Use localized amounts for currencies w/o minor units [bslobodin]
+* WebPay: Leverage fixes to Stripe to remove duplicate code [bslobodin]
+* Klarna: Miscellanenous fixes [edward]
+* Mollie iDEAL: Use order's description [wvanbergen]
 
 == Version 1.43.0 (April 24, 2014)
 
