@@ -61,18 +61,18 @@ class KlarnaHelperTest < Test::Unit::TestCase
   def test_merchant_digest
     @helper = valid_helper
 
-    assert_field 'merchant_digest', "k2BENClM8CRy3h1njQNtUHC+Jd4lVoCCkHMGu5RBAkM="
+    assert_field 'merchant_digest', "nWTZcuM5KgpzEkPSTe/54yIT3kwe3cqm6Ane79iDAYc="
   end
 
   def test_line_item
     item = example_line_item
     @helper.line_item(item)
 
-    assert_field 'cart_item-0_type', item[:type].to_s
-    assert_field 'cart_item-0_reference', item[:reference].to_s
-    assert_field 'cart_item-0_name', item[:name].to_s
-    assert_field 'cart_item-0_quantity', item[:quantity].to_s
-    assert_field 'cart_item-0_unit_price', (item[:unit_price].to_i + item[:tax_amount].to_i).to_s
+    assert_field 'cart_item-0_type', 'physical'
+    assert_field 'cart_item-0_reference', '#1'
+    assert_field 'cart_item-0_name', 'example item description'
+    assert_field 'cart_item-0_quantity', '1'
+    assert_field 'cart_item-0_unit_price', (900 + 100).to_s
     assert_field 'cart_item-0_tax_rate', '1111'
   end
 
@@ -94,13 +94,13 @@ class KlarnaHelperTest < Test::Unit::TestCase
 
   def example_line_item(order_number = 1)
     item = {
-      :type => 'physical',
+      :type => 'line item',
       :reference => "##{order_number}",
       :name => 'example item description',
-      :quantity => 1.to_s,
-      :unit_price => Money.new(9.00).cents.to_s,
+      :quantity => 1,
+      :unit_price => 900,
       :discount_rate => nil,
-      :tax_amount => Money.new(1.00).cents.to_s
+      :tax_amount => 100
     }
   end
 

@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
 
             i = @line_items.size - 1
 
-            add_field("cart_item-#{i}_type", item.fetch(:type, ''))
+            add_field("cart_item-#{i}_type", type_for(item))
             add_field("cart_item-#{i}_reference", item.fetch(:reference, ''))
             add_field("cart_item-#{i}_name", item.fetch(:name, ''))
             add_field("cart_item-#{i}_quantity", item.fetch(:quantity, ''))
@@ -76,6 +76,19 @@ module ActiveMerchant #:nodoc:
           end
 
           private
+
+          def type_for(item)
+            case item.fetch(:type, '')
+            when 'shipping'
+              'shipping_fee'
+            when 'line item'
+              'physical'
+            when 'discount'
+              'discount'
+            else
+              raise StandardError, "Unable to determine type for item #{item.to_yaml}"
+            end
+          end
 
           def append_order_query_param(url)
             u = URI.parse(url)
