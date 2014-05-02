@@ -67,8 +67,8 @@ module ActiveMerchant #:nodoc:
             check_for_errors(response, xml)
 
             extract_token(xml)
-          rescue Timeout::Error => e
-            raise ActionViewHelperError, "Erro ao se conectar ao PagSeguro."
+          rescue Timeout::Error, Errno::ECONNRESET => e
+            raise ActionViewHelperError, "Erro ao conectar-se ao PagSeguro. Por favor, tente novamente."
           end
 
           def area_code_and_number(phone)
