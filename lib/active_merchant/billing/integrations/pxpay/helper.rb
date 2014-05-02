@@ -45,6 +45,7 @@ module ActiveMerchant #:nodoc:
               'PxPayKey'          => options[:credential2],
               'CurrencyInput'     => options[:currency],
               'MerchantReference' => options[:description],
+              'EmailAddress'      => options[:customer_email],
               'TxnData1'          => options[:custom1],
               'TxnData2'          => options[:custom2],
               'TxnData3'          => options[:custom3],
