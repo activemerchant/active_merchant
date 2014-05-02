@@ -344,6 +344,9 @@ class AuthorizeNetXmlTest < Test::Unit::TestCase
   end
 =end
 =begin
+
+  THE CURRENCY CODE IS NOT CURRENTLY SUPPORTED BY THE AUTHORIZE.NET API
+
   def test_bad_currency
     @options[:currency] = "XYZ"
     assert response = @gateway.purchase(@amount, @credit_card, @options)
