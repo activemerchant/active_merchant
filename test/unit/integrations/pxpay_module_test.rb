@@ -62,6 +62,13 @@ class PxpayModuleTest < Test::Unit::TestCase
     end
   end
 
+  def test_credential_based_url
+    Pxpay::Helper.any_instance.expects(:ssl_post).returns(valid_response)
+
+    helper = Pxpay::Helper.new('44', @username, @service_options.slice(:amount, :return_url, :credential2))
+    assert_equal "https://sec.paymentexpress.com/pxpay/pxpay.aspx?userid=PXPAY_USER&request=REQUEST_TOKEN", helper.credential_based_url
+  end
+
   private
 
   def valid_response
