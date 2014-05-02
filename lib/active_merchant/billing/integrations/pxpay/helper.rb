@@ -58,8 +58,8 @@ module ActiveMerchant #:nodoc:
 
             super
 
-            raise "error - must specify return_url"        if redirect_parameters['UrlSuccess'].blank?
-            raise "error - must specify cancel_return_url" if redirect_parameters['UrlFail'].blank?
+            raise ArgumentError, "error - must specify return_url"        if redirect_parameters['UrlSuccess'].blank?
+            raise ArgumentError, "error - must specify cancel_return_url" if redirect_parameters['UrlFail'].blank?
           end
 
           def credential_based_url
