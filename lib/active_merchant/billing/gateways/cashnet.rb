@@ -3,8 +3,8 @@ module ActiveMerchant #:nodoc:
     class CashnetGateway < Gateway
       class_attribute :ignore_http_status
 
-      self.live_url      = 'https://commerce.cashnet.com/cashnete/Gateway/htmlgw.aspx'
-      self.ignore_http_status = true
+      self.live_url      = 'https://commerce.cashnet.com/'
+      self.ignore_http_status = false
 
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
@@ -49,8 +49,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, money, fields)
         fields[:amount] = amount(money) 
-        url = live_url #+ @options[:merchant_gateway_name]
-        fields[:client] = @options[:merchant_gateway_name]
+        url = live_url + @options[:merchant_gateway_name]
         parse(ssl_post(url, post_data(action, fields)))
       end
 
@@ -113,6 +112,8 @@ module ActiveMerchant #:nodoc:
       def handle_response(response)
         if ignore_http_status || (200...300).include?(response.code.to_i)
           return response.body
+        elsif 302 == response.code.to_i
+          return ssl_get(URI.parse(response['location']))
         end
         raise ResponseError.new(response)
       end
