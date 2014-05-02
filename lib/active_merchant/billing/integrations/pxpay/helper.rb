@@ -35,40 +35,39 @@ module ActiveMerchant #:nodoc:
 
         class Helper < ActiveMerchant::Billing::Integrations::Helper
           include PostsData
-          mapping :account, 'PxPayUserId'
-          mapping :credential2, 'PxPayKey'
-          mapping :currency, 'CurrencyInput'
-          mapping :description, 'MerchantReference'
-          mapping :order, 'TxnId'
-          mapping :customer, :email => 'EmailAddress'
 
-          mapping :custom1, 'TxnData1'
-          mapping :custom2, 'TxnData2'
-          mapping :custom3, 'TxnData3'
+          attr_reader :redirect_parameters
 
           def initialize(order, account, options = {})
+            @redirect_parameters = {
+              'PxPayUserId'       => account,
+              'TxnId'             => order,
+              'PxPayKey'          => options[:credential2],
+              'CurrencyInput'     => options[:currency],
+              'MerchantReference' => options[:description],
+              'TxnData1'          => options[:custom1],
+              'TxnData2'          => options[:custom2],
+              'TxnData3'          => options[:custom3],
+              'AmountInput'       => "%.2f" % options[:amount].to_f.round(2),
+              'EnableAddBillCard' => '0',
+              'TxnType'           => 'Purchase',
+              'UrlSuccess'        => options[:return_url],
+              'UrlFail'           => options[:return_url]
+            }
+
             super
-            add_field 'AmountInput', "%.2f" % options[:amount].to_f.round(2)
-            add_field 'EnableAddBillCard', '0'
-            add_field 'TxnType', 'Purchase'
+
+            raise "error - must specify return_url"        if redirect_parameters['UrlSuccess'].blank?
+            raise "error - must specify cancel_return_url" if redirect_parameters['UrlFail'].blank?
           end
 
-          def return_url(url)
-            add_field 'UrlSuccess', url
-            add_field 'UrlFail', url
-          end
+          def credential_based_url
+            raw_response = ssl_post(Pxpay.token_url, generate_request)
+            result = parse_response(raw_response)
 
-          def form_fields
-            # if either return URLs are blank PxPay will generate a token but redirect user to error page.
-            raise "error - must specify return_url" if @fields['UrlSuccess'].blank?
-            raise "error - must specify cancel_return_url" if @fields['UrlFail'].blank?
-
-            result = request_secure_redirect
             raise ActionViewHelperError, "error - failed to get token - message was #{result[:redirect]}" unless result[:valid] == "1"
 
-            url = URI.parse(result[:redirect])
-
-            CGI.parse(url.query)
+            result[:redirect]
           end
 
           def form_method
@@ -80,7 +79,7 @@ module ActiveMerchant #:nodoc:
             xml = REXML::Document.new
             root = xml.add_element('GenerateRequest')
 
-            @fields.each do | k, v |
+            redirect_parameters.each do | k, v |
               v = v.slice(0, 50) if k == "MerchantReference"
               root.add_element(k).text = v
             end
@@ -88,10 +87,8 @@ module ActiveMerchant #:nodoc:
             xml.to_s
           end
 
-          def request_secure_redirect
-            request = generate_request
-            response = ssl_post(Pxpay.token_url, request)
-            xml = REXML::Document.new(response)
+          def parse_response(raw_response)
+            xml = REXML::Document.new(raw_response)
             root = REXML::XPath.first(xml, "//Request")
             valid = root.attributes["valid"]
             redirect = root.elements["URI"].try(:text)
