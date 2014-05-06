@@ -697,6 +697,4 @@ wirecard_checkout_page:
   shop_id: ''
   paymenttype: IDL
 
-ccavenue:
-   merchant_id: M_demo1_1828
-   workingKey: ekvb7aezafo9r38ikfdfzrvy6srsl8st
+ 
