@@ -204,8 +204,8 @@ module ActiveMerchant #:nodoc:
         # Bogus card is pretty much for testing purposes. Lets just skip these extra tests if its used
         return if brand == 'bogus'
 
-        validate_card_brand
         validate_card_number
+        validate_card_brand
         validate_verification_value
         validate_switch_or_solo_attributes
       end
@@ -226,21 +226,26 @@ module ActiveMerchant #:nodoc:
         self.brand = self.class.brand?(number) if brand.blank?
       end
 
-      def validate_card_number #:nodoc:
+      def validate_card_number
         if number.blank?
           errors.add :number, "is required"
         elsif !CreditCard.valid_number?(number)
           errors.add :number, "is not a valid credit card number"
         end
-
-        unless errors.on(:number) || errors.on(:brand)
-          errors.add :brand, "does not match the card number" unless CreditCard.matching_brand?(number, brand)
-        end
       end
 
-      def validate_card_brand #:nodoc:
-        errors.add :brand, "is required" if brand.blank? && number.present?
-        errors.add :brand, "is invalid"  unless brand.blank? || CreditCard.card_companies.keys.include?(brand)
+      def validate_card_brand
+        if(brand.blank? && !errors.on(:number))
+          errors.add :brand, "is required"
+        end
+
+        if(brand.present? && !CreditCard.card_companies.keys.include?(brand))
+          errors.add :brand, "is invalid"
+        end
+
+        unless(errors.on(:number) || errors.on(:brand))
+          errors.add :brand, "does not match the card number" unless CreditCard.matching_brand?(number, brand)
+        end
       end
 
       alias_method :validate_card_type, :validate_card_brand
