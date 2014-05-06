@@ -40,17 +40,6 @@ class TwoCheckoutHelperTest < Test::Unit::TestCase
     assert_field 'phone', '(555)555-5555'
   end
 
-  def test_line_item_fields
-    @helper.line_item :quantity => 1, :recurrence => '1 Week'
-    @helper.line_item :description => 'Test Product', :price => '15.0'
-
-    assert_field 'li_1_quantity', '1'
-    assert_field 'li_1_recurrence', '1 Week'
-
-    assert_field 'li_2_description', 'Test Product'
-    assert_field 'li_2_price', '15.0'
-  end
-
   def test_third_party_cart_fields
     @helper.third_party_cart :prod => "1,1", :name => 'Example Product Name'
     @helper.third_party_cart :description => 'Example Product Description', :price => '15.0'
