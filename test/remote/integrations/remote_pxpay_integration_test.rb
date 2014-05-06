@@ -8,34 +8,6 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
   def setup
     @output_buffer = ""
     @options = fixtures(:pxpay)
-
-    @helper = Pxpay::Helper.new('500', @options[:login], :amount => "120.99", :currency => 'USD', :credential2 => @options[:password])
-  end
-
-  def test_merchant_references_longer_than_50_characters_should_be_trimmed
-    @helper.description = "more than 50 chars--------------------40--------50---55"
-    request = @helper.send(:generate_request)
-    assert_match /<MerchantReference>more than 50 chars--------------------40--------50<\/MerchantReference>/, request
-  end
-
-  def test_valid_credentials_returns_secure_token
-    @helper.return_url "http://t/pxpay/return_url"
-    @helper.cancel_return_url "http://t/pxpay/cancel_url"
-
-    response = @helper.send :request_secure_redirect
-
-    assert_equal "1", response[:valid]
-    assert response[:redirect].present?
-  end
-
-  def test_redirect_url_matches_expected
-    @helper.return_url "http://t/pxpay/return_url"
-    @helper.cancel_return_url "http://t/pxpay/cancel_url"
-
-    response = @helper.send :request_secure_redirect
-
-    url = URI.parse(response[:redirect])
-    assert_equal Pxpay.service_url, "#{url.scheme}://#{url.host}#{url.path}"
   end
 
   def test_entire_payment
@@ -126,23 +98,7 @@ class RemotePxpayIntegrationTest < Test::Unit::TestCase
   private
 
   def generate_valid_redirect_form(order_id)
-    payment_service_for(order_id, @options[:login], :service => :pxpay,  :amount => "157.0") do |service|
-      # You must set :credential2 to your pxpay key
-      service.credential2 @options[:password]
-
-      service.customer_id 8
-      service.customer :first_name => 'g',
-                       :last_name => 'g',
-                       :email => 'g@g.com',
-                       :phone => '3'
-
-      service.description "Order Description"
-
-      # The end-user is presented with the HTML produced by the notify_url.
-      service.return_url "http://t/pxpay/payment_received_notification_sub_step"
-      service.cancel_return_url "http://t/pxpay/payment_cancelled"
-      service.currency 'USD'
-    end
+    payment_service_for(order_id, @options[:login], :service => :pxpay,  :amount => "157.0", :return_url => "http://example.com/pxpay/return_url") {}
   end
 end
 
