@@ -72,20 +72,6 @@ module ActiveMerchant #:nodoc:
             add_field(mappings[:shipping_address][:name], "#{params[:first_name]} #{params[:last_name]}")
           end
 
-          # Uses Pass Through Product Parameters to pass in lineitems.
-          def line_item(params = {})
-            add_field('mode', '2CO')
-            (max_existing_line_item_id = form_fields.keys.map do |key|
-              i = key.to_s[/^li_(\d+)_/, 1]
-              (i && i.to_i)
-            end.compact.max || 0)
-
-            line_item_id = max_existing_line_item_id + 1
-            params.each do |key, value|
-              add_field("li_#{line_item_id}_#{key}", value)
-            end
-          end
-
           # Uses Third Party Cart parameter set to pass in lineitem details.
           # You must also specify `service.invoice` when using this method.
           def third_party_cart(params = {})
