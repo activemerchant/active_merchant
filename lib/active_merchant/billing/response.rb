@@ -6,6 +6,8 @@ module ActiveMerchant #:nodoc:
     class Response
       attr_reader :params, :message, :test, :authorization, :avs_result, :cvv_result
 
+      attr_accessor :request, :response
+
       def success?
         @success
       end

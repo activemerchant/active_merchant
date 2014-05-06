@@ -1,7 +1,7 @@
 module ActiveMerchant
   module Billing
     class DataCashGateway < Gateway
-      self.default_currency = 'GBP'
+      self.default_currency    = 'GBP'
       self.supported_countries = ['GB']
 
       # From the DataCash docs; Page 13, the following cards are
@@ -11,30 +11,30 @@ module ActiveMerchant
       # Switch, Visa, Visa Delta, VISA Electron, Visa Purchasing
       #
       # Note continuous authority is only supported for :visa, :master and :american_express card types
-      self.supported_cardtypes = [ :visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro, :switch, :solo, :laser ]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro, :switch, :solo, :laser]
 
-      self.homepage_url = 'http://www.datacash.com/'
-      self.display_name = 'DataCash'
+      self.homepage_url       = 'http://www.datacash.com/'
+      self.display_name       = 'DataCash'
 
       # Datacash server URLs
-      self.test_url = 'https://testserver.datacash.com/Transaction'
-      self.live_url = 'https://mars.transaction.datacash.com/Transaction'
+      self.test_url           = 'https://testserver.datacash.com/Transaction'
+      self.live_url           = 'https://mars.transaction.datacash.com/Transaction'
 
       # Different Card Transaction Types
-      AUTH_TYPE = 'auth'
-      CANCEL_TYPE = 'cancel'
-      FULFILL_TYPE = 'fulfill'
-      PRE_TYPE = 'pre'
-      REFUND_TYPE = 'refund'
+      AUTH_TYPE               = 'auth'
+      CANCEL_TYPE             = 'cancel'
+      FULFILL_TYPE            = 'fulfill'
+      PRE_TYPE                = 'pre'
+      REFUND_TYPE             = 'refund'
       TRANSACTION_REFUND_TYPE = 'txn_refund'
 
       # Constant strings for use in the ExtendedPolicy complex element for
       # CV2 checks
-      POLICY_ACCEPT = 'accept'
-      POLICY_REJECT = 'reject'
+      POLICY_ACCEPT           = 'accept'
+      POLICY_REJECT           = 'reject'
 
       # Datacash success code
-      DATACASH_SUCCESS = '1'
+      DATACASH_SUCCESS        = '1'
 
       # Creates a new DataCashGateway
       #
@@ -154,7 +154,7 @@ module ActiveMerchant
       # Create the xml document for a 'cancel' or 'fulfill' transaction.
       #
       # Final XML should look like:
-      # <Request>
+      # <Request version="2">  #version is optional
       #  <Authentication>
       #    <client>99000001</client>
       #    <password>******</password>
@@ -183,9 +183,9 @@ module ActiveMerchant
       #
       def build_void_or_capture_request(type, money, authorization, options)
         parsed_authorization = parse_authorization_string(authorization)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml                  = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, version_options do
           add_authentication(xml)
 
           xml.tag! :Transaction do
@@ -211,7 +211,7 @@ module ActiveMerchant
       #
       # Final XML should look like:
       #
-      # <Request>
+      # <Request version="2"> #version is optional
       #  <Authentication>
       #    <client>99000000</client>
       #    <password>*******</password>
@@ -332,7 +332,7 @@ module ActiveMerchant
 
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, version_options do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :ContAuthTxn, :type => 'historic'
@@ -354,7 +354,7 @@ module ActiveMerchant
       #
       # Final XML should look like:
       #
-      # <Request>
+      # <Request version="2"> #optional passed in options
       #   <Authentication>
       #     <client>99000001</client>
       #     <password>*******</password>
@@ -372,9 +372,9 @@ module ActiveMerchant
       #
       def build_transaction_refund_request(money, authorization)
         parsed_authorization = parse_authorization_string(authorization)
-        xml = Builder::XmlMarkup.new :indent => 2
+        xml                  = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, version_options do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :HistoricTxn do
@@ -395,7 +395,7 @@ module ActiveMerchant
       #
       # Final XML should look like:
       #
-      # <Request>
+      # <Request> #version optional
       #   <Authentication>
       #     <client>99000001</client>
       #     <password>*****</password>
@@ -418,7 +418,7 @@ module ActiveMerchant
       def build_refund_request(money, credit_card, options)
         xml = Builder::XmlMarkup.new :indent => 2
         xml.instruct!
-        xml.tag! :Request do
+        xml.tag! :Request, version_options do
           add_authentication(xml)
           xml.tag! :Transaction do
             xml.tag! :CardTxn do
@@ -469,7 +469,7 @@ module ActiveMerchant
           xml.tag! :expirydate, format_date(credit_card.month, credit_card.year)
 
           # optional values - for Solo etc
-          if [ 'switch', 'solo' ].include?(card_brand(credit_card).to_s)
+          if ['switch', 'solo'].include?(card_brand(credit_card).to_s)
 
             xml.tag! :issuenumber, credit_card.issue_number unless credit_card.issue_number.blank?
 
@@ -496,23 +496,23 @@ module ActiveMerchant
             # a predefined one
             xml.tag! :ExtendedPolicy do
               xml.tag! :cv2_policy,
-              :notprovided =>   POLICY_REJECT,
-              :notchecked =>    POLICY_REJECT,
-              :matched =>       POLICY_ACCEPT,
-              :notmatched =>    POLICY_REJECT,
-              :partialmatch =>  POLICY_REJECT
+                       :notprovided  => POLICY_REJECT,
+                       :notchecked   => POLICY_REJECT,
+                       :matched      => POLICY_ACCEPT,
+                       :notmatched   => POLICY_REJECT,
+                       :partialmatch => POLICY_REJECT
               xml.tag! :postcode_policy,
-              :notprovided =>   POLICY_ACCEPT,
-              :notchecked =>    POLICY_ACCEPT,
-              :matched =>       POLICY_ACCEPT,
-              :notmatched =>    POLICY_REJECT,
-              :partialmatch =>  POLICY_ACCEPT
+                       :notprovided  => POLICY_ACCEPT,
+                       :notchecked   => POLICY_ACCEPT,
+                       :matched      => POLICY_ACCEPT,
+                       :notmatched   => POLICY_REJECT,
+                       :partialmatch => POLICY_ACCEPT
               xml.tag! :address_policy,
-              :notprovided =>   POLICY_ACCEPT,
-              :notchecked =>    POLICY_ACCEPT,
-              :matched =>       POLICY_ACCEPT,
-              :notmatched =>    POLICY_REJECT,
-              :partialmatch =>  POLICY_ACCEPT
+                       :notprovided  => POLICY_ACCEPT,
+                       :notchecked   => POLICY_ACCEPT,
+                       :matched      => POLICY_ACCEPT,
+                       :notmatched   => POLICY_REJECT,
+                       :partialmatch => POLICY_ACCEPT
             end
           end
         end
@@ -522,17 +522,24 @@ module ActiveMerchant
       #
       # Parameters:
       #   -request: The XML data that is to be sent to Datacash
+      #   -request and response are now available to the Response object
       #
       # Returns:
       #   - ActiveMerchant::Billing::Response object
       #
       def commit(request)
-        response = parse(ssl_post(test? ? self.test_url : self.live_url, request))
+        url             = @options[:url] || (test? ? self.test_url : self.live_url)
+        response        = header_options.any? ? ssl_post(url, request, header_options) : ssl_post(url, request)
+        parsed_response = parse(response)
 
-        Response.new(response[:status] == DATACASH_SUCCESS, response[:reason], response,
-          :test => test?,
-          :authorization => "#{response[:datacash_reference]};#{response[:authcode]};#{response[:ca_reference]}"
+        data_cash_response          = Response.new(parsed_response[:status] == DATACASH_SUCCESS, parsed_response[:reason], parsed_response,
+                                                   :test          => test?,
+                                                   :authorization => "#{parsed_response[:datacash_reference]};#{parsed_response[:authcode]};#{parsed_response[:ca_reference]}"
         )
+        data_cash_response.request  = request
+        data_cash_response.response = response
+
+        data_cash_response
       end
 
       # Returns a date string in the format Datacash expects
@@ -545,7 +552,7 @@ module ActiveMerchant
       #   -String: date in MM/YY format
       #
       def format_date(month, year)
-        "#{format(month,:two_digits)}/#{format(year, :two_digits)}"
+        "#{format(month, :two_digits)}/#{format(year, :two_digits)}"
       end
 
       # Parse the datacash response and create a Response object
@@ -559,8 +566,8 @@ module ActiveMerchant
       def parse(body)
 
         response = {}
-        xml = REXML::Document.new(body)
-        root = REXML::XPath.first(xml, "//Response")
+        xml      = REXML::Document.new(body)
+        root     = REXML::XPath.first(xml, "//Response")
 
         root.elements.to_a.each do |node|
           parse_element(response, node)
@@ -579,7 +586,7 @@ module ActiveMerchant
       # -  none (results are stored in the passed hash)
       def parse_element(response, node)
         if node.has_elements?
-          node.elements.each{|e| parse_element(response, e) }
+          node.elements.each { |e| parse_element(response, e) }
         else
           response[node.name.underscore.to_sym] = node.text
         end
@@ -592,6 +599,22 @@ module ActiveMerchant
       def parse_authorization_string(authorization)
         reference, auth_code, ca_reference = authorization.to_s.split(';')
         {:reference => reference, :auth_code => auth_code, :ca_reference => ca_reference}
+      end
+
+      def version_options(options = {})
+        if @options[:version]
+          {:version => @options[:version]}.merge(options)
+        else
+          options
+        end
+      end
+
+      def header_options
+        if @options[:headers]
+          @options[:headers]
+        else
+          {}
+        end
       end
     end
   end
