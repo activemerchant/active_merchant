@@ -36,10 +36,10 @@ module ActiveMerchant #:nodoc:
         class Helper < ActiveMerchant::Billing::Integrations::Helper
           include PostsData
 
-          attr_reader :redirect_parameters
+          attr_reader :token_parameters, :redirect_parameters
 
           def initialize(order, account, options = {})
-            @redirect_parameters = {
+            @token_parameters = {
               'PxPayUserId'       => account,
               'TxnId'             => order,
               'PxPayKey'          => options[:credential2],
@@ -55,11 +55,12 @@ module ActiveMerchant #:nodoc:
               'UrlSuccess'        => options[:return_url],
               'UrlFail'           => options[:return_url]
             }
+            @redirect_parameters = {}
 
             super
 
-            raise ArgumentError, "error - must specify return_url"        if redirect_parameters['UrlSuccess'].blank?
-            raise ArgumentError, "error - must specify cancel_return_url" if redirect_parameters['UrlFail'].blank?
+            raise ArgumentError, "error - must specify return_url"        if token_parameters['UrlSuccess'].blank?
+            raise ArgumentError, "error - must specify cancel_return_url" if token_parameters['UrlFail'].blank?
           end
 
           def credential_based_url
@@ -68,11 +69,22 @@ module ActiveMerchant #:nodoc:
 
             raise ActionViewHelperError, "error - failed to get token - message was #{result[:redirect]}" unless result[:valid] == "1"
 
-            result[:redirect]
+            url = URI.parse(result[:redirect])
+
+            if url.query
+              @redirect_parameters = CGI.parse(url.query)
+              url.query = nil
+            end
+
+            url.to_s
           end
 
           def form_method
             "GET"
+          end
+
+          def form_fields
+            redirect_parameters
           end
 
           private
@@ -80,7 +92,7 @@ module ActiveMerchant #:nodoc:
             xml = REXML::Document.new
             root = xml.add_element('GenerateRequest')
 
-            redirect_parameters.each do | k, v |
+            token_parameters.each do | k, v |
               next if v.blank?
 
               v = v.slice(0, 50) if k == "MerchantReference"

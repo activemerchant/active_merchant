@@ -66,13 +66,27 @@ class PxpayModuleTest < Test::Unit::TestCase
     Pxpay::Helper.any_instance.expects(:ssl_post).returns(valid_response)
 
     helper = Pxpay::Helper.new('44', @username, @service_options.slice(:amount, :return_url, :credential2))
-    assert_equal "https://sec.paymentexpress.com/pxpay/pxpay.aspx?userid=PXPAY_USER&request=REQUEST_TOKEN", helper.credential_based_url
+    assert_equal "https://sec.paymentexpress.com/pxpay/pxpay.aspx", helper.credential_based_url
+    expected_params = {'userid' => ['PXPAY_USER'], 'request' => ['REQUEST_TOKEN']}
+    assert_equal expected_params, helper.redirect_parameters
+  end
+
+  def test_credential_based_url_without_query
+    Pxpay::Helper.any_instance.expects(:ssl_post).returns(valid_response_without_query)
+
+    helper = Pxpay::Helper.new('44', @username, @service_options.slice(:amount, :return_url, :credential2))
+    assert_equal "https://sec.paymentexpress.com/pxmi3/RANDOM_TOKEN", helper.credential_based_url
+    assert helper.redirect_parameters.empty?
   end
 
   private
 
   def valid_response
     '<Request valid="1"><URI>https://sec.paymentexpress.com/pxpay/pxpay.aspx?userid=PXPAY_USER&amp;request=REQUEST_TOKEN</URI></Request>'
+  end
+
+  def valid_response_without_query
+    '<Request valid="1"><URI>https://sec.paymentexpress.com/pxmi3/RANDOM_TOKEN</URI></Request>'
   end
 
   def invalid_response
