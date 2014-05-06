@@ -120,10 +120,14 @@ module ActiveMerchant #:nodoc:
             subtotal_price = item.fetch(:unit_price, 0).to_f * item.fetch(:quantity, 0).to_i
             tax_amount = item.fetch(:tax_amount, 0).to_f
 
-            tax_rate = tax_amount / subtotal_price
-            tax_rate = tax_rate.round(4)
+            if subtotal_price > 0
+              tax_rate = tax_amount / subtotal_price
+              tax_rate = tax_rate.round(4)
 
-            percentage_to_two_decimal_precision_whole_number(tax_rate)
+              percentage_to_two_decimal_precision_whole_number(tax_rate)
+            else
+              0
+            end
           end
 
           def percentage_to_two_decimal_precision_whole_number(percentage)
