@@ -55,6 +55,10 @@ module ActiveMerchant #:nodoc:
           false
         end
 
+        def iso_currency
+          ActiveMerchant::CurrencyCode.standardize(currency)
+        end
+
         private
 
         # Take the posted data and move the relevant data into a hash
