@@ -101,9 +101,10 @@ module ActiveMerchant #:nodoc:
       # ==== Options
       #
       def recurring(identification, options={})
+        deprecated RECURRING_DEPRECATION_MESSAGE
+
         commit(build_recurring_request(identification, options))
       end
-
 
       private
 

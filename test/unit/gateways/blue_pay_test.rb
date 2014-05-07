@@ -8,7 +8,6 @@ RSP = {
   :approved_purchase => "AUTH_CODE=GYRUY&PAYMENT_ACCOUNT_MASK=xxxxxxxxxxxx4242&CARD_TYPE=VISA&TRANS_TYPE=SALE&REBID=&STATUS=1&AVS=_&TRANS_ID=100134203767&CVV2=_&MESSAGE=Approved%20Sale"
 }
 
-
 class BluePayTest < Test::Unit::TestCase
   include CommStub
 
@@ -191,13 +190,15 @@ class BluePayTest < Test::Unit::TestCase
   def test_successful_recurring
     @gateway.expects(:ssl_post).returns(successful_recurring_response)
 
-    response = @gateway.recurring(@amount, @credit_card,
-      :billing_address => address.merge(:first_name => 'Jim', :last_name => 'Smith'),
-      :rebill_start_date => '1 MONTH',
-      :rebill_expression => '14 DAYS',
-      :rebill_cycles     => '24',
-      :rebill_amount     => @amount * 4
-   )
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(@amount, @credit_card,
+        :billing_address => address.merge(:first_name => 'Jim', :last_name => 'Smith'),
+        :rebill_start_date => '1 MONTH',
+        :rebill_expression => '14 DAYS',
+        :rebill_cycles     => '24',
+        :rebill_amount     => @amount * 4
+     )
+    end
 
     assert_instance_of Response, response
     assert response.success?
@@ -208,7 +209,9 @@ class BluePayTest < Test::Unit::TestCase
   def test_successful_update_recurring
     @gateway.expects(:ssl_post).returns(successful_update_recurring_response)
 
-    response = @gateway.update_recurring(:rebill_id => @rebill_id, :rebill_amount => @amount * 2)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.update_recurring(:rebill_id => @rebill_id, :rebill_amount => @amount * 2)
+    end
 
     assert_instance_of Response, response
     assert response.success?
@@ -219,7 +222,9 @@ class BluePayTest < Test::Unit::TestCase
   def test_successful_cancel_recurring
     @gateway.expects(:ssl_post).returns(successful_cancel_recurring_response)
 
-    response = @gateway.cancel_recurring(@rebill_id)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.cancel_recurring(@rebill_id)
+    end
 
     assert_instance_of Response, response
     assert response.success?
@@ -230,7 +235,9 @@ class BluePayTest < Test::Unit::TestCase
   def test_successful_status_recurring
     @gateway.expects(:ssl_post).returns(successful_status_recurring_response)
 
-    response = @gateway.status_recurring(@rebill_id)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.status_recurring(@rebill_id)
+    end
     assert_instance_of Response, response
     assert response.success?
     assert response.test?

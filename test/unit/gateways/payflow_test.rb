@@ -162,38 +162,48 @@ class PayflowTest < Test::Unit::TestCase
 
   def test_initial_recurring_transaction_missing_parameters
     assert_raises ArgumentError do
-      response = @gateway.recurring(@amount, @credit_card,
-        :periodicity => :monthly,
-        :initial_transaction => { }
-      )
+      assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+        @gateway.recurring(@amount, @credit_card,
+          :periodicity => :monthly,
+          :initial_transaction => { }
+        )
+      end
     end
   end
 
   def test_initial_purchase_missing_amount
     assert_raises ArgumentError do
-      response = @gateway.recurring(@amount, @credit_card,
-        :periodicity => :monthly,
-        :initial_transaction => { :amount => :purchase }
-      )
+      assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+        @gateway.recurring(@amount, @credit_card,
+          :periodicity => :monthly,
+          :initial_transaction => { :amount => :purchase }
+        )
+      end
     end
   end
 
   def test_recurring_add_action_missing_parameters
     assert_raises ArgumentError do
-      response = @gateway.recurring(@amount, @credit_card)
+      assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+        @gateway.recurring(@amount, @credit_card)
+      end
     end
   end
 
   def test_recurring_modify_action_missing_parameters
     assert_raises ArgumentError do
-      response = @gateway.recurring(@amount, nil)
+      assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+        @gateway.recurring(@amount, nil)
+      end
     end
   end
 
   def test_successful_recurring_action
     @gateway.stubs(:ssl_post).returns(successful_recurring_response)
 
-    response = @gateway.recurring(@amount, @credit_card, :periodicity => :monthly)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(@amount, @credit_card, :periodicity => :monthly)
+    end
 
     assert_instance_of PayflowResponse, response
     assert_success response
@@ -205,7 +215,9 @@ class PayflowTest < Test::Unit::TestCase
   def test_successful_recurring_modify_action
     @gateway.stubs(:ssl_post).returns(successful_recurring_response)
 
-    response = @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :periodicity => :monthly)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :periodicity => :monthly)
+    end
 
     assert_instance_of PayflowResponse, response
     assert_success response
@@ -217,7 +229,9 @@ class PayflowTest < Test::Unit::TestCase
   def test_successful_recurring_modify_action_with_retry_num_days
     @gateway.stubs(:ssl_post).returns(successful_recurring_response)
 
-    response = @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :retry_num_days => 3, :periodicity => :monthly)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :retry_num_days => 3, :periodicity => :monthly)
+    end
 
     assert_instance_of PayflowResponse, response
     assert_success response
@@ -229,7 +243,9 @@ class PayflowTest < Test::Unit::TestCase
   def test_falied_recurring_modify_action_with_starting_at_in_the_past
     @gateway.stubs(:ssl_post).returns(start_date_error_recurring_response)
 
-    response = @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :starting_at => Date.yesterday, :periodicity => :monthly)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :starting_at => Date.yesterday, :periodicity => :monthly)
+    end
 
     assert_instance_of PayflowResponse, response
     assert_success response
@@ -242,7 +258,9 @@ class PayflowTest < Test::Unit::TestCase
   def test_falied_recurring_modify_action_with_starting_at_missing_and_changed_periodicity
     @gateway.stubs(:ssl_post).returns(start_date_missing_recurring_response)
 
-    response = @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :periodicity => :yearly)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(@amount, nil, :profile_id => "RT0000000009", :periodicity => :yearly)
+    end
 
     assert_instance_of PayflowResponse, response
     assert_success response
@@ -255,7 +273,9 @@ class PayflowTest < Test::Unit::TestCase
   def test_recurring_profile_payment_history_inquiry
     @gateway.stubs(:ssl_post).returns(successful_payment_history_recurring_response)
 
-    response = @gateway.recurring_inquiry('RT0000000009', :history => true)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring_inquiry('RT0000000009', :history => true)
+    end
     assert_equal 1, response.payment_history.size
     assert_equal '1', response.payment_history.first['payment_num']
     assert_equal '7.25', response.payment_history.first['amt']

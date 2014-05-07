@@ -218,7 +218,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_default_managed_billing
     response = stub_comms do
-      @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => "10-10-2014" })
+      assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+        @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => "10-10-2014" })
+      end
     end.check_request do |endpoint, data, headers|
       assert_match(/<MBType>R/, data)
       assert_match(/<MBOrderIdGenerationMethod>IO/, data)
@@ -230,10 +232,12 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_managed_billing
     response = stub_comms do
-      @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => "10-10-2014",
-              :end_date => "10-10-2015",
-              :max_dollar_value => 1500,
-              :max_transactions => 12})
+      assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+        @gateway.add_customer_profile(credit_card, :managed_billing => {:start_date => "10-10-2014",
+                :end_date => "10-10-2015",
+                :max_dollar_value => 1500,
+                :max_transactions => 12})
+      end
     end.check_request do |endpoint, data, headers|
       assert_match(/<MBType>R/, data)
       assert_match(/<MBOrderIdGenerationMethod>IO/, data)

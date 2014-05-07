@@ -87,7 +87,9 @@ class VindiciaTest < Test::Unit::TestCase
                                                  successful_capture_response,
                                                  successful_update_response)
 
-    assert response = @gateway.recurring(@amount, @credit_card, @options.merge(:product_sku => "TEST_SKU"))
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(@amount, @credit_card, @options.merge(:product_sku => "TEST_SKU"))
+    end
     assert_instance_of Response, response
     assert_success response
 
@@ -101,7 +103,9 @@ class VindiciaTest < Test::Unit::TestCase
                                                  unsuccessful_update_response,
                                                  successful_void_response)
 
-    assert response = @gateway.recurring(@amount, @credit_card, @options.merge(:product_sku => "TEST_SKU"))
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(@amount, @credit_card, @options.merge(:product_sku => "TEST_SKU"))
+    end
     assert_failure response
     assert response.test?
   end

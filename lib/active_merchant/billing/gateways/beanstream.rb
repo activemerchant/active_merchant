@@ -100,6 +100,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def recurring(money, source, options = {})
+        deprecated RECURRING_DEPRECATION_MESSAGE
+
         post = {}
         add_amount(post, money)
         add_invoice(post, options)
@@ -111,6 +113,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def update_recurring(amount, source, options = {})
+        deprecated RECURRING_DEPRECATION_MESSAGE
+
         post = {}
         add_recurring_amount(post, amount)
         add_recurring_invoice(post, options)
@@ -122,6 +126,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def cancel_recurring(options = {})
+        deprecated RECURRING_DEPRECATION_MESSAGE
+
         post = {}
         add_recurring_operation_type(post, :cancel)
         add_recurring_service(post, options)

@@ -35,15 +35,6 @@ class BogusTest < Test::Unit::TestCase
     assert_equal("Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error", e.message)
   end
 
-  def test_recurring
-    assert  @gateway.recurring(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
-    assert !@gateway.recurring(1000, credit_card(CC_FAILURE_PLACEHOLDER)).success?
-    e = assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.recurring(1000, credit_card('123'))
-    end
-    assert_equal("Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error", e.message)
-  end
-
   def test_capture
     assert  @gateway.capture(1000, '1337').success?
     assert  @gateway.capture(1000, @response.params["transid"]).success?
@@ -132,15 +123,6 @@ class BogusTest < Test::Unit::TestCase
     assert  @gateway.purchase(1000, check(:account_number => CHECK_FAILURE_PLACEHOLDER, :number => CHECK_SUCCESS_PLACEHOLDER)).success?
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.purchase(1000, check(:account_number => '123', :number => nil))
-    end
-    assert_equal("Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error", e.message)
-  end
-
-  def test_recurring_with_check
-    assert  @gateway.recurring(1000, check(:account_number => CHECK_SUCCESS_PLACEHOLDER, :number => nil)).success?
-    assert !@gateway.recurring(1000, check(:account_number => CHECK_FAILURE_PLACEHOLDER, :number => nil)).success?
-    e = assert_raises(ActiveMerchant::Billing::Error) do
-      @gateway.recurring(1000, check(:account_number => '123', :number => nil))
     end
     assert_equal("Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error", e.message)
   end
