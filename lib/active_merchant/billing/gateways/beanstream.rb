@@ -16,7 +16,10 @@ module ActiveMerchant #:nodoc:
     # BeanStream supports payment profiles (vaults). This allows you to store cc information with BeanStream and process subsequent transactions with a customer id.
     # Secure Payment Profiles must be enabled on your account (must be done over the phone).
     # Your API Access Passcode must be set in Administration => account settings => order settings.
-    # To learn more about storing credit cards with the Beanstream gateway, please read the BEAN_Payment_Profiles.pdf (I had to phone BeanStream to request it.)
+    # To learn more about storing credit cards with the Beanstream gateway, documentation can be found at http://developer.beanstream.com/documentation/classic-apis
+    # 
+    # To store a credit card using Beanstream's Legato Javascript Library (http://developer.beanstream.com/documentation/legato) you must pass the singleUseToken in
+    # the store method's option parameter. Example: @gateway.store(nil, {:singleUseToken => "gt6-0c78c25b-3637-4ba0-90e2-26105287f198"})
     #
     # == Notes
     # * Adding of order products information is not implemented.

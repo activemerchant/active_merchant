@@ -197,9 +197,29 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert_equal @options[:vault_id], response.params["customer_vault_id"].to_i
   end
 
+  def test_successful_add_to_vault_with_single_use_token
+    single_use_token_options = {
+      :singleUseToken => generate_single_use_token(@visa)
+    }
+    assert response = @gateway.store(nil, single_use_token_options)
+    assert_equal 'Operation Successful', response.message
+    assert_success response
+    assert_not_nil response.params["customer_vault_id"]
+  end
+
   def test_update_vault
     test_add_to_vault_with_custom_vault_id_with_store_method
     assert response = @gateway.update(@options[:vault_id], @mastercard)
+    assert_success response
+    assert_equal 'Operation Successful', response.message
+  end
+
+  def test_update_vault_with_single_use_token
+    test_add_to_vault_with_custom_vault_id_with_store_method
+    single_use_token_options = {
+      :singleUseToken => generate_single_use_token(@mastercard)
+    }
+    assert response = @gateway.update(@options[:vault_id], nil, single_use_token_options)
     assert_success response
     assert_equal 'Operation Successful', response.message
   end
@@ -239,5 +259,26 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     assert second_response = @gateway.purchase(@amount*2, @options[:vault_id], @options)
     assert_failure second_response
     assert_equal "Invalid customer code.", second_response.message
+  end
+
+  private
+
+  def generate_single_use_token(credit_card)
+    uri = URI.parse('https://www.beanstream.com/scripts/tokenization/tokens')
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+    request = Net::HTTP::Post.new(uri.path)
+    request.content_type = "application/json"
+    request.body = {
+      "number"       => credit_card.number,
+      "expiry_month" => "01",
+      "expiry_year"  => (Time.now.year + 1) % 100,
+      "cvd"          => credit_card.verification_value,
+    }.to_json
+
+    response = http.request(request)
+    JSON.parse(response.body)["token"]
   end
 end
