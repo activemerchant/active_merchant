@@ -21,6 +21,23 @@ module ActiveMerchant #:nodoc:
     # To store a credit card using Beanstream's Legato Javascript Library (http://developer.beanstream.com/documentation/legato) you must pass the singleUseToken in
     # the store method's option parameter. Example: @gateway.store("gt6-0c78c25b-3637-4ba0-90e2-26105287f198")
     #
+    # == Legato:
+    # Legato is Beanstream's JavaScript library. When your customer submits their payment information, the credit card’s number, CVD,
+    # and expiry date will NOT go through the merchant server. As a result, the scope of your PCI compliance is limited.
+    # Using Legato, Beanstream will return a token. Use this token in place of a CreditCard instance.
+    # A JavaScript implementation example can be found at http://developer.beanstream.com/documentation/legato.
+    #
+    #   Example:
+    #
+    #   twenty = 2000
+    #   gateway = BeanstreamGateway.new(
+    #     :login => '100200000',
+    #     :user => 'xiaobozz',
+    #     :password => 'password'
+    #   )
+    #   response = gateway.purchase(twenty, {legato: 'singleUseToken'}, options)
+    #
+    #
     # == Notes
     # * Adding of order products information is not implemented.
     # * Ensure that country and province data is provided as a code such as "CA", "US", "QC".
