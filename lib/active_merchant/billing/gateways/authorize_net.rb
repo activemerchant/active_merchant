@@ -71,7 +71,8 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>:login</tt> -- The Authorize.Net API Login ID (REQUIRED)
       # * <tt>:password</tt> -- The Authorize.Net Transaction Key. (REQUIRED)
-      # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test server.
+      # * <tt>:test</tt> -- +true+ or +false+. If true, perform "testmode" transactions against the test server.
+      # * <tt>:test_url</tt> -- +true+ or +false+. If true, perform "real" transactions against the test server.
       #   Otherwise, perform transactions against the production server.
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -268,6 +269,12 @@ module ActiveMerchant #:nodoc:
         parameters[:amount] = amount(money) unless action == 'VOID'
 
         url = test? ? self.test_url : self.live_url
+        
+        # Use :test_url option to send a non-test-mode request against the testing endpoint
+        if @options[:test_url] == true 
+          url = self.test_url 
+          parameters[:test_request] = 'FALSE'
+        end
         data = ssl_post url, post_data(action, parameters)
 
         response          = parse(data)
