@@ -6,16 +6,8 @@ module ActiveMerchant #:nodoc:
         autoload :Notification, 'active_merchant/billing/integrations/pxpay/notification.rb'
         autoload :Return, 'active_merchant/billing/integrations/pxpay/return.rb'
 
-        TOKEN_URL = 'https://sec.paymentexpress.com/pxpay/pxaccess.aspx'
-
-        LIVE_URL = 'https://sec.paymentexpress.com/pxpay/pxpay.aspx'
-
         def self.token_url
-          TOKEN_URL
-        end
-
-        def self.service_url
-          LIVE_URL
+          'https://sec.paymentexpress.com/pxpay/pxaccess.aspx'
         end
 
         def self.notification(post, options={})

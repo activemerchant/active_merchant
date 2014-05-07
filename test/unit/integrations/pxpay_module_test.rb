@@ -11,6 +11,13 @@ class PxpayModuleTest < Test::Unit::TestCase
     @options = fixtures(:pxpay)
     @username = @options[:login]
     @key = @options[:password]
+
+    @service_options = {
+      :service => :pxpay,
+      :amount => 157.0,
+      :return_url => "http://example.com/pxpay/return_url",
+      :credential2 => @options[:password]
+    }
   end
 
   def test_notification_method
@@ -20,114 +27,69 @@ class PxpayModuleTest < Test::Unit::TestCase
   end
 
   def test_should_round_numbers
-    Pxpay::Helper.any_instance.stubs(:form_fields).returns({})
+    Pxpay::Helper.any_instance.expects(:ssl_post).with { |_, request| request.include?('<AmountInput>157.00</AmountInput>') }.returns(valid_response)
+    payment_service_for('44', @username, @service_options.merge(:amount => "157.003")) {}
 
-    request = ""
-    payment_service_for('44',@username, :service => :pxpay,  :amount => "157.003"){ |service| request = service.send :generate_request}
-    assert request !~ /AmountInput>157.003</
-
-    payment_service_for('44',@username, :service => :pxpay,  :amount => "157.005"){ |service| request = service.send :generate_request}
-    assert request =~ /AmountInput>157.01</
+    Pxpay::Helper.any_instance.expects(:ssl_post).with { |_, request| request.include?('<AmountInput>157.01</AmountInput>') }.returns(valid_response)
+    payment_service_for('44', @username, @service_options.merge(:amount => "157.005")) {}
   end
 
   def test_amount_has_cent_precision
-    Pxpay::Helper.any_instance.stubs(:form_fields).returns({})
-
-    request = ""
-    payment_service_for('44',@username, :service => :pxpay,  :amount => "157"){ |service| request = service.send :generate_request}
-    assert request =~ /AmountInput>157.00</
+    Pxpay::Helper.any_instance.expects(:ssl_post).with { |_, request| request.include?('<AmountInput>157.00</AmountInput>') }.returns(valid_response)
+    payment_service_for('44', @username, @service_options) {}
   end
 
   def test_all_fields
-    Pxpay::Helper.any_instance.stubs(:form_fields).returns({})
+    Pxpay::Helper.any_instance.expects(:ssl_post).with do |_, request|
+      assert_match "<TxnId>44</TxnId>", request
+      assert_match "<PxPayUserId>#{@username}</PxPayUserId>", request
+      assert_match "<PxPayKey>#{@key}</PxPayKey>", request
+      assert_match "<TxnType>Purchase</TxnType>", request
+      assert_match "<AmountInput>157.00</AmountInput>", request
+      assert_match "<EnableAddBillCard>0</EnableAddBillCard>", request
+      assert_match "<UrlSuccess>http://example.com/pxpay/return_url</UrlSuccess>", request
+      assert_match "<UrlFail>http://example.com/pxpay/return_url</UrlFail>", request
+    end.returns(valid_response)
 
-    request = ""
-    payment_service_for('44',@username, :service => :pxpay,  :amount => 157.0){|service|
-
-      service.customer_id 8
-      service.customer :first_name => 'g',
-                       :last_name => 'g',
-                       :email => 'g@g.com',
-                       :phone => '3'
-
-      service.return_url "http://example.com/pxpay/return_url"
-
-      service.credential2 @key
-
-      request = service.send :generate_request
-    }
-
-    assert_match /<TxnId>44</, request
-    assert_match /<PxPayUserId>#{@username}</, request
-    assert_match /<PxPayKey>#{@key}</, request
-    assert_match /<TxnType>Purchase</, request
-    assert_match /<AmountInput>157.00</, request
-    assert_match /<EnableAddBillCard>0</, request
-    assert_match /<EmailAddress>g@g.com</, request
-    assert_match /<UrlSuccess>http:\/\/example.com\/pxpay\/return_url</, request
-    assert_match /<UrlFail>http:\/\/example.com\/pxpay\/return_url</, request
-  end
-
-  def test_xml_escaping_fields
-    Pxpay::Helper.any_instance.stubs(:form_fields).returns({})
-
-    request = ""
-
-    payment_service_for('44',@username, :service => :pxpay, :amount => 157.0){|service|
-
-      service.customer_id 8
-      service.customer :first_name => 'g<',
-                       :last_name => 'g&',
-                       :email => '<g g> g@g.com',
-                       :phone => '3'
-
-      service.billing_address :zip => 'g',
-                       :country => 'United States of <',
-                       :address1 => 'g'
-
-      service.ship_to_address :first_name => 'g>',
-                              :last_name => 'g>',
-                              :city => '><&',
-                              :address1 => 'g&',
-                              :address2 => '>',
-                              :state => '>ut',
-                              :country => '>United States of America',
-                              :zip => '>g'
-
-      service.credential2 @key
-
-      service.return_url "http://t/pxpay/return_url?&"
-      service.cancel_return_url "http://t/pxpay/cancel_url?&"
-      request = service.generate_request
-    }
-
-    assert_nothing_raised do
-      doc = Nokogiri::XML(request) { |config| config.options = Nokogiri::XML::ParseOptions::STRICT }
-    end
-  end
-
-  def test_created_form_is_valid
-    Pxpay::Helper.any_instance.stubs(:ssl_post).returns('<Request valid="1"><URI>https://sec.paymentexpress.com/pxpay/pxpay.aspx?userid=PXPAY_USER&amp;request=REQUEST_TOKEN</URI></Request>')
-
-    payment_service_for('44',@username, :service => :pxpay, :amount => 157.0){|service|
-       service.credential2 @key
-       service.return_url "http://store.shopify.com/done"
-       service.cancel_return_url "http://store.shopify.com/cancel"
-    }
-
-    assert_match /method=\"GET\"/i, @output_buffer
+    payment_service_for('44', @username, @service_options) {}
   end
 
   def test_created_form_is_invalid_when_credentials_are_wrong
-    Pxpay::Helper.any_instance.stubs(:ssl_post).returns('<Request valid="1"><Reco>IP</Reco><ResponseText>Invalid Access Info</ResponseText></Request>')
+    Pxpay::Helper.any_instance.stubs(:ssl_post).returns(invalid_response)
 
     assert_raise(ActionViewHelperError) do
-      payment_service_for('44',@username, :service => :pxpay, :amount => 157.0){|service|
-         service.credential2 @key
-         service.return_url "http://store.shopify.com/done"
-         service.cancel_return_url "http://store.shopify.com/cancel"
-      }
+      payment_service_for('44', @username, @service_options) {}
     end
   end
 
+  def test_credential_based_url
+    Pxpay::Helper.any_instance.expects(:ssl_post).returns(valid_response)
+
+    helper = Pxpay::Helper.new('44', @username, @service_options.slice(:amount, :return_url, :credential2))
+    assert_equal "https://sec.paymentexpress.com/pxpay/pxpay.aspx", helper.credential_based_url
+    expected_params = {'userid' => ['PXPAY_USER'], 'request' => ['REQUEST_TOKEN']}
+    assert_equal expected_params, helper.redirect_parameters
+  end
+
+  def test_credential_based_url_without_query
+    Pxpay::Helper.any_instance.expects(:ssl_post).returns(valid_response_without_query)
+
+    helper = Pxpay::Helper.new('44', @username, @service_options.slice(:amount, :return_url, :credential2))
+    assert_equal "https://sec.paymentexpress.com/pxmi3/RANDOM_TOKEN", helper.credential_based_url
+    assert helper.redirect_parameters.empty?
+  end
+
+  private
+
+  def valid_response
+    '<Request valid="1"><URI>https://sec.paymentexpress.com/pxpay/pxpay.aspx?userid=PXPAY_USER&amp;request=REQUEST_TOKEN</URI></Request>'
+  end
+
+  def valid_response_without_query
+    '<Request valid="1"><URI>https://sec.paymentexpress.com/pxmi3/RANDOM_TOKEN</URI></Request>'
+  end
+
+  def invalid_response
+    '<Request valid="1"><Reco>IP</Reco><ResponseText>Invalid Access Info</ResponseText></Request>'
+  end
 end
