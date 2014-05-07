@@ -173,7 +173,7 @@ firstdata_e4:
 
 first_giving:
   application_key: ''
-  security_token:  ''
+  security_token: ''
   charity_id: "1234"
 
 garanti:
@@ -632,7 +632,7 @@ secure_pay_au:
   login: ABC0030
   password: abc123
 
-#  Replace with your serial numbers for the skipjack test environment
+# Replace with your serial numbers for the skipjack test environment
 skipjack:
   login: X
   password: Y

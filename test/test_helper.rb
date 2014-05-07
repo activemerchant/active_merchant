@@ -74,11 +74,11 @@ module ActiveMerchant
 
     # Allows testing of negative assertions:
     #
-    #   # Instead of
-    #   assert !something_that_is_false
+    # # Instead of
+    # assert !something_that_is_false
     #
-    #   # Do this
-    #   assert_false something_that_should_be_false
+    # # Do this
+    # assert_false something_that_should_be_false
     #
     # An optional +msg+ parameter is available to help you debug.
     def assert_false(boolean, message = nil)
@@ -93,11 +93,11 @@ module ActiveMerchant
 
     # An assertion of a successful response:
     #
-    #   # Instead of
-    #   assert response.success?
+    # # Instead of
+    # assert response.success?
     #
-    #   # DRY that up with
-    #   assert_success response
+    # # DRY that up with
+    # assert_success response
     #
     # A message will automatically show the inspection of the response
     # object if things go afoul.
@@ -181,16 +181,16 @@ module ActiveMerchant
 
     def address(options = {})
       {
-        :name     => 'Jim Smith',
+        :name => 'Jim Smith',
         :address1 => '1234 My Street',
         :address2 => 'Apt 1',
-        :company  => 'Widgets Inc',
-        :city     => 'Ottawa',
-        :state    => 'ON',
-        :zip      => 'K1C2N6',
-        :country  => 'CA',
-        :phone    => '(555)555-5555',
-        :fax      => '(555)555-6666'
+        :company => 'Widgets Inc',
+        :city => 'Ottawa',
+        :state => 'ON',
+        :zip => 'K1C2N6',
+        :country => 'CA',
+        :phone => '(555)555-5555',
+        :fax => '(555)555-6666'
       }.update(options)
     end
 
