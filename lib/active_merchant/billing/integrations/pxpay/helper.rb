@@ -13,10 +13,10 @@ module ActiveMerchant #:nodoc:
           def initialize(order, account, options = {})
             @token_parameters = {
               'PxPayUserId'       => account,
-              'TxnId'             => order,
+              'TxnId'             => SecureRandom.hex(8),
               'PxPayKey'          => options[:credential2],
               'CurrencyInput'     => options[:currency],
-              'MerchantReference' => options[:description],
+              'MerchantReference' => order,
               'EmailAddress'      => options[:customer_email],
               'TxnData1'          => options[:custom1],
               'TxnData2'          => options[:custom2],
@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
             token_parameters.each do | k, v |
               next if v.blank?
 
-              v = v.slice(0, 50) if k == "MerchantReference"
+              v = v.to_s.slice(0, 50) if k == "MerchantReference"
               root.add_element(k).text = v
             end
 
