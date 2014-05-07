@@ -18,6 +18,15 @@ class KlarnaHelperTest < Test::Unit::TestCase
     @helper = Klarna::Helper.new(@order_id, @credential1, @options)
   end
 
+  def test_test_mode_is_always_set
+    @helper = Klarna::Helper.new(@order_id, @credential1, @options.merge(:test => true))
+    assert_field 'test_mode', 'true'
+
+    ActiveMerchant::Billing::Base.integration_mode = :not_test
+    @helper = Klarna::Helper.new(@order_id, @credential1, @options.merge(:test => false))
+    assert_field 'test_mode', 'false'
+  end
+
   def test_basic_helper_fields
     assert_field 'purchase_currency', @options[:currency]
     assert_field 'merchant_id', @credential1

@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
         end
 
         def test?
-          @test_mode ||= ActiveMerchant::Billing::Base.integration_mode == :test || @test
+          @test_mode ||= ActiveMerchant::Billing::Base.integration_mode == :test || !!@test
         end
 
         def form_method

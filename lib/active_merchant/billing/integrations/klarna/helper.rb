@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
             @order = order
 
             add_field('platform_type', application_id)
-            add_field('test_mode', test?)
+            add_field('test_mode', test?.to_s)
           end
 
           def notify_url(url)
