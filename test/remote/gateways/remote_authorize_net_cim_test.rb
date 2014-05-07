@@ -146,6 +146,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
           :description => 'Test Order Description',
           :purchase_order_number => '4321'
         },
+        :recurring_billing => true,
         :card_code => '900', # authorize.net says this is a matching CVV
         :amount => @amount
       }
