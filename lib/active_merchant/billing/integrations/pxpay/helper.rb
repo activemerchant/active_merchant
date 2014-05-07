@@ -13,7 +13,6 @@ module ActiveMerchant #:nodoc:
           def initialize(order, account, options = {})
             @token_parameters = {
               'PxPayUserId'       => account,
-              'TxnId'             => SecureRandom.hex(8),
               'PxPayKey'          => options[:credential2],
               'CurrencyInput'     => options[:currency],
               'MerchantReference' => order,

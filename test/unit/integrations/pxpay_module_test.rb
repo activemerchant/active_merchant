@@ -40,9 +40,7 @@ class PxpayModuleTest < Test::Unit::TestCase
   end
 
   def test_all_fields
-    SecureRandom.stubs(:hex).returns('1234')
     Pxpay::Helper.any_instance.expects(:ssl_post).with do |_, request|
-      assert_match "<TxnId>1234</TxnId>", request
       assert_match "<MerchantReference>44</MerchantReference>", request
       assert_match "<PxPayUserId>#{@username}</PxPayUserId>", request
       assert_match "<PxPayKey>#{@key}</PxPayKey>", request
