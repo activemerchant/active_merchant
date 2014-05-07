@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://test-external.payex.com/'
 
       self.money_format = :cents
-      self.supported_countries = ['SE', 'NO', 'DK']
+      self.supported_countries = ['DK', 'FI', 'NO', 'SE']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://payex.com/'
       self.display_name = 'Payex'
