@@ -4,7 +4,7 @@ class RemoteElavonTest < Test::Unit::TestCase
   def setup
     @gateway = ElavonGateway.new(fixtures(:elavon))
 
-    @credit_card = credit_card('4222222222222')
+    @credit_card = credit_card('4111111111111111')
     @bad_credit_card = credit_card('invalid')
 
     @options = {
@@ -98,8 +98,82 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_success purchase
 
     assert response = @gateway.void(purchase.authorization)
+    assert_success response
     assert response = @gateway.void(purchase.authorization)
     assert_failure response
     assert_equal 'The transaction ID is invalid for this transaction type', response.message
+  end
+
+  def test_successful_recurring
+    @options[:billing_cycle] = 'DAILY'
+    @options[:next_payment_date] = Time.now.strftime("%m/%d/%Y")
+    assert recurring = @gateway.recurring(@amount, @credit_card, @options)
+
+    assert_equal 'SUCCESS', recurring.message
+    assert_success recurring
+  end
+
+  def test_unsuccessful_recurring
+    @options[:billing_cycle] = 'JUNK_PERIOD'
+    @options[:next_payment_date] = Time.now.strftime("%m/%d/%Y")
+    assert recurring = @gateway.recurring(@amount, @credit_card, @options)
+    assert_failure recurring
+    assert_equal 'Billing Cycle specified is not a valid entry.', recurring.message
+  end
+
+  def test_successful_cancel_recurring
+    @options[:billing_cycle] = 'DAILY'
+    @options[:next_payment_date] = Time.now.strftime("%m/%d/%Y")
+    assert add_recurring = @gateway.recurring(@amount, @credit_card, @options)
+    assert_success add_recurring
+
+    assert cancel_recurring = @gateway.cancel_recurring(add_recurring.params['recurring_id'], @options)
+
+    assert_equal 'SUCCESS', cancel_recurring.message
+    assert_success cancel_recurring
+  end
+
+  def test_successful_update_recurring_money
+    @options[:billing_cycle] = 'MONTHLY'
+    @options[:next_payment_date] = Time.now.strftime("%m/%d/%Y")
+    assert recurring = @gateway.recurring(@amount, @credit_card, @options)
+    assert_success recurring
+
+    @options = {}
+    @options[:recurring_id] = recurring.params['recurring_id']
+    @amount = 200
+
+    assert update = @gateway.update_recurring(@amount, nil, @options)
+    assert_success update
+  end
+
+  def test_successful_update_recurring_cycle
+    @options[:billing_cycle] = 'MONTHLY'
+    @options[:next_payment_date] = Time.now.strftime("%m/%d/%Y")
+    assert recurring = @gateway.recurring(@amount, @credit_card, @options)
+    assert_success recurring
+
+    @options = {}
+    @options[:recurring_id] = recurring.params['recurring_id']
+    @options[:billing_cycle] = 'DAILY'
+
+    assert update = @gateway.update_recurring(nil, nil, @options)
+    assert_success update
+  end
+
+  def test_successful_verify
+    assert response = @gateway.verify(@credit_card, @options)
+
+    assert_success response
+    assert_equal 'M', response.cvv_result['code']
+    assert_equal 'Y', response.avs_result['code']
+  end
+ 
+  def test_unsuccessful_verify
+    @credit_card.verification_value = '0000'
+    assert response = @gateway.verify(@credit_card, @options)
+
+    assert_failure response
+    assert_equal '5021', response.errorCode
   end
 end

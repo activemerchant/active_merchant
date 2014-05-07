@@ -47,7 +47,11 @@ module ActiveMerchant #:nodoc:
         :refund => 'CCRETURN',
         :authorize => 'CCAUTHONLY',
         :capture => 'CCFORCE',
-        :void => 'CCVOID'
+        :void => 'CCVOID',
+        :recurring => 'CCADDRECURRING',
+        :cancel_recurring => 'CCDELETERECURRING',
+        :update_recurring => 'CCUPDATERECURRING',
+        :verify => 'CCVERIFY'
       }
 
       # Initialize the Gateway
@@ -71,7 +75,7 @@ module ActiveMerchant #:nodoc:
         form = {}
         add_salestax(form, options)
         add_invoice(form, options)
-        add_creditcard(form, creditcard)
+        add_creditcard(form, creditcard, true)
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
@@ -89,7 +93,7 @@ module ActiveMerchant #:nodoc:
         form = {}
         add_salestax(form, options)
         add_invoice(form, options)
-        add_creditcard(form, creditcard)
+        add_creditcard(form, creditcard, true)
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
@@ -110,7 +114,7 @@ module ActiveMerchant #:nodoc:
         add_salestax(form, options)
         add_approval_code(form, authorization)
         add_invoice(form, options)
-        add_creditcard(form, options[:credit_card])
+        add_creditcard(form, options[:credit_card], true)
         add_customer_data(form, options)
         add_test_mode(form, options)
         commit(:capture, money, form)
@@ -159,13 +163,70 @@ module ActiveMerchant #:nodoc:
 
         form = {}
         add_invoice(form, options)
-        add_creditcard(form, creditcard)
+        add_creditcard(form, creditcard, true)
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
         commit(:credit, money, form)
       end
 
+      # Create a Recurring transaction
+      #
+      # ==== Parameters
+      # * <tt>money</tt> - The amount for each recurring transaction payment in cents.
+      # * <tt>creditcard</tt> - The credit card to be charged against for each payment.
+      # * <tt>options</tt>
+      def recurring(money, creditcard, options = {})
+        form = {}
+        add_creditcard(form, creditcard, false)
+        add_recurring(form, options)
+        add_address(form, options)
+        add_test_mode(form, options)
+        commit(:recurring, money, form)
+      end
+
+      # Update a Recurring transaction
+      #
+      # ==== Parameters
+      # * <tt>money</tt> - The amount for each recurring transaction payment in cents.
+      # * <tt>creditcard</tt> - The credit card to be charged against for each payment.
+      # * <tt>options</tt> - Here, options must include the recurring_id of the transaction being modified.
+      def update_recurring(amount, creditcard, options = {})
+        requires!(options, :recurring_id)
+        form = {}
+
+        if !creditcard.nil?
+          add_creditcard(form, creditcard, false)
+        end
+        add_recurring(form, options)
+        add_test_mode(form, options)
+        commit(:update_recurring, amount, form)
+      end
+
+      # Cancel a Recurring transaction
+      #
+      # ==== Parameters
+      # * <tt>recurring_id</tt> - The recurring_id of the transaction to be deleted.
+      # * <tt>options</tt>
+      def cancel_recurring(recurring_id, options = {})
+        form = {}
+
+        form[:recurring_id] = recurring_id
+        add_test_mode(form, options)
+        commit(:cancel_recurring, nil, form)
+      end
+
+      # Verify the AVS, CVV data for a supplied card via the Gateway
+      #
+      # ==== Parameters
+      # * <tt>creditcard</tt> - the Credit Card to be verfied
+      def verify(creditcard, options)
+        form = {}
+        add_creditcard(form, creditcard, true)
+        add_address(form, options)
+        add_test_mode(form, options)
+        commit(:verify, nil, form)
+      end
 
       private
       def add_invoice(form,options)
@@ -181,15 +242,36 @@ module ActiveMerchant #:nodoc:
         form[:txn_id] = authorization.split(';').last
       end
 
+      def add_recurring(form, options)
+        if options[:recurring_id]
+          form[:recurring_id] = options[:recurring_id]
+        end
+        if options[:next_payment_date]
+          form[:next_payment_date] = options[:next_payment_date]
+        end
+        if options[:billing_cycle]
+          form[:billing_cycle] = options[:billing_cycle]
+        end
+        if options[:bill_on_half]
+          form[:bill_on_half] = options[:bill_on_half]
+        end
+        if options[:end_of_month]
+          form[:end_of_month] = options[:end_of_month]
+        end
+        if options[:skip_payment]
+          form[:skip_payment] = options[:skip_payment]
+        end
+      end
+
       def authorization_from(response)
         [response['approval_code'], response['txn_id']].join(';')
       end
 
-      def add_creditcard(form, creditcard)
+      def add_creditcard(form, creditcard, include_cvv)
         form[:card_number] = creditcard.number
         form[:exp_date] = expdate(creditcard)
 
-        if creditcard.verification_value?
+        if (include_cvv == true) && (creditcard.verification_value?)
           add_verification_value(form, creditcard)
         end
 
@@ -261,17 +343,36 @@ module ActiveMerchant #:nodoc:
         success?(response) ? response['result_message'] : response['errorMessage']
       end
 
+      #
+      # Note that only Transactions which immediately result in an interaction by Elavon with a Credit Card company
+      # return a value in ssl_result.  The various Recurring, Installment, and perhaps other transactions, do not as
+      # they're queued for later processing.
+      #
+      def success_from?(action, response)
+        if (action == :recurring) || (action == :cancel_recurring) || (action == :update_recurring)
+          if response['result_message'] == 'SUCCESS'
+            return true
+          else
+            return false
+          end
+        else
+          response['result'] == '0'
+        end
+      end
+
       def success?(response)
         !response.has_key?('errorMessage')
       end
 
       def commit(action, money, parameters)
-        parameters[:amount] = amount(money)
+        if ! money.nil?
+          parameters[:amount] = amount(money)
+        end
         parameters[:transaction_type] = self.actions[action]
-
+        
         response = parse( ssl_post(test? ? self.test_url : self.live_url, post_data(parameters)) )
-
-        Response.new(response['result'] == '0', message_from(response), response,
+        
+        Response.new(success_from?(action, response), message_from(response), response,
           :test => @options[:test] || test?,
           :authorization => authorization_from(response),
           :avs_result => { :code => response['avs_response'] },

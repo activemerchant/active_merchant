@@ -86,6 +86,48 @@ class ElavonTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'The refund amount exceeds the original transaction amount.', response.message
   end
+  
+  def test_successful_recurring
+    @gateway.expects(:ssl_post).returns(successful_recurring_response)
+
+    @options[:billing_cycle] = 'MONTHLY'
+    @options[:next_payment_date] = Time.now.strftime("%m/%d/%Y")
+    assert response = @gateway.recurring(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_unsuccessful_recurring
+    @gateway.expects(:ssl_post).returns(failed_recurring_response)
+
+    @options[:billing_cycle] = 'NOSUCHENTRY'
+    @options[:next_payment_date] = Time.now.strftime("%m/%d/%Y")
+    assert response = @gateway.recurring(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'The billing cycle specified is not a valid entry.', response.message
+  end
+
+  def test_successful_updaterecurring
+    @gateway.expects(:ssl_post).returns(successful_recurring_response)
+
+    @options = {}
+    @options[:recurring_id] = 'AA49315-C8C8000A-E8F2-4566-959E-CA3B089F2E45'
+    assert response = @gateway.update_recurring(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_unsuccessful_updaterecurring
+    @gateway.expects(:ssl_post).returns(failed_recurring_response)
+
+    @options = {}
+    @options[:recurring_id] = 'AA49315-C8C8000A-E8F2-4566-959E-CA3B089F2E45'
+    @options[:billing_cycle] = "NONSENSE"
+
+    assert response = @gateway.update_recurring(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'The billing cycle specified is not a valid entry.', response.message
+  end
 
   def test_invalid_login
     @gateway.expects(:ssl_post).returns(invalid_login_response)
@@ -111,6 +153,26 @@ class ElavonTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     response = @gateway.purchase(@amount, @credit_card)
     assert_equal 'P', response.cvv_result['code']
+  end
+
+  def test_successful_verify
+    @gateway.expects(:ssl_post).returns(successful_verify_response)
+
+    options = {}
+
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_equal 'M', response.cvv_result['code']
+    assert_equal 'Y', response.avs_result['code']
+    assert_success response
+  end
+
+  def test_unsuccessful_verify
+    @gateway.expects(:ssl_post).returns(unsuccessful_verify_response)
+
+    options = {}
+
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_failure response
   end
 
   private
@@ -185,6 +247,19 @@ class ElavonTest < Test::Unit::TestCase
     ssl_txn_time=08/21/2012 05:37:19 PM"
   end
 
+  def successful_recurring_response
+    "ssl_result=0
+    ssl_result_message=SUCCESS
+    ssl_card_number=42********4242
+    ssl_exp_date=0914
+    ssl_amount=1.00
+    ssl_billing_cycle=MONTHLY
+    ssl_next_payment_date=
+    ssl_recurring_batch_count=
+    ssl_recurring_id=AA49315-C8C8000A-E8F2-4566-959E-CA3B089F2E45
+    ssl_start_payment_date="
+  end
+
   def failed_purchase_response
     "errorCode=5000
     errorName=Credit Card Number Invalid
@@ -231,4 +306,30 @@ class ElavonTest < Test::Unit::TestCase
     errorName=Credit Card Number Invalid
     errorMessage=The Credit Card Number supplied in the authorization request appears to be invalid."
   end
+
+  def failed_recurring_response
+    "errorCode=5030
+     errorName=Invalid Billing cycle
+     errorMessage=The billing cycle specified is not a valid entry."
+  end
+
+  def successful_verify_response
+    "ssl_card_number=42**********4242
+     ssl_exp_date=0910
+     ssl_result=0
+     ssl_result_message=APPROVAL
+     ssl_txn_id=
+     ssl_txn_time=
+     ssl_approval_code=
+     ssl_avs_response=Y
+     ssl_cvv2_response=M"
+  end
+
+  def unsuccessful_verify_response
+    "errorCode=6022
+    errorName=Declined Cvv2
+    errorMessage=The transaction was not approved."
+  end
+
 end
+
