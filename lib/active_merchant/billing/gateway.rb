@@ -143,6 +143,35 @@ module ActiveMerchant #:nodoc:
         (@options.has_key?(:test) ? @options[:test] : Base.test?)
       end
 
+      protected # :nodoc: all
+
+      def expdate(credit_card)
+        year  = sprintf("%.4i", credit_card.year)
+        month = sprintf("%.2i", credit_card.month)
+
+        "#{month}#{year[-2..-1]}"
+      end
+
+      def normalize(field)
+        case field
+          when "true"   then true
+          when "false"  then false
+          when ""       then nil
+          when "null"   then nil
+          else field
+        end
+      end
+
+      def user_agent
+        @@ua ||= JSON.dump({
+          :bindings_version => ActiveMerchant::VERSION,
+          :lang => 'ruby',
+          :lang_version => "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
+          :platform => RUBY_PLATFORM,
+          :publisher => 'active_merchant'
+        })
+      end
+
       private # :nodoc: all
 
       def name

@@ -99,13 +99,6 @@ module ActiveMerchant #:nodoc:
         post[:MerchantKey] = @options[:password]
         post.to_s
       end
-
-      def expdate(creditcard)
-        year = sprintf("%.4i", creditcard.year)
-        month = sprintf("%.2i", creditcard.month)
-
-        "#{month}#{year[-2..-1]}"
-      end
     end
   end
 end

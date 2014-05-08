@@ -125,13 +125,6 @@ module ActiveMerchant #:nodoc:
         post[:cvv]       = credit_card.verification_value
       end
 
-      def expdate(credit_card)
-        year  = sprintf("%.4i", credit_card.year)
-        month = sprintf("%.2i", credit_card.month)
-
-        "#{month}#{year[-2..-1]}"
-      end
-
       def add_addresses(post, options)
         if billing_address = options[:billing_address] || options[:address]
           post[:company]    = billing_address[:company]

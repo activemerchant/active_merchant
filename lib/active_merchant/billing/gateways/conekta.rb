@@ -175,20 +175,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(meta)
-        @@ua ||= JSON.dump({
-          :bindings_version => ActiveMerchant::VERSION,
-          :lang => 'ruby',
-          :lang_version => "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
-          :platform => RUBY_PLATFORM,
-          :publisher => 'active_merchant'
-        })
-
         {
           "Accept" => "application/vnd.conekta-v#{options[:version]}+json",
           "Authorization" => "Basic " + Base64.encode64("#{options[:key]}:"),
           "RaiseHtmlError" => "false",
           "User-Agent" => "Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          "X-Conekta-Client-User-Agent" => @@ua,
+          "X-Conekta-Client-User-Agent" => user_agent,
           "X-Conekta-Client-User-Metadata" => meta.to_json
         }
       end

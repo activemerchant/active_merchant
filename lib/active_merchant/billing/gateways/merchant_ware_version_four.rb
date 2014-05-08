@@ -147,13 +147,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def expdate(credit_card)
-        year  = sprintf("%.4i", credit_card.year)
-        month = sprintf("%.2i", credit_card.month)
-
-        "#{month}#{year[-2..-1]}"
-      end
-
       def add_invoice(xml, options)
         xml.tag! "invoiceNumber", options[:order_id].to_s.gsub(/[^\w]/, '').slice(0, 25)
       end

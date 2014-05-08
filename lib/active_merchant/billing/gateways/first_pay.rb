@@ -102,13 +102,6 @@ module ActiveMerchant #:nodoc:
         post[:exp] = expdate(creditcard)
       end
 
-      def expdate(credit_card)
-        year  = sprintf("%.4i", credit_card.year)
-        month = sprintf("%.2i", credit_card.month)
-
-        "#{month}#{year[-2..-1]}"
-      end
-
       def add_credit_data(post, transaction_id)
         post[:transid] = transaction_id
       end
