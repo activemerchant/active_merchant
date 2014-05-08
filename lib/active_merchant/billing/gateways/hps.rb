@@ -69,21 +69,6 @@ module ActiveMerchant #:nodoc:
         get(transaction_id)
       end
 
-      def get(transaction_id)
-
-        if transaction_id.nil? or transaction_id == 0
-          return ActiveMerchant::Billing::Response.new(false,@exception_mapper.map_sdk_exception(Hps::SdkCodes.invalid_transaction_id).message )
-        end
-
-        xml = Builder::XmlMarkup.new
-        xml.hps :Transaction do
-          xml.hps :ReportTxnDetail do
-            xml.hps :TxnId, transaction_id
-          end
-        end
-        submit_get xml.target!
-      end
-
       def purchase(money, card_or_token, options={})
         request_multi_use_token = add_multi_use(options)
 
@@ -203,6 +188,21 @@ module ActiveMerchant #:nodoc:
         multi_use = false
         multi_use = options[:request_multi_use_token] if options[:request_multi_use_token]
         multi_use
+      end
+
+      def get(transaction_id)
+
+        if transaction_id.nil? or transaction_id == 0
+          return ActiveMerchant::Billing::Response.new(false,@exception_mapper.map_sdk_exception(Hps::SdkCodes.invalid_transaction_id).message )
+        end
+
+        xml = Builder::XmlMarkup.new
+        xml.hps :Transaction do
+          xml.hps :ReportTxnDetail do
+            xml.hps :TxnId, transaction_id
+          end
+        end
+        submit_get xml.target!
       end
 
       def submit_auth_or_purchase(action, xml, money)
