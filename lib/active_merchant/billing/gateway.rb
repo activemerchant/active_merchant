@@ -143,6 +143,18 @@ module ActiveMerchant #:nodoc:
         (@options.has_key?(:test) ? @options[:test] : Base.test?)
       end
 
+      protected # :nodoc: all
+
+      def user_agent
+        @@ua ||= JSON.dump({
+          :bindings_version => ActiveMerchant::VERSION,
+          :lang => 'ruby',
+          :lang_version => "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
+          :platform => RUBY_PLATFORM,
+          :publisher => 'active_merchant'
+        })
+      end
+
       private # :nodoc: all
 
       def name

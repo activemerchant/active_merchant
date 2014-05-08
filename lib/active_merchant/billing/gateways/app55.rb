@@ -166,17 +166,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers
-        @@ua ||= JSON.dump(
-          :bindings_version => ActiveMerchant::VERSION,
-          :lang => 'ruby',
-          :lang_version => "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL} (#{RUBY_RELEASE_DATE})",
-          :platform => RUBY_PLATFORM,
-          :publisher => 'active_merchant'
-        )
-
         {
           "Authorization" => "Basic " + Base64.strict_encode64(@options[:api_key].to_s + ":" + @options[:api_secret].to_s),
-          "User-Agent" => "ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          "User-Agent" => user_agent,
         }
       end
     end
