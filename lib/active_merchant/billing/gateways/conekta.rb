@@ -54,34 +54,46 @@ module ActiveMerchant #:nodoc:
 
         commit(:post, "charges/#{identifier}/refund", post)
       end
-
+      
+			
       def store(creditcard, options = {})
         post = {}
-        post[:id] = options[:id] if options[:id]
-        post[:name] = options[:name] if options[:name]
+				if creditcard.instance_of?(ActiveMerchant::Billing::CreditCard)
+					post[:name] = creditcard.name
+				elsif creditcard.kind_of?(String)
+					post[:name] = options[:name] if options[:name]
+				end
         post[:email] = options[:email] if options[:email]
         add_payment_source(post, creditcard, options)
         post[:cards] = [post[:card]]
         post.delete(:card)
-        
         customer = {}
         customer[:customer] = post
         post = {}
         post = customer
-        
-        path = if post[:customer][:id]
-          action = :put
-          "customers/#{CGI.escape(post[:customer][:id])}"
-        else
-          action = :post
-          'customers'
-        end
-
-        commit(action, path, post)
+        commit(:post, "customers", post)
       end
-
-      def unstore(customer_id, options = {})
-        commit(:delete, "customers/#{CGI.escape(customer_id)}", nil)
+      
+      def update(customer_id, creditcard, options = {})
+				post = {}
+        post[:id] = customer_id
+        add_payment_source(post, creditcard, options)
+        post[:cards] = [post[:card]]
+        post.delete(:card)
+        customer = {}
+        customer[:customer] = post
+        post = {}
+        post = customer
+        path = "customers/#{CGI.escape(customer_id)}"
+        commit(:put, path, post)
+      end
+      
+      def unstore(customer_id, card_id = nil, options = {})
+        if card_id.nil?
+          commit(:delete, "customers/#{CGI.escape(customer_id)}", nil, options)
+        else
+          commit(:delete, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(card_id)}", nil, options)
+        end
       end
 
       private
@@ -118,16 +130,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_shipment_address(post, options)
-		if address = options[:shipping_address]
-			post[:address] = {}
-			post[:address][:street1] = address[:address1] if address[:address1]
-			post[:address][:street2] = address[:address2] if address[:address2]
-			post[:address][:street3] = address[:address3] if address[:address3]
-			post[:address][:city] = address[:city] if address[:city]
-			post[:address][:state] = address[:state] if address[:state]
-			post[:address][:country] = address[:country] if address[:country]
-			post[:address][:zip] = address[:zip] if address[:zip]
-		end
+				if address = options[:shipping_address]
+					post[:address] = {}
+					post[:address][:street1] = address[:address1] if address[:address1]
+					post[:address][:street2] = address[:address2] if address[:address2]
+					post[:address][:street3] = address[:address3] if address[:address3]
+					post[:address][:city] = address[:city] if address[:city]
+					post[:address][:state] = address[:state] if address[:state]
+					post[:address][:country] = address[:country] if address[:country]
+					post[:address][:zip] = address[:zip] if address[:zip]
+				end
       end
 
       def add_line_items(post, options)
@@ -136,36 +148,36 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_billing_address(post, options)
-		if address = options[:billing_address] || options[:address]
-			post[:billing_address] = {}
-			post[:billing_address][:street1] = address[:address1] if address[:address1]
-			post[:billing_address][:street2] = address[:address2] if address[:address2]
-			post[:billing_address][:street3] = address[:address3] if address[:address3]
-			post[:billing_address][:city] = address[:city] if address[:city]
-			post[:billing_address][:state] = address[:state] if address[:state]
-			post[:billing_address][:country] = address[:country] if address[:country]
-			post[:billing_address][:zip] = address[:zip] if address[:zip]
-			post[:billing_address][:company_name] = address[:company_name] if address[:company_name]
-			post[:billing_address][:tax_id] = address[:tax_id] if address[:tax_id]
-			post[:billing_address][:name] = address[:name] if address[:name]
-			post[:billing_address][:phone] = address[:phone] if address[:phone]
-			post[:billing_address][:email] = address[:email] if address[:email]
-		end
-      end
+			def add_billing_address(post, options)
+				if address = options[:billing_address] || options[:address]
+					post[:billing_address] = {}
+					post[:billing_address][:street1] = address[:address1] if address[:address1]
+					post[:billing_address][:street2] = address[:address2] if address[:address2]
+					post[:billing_address][:street3] = address[:address3] if address[:address3]
+					post[:billing_address][:city] = address[:city] if address[:city]
+					post[:billing_address][:state] = address[:state] if address[:state]
+					post[:billing_address][:country] = address[:country] if address[:country]
+					post[:billing_address][:zip] = address[:zip] if address[:zip]
+					post[:billing_address][:company_name] = address[:company_name] if address[:company_name]
+					post[:billing_address][:tax_id] = address[:tax_id] if address[:tax_id]
+					post[:billing_address][:name] = address[:name] if address[:name]
+					post[:billing_address][:phone] = address[:phone] if address[:phone]
+					post[:billing_address][:email] = address[:email] if address[:email]
+				end
+			end
 
-      def add_address(post, options)
-		if address = options[:billing_address] || options[:address]
-			post[:address] = {}
-			post[:address][:street1] = address[:address1] if address[:address1]
-			post[:address][:street2] = address[:address2] if address[:address2]
-			post[:address][:street3] = address[:address3] if address[:address3]
-			post[:address][:city] = address[:city] if address[:city]
-			post[:address][:state] = address[:state] if address[:state]
-			post[:address][:country] = address[:country] if address[:country]
-			post[:address][:zip] = address[:zip] if address[:zip]
-		end
-      end
+			def add_address(post, options)
+				if address = options[:billing_address] || options[:address]
+					post[:address] = {}
+					post[:address][:street1] = address[:address1] if address[:address1]
+					post[:address][:street2] = address[:address2] if address[:address2]
+					post[:address][:street3] = address[:address3] if address[:address3]
+					post[:address][:city] = address[:city] if address[:city]
+					post[:address][:state] = address[:state] if address[:state]
+					post[:address][:country] = address[:country] if address[:country]
+					post[:address][:zip] = address[:zip] if address[:zip]
+				end
+			end
 
       def add_payment_source(post, payment_source, options)
         if payment_source.kind_of?(String)
