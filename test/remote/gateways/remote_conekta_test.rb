@@ -7,7 +7,7 @@ class RemoteConektaTest < Test::Unit::TestCase
     @amount = 300
 
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
-      number:             "4111111111111111",
+      number:             "4242424242424242",
       verification_value: "183",
       month:              "01",
       year:               "2018",
@@ -46,7 +46,6 @@ class RemoteConektaTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "The card's issuing bank has declined to process this charge.", response.message
   end
 
   def test_successful_refund
@@ -63,7 +62,7 @@ class RemoteConektaTest < Test::Unit::TestCase
   def test_unsuccessful_refund
     assert response = @gateway.refund(@amount, "1", @options)
     assert_failure response
-    assert_equal "The charge does not exist or it is not suitable for this operation", response.message
+    assert_equal "The resource was not found.", response.message
   end
 
   def test_successful_authorize
@@ -75,7 +74,6 @@ class RemoteConektaTest < Test::Unit::TestCase
   def test_unsuccessful_authorize
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "The card's issuing bank has declined to process this charge.", response.message
   end
 
   def test_successful_capture
@@ -89,16 +87,26 @@ class RemoteConektaTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    assert response = @gateway.store(@credit_card, {name: "John Doe", email: "email@example.com"})
+    assert response = @gateway.store("tok_test_visa_4242", {name: "John Doe", email: "email@example.com"})
     assert_success response
+    assert response = @gateway.update(response.params["id"], "tok_test_visa_1881")
     assert_equal "customer", response.params["object"]
     assert_equal "John Doe", response.params["name"]
+    assert_equal "4242", response.params["cards"][0]["last4"]
+    assert_equal "1881", response.params["cards"][1]["last4"]
     assert_equal "email@example.com", response.params["email"]
   end
 
   def test_successful_unstore
-    creation = @gateway.store(@credit_card, {name: "John Doe", email: "email@example.com"})
+    creation = @gateway.store("tok_test_visa_4242", {name: "John Doe", email: "email@example.com"})
     assert response = @gateway.unstore(creation.params['id'])
+    assert_success response
+    assert_equal true, response.params["deleted"]
+  end
+  
+  def test_successful_unstore_card
+    creation = @gateway.store("tok_test_visa_4242", {name: "John Doe", email: "email@example.com"})
+    assert response = @gateway.unstore(creation.params['id'], creation.params['"default_card_id"'])
     assert_success response
     assert_equal true, response.params["deleted"]
   end
@@ -106,13 +114,13 @@ class RemoteConektaTest < Test::Unit::TestCase
   def test_unsuccessful_capture
     assert response = @gateway.capture(@amount, "1", @options)
     assert_failure response
-    assert_equal "The charge does not exist or it is not suitable for this operation", response.message
+    assert_equal "The resource was not found.", response.message
   end
 
   def test_invalid_key
     gateway = ConektaGateway.new(key: 'invalid_token')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Unrecognized authentication key", response.message
+    assert_equal "Unrecognized access key.", response.message
   end
-end
+end	
