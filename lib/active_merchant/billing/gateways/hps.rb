@@ -302,35 +302,6 @@ module ActiveMerchant #:nodoc:
 
       end
 
-      def submit_verify(transaction)
-        response = do_transaction(transaction)
-        if response.is_a? ActiveMerchant::Billing::Response
-          response
-        else
-          header = response['Header']
-
-          if successful?(response)
-            transaction = response['Transaction']['CreditAccountVerify']
-            result = {
-                'CardType' => transaction['CardType'],
-                'CVVRsltCode' => transaction['CVVRsltCode'],
-                'RspCode' => transaction['RspCode'],
-                'RspText' => transaction['RspText'],
-                'AVSRsltCode' => transaction['AVSRsltCode'],
-                'AVSRsltText' => transaction['AVSRsltText'],
-            }
-
-            if [ '85', '00' ].include? result['RspCode'] == false
-              build_error_response @exception_mapper.map_issuer_exception(header['GatewayTxnId'], result['RspCode'], result['RspText'])
-            else
-              build_response header,result,response
-            end
-          else
-            build_error_response @exception_mapper.map_gateway_exception(header['GatewayTxnId'], header['GatewayRspCode'], header['GatewayRspMsg'])
-          end
-        end
-      end
-
       def submit_void(xml)
         response = do_transaction(xml)
 
