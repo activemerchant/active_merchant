@@ -135,7 +135,7 @@ module ActiveMerchant #:nodoc:
         submit_reverse xml.target!
       end
 
-      def void(transaction_id)
+      def void(transaction_id, options={})
         xml = Builder::XmlMarkup.new
         xml.hps :Transaction do
           xml.hps :CreditVoid do
