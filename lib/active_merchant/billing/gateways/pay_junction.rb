@@ -239,6 +239,8 @@ module ActiveMerchant #:nodoc:
       # YYYYMMDD format and can be used to specify when the first charge will be made.
       # If omitted the first charge will be immediate.
       def recurring(money, payment_source, options = {})
+        deprecated RECURRING_DEPRECATION_MESSAGE
+
         requires!(options, [:periodicity, :monthly, :weekly, :daily], :payments)
 
         periodic_type = case options[:periodicity]

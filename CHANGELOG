@@ -12,6 +12,7 @@
 * Beanstream: Add support for Legato single use tokens [tylerrooney]
 * PayPal Digital Goods: Allow mobile [tomprats]
 * Maxipago: Add installment support [alexandremcosta]
+* Deprecate recurring API support [ntalbott]
 
 == Version 1.43.1 (May 1, 2014)
 

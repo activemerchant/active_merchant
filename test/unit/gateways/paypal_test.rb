@@ -20,47 +20,85 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_no_ip_address
-    assert_raise(ArgumentError){ @gateway.purchase(@amount, @credit_card, :billing_address => address)}
+    assert_raise(ArgumentError) do
+      @gateway.purchase(@amount, @credit_card, :billing_address => address)
+    end
   end
 
   def test_recurring_requires_description
     @recurring_required_fields.delete(:description)
-    assert_raise(ArgumentError){ @gateway.recurring(@amount, @credit_card, @options.merge(@recurring_required_fields)) }
+    assert_raise(ArgumentError) do
+      assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+        @gateway.recurring(@amount, @credit_card, @options.merge(@recurring_required_fields))
+      end
+    end
   end
 
   def test_recurring_requires_start_date
     @recurring_required_fields.delete(:start_date)
-    assert_raise(ArgumentError){ @gateway.recurring(@amount, @credit_card, @options.merge(@recurring_required_fields)) }
+    assert_raise(ArgumentError) do
+      assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+        @gateway.recurring(@amount, @credit_card, @options.merge(@recurring_required_fields))
+      end
+    end
   end
 
   def test_recurring_requires_frequency
     @recurring_required_fields.delete(:frequency)
-    assert_raise(ArgumentError){ @gateway.recurring(@amount, @credit_card, @options.merge(@recurring_required_fields)) }
+    assert_raise(ArgumentError) do
+      assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+        @gateway.recurring(@amount, @credit_card, @options.merge(@recurring_required_fields))
+      end
+    end
   end
 
   def test_recurring_requires_period
     @recurring_required_fields.delete(:period)
-    assert_raise(ArgumentError){ @gateway.recurring(@amount, @credit_card, @options.merge(@recurring_required_fields)) }
+    assert_raise(ArgumentError) do
+      assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+        @gateway.recurring(@amount, @credit_card, @options.merge(@recurring_required_fields))
+      end
+    end
   end
 
   def test_update_recurring_requires_profile_id
-    assert_raise(ArgumentError){ @gateway.update_recurring(:amount => 100)}
+    assert_raise(ArgumentError) do
+      assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+        @gateway.update_recurring(:amount => 100)
+      end
+    end
   end
 
   def test_cancel_recurring_requires_profile_id
-    assert_raise(ArgumentError){ @gateway.cancel_recurring(nil, :note => 'Note')}
+    assert_raise(ArgumentError) do
+      assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+        @gateway.cancel_recurring(nil, :note => 'Note')
+      end
+    end
   end
 
   def test_status_recurring_requires_profile_id
-    assert_raise(ArgumentError){ @gateway.status_recurring(nil, :note => 'Note')}
+    assert_raise(ArgumentError) do
+      assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+        @gateway.status_recurring(nil)
+      end
+    end
   end
 
   def test_suspend_recurring_requires_profile_id
-    assert_raise(ArgumentError){ @gateway.suspend_recurring(nil, :note => 'Note')}
+    assert_raise(ArgumentError) do
+      assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+        @gateway.suspend_recurring(nil, :note => 'Note')
+      end
+    end
   end
 
   def test_reactivate_recurring_requires_profile_id
-    assert_raise(ArgumentError){ @gateway.reactivate_recurring(nil, :note => 'Note')}
+    assert_raise(ArgumentError) do
+      assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+        @gateway.reactivate_recurring(nil, :note => 'Note')
+      end
+    end
   end
 
   def test_successful_purchase_with_auth_signature
@@ -306,7 +344,9 @@ class PaypalTest < Test::Unit::TestCase
 
   def test_successful_create_profile
     @gateway.expects(:ssl_post).returns(successful_create_profile_paypal_response)
-    response = @gateway.recurring(@amount, @credit_card, :description => "some description", :start_date => Time.now, :frequency => 12, :period => 'Month')
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(@amount, @credit_card, :description => "some description", :start_date => Time.now, :frequency => 12, :period => 'Month')
+    end
     assert_instance_of Response, response
     assert response.success?
     assert response.test?
@@ -316,7 +356,9 @@ class PaypalTest < Test::Unit::TestCase
 
   def test_failed_create_profile
     @gateway.expects(:ssl_post).returns(failed_create_profile_paypal_response)
-    response = @gateway.recurring(@amount, @credit_card, :description => "some description", :start_date => Time.now, :frequency => 12, :period => 'Month')
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(@amount, @credit_card, :description => "some description", :start_date => Time.now, :frequency => 12, :period => 'Month')
+    end
     assert_instance_of Response, response
     assert !response.success?
     assert response.test?
@@ -327,42 +369,56 @@ class PaypalTest < Test::Unit::TestCase
   def test_update_recurring_delegation
     @gateway.expects(:build_change_profile_request).with('I-G7A2FF8V75JY', :amount => 200)
     @gateway.stubs(:commit)
-    @gateway.update_recurring(:profile_id => 'I-G7A2FF8V75JY', :amount => 200)
+    assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.update_recurring(:profile_id => 'I-G7A2FF8V75JY', :amount => 200)
+    end
   end
 
   def test_update_recurring_response
     @gateway.expects(:ssl_post).returns(successful_update_recurring_payment_profile_response)
-    response = @gateway.update_recurring(:profile_id => 'I-G7A2FF8V75JY', :amount => 200)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.update_recurring(:profile_id => 'I-G7A2FF8V75JY', :amount => 200)
+    end
     assert response.success?
   end
 
   def test_cancel_recurring_delegation
     @gateway.expects(:build_manage_profile_request).with('I-G7A2FF8V75JY', 'Cancel', :note => 'A Note').returns(:cancel_request)
     @gateway.expects(:commit).with('ManageRecurringPaymentsProfileStatus', :cancel_request)
-    @gateway.cancel_recurring('I-G7A2FF8V75JY', :note => 'A Note')
+    assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.cancel_recurring('I-G7A2FF8V75JY', :note => 'A Note')
+    end
   end
 
   def test_suspend_recurring_delegation
     @gateway.expects(:build_manage_profile_request).with('I-G7A2FF8V75JY', 'Suspend', :note => 'A Note').returns(:request)
     @gateway.expects(:commit).with('ManageRecurringPaymentsProfileStatus', :request)
-    @gateway.suspend_recurring('I-G7A2FF8V75JY', :note => 'A Note')
+    assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.suspend_recurring('I-G7A2FF8V75JY', :note => 'A Note')
+    end
   end
 
   def test_reactivate_recurring_delegation
     @gateway.expects(:build_manage_profile_request).with('I-G7A2FF8V75JY', 'Reactivate', :note => 'A Note').returns(:request)
     @gateway.expects(:commit).with('ManageRecurringPaymentsProfileStatus', :request)
-    @gateway.reactivate_recurring('I-G7A2FF8V75JY', :note => 'A Note')
+    assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.reactivate_recurring('I-G7A2FF8V75JY', :note => 'A Note')
+    end
   end
 
   def test_status_recurring_delegation
     @gateway.expects(:build_get_profile_details_request).with('I-G7A2FF8V75JY').returns(:request)
     @gateway.expects(:commit).with('GetRecurringPaymentsProfileDetails', :request)
-    @gateway.status_recurring('I-G7A2FF8V75JY')
+    assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.status_recurring('I-G7A2FF8V75JY')
+    end
   end
 
   def test_status_recurring_response
     @gateway.expects(:ssl_post).returns(succesful_get_recurring_payments_profile_response)
-    response = @gateway.status_recurring('I-M1L3RX91DPDD')
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.status_recurring('I-M1L3RX91DPDD')
+    end
     assert response.success?
     assert_equal 'I-M1L3RX91DPDD', response.params['profile_id']
   end
@@ -370,12 +426,16 @@ class PaypalTest < Test::Unit::TestCase
   def test_bill_outstanding_amoung_delegation
     @gateway.expects(:build_bill_outstanding_amount).with('I-G7A2FF8V75JY', :amount => 400).returns(:request)
     @gateway.expects(:commit).with('BillOutstandingAmount', :request)
-    @gateway.bill_outstanding_amount('I-G7A2FF8V75JY', :amount => 400)
+    assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.bill_outstanding_amount('I-G7A2FF8V75JY', :amount => 400)
+    end
   end
 
   def test_bill_outstanding_amoung_response
     @gateway.expects(:ssl_post).returns(successful_bill_outstanding_amount)
-    response = @gateway.bill_outstanding_amount('I-G7A2FF8V75JY', :amount => 400)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.bill_outstanding_amount('I-G7A2FF8V75JY', :amount => 400)
+    end
     assert response.success?
   end
 

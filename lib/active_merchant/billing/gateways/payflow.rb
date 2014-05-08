@@ -57,6 +57,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>payments</tt> - The term, or number of payments that will be made
       # * <tt>comment</tt> - A comment associated with the profile
       def recurring(money, credit_card, options = {})
+        deprecated RECURRING_DEPRECATION_MESSAGE
+
         options[:name] = credit_card.name if options[:name].blank? && credit_card
         request = build_recurring_request(options[:profile_id] ? :modify : :add, money, options) do |xml|
           add_credit_card(xml, credit_card) if credit_card
@@ -65,11 +67,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def cancel_recurring(profile_id)
+        deprecated RECURRING_DEPRECATION_MESSAGE
+
         request = build_recurring_request(:cancel, 0, :profile_id => profile_id)
         commit(request, options.merge(:request_type => :recurring))
       end
 
       def recurring_inquiry(profile_id, options = {})
+        deprecated RECURRING_DEPRECATION_MESSAGE
+
         request = build_recurring_request(:inquiry, nil, options.update( :profile_id => profile_id ))
         commit(request, options.merge(:request_type => :recurring))
       end

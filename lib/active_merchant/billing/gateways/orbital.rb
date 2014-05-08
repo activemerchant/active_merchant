@@ -403,6 +403,8 @@ module ActiveMerchant #:nodoc:
 
       def add_managed_billing(xml, options)
         if mb = options[:managed_billing]
+          deprecated RECURRING_DEPRECATION_MESSAGE
+
           # default to recurring (R).  Other option is deferred (D).
           xml.tag! :MBType, mb[:type] || RECURRING
           # default to Customer Reference Number

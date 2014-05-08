@@ -235,6 +235,8 @@ module ActiveMerchant #:nodoc:
       #
       # You can optionally specify how long you want payments to continue using 'payments'
       def recurring(money, creditcard, options = {})
+        deprecated RECURRING_DEPRECATION_MESSAGE
+
         requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily] )
 
         cycle = case options[:periodicity]

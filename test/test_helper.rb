@@ -126,7 +126,7 @@ module ActiveMerchant
       end
     end
 
-    def assert_deprecation_warning(message, target)
+    def assert_deprecation_warning(message, target=@gateway)
       target.expects(:deprecated).with(message)
       yield
     end

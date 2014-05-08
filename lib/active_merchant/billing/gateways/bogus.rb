@@ -42,18 +42,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def recurring(money, paysource, options = {})
-        money = amount(money)
-        case normalize(paysource)
-        when /1$/
-          Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
-        when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE },:test => true)
-        else
-          raise Error, error_message(paysource)
-        end
-      end
-
       def credit(money, paysource, options = {})
         if paysource.is_a?(String)
           deprecated CREDIT_DEPRECATION_MESSAGE

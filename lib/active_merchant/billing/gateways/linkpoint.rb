@@ -166,6 +166,8 @@ module ActiveMerchant #:nodoc:
       # :comments               Uh... comments
       #
       def recurring(money, creditcard, options={})
+        deprecated RECURRING_DEPRECATION_MESSAGE
+
         requires!(options, [:periodicity, :bimonthly, :monthly, :biweekly, :weekly, :yearly, :daily], :installments, :order_id )
 
         options.update(
