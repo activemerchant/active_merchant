@@ -146,25 +146,6 @@ module ActiveMerchant #:nodoc:
         submit_void xml.target!
       end
 
-      def verify(card_or_token, options={})
-        request_multi_use_token = add_multi_use(options)
-        
-        xml = Builder::XmlMarkup.new
-        xml.hps :Transaction do
-          xml.hps :CreditAccountVerify do
-            xml.hps :Block1 do
-              xml << add_customer_data(card_or_token,options)
-              xml.hps :CardData do
-                xml << add_payment(card_or_token)
-                xml.hps :TokenRequest, request_multi_use_token ? 'Y' : 'N'
-              end
-            end
-          end
-        end
-
-        submit_verify(xml.target!)
-      end
-
       private
 
       def add_customer_data(card_or_token,options)
