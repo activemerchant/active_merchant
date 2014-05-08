@@ -90,18 +90,32 @@ class CreditCardTest < Test::Unit::TestCase
     @visa.brand = 'master'
 
     assert_not_valid @visa
-    assert_not_equal @visa.errors.on(:number), @visa.errors.on(:brand)
+    assert_false @visa.errors.on(:number)
+    assert @visa.errors.on(:brand)
+    assert_equal "does not match the card number", @visa.errors.on(:brand)
   end
 
   def test_should_be_invalid_when_brand_cannot_be_detected
-    @visa.number = nil
     @visa.brand = nil
 
+    @visa.number = nil
     assert_not_valid @visa
-    assert !@visa.errors.on(:brand)
-    assert !@visa.errors.on(:type)
+    assert_false @visa.errors.on(:brand)
+    assert_false @visa.errors.on(:type)
     assert @visa.errors.on(:number)
     assert_equal 'is required', @visa.errors.on(:number)
+
+    @visa.number = "11112222333344ff"
+    assert_not_valid @visa
+    assert_false @visa.errors.on(:type)
+    assert_false @visa.errors.on(:brand)
+    assert       @visa.errors.on(:number)
+
+    @visa.number = "11112222333344444"
+    assert_not_valid @visa
+    assert_false @visa.errors.on(:brand)
+    assert_false @visa.errors.on(:type)
+    assert @visa.errors.on(:number)
   end
 
   def test_should_be_a_valid_card_number
