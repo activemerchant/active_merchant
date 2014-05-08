@@ -176,53 +176,6 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal 'Authentication error. Please double check your service configuration.', response.message
   end
 
-  def test_empty_login_verify
-    gateway = HpsGateway.new(
-        secret_api_key: ''
-    )
-    response = gateway.verify(@credit_card, @options)
-    assert_failure response
-    assert_equal 'Unable to process the payment transaction.', response.message
-  end
-
-  def test_nil_login_verify
-    gateway = HpsGateway.new(
-        secret_api_key: nil
-    )
-    response = gateway.verify(@credit_card, @options)
-    assert_failure response
-    assert_equal 'Unable to process the payment transaction.', response.message
-  end
-
-  def test_invalid_login_verify
-    gateway = HpsGateway.new(
-        secret_api_key: 'Bad_API_KEY'
-    )
-    response = gateway.verify(@credit_card, @options)
-    assert_failure response
-    assert_equal 'Authentication error. Please double check your service configuration.', response.message
-  end
-
-  def test_successful_verify
-    response = @gateway.verify(@credit_card,@options)
-
-    assert_success response
-    assert_equal 'Visa', response.params['card_type']
-    assert_equal 'CARD OK', response.params['response_text']
-    assert_equal '85', response.params['response_code']
-  end
-
-  def test_successful_get_token_from_verify
-    @options[:request_multi_use_token] = true
-    response = @gateway.verify(@credit_card,@options)
-
-    assert_success response
-    assert_equal 'Visa', response.params['card_type']
-    assert_equal  'Success', response.params['token_data'][:response_message]
-    assert_not_nil response.params['token_data'][:token_value]
-    assert_equal '85', response.params['response_code']
-  end
-
   def test_successful_get_token_from_auth
     @options[:request_multi_use_token] = true
     response = @gateway.authorize(@amount,@credit_card,@options)
@@ -262,20 +215,4 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal '00', purchase.params['response_code']
   end
 
-  def test_successful_purchase_with_token_from_verify
-    @options[:request_multi_use_token] = true
-    response = @gateway.verify(@credit_card,@options)
-
-    assert_success response
-    assert_equal 'Visa', response.params['card_type']
-    assert_equal  'Success', response.params['token_data'][:response_message]
-    assert_not_nil response.params['token_data'][:token_value]
-    token = response.params['token_data'][:token_value]
-
-    @options[:request_multi_use_token] = false
-    purchase = @gateway.purchase(@amount,token,@options)
-    assert_success purchase
-    assert_equal 'Success', purchase.message
-    assert_equal '00', purchase.params['response_code']
-  end
 end
