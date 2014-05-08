@@ -37,11 +37,11 @@ module ActiveMerchant #:nodoc:
         commit(build_void_request(authorization, options))
       end
 
-      def credit_with_authorization(money, authorization, options = {})
+      def refund(money, authorization, options = {})
         commit(build_authorization_credit_request(money, authorization, options))
       end
 
-      def credit_with_creditcard(money, creditcard, options = {})
+      def credit(money, creditcard, options = {})
         commit(build_creditcard_credit_request(money, creditcard, options))
       end
 

@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'test_helper'
 
 class FinansbankTest < Test::Unit::TestCase
@@ -92,34 +93,34 @@ class FinansbankTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_credit_with_authorize
-    @gateway.expects(:ssl_post).returns(success_credit_with_authorization_response)
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(success_refund_response)
 
-    assert response = @gateway.credit_with_authorization(5 * 100, @options[:order_id])
+    assert response = @gateway.refund(5 * 100, @options[:order_id])
     assert_success response
     assert response.test?
   end
 
-  def test_failed_credit_with_authorize
-    @gateway.expects(:ssl_post).returns(failed_credit_with_authorization_response)
+  def test_failed_refund
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    assert response = @gateway.credit_with_authorization(5 * 100, @options[:order_id])
+    assert response = @gateway.refund(5 * 100, @options[:order_id])
     assert_failure response
     assert response.test?
   end
 
-  def test_successful_credit_with_creditcard
-    @gateway.expects(:ssl_post).returns(success_credit_with_creditcard_response)
+  def test_successful_credit
+    @gateway.expects(:ssl_post).returns(success_credit_response)
 
-    assert response = @gateway.credit_with_creditcard(5 * 100, @credit_card)
+    assert response = @gateway.credit(5 * 100, @credit_card)
     assert_success response
     assert response.test?
   end
 
-  def test_failed_credit_with_creditcard
-    @gateway.expects(:ssl_post).returns(failed_credit_with_creditcard_response)
+  def test_failed_credit
+    @gateway.expects(:ssl_post).returns(failed_credit_response)
 
-    assert response = @gateway.credit_with_creditcard(5 * 100, @credit_card)
+    assert response = @gateway.credit(5 * 100, @credit_card)
     assert_failure response
     assert response.test?
   end
@@ -264,7 +265,7 @@ class FinansbankTest < Test::Unit::TestCase
     EOF
   end
 
-  def success_credit_with_authorization_response
+  def success_refund_response
     <<-EOF
 <CC5Response>
   <OrderId>1</OrderId>
@@ -288,7 +289,7 @@ class FinansbankTest < Test::Unit::TestCase
     EOF
   end
 
-  def failed_credit_with_authorization_response
+  def failed_refund_response
     <<-EOF
 <CC5Response>
   <OrderId></OrderId>
@@ -309,7 +310,7 @@ class FinansbankTest < Test::Unit::TestCase
     EOF
   end
 
-  def success_credit_with_creditcard_response
+  def success_credit_response
     <<-EOF
 <CC5Response>
   <OrderId>ORDER-14024KUGB13953</OrderId>
@@ -331,7 +332,7 @@ class FinansbankTest < Test::Unit::TestCase
     EOF
   end
 
-  def failed_credit_with_creditcard_response
+  def failed_credit_response
     <<-EOF
 <CC5Response>
   <OrderId></OrderId>
