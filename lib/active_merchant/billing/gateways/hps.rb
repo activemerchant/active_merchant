@@ -106,20 +106,6 @@ module ActiveMerchant #:nodoc:
         submit_refund xml.target!
       end
 
-      def reverse_transaction(money, transaction_id, options={})
-        xml = Builder::XmlMarkup.new
-        xml.hps :Transaction do
-          xml.hps :CreditReversal do
-            xml.hps :Block1 do
-              xml.hps :Amt, amount(money)
-              xml.hps :GatewayTxnId, transaction_id
-              xml << add_details(options)
-            end
-          end
-        end
-        submit_reverse xml.target!
-      end
-
       def void(transaction_id, options={})
         xml = Builder::XmlMarkup.new
         xml.hps :Transaction do
