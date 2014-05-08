@@ -28,28 +28,24 @@ module ActiveMerchant #:nodoc:
       def authorize(money, card_or_token, options={})
         request_multi_use_token = add_multi_use(options)
 
-        if valid_amount?(money)
-          xml = Builder::XmlMarkup.new
-          xml.hps :Transaction do
-            xml.hps :CreditAuth do
-              xml.hps :Block1 do
-                xml.hps :AllowDup, 'Y'
-                xml.hps :Amt, amount(money)
-                xml << add_customer_data(card_or_token,options)
-                xml << add_details(options)
-                xml.hps :CardData do
-                  xml << add_payment(card_or_token)
+        xml = Builder::XmlMarkup.new
+        xml.hps :Transaction do
+          xml.hps :CreditAuth do
+            xml.hps :Block1 do
+              xml.hps :AllowDup, 'Y'
+              xml.hps :Amt, amount(money)
+              xml << add_customer_data(card_or_token,options)
+              xml << add_details(options)
+              xml.hps :CardData do
+                xml << add_payment(card_or_token)
 
-                  xml.hps :TokenRequest, request_multi_use_token ? 'Y' : 'N'
+                xml.hps :TokenRequest, request_multi_use_token ? 'Y' : 'N'
 
-                end
               end
             end
           end
-          submit_auth_or_purchase 'CreditAuth', xml.target!, money
-        else
-          @exception_mapper.map_sdk_exception(Hps::SdkCodes.invalid_amount)
         end
+        submit_auth_or_purchase 'CreditAuth', xml.target!, money
       end
 
       def capture(money, transaction_id)
@@ -89,66 +85,54 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, card_or_token, options={})
-        if valid_amount?(money)
-          request_multi_use_token = add_multi_use(options)
+        request_multi_use_token = add_multi_use(options)
 
-          xml = Builder::XmlMarkup.new
-          xml.hps :Transaction do
-            xml.hps :CreditSale do
-              xml.hps :Block1 do
-                xml.hps :AllowDup, 'Y'
-                xml.hps :Amt, amount(money)
-                xml << add_customer_data(card_or_token,options)
-                xml << add_details(options)
-                xml.hps :CardData do
-                  xml << add_payment(card_or_token)
-                  xml.hps :TokenRequest, request_multi_use_token ? 'Y' : 'N'
-                end
+        xml = Builder::XmlMarkup.new
+        xml.hps :Transaction do
+          xml.hps :CreditSale do
+            xml.hps :Block1 do
+              xml.hps :AllowDup, 'Y'
+              xml.hps :Amt, amount(money)
+              xml << add_customer_data(card_or_token,options)
+              xml << add_details(options)
+              xml.hps :CardData do
+                xml << add_payment(card_or_token)
+                xml.hps :TokenRequest, request_multi_use_token ? 'Y' : 'N'
               end
             end
           end
-          submit_auth_or_purchase 'CreditSale', xml.target!, money
-        else
-          build_error_response @exception_mapper.map_sdk_exception(Hps::SdkCodes.invalid_amount).message
         end
+        submit_auth_or_purchase 'CreditSale', xml.target!, money
       end
 
       def refund(money, transaction_id, options={})
-        if valid_amount?(money)
-          xml = Builder::XmlMarkup.new
-          xml.hps :Transaction do
-            xml.hps :CreditReturn do
-              xml.hps :Block1 do
-                xml.hps :AllowDup, 'Y'
-                xml.hps :Amt, amount(money)
-                xml.hps :GatewayTxnId, transaction_id
-                xml << add_customer_data(transaction_id,options)
-                xml << add_details(options)
-              end
+        xml = Builder::XmlMarkup.new
+        xml.hps :Transaction do
+          xml.hps :CreditReturn do
+            xml.hps :Block1 do
+              xml.hps :AllowDup, 'Y'
+              xml.hps :Amt, amount(money)
+              xml.hps :GatewayTxnId, transaction_id
+              xml << add_customer_data(transaction_id,options)
+              xml << add_details(options)
             end
           end
-          submit_refund xml.target!
-        else
-          build_error_response @exception_mapper.map_sdk_exception(Hps::SdkCodes.invalid_amount).message
         end
+        submit_refund xml.target!
       end
 
       def reverse_transaction(money, transaction_id, options={})
-        if valid_amount?(money)
-          xml = Builder::XmlMarkup.new
-          xml.hps :Transaction do
-            xml.hps :CreditReversal do
-              xml.hps :Block1 do
-                xml.hps :Amt, amount(money)
-                xml.hps :GatewayTxnId, transaction_id
-                xml << add_details(options)
-              end
+        xml = Builder::XmlMarkup.new
+        xml.hps :Transaction do
+          xml.hps :CreditReversal do
+            xml.hps :Block1 do
+              xml.hps :Amt, amount(money)
+              xml.hps :GatewayTxnId, transaction_id
+              xml << add_details(options)
             end
           end
-          submit_reverse xml.target!
-        else
-          build_error_response @exception_mapper.map_sdk_exception(Hps::SdkCodes.invalid_amount).message
         end
+        submit_reverse xml.target!
       end
 
       def void(transaction_id)
@@ -238,13 +222,6 @@ module ActiveMerchant #:nodoc:
         multi_use = false
         multi_use = options[:request_multi_use_token] if options[:request_multi_use_token]
         multi_use
-      end
-
-      def valid_amount?(money)
-        if money.nil? or money <= 0
-          false
-        end
-        true
       end
 
       def submit_auth_or_purchase(action, xml, money)
