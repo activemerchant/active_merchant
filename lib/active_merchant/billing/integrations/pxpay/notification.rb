@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def item_id
-            @params['TxnId']
+            @params['MerchantReference']
           end
 
           def currency_input

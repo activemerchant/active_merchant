@@ -41,7 +41,7 @@ class PxpayModuleTest < Test::Unit::TestCase
 
   def test_all_fields
     Pxpay::Helper.any_instance.expects(:ssl_post).with do |_, request|
-      assert_match "<TxnId>44</TxnId>", request
+      assert_match "<MerchantReference>44</MerchantReference>", request
       assert_match "<PxPayUserId>#{@username}</PxPayUserId>", request
       assert_match "<PxPayKey>#{@key}</PxPayKey>", request
       assert_match "<TxnType>Purchase</TxnType>", request
