@@ -48,7 +48,7 @@ module ActiveMerchant #:nodoc:
         submit_auth_or_purchase 'CreditAuth', xml.target!, money
       end
 
-      def capture(money, transaction_id)
+      def capture(money, transaction_id, options={})
 
         xml = Builder::XmlMarkup.new
         xml.hps :Transaction do
