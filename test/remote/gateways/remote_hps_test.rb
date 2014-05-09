@@ -54,7 +54,7 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_success auth
     assert_equal '00', auth.params['response_code']
 
-    assert capture = @gateway.capture(nil, auth.params['transaction_id'])
+    assert capture = @gateway.capture(nil, auth.authorization)
     assert_success capture
     assert_equal '00', capture.params['response_code']
   end
@@ -68,7 +68,7 @@ class RemoteHpsTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.params['transaction_id'])
+    assert capture = @gateway.capture(@amount-1, auth.authorization)
     assert_success capture
     assert_equal '00', capture.params['response_code']
   end
@@ -83,7 +83,7 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_success purchase
     assert_equal '00', purchase.params['response_code']
 
-    assert refund = @gateway.refund(@amount, purchase.params['transaction_id'])
+    assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
     assert_equal 'Success', refund.params['transaction_header']['GatewayRspMsg']
     assert_equal '0', refund.params['transaction_header']['GatewayRspCode']
@@ -95,7 +95,7 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_success purchase
     assert_equal '00', purchase.params['response_code']
 
-    assert refund = @gateway.refund(@amount-1, purchase.params['transaction_id'])
+    assert refund = @gateway.refund(@amount-1, purchase.authorization)
     assert_success refund
     assert_equal 'Success', refund.params['transaction_header']['GatewayRspMsg']
     assert_equal '0', refund.params['transaction_header']['GatewayRspCode']
@@ -112,7 +112,7 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_success auth
     assert_equal '00', auth.params['response_code']
 
-    assert void = @gateway.void(auth.params['transaction_id'])
+    assert void = @gateway.void(auth.authorization)
     assert_success void
     assert_equal 'Success', void.params['transaction_header']['GatewayRspMsg']
   end
