@@ -2,6 +2,13 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module CreditCardFormatting
 
+      def expdate(credit_card)
+        year  = sprintf("%.4i", credit_card.year)
+        month = sprintf("%.2i", credit_card.month)
+
+        "#{month}#{year[-2..-1]}"
+      end
+
       # This method is used to format numerical information pertaining to credit cards.
       #
       #   format(2005, :two_digits)  # => "05"
@@ -15,7 +22,6 @@ module ActiveMerchant #:nodoc:
           else number
         end
       end
-
     end
   end
 end
