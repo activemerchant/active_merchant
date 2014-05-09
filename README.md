@@ -173,7 +173,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [PSL Payment Solutions](http://www.paymentsolutionsltd.com/) - GB
 * [QuickBooks Merchant Services](http://payments.intuit.com/) - US
 * [Quantum Gateway](http://www.quantumgateway.com) - US
-* [Quickpay](http://quickpay.dk/) - DK, SE
+* [QuickPay](http://quickpay.net/) - DE, DK, ES, FI, FR, FO, GB, IS, NO, SE
 * [Raven PacNet](http://www.pacnetservices.com/) - US
 * [Realex](http://www.realexpayments.com/) - IE, GB, FR, BE, NL, LU, IT
 * [Redsys](http://www.redsys.es/) - ES

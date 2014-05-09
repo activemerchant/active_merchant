@@ -115,7 +115,7 @@ class QuickpayTest < Test::Unit::TestCase
   end
   
   def test_supported_countries
-    assert_equal ['DK', 'SE'], QuickpayGateway.supported_countries
+    assert_equal ['DE', 'DK', 'ES', 'FI', 'FR', 'FO', 'GB', 'IS', 'NO', 'SE'], QuickpayGateway.supported_countries
   end
   
   def test_supported_card_types

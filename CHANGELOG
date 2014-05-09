@@ -28,6 +28,7 @@
 * Inline RequiresParameters in Gateway & move Country from active_utils [ntalbott]
 * Quickpay v7: Fix passing acquirers field [moklett]
 * Quickpay v7: Pass an amount when storing cards [ta & moklett]
+* Quickpay: Expand list of supported countries [ta]
 
 == Version 1.43.2 (May 12, 2014)
 
