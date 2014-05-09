@@ -145,13 +145,6 @@ module ActiveMerchant #:nodoc:
 
       protected # :nodoc: all
 
-      def expdate(credit_card)
-        year  = sprintf("%.4i", credit_card.year)
-        month = sprintf("%.2i", credit_card.month)
-
-        "#{month}#{year[-2..-1]}"
-      end
-
       def normalize(field)
         case field
           when "true"   then true
