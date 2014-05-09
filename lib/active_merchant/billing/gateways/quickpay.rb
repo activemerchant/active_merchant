@@ -9,9 +9,9 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'DKK'
       self.money_format = :cents
       self.supported_cardtypes = [:dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro]
-      self.supported_countries = ['DK', 'SE']
-      self.homepage_url = 'http://quickpay.dk/'
-      self.display_name = 'Quickpay'
+      self.supported_countries = ['DE', 'DK', 'ES', 'FI', 'FR', 'FO', 'GB', 'IS', 'NO', 'SE']
+      self.homepage_url = 'http://quickpay.net/'
+      self.display_name = 'QuickPay'
 
       MD5_CHECK_FIELDS = {
         3 => {
