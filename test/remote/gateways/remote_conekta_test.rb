@@ -85,32 +85,7 @@ class RemoteConektaTest < Test::Unit::TestCase
     assert_success response
     assert_equal nil, response.message
   end
-
-  def test_successful_store
-    assert response = @gateway.store("tok_test_visa_4242", {name: "John Doe", email: "email@example.com"})
-    assert_success response
-    assert response = @gateway.update(response.params["id"], "tok_test_visa_1881")
-    assert_equal "customer", response.params["object"]
-    assert_equal "John Doe", response.params["name"]
-    assert_equal "4242", response.params["cards"][0]["last4"]
-    assert_equal "1881", response.params["cards"][1]["last4"]
-    assert_equal "email@example.com", response.params["email"]
-  end
-
-  def test_successful_unstore
-    creation = @gateway.store("tok_test_visa_4242", {name: "John Doe", email: "email@example.com"})
-    assert response = @gateway.unstore(creation.params['id'])
-    assert_success response
-    assert_equal true, response.params["deleted"]
-  end
   
-  def test_successful_unstore_card
-    creation = @gateway.store("tok_test_visa_4242", {name: "John Doe", email: "email@example.com"})
-    assert response = @gateway.unstore(creation.params['id'], creation.params['"default_card_id"'])
-    assert_success response
-    assert_equal true, response.params["deleted"]
-  end
-
   def test_unsuccessful_capture
     assert response = @gateway.capture(@amount, "1", @options)
     assert_failure response

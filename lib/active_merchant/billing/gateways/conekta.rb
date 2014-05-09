@@ -55,47 +55,6 @@ module ActiveMerchant #:nodoc:
         commit(:post, "charges/#{identifier}/refund", post)
       end
       
-			
-      def store(creditcard, options = {})
-        post = {}
-				if creditcard.instance_of?(ActiveMerchant::Billing::CreditCard)
-					post[:name] = creditcard.name
-				elsif creditcard.kind_of?(String)
-					post[:name] = options[:name] if options[:name]
-				end
-        post[:email] = options[:email] if options[:email]
-        add_payment_source(post, creditcard, options)
-        post[:cards] = [post[:card]]
-        post.delete(:card)
-        customer = {}
-        customer[:customer] = post
-        post = {}
-        post = customer
-        commit(:post, "customers", post)
-      end
-      
-      def update(customer_id, creditcard, options = {})
-				post = {}
-        post[:id] = customer_id
-        add_payment_source(post, creditcard, options)
-        post[:cards] = [post[:card]]
-        post.delete(:card)
-        customer = {}
-        customer[:customer] = post
-        post = {}
-        post = customer
-        path = "customers/#{CGI.escape(customer_id)}"
-        commit(:put, path, post)
-      end
-      
-      def unstore(customer_id, card_id = nil, options = {})
-        if card_id.nil?
-          commit(:delete, "customers/#{CGI.escape(customer_id)}", nil, options)
-        else
-          commit(:delete, "customers/#{CGI.escape(customer_id)}/cards/#{CGI.escape(card_id)}", nil, options)
-        end
-      end
-
       private
 
       def add_order(post, money, options)
