@@ -26,7 +26,8 @@
 * Stop requiring unused CurrencyCode class from active_utils [ntalbott]
 * Move ActiveMerchant::Error into ActiveMerchant [ntalbott]
 * Inline RequiresParameters in Gateway & move Country from active_utils [ntalbott]
-* Quickpay: Fix passing acquirers field [moklett]
+* Quickpay v7: Fix passing acquirers field [moklett]
+* Quickpay v7: Pass an amount when storing cards [ta & moklett]
 
 == Version 1.43.2 (May 12, 2014)
 

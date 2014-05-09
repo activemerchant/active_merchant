@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class QuickpayTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = QuickpayGateway.new(
       :login => 'LOGIN',
@@ -28,6 +30,38 @@ class QuickpayTest < Test::Unit::TestCase
     assert_success response
     assert_equal '2865261', response.authorization
     assert response.test?
+  end
+
+  def test_successful_store_for_v6
+    @gateway = QuickpayGateway.new(
+      :login => 'LOGIN',
+      :password => 'PASSWORD',
+      :version => 6
+    )
+
+    response = stub_comms do
+      @gateway.store(@credit_card, {:order_id => 'fa73664073e23597bbdd', :description => 'Storing Card'})
+    end.check_request do |endpoint, data, headers|
+      assert_equal(expected_store_parameters_v6, CGI::parse(data))
+    end.respond_with(successful_store_response_v6)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '80760015', response.authorization
+  end
+
+  def test_successful_store_for_v7
+    response = stub_comms do
+      @gateway.store(@credit_card, {:order_id => 'ed7546cb4ceb8f017ea4', :description => 'Storing Card'})
+    end.check_request do |endpoint, data, headers|
+      assert_equal(expected_store_parameters_v7, CGI::parse(data))
+    end.respond_with(successful_store_response_v7)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '80758573', response.authorization
   end
 
   def test_failed_authorization
@@ -118,7 +152,49 @@ class QuickpayTest < Test::Unit::TestCase
     '<?xml version="1.0" encoding="ISO-8859-1"?><response><msgtype>1230</msgtype><amount>100</amount><time>080107061755</time><pbsstat>000</pbsstat><qpstat>000</qpstat><qpstatmsg>OK</qpstatmsg><currency>DKK</currency><ordernum>4820346075804536193</ordernum><transaction>2865261</transaction><merchant>Shopify</merchant><merchantemail>pixels@jadedpixel.com</merchantemail></response>'
   end
   
+  def successful_store_response_v6
+    '<?xml version="1.0" encoding="UTF-8"?><response><msgtype>subscribe</msgtype><ordernumber>fa73664073e23597bbdd</ordernumber><amount>0</amount><currency>n/a</currency><time>2014-02-26T21:25:47+01:00</time><state>9</state><qpstat>000</qpstat><qpstatmsg>OK</qpstatmsg><chstat>000</chstat><chstatmsg>OK</chstatmsg><merchant>Test Merchant</merchant><merchantemail>merchant@example.com</merchantemail><transaction>80760015</transaction><cardtype>visa</cardtype><cardnumber>XXXXXXXXXXXX4242</cardnumber><cardexpire>1509</cardexpire><splitpayment/><fraudprobability/><fraudremarks/><fraudreport/><md5check>6df8a5682079d580c7aba24e047a3d00</md5check></response>'
+  end
+
+  def successful_store_response_v7
+    '<?xml version="1.0" encoding="UTF-8"?><response><msgtype>subscribe</msgtype><ordernumber>ed7546cb4ceb8f017ea4</ordernumber><amount>0</amount><currency>DKK</currency><time>2014-02-26T21:04:00+01:00</time><state>9</state><qpstat>000</qpstat><qpstatmsg>OK</qpstatmsg><chstat>000</chstat><chstatmsg>OK</chstatmsg><merchant>Test Merchant</merchant><merchantemail>merchant@example.com</merchantemail><transaction>80758573</transaction><cardtype>visa</cardtype><cardnumber>XXXXXXXXXXXX4242</cardnumber><cardexpire>1509</cardexpire><splitpayment/><acquirer>nets</acquirer><fraudprobability/><fraudremarks/><fraudreport/><md5check>a7107c46c9d64031e228c6eb52b5afbe</md5check></response>'
+  end
+
   def failed_authorization_response
     '<?xml version="1.0" encoding="ISO-8859-1"?><response><qpstat>008</qpstat><qpstatmsg>Missing/error in card verification data</qpstatmsg></response>'
+  end
+
+  def expected_store_parameters_v6
+    two_digit_year = (Time.now.year + 1).to_s[2,2]
+    {
+      "cardnumber"=>["4242424242424242"],
+      "cvd"=>["123"],
+      "expirationdate"=>["#{two_digit_year}09"],
+      "ordernumber"=>["fa73664073e23597bbdd"],
+      "description"=>["Storing Card"],
+      "testmode"=>["1"],
+      "protocol"=>["6"],
+      "msgtype"=>["subscribe"],
+      "merchant"=>["LOGIN"],
+      "md5check"=>["8b7b3100fb835646723b9583febfb228"]
+    }
+  end
+
+  def expected_store_parameters_v7
+    two_digit_year = (Time.now.year + 1).to_s[2,2]
+    {
+      "amount"=>["0"],
+      "currency"=>["DKK"],
+      "cardnumber"=>["4242424242424242"],
+      "cvd"=>["123"],
+      "expirationdate"=>["#{two_digit_year}09"],
+      "ordernumber"=>["ed7546cb4ceb8f017ea4"],
+      "description"=>["Storing Card"],
+      "testmode"=>["1"],
+      "protocol"=>["7"],
+      "msgtype"=>["subscribe"],
+      "merchant"=>["LOGIN"],
+      "md5check"=>["5679173d581e33bf2c3d8ff772d01c9f"]
+    }
   end
 end
