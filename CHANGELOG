@@ -13,6 +13,7 @@
 * PayPal Digital Goods: Allow mobile [tomprats]
 * Maxipago: Add installment support [alexandremcosta]
 * Deprecate recurring API support [ntalbott]
+* NMI: fix CreditCard check [bslobodin]
 
 == Version 1.43.1 (May 1, 2014)
 

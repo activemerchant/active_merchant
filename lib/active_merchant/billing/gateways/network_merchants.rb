@@ -146,23 +146,14 @@ module ActiveMerchant #:nodoc:
         post[:magnesafe_magneprint_status] = options[:magnesafe_magneprint_status]
       end
 
-      def add_payment_method(post, creditcard_or_check_or_vault_id, options)
+      def add_payment_method(post, payment_source, options)
         post[:processor_id] = options[:processor_id]
         post[:customer_vault] = 'add_customer' if options[:store]
 
         add_swipe_data(post, options)
 
-        # creditcard_or_check can be blank if using swipe data
-        if creditcard_or_check_or_vault_id.is_a?(CreditCard) # creditcard or check
-          creditcard = creditcard_or_check_or_vault_id
-          post[:firstname] = creditcard.first_name
-          post[:lastname] = creditcard.last_name
-          post[:ccnumber] = creditcard.number
-          post[:ccexp] = format(creditcard.month, :two_digits) + format(creditcard.year, :two_digits)
-          post[:cvv] = creditcard.verification_value
-          post[:payment] = 'creditcard'
-        elsif creditcard_or_check_or_vault_id.is_a?(Check)
-          check = creditcard_or_check_or_vault_id
+        if payment_source.is_a?(Check)
+          check = payment_source
           post[:firstname] = check.first_name
           post[:lastname] = check.last_name
           post[:checkname] = check.name
@@ -171,8 +162,16 @@ module ActiveMerchant #:nodoc:
           post[:account_type] = check.account_type
           post[:account_holder_type] = check.account_holder_type
           post[:payment] = 'check'
+        elsif payment_source.respond_to?(:number)
+          creditcard = payment_source
+          post[:firstname] = creditcard.first_name
+          post[:lastname] = creditcard.last_name
+          post[:ccnumber] = creditcard.number
+          post[:ccexp] = format(creditcard.month, :two_digits) + format(creditcard.year, :two_digits)
+          post[:cvv] = creditcard.verification_value
+          post[:payment] = 'creditcard'
         else
-          post[:customer_vault_id] = creditcard_or_check_or_vault_id
+          post[:customer_vault_id] = payment_source
         end
       end
 
