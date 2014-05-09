@@ -328,7 +328,7 @@ module ActiveMerchant #:nodoc:
             :response_code => (transaction['RspCode'] if transaction['RspCode']),
             :response_text => (transaction['RspText'] if transaction['RspText'] ),
             :transaction_header => header,
-            :transaction_id => (header['GatewayTxnId'] if header['GatewayTxnId'] ),
+            :auth_code => (response['AuthCode'] if response['AuthCode']),
             :token_data => {
                 :response_message => (header['TokenData']['TokenRspMsg'] if (header['TokenData'] && header['TokenData']['TokenRspMsg']) ),
                 :token_value =>(header['TokenData']['TokenValue'] if (header['TokenData'] && header['TokenData']['TokenValue']) ),
@@ -337,7 +337,7 @@ module ActiveMerchant #:nodoc:
         }
         options = {
            :test => test?,
-           :authorization => authorization_from(transaction),
+           :authorization => authorization_from(header),
            :avs_result => {
                :code => (transaction['AVSRsltCode'] if transaction['AVSRsltCode'] ),
                :message => (transaction['AVSRsltText'] if transaction['AVSRsltText'] )
@@ -360,8 +360,8 @@ module ActiveMerchant #:nodoc:
         header['GatewayRspMsg']
       end
 
-      def authorization_from(response)
-        response['AuthCode']
+      def authorization_from(header)
+        (header['GatewayTxnId'] if header['GatewayTxnId'] )
       end
 
       def do_transaction(transaction)
