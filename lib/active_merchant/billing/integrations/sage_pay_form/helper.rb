@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
             @crypt ||= create_crypt_field(fields.except(*crypt_skip), key)
 
             result = {
-              'VPSProtocol' => '2.23',
+              'VPSProtocol' => '3.00',
               'TxType' => 'PAYMENT',
               'Vendor' => @fields['Vendor'],
               'Crypt'  => @crypt
