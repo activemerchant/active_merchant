@@ -54,6 +54,19 @@ class WirecardTest < Test::Unit::TestCase
     assert_equal TEST_PURCHASE_GUWID, response.authorization
   end
 
+  def test_successful_reference_purchase
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert_equal TEST_PURCHASE_GUWID, purchase.authorization
+
+    @gateway.expects(:ssl_post).returns(successful_reference_purchase_response)
+    reference_purchase = @gateway.purchase(@amount, purchase.authorization, @options)
+    assert_success reference_purchase
+    assert reference_purchase.test?
+    assert reference_purchase.message[/this is a demo/i]
+  end
+
   def test_wrong_credit_card_authorization
     @gateway.expects(:ssl_post).returns(wrong_creditcard_authorization_response)
     assert response = @gateway.authorize(@amount, @declined_card, @options)
@@ -315,6 +328,33 @@ class WirecardTest < Test::Unit::TestCase
                 <StatusType>INFO</StatusType>
                 <FunctionResult>ACK</FunctionResult>
                 <TimeStamp>2008-06-19 08:09:19</TimeStamp>
+              </PROCESSING_STATUS>
+            </CC_TRANSACTION>
+          </FNC_CC_PURCHASE>
+        </W_JOB>
+      </W_RESPONSE>
+    </WIRECARD_BXML>
+    XML
+  end
+
+  def successful_reference_purchase_response
+    <<-XML
+    <?xml version="1.0" encoding="UTF-8"?>
+    <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+      <W_RESPONSE>
+        <W_JOB>
+          <JobID></JobID>
+          <FNC_CC_PURCHASE>
+            <FunctionID></FunctionID>
+            <CC_TRANSACTION>
+              <TransactionID>E0BCBF30B82D0131000000000000E4CF</TransactionID>
+              <PROCESSING_STATUS>
+                <GuWID>C868749139989024436148</GuWID>
+                <AuthorizationCode>194071</AuthorizationCode>
+                <Info>THIS IS A DEMO TRANSACTION USING CREDIT CARD NUMBER 420000****0000. NO REAL MONEY WILL BE TRANSFERED.</Info>
+                <StatusType>INFO</StatusType>
+                <FunctionResult>PENDING</FunctionResult>
+                <TimeStamp>2014-05-12 12:24:04</TimeStamp>
               </PROCESSING_STATUS>
             </CC_TRANSACTION>
           </FNC_CC_PURCHASE>

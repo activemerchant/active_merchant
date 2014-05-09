@@ -87,6 +87,16 @@ class RemoteWirecardTest < Test::Unit::TestCase
     assert_match /THIS IS A DEMO/, response.message
   end
 
+  def test_successful_reference_purchase
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert purchase.authorization
+
+    assert reference_purchase = @gateway.purchase(@amount, purchase.authorization)
+    assert_success reference_purchase
+    assert_match /THIS IS A DEMO/, reference_purchase.message
+  end
+
   def test_utf8_description_does_not_blow_up
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(description: "Habitación"))
     assert_success response

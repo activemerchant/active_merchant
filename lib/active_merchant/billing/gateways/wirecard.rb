@@ -54,8 +54,12 @@ module ActiveMerchant #:nodoc:
         commit(:capture, money, options)
       end
 
-      def purchase(money, creditcard, options = {})
-        options[:credit_card] = creditcard
+      def purchase(money, payment_method, options = {})
+        if payment_method.respond_to?(:number)
+          options[:credit_card] = payment_method
+        else
+          options[:preauthorization] = payment_method
+        end
         commit(:purchase, money, options)
       end
 
@@ -149,7 +153,11 @@ module ActiveMerchant #:nodoc:
             case options[:action]
             when :preauthorization, :purchase
               add_invoice(xml, money, options)
-              add_creditcard(xml, options[:credit_card])
+              if options[:credit_card]
+                add_creditcard(xml, options[:credit_card])
+              else
+                xml.tag! 'GuWID', options[:preauthorization]
+              end
               add_address(xml, options[:billing_address])
             when :capture, :bookback
               xml.tag! 'GuWID', options[:preauthorization]

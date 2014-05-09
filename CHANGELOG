@@ -19,6 +19,7 @@
 * Balanced: Update to API 1.1 [steveklabnik]
 * Add Cashnet gateway [hoenth]
 * Conekta: Standardize address options [MauricioMurga]
+* Wirecard: Add support for reference purchases [timtait]
 
 == Version 1.43.1 (May 1, 2014)
 
