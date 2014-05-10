@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def sage_decrypt(ciphertext, key)
-            ciphertext = ciphertext[1..-1]
+            ciphertext = ciphertext[1..-1] # remove @ symbol at the beginning of a string
             cipher(:decrypt, key, ciphertext)
           rescue OpenSSL::Cipher::CipherError => e
             return '' if e.message == 'wrong final block length'
@@ -24,19 +24,18 @@ module ActiveMerchant #:nodoc:
           private
 
           def cipher(action, key, payload)
-
             if action == :decrypt
               payload = [payload].pack('H*')
             end
 
             cipher = OpenSSL::Cipher::AES128.new(:CBC)
-            cipher.send(action)
+            cipher.public_send(action)
             cipher.key = key
             cipher.iv = key
             result = cipher.update(payload) + cipher.final
 
             if action == :encrypt
-              result = result.unpack("H*")[0]
+              result = result.unpack('H*')[0]
             end
 
             result
