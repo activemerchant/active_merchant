@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 require 'test_helper'
+require 'active_support/core_ext/hash'
 
 class SagePayFormHelperTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
@@ -177,7 +178,7 @@ class SagePayFormHelperTest < Test::Unit::TestCase
   def test_basic_form_fields
     params = @helper.form_fields
 
-    assert_equal '2.23', params['VPSProtocol']
+    assert_equal '3.00', params['VPSProtocol']
     assert_equal 'PAYMENT', params['TxType']
     assert_equal 'cody@example.com', params['Vendor']
     assert_not_nil params['Crypt']
@@ -187,28 +188,18 @@ class SagePayFormHelperTest < Test::Unit::TestCase
     @helper.customer :first_name => 'Tobias', :last_name => "Lütke", :email => 'cody@example.com'
     params = @helper.form_fields
 
-    assert_equal '2.23', params['VPSProtocol']
+    assert_equal '3.00', params['VPSProtocol']
     assert_equal 'PAYMENT', params['TxType']
     assert_equal 'cody@example.com', params['Vendor']
     assert_not_nil params['Crypt']
   end
 
-  def test_crypt_field_is_base64
+  def test_crypt_field_is_hex
     crypt = @helper.form_fields['Crypt']
-    assert_match /^[A-Za-z0-9\+\/]+=*$/, crypt
+    assert_match /^@[A-F0-9]+$/, crypt
   end
 
-  def test_crypt_field_salt
-    random = 'ExpectSomePartOfThisSalt'
-    SecureRandom.expects(:base64).returns(random)
-
-    with_crypt_plaintext do |plain|
-      salt = plain.split('&').first
-      assert random.start_with?(salt)
-    end
-  end
-
-  def test_crypt_field_is_salted_uniq
+  def test_crypt_field_is_uniq
     crypts = (1..5).map { @helper.dup.form_fields['Crypt'] }
     assert_equal 5, crypts.uniq.count
   end
