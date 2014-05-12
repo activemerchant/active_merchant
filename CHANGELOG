@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.43.2 (May 12, 2014)
+
 * Remove 2Checkout's #line_item due to conflict with Klarna/Shopify [edward]
 * Auth.Net CIM: Fix ordering of order/trans_id [pdamer]
 * Add PagoFacil gateway [bhserna]
@@ -27,6 +29,13 @@
 * Universal: Remove all billing address fields [bslobodin]
 * Balanced: Stop creating a customer on each call [ntalbott]
 * Balanced: Refactor and handle legacy authorizations [ntalbott]
+* SagePay Form: Update to v3.00 [bslobodin]
+* GestPay: Use a more specific error class when parsing [odorcicd]
+* PagSeguro: Improve error handling [celsodantas]
+* PxPay: Support for newer, query-less redirect URLs [odorcicd, bslobodin]
+* eWAY Rapid: Update to 3.1 API [atomgiant]
+* Misc refactorings [justinplouffe]
+* Remove greedy rescue, and convert some errors to be user-facing [odorcicd]
 
 == Version 1.43.1 (May 1, 2014)
 
