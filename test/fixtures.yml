@@ -734,3 +734,14 @@ wirecard_checkout_page:
 
 mollie_ideal:
   api_key: 'test_8isBjQoJXJoiXRSzjhwKPO1Bo9AkVA'
+
+# Cashnet doesn't provide public testing data
+cashnet:
+  merchant_name: 'X'
+  station: 'X'
+  operator: 'X'
+  password: 'X'
+  credit_card_payment_code: 'X'
+  customer_code: 'X'
+  item_code: 'X'
+  merchant_gateway_name: 'X'  
