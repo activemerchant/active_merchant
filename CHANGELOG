@@ -36,6 +36,8 @@
 * eWAY Rapid: Update to 3.1 API [atomgiant]
 * Misc refactorings [justinplouffe]
 * Remove greedy rescue, and convert some errors to be user-facing [odorcicd]
+* PayPal Express: pass logo image for setup request [dimko]
+* Improve credit card validation [duff]
 
 == Version 1.43.1 (May 1, 2014)
 
