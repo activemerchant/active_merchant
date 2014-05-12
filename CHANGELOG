@@ -4,7 +4,7 @@
 
 * Remove 2Checkout's #line_item due to conflict with Klarna/Shopify [edward]
 * Auth.Net CIM: Fix ordering of order/trans_id [pdamer]
-* Add PagoFacil gateway [bhserna]
+* Add PagoFacil gateway [bhserna, abisosa]
 * Stripe: Allow for updating of stored card [speric]
 * Authorize.Net: Deprecate ARB [ntalbott]
 * Authorize.Net CIM: Add recurring billing flag [gabealmer]
