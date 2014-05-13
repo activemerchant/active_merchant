@@ -54,8 +54,13 @@ module ActiveMerchant #:nodoc:
         commit(:capture, money, options)
       end
 
-      def purchase(money, creditcard, options = {})
-        options[:credit_card] = creditcard
+      def purchase(money, creditcard_or_authorization, options = {})
+        if creditcard_or_authorization.is_a?(String)
+          options[:preauthorization] = creditcard_or_authorization
+          options[:recurring] = 'Repeated'
+        else
+          options[:credit_card] = creditcard_or_authorization
+        end
         commit(:purchase, money, options)
       end
 
@@ -149,7 +154,11 @@ module ActiveMerchant #:nodoc:
             case options[:action]
             when :preauthorization, :purchase
               add_invoice(xml, money, options)
-              add_creditcard(xml, options[:credit_card])
+              if options[:recurring] == 'Repeated'
+                xml.tag! 'GuWID', options[:preauthorization]
+              else
+                add_creditcard(xml, options[:credit_card])
+              end
               add_address(xml, options[:billing_address])
             when :capture, :bookback
               xml.tag! 'GuWID', options[:preauthorization]
