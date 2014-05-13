@@ -92,6 +92,8 @@ module ActiveMerchant #:nodoc:
             parts = fields.map { |k, v| "#{k}=#{sanitize(k, v)}" unless v.nil? }.compact.shuffle
             parts.unshift(sage_encrypt_salt(key.length, key.length * 2))
             sage_encrypt(parts.join('&'), key)
+          rescue OpenSSL::Cipher::CipherError
+            raise ActionViewHelperError, "Invalid encryption key."
           end
 
           def sanitize(key, value)
