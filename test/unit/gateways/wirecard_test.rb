@@ -32,6 +32,14 @@ class WirecardTest < Test::Unit::TestCase
       :country  => 'CA',
       :state    => nil,
     }
+
+    @address_avs = {
+      :address1 => '9 Derry Street',
+      :city     => 'London',
+      :zip      => 'W8 2TE',
+      :country  => 'GB',
+      :state    => 'London',
+    }
   end
 
   def test_successful_authorization
@@ -185,6 +193,13 @@ class WirecardTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/<FunctionID>\?D\?nde est\? la estaci\?n\?<\/FunctionID>/, data)
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_failed_avs_reponse_message
+    options = @options.merge(:billing_address => @address_avs)
+    @gateway.expects(:ssl_post).returns(failed_avs_reponse)
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_match /AVS Unavailable./, response.avs_result["message"]
   end
 
   private
@@ -464,6 +479,42 @@ class WirecardTest < Test::Unit::TestCase
                   <Advice>Only demo card number '4200000000000000' is allowed for VISA in demo mode.</Advice>
                 </ERROR>
                 <TimeStamp>2008-06-19 06:58:51</TimeStamp>
+              </PROCESSING_STATUS>
+            </CC_TRANSACTION>
+          </FNC_CC_PURCHASE>
+        </W_JOB>
+      </W_RESPONSE>
+    </WIRECARD_BXML>
+    XML
+  end
+
+  # AVS failure
+  def failed_avs_reponse
+    <<-XML
+    <?xml version="1.0" encoding="UTF-8"?>
+    <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+      <W_RESPONSE>
+        <W_JOB>
+          <JobID></JobID>
+          <FNC_CC_PURCHASE>
+            <FunctionID></FunctionID>
+            <CC_TRANSACTION>
+              <TransactionID>E0BCBF30B82D0131000000000000E4CF</TransactionID>
+              <PROCESSING_STATUS>
+                <GuWID>C997753139988691610455</GuWID>
+                <AuthorizationCode>732129</AuthorizationCode>
+                <Info>THIS IS A DEMO TRANSACTION USING CREDIT CARD NUMBER 420000****0000. NO REAL MONEY WILL BE TRANSFERED.</Info>
+                <StatusType>INFO</StatusType>
+                <FunctionResult>PENDING</FunctionResult>
+                <AVS>
+                  <ResultCode>U</ResultCode>
+                  <Message>AVS Unavailable.</Message>
+                  <AuthorizationEntity>5</AuthorizationEntity>
+                  <AuthorizationEntityMessage>Response provided by issuer processor.</AuthorizationEntityMessage>
+                  <ProviderResultCode>I</ProviderResultCode>
+                  <ProviderResultMessage>Address information is unavailable, or the Issuer does not support AVS. Acquirer has representment rights.</ProviderResultMessage>
+                </AVS>
+                <TimeStamp>2014-05-12 11:28:36</TimeStamp>
               </PROCESSING_STATUS>
             </CC_TRANSACTION>
           </FNC_CC_PURCHASE>
