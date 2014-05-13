@@ -536,8 +536,6 @@ module ActiveMerchant
                                                    :test          => test?,
                                                    :authorization => "#{parsed_response[:datacash_reference]};#{parsed_response[:authcode]};#{parsed_response[:ca_reference]}"
         )
-        data_cash_response.request  = request
-        data_cash_response.response = response
 
         data_cash_response
       end
