@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
           :test => test?,
           :authorization => authorization,
           :avs_result => { :code => response[:avsCode] },
-          :cvv_result => response[:cvCode]
+          :cvv_result => response[:CVCResponseCode]
         )
       rescue ResponseError => e
         if e.response.code == "401"
@@ -252,6 +252,11 @@ module ActiveMerchant #:nodoc:
             message << info.text
           end
 
+          if status.elements['AVS']
+            parse_avs_response(root)
+            # todo, set the responses here
+          end
+
           status.elements.to_a.each do |node|
             response[node.name.to_sym] = (node.text || '').strip
           end
@@ -262,6 +267,19 @@ module ActiveMerchant #:nodoc:
 
         parse_error(root, message)
         response[:Message] = message
+      end
+
+      def parse_avs_response(root)
+        avs_elements = ["Message","ResultCode","AuthorizationEntity","AuthorizationEntityMessage","ProviderResultCode","ProviderResultMessage"]
+        avs_response = []
+        REXML::XPath.each(root, "//AVS") do |avs_elem|
+          avs = {}
+          avs_elements.each do |elem|
+            avs[elem] = avs_elem.elements[elem].text
+          end
+          avs_response << avs
+        end
+        avs_response
       end
 
       # Parse a generic error response from the gateway
