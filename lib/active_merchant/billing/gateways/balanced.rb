@@ -482,7 +482,16 @@ module ActiveMerchant #:nodoc:
       end
 
       def error?(response)
-        response.key?('errors')
+        # In certain circumstances, such as a malformed request, you can get a 1.0 error
+        # as well as a 1.1 error back from the API. So let's check for either, to be extra
+        # robust.
+        one_one_error = response.key?('errors')
+
+        one_oh_error = if response.key?('status_code')
+          response['status_code'].to_i > 299
+        end
+
+        one_one_error || one_oh_error
       end
 
       def post_data(params)
