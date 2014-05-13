@@ -111,8 +111,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success, message, response,
           :test => test?,
           :authorization => authorization,
-          :avs_result => { :code => response[:avsCode] },
-          :cvv_result => response[:cvCode]
+          :avs_result => { :code => avs_code(response, options) },
+          :cvv_result => response[:CVCResponseCode]
         )
       rescue ResponseError => e
         if e.response.code == "401"
@@ -261,7 +261,14 @@ module ActiveMerchant #:nodoc:
           end
 
           status.elements.to_a.each do |node|
-            response[node.name.to_sym] = (node.text || '').strip
+            if (node.elements.size == 0)
+              response[node.name.to_sym] = (node.text || '').strip
+            else
+              node.elements.each do |childnode|
+                name = "#{node.name}_#{childnode.name}"
+                response[name.to_sym] = (childnode.text || '').strip
+              end
+            end
           end
 
           error_code = REXML::XPath.first(status, "ERROR/Number")
@@ -309,6 +316,28 @@ module ActiveMerchant #:nodoc:
           end
         end
         string
+      end
+
+      # Amex have different AVS response codes
+      AMEX_TRANSLATED_AVS_CODES = {
+        "A" => "B", # CSC and Address Matched
+        "F" => "D", # All Data Matched
+        "N" => "I", # CSC Match
+        "U" => "U", # Data Not Checked
+        "Y" => "D", # All Data Matched
+        "Z" => "P", # CSC and Postcode Matched
+        "F" => "D"  # Street address and zip code match
+      }
+
+      # Amex have different AVS response codes to visa etc
+      def avs_code(response, options)
+        if response.has_key?(:AVS_ProviderResultCode)
+          if options[:credit_card].present? && ActiveMerchant::Billing::CreditCard.brand?(options[:credit_card].number) == "american_express"
+            AMEX_TRANSLATED_AVS_CODES[response[:AVS_ProviderResultCode]]
+          else
+            response[:AVS_ProviderResultCode]
+          end
+        end
       end
 
       # Encode login and password in Base64 to supply as HTTP header

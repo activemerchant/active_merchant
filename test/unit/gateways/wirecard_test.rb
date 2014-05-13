@@ -9,28 +9,37 @@ class WirecardTest < Test::Unit::TestCase
   TEST_CAPTURE_GUWID = 'C833707121385268439116'
 
   def setup
-    @gateway = WirecardGateway.new(:login => '', :password => '', :signature => '')
+    @gateway = WirecardGateway.new(login: '', password: '', signature: '')
     @credit_card = credit_card('4200000000000000')
     @declined_card = credit_card('4000300011112220')
-    @unsupported_card = credit_card('4200000000000000', :brand => :maestro)
+    @unsupported_card = credit_card('4200000000000000', brand: :maestro)
+    @amex_card = credit_card('370000000000000', brand: "amex")
 
     @amount = 111
 
     @options = {
-      :order_id => '1',
-      :billing_address => address,
-      :description => 'Wirecard Purchase',
-      :email => 'soleone@example.com'
+      order_id: '1',
+      billing_address: address,
+      description: 'Wirecard Purchase',
+      email: 'soleone@example.com'
     }
 
     @address_without_state = {
-      :name     => 'Jim Smith',
-      :address1 => '1234 My Street',
-      :company  => 'Widgets Inc',
-      :city     => 'Ottawa',
-      :zip      => 'K12 P2A',
-      :country  => 'CA',
-      :state    => nil,
+      name:      'Jim Smith',
+      address1:  '1234 My Street',
+      company:   'Widgets Inc',
+      city:      'Ottawa',
+      zip:       'K12 P2A',
+      country:   'CA',
+      state:     nil,
+    }
+
+    @address_avs = {
+      address1:  '9 Derry Street',
+      city:      'London',
+      zip:       'W8 2TE',
+      country:   'GB',
+      state:     'London',
     }
   end
 
@@ -155,7 +164,7 @@ class WirecardTest < Test::Unit::TestCase
   end
 
   def test_no_error_if_no_state_is_provided_in_address
-    options = @options.merge(:billing_address => @address_without_state)
+    options = @options.merge(billing_address: @address_without_state)
     @gateway.expects(:ssl_post).returns(unauthorized_capture_response)
     assert_nothing_raised do
       @gateway.authorize(@amount, @credit_card, options)
@@ -198,6 +207,20 @@ class WirecardTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/<FunctionID>\?D\?nde est\? la estaci\?n\?<\/FunctionID>/, data)
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_failed_avs_response_message
+    options = @options.merge(billing_address: @address_avs)
+    @gateway.expects(:ssl_post).returns(failed_avs_response)
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_match /A/, response.avs_result["code"]
+  end
+
+  def test_failed_amex_avs_response_code
+    options = @options.merge(billing_address: @address_avs)
+    @gateway.expects(:ssl_post).returns(failed_avs_response)
+    response = @gateway.purchase(@amount, @amex_card, options)
+    assert_match /B/, response.avs_result["code"]
   end
 
   private
@@ -504,6 +527,42 @@ class WirecardTest < Test::Unit::TestCase
                   <Advice>Only demo card number '4200000000000000' is allowed for VISA in demo mode.</Advice>
                 </ERROR>
                 <TimeStamp>2008-06-19 06:58:51</TimeStamp>
+              </PROCESSING_STATUS>
+            </CC_TRANSACTION>
+          </FNC_CC_PURCHASE>
+        </W_JOB>
+      </W_RESPONSE>
+    </WIRECARD_BXML>
+    XML
+  end
+
+  # AVS failure
+  def failed_avs_response
+    <<-XML
+    <?xml version="1.0" encoding="UTF-8"?>
+    <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+      <W_RESPONSE>
+        <W_JOB>
+          <JobID></JobID>
+          <FNC_CC_PURCHASE>
+            <FunctionID></FunctionID>
+            <CC_TRANSACTION>
+              <TransactionID>E0BCBF30B82D0131000000000000E4CF</TransactionID>
+              <PROCESSING_STATUS>
+                <GuWID>C997753139988691610455</GuWID>
+                <AuthorizationCode>732129</AuthorizationCode>
+                <Info>THIS IS A DEMO TRANSACTION USING CREDIT CARD NUMBER 420000****0000. NO REAL MONEY WILL BE TRANSFERED.</Info>
+                <StatusType>INFO</StatusType>
+                <FunctionResult>PENDING</FunctionResult>
+                <AVS>
+                  <ResultCode>U</ResultCode>
+                  <Message>AVS Unavailable.</Message>
+                  <AuthorizationEntity>5</AuthorizationEntity>
+                  <AuthorizationEntityMessage>Response provided by issuer processor.</AuthorizationEntityMessage>
+                  <ProviderResultCode>A</ProviderResultCode>
+                  <ProviderResultMessage>Address information is unavailable, or the Issuer does not support AVS. Acquirer has representment rights.</ProviderResultMessage>
+                </AVS>
+                <TimeStamp>2014-05-12 11:28:36</TimeStamp>
               </PROCESSING_STATUS>
             </CC_TRANSACTION>
           </FNC_CC_PURCHASE>
