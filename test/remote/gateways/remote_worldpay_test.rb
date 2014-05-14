@@ -33,6 +33,35 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_authorize_and_capture_by_reference
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'SUCCESS', auth.message
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+
+    assert reference = auth.authorization
+    @options[:order_id] = generate_unique_id
+    assert auth = @gateway.authorize(@amount, reference, @options)
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
+
+  def test_authorize_and_purchase_by_reference
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'SUCCESS', auth.message
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+
+    assert reference = auth.authorization
+    @options[:order_id] = generate_unique_id
+    assert auth = @gateway.authorize(@amount, reference, @options)
+    @options[:order_id] = generate_unique_id
+    assert capture = @gateway.purchase(@amount, auth.authorization, @options)
+    assert_success capture
+  end
+
   def test_failed_capture
     assert response = @gateway.capture(@amount, 'bogus')
     assert_failure response
