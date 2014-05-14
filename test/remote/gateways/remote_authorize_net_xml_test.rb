@@ -137,13 +137,12 @@ class AuthorizeNetXmlTest < Test::Unit::TestCase
     assert response.authorization
   end
 
-  #TODO: implement this test.
   def test_card_present_purchase
     @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-    assert_equal "charge", response.params["object"]
-    assert response.params["paid"]
+    assert response.test?
+    assert_equal 'This transaction has been approved.', response.message
+    assert response.authorization
   end
 #this test will fail until consolidated accounts is activated.
 =begin
@@ -201,18 +200,17 @@ class AuthorizeNetXmlTest < Test::Unit::TestCase
     assert_success capture
     assert_equal 'This transaction has been approved.', capture.message
   end
-=end
-  #TODO: implement this test.
+
   def test_card_present_authorize_and_capture
-    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
+    @credit_card.track_data = ';4111111111111111=1803101000020000831?'
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
-    assert !authorization.params["captured"]
 
-    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert capture = @gateway.capture(@amount, authorization.params['transaction_id'])
     assert_success capture
+    assert_equal 'This transaction has been approved.', capture.message
   end
-=begin
+
   def test_authorization_and_void
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
@@ -331,7 +329,7 @@ class AuthorizeNetXmlTest < Test::Unit::TestCase
     assert_equal 'E00013', response.params['message_code']
     assert_equal 'E00013', response.params['code']
   end
-=end
+
 =begin
   I don't see any mapping to a solution id in the SDK
   def test_successful_purchase_with_solution_id
