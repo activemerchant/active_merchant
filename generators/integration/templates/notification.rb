@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
             request = Net::HTTP::Post.new(uri.path)
 
             request['Content-Length'] = "#{payload.size}"
-            request['User-Agent'] = "Active Merchant -- http://home.leetsoft.com/am"
+            request['User-Agent'] = "Active Merchant -- http://activemerchant.org/"
             request['Content-Type'] = "application/x-www-form-urlencoded"
 
             http = Net::HTTP.new(uri.host, uri.port)

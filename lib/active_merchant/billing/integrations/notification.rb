@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
         end
 
         # This combines the gross and currency and returns a proper Money object.
-        # this requires the money library located at http://dist.leetsoft.com/api/money
+        # this requires the money library located at http://rubymoney.github.io/money/
         def amount
           return Money.new(gross_cents, currency) rescue ArgumentError
           return Money.new(gross_cents) # maybe you have an own money object which doesn't take a currency?
