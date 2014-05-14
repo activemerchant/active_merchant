@@ -16,8 +16,13 @@ app55:
   api_secret: "yT1FRpuusBIQoEBIfIQ8bPStkl7yzdTz"
 
 authorize_net:
-  login: X
-  password: Y
+  login: 4Pf3E54zCsW
+  password: 337UTt4y6DB64ft8
+
+# Working credentials, no need to replace
+authorizenet:
+  some_credential: SOMECREDENTIAL
+  another_credential: ANOTHERCREDENTIAL
 
 # Working credentials, no need to replace
 balanced:

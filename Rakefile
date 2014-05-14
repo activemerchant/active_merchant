@@ -53,20 +53,19 @@ namespace :test do
     t.verbose = true
   end
 
-  Rake::TestTask.new(:anet_units) do |t|
-    t.pattern = 'test/unit/gateways/authorize_net_xml_test.rb'
-    t.ruby_opts << '-rubygems'
-    t.libs << 'test'
-    t.verbose = true
-  end
-
   Rake::TestTask.new(:anet_remote) do |t|
-    t.pattern = 'test/remote/gateways/remote_authorize_net_xml_test.rb'
+    t.pattern = 'test/remote/gateways/remote_authorizenet_test.rb'
     t.ruby_opts << '-rubygems'
     t.libs << 'test'
     t.verbose = true
   end
 
+  Rake::TestTask.new(:anet_units) do |t|
+    t.pattern = 'test/unit/gateways/authorizenet_test.rb'
+    t.ruby_opts << '-rubygems'
+    t.libs << 'test'
+    t.verbose = true
+  end
 end
 
 namespace :gateways do
