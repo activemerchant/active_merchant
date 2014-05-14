@@ -45,7 +45,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-        submit_auth_or_purchase 'CreditAuth', xml.target!, money
+        commit 'CreditAuth', xml.target!, money
       end
 
       def capture(money, transaction_id, options={})
@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-        submit_auth_or_purchase 'CreditSale', xml.target!, money
+        commit 'CreditSale', xml.target!, money
       end
 
       def refund(money, transaction_id, options={})
@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-        submit_refund xml.target!
+        commit 'Refund', xml.target!
       end
 
       def void(transaction_id, options={})
@@ -114,7 +114,7 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        submit_void xml.target!
+        commit 'Void', xml.target!
       end
 
       private
@@ -188,7 +188,7 @@ module ActiveMerchant #:nodoc:
             xml.hps :TxnId, transaction_id
           end
         end
-        submit_get xml.target!
+        commit 'ReportTxnDetail', xml.target!
       end
 
       def commit ( action, xml, money=nil)
