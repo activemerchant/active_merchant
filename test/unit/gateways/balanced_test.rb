@@ -6,7 +6,7 @@ class BalancedTest < Test::Unit::TestCase
   def setup
     @marketplace_uri = '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO'
 
-    marketplace_uris = {
+    @marketplace_uris = {
       'uri' => @marketplace_uri,
       'debits_uri' => '/debits',
       'cards_uri' => '/cards',
@@ -16,7 +16,7 @@ class BalancedTest < Test::Unit::TestCase
 
     @gateway = BalancedGateway.new(
       login: 'e1c5ad38d1c711e1b36c026ba7e239a9',
-      marketplace: marketplace_uris
+      marketplace: @marketplace_uris
     )
 
     @amount = 100
@@ -260,6 +260,7 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
+    BalancedGateway.any_instance.expects(:ssl_get).returns(invalid_login_response)
     begin
       BalancedGateway.new(
         login: 'lol'
@@ -273,6 +274,23 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   private
+
+  def invalid_login_response
+    %(
+{
+  "errors": [
+    {
+      "status": "Unauthorized",
+      "category_code": "authentication-required",
+      "description": "<p>The server could not verify that you are authorized to access the URL requested.  You either supplied the wrong credentials (e.g. a bad password), or your browser doesn't understand how to supply the credentials required.</p><p>In case you are allowed to request the document, please check your user-id and password and try again.</p> Your request id is OHM45edd6b0db7511e39cf202b12035401b.",
+      "status_code": 401,
+      "category_type": "permission",
+      "request_id": "OHM45edd6b0db7511e39cf202b12035401b"
+    }
+  ]
+}
+    )
+  end
 
   def marketplace_response
     <<-RESPONSE

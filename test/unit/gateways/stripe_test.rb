@@ -98,6 +98,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_amount_localization
+    @gateway.expects(:ssl_request).returns(successful_purchase_response(true))
     @gateway.expects(:post_data).with do |params|
       assert_equal '4', params[:amount]
     end
