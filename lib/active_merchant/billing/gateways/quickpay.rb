@@ -136,7 +136,7 @@ module ActiveMerchant #:nodoc:
 
           :refund    => %w(protocol msgtype merchant amount transaction apikey),
 
-          :subscribe => %w(protocol msgtype merchant ordernumber cardnumber
+          :subscribe => %w(protocol msgtype merchant ordernumber amount currency cardnumber
                            expirationdate cvd acquirer cardtypelock description testmode
                            fraud_remote_addr fraud_http_accept fraud_http_accept_language
                            fraud_http_accept_encoding fraud_http_accept_charset
@@ -222,10 +222,11 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
-      def store(creditcard, options = {})
+      def store(creditcard, amount = 0, options = {})
         post = {}
 
         add_creditcard(post, creditcard, options)
+	add_amount(post, amount, options)
         add_invoice(post, options)
         add_description(post, options)
         add_fraud_parameters(post, options)
