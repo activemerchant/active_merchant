@@ -191,43 +191,44 @@ module ActiveMerchant #:nodoc:
         submit_get xml.target!
       end
 
-      def submit_auth_or_purchase(action, xml, money)
-        response = do_transaction(xml)
-
+      def commit ( action, xml, money=nil)
+        response = do_transaction xml
+        
         if response.is_a? ActiveMerchant::Billing::Response
-          response
+          return response
         else
           header = response['Header']
-
-          if successful?(response)
-            transaction = response['Transaction'][action]
-
-            if header['GatewayRspCode'].eql?('30') || !header['GatewayRspCode'].eql?('0')
-              build_error_response process_charge_gateway_response(header['GatewayRspCode'], header['GatewayRspMsg'], header['GatewayTxnId'],money)
-            elsif ! transaction['RspCode'].eql? '00'
-              transaction = response['Transaction'][action]
-              build_error_response process_charge_issuer_response(transaction['RspCode'],transaction['RspText'],header['GatewayTxnId'], money)
+          
+          if successful?(response)          
+            
+            if ['Refund','Void'].include? action
+              transaction ={
+                'RspCode' => '00',
+                'RspText' => ''
+              }
             else
-              build_response(header,transaction, response)
+              transaction = response['Transaction'][action]
+              
+              if ['CreditSale','CreditAuth'].include? action
+                sale_auth_response = sale_auth_check header, transaction, money
+                if sale_auth_response.is_a? ActiveMerchant::Billing::Response
+                  return sale_auth_response
+                end
+                
+              end
+              
+              if 'ReportTxnDetail'.eql? action
+                return report_txn_response header, transaction, response
+              end
+              
             end
+            return build_response(header,transaction,response)
           else
             build_error_response(@exception_mapper.map_gateway_exception(header['GatewayTxnId'],header['GatewayRspCode'], header['GatewayRspMsg']))
           end
+          
         end
-
       end
-
-      def submit_get(xml)
-
-        response = do_transaction(xml)
-
-        if response.is_a? ActiveMerchant::Billing::Response
-          response
-        else
-          transaction = response['Transaction']['ReportTxnDetail']
-
-          header = response['Header']
-          result = {
               'CardType' => transaction['Data']['CardType'],
               'CVVRsltCode' => transaction['Data']['CVVRsltCode'],
               'RspCode' => transaction['Data']['RspCode'],
@@ -256,72 +257,8 @@ module ActiveMerchant #:nodoc:
           else
             build_response(header,result, response)
           end
-        end
-
       end
-
-      def submit_refund(xml)
-        response = do_transaction(xml)
-
-        if response.is_a? ActiveMerchant::Billing::Response
-          response
-        else
-          header = response['Header']
-
-          if successful?(response)
-            transaction ={
-                'RspCode' => '00',
-                'RspText' => ''
-            }
-            build_response(header,transaction,response)
-          else
-            build_error_response( @exception_mapper.map_gateway_exception(header['GatewayTxnId'], header['GatewayRspCode'], header['GatewayRspMsg']) )
-          end
-        end
-
-      end
-
-      def submit_reverse(xml)
-        response = do_transaction(xml)
-
-        if response.is_a? ActiveMerchant::Billing::Response
-          response
-        else
-          header = response['Header']
-
-          if successful?( response)
-            transaction ={
-                :RspCode => '00',
-                :RspText => ''
-            }
-            build_response(header,transaction,response)
-          else
-            build_error_response( @exception_mapper.map_gateway_exception(header['GatewayTxnId'], header['GatewayRspCode'], header['GatewayRspMsg']) )
-          end
-        end
-
-      end
-
-      def submit_void(xml)
-        response = do_transaction(xml)
-
-        if response.is_a? ActiveMerchant::Billing::Response
-          response
-        else
-          header = response['Header']
-
-          if successful?(response)
-            transaction ={
-                'RspCode' => '00',
-                'RspText' => ''
-            }
-            build_response(header,transaction,response)
-          else
-            build_error_response( @exception_mapper.map_gateway_exception(header['GatewayTxnId'], header['GatewayRspCode'], header['GatewayRspMsg']) )
-          end
-        end
-
-      end
+      
       def build_response( header, transaction, response)
         response = {
             :card_type => (transaction['CardType'] if transaction['CardType'] ) ,
