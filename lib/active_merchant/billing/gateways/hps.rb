@@ -229,6 +229,18 @@ module ActiveMerchant #:nodoc:
           
         end
       end
+      
+      def sale_auth_check(header, transaction, money)
+        
+        if header['GatewayRspCode'].eql?('30') || !header['GatewayRspCode'].eql?('0')
+          build_error_response process_charge_gateway_response(header['GatewayRspCode'], header['GatewayRspMsg'], header['GatewayTxnId'],money)
+        elsif ! transaction['RspCode'].eql? '00'
+          build_error_response process_charge_issuer_response(transaction['RspCode'],transaction['RspText'],header['GatewayTxnId'], money)
+        end
+      end
+      
+      def report_txn_response(header,transaction,response)
+        result = {
               'CardType' => transaction['Data']['CardType'],
               'CVVRsltCode' => transaction['Data']['CVVRsltCode'],
               'RspCode' => transaction['Data']['RspCode'],
