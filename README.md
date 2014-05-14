@@ -206,7 +206,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [2 Checkout](http://www.2checkout.com)
 * [A1Agregator](http://a1agregator.ru/) - RU
 * [Authorize.Net SIM](http://developer.authorize.net/api/sim/) - US
-* [Banca Sella GestPay](https://www.sella.it/banca/ecommerce/gestpay/gestpay.jsp)
+* [Banca Sella GestPay](https://www.gestpay.it/)
 * [Chronopay](http://www.chronopay.com)
 * [DirecPay](http://www.timesofmoney.com/direcpay/jsp/home.jsp)
 * [Direct-eBanking / sofortueberweisung.de by Payment-Networks AG](https://www.payment-network.com/deb_com_en/merchantarea/home) - DE, AT, CH, BE, UK, NL
