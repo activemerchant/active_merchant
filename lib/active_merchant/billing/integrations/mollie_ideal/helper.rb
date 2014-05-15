@@ -55,7 +55,7 @@ module ActiveMerchant #:nodoc:
           rescue ResponseError => e
             case e.response.code
             when '401'
-              raise ActiveViewHelperError, 'Invalid credentials.'
+              raise ActionViewHelperError, 'Invalid credentials.'
             when '422'
               error = JSON.parse(e.response.body)['error']['message']
               raise ActionViewHelperError, error
