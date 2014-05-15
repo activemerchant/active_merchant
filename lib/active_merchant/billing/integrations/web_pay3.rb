@@ -6,19 +6,18 @@ module ActiveMerchant #:nodoc:
       module WebPay3
         autoload :Return, File.dirname(__FILE__) + '/web_pay3/return.rb'
         autoload :Helper, File.dirname(__FILE__) + '/web_pay3/helper.rb'
-        # autoload :Notification, File.dirname(__FILE__) + '/web_pay3/notification.rb'
 
-        # Overwrite this if you want to change the WebPay3 test url
+        # sandbox ipg
         mattr_accessor :test_url
         self.test_url = 'https://ipgtest.webteh.hr/form'
 
+        # sandbox ipg
         mattr_accessor :development_url
         self.development_url = 'https://ipgtest.webteh.hr/form'
 
+        # production ipg
         mattr_accessor :production_url
-        self.production_url = 'https://ipgtest.webteh.hr/form'
-        #self.production_url = 'https://ipg.webteh.hr/form'
-
+        self.production_url = 'https://ipg.webteh.hr/form'
 
         def self.service_url
           mode = ActiveMerchant::Billing::Base.integration_mode

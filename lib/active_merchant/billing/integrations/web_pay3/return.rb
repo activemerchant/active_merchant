@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
             params['digest'] and (calculated_digest == returned_digest)
           end
 
-          # payment is canceled id there is no returned digest
+          # payment is canceled if there is no returned digest
           def cancelled?
             params['order_number'] and params['digest'].nil?
           end
