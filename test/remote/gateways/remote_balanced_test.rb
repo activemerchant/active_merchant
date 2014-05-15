@@ -58,17 +58,16 @@ class RemoteBalancedTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_capture
-    amount = @amount
-    assert auth = @gateway.authorize(amount, @credit_card, @options)
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal 'Transaction approved', auth.message
 
     hold_id = auth.params["card_holds"][0]["id"]
     capture_url = auth.params["links"]["card_holds.debits"].gsub("{card_holds.id}", hold_id)
 
-    assert capture = @gateway.capture(amount, capture_url)
+    assert capture = @gateway.capture(@amount, capture_url)
     assert_success capture
-    assert_equal amount, capture.params['debits'][0]['amount']
+    assert_equal @amount, capture.params['debits'][0]['amount']
 
     auth_card_id = auth.params['card_holds'][0]['links']['card']
     capture_source_id = capture.params['debits'][0]['links']['source']
@@ -77,17 +76,16 @@ class RemoteBalancedTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_capture_partial
-    amount = @amount
-    assert auth = @gateway.authorize(amount, @credit_card, @options)
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal 'Transaction approved', auth.message
 
     hold_id = auth.params["card_holds"][0]["id"]
     capture_url = auth.params["links"]["card_holds.debits"].gsub("{card_holds.id}", hold_id)
 
-    assert capture = @gateway.capture(amount / 2, capture_url)
+    assert capture = @gateway.capture(@amount / 2, capture_url)
     assert_success capture
-    assert_equal amount / 2, capture.params['debits'][0]['amount']
+    assert_equal @amount / 2, capture.params['debits'][0]['amount']
 
     auth_card_id = auth.params['card_holds'][0]['links']['card']
     capture_source_id = capture.params['debits'][0]['links']['source']
@@ -101,8 +99,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
   end
 
   def test_void_authorization
-    amount = @amount
-    assert auth = @gateway.authorize(amount, @credit_card, @options)
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     number = auth.params["card_holds"][0]["href"]
     assert void = @gateway.void(number)
@@ -111,8 +108,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
   end
 
   def test_void_authorization_via_authorization
-    amount = @amount
-    assert auth = @gateway.authorize(amount, @credit_card, @options)
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert auth.authorization
     assert void = @gateway.void(auth.authorization)
@@ -120,12 +116,25 @@ class RemoteBalancedTest < Test::Unit::TestCase
     assert void.params["card_holds"][0]['voided_at']
   end
 
-  def test_authorize_authorization
-    amount = @amount
-    assert auth = @gateway.authorize(amount, @credit_card, @options)
+  def test_voiding_a_capture_not_allowed
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert auth.authorization
-    assert capture = @gateway.capture(amount, auth.authorization)
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert capture.authorization
+
+    void = @gateway.void(capture.authorization)
+    assert_failure void
+    assert_match /Unable to void/i, void.message
+  end
+
+  def test_authorize_authorization
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert auth.authorization
+    assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
   end
 
@@ -142,11 +151,10 @@ class RemoteBalancedTest < Test::Unit::TestCase
   end
 
   def test_refund_authorization
-    amount = @amount
-    assert auth = @gateway.purchase(amount, @credit_card, @options)
+    assert auth = @gateway.purchase(@amount, @credit_card, @options)
     assert_success auth
     assert auth.authorization
-    assert refund = @gateway.refund(amount, auth.authorization)
+    assert refund = @gateway.refund(@amount, auth.authorization)
     assert_success refund
   end
 
