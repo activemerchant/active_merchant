@@ -229,6 +229,8 @@ module ActiveMerchant #:nodoc:
         add_common_params(post, options)
 
         authorization = authorization.split("|")[2] if authorization.include?("|")
+        return Response.new(false, "Unable to void this transaction", {}, test: test?) unless authorization
+
         create_transaction(:put, authorization, post)
       rescue Error => ex
         failed_response(ex.response)
@@ -278,14 +280,13 @@ module ActiveMerchant #:nodoc:
           card_uri = associate_card_to_account(customer_uri, credit_card)
         end
 
-        is_test = false
-        if @marketplace_uri
-          is_test = (@marketplace_uri.index("TEST") ? true : false)
-        end
-
-        Response.new(true, "Card stored", {}, test: is_test, authorization: card_uri)
+        Response.new(true, "Card stored", {}, test: test?, authorization: card_uri)
       rescue Error => ex
         failed_response(ex.response)
+      end
+
+      def test?
+        @marketplace_uri.index("TEST") ? true : false
       end
 
       private
@@ -440,22 +441,17 @@ module ActiveMerchant #:nodoc:
           success,
           (success ? "Transaction approved" : response["errors"][0]["description"]),
           response,
-          test: (@marketplace_uri.index("TEST") ? true : false),
+          test: test?,
           authorization: authorization
         )
       end
 
       def failed_response(response)
-        is_test = false
-        if @marketplace_uri
-          is_test = (@marketplace_uri.index("TEST") ? true : false)
-        end
-
         Response.new(
           false,
           response["errors"][0]["description"],
           response,
-          test: is_test
+          test: test?
         )
       end
 
