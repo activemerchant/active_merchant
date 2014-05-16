@@ -27,4 +27,21 @@ class CashnetTest < Test::Unit::TestCase
     assert refund.test?
     assert_equal 'Success', refund.message
   end
+
+  def test_failed_purchase
+    assert response = @gateway.purchase(-44, @credit_card, @options)
+    assert_failure response
+    assert_match /Negative amount is not allowed/, response.message
+    assert_equal "5", response.params["result"]
+  end
+
+  def test_failed_refund
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount + 50, purchase.authorization)
+    assert_failure refund
+    assert_match /Amount to refund exceeds/, refund.message
+    assert_equal "302", refund.params["result"]
+  end
 end
