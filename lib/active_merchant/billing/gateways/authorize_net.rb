@@ -262,7 +262,9 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         if options.has_key? :email
           post[:email] = options[:email]
-          post[:email_customer] = false
+          if options.has_key? :email_customer
+            post[:email_customer] = options[:email_customer]
+          end
         end
 
         if options.has_key? :customer
