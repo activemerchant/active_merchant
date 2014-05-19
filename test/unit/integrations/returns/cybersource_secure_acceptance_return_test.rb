@@ -22,7 +22,7 @@ class CybersourceSecureAcceptanceReturnTest < Test::Unit::TestCase
     assert_equal "5.00", notification.gross
     assert_equal "USD", notification.currency
     assert_equal DateTime.parse('Thu, 06 May 2014 09:40:27 +0000'), notification.received_at
-    assert_equal 'Visa', notification.card_type
+    assert_equal 'Visa', notification.card_brand
     assert notification.test?
   end
 

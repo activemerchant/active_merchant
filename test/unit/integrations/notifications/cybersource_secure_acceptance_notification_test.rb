@@ -15,7 +15,7 @@ class CybersourceSecureAcceptanceNotificationTest < Test::Unit::TestCase
     assert_equal "5.00", @cybersource_secure_acceptance.gross
     assert_equal "USD", @cybersource_secure_acceptance.currency
     assert_equal DateTime.parse('Thu, 06 May 2014 09:40:27 +0000'), @cybersource_secure_acceptance.received_at
-    assert_equal 'Visa', @cybersource_secure_acceptance.card_type
+    assert_equal 'Visa', @cybersource_secure_acceptance.card_brand
     assert @cybersource_secure_acceptance.test?
   end
 
