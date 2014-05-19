@@ -135,6 +135,7 @@ efsnet:
 elavon:
   login: LOGIN
   password: PASSWORD
+  user: USER (often the same as LOGIN)
 
 # login: merchant number
 # password: referrer url (for authorize authentication)
