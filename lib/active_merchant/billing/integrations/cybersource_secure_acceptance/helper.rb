@@ -163,7 +163,7 @@ module ActiveMerchant #:nodoc:
           # Need to format the amount to have 2 decimal places
           def amount=(money)
             cents = convert_to_cents(money)
-            add_field mappings[:amount], sprintf("%.2f", BigDecimal.new(cents)/100)
+            add_field mappings[:amount], sprintf("%.2f", BigDecimal.new(cents.to_s)/100)
           end
 
           # Add a line item to Cybersource Secure Acceptance.
