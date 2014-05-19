@@ -733,6 +733,7 @@ wepay:
 wirecard:
   login: 56500
   password: TestXAPTER
+  signature: 56500
 
 wirecard_checkout_page:
   secret: B8AKTPWBRMNBV455FG6M2DANE99WU2

@@ -4,7 +4,6 @@ require 'test_helper'
 class RemoteWirecardTest < Test::Unit::TestCase
   def setup
     test_account = fixtures(:wirecard)
-    test_account[:signature] = test_account[:login]
     @gateway = WirecardGateway.new(test_account)
 
     @amount = 100
