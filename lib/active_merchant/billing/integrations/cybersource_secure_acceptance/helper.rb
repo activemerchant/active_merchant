@@ -204,12 +204,12 @@ module ActiveMerchant #:nodoc:
 
                 if tax_amount
                   tax_amount_cents = convert_to_cents(tax_amount) * quantity
-                  tax_amount = sprintf("%.2f", BigDecimal.new(tax_amount_cents)/100)
+                  tax_amount = sprintf("%.2f", BigDecimal.new(tax_amount_cents.to_s)/100)
                 end
 
                 if unit_price
                   unit_price_cents = convert_to_cents(unit_price) * quantity
-                  unit_price = sprintf("%.2f", BigDecimal.new(unit_price_cents)/100)
+                  unit_price = sprintf("%.2f", BigDecimal.new(unit_price_cents.to_s)/100)
                 end
 
                 add_field "item_#{@line_item_count}_tax_amount", tax_amount if tax_amount
@@ -229,13 +229,13 @@ module ActiveMerchant #:nodoc:
                   old_tax_amount_cents = (BigDecimal.new(@fields['item_49_tax_amount'])*100).to_i || 0
 
                   tax_amount_cents = (convert_to_cents(tax_amount) * quantity) + old_tax_amount_cents
-                  tax_amount = sprintf("%.2f", BigDecimal.new(tax_amount_cents)/100)
+                  tax_amount = sprintf("%.2f", BigDecimal.new(tax_amount_cents.to_s)/100)
                 end
                 if unit_price
                   old_unit_price_cents = (BigDecimal.new(@fields['item_49_unit_price'])*100).to_i || 0
 
                   unit_price_cents = (convert_to_cents(unit_price) * quantity) + old_unit_price_cents
-                  unit_price = sprintf("%.2f", BigDecimal.new(unit_price_cents)/100)
+                  unit_price = sprintf("%.2f", BigDecimal.new(unit_price_cents.to_s)/100)
                 end
 
                 @fields['item_49_tax_amount'] = tax_amount if tax_amount
@@ -247,12 +247,12 @@ module ActiveMerchant #:nodoc:
               else
                 if tax_amount
                   tax_amount_cents = convert_to_cents(tax_amount)
-                  tax_amount = sprintf("%.2f", BigDecimal.new(tax_amount_cents)/100)
+                  tax_amount = sprintf("%.2f", BigDecimal.new(tax_amount_cents.to_s)/100)
                 end
 
                 if unit_price
                   unit_price_cents = convert_to_cents(unit_price)
-                  unit_price = sprintf("%.2f", BigDecimal.new(unit_price_cents)/100)
+                  unit_price = sprintf("%.2f", BigDecimal.new(unit_price_cents.to_s)/100)
                 end
 
                 add_field "item_#{@line_item_count}_name", name
