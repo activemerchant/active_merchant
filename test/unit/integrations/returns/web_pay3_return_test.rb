@@ -4,11 +4,11 @@ class WebPay3ReturnTest < Test::Unit::TestCase
   include ActiveMerchant::Billing::Integrations
 
   def test_cancelled_return
-    assert WebPay3::Return.new(http_raw_data_when_cancelled, key: fixtures(:web_pay3)[:credential2]).cancelled?
+    assert WebPay3::Return.new(http_raw_data_when_cancelled, key: fixtures(:web_pay3)[:key]).cancelled?
   end
 
   def test_success_return
-    assert WebPay3::Return.new(http_raw_data_when_success, key: fixtures(:web_pay3)[:credential2]).success?
+    assert WebPay3::Return.new(http_raw_data_when_success, key: fixtures(:web_pay3)[:key]).success?
   end
 
   private

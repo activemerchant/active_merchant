@@ -6,10 +6,10 @@ class WebPay3HelperTest < Test::Unit::TestCase
   def test_form_fields
     amount = 12345
     currency = 'USD'
-    key = fixtures(:web_pay3)[:credential2]
+    key = fixtures(:web_pay3)[:key]
     merchant_token = fixtures(:web_pay3)[:merchant_token]
     transaction_type = fixtures(:web_pay3)[:transaction_type]
-    language = fixtures(:web_pay3)[:credential3]
+    language = fixtures(:web_pay3)[:language]
     order_number = '12345_order_number'
 
     options = { credential2: key,
