@@ -13,6 +13,7 @@ class RemoteWirecardTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4200000000000000')
     @declined_card = credit_card('4000300011112220')
+    @amex_card = credit_card('370000000000010')
 
     @options = {
       :order_id => 1,
@@ -152,20 +153,17 @@ class RemoteWirecardTest < Test::Unit::TestCase
   end
 
   def test_successful_amex_avs_result
-    # NEEDS UPDATED FOR AMEX
-
-    # Magic Wirecard address to return an AVS 'M' result
     a_address = {
-      :address1 => 'Belgiestraat 8 bus 6',
-      :state => 'Brussel',
-      :zip => '1826',
-      :country => 'BE'
+      :address1 => '10 Edward Street',
+      :state => 'London',
+      :zip => 'BN66 6AB',
+      :country => 'GB'
     }
 
-    assert response = @gateway_avs_cvc_enabled.purchase(@amount, @credit_card, @options.merge(:billing_address => a_address))
+    assert response = @gateway_avs_cvc_enabled.purchase(@amount, @amex_card, @options.merge(:billing_address => a_address))
 
     assert_success response
-    assert_equal "M", response.avs_result["code"]
+    assert_equal "U", response.avs_result["code"]
   end
 
   # Failure tested
