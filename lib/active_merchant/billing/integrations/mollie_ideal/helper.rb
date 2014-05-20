@@ -53,7 +53,10 @@ module ActiveMerchant #:nodoc:
           def request_redirect
             MollieIdeal.create_payment(token, redirect_paramaters)
           rescue ResponseError => e
-            if e.response.code == '422'
+            case e.response.code
+            when '401'
+              raise ActionViewHelperError, 'Invalid credentials.'
+            when '422'
               error = JSON.parse(e.response.body)['error']['message']
               raise ActionViewHelperError, error
             else
