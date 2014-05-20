@@ -6,10 +6,6 @@ class RemoteWirecardTest < Test::Unit::TestCase
     test_account = fixtures(:wirecard)
     @gateway = WirecardGateway.new(test_account)
 
-    # Used to test AVS / CVC responses
-    test_account_avs_cvc = fixtures(:wirecard_avs_cvc)
-    @gateway_avs_cvc_enabled = WirecardGateway.new(test_account_avs_cvc)
-
     @amount = 100
     @credit_card = credit_card('4200000000000000')
     @declined_card = credit_card('4000300011112220')
@@ -130,7 +126,7 @@ class RemoteWirecardTest < Test::Unit::TestCase
 
   def test_successful_cvv_result
     @credit_card.verification_value = "666" # Magic Value = "Matched (correct) CVC-2"
-    assert response = @gateway_avs_cvc_enabled.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_success response
     assert_equal "M", response.cvv_result["code"]
@@ -145,7 +141,7 @@ class RemoteWirecardTest < Test::Unit::TestCase
       :country => 'GB'
     }
 
-    assert response = @gateway_avs_cvc_enabled.purchase(@amount, @credit_card, @options.merge(:billing_address => m_address))
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:billing_address => m_address))
 
     assert_success response
     assert_equal "M", response.avs_result["code"]
@@ -159,7 +155,7 @@ class RemoteWirecardTest < Test::Unit::TestCase
       :country => 'GB'
     }
 
-    assert response = @gateway_avs_cvc_enabled.purchase(@amount, @amex_card, @options.merge(:billing_address => a_address))
+    assert response = @gateway.purchase(@amount, @amex_card, @options.merge(:billing_address => a_address))
 
     assert_success response
     assert_equal "U", response.avs_result["code"]
