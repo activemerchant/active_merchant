@@ -3,10 +3,43 @@ module ActiveMerchant #:nodoc:
     module Integrations #:nodoc:
       module Universal
         class Helper < ActiveMerchant::Billing::Integrations::Helper
+          CURRENCY_SPECIAL_MINOR_UNITS = {
+            'BIF' => 0,
+            'BYR' => 0,
+            'CLF' => 0,
+            'CLP' => 0,
+            'CVE' => 0,
+            'DJF' => 0,
+            'GNF' => 0,
+            'HUF' => 0,
+            'ISK' => 0,
+            'JPY' => 0,
+            'KMF' => 0,
+            'KRW' => 0,
+            'PYG' => 0,
+            'RWF' => 0,
+            'UGX' => 0,
+            'UYI' => 0,
+            'VND' => 0,
+            'VUV' => 0,
+            'XAF' => 0,
+            'XOF' => 0,
+            'XPF' => 0,
+            'BHD' => 3,
+            'IQD' => 3,
+            'JOD' => 3,
+            'KWD' => 3,
+            'LYD' => 3,
+            'OMR' => 3,
+            'TND' => 3,
+            'COU' => 4
+            }
+
           def initialize(order, account, options = {})
-            super
             @forward_url = options[:forward_url]
             @key = options[:credential2]
+            @currency = options[:currency]
+            super
             self.country = options[:country]
             self.account_name = options[:account_name]
             self.transaction_type = options[:transaction_type]
@@ -21,6 +54,18 @@ module ActiveMerchant #:nodoc:
             sign_fields
           end
 
+          def amount=(amount)
+            add_field 'x_amount', format_amount(amount, @currency)
+          end
+
+          def shipping(amount)
+            add_field 'x_amount_shipping', format_amount(amount, @currency)
+          end
+
+          def tax(amount)
+            add_field 'x_amount_tax', format_amount(amount, @currency)
+          end
+
           def sign_fields
             @fields.merge!('x_signature' => generate_signature)
           end
@@ -31,9 +76,6 @@ module ActiveMerchant #:nodoc:
 
           mapping :account,          'x_account_id'
           mapping :currency,         'x_currency'
-          mapping :amount,           'x_amount'
-          mapping :shipping,         'x_amount_shipping'
-          mapping :tax,              'x_amount_tax'
           mapping :order,            'x_reference'
           mapping :country,          'x_shop_country'
           mapping :account_name,     'x_shop_name'
@@ -69,6 +111,13 @@ module ActiveMerchant #:nodoc:
           mapping        :notify_url, 'x_url_callback'
           mapping        :return_url, 'x_url_complete'
           mapping :cancel_return_url, 'x_url_cancel'
+
+          private
+
+          def format_amount(amount, currency)
+            units = CURRENCY_SPECIAL_MINOR_UNITS[currency] || 2
+            sprintf("%.#{units}f", amount)
+          end
         end
       end
     end

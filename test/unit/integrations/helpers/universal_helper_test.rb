@@ -7,7 +7,7 @@ class UniversalHelperTest < Test::Unit::TestCase
     @order = 'order-500'
     @account = 'zork'
     @key = 'TO78ghHCfBQ6ZBw2Q2fJ3wRwGkWkUHVs'
-    @amount = 12345
+    @amount = 123.45
     @currency = 'USD'
     @test = false
     @country = 'US'
@@ -30,16 +30,16 @@ class UniversalHelperTest < Test::Unit::TestCase
   end
 
   def test_core_fields
-    @helper.shipping 678
-    @helper.tax 90
+    @helper.shipping 6.78
+    @helper.tax 0
     @helper.description 'Box of Red Wine'
     @helper.invoice 'Invoice #1A'
 
     assert_field 'x_account_id', @account
     assert_field 'x_currency', @currency
-    assert_field 'x_amount', @amount.to_s
-    assert_field 'x_amount_shipping', '678'
-    assert_field 'x_amount_tax', '90'
+    assert_field 'x_amount', '123.45'
+    assert_field 'x_amount_shipping', '6.78'
+    assert_field 'x_amount_tax', '0.00'
     assert_field 'x_reference', @order
     assert_field 'x_shop_country', @country
     assert_field 'x_shop_name', @account_name
@@ -47,6 +47,18 @@ class UniversalHelperTest < Test::Unit::TestCase
     assert_field 'x_description', 'Box of Red Wine'
     assert_field 'x_invoice', 'Invoice #1A'
     assert_field 'x_test', @test.to_s
+  end
+
+  def test_special_currency_formatting
+    @options[:currency] = 'COU'
+    @helper = Universal::Helper.new(@order, @account, @options)
+    @helper.shipping 6.78
+    @helper.tax 0
+
+    assert_field 'x_currency', 'COU'
+    assert_field 'x_amount', '123.4500'
+    assert_field 'x_amount_shipping', '6.7800'
+    assert_field 'x_amount_tax', '0.0000'
   end
 
   def test_customer_fields
@@ -116,7 +128,7 @@ class UniversalHelperTest < Test::Unit::TestCase
   end
 
   def test_signature
-    expected_signature = Digest::HMAC.hexdigest('x_account_idzorkx_amount12345x_currencyUSDx_referenceorder-500x_shop_countryUSx_shop_nameWidgets Incx_testfalsex_transaction_typesale', @key, Digest::SHA256)
+    expected_signature = Digest::HMAC.hexdigest('x_account_idzorkx_amount123.45x_currencyUSDx_referenceorder-500x_shop_countryUSx_shop_nameWidgets Incx_testfalsex_transaction_typesale', @key, Digest::SHA256)
     @helper.sign_fields
 
     assert_field 'x_signature', expected_signature
