@@ -735,6 +735,11 @@ wirecard:
   password: TestXAPTER
   signature: 56500
 
+wirecard_avs_cvc:
+  login: 00000031629CA9FA
+  password: TestXAPTER
+  signature: 00000031629CAFD5
+
 wirecard_checkout_page:
   secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
   shop_id: ''
