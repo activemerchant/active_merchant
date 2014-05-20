@@ -24,6 +24,7 @@
 * Balanced: Voiding a capture is not allowed [duff]
 * Add HPS gateway (Heartland Payment Systems) [SecureSubmit]
 * Balanced: Fix handling of 500 errors [ntalbott]
+* Universal: Remove all billing address fields [bslobodin]
 
 == Version 1.43.1 (May 1, 2014)
 
