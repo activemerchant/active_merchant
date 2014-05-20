@@ -128,10 +128,9 @@ class RemoteWirecardTest < Test::Unit::TestCase
     assert response.message[/THIS IS A DEMO/]
   end
 
-  # Note: Requires wirecard test account with AVS+CVV responses enabled
   def test_successful_cvv_result
     @credit_card.verification_value = "666" # Magic Value = "Matched (correct) CVC-2"
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway_avs_cvc_enabled.purchase(@amount, @credit_card, @options)
 
     assert_success response
     assert_equal "M", response.cvv_result["code"]
