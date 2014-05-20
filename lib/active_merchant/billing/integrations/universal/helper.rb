@@ -46,15 +46,6 @@ module ActiveMerchant #:nodoc:
                              :email      => 'x_customer_email',
                              :phone      => 'x_customer_phone'
 
-          mapping :billing_address, :city =>     'x_customer_billing_city',
-                                    :company =>  'x_customer_billing_company',
-                                    :address1 => 'x_customer_billing_address1',
-                                    :address2 => 'x_customer_billing_address2',
-                                    :state =>    'x_customer_billing_state',
-                                    :zip =>      'x_customer_billing_zip',
-                                    :country =>  'x_customer_billing_country',
-                                    :phone =>    'x_customer_billing_phone'
-
           mapping :shipping_address, :first_name => 'x_customer_shipping_first_name',
                                      :last_name =>  'x_customer_shipping_last_name',
                                      :city =>       'x_customer_shipping_city',

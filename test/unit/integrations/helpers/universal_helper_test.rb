@@ -61,26 +61,6 @@ class UniversalHelperTest < Test::Unit::TestCase
     assert_field 'x_customer_phone',      '(613) 456-7890'
   end
 
-  def test_billing_address_fields
-    @helper.billing_address :city =>     'Ottawa',
-                            :company =>  'Shopify Ottawa',
-                            :address1 => '126 York St',
-                            :address2 => '2nd floor',
-                            :state =>    'ON',
-                            :zip =>      'K1N 5T5',
-                            :country =>  'CA',
-                            :phone =>    '(613) 987-6543'
-
-    assert_field 'x_customer_billing_city',     'Ottawa'
-    assert_field 'x_customer_billing_company',  'Shopify Ottawa'
-    assert_field 'x_customer_billing_address1', '126 York St'
-    assert_field 'x_customer_billing_address2', '2nd floor'
-    assert_field 'x_customer_billing_state',    'ON'
-    assert_field 'x_customer_billing_zip',      'K1N 5T5'
-    assert_field 'x_customer_billing_country',  'CA'
-    assert_field 'x_customer_billing_phone',    '(613) 987-6543'
-  end
-
   def test_shipping_address_fields
     @helper.shipping_address :first_name => 'John',
                              :last_name  => 'Doe',
