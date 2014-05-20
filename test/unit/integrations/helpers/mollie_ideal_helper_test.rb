@@ -32,6 +32,16 @@ class MollieIdealHelperTest < Test::Unit::TestCase
     assert_equal "0148703115482464", @helper.fields['bank_trxid']
   end
 
+  def test_credential_based_url_errors
+    @mock_api.expects(:post_request)
+      .with('payments', :amount => 500, :description => 'Order #111', :method => 'ideal', :issuer => 'ideal_TESTNL99', :redirectUrl => 'https://return.com', :metadata => {:order => 'order-500'})
+      .raises(ActiveMerchant::ResponseError.new(stub(:code => "403", :message => "Internal Server Error", :body => '{"error": {"message": "bleh"}}')))
+
+    assert_raises ActionViewHelperError do
+      @helper.credential_based_url
+    end
+  end
+
   def test_raises_without_required_options
     assert_raises(ArgumentError) { MollieIdeal::Helper.new('order-500','1234567', @required_options.merge(:redirect_param => nil)) }
     assert_raises(ArgumentError) { MollieIdeal::Helper.new('order-500','1234567', @required_options.merge(:return_url => nil)) }
