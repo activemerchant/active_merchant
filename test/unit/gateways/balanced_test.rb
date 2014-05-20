@@ -273,6 +273,24 @@ class BalancedTest < Test::Unit::TestCase
     assert_equal 'Invalid login credentials supplied', msg
   end
 
+  def test_handle_500
+    error_response = stub("error_response", body: "<html>\n  <head>\n    <title>Internal Server Error</title>\n  </head>\n  <body>\n    <h1>Internal Server Error</h1>\n    \n  </body>\n</html>\n", code: 500)
+
+    @gateway.expects(:raw_ssl_request).times(4).returns(
+      stub("customers_response", body: customers_response, code: 200)
+    ).then.returns(
+      stub("cards_response", body: cards_response, code: 200)
+    ).then.returns(
+     stub("customers_response", body: customers_response, code: 200)
+    ).then.returns(
+      error_response
+    )
+
+    assert_raises(ActiveMerchant::ResponseError) do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end
+  end
+
   private
 
   def invalid_login_response

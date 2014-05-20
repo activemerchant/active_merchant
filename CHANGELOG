@@ -23,6 +23,7 @@
 * Worldpay: Add support for external references [matsubo]
 * Balanced: Voiding a capture is not allowed [duff]
 * Add HPS gateway (Heartland Payment Systems) [SecureSubmit]
+* Balanced: Fix handling of 500 errors [ntalbott]
 
 == Version 1.43.1 (May 1, 2014)
 

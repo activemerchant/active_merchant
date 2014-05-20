@@ -410,6 +410,7 @@ module ActiveMerchant #:nodoc:
           end
           parse(raw_response)
         rescue ResponseError => e
+          raise if(e.response.code.to_s == "500")
           raw_response = e.response.body
           response_error(raw_response)
         rescue JSON::ParserError
