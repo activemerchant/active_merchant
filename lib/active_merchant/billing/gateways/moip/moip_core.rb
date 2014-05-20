@@ -66,13 +66,13 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_capture_params(authorization, payment_method, options)
+      def build_capture_params(authorization, options)
         params = {
             :pagamentoWidget => {
                 :token => authorization,
                 :referer => options[:referer],
                 :dadosPagamento => {
-                    :Forma => payment_methods(payment_method)
+                    :Forma => payment_methods(options[:payment_method])
                 }
             }
         }
@@ -80,9 +80,9 @@ module ActiveMerchant #:nodoc:
         case params[:pagamentoWidget][:dadosPagamento][:Forma]
           when 'CartaoCredito'
             requires!(options, :creditcard)
-            add_creditcard(params[:pagamentoWidget][:dadosPagamento], payment_method, options[:creditcard])
+            add_creditcard(params[:pagamentoWidget][:dadosPagamento], options[:payment_method], options[:creditcard])
           when 'DebitoBancario'
-            params[:pagamentoWidget][:dadosPagamento][:Instituicao] = payment_method.classify
+            params[:pagamentoWidget][:dadosPagamento][:Instituicao] = options[:payment_method].classify
         end
 
         {

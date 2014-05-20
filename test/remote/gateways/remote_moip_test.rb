@@ -48,17 +48,20 @@ class RemoteMoipTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize
-    assert response = @gateway.authorize(@amount, @options)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Sucesso', response.message
   end
 
   def test_authorize_and_capture
-    assert auth = @gateway.authorize(@amount, @options)
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal 'Sucesso', auth.message
     assert auth.authorization
-    assert capture = @gateway.capture(auth.authorization, @credit_card, @options)
+
+    payment = { :payment_method => @credit_card }
+    my_options = @options.merge(payment)
+    assert capture = @gateway.capture(@amount, auth.authorization, my_options)
     assert_success capture
     assert_equal 'Requisição processada com sucesso', capture.message
   end
@@ -88,13 +91,15 @@ class RemoteMoipTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_authorize
-    assert response = @gateway.authorize(@amount, @options.merge(:order_id => 1))
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge(:order_id => 1))
     assert_failure response
     assert_equal 'Id Próprio já foi utilizado em outra Instrução', response.message
   end
 
   def test_failed_capture
-    assert response = @gateway.capture('error', @credit_card, @options)
+    payment = { :payment_method => @credit_card }
+    my_options = @options.merge(payment)
+    assert response = @gateway.capture(@amount, 'error', my_options)
     assert_failure response
     assert_equal 'Token inválido', response.message
   end

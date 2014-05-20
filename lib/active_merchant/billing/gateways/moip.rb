@@ -14,18 +14,20 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Moip'
       self.default_currency = 'BRL'
 
-      def authorize(money, options = {})
+      def authorize(money, payment_method, options = {})
         commit(:post, 'xml', build_url('authorize'), build_authorize_request(money, options), add_authentication)
       end
 
-      def capture(authorization, payment_method, options = {})
-        commit(:get, 'json', build_url('capture', build_capture_params(authorization, payment_method, options)), nil)
+      def capture(amount, authorization, options = {})
+        commit(:get, 'json', build_url('capture', build_capture_params(authorization, options)), nil)
       end
 
       def purchase(money, payment_method, options = {})
+        payment = { :payment_method => payment_method }
+        capture_options = options.merge(payment)
         MultiResponse.run do |r|
-          r.process{authorize(money, options)}
-          r.process{capture(r.authorization, payment_method, options)}
+          r.process{authorize(money, payment_method, options)}
+          r.process{capture(money, r.authorization, capture_options)}
         end
       end
     end
