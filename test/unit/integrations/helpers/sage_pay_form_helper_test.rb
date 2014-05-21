@@ -205,7 +205,7 @@ class SagePayFormHelperTest < Test::Unit::TestCase
   end
 
   def test_raise_error_on_invalid_key
-    assert_raise_with_message(ActionViewHelperError, 'Invalid encryption key.') do
+    assert_raise ActionViewHelperError do
       @helper.credential2 'invalid'
       @helper.form_fields
     end
