@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
         post[:number] = credit_card.number
         post[:expiration_month] = credit_card.month
         post[:expiration_year] = credit_card.year
-        post[:security_code] = credit_card.verification_value if credit_card.verification_value?
+        post[:cvv] = credit_card.verification_value if credit_card.verification_value?
         post[:name] = credit_card.name if credit_card.name
 
         add_address(post, options)
@@ -133,10 +133,13 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         if(address = (options[:billing_address] || options[:address]))
-          post[:street_address] = address[:address1] if address[:address1]
-          post[:street_address] += ' ' + address[:address2] if address[:address2]
-          post[:postal_code] = address[:zip] if address[:zip]
-          post[:country] = address[:country] if address[:country]
+          post[:address] = {}
+          post[:address][:line1] = address[:address1] if address[:address1]
+          post[:address][:line2] = address[:address2] if address[:address2]
+          post[:address][:city] = address[:city] if address[:city]
+          post[:address][:state] = address[:state] if address[:state]
+          post[:address][:postal_code] = address[:zip] if address[:zip]
+          post[:address][:country_code] = address[:country] if address[:country]
         end
       end
 

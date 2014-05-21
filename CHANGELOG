@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Moneris: Use the name on the card [duff]
+* Balanced: More 1.1 API fixes and mappings [ntalbott]
 
 == Version 1.43.2 (May 12, 2014)
 
