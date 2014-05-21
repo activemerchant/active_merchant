@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Moneris: Use the name on the card [duff]
+
 == Version 1.43.2 (May 12, 2014)
 
 * Remove 2Checkout's #line_item due to conflict with Klarna/Shopify [edward]

@@ -211,6 +211,22 @@ class MonerisTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_customer_can_be_specified
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, order_id: "3", customer: "Joe Jones")
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{cust_id>Joe Jones}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_customer_not_specified_card_name_used
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, order_id: "3")
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{cust_id>Longbob Longsen}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def successful_purchase_response
