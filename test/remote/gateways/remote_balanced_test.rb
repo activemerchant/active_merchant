@@ -17,27 +17,27 @@ class RemoteBalancedTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'Transaction approved', response.message
+    assert_equal "Success", response.message
     assert_equal @amount, response.params['debits'][0]['amount']
   end
 
-  def test_invalid_card
-    assert response = @gateway.purchase(@amount, @invalid_card, @options)
+  def test_purchase_with_invalid_card
+    response = @gateway.purchase(@amount, @invalid_card, @options)
     assert_failure response
     assert_match /call bank/i, response.message
   end
 
   def test_unsuccessful_purchase
-    assert response = @gateway.purchase(@amount, @declined_card, @options)
+    response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_match /Account Frozen/, response.message
   end
 
   def test_passing_appears_on_statement
     options = @options.merge(appears_on_statement_as: "Homer Electric")
-    assert response = @gateway.purchase(@amount, @credit_card, options)
+    response = @gateway.purchase(@amount, @credit_card, options)
 
     assert_success response
     assert_equal "BAL*Homer Electric", response.params['debits'][0]['appears_on_statement_as']
@@ -45,83 +45,58 @@ class RemoteBalancedTest < Test::Unit::TestCase
 
   def test_passing_meta
     options = @options.merge(meta: { "order_number" => '12345' })
-    assert response = @gateway.purchase(@amount, @credit_card, options)
+    response = @gateway.purchase(@amount, @credit_card, options)
 
     assert_success response
     assert_equal options[:meta], response.params["debits"][0]["meta"]
   end
 
   def test_authorize_and_capture
-    assert auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-    assert_equal 'Transaction approved', auth.message
+    assert authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize
+    assert_equal 'Success', authorize.message
 
-    hold_id = auth.params["card_holds"][0]["id"]
-    capture_url = auth.params["links"]["card_holds.debits"].gsub("{card_holds.id}", hold_id)
-
-    assert capture = @gateway.capture(@amount, capture_url)
+    assert capture = @gateway.capture(@amount, authorize.authorization)
     assert_success capture
     assert_equal @amount, capture.params['debits'][0]['amount']
-
-    auth_card_id = auth.params['card_holds'][0]['links']['card']
-    capture_source_id = capture.params['debits'][0]['links']['source']
-
-    assert_equal auth_card_id, capture_source_id
   end
 
   def test_authorize_and_capture_partial
-    assert auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-    assert_equal 'Transaction approved', auth.message
+    assert authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize
+    assert_equal 'Success', authorize.message
 
-    hold_id = auth.params["card_holds"][0]["id"]
-    capture_url = auth.params["links"]["card_holds.debits"].gsub("{card_holds.id}", hold_id)
-
-    assert capture = @gateway.capture(@amount / 2, capture_url)
+    assert capture = @gateway.capture(@amount / 2, authorize.authorization)
     assert_success capture
     assert_equal @amount / 2, capture.params['debits'][0]['amount']
-
-    auth_card_id = auth.params['card_holds'][0]['links']['card']
-    capture_source_id = capture.params['debits'][0]['links']['source']
-
-    assert_equal auth_card_id, capture_source_id
   end
 
   def test_failed_capture
-    assert response = @gateway.capture(@amount, '')
+    response = @gateway.capture(@amount, '')
     assert_failure response
   end
 
   def test_void_authorization
-    assert auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-    number = auth.params["card_holds"][0]["href"]
-    assert void = @gateway.void(number)
+    assert authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize
+
+    assert void = @gateway.void(authorize.authorization)
     assert_success void
     assert void.params["card_holds"][0]['voided_at'], void.inspect
   end
 
-  def test_void_authorization_via_authorization
-    assert auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-    assert auth.authorization
-    assert void = @gateway.void(auth.authorization)
-    assert_success void
-    assert void.params["card_holds"][0]['voided_at']
-  end
-
   def test_voiding_a_capture_not_allowed
-    assert auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-    assert auth.authorization
+    assert authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize
+    assert authorize.authorization
 
-    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert capture = @gateway.capture(@amount, authorize.authorization)
     assert_success capture
     assert capture.authorization
 
     void = @gateway.void(capture.authorization)
     assert_failure void
-    assert_match /Unable to void/i, void.message
+    assert_match /not found/i, void.message
   end
 
   def test_authorize_authorization
@@ -133,13 +108,10 @@ class RemoteBalancedTest < Test::Unit::TestCase
   end
 
   def test_refund_purchase
-    assert debit = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success debit
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
 
-    debit_id = debit.params["debits"][0]["id"]
-    capture_url = debit.params["links"]["debits.refunds"].gsub("{debits.id}", debit_id)
-
-    assert refund = @gateway.refund(@amount, capture_url)
+    assert refund = @gateway.refund(@amount, purchase.authorization)
     assert_success refund
     assert_equal @amount, refund.params['refunds'][0]['amount']
   end
@@ -153,13 +125,10 @@ class RemoteBalancedTest < Test::Unit::TestCase
   end
 
   def test_refund_partial_purchase
-    assert debit = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success debit
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
 
-    debit_id = debit.params["debits"][0]["id"]
-    capture_url = debit.params["links"]["debits.refunds"].gsub("{debits.id}", debit_id)
-
-    assert refund = @gateway.refund(@amount / 2, capture_url)
+    assert refund = @gateway.refund(@amount / 2, purchase.authorization)
     assert_success refund
     assert_equal @amount / 2, refund.params['refunds'][0]['amount']
   end
@@ -172,16 +141,27 @@ class RemoteBalancedTest < Test::Unit::TestCase
     assert_instance_of String, store.authorization
   end
 
+  def test_store_and_purchase
+    store = @gateway.store(@credit_card)
+    assert_success store
+
+    purchase = @gateway.purchase(@amount, store.authorization)
+    assert_success purchase
+  end
+
+  def test_store_and_authorize
+    store = @gateway.store(@credit_card)
+    assert_success store
+
+    authorize = @gateway.authorize(@amount, store.authorization)
+    assert_success authorize
+  end
+
   def test_invalid_login
-    begin
-      BalancedGateway.new(
-        login: ''
-      )
-    rescue BalancedGateway::Error => ex
-      msg = ex.message
-    else
-      msg = nil
-    end
-    assert_equal 'Invalid login credentials supplied', msg
+    gateway = BalancedGateway.new(
+      login: ''
+    )
+    response = gateway.store(@credit_card)
+    assert_match %r{credentials}i, response.message
   end
 end

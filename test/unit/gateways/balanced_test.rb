@@ -4,25 +4,12 @@ class BalancedTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @marketplace_uri = '/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO'
-
-    @marketplace_uris = {
-      'uri' => @marketplace_uri,
-      'debits_uri' => '/debits',
-      'cards_uri' => '/cards',
-      'customer_uri' => '/customers',
-      'refunds_uri' => '/refunds',
-    }
-
     @gateway = BalancedGateway.new(
-      login: 'e1c5ad38d1c711e1b36c026ba7e239a9',
-      marketplace: @marketplace_uris
+      login: 'e1c5ad38d1c711e1b36c026ba7e239a9'
     )
 
     @amount = 100
     @credit_card = credit_card('4111111111111111')
-    @invalid_card = credit_card('4222222222222220')
-    @declined_card = credit_card('4444444444444448')
 
     @options = {
       email:  'john.buyer@example.org',
@@ -39,7 +26,7 @@ class BalancedTest < Test::Unit::TestCase
     )
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'Transaction approved', response.message
+    assert_equal 'Success', response.message
     assert_equal @amount, response.params['debits'][0]['amount']
   end
 
@@ -49,9 +36,9 @@ class BalancedTest < Test::Unit::TestCase
     ).then.returns(
       declined_response
     )
-    assert response = @gateway.purchase(@amount, @invalid_card, @options)
+    assert response = @gateway.purchase(@amount, credit_card('4222222222222220'), @options)
     assert_failure response
-    assert_match /Customer call bank/, response.message
+    assert_match %r{Customer call bank}i, response.message
   end
 
   def test_invalid_email
@@ -60,7 +47,7 @@ class BalancedTest < Test::Unit::TestCase
     )
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(email: 'invalid_email'))
     assert_failure response
-    assert_match /Invalid field.*email/, response.message
+    assert_match %r{Invalid field.*email}i, response.message
   end
 
   def test_unsuccessful_purchase
@@ -70,9 +57,9 @@ class BalancedTest < Test::Unit::TestCase
       account_frozen_response
     )
 
-    assert response = @gateway.purchase(@amount, @declined_card, @options)
+    assert response = @gateway.purchase(@amount, credit_card('4444444444444448'), @options)
     assert_failure response
-    assert_match /Account Frozen/, response.message
+    assert_match %r{Account Frozen}i, response.message
   end
 
   def test_passing_appears_on_statement
@@ -100,19 +87,11 @@ class BalancedTest < Test::Unit::TestCase
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
     assert_success auth
-    assert_equal 'Transaction approved', auth.message
+    assert_equal 'Success', auth.message
 
-    hold_id = auth.params["card_holds"][0]["id"]
-    capture_url = auth.params["links"]["card_holds.debits"].gsub("{card_holds.id}", hold_id)
-
-    assert capture = @gateway.capture(amount, capture_url)
+    assert capture = @gateway.capture(amount, auth.authorization)
     assert_success capture
     assert_equal amount, capture.params['debits'][0]['amount']
-
-    auth_card_id = auth.params['card_holds'][0]['links']['card']
-    capture_source_id = capture.params['debits'][0]['links']['source']
-
-    assert_equal auth_card_id, capture_source_id
   end
 
   def test_authorize_and_capture_partial
@@ -127,19 +106,11 @@ class BalancedTest < Test::Unit::TestCase
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
     assert_success auth
-    assert_equal 'Transaction approved', auth.message
+    assert_equal 'Success', auth.message
 
-    hold_id = auth.params["card_holds"][0]["id"]
-    capture_url = auth.params["links"]["card_holds.debits"].gsub("{card_holds.id}", hold_id)
-
-    assert capture = @gateway.capture(amount / 2, capture_url)
+    assert capture = @gateway.capture(amount / 2, auth.authorization)
     assert_success capture
     assert_equal amount / 2, capture.params['debits'][0]['amount']
-
-    auth_card_id = auth.params['card_holds'][0]['links']['card']
-    capture_source_id = capture.params['debits'][0]['links']['source']
-
-    assert_equal auth_card_id, capture_source_id
   end
 
   def test_failed_capture
@@ -147,7 +118,7 @@ class BalancedTest < Test::Unit::TestCase
       method_not_allowed_response
     )
 
-    assert response = @gateway.capture(@amount, '')
+    assert response = @gateway.capture(@amount, 'bogus')
     assert_failure response
   end
 
@@ -181,10 +152,7 @@ class BalancedTest < Test::Unit::TestCase
     assert debit = @gateway.purchase(@amount, @credit_card, @options)
     assert_success debit
 
-    debit_id = debit.params["debits"][0]["id"]
-    capture_url = debit.params["links"]["debits.refunds"].gsub("{debits.id}", debit_id)
-
-    assert refund = @gateway.refund(@amount, capture_url)
+    assert refund = @gateway.refund(@amount, debit.authorization)
     assert_success refund
     assert_equal @amount, refund.params['refunds'][0]['amount']
   end
@@ -201,10 +169,7 @@ class BalancedTest < Test::Unit::TestCase
     assert debit = @gateway.purchase(@amount, @credit_card, @options)
     assert_success debit
 
-    debit_id = debit.params["debits"][0]["id"]
-    capture_url = debit.params["links"]["debits.refunds"].gsub("{debits.id}", debit_id)
-
-    assert refund = @gateway.refund(@amount / 2, capture_url)
+    assert refund = @gateway.refund(@amount / 2, debit.authorization)
     assert_success refund
     assert_equal @amount / 2, refund.params['refunds'][0]['amount']
   end
@@ -221,31 +186,44 @@ class BalancedTest < Test::Unit::TestCase
     assert_instance_of String, response.authorization
   end
 
-  def test_invalid_login
-    BalancedGateway.any_instance.expects(:ssl_get).returns(invalid_login_response)
-    begin
-      BalancedGateway.new(
-        login: 'lol'
-      )
-    rescue BalancedGateway::Error => ex
-      msg = ex.message
-    else
-      msg = nil
+  def test_capturing_legacy_authorizations
+    v1_authorization = "/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO/holds/HL7dYMhpVBcqAYqxLF5mZtQ5"
+    v11_authorization = "/card_holds/HL7dYMhpVBcqAYqxLF5mZtQ5/debits||/card_holds/HL7dYMhpVBcqAYqxLF5mZtQ5"
+
+    [v1_authorization, v11_authorization].each do |authorization|
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.capture(@amount, authorization)
+      end.check_request do |method, endpoint, data, headers|
+        assert_equal("https://api.balancedpayments.com/card_holds/HL7dYMhpVBcqAYqxLF5mZtQ5/debits", endpoint)
+      end.respond_with(authorized_debits_response)
     end
-    assert_equal 'Invalid login credentials supplied', msg
   end
 
-  def test_handle_500
-    error_response = stub("error_response", body: "<html>\n  <head>\n    <title>Internal Server Error</title>\n  </head>\n  <body>\n    <h1>Internal Server Error</h1>\n    \n  </body>\n</html>\n", code: 500)
+  def test_voiding_legacy_authorizations
+    v1_authorization = "/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO/holds/HL7dYMhpVBcqAYqxLF5mZtQ5"
+    v11_authorization = "/card_holds/HL7dYMhpVBcqAYqxLF5mZtQ5/debits||/card_holds/HL7dYMhpVBcqAYqxLF5mZtQ5"
 
-    @gateway.expects(:raw_ssl_request).times(2).returns(
-      stub("cards_response", body: cards_response, code: 200)
-    ).then.returns(
-      error_response
-    )
+    [v1_authorization, v11_authorization].each do |authorization|
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.void(authorization)
+      end.check_request do |method, endpoint, data, headers|
+        assert_equal :put, method
+        assert_equal("https://api.balancedpayments.com/card_holds/HL7dYMhpVBcqAYqxLF5mZtQ5", endpoint)
+        assert_match %r{\bis_void=true\b}, data
+      end.respond_with(voided_hold_response)
+    end
+  end
 
-    assert_raises(ActiveMerchant::ResponseError) do
-      @gateway.authorize(@amount, @credit_card, @options)
+  def test_refunding_legacy_purchases
+    v1_authorization = "/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO/debits/WD2x6vLS7RzHYEcdymqRyNAO"
+    v11_authorization = "|/debits/WD2x6vLS7RzHYEcdymqRyNAO/refunds|"
+
+    [v1_authorization, v11_authorization].each do |authorization|
+      stub_comms(@gateway, :ssl_request) do
+        @gateway.refund(nil, authorization)
+      end.check_request do |method, endpoint, data, headers|
+        assert_equal("https://api.balancedpayments.com/debits/WD2x6vLS7RzHYEcdymqRyNAO/refunds", endpoint)
+      end.respond_with(refunds_response)
     end
   end
 
