@@ -25,6 +25,7 @@
 * Add HPS gateway (Heartland Payment Systems) [SecureSubmit]
 * Balanced: Fix handling of 500 errors [ntalbott]
 * Universal: Remove all billing address fields [bslobodin]
+* Balanced: Stop creating a customer on each call [ntalbott]
 
 == Version 1.43.1 (May 1, 2014)
 

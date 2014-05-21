@@ -32,12 +32,8 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_request).times(4).returns(
-      customers_response
-    ).then.returns(
+    @gateway.expects(:ssl_request).times(2).returns(
       cards_response
-    ).then.returns(
-      customers_response
     ).then.returns(
       debits_response
     )
@@ -48,9 +44,7 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_invalid_card
-    @gateway.expects(:ssl_request).times(4).returns(
-      customers_response
-    ).then.returns(
+    @gateway.expects(:ssl_request).times(2).returns(
       cards_response
     ).then.returns(
       declined_response
@@ -61,7 +55,7 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_invalid_email
-    @gateway.expects(:ssl_request).times(1).returns(
+    @gateway.expects(:ssl_request).returns(
       bad_email_response
     )
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(email: 'invalid_email'))
@@ -70,12 +64,8 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_purchase
-    @gateway.expects(:ssl_request).times(4).returns(
-      customers_response
-    ).then.returns(
+    @gateway.expects(:ssl_request).times(2).returns(
       cards_response
-    ).then.returns(
-      customers_response
     ).then.returns(
       account_frozen_response
     )
@@ -86,12 +76,8 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_passing_appears_on_statement
-    @gateway.expects(:ssl_request).times(4).returns(
-      customers_response
-    ).then.returns(
+    @gateway.expects(:ssl_request).times(2).returns(
       cards_response
-    ).then.returns(
-      customers_response
     ).then.returns(
       appears_on_response
     )
@@ -103,12 +89,8 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_capture
-    @gateway.expects(:ssl_request).times(5).returns(
-      customers_response
-    ).then.returns(
+    @gateway.expects(:ssl_request).times(3).returns(
       cards_response
-    ).then.returns(
-      customers_response
     ).then.returns(
       holds_response
     ).then.returns(
@@ -134,12 +116,8 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_capture_partial
-    @gateway.expects(:ssl_request).times(5).returns(
-      customers_response
-    ).then.returns(
+    @gateway.expects(:ssl_request).times(3).returns(
       cards_response
-    ).then.returns(
-      customers_response
     ).then.returns(
       holds_response
     ).then.returns(
@@ -165,7 +143,7 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    @gateway.expects(:ssl_request).times(1).returns(
+    @gateway.expects(:ssl_request).returns(
       method_not_allowed_response
     )
 
@@ -174,12 +152,8 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_void_authorization
-    @gateway.expects(:ssl_request).times(5).returns(
-      customers_response
-    ).then.returns(
+    @gateway.expects(:ssl_request).times(3).returns(
       cards_response
-    ).then.returns(
-      customers_response
     ).then.returns(
       holds_response
     ).then.returns(
@@ -196,12 +170,8 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_refund_purchase
-    @gateway.expects(:ssl_request).times(5).returns(
-      customers_response
-    ).then.returns(
+    @gateway.expects(:ssl_request).times(3).returns(
       cards_response
-    ).then.returns(
-      customers_response
     ).then.returns(
       debits_response
     ).then.returns(
@@ -220,12 +190,8 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_refund_partial_purchase
-    @gateway.expects(:ssl_request).times(5).returns(
-      customers_response
-    ).then.returns(
+    @gateway.expects(:ssl_request).times(3).returns(
       cards_response
-    ).then.returns(
-      customers_response
     ).then.returns(
       debits_response
     ).then.returns(
@@ -244,12 +210,8 @@ class BalancedTest < Test::Unit::TestCase
   end
 
   def test_store
-    @gateway.expects(:ssl_request).times(3).returns(
-      customers_response
-    ).then.returns(
+    @gateway.expects(:ssl_request).returns(
       cards_response
-    ).then.returns(
-      customers_response
     )
 
     new_email_address = '%d@example.org' % Time.now
@@ -276,12 +238,8 @@ class BalancedTest < Test::Unit::TestCase
   def test_handle_500
     error_response = stub("error_response", body: "<html>\n  <head>\n    <title>Internal Server Error</title>\n  </head>\n  <body>\n    <h1>Internal Server Error</h1>\n    \n  </body>\n</html>\n", code: 500)
 
-    @gateway.expects(:raw_ssl_request).times(4).returns(
-      stub("customers_response", body: customers_response, code: 200)
-    ).then.returns(
+    @gateway.expects(:raw_ssl_request).times(2).returns(
       stub("cards_response", body: cards_response, code: 200)
-    ).then.returns(
-     stub("customers_response", body: customers_response, code: 200)
     ).then.returns(
       error_response
     )
@@ -355,56 +313,6 @@ class BalancedTest < Test::Unit::TestCase
     "marketplaces.bank_accounts": "/bank_accounts",
     "marketplaces.callbacks": "/callbacks",
     "marketplaces.events": "/events"
-  }
-}
-RESPONSE
-  end
-
-  def customers_response
-    <<-RESPONSE
-{
-  "customers": [
-    {
-      "name": null,
-      "links": {
-        "source": null,
-        "destination": null
-      },
-      "updated_at": "2014-02-06T23:19:25.522526Z",
-      "created_at": "2014-02-06T23:19:25.347027Z",
-      "dob_month": null,
-      "id": "CUVdXCglg4YdG1dIIra1q4U",
-      "phone": null,
-      "href": "/customers/CUVdXCglg4YdG1dIIra1q4U",
-      "merchant_status": "no-match",
-      "meta": {},
-      "dob_year": null,
-      "address": {
-        "city": null,
-        "line2": null,
-        "line1": null,
-        "state": null,
-        "postal_code": null,
-        "country_code": null
-      },
-      "business_name": null,
-      "ssn_last4": null,
-      "email": "john.buyer@example.org",
-      "ein": null
-    }
-  ],
-  "links": {
-    "customers.source": "/resources/{customers.source}",
-    "customers.card_holds": "/customers/{customers.id}/card_holds",
-    "customers.bank_accounts": "/customers/{customers.id}/bank_accounts",
-    "customers.debits": "/customers/{customers.id}/debits",
-    "customers.destination": "/resources/{customers.destination}",
-    "customers.cards": "/customers/{customers.id}/cards",
-    "customers.transactions": "/customers/{customers.id}/transactions",
-    "customers.refunds": "/customers/{customers.id}/refunds",
-    "customers.reversals": "/customers/{customers.id}/reversals",
-    "customers.orders": "/customers/{customers.id}/orders",
-    "customers.credits": "/customers/{customers.id}/credits"
   }
 }
 RESPONSE

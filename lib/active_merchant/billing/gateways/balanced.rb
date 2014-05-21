@@ -132,7 +132,6 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         add_common_params(post, options)
 
-        create_or_find_customer(post, options)
         card_uri, response = add_credit_card(post, credit_card, options)
         add_address(credit_card, options)
         card_id = response["cards"][0]["id"]
@@ -178,7 +177,6 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         add_common_params(post, options)
 
-        create_or_find_customer(post, options)
         card_uri, response = add_credit_card(post, credit_card, options)
         add_address(credit_card, options)
 
@@ -273,7 +271,6 @@ module ActiveMerchant #:nodoc:
       def store(credit_card, options = {})
         requires!(options, :email)
         post = {}
-        customer_uri = create_or_find_customer(post, options)
         if credit_card.respond_to? :number
           card_uri, _ = add_credit_card(post, credit_card, options)
         else
@@ -317,33 +314,6 @@ module ActiveMerchant #:nodoc:
         @refunds_uri = marketplace['refunds_uri']
       end
 
-      def create_or_find_customer(post, options)
-        customer_uri = nil
-
-        if options.has_key?(:customer_uri)
-          customer_uri = options[:customer_uri]
-        end
-
-        if customer_uri.nil?
-          post[:name] = options[:name] if options[:name]
-          post[:email] = options[:email]
-          post[:meta] = options[:meta] if options[:meta]
-
-          # create an account
-          response = http_request(:post, @customer_uri, post)
-
-          if error?(response)
-            raise Error.new(response)
-          end
-
-          customer_uri = response['customers'][0]['href']
-        end
-
-        post[:customer_uri] = customer_uri
-
-        customer_uri
-      end
-
       def add_address(credit_card, options)
         return unless credit_card.kind_of?(Hash)
         if(address = (options[:billing_address] || options[:address]))
@@ -380,11 +350,8 @@ module ActiveMerchant #:nodoc:
           end
           card_uri = response['cards'][0]['href']
 
-          associate_card_to_account(post[:customer_uri], card_uri)
-
           post[:card_uri] = card_uri
         elsif credit_card.kind_of?(String)
-          associate_card_to_account(post[:account_uri], credit_card) unless options[:account_uri]
           post[:card_uri] = credit_card
           body = {}
         end
