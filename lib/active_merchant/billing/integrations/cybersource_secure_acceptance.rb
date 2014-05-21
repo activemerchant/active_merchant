@@ -11,8 +11,6 @@ module ActiveMerchant #:nodoc:
         #
         # Defaults to Web/Mobile (payment window).
         #
-        # Notification
-        #
         # Notes:
         #
         # - Main credential is the access_key from your Cybersource SA profile.
