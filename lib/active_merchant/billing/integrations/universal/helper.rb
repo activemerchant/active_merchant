@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
             'OMR' => 3,
             'TND' => 3,
             'COU' => 4
-            }
+          }
 
           def initialize(order, account, options = {})
             @forward_url = options[:forward_url]
