@@ -204,6 +204,13 @@ class SagePayFormHelperTest < Test::Unit::TestCase
     assert_equal 5, crypts.uniq.count
   end
 
+  def test_raise_error_on_invalid_key
+    assert_raise_with_message(ActionViewHelperError, 'Invalid encryption key.') do
+      @helper.credential2 'invalid'
+      @helper.form_fields
+    end
+  end
+
   def test_not_including_post_code_uses_0000_default
     @helper.billing_address(
       :address1 => '1 My Street',
