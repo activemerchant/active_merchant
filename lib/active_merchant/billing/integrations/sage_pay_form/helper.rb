@@ -93,7 +93,11 @@ module ActiveMerchant #:nodoc:
             parts.unshift(sage_encrypt_salt(key.length, key.length * 2))
             sage_encrypt(parts.join('&'), key)
           rescue OpenSSL::Cipher::CipherError => e
-            raise ActionViewHelperError, 'Invalid encryption key.' if e.message == 'key length too short'
+            if e.message == 'key length too short'
+              raise ActionViewHelperError, 'Invalid encryption key.'
+            else
+              raise
+            end
           end
 
           def sanitize(key, value)
