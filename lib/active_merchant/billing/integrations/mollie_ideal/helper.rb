@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
           def request_redirect
             MollieIdeal.create_payment(token, redirect_paramaters)
           rescue ResponseError => e
-            if e.response.code == '422'
+            if %w(401 403 422).include?(e.response.code)
               error = JSON.parse(e.response.body)['error']['message']
               raise ActionViewHelperError, error
             else
