@@ -21,8 +21,8 @@ authorize_net:
 
 # Working credentials, no need to replace
 authorizenet:
-  some_credential: SOMECREDENTIAL
-  another_credential: ANOTHERCREDENTIAL
+  login: 4Pf3E54zCsW
+  password: 337UTt4y6DB64ft8
 
 # Working credentials, no need to replace
 balanced:
