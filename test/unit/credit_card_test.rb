@@ -268,12 +268,12 @@ class CreditCardTest < Test::Unit::TestCase
     ccn = CreditCard.new(:number => "1")
     assert_equal "1", ccn.last_digits
   end
-  
+
   def test_should_return_first_four_digits_of_card_number
     ccn = CreditCard.new(:number => "4779139500118580")
     assert_equal "477913", ccn.first_digits
   end
-  
+
   def test_should_return_first_bogus_digit_of_card_number
     ccn = CreditCard.new(:number => "1")
     assert_equal "1", ccn.first_digits
@@ -384,7 +384,7 @@ class CreditCardTest < Test::Unit::TestCase
     assert !card.valid?
     assert_equal "", card.number
   end
-  
+
   def test_brand_is_aliased_as_type
     assert_deprecation_warning("CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead.", CreditCard) do
       assert_equal @visa.type, @visa.brand
@@ -392,5 +392,29 @@ class CreditCardTest < Test::Unit::TestCase
     assert_deprecation_warning("CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead.", CreditCard) do
       assert_equal @solo.type, @solo.brand
     end
+  end
+
+  def test_month_and_year_are_immediately_converted_to_integers
+    card = CreditCard.new
+
+    card.month = "1"
+    assert_equal 1, card.month
+    card.year = "1"
+    assert_equal 1, card.year
+
+    card.month = ""
+    assert_nil card.month
+    card.year = ""
+    assert_nil card.year
+
+    card.month = nil
+    assert_nil card.month
+    card.year = nil
+    assert_nil card.year
+
+    card.start_month = "1"
+    assert_equal 1, card.start_month
+    card.start_year = "1"
+    assert_equal 1, card.start_year
   end
 end
