@@ -61,12 +61,12 @@ module ActiveMerchant #:nodoc:
       # Returns or sets the expiry month for the card.
       #
       # @return [Integer]
-      attr_accessor :month
+      attr_reader :month
 
       # Returns or sets the expiry year for the card.
       #
       # @return [Integer]
-      attr_accessor :year
+      attr_reader :year
 
       # Returns or sets the credit card brand.
       #
@@ -101,7 +101,8 @@ module ActiveMerchant #:nodoc:
       attr_accessor :last_name
 
       # Required for Switch / Solo cards
-      attr_accessor :start_month, :start_year, :issue_number
+      attr_reader :start_month, :start_year
+      attr_accessor :issue_number
 
       # Returns or sets the card verification value.
       #
@@ -169,6 +170,19 @@ module ActiveMerchant #:nodoc:
         self.first_name = names.join(" ")
       end
 
+      %w(month year start_month start_year).each do |m|
+        class_eval %(
+          def #{m}=(v)
+            @#{m} = case v
+            when "", nil, 0
+              nil
+            else
+              v.to_i
+            end
+          end
+        )
+      end
+
       def verification_value?
         !@verification_value.blank?
       end
@@ -217,10 +231,6 @@ module ActiveMerchant #:nodoc:
       private
 
       def before_validate #:nodoc:
-        self.month = month.to_i
-        self.year  = year.to_i
-        self.start_month = start_month.to_i unless start_month.nil?
-        self.start_year = start_year.to_i unless start_year.nil?
         self.number = number.to_s.gsub(/[^\d]/, "")
         self.brand.downcase! if brand.respond_to?(:downcase)
         self.brand = self.class.brand?(number) if brand.blank?
@@ -254,9 +264,9 @@ module ActiveMerchant #:nodoc:
         errors.add :first_name, "cannot be empty"      if @first_name.blank?
         errors.add :last_name,  "cannot be empty"      if @last_name.blank?
 
-        if @month.to_i.zero? || @year.to_i.zero?
-          errors.add :month, "is required"  if @month.to_i.zero?
-          errors.add :year,  "is required"  if @year.to_i.zero?
+        if(!@month || !@year)
+          errors.add :month, "is required"  unless @month
+          errors.add :year,  "is required"  unless @year
         else
           errors.add :month,      "is not a valid month" unless valid_month?(@month)
           errors.add :year,       "expired"              if expired?
