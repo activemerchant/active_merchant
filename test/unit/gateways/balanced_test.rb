@@ -174,6 +174,24 @@ class BalancedTest < Test::Unit::TestCase
     assert_equal @amount / 2, refund.params['refunds'][0]['amount']
   end
 
+  def test_refund_pending_status
+    @gateway.expects(:ssl_request).times(3).returns(
+      cards_response
+    ).then.returns(
+      debits_response
+    ).then.returns(
+      refunds_pending_response
+    )
+
+    assert debit = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success debit
+
+    assert refund = @gateway.refund(@amount, debit.authorization)
+    assert_success refund
+    assert_equal "pending", refund.params['refunds'][0]['status']
+    assert_equal @amount, refund.params['refunds'][0]['amount']
+  end
+
   def test_store
     @gateway.expects(:ssl_request).returns(
       cards_response
@@ -746,6 +764,38 @@ RESPONSE
       "amount": 50,
       "meta": {},
       "id": "RFJ4N00zLaQFrfBkC8cbN68"
+    }
+  ]
+}
+RESPONSE
+  end
+
+  def refunds_pending_response
+    <<-RESPONSE
+{
+  "links": {
+    "refunds.dispute": "/disputes/{refunds.dispute}",
+    "refunds.events": "/refunds/{refunds.id}/events",
+    "refunds.debit": "/debits/{refunds.debit}",
+    "refunds.order": "/orders/{refunds.order}"
+  },
+  "refunds": [
+    {
+      "status": "pending",
+      "description": null,
+      "links": {
+        "debit": "WD7AT5AGKI0jccoElAEEqiuL",
+        "order": null,
+        "dispute": null
+      },
+      "href": "/refunds/RF46a5p6ZVMK4qVIeCJ8u2LE",
+      "created_at": "2014-05-22T20:20:32.956467Z",
+      "transaction_number": "RF485-302-2551",
+      "updated_at": "2014-05-22T20:20:35.991553Z",
+      "currency": "USD",
+      "amount": 100,
+      "meta": {},
+      "id": "RF46a5p6ZVMK4qVIeCJ8u2LE"
     }
   ]
 }
