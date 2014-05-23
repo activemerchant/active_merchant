@@ -58,13 +58,6 @@ module ActiveMerchant #:nodoc:
       end
 =end
       private
-      def add_authentication(xml, options)
-        xml.merchantAuthentication {
-          xml.name(@options[:login])
-          xml.transactionKey(@options[:password])
-        }
-      end
-
       def add_payment_source(xml, source)
         case determine_funding_source(source)
           when :credit_card then
@@ -197,6 +190,19 @@ module ActiveMerchant #:nodoc:
         active_merchant_response
       end
 
+      def post_data
+        payload = Nokogiri::XML::Builder.new do |xml|
+          xml.createTransactionRequest('xmlns' => 'AnetApi/xml/v1/schema/AnetApiSchema.xsd') {
+            xml.merchantAuthentication {
+              xml.name @options[:login]
+              xml.transactionKey @options[:password]
+            }
+            yield(xml)
+          }
+        end
+        payload.to_xml(:ident => 0)
+      end
+
       def success_from(response)
         response[:messages_message_code] == 'I00001' ? true : false
       end
@@ -234,37 +240,6 @@ module ActiveMerchant #:nodoc:
         end
 
         active_merchant_response
-      end
-
-      def post_data
-        payload = Nokogiri::XML::Builder.new do |xml|
-          xml.createTransactionRequest('xmlns' => 'AnetApi/xml/v1/schema/AnetApiSchema.xsd') {
-            xml.merchantAuthentication {
-              xml.name @options[:login]
-              xml.transactionKey @options[:password]
-            }
-            yield(xml)
-          }
-        end
-=begin
-        payload_xml = payload.root.to_xml(:indent => 0)
-
-        payload_signature = sign_payload(payload_xml)
-
-        request = Nokogiri::XML::Builder.new do |xml|
-          xml.GatewayInterface {
-            xml.APICredentials {
-              xml.Username(@options[:login])
-              xml.PayloadSignature(payload_signature)
-              xml.TargetGateway(@options[:gateway_id])
-            }
-          }
-        end.doc
-
-        request.root.children.first.after payload.root
-        request.to_xml(:indent => 0)
-=end
-        payload.to_xml(:ident => 0)
       end
     end
   end
