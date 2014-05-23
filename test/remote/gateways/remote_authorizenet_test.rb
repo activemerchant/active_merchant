@@ -4,7 +4,7 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
   def setup
     @gateway = AuthorizenetGateway.new(fixtures(:authorizenet))
 
-    @amount = 110
+    @amount = 112
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
 
@@ -77,6 +77,7 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
     assert_failure response
   end
 =end
+=begin
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -89,6 +90,7 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
     response = @gateway.void('')
     assert_failure response
   end
+=end
 =begin
   def test_invalid_login
     gateway = AuthorizenetGateway.new(

@@ -19,26 +19,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment_source, options = {})
-        payload = Nokogiri::XML::Builder.new do |xml|
-          xml.createTransactionRequest('xmlns' => 'AnetApi/xml/v1/schema/AnetApiSchema.xsd') {
-            add_authentication(xml, options)
-            xml.refId 1
-            xml.transactionRequest {
-              xml.transactionType 'authCaptureTransaction'
-              xml.amount money
-              add_payment_source(xml, payment_source)
-              add_invoice(xml, money, options)
-              add_customer_data(xml, payment_source, options)
+        commit do |xml|
+          #TODO where am I getting ref from?
+          xml.refId 1
+          xml.transactionRequest {
+            xml.transactionType 'authCaptureTransaction'
+            xml.amount money
+            add_payment_source(xml, payment_source)
+            add_invoice(xml, money, options)
+            add_customer_data(xml, payment_source, options)
 
-              #add_transaction_control(xml, options)
-              #add_vendor_data(xml, options)
-            }
+            #add_transaction_control(xml, options)
+            #add_vendor_data(xml, options)
           }
-        end.doc
-
-        commit(payload)
+        end
       end
-
+=begin
       def authorize(money, payment, options={})
         post = {}
         add_invoice(post, money, options)
@@ -60,7 +56,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options={})
         commit('void', post)
       end
-
+=end
       private
       def add_authentication(xml, options)
         xml.merchantAuthentication {
@@ -98,6 +94,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_check(xml, check)
+        #TODO really add_check, this is just copied from something else
         xml.AccountInfo {
           xml.ABA(check.routing_number.to_s)
           xml.AccountNumber(check.account_number.to_s)
@@ -110,6 +107,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(xml, payment_source, options)
         billing_address = options[:billing_address] || options[:address]
         shipping_address = options[:shipping_address] || options[:address]
+=begin
         xml.customerIP(options[:ip])
         xml.customer {
           #TODO: is this doc'd on the active_merchant side?
@@ -139,12 +137,14 @@ module ActiveMerchant #:nodoc:
           xml.zip(shipping_address[:zip])
           xml.country(shipping_address[:country])
         } unless shipping_address.blank?
+=end
       end
 
       def add_address(post, creditcard, options)
       end
 
       def add_invoice(xml, money, options)
+      #TODO add_invoice
 =begin
         xml.AuthCode options[:force] if options[:force]
         if options[:order_items].blank?
@@ -181,9 +181,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def commit(payload)
+      def commit(&payload)
         url = (test? ? test_url : live_url)
-        response = parse(ssl_post(url, post_data(payload), 'Content-Type' => 'text/xml'))
+        response = parse(ssl_post(url, post_data(&payload), 'Content-Type' => 'text/xml'))
 
         active_merchant_response = Response.new(
             success_from(response),
@@ -236,7 +236,16 @@ module ActiveMerchant #:nodoc:
         active_merchant_response
       end
 
-      def post_data(payload)
+      def post_data
+        payload = Nokogiri::XML::Builder.new do |xml|
+          xml.createTransactionRequest('xmlns' => 'AnetApi/xml/v1/schema/AnetApiSchema.xsd') {
+            xml.merchantAuthentication {
+              xml.name @options[:login]
+              xml.transactionKey @options[:password]
+            }
+            yield(xml)
+          }
+        end
 =begin
         payload_xml = payload.root.to_xml(:indent => 0)
 
@@ -256,50 +265,6 @@ module ActiveMerchant #:nodoc:
         request.to_xml(:indent => 0)
 =end
         payload.to_xml(:ident => 0)
-      end
-
-      def the_rest(xml)
-        xml.lineItems {
-          xml.lineItem {
-            xml.itemId 1
-            xml.name 'Ice Cream'
-            xml.description 'Cannes logo ice cream delight'
-            xml.quantity 20
-            xml.unitPrice 45.00
-          }
-        }
-        xml.tax {
-          xml.amount 4.26
-          xml.name 'level2'
-          xml.description 'level2'
-        }
-        xml.duty {
-          xml.amount 8.55
-          xml.name 'duty name'
-          xml.description 'duty description'
-        }
-        xml.shipping {
-          xml.amount 4.26
-          xml.name 'level2 tax name'
-          xml.description 'level2 tax'
-        }
-        xml.poNumber 456654
-        xml.transactionSettings {
-          xml.setting {
-            xml.settingName 'testRequest'
-            xml.settingValue false
-          }
-        }
-        xml.userFields {
-          xml.userField {
-            xml.name 'MerchantDefinedFieldName'
-            xml.value 'MerchantDefinedFieldValue1'
-          }
-          xml.userField {
-            xml.name 'favorite_color'
-            xml.value 'blue'
-          }
-        }
       end
     end
   end
