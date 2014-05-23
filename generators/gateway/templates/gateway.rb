@@ -62,6 +62,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment)
+        {}
       end
 
       def parse(body)

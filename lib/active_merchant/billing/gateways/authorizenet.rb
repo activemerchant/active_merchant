@@ -71,8 +71,10 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_source(xml, source)
         case determine_funding_source(source)
-          when :credit_card then add_creditcard(xml, source)
-          when :check       then add_check(xml, source)
+          when :credit_card then
+            add_creditcard(xml, source)
+          when :check then
+            add_check(xml, source)
         end
       end
 
@@ -89,7 +91,7 @@ module ActiveMerchant #:nodoc:
         xml.payment {
           xml.creditCard {
             xml.cardNumber(creditcard.number.to_s)
-            xml.expirationDate(creditcard.month.to_s.rjust(2,'0') + '/' + creditcard.year.to_s)
+            xml.expirationDate(creditcard.month.to_s.rjust(2, '0') + '/' + creditcard.year.to_s)
             xml.cardCode (creditcard.verification_value.to_s) unless creditcard.verification_value.blank?
           }
         }
@@ -108,7 +110,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(xml, payment_source, options)
         billing_address = options[:billing_address] || options[:address]
         shipping_address = options[:shipping_address] || options[:address]
-
+        xml.customerIP(options[:ip])
         xml.customer {
           #TODO: is this doc'd on the active_merchant side?
           xml.type(options[:customer_type]) unless options[:customer_type].blank?
@@ -183,17 +185,20 @@ module ActiveMerchant #:nodoc:
         url = (test? ? test_url : live_url)
         response = parse(ssl_post(url, post_data(payload), 'Content-Type' => 'text/xml'))
 
-        Response.new(
+        active_merchant_response = Response.new(
             success_from(response),
             message_from(response),
             response,
             authorization: authorization_from(response),
             test: test?
         )
+
+        build_avs_response(response, active_merchant_response)
+        active_merchant_response
       end
 
       def success_from(response)
-        response[:messages_message_code] == 'I00001' ? true: false
+        response[:messages_message_code] == 'I00001' ? true : false
       end
 
       def message_from(response)
@@ -202,6 +207,33 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         response[:transactionresponse_authcode]
+      end
+
+      def build_avs_response(response, active_merchant_response)
+        code = response[:transactionresponse_avsresultcode]
+        active_merchant_response.avs_result['code'] = code
+        case code
+          when 'Y'
+            active_merchant_response.avs_result['street_match'] = true
+            active_merchant_response.avs_result['postal_match'] = true
+            active_merchant_response.avs_result['message'] = 'Address (Street) and 5 digit ZIP match'
+          when 'A'
+            active_merchant_response.avs_result['street_match'] = true
+            active_merchant_response.avs_result['postal_match'] = false
+            active_merchant_response.avs_result['message'] = 'Address (Street) matches, ZIP does not'
+          when 'B'
+            active_merchant_response.avs_result['message'] = 'Address information not provided for AVS check'
+          when 'E'
+            active_merchant_response.avs_result['message'] = 'AVS error'
+          when 'G'
+            active_merchant_response.avs_result['message'] = 'Non-U.S. Card Issuing Bank'
+          when 'N'
+            active_merchant_response.avs_result['street_match'] = false
+            active_merchant_response.avs_result['postal_match'] = false
+            active_merchant_response.avs_result['message'] = 'No Match on Address (Street) or ZIP'
+        end
+
+        active_merchant_response
       end
 
       def post_data(payload)
@@ -252,12 +284,6 @@ module ActiveMerchant #:nodoc:
           xml.description 'level2 tax'
         }
         xml.poNumber 456654
-        xml.customer {
-          xml.type 'Sole Proprietor'
-          xml.id '1'
-          xml.email 'mj@gmail.com'
-        }
-        xml.customerIP '192.168.1.1'
         xml.transactionSettings {
           xml.setting {
             xml.settingName 'testRequest'
