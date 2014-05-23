@@ -175,9 +175,11 @@ module ActiveMerchant #:nodoc:
         entity = (raw_response[entity_name] || []).first
         if !entity
           false
+        elsif (entity_name == "refunds") && (entity.include?("status"))
+          %w(succeeded pending).include?(entity["status"])
         elsif entity.include?("status")
           (entity["status"] == "succeeded")
-        elsif(entity_name == "cards")
+        elsif (entity_name == "cards")
           !!entity["id"]
         else
           false
