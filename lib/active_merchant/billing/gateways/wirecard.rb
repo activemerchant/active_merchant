@@ -26,6 +26,17 @@ module ActiveMerchant #:nodoc:
       # number 5551234 within area code 202 (country code 1).
       VALID_PHONE_FORMAT = /\+\d{1,3}(\(?\d{3}\)?)?\d{3}-\d{4}-\d{3}/
 
+      # Amex have different AVS response codes
+      AMEX_TRANSLATED_AVS_CODES = {
+        "A" => "B", # CSC and Address Matched
+        "F" => "D", # All Data Matched
+        "N" => "I", # CSC Match
+        "U" => "U", # Data Not Checked
+        "Y" => "D", # All Data Matched
+        "Z" => "P", # CSC and Postcode Matched
+        "F" => "D"  # Street address and zip code match
+      }
+
       self.supported_cardtypes = [ :visa, :master, :american_express, :diners_club, :jcb, :switch ]
       self.supported_countries = %w(AD CY GI IM MT RO CH AT DK GR IT MC SM TR BE EE HU LV NL SK GB BG FI IS LI NO SI VA FR IL LT PL ES CZ DE IE LU PT SE)
       self.homepage_url = 'http://www.wirecard.com'
@@ -111,8 +122,8 @@ module ActiveMerchant #:nodoc:
         Response.new(success, message, response,
           :test => test?,
           :authorization => authorization,
-          :avs_result => { :code => response[:avsCode] },
-          :cvv_result => response[:cvCode]
+          :avs_result => { :code => avs_code(response, options) },
+          :cvv_result => response[:CVCResponseCode]
         )
       rescue ResponseError => e
         if e.response.code == "401"
@@ -264,12 +275,25 @@ module ActiveMerchant #:nodoc:
             response[node.name.to_sym] = (node.text || '').strip
           end
 
+          if avs_result = status.elements['AVS']
+            response[:AVS] = parse_avs_response(avs_result)
+          end
+
           error_code = REXML::XPath.first(status, "ERROR/Number")
           response['ErrorCode'] = error_code.text if error_code
         end
 
         parse_error(root, message)
         response[:Message] = message
+      end
+
+      # this needs to populate the response[:AVS]
+      def parse_avs_response(avs_response)
+        avs = {}
+        avs_response.elements.to_a.each do |node|
+          avs[node.name] = (node.text || '').strip
+        end
+        avs
       end
 
       # Parse a generic error response from the gateway
@@ -309,6 +333,17 @@ module ActiveMerchant #:nodoc:
           end
         end
         string
+      end
+
+      # Amex have different AVS response codes to visa etc
+      def avs_code(response, options)
+        if response.has_key?(:AVS) && response[:AVS].has_key?("ProviderResultCode")
+          if options[:credit_card].present? && ActiveMerchant::Billing::CreditCard.brand?(options[:credit_card].number) == "american_express"
+            AMEX_TRANSLATED_AVS_CODES[response[:AVS]["ProviderResultCode"]]
+          else
+            response[:AVS]["ProviderResultCode"]
+          end
+        end
       end
 
       # Encode login and password in Base64 to supply as HTTP header

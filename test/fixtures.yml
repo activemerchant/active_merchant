@@ -733,10 +733,11 @@ wepay:
   account_id: "1311201206"
   access_token: "STAGE_4c6a319f9b6ef50e596ee3ea0b845f2fecd50fa0d8bc0b7483bd61c2018dbf5c"
 
-# Working test credentials, no need to replace
+# Working test credentials with AVS/CVV support, no need to replace
 wirecard:
-  login: 56500
+  login: 00000031629CA9FA
   password: TestXAPTER
+  signature: 00000031629CAFD5
 
 wirecard_checkout_page:
   secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
