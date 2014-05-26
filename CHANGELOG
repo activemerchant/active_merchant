@@ -4,6 +4,7 @@
 * Balanced: More 1.1 API fixes and mappings [ntalbott]
 * Balanced: Handle "pending" refunds [duff]
 * Immediately convert credit card date fields to integers [ntalbott]
+* Balanced: Handle outside card tokens [ntalbott]
 
 == Version 1.43.2 (May 12, 2014)
 

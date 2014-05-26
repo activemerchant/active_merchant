@@ -23,6 +23,14 @@ class RemoteBalancedTest < Test::Unit::TestCase
     assert_equal @amount, response.params['debits'][0]['amount']
   end
 
+  def test_successful_purchase_with_outside_token
+    outside_token = @gateway.store(@credit_card).params['cards'][0]['href']
+    response = @gateway.purchase(@amount, outside_token, @options)
+    assert_success response
+    assert_equal "Success", response.message
+    assert_equal @amount, response.params['debits'][0]['amount']
+  end
+
   def test_purchase_with_invalid_card
     response = @gateway.purchase(@amount, @invalid_card, @options)
     assert_failure response

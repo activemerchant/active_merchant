@@ -30,6 +30,18 @@ class BalancedTest < Test::Unit::TestCase
     assert_equal @amount, response.params['debits'][0]['amount']
   end
 
+  def test_successful_purchase_with_outside_token
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, "/cards/CCVOX2d7Ar6Ze5TOxHsebeH", @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_equal("https://api.balancedpayments.com/cards/CCVOX2d7Ar6Ze5TOxHsebeH/debits", endpoint)
+    end.respond_with(debits_response)
+
+    assert_success response
+    assert_equal 'Success', response.message
+    assert_equal @amount, response.params['debits'][0]['amount']
+  end
+
   def test_invalid_card
     @gateway.expects(:ssl_request).times(2).returns(
       cards_response
