@@ -13,6 +13,7 @@
 
 adyen:
   company: company
+  merchant: merchant
   password: password
 
 app55:

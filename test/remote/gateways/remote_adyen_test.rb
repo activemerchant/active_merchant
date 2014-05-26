@@ -10,7 +10,6 @@ class RemoteAdyenTest < Test::Unit::TestCase
 
     @options = {
       order_id: '1',
-      merchant: 'Shopifytest',
       billing_address: address,
       description: 'Store Purchase'
     }
@@ -91,6 +90,7 @@ class RemoteAdyenTest < Test::Unit::TestCase
   def test_invalid_login
     gateway = AdyenGateway.new(
       company: '',
+      merchant: '',
       password: ''
     )
     response = gateway.purchase(@amount, @credit_card, @options)

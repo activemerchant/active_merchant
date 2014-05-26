@@ -13,12 +13,12 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Adyen'
 
       def initialize(options = {})
-        requires!(options, :company, :password)
+        requires!(options, :company, :merchant, :password)
         super
       end
 
       def purchase(money, creditcard, options = {})
-        requires!(options, :merchant, :order_id)
+        requires!(options, :order_id)
 
         MultiResponse.run do |r|
           r.process { authorize(money, creditcard, options) }
@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, creditcard, options = {})
-        requires!(options, :merchant, :order_id)
+        requires!(options, :order_id)
 
         post = {}
         post[:paymentRequest] = payment_request(money, options)
@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        requires!(options, :merchant, :order_id)
+        requires!(options, :order_id)
 
         post = {}
         post[:modificationRequest] = modification_request(authorization, options)
@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(money, authorization, options = {})
-        requires!(options, :merchant, :order_id)
+        requires!(options, :order_id)
 
         post = {}
         post[:modificationRequest] = modification_request(authorization, options)
@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(identification, options = {})
-        requires!(options, :merchant, :order_id)
+        requires!(options, :order_id)
 
         post = {}
         post[:modificationRequest] = modification_request(identification, options)
@@ -179,14 +179,14 @@ module ActiveMerchant #:nodoc:
 
       def modification_request(reference, options)
         {
-          :merchantAccount    => options[:merchant],
+          :merchantAccount    => @options[:merchant],
           :originalReference  => reference
         }.keep_if { |_, v| v }
       end
 
       def payment_request(money, options)
         {
-          :merchantAccount  => options[:merchant],
+          :merchantAccount  => @options[:merchant],
           :reference        => options[:order_id],
           :shopperEmail     => options[:email],
           :shopperIP        => options[:ip],
