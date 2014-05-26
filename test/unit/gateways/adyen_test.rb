@@ -12,7 +12,6 @@ class AdyenTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      merchant: 'TestMerchant',
       order_id: '1',
       billing_address: address,
       description: 'Store Purchase'
