@@ -126,13 +126,18 @@ module ActiveMerchant
       end
     end
 
-    def assert_deprecation_warning(message, target=@gateway)
-      target.expects(:deprecated).with(message)
+    def assert_deprecation_warning(message)
+      ActiveMerchant.expects(:deprecated).with(message)
       yield
     end
 
-    def assert_no_deprecation_warning(target)
-      target.expects(:deprecated).never
+    def silence_deprecation_warnings
+      ActiveMerchant.stubs(:deprecated)
+      yield
+    end
+
+    def assert_no_deprecation_warning
+      ActiveMerchant.expects(:deprecated).never
       yield
     end
 

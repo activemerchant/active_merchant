@@ -8,6 +8,7 @@
 * Balanced: Do not pass address if zip is missing [ntalbott]
 * Float active_utils at the patch version instead of the minor version [nwjsmith]
 * Wirecard: Fix CVV & AVS response handling [alevett]
+* Consolidate deprecation handling [ntalbott]
 
 == Version 1.43.2 (May 12, 2014)
 

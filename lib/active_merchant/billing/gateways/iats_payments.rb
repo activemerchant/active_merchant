@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options={})
         if(options[:login])
-          deprecated("The 'login' option is deprecated in favor of 'agent_code' and will be removed in a future version.")
+          ActiveMerchant.deprecated("The 'login' option is deprecated in favor of 'agent_code' and will be removed in a future version.")
           options[:agent_code] = options[:login]
         end
 

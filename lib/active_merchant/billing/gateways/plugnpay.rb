@@ -153,7 +153,7 @@ module ActiveMerchant
         add_amount(post, money, options)
 
         if identification_or_creditcard.is_a?(String)
-          deprecated CREDIT_DEPRECATION_MESSAGE
+          ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
           refund(money, identification_or_creditcard, options)
         else
           add_creditcard(post, identification_or_creditcard)

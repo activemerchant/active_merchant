@@ -120,7 +120,7 @@ module ActiveMerchant #:nodoc:
 
           :chstatus  => %w(protocol msgtype merchant apikey)
         },
-        
+
         7 => {
           :authorize => %w(protocol msgtype merchant ordernumber amount
                            currency autocapture cardnumber expirationdate cvd
@@ -148,7 +148,7 @@ module ActiveMerchant #:nodoc:
           :status    => %w(protocol msgtype merchant transaction apikey),
 
           :chstatus  => %w(protocol msgtype merchant apikey)
-        }        
+        }
       }
 
       APPROVED = '000'
@@ -218,7 +218,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, identification, options = {})
-        deprecated CREDIT_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, identification, options)
       end
 

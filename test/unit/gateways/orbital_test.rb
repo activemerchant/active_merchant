@@ -63,7 +63,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   def test_deprecated_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    assert_deprecation_warning("Calling the void method with an amount parameter is deprecated and will be removed in a future version.", @gateway) do
+    assert_deprecation_warning("Calling the void method with an amount parameter is deprecated and will be removed in a future version.") do
       assert response = @gateway.void(@amount, "identifier")
       assert_instance_of Response, response
       assert_success response

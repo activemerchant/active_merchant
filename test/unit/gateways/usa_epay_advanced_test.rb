@@ -151,7 +151,7 @@ class UsaEpayAdvancedTest < Test::Unit::TestCase
 
   def test_successful_credit
     @gateway.expects(:ssl_post).returns(successful_credit_response)
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
       assert response = @gateway.credit(1234, @credit_card, @options)
       assert_instance_of Response, response
       assert response.test?

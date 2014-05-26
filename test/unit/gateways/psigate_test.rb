@@ -40,7 +40,7 @@ class PsigateTest < Test::Unit::TestCase
   def test_deprecated_credit
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<OrderID>transaction_id<\//), anything).returns("")
     @gateway.expects(:parse).returns({})
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
       @gateway.credit(@amount, "transaction_id", @options)
     end
   end

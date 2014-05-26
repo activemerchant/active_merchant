@@ -119,12 +119,12 @@ module ActiveMerchant #:nodoc:
       attr_accessor :track_data
 
       def type
-        self.class.deprecated "CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead."
+        ActiveMerchant.deprecated "CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead."
         brand
       end
 
       def type=(value)
-        self.class.deprecated "CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead."
+        ActiveMerchant.deprecated "CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead."
         self.brand = value
       end
 
