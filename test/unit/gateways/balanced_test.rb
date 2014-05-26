@@ -257,6 +257,36 @@ class BalancedTest < Test::Unit::TestCase
     end
   end
 
+  def test_passing_address
+    a = address
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, address: a)
+    end.check_request do |method, endpoint, data, headers|
+      next if endpoint =~ /debits/
+      clean = proc{|s| Regexp.escape(CGI.escape(s))}
+      assert_match(%r{address\[line1\]=#{clean[a[:address1]]}}, data)
+      assert_match(%r{address\[line2\]=#{clean[a[:address2]]}}, data)
+      assert_match(%r{address\[city\]=#{clean[a[:city]]}}, data)
+      assert_match(%r{address\[state\]=#{clean[a[:state]]}}, data)
+      assert_match(%r{address\[postal_code\]=#{clean[a[:zip]]}}, data)
+      assert_match(%r{address\[country_code\]=#{clean[a[:country]]}}, data)
+    end.respond_with(cards_response, debits_response)
+
+    assert_success response
+  end
+
+  def test_passing_address_without_zip
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, address: address(zip: nil))
+    end.check_request do |method, endpoint, data, headers|
+      next if endpoint =~ /debits/
+      clean = proc{|s| Regexp.escape(CGI.escape(s))}
+      assert_no_match(%r{address}, data)
+    end.respond_with(cards_response, debits_response)
+
+    assert_success response
+  end
+
   private
 
   def invalid_login_response

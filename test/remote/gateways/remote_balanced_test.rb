@@ -165,6 +165,11 @@ class RemoteBalancedTest < Test::Unit::TestCase
     assert_success authorize
   end
 
+  def test_passing_address_with_no_zip
+    response = @gateway.purchase(@amount, @credit_card, address(zip: nil))
+    assert_success response
+  end
+
   def test_invalid_login
     gateway = BalancedGateway.new(
       login: ''

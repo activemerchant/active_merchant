@@ -141,7 +141,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(post, options)
-        if(address = (options[:billing_address] || options[:address]))
+        address = (options[:billing_address] || options[:address])
+        if(address && address[:zip])
           post[:address] = {}
           post[:address][:line1] = address[:address1] if address[:address1]
           post[:address][:line2] = address[:address2] if address[:address2]
