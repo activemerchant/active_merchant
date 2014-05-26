@@ -5,9 +5,7 @@ module ActiveMerchant #:nodoc:
     # not backed by any database.
     #
     # You may use Check in place of CreditCard with any gateway that supports it.
-    class Check
-      include Validateable
-
+    class Check < Model
       attr_accessor :first_name, :last_name,
                     :bank_name, :routing_number, :account_number,
                     :account_holder_type, :account_type, :number
@@ -20,7 +18,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def name=(value)
-        return if value.blank?
+        return if empty?(value)
 
         @name = value
         segments = value.split(' ')
@@ -29,17 +27,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def validate
+        errors = []
+
         [:name, :routing_number, :account_number].each do |attr|
-          errors.add(attr, "cannot be empty") if self.send(attr).blank?
+          errors << [attr, "cannot be empty"] if empty?(self.send(attr))
         end
 
-        errors.add(:routing_number, "is invalid") unless valid_routing_number?
+        errors << [:routing_number, "is invalid"] unless valid_routing_number?
 
-        errors.add(:account_holder_type, "must be personal or business") if
-            !account_holder_type.blank? && !%w[business personal].include?(account_holder_type.to_s)
+        if(!empty?(account_holder_type) && !%w[business personal].include?(account_holder_type.to_s))
+          errors << [:account_holder_type, "must be personal or business"]
+        end
 
-        errors.add(:account_type, "must be checking or savings") if
-            !account_type.blank? && !%w[checking savings].include?(account_type.to_s)
+        if(!empty?(account_type) && !%w[checking savings].include?(account_type.to_s))
+          errors << [:account_type, "must be checking or savings"]
+        end
+
+        errors_hash(errors)
       end
 
       def type

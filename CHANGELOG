@@ -16,13 +16,14 @@
 * Balanced: Do not pass address if zip is blank [duff]
 * Do CreditCard attribute cleanup at assignment [ntalbott]
 * eWay Rapid: Add auth/capture/void support [ntalbott]
+* [POSSIBLE BREAKAGE] Remove dependency on active_utils Validateable [ntalbott]
 
 == Version 1.43.2 (May 12, 2014)
 
 * Remove 2Checkout's #line_item due to conflict with Klarna/Shopify [edward]
 * Auth.Net CIM: Fix ordering of order/trans_id [pdamer]
 * Add PagoFacil gateway [bhserna, abisosa]
-* Stripe: Allow for updating of stored card [speric]
+* [POSSIBLE BREAKAGE] Stripe: Allow for updating of stored card [speric]
 * Authorize.Net: Deprecate ARB [ntalbott]
 * Authorize.Net CIM: Add recurring billing flag [gabealmer]
 * Spreedly: Add support for :ip [megamoose]
