@@ -14,8 +14,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :company, :password)
-        @company = options[:company]
-        @password = options[:password]
         super
       end
 
@@ -113,7 +111,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          'Authorization' => 'Basic ' + Base64.encode64("ws@Company.#{@company}:#{@password}").strip
+          'Authorization' => 'Basic ' + Base64.encode64("ws@Company.#{@options[:company]}:#{@options[:password]}").strip
         }
       end
 
