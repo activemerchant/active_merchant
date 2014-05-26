@@ -83,8 +83,8 @@ module ActiveMerchant #:nodoc:
         ]
 
         Response.new(
-          success?(response),
-          message(response),
+          success_from(response),
+          message_from(response),
           response,
           test: test?,
           authorization: response[:pspReference]
@@ -134,12 +134,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def message(response)
+      def message_from(response)
         return response[:resultCode] if response.has_key?(:resultCode) # Payment request
         return response[:response] if response[:response] # Modification request
       end
 
-      def success?(response)
+      def success_from(response)
         return true if response.has_key?(:authCode)
         return true if response[:response] == '[capture-received]'
         return true if response[:response] == '[cancel-received]'
