@@ -18,11 +18,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, creditcard, options = {})
-        response = authorize(money, creditcard, options)
-        if response.success?
-          capture(money, response.authorization, options)
-        else
-          response
+        requires!(options, :merchant, :order_id)
+
+        MultiResponse.run do |r|
+          r.process { authorize(money, creditcard, options) }
+          r.process { capture(money, r.authorization, options) }
         end
       end
 
