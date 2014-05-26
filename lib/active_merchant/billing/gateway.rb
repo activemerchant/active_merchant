@@ -55,7 +55,6 @@ module ActiveMerchant #:nodoc:
       include PostsData
       include RequiresParameters
       include CreditCardFormatting
-      include Utils
 
       DEBIT_CARDS = [ :switch, :solo ]
       CURRENCIES_WITHOUT_FRACTIONS = [ 'BIF', 'BYR', 'CLP', 'CVE', 'DJF', 'GNF', 'HUF', 'ISK', 'JPY', 'KMF', 'KRW', 'PYG', 'RWF', 'TWD', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF' ]
@@ -68,6 +67,10 @@ module ActiveMerchant #:nodoc:
       def self.inherited(subclass)
         super
         @@implementations << subclass
+      end
+
+      def generate_unique_id
+        SecureRandom.hex(16)
       end
 
       # The format of the amounts used by the gateway

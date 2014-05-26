@@ -64,7 +64,7 @@ credit_card = ActiveMerchant::Billing::CreditCard.new(
                 :verification_value => '000')
 
 # Validating the card automatically detects the card type
-if credit_card.valid?
+if credit_card.validate.empty?
   # Capture $10 from the credit card
   response = gateway.purchase(amount, credit_card)
 

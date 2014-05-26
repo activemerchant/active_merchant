@@ -114,16 +114,24 @@ module ActiveMerchant
       end
     end
 
-    def assert_valid(validateable)
+    def assert_valid(model)
+      errors = model.validate
+
       clean_backtrace do
-        assert validateable.valid?, "Expected to be valid"
+        assert_equal({}, errors, "Expected to be valid")
       end
+
+      errors
     end
 
-    def assert_not_valid(validateable)
+    def assert_not_valid(model)
+      errors = model.validate
+
       clean_backtrace do
-        assert_false validateable.valid?, "Expected to not be valid"
+        assert_not_equal({}, errors, "Expected to not be valid")
       end
+
+      errors
     end
 
     def assert_deprecation_warning(message)
