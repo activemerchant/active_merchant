@@ -4,6 +4,7 @@ class AdyenTest < Test::Unit::TestCase
   def setup
     @gateway = AdyenGateway.new(
       company: 'company',
+      merchant: 'merchant',
       password: 'password'
     )
 
