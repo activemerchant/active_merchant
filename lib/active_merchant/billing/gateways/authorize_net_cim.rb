@@ -613,7 +613,6 @@ module ActiveMerchant #:nodoc:
 
       def build_create_customer_profile_transaction_request(xml, options)
         options[:extra_options] ||= {}
-        options[:extra_options].merge!('x_test_request' => 'TRUE') if @options[:test_requests]
 
         add_transaction(xml, options[:transaction])
         tag_unless_blank(xml, 'extraOptions', format_extra_options(options[:extra_options]))
