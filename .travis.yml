@@ -2,14 +2,12 @@ rvm:
   - 2.1.0
   - 2.0.0
   - 1.9.3
-  - 1.9.2
 
 gemfile:
   - Gemfile_rails40
   - Gemfile
   - Gemfile_rails31
   - Gemfile_rails30
-  - Gemfile_rails23
 
 script: "bundle exec rake test:units"
 
