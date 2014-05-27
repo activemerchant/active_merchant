@@ -79,19 +79,14 @@ module ActiveMerchant #:nodoc:
       def commit(action, post)
         request = post_data(flatten_hash(post.merge(:action => action)))
         raw_response = ssl_post(url, request, headers)
-
-        response = Hash[
-          parse(raw_response).map do |key, val|
-            [key.split('.').last.to_sym, val]
-          end
-        ]
+        response = parse(raw_response)
 
         Response.new(
           success_from(response),
           message_from(response),
           response,
           test: test?,
-          authorization: response[:pspReference]
+          authorization: response['pspReference']
         )
 
       rescue ResponseError => e
@@ -125,7 +120,7 @@ module ActiveMerchant #:nodoc:
         Hash[
           response.split('&').map do |x|
             key, val = x.split('=', 2)
-            [key, CGI.unescape(val)]
+            [key.split('.').last, CGI.unescape(val)]
           end
         ]
       end
@@ -139,15 +134,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        return response[:resultCode] if response.has_key?(:resultCode) # Payment request
-        return response[:response] if response[:response] # Modification request
+        return response['resultCode'] if response.has_key?('resultCode') # Payment request
+        return response['response'] if response['response'] # Modification request
       end
 
       def success_from(response)
-        return true if response.has_key?(:authCode)
-        return true if response[:response] == '[capture-received]'
-        return true if response[:response] == '[cancel-received]'
-        return true if response[:response] == '[refund-received]'
+        return true if response.has_key?('authCode')
+        return true if response['response'] == '[capture-received]'
+        return true if response['response'] == '[cancel-received]'
+        return true if response['response'] == '[refund-received]'
         return false
       end
 
