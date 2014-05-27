@@ -93,13 +93,28 @@ module ActiveMerchant #:nodoc:
       def add_payment(xml, card_or_token, options)
         xml.hps :CardData do
           if card_or_token.respond_to?(:number)
-            xml.hps :ManualEntry do
-              xml.hps :CardNbr, card_or_token.number
-              xml.hps :ExpMonth, card_or_token.month
-              xml.hps :ExpYear, card_or_token.year
-              xml.hps :CVV2, card_or_token.verification_value
-              xml.hps :CardPresent, 'N'
-              xml.hps :ReaderPresent, 'N'
+            if card_or_token.track_data
+              xml.tag!("hps:TrackData", 'method'=>'swipe') do
+                xml.text! card_or_token.track_data
+              end
+              if options[:encryption_type]
+                xml.hps :EncryptionData do
+                  xml.hps :Version, options[:encryption_type]
+                  if options[:encryption_type] == '02'
+                    xml.hps :EncryptedTrackNumber, options[:encrypted_track_number]
+                    xml.hps :KTB, options[:ktb]
+                  end
+                end
+              end
+            else
+              xml.hps :ManualEntry do
+                xml.hps :CardNbr, card_or_token.number
+                xml.hps :ExpMonth, card_or_token.month
+                xml.hps :ExpYear, card_or_token.year
+                xml.hps :CVV2, card_or_token.verification_value
+                xml.hps :CardPresent, 'N'
+                xml.hps :ReaderPresent, 'N'
+              end
             end
           else
             xml.hps :TokenData do
@@ -123,7 +138,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(action)
-        xml = Builder::XmlMarkup.new
+        xml = Builder::XmlMarkup.new(encoding: 'UTF-8')
         xml.instruct!(:xml, encoding: 'UTF-8')
         xml.SOAP :Envelope, {
             'xmlns:SOAP' => 'http://schemas.xmlsoap.org/soap/envelope/',
