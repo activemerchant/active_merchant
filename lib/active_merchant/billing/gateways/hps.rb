@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment(xml, card_or_token, options)
         xml.hps :CardData do
-          if card_or_token.respond_to?(:number)
+          if card_or_token.respond_to?(:number) && card_or_token.track_data.nil?
             xml.hps :ManualEntry do
               xml.hps :CardNbr, card_or_token.number
               xml.hps :ExpMonth, card_or_token.month
@@ -100,6 +100,15 @@ module ActiveMerchant #:nodoc:
               xml.hps :CVV2, card_or_token.verification_value
               xml.hps :CardPresent, 'N'
               xml.hps :ReaderPresent, 'N'
+            end
+          elsif card_or_token.respond_to?(:number) && !card_or_token.track_data.nil?
+            xml.tag!("hps:TrackData", 'method'=>'swipe'){xml.text! card_or_token.track_data}
+            if %w(01 02).include?(options[:encryption_type])
+              xml.hps :EncryptionData do
+                xml.hps :Version, options[:encryption_type]
+                xml.hps :EncryptedTrackNumber, options[:encrypted_track_number] if options[:encryption_type].eql? '02'
+                xml.hps :KTB, options[:ktb] if options[:encryption_type].eql? '02'
+              end
             end
           else
             xml.hps :TokenData do
@@ -123,7 +132,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(action)
-        xml = Builder::XmlMarkup.new
+        xml = Builder::XmlMarkup.new(encoding: 'UTF-8')
         xml.instruct!(:xml, encoding: 'UTF-8')
         xml.SOAP :Envelope, {
             'xmlns:SOAP' => 'http://schemas.xmlsoap.org/soap/envelope/',
