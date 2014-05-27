@@ -31,10 +31,16 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:paymentRequest] = payment_request(money, options)
-        post[:paymentRequest][:amount] = amount(money, options[:currency])
-        post[:paymentRequest][:billingAddress] = address(options[:billing_address]) if options[:billing_address]
-        post[:paymentRequest][:deliveryAddress] = address(options[:shipping_address]) if options[:shipping_address]
-        post[:paymentRequest][:card] = credit_card(creditcard)
+        post[:paymentRequest][:amount] = amount_hash(money, options[:currency])
+        post[:paymentRequest][:card] = credit_card_hash(creditcard)
+
+        if address = (options[:billing_address] || options[:address])
+          post[:paymentRequest][:billingAddress] = address_hash(address)
+        end
+
+        if options[:shipping_address]
+          post[:paymentRequest][:deliveryAddress] = address_hash(options[:shipping_address])
+        end
 
         commit('Payment.authorise', post)
       end
@@ -44,7 +50,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:modificationRequest] = modification_request(authorization, options)
-        post[:modificationRequest][:modificationAmount] = amount(money, options[:currency])
+        post[:modificationRequest][:modificationAmount] = amount_hash(money, options[:currency])
         
         commit('Payment.capture', post)
       end
@@ -54,7 +60,7 @@ module ActiveMerchant #:nodoc:
 
         post = {}
         post[:modificationRequest] = modification_request(authorization, options)
-        post[:modificationRequest][:modificationAmount] = amount(money, options[:currency])
+        post[:modificationRequest][:modificationAmount] = amount_hash(money, options[:currency])
         
         commit('Payment.refund', post)
       end
@@ -149,7 +155,7 @@ module ActiveMerchant #:nodoc:
         test? ? self.test_url : self.live_url
       end
 
-      def address(address)
+      def address_hash(address)
         {
           :city              => address[:city],
           :street            => address[:address1],
@@ -160,14 +166,14 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def amount(money, currency)
+      def amount_hash(money, currency)
         {
           :currency => (currency || currency(money)),
           :value    => money
         }
       end
 
-      def credit_card(creditcard)
+      def credit_card_hash(creditcard)
         {
           :cvc         => creditcard.verification_value,
           :expiryMonth => format(creditcard.month, :two_digits),
