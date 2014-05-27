@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
         raw_response = ssl_post(url, request, headers)
 
         response = Hash[
-          parse_response(raw_response).map do |key, val|
+          parse(raw_response).map do |key, val|
             [key.split('.').last.to_sym, val]
           end
         ]
@@ -121,7 +121,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def parse_response(response)
+      def parse(response)
         Hash[
           response.split('&').map do |x|
             key, val = x.split('=', 2)
