@@ -96,6 +96,49 @@ class HpsTest < Test::Unit::TestCase
     assert_failure void
   end
 
+  def test_successful_purchase_with_swipe_no_encryption
+    @gateway.expects(:ssl_post).returns(successful_swipe_purchase_response)
+    
+    @credit_card.track_data = '%B547888879888877776?;5473500000000014=25121019999888877776?'
+    response = @gateway.purchase(@amount,@credit_card,@options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_purchase_with_swipe_bad_track_data
+    @gateway.expects(:ssl_post).returns(failed_swipe_purchase_response)
+    
+    @credit_card.track_data = '%B547888879888877776?;?'
+    response = @gateway.purchase(@amount,@credit_card,@options)
+
+    assert_failure response
+    assert_equal 'Transaction was rejected because the track data could not be read.', response.message
+  end
+  
+  def test_successful_purchase_with_swipe_encryption_type_01
+    @gateway.expects(:ssl_post).returns(successful_swipe_purchase_response)
+    
+    @options[:encryption_type] = "01"
+    @credit_card.track_data = "&lt;E1052711%B5473501000000014^MC TEST CARD^251200000000000000000000000000000000?|GVEY/MKaKXuqqjKRRueIdCHPPoj1gMccgNOtHC41ymz7bIvyJJVdD3LW8BbwvwoenI+|+++++++C4cI2zjMp|11;5473501000000014=25120000000000000000?|8XqYkQGMdGeiIsgM0pzdCbEGUDP|+++++++C4cI2zjMp|00|||/wECAQECAoFGAgEH2wYcShV78RZwb3NAc2VjdXJlZXhjaGFuZ2UubmV0PX50qfj4dt0lu9oFBESQQNkpoxEVpCW3ZKmoIV3T93zphPS3XKP4+DiVlM8VIOOmAuRrpzxNi0TN/DWXWSjUC8m/PI2dACGdl/hVJ/imfqIs68wYDnp8j0ZfgvM26MlnDbTVRrSx68Nzj2QAgpBCHcaBb/FZm9T7pfMr2Mlh2YcAt6gGG1i2bJgiEJn8IiSDX5M2ybzqRT86PCbKle/XCTwFFe1X|&gt;"
+    response = @gateway.purchase(@amount,@credit_card,@options)
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_swipe_encryption_type_02
+    @gateway.expects(:ssl_post).returns(successful_swipe_purchase_response)
+    
+    @options[:encryption_type] = '02'
+    @options[:encrypted_track_number] = 2
+    @options[:ktb] = '/wECAQECAoFGAgEH3QgVTDT6jRZwb3NAc2VjdXJlZXhjaGFuZ2UubmV0Nkt08KRSPigRYcr1HVgjRFEvtUBy+VcCKlOGA3871r3SOkqDvH2+30insdLHmhTLCc4sC2IhlobvWnutAfylKk2GLspH/pfEnVKPvBv0hBnF4413+QIRlAuGX6+qZjna2aMl0kIsjEY4N6qoVq2j5/e5I+41+a2pbm61blv2PEMAmyuCcAbN3/At/1kRZNwN6LSUg9VmJO83kOglWBe1CbdFtncq'
+    @credit_card.track_data = '7SV2BK6ESQPrq01iig27E74SxMg'
+    response = @gateway.purchase(@amount,@credit_card,@options)
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+  
   private
 
   def successful_charge_response
@@ -387,6 +430,64 @@ class HpsTest < Test::Unit::TestCase
         </Ver1.0>
      </PosResponse>
   </soap:Body>
+</soap:Envelope>
+    RESPONSE
+  end
+  
+  def successful_swipe_purchase_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>95878</LicenseId>
+               <SiteId>95881</SiteId>
+               <DeviceId>2409000</DeviceId>
+               <GatewayTxnId>17596558</GatewayTxnId>
+               <GatewayRspCode>0</GatewayRspCode>
+               <GatewayRspMsg>Success</GatewayRspMsg>
+               <RspDT>2014-05-26T10:27:30.4211513</RspDT>
+            </Header>
+            <Transaction>
+               <CreditSale>
+                  <RspCode>00</RspCode>
+                  <RspText>APPROVAL</RspText>
+                  <AuthCode>037677</AuthCode>
+                  <AVSRsltCode>0</AVSRsltCode>
+                  <RefNbr>414614470800</RefNbr>
+                  <AVSResultCodeAction>ACCEPT</AVSResultCodeAction>
+                  <CardType>MC</CardType>
+                  <AVSRsltText>AVS Not Requested.</AVSRsltText>
+               </CreditSale>
+            </Transaction>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    RESPONSE
+  end
+  
+  def failed_swipe_purchase_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>95878</LicenseId>
+               <SiteId>95881</SiteId>
+               <DeviceId>2409000</DeviceId>
+               <GatewayTxnId>17602711</GatewayTxnId>
+               <GatewayRspCode>8</GatewayRspCode>
+               <GatewayRspMsg>Transaction was rejected because the track data could not be read.</GatewayRspMsg>
+               <RspDT>2014-05-26T10:42:44.5031513</RspDT>
+            </Header>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
 </soap:Envelope>
     RESPONSE
   end
