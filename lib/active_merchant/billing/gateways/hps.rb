@@ -75,17 +75,19 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(xml, card_or_token,options)
         if card_or_token.respond_to?(:number)
-          billing_address = options[:billing_address] || options[:address]
 
           xml.hps :CardHolderData do
             xml.hps :CardHolderFirstName, card_or_token.first_name
             xml.hps :CardHolderLastName, card_or_token.last_name
             xml.hps :CardHolderEmail, options[:email] if options[:email]
             xml.hps :CardHolderPhone, options[:phone] if options[:phone]
-            xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1]
-            xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
-            xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
-            xml.hps :CardHolderZip, billing_address[:zip] if billing_address[:zip]
+
+            if billing_address = (options[:billing_address] || options[:address])
+              xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1]
+              xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
+              xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
+              xml.hps :CardHolderZip, billing_address[:zip] if billing_address[:zip]
+            end
           end
         end
       end

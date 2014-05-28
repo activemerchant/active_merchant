@@ -12,6 +12,7 @@
 * Authorize.Net CIM: Do not send x_test_request [danrabinowitz]
 * Authorize.Net CIM: Pass delimiter through [jsoma]
 * HPS: Add support for track data [SecureSubmit]
+* HPS: Fix processing without an address [SecureSubmit]
 
 == Version 1.43.2 (May 12, 2014)
 

@@ -22,6 +22,18 @@ class HpsTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_no_address
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    options = {
+      order_id: '1',
+      description: 'Store Purchase'
+    }
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_instance_of Response, response
+    assert_success response
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_charge_response)
 
@@ -34,6 +46,18 @@ class HpsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+  end
+
+  def test_successful_authorize_no_address
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    options = {
+      order_id: '1',
+      description: 'Store Authorize'
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
     assert_instance_of Response, response
     assert_success response
   end
