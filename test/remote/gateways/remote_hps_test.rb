@@ -31,6 +31,17 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_no_address
+    options = {
+      order_id: '1',
+      description: 'Store Purchase'
+    }
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@declined_amount, @credit_card, @options)
     assert_failure response
@@ -52,6 +63,17 @@ class RemoteHpsTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(nil, auth.authorization)
     assert_success capture
+  end
+
+  def test_successful_authorize_no_address
+    options = {
+      order_id: '1',
+      description: 'Store Authorize'
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal 'Success', response.message
   end
 
   def test_failed_authorize
