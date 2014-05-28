@@ -44,34 +44,40 @@ module ActiveMerchant #:nodoc:
           # apc arrives. Coinbase will verify that all the information we received are correct and will return a
           # ok or a fail.
           #
-          # authcode should be the same api_key passed into payment_service_for
+          # authcode should be { api_key: "your API key", api_secret: "your API secret" }
           #
           # Example:
           #
           #   def ipn
           #     notify = CoinbaseNotification.new(request.raw_post)
           #
-          #     if notify.acknowledge(api_key)
+          #     if notify.acknowledge({ api_key: "your API key", api_secret: "your API secret" })
           #       ... process order ... if notify.complete?
           #     else
           #       ... log possible hacking attempt ...
           #     end
-          def acknowledge(authcode = nil)
+          def acknowledge(authcode = {})
 
             uri = URI.parse(Coinbase.notification_confirmation_url % transaction_id)
 
-            request = Net::HTTP::Get.new("#{uri.path}?api_key=%s" % authcode)
+            request = Net::HTTP::Get.new(uri.path)
 
             http = Net::HTTP.new(uri.host, uri.port)
             http.use_ssl        = true
 
+            # Authentication
+            nonce = (Time.now.to_f * 1e6).to_i
+            request['ACCESS_KEY'] = authcode[:api_key]
+            request['ACCESS_SIGNATURE'] = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha256'), authcode[:api_secret], nonce.to_s + uri.to_s)
+            request['ACCESS_NONCE'] = nonce.to_s
+
             response = http.request(request).body
             order = JSON.parse(response)
-            
+
             if order.nil?
             	return false
             end
-            
+
             order = order['order']
 
             # check all properties with the server
@@ -82,9 +88,7 @@ module ActiveMerchant #:nodoc:
 
           # Take the posted data and move the relevant data into a hash
           def parse(post)
-            raw = post.to_s
-            @params = JSON.parse(raw)
-            @params = @params['order']
+            @params = post['order']
           end
         end
       end
