@@ -151,10 +151,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def address_hash(address)
+        full_address = "#{address[:address1]} #{address[:address2]}"
+
         {
           :city              => address[:city],
-          :street            => address[:address1],
-          :houseNumberOrName => address[:address2],
+          :street            => full_address.split(' ').keep_if { |x| x !~ /\d/ }.join(' '),
+          :houseNumberOrName => full_address.split(' ').keep_if { |x| x =~ /\d/ }.join(' '),
           :postalCode        => address[:zip],
           :stateOrProvince   => address[:state],
           :country           => address[:country]
