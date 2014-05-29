@@ -28,7 +28,7 @@ class AdyenTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(:code => '500', :body => failed_authorize_response)))
+    @gateway.stubs(:ssl_post).returns(failed_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
