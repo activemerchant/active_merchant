@@ -14,6 +14,7 @@
 * HPS: Add support for track data [SecureSubmit]
 * HPS: Fix processing without an address [SecureSubmit]
 * Balanced: Do not pass address if zip is blank [duff]
+* Do CreditCard attribute cleanup at assignment [ntalbott]
 
 == Version 1.43.2 (May 12, 2014)
 

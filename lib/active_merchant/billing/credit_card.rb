@@ -56,7 +56,7 @@ module ActiveMerchant #:nodoc:
       # Returns or sets the credit card number.
       #
       # @return [String]
-      attr_accessor :number
+      attr_reader :number
 
       # Returns or sets the expiry month for the card.
       #
@@ -67,28 +67,6 @@ module ActiveMerchant #:nodoc:
       #
       # @return [Integer]
       attr_reader :year
-
-      # Returns or sets the credit card brand.
-      #
-      # Valid card types are
-      #
-      # * +'visa'+
-      # * +'master'+
-      # * +'discover'+
-      # * +'american_express'+
-      # * +'diners_club'+
-      # * +'jcb'+
-      # * +'switch'+
-      # * +'solo'+
-      # * +'dankort'+
-      # * +'maestro'+
-      # * +'forbrugsforeningen'+
-      # * +'laser'+
-      #
-      # Or, if you wish to test your implementation, +'bogus'+.
-      #
-      # @return (String) the credit card brand
-      attr_accessor :brand
 
       # Returns or sets the first name of the card holder.
       #
@@ -117,6 +95,35 @@ module ActiveMerchant #:nodoc:
       #
       # @return [String]
       attr_accessor :track_data
+
+      # Returns the credit card brand.
+      #
+      # Valid card types are
+      #
+      # * +'visa'+
+      # * +'master'+
+      # * +'discover'+
+      # * +'american_express'+
+      # * +'diners_club'+
+      # * +'jcb'+
+      # * +'switch'+
+      # * +'solo'+
+      # * +'dankort'+
+      # * +'maestro'+
+      # * +'forbrugsforeningen'+
+      # * +'laser'+
+      #
+      # Or, if you wish to test your implementation, +'bogus'+.
+      #
+      # @return (String) the credit card brand
+      def brand
+        return @brand unless @brand.blank?
+        self.class.brand?(number)
+      end
+
+      def brand=(value)
+        @brand = (value.respond_to?(:downcase) ? value.downcase : value)
+      end
 
       def type
         ActiveMerchant.deprecated "CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead."
@@ -183,6 +190,10 @@ module ActiveMerchant #:nodoc:
         )
       end
 
+      def number=(value)
+        @number = value.to_s.gsub(/[^\d]/, "")
+      end
+
       def verification_value?
         !@verification_value.blank?
       end
@@ -229,12 +240,6 @@ module ActiveMerchant #:nodoc:
       end
 
       private
-
-      def before_validate #:nodoc:
-        self.number = number.to_s.gsub(/[^\d]/, "")
-        self.brand.downcase! if brand.respond_to?(:downcase)
-        self.brand = self.class.brand?(number) if brand.blank?
-      end
 
       def validate_card_number
         if number.blank?
