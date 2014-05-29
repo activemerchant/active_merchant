@@ -13,6 +13,7 @@
 * Authorize.Net CIM: Pass delimiter through [jsoma]
 * HPS: Add support for track data [SecureSubmit]
 * HPS: Fix processing without an address [SecureSubmit]
+* Balanced: Do not pass address if zip is blank [duff]
 
 == Version 1.43.2 (May 12, 2014)
 
