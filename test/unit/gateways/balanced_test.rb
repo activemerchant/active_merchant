@@ -280,7 +280,17 @@ class BalancedTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, address: address(zip: nil))
     end.check_request do |method, endpoint, data, headers|
       next if endpoint =~ /debits/
-      clean = proc{|s| Regexp.escape(CGI.escape(s))}
+      assert_no_match(%r{address}, data)
+    end.respond_with(cards_response, debits_response)
+
+    assert_success response
+  end
+
+  def test_passing_address_with_blank_zip
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, address: address(zip: "   "))
+    end.check_request do |method, endpoint, data, headers|
+      next if endpoint =~ /debits/
       assert_no_match(%r{address}, data)
     end.respond_with(cards_response, debits_response)
 
