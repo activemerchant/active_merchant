@@ -40,7 +40,7 @@ class MoipTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_request).twice.returns(successful_authorize_response, successful_capture_response)
+    @gateway.expects(:ssl_request).twice.returns(successful_authenticate_response, successful_pay_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of MultiResponse, response
@@ -50,10 +50,10 @@ class MoipTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_authorize
-    @gateway.expects(:ssl_request).returns(successful_authorize_response)
+  def test_successful_authenticate
+    @gateway.expects(:ssl_request).returns(successful_authenticate_response)
 
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert response = @gateway.send(:authenticate, @amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
 
@@ -62,24 +62,24 @@ class MoipTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_request
-    @gateway.expects(:ssl_request).twice.returns(successful_authorize_response,failed_capture_response)
+    @gateway.expects(:ssl_request).twice.returns(successful_authenticate_response,failed_pay_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
   end
 
-  def test_unsuccessful_authorize
-    @gateway.expects(:ssl_request).returns(unsuccessful_authorize_response)
+  def test_unsuccessful_authenticate
+    @gateway.expects(:ssl_request).returns(unsuccessful_authenticate_response)
 
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert response = @gateway.send(:authenticate, @amount, @credit_card, @options)
     assert_failure response
     assert response.test?
   end
 
   private
 
-  def successful_authorize_response
+  def successful_authenticate_response
     <<-XML
         <ns1:EnviarInstrucaoUnicaResponse xmlns:ns1="http://www.moip.com.br/ws/alpha/">
           <Resposta>
@@ -92,16 +92,16 @@ class MoipTest < Test::Unit::TestCase
   end
 
   # Place raw successful response from gateway here
-  def successful_capture_response
+  def successful_pay_response
     '?({"Status":"EmAnalise","Codigo":0,"CodigoRetorno":"","TaxaMoIP":"0.46","StatusPagamento":"Sucesso","Classificacao":{"Codigo":999,"Descricao":"Nao suportado no ambiente Sandbox"},"CodigoMoIP":207695,"Mensagem":"Requisicao processada com sucesso","TotalPago":"1.00"})'
   end
 
   # Place raw failed response from gateway here
-  def failed_capture_response
+  def failed_pay_response
     '?({"Codigo":901,"StatusPagamento":"Falha","Mensagem":"Instituicao de pagamento invalida"})'
   end
 
-  def unsuccessful_authorize_response
+  def unsuccessful_authenticate_response
     <<-XML
       <ns1:EnviarInstrucaoUnicaResponse xmlns:ns1="http://www.moip.com.br/ws/alpha/">
         <Resposta>

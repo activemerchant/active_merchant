@@ -2,8 +2,8 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     module MoipCore #:nodoc:
       URL_ACTIONS = {
-          'authorize' => '/ws/alpha/EnviarInstrucao/Unica',
-          'capture'   => '/rest/pagamento?callback=?'
+          'authenticate'  => '/ws/alpha/EnviarInstrucao/Unica',
+          'pay'           => '/rest/pagamento?callback=?'
       }
 
       CARD_BRAND = {
@@ -33,7 +33,7 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def build_authorize_request(money, options)
+      def build_authenticate_request(money, options)
         xml = Builder::XmlMarkup.new
         xml.tag! 'EnviarInstrucao' do
           xml.tag! 'InstrucaoUnica', TipoValidacao: 'Transparente' do
@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def build_capture_params(authorization, options)
+      def build_pay_params(authorization, options)
         params = {
             :pagamentoWidget => {
                 :token => authorization,
