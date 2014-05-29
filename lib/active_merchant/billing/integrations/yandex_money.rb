@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
         # https://money.yandex.ru/start/
 
         # Shop example:
-        # 
+        # https://github.com/yandex-money/shopify-active-merchant-shop-example
 
         mattr_accessor :production_url, :test_url
 
