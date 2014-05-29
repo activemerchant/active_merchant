@@ -90,10 +90,15 @@ module ActiveMerchant #:nodoc:
         )
 
       rescue ResponseError => e
-        if e.response.code == '401'
+        case e.response.code
+        when '401'
           return Response.new(false, 'Invalid credentials.', {}, :test => test?)
-        else
+        when '404'
+          return Response.new(false, 'Authorization not found.', {}, :test => test?)
+        when '500'
           return Response.new(false, e.response.body, {}, :test => test?)
+        else
+          raise
         end
       end
 
