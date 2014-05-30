@@ -44,14 +44,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(money, payment, authorization, options={})
+      def capture(money, authorization, options={})
         commit do |xml|
-          xml.refId options[:order_id]
+          xml.refId options[:order_id] if options.is_a? Hash
           xml.transactionRequest {
-            xml.transactionType 'captureOnlyTransaction'
+            xml.transactionType 'priorAuthCaptureTransaction'
             xml.amount money
-            add_payment_source(xml, payment) unless payment.nil?
-            xml.authCode authorization[:authcode] if authorization.is_a? Hash
+            xml.refTransId authorization
           }
         end
       end
@@ -63,7 +62,7 @@ module ActiveMerchant #:nodoc:
             xml.transactionType 'refundTransaction'
             xml.amount money unless money.nil?
             add_payment_source(xml, payment) unless money.nil?
-            xml.refTransId authorization[:transid] if authorization.is_a? Hash
+            xml.refTransId authorization
           }
         end
       end
@@ -73,7 +72,7 @@ module ActiveMerchant #:nodoc:
           xml.refId options[:order_id]
           xml.transactionRequest {
             xml.transactionType 'voidTransaction'
-            xml.refTransId authorization[:transid] if authorization.is_a? Hash
+            xml.refTransId authorization
           }
         end
       end
@@ -225,7 +224,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        { :transid => response[:transactionresponse_transid], :authcode => response[:transactionresponse_authcode] }
+        response[:transactionresponse_transid]
       end
 
       def build_avs_response(response, active_merchant_response)

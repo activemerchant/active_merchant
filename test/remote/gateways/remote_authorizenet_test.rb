@@ -39,12 +39,11 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
     assert_equal 'The credit card has expired.', response.message
   end
 
-  #TODO: In the past this just required a transaction number and amount.  Trying to figure out a clean way to do this now.
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount, @credit_card, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
   end
 
@@ -58,7 +57,7 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, @credit_card, auth.authorization)
+    assert capture = @gateway.capture(@amount-1, auth.authorization)
     assert_success capture
   end
 
@@ -75,7 +74,6 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
   #  assert_success refund
   #end
 
-  #TODO: In the past this just required a transaction number and amount.  Trying to figure out a clean way to do this now.
   #this requires an overnight settlement.  Must be tested with a hard coded transaction id
   #def test_partial_refund
   #  purchase = @gateway.purchase(@amount, @credit_card, @options)
