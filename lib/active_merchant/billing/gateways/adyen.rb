@@ -103,14 +103,14 @@ module ActiveMerchant #:nodoc:
         raise
       end
 
-      def flatten_hash(hash, keys = nil)
+      def flatten_hash(hash, prefix = nil)
         flat_hash = {}
         hash.each_pair do |key, val|
-          conc_key = keys.nil? ? key : "#{keys}.#{key}"
+          conc_key = prefix.nil? ? key : "#{prefix}.#{key}"
           if val.is_a?(Hash)
             flat_hash.merge!(flatten_hash(val, conc_key))
           else
-            flat_hash[conc_key.to_sym] = val
+            flat_hash[conc_key] = val
           end
         end
         flat_hash
@@ -161,8 +161,8 @@ module ActiveMerchant #:nodoc:
 
         {
           :city              => address[:city],
-          :street            => full_address.split(' ').keep_if { |x| x !~ /\d/ }.join(' '),
-          :houseNumberOrName => full_address.split(' ').keep_if { |x| x =~ /\d/ }.join(' '),
+          :street            => full_address.split(/\s+/).keep_if { |x| x !~ /\d/ }.join(' '),
+          :houseNumberOrName => full_address.split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' '),
           :postalCode        => address[:zip],
           :stateOrProvince   => address[:state],
           :country           => address[:country]
@@ -172,7 +172,7 @@ module ActiveMerchant #:nodoc:
       def amount_hash(money, currency)
         {
           :currency => (currency || currency(money)),
-          :value    => money
+          :value    => amount(money)
         }
       end
 
