@@ -18,61 +18,72 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, payment_source, options = {})
+      def purchase(money, payment, options = {})
         commit do |xml|
-          #TODO where am I getting ref from?
-          xml.refId 1
+          xml.refId options[:order_id]
           xml.transactionRequest {
             xml.transactionType 'authCaptureTransaction'
             xml.amount money
-            add_payment_source(xml, payment_source)
-            add_invoice(xml, money, options)
-            add_customer_data(xml, payment_source, options)
-
-            #add_transaction_control(xml, options)
-            #add_vendor_data(xml, options)
+            add_payment_source(xml, payment)
+            #add_invoice(xml, money, options)
+            add_customer_data(xml, payment, options)
           }
         end
       end
-=begin
+
       def authorize(money, payment, options={})
-        post = {}
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_address(post, payment, options)
-        add_customer_data(post, options)
-
-        commit('authonly', post)
-      end
-
-      def capture(money, authorization, options={})
-        commit('capture', post)
-      end
-
-      def refund(money, authorization, options={})
-        commit('refund', post)
-      end
-
-      def void(authorization, options={})
-        commit('void', post)
-      end
-=end
-      private
-      def add_payment_source(xml, source)
-        case determine_funding_source(source)
-          when :credit_card then
-            add_creditcard(xml, source)
-          when :check then
-            add_check(xml, source)
+        commit do |xml|
+          xml.refId options[:order_id]
+          xml.transactionRequest {
+            xml.transactionType 'authOnlyTransaction'
+            xml.amount money
+            add_payment_source(xml, payment)
+            #add_invoice(xml, money, options)
+            add_customer_data(xml, payment, options)
+          }
         end
       end
 
-      def determine_funding_source(payment_source)
-        case payment_source
-          when ActiveMerchant::Billing::CreditCard
-            :credit_card
-          when ActiveMerchant::Billing::Check
-            :check
+      def capture(money, payment, authorization, options={})
+        commit do |xml|
+          xml.refId options[:order_id]
+          xml.transactionRequest {
+            xml.transactionType 'captureOnlyTransaction'
+            xml.amount money
+            add_payment_source(xml, payment) unless payment.nil?
+            xml.authCode authorization[:authcode] if authorization.is_a? Hash
+          }
+        end
+      end
+
+      def refund(money, payment, authorization, options={})
+        commit do |xml|
+          xml.refId options[:order_id]
+          xml.transactionRequest {
+            xml.transactionType 'refundTransaction'
+            xml.amount money unless money.nil?
+            add_payment_source(xml, payment) unless money.nil?
+            xml.refTransId authorization[:transid] if authorization.is_a? Hash
+          }
+        end
+      end
+
+      def void(authorization, options={})
+        commit do |xml|
+          xml.refId options[:order_id]
+          xml.transactionRequest {
+            xml.transactionType 'voidTransaction'
+            xml.refTransId authorization[:transid] if authorization.is_a? Hash
+          }
+        end
+      end
+
+      private
+      def add_payment_source(xml, source)
+        if card_brand(source) == 'check'
+          add_check(xml, source)
+        else
+          add_creditcard(xml, source)
         end
       end
 
@@ -100,18 +111,15 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(xml, payment_source, options)
         billing_address = options[:billing_address] || options[:address]
         shipping_address = options[:shipping_address] || options[:address]
-=begin
-        xml.customerIP(options[:ip])
+
+        xml.customerIP(options[:ip]) unless options[:ip].blank?
         xml.customer {
-          #TODO: is this doc'd on the active_merchant side?
-          xml.type(options[:customer_type]) unless options[:customer_type].blank?
-          xml.id(options[:order_id]) unless options[:order_id].blank?
           xml.email(options[:email]) unless options[:email].blank?
         }
         xml.billTo {
           xml.firstName(payment_source.first_name || parse_first_name(billing_address[:name]))
           xml.lastName(payment_source.last_name || parse_last_name(billing_address[:name]))
-          #TODO: is this doc'd on the active_merchant side?
+
           xml.company(billing_address[:company]) unless options[:company].blank?
           xml.address(billing_address[:address1])
           xml.city(billing_address[:city])
@@ -122,7 +130,7 @@ module ActiveMerchant #:nodoc:
         xml.shipTo {
           xml.firstName(payment_source.first_name || parse_first_name(shipping_address[:name]))
           xml.lastName(payment_source.last_name || parse_last_name(shipping_address[:name]))
-          #TODO: is this doc'd on the active_merchant side?
+
           xml.company(shipping_address[:company]) unless options[:company].blank?
           xml.address(shipping_address[:address1])
           xml.city(shipping_address[:city])
@@ -130,7 +138,6 @@ module ActiveMerchant #:nodoc:
           xml.zip(shipping_address[:zip])
           xml.country(shipping_address[:country])
         } unless shipping_address.blank?
-=end
       end
 
       def add_address(post, creditcard, options)
@@ -200,6 +207,8 @@ module ActiveMerchant #:nodoc:
             yield(xml)
           }
         end
+        #TODO: remove this later, debug to see the payload
+        #p payload.to_xml(:ident => 0)
         payload.to_xml(:ident => 0)
       end
 
@@ -208,11 +217,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response[:transactionresponse_messages_message_description]
+        if response[:transactionresponse_errors_error_errortext].nil?
+          response[:transactionresponse_messages_message_description]
+        else
+          response[:transactionresponse_errors_error_errortext]
+        end
       end
 
       def authorization_from(response)
-        response[:transactionresponse_authcode]
+        { :transid => response[:transactionresponse_transid], :authcode => response[:transactionresponse_authcode] }
       end
 
       def build_avs_response(response, active_merchant_response)

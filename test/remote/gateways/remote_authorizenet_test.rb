@@ -4,9 +4,10 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
   def setup
     @gateway = AuthorizenetGateway.new(fixtures(:authorizenet))
 
-    @amount = 112
+    @amount = (rand(10000) + 100) / 100.0
     @credit_card = credit_card('4000100011112224')
-    @declined_card = credit_card('4000300011112220')
+    #@declined_card = credit_card('4000300011112220')
+    @declined_card = credit_card('400030001111222')
 
     @options = {
       order_id: '1',
@@ -23,61 +24,72 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved.', response.message
     assert response.authorization
   end
-=begin
+
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
+    assert_equal 'The credit card number is invalid.', response.message
   end
 
+  def test_expired_credit_card
+    @credit_card.year = 2004
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert response.test?
+    assert_equal 'The credit card has expired.', response.message
+  end
+
+  #TODO: In the past this just required a transaction number and amount.  Trying to figure out a clean way to do this now.
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(nil, auth.authorization)
+    assert capture = @gateway.capture(@amount, @credit_card, auth.authorization)
     assert_success capture
   end
 
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
+    assert_equal 'The credit card number is invalid.', response.message
   end
 
   def test_partial_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@amount-1, @credit_card, auth.authorization)
     assert_success capture
   end
 
   def test_failed_capture
-    response = @gateway.capture(nil, '')
+    response = @gateway.capture(nil, nil, '')
     assert_failure response
   end
 
-  def test_successful_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
+  # As of June 2014, AuthorizeNet REQUIRES the amount for the refund.
+  #def test_successful_refund
+  #  purchase = @gateway.purchase(@amount, @credit_card, @options)
+  #  assert_success purchase
+  #  assert refund = @gateway.refund(nil, purchase.authorization)
+  #  assert_success refund
+  #end
 
-    assert refund = @gateway.refund(nil, purchase.authorization)
-    assert_success refund
-  end
+  #TODO: In the past this just required a transaction number and amount.  Trying to figure out a clean way to do this now.
+  #this requires an overnight settlement.  Must be tested with a hard coded transaction id
+  #def test_partial_refund
+  #  purchase = @gateway.purchase(@amount, @credit_card, @options)
+  #  assert_success purchase
 
-  def test_partial_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
-    assert_success refund
-  end
+  #  assert refund = @gateway.refund(@amount, @credit_card, purchase.authorization)
+  #  assert_success refund
+  #end
 
   def test_failed_refund
-    response = @gateway.refund(nil, '')
+    response = @gateway.refund(nil, nil, '')
     assert_failure response
   end
-=end
-=begin
+
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -90,8 +102,7 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
     response = @gateway.void('')
     assert_failure response
   end
-=end
-=begin
+
   def test_invalid_login
     gateway = AuthorizenetGateway.new(
       login: '',
@@ -100,5 +111,4 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
-=end
 end
