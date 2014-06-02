@@ -6,6 +6,7 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
 
     @amount = (rand(10000) + 100) / 100.0
     @credit_card = credit_card('4000100011112224')
+    @check = check
     #@declined_card = credit_card('4000300011112220')
     @declined_card = credit_card('400030001111222')
 
@@ -31,12 +32,42 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
     assert_equal 'The credit card number is invalid.', response.message
   end
 
+  def test_card_present_purchase_with_no_data
+    no_data_credit_card = ActiveMerchant::Billing::CreditCard.new()
+    assert response = @gateway.purchase(@amount, no_data_credit_card, @options)
+    assert response.test?
+    assert_equal 'credit card number is invalid.', response.message
+  end
+
   def test_expired_credit_card
     @credit_card.year = 2004
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
     assert_equal 'The credit card has expired.', response.message
+  end
+
+  def test_successful_echeck_purchase
+    assert response = @gateway.purchase(@amount, @check, @options)
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved.', response.message
+    assert response.authorization
+  end
+
+  def test_successful_echeck_authorization
+    assert response = @gateway.authorize(@amount, @check, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved.', response.message
+    assert response.authorization
+  end
+
+  def test_card_present_purchase_with_track_data_only
+    track_credit_card = ActiveMerchant::Billing::CreditCard.new(:track_data => '%B378282246310005^LONGSON/LONGBOB^1705101130504392?')
+    assert response = @gateway.purchase(@amount, track_credit_card, @options)
+    assert response.test?
+    assert_equal 'This transaction has been approved.', response.message
+    assert response.authorization
   end
 
   def test_successful_authorize_and_capture
@@ -53,6 +84,17 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
     assert_equal 'The credit card number is invalid.', response.message
   end
 
+  def test_card_present_authorize_and_capture_with_track_data_only
+    track_credit_card = ActiveMerchant::Billing::CreditCard.new(:track_data => '%B378282246310005^LONGSON/LONGBOB^1705101130504392?')
+    assert authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+
+    assert_equal 'This transaction has been approved.', capture.message
+  end
+
   def test_partial_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -63,28 +105,6 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
 
   def test_failed_capture
     response = @gateway.capture(nil, nil, '')
-    assert_failure response
-  end
-
-  # As of June 2014, AuthorizeNet REQUIRES the amount for the refund.
-  #def test_successful_refund
-  #  purchase = @gateway.purchase(@amount, @credit_card, @options)
-  #  assert_success purchase
-  #  assert refund = @gateway.refund(nil, purchase.authorization)
-  #  assert_success refund
-  #end
-
-  #this requires an overnight settlement.  Must be tested with a hard coded transaction id
-  #def test_partial_refund
-  #  purchase = @gateway.purchase(@amount, @credit_card, @options)
-  #  assert_success purchase
-
-  #  assert refund = @gateway.refund(@amount, @credit_card, purchase.authorization)
-  #  assert_success refund
-  #end
-
-  def test_failed_refund
-    response = @gateway.refund(nil, nil, '')
     assert_failure response
   end
 
@@ -109,4 +129,23 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
+
+  def test_failed_refund
+    response = @gateway.refund(nil, '')
+    assert_failure response
+  end
+  # As of June 2014, AuthorizeNet REQUIRES the amount for the refund.
+  #def test_successful_refund
+  #  purchase = @gateway.purchase(@amount, @credit_card, @options)
+  #  assert_success purchase
+  #  assert refund = @gateway.refund(nil, purchase.authorization)
+  #  assert_success refund
+  #end
+=begin
+  #this requires an overnight settlement.  Must be tested with a hard coded transaction id
+  def test_partial_refund
+    assert refund = @gateway.refund(@amount, 2214269051)
+    assert_success refund
+  end
+=end
 end

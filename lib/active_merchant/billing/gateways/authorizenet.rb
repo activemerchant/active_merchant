@@ -2,6 +2,10 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class AuthorizenetGateway < Gateway
       require 'nokogiri'
+      TRACKS = {
+          1 => /^%(?<format_code>.)(?<pan>[\d]{1,19}+)\^(?<name>.{2,26})\^(?<expiration>[\d]{0,4}|\^)(?<service_code>[\d]{0,3}|\^)(?<discretionary_data>.*)\?\Z/,
+          2 => /\A;(?<pan>[\d]{1,19}+)=(?<expiration>[\d]{0,4}|=)(?<service_code>[\d]{0,3}|=)(?<discretionary_data>.*)\?\Z/
+      }.freeze
 
       self.test_url = 'https://apitest.authorize.net/xml/v1/request.api'
       self.live_url = 'https://api.authorize.net/xml/v1/request.api'
@@ -55,13 +59,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def refund(money, payment, authorization, options={})
+      def refund(money, authorization, options={})
         commit do |xml|
           xml.refId options[:order_id]
           xml.transactionRequest {
             xml.transactionType 'refundTransaction'
             xml.amount money unless money.nil?
-            add_payment_source(xml, payment) unless money.nil?
             xml.refTransId authorization
           }
         end
@@ -87,23 +90,69 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_creditcard(xml, creditcard)
-        xml.payment {
-          xml.creditCard {
-            xml.cardNumber(creditcard.number.to_s)
-            xml.expirationDate(creditcard.month.to_s.rjust(2, '0') + '/' + creditcard.year.to_s)
-            xml.cardCode (creditcard.verification_value.to_s) unless creditcard.verification_value.blank?
+        if creditcard.track_data.nil?
+          xml.payment {
+            xml.creditCard {
+              xml.cardNumber(creditcard.number.to_s)
+              xml.expirationDate(creditcard.month.to_s.rjust(2, '0') + '/' + creditcard.year.to_s)
+              xml.cardCode (creditcard.verification_value.to_s) unless creditcard.verification_value.blank?
+            }
           }
-        }
+        else
+          add_swipe_data(xml, creditcard)
+        end
       end
 
+      def add_swipe_data(xml, credit_card)
+        if (TRACKS[1].match(credit_card.track_data))
+          xml.payment {
+            xml.trackData {
+              xml.track1 credit_card.track_data
+            }
+          }
+        else
+          xml.payment {
+            xml.trackData {
+              xml.track2 credit_card.track_data
+            }
+          }
+        end
+      end
+
+=begin
+      post[:payment] = 'check' # Set transaction to ACH
+      post[:checkname] = check.name # The name on the customer's Checking Account
+      post[:checkaba] = check.routing_number # The customer's bank routing number
+      post[:checkaccount] = check.account_number # The customer's account number
+      post[:account_holder_type] = check.account_holder_type # The customer's type of ACH account
+      post[:account_type] = check.account_type # The customer's type of ACH account
+        :name => 'Jim Smith',
+        :bank_name => 'Bank of Elbonia',
+        :routing_number => '244183602',
+        :account_number => '15378535',
+        :account_holder_type => 'personal',
+        :account_type => 'checking',
+        :number => '1'
+accountNumber 	Account number, masked.
+	XXXX1111
+routingNumber 	Bank's routing number.
+	XXXX0000
+nameOnAccount 	Name of the person who holds the bank account.
+
+bankName 	The name of the bank.
+
+echeckType
+=end
       def add_check(xml, check)
-        #TODO really add_check, this is just copied from something else
-        xml.AccountInfo {
-          xml.ABA(check.routing_number.to_s)
-          xml.AccountNumber(check.account_number.to_s)
-          xml.AccountSource(check.account_type.to_s)
-          xml.AccountType(check.account_holder_type.to_s)
-          xml.CheckNumber(check.number.to_s)
+        xml.payment {
+          xml.bankAccount {
+            xml.routingNumber check.routing_number
+            xml.accountNumber check.account_number
+            xml.nameOnAccount check.name
+            xml.echeckType "WEB"
+            xml.bankName check.bank_name
+            xml.checkNumber check.number
+          }
         }
       end
 
@@ -143,7 +192,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(xml, money, options)
-      #TODO add_invoice
+        #TODO add_invoice
 =begin
         xml.AuthCode options[:force] if options[:force]
         if options[:order_items].blank?
@@ -161,6 +210,14 @@ module ActiveMerchant #:nodoc:
           }
         end
 =end
+      end
+
+      def parse_first_name(full_name)
+        full_name.split()[0]
+      end
+
+      def parse_last_name(full_name)
+        full_name.split()[1]
       end
 
       def parse(body)
@@ -216,7 +273,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        if response[:transactionresponse_errors_error_errortext].nil?
+        if response[:messages_message_text].to_s.include? "The 'AnetApi/xml/v1/schema/AnetApiSchema.xsd:cardNumber' element is invalid"
+          'credit card number is invalid.'
+        elsif response[:transactionresponse_errors_error_errortext].nil?
           response[:transactionresponse_messages_message_description]
         else
           response[:transactionresponse_errors_error_errortext]
