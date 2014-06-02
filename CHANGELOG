@@ -17,6 +17,7 @@
 * Do CreditCard attribute cleanup at assignment [ntalbott]
 * eWay Rapid: Add auth/capture/void support [ntalbott]
 * [POSSIBLE BREAKAGE] Remove dependency on active_utils Validateable [ntalbott]
+* Make all active_utils requires explicit [ntalbott]
 
 == Version 1.43.2 (May 12, 2014)
 

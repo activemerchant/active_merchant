@@ -140,7 +140,7 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
         xml.tag! 'NABTransactMessage' do
           xml.tag! 'MessageInfo' do
-            xml.tag! 'messageID', Utils.generate_unique_id.slice(0, 30)
+            xml.tag! 'messageID', SecureRandom.hex(15)
             xml.tag! 'messageTimestamp', generate_timestamp
             xml.tag! 'timeoutValue', request_timeout
             xml.tag! 'apiVersion', API_VERSION
@@ -191,7 +191,7 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
         xml.tag! 'NABTransactMessage' do
           xml.tag! 'MessageInfo' do
-            xml.tag! 'messageID', ActiveMerchant::Utils.generate_unique_id.slice(0, 30)
+            xml.tag! 'messageID', SecureRandom.hex(15)
             xml.tag! 'messageTimestamp', generate_timestamp
             xml.tag! 'timeoutValue', request_timeout
             xml.tag! 'apiVersion', PERIODIC_API_VERSION

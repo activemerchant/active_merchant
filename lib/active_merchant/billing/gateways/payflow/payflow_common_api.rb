@@ -184,24 +184,24 @@ module ActiveMerchant #:nodoc:
         {
           "Content-Type" => "text/xml",
           "Content-Length" => content_length.to_s,
-      	  "X-VPS-Client-Timeout" => timeout.to_s,
-      	  "X-VPS-VIT-Integration-Product" => "ActiveMerchant",
-      	  "X-VPS-VIT-Runtime-Version" => RUBY_VERSION,
-      	  "X-VPS-Request-ID" => Utils.generate_unique_id
-    	  }
-    	end
+          "X-VPS-Client-Timeout" => timeout.to_s,
+          "X-VPS-VIT-Integration-Product" => "ActiveMerchant",
+          "X-VPS-VIT-Runtime-Version" => RUBY_VERSION,
+          "X-VPS-Request-ID" => SecureRandom.hex(16)
+        }
+      end
 
-    	def commit(request_body, options  = {})
+      def commit(request_body, options  = {})
         request = build_request(request_body, options)
         headers = build_headers(request.size)
 
-    	  response = parse(ssl_post(test? ? self.test_url : self.live_url, request, headers))
+        response = parse(ssl_post(test? ? self.test_url : self.live_url, request, headers))
 
-    	  build_response(response[:result] == "0", response[:message], response,
-    	    :test => test?,
-    	    :authorization => response[:pn_ref] || response[:rp_ref],
-    	    :cvv_result => CVV_CODE[response[:cv_result]],
-    	    :avs_result => { :code => response[:avs_result] }
+        build_response(response[:result] == "0", response[:message], response,
+          :test => test?,
+          :authorization => response[:pn_ref] || response[:rp_ref],
+          :cvv_result => CVV_CODE[response[:cv_result]],
+          :avs_result => { :code => response[:avs_result] }
         )
       end
     end

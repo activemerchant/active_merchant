@@ -70,7 +70,7 @@ module ActiveMerchant #:nodoc:
           private
 
           def secure_token_id
-            @secure_token_id ||= Utils.generate_unique_id
+            @secure_token_id ||= SecureRandom.hex(16)
           end
 
           def secure_token_url

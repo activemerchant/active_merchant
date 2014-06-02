@@ -207,6 +207,10 @@ module ActiveMerchant
       }.update(options)
     end
 
+    def generate_unique_id
+      SecureRandom.hex(16)
+    end
+
     def all_fixtures
       @@fixtures ||= load_fixtures
     end
@@ -239,7 +243,6 @@ end
 Test::Unit::TestCase.class_eval do
   include ActiveMerchant::Billing
   include ActiveMerchant::Assertions
-  include ActiveMerchant::Utils
   include ActiveMerchant::Fixtures
 end
 

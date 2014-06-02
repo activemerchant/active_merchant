@@ -11,7 +11,7 @@ class RemoteFederatedCanadaTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111') # Visa
 
     @options = {
-      :order_id => ActiveMerchant::Utils.generate_unique_id,
+      :order_id => generate_unique_id,
       :billing_address => address,
       :description => 'Active Merchant Remote Test Purchase'
     }
