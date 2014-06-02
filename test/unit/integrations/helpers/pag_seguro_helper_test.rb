@@ -151,4 +151,9 @@ class PagSeguroHelperTest < Test::Unit::TestCase
       @helper.fetch_token
     end
   end
+
+  def test_name_white_spaces_should_be_stripped
+    @helper.customer :first_name => '  Cody  Yo ', :last_name => 'Fau  ser     ', :email => 'cody@example.com', phone: "71 98765432"
+    assert_field 'senderName', 'Cody Yo Fau ser'
+  end
 end
