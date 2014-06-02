@@ -628,6 +628,11 @@ realex_with_account:
   password: Y
   account: testaccount
 
+redecard:
+  login: testews
+  password: testews
+  affiliate: 254785
+
 redsys:
   login: MERCHANT CODE
   secret_key: SECRET KEY
