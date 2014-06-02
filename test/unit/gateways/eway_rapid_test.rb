@@ -133,6 +133,66 @@ class EwayRapidTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_authorize
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal "Transaction Approved Successful", response.message
+    assert_equal 10774952, response.authorization
+  end
+
+  def test_successful_capture
+    response = stub_comms do
+      @gateway.capture(nil, "auth")
+    end.respond_with(successful_capture_response)
+
+    assert_success response
+    assert_equal "982541", response.message
+    assert_equal 10774953, response.authorization
+  end
+
+  def test_failed_authorize
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.respond_with(failed_authorize_response)
+
+    assert_failure response
+    assert_equal "Invalid Payment TotalAmount", response.message
+    assert_nil response.authorization
+  end
+
+  def test_failed_capture
+    response = stub_comms do
+      @gateway.capture(@amount, "auth")
+    end.respond_with(failed_capture_response)
+
+    assert_failure response
+    assert_equal "V6134", response.message
+    assert_equal 0, response.authorization
+  end
+
+  def test_successful_void
+    response = stub_comms do
+      @gateway.void("auth")
+    end.respond_with(successful_void_response)
+
+    assert_success response
+    assert_equal "878060", response.message
+    assert_equal 10775041, response.authorization
+  end
+
+  def test_failed_void
+    response = stub_comms do
+      @gateway.void(@amount, "auth")
+    end.respond_with(failed_void_response)
+
+    assert_failure response
+    assert_equal "V6134", response.message
+    assert_equal 0, response.authorization
+  end
+
   def test_successful_store
     response = stub_comms do
       @gateway.store(@credit_card, :billing_address => {
@@ -361,6 +421,166 @@ class EwayRapidTest < Test::Unit::TestCase
           "CurrencyCode": "AUD"
         },
         "Errors": "V6011"
+      }
+    )
+  end
+
+  def successful_authorize_response
+    %(
+      {
+        "AuthorisationCode": "805851",
+        "ResponseCode": "00",
+        "ResponseMessage": "A2000",
+        "TransactionID": 10774952,
+        "TransactionStatus": true,
+        "TransactionType": "Purchase",
+        "BeagleScore": 0,
+        "Verification": {
+          "CVN": 0,
+          "Address": 0,
+          "Email": 0,
+          "Mobile": 0,
+          "Phone": 0
+        },
+        "Customer": {
+          "CardDetails": {
+          "Number": "444433XXXXXX1111",
+          "Name": "Longbob Longsen",
+          "ExpiryMonth": "09",
+          "ExpiryYear": "15",
+          "StartMonth": null,
+          "StartYear": null,
+          "IssueNumber": null
+        },
+        "TokenCustomerID": null,
+        "Reference": "",
+        "Title": "Mr.",
+        "FirstName": "Jim",
+        "LastName": "Smith",
+        "CompanyName": "Widgets Inc",
+        "JobDescription": "",
+        "Street1": "1234 My Street",
+        "Street2": "Apt 1",
+        "City": "Ottawa",
+        "State": "ON",
+        "PostalCode": "K1C2N6",
+        "Country": "ca",
+        "Email": "",
+        "Phone": "(555)555-5555",
+        "Mobile": "",
+        "Comments": "",
+        "Fax": "(555)555-6666",
+        "Url": ""
+        },
+        "Payment": {
+          "TotalAmount":100,
+          "InvoiceNumber": "",
+          "InvoiceDescription": "Store Purchase",
+          "InvoiceReference": "1",
+        "CurrencyCode": "AUD"
+        },
+        "Errors": null
+      }
+    )
+  end
+
+  def failed_authorize_response
+    %(
+      {
+        "AuthorisationCode": null,
+        "ResponseCode": null,
+        "ResponseMessage": null,
+        "TransactionID": null,
+        "TransactionStatus": null,
+        "TransactionType": "Purchase",
+        "BeagleScore": null,
+        "Verification": null,
+        "Customer": {
+          "CardDetails": {
+            "Number": "444433XXXXXX1111",
+            "Name": "Longbob Longsen",
+            "ExpiryMonth": "09",
+            "ExpiryYear": "2015",
+            "StartMonth": null,
+            "StartYear": null,
+            "IssueNumber": null
+          },
+          "TokenCustomerID": null,
+          "Reference": null,
+          "Title": "Mr.",
+          "FirstName": "Jim",
+          "LastName": "Smith",
+          "CompanyName": "Widgets Inc",
+          "JobDescription": null,
+          "Street1": "1234 My Street",
+          "Street2": "Apt 1",
+          "City": "Ottawa",
+          "State": "ON",
+          "PostalCode": "K1C2N6",
+          "Country": "ca",
+          "Email": null,
+          "Phone": "(555)555-5555",
+          "Mobile": null,
+          "Comments": null,
+          "Fax": "(555)555-6666",
+          "Url": null
+        },
+        "Payment": {
+          "TotalAmount": -100,
+          "InvoiceNumber": null,
+          "InvoiceDescription": "Store Purchase",
+          "InvoiceReference": "1",
+          "CurrencyCode": "AUD"
+        },
+        "Errors": "V6011"
+      }
+    )
+  end
+
+  def successful_capture_response
+    %(
+      {
+        "ResponseCode": "982541",
+        "ResponseMessage": "982541",
+        "TransactionID": 10774953,
+        "TransactionStatus": true,
+        "Errors": null
+      }
+    )
+  end
+
+  def failed_capture_response
+    %(
+      {
+        "ResponseCode": null,
+        "ResponseMessage": null
+        ,"TransactionID": 0
+        ,"TransactionStatus": false,
+        "Errors": "V6134"
+      }
+    )
+  end
+
+  def successful_void_response
+    %(
+      {
+        "ResponseCode": "878060",
+        "ResponseMessage": "878060",
+        "TransactionID": 10775041,
+        "TransactionStatus": true,
+        "Errors": null
+      }
+    )
+  end
+
+  def failed_void_response
+    %(
+      {
+        "ResponseCode": null,
+        "ResponseMessage": null,
+        "TransactionID": 0,
+        "TransactionStatus": false,
+        "Errors": "V6134"
       }
     )
   end
