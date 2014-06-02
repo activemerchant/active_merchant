@@ -45,11 +45,12 @@ module ActiveMerchant #:nodoc:
 
           def customer(params = {})
             phone = area_code_and_number(params[:phone])
+            full_name = remove_excessive_whitespace("#{params[:first_name]} #{params[:last_name]}")
 
             add_field("senderAreaCode", phone[0])
             add_field("senderPhone", phone[1])
             add_field("senderEmail", params[:email])
-            add_field('senderName', "#{params[:first_name]} #{params[:last_name]}")
+            add_field('senderName', full_name)
           end
 
           def fetch_token
@@ -114,6 +115,9 @@ module ActiveMerchant #:nodoc:
             end.join(", ")
           end
 
+          def remove_excessive_whitespace(text)
+            text.gsub(/\s{2,}/, ' ').strip
+          end
         end
       end
     end
