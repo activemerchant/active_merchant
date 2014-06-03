@@ -191,6 +191,12 @@ garanti:
   merchant_id: 600218
   password: "123qweASD"
 
+gmo:
+  login: tshop00001193
+  password: qducy9yq
+  #login: tshop00003807
+  #password: gzuzbcmr
+
 hdfc:
   login: LOGIN
   password: PASSWORD
