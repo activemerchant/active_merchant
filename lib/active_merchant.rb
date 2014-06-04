@@ -56,6 +56,8 @@ require 'securerandom'
 require 'builder'
 require 'cgi'
 require 'rexml/document'
+require 'timeout'
+require 'socket'
 
 require 'active_utils/common/network_connection_retries'
 require 'active_utils/common/connection'
