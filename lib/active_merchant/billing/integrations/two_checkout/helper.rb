@@ -61,6 +61,9 @@ module ActiveMerchant #:nodoc:
           # Allow referral partners to indicate their shopping cart
           mapping :cart_type, '2co_cart_type'
 
+          # Allow sellers to pass in the hosted checkout language
+          mapping :lang, 'lang'
+
           def customer(params = {})
             add_field(mappings[:customer][:email], params[:email])
             add_field(mappings[:customer][:phone], params[:phone])
