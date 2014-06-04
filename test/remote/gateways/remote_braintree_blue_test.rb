@@ -185,30 +185,6 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal({'code' => nil, 'message' => nil, 'street_match' => 'M', 'postal_match' => 'M'}, response.avs_result)
   end
 
-  def test_transaction_succeeds_with_bad_avs_without_avs_rules
-    assert response = @gateway.purchase(@amount, @credit_card,
-      @options.merge(
-        :billing_address => {:address1 => "200 E Main St", :zip => "20000"}
-      )
-    )
-    assert_success response
-    assert_equal({'code' => nil, 'message' => nil, 'street_match' => 'N', 'postal_match' => 'N'}, response.avs_result)
-  end
-
-  def test_transaction_fails_with_bad_avs_with_avs_rules
-    gateway = BraintreeGateway.new(fixtures(:braintree_blue_with_processing_rules))
-
-    assert response = gateway.purchase(@amount, @credit_card,
-      @options.merge(
-        :billing_address => {:address1 => "200 E Main St", :zip => "20000"}
-      )
-    )
-
-    assert_failure response, "This test will fail unless you specify a braintree_blue_with_processing_rules that has AVS required."
-    assert_equal("Transaction declined - gateway rejected", response.message)
-    assert_equal({'code' => nil, 'message' => nil, 'street_match' => 'N', 'postal_match' => 'N'}, response.avs_result)
-  end
-
   def test_cvv_match
     assert response = @gateway.purchase(@amount, credit_card('5105105105105100', :verification_value => '400'))
     assert_success response
@@ -218,16 +194,6 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   def test_cvv_no_match
     assert response = @gateway.purchase(@amount, credit_card('5105105105105100', :verification_value => '200'))
     assert_success response
-    assert_equal({'code' => 'N', 'message' => ''}, response.cvv_result)
-  end
-
-  def test_transaction_fails_with_bad_cvv_with_cvv_rules
-    gateway = BraintreeGateway.new(fixtures(:braintree_blue_with_processing_rules))
-
-    assert response = gateway.purchase(@amount, credit_card('5105105105105100', :verification_value => '200'))
-    assert_failure response, "This test will fail unless you specify a braintree_blue_with_processing_rules that has CVV required."
-
-    assert_equal("Transaction declined - gateway rejected", response.message)
     assert_equal({'code' => 'N', 'message' => ''}, response.cvv_result)
   end
 
