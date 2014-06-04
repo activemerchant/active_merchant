@@ -33,20 +33,12 @@ class WorldPayHelperTest < Test::Unit::TestCase
                             :zip => 'CV1 1AA',
                             :country  => 'GB'
    
-    assert_field 'address', '1 Nowhere Close&#10;Electric Wharf&#10;Coventry&#10;Warwickshire'
+    assert_field 'address1', '1 Nowhere Close'
+    assert_field 'address2', 'Electric Wharf'
+    assert_field 'town', 'Coventry'
+    assert_field 'region', 'Warwickshire'
     assert_field 'postcode', 'CV1 1AA'
     assert_field 'country', 'GB'
-  end
-
-  def test_address_mapping_without_address1_and_state
-    @helper.billing_address :address1 => 'Teststr. 1',
-                            :city => 'Berlin',
-                            :zip => '10000',
-                            :country  => 'DE'
-   
-    assert_field 'address', 'Teststr. 1&#10;Berlin'
-    assert_field 'postcode', '10000'
-    assert_field 'country', 'DE'
   end
   
   def test_unknown_mapping
