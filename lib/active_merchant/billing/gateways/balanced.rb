@@ -128,12 +128,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def card_identifier_from(identifier)
-        case identifier
-        when %r{\/}
-          identifier.split("/")[2]
-        else
-          identifier
-        end
+        identifier.split("/").last
       end
 
       def add_amount(post, money)
