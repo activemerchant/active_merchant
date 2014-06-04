@@ -71,9 +71,33 @@ require 'active_utils/common/currency_code'
 require 'active_merchant/billing'
 require 'active_merchant/version'
 
+I18n.enforce_available_locales = false
+
 module ActiveMerchant #:nodoc:
+  OFFSITE_PAYMENT_EXTRACTION_MESSAGE = "Integrations have been extracted into a separate gem (https://github.com/Shopify/offsite_payments) and will no longer be loaded by ActiveMerchant 2.x."
+
   module Billing #:nodoc:
-    autoload :Integrations, 'active_merchant/billing/integrations'
+    def self.const_missing(name)
+      if name.to_s == "Integrations"
+        ActiveMerchant.deprecated(OFFSITE_PAYMENT_EXTRACTION_MESSAGE)
+        require "active_merchant/offsite_payments_shim"
+        ActiveMerchant::OffsitePaymentsShim
+      else
+        super
+      end
+    end
+
+    def self.included(klass)
+      def klass.const_missing(name)
+        if name.to_s == "Integrations"
+          ActiveMerchant.deprecated(OFFSITE_PAYMENT_EXTRACTION_MESSAGE)
+          require "active_merchant/offsite_payments_shim"
+          ActiveMerchant::OffsitePaymentsShim
+        else
+          super
+        end
+      end
+    end
   end
 
   def self.deprecated(message, caller=Kernel.caller[1])

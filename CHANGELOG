@@ -20,6 +20,7 @@
 * Make all active_utils requires explicit [ntalbott]
 * Balanced: Handle legacy card tokens [ntalbott]
 * Braintree Blue: Default verification merchant id [speric]
+* [POSSIBLE BREAKAGE] Extract integrations into an offsite_payments gem [ntalbott]
 
 == Version 1.43.2 (May 12, 2014)
 

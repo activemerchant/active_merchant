@@ -45,7 +45,6 @@ begin
 rescue LoadError
   require 'action_controller/test_process'
 end
-require 'active_merchant/billing/integrations/action_view_helper'
 
 ActiveMerchant::Billing::Base.mode = :test
 
@@ -134,8 +133,8 @@ module ActiveMerchant
       errors
     end
 
-    def assert_deprecation_warning(message)
-      ActiveMerchant.expects(:deprecated).with(message)
+    def assert_deprecation_warning(message=nil)
+      ActiveMerchant.expects(:deprecated).with(message ? message : anything)
       yield
     end
 

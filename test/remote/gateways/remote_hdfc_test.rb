@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'remote/integrations/remote_integration_helper'
 
 class RemoteHdfcTest < Test::Unit::TestCase
   def setup
