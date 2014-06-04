@@ -28,7 +28,7 @@ class ValitorReturnTest < Test::Unit::TestCase
     assert_equal "COUNTRY", @ret.customer_country
     assert_equal "EMAIL@EXAMPLE.COM", @ret.customer_email
     assert_equal "COMMENTS", @ret.customer_comment
-    assert_equal "100.00", @ret.gross
+    assert_nil @ret.gross
     
     assert !@ret.test?
   end
@@ -51,6 +51,6 @@ class ValitorReturnTest < Test::Unit::TestCase
   end
 
   def http_raw_query
-    "Kortategund=VISA&KortnumerSidustu=9999&Dagsetning=21.01.2011&Heimildarnumer=123450&Faerslunumer=FÆRSLUNR: 0026237&VefverslunSalaID=2b969de3-6928-4fa7-a0d6-6dec63fec5c3&Tilvisunarnumer=order684afbb93730db2492a8fa2f3fedbcb9&RafraenUndirskriftSvar=03d859813eff711d6c8667b0caf5f5a5&Upphaed=100&Nafn=NAME&Heimilisfang=123 ADDRESS&Postnumer=98765&Stadur=CITY&Land=COUNTRY&Tolvupostfang=EMAIL@EXAMPLE.COM&Athugasemdir=COMMENTS&LeyfirEndurtoku="
+    "CardType=VISA&CardNumberMasked=9999&Date=21.01.2011&AuthorizationNumber=123450&TransactionNumber=FÆRSLUNR: 0026237&SaleID=2b969de3-6928-4fa7-a0d6-6dec63fec5c3&ReferenceNumber=order684afbb93730db2492a8fa2f3fedbcb9&DigitalSignatureResponse=03d859813eff711d6c8667b0caf5f5a5&Name=NAME&Address=123 ADDRESS&PostalCode=98765&City=CITY&Country=COUNTRY&Email=EMAIL@EXAMPLE.COM&Comments=COMMENTS"
   end  
 end
