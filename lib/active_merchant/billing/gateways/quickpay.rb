@@ -9,9 +9,9 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'DKK'
       self.money_format = :cents
       self.supported_cardtypes = [:dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro]
-      self.supported_countries = ['DK', 'SE']
-      self.homepage_url = 'http://quickpay.dk/'
-      self.display_name = 'Quickpay'
+      self.supported_countries = ['DE', 'DK', 'ES', 'FI', 'FR', 'FO', 'GB', 'IS', 'NO', 'SE']
+      self.homepage_url = 'http://quickpay.net/'
+      self.display_name = 'QuickPay'
 
       MD5_CHECK_FIELDS = {
         3 => {
@@ -136,11 +136,12 @@ module ActiveMerchant #:nodoc:
 
           :refund    => %w(protocol msgtype merchant amount transaction apikey),
 
-          :subscribe => %w(protocol msgtype merchant ordernumber cardnumber
-                           expirationdate cvd acquirer cardtypelock description testmode
-                           fraud_remote_addr fraud_http_accept fraud_http_accept_language
-                           fraud_http_accept_encoding fraud_http_accept_charset
-                           fraud_http_referer fraud_http_user_agent apikey),
+          :subscribe => %w(protocol msgtype merchant ordernumber amount currency
+                           cardnumber expirationdate cvd acquirer cardtypelock
+                           description testmode fraud_remote_addr fraud_http_accept
+                           fraud_http_accept_language fraud_http_accept_encoding
+                           fraud_http_accept_charset fraud_http_referer
+                           fraud_http_user_agent apikey),
 
           :recurring => %w(protocol msgtype merchant ordernumber amount currency
                            autocapture transaction apikey),
@@ -226,6 +227,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_creditcard(post, creditcard, options)
+        add_amount(post, 100, {:currency => 'DKK'})
         add_invoice(post, options)
         add_description(post, options)
         add_fraud_parameters(post, options)
