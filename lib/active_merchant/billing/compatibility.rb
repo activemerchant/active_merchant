@@ -45,8 +45,10 @@ module ActiveMerchant
         def valid?
           internal_errors.clear
 
-          validate.each do |attribute, error|
-            internal_errors.add(attribute, error)
+          validate.each do |attribute, errors|
+            errors.each do |error|
+              internal_errors.add(attribute, error)
+            end
           end
 
           internal_errors.empty?

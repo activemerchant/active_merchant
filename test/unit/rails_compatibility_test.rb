@@ -8,6 +8,7 @@ class RailsCompatibilityTest < Test::Unit::TestCase
       assert !cc.valid?
       assert cc.errors.on(:first_name)
       assert cc.errors.on("first_name")
+      assert_equal "cannot be empty", cc.errors.on(:first_name)
     end
   end
 end
