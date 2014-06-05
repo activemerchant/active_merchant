@@ -29,6 +29,7 @@
 * Quickpay v7: Fix passing acquirers field [moklett]
 * Quickpay v7: Pass an amount when storing cards [ta & moklett]
 * Quickpay: Expand list of supported countries [ta]
+* Validate CreditCard verification value [mnoack]
 
 == Version 1.43.2 (May 12, 2014)
 

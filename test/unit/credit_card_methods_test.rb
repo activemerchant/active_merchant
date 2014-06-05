@@ -59,6 +59,17 @@ class CreditCardMethodsTest < Test::Unit::TestCase
     assert valid_expiry_year?(year.to_s)
   end
 
+  def test_should_validate_card_verification_value
+    assert valid_card_verification_value?(123, 'visa')
+    assert valid_card_verification_value?('123', 'visa')
+    assert valid_card_verification_value?(1234, 'american_express')
+    assert valid_card_verification_value?('1234', 'american_express')
+    assert_false valid_card_verification_value?(12, 'visa')
+    assert_false valid_card_verification_value?(1234, 'visa')
+    assert_false valid_card_verification_value?(123, 'american_express')
+    assert_false valid_card_verification_value?(12345, 'american_express')
+  end
+  
   def test_should_be_able_to_identify_valid_issue_numbers
     assert valid_issue_number?(1)
     assert valid_issue_number?(10)
