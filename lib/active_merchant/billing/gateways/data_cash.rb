@@ -1,3 +1,5 @@
+require "active_support/core_ext/string/access"
+
 module ActiveMerchant
   module Billing
     class DataCashGateway < Gateway

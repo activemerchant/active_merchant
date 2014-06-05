@@ -4,10 +4,8 @@ rvm:
   - 1.9.3
 
 gemfile:
-  - Gemfile_rails40
   - Gemfile
-  - Gemfile_rails31
-  - Gemfile_rails30
+  - Gemfile_rails32
 
 script: "bundle exec rake test:units"
 
@@ -15,10 +13,3 @@ notifications:
   email:
     - payments-dev@shopify.com
     - nathaniel@talbott.ws
-
-matrix:
-  exclude:
-    - rvm: 1.9.2
-      gemfile: Gemfile_rails40
-    - rvm: 2.1.0
-      gemfile: Gemfile_rails23
