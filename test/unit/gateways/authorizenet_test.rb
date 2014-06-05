@@ -23,7 +23,7 @@ class AuthorizenetTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal 'GSOFTZ', response.authorization
+    assert_equal '2213698343', response.authorization
     assert response.test?
     assert_equal 'Y', response.avs_result['code']
     assert response.avs_result['street_match']
@@ -79,20 +79,111 @@ class AuthorizenetTest < Test::Unit::TestCase
     assert !avs_response.avs_result['postal_match']
     assert_equal 'No Match on Address (Street) or ZIP', avs_response.avs_result['message']
 
-#TODO: finish this
-=begin
-    P = AVS not applicable for this transaction
-    R = Retry – System unavailable or timed out
-    S = Service not supported by issuer
-    U = Address information is unavailable
-    W = 9 digit ZIP matches, Address (Street) does not
-    X = Address (Street) and 9 digit ZIP match
-    Y = Address (Street) and 5 digit ZIP match
-    Z = 5 digit ZIP matches, Address (Street) does not
-=end
+    response = {:transactionresponse_avsresultcode => 'P'}
+    active_merchant_response = Response.new(true, 'test.')
+    avs_response = @gateway.send(:build_avs_response, response, active_merchant_response)
+    assert_equal 'P', avs_response.avs_result['code']
+    assert_nil avs_response.avs_result['street_match']
+    assert_nil avs_response.avs_result['postal_match']
+    assert_equal 'AVS not applicable for this transaction', avs_response.avs_result['message']
 
+    response = {:transactionresponse_avsresultcode => 'R'}
+    active_merchant_response = Response.new(true, 'test.')
+    avs_response = @gateway.send(:build_avs_response, response, active_merchant_response)
+    assert_equal 'R', avs_response.avs_result['code']
+    assert_nil avs_response.avs_result['street_match']
+    assert_nil avs_response.avs_result['postal_match']
+    assert_equal 'Retry – System unavailable or timed out', avs_response.avs_result['message']
+
+    response = {:transactionresponse_avsresultcode => 'S'}
+    active_merchant_response = Response.new(true, 'test.')
+    avs_response = @gateway.send(:build_avs_response, response, active_merchant_response)
+    assert_equal 'S', avs_response.avs_result['code']
+    assert_nil avs_response.avs_result['street_match']
+    assert_nil avs_response.avs_result['postal_match']
+    assert_equal 'Service not supported by issuer', avs_response.avs_result['message']
+
+    response = {:transactionresponse_avsresultcode => 'U'}
+    active_merchant_response = Response.new(true, 'test.')
+    avs_response = @gateway.send(:build_avs_response, response, active_merchant_response)
+    assert_equal 'U', avs_response.avs_result['code']
+    assert_nil avs_response.avs_result['street_match']
+    assert_nil avs_response.avs_result['postal_match']
+    assert_equal 'Address information is unavailable', avs_response.avs_result['message']
+
+    response = {:transactionresponse_avsresultcode => 'W'}
+    active_merchant_response = Response.new(true, 'test.')
+    avs_response = @gateway.send(:build_avs_response, response, active_merchant_response)
+    assert_equal 'W', avs_response.avs_result['code']
+    assert !avs_response.avs_result['street_match']
+    assert avs_response.avs_result['postal_match']
+    assert_equal '9 digit ZIP matches, Address (Street) does not', avs_response.avs_result['message']
+
+    response = {:transactionresponse_avsresultcode => 'X'}
+    active_merchant_response = Response.new(true, 'test.')
+    avs_response = @gateway.send(:build_avs_response, response, active_merchant_response)
+    assert_equal 'X', avs_response.avs_result['code']
+    assert avs_response.avs_result['street_match']
+    assert avs_response.avs_result['postal_match']
+    assert_equal 'Address (Street) and 9 digit ZIP match', avs_response.avs_result['message']
+
+    response = {:transactionresponse_avsresultcode => 'Y'}
+    active_merchant_response = Response.new(true, 'test.')
+    avs_response = @gateway.send(:build_avs_response, response, active_merchant_response)
+    assert_equal 'Y', avs_response.avs_result['code']
+    assert avs_response.avs_result['street_match']
+    assert avs_response.avs_result['postal_match']
+    assert_equal 'Address (Street) and 5 digit ZIP match', avs_response.avs_result['message']
+
+    response = {:transactionresponse_avsresultcode => 'Z'}
+    active_merchant_response = Response.new(true, 'test.')
+    avs_response = @gateway.send(:build_avs_response, response, active_merchant_response)
+    assert_equal 'Z', avs_response.avs_result['code']
+    assert !avs_response.avs_result['street_match']
+    assert avs_response.avs_result['postal_match']
+    assert_equal '5 digit ZIP matches, Address (Street) does not', avs_response.avs_result['message']
   end
+=begin
+  Value: The card code verification (CCV) response code
+  Format:
 
+  P = Not Processed
+  S = Should have been present
+  U = Issuer unable to process request
+  Notes: Indicates the result of the CCV filter.
+                                             See Credit Card Verification (CCV) Filter of this document for more information.
+=end
+  def test_cvv_response_mapping
+    response = {:transactionresponse_cvvresultcode => 'M'}
+    active_merchant_response = Response.new(true, 'test.')
+    cvv_response = @gateway.send(:build_cvv_response, response, active_merchant_response)
+    assert_equal 'M', cvv_response.cvv_result['code']
+    assert_equal 'Match', cvv_response.cvv_result['message']
+
+    response = {:transactionresponse_cvvresultcode => 'N'}
+    active_merchant_response = Response.new(true, 'test.')
+    cvv_response = @gateway.send(:build_cvv_response, response, active_merchant_response)
+    assert_equal 'N', cvv_response.cvv_result['code']
+    assert_equal 'No Match', cvv_response.cvv_result['message']
+
+    response = {:transactionresponse_cvvresultcode => 'P'}
+    active_merchant_response = Response.new(true, 'test.')
+    cvv_response = @gateway.send(:build_cvv_response, response, active_merchant_response)
+    assert_equal 'P', cvv_response.cvv_result['code']
+    assert_equal 'Not Processed', cvv_response.cvv_result['message']
+
+    response = {:transactionresponse_cvvresultcode => 'S'}
+    active_merchant_response = Response.new(true, 'test.')
+    cvv_response = @gateway.send(:build_cvv_response, response, active_merchant_response)
+    assert_equal 'S', cvv_response.cvv_result['code']
+    assert_equal 'Should have been present', cvv_response.cvv_result['message']
+
+    response = {:transactionresponse_cvvresultcode => 'U'}
+    active_merchant_response = Response.new(true, 'test.')
+    cvv_response = @gateway.send(:build_cvv_response, response, active_merchant_response)
+    assert_equal 'U', cvv_response.cvv_result['code']
+    assert_equal 'Issuer unable to process request', cvv_response.cvv_result['message']
+  end
 =begin
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)

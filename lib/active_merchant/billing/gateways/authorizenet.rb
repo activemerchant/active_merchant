@@ -250,6 +250,7 @@ echeckType
         )
 
         build_avs_response(response, active_merchant_response)
+        build_cvv_response(response, active_merchant_response)
         active_merchant_response
       end
 
@@ -263,8 +264,6 @@ echeckType
             yield(xml)
           }
         end
-        #TODO: remove this later, debug to see the payload
-        #p payload.to_xml(:ident => 0)
         payload.to_xml(:ident => 0)
       end
 
@@ -308,8 +307,50 @@ echeckType
             active_merchant_response.avs_result['street_match'] = false
             active_merchant_response.avs_result['postal_match'] = false
             active_merchant_response.avs_result['message'] = 'No Match on Address (Street) or ZIP'
+          when 'P'
+            active_merchant_response.avs_result['message'] = 'AVS not applicable for this transaction'
+          when 'R'
+            active_merchant_response.avs_result['message'] = 'Retry – System unavailable or timed out'
+          when 'S'
+            active_merchant_response.avs_result['message'] = 'Service not supported by issuer'
+          when 'U'
+            active_merchant_response.avs_result['message'] = 'Address information is unavailable'
+          when 'W'
+            active_merchant_response.avs_result['street_match'] = false
+            active_merchant_response.avs_result['postal_match'] = true
+            active_merchant_response.avs_result['message'] = '9 digit ZIP matches, Address (Street) does not'
+          when 'X'
+            active_merchant_response.avs_result['street_match'] = true
+            active_merchant_response.avs_result['postal_match'] = true
+            active_merchant_response.avs_result['message'] = 'Address (Street) and 9 digit ZIP match'
+          when 'Y'
+            active_merchant_response.avs_result['street_match'] = true
+            active_merchant_response.avs_result['postal_match'] = true
+            active_merchant_response.avs_result['message'] = 'Address (Street) and 5 digit ZIP match'
+          when 'Z'
+            active_merchant_response.avs_result['street_match'] = false
+            active_merchant_response.avs_result['postal_match'] = true
+            active_merchant_response.avs_result['message'] = '5 digit ZIP matches, Address (Street) does not'
         end
 
+        active_merchant_response
+      end
+
+      def build_cvv_response(response, active_merchant_response)
+        code = response[:transactionresponse_cvvresultcode]
+        active_merchant_response.cvv_result['code'] = code
+        case code
+          when 'M'
+            active_merchant_response.cvv_result['message'] = 'Match'
+          when 'N'
+            active_merchant_response.cvv_result['message'] = 'No Match'
+          when 'P'
+            active_merchant_response.cvv_result['message'] = 'Not Processed'
+          when 'S'
+            active_merchant_response.cvv_result['message'] = 'Should have been present'
+          when 'U'
+            active_merchant_response.cvv_result['message'] = 'Issuer unable to process request'
+        end
         active_merchant_response
       end
     end
