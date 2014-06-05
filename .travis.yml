@@ -5,8 +5,9 @@ rvm:
 
 gemfile:
   - Gemfile
-  - Gemfile_rails32
+  - Gemfile_rails40
 
+install: "bundle install"
 script: "bundle exec rake test:units"
 
 notifications:
