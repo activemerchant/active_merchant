@@ -33,6 +33,27 @@ module ActiveMerchant #:nodoc:
         ((year.to_s =~ /^\d{4}$/) && (year.to_i > 1987))
       end
 
+      # Credit card providers have 3 digit verification values
+      # This isn't standardised, these are called various names such as
+      # CVC, CVV, CID, CSC and more
+      # See: http://en.wikipedia.org/wiki/Card_security_code
+      # American Express is the exception with 4 digits
+      #
+      # Below are links from the card providers with their requirements
+      # visa:             http://usa.visa.com/personal/security/3-digit-security-code.jsp
+      # master:           http://www.mastercard.com/ca/merchant/en/getstarted/Anatomy_MasterCard.html
+      # jcb:              http://www.jcbcard.com/security/info.html
+      # diners_club:      http://www.dinersclub.com/assets/DinersClub_card_ID_features.pdf
+      # discover:         https://www.discover.com/credit-cards/help-center/glossary.html
+      # american_express: https://online.americanexpress.com/myca/fuidfyp/us/action?request_type=un_fuid&Face=en_US
+      def valid_card_verification_value?(cvv, brand)
+        cvv.to_s =~ /^\d{#{card_verification_value_length(brand)}}$/
+      end
+      
+      def card_verification_value_length(brand)
+        brand == 'american_express' ? 4 : 3
+      end
+      
       def valid_issue_number?(number)
         (number.to_s =~ /^\d{1,2}$/)
       end

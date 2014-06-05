@@ -206,7 +206,18 @@ class CreditCardTest < Test::Unit::TestCase
     card = credit_card('4242424242424242', :verification_value => nil)
     assert_not_valid card
 
+    card.verification_value = '1234'
+    errors = assert_not_valid card
+    assert_equal errors[:verification_value], ['should be 3 digits']
+
     card.verification_value = '123'
+    assert_valid card
+
+    card = credit_card('341111111111111', :verification_value => '123', :brand => 'american_express')
+    errors = assert_not_valid card
+    assert_equal errors[:verification_value], ['should be 4 digits']
+
+    card.verification_value = '1234'
     assert_valid card
   end
 
