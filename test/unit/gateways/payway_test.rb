@@ -6,7 +6,7 @@ class PaywayTest < Test::Unit::TestCase
     @gateway = PaywayGateway.new(
       :username => '12341234',
       :password => 'abcdabcd',
-      :pem      => File.read('gem-public_cert.pem')
+      :pem      => certificate
     )
 
     @amount = 1000
@@ -250,5 +250,29 @@ class PaywayTest < Test::Unit::TestCase
 
     def bad_merchant_response
       "response.summaryCode=3&response.responseCode=QK"
+    end
+
+    def certificate
+      '------BEGIN CERTIFICATE-----
+ -MIIDeDCCAmCgAwIBAgIBATANBgkqhkiG9w0BAQUFADBBMRMwEQYDVQQDDApjb2R5
+ -ZmF1c2VyMRUwEwYKCZImiZPyLGQBGRYFZ21haWwxEzARBgoJkiaJk/IsZAEZFgNj
+ -b20wHhcNMTMxMTEzMTk1NjE2WhcNMTQxMTEzMTk1NjE2WjBBMRMwEQYDVQQDDApj
+ -b2R5ZmF1c2VyMRUwEwYKCZImiZPyLGQBGRYFZ21haWwxEzARBgoJkiaJk/IsZAEZ
+ -FgNjb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC6T4Iqt5iWvAlU
+ -iXI6L8UO0URQhIC65X/gJ9hL/x4lwSl/ckVm/R/bPrJGmifT+YooFv824N3y/TIX
+ -25o/lZtRj1TUZJK4OCb0aVzosQVxBHSe6rLmxO8cItNTMOM9wn3thaITFrTa1DOQ
+ -O3wqEjvW2L6VMozVfK1MfjL9IGgy0rCnl+2g4Gh4jDDpkLfnMG5CWI6cTCf3C1ye
+ -ytOpWgi0XpOEy8nQWcFmt/KCQ/kFfzBo4QxqJi54b80842EyvzWT9OB7Oew/CXZG
+ -F2yIHtiYxonz6N09vvSzq4CvEuisoUFLKZnktndxMEBKwJU3XeSHAbuS7ix40OKO
+ -WKuI54fHAgMBAAGjezB5MAkGA1UdEwQCMAAwCwYDVR0PBAQDAgSwMB0GA1UdDgQW
+ -BBR9QQpefI3oDCAxiqJW/3Gg6jI6qjAfBgNVHREEGDAWgRRjb2R5ZmF1c2VyQGdt
+ -YWlsLmNvbTAfBgNVHRIEGDAWgRRjb2R5ZmF1c2VyQGdtYWlsLmNvbTANBgkqhkiG
+ -9w0BAQUFAAOCAQEAYJgMj+RlvKSOcks29P76WE+Lexvq3eZBDxxgFHatACdq5Fis
+ -MUEGiiHeLkR1KRTkvkXCos6CtZVUBVUsftueHmKA7adO2yhrjv4YhPTb/WZxWmQC
+ -L59lMhnp9UcFJ0H7TkAiU1TvvXewdQPseX8Ayl0zRwD70RfhGh0LfFsKN0JGR4ZS
+ -yZvtu7hS26h9KwIyo5N3nw7cKSLzT7KsV+s1C+rTjVCb3/JJA9yOe/SCj/Xyc+JW
+ -ZJB9YPQZG+vWBdDSca3sUMtvFxpLUFwdKF5APSPOVnhbFJ3vSXY1ulP/R6XW9vnw
+ -6kkQi2fHhU20ugMzp881Eixr+TjC0RvUerLG7g==
+ ------END CERTIFICATE-----'
     end
 end
