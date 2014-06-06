@@ -21,7 +21,6 @@
 * Balanced: Handle legacy card tokens [ntalbott]
 * Braintree Blue: Default verification merchant id [speric]
 * [POSSIBLE BREAKAGE] Extract integrations into an offsite_payments gem [ntalbott]
-* Remove defunct Samurai gateway [ntalbott]
 * [POSSIBLE BREAKAGE] Drop stated/tested compatibility with Rails < 3.2 [ntalbott]
 
 == Version 1.43.2 (May 12, 2014)

@@ -180,6 +180,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [SagePay](http://www.sagepay.com) - GB, IE
 * [Sage Payment Solutions](http://www.sagepayments.com) - US, CA
 * [Sallie Mae](http://www.salliemae.com/) - US
+* [Samurai](https://samurai.feefighters.com) - US
 * [SecureNet](http://www.securenet.com/) - US
 * [SecurePay](http://www.securepay.com/) - US, CA, GB, AU
 * [SecurePayTech](http://www.securepaytech.com/) - NZ
