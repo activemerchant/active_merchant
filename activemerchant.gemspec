@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.homepage = 'http://activemerchant.org/'
   s.rubyforge_project = 'activemerchant'
 
-  s.files = Dir['CHANGELOG', 'README.md', 'MIT-LICENSE', 'CONTRIBUTORS', 'gem-public_cert.pem', 'lib/**/*', 'vendor/**/*']
+  s.files = Dir['CHANGELOG', 'README.md', 'MIT-LICENSE', 'CONTRIBUTORS', 'lib/**/*', 'vendor/**/*']
   s.require_path = 'lib'
 
   s.has_rdoc = true if Gem::VERSION < '1.7.0'
@@ -32,6 +32,4 @@ Gem::Specification.new do |s|
   s.add_development_dependency('mocha', '~> 0.13.0')
   s.add_development_dependency('rails', '>= 3.2.14')
   s.add_development_dependency('thor')
-  s.signing_key = ENV['GEM_PRIVATE_KEY']
-  s.cert_chain  = ['gem-public_cert.pem']
 end
