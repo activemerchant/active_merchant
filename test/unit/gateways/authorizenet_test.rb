@@ -17,6 +17,16 @@ class AuthorizenetTest < Test::Unit::TestCase
     }
   end
 
+  def build_xml
+    payload = Nokogiri::XML::Builder.new do |xml|
+      xml.test {
+        yield(xml)
+      }
+    end
+    #payload.to_xml(:ident => 0)
+    payload
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -143,16 +153,7 @@ class AuthorizenetTest < Test::Unit::TestCase
     assert avs_response.avs_result['postal_match']
     assert_equal '5 digit ZIP matches, Address (Street) does not', avs_response.avs_result['message']
   end
-=begin
-  Value: The card code verification (CCV) response code
-  Format:
 
-  P = Not Processed
-  S = Should have been present
-  U = Issuer unable to process request
-  Notes: Indicates the result of the CCV filter.
-                                             See Credit Card Verification (CCV) Filter of this document for more information.
-=end
   def test_cvv_response_mapping
     response = {:transactionresponse_cvvresultcode => 'M'}
     active_merchant_response = Response.new(true, 'test.')
@@ -184,24 +185,49 @@ class AuthorizenetTest < Test::Unit::TestCase
     assert_equal 'U', cvv_response.cvv_result['code']
     assert_equal 'Issuer unable to process request', cvv_response.cvv_result['message']
   end
-=begin
+
+  def test_add_swipe_data_with_bad_data
+    @credit_card.track_data = '%B378282246310005LONGSONLONGBOB1705101130504392?'
+    swipe_xml = @gateway.send(:add_swipe_data, @xml, @credit_card)
+
+    assert_equal nil, swipe_xml
+  end
+
+  def test_add_swipe_data_with_track_1
+    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
+    swipe_xml = build_xml do |xml|
+      @gateway.send(:add_swipe_data, xml, @credit_card)
+    end
+
+    assert_equal  '%B378282246310005^LONGSON/LONGBOB^1705101130504392?', swipe_xml.doc.xpath('//track1').text
+    assert_equal  '', swipe_xml.doc.xpath('//track2').text
+  end
+
+  def test_add_swipe_data_with_track_2
+    @credit_card.track_data = ';4111111111111111=1803101000020000831?'
+    swipe_xml = build_xml do |xml|
+      @gateway.send(:add_swipe_data, xml, @credit_card)
+    end
+
+    assert_equal  ';4111111111111111=1803101000020000831?', swipe_xml.doc.xpath('//track2').text
+    assert_equal  '', swipe_xml.doc.xpath('//track1').text
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
-=end
+
   def test_successful_authorize
-=begin
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal 'GSOFTZ', response.authorization
+    assert_equal '2213759427', response.authorization
     assert response.test?
-=end
   end
 
   def test_failed_authorize
@@ -213,7 +239,9 @@ class AuthorizenetTest < Test::Unit::TestCase
   def test_failed_capture
   end
 
+  #TODO: these refund ones are particularly useful in that we can't get immediate turnaround on remote tests
   def test_successful_refund
+
   end
 
   def test_failed_refund

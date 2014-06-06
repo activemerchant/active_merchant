@@ -85,11 +85,11 @@ module ActiveMerchant #:nodoc:
         if card_brand(source) == 'check'
           add_check(xml, source)
         else
-          add_creditcard(xml, source)
+          add_credit_card(xml, source)
         end
       end
 
-      def add_creditcard(xml, creditcard)
+      def add_credit_card(xml, creditcard)
         if creditcard.track_data.nil?
           xml.payment {
             xml.creditCard {
@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
               xml.track1 credit_card.track_data
             }
           }
-        else
+        elsif (TRACKS[2].match(credit_card.track_data))
           xml.payment {
             xml.trackData {
               xml.track2 credit_card.track_data
@@ -119,30 +119,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-=begin
-      post[:payment] = 'check' # Set transaction to ACH
-      post[:checkname] = check.name # The name on the customer's Checking Account
-      post[:checkaba] = check.routing_number # The customer's bank routing number
-      post[:checkaccount] = check.account_number # The customer's account number
-      post[:account_holder_type] = check.account_holder_type # The customer's type of ACH account
-      post[:account_type] = check.account_type # The customer's type of ACH account
-        :name => 'Jim Smith',
-        :bank_name => 'Bank of Elbonia',
-        :routing_number => '244183602',
-        :account_number => '15378535',
-        :account_holder_type => 'personal',
-        :account_type => 'checking',
-        :number => '1'
-accountNumber 	Account number, masked.
-	XXXX1111
-routingNumber 	Bank's routing number.
-	XXXX0000
-nameOnAccount 	Name of the person who holds the bank account.
-
-bankName 	The name of the bank.
-
-echeckType
-=end
       def add_check(xml, check)
         xml.payment {
           xml.bankAccount {
@@ -192,24 +168,9 @@ echeckType
       end
 
       def add_invoice(xml, money, options)
-        #TODO add_invoice
-=begin
-        xml.AuthCode options[:force] if options[:force]
-        if options[:order_items].blank?
-          xml.Total(amount(money)) unless(money.nil? || money < 0.01)
-          xml.Description(options[:description]) unless( options[:description].blank?)
-        else
-          xml.OrderItems {
-            options[:order_items].each do |item|
-              xml.Item {
-                xml.Description(item[:description])
-                xml.Cost(amount(item[:cost]))
-                xml.Qty(item[:quantity].to_s)
-              }
-            end
-          }
-        end
-=end
+        #TODO add_invoice random notes below
+        #attr_accessor :invoice_num, :description, :tax, :tax_name, :tax_description, :freight, :freight_name,
+        #:freight_description, :duty, :duty_name, :duty_description, :tax_exempt, :po_num, :line_items
       end
 
       def parse_first_name(full_name)
