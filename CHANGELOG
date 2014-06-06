@@ -40,6 +40,7 @@
 * Elavon: Add store/update support [npverni]
 * Wirecard: Catch an empty ERROR <Message> Element [timtait]
 * Finansbank (CC5): Add void/refund/credit support [muhammetdilek]
+* Wirecard: Use authorization_check for Amex store [npverni]
 
 == Version 1.43.2 (May 12, 2014)
 
