@@ -9,7 +9,7 @@ class RemoteWirecardTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('4200000000000000')
     @declined_card = credit_card('4000300011112220')
-    @amex_card = credit_card('370000000000010')
+    @amex_card = credit_card('370000000000010', brand: 'amex')
 
     @options = {
       order_id: 1,
@@ -169,6 +169,12 @@ class RemoteWirecardTest < Test::Unit::TestCase
 
   def test_successful_store
     assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert response.authorization
+  end
+
+  def test_successful_store_with_amex
+    assert response = @gateway.store(@amex_card)
     assert_success response
     assert response.authorization
   end
