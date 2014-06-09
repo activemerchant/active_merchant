@@ -92,7 +92,6 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    # Replace with authorization number from the successful response
     assert_equal 'ch_test_charge', response.authorization
     assert response.test?
   end
@@ -127,7 +126,6 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    # Replace with authorization number from the successful response
     assert_equal 'ch_test_charge', response.authorization
     assert response.test?
   end
@@ -138,7 +136,6 @@ class StripeTest < Test::Unit::TestCase
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
     assert_success response
 
-    # Replace with authorization number from the successful response
     assert_equal 'ch_test_charge', response.authorization
     assert response.test?
   end
@@ -214,8 +211,17 @@ class StripeTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    # unsuccessful request defaults to live
-    assert !response.test?
+    assert !response.test? # unsuccessful request defaults to live
+    assert_nil response.authorization
+  end
+
+  def test_declined_request
+    @gateway.expects(:ssl_request).returns(declined_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert !response.test? # unsuccessful request defaults to live
+    assert_equal 'ch_test_charge', response.authorization
   end
 
   def test_invalid_raw_response
@@ -453,7 +459,6 @@ class StripeTest < Test::Unit::TestCase
 
   private
 
-  # Create new customer and set default credit card
   def successful_new_customer_response
     <<-RESPONSE
 {
@@ -690,7 +695,6 @@ class StripeTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  # Place raw failed response from gateway here
   def failed_purchase_response
     <<-RESPONSE
     {
@@ -703,6 +707,20 @@ class StripeTest < Test::Unit::TestCase
     }
     RESPONSE
   end
+
+  def declined_purchase_response
+    <<-RESPONSE
+    {
+      "error": {
+        "message": "Your card was declined.",
+        "type": "card_error",
+        "code": "card_declined",
+        "charge": "ch_test_charge"
+      }
+    }
+    RESPONSE
+  end
+
 
   def successful_update_credit_card_response
     <<-RESPONSE
@@ -729,7 +747,7 @@ class StripeTest < Test::Unit::TestCase
     }
     RESPONSE
   end
-  # Place raw invalid JSON from gateway here
+
   def invalid_json_response
     <<-RESPONSE
     {
