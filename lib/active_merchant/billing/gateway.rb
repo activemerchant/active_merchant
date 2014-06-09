@@ -112,7 +112,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def self.card_brand(source)
-        result = source.respond_to?(:brand) ? source.brand : source.type
+        result = source.respond_to?(:brand) ? source.brand : source.type unless source.nil?
         result.to_s.downcase
       end
 

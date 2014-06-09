@@ -59,12 +59,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, payment, authorization, options={})
         commit do |xml|
-          xml.refId options[:order_id]
           xml.transactionRequest {
             xml.transactionType 'refundTransaction'
             xml.amount money unless money.nil?
+            add_payment_source(xml, payment)
             xml.refTransId authorization
           }
         end
@@ -85,7 +85,7 @@ module ActiveMerchant #:nodoc:
         if card_brand(source) == 'check'
           add_check(xml, source)
         else
-          add_credit_card(xml, source)
+          add_credit_card(xml, source) unless source.nil?
         end
       end
 

@@ -23,7 +23,6 @@ class AuthorizenetTest < Test::Unit::TestCase
         yield(xml)
       }
     end
-    #payload.to_xml(:ident => 0)
     payload
   end
 
@@ -38,6 +37,9 @@ class AuthorizenetTest < Test::Unit::TestCase
     assert_equal 'Y', response.avs_result['code']
     assert response.avs_result['street_match']
     assert response.avs_result['postal_match']
+    assert_equal 'Address (Street) and 5 digit ZIP match', response.avs_result['message']
+    assert_equal 'P', response.cvv_result['code']
+    assert_equal 'Not Processed', response.cvv_result['message']
   end
 
   def test_avs_response_mapping
@@ -462,9 +464,71 @@ class AuthorizenetTest < Test::Unit::TestCase
   end
 
   def successful_refund_response
+    <<-eos
+      <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                 xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+      <messages>
+        <resultCode>Ok</resultCode>
+        <message>
+          <code>I00001</code>
+          <text>Successful.</text>
+        </message>
+      </messages>
+      <transactionResponse>
+        <responseCode>1</responseCode>
+        <authCode/>
+        <avsResultCode>P</avsResultCode>
+        <cvvResultCode/>
+        <cavvResultCode/>
+        <transId>2214602071</transId>
+        <refTransID>2214269051</refTransID>
+        <transHash>A3E5982FB6789092985F2D618196A268</transHash>
+        <testRequest>0</testRequest>
+        <accountNumber>XXXX2224</accountNumber>
+        <accountType>Visa</accountType>
+        <messages>
+          <message>
+            <code>1</code>
+            <description>This transaction has been approved.</description>
+          </message>
+        </messages>
+      </transactionResponse>
+      </createTransactionResponse>
+    eos
   end
 
   def failed_refund_response
+    <<-eos
+      <createTransactionResponse xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                                 xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+      <messages>
+        <resultCode>Error</resultCode>
+        <message>
+          <code>E00027</code>
+          <text>The transaction was unsuccessful.</text>
+        </message>
+      </messages>
+      <transactionResponse>
+        <responseCode>3</responseCode>
+        <authCode/>
+        <avsResultCode>P</avsResultCode>
+        <cvvResultCode/>
+        <cavvResultCode/>
+        <transId>0</transId>
+        <refTransID>2214269051</refTransID>
+        <transHash>63E03F4968F0874E1B41FCD79DD54717</transHash>
+        <testRequest>0</testRequest>
+        <accountNumber>XXXX2224</accountNumber>
+        <accountType>Visa</accountType>
+        <errors>
+          <error>
+            <errorCode>55</errorCode>
+            <errorText>The sum of credits against the referenced transaction would exceed original debit amount.</errorText>
+          </error>
+        </errors>
+      </transactionResponse>
+      </createTransactionResponse>
+    eos
   end
 
   def successful_void_response
