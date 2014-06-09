@@ -66,7 +66,6 @@ require 'active_utils/common/country'
 require 'active_utils/common/error'
 require 'active_utils/common/post_data'
 require 'active_utils/common/posts_data'
-require 'active_utils/common/currency_code'
 
 require 'active_merchant/billing'
 require 'active_merchant/version'
