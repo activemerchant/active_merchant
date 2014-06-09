@@ -30,6 +30,7 @@
 * Quickpay v7: Pass an amount when storing cards [ta & moklett]
 * Quickpay: Expand list of supported countries [ta]
 * Validate CreditCard verification value [mnoack]
+* Authorize.Net CIM: Allow updating a payment profile without a full credit card number [speric]
 
 == Version 1.43.2 (May 12, 2014)
 
