@@ -24,6 +24,7 @@
 * [POSSIBLE BREAKAGE] Drop stated/tested compatibility with Rails < 3.2 [ntalbott]
 * Stop requiring unused CurrencyCode class from active_utils [ntalbott]
 * Move ActiveMerchant::Error into ActiveMerchant [ntalbott]
+* Inline RequiresParameters in Gateway & move Country from active_utils [ntalbott]
 
 == Version 1.43.2 (May 12, 2014)
 
