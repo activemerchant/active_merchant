@@ -20,6 +20,10 @@ class FirstdataE4Test < Test::Unit::TestCase
     @authorization = "ET1700;106625152;4738"
   end
 
+  def test_supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :jcb, :discover], FirstdataE4Gateway.supported_cardtypes
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -115,6 +119,14 @@ class FirstdataE4Test < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match "<VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>", data
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_card_type
+    assert_equal 'Visa', @gateway.send(:card_type, 'visa')
+    assert_equal 'Mastercard', @gateway.send(:card_type, 'master')
+    assert_equal 'American Express', @gateway.send(:card_type, 'american_express')
+    assert_equal 'JCB', @gateway.send(:card_type, 'jcb')
+    assert_equal 'Discover', @gateway.send(:card_type, 'discover')
   end
 
   private
