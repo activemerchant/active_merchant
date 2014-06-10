@@ -28,6 +28,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard(post, creditcard)
         add_address(post, creditcard, options)
+        add_capture(post, options)
 
         commit('charges', post, options)
       end
@@ -50,7 +51,16 @@ module ActiveMerchant #:nodoc:
         commit("charges/#{CGI.escape(token)}/refunds", { :amount => amount(money) }, options)
       end
 
+      # Authorize an amount on a credit card. Once authorized, you can later
+      # capture this charge using the token that is returned.
+      def authorize(money, creditcard, options = {})
+        options[:capture] = false
+
+        purchase(money, creditcard, options)
+      end
+
       private
+
       def add_amount(post, money, options)
         post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money))
@@ -79,6 +89,12 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         post[:description] = options[:description] || "Active Merchant Purchase"
+      end
+
+      def add_capture(post, options)
+        capture = options[:capture]
+
+        post[:capture] = capture == false ? false : true
       end
 
       def add_creditcard(post, creditcard)

@@ -55,6 +55,7 @@ class PinTest < Test::Unit::TestCase
     @gateway.expects(:add_invoice).with(instance_of(Hash), @options)
     @gateway.expects(:add_creditcard).with(instance_of(Hash), @credit_card)
     @gateway.expects(:add_address).with(instance_of(Hash), @credit_card, @options)
+    @gateway.expects(:add_capture).with(instance_of(Hash), @options)
 
     @gateway.stubs(:ssl_post).returns(successful_purchase_response)
     assert_success @gateway.purchase(@amount, @credit_card, @options)
@@ -192,6 +193,16 @@ class PinTest < Test::Unit::TestCase
     @gateway.send(:add_invoice, post, @options)
 
     assert_equal @options[:description], post[:description]
+  end
+
+  def test_add_capture
+    post = {}
+
+    @gateway.send(:add_capture, post, @options)
+    assert_equal post[:capture], true
+
+    @gateway.send(:add_capture, post, :capture => false)
+    assert_equal post[:capture], false
   end
 
   def test_add_creditcard
