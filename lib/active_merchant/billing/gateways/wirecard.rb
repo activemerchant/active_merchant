@@ -150,6 +150,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'FunctionID', clean_description(options[:description])
           xml.tag! 'CC_TRANSACTION' do
             xml.tag! 'TransactionID', options[:order_id]
+            xml.tag! 'CommerceType', options[:commerce_type] if options[:commerce_type]
             case options[:action]
             when :preauthorization, :purchase
               add_invoice(xml, money, options)

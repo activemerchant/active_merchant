@@ -223,6 +223,16 @@ class WirecardTest < Test::Unit::TestCase
     assert_match /B/, response.avs_result["code"]
   end
 
+  def test_commerce_type_option
+    options = { commerce_type: "MOTO" }
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<CommerceType>MOTO<\/CommerceType>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   # Authorization success
