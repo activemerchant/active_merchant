@@ -3,7 +3,7 @@ module ActiveMerchant #:nodoc:
     class RedecardGateway < Gateway
 
       self.test_url = 'https://ecommerce.redecard.com.br/pos_virtual/wskomerci/cap_teste.asmx'
-      self.live_url = 'https://example.com/live'
+      self.live_url = 'https://ecommerce.redecard.com.br/pos_virtual/wskomerci/cap.asmx'
 
       self.supported_countries = ['BR']
       self.default_currency = 'BRL'
@@ -117,12 +117,12 @@ module ActiveMerchant #:nodoc:
 
       def add_affiliate(post, options)
         post[:filiacao] = @options[:affiliate]
-        post[:distribuidor] = @options[:affiliate]
+        post[:distribuidor] = @options.fetch(:distributor, nil)
       end
 
       def add_payment_value(post, money, options)
         post[:total] = amount(money)
-        post[:parcelas] = options[:installments] || '1'
+        post[:parcelas] = options[:installments] || '00'
       end
 
       def add_invoice(post, money, options)
@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
         post[:pax3] = nil
         post[:pax4] = nil
         post[:conftxn] = 'S'
-        post[:adddata] = nil
+        post[:add_data] = nil
       end
 
       def commit(action, parameters)
@@ -173,7 +173,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_commit_url(action)
-        url = (test? ? "#{test_url}/#{action}Tst" : live_url)
+        url = (test? ? "#{test_url}/#{action}Tst" : "#{live_url}/#{action}")
       end
 
       def parse(body)
@@ -211,7 +211,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, parameters = {})
-        parameters.map { |k,v| "&#{k}=#{URI.encode(v.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))}" }.join
+        data = parameters.map { |k,v| "&#{k}=#{URI.encode(v.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))}" }.join
+        data[0] = ''
+        data
       end
     end
   end
