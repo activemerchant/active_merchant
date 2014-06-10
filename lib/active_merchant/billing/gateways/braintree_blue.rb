@@ -111,51 +111,33 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def store(creditcard, options = {})
+      def store(payment_method, options = {})
         if options[:customer].present?
           MultiResponse.new.tap do |r|
             customer_exists_response = nil
             r.process{customer_exists_response = check_customer_exists(options[:customer])}
             r.process do
               if customer_exists_response.params["exists"]
-                add_credit_card_to_customer(creditcard, options)
+                add_credit_card_to_customer(payment_method, options)
               else
-                add_customer_with_credit_card(creditcard, options)
+                add_customer_with_credit_card(payment_method, options)
               end
             end
           end
         else
-          add_customer_with_credit_card(creditcard, options)
+          if payment_method.respond_to?(:payment_method_nonce)
+            add_customer_with_paypal_account(payment_method, options)
+          else
+            add_customer_with_credit_card(payment_method, options)
+          end
         end
       end
 
-      def update(vault_id, creditcard, options = {})
-        braintree_credit_card = nil
-        commit do
-          braintree_credit_card = @braintree_gateway.customer.find(vault_id).credit_cards.detect { |cc| cc.default? }
-          return Response.new(false, 'Braintree::NotFoundError') if braintree_credit_card.nil?
-
-          options.merge!(:update_existing_token => braintree_credit_card.token)
-          credit_card_params = merge_credit_card_options({
-            :credit_card => {
-              :cardholder_name => creditcard.name,
-              :number => creditcard.number,
-              :cvv => creditcard.verification_value,
-              :expiration_month => creditcard.month.to_s.rjust(2, "0"),
-              :expiration_year => creditcard.year.to_s
-            }
-          }, options)[:credit_card]
-
-          result = @braintree_gateway.customer.update(vault_id,
-            :first_name => creditcard.first_name,
-            :last_name => creditcard.last_name,
-            :email => scrub_email(options[:email]),
-            :credit_card => credit_card_params
-          )
-          Response.new(result.success?, message_from_result(result),
-            :braintree_customer => (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
-            :customer_vault_id => (result.customer.id if result.success?)
-          )
+      def update(vault_id, payment_method, options = {})
+        if payment_method.respond_to?(:payment_method_nonce)
+          update_with_paypal_account(vault_id, payment_method, options)
+        else
+          update_with_credit_card(vault_id, payment_method, options)
         end
       end
 
@@ -197,6 +179,27 @@ module ActiveMerchant #:nodoc:
           rescue Braintree::NotFoundError
             ActiveMerchant::Billing::Response.new(true, "Customer not found", {exists: false})
           end
+        end
+      end
+
+      def add_customer_with_paypal_account(paypal_account, options)
+        commit do
+          parameters = {
+            :first_name => paypal_account.first_name,
+            :last_name => paypal_account.last_name,
+            :email => scrub_email(options[:email]),
+            :id => options[:customer],
+            :payment_method_nonce => paypal_account.payment_method_nonce,
+          }
+          result = @braintree_gateway.customer.create(parameters)
+          response = Response.new(result.success?, message_from_result(result),
+            {
+              :braintree_customer => (customer_hash(result.customer, :include_credit_cards) if result.success?),
+              :customer_vault_id => (result.customer.id if result.success?)
+            },
+            :authorization => (result.customer.id if result.success?)
+          )
+          response
         end
       end
 
@@ -256,6 +259,60 @@ module ActiveMerchant #:nodoc:
               credit_card_token: (result.credit_card.token if result.success?)
             },
             authorization: (result.credit_card.customer_id if result.success?)
+          )
+        end
+      end
+
+      def update_with_credit_card(vault_id, creditcard, options = {})
+        braintree_credit_card = nil
+        commit do
+          braintree_credit_card = @braintree_gateway.customer.find(vault_id).credit_cards.detect { |cc| cc.default? }
+          return Response.new(false, 'Braintree::NotFoundError') if braintree_credit_card.nil?
+
+          options.merge!(:update_existing_token => braintree_credit_card.token)
+          credit_card_params = merge_credit_card_options({
+            :credit_card => {
+              :cardholder_name => creditcard.name,
+              :number => creditcard.number,
+              :cvv => creditcard.verification_value,
+              :expiration_month => creditcard.month.to_s.rjust(2, "0"),
+              :expiration_year => creditcard.year.to_s
+            }
+          }, options)[:credit_card]
+
+          result = @braintree_gateway.customer.update(vault_id,
+            :first_name => creditcard.first_name,
+            :last_name => creditcard.last_name,
+            :email => scrub_email(options[:email]),
+            :credit_card => credit_card_params
+          )
+          Response.new(result.success?, message_from_result(result),
+            :braintree_customer => (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
+            :customer_vault_id => (result.customer.id if result.success?)
+          )
+        end
+      end
+
+      def update_with_paypal_account(vault_id, paypal_account, options = {})
+        customer = nil
+        commit do
+          customer = @braintree_gateway.customer.find(vault_id)
+          return Response.new(false, 'Braintree::NotFoundError') if customer.nil?
+
+          # Delete the customers existing payment methods
+          customer.paypal_accounts.each { |pp| @braintree_gateway.paypal_account.delete(pp.token) }
+
+          # Update it with the new nonce
+          result = @braintree_gateway.customer.update(vault_id,
+            :first_name => paypal_account.first_name,
+            :last_name => paypal_account.last_name,
+            :email => scrub_email(options[:email]),
+            :payment_method_nonce => paypal_account.payment_method_nonce,
+          )
+
+          Response.new(result.success?, message_from_result(result),
+            :braintree_customer => (customer_hash(@braintree_gateway.customer.find(vault_id), :include_credit_cards) if result.success?),
+            :customer_vault_id => (result.customer.id if result.success?)
           )
         end
       end
