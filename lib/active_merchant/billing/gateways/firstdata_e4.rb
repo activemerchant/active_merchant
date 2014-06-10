@@ -23,7 +23,15 @@ module ActiveMerchant #:nodoc:
 
       SENSITIVE_FIELDS = [:verification_str2, :expiry_date, :card_number]
 
-      self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :discover]
+      BRANDS = {
+        :visa => 'Visa',
+        :master => "Mastercard",
+        :american_express => "American Express",
+        :jcb => "JCB",
+        :discover => "Discover"
+      }
+
+      self.supported_cardtypes = BRANDS.keys
       self.supported_countries = ["CA", "US"]
       self.default_currency = "USD"
       self.homepage_url = "http://www.firstdata.com"
@@ -168,7 +176,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! "Card_Number", credit_card.number
         xml.tag! "Expiry_Date", expdate(credit_card)
         xml.tag! "CardHoldersName", credit_card.name
-        xml.tag! "CardType", credit_card.brand
+        xml.tag! "CardType", card_type(credit_card.brand)
 
         add_credit_card_verification_strings(xml, credit_card, options)
       end
@@ -199,7 +207,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! "TransarmorToken", params[0]
         xml.tag! "Expiry_Date", expdate(credit_card)
         xml.tag! "CardHoldersName", credit_card.name
-        xml.tag! "CardType", credit_card.brand
+        xml.tag! "CardType", card_type(credit_card.brand)
       end
 
       def add_customer_data(xml, options)
@@ -221,6 +229,10 @@ module ActiveMerchant #:nodoc:
 
       def expdate(credit_card)
         "#{format(credit_card.month, :two_digits)}#{format(credit_card.year, :two_digits)}"
+      end
+
+      def card_type(credit_card_brand)
+        BRANDS[credit_card_brand.to_sym] if credit_card_brand
       end
 
       def commit(action, request, credit_card = nil)
