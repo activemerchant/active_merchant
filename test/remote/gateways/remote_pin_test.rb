@@ -18,18 +18,39 @@ class RemotePinTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
+    assert_equal response.params['response']['captured'], true
+  end
+
+  def test_successful_authorize_and_capture
+    authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+    assert_equal authorization.params['response']['captured'], false
+
+    response = @gateway.capture(@amount, authorization.authorization, @options)
+    assert_success response
+    assert_equal response.params['response']['captured'], true
+  end
+
+  def test_failed_authorize
+    response = @gateway.authorize(@amount, @declined_card, @options)
+    assert_failure response
+  end
+
+  def test_failed_capture
+    response = @gateway.capture(@amount, "bogus", @options)
+    assert_failure response
   end
 
   def test_successful_purchase_without_description
     @options.delete(:description)
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
   end
 
   def test_unsuccessful_purchase
-    assert response = @gateway.purchase(@amount, @declined_card, @options)
+    response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
   end
 
@@ -70,7 +91,7 @@ class RemotePinTest < Test::Unit::TestCase
   end
 
   def test_store_and_customer_token_charge
-    assert response = @gateway.store(@credit_card, @options)
+    response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_not_nil response.authorization
 
@@ -85,31 +106,31 @@ class RemotePinTest < Test::Unit::TestCase
   end
 
   def test_refund
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_not_nil response.authorization
 
     token = response.authorization
 
-    assert response = @gateway.refund(@amount, token, @options)
+    response = @gateway.refund(@amount, token, @options)
     assert_success response
     assert_not_nil response.authorization
   end
 
   def test_failed_refund
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_not_nil response.authorization
 
     token = response.authorization
 
-    assert response = @gateway.refund(@amount, token.reverse, @options)
+    response = @gateway.refund(@amount, token.reverse, @options)
     assert_failure response
   end
 
   def test_invalid_login
     gateway = PinGateway.new(:api_key => '')
-    assert response = gateway.purchase(@amount, @credit_card, @options)
+    response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
 end

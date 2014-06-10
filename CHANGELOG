@@ -60,6 +60,7 @@
 * Enhance gateway generator to support verify [duff]
 * PayPal Express: Add funding source support [baraabourghli]
 * Optimal: Add IP address to requests [justinplouffe]
+* Pin: Add authorize & capture support [keithpitt]
 
 == Version 1.43.2 (May 12, 2014)
 
