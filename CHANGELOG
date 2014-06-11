@@ -33,6 +33,7 @@
 * Authorize.Net CIM: Allow updating a payment profile without a full credit card number [speric]
 * Wirecard: Add optional CommerceType element [timtait]
 * Add Borgun gateway [markabe]
+* [POSSIBLE BREAKAGE] NAB Transact: Allow timeout customization [duff]
 
 == Version 1.43.2 (May 12, 2014)
 
