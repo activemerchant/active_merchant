@@ -119,7 +119,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Garanti Sanal POS](https://sanalposweb.garanti.com.tr) - US, TR
 * [HDFC](http://www.hdfcbank.com/sme/sme-details/merchant-services/guzh6m0i) - IN
 * [Heartland Payment Systems](http://developer.heartlandpaymentsystems.com/SecureSubmit/) - US
-* [iATS Payments](http://home.iatspayments.com/) - AU, CA, CH, DE, DK, ES, FI, FR, GR, HK, IE, IT, JP, NL, NO, NZ, PT, SE, SG, TR, UK, US
+* [iATS Payments](http://home.iatspayments.com/) - AU, BR, CA, CH, DE, DK, ES, FI, FR, GR, HK, IE, IT, NL, NO, PT, SE, SG, TR, UK, US
 * [Inspire Commerce](http://www.inspiregateway.com) - US
 * [InstaPay](http://www.instapayllc.com) - US
 * [Iridium](http://www.iridiumcorp.co.uk/) - GB, ES
