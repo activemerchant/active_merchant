@@ -1,15 +1,15 @@
 require 'test_helper'
 
 class RemoteStripeTest < Test::Unit::TestCase
+  CHARGE_ID_REGEX = /ch_[a-zA-Z\d]+/
 
   def setup
     @gateway = StripeGateway.new(fixtures(:stripe))
     @currency = fixtures(:stripe)["currency"]
 
     @amount = 100
-    # You may have to update the currency, depending on your tenant
     @credit_card = credit_card('4242424242424242')
-    @declined_card = credit_card('4000')
+    @declined_card = credit_card('4000000000000002')
     @new_credit_card = credit_card('5105105105105100')
 
     @options = {
@@ -26,6 +26,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response.params["paid"]
     assert_equal "ActiveMerchant Test Purchase", response.params["description"]
     assert_equal "wow@example.com", response.params["metadata"]["email"]
+    assert_match CHARGE_ID_REGEX, response.authorization
   end
 
   def test_successful_purchase_with_recurring_flag
@@ -41,7 +42,8 @@ class RemoteStripeTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_match /card number.* invalid/, response.message
+    assert_match /Your card was declined/, response.message
+    assert_match CHARGE_ID_REGEX, response.authorization
   end
 
   def test_authorization_and_capture
