@@ -24,7 +24,7 @@ balanced:
   login: 'e1c5ad38d1c711e1b36c026ba7e239a9'
 
 banwire:
-  login: "desarrollo"
+  login: "userdemo"
 
 barclays_epdq:
   login: test

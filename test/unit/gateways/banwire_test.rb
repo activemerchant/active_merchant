@@ -5,7 +5,7 @@ class BanwireTest < Test::Unit::TestCase
 
   def setup
     @gateway = BanwireGateway.new(
-                 :login => 'desarrollo',
+                 :login => 'userdemo',
                  :currency => 'MXN')
 
     @credit_card = credit_card('5204164299999999',
@@ -18,7 +18,8 @@ class BanwireTest < Test::Unit::TestCase
       :order_id => '1',
       :email => 'test@email.com',
       :billing_address => address,
-      :description => 'Store purchase'
+      :description => 'Store purchase',
+      :login => 'userdemo'
     }
 
     @amex_credit_card = credit_card('375932134599999',
@@ -30,7 +31,8 @@ class BanwireTest < Test::Unit::TestCase
         :order_id => '2',
         :email => 'test@email.com',
         :billing_address => address(:address1 => 'Horacio', :zip => 11560),
-        :description  => 'Store purchase amex'
+        :description  => 'Store purchase amex',
+        :login => 'userdemo'
     }
   end
 
@@ -89,13 +91,13 @@ class BanwireTest < Test::Unit::TestCase
 
   def failed_purchase_response
     <<-RESPONSE
-    {"user":"desarrollo","id":"20120627190025","referencia":"12345","date":"27-06-2012 19:00:25","card":"9999","response":"ko","code":700,"message":"Pago Denegado."}
+    {"user":"userdemo","id":"20120627190025","referencia":"12345","date":"27-06-2012 19:00:25","card":"9999","response":"ko","code":700,"message":"Pago Denegado."}
     RESPONSE
   end
 
   def successful_purchase_response
     <<-RESPONSE
-    {"user":"desarrollo","id":"20120627190025","referencia":"12345","date":"27-06-2012 19:00:25","card":"9999","response":"ok","code_auth":"test12345","monto":"100", "cliente":"Roberto I Ramirez N"}
+    {"user":"userdemo","id":"20120627190025","referencia":"12345","date":"27-06-2012 19:00:25","card":"9999","response":"ok","code_auth":"test12345","monto":"100", "cliente":"Roberto I Ramirez N"}
     RESPONSE
   end
 
@@ -107,13 +109,13 @@ class BanwireTest < Test::Unit::TestCase
 
   def successful_purchase_amex_response
     <<-RESPONSE
-    {"user":"desarrollo","id":"20120731153834","referencia":"12345","date":"31-07-2012 15:38:34","card":"99999","response":"ok","code_auth":"test12345","monto":0.5,"client":"Banwire Test Card"}
+    {"user":"userdemo","id":"20120731153834","referencia":"12345","date":"31-07-2012 15:38:34","card":"99999","response":"ok","code_auth":"test12345","monto":0.5,"client":"Banwire Test Card"}
     RESPONSE
   end
 
   def invalid_json_response
     <<-RESPONSE
-    {"user":"desarrollo"
+    {"user":"userdemo"
     RESPONSE
   end
 end
