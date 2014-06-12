@@ -11,6 +11,19 @@
 # Paste any required PEM certificates after the pem key.
 #
 
+# Working credentials, no need to replace
+another_lane:
+  site_id: 'your site id'
+  site_password: 'your site password'
+  acctual_credit_card:
+    number             : 'number'
+    month              : 'mm'
+    year               : 'yyyy'
+    first_name         : 'First name on card'
+    last_name          : 'Last name on card'
+    verification_value : 'CVC on card'
+    brand              : 'Acctual card brand name'
+
 app55:
   api_key: "QDtACYMCFqtuKOQ22QtCkGR1TzD7XM8i"
   api_secret: "yT1FRpuusBIQoEBIfIQ8bPStkl7yzdTz"
