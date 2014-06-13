@@ -38,6 +38,7 @@
 * Worldpay: Add support for Switch cards [dougal]
 * FirstData e4: Send correct card type [npverni]
 * Elavon: Add store/update support [npverni]
+* Wirecard: Catch an empty ERROR <Message> Element [timtait]
 
 == Version 1.43.2 (May 12, 2014)
 

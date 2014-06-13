@@ -365,7 +365,7 @@ module ActiveMerchant #:nodoc:
         # Convert all messages to a single string
         string = ''
         errors.each do |error|
-          string << error[:Message]
+          string << error[:Message] if error[:Message]
           error[:Advice].each_with_index do |advice, index|
             string << ' (' if index == 0
             string << "#{index+1}. #{advice}"
