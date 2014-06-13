@@ -298,6 +298,13 @@ class WirecardTest < Test::Unit::TestCase
     end.respond_with(successful_authorization_response)
   end
 
+  def test_system_error_response
+    @gateway.expects(:ssl_post).returns(system_error_response)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_failure response
+  end
+
   private
 
   def assert_xml_element_text(xml, xpath, expected_text)
@@ -617,6 +624,38 @@ class WirecardTest < Test::Unit::TestCase
                   <ProviderResultMessage>Address information is unavailable, or the Issuer does not support AVS. Acquirer has representment rights.</ProviderResultMessage>
                 </AVS>
                 <TimeStamp>2014-05-12 11:28:36</TimeStamp>
+              </PROCESSING_STATUS>
+            </CC_TRANSACTION>
+          </FNC_CC_PURCHASE>
+        </W_JOB>
+      </W_RESPONSE>
+    </WIRECARD_BXML>
+    XML
+  end
+
+  def system_error_response
+    <<-XML
+    <?xml version="1.0" encoding="UTF-8"?>
+    <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+      <W_RESPONSE>
+        <W_JOB>
+          <JobID></JobID>
+          <FNC_CC_PURCHASE>
+            <FunctionID></FunctionID>
+            <CC_TRANSACTION>
+              <TransactionID>3A368E50D50B01310000000000009153</TransactionID>
+              <PROCESSING_STATUS>
+                <GuWID>C967464140265180577024</GuWID>
+                <AuthorizationCode></AuthorizationCode>
+                <Info>THIS IS A DEMO TRANSACTION USING CREDIT CARD NUMBER 420000****0000. NO REAL MONEY WILL BE TRANSFERED.</Info>
+                <StatusType>INFO</StatusType>
+                <FunctionResult>NOK</FunctionResult>
+                <ERROR>
+                  <Type>SYSTEM_ERROR</Type>
+                  <Number>20205</Number>
+                  <Message></Message>
+                </ERROR>
+                <TimeStamp>2014-06-13 11:30:05</TimeStamp>
               </PROCESSING_STATUS>
             </CC_TRANSACTION>
           </FNC_CC_PURCHASE>
