@@ -75,14 +75,6 @@ class AdyenTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_failed_void
-    @gateway.stubs(:ssl_post).raises(ActiveMerchant::ResponseError.new(stub(:code => '404', :body => failed_void_response)))
-
-    response = @gateway.void('0000000000000000', @options)
-    assert_failure response
-    assert response.test?
-  end
-
   private
 
   def successful_authorize_response
@@ -111,9 +103,5 @@ class AdyenTest < Test::Unit::TestCase
 
   def successful_void_response
     'modificationResult.pspReference=7914002636728161&modificationResult.response=%5Bcancel-received%5D'
-  end
-
-  def failed_void_response
-    '\r\n0\r\n\r\n'
   end
 end
