@@ -47,7 +47,7 @@ module ActiveMerchant #:nodoc:
         :refund => 'CCRETURN',
         :authorize => 'CCAUTHONLY',
         :capture => 'CCFORCE',
-        :void => 'CCVOID',
+        :void => 'CCDELETE',
         :store => 'CCGETTOKEN',
         :update => 'CCUPDATETOKEN',
       }
