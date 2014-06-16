@@ -145,10 +145,9 @@ module ActiveMerchant #:nodoc:
 
       def success_from(response)
         return true if response.has_key?('authCode')
-        return true if response['response'] == '[capture-received]'
-        return true if response['response'] == '[cancel-received]'
-        return true if response['response'] == '[refund-received]'
-        return false
+
+        successful_responses = %w([capture-received] [cancel-received] [refund-received])
+        successful_responses.include?(response['response'])
       end
 
       def url
