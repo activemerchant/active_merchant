@@ -142,6 +142,7 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         return response['resultCode'] if response.has_key?('resultCode') # Payment request
         return response['response'] if response['response'] # Modification request
+        "Failure" # Negative fallback in case of error
       end
 
       def success_from(response)
