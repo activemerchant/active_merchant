@@ -256,7 +256,7 @@ module ActiveMerchant #:nodoc:
       #
       # Any validation errors are added to the {#errors} attribute.
       def validate
-        errors = validate_essential_attributes
+        errors = validate_essential_attributes + validate_verification_value
 
         # Bogus card is pretty much for testing purposes. Lets just skip these extra tests if its used
         return errors_hash(errors) if brand == 'bogus'
@@ -264,7 +264,6 @@ module ActiveMerchant #:nodoc:
         errors_hash(
           errors +
           validate_card_brand_and_number +
-          validate_verification_value +
           validate_switch_or_solo_attributes
         )
       end
