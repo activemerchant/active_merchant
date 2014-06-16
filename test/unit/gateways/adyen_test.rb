@@ -67,6 +67,7 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
   end
+  
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
