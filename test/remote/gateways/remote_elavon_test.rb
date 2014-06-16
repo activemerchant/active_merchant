@@ -103,6 +103,16 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_equal 'The transaction ID is invalid for this transaction type', response.message
   end
 
+  def test_authorize_and_successful_void
+    assert authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize
+
+    assert response = @gateway.void(authorize.authorization)
+
+    assert_success response
+    assert response.authorization
+  end
+
   def test_successful_store_without_verify
     assert response = @gateway.store(@credit_card, @options)
     assert_success response
