@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options = {})
         commit do |xml|
-          xml.refId options[:order_id]
+          xml.refId options[:order_id] if options.is_a? Hash
           xml.transactionRequest {
             xml.transactionType 'authCaptureTransaction'
             xml.amount money
@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, payment, options={})
         commit do |xml|
-          xml.refId options[:order_id]
+          xml.refId options[:order_id] if options.is_a? Hash
           xml.transactionRequest {
             xml.transactionType 'authOnlyTransaction'
             xml.amount money
@@ -168,7 +168,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(xml, money, options)
-        #TODO add_invoice random notes below
         #attr_accessor :invoice_num, :description, :tax, :tax_name, :tax_description, :freight, :freight_name,
         #:freight_description, :duty, :duty_name, :duty_description, :tax_exempt, :po_num, :line_items
       end
@@ -207,11 +206,11 @@ module ActiveMerchant #:nodoc:
             message_from(response),
             response,
             authorization: authorization_from(response),
-            test: test?
+            test: test?,
+            avs_result: build_avs_result(response),
+            cvv_result: build_cvv_result(response)
         )
 
-        build_avs_response(response, active_merchant_response)
-        build_cvv_response(response, active_merchant_response)
         active_merchant_response
       end
 
@@ -246,73 +245,42 @@ module ActiveMerchant #:nodoc:
         response[:transactionresponse_transid]
       end
 
-      def build_avs_response(response, active_merchant_response)
-        code = response[:transactionresponse_avsresultcode]
-        active_merchant_response.avs_result['code'] = code
-        case code
-          when 'Y'
-            active_merchant_response.avs_result['street_match'] = true
-            active_merchant_response.avs_result['postal_match'] = true
-            active_merchant_response.avs_result['message'] = 'Address (Street) and 5 digit ZIP match'
-          when 'A'
-            active_merchant_response.avs_result['street_match'] = true
-            active_merchant_response.avs_result['postal_match'] = false
-            active_merchant_response.avs_result['message'] = 'Address (Street) matches, ZIP does not'
-          when 'B'
-            active_merchant_response.avs_result['message'] = 'Address information not provided for AVS check'
-          when 'E'
-            active_merchant_response.avs_result['message'] = 'AVS error'
-          when 'G'
-            active_merchant_response.avs_result['message'] = 'Non-U.S. Card Issuing Bank'
-          when 'N'
-            active_merchant_response.avs_result['street_match'] = false
-            active_merchant_response.avs_result['postal_match'] = false
-            active_merchant_response.avs_result['message'] = 'No Match on Address (Street) or ZIP'
-          when 'P'
-            active_merchant_response.avs_result['message'] = 'AVS not applicable for this transaction'
-          when 'R'
-            active_merchant_response.avs_result['message'] = 'Retry – System unavailable or timed out'
-          when 'S'
-            active_merchant_response.avs_result['message'] = 'Service not supported by issuer'
-          when 'U'
-            active_merchant_response.avs_result['message'] = 'Address information is unavailable'
-          when 'W'
-            active_merchant_response.avs_result['street_match'] = false
-            active_merchant_response.avs_result['postal_match'] = true
-            active_merchant_response.avs_result['message'] = '9 digit ZIP matches, Address (Street) does not'
-          when 'X'
-            active_merchant_response.avs_result['street_match'] = true
-            active_merchant_response.avs_result['postal_match'] = true
-            active_merchant_response.avs_result['message'] = 'Address (Street) and 9 digit ZIP match'
-          when 'Y'
-            active_merchant_response.avs_result['street_match'] = true
-            active_merchant_response.avs_result['postal_match'] = true
-            active_merchant_response.avs_result['message'] = 'Address (Street) and 5 digit ZIP match'
-          when 'Z'
-            active_merchant_response.avs_result['street_match'] = false
-            active_merchant_response.avs_result['postal_match'] = true
-            active_merchant_response.avs_result['message'] = '5 digit ZIP matches, Address (Street) does not'
-        end
+      def build_avs_result(response)
+        avs_result = nil
 
-        active_merchant_response
+        case response[:transactionresponse_avsresultcode]
+          when 'A'
+            avs_result = AVSResult.new ({:code => 'A'})
+          when 'B'
+            avs_result = AVSResult.new ({:code => 'U'})
+          when 'E'
+            avs_result = AVSResult.new ({:code => 'E'})
+          when 'G'
+            avs_result = AVSResult.new ({:code => 'G'})
+          when 'N'
+            avs_result = AVSResult.new ({:code => 'C'})
+          when 'P'
+            avs_result = AVSResult.new ({:code => 'E'})
+          when 'R'
+            avs_result = AVSResult.new ({:code => 'R'})
+          when 'S'
+            avs_result = AVSResult.new ({:code => 'S'})
+          when 'U'
+            avs_result = AVSResult.new ({:code => 'U'})
+          when 'W'
+            avs_result = AVSResult.new ({:code => 'W'})
+          when 'X'
+            avs_result = AVSResult.new ({:code => 'X'})
+          when 'Y'
+            avs_result = AVSResult.new ({:code => 'Y'})
+          when 'Z'
+            avs_result = AVSResult.new ({:code => 'Z'})
+        end
+        avs_result
       end
 
-      def build_cvv_response(response, active_merchant_response)
-        code = response[:transactionresponse_cvvresultcode]
-        active_merchant_response.cvv_result['code'] = code
-        case code
-          when 'M'
-            active_merchant_response.cvv_result['message'] = 'Match'
-          when 'N'
-            active_merchant_response.cvv_result['message'] = 'No Match'
-          when 'P'
-            active_merchant_response.cvv_result['message'] = 'Not Processed'
-          when 'S'
-            active_merchant_response.cvv_result['message'] = 'Should have been present'
-          when 'U'
-            active_merchant_response.cvv_result['message'] = 'Issuer unable to process request'
-        end
-        active_merchant_response
+      def build_cvv_result(response)
+        cvv_result = CVVResult.new response[:transactionresponse_cvvresultcode]
       end
     end
   end

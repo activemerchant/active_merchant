@@ -11,9 +11,9 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
     @declined_card = credit_card('400030001111222')
 
     @options = {
-      order_id: '1',
-      billing_address: address,
-      description: 'Store Purchase'
+        order_id: '1',
+        billing_address: address,
+        description: 'Store Purchase'
     }
   end
 
@@ -104,7 +104,7 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = @gateway.capture(nil, nil, '')
+    response = @gateway.capture(20, 23124)
     assert_failure response
   end
 
@@ -123,8 +123,8 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = AuthorizenetGateway.new(
-      login: '',
-      password: ''
+        login: '',
+        password: ''
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
