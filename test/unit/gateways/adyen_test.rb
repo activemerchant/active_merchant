@@ -57,6 +57,7 @@ class AdyenTest < Test::Unit::TestCase
     response = @gateway.refund(@amount, '7914002629995504', @options)
     assert_success response
     assert response.test?
+
   end
 
   def test_failed_refund
@@ -66,13 +67,24 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
   end
-
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
     response = @gateway.void('7914002629995504', @options)
     assert_success response
     assert response.test?
+  end
+
+  def test_fractional_currency
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    @gateway.expects(:post_data).with do |params|
+      assert_equal '100', params['paymentRequest.amount.value']
+      assert_equal 'JPY', params['paymentRequest.amount.currency']
+    end
+
+    @options[:currency] = 'JPY'
+
+    @gateway.authorize(@amount, @credit_card, @options)
   end
 
   private
