@@ -54,18 +54,23 @@ module ActiveMerchant #:nodoc:
           xml.transactionRequest {
             xml.transactionType 'priorAuthCaptureTransaction'
             xml.amount money
-            xml.refTransId authorization
+            xml.refTransId authorization.split('#')[0]
           }
         end
       end
 
-      def refund(money, payment, authorization, options={})
+      def refund(money, authorization, options={})
         commit do |xml|
           xml.transactionRequest {
             xml.transactionType 'refundTransaction'
             xml.amount money unless money.nil?
-            add_payment_source(xml, payment)
-            xml.refTransId authorization
+            xml.payment {
+              xml.creditCard {
+                xml.cardNumber(authorization.split('#')[1])
+                xml.expirationDate 'XXXX'
+              }
+            }
+            xml.refTransId authorization.split('#')[0]
           }
         end
       end
@@ -75,7 +80,7 @@ module ActiveMerchant #:nodoc:
           xml.refId options[:order_id]
           xml.transactionRequest {
             xml.transactionType 'voidTransaction'
-            xml.refTransId authorization
+            xml.refTransId authorization.split('#')[0]
           }
         end
       end
@@ -242,7 +247,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response[:transactionresponse_transid]
+        account_number = response[:transactionresponse_accountnumber]
+        if (!account_number.nil?) && (account_number.include? 'XXXX')
+           account_number = account_number[-4..-1]
+        end
+
+        response[:transactionresponse_transid] + '#' + account_number unless response[:transactionresponse_transid].nil? || account_number.nil? || account_number.empty?
       end
 
       def build_avs_result(response)

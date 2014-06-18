@@ -104,7 +104,7 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = @gateway.capture(20, 23124)
+    response = @gateway.capture(20, '23124#1234')
     assert_failure response
   end
 
@@ -131,7 +131,7 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = @gateway.refund(nil, nil, '')
+    response = @gateway.refund(nil, '')
     assert_failure response
   end
 
@@ -146,7 +146,7 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
   #this requires an overnight settlement.  Must be tested with a hard coded transaction id
   #credit card is required to do this.
   #def test_partial_refund
-  #  assert refund = @gateway.refund(36.40, @credit_card, 2214269051)
+  #  assert refund = @gateway.refund(78.56, '2215043618#2224')
   #  assert_success refund
   #end
 end

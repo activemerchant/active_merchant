@@ -205,7 +205,7 @@ class AuthorizenetTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal '2213698343', response.authorization
+    assert_equal '2213698343', response.authorization.split('#')[0]
     assert response.test?
     assert_equal 'Y', response.avs_result['code']
     assert response.avs_result['street_match']
@@ -230,7 +230,7 @@ class AuthorizenetTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
     assert_equal 'Match', response.cvv_result['message']
 
-    assert_equal '2213759427', response.authorization
+    assert_equal '2213759427', response.authorization.split('#')[0]
     assert response.test?
   end
 
@@ -244,35 +244,50 @@ class AuthorizenetTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    capture = @gateway.capture(@amount, 2214269051, @options)
+    capture = @gateway.capture(@amount, '2214269051#XXXX1234', @options)
     assert_success capture
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    assert capture = @gateway.capture(@amount, 1)
+    assert capture = @gateway.capture(@amount, '2214269051#XXXX1234')
     assert_failure capture
   end
 
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    assert refund = @gateway.refund(36.40, @credit_card, 2214269051)
+    assert refund = @gateway.refund(36.40, '2214269051#XXXX1234')
     assert_success refund
+    assert_equal 'This transaction has been approved.', refund.message
+    assert_equal '2214602071#2224', refund.authorization
+
+    assert_equal 'AVS data is invalid or AVS is not allowed for this card type.', refund.avs_result['message']
+    assert_nil refund.avs_result['street_match']
+    assert_nil refund.avs_result['postal_match']
+    assert_nil refund.cvv_result[:code]
+    assert_nil refund.cvv_result[:message]
   end
 
   def test_failed_refund
     @gateway.expects(:ssl_post).returns(failed_refund_response)
 
-    response = @gateway.refund(nil, nil, '')
-    assert_failure response
+    refund = @gateway.refund(nil, '')
+    assert_failure refund
+    assert_equal 'The sum of credits against the referenced transaction would exceed original debit amount.', refund.message
+    assert_equal '0#2224', refund.authorization
+    assert_equal 'AVS data is invalid or AVS is not allowed for this card type.', refund.avs_result['message']
+    assert_nil refund.avs_result['street_match']
+    assert_nil refund.avs_result['postal_match']
+    assert_nil refund.cvv_result[:code]
+    assert_nil refund.cvv_result[:message]
   end
 
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
-    assert void = @gateway.void(1)
+    assert void = @gateway.void('')
     assert_success void
   end
 
