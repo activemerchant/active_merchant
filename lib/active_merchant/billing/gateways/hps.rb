@@ -97,7 +97,7 @@ module ActiveMerchant #:nodoc:
               xml.hps :CardNbr, card_or_token.number
               xml.hps :ExpMonth, card_or_token.month
               xml.hps :ExpYear, card_or_token.year
-              xml.hps :CVV2, card_or_token.verification_value
+              xml.hps :CVV2, card_or_token.verification_value unless card_or_token.verification_value.nil?
               xml.hps :CardPresent, 'N'
               xml.hps :ReaderPresent, 'N'
             end
