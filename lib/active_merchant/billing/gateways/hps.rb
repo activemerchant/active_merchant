@@ -154,6 +154,9 @@ module ActiveMerchant #:nodoc:
               xml.hps 'Ver1.0'.to_sym do
                 xml.hps :Header do
                   xml.hps :SecretAPIKey, @options[:secret_api_key]
+                  xml.hps :DeveloperID, @options[:developer_id] if @options[:developer_id]
+                  xml.hps :VersionNbr, @options[:version_number] if @options[:version_number]
+                  xml.hps :SiteTrace, @options[:site_trace] if @options[:site_trace]
                 end
                 xml.hps :Transaction do
                   xml.hps action.to_sym do

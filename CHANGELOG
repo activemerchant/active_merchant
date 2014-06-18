@@ -49,6 +49,7 @@
 * Paymill: Add source [nikoloff]
 * Paymill: Add description for preauthorizations [nikoloff]
 * Paymill: Add remote tests using tokens [nikoloff]
+* HPS: Add developer, version number and site trace options [SecureSubmit]
 
 == Version 1.43.2 (May 12, 2014)
 
