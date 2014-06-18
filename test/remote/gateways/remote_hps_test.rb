@@ -21,6 +21,12 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_purchase_without_cardholder
+    response = @gateway.purchase(@amount, @credit_card)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_successful_purchase_with_details
     @options[:description] = 'Description'
     @options[:order_id] = '12345'
