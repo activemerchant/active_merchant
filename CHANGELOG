@@ -44,6 +44,7 @@
 * Elavon: Make void work for authorizations [duff]
 * Add Commercegate gateway [vitaliyvasin]
 * Wirecard: Fix "amex" references [mendable]
+* HPS: Do not pass empty elements [SecureSubmit]
 
 == Version 1.43.2 (May 12, 2014)
 

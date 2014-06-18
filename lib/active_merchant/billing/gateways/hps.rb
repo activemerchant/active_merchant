@@ -73,16 +73,20 @@ module ActiveMerchant #:nodoc:
         xml.hps :Amt, amount(money) if money
       end
 
-      def add_customer_data(xml, card_or_token,options)
-        if card_or_token.respond_to?(:number)
+      def add_customer_data(xml, credit_card, options)
+        return unless credit_card.respond_to?(:number)
 
+        first_name = credit_card.first_name
+        last_name = credit_card.last_name
+
+        if(first_name || last_name)
           xml.hps :CardHolderData do
-            xml.hps :CardHolderFirstName, card_or_token.first_name
-            xml.hps :CardHolderLastName, card_or_token.last_name
+            xml.hps :CardHolderFirstName, first_name if first_name
+            xml.hps :CardHolderLastName, last_name if last_name
             xml.hps :CardHolderEmail, options[:email] if options[:email]
             xml.hps :CardHolderPhone, options[:phone] if options[:phone]
 
-            if billing_address = (options[:billing_address] || options[:address])
+            if(billing_address = (options[:billing_address] || options[:address]))
               xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1]
               xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
               xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
@@ -113,7 +117,7 @@ module ActiveMerchant #:nodoc:
                 xml.hps :CardNbr, card_or_token.number
                 xml.hps :ExpMonth, card_or_token.month
                 xml.hps :ExpYear, card_or_token.year
-                xml.hps :CVV2, card_or_token.verification_value
+                xml.hps :CVV2, card_or_token.verification_value if card_or_token.verification_value
                 xml.hps :CardPresent, 'N'
                 xml.hps :ReaderPresent, 'N'
               end
