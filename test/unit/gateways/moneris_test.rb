@@ -211,51 +211,34 @@ class MonerisTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_avs_information_present_when_enabled
-    gateway = MonerisGateway.new(login: 'store5', password: 'yesguy', avs_enabled: true)
-
+  def test_avs_information_present_with_address
     stub_comms do
-      gateway.purchase(@amount, @credit_card, @options)
+      @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_match(%r{avs_street_number>}, data)
       assert_match(%r{avs_street_name>}, data)
       assert_match(%r{avs_zipcode>}, data)
-      assert_match(%r{avs_shiptocountry>}, data)
     end.respond_with(successful_purchase_response_with_avs_result)
   end
 
-  def test_avs_information_absent_when_disabled
+  def test_avs_information_absent_with_no_address
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options)
+      @gateway.purchase(@amount, @credit_card, @options.tap { |x| x.delete(:billing_address) })
     end.check_request do |endpoint, data, headers|
       assert_no_match(%r{avs_street_number>}, data)
       assert_no_match(%r{avs_street_name>}, data)
       assert_no_match(%r{avs_zipcode>}, data)
-      assert_no_match(%r{avs_shiptocountry>}, data)
     end.respond_with(successful_purchase_response)
   end
 
-  def test_avs_result_valid_when_enabled
-    gateway = MonerisGateway.new(login: 'store5', password: 'yesguy', avs_enabled: true)
-    
-    gateway.expects(:ssl_post).returns(successful_purchase_response_with_avs_result)
-    assert response = gateway.purchase(100, @credit_card, @options)
+  def test_avs_result_valid_with_address
+    @gateway.expects(:ssl_post).returns(successful_purchase_response_with_avs_result)
+    assert response = @gateway.purchase(100, @credit_card, @options)
     assert_equal(response.avs_result, {
       'code' => 'A',
       'message' => 'Street address matches, but 5-digit and 9-digit postal code do not match.',
       'street_match' => 'Y',
       'postal_match' => 'N'
-    })
-  end
-
-  def test_avs_result_nil_when_disabled
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert response = @gateway.purchase(100, @credit_card, @options)
-    assert_equal(response.avs_result, {
-      'code' => nil,
-      'message' => nil,
-      'street_match' => nil,
-      'postal_match' => nil
     })
   end
 

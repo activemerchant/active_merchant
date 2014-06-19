@@ -36,7 +36,6 @@ module ActiveMerchant #:nodoc:
       #                            Defaults to false.  (optional)
       def initialize(options = {})
         requires!(options, :login, :password)
-        @avs_enabled = options[:avs_enabled]
         @cvv_enabled = options[:cvv_enabled]
         options = { :crypt_type => 7 }.merge(options)
         super
@@ -243,7 +242,7 @@ module ActiveMerchant #:nodoc:
         actions[action].each do |key|
           case key
           when :avs_info
-            transaction.add_element(avs_element(parameters[:address])) if @avs_enabled && parameters[:address]
+            transaction.add_element(avs_element(parameters[:address])) if parameters[:address]
           when :cvd_info
             transaction.add_element(cvd_element(parameters[:cvd_value])) if @cvv_enabled
           else

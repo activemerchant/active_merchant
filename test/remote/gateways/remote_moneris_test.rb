@@ -163,9 +163,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_equal({'code' => 'N', 'message' => 'No Match'}, response.cvv_result)
   end
 
-  def test_avs_result_valid_when_enabled
-    gateway = MonerisGateway.new(fixtures(:moneris).merge(avs_enabled: true))
-    assert response = gateway.purchase(1010, @credit_card, @options)
+  def test_avs_result_valid_when_address_present
+    assert response = @gateway.purchase(1010, @credit_card, @options)
     assert_success response
     assert_equal(response.avs_result, {
       'code' => 'A',
@@ -175,8 +174,19 @@ class MonerisRemoteTest < Test::Unit::TestCase
     })
   end
 
-  def test_avs_result_nil_when_disabled
-    assert response = @gateway.purchase(1010, @credit_card, @options)
+  def test_avs_result_nil_when_address_absent
+    assert response = @gateway.purchase(1010, @credit_card, @options.tap { |x| x.delete(:billing_address) })
+    assert_success response
+    assert_equal(response.avs_result, {
+      'code' => nil,
+      'message' => nil,
+      'street_match' => nil,
+      'postal_match' => nil
+    })
+  end
+
+  def test_avs_result_nil_when_efraud_disabled
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal(response.avs_result, {
       'code' => nil,
