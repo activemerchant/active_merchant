@@ -29,6 +29,14 @@ class RemotePinTest < Test::Unit::TestCase
     assert_equal response.params['response']['captured'], false
   end
 
+  def test_successful_capture
+    authorization = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert response = @gateway.capture(@amount, authorization.authorization, @options)
+    assert_success response
+    assert_equal response.params['response']['captured'], true
+  end
+
   def test_successful_purchase_without_description
     @options.delete(:description)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
