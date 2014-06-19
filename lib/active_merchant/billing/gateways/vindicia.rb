@@ -167,7 +167,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:product_sku</tt> -- The subscription product's sku
       # * <tt>:autobill_prefix</tt> -- Prefix to order id for subscriptions - defaults to 'A' (OPTIONAL)
       def recurring(money, creditcard, options={})
-        deprecated RECURRING_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
         options[:recurring] = true
         @autobill_prefix = options[:autobill_prefix] || "A"

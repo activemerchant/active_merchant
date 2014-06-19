@@ -226,13 +226,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, authorization, options= {})
-        deprecated CREDIT_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
 
       def void(authorization, options = {}, deprecated = {})
         if(!options.kind_of?(Hash))
-          deprecated("Calling the void method with an amount parameter is deprecated and will be removed in a future version.")
+          ActiveMerchant.deprecated("Calling the void method with an amount parameter is deprecated and will be removed in a future version.")
           return void(options, deprecated.merge(:amount => authorization))
         end
 
@@ -403,7 +403,7 @@ module ActiveMerchant #:nodoc:
 
       def add_managed_billing(xml, options)
         if mb = options[:managed_billing]
-          deprecated RECURRING_DEPRECATION_MESSAGE
+          ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
           # default to recurring (R).  Other option is deferred (D).
           xml.tag! :MBType, mb[:type] || RECURRING

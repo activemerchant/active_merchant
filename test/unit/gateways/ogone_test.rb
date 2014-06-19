@@ -146,7 +146,7 @@ class OgoneTest < Test::Unit::TestCase
 
   def test_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_referenced_credit_response)
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
       assert response = @gateway.credit(@amount, "3049652;SAL")
       assert_success response
       assert_equal '3049652;RFD', response.authorization
@@ -193,7 +193,7 @@ class OgoneTest < Test::Unit::TestCase
     @gateway.expects(:add_pair).at_least(1)
     @gateway.expects(:add_pair).with(anything, 'ECI', '7')
     @gateway.expects(:ssl_post).times(2).returns(successful_purchase_response)
-    assert_deprecation_warning(OgoneGateway::OGONE_STORE_OPTION_DEPRECATION_MESSAGE, @gateway) do
+    assert_deprecation_warning(OgoneGateway::OGONE_STORE_OPTION_DEPRECATION_MESSAGE) do
       assert response = @gateway.store(@credit_card, :store => @billing_id)
       assert_success response
       assert_equal '3014726;RES', response.authorization
@@ -309,13 +309,13 @@ class OgoneTest < Test::Unit::TestCase
   def test_without_signature
     gateway = OgoneGateway.new(@credentials.merge(:signature => nil, :signature_encryptor => nil))
     gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert_deprecation_warning(OgoneGateway::OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE, gateway) do
+    assert_deprecation_warning(OgoneGateway::OGONE_NO_SIGNATURE_DEPRECATION_MESSAGE) do
       gateway.purchase(@amount, @credit_card, @options)
     end
 
     gateway = OgoneGateway.new(@credentials.merge(:signature => nil, :signature_encryptor => "none"))
     gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert_no_deprecation_warning(@gateway) do
+    assert_no_deprecation_warning do
       gateway.purchase(@amount, @credit_card, @options)
     end
   end

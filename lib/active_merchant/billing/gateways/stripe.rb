@@ -292,11 +292,12 @@ module ActiveMerchant #:nodoc:
         card = response["card"] || response["active_card"] || {}
         avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
         cvc_code = CVC_CODE_TRANSLATOR[card["cvc_check"]]
+
         Response.new(success,
           success ? "Transaction approved" : response["error"]["message"],
           response,
           :test => response.has_key?("livemode") ? !response["livemode"] : false,
-          :authorization => response["id"],
+          :authorization => success ? response["id"] : response["error"]["charge"],
           :avs_result => { :code => avs_code },
           :cvv_result => cvc_code
         )

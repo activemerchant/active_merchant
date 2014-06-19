@@ -128,12 +128,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def card_identifier_from(identifier)
-        case identifier
-        when %r{\/}
-          identifier.split("/")[2]
-        else
-          identifier
-        end
+        identifier.split("/").last
       end
 
       def add_amount(post, money)
@@ -142,7 +137,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         address = (options[:billing_address] || options[:address])
-        if(address && address[:zip])
+        if(address && address[:zip].present?)
           post[:address] = {}
           post[:address][:line1] = address[:address1] if address[:address1]
           post[:address][:line2] = address[:address2] if address[:address2]

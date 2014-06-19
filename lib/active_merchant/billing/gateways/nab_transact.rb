@@ -16,18 +16,10 @@ module ActiveMerchant #:nodoc:
       self.live_periodic_url = 'https://transact.nab.com.au/xmlapi/periodic'
 
       self.supported_countries = ['AU']
-
-      # The card types supported by the payment gateway
-      # Note that support for Diners, Amex, and JCB require extra
-      # steps in setting up your account, as detailed in the NAB Transact API
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
 
       self.homepage_url = 'http://transact.nab.com.au'
       self.display_name = 'NAB Transact'
-
-      cattr_accessor :request_timeout
-      self.request_timeout = 60
-
       self.money_format = :cents
       self.default_currency = 'AUD'
 
@@ -140,7 +132,7 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
         xml.tag! 'NABTransactMessage' do
           xml.tag! 'MessageInfo' do
-            xml.tag! 'messageID', Utils.generate_unique_id.slice(0, 30)
+            xml.tag! 'messageID', SecureRandom.hex(15)
             xml.tag! 'messageTimestamp', generate_timestamp
             xml.tag! 'timeoutValue', request_timeout
             xml.tag! 'apiVersion', API_VERSION
@@ -191,7 +183,7 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
         xml.tag! 'NABTransactMessage' do
           xml.tag! 'MessageInfo' do
-            xml.tag! 'messageID', ActiveMerchant::Utils.generate_unique_id.slice(0, 30)
+            xml.tag! 'messageID', SecureRandom.hex(15)
             xml.tag! 'messageTimestamp', generate_timestamp
             xml.tag! 'timeoutValue', request_timeout
             xml.tag! 'apiVersion', PERIODIC_API_VERSION
@@ -272,6 +264,10 @@ module ActiveMerchant #:nodoc:
       def generate_timestamp
         time = Time.now.utc
         time.strftime("%Y%d%m%H%M%S#{time.usec}+000")
+      end
+
+      def request_timeout
+        @options[:request_timeout] || 60
       end
 
     end

@@ -1,5 +1,4 @@
 require 'test_helper'
-require 'active_utils/common/country'
 
 class GatewayTest < Test::Unit::TestCase
   def setup

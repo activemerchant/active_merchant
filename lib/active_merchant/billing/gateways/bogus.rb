@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
 
       def credit(money, paysource, options = {})
         if paysource.is_a?(String)
-          deprecated CREDIT_DEPRECATION_MESSAGE
+          ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
           return refund(money, paysource, options)
         end
 

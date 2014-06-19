@@ -88,12 +88,12 @@ class IatsPaymentsTest < Test::Unit::TestCase
   end
 
   def test_deprecated_options
-
-    IatsPaymentsGateway.any_instance.expects(:deprecated).with("The 'login' option is deprecated in favor of 'agent_code' and will be removed in a future version.")
-    @gateway = IatsPaymentsGateway.new(
-      :login => 'login',
-      :password => 'password'
-    )
+    assert_deprecation_warning("The 'login' option is deprecated in favor of 'agent_code' and will be removed in a future version.") do
+      @gateway = IatsPaymentsGateway.new(
+        :login => 'login',
+        :password => 'password'
+      )
+    end
 
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)

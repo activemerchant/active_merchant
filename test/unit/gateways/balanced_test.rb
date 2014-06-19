@@ -216,6 +216,20 @@ class BalancedTest < Test::Unit::TestCase
     assert_instance_of String, response.authorization
   end
 
+  def test_successful_purchase_with_legacy_outside_token
+    legacy_outside_token = '/v1/marketplaces/MP6oR9hHNlu2BLVsRRoQL3Gg/cards/CC7m1Mtqk6rVJo5tcD1qitAC'
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, legacy_outside_token, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_equal("https://api.balancedpayments.com/cards/CC7m1Mtqk6rVJo5tcD1qitAC/debits", endpoint)
+    end.respond_with(debits_response)
+
+    assert_success response
+    assert_equal 'Success', response.message
+    assert_equal @amount, response.params['debits'][0]['amount']
+  end
+
   def test_capturing_legacy_authorizations
     v1_authorization = "/v1/marketplaces/TEST-MP73SaFdpQePv9dOaG5wXOGO/holds/HL7dYMhpVBcqAYqxLF5mZtQ5"
     v11_authorization = "/card_holds/HL7dYMhpVBcqAYqxLF5mZtQ5/debits||/card_holds/HL7dYMhpVBcqAYqxLF5mZtQ5"
@@ -280,7 +294,17 @@ class BalancedTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, address: address(zip: nil))
     end.check_request do |method, endpoint, data, headers|
       next if endpoint =~ /debits/
-      clean = proc{|s| Regexp.escape(CGI.escape(s))}
+      assert_no_match(%r{address}, data)
+    end.respond_with(cards_response, debits_response)
+
+    assert_success response
+  end
+
+  def test_passing_address_with_blank_zip
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, address: address(zip: "   "))
+    end.check_request do |method, endpoint, data, headers|
+      next if endpoint =~ /debits/
       assert_no_match(%r{address}, data)
     end.respond_with(cards_response, debits_response)
 

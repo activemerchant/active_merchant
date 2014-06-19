@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       self.live_na_url = 'https://www.iatspayments.com/NetGate/ProcessLink.asmx'
       self.live_uk_url = 'https://www.uk.iatspayments.com/NetGate/ProcessLink.asmx'
 
-      self.supported_countries = %w(AU CA CH DE DK ES FI FR GR HK IE IT JP NL NO NZ PT SE SG TR GB US)
+      self.supported_countries = %w(AU BR CA CH DE DK ES FI FR GR HK IE IT NL NO PT SE SG TR GB US)
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
@@ -15,7 +15,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options={})
         if(options[:login])
-          deprecated("The 'login' option is deprecated in favor of 'agent_code' and will be removed in a future version.")
+          ActiveMerchant.deprecated("The 'login' option is deprecated in favor of 'agent_code' and will be removed in a future version.")
           options[:agent_code] = options[:login]
         end
 

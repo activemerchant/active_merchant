@@ -53,9 +53,7 @@ module ActiveMerchant #:nodoc:
     #
     class Gateway
       include PostsData
-      include RequiresParameters
       include CreditCardFormatting
-      include Utils
 
       DEBIT_CARDS = [ :switch, :solo ]
       CURRENCIES_WITHOUT_FRACTIONS = [ 'BIF', 'BYR', 'CLP', 'CVE', 'DJF', 'GNF', 'HUF', 'ISK', 'JPY', 'KMF', 'KRW', 'PYG', 'RWF', 'TWD', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF' ]
@@ -68,6 +66,10 @@ module ActiveMerchant #:nodoc:
       def self.inherited(subclass)
         super
         @@implementations << subclass
+      end
+
+      def generate_unique_id
+        SecureRandom.hex(16)
       end
 
       # The format of the amounts used by the gateway
@@ -174,7 +176,7 @@ module ActiveMerchant #:nodoc:
       def amount(money)
         return nil if money.nil?
         cents = if money.respond_to?(:cents)
-          deprecated "Support for Money objects is deprecated and will be removed from a future release of ActiveMerchant. Please use an Integer value in cents"
+          ActiveMerchant.deprecated "Support for Money objects is deprecated and will be removed from a future release of ActiveMerchant. Please use an Integer value in cents"
           money.cents
         else
           money
@@ -214,6 +216,19 @@ module ActiveMerchant #:nodoc:
       def requires_start_date_or_issue_number?(credit_card)
         return false if card_brand(credit_card).blank?
         DEBIT_CARDS.include?(card_brand(credit_card).to_sym)
+      end
+
+      def requires!(hash, *params)
+        params.each do |param|
+          if param.is_a?(Array)
+            raise ArgumentError.new("Missing required parameter: #{param.first}") unless hash.has_key?(param.first)
+
+            valid_options = param[1..-1]
+            raise ArgumentError.new("Parameter: #{param.first} must be one of #{valid_options.to_sentence(:words_connector => 'or')}") unless valid_options.include?(hash[param.first])
+          else
+            raise ArgumentError.new("Missing required parameter: #{param}") unless hash.has_key?(param)
+          end
+        end
       end
     end
   end

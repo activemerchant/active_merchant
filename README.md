@@ -64,7 +64,7 @@ credit_card = ActiveMerchant::Billing::CreditCard.new(
                 :verification_value => '000')
 
 # Validating the card automatically detects the card type
-if credit_card.valid?
+if credit_card.validate.empty?
   # Capture $10 from the credit card
   response = gateway.purchase(amount, credit_card)
 
@@ -79,7 +79,7 @@ end
 For more in-depth documentation and tutorials, see [GettingStarted.md](GettingStarted.md) and the
 [API documentation](http://rubydoc.info/github/Shopify/active_merchant/master/file/README.md).
 
-## Supported Direct Payment Gateways
+## Supported Payment Gateways
 
 The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) contains a [table of features supported by each gateway](http://github.com/Shopify/active_merchant/wikis/gatewayfeaturematrix).
 
@@ -93,6 +93,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Be2Bill](http://www.be2bill.com/) - FR
 * [Beanstream.com](http://www.beanstream.com/) - CA, US
 * [BluePay](http://www.bluepay.com/) - US
+* [Borgun](https://www.borgun.is/) - IS
 * [Braintree](http://www.braintreepaymentsolutions.com) - US, CA, AU, AD, AT, BE, BG, CY, CZ, DK, EE, FI, FR, GI, DE, GR, HU, IS, IM, IE, IT, LV, LI, LT, LU, MT, MC, NL, NO, PL, PT, RO, SM, SK, SI, ES, SE, CH, TR, GB
 * [BridgePay](http://www.bridgepaynetwork.com/) - CA, US
 * [CardSave](http://www.cardsave.net/) - GB
@@ -119,7 +120,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Garanti Sanal POS](https://sanalposweb.garanti.com.tr) - US, TR
 * [HDFC](http://www.hdfcbank.com/sme/sme-details/merchant-services/guzh6m0i) - IN
 * [Heartland Payment Systems](http://developer.heartlandpaymentsystems.com/SecureSubmit/) - US
-* [iATS Payments](http://home.iatspayments.com/) - AU, CA, CH, DE, DK, ES, FI, FR, GR, HK, IE, IT, JP, NL, NO, NZ, PT, SE, SG, TR, UK, US
+* [iATS Payments](http://home.iatspayments.com/) - AU, BR, CA, CH, DE, DK, ES, FI, FR, GR, HK, IE, IT, NL, NO, PT, SE, SG, TR, UK, US
 * [Inspire Commerce](http://www.inspiregateway.com) - US
 * [InstaPay](http://www.instapayllc.com) - US
 * [Iridium](http://www.iridiumcorp.co.uk/) - GB, ES
@@ -173,7 +174,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [PSL Payment Solutions](http://www.paymentsolutionsltd.com/) - GB
 * [QuickBooks Merchant Services](http://payments.intuit.com/) - US
 * [Quantum Gateway](http://www.quantumgateway.com) - US
-* [Quickpay](http://quickpay.dk/) - DK, SE
+* [QuickPay](http://quickpay.net/) - DE, DK, ES, FI, FR, FO, GB, IS, NO, SE
 * [Raven PacNet](http://www.pacnetservices.com/) - US
 * [Realex](http://www.realexpayments.com/) - IE, GB, FR, BE, NL, LU, IT
 * [Redsys](http://www.redsys.es/) - ES
@@ -201,38 +202,6 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [WePay](https://www.wepay.com/) - US
 * [Wirecard](http://www.wirecard.com) - AD, CY, GI, IM, MT, RO, CH, AT, DK, GR, IT, MC, SM, TR, BE, EE, HU, LV, NL, SK, GB, BG, FI, IS, LI, NO, SI, VA, FR, IL, LT, PL, ES, CZ, DE, IE, LU, PT, SE
 * [WorldPay](http://www.worldpay.com/) - HK, US, GB, AU, AD, BE, CH, CY, CZ, DE, DK, ES, FI, FR, GI, GR, HU, IE, IL, IT, LI, LU, MC, MT, NL, NO, NZ, PL, PT, SE, SG, SI, SM, TR, UM, VA
-
-## Supported Offsite Payment Gateways
-
-* [2 Checkout](http://www.2checkout.com)
-* [A1Agregator](http://a1agregator.ru/) - RU
-* [Authorize.Net SIM](http://developer.authorize.net/api/sim/) - US
-* [Banca Sella GestPay](https://www.gestpay.it/)
-* [Chronopay](http://www.chronopay.com)
-* [DirecPay](http://www.timesofmoney.com/direcpay/jsp/home.jsp)
-* [Direct-eBanking / sofortueberweisung.de by Payment-Networks AG](https://www.payment-network.com/deb_com_en/merchantarea/home) - DE, AT, CH, BE, UK, NL
-* [Dotpay](http://dotpay.pl)
-* [Doku](http://doku.com)
-* [Dwolla](https://www.dwolla.com/default.aspx)
-* [ePay](http://www.epay.dk/epay-payment-solutions/)
-* [First Data](https://firstdata.zendesk.com/entries/407522-first-data-global-gateway-e4sm-payment-pages-integration-manual)
-* [HiTRUST](http://www.hitrust.com.hk/)
-* [Moneybookers](http://www.moneybookers.com)
-* [Nochex](http://www.nochex.com)
-* [PagSeguro](http://www.pagseguro.com.br/) - BR
-* [Paxum](https://www.paxum.com/)
-* [PayPal Website Payments Standard](https://www.paypal.com/cgi-bin/webscr?cmd#_wp-standard-overview-outside)
-* [Paysbuy](https://www.paysbuy.com/) - TH
-* [Platron](https://www.platron.ru/) - RU
-* [RBK Money](https://rbkmoney.ru/) - RU
-* [Robokassa](http://robokassa.ru/) - RU
-* [SagePay Form](http://www.sagepay.com/products_services/sage_pay_go/integration/form)
-* [Suomen Maksuturva](https://www.maksuturva.fi/services/vendor_services/integration_guidelines.html)
-* [Valitor](http://www.valitor.is/) - IS
-* [Verkkomaksut](http://www.verkkomaksut.fi) - FI
-* [WebMoney](http://www.webmoney.ru) - RU
-* [WebPay](http://webpay.by/)
-* [WorldPay](http://www.worldpay.com)
 
 ## Contributing
 

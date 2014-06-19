@@ -74,7 +74,7 @@ class RemoteQuickpayV5Test < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @visa_dankort, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'dankort', response.params['cardtype']
+    assert_equal 'visa-dk', response.params['cardtype']
   end
 
   def test_successful_visa_electron_authorization

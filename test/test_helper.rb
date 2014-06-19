@@ -45,7 +45,6 @@ begin
 rescue LoadError
   require 'action_controller/test_process'
 end
-require 'active_merchant/billing/integrations/action_view_helper'
 
 ActiveMerchant::Billing::Base.mode = :test
 
@@ -114,25 +113,38 @@ module ActiveMerchant
       end
     end
 
-    def assert_valid(validateable)
+    def assert_valid(model)
+      errors = model.validate
+
       clean_backtrace do
-        assert validateable.valid?, "Expected to be valid"
+        assert_equal({}, errors, "Expected to be valid")
       end
+
+      errors
     end
 
-    def assert_not_valid(validateable)
+    def assert_not_valid(model)
+      errors = model.validate
+
       clean_backtrace do
-        assert_false validateable.valid?, "Expected to not be valid"
+        assert_not_equal({}, errors, "Expected to not be valid")
       end
+
+      errors
     end
 
-    def assert_deprecation_warning(message, target=@gateway)
-      target.expects(:deprecated).with(message)
+    def assert_deprecation_warning(message=nil)
+      ActiveMerchant.expects(:deprecated).with(message ? message : anything)
       yield
     end
 
-    def assert_no_deprecation_warning(target)
-      target.expects(:deprecated).never
+    def silence_deprecation_warnings
+      ActiveMerchant.stubs(:deprecated)
+      yield
+    end
+
+    def assert_no_deprecation_warning
+      ActiveMerchant.expects(:deprecated).never
       yield
     end
 
@@ -194,6 +206,10 @@ module ActiveMerchant
       }.update(options)
     end
 
+    def generate_unique_id
+      SecureRandom.hex(16)
+    end
+
     def all_fixtures
       @@fixtures ||= load_fixtures
     end
@@ -226,7 +242,6 @@ end
 Test::Unit::TestCase.class_eval do
   include ActiveMerchant::Billing
   include ActiveMerchant::Assertions
-  include ActiveMerchant::Utils
   include ActiveMerchant::Fixtures
 end
 

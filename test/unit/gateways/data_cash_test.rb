@@ -11,8 +11,8 @@ class DataCashTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card('4242424242424242')
-    
-    @address = { 
+
+    @address = {
       :name     => 'Mark McBride',
       :address1 => 'Flat 12/3',
       :address2 => '45 Main Road',
@@ -22,16 +22,16 @@ class DataCashTest < Test::Unit::TestCase
       :zip      => 'A987AA',
       :phone    => '(555)555-5555'
     }
-    
+
     @options = {
       :order_id => generate_unique_id,
       :billing_address => @address
     }
   end
-  
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    
+
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
@@ -48,7 +48,7 @@ class DataCashTest < Test::Unit::TestCase
 
   def test_deprecated_credit
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/<method>txn_refund<\/method>/)).returns(successful_purchase_response)
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
       @gateway.credit(@amount, "transaction_id", @options)
     end
   end
@@ -61,51 +61,51 @@ class DataCashTest < Test::Unit::TestCase
 
   def test_unsuccessful_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
-    
+
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
     assert response.test?
     assert_equal 'DECLINED', response.message
   end
-  
+
   def test_error_response
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
-    
+
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
     assert response.test?
     assert_equal 'DECLINED', response.message
   end
-  
+
   def test_supported_countries
     assert_equal ['GB'], DataCashGateway.supported_countries
   end
-  
+
   def test_supported_card_types
     assert_equal [ :visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro, :switch, :solo, :laser ], DataCashGateway.supported_cardtypes
   end
-  
+
   def test_purchase_with_missing_order_id_option
     assert_raise(ArgumentError){ @gateway.purchase(100, @credit_card, {}) }
   end
-  
+
   def test_authorize_with_missing_order_id_option
     assert_raise(ArgumentError){ @gateway.authorize(100, @credit_card, {}) }
   end
-  
+
   def test_purchase_does_not_raise_exception_with_missing_billing_address
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert @gateway.authorize(100, @credit_card, {:order_id => generate_unique_id }).is_a?(ActiveMerchant::Billing::Response)
   end
-  
+
   def test_continuous_authority_purchase_with_missing_continuous_authority_reference
     assert_raise(ArgumentError) do
       @gateway.authorize(100, "a;b;", @options)
     end
   end
-  
+
   def test_successful_continuous_authority_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_using_continuous_authority_response)
 
@@ -121,7 +121,7 @@ class DataCashTest < Test::Unit::TestCase
     response = @gateway.purchase(100, @credit_card, @options)
     assert_success response
   end
-  
+
   private
   def failed_purchase_response
     <<-XML
@@ -140,7 +140,7 @@ class DataCashTest < Test::Unit::TestCase
 </Response>
     XML
   end
-  
+
   def successful_purchase_response
     <<-XML
 <Response>
@@ -188,5 +188,5 @@ class DataCashTest < Test::Unit::TestCase
   <time>1363364966</time>
 </Response>
     XML
-  end  
+  end
 end

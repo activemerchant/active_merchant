@@ -75,17 +75,19 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(xml, card_or_token,options)
         if card_or_token.respond_to?(:number) && !card_or_token.first_name.nil? && (options[:address] || options[:billing_address])
-        billing_address = options[:billing_address] || options[:address]
 
           xml.hps :CardHolderData do
             xml.hps :CardHolderFirstName, card_or_token.first_name unless card_or_token.first_name.nil?
             xml.hps :CardHolderLastName, card_or_token.last_name unless card_or_token.last_name.nil?
             xml.hps :CardHolderEmail, options[:email] if options[:email]
             xml.hps :CardHolderPhone, options[:phone] if options[:phone]
-            xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1] 
-            xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
-            xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
-            xml.hps :CardHolderZip, billing_address[:zip] if billing_address[:zip]
+
+            if billing_address = (options[:billing_address] || options[:address])
+              xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1]
+              xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
+              xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
+              xml.hps :CardHolderZip, billing_address[:zip] if billing_address[:zip]
+            end
           end
         end
       end
@@ -93,13 +95,28 @@ module ActiveMerchant #:nodoc:
       def add_payment(xml, card_or_token, options)
         xml.hps :CardData do
           if card_or_token.respond_to?(:number)
-            xml.hps :ManualEntry do
-              xml.hps :CardNbr, card_or_token.number
-              xml.hps :ExpMonth, card_or_token.month
-              xml.hps :ExpYear, card_or_token.year
-              xml.hps :CVV2, card_or_token.verification_value unless card_or_token.verification_value.nil?
-              xml.hps :CardPresent, 'N'
-              xml.hps :ReaderPresent, 'N'
+            if card_or_token.track_data
+              xml.tag!("hps:TrackData", 'method'=>'swipe') do
+                xml.text! card_or_token.track_data
+              end
+              if options[:encryption_type]
+                xml.hps :EncryptionData do
+                  xml.hps :Version, options[:encryption_type]
+                  if options[:encryption_type] == '02'
+                    xml.hps :EncryptedTrackNumber, options[:encrypted_track_number]
+                    xml.hps :KTB, options[:ktb]
+                  end
+                end
+              end
+            else
+              xml.hps :ManualEntry do
+                xml.hps :CardNbr, card_or_token.number
+                xml.hps :ExpMonth, card_or_token.month
+                xml.hps :ExpYear, card_or_token.year
+                xml.hps :CVV2, card_or_token.verification_value unless card_or_token.verification_value.nil?
+                xml.hps :CardPresent, 'N'
+                xml.hps :ReaderPresent, 'N'
+              end
             end
           else
             xml.hps :TokenData do
@@ -123,7 +140,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(action)
-        xml = Builder::XmlMarkup.new
+        xml = Builder::XmlMarkup.new(encoding: 'UTF-8')
         xml.instruct!(:xml, encoding: 'UTF-8')
         xml.SOAP :Envelope, {
             'xmlns:SOAP' => 'http://schemas.xmlsoap.org/soap/envelope/',

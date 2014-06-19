@@ -65,7 +65,7 @@ class BogusTest < Test::Unit::TestCase
   def test_credit_uses_refund
     options = {:foo => :bar}
     @gateway.expects(:refund).with(1000, '1337', options)
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
       @gateway.credit(1000, '1337', options)
     end
   end

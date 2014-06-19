@@ -47,7 +47,9 @@ module ActiveMerchant #:nodoc:
         :refund => 'CCRETURN',
         :authorize => 'CCAUTHONLY',
         :capture => 'CCFORCE',
-        :void => 'CCVOID'
+        :void => 'CCDELETE',
+        :store => 'CCGETTOKEN',
+        :update => 'CCUPDATETOKEN',
       }
 
       # Initialize the Gateway
@@ -67,11 +69,15 @@ module ActiveMerchant #:nodoc:
       end
 
       # Make a purchase
-      def purchase(money, creditcard, options = {})
+      def purchase(money, payment_method, options = {})
         form = {}
         add_salestax(form, options)
         add_invoice(form, options)
-        add_creditcard(form, creditcard)
+        if payment_method.is_a?(String)
+          add_token(form, payment_method)
+        else
+          add_creditcard(form, payment_method)
+        end
         add_address(form, options)
         add_customer_data(form, options)
         add_test_mode(form, options)
@@ -167,7 +173,29 @@ module ActiveMerchant #:nodoc:
       end
 
 
+      def store(creditcard, options = {})
+        form = {}
+        add_creditcard(form, creditcard)
+        add_address(form, options)
+        add_customer_data(form, options)
+        add_test_mode(form, options)
+        add_verification(form, options)
+        form[:add_token] = 'Y'
+        commit(:store, nil, form)
+      end
+
+      def update(token, creditcard, options = {})
+        form = {}
+        add_token(form, token)
+        add_creditcard(form, creditcard)
+        add_address(form, options)
+        add_customer_data(form, options)
+        add_test_mode(form, options)
+        commit(:update, nil, form)
+      end
+
       private
+
       def add_invoice(form,options)
         form[:invoice_number] = (options[:order_id] || options[:invoice]).to_s.slice(0, 10)
         form[:description] = options[:description].to_s.slice(0, 255)
@@ -195,6 +223,10 @@ module ActiveMerchant #:nodoc:
 
         form[:first_name] = creditcard.first_name.to_s.slice(0, 20)
         form[:last_name] = creditcard.last_name.to_s.slice(0, 30)
+      end
+
+      def add_token(form, token)
+        form[:token] = token
       end
 
       def add_verification_value(form, creditcard)
@@ -237,6 +269,10 @@ module ActiveMerchant #:nodoc:
           form[:ship_to_country]        = shipping_address[:country].to_s.slice(0, 50)
           form[:ship_to_zip]            = shipping_address[:zip].to_s.slice(0, 10)
         end
+      end
+
+      def add_verification(form, options)
+        form[:verify] = 'Y' if options[:verify]
       end
 
       def parse_first_and_last_name(value)

@@ -131,6 +131,23 @@ class NabTransactTest < Test::Unit::TestCase
     assert_equal "Only $1.00 available for refund", response.message
   end
 
+  def test_request_timeout_default
+    stub_comms(@gateway, :ssl_request) do
+      assert response = @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<timeoutValue>60/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_override_request_timeout
+    gateway = NabTransactGateway.new(login: 'login', password: 'password', request_timeout: 44)
+    stub_comms(gateway, :ssl_request) do
+      assert response = gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/<timeoutValue>44/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def check_transaction_type(type)

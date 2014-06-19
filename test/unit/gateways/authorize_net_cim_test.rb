@@ -417,6 +417,30 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_nil response.authorization
   end
 
+  def test_should_update_customer_payment_profile_request_with_last_four_digits
+    last_four_credit_card = ActiveMerchant::Billing::CreditCard.new(:number => "4242") #Credit card with only last four digits
+
+    response = stub_comms do
+      @gateway.update_customer_payment_profile(
+        :customer_profile_id => @customer_profile_id,
+        :payment_profile => {
+          :customer_payment_profile_id => @customer_payment_profile_id,
+          :bill_to => address(:address1 => "345 Avenue B",
+                              :address2 => "Apt 101"),
+          :payment => {
+            :credit_card => last_four_credit_card
+          }
+        }
+      )
+    end.check_request do |endpoint, data, headers|
+      assert_match %r{<cardNumber>XXXX4242</cardNumber>}, data
+    end.respond_with(successful_update_customer_payment_profile_response)
+
+    assert_instance_of Response, response
+    assert_success response
+    assert_nil response.authorization
+  end
+
   def test_should_update_customer_shipping_address_request
     @gateway.expects(:ssl_post).returns(successful_update_customer_shipping_address_response)
 
@@ -583,6 +607,13 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal 'M', response.params['direct_response']['card_code'] # M => match
     assert_equal response.authorization, response.params['direct_response']['transaction_id']
     assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
+  end
+
+  def test_full_or_masked_card_number
+    assert_equal nil, @gateway.send(:full_or_masked_card_number, nil)
+    assert_equal '', @gateway.send(:full_or_masked_card_number, '')
+    assert_equal '4242424242424242', @gateway.send(:full_or_masked_card_number, @credit_card.number)
+    assert_equal 'XXXX1234', @gateway.send(:full_or_masked_card_number, '1234')
   end
 
   private

@@ -245,7 +245,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
       assert response = @gateway.credit(@amount, '123456789', :card_number => @credit_card.number)
       assert_success response
       assert_equal 'This transaction has been approved', response.message

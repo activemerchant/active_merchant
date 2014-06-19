@@ -69,7 +69,7 @@ class QbmsTest < Test::Unit::TestCase
   def test_successful_deprecated_credit
     @gateway.expects(:ssl_post).returns(credit_response)
 
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
       assert response = @gateway.credit(@amount, "x")
       assert_instance_of Response, response
       assert_success response

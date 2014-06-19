@@ -52,9 +52,32 @@ module ActiveMerchant #:nodoc:
         commit(url_for('Transaction'), params)
       end
 
+      def authorize(amount, payment_method, options={})
+        params = {}
+        add_metadata(params, options)
+        add_invoice(params, amount, options)
+        add_customer_data(params, options)
+        add_credit_card(params, payment_method, options)
+        commit(url_for('Authorisation'), params)
+      end
+
+      def capture(amount, identification, options = {})
+        params = {}
+        add_metadata(params, options)
+        add_invoice(params, amount, options)
+        add_reference(params, identification)
+        commit(url_for("CapturePayment"), params)
+      end
+
+      def void(identification, options = {})
+        params = {}
+        add_reference(params, identification)
+        commit(url_for("CancelAuthorisation"), params)
+      end
+
       # Public: Refund a transaction.
       #
-      # money          - The monetary amount of the transaction in cents
+      # amount         - The monetary amount of the transaction in cents
       # identification - The transaction id which is returned in the
       #                  authorization of the successful purchase transaction
       # options        - A standard ActiveMerchant options hash:
@@ -75,10 +98,11 @@ module ActiveMerchant #:nodoc:
       #                                      (default: "https://github.com/Shopify/active_merchant")
       #
       # Returns an ActiveMerchant::Billing::Response object
-      def refund(money, identification, options = {})
+      def refund(amount, identification, options = {})
         params = {}
         add_metadata(params, options)
-        add_invoice(params, money, options.merge(refund_transaction_id: identification))
+        add_invoice(params, amount, options, "Refund")
+        add_reference(params["Refund"], identification)
         add_customer_data(params, options)
         commit(url_for("Transaction/#{identification}/Refund"), params)
       end
@@ -150,21 +174,18 @@ module ActiveMerchant #:nodoc:
         params['DeviceID'] = options[:application_id] || application_id
       end
 
-      def add_invoice(params, money, options)
+      def add_invoice(params, money, options, key = "Payment")
         currency_code = options[:currency] || currency(money)
-        invoice = {
+        params[key] = {
           'TotalAmount' => localized_amount(money, currency_code),
           'InvoiceReference' => options[:order_id],
           'InvoiceDescription' => options[:description],
           'CurrencyCode' => currency_code,
         }
-        if options[:refund_transaction_id]
-          # must include the original transaction id for refunds
-          invoice['TransactionID'] = options[:refund_transaction_id] if options[:refund_transaction_id]
-          params['Refund'] = invoice
-        else
-          params['Payment'] = invoice
-        end
+      end
+
+      def add_reference(params, reference)
+        params['TransactionID'] = reference
       end
 
       def add_customer_data(params, options)
@@ -248,14 +269,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        if response['Errors']
-          false
-        elsif response['ResponseCode'] == "00"
+        if response['ResponseCode'] == "00"
           true
         elsif response['TransactionStatus']
           (response['TransactionStatus'] == true)
+        elsif response["Succeeded"]
+          (response["Succeeded"] == true)
         else
-          true
+          false
         end
       end
 
