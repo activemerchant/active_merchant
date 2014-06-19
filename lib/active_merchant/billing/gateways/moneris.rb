@@ -27,10 +27,6 @@ module ActiveMerchant #:nodoc:
       #
       # * <tt>:login</tt> -- Your Store ID
       # * <tt>:password</tt> -- Your API Token
-      # * <tt>:avs_enabled</tt> -- Specify that you would like the address information
-      #                            passed to the gateway to perform an AVS check.
-      #                            Only particular account types at Moneris will allow this.
-      #                            Defaults to false.  (optional)
       # * <tt>:cvv_enabled</tt> -- Specify that you would like the CVV passed to the gateway.
       #                            Only particular account types at Moneris will allow this.
       #                            Defaults to false.  (optional)
