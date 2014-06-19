@@ -102,6 +102,16 @@ class PinTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_update
+    token = 'cus_05p0n7UFPmcyCNjD8c6HdA'
+    @gateway.expects(:ssl_request).with(:put, "https://test-api.pin.net.au/1/customers/#{token}", instance_of(String), instance_of(Hash)).returns(successful_customer_store_response)
+    assert response = @gateway.update('cus_05p0n7UFPmcyCNjD8c6HdA', @credit_card, @options)
+    assert_success response
+    assert_equal 'cus_05p0n7UFPmcyCNjD8c6HdA', response.authorization
+    assert_equal JSON.parse(successful_customer_store_response), response.params
+    assert response.test?
+  end
+
   def test_successful_refund
     token = 'ch_encBuMDf17qTabmVjDsQlg'
     @gateway.expects(:ssl_request).with(:post, "https://test-api.pin.net.au/1/charges/#{token}/refunds", {:amount => '100'}.to_json, instance_of(Hash)).returns(successful_refund_response)
@@ -155,6 +165,13 @@ class PinTest < Test::Unit::TestCase
     @gateway.expects(:add_address).with(instance_of(Hash), @credit_card, @options)
     @gateway.expects(:ssl_request).returns(successful_store_response)
     assert_success @gateway.store(@credit_card, @options)
+  end
+
+  def test_update_parameters
+    @gateway.expects(:add_creditcard).with(instance_of(Hash), @credit_card)
+    @gateway.expects(:add_address).with(instance_of(Hash), @credit_card, @options)
+    @gateway.expects(:ssl_request).returns(successful_store_response)
+    assert_success @gateway.update('cus_XZg1ULpWaROQCOT5PdwLkQ', @credit_card, @options)
   end
 
   def test_add_amount

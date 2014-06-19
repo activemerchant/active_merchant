@@ -65,6 +65,16 @@ module ActiveMerchant #:nodoc:
         commit(:put, "charges/#{CGI.escape(token)}/capture", {}, options)
       end
 
+      # Updates the credit card for the customer.
+      def update(token, creditcard, options = {})
+        post = {}
+
+        add_creditcard(post, creditcard)
+        add_customer_data(post, options)
+        add_address(post, creditcard, options)
+        commit(:put, "customers/#{CGI.escape(token)}", post, options)
+      end
+
       private
 
       def add_amount(post, money, options)
@@ -74,8 +84,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        post[:email] = options[:email]
-        post[:ip_address] = options[:ip]
+        post[:email] = options[:email] if options[:email]
+        post[:ip_address] = options[:ip] if options[:ip]
       end
 
       def add_address(post, creditcard, options)

@@ -5,7 +5,8 @@ class RemotePinTest < Test::Unit::TestCase
     @gateway = PinGateway.new(fixtures(:pin))
 
     @amount = 100
-    @credit_card = credit_card('5520000000000000')
+    @credit_card = credit_card('5520000000000000', :year => Time.now.year + 2)
+    @visa_credit_card = credit_card('4200000000000000', :year => Time.now.year + 3)
     @declined_card = credit_card('4100000000000001')
 
     @options = {
@@ -103,6 +104,18 @@ class RemotePinTest < Test::Unit::TestCase
     assert response2 = @gateway.purchase(@amount, token, @options)
     assert_success response2
     assert_not_equal response1.authorization, response2.authorization
+  end
+
+  def test_store_and_update
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_not_nil response.authorization
+    assert_equal response.params['response']['card']['expiry_year'], @credit_card.year
+
+    response = @gateway.update(response.authorization, @visa_credit_card, :address => address)
+    assert_success response
+    assert_not_nil response.authorization
+    assert_equal response.params['response']['card']['expiry_year'], @visa_credit_card.year
   end
 
   def test_refund
