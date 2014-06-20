@@ -233,6 +233,11 @@ itransact:
 jetpay:
   login: TESTTERMINAL
 
+komerci:
+  login: testews
+  password: testews
+  affiliate: 254785
+
 linkpoint:
   login: STOREID
   pem: |
@@ -627,11 +632,6 @@ realex_with_account:
   login: X
   password: Y
   account: testaccount
-
-redecard:
-  login: testews
-  password: testews
-  affiliate: 254785
 
 redsys:
   login: MERCHANT CODE

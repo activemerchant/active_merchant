@@ -1,9 +1,9 @@
 require 'test_helper'
 
-class RedecardTest < Test::Unit::TestCase
+class KomerciTest < Test::Unit::TestCase
   def setup
-    @gateway = RedecardGateway.new(
-      fixtures(:redecard)
+    @gateway = KomerciGateway.new(
+      fixtures(:komerci)
     )
 
     @credit_card = credit_card
@@ -16,15 +16,12 @@ class RedecardTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_request).twice.returns(successful_authorize_response, successful_capture_response)
+    @gateway.expects(:ssl_request).once.returns(successful_authorize_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_instance_of MultiResponse, response
-    assert_success response
 
-    assert_equal '4444', response.responses.first.authorization
-    assert_success response.responses.first
-    assert_success response.responses.last
+    assert_success response
+    assert_equal '4444', response.authorization
     assert response.test?
   end
 

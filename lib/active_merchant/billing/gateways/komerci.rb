@@ -1,6 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class RedecardGateway < Gateway
+    class KomerciGateway < Gateway
 
       self.test_url = 'https://ecommerce.redecard.com.br/pos_virtual/wskomerci/cap_teste.asmx'
       self.live_url = 'https://ecommerce.redecard.com.br/pos_virtual/wskomerci/cap.asmx'
@@ -24,10 +24,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, credit_card, options={})
-        MultiResponse.run do |r|
-          r.process { authorize(money, credit_card, options) }
-          r.process { capture(money, r.authorization, prepare_capture_options(r, options)) }
-        end
+        post = {}
+        add_affiliate(post, options)
+        add_invoice(post, money, options)
+        add_payment_value(post, money, options)
+        add_credit_card(post, credit_card)
+        add_authorize_empty_params(post)
+        post[:transacao] = SALE_TYPES[options[:sale_type]] || '04'
+        commit('GetAuthorized', post)
       end
 
       # Besides the authorization, we need the 'numcv' from the authorize
@@ -177,7 +181,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        xml = REXML::Document.new(body.force_encoding("ISO-8859-1").encode("UTF-8"))
+        xml = REXML::Document.new(body)
 
         response = {}
         xml.root.elements.to_a.each do |node|
