@@ -384,7 +384,7 @@ openpay:
 optimal_payment:
   login: test
   password: test
-  account: '89987182'
+  account: 'ACCOUNT_NUMBER'
 
 orbital_gateway:
   login: LOGIN
