@@ -115,7 +115,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Fat Zebra](https://www.fatzebra.com.au/) - AU
 * [Federated Canada](http://www.federatedcanada.com/) - CA
 * [Finansbank WebPOS](https://www.fbwebpos.com/) - US, TR
-* [First Pay](http://www.first-pay.com) - US
+* [1stPayGateway.Net](http://1stpaygateway.net/) - US
 * [FirstData Global Gateway e4](http://www.firstdata.com) - CA, US
 * [FirstGiving](http://www.firstgiving.com/) - US
 * [Garanti Sanal POS](https://sanalposweb.garanti.com.tr) - US, TR
