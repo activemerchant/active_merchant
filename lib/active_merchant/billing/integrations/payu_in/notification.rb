@@ -6,8 +6,8 @@ module ActiveMerchant #:nodoc:
 
           def initialize(post, options = {})
             super(post, options)
-            @merchant_id = options[:credential1]
-            @secret_key = options[:credential2]
+            @merchant_id = options[:merchant_id]
+            @secret_key = options[:secret_key]
             @params = options[:params]
           end
 

@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
           mapping :amount, 'amount'
           mapping :account, 'key'
           mapping :order, 'txnid'
-          mapping :credential2, 'productinfo'
+          mapping :productinfo, 'productinfo'
 
           mapping :customer, :first_name => 'firstname',
             :last_name  => 'lastname',
@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
           end
 
           def generate_checksum(  options = {} )
-            checksum_fields = [ :order, :amount, :credential2, { :customer => [ :first_name, :email ] },
+            checksum_fields = [ :order, :amount, :productinfo, { :customer => [ :first_name, :email ] },
               { :user_defined => [ :var1, :var2, :var3, :var4, :var5, :var6, :var7, :var8, :var9, :var10 ] } ]
             checksum_payload_items = checksum_fields.inject( [] ) do | items, field |
               if Hash === field then
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
               end
             end
             checksum_payload_items.push( options )
-            PayuIn.checksum(PayuIn.merchant_id, PayuIn.secret_key, *checksum_payload_items )
+            PayuIn.checksum(@fields[ mappings[:account] ], ActiveMerchant::Billing::PayuInGateway.secret_key, *checksum_payload_items )
           end
 
         end
