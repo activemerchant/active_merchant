@@ -154,6 +154,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
+        return response[:cv2avs_status] unless response[:status] == '1'
         response[:extended_response_message]
       end
 
