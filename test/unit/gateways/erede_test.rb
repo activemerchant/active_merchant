@@ -40,8 +40,6 @@ class KomerciTest < Test::Unit::TestCase
 
     assert_failure response
     assert response.test?
-
-    assert_equal 'SECURITY CODE MATCH ONLY', response.message
   end
 
   private
