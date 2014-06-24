@@ -13,7 +13,7 @@ class MonerisTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4242424242424242')
-    @options = { :order_id => '1', :customer => '1' }
+    @options = { :order_id => '1', :customer => '1', :billing_address => address}
   end
 
   def test_default_options
@@ -211,6 +211,37 @@ class MonerisTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_avs_information_present_with_address
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{avs_street_number>}, data)
+      assert_match(%r{avs_street_name>}, data)
+      assert_match(%r{avs_zipcode>}, data)
+    end.respond_with(successful_purchase_response_with_avs_result)
+  end
+
+  def test_avs_information_absent_with_no_address
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.tap { |x| x.delete(:billing_address) })
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{avs_street_number>}, data)
+      assert_no_match(%r{avs_street_name>}, data)
+      assert_no_match(%r{avs_zipcode>}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_avs_result_valid_with_address
+    @gateway.expects(:ssl_post).returns(successful_purchase_response_with_avs_result)
+    assert response = @gateway.purchase(100, @credit_card, @options)
+    assert_equal(response.avs_result, {
+      'code' => 'A',
+      'message' => 'Street address matches, but 5-digit and 9-digit postal code do not match.',
+      'street_match' => 'Y',
+      'postal_match' => 'N'
+    })
+  end
+
   def test_customer_can_be_specified
     stub_comms do
       @gateway.purchase(@amount, @credit_card, order_id: "3", customer: "Joe Jones")
@@ -248,6 +279,36 @@ class MonerisTest < Test::Unit::TestCase
     <CardType>V</CardType>
     <TransID>58-0_3</TransID>
     <TimedOut>false</TimedOut>
+  </receipt>
+</response>
+
+    RESPONSE
+  end
+
+  def successful_purchase_response_with_avs_result
+    <<-RESPONSE
+<?xml version="1.0"?>
+<response>
+  <receipt>
+    <ReceiptId>9c7189ec64b58f541335be1ca6294d09</ReceiptId>
+    <ReferenceNum>660110910011136190</ReferenceNum>
+    <ResponseCode>027</ResponseCode>
+    <ISO>01</ISO>
+    <AuthCode>115497</AuthCode>
+    <TransTime>15:20:51</TransTime>
+    <TransDate>2014-06-18</TransDate>
+    <TransType>00</TransType>
+    <Complete>true</Complete><Message>APPROVED * =</Message>
+    <TransAmount>10.10</TransAmount>
+    <CardType>V</CardType>
+    <TransID>491573-0_9</TransID>
+    <TimedOut>false</TimedOut>
+    <BankTotals>null</BankTotals>
+    <Ticket>null</Ticket>
+    <CorporateCard>false</CorporateCard>
+    <AvsResultCode>A</AvsResultCode>
+    <ITDResponse>null</ITDResponse>
+    <IsVisaDebit>false</IsVisaDebit>
   </receipt>
 </response>
 
