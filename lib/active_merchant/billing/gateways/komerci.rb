@@ -14,8 +14,8 @@ module ActiveMerchant #:nodoc:
 
       SALE_TYPES = {
         spot_sale: '04',
-        issuing_installments: '06',
-        establishment_installments: '08'
+        issuing_instalments: '06',
+        establishment_instalments: '08'
       }
 
       def initialize(options={})
@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_value(post, money, options)
         post[:total] = amount(money)
-        post[:parcelas] = options[:installments] || '00'
+        post[:parcelas] = options[:instalments] || '00'
       end
 
       def add_invoice(post, money, options)
