@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :diners]
 
       self.homepage_url = 'http://www.userede.com.br/pt-BR/Paginas/default.aspx'
-      self.display_name = 'RedeCard'
+      self.display_name = 'RedeCard Komerci'
 
       SALE_TYPES = {
         spot_sale: '04',

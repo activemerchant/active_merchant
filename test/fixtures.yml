@@ -136,6 +136,11 @@ epay:
   login: X
   password: Y
 
+erede:
+  affiliate: change
+  login: me
+  password: please
+
 evo_ca:
   username: demo
   password: password
