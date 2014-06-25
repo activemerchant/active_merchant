@@ -6,11 +6,13 @@ class ActiveMerchant::Billing::OptimalPaymentGateway
 end
 
 class OptimalPaymentTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = OptimalPaymentGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      :login => 'login',
+      :password => 'password'
+    )
 
     @credit_card = credit_card
     @amount = 100
@@ -26,6 +28,14 @@ class OptimalPaymentTest < Test::Unit::TestCase
   def test_full_request
     @gateway.instance_variable_set('@credit_card', @credit_card)
     assert_match full_request, @gateway.cc_auth_request(@amount, @options)
+  end
+
+  def test_ip_address_is_passed
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(ip: "1.2.3.4"))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r{customerIP%3E1.2.3.4%3C}, data
+    end.respond_with(successful_purchase_response)
   end
 
   def test_minimal_request

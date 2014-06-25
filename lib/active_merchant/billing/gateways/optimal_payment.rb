@@ -161,6 +161,7 @@ module ActiveMerchant #:nodoc:
           build_card(xml, opts)
           build_billing_details(xml, opts)
           build_shipping_details(xml, opts)
+          xml.customerIP opts[:ip] if opts[:ip]
         end
       end
 
