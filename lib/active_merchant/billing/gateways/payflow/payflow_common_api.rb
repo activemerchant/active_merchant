@@ -85,7 +85,7 @@ module ActiveMerchant #:nodoc:
             else
               xml.tag! 'Transactions' do
                 xml.tag! 'Transaction', 'CustRef' => options[:customer] do
-                  xml.tag! 'Verbosity', 'MEDIUM'
+                  xml.tag! 'Verbosity', @options[:verbosity] || 'MEDIUM'
                   xml << body
                 end
               end
