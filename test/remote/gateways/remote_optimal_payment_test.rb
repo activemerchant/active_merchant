@@ -12,7 +12,8 @@ class RemoteOptimalPaymentTest < Test::Unit::TestCase
       :order_id => '1',
       :billing_address => address,
       :description => 'Basic Subscription',
-      :email => 'email@example.com'
+      :email => 'email@example.com',
+      :ip => '1.2.3.4'
     }
   end
 

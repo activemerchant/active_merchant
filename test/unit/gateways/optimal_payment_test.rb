@@ -28,6 +28,11 @@ class OptimalPaymentTest < Test::Unit::TestCase
     assert_match full_request, @gateway.cc_auth_request(@amount, @options)
   end
 
+  def test_full_request_with_ip_address
+    @gateway.instance_variable_set('@credit_card', @credit_card)
+    assert_match full_request_with_ip_address, @gateway.cc_auth_request(@amount, @options.merge(:ip => '1.2.3.4'))
+  end
+
   def test_minimal_request
     options = {
       :order_id => '1',
@@ -213,6 +218,45 @@ class OptimalPaymentTest < Test::Unit::TestCase
     <phone>%28555%29555-5555</phone>
     <email>email%40example.com</email>
   </billingDetails>
+</ccAuthRequestV1>
+    XML
+    Regexp.new(Regexp.escape(str).sub('xmlns', '[^>]+').sub('/>', '(/>|></[^>]+>)'))
+  end
+
+  def full_request_with_ip_address
+    str = <<-XML
+<ccAuthRequestV1 xmlns>
+  <merchantAccount>
+    <accountNum/>
+    <storeID>login</storeID>
+    <storePwd>password</storePwd>
+  </merchantAccount>
+  <merchantRefNum>1</merchantRefNum>
+  <amount>1.0</amount>
+  <card>
+    <cardNum>4242424242424242</cardNum>
+    <cardExpiry>
+      <month>9</month>
+      <year>#{Time.now.year + 1}</year>
+    </cardExpiry>
+    <cardType>VI</cardType>
+    <cvdIndicator>1</cvdIndicator>
+    <cvd>123</cvd>
+  </card>
+  <billingDetails>
+    <cardPayMethod>WEB</cardPayMethod>
+    <firstName>Jim</firstName>
+    <lastName>Smith</lastName>
+    <street>1234+My+Street</street>
+    <street2>Apt+1</street2>
+    <city>Ottawa</city>
+    <state>ON</state>
+    <country>CA</country>
+    <zip>K1C2N6</zip>
+    <phone>%28555%29555-5555</phone>
+    <email>email%40example.com</email>
+  </billingDetails>
+  <customerIP>1.2.3.4</customerIP>
 </ccAuthRequestV1>
     XML
     Regexp.new(Regexp.escape(str).sub('xmlns', '[^>]+').sub('/>', '(/>|></[^>]+>)'))
