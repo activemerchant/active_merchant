@@ -74,11 +74,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(xml, card_or_token,options)
-        if card_or_token.respond_to?(:number)
+        if card_or_token.respond_to?(:number) && !card_or_token.first_name.nil? && (options[:address] || options[:billing_address])
 
           xml.hps :CardHolderData do
-            xml.hps :CardHolderFirstName, card_or_token.first_name
-            xml.hps :CardHolderLastName, card_or_token.last_name
+            xml.hps :CardHolderFirstName, card_or_token.first_name unless card_or_token.first_name.nil?
+            xml.hps :CardHolderLastName, card_or_token.last_name unless card_or_token.last_name.nil?
             xml.hps :CardHolderEmail, options[:email] if options[:email]
             xml.hps :CardHolderPhone, options[:phone] if options[:phone]
 
@@ -113,7 +113,7 @@ module ActiveMerchant #:nodoc:
                 xml.hps :CardNbr, card_or_token.number
                 xml.hps :ExpMonth, card_or_token.month
                 xml.hps :ExpYear, card_or_token.year
-                xml.hps :CVV2, card_or_token.verification_value
+                xml.hps :CVV2, card_or_token.verification_value unless card_or_token.verification_value.nil?
                 xml.hps :CardPresent, 'N'
                 xml.hps :ReaderPresent, 'N'
               end
@@ -150,6 +150,9 @@ module ActiveMerchant #:nodoc:
               xml.hps 'Ver1.0'.to_sym do
                 xml.hps :Header do
                   xml.hps :SecretAPIKey, @options[:secret_api_key]
+                  xml.hps :DeveloperID, @options[:developer_id] if @options[:developer_id]
+                  xml.hps :VersionNbr, @options[:version_number] if @options[:version_number]
+                  xml.hps :SiteTrace, @options[:site_trace] if @options[:site_trace]
                 end
                 xml.hps :Transaction do
                   xml.hps action.to_sym do
