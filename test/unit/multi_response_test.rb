@@ -167,5 +167,7 @@ class MultiResponseTest < Test::Unit::TestCase
     m.process(:ignore_result){r2}
     assert_equal "1", m.message
     assert_equal [r1, r2], m.responses
+
+    assert m.success?
   end
 end
