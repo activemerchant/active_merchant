@@ -88,6 +88,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def verify(creditcard, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(50, creditcard, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       def application_fee_from_response(response)
         return unless response.success?
 

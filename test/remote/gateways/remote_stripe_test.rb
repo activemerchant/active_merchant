@@ -94,6 +94,23 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_match /active_merchant_fake_charge/, refund.message
   end
 
+  def test_successful_verify
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+
+    assert_equal "Transaction approved", response.message
+    assert_equal "wow@example.com", response.params["metadata"]["email"]
+    assert_equal "charge", response.params["object"]
+    assert_success response.responses.last, "The void should succeed"
+    assert response.responses.last.params["refunded"]
+  end
+
+  def test_unsuccessful_verify
+    assert response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_match /Your card was declined/, response.message
+  end
+
   def test_successful_store
     assert response = @gateway.store(@credit_card, {:currency => @currency, :description => "Active Merchant Test Customer", :email => "email@example.com"})
     assert_success response
