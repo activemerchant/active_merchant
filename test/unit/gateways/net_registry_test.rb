@@ -48,7 +48,7 @@ class NetRegistryTest < Test::Unit::TestCase
 
   def test_capture_without_credit_card_provided
     assert_raise(ArgumentError) do
-      response = @gateway.capture(@amount, '0707161858000000', @options)
+      @gateway.capture(@amount, '0707161858000000', @options)
     end
   end
 
@@ -56,7 +56,7 @@ class NetRegistryTest < Test::Unit::TestCase
     @gateway.stubs(:ssl_post).returns(successful_authorization_response)
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_match /\A\d{6}\z/, response.authorization
+    assert_match %r{\A\d{6}\z}, response.authorization
     assert_equal '000000', response.authorization
   end
 
@@ -65,7 +65,7 @@ class NetRegistryTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    assert_match /\A\d{6}\z/, response.authorization
+    assert_match %r{\A\d{6}\z}, response.authorization
 
     response = @gateway.capture(@amount, response.authorization, :credit_card => @credit_card)
     assert_success response

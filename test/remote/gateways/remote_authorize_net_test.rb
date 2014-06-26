@@ -23,6 +23,13 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_minimal_options
+    assert response = @gateway.purchase(@amount, @credit_card)
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
 
   def test_successful_echeck_purchase
     assert response = @gateway.purchase(@amount, @check, @options)
@@ -83,7 +90,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     bogus_card = credit_card('4424222222222222')
     assert response = @gateway.verify(bogus_card, @options)
     assert_failure response
-    assert_match /The credit card number is invalid/, response.message
+    assert_match %r{The credit card number is invalid}, response.message
   end
 
   def test_bad_login

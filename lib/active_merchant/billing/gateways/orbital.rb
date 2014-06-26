@@ -759,7 +759,7 @@ module ActiveMerchant #:nodoc:
         end
 
         def initialize(code)
-          @code = code.to_s.strip.upcase unless code.blank?
+          @code = (code.blank? ? nil : code.to_s.strip.upcase)
           if @code
             @message      = CODES[@code]
             @postal_match = ORBITAL_POSTAL_MATCH_CODE[@code]

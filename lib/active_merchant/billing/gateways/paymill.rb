@@ -236,6 +236,8 @@ module ActiveMerchant #:nodoc:
 
 
       class ResponseParser
+        attr_reader :raw_response, :parsed, :succeeded, :message, :options
+
         def initialize(raw_response="", options={})
           @raw_response = raw_response
           @options = options
@@ -253,7 +255,6 @@ module ActiveMerchant #:nodoc:
         end
 
         private
-        attr_reader :raw_response, :parsed, :succeeded, :message, :options
 
         def parse_response
           @parsed = JSON.parse(raw_response.sub(/jsonPFunction\(/, '').sub(/\)\z/, ''))

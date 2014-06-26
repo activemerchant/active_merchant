@@ -262,7 +262,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_equal response.authorization, response.params['direct_response']['transaction_id']
     assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
     assert_equal 'auth_capture', response.params['direct_response']['transaction_type']
-    assert_equal 'CSYM0K', approval_code = response.params['direct_response']['approval_code']
+    assert_equal 'CSYM0K', response.params['direct_response']['approval_code']
     assert_equal '2163585627', response.params['direct_response']['transaction_id']
 
     assert_equal '1', response.params['direct_response']['response_code']
@@ -634,7 +634,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert_nil response.authorization
     assert_equal 'This transaction has been approved.', response.params['direct_response']['message']
     assert_equal 'auth_only', response.params['direct_response']['transaction_type']
-    assert_equal 'Gw4NGI', approval_code = response.params['direct_response']['approval_code']
+    assert_equal 'Gw4NGI', response.params['direct_response']['approval_code']
     return response
   end
 

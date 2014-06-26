@@ -3,7 +3,7 @@ require 'test_helper'
 class ModernPaymentsCimTest < Test::Unit::TestCase
   def setup
     Base.mode = :test
-    
+
     @gateway = ModernPaymentsCimGateway.new(
                  :login => 'login',
                  :password => 'password'
@@ -11,41 +11,41 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
 
     @credit_card = credit_card
     @amount = 100
-    
-    @options = { 
+
+    @options = {
       :order_id => '1',
       :billing_address => address,
       :description => 'Store Purchase'
     }
   end
-  
+
   def test_create_customer
     @gateway.expects(:ssl_post).returns(successful_create_customer_response)
-    
+
     assert response = @gateway.create_customer(@options)
     assert_instance_of Response, response
     assert response.test?
     assert_success response
     assert_equal "6677348", response.params["create_customer_result"]
   end
-  
+
   def test_modify_customer_credit_card
     @gateway.expects(:ssl_post).returns(successful_modify_customer_credit_card_response)
-    
+
     assert response = @gateway.modify_customer_credit_card("10001", @credit_card)
     assert_instance_of Response, response
     assert response.test?
     assert_success response
     assert_equal "6677757", response.params["modify_customer_credit_card_result"]
   end
-  
+
   def test_successful_credit_card_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    
+
     assert response = @gateway.authorize_credit_card_payment("10001", @amount)
     assert_instance_of Response, response
     assert response.test?
-  
+
     assert_success response
     assert_equal "18713505", response.params["trans_id"]
     assert_equal "RESPONSECODE=A\nAUTHCODE=020411\nDECLINEREASON=\nAVSDATA=Z\nTRANSID=C00 17093294", response.params["auth_string"]
@@ -58,21 +58,21 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
     assert_equal ModernPaymentsCimGateway::SUCCESS_MESSAGE, response.message
     assert_equal 'Z', response.avs_result['code']
   end
-  
+
   def test_unsuccessful_credit_card_authorization
     @gateway.expects(:ssl_post).returns(unsuccessful_credit_card_authorization_response)
-    
+
     assert response = @gateway.authorize_credit_card_payment("10001", @amount)
     assert_instance_of Response, response
     assert response.test?
     assert_failure response
     assert_equal "999", response.authorization
-    assert_match /RESPONSECODE=D/, response.params["message_text"]
+    assert_match %r{RESPONSECODE=D}, response.params["message_text"]
   end
-  
+
   def test_soap_fault_response
     @gateway.expects(:ssl_post).returns(soap_fault_response)
-    
+
     assert response = @gateway.create_customer(@options)
     assert_instance_of Response, response
     assert response.test?
@@ -81,7 +81,7 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
   end
 
   private
-  
+
   def successful_create_customer_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -94,7 +94,7 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
 </soap:Envelope>
     XML
   end
-  
+
   def successful_modify_customer_credit_card_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -107,7 +107,7 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
 </soap:Envelope>
     XML
   end
-  
+
   def unsuccessful_credit_card_authorization_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -125,10 +125,10 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
 			</AuthorizeCreditCardPaymentResult>
 		</AuthorizeCreditCardPaymentResponse>
 	</soap:Body>
-</soap:Envelope>    
+</soap:Envelope>
     XML
   end
-  
+
   def soap_fault_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -147,7 +147,7 @@ class ModernPaymentsCimTest < Test::Unit::TestCase
 </soap:Envelope>
     XML
   end
-  
+
   def successful_authorization_response
     <<-XML
 <?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><AuthorizeCreditCardPaymentResponse xmlns="https://secure.modpay.com/ws/"><AuthorizeCreditCardPaymentResult><transId>18713505</transId><authCode>020411</authCode><avsCode>Z</avsCode><transCode>C00 17093294
@@ -156,7 +156,7 @@ AUTHCODE=020411
 DECLINEREASON=
 AVSDATA=Z
 TRANSID=C00 17093294
-</authString><messageText>Approved</messageText><approved>true</approved></AuthorizeCreditCardPaymentResult></AuthorizeCreditCardPaymentResponse></soap:Body></soap:Envelope>    
+</authString><messageText>Approved</messageText><approved>true</approved></AuthorizeCreditCardPaymentResult></AuthorizeCreditCardPaymentResponse></soap:Body></soap:Envelope>
     XML
   end
 end

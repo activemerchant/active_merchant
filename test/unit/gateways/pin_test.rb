@@ -216,7 +216,7 @@ class PinTest < Test::Unit::TestCase
   def test_add_address
     post = {}
 
-    @gateway.send(:add_address, post, @creditcard, @options)
+    @gateway.send(:add_address, post, @credit_card, @options)
 
     assert_equal @options[:billing_address][:address1], post[:card][:address_line1]
     assert_equal @options[:billing_address][:city], post[:card][:address_city]

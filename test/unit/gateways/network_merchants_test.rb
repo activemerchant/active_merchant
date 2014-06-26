@@ -8,6 +8,7 @@ class NetworkMerchantsTest < Test::Unit::TestCase
                )
 
     @credit_card = credit_card
+    @check = check
     @amount = 100
 
     @options = {
@@ -100,7 +101,7 @@ class NetworkMerchantsTest < Test::Unit::TestCase
   def test_store
     @gateway.expects(:ssl_post).returns(successful_store)
 
-    assert store = @gateway.store(@credit_card, @options)
+    store = @gateway.store(@credit_card, @options)
     assert_success store
     assert_equal '1200085822', store.authorization
     assert_equal '1200085822', store.params['customer_vault_id']
@@ -109,7 +110,7 @@ class NetworkMerchantsTest < Test::Unit::TestCase
   def test_store_check
     @gateway.expects(:ssl_post).returns(successful_store)
 
-    assert store = @gateway.store(@check, @options)
+    store = @gateway.store(@check, @options)
     assert_success store
     assert_equal '1200085822', store.authorization
     assert_equal '1200085822', store.params['customer_vault_id']
@@ -119,7 +120,7 @@ class NetworkMerchantsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_store)
 
     @credit_card.number = "123"
-    assert store = @gateway.store(@creditcard, @options)
+    store = @gateway.store(@credit_card, @options)
     assert_failure store
     assert store.message.include?('Billing Information missing')
     assert_nil store.authorization

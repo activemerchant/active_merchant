@@ -152,7 +152,7 @@ class RemoteBraintreeOrangeTest < Test::Unit::TestCase
     bogus_card = credit_card('4424222222222222')
     assert response = @gateway.verify(bogus_card, @options)
     assert_failure response
-    assert_match /Invalid Credit Card Number/, response.message
+    assert_match %r{Invalid Credit Card Number}, response.message
   end
 
   def test_invalid_login

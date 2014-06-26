@@ -115,7 +115,7 @@ class WebpayTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match /^Invalid response received from the WebPay API/, response.message
+    assert_match %r{^Invalid response received from the WebPay API}, response.message
   end
 
   def test_add_customer

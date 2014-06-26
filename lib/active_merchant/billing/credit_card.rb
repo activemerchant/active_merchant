@@ -92,7 +92,7 @@ module ActiveMerchant #:nodoc:
       #
       # @return (String) the credit card brand
       def brand
-        if empty?(@brand)
+        if !defined?(@brand) || empty?(@brand)
           self.class.brand?(number)
         else
           @brand
@@ -163,19 +163,19 @@ module ActiveMerchant #:nodoc:
 
       # Returns whether the +first_name+ attribute has been set.
       def first_name?
-        @first_name.present?
+        first_name.present?
       end
 
       # Returns whether the +last_name+ attribute has been set.
       def last_name?
-        @last_name.present?
+        last_name.present?
       end
 
       # Returns the full name of the card holder.
       #
       # @return [String] the full name of the card holder
       def name
-        [@first_name, @last_name].compact.join(' ')
+        [first_name, last_name].compact.join(' ')
       end
 
       def name=(full_name)
@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def verification_value?
-        !@verification_value.blank?
+        !verification_value.blank?
       end
 
       # Returns a display-friendly version of the card number.

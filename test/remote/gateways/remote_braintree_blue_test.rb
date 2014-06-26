@@ -70,7 +70,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'OK', response.message
     customer_vault_id = response.params["customer_vault_id"]
-    assert_match /\A\d+\z/, customer_vault_id
+    assert_match %r{\A\d+\z}, customer_vault_id
 
     assert response = @gateway.purchase(@amount, customer_vault_id.to_i)
     assert_success response
@@ -88,7 +88,7 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   def test_failed_verify
     assert response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match /number is not an accepted test number/, response.message
+    assert_match %r{number is not an accepted test number}, response.message
   end
 
   def test_successful_validate_on_store

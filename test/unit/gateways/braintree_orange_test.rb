@@ -62,7 +62,7 @@ class BraintreeOrangeTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(successful_authorization_response, failed_void_response)
     assert_success response
-    assert_match /This transaction has been approved/, response.message
+    assert_match %r{This transaction has been approved}, response.message
   end
 
   def test_unsuccessful_verify
@@ -70,7 +70,7 @@ class BraintreeOrangeTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(failed_authorization_response, successful_void_response)
     assert_failure response
-    assert_match /Invalid Credit Card Number/, response.message
+    assert_match %r{Invalid Credit Card Number}, response.message
   end
 
   def test_add_address

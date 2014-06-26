@@ -150,7 +150,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         reply = {}
         xml = REXML::Document.new(body)
-         if root = REXML::XPath.first(xml, "//soap:Fault") then
+        if root = REXML::XPath.first(xml, "//soap:Fault") then
            reply=parse_fault(root)
         else
           if root = REXML::XPath.first(xml, '//ProcessPaymentResponse/ewayResponse') then

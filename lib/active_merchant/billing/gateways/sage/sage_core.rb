@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, reference)
-        ref, source = reference.to_s.split(";")
+        ref, _ = reference.to_s.split(";")
         post[:T_reference] = ref
       end
 

@@ -155,7 +155,7 @@ class SamuraiTest < Test::Unit::TestCase
                            with(card_to_store).
                            returns(payment_method)
     payment_method.expects(:retain).never
-    response = @gateway.store(@successful_credit_card, :retain => true)
+    @gateway.store(@successful_credit_card, :retain => true)
   end
 
   def test_no_retain_options
@@ -166,8 +166,8 @@ class SamuraiTest < Test::Unit::TestCase
                            returns(payment_method).
                            twice
     payment_method.expects(:retain).never
-    response = @gateway.store(@successful_credit_card, :retain => false)
-    response = @gateway.store(@successful_credit_card)
+    @gateway.store(@successful_credit_card, :retain => false)
+    @gateway.store(@successful_credit_card)
   end
 
   def test_passing_optional_processor_options

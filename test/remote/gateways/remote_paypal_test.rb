@@ -144,13 +144,13 @@ class PaypalTest < Test::Unit::TestCase
     assert response = @gateway.verify(@credit_card, @params)
     assert_success response
     assert_equal "0.00", response.params['amount']
-    assert_match /This card authorization verification is not a payment transaction/, response.message
+    assert_match %r{This card authorization verification is not a payment transaction}, response.message
   end
 
   def test_failed_verify
     assert response = @gateway.verify(@declined_card, @params)
     assert_failure response
-    assert_match /This transaction cannot be processed/, response.message
+    assert_match %r{This transaction cannot be processed}, response.message
   end
 
   def test_successful_verify_non_visa_mc
@@ -158,7 +158,7 @@ class PaypalTest < Test::Unit::TestCase
     assert response = @gateway.verify(amex_card, @params)
     assert_success response
     assert_equal "1.00", response.params['amount']
-    assert_match /Success/, response.message
+    assert_match %r{Success}, response.message
     assert_success response.responses.last, "The void should succeed"
   end
 

@@ -269,6 +269,6 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_nil response.params['transaction_time']
     @gateway.options[:verbosity] = 'HIGH'
     assert response = @gateway.purchase(100, @credit_card, @options)
-    assert_match /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/, response.params['transaction_time']
+    assert_match %r{^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}}, response.params['transaction_time']
   end
 end

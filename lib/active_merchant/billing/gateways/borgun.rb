@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options={})
         post = {}
         # TransType and TrAmount must match original values from auth or purchase.
-        dateandtime, batch, transaction, rrn, authcode, transtype, tramount = split_authorization(authorization)
+        _, _, _, _, _, transtype, tramount = split_authorization(authorization)
         post[:TransType] = transtype
         add_invoice(post, tramount.to_i, options)
         add_reference(post, authorization)
@@ -85,7 +85,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, authorization)
-        dateandtime, batch, transaction, rrn, authcode, transtype, tramount = split_authorization(authorization)
+        dateandtime, batch, transaction, rrn, authcode, _, _ = split_authorization(authorization)
         post[:DateAndTime] = dateandtime
         post[:Batch] = batch
         post[:Transaction] = transaction
@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
           end
         end
         inner = CGI.escapeHTML(xml.target!)
-        request_data = envelope(mode).sub(/{{ :body }}/,inner)
+        envelope(mode).sub(/{{ :body }}/,inner)
       end
 
       def envelope(mode)

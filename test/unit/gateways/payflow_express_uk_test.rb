@@ -7,36 +7,36 @@ class PayflowExpressUkTest < Test::Unit::TestCase
       :password => 'PASSWORD'
     )
   end
-  
+
   def test_supported_countries
     assert_equal ['GB'], PayflowExpressUkGateway.supported_countries
   end
-  
+
   def test_get_express_details
-     @gateway.expects(:ssl_post).returns(successful_get_express_details_response)
-     response = @gateway.details_for('EC-2OPN7UJGFWK9OYFV')
-     assert_instance_of PayflowExpressResponse, response
-     assert_success response
-     assert response.test?
+    @gateway.expects(:ssl_post).returns(successful_get_express_details_response)
+    response = @gateway.details_for('EC-2OPN7UJGFWK9OYFV')
+    assert_instance_of PayflowExpressResponse, response
+    assert_success response
+    assert response.test?
 
-     assert_equal 'EC-2OPN7UJGFWK9OYFV', response.token
-     assert_equal 'LYWCMEN4FA7ZQ', response.payer_id
-     assert_equal 'paul@test.com', response.email
-     assert_equal 'paul smith', response.full_name
-     assert_equal 'GB', response.payer_country
+    assert_equal 'EC-2OPN7UJGFWK9OYFV', response.token
+    assert_equal 'LYWCMEN4FA7ZQ', response.payer_id
+    assert_equal 'paul@test.com', response.email
+    assert_equal 'paul smith', response.full_name
+    assert_equal 'GB', response.payer_country
 
-     assert address = response.address
-     assert_equal 'paul smith', address['name']
-     assert_nil address['company']
-     assert_equal '10 keyworth avenue', address['address1']
-     assert_equal 'grangetown', address['address2']
-     assert_equal 'hinterland', address['city']
-     assert_equal 'Tyne and Wear', address['state']
-     assert_equal 'sr5 2uh', address['zip']
-     assert_equal 'GB', address['country']
-     assert_nil address['phone']
-   end
-  
+    assert address = response.address
+    assert_equal 'paul smith', address['name']
+    assert_nil address['company']
+    assert_equal '10 keyworth avenue', address['address1']
+    assert_equal 'grangetown', address['address2']
+    assert_equal 'hinterland', address['city']
+    assert_equal 'Tyne and Wear', address['state']
+    assert_equal 'sr5 2uh', address['zip']
+    assert_equal 'GB', address['country']
+    assert_nil address['phone']
+  end
+
   private
   def successful_get_express_details_response
     <<-RESPONSE

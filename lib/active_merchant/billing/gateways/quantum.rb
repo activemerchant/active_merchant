@@ -241,7 +241,7 @@ module ActiveMerchant #:nodoc:
               parse_element(reply, node)
             end
           end
-        rescue Exception => e
+        rescue Exception
           reply[:request_status] = 'Failure'
           reply[:request_message] = "Failure: There was a problem parsing the response XML"
         end

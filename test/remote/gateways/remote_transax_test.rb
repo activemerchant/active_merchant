@@ -26,7 +26,7 @@ class RemoteTransaxTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_match /invalid/i, response.message
+    assert_match %r{invalid}i, response.message
   end
 
   def test_authorize_and_capture
@@ -61,7 +61,7 @@ class RemoteTransaxTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_match /Invalid Transaction ID/, response.message
+    assert_match %r{Invalid Transaction ID}, response.message
   end
 
   def test_credit
@@ -110,7 +110,7 @@ class RemoteTransaxTest < Test::Unit::TestCase
     bogus_card = credit_card('4424222222222222')
     assert response = @gateway.verify(bogus_card, @options)
     assert_failure response
-    assert_match /Invalid Credit Card Number/, response.message
+    assert_match %r{Invalid Credit Card Number}, response.message
   end
 
   def test_invalid_login

@@ -44,7 +44,7 @@ class RemoteWirecardTest < Test::Unit::TestCase
     amount = @amount
     assert auth = @gateway.authorize(amount, @credit_card, @options)
     assert_success auth
-    assert_match /THIS IS A DEMO/, auth.message
+    assert_match %r{THIS IS A DEMO}, auth.message
     assert auth.authorization
     assert capture = @gateway.capture(amount, auth.authorization, @options)
     assert_success capture
@@ -53,7 +53,7 @@ class RemoteWirecardTest < Test::Unit::TestCase
   def test_successful_authorize_and_partial_capture
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
-    assert_match /THIS IS A DEMO/, auth.message
+    assert_match %r{THIS IS A DEMO}, auth.message
     assert auth.authorization
 
     #Capture some of the authorized amount
@@ -68,7 +68,7 @@ class RemoteWirecardTest < Test::Unit::TestCase
 
     assert void = @gateway.void(response.authorization)
     assert_success void
-    assert_match /THIS IS A DEMO/, void.message
+    assert_match %r{THIS IS A DEMO}, void.message
   end
 
   def test_successful_refund
@@ -78,19 +78,19 @@ class RemoteWirecardTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount - 20, response.authorization)
     assert_success refund
-    assert_match /THIS IS A DEMO/, refund.message
+    assert_match %r{THIS IS A DEMO}, refund.message
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_match /THIS IS A DEMO/, response.message
+    assert_match %r{THIS IS A DEMO}, response.message
   end
 
   def test_successful_purchase_with_commerce_type
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(commerce_type: "MOTO"))
     assert_success response
-    assert_match /THIS IS A DEMO/, response.message
+    assert_match %r{THIS IS A DEMO}, response.message
   end
 
   def test_successful_reference_purchase
@@ -100,13 +100,13 @@ class RemoteWirecardTest < Test::Unit::TestCase
 
     assert reference_purchase = @gateway.purchase(@amount, purchase.authorization)
     assert_success reference_purchase
-    assert_match /THIS IS A DEMO/, reference_purchase.message
+    assert_match %r{THIS IS A DEMO}, reference_purchase.message
   end
 
   def test_utf8_description_does_not_blow_up
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(description: "Habitación"))
     assert_success response
-    assert_match /THIS IS A DEMO/, response.message
+    assert_match %r{THIS IS A DEMO}, response.message
   end
 
   def test_successful_purchase_with_german_address_german_state_and_german_phone
@@ -232,13 +232,13 @@ class RemoteWirecardTest < Test::Unit::TestCase
   def test_failed_refund
     assert refund = @gateway.refund(@amount - 20, 'C428094138244444404448')
     assert_failure refund
-    assert_match /Could not find referenced transaction/, refund.message
+    assert_match %r{Could not find referenced transaction}, refund.message
   end
 
   def test_failed_void
     assert void = @gateway.void('C428094138244444404448')
     assert_failure void
-    assert_match /Could not find referenced transaction/, void.message
+    assert_match %r{Could not find referenced transaction}, void.message
   end
 
   def test_unauthorized_purchase

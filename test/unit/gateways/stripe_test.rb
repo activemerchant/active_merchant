@@ -293,7 +293,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_add_customer
     post = {}
-    @gateway.send(:add_customer, post, @creditcard, {:customer => "test_customer"})
+    @gateway.send(:add_customer, post, nil, {:customer => "test_customer"})
     assert_equal "test_customer", post[:customer]
   end
 

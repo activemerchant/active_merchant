@@ -101,7 +101,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
     @options[:shipping_address] = {:country => "CA"}
     @gateway.expects(:ssl_post).with do |url, data|
       xml = data.split("&").detect{|string| string =~ /txnRequest=/}.gsub("txnRequest=","")
-      doc = Nokogiri::XML.parse(URI.decode(xml))
+      doc = Nokogiri::XML.parse(CGI.unescape(xml))
       doc.xpath('//xmlns:shippingDetails/xmlns:country').first.text == "CA" && doc.to_s.include?('<shippingDetails>')
     end.returns(successful_purchase_response)
 
@@ -112,7 +112,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
     @options[:shipping_address] = nil
     @gateway.expects(:ssl_post).with do |url, data|
       xml = data.split("&").detect{|string| string =~ /txnRequest=/}.gsub("txnRequest=","")
-      doc = Nokogiri::XML.parse(URI.decode(xml))
+      doc = Nokogiri::XML.parse(CGI.unescape(xml))
       doc.to_s.include?('<shippingDetails>') == false
     end.returns(successful_purchase_response)
 
@@ -182,7 +182,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
 
   def test_email_being_sent
     @gateway.expects(:ssl_post).with do |url, data|
-      data =~ /email%3Eemail%2540example.com%3C\/email/
+      data =~ /email%3Eemail%2540example.com%3C%2Femail/
     end
 
     @gateway.purchase(@amount, @credit_card, @options)

@@ -304,7 +304,7 @@ module ActiveMerchant #:nodoc:
            response["TxAuthNo"],
            response["SecurityKey"],
            action ].join(";")
-         end
+        end
       end
 
       def abort_or_void_from(identification)

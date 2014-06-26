@@ -474,7 +474,7 @@ class PaypalTest < Test::Unit::TestCase
       @gateway.verify(@credit_card, @options)
     end.respond_with(failed_zero_dollar_auth_response)
     assert_failure response
-    assert_match /This transaction cannot be processed/, response.message
+    assert_match %r{This transaction cannot be processed}, response.message
   end
 
   def test_successful_verify_non_visa_mc
@@ -503,7 +503,7 @@ class PaypalTest < Test::Unit::TestCase
       @gateway.verify(amex_card, @options)
     end.respond_with(failed_one_dollar_auth_response, successful_void_response)
     assert_failure response
-    assert_match /This transaction cannot be processed/, response.message
+    assert_match %r{This transaction cannot be processed}, response.message
     assert_equal "1.00", response.params["amount"]
   end
 

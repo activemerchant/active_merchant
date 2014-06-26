@@ -118,7 +118,7 @@ module ActiveMerchant #:nodoc:
         when %r{\|}
           uri = identifier.
             split("|").
-            detect{|uri| uri.size > 0}
+            detect{|part| part.size > 0}
           uri.split("/")[2]
         when %r{\/}
           identifier.split("/")[5]

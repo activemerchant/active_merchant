@@ -82,7 +82,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
     @credit_card.last_name = "& More. # Here"
     @options[:address][:name] = "Ren & Stimpy"
 
-    purchase = stub_comms do
+    stub_comms do
       @gateway.purchase(@success_amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
       assert_match(/customerName=Ren\+\+Stimpy/, data)
