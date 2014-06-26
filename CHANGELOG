@@ -46,6 +46,7 @@
 * Wirecard: Fix "amex" references [mendable]
 * HPS: Do not pass empty elements [SecureSubmit]
 * Paymill: Add more supported card types [nikoloff]
+* Paymill: Add source [nikoloff]
 
 == Version 1.43.2 (May 12, 2014)
 
