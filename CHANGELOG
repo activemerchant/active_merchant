@@ -47,6 +47,7 @@
 * HPS: Do not pass empty elements [SecureSubmit]
 * Paymill: Add more supported card types [nikoloff]
 * Paymill: Add source [nikoloff]
+* Paymill: Add description for preauthorizations [nikoloff]
 
 == Version 1.43.2 (May 12, 2014)
 
