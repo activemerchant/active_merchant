@@ -9,7 +9,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
     @credit_card = credit_card('4242424242424242')
     @options = {
       :order_id => generate_unique_id,
-      :customer => generate_unique_id
+      :customer => generate_unique_id,
+      :billing_address => address
     }
   end
 
@@ -162,4 +163,36 @@ class MonerisRemoteTest < Test::Unit::TestCase
     assert_equal({'code' => 'N', 'message' => 'No Match'}, response.cvv_result)
   end
 
+  def test_avs_result_valid_when_address_present
+    assert response = @gateway.purchase(1010, @credit_card, @options)
+    assert_success response
+    assert_equal(response.avs_result, {
+      'code' => 'A',
+      'message' => 'Street address matches, but 5-digit and 9-digit postal code do not match.',
+      'street_match' => 'Y',
+      'postal_match' => 'N'
+    })
+  end
+
+  def test_avs_result_nil_when_address_absent
+    assert response = @gateway.purchase(1010, @credit_card, @options.tap { |x| x.delete(:billing_address) })
+    assert_success response
+    assert_equal(response.avs_result, {
+      'code' => nil,
+      'message' => nil,
+      'street_match' => nil,
+      'postal_match' => nil
+    })
+  end
+
+  def test_avs_result_nil_when_efraud_disabled
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal(response.avs_result, {
+      'code' => nil,
+      'message' => nil,
+      'street_match' => nil,
+      'postal_match' => nil
+    })
+  end
 end

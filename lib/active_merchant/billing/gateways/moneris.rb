@@ -48,6 +48,7 @@ module ActiveMerchant #:nodoc:
         add_payment_source(post, creditcard_or_datakey, options)
         post[:amount]     = amount(money)
         post[:order_id]   = options[:order_id]
+        post[:address]    = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         action = (post[:data_key].blank?) ? 'preauth' : 'res_preauth_cc'
         commit(action, post)
@@ -63,6 +64,7 @@ module ActiveMerchant #:nodoc:
         add_payment_source(post, creditcard_or_datakey, options)
         post[:amount]     = amount(money)
         post[:order_id]   = options[:order_id]
+        post[:address]    = options[:billing_address] || options[:address]
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
         action = (post[:data_key].blank?) ? 'purchase' : 'res_purchase_cc'
         commit(action, post)
@@ -185,6 +187,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful?(response), message_from(response[:message]), response,
           :test          => test?,
+          :avs_result    => { :code => response[:avs_result_code] },
           :cvv_result    => response[:cvd_result_code].try(:last),
           :authorization => authorization_from(response)
         )
@@ -233,14 +236,28 @@ module ActiveMerchant #:nodoc:
 
         # Must add the elements in the correct order
         actions[action].each do |key|
-          if((key == :cvd_info) && @cvv_enabled)
-            transaction.add_element(cvd_element(parameters[:cvd_value]))
+          case key
+          when :avs_info
+            transaction.add_element(avs_element(parameters[:address])) if parameters[:address]
+          when :cvd_info
+            transaction.add_element(cvd_element(parameters[:cvd_value])) if @cvv_enabled
           else
             transaction.add_element(key.to_s).text = parameters[key] unless parameters[key].blank?
           end
         end
 
         transaction
+      end
+
+      def avs_element(address)
+        full_address = "#{address[:address1]} #{address[:address2]}"
+        tokens = full_address.split(/\s+/)
+
+        element = REXML::Element.new('avs_info')
+        element.add_element('avs_street_number').text = tokens.keep_if { |x| x =~ /\d/ }.join(' ')
+        element.add_element('avs_street_name').text = tokens.keep_if { |x| x !~ /\d/ }.join(' ')
+        element.add_element('avs_zipcode').text = address[:zip]
+        element
       end
 
       def cvd_element(cvd_value)
@@ -261,8 +278,8 @@ module ActiveMerchant #:nodoc:
 
       def actions
         {
-          "purchase"           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :cvd_info],
-          "preauth"            => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :cvd_info],
+          "purchase"           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info],
+          "preauth"            => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info],
           "command"            => [:order_id],
           "refund"             => [:order_id, :amount, :txn_number, :crypt_type],
           "indrefund"          => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
