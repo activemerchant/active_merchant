@@ -48,6 +48,7 @@
 * Paymill: Add more supported card types [nikoloff]
 * Paymill: Add source [nikoloff]
 * Paymill: Add description for preauthorizations [nikoloff]
+* Paymill: Add remote tests using tokens [nikoloff]
 
 == Version 1.43.2 (May 12, 2014)
 
