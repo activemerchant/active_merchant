@@ -29,7 +29,6 @@ module ActiveMerchant #:nodoc:
             xml.transactionType 'authCaptureTransaction'
             xml.amount money
             add_payment_source(xml, payment)
-            #add_invoice(xml, money, options)
             add_customer_data(xml, payment, options)
           }
         end
@@ -42,7 +41,6 @@ module ActiveMerchant #:nodoc:
             xml.transactionType 'authOnlyTransaction'
             xml.amount money
             add_payment_source(xml, payment)
-            #add_invoice(xml, money, options)
             add_customer_data(xml, payment, options)
           }
         end
@@ -63,7 +61,11 @@ module ActiveMerchant #:nodoc:
         commit do |xml|
           xml.transactionRequest {
             xml.transactionType 'refundTransaction'
-            xml.amount money unless money.nil?
+            if money.nil?
+              xml.amount 0
+            else
+              xml.amount money
+            end
             xml.payment {
               xml.creditCard {
                 xml.cardNumber(authorization.split('#')[1])

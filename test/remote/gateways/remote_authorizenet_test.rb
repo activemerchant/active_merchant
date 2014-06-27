@@ -7,7 +7,6 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
     @amount = (rand(10000) + 100) / 100.0
     @credit_card = credit_card('4000100011112224')
     @check = check
-    #@declined_card = credit_card('4000300011112220')
     @declined_card = credit_card('400030001111222')
 
     @options = {
@@ -134,19 +133,4 @@ class RemoteAuthorizenetTest < Test::Unit::TestCase
     response = @gateway.refund(nil, '')
     assert_failure response
   end
-
-  # As of June 2014, AuthorizeNet REQUIRES the amount for the refund.
-  #def test_successful_refund
-  #  purchase = @gateway.purchase(@amount, @credit_card, @options)
-  #  assert_success purchase
-  #  assert refund = @gateway.refund(nil, purchase.authorization)
-  #  assert_success refund
-  #end
-
-  #this requires an overnight settlement.  Must be tested with a hard coded transaction id
-  #credit card is required to do this.
-  #def test_partial_refund
-  #  assert refund = @gateway.refund(78.56, '2215043618#2224')
-  #  assert_success refund
-  #end
 end
