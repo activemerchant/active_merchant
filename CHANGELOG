@@ -54,6 +54,7 @@
 * Payflow: Add verbosity option [doppler]
 * Allow ignoring the result of any MultiResponse step [ntalbott]
 * Stripe: Add ability to verify a card [duff]
+* Paypal: Add ability to verify a card [duff]
 
 == Version 1.43.2 (May 12, 2014)
 
