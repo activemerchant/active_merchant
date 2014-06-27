@@ -72,6 +72,20 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'This transaction has been approved', void.message
   end
 
+  def test_successful_verify
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal "This transaction has been approved", response.message
+    assert_success response.responses.last, "The void should succeed"
+  end
+
+  def test_failed_verify
+    bogus_card = credit_card('4424222222222222')
+    assert response = @gateway.verify(bogus_card, @options)
+    assert_failure response
+    assert_match /The credit card number is invalid/, response.message
+  end
+
   def test_bad_login
     gateway = AuthorizeNetGateway.new(
       :login => 'X',
