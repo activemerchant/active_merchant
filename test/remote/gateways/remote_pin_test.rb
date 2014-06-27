@@ -112,18 +112,6 @@ class RemotePinTest < Test::Unit::TestCase
     assert_equal response.params['response']['card']['expiry_year'], @visa_credit_card.year
   end
 
-  def test_store_and_update_customer
-    assert response = @gateway.store(@credit_card, @options)
-    assert_success response
-    assert_not_nil response.authorization
-    assert_equal response.params['response']['email'], @options[:email]
-
-    assert response = @gateway.update_customer(response.authorization, :email => "updated-roland@pin.net.au")
-    assert_success response
-    assert_not_nil response.authorization
-    assert_equal response.params['response']['email'], "updated-roland@pin.net.au"
-  end
-
   def test_refund
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response

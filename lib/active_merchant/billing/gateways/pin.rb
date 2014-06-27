@@ -75,11 +75,6 @@ module ActiveMerchant #:nodoc:
         commit(:put, "customers/#{CGI.escape(token)}", post, options)
       end
 
-      # Updates other data on the customer such as email address.
-      def update_customer(token, post, options = {})
-        commit(:put, "customers/#{CGI.escape(token)}", post, options)
-      end
-
       private
 
       def add_amount(post, money, options)
