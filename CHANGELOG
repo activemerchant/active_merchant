@@ -56,6 +56,7 @@
 * Stripe: Add ability to verify a card [duff]
 * Paypal: Add ability to verify a card [duff]
 * Authorize.net: Add ability to verify a card [duff]
+* Braintree: Add ability to verify a card [duff]
 
 == Version 1.43.2 (May 12, 2014)
 

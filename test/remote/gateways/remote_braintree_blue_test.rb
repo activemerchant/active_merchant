@@ -79,6 +79,18 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal customer_vault_id, response.params["braintree_transaction"]["customer_details"]["id"]
   end
 
+  def test_successful_verify
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal "1000 Approved", response.message
+  end
+
+  def test_failed_verify
+    assert response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_match /number is not an accepted test number/, response.message
+  end
+
   def test_successful_validate_on_store
     card = credit_card('4111111111111111', :verification_value => '101')
     assert response = @gateway.store(card, :verify_card => true)
