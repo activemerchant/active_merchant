@@ -13,7 +13,7 @@ class WirecardTest < Test::Unit::TestCase
     @credit_card = credit_card('4200000000000000')
     @declined_card = credit_card('4000300011112220')
     @unsupported_card = credit_card('4200000000000000', brand: :maestro)
-    @amex_card = credit_card('370000000000000', brand: "amex")
+    @amex_card = credit_card('370000000000000', brand: "american_express")
 
     @amount = 111
 

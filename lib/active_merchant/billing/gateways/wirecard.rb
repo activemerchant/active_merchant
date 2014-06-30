@@ -119,7 +119,7 @@ module ActiveMerchant #:nodoc:
         options[:recurring] = 'Initial'
         money = options.delete(:amount) || 100
         # Amex does not support authorization_check
-        if creditcard.brand == 'amex'
+        if creditcard.brand == 'american_express'
           commit(:preauthorization, money, options)
         else
           commit(:authorization_check, money, options)

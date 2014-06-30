@@ -5,7 +5,7 @@ module ActiveMerchant #:nodoc:
                                     GI GR HR HU IE IL IM IS IT LI LT LU LV MC MT
                                     NL NO PL PT RO SE SI SK TR VA)
 
-      self.supported_cardtypes = [:visa, :master]
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :discover, :union_pay, :jcb]
       self.homepage_url = 'https://paymill.com'
       self.display_name = 'PAYMILL'
       self.money_format = :cents
@@ -30,6 +30,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         post[:preauthorization] = preauth(authorization)
         post[:description] = options[:description]
+        post[:source] = 'active_merchant'
         commit(:post, 'transactions', post)
       end
 
@@ -116,6 +117,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options)
         post[:token] = card_token
         post[:description] = options[:description]
+        post[:source] = 'active_merchant'
         commit(:post, 'transactions', post)
       end
 
@@ -124,6 +126,8 @@ module ActiveMerchant #:nodoc:
 
         add_amount(post, money, options)
         post[:token] = card_token
+        post[:description] = options[:description]
+        post[:source] = 'active_merchant'
         commit(:post, 'preauthorizations', post)
       end
 

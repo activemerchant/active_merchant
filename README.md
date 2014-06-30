@@ -101,6 +101,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Cashnet](http://www.higherone.com/) - US
 * [Cecabank](http://www.ceca.es/es/) - ES
 * [CertoDirect](http://www.certodirect.com/) - BE, BG, CZ, DK, DE, EE, IE, EL, ES, FR, IT, CY, LV, LT, LU, HU, MT, NL, AT, PL, PT, RO, SI, SK, FI, SE, GB
+* [Commercegate](http://www.commercegate.com/) - AD, AT, AX, BE, BG, CH, CY, CZ, DE, DK, ES, FI, FR, GB, GG, GI, GR, HR, HU, IE, IM, IS, IT, JE, LI, LT, LU, LV, MC, MT, NL, NO, PL, PT, RO, SE, SI, SK, VA
 * [Conekta](https://conekta.io) - MX
 * [CyberSource](http://www.cybersource.com) - US, BR, CA, CN, DK, FI, FR, DE, JP, MX, NO, SE, GB, SG
 * [DataCash](http://www.datacash.com/) - GB
@@ -114,7 +115,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Fat Zebra](https://www.fatzebra.com.au/) - AU
 * [Federated Canada](http://www.federatedcanada.com/) - CA
 * [Finansbank WebPOS](https://www.fbwebpos.com/) - US, TR
-* [First Pay](http://www.first-pay.com) - US
+* [1stPayGateway.Net](http://1stpaygateway.net/) - US
 * [FirstData Global Gateway e4](http://www.firstdata.com) - CA, US
 * [FirstGiving](http://www.firstgiving.com/) - US
 * [Garanti Sanal POS](https://sanalposweb.garanti.com.tr) - US, TR
