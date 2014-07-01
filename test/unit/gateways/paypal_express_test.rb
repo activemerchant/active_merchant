@@ -579,6 +579,7 @@ class PaypalExpressTest < Test::Unit::TestCase
         :callback_url => "http://example.com/update_callback",
         :callback_timeout => 2,
         :callback_version => '53.0',
+        :funding_sources => {:source => 'BML'},
         :shipping_options => [{:default => true,
                                :name => "first one",
                                :amount => 10}]
