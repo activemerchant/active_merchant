@@ -58,6 +58,7 @@
 * Authorize.net: Add ability to verify a card [duff]
 * Braintree: Add ability to verify a card [duff]
 * Enhance gateway generator to support verify [duff]
+* PayPal Express: Add funding source support [baraabourghli]
 
 == Version 1.43.2 (May 12, 2014)
 
