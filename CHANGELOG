@@ -52,6 +52,7 @@
 * HPS: Add developer, version number and site trace options [SecureSubmit]
 * Update 1stPayGateway.Net gateway [rwdaigle]
 * Payflow: Add verbosity option [doppler]
+* Allow ignoring the result of any MultiResponse step [ntalbott]
 
 == Version 1.43.2 (May 12, 2014)
 

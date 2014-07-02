@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
           return r unless options[:refund_fee_amount]
 
           r.process { fetch_application_fees(identification, options) }
-          r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r), options) }
+          r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r.responses.last), options) }
         end
       end
 
