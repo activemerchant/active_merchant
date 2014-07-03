@@ -1,9 +1,3 @@
-begin
-  require "vindicia-api"
-rescue LoadError
-  raise "Could not load the vindicia-api gem.  Use `gem install vindicia-api` to install it."
-end
-
 require 'i18n/core_ext/string/interpolate'
 
 module ActiveMerchant #:nodoc:
@@ -46,24 +40,9 @@ module ActiveMerchant #:nodoc:
       # * <tt>:cvn_success</tt> -- Array of valid CVN Check return values - defaults to [M, P] (OPTIONAL)
       # * <tt>:avs_success</tt> -- Array of valid AVS Check return values - defaults to [X, Y, A, W, Z] (OPTIONAL)
       def initialize(options = {})
-        requires!(options, :login, :password)
+        requires!(options, :login, :password, :account_id)
         super
 
-        config = lambda do |config|
-          config.login = options[:login]
-          config.password = options[:password]
-          config.api_version = options[:api_version] || "3.6"
-          config.endpoint = test? ? self.test_url : self.live_url
-          config.namespace = "http://soap.vindicia.com"
-        end
-
-        if Vindicia.config.is_configured?
-          config.call(Vindicia.config)
-        else
-          Vindicia.configure(&config)
-        end
-
-        requires!(options, :account_id)
         @account_id = options[:account_id]
 
         @transaction_prefix = options[:transaction_prefix] || "X"
@@ -121,9 +100,9 @@ module ActiveMerchant #:nodoc:
       # * <tt>money</tt> -- The amount to be captured as an Integer value in cents.
       # * <tt>identification</tt> -- The authorization returned from the previous authorize request.
       def capture(money, identification, options = {})
-        response = post(Vindicia::Transaction.capture({
-          :transactions => [{ :merchantTransactionId => identification }]
-        }))
+        response = post(:capture) do |xml|
+          add_hash(xml, transactions: [{ merchantTransactionId: identification }])
+        end
 
         if response[:return][:returnCode] != '200' || response[:qtyFail].to_i > 0
           return fail(response)
@@ -139,13 +118,13 @@ module ActiveMerchant #:nodoc:
       # * <tt>identification</tt> - The authorization returned from the previous authorize request.
       # * <tt>options</tt> - Extra options (currently only :ip used)
       def void(identification, options = {})
-        response = post(Vindicia::Transaction.cancel({
-          :transactions => [{
-            :account => { :merchantAccountId => @account_id },
-            :merchantTransactionId => identification,
-            :sourceIp => options[:ip]
-          }]
-        }))
+        response = post(:cancel) do |xml|
+          add_hash(xml, transactions: [{
+            account: {merchantAccountId: @account_id},
+            merchantTransactionId: identification,
+            sourceIp: options[:ip]
+          }])
+        end
 
         if response[:return][:returnCode] == '200' && response[:qtyFail].to_i == 0
           success(response, identification)
@@ -195,10 +174,56 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      protected
+      private
 
-      def post(body)
-        parse(ssl_post(Vindicia.config.endpoint, body, "Content-Type" => "text/xml"))
+      def add_hash(xml, hash)
+        hash.each do |k,v|
+          add_element(xml, k, v)
+        end
+      end
+
+      def add_array(xml, elem, val)
+        val.each do |v|
+          add_element(xml, elem, v)
+        end
+      end
+
+      def add_element(xml, elem, val)
+        if val.is_a?(Hash)
+          xml.tag!(elem.to_s.camelize(:lower)) do |env|
+            add_hash(env, val)
+          end
+        elsif val.is_a?(Array)
+          add_array(xml, elem, val)
+        else
+          xml.tag!(elem.to_s.camelize(:lower), val.to_s)
+        end
+      end
+
+      def post(action, kind="Transaction")
+        xml = Builder::XmlMarkup.new
+        xml.instruct!(:xml, :encoding => "UTF-8")
+        xml.env :Envelope,
+          "xmlns:xsd" => "http://www.w3.org/2001/XMLSchema",
+          "xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance",
+          "xmlns:tns" => "http://soap.vindicia.com/v3_6/#{kind}",
+          "xmlns:env" => "http://schemas.xmlsoap.org/soap/envelope/" do
+
+          xml.env :Body do
+            xml.tns action.to_sym do
+              xml.auth do
+                xml.tag! :login, @options[:login]
+                xml.tag! :password, @options[:password]
+                xml.tag! :version, "3.6"
+              end
+
+              yield(xml)
+            end
+          end
+        end
+
+        url = (test? ? self.test_url : self.live_url)
+        parse(ssl_post(url, xml.target!, "Content-Type" => "text/xml"))
       end
 
       def parse(response)
@@ -242,10 +267,9 @@ module ActiveMerchant #:nodoc:
         add_customer_data(parameters, options)
         add_payment_source(parameters, creditcard, options)
 
-        post(Vindicia::Transaction.auth({
-          :transaction => parameters,
-          :minChargebackProbability => @min_chargeback_probability
-        }))
+        post(:auth) do |xml|
+          add_hash(xml, transaction: parameters, minChargebackProbability: @min_chargeback_probability)
+        end
       end
 
       def add_account_data(parameters, options)
@@ -284,11 +308,9 @@ module ActiveMerchant #:nodoc:
         add_account_data(parameters, options)
         add_subscription_information(parameters, options)
 
-        post(Vindicia::AutoBill.update({
-          :autobill => parameters,
-          :validatePaymentMethod => false,
-          :minChargebackProbability => 100
-        }))
+        post(:update, "AutoBill") do |xml|
+          add_hash(xml, autobill: parameters, validatePaymentMethod: false, minChargebackProbability: 100)
+        end
       end
 
       def check_subscription(vindicia_transaction)
