@@ -23,7 +23,8 @@ class RemoteBanwireTest < Test::Unit::TestCase
       :order_id => '1',
       :email => "test@email.com",
       :billing_address => address,
-      :description => 'Store Purchase'
+      :description => 'Store Purchase',
+      :login => 'userdemo'
     }
 
     @amex_credit_card = credit_card('375932134599999',
@@ -37,15 +38,17 @@ class RemoteBanwireTest < Test::Unit::TestCase
     @amex_successful_options = {
         :order_id => '3',
         :email => 'test@email.com',
-        :billing_address => address(:address1 => 'Horacio', :zip => '11560'),
-        :description  => 'Store purchase amex'
+        :billing_address => address(:address1 => 'Horacio 930', :zip => '11550'),
+        :description  => 'Store purchase amex',
+        :login => 'userdemo'
     }
 
     @amex_options = {
         :order_id => '2',
         :email => 'test@email.com',
         :billing_address => address,
-        :description  => 'Store purchase amex'
+        :description  => 'Store purchase amex',
+        :login => 'userdemo'
     }
   end
 
@@ -67,7 +70,7 @@ class RemoteBanwireTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'denied', response.message
+    assert_equal 'La transacción ha sido denegada por seguridad.', response.message
   end
 
   def test_invalid_login
@@ -75,6 +78,7 @@ class RemoteBanwireTest < Test::Unit::TestCase
                 :login => 'fakeuser',
                 :currency => 'MXN'
               )
+    @options.merge!(login: 'fakeuser')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'ID de cuenta invalido', response.message
