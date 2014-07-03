@@ -132,35 +132,6 @@ module ActiveMerchant #:nodoc:
       # @return [String]
       attr_accessor :track_data
 
-      # Returns the credit card brand.
-      #
-      # Valid card types are
-      #
-      # * +'visa'+
-      # * +'master'+
-      # * +'discover'+
-      # * +'american_express'+
-      # * +'diners_club'+
-      # * +'jcb'+
-      # * +'switch'+
-      # * +'solo'+
-      # * +'dankort'+
-      # * +'maestro'+
-      # * +'forbrugsforeningen'+
-      # * +'laser'+
-      #
-      # Or, if you wish to test your implementation, +'bogus'+.
-      #
-      # @return (String) the credit card brand
-      def brand
-        return @brand unless @brand.blank?
-        self.class.brand?(number)
-      end
-
-      def brand=(value)
-        @brand = (value.respond_to?(:downcase) ? value.downcase : value)
-      end
-
       def type
         ActiveMerchant.deprecated "CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead."
         brand
