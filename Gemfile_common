@@ -8,5 +8,3 @@ group :test, :remote_test do
   gem 'samurai', '>= 0.2.25'
   gem 'braintree', '>= 2.0.0'
 end
-
-gem 'money', '5.0.0', :platforms => [:ruby_18]
