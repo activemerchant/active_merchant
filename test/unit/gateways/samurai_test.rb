@@ -2,6 +2,8 @@ require 'test_helper'
 
 class SamuraiTest < Test::Unit::TestCase
   def setup
+    @old_verbose, $VERBOSE = $VERBOSE, false
+
     @gateway = SamuraiGateway.new(
               :login => "MERCHANT KEY",
               :password => "MERCHANT_PASSWORD",
@@ -14,6 +16,9 @@ class SamuraiTest < Test::Unit::TestCase
     @successful_authorization_id = "successful_authorization_id"
   end
 
+  def teardown
+    $VERBOSE = @old_verbose
+  end
 
   def test_successful_purchase_with_payment_method_token
     Samurai::Processor.expects(:purchase).

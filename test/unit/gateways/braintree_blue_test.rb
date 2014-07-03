@@ -2,6 +2,8 @@ require 'test_helper'
 
 class BraintreeBlueTest < Test::Unit::TestCase
   def setup
+    @old_verbose, $VERBOSE = $VERBOSE, false
+
     @gateway = BraintreeBlueGateway.new(
       :merchant_id => 'test',
       :public_key => 'test',
@@ -9,6 +11,10 @@ class BraintreeBlueTest < Test::Unit::TestCase
     )
 
     @internal_gateway = @gateway.instance_variable_get( :@braintree_gateway )
+  end
+
+  def teardown
+    $VERBOSE = @old_verbose
   end
 
   def test_refund_legacy_method_signature

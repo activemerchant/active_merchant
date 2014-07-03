@@ -63,6 +63,7 @@
 * Pin: Add authorize & capture support [keithpitt]
 * Pin: Add update support [keithpitt]
 * Vindicia: Stop using the vindicia-api gem [ntalbott]
+* Clean up the warnings fog [ntalbott]
 
 == Version 1.43.2 (May 12, 2014)
 
