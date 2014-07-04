@@ -67,6 +67,7 @@
 * Quickpay: Map options[:ip] for fraud analysis [ta]
 * SagePay: Truncate fields [duff]
 * First Data E4: Add ability to verify a card [duff]
+* Elavon: Add ability to verify a card [duff]
 
 == Version 1.43.2 (May 12, 2014)
 

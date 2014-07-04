@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class ElavonTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = ElavonGateway.new(
                  :login => 'login',
@@ -85,6 +87,29 @@ class ElavonTest < Test::Unit::TestCase
     assert response = @gateway.refund(123, '456')
     assert_failure response
     assert_equal 'The refund amount exceeds the original transaction amount.', response.message
+  end
+
+  def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card)
+    end.respond_with(successful_authorization_response, successful_void_response)
+    assert_success response
+  end
+
+  def test_successful_verify_failed_void
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorization_response, failed_void_response)
+    assert_success response
+    assert_equal "APPROVED", response.message
+  end
+
+  def test_unsuccessful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorization_response, successful_void_response)
+    assert_failure response
+    assert_equal "The Credit Card Number supplied in the authorization request appears to be invalid.", response.message
   end
 
   def test_invalid_login

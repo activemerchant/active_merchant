@@ -55,6 +55,19 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_equal 'The Credit Card Number supplied in the authorization request appears to be invalid.', response.message
   end
 
+  def test_successful_verify
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal "APPROVAL", response.message
+    assert_success response.responses.last, "The void should succeed"
+  end
+
+  def test_failed_verify
+    assert response = @gateway.verify(@bad_credit_card, @options)
+    assert_failure response
+    assert_match %r{appears to be invalid}, response.message
+  end
+
   def test_purchase_and_credit
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
