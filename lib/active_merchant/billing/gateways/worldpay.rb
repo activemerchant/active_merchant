@@ -127,6 +127,7 @@ module ActiveMerchant #:nodoc:
                 end
               end
               add_payment_method(xml, money, payment_method, options)
+              add_email(xml, options)
             end
           end
         end
@@ -197,7 +198,17 @@ module ActiveMerchant #:nodoc:
 
               add_address(xml, 'cardAddress', (options[:billing_address] || options[:address]))
             end
+            if options[:ip]
+              xml.tag! 'session', 'shopperIPAddress' => options[:ip]
+            end
           end
+        end
+      end
+
+      def add_email(xml, options)
+        return unless options[:email]
+        xml.tag! 'shopper' do
+          xml.tag! 'shopperEmailAddress', options[:email]
         end
       end
 
