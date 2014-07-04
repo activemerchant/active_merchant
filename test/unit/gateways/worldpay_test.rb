@@ -234,6 +234,34 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_email
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(:email => "eggcellent@example.com"))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<shopperEmailAddress>eggcellent@example.com</shopperEmailAddress>), data
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match %r(shopperEmailAddress), data
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_ip
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(:ip => "192.137.11.44"))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<session shopperIPAddress="192.137.11.44"/>), data
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match %r(<session), data
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_parsing
     response = stub_comms do
       @gateway.authorize(100, @credit_card, @options.merge(:address => {:address1 => "123 Anystreet", :country => "US"}))
