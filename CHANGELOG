@@ -69,6 +69,7 @@
 * First Data E4: Add ability to verify a card [duff]
 * Elavon: Add ability to verify a card [duff]
 * Worldpay: Pass email and IP address [duff]
+* Worldpay: Use updated address format [duff]
 
 == Version 1.43.2 (May 12, 2014)
 
