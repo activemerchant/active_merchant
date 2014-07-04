@@ -76,6 +76,13 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card)
+    end.respond_with(successful_verify_response)
+    assert_success response
+  end
+
   def test_expdate
     assert_equal(
       "%02d%s" % [@credit_card.month, @credit_card.year.to_s[-2..-1]],
@@ -473,6 +480,102 @@ Transaction not approved 605
 Please retain this copy for your records.
 =========================================</CTR>
     </TransactionResult>
+    RESPONSE
+  end
+
+  def successful_verify_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<TransactionResult>
+  <ExactID>AD2552-05</ExactID>
+  <Password></Password>
+  <Transaction_Type>05</Transaction_Type>
+  <DollarAmount>0.0</DollarAmount>
+  <SurchargeAmount></SurchargeAmount>
+  <Card_Number>############4242</Card_Number>
+  <Transaction_Tag>25101911</Transaction_Tag>
+  <Track1></Track1>
+  <Track2></Track2>
+  <PAN></PAN>
+  <Authorization_Num>ET184931</Authorization_Num>
+  <Expiry_Date>0915</Expiry_Date>
+  <CardHoldersName>Longbob Longsen</CardHoldersName>
+  <VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>
+  <VerificationStr2>123</VerificationStr2>
+  <CVD_Presence_Ind>0</CVD_Presence_Ind>
+  <ZipCode></ZipCode>
+  <Tax1Amount></Tax1Amount>
+  <Tax1Number></Tax1Number>
+  <Tax2Amount></Tax2Amount>
+  <Tax2Number></Tax2Number>
+  <Secure_AuthRequired></Secure_AuthRequired>
+  <Secure_AuthResult></Secure_AuthResult>
+  <Ecommerce_Flag></Ecommerce_Flag>
+  <XID></XID>
+  <CAVV></CAVV>
+  <CAVV_Algorithm></CAVV_Algorithm>
+  <Reference_No>1</Reference_No>
+  <Customer_Ref></Customer_Ref>
+  <Reference_3>Store Purchase</Reference_3>
+  <Language></Language>
+  <Client_IP>75.182.123.244</Client_IP>
+  <Client_Email></Client_Email>
+  <Transaction_Error>false</Transaction_Error>
+  <Transaction_Approved>true</Transaction_Approved>
+  <EXact_Resp_Code>00</EXact_Resp_Code>
+  <EXact_Message>Transaction Normal</EXact_Message>
+  <Bank_Resp_Code>100</Bank_Resp_Code>
+  <Bank_Message>Approved</Bank_Message>
+  <Bank_Resp_Code_2></Bank_Resp_Code_2>
+  <SequenceNo>000040</SequenceNo>
+  <AVS>1</AVS>
+  <CVV2>M</CVV2>
+  <Retrieval_Ref_No>7228838</Retrieval_Ref_No>
+  <CAVV_Response></CAVV_Response>
+  <Currency>USD</Currency>
+  <AmountRequested></AmountRequested>
+  <PartialRedemption>false</PartialRedemption>
+  <MerchantName>FriendlyInc</MerchantName>
+  <MerchantAddress>123 Main Street</MerchantAddress>
+  <MerchantCity>Durham</MerchantCity>
+  <MerchantProvince>North Carolina</MerchantProvince>
+  <MerchantCountry>United States</MerchantCountry>
+  <MerchantPostal>27592</MerchantPostal>
+  <MerchantURL></MerchantURL>
+  <TransarmorToken></TransarmorToken>
+  <CardType>Visa</CardType>
+  <CurrentBalance></CurrentBalance>
+  <PreviousBalance></PreviousBalance>
+  <EAN></EAN>
+  <CardCost></CardCost>
+  <VirtualCard>false</VirtualCard>
+  <CTR>=========== TRANSACTION RECORD ==========
+FriendlyInc DEMO0
+123 Main Street
+Durham, NC 27592
+United States
+
+
+TYPE: Auth Only
+
+ACCT: Visa  $ 0.00 USD
+
+CARDHOLDER NAME : Longbob Longsen
+CARD NUMBER     : ############4242
+DATE/TIME       : 04 Jul 14 14:21:52
+REFERENCE #     :  000040 M
+AUTHOR. #       : ET184931
+TRANS. REF.     : 1
+
+    Approved - Thank You 100
+
+
+Please retain this copy for your records.
+
+Cardholder will pay above amount to card
+issuer pursuant to cardholder agreement.
+=========================================</CTR>
+</TransactionResult>
     RESPONSE
   end
 
