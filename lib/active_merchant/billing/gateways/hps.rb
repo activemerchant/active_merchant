@@ -74,24 +74,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(xml, credit_card, options)
-        return unless credit_card.respond_to?(:number)
+        xml.hps :CardHolderData do
 
-        first_name = credit_card.first_name
-        last_name = credit_card.last_name
-
-        if(first_name || last_name)
-          xml.hps :CardHolderData do
-            xml.hps :CardHolderFirstName, first_name if first_name
-            xml.hps :CardHolderLastName, last_name if last_name
+          if(credit_card.respond_to?(:number))
+            xml.hps :CardHolderFirstName, credit_card.first_name if credit_card.first_name
+            xml.hps :CardHolderLastName, credit_card.last_name if credit_card.last_name
             xml.hps :CardHolderEmail, options[:email] if options[:email]
-            xml.hps :CardHolderPhone, options[:phone] if options[:phone]
+            xml.hps :CardHolderPhone, options[:phone].gsub(/\D+/,'') if options[:phone]
+          end
 
-            if(billing_address = (options[:billing_address] || options[:address]))
-              xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1]
-              xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
-              xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
-              xml.hps :CardHolderZip, billing_address[:zip] if billing_address[:zip]
-            end
+          if(billing_address = (options[:billing_address] || options[:address]))
+            xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1]
+            xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
+            xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
+            xml.hps :CardHolderZip, billing_address[:zip].gsub(/\D+/,'') if billing_address[:zip]
           end
         end
       end
