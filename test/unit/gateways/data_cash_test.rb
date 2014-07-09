@@ -1,9 +1,6 @@
 require 'test_helper'
 
 class DataCashTest < Test::Unit::TestCase
-  # 100 Cents
-  AMOUNT = 100
-
   def setup
     @gateway = DataCashGateway.new(
       :login => 'LOGIN',
@@ -11,6 +8,8 @@ class DataCashTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card('4242424242424242')
+
+    @amount = 100
 
     @address = {
       :name     => 'Mark McBride',

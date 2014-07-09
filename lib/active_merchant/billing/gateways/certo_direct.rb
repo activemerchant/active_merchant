@@ -156,7 +156,7 @@ module ActiveMerchant #:nodoc:
 
       def build_recurring_request(identification, options)
         build_request_xml('Sale') do |xml|
-          xml.tag! 'order' do |xml|
+          xml.tag! 'order' do
             xml.tag!('test', 'true') if test?
             xml.tag! 'initial_order_id', identification, :type => 'integer'
 

@@ -107,6 +107,29 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card)
+    end.respond_with(successful_authorization_response, successful_void_response)
+    assert_success response
+  end
+
+  def test_successful_verify_failed_void
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorization_response, failed_void_response)
+    assert_success response
+    assert_equal "This transaction has been approved", response.message
+  end
+
+  def test_unsuccessful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorization_response, successful_void_response)
+    assert_failure response
+    assert_equal "This transaction was declined", response.message
+  end
+
   def test_add_address_outsite_north_america
     result = {}
 
@@ -375,8 +398,16 @@ class AuthorizeNetTest < Test::Unit::TestCase
     '$1$,$1$,$1$,$This transaction has been approved.$,$d1GENk$,$Y$,$508141795$,$32968c18334f16525227$,$Store purchase$,$1.00$,$CC$,$auth_capture$,$$,$Longbob$,$Longsen$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$269862C030129C1173727CC10B1935ED$,$P$,$2$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
   end
 
+  def successful_void_response
+    '$1$,$1$,$1$,$This transaction has been approved.$,$O39YT0$,$P$,$2215573915$,$823f2867c0cd10cf6e7e$,$$,$0.00$,$CC$,$void$,$$,$$,$$,$$,$$,$$,$$,$K1C2N6$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$C9C5D270851F841D0CD9E64542D8D3BC$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$XXXX4242$,$Visa$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
+  end
+
   def failed_authorization_response
     '$2$,$1$,$1$,$This transaction was declined.$,$advE7f$,$Y$,$508141794$,$5b3fe66005f3da0ebe51$,$$,$1.00$,$CC$,$auth_only$,$$,$Longbob$,$Longsen$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$2860A297E0FE804BCB9EF8738599645C$,$P$,$2$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
+  end
+
+  def failed_void_response
+    '$1$,$1$,$310$,$This transaction has already been voided.$,$$,$P$,$0$,$$,$$,$0.00$,$CC$,$void$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$02AA39F01BE7579FCBE318A14D516F9C$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$Visa$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$,$$'
   end
 
   def already_actioned_capture_response

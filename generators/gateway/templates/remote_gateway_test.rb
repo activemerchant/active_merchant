@@ -87,6 +87,18 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_match %r{REPLACE WITH SUCCESS MESSAGE}, response.message
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
+  end
+
   def test_invalid_login
     gateway = <%= class_name %>Gateway.new(
       login: '',

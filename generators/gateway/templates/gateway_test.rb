@@ -58,6 +58,15 @@ class <%= class_name %>Test < Test::Unit::TestCase
   def test_failed_void
   end
 
+  def test_successful_verify
+  end
+
+  def test_successful_verify_with_failed_void
+  end
+
+  def test_failed_verify
+  end
+
   private
 
   def successful_purchase_response

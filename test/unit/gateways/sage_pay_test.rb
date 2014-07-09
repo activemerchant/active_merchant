@@ -91,12 +91,12 @@ class SagePayTest < Test::Unit::TestCase
   end
 
   def test_avs_result
-     @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-     response = @gateway.purchase(@amount, @credit_card, @options)
-     assert_equal 'Y', response.avs_result['postal_match']
-     assert_equal 'N', response.avs_result['street_match']
-   end
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Y', response.avs_result['postal_match']
+    assert_equal 'N', response.avs_result['street_match']
+  end
 
    def test_cvv_result
      @gateway.expects(:ssl_post).returns(successful_purchase_response)

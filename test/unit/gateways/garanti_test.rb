@@ -4,6 +4,7 @@ require 'test_helper'
 
 class GarantiTest < Test::Unit::TestCase
   def setup
+    @original_kcode = nil
     if RUBY_VERSION < '1.9' && $KCODE == "NONE"
       @original_kcode = $KCODE
       $KCODE = 'u'
@@ -62,8 +63,8 @@ class GarantiTest < Test::Unit::TestCase
   def test_nil_normalization
     assert_nil @gateway.send(:normalize, nil)
   end
-  
-  
+
+
   private
 
   # Place raw successful response from gateway here

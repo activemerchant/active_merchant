@@ -120,7 +120,6 @@ module ActiveMerchant #:nodoc:
         data = ssl_post(self.live_url, post_data(action, parameters))
         response = parse(data)
         message = message_from(response)
-        test_mode = test?
 
         Response.new(success?(response), message, response,
           :test => test?,

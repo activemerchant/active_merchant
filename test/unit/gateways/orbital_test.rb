@@ -26,19 +26,19 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(50, credit_card, :order_id => '1')
     end.check_request do |endpoint, data, headers|
-      assert_match /<CurrencyExponent>2<\/CurrencyExponent>/, data
+      assert_match %r{<CurrencyExponent>2<\/CurrencyExponent>}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.purchase(50, credit_card, :order_id => '1', :currency => 'CAD')
     end.check_request do |endpoint, data, headers|
-      assert_match /<CurrencyExponent>2<\/CurrencyExponent>/, data
+      assert_match %r{<CurrencyExponent>2<\/CurrencyExponent>}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.purchase(50, credit_card, :order_id => '1', :currency => 'JPY')
     end.check_request do |endpoint, data, headers|
-      assert_match /<CurrencyExponent>0<\/CurrencyExponent>/, data
+      assert_match %r{<CurrencyExponent>0<\/CurrencyExponent>}, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -64,7 +64,7 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
     assert_deprecation_warning("Calling the void method with an amount parameter is deprecated and will be removed in a future version.") do
-      assert response = @gateway.void(@amount, "identifier")
+      assert response = @gateway.void(50, "identifier")
       assert_instance_of Response, response
       assert_success response
       assert_nil response.message

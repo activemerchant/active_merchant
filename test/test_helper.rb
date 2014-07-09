@@ -11,7 +11,6 @@ end
 
 require 'test/unit'
 
-require 'money'
 require 'mocha/version'
 if(Mocha::VERSION.split(".")[1].to_i < 12)
   require 'mocha'
@@ -29,21 +28,6 @@ require 'active_support/core_ext/numeric/time'
 begin
   require 'active_support/core_ext/time/acts_like'
 rescue LoadError
-end
-
-begin
-  gem 'actionpack'
-rescue LoadError
-  raise StandardError, "The view tests need ActionPack installed as gem to run"
-end
-
-require 'action_controller'
-require "action_view/template"
-begin
-  require 'active_support/core_ext/module/deprecation'
-  require 'action_dispatch/testing/test_process'
-rescue LoadError
-  require 'action_controller/test_process'
 end
 
 ActiveMerchant::Billing::Base.mode = :test
@@ -222,7 +206,7 @@ module ActiveMerchant
 
     def load_fixtures
       [DEFAULT_CREDENTIALS, LOCAL_CREDENTIALS].inject({}) do |credentials, file_name|
-        if File.exists?(file_name)
+        if File.exist?(file_name)
           yaml_data = YAML.load(File.read(file_name))
           credentials.merge!(symbolize_keys(yaml_data))
         end

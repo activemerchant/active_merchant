@@ -20,8 +20,8 @@ class RealexTest < Test::Unit::TestCase
     )
 
     @gateway_with_account = RealexGateway.new(
-      :login => @merchant_id,
-      :password => @secret,
+      :login => @login,
+      :password => @password,
       :account => 'bill_web_cengal'
     )
 

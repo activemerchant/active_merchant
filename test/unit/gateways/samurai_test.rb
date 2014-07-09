@@ -2,6 +2,8 @@ require 'test_helper'
 
 class SamuraiTest < Test::Unit::TestCase
   def setup
+    @old_verbose, $VERBOSE = $VERBOSE, false
+
     @gateway = SamuraiGateway.new(
               :login => "MERCHANT KEY",
               :password => "MERCHANT_PASSWORD",
@@ -14,6 +16,9 @@ class SamuraiTest < Test::Unit::TestCase
     @successful_authorization_id = "successful_authorization_id"
   end
 
+  def teardown
+    $VERBOSE = @old_verbose
+  end
 
   def test_successful_purchase_with_payment_method_token
     Samurai::Processor.expects(:purchase).
@@ -155,7 +160,7 @@ class SamuraiTest < Test::Unit::TestCase
                            with(card_to_store).
                            returns(payment_method)
     payment_method.expects(:retain).never
-    response = @gateway.store(@successful_credit_card, :retain => true)
+    @gateway.store(@successful_credit_card, :retain => true)
   end
 
   def test_no_retain_options
@@ -166,8 +171,8 @@ class SamuraiTest < Test::Unit::TestCase
                            returns(payment_method).
                            twice
     payment_method.expects(:retain).never
-    response = @gateway.store(@successful_credit_card, :retain => false)
-    response = @gateway.store(@successful_credit_card)
+    @gateway.store(@successful_credit_card, :retain => false)
+    @gateway.store(@successful_credit_card)
   end
 
   def test_passing_optional_processor_options

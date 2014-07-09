@@ -34,13 +34,13 @@ class RemoteBalancedTest < Test::Unit::TestCase
   def test_purchase_with_invalid_card
     response = @gateway.purchase(@amount, @invalid_card, @options)
     assert_failure response
-    assert_match /call bank/i, response.message
+    assert_match %r{call bank}i, response.message
   end
 
   def test_unsuccessful_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_match /Account Frozen/, response.message
+    assert_match %r{Account Frozen}, response.message
   end
 
   def test_passing_appears_on_statement
@@ -104,7 +104,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
 
     void = @gateway.void(capture.authorization)
     assert_failure void
-    assert_match /not found/i, void.message
+    assert_match %r{not found}i, void.message
   end
 
   def test_authorize_authorization

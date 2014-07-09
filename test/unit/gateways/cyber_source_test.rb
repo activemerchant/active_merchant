@@ -95,7 +95,7 @@ class CyberSourceTest < Test::Unit::TestCase
     @gateway.stubs(:ssl_post).returns(successful_create_subscription_response, successful_purchase_response)
 
     assert_success(response = @gateway.store(@credit_card, @subscription_options))
-    assert_success(response_reference_purchase = @gateway.purchase(@amount, response.authorization, @options))
+    assert_success(@gateway.purchase(@amount, response.authorization, @options))
     assert response.test?
   end
 
@@ -218,7 +218,7 @@ class CyberSourceTest < Test::Unit::TestCase
     @gateway.stubs(:ssl_post).returns(successful_capture_response, successful_refund_response)
     assert_success(response = @gateway.purchase(@amount, @credit_card, @options))
 
-    assert_success(response_refund = @gateway.refund(@amount, response.authorization))
+    assert_success(@gateway.refund(@amount, response.authorization))
   end
 
   def test_successful_credit_request

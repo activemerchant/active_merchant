@@ -2,7 +2,7 @@ require 'test_helper'
 
 class PaystationTest < Test::Unit::TestCase
   def setup
-    
+
     @gateway = PaystationGateway.new(
                  :paystation_id => 'some_id_number',
                  :gateway_id    => 'another_id_number'
@@ -10,29 +10,29 @@ class PaystationTest < Test::Unit::TestCase
 
     @credit_card = credit_card
     @amount = 100
-    
-    @options = { 
+
+    @options = {
       :order_id => '1',
       :customer => 'Joe Bloggs, Customer ID #56',
       :description => 'Store Purchase'
     }
   end
-  
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    
+
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    
+
     assert_equal '0008813023-01', response.authorization
-    
+
     assert_equal 'Store Purchase', response.params["merchant_reference"]
     assert response.test?
   end
 
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
-    
+
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
@@ -40,46 +40,46 @@ class PaystationTest < Test::Unit::TestCase
 
   def test_successful_store
     @gateway.expects(:ssl_post).returns(successful_store_response)
-    
+
     assert response = @gateway.store(@credit_card, @options.merge(:token => "justatest1310263135"))
     assert_success response
     assert response.test?
-    
+
     assert_equal "justatest1310263135", response.token
   end
-  
+
   def test_successful_purchase_from_token
     @gateway.expects(:ssl_post).returns(successful_stored_purchase_response)
-  
+
     token = "u09fxli14afpnd6022x0z82317beqe9e2w048l9it8286k6lpvz9x27hdal9bl95"
-  
+
     assert response = @gateway.purchase(@amount, token, @options)
     assert_success response
-    
+
     assert_equal '0009062149-01', response.authorization
-    
+
     assert_equal 'Store Purchase', response.params["merchant_reference"]
     assert response.test?
   end
-  
+
   def test_successful_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    
-    assert response = @gateway.authorize(@successful_amount, @credit_card, @options)
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    
+
     assert response.authorization
   end
-  
+
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
-    
-    assert response = @gateway.capture(@successful_amount, "0009062250-01", @options.merge(:credit_card_verification => 123))
+
+    assert response = @gateway.capture(@amount, "0009062250-01", @options.merge(:credit_card_verification => 123))
     assert_success response
   end
 
   private
-  
+
     def successful_purchase_response
       %(<?xml version="1.0" standalone="yes"?>
       <response>
@@ -120,7 +120,7 @@ class PaystationTest < Test::Unit::TestCase
       <IssuerCountry>unknown</IssuerCountry>
       </response>)
     end
-  
+
     def failed_purchase_response
       %(<?xml version="1.0" standalone="yes"?>
       <response>
@@ -161,7 +161,7 @@ class PaystationTest < Test::Unit::TestCase
       <IssuerCountry>unknown</IssuerCountry>
       </response>)
     end
-    
+
     def successful_store_response
       %(<?xml version="1.0" standalone="yes"?>
       <PaystationFuturePaymentResponse>
@@ -203,7 +203,7 @@ class PaystationTest < Test::Unit::TestCase
       <IssuerCountry>unknown</IssuerCountry>
       </PaystationFuturePaymentResponse>)
     end
-    
+
     def successful_stored_purchase_response
       %(<?xml version="1.0" standalone="yes"?>
       <PaystationFuturePaymentResponse>
@@ -245,7 +245,7 @@ class PaystationTest < Test::Unit::TestCase
       <IssuerCountry>unknown</IssuerCountry>
       </PaystationFuturePaymentResponse>)
     end
-    
+
     def successful_authorization_response
       %(<?xml version="1.0" standalone="yes"?>
       <response>
@@ -286,7 +286,7 @@ class PaystationTest < Test::Unit::TestCase
       <IssuerCountry>unknown</IssuerCountry>
       </response>)
     end
-    
+
     def successful_capture_response
       %(<?xml version="1.0" standalone="yes"?>
       <PaystationCaptureResponse>

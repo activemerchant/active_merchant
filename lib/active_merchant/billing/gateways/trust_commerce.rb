@@ -399,7 +399,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(data)
-        status = case data["status"]
+        case data["status"]
         when "decline"
           return DECLINE_CODES[data["declinetype"]]
         when "baddata"

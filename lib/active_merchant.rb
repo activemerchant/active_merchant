@@ -60,7 +60,7 @@ require 'timeout'
 require 'socket'
 
 require 'active_utils/common/network_connection_retries'
-require 'active_utils/common/connection'
+silence_warnings{require 'active_utils/common/connection'}
 require 'active_utils/common/post_data'
 require 'active_utils/common/posts_data'
 

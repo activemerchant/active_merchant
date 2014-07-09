@@ -104,7 +104,7 @@ class AuthorizeNetCimTest < Test::Unit::TestCase
     assert response.params['direct_response']['approval_code'] =~ /\w{6}/
     assert_equal "auth_only", response.params['direct_response']['transaction_type']
     assert_equal "100.00", response.params['direct_response']['amount']
-    assert_match /\d+/, response.params['direct_response']['transaction_id']
+    assert_match %r{\d+}, response.params['direct_response']['transaction_id']
 
     approval_code = response.params['direct_response']['approval_code']
 

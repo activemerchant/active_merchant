@@ -75,7 +75,7 @@ class PayexTest < Test::Unit::TestCase
     assert response = @gateway.void("1")
     assert_failure response
     assert_not_equal 'OK', response.message
-    assert_match /1/, response.message
+    assert_match %r{1}, response.message
     assert response.test?
   end
 
@@ -92,7 +92,7 @@ class PayexTest < Test::Unit::TestCase
     assert response = @gateway.refund(@amount, "1", order_id: '123')
     assert_failure response
     assert_not_equal 'OK', response.message
-    assert_match /1/, response.message
+    assert_match %r{1}, response.message
     assert response.test?
   end
 

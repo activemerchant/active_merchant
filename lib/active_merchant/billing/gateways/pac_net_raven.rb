@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        Hash[body.split('&').map{|x| x.split('=').map{|x| CGI.unescape(x)}}]
+        Hash[body.split('&').map{|x| x.split('=').map{|y| CGI.unescape(y)}}]
       end
 
       def commit(action, money, parameters)
@@ -199,7 +199,7 @@ module ActiveMerchant #:nodoc:
         else
           post['UserName']
         end
-        Digest::HMAC.hexdigest(string, @options[:secret], Digest::SHA1)
+        OpenSSL::HMAC.hexdigest(OpenSSL::Digest::SHA1.new(@options[:secret]), @options[:secret], string)
       end
     end
   end

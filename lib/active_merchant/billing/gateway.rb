@@ -10,15 +10,16 @@ module ActiveMerchant #:nodoc:
     #
     # The standard list of gateway functions that most concrete gateway subclasses implement is:
     #
-    # * <tt>purchase(money, creditcard, options = {})</tt>
-    # * <tt>authorize(money, creditcard, options = {})</tt>
+    # * <tt>purchase(money, credit_card, options = {})</tt>
+    # * <tt>authorize(money, credit_card, options = {})</tt>
     # * <tt>capture(money, authorization, options = {})</tt>
     # * <tt>void(identification, options = {})</tt>
-    # * <tt>credit(money, identification, options = {})</tt>
+    # * <tt>refund(money, identification, options = {})</tt>
+    # * <tt>verify(credit_card, options = {})</tt>
     #
     # Some gateways also support features for storing credit cards:
     #
-    # * <tt>store(creditcard, options = {})</tt>
+    # * <tt>store(credit_card, options = {})</tt>
     # * <tt>unstore(identification, options = {})</tt>
     #
     # === Gateway Options

@@ -6,11 +6,13 @@ class ActiveMerchant::Billing::OptimalPaymentGateway
 end
 
 class OptimalPaymentTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = OptimalPaymentGateway.new(
-                 :login => 'login',
-                 :password => 'password'
-               )
+      :login => 'login',
+      :password => 'password'
+    )
 
     @credit_card = credit_card
     @amount = 100
@@ -26,6 +28,14 @@ class OptimalPaymentTest < Test::Unit::TestCase
   def test_full_request
     @gateway.instance_variable_set('@credit_card', @credit_card)
     assert_match full_request, @gateway.cc_auth_request(@amount, @options)
+  end
+
+  def test_ip_address_is_passed
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(ip: "1.2.3.4"))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r{customerIP%3E1.2.3.4%3C}, data
+    end.respond_with(successful_purchase_response)
   end
 
   def test_minimal_request
@@ -91,7 +101,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
     @options[:shipping_address] = {:country => "CA"}
     @gateway.expects(:ssl_post).with do |url, data|
       xml = data.split("&").detect{|string| string =~ /txnRequest=/}.gsub("txnRequest=","")
-      doc = Nokogiri::XML.parse(URI.decode(xml))
+      doc = Nokogiri::XML.parse(CGI.unescape(xml))
       doc.xpath('//xmlns:shippingDetails/xmlns:country').first.text == "CA" && doc.to_s.include?('<shippingDetails>')
     end.returns(successful_purchase_response)
 
@@ -102,7 +112,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
     @options[:shipping_address] = nil
     @gateway.expects(:ssl_post).with do |url, data|
       xml = data.split("&").detect{|string| string =~ /txnRequest=/}.gsub("txnRequest=","")
-      doc = Nokogiri::XML.parse(URI.decode(xml))
+      doc = Nokogiri::XML.parse(CGI.unescape(xml))
       doc.to_s.include?('<shippingDetails>') == false
     end.returns(successful_purchase_response)
 
@@ -172,7 +182,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
 
   def test_email_being_sent
     @gateway.expects(:ssl_post).with do |url, data|
-      data =~ /email%3Eemail%2540example.com%3C\/email/
+      data =~ /email%3Eemail%2540example.com%3C%2Femail/
     end
 
     @gateway.purchase(@amount, @credit_card, @options)

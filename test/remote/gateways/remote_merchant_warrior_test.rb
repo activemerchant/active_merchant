@@ -68,7 +68,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
 
   def test_failed_refund
     assert refund = @gateway.refund(@success_amount, 'invalid-transaction-id')
-    assert_match /Invalid transactionID/, refund.message
+    assert_match %r{Invalid transactionID}, refund.message
     assert_failure refund
   end
 
@@ -78,7 +78,7 @@ class RemoteMerchantWarriorTest < Test::Unit::TestCase
     assert_equal 'Transaction approved', auth.message
 
     assert capture = @gateway.capture(400, auth.authorization)
-    assert_match /Capture amount is greater than the transaction amount/, capture.message
+    assert_match %r{Capture amount is greater than the transaction amount}, capture.message
     assert_failure capture
   end
 

@@ -38,8 +38,8 @@ class RemoteQuickpayV7Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_all_fraud_parameters
+    @options[:ip] = '127.0.0.1' # will set :fraud_remote_addr
     @options[:fraud_http_referer] = 'http://www.excample.com'
-    @options[:fraud_remote_addr] = '127.0.0.1'
     @options[:fraud_http_accept] = 'foo'
     @options[:fraud_http_accept_language] = "DK"
     @options[:fraud_http_accept_encoding] = "UFT8"

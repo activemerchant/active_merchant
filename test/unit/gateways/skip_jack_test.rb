@@ -41,7 +41,7 @@ class SkipJackTest < Test::Unit::TestCase
   def test_authorization_success
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
 
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
     assert_equal '9802853155172.022', response.authorization
@@ -50,7 +50,7 @@ class SkipJackTest < Test::Unit::TestCase
   def test_authorization_failure
     @gateway.expects(:ssl_post).returns(unsuccessful_authorization_response)
 
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
   end
@@ -58,7 +58,7 @@ class SkipJackTest < Test::Unit::TestCase
   def test_purchase_success
     @gateway.expects(:ssl_post).times(2).returns(successful_authorization_response, successful_capture_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal "9802853155172.022", response.authorization
   end
@@ -66,7 +66,7 @@ class SkipJackTest < Test::Unit::TestCase
   def test_purchase_failure
     @gateway.expects(:ssl_post).returns(unsuccessful_authorization_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
   end
@@ -74,7 +74,7 @@ class SkipJackTest < Test::Unit::TestCase
   def test_refund_success
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    assert response = @gateway.refund(@amount, 123)
+    response = @gateway.refund(@amount, 123)
     assert_instance_of Response, response
     assert_failure response
   end
@@ -83,7 +83,7 @@ class SkipJackTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
     assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
-      assert response = @gateway.credit(@amount, 123)
+      response = @gateway.credit(@amount, 123)
       assert_instance_of Response, response
       assert_failure response
     end
@@ -179,7 +179,7 @@ class SkipJackTest < Test::Unit::TestCase
   def test_paymentech_authorization_success
     @gateway.expects(:ssl_post).returns(successful_paymentech_authorization_response)
 
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
     assert_equal '40000024585892.109', response.authorization
@@ -188,7 +188,7 @@ class SkipJackTest < Test::Unit::TestCase
   def test_paymentech_authorization_failure
     @gateway.expects(:ssl_post).returns(unsuccessful_paymentech_authorization_response)
 
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
   end
@@ -197,24 +197,24 @@ class SkipJackTest < Test::Unit::TestCase
   def test_serial_number_is_added_before_developer_serial_number_for_authorization
     @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?AuthorizeAPI', "Year=#{Time.now.year + 1}&TransactionAmount=1.00&ShipToPhone=&SerialNumber=X&SJName=Longbob+Longsen&OrderString=1%7ENone%7E0.00%7E0%7EN%7E%7C%7C&OrderNumber=1&OrderDescription=&Month=9&InvoiceNumber=&Email=cody%40example.com&DeveloperSerialNumber=Y&CustomerCode=&CVV2=123&AccountNumber=4242424242424242").returns(successful_authorization_response)
 
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    @gateway.authorize(@amount, @credit_card, @options)
   end
 
   def test_serial_number_is_added_before_developer_serial_number_for_capture
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    response = @gateway.authorize(@amount, @credit_card, @options)
 
     @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', "szTransactionId=#{response.authorization}&szSerialNumber=X&szForceSettlement=0&szDeveloperSerialNumber=Y&szDesiredStatus=SETTLE&szAmount=1.00").returns(successful_capture_response)
-    assert response = @gateway.capture(@amount, response.authorization)
+    response = @gateway.capture(@amount, response.authorization)
   end
 
   def test_successful_partial_capture
     @amount = 200
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    response = @gateway.authorize(@amount, @credit_card, @options)
 
     @gateway.expects(:ssl_post).with('https://developer.skipjackic.com/scripts/evolvcc.dll?SJAPI_TransactionChangeStatusRequest', "szTransactionId=#{response.authorization}&szSerialNumber=X&szForceSettlement=0&szDeveloperSerialNumber=Y&szDesiredStatus=SETTLE&szAmount=1.00").returns(successful_capture_response)
-    assert response = @gateway.capture(@amount/2, response.authorization)
+    response = @gateway.capture(@amount/2, response.authorization)
     assert_equal "1.0000", response.params["TransactionAmount"]
   end
 
@@ -229,7 +229,7 @@ class SkipJackTest < Test::Unit::TestCase
       CGI.parse(params)['ShipToState'].first == 'XX'
     end.returns(successful_authorization_response)
 
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    @gateway.authorize(@amount, @credit_card, @options)
   end
 
   private

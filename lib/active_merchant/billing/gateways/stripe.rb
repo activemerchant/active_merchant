@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
       # Source: https://support.stripe.com/questions/which-zero-decimal-currencies-does-stripe-support
       CURRENCIES_WITHOUT_FRACTIONS = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'VUV', 'XAF', 'XOF', 'XPF']
 
-      self.supported_countries = %w(US CA GB AU IE FR NL BE DE ES)
+      self.supported_countries = %w(AU BE CA CH DE ES FI FR GB IE IT LU NL US)
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
@@ -84,7 +84,14 @@ module ActiveMerchant #:nodoc:
           return r unless options[:refund_fee_amount]
 
           r.process { fetch_application_fees(identification, options) }
-          r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r), options) }
+          r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r.responses.last), options) }
+        end
+      end
+
+      def verify(creditcard, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(50, creditcard, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
 

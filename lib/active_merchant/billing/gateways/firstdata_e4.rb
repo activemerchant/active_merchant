@@ -6,12 +6,13 @@ module ActiveMerchant #:nodoc:
       self.live_url = "https://api.globalgatewaye4.firstdata.com/transaction/v11"
 
       TRANSACTIONS = {
-        :sale          => "00",
-        :authorization => "01",
-        :capture       => "32",
-        :void          => "33",
-        :credit        => "34",
-        :store         => "05"
+        sale:          "00",
+        authorization: "01",
+        verify:        "05",
+        capture:       "32",
+        void:          "33",
+        credit:        "34",
+        store:         "05"
       }
 
       POST_HEADERS = {
@@ -72,6 +73,10 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options = {})
         commit(:credit, build_capture_or_credit_request(money, authorization, options))
+      end
+
+      def verify(credit_card, options = {})
+        commit(:verify, build_sale_or_authorization_request(0, credit_card, options))
       end
 
       # Tokenize a credit card with TransArmor

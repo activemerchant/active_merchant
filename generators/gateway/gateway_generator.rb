@@ -10,7 +10,6 @@ class GatewayGenerator < ActiveMerchantGenerator
     template "templates/remote_gateway_test.rb", remote_gateway_test_file
 
     before = (next_identifier ? /(?:\n#[^\n]*)*\n#{next_identifier}:\s*\n/ : /\z/)
-    p before
     inject_into_file(fixtures_file, <<EOYAML, before: before)
 
 # Working credentials, no need to replace

@@ -290,7 +290,7 @@ module ActiveMerchant #:nodoc:
 
       def add_fraud_parameters(post, options)
         if @protocol >= 4
-          post[:fraud_remote_addr] = options[:fraud_remote_addr] if options[:fraud_remote_addr]
+          post[:fraud_remote_addr] = options[:ip] if options[:ip]
           post[:fraud_http_accept] = options[:fraud_http_accept] if options[:fraud_http_accept]
           post[:fraud_http_accept_language] = options[:fraud_http_accept_language] if options[:fraud_http_accept_language]
           post[:fraud_http_accept_encoding] = options[:fraud_http_accept_encoding] if options[:fraud_http_accept_encoding]
@@ -359,7 +359,7 @@ module ActiveMerchant #:nodoc:
 
       # Limited to 20 digits max
       def format_order_number(number)
-        number.to_s.gsub(/[^\w_]/, '').rjust(4, "0")[0...20]
+        number.to_s.gsub(/[^\w]/, '').rjust(4, "0")[0...20]
       end
     end
   end

@@ -189,7 +189,7 @@ class BeanstreamTest < Test::Unit::TestCase
     end.returns(successful_purchase_response)
 
     @options[:ip] = "123.123.123.123"
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    @gateway.purchase(@amount, @credit_card, @options)
   end
 
   private

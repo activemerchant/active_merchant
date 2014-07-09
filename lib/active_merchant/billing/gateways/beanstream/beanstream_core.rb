@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        reference, amount, type = split_auth(authorization)
+        reference, _, _ = split_auth(authorization)
 
         post = {}
         add_amount(post, money)
@@ -98,7 +98,7 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, source, options = {})
         post = {}
-        reference, amount, type = split_auth(source)
+        reference, _, type = split_auth(source)
         add_reference(post, reference)
         add_transaction_type(post, refund_action(type))
         add_amount(post, money)

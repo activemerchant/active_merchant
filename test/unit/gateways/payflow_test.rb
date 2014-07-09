@@ -318,7 +318,7 @@ class PayflowTest < Test::Unit::TestCase
     assert_equal timeout, headers['X-VPS-Client-Timeout']
 
     xml = @gateway.send(:build_request, 'dummy body')
-    assert_match /Timeout="#{timeout}"/, xml
+    assert_match %r{Timeout="#{timeout}"}, xml
   end
 
   def test_name_field_are_included_instead_of_first_and_last
