@@ -106,13 +106,13 @@ class CreditCardMethodsTest < Test::Unit::TestCase
   end
 
   def test_should_detect_maestro_dk_as_maestro
-    assert_equal 'maestro', CreditCard.brand?('6769271000000000')
+    assert_equal 'master', CreditCard.brand?('6769271000000000')
   end
 
   def test_should_detect_maestro_cards
-    assert_equal 'maestro', CreditCard.brand?('5020100000000000')
+    assert_equal 'master', CreditCard.brand?('5020100000000000')
 
-    maestro_card_numbers.each { |number| assert_equal 'maestro', CreditCard.brand?(number) }
+    maestro_card_numbers.each { |number| assert_equal 'master', CreditCard.brand?(number) }
     non_maestro_card_numbers.each { |number| assert_not_equal 'maestro', CreditCard.brand?(number) }
   end
 
@@ -167,7 +167,7 @@ class CreditCardMethodsTest < Test::Unit::TestCase
 
     while maestro.length < 19
       maestro << '0'
-      assert_equal 'maestro', CreditCard.brand?(maestro)
+      assert_equal 'master', CreditCard.brand?(maestro)
     end
 
     assert_equal 19, maestro.length
