@@ -251,11 +251,10 @@ module ActiveMerchant #:nodoc:
 
       def avs_element(address)
         full_address = "#{address[:address1]} #{address[:address2]}"
-        tokens = full_address.split(/\s+/)
 
         element = REXML::Element.new('avs_info')
-        element.add_element('avs_street_number').text = tokens.keep_if { |x| x =~ /\d/ }.join(' ')
-        element.add_element('avs_street_name').text = tokens.keep_if { |x| x !~ /\d/ }.join(' ')
+        element.add_element('avs_street_number').text = full_address.split(/\s+/).keep_if { |x| x =~ /\d/ }.join(' ')
+        element.add_element('avs_street_name').text = full_address.split(/\s+/).keep_if { |x| x !~ /\d/ }.join(' ')
         element.add_element('avs_zipcode').text = address[:zip]
         element
       end
