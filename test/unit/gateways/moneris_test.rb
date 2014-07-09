@@ -212,12 +212,13 @@ class MonerisTest < Test::Unit::TestCase
   end
 
   def test_avs_information_present_with_address
+    billing_address = address(address1: "1234 Anystreet", address2: "")
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options)
+      @gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: "1")
     end.check_request do |endpoint, data, headers|
-      assert_match(%r{avs_street_number>}, data)
-      assert_match(%r{avs_street_name>}, data)
-      assert_match(%r{avs_zipcode>}, data)
+      assert_match(%r{avs_street_number>1234<}, data)
+      assert_match(%r{avs_street_name>Anystreet<}, data)
+      assert_match(%r{avs_zipcode>#{billing_address[:zip]}<}, data)
     end.respond_with(successful_purchase_response_with_avs_result)
   end
 
