@@ -33,6 +33,26 @@ class BraintreeBlueTest < Test::Unit::TestCase
     assert_equal "refund_transaction_id", response.authorization
   end
 
+  def test_transaction_uses_customer_id_by_default
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+      with(has_entries(:customer_id => "present")).
+      returns(braintree_result)
+
+    assert response = @gateway.purchase(10, 'present', {})
+    assert_instance_of Response, response
+    assert_success response
+  end
+
+  def test_transaction_uses_payment_method_token_when_option
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+      with(has_entries(:payment_method_token => "present")).
+      returns(braintree_result)
+
+    assert response = @gateway.purchase(10, 'present', { payment_method_token: true })
+    assert_instance_of Response, response
+    assert_success response
+  end
+
   def test_void_transaction
     Braintree::TransactionGateway.any_instance.expects(:void).
       with('transaction_id').

@@ -241,6 +241,23 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal '510510', @braintree_backend.customer.find(response.params["customer_vault_id"]).credit_cards[0].bin
   end
 
+  def test_purchase_using_specified_payment_method_token
+    assert response = @gateway.store(
+      credit_card('4111111111111111',
+        :first_name => 'Old First', :last_name => 'Old Last',
+        :month => 9, :year => 2012
+      ),
+      :email => "old@example.com"
+    )
+    payment_method_token = response.params["braintree_customer"]["credit_cards"][0]["token"]
+    assert response = @gateway.purchase(
+      @amount, payment_method_token, @options.merge(payment_method_token: true)
+    )
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal payment_method_token, response.params["braintree_transaction"]["credit_card_details"]["token"]
+  end
+
   def test_successful_purchase_with_addresses
     billing_address = {
       :address1 => '1 E Main St',
