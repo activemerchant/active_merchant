@@ -480,7 +480,7 @@ module ActiveMerchant #:nodoc:
         end
 
         if credit_card_or_vault_id.is_a?(String) || credit_card_or_vault_id.is_a?(Integer)
-          parameters[:customer_id] = credit_card_or_vault_id
+          parameters[:payment_method_token] = credit_card_or_vault_id
         else
           parameters[:customer].merge!(
             :first_name => credit_card_or_vault_id.first_name,
