@@ -73,7 +73,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         commit do
           result = @braintree_gateway.transaction.submit_for_settlement(authorization, amount(money).to_s)
-          Response.new(result.success?, message_from_result(result))
+          response_from_result(result)
         end
       end
 
@@ -92,21 +92,13 @@ module ActiveMerchant #:nodoc:
         money = amount(money).to_s if money
 
         commit do
-          result = @braintree_gateway.transaction.refund(transaction_id, money)
-          Response.new(result.success?, message_from_result(result),
-            {:braintree_transaction => (transaction_hash(result.transaction) if result.success?)},
-            {:authorization => (result.transaction.id if result.success?)}
-           )
+          response_from_result(@braintree_gateway.transaction.refund(transaction_id, money))
         end
       end
 
       def void(authorization, options = {})
         commit do
-          result = @braintree_gateway.transaction.void(authorization)
-          Response.new(result.success?, message_from_result(result),
-            {:braintree_transaction => (transaction_hash(result.transaction) if result.success?)},
-            {:authorization => (result.transaction.id if result.success?)}
-          )
+          response_from_result(@braintree_gateway.transaction.void(authorization))
         end
       end
 
@@ -311,6 +303,13 @@ module ActiveMerchant #:nodoc:
         else
           result.errors.map { |e| "#{e.message} (#{e.code})" }.join(" ")
         end
+      end
+
+      def response_from_result(result)
+        Response.new(result.success?, message_from_result(result),
+          { braintree_transaction: (transaction_hash(result.transaction) if result.success?) },
+          { authorization: (result.transaction.id if result.success?) }
+         )
       end
 
       def response_params(result)
