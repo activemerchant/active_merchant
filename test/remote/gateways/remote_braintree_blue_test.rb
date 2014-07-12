@@ -296,18 +296,16 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
   end
 
   def test_authorize_and_capture
-    amount = @amount
-    assert auth = @gateway.authorize(amount, @credit_card, @options)
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal '1000 Approved', auth.message
     assert auth.authorization
-    assert capture = @gateway.capture(amount, auth.authorization)
+    assert capture = @gateway.capture(@amount, auth.authorization)
     assert_success capture
   end
 
   def test_authorize_and_void
-    amount = @amount
-    assert auth = @gateway.authorize(amount, @credit_card, @options)
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal '1000 Approved', auth.message
     assert auth.authorization
@@ -316,9 +314,28 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'voided', void.params["braintree_transaction"]["status"]
   end
 
+  def test_purchase_and_void
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert void = @gateway.void(purchase.authorization)
+    assert_success void
+    assert_equal 'voided', void.params["braintree_transaction"]["status"]
+  end
+
+  def test_capture_and_void
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+
+    assert void = @gateway.void(capture.authorization)
+    assert_success void
+    assert_equal 'voided', void.params["braintree_transaction"]["status"]
+  end
+
   def test_failed_void
-    amount = @amount
-    assert auth = @gateway.authorize(amount, @credit_card, @options)
+    assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
     assert_equal '1000 Approved', auth.message
     assert auth.authorization
