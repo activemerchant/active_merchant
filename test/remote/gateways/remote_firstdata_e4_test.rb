@@ -11,11 +11,24 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store Purchase'
     }
+    @options_with_authentication_data = @options.merge({
+      eci: "5",
+      cavv: "TESTCAVV",
+      xid: "TESTXID"
+    })
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_match(/Transaction Normal/, response.message)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_card_authentication
+    assert response = @gateway.purchase(@amount, @credit_card, @options_with_authentication_data)
+    assert_equal response.params["cavv"], @options_with_authentication_data[:cavv]
+    assert_equal response.params["ecommerce_flag"], @options_with_authentication_data[:eci]
+    assert_equal response.params["xid"], @options_with_authentication_data[:xid]
     assert_success response
   end
 
@@ -100,5 +113,4 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result["code"]
     assert_equal '1', response.avs_result["code"]
   end
-
 end

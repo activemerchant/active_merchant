@@ -128,6 +128,23 @@ class FirstdataE4Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_requests_include_card_authentication_data
+    authentication_hash = {
+      eci: "06",
+      cavv: "SAMPLECAVV",
+      xid: "SAMPLEXID"
+    }
+    options_with_authentication_data = @options.merge(authentication_hash)
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, options_with_authentication_data)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<Ecommerce_Flag>06</Ecommerce_Flag>", data
+      assert_match "<CAVV>SAMPLECAVV</CAVV>", data
+      assert_match "<XID>SAMPLEXID</XID>", data
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_card_type
     assert_equal 'Visa', @gateway.send(:card_type, 'visa')
     assert_equal 'Mastercard', @gateway.send(:card_type, 'master')
