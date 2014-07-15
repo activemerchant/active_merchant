@@ -73,6 +73,7 @@
 * Moneris: Fix address splitting [ntalbott]
 * FirstData E4: Allow passing CAVV through [Senjai]
 * Braintree Blue: Remember the capture transaction id [duff]
+* Eway Rapid: Truncate some fields [duff]
 
 == Version 1.43.2 (May 12, 2014)
 
