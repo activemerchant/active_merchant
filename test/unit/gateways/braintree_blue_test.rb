@@ -149,6 +149,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     Braintree::CustomerGateway.any_instance.expects(:create).with do |params|
       params[:credit_card][:options].has_key?(:verify_card)
       assert_equal true, params[:credit_card][:options][:verify_card]
+      assert_equal "Longbob Longsen", params[:credit_card][:cardholder_name]
       params
     end.returns(result)
 
@@ -299,6 +300,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     Braintree::CreditCardGateway.any_instance.expects(:create).with do |params|
       assert_equal "customerid", params[:customer_id]
       assert_equal "41111111111111111111", params[:number]
+      assert_equal "Longbob Longsen", params[:cardholder_name]
       params
     end.returns(result)
 
@@ -318,6 +320,7 @@ class BraintreeBlueTest < Test::Unit::TestCase
     result = Braintree::SuccessfulResult.new(:customer => customer)
     Braintree::CustomerGateway.any_instance.expects(:update).with do |vault, params|
       assert_equal "567", params[:credit_card][:cvv]
+      assert_equal "Longbob Longsen", params[:credit_card][:cardholder_name]
       [vault, params]
     end.returns(result)
 
