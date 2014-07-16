@@ -75,6 +75,7 @@
 * Braintree Blue: Remember the capture transaction id [duff]
 * Eway Rapid: Truncate some fields [duff]
 * Optimal Payment: Make account mandatory field [rwdaigle]
+* Worldpay: Improve address defaulting [duff]
 
 == Version 1.43.2 (May 12, 2014)
 

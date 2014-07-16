@@ -36,7 +36,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_successful_reference_transaction_authorize_with_merchant_code
     response = stub_comms do
-      @gateway.authorize(@amount, @options[:order_id].to_s, @options.merge({ :merchant_code => 'testlogin2'}))
+      @gateway.authorize(@amount, @options[:order_id].to_s, @options.merge({ merchant_code: 'testlogin2'}))
     end.check_request do |endpoint, data, headers|
       assert_match(/testlogin2/, data)
     end.respond_with(successful_authorize_response)
@@ -60,7 +60,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_purchase_passes_correct_currency
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'CAD'))
+      @gateway.purchase(@amount, @credit_card, @options.merge(currency: 'CAD'))
     end.check_request do |endpoint, data, headers|
       assert_match(/CAD/, data)
     end.respond_with(successful_authorize_response, successful_capture_response)
@@ -146,7 +146,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(:description => "Something cool."))
+      @gateway.authorize(@amount, @credit_card, @options.merge(description: "Something cool."))
     end.check_request do |endpoint, data, headers|
       assert_match %r(<description>Something cool.</description>), data
     end.respond_with(successful_authorize_response)
@@ -160,7 +160,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, @options.merge(:order_content => "Lots 'o' crazy <data> stuff."))
+      @gateway.authorize(@amount, @credit_card, @options.merge(order_content: "Lots 'o' crazy <data> stuff."))
     end.check_request do |endpoint, data, headers|
       assert_match %r(<orderContent>\s*<!\[CDATA\[Lots 'o' crazy <data> stuff\.\]\]>\s*</orderContent>), data
     end.respond_with(successful_authorize_response)
@@ -191,7 +191,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_address_handling
     stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(:billing_address => address))
+      @gateway.authorize(100, @credit_card, @options.merge(billing_address: address))
     end.check_request do |endpoint, data, headers|
       assert_match %r(<firstName>Jim</firstName>), data
       assert_match %r(<lastName>Smith</lastName>), data
@@ -205,7 +205,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(:address => address))
+      @gateway.authorize(100, @credit_card, @options.merge(address: address))
     end.check_request do |endpoint, data, headers|
       assert_match %r(<firstName>Jim</firstName>), data
       assert_match %r(<lastName>Smith</lastName>), data
@@ -219,22 +219,39 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(:address => {:address1 => "Anystreet", :country => "US"}))
+      @gateway.authorize(100, @credit_card, @options.merge(billing_address: { phone: "555-3323" }))
     end.check_request do |endpoint, data, headers|
       assert_no_match %r(firstName), data
       assert_no_match %r(lastName), data
       assert_no_match %r(address2), data
-      assert_no_match %r(city), data
-      assert_no_match %r(telephoneNumber), data
-      assert_match %r(<address1>Anystreet</address1>), data
+      assert_match %r(<address1>N/A</address1>), data
+      assert_match %r(<city>N/A</city>), data
       assert_match %r(<postalCode>0000</postalCode>), data
       assert_match %r(<state>N/A</state>), data
+      assert_match %r(<countryCode>US</countryCode>), data
+      assert_match %r(<telephoneNumber>555-3323</telephoneNumber>), data
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_default_address
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match %r(firstName), data
+      assert_no_match %r(lastName), data
+      assert_no_match %r(address2), data
+      assert_no_match %r(telephoneNumber), data
+      assert_match %r(<address1>N/A</address1>), data
+      assert_match %r(<city>N/A</city>), data
+      assert_match %r(<postalCode>0000</postalCode>), data
+      assert_match %r(<state>N/A</state>), data
+      assert_match %r(<countryCode>US</countryCode>), data
     end.respond_with(successful_authorize_response)
   end
 
   def test_email
     stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(:email => "eggcellent@example.com"))
+      @gateway.authorize(100, @credit_card, @options.merge(email: "eggcellent@example.com"))
     end.check_request do |endpoint, data, headers|
       assert_match %r(<shopperEmailAddress>eggcellent@example.com</shopperEmailAddress>), data
     end.respond_with(successful_authorize_response)
@@ -248,7 +265,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_ip
     stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(:ip => "192.137.11.44"))
+      @gateway.authorize(100, @credit_card, @options.merge(ip: "192.137.11.44"))
     end.check_request do |endpoint, data, headers|
       assert_match %r(<session shopperIPAddress="192.137.11.44"/>), data
     end.respond_with(successful_authorize_response)
@@ -262,7 +279,7 @@ class WorldpayTest < Test::Unit::TestCase
 
   def test_parsing
     response = stub_comms do
-      @gateway.authorize(100, @credit_card, @options.merge(:address => {:address1 => "123 Anystreet", :country => "US"}))
+      @gateway.authorize(100, @credit_card, @options.merge(address: {address1: "123 Anystreet", country: "US"}))
     end.respond_with(successful_authorize_response)
 
     assert_equal({
