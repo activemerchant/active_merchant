@@ -392,9 +392,9 @@ openpay:
   merchant_id: 'mzdtln0bmtms6o3kck8f'
 
 optimal_payment:
-  login: test
+  store_id: test
   password: test
-  account: 'ACCOUNT_NUMBER'
+  account_number: '12345678'
 
 orbital_gateway:
   login: LOGIN
