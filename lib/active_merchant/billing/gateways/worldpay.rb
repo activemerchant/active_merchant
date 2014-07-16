@@ -196,7 +196,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! 'cardHolderName', payment_method.name
               xml.tag! 'cvc', payment_method.verification_value
 
-              add_address(xml, 'cardAddress', (options[:billing_address] || options[:address]))
+              add_address(xml, (options[:billing_address] || options[:address]))
             end
             if options[:ip]
               xml.tag! 'session', 'shopperIPAddress' => options[:ip]
@@ -212,10 +212,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_address(xml, element, address)
-        return if address.nil?
+      def add_address(xml, address)
+        address = default_address.merge(address || {})
 
-        xml.tag! element do
+        xml.tag! 'cardAddress' do
           xml.tag! 'address' do
             if m = /^\s*([^\s]+)\s+(.+)$/.match(address[:name])
               xml.tag! 'firstName', m[1]
@@ -223,13 +223,23 @@ module ActiveMerchant #:nodoc:
             end
             xml.tag! 'address1', address[:address1]
             xml.tag! 'address2', address[:address2] if address[:address2]
-            xml.tag! 'postalCode', (address[:zip].present? ? address[:zip] : "0000")
-            xml.tag! 'city', address[:city] if address[:city]
-            xml.tag! 'state', (address[:state].present? ? address[:state] : 'N/A')
+            xml.tag! 'postalCode', address[:zip]
+            xml.tag! 'city', address[:city]
+            xml.tag! 'state', address[:state]
             xml.tag! 'countryCode', address[:country]
             xml.tag! 'telephoneNumber', address[:phone] if address[:phone]
           end
         end
+      end
+
+      def default_address
+        {
+          address1: 'N/A',
+          zip: '0000',
+          city: 'N/A',
+          state: 'N/A',
+          country: 'US'
+        }
       end
 
       def parse(action, xml)
