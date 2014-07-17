@@ -233,7 +233,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
-  def test_default_address
+  def test_no_address_specified
     stub_comms do
       @gateway.authorize(100, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
@@ -246,6 +246,25 @@ class WorldpayTest < Test::Unit::TestCase
       assert_match %r(<postalCode>0000</postalCode>), data
       assert_match %r(<state>N/A</state>), data
       assert_match %r(<countryCode>US</countryCode>), data
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_address_with_parts_unspecified
+    address_with_nils = { address1: nil, city: ' ', state: nil, zip: '  ',
+                          country: nil, phone: '555-3323' }
+
+    stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(billing_address: address_with_nils))
+    end.check_request do |endpoint, data, headers|
+      assert_no_match %r(firstName), data
+      assert_no_match %r(lastName), data
+      assert_no_match %r(address2), data
+      assert_match %r(<address1>N/A</address1>), data
+      assert_match %r(<city>N/A</city>), data
+      assert_match %r(<postalCode>0000</postalCode>), data
+      assert_match %r(<state>N/A</state>), data
+      assert_match %r(<countryCode>US</countryCode>), data
+      assert_match %r(<telephoneNumber>555-3323</telephoneNumber>), data
     end.respond_with(successful_authorize_response)
   end
 
