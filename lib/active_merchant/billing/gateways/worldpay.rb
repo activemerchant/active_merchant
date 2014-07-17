@@ -213,7 +213,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, address)
-        address = default_address.merge(address || {})
+        address = address_with_defaults(address)
 
         xml.tag! 'cardAddress' do
           xml.tag! 'address' do
@@ -229,6 +229,12 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'countryCode', address[:country]
             xml.tag! 'telephoneNumber', address[:phone] if address[:phone]
           end
+        end
+      end
+
+      def address_with_defaults(address)
+        default_address.merge(address || {}) do |key, old_value, new_value|
+          new_value.blank? ? old_value : new_value
         end
       end
 
