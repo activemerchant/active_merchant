@@ -1,5 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.43.3 (July 18, 2014)
+
+* Netregistry: Use updated URL [bslobodin]
+
 == Version 1.43.1 (May 1, 2014)
 
 * Merchant Warrior: Scrub names [duff]

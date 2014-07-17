@@ -98,7 +98,7 @@ class PxpayModuleTest < Test::Unit::TestCase
 
       service.return_url "http://t/pxpay/return_url?&"
       service.cancel_return_url "http://t/pxpay/cancel_url?&"
-      request = service.generate_request
+      request = service.send :generate_request
     }
 
     assert_nothing_raised do
