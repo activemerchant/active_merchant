@@ -33,6 +33,7 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login, :password)
         @cvv_enabled = options[:cvv_enabled]
+        @avs_enabled = options[:avs_enabled]
         options = { :crypt_type => 7 }.merge(options)
         super
       end
@@ -188,7 +189,7 @@ module ActiveMerchant #:nodoc:
         Response.new(successful?(response), message_from(response[:message]), response,
           :test          => test?,
           :avs_result    => { :code => response[:avs_result_code] },
-          :cvv_result    => response[:cvd_result_code].try(:last),
+          :cvv_result    => response[:cvd_result_code] && response[:cvd_result_code][-1,1],
           :authorization => authorization_from(response)
         )
       end
@@ -238,7 +239,7 @@ module ActiveMerchant #:nodoc:
         actions[action].each do |key|
           case key
           when :avs_info
-            transaction.add_element(avs_element(parameters[:address])) if parameters[:address]
+            transaction.add_element(avs_element(parameters[:address])) if @avs_enabled && parameters[:address]
           when :cvd_info
             transaction.add_element(cvd_element(parameters[:cvd_value])) if @cvv_enabled
           else
