@@ -85,6 +85,7 @@
 * USAePay: Add verify support [markabe]
 * BridgePay: Add verify support [duff]
 * Braintree Blue: Add payment_method_token flag [JDutil]
+* SagePay: Add optional FI fields [rob-anderson]
 
 == Version 1.43.2 (May 12, 2014)
 
