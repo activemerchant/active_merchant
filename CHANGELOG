@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Moneris: Add :avs_enabled option [bslobodin]
 * Stripe: Populate authorization in failed responses, when available [bslobodin]
 * Moneris: Use the name on the card [duff]
 * Balanced: More 1.1 API fixes and mappings [ntalbott]
