@@ -96,7 +96,7 @@ module ActiveMerchant #:nodoc:
         else
           raise 'Unknown Action'
         end
-        txnRequest = CGI.escape(xml)
+        txnRequest = URI.encode(xml)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, "txnMode=#{action}&txnRequest=#{txnRequest}"))
 
         Response.new(successful?(response), message_from(response), hash_from_xml(response),
