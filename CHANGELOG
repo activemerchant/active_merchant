@@ -79,6 +79,7 @@
 * Authorize.Net: Add maestro as a supported card type [vparihar01]
 * Worldpay: Improve address defaults [duff]
 * Braintree Blue: Pass cardholder_name when tokenizing [radar]
+* Wirecard: Improve error handling [mendable]
 
 == Version 1.43.2 (May 12, 2014)
 
