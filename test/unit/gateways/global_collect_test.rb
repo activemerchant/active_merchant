@@ -41,7 +41,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_unsuccessful_authorize
+  def test_failed_authorize
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card, @options)
     end.respond_with(failed_authorize_response)
