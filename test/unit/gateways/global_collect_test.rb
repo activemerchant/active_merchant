@@ -4,6 +4,8 @@ class GlobalCollectTest < Test::Unit::TestCase
   include CommStub
 
   def setup
+    Base.gateway_mode = :test
+
     @gateway = GlobalCollectGateway.new(:merchant_id => '1')
     @credit_card = credit_card
     @amount = 100
@@ -126,7 +128,7 @@ class GlobalCollectTest < Test::Unit::TestCase
 
   def test_deprecated_credit
     @gateway.expects(:refund).with(@amount, "transaction_id", @options)
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
       @gateway.credit(@amount, "transaction_id", @options)
     end
   end
