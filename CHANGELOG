@@ -83,6 +83,7 @@
 * Wirecard: Improve error handling [mendable]
 * Litle: Add verify support [markabe]
 * USAePay: Add verify support [markabe]
+* BridgePay: Add verify support [duff]
 
 == Version 1.43.2 (May 12, 2014)
 
