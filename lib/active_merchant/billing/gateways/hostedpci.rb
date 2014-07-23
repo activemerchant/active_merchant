@@ -298,10 +298,10 @@ module ActiveMerchant #:nodoc:
         post[HPCI_CONST[:PXYPARAM_PXY_CC_CVV]]  = creditcard.verification_value if creditcard.verification_value?
         post[HPCI_CONST[:PXYPARAM_PXY_CC_EXPMONTH]]   = creditcard.month.to_s
         post[HPCI_CONST[:PXYPARAM_PXY_CC_EXPYEAR]]   = creditcard.year.to_s
-        if creditcard.type.nil? || creditcard.type.empty?
+        if creditcard.brand.nil? || creditcard.brand.empty?
           post[HPCI_CONST[:PXYPARAM_PXY_CC_CARDTYPE]]   = 'any'
         else
-          post[HPCI_CONST[:PXYPARAM_PXY_CC_CARDTYPE]]   = creditcard.type
+          post[HPCI_CONST[:PXYPARAM_PXY_CC_CARDTYPE]]   = creditcard.brand
         end
       end ##END: add_creditcard
 
@@ -327,9 +327,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, money, parameters)
-        puts('Action: ' + action)
-        #puts(parameters)
-
         if action == 'sale'
           serviceUrl = HPCI_CONST[:PXY_SALE]
         elsif action =='authonly'
@@ -347,12 +344,8 @@ module ActiveMerchant #:nodoc:
         #contruct the URL to the restful service
         url = @host + serviceUrl
 
-        puts(url)
-
         #perform the http post
         data = ssl_post url, post_data(action, parameters)
-
-        puts(data)
 
         ## parse response data into hash
         response = parse(data)
@@ -408,8 +401,6 @@ module ActiveMerchant #:nodoc:
           put_in_map results, :cvv2_response, responseHash[HPCI_CONST[:PXYRESP_CVV2]]
         end
 
-        puts(results)
-
         results
       end ##END: parse
 
@@ -418,7 +409,6 @@ module ActiveMerchant #:nodoc:
         if !from.nil? && !from.empty?
           to[idx] = from[0] #get the first element of the array
         end
-        ##puts("to: " + to[idx])
       end
 
       def message_from(response)
@@ -427,7 +417,6 @@ module ActiveMerchant #:nodoc:
       def post_data(action, parameters = {})
         post = {}
         request = post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
-        ##puts(request)
         request
       end ##END: post_Data
 

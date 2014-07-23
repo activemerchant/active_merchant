@@ -3,9 +3,9 @@ require 'test_helper'
 class HostedpciTest < Test::Unit::TestCase
   def setup
     @gateway = HostedpciGateway.new(
-                                    :login => 'synt1StgAPI',
-                                    :password =>   'E8nBO2Prn9g_6_q-0V8.745U6cx9Mkzu',
-                                    :hpci_api_host => 'http://api-synt1stg.c1.hostedpci.com'
+                                    :login => 'login',
+                                    :password =>   'password',
+                                    :hpci_api_host => 'http://api-address.hostedpci.com'
                                     )
 
     @credit_card = credit_card
@@ -15,7 +15,7 @@ class HostedpciTest < Test::Unit::TestCase
       :order_id => '1',
       :billing_address => address,
       :description => 'Store Purchase',
-      :ip => '173.32.21.248',
+      :ip => '127.0.0.1',
       :customer => 'tstuser1',
       :email => 'tstuser1@hostedpci.com'
     }
@@ -82,9 +82,6 @@ class HostedpciTest < Test::Unit::TestCase
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    ##puts(@credit_card.number)
-    ##puts(@options)
-
     ##provide a token, rather then a credit card number
     @credit_card.number = '4242000000014242'
 
@@ -139,7 +136,6 @@ class HostedpciTest < Test::Unit::TestCase
     assert response.params['error_id'] == 'PPA_ACT_1'
 
   end
-
 
   private
 
