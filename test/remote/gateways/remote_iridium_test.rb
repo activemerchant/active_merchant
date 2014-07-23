@@ -7,6 +7,9 @@ class RemoteIridiumTest < Test::Unit::TestCase
     @gateway = IridiumGateway.new(fixtures(:iridium))
 
     @amount = 100
+    @avs_card = credit_card('4921810000005462', {:verification_value => '441'})
+    @cv2_card = credit_card('4976000000003436', {:verification_value => '777'})
+    @avs_cv2_card = credit_card('4921810000005462', {:verification_value => '777'})
     @credit_card = credit_card('4976000000003436', {:verification_value => '452'})
     @declined_card = credit_card('4221690000004963')
 
@@ -32,7 +35,25 @@ class RemoteIridiumTest < Test::Unit::TestCase
   def test_failed_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'Card declined', response.message
+    assert_match %r{Card declined}i, response.message
+  end
+
+  def test_avs_failure
+    assert response = @gateway.purchase(@amount, @avs_card, @options)
+    assert_failure response
+    assert_match %r{Address and/or Post Code check failed}i, response.message
+  end
+
+  def test_cv2_failure
+    assert response = @gateway.purchase(@amount, @cv2_card, @options)
+    assert_failure response
+    assert_match %r{The CVV code was invalid}i, response.message
+  end
+
+  def test_avs_cv2_failure
+    assert response = @gateway.purchase(@amount, @avs_cv2_card, @options)
+    assert_failure response
+    assert_match %r{The CVV code was invalid and the Address and/or Post Code check failed}i, response.message
   end
 
   def test_authorize_and_capture
@@ -62,7 +83,7 @@ class RemoteIridiumTest < Test::Unit::TestCase
   def test_failed_authorization
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert response.test?
-    assert_equal 'Card declined', response.message
+    assert_match %r{Card declined}i, response.message
     assert_equal false,  response.success?
   end
 

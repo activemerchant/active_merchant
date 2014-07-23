@@ -354,7 +354,20 @@ module ActiveMerchant #:nodoc:
                                "Content-Type" => "text/xml; charset=utf-8" }))
 
         success = response[:transaction_result][:status_code] == "0"
+
         message = response[:transaction_result][:message]
+
+        if (response[:transaction_result][:status_code] == "5")
+          if (response[:transaction_output_data][:cv2_check_result] != "PASSED")
+            message = "Card declined: The CVV code was invalid"
+            unless (response[:transaction_output_data][:address_numeric_check_result] == "PASSED" && response[:transaction_output_data][:post_code_check_result] == "PASSED")
+              message += " and the Address and/or Post Code check failed"
+            end
+          elsif (response[:transaction_output_data][:address_numeric_check_result] != "PASSED" || response[:transaction_output_data][:post_code_check_result] != "PASSED")
+            message = "Card declined: The Address and/or Post Code check failed"
+          end
+        end
+
         authorization = success ? [ options[:order_id], response[:transaction_output_data][:cross_reference], response[:transaction_output_data][:auth_code] ].compact.join(";") : nil
 
         Response.new(success, message, response,
