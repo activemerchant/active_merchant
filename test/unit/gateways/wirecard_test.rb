@@ -674,7 +674,7 @@ class WirecardTest < Test::Unit::TestCase
     XML
   end
 
-def system_error_response_without_job
+  def system_error_response_without_job
     <<-XML
     <?xml version="1.0" encoding="UTF-8"?>
     <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
