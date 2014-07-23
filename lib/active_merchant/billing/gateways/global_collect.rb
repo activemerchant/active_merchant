@@ -64,6 +64,7 @@ module ActiveMerchant #:nodoc:
           build_response response, nil
         end
       end
+
       def build_response params, authorization=nil
         if successful?(params)
           Response.new true, "Success", params, {:test => test?, :authorization => authorization}
@@ -153,7 +154,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         xml = Nokogiri::XML(body)
         response = xml.xpath('/XML/REQUEST/RESPONSE')
-        return Hash.from_xml(response.to_xml)['RESPONSE']
+        Hash.from_xml(response.to_xml)['RESPONSE']
       end
 
       def post_data(action, params = {})
