@@ -232,4 +232,24 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Success', response.message
   end
+
+  def test_cert_changes_for_purchace
+    visa = ActiveMerchant::Billing::CreditCard.new(
+      :number             => '4012002000060016',
+      :month              => '12',
+      :year               => '2015',
+      :verification_value => '123')
+
+    options = {
+      :billing_address => {
+        :address1 => '6860 Dallas Pkwy', 
+        :zip => '75024'
+      } 
+    }
+
+    response = @gateway.purchase(@amount,visa,options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
 end
