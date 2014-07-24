@@ -62,6 +62,29 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_overly_long_fields
+    options = {
+      order_id: "OrderId must be less than 50 characters otherwise it fails",
+      description: "EWay Rapid transactions fail if the description is more than 64 characters.",
+      billing_address: {
+        address1: "The Billing Address 1 Cannot Be More Than Fifty Characters.",
+        address2: "The Billing Address 2 Cannot Be More Than Fifty Characters.",
+        city: "TheCityCannotBeMoreThanFiftyCharactersOrItAllFallsApart",
+      },
+      shipping_address: {
+        address1: "The Shipping Address 1 Cannot Be More Than Fifty Characters.",
+        address2: "The Shipping Address 2 Cannot Be More Than Fifty Characters.",
+        city: "TheCityCannotBeMoreThanFiftyCharactersOrItAllFallsApart",
+      }
+    }
+    @credit_card.first_name = "FullNameOnACardMustBeLessThanFiftyCharacters"
+    @credit_card.last_name = "LastName"
+
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_success response
+    assert_equal "Transaction Approved Successful", response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(@failed_amount, @credit_card, @options)
     assert_failure response

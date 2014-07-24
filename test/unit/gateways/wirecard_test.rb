@@ -305,6 +305,15 @@ class WirecardTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_system_error_response_without_job
+    @gateway.expects(:ssl_post).returns(system_error_response_without_job)
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_failure response
+    assert_equal "Job Refused", response.params["Message"]
+    assert_equal "10003", response.params["ErrorCode"]
+  end
+
   private
 
   def assert_xml_element_text(xml, xpath, expected_text)
@@ -660,6 +669,21 @@ class WirecardTest < Test::Unit::TestCase
             </CC_TRANSACTION>
           </FNC_CC_PURCHASE>
         </W_JOB>
+      </W_RESPONSE>
+    </WIRECARD_BXML>
+    XML
+  end
+
+  def system_error_response_without_job
+    <<-XML
+    <?xml version="1.0" encoding="UTF-8"?>
+    <WIRECARD_BXML xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance" xsi:noNamespaceSchemaLocation="wirecard.xsd">
+      <W_RESPONSE>
+        <ERROR>
+          <Type>SYSTEM_ERROR</Type>
+          <Number>10003</Number>
+          <Message>Job Refused</Message>
+        </ERROR>
       </W_RESPONSE>
     </WIRECARD_BXML>
     XML

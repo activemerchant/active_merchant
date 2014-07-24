@@ -22,7 +22,7 @@ module ActiveMerchant
     # response will contain a 'receipt' parameter
     # (response.params['receipt']) if a receipt was issued by the gateway.
     class NetRegistryGateway < Gateway
-      self.live_url = self.test_url = 'https://4tknox.au.com/cgi-bin/themerchant.au.com/ecom/external2.pl'
+      self.live_url = self.test_url = 'https://paygate.ssllock.net/external2.pl'
 
       FILTERED_PARAMS = [ 'card_no', 'card_expiry', 'receipt_array' ]
 

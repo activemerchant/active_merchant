@@ -178,8 +178,8 @@ module ActiveMerchant #:nodoc:
         currency_code = options[:currency] || currency(money)
         params[key] = {
           'TotalAmount' => localized_amount(money, currency_code),
-          'InvoiceReference' => options[:order_id],
-          'InvoiceDescription' => options[:description],
+          'InvoiceReference' => truncate(options[:order_id]),
+          'InvoiceDescription' => truncate(options[:description], 64),
           'CurrencyCode' => currency_code,
         }
       end
@@ -205,9 +205,9 @@ module ActiveMerchant #:nodoc:
         end
         params['Title'] = address[:title]
         params['CompanyName'] = address[:company] unless options[:skip_company]
-        params['Street1'] = address[:address1]
-        params['Street2'] = address[:address2]
-        params['City'] = address[:city]
+        params['Street1'] = truncate(address[:address1])
+        params['Street2'] = truncate(address[:address2])
+        params['City'] = truncate(address[:city])
         params['State'] = address[:state]
         params['PostalCode'] = address[:zip]
         params['Country'] = address[:country].to_s.downcase
@@ -222,7 +222,7 @@ module ActiveMerchant #:nodoc:
         if credit_card.respond_to? :number
           params['Method'] = 'ProcessPayment'
           card_details = params['Customer']['CardDetails'] = {}
-          card_details['Name'] = credit_card.name
+          card_details['Name'] = truncate(credit_card.name)
           card_details['Number'] = credit_card.number
           card_details['ExpiryMonth'] = "%02d" % (credit_card.month || 0)
           card_details['ExpiryYear'] = "%02d" % (credit_card.year || 0)
@@ -323,6 +323,11 @@ module ActiveMerchant #:nodoc:
         else
           "P"
         end
+      end
+
+      def truncate(value, max_size = 50)
+        return nil unless value
+        value.to_s[0, max_size]
       end
 
       MESSAGES = {

@@ -56,7 +56,7 @@ class EwayRapidTest < Test::Unit::TestCase
         :redirect_url => "http://awesomesauce.com",
         :ip => "0.0.0.0",
         :application_id => "Woohoo",
-        :description => "Description",
+        :description => "The Really Long Description More Than Sixty Four Characters Gets Truncated",
         :order_id => "orderid1",
         :currency => "INR",
         :email => "jim@example.com",
@@ -96,7 +96,7 @@ class EwayRapidTest < Test::Unit::TestCase
       assert_match(%r{"DeviceID":"Woohoo"}, data)
 
       assert_match(%r{"TotalAmount":"200"}, data)
-      assert_match(%r{"InvoiceDescription":"Description"}, data)
+      assert_match(%r{"InvoiceDescription":"The Really Long Description More Than Sixty Four Characters Gets"}, data)
       assert_match(%r{"InvoiceReference":"orderid1"}, data)
       assert_match(%r{"CurrencyCode":"INR"}, data)
 

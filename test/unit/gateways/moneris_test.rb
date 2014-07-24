@@ -167,7 +167,7 @@ class MonerisTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  def test_gets_sent_when_its_enabled
+  def test_cvv_enabled_and_provided
     gateway = MonerisGateway.new(login: 'store1', password: 'yesguy', cvv_enabled: true)
 
     @credit_card.verification_value = "452"
@@ -179,7 +179,7 @@ class MonerisTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_no_cvv_specified_when_its_enabled
+  def test_cvv_enabled_but_not_provided
     gateway = MonerisGateway.new(login: 'store1', password: 'yesguy', cvv_enabled: true)
 
     @credit_card.verification_value = ""
@@ -191,7 +191,7 @@ class MonerisTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_passing_cvv_when_not_enabled
+  def test_cvv_disabled_and_provided
     @credit_card.verification_value = "452"
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -201,7 +201,7 @@ class MonerisTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_no_cvv_specified_when_not_enabled
+  def test_cvv_disabled_but_not_provided
     @credit_card.verification_value = ""
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
@@ -211,10 +211,12 @@ class MonerisTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_avs_information_present_with_address
+  def test_avs_enabled_and_provided
+    gateway = MonerisGateway.new(login: 'store1', password: 'yesguy', avs_enabled: true)
+
     billing_address = address(address1: "1234 Anystreet", address2: "")
     stub_comms do
-      @gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: "1")
+      gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: "1")
     end.check_request do |endpoint, data, headers|
       assert_match(%r{avs_street_number>1234<}, data)
       assert_match(%r{avs_street_name>Anystreet<}, data)
@@ -222,7 +224,30 @@ class MonerisTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response_with_avs_result)
   end
 
-  def test_avs_information_absent_with_no_address
+  def test_avs_enabled_but_not_provided
+    gateway = MonerisGateway.new(login: 'store1', password: 'yesguy', avs_enabled: true)
+
+    stub_comms do
+      gateway.purchase(@amount, @credit_card, @options.tap { |x| x.delete(:billing_address) })
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{avs_street_number>}, data)
+      assert_no_match(%r{avs_street_name>}, data)
+      assert_no_match(%r{avs_zipcode>}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_avs_disabled_and_provided
+    billing_address = address(address1: "1234 Anystreet", address2: "")
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, billing_address: billing_address, order_id: "1")
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{avs_street_number>}, data)
+      assert_no_match(%r{avs_street_name>}, data)
+      assert_no_match(%r{avs_zipcode>}, data)
+    end.respond_with(successful_purchase_response_with_avs_result)
+  end
+
+  def test_avs_disabled_and_not_provided
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.tap { |x| x.delete(:billing_address) })
     end.check_request do |endpoint, data, headers|

@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* Moneris: Add :avs_enabled option [bslobodin]
 * Stripe: Populate authorization in failed responses, when available [bslobodin]
 * Moneris: Use the name on the card [duff]
 * Balanced: More 1.1 API fixes and mappings [ntalbott]
@@ -72,6 +73,14 @@
 * Worldpay: Use updated address format [duff]
 * Moneris: Fix address splitting [ntalbott]
 * FirstData E4: Allow passing CAVV through [Senjai]
+* Braintree Blue: Remember the capture transaction id [duff]
+* Eway Rapid: Truncate some fields [duff]
+* Optimal Payment: Make account mandatory field [rwdaigle]
+* Worldpay: Improve address defaulting [duff]
+* Authorize.Net: Add maestro as a supported card type [vparihar01]
+* Worldpay: Improve address defaults [duff]
+* Braintree Blue: Pass cardholder_name when tokenizing [radar]
+* Wirecard: Improve error handling [mendable]
 
 == Version 1.43.2 (May 12, 2014)
 
