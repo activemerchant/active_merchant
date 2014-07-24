@@ -15,6 +15,9 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :cents
 
+      @@developer_id = '002914'
+      @@version_number = '1715'
+
       def initialize(options={})
         requires!(options, :secret_api_key)
         super
@@ -150,8 +153,8 @@ module ActiveMerchant #:nodoc:
               xml.hps 'Ver1.0'.to_sym do
                 xml.hps :Header do
                   xml.hps :SecretAPIKey, @options[:secret_api_key]
-                  xml.hps :DeveloperID, @options[:developer_id] if @options[:developer_id]
-                  xml.hps :VersionNbr, @options[:version_number] if @options[:version_number]
+                  xml.hps :DeveloperID, if @options[:developer_id] then @options[:developer_id] else @@developer_id end
+                  xml.hps :VersionNbr, if @options[:version_number] then @options[:version_number] else @@version_number end
                   xml.hps :SiteTrace, @options[:site_trace] if @options[:site_trace]
                 end
                 xml.hps :Transaction do
