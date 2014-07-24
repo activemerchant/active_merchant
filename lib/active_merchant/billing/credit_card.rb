@@ -52,6 +52,9 @@ module ActiveMerchant #:nodoc:
       cattr_accessor :require_verification_value
       self.require_verification_value = true
 
+      cattr_accessor :required_name_fields
+      self.required_name_fields = [:first_name, :last_name]
+
       # Returns or sets the credit card number.
       #
       # @return [String]
@@ -248,8 +251,9 @@ module ActiveMerchant #:nodoc:
       def validate_essential_attributes #:nodoc:
         errors = []
 
-        errors << [:first_name, "cannot be empty"] if first_name.blank?
-        errors << [:last_name,  "cannot be empty"] if last_name.blank?
+        self.class.required_name_fields.each do |field|
+          errors << [field, "cannot be empty"] if send(field).blank?
+        end
 
         if(empty?(month) || empty?(year))
           errors << [:month, "is required"] if empty?(month)
