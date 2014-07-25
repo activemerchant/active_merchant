@@ -93,6 +93,61 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_credit_cart_purchase_single_request_ignore_avs
+    @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_match %r'<ignoreAVSResult>true</ignoreAVSResult>', request_body
+      assert_not_match %r'<ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
+      ignore_avs: true
+    ))
+    assert_success response
+  end
+
+  def test_successful_credit_cart_purchase_single_request_without_ignore_avs
+    @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_not_match %r'<ignoreAVSResult>', request_body
+      assert_not_match %r'<ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    # globally ignored AVS for gateway instance:
+    @gateway.options[:ignore_avs] = true
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
+      ignore_avs: false
+    ))
+    assert_success response
+  end
+
+  def test_successful_credit_cart_purchase_single_request_ignore_ccv
+    @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_not_match %r'<ignoreAVSResult>', request_body
+      assert_match %r'<ignoreCVResult>true</ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
+      ignore_cvv: true
+    ))
+    assert_success response
+  end
+
+  def test_successful_credit_cart_purchase_single_request_without_ignore_ccv
+    @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_not_match %r'<ignoreAVSResult>', request_body
+      assert_not_match %r'<ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
+      ignore_cvv: false
+    ))
+    assert_success response
+  end
+
   def test_successful_reference_purchase
     @gateway.stubs(:ssl_post).returns(successful_create_subscription_response, successful_purchase_response)
 
