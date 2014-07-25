@@ -25,11 +25,12 @@ module ActiveMerchant #:nodoc:
 
       #Transactions currently accepted by NAB Transact XML API
       TRANSACTIONS = {
-        :purchase => 0,         #Standard Payment
-        :refund => 4,           #Refund
-        :void => 6,             #Client Reversal (Void)
-        :authorization => 10,   #Preauthorise
-        :capture => 11          #Preauthorise Complete (Advice)
+        :purchase => 0,           #Standard Payment
+        :refund => 4,             #Refund
+        :void => 6,               #Client Reversal (Void)
+        :unmatched_refund => 666, #Unmatched Refund
+        :authorization => 10,     #Preauthorise
+        :capture => 11            #Preauthorise Complete (Advice)
       }
 
       PERIODIC_TYPES = {
@@ -58,8 +59,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def refund(money, authorization, options = {})
-        commit :refund, build_reference_request(money, authorization, options)
+      def refund(money, authorization_or_credit_card, options = {})
+        if authorization_or_credit_card.respond_to?(:number)
+          # Credit card instance for unmatched refund
+          commit :unmatched_refund, build_purchase_request(money, authorization_or_credit_card, options)
+        else
+          # Previous transaction being refunded
+          commit :refund, build_reference_request(money, authorization_or_credit_card, options)
+        end
       end
 
       def authorize(money, credit_card, options = {})

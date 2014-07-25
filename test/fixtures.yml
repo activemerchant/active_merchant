@@ -340,7 +340,7 @@ nab_transact:
   password: changeit
 
 # Working credentials, no need to replace
-nab_transact_card_acceptor:
+nab_transact_privileged:
   login: XYZ0010
   password: abcd1234
 
