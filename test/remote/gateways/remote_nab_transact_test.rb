@@ -4,7 +4,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
 
   def setup
     @gateway = NabTransactGateway.new(fixtures(:nab_transact))
-    @card_acceptor_gateway = NabTransactGateway.new(fixtures(:nab_transact_card_acceptor))
+    @privileged_gateway = NabTransactGateway.new(fixtures(:nab_transact_privileged))
 
     @amount = 200
     @credit_card = credit_card('4444333322221111')
@@ -73,7 +73,7 @@ class RemoteNabTransactTest < Test::Unit::TestCase
       assert_failure response
       assert_equal 'Permission denied', response.message
 
-      assert response = @card_acceptor_gateway.purchase(@amount, @credit_card, options)
+      assert response = @privileged_gateway.purchase(@amount, @credit_card, options)
       assert_success response
       assert_equal 'Approved', response.message
     end
@@ -138,13 +138,13 @@ class RemoteNabTransactTest < Test::Unit::TestCase
       assert_failure response
       assert_equal 'Permission denied', response.message
 
-      assert response = @card_acceptor_gateway.authorize(@amount, @credit_card, options)
+      assert response = @privileged_gateway.authorize(@amount, @credit_card, options)
       assert_success response
       assert_equal 'Approved', response.message
 
       authorization = response.authorization
 
-      assert response = @card_acceptor_gateway.capture(@amount, authorization)
+      assert response = @privileged_gateway.capture(@amount, authorization)
       assert_success response
       assert_equal 'Approved', response.message
     end
@@ -155,6 +155,18 @@ class RemoteNabTransactTest < Test::Unit::TestCase
     assert_success response
     authorization = response.authorization
     assert response = @gateway.refund(@amount, authorization)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  # You need to speak to NAB Transact to have this feature enabled on
+  # your account otherwise you will receive a "Permission denied" error
+  def test_credit
+    assert response = @gateway.credit(@amount, @credit_card, {:order_id => '1'})
+    assert_failure response
+    assert_equal 'Permission denied', response.message
+
+    assert response = @privileged_gateway.credit(@amount, @credit_card, {:order_id => '1'})
     assert_success response
     assert_equal 'Approved', response.message
   end

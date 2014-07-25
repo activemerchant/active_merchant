@@ -87,6 +87,7 @@
 * Braintree Blue: Add payment_method_token flag [JDutil]
 * SagePay: Add optional FI fields [rob-anderson]
 * Iridium: Add AVS and CVV results [X0Refraction]
+* NAB Transact: Add credit support [nagash]
 
 == Version 1.43.2 (May 12, 2014)
 
