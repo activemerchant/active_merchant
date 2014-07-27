@@ -187,6 +187,16 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal 'submitted_for_settlement', response.params["braintree_transaction"]["status"]
   end
 
+  def test_successful_purchase_with_solution_id
+    ActiveMerchant::Billing::BraintreeBlueGateway.application_id = 'ABC123'
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal '1000 Approved', response.message
+    assert_equal 'submitted_for_settlement', response.params["braintree_transaction"]["status"]
+  ensure
+    ActiveMerchant::Billing::BraintreeBlueGateway.application_id = nil
+  end
+
   def test_avs_match
     assert response = @gateway.purchase(@amount, @credit_card,
       @options.merge(

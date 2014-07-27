@@ -88,6 +88,7 @@
 * SagePay: Add optional FI fields [rob-anderson]
 * Iridium: Add AVS and CVV results [X0Refraction]
 * NAB Transact: Add credit support [nagash]
+* Braintree Blue: Add application_id support [npverni]
 
 == Version 1.43.2 (May 12, 2014)
 
