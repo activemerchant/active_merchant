@@ -161,12 +161,12 @@ class RemoteNabTransactTest < Test::Unit::TestCase
 
   # You need to speak to NAB Transact to have this feature enabled on
   # your account otherwise you will receive a "Permission denied" error
-  def test_unmatched_refund
-    assert response = @gateway.refund(@amount, @credit_card, {:order_id => '1'})
+  def test_credit
+    assert response = @gateway.credit(@amount, @credit_card, {:order_id => '1'})
     assert_failure response
     assert_equal 'Permission denied', response.message
 
-    assert response = @privileged_gateway.refund(@amount, @credit_card, {:order_id => '1'})
+    assert response = @privileged_gateway.credit(@amount, @credit_card, {:order_id => '1'})
     assert_success response
     assert_equal 'Approved', response.message
   end

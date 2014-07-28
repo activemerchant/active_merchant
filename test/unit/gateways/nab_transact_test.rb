@@ -123,9 +123,9 @@ class NabTransactTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_successful_unmatched_refund
+  def test_successful_credit
     @gateway.expects(:ssl_post).with(&check_transaction_type(:unmatched_refund)).returns(successful_refund_response)
-    assert_success @gateway.refund(@amount, @credit_card, {:order_id => '1'})
+    assert_success @gateway.credit(@amount, @credit_card, {:order_id => '1'})
   end
 
   def test_failed_refund

@@ -59,14 +59,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def refund(money, authorization_or_credit_card, options = {})
-        if authorization_or_credit_card.respond_to?(:number)
-          # Credit card instance for unmatched refund
-          commit :unmatched_refund, build_purchase_request(money, authorization_or_credit_card, options)
-        else
-          # Previous transaction being refunded
-          commit :refund, build_reference_request(money, authorization_or_credit_card, options)
-        end
+      def credit(money, credit_card, options = {})
+        commit :unmatched_refund, build_purchase_request(money, credit_card, options)
+      end
+
+      def refund(money, authorization, options = {})
+        commit :refund, build_reference_request(money, authorization, options)
       end
 
       def authorize(money, credit_card, options = {})
