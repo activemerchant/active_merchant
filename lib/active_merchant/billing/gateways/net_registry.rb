@@ -151,7 +151,7 @@ module ActiveMerchant
       def post_data(action, params)
         params['COMMAND'] = TRANSACTIONS[action]
         params['LOGIN'] = "#{@options[:login]}/#{@options[:password]}"
-        CGI.escape(params.map{|k,v| "#{k}=#{v}"}.join('&'))
+        URI.encode(params.map{|k,v| "#{k}=#{v}"}.join('&'))
       end
 
       def parse(response)
