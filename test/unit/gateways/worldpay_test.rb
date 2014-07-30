@@ -205,6 +205,20 @@ class WorldpayTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
 
     stub_comms do
+      @gateway.authorize(100, @credit_card, @options.merge(billing_address: address.with_indifferent_access))
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<firstName>Jim</firstName>), data
+      assert_match %r(<lastName>Smith</lastName>), data
+      assert_match %r(<address1>1234 My Street</address1>), data
+      assert_match %r(<address2>Apt 1</address2>), data
+      assert_match %r(<postalCode>K1C2N6</postalCode>), data
+      assert_match %r(<city>Ottawa</city>), data
+      assert_match %r(<state>ON</state>), data
+      assert_match %r(<countryCode>CA</countryCode>), data
+      assert_match %r(<telephoneNumber>\(555\)555-5555</telephoneNumber>), data
+    end.respond_with(successful_authorize_response)
+
+    stub_comms do
       @gateway.authorize(100, @credit_card, @options.merge(address: address))
     end.check_request do |endpoint, data, headers|
       assert_match %r(<firstName>Jim</firstName>), data

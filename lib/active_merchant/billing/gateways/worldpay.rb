@@ -233,9 +233,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def address_with_defaults(address)
-        default_address.merge(address || {}) do |key, old_value, new_value|
-          new_value.blank? ? old_value : new_value
-        end
+        address ||= {}
+        address.delete_if { |_, v| v.blank? }
+        address.reverse_merge!(default_address)
       end
 
       def default_address
