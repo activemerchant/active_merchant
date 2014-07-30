@@ -233,9 +233,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def address_with_defaults(address)
-        default_address.merge(address || {}) do |key, old_value, new_value|
-          new_value.blank? ? old_value : new_value
+        address_with_defaults = address.try(:dup) || {}
+        default_address.each do |key, default_value|
+          address_with_defaults[key] = default_value if address_with_defaults[key].blank?
         end
+        address_with_defaults
       end
 
       def default_address
