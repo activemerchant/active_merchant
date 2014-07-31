@@ -41,19 +41,22 @@ class RemoteIridiumTest < Test::Unit::TestCase
   def test_avs_failure
     assert response = @gateway.purchase(@amount, @avs_card, @options)
     assert_failure response
-    assert_match %r{Address and/or Post Code check failed}i, response.message
+    assert_equal response.avs_result["street_match"], "N"
+    assert_equal response.avs_result["postal_match"], "N"
   end
 
   def test_cv2_failure
     assert response = @gateway.purchase(@amount, @cv2_card, @options)
     assert_failure response
-    assert_match %r{The CVV code was invalid}i, response.message
+    assert_equal response.cvv_result["code"], "N"
   end
 
   def test_avs_cv2_failure
     assert response = @gateway.purchase(@amount, @avs_cv2_card, @options)
     assert_failure response
-    assert_match %r{The CVV code was invalid and the Address and/or Post Code check failed}i, response.message
+    assert_equal response.avs_result["street_match"], "N"
+    assert_equal response.avs_result["postal_match"], "N"
+    assert_equal response.cvv_result["code"], "N"
   end
 
   def test_authorize_and_capture
