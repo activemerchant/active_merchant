@@ -2,6 +2,7 @@
 
 * HPS: Always pass CardHolderData element [SecureSubmit, ntalbott]
 * PayJunction: Include 'track' parameter if provided [hron]
+* WebPay: Fix API calls [tomykaira]
 
 == Version 1.44.1 (Aug 28, 2014)
 
