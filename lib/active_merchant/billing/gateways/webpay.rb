@@ -60,6 +60,20 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def update(customer_id, creditcard, options = {})
+        post = {}
+        add_creditcard(post, creditcard, options)
+        commit(:post, "customers/#{CGI.escape(customer_id)}", post, options)
+      end
+
+      private
+
+      def create_post_for_auth_or_purchase(money, creditcard, options)
+        stripe_post = super
+        stripe_post[:description] ||= stripe_post.delete(:metadata).try(:[], :email)
+        stripe_post
+      end
+
       def json_error(raw_response)
         msg = 'Invalid response received from the WebPay API.  Please contact support@webpay.jp if you continue to receive this message.'
         msg += "  (The raw response returned by the API was #{raw_response.inspect})"
