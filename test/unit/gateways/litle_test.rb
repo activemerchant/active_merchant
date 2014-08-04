@@ -209,6 +209,28 @@ class LitleTest < Test::Unit::TestCase
     assert_equal "820", response.params["response"]
   end
 
+  def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card)
+    end.respond_with(successful_authorize_response, successful_void_of_auth_response)
+    assert_success response
+  end
+
+  def test_successful_verify_failed_void
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, failed_void_of_authorization_response)
+    assert_success response
+    assert_equal "Approved", response.message
+  end
+
+  def test_unsuccessful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorize_response, successful_void_of_auth_response)
+    assert_failure response
+    assert_equal "Insufficient Funds", response.message
+  end
 
   private
 
