@@ -720,7 +720,7 @@ trust_commerce:
 
 # Working credentials, no need to replace
 usa_epay:
-  login: 'yCaWGYQsSVR0S48B6AKMK07RQhaxHvGu'
+  login: '4EoZ5U2Q55j976W7eplC71i6b7kn4pcV'
 
 # Get credentials here: https://www.usaepay.com/developer/login
 usa_epay_advanced:
