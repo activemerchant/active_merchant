@@ -81,6 +81,13 @@ module ActiveMerchant #:nodoc:
         commit(:credit, request)
       end
 
+      def verify(creditcard, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(0, creditcard, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       def void(authorization, options={})
         transaction_id, kind = split_authorization(authorization)
 
