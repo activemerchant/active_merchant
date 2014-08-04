@@ -47,8 +47,13 @@ module ActiveMerchant #:nodoc:
     end
 
     def ==(other)
-      (@name == other.name)
+      if other.class == ActiveMerchant::Country
+        (@name == other.name)
+      else
+        super
+      end
     end
+
     alias eql? ==
 
     def hash
