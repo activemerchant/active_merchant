@@ -22,9 +22,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, credit_card, options={})
+        @credit_card = credit_card
         requires!(options, :buyer_cpf, :address)
         requires!(options, :first_name, :last_name, :expiry_date) unless credit_card_payment?
-        @credit_card = credit_card
         xml = create_request do |xml|
           add_authentication(xml, options)
           add_transaction(xml, money, credit_card, options)
@@ -133,8 +133,9 @@ module ActiveMerchant #:nodoc:
       def commit(xml)
         url = build_commit_url
 
-        print xml.target!
         response = parse(ssl_post(url, xml.target!))
+        print response
+        puts "\r\n"
 
         Response.new(
           success_from(response),
