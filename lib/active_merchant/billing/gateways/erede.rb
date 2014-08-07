@@ -23,6 +23,8 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, credit_card, options={})
         requires!(options, :buyer_cpf, :address)
+        requires!(options, :first_name, :last_name, :expiry_date) unless credit_card_payment?
+        @credit_card = credit_card
         xml = create_request do |xml|
           add_authentication(xml, options)
           add_transaction(xml, money, credit_card, options)
@@ -45,6 +47,10 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def credit_card_payment?
+        @credit_card.is_a? ActiveMerchant::Billing::CreditCard
+      end
+
       def create_request
         xml = Builder::XmlMarkup.new
         xml.Request version: '2' do |request_xml|
@@ -64,10 +70,20 @@ module ActiveMerchant #:nodoc:
 
       def add_transaction(xml, money, credit_card, options)
         xml.Transaction {
-          xml.CardTxn {
-            xml.method 'auth'
-            add_credit_card(xml, credit_card, options)
-          }
+          if credit_card_payment?
+            xml.CardTxn {
+              xml.method 'auth'
+              add_credit_card(xml, credit_card, options)
+            }
+          else
+            xml.BoletoTxn {
+              xml.method 'payment'
+              xml.expiry_date options[:expiry_date]
+              xml.instructions options[:instructions]
+              xml.last_name options[:last_name]
+              xml.first_name options[:first_name]
+            }
+          end
           xml.TxnDetails {
             xml.merchantreference options[:order_id]
             xml.amount amount(money), currency: default_currency
@@ -116,6 +132,8 @@ module ActiveMerchant #:nodoc:
 
       def commit(xml)
         url = build_commit_url
+
+        print xml.target!
         response = parse(ssl_post(url, xml.target!))
 
         Response.new(
@@ -155,11 +173,22 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         return response[:cv2avs_status] unless response[:status] == '1'
-        response[:extended_response_message]
+        if credit_card_payment?
+          response[:extended_response_message]
+        else
+          response[:reason]
+        end
       end
 
       def authorization_from(response)
-        response[:authcode]
+        if credit_card_payment?
+          response[:authcode]
+        else
+          {
+            gateway_reference: response[:gateway_reference],
+            boleto_url: response[:boleto_url]
+          }
+        end
       end
     end
   end
