@@ -47,6 +47,15 @@ module ActiveMerchant #:nodoc:
         commit('payments/void', {:TrasactionId => transaction_id})
       end
 
+      def subscribe(token, amount, options={})
+        options.merge!(:Token => token, :Amount => amount)
+        commit('subscriptions/create', options)
+      end
+
+      def cancel_subscription(subscription_id)
+        commit('subscriptions/cancel', {:Id => subscription_id})
+      end
+
       private
 
       def commit(path, parameters)

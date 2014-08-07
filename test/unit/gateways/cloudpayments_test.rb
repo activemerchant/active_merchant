@@ -18,6 +18,19 @@ class CloudpaymentsTest < Test::Unit::TestCase
        :AccountId => "user_x"
     }
     @cryptogram_options = @token_options.merge(:Name => "ALEXANDER")
+
+    @subscriptions_options = {
+      :token=>"477BBA133C182267FE5F086924ABDC5DB71F77BFC27F01F2843F2CDC69D89F05",
+      :accountId=>"user@example.com",
+      :description=>"example.com",
+      :email=>"user@example.com",
+      :amount=>1.02,
+      :currency=>"RUB",
+      :requireConfirmation=>false,
+      :startDate=>"2014-08-06T16:46:29.5377246Z",
+      :interval=>"Month",
+      :period=>1
+    }
   end
 
   def test_successful_authorization
@@ -54,7 +67,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    @gateway.expects(:ssl_post).returns(successful_void_response)
+    @gateway.expects(:ssl_post).returns(common_successful_response)
 
     assert response = @gateway.void(504)
     assert_instance_of Response, response
@@ -66,7 +79,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    @gateway.expects(:ssl_post).returns(successful_void_response)
+    @gateway.expects(:ssl_post).returns(common_successful_response)
 
     assert response = @gateway.refund(100, 504392048)
     assert_instance_of Response, response
@@ -78,7 +91,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
   end
 
   def test_successful_confirm
-    @gateway.expects(:ssl_post).returns(successful_void_response)
+    @gateway.expects(:ssl_post).returns(common_successful_response)
 
     assert response = @gateway.confirm(100, 504392048)
     assert_instance_of Response, response
@@ -97,6 +110,31 @@ class CloudpaymentsTest < Test::Unit::TestCase
     assert_failure response
 
     assert_equal 'Declined', response.params['Status']
+    assert response.test?
+  end
+
+  def test_successful_subscription
+    @gateway.expects(:ssl_post).returns(successful_subscription_response)
+
+    assert response = @gateway.subscribe(@token, @amount, @subscriptions_options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'user@example.com', response.params['AccountId']
+    assert_equal 'Month', response.params['Interval']
+    assert_equal 1, response.params['Period']
+    assert response.test?
+  end
+
+  def test_cancel_subscription
+    @gateway.expects(:ssl_post).returns(common_successful_response)
+
+    assert response = @gateway.cancel_subscription('sc_8cf8a9338fb8ebf7202b08d09c938')
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal true, response.success?
+    assert_equal nil, response.message
     assert response.test?
   end
 
@@ -148,7 +186,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
     RESPONSE
   end
 
-  def successful_void_response
+  def common_successful_response
     <<-RESPONSE
     {
       "Success":true,
@@ -195,6 +233,35 @@ class CloudpaymentsTest < Test::Unit::TestCase
       },
       "Success": false,
       "Message": null
+    }
+    RESPONSE
+  end
+
+  def successful_subscription_response
+    <<-RESPONSE
+    {
+       "Model":{
+          "Id": "sc_8cf8a9338fb8ebf7202b08d09c938",
+          "AccountId": "user@example.com",
+          "Description": "Ежемесячная подписка на сервис example.com",
+          "Email": "user@example.com",
+          "Amount": 1.02,
+          "CurrencyCode": 0,
+          "Currency": "RUB",
+          "Auth": false,
+          "StartDate": "#{Date.today}",
+          "IntervalCode": 1,
+          "Interval": "Month",
+          "Period": 1,
+          "MaxPeriods": null,
+          "StatusCode": 0,
+          "Status": "Active",
+          "SuccessfulTransactionsNumber": 0,
+          "FailedTransactionsNumber": 0,
+          "LastTransactionDate": null,
+          "NextTransactionDate": "#{Date.today}"
+       },
+       "Success":true
     }
     RESPONSE
   end
