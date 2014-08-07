@@ -79,6 +79,19 @@ class PayJunctionTest < Test::Unit::TestCase
     assert_nil response.cvv_result['code']
   end
 
+  def test_add_creditcard_with_track_data
+    post = {}
+    @credit_card.stubs(:track_data).returns("Tracking data")
+    @gateway.send(:add_creditcard, post, @credit_card)
+    assert_equal @credit_card.track_data, post[:track]
+    assert_nil post[:name]
+    assert_nil post[:number]
+    assert_nil post[:expiration_month]
+    assert_nil post[:expiration_year]
+    assert_nil post[:verification_number]
+  end
+
+
   private
   def successful_authorization_response
     <<-RESPONSE
