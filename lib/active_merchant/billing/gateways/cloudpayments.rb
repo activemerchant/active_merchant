@@ -92,6 +92,7 @@ module ActiveMerchant #:nodoc:
       def headers
         {
           "Authorization" => "Basic " + Base64.encode64("#{options[:public_id]}:#{options[:api_secret]}"),
+          "Content-Type" => 'application/json'
         }
       end
 
