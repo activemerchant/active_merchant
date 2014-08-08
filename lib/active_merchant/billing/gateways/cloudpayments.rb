@@ -61,17 +61,32 @@ module ActiveMerchant #:nodoc:
       def commit(path, parameters)
         parameters = parameters.present? ? parameters.to_query : nil
         response = parse(ssl_post(live_url + path, parameters, headers) )
+        model = response['Model']
 
         auth  = if success?(response)
-                  response['Model'].present? ? response['Model']['TransactionId'] : {}
+                  model.present? ? model['TransactionId'] || model['Id'] : 'success'
                 else
-                  response['Model'].present? ? response['Model']['Reason'] || response['Model']['PaReq'] : {}
+                  model.present? ? model['TransactionId'] : 'failure'
                 end
-        Response.new(
-          success?(response),
-          response['Message'],
-          response['Model'],
-          :authorization => auth,
+
+        msg = if success?(response)
+                'Transaction approved'
+              else
+                if response['Message'].blank?
+                  if model['Reason'].present?
+                    model['Reason']
+                  elsif model['PaReq'].present?
+                    '3ds needed'
+                  end
+                else
+                  response['Message']
+                end
+              end
+
+        Response.new(success?(response),
+          msg,
+          model,
+          authorization: auth,
           test: test?
         )
       end

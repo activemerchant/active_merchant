@@ -52,6 +52,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal @amount.to_i, response.params['Amount'].to_i
+    assert_equal 'Completed', response.params['Status']
     assert response.test?
   end
 
@@ -74,7 +75,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal true, response.success?
-    assert_equal nil, response.message
+    assert_equal 'Transaction approved', response.message
     assert response.test?
   end
 
@@ -86,7 +87,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal true, response.success?
-    assert_equal nil, response.message
+    assert_equal 'Transaction approved', response.message
     assert response.test?
   end
 
@@ -98,7 +99,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal true, response.success?
-    assert_equal nil, response.message
+    assert_equal 'Transaction approved', response.message
     assert response.test?
   end
 
@@ -134,7 +135,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
     assert_success response
 
     assert_equal true, response.success?
-    assert_equal nil, response.message
+    assert_equal 'Transaction approved', response.message
     assert response.test?
   end
 
