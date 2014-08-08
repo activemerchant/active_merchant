@@ -1,3 +1,4 @@
+
 # Active Merchant
 [![Build Status](https://travis-ci.org/Shopify/active_merchant.png?branch=master)](https://travis-ci.org/Shopify/active_merchant)
 [![Code Climate](https://codeclimate.com/github/Shopify/active_merchant.png)](https://codeclimate.com/github/Shopify/active_merchant)
@@ -101,7 +102,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Cashnet](http://www.higherone.com/) - US
 * [Cecabank](http://www.ceca.es/es/) - ES
 * [CertoDirect](http://www.certodirect.com/) - BE, BG, CZ, DK, DE, EE, IE, EL, ES, FR, IT, CY, LV, LT, LU, HU, MT, NL, AT, PL, PT, RO, SI, SK, FI, SE, GB
-* [CloudPayments](http://cloudpayments.ru) - RU
+* [CloudPayments](http://cloudpayments.ru) - RU, AT, BE, BG, CY, CZ, DK, EE, FI, FR, GI, DE, GR, HU, IS, IM, IE, IT, LV, LI, LT, LU, MT, MC, NL, NO, PL, PT, RO, SM, SK, SI, ES, SE, CH, TR, GB
 * [Commercegate](http://www.commercegate.com/) - AD, AT, AX, BE, BG, CH, CY, CZ, DE, DK, ES, FI, FR, GB, GG, GI, GR, HR, HU, IE, IM, IS, IT, JE, LI, LT, LU, LV, MC, MT, NL, NO, PL, PT, RO, SE, SI, SK, VA
 * [Conekta](https://conekta.io) - MX
 * [CyberSource](http://www.cybersource.com) - US, BR, CA, CN, DK, FI, FR, DE, JP, MX, NO, SE, GB, SG

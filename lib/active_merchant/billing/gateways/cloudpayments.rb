@@ -56,6 +56,10 @@ module ActiveMerchant #:nodoc:
         commit('subscriptions/cancel', {:Id => subscription_id})
       end
 
+      def post3ds(transaction_id, pa_res)
+        commit('payments/post3ds', {:TransactionId => transaction_id, :PaRes => pa_res})
+      end
+
       private
 
       def commit(path, parameters)
