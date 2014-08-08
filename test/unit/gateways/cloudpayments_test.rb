@@ -40,7 +40,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal 'a4e67841-abb0-42de-a364-d1d8f9f4b3c0', response.authorization
+    assert_equal 504, response.authorization
     assert response.test?
   end
 
@@ -51,7 +51,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal @amount, response.params['Amount']
+    assert_equal @amount.to_i, response.params['Amount'].to_i
     assert response.test?
   end
 
@@ -62,7 +62,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    assert_equal 'a4e67841-abb0-42de-a364-d1d8f9f4b3c0', response.authorization
+    assert_equal 504, response.authorization
     assert response.test?
   end
 

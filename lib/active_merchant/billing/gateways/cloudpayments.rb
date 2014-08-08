@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def void(transaction_id)
-        commit('payments/void', {:TrasactionId => transaction_id})
+        commit('payments/void', {:TransactionId => transaction_id})
       end
 
       def subscribe(token, amount, options={})
@@ -63,7 +63,7 @@ module ActiveMerchant #:nodoc:
         response = parse(ssl_post(live_url + path, parameters, headers) )
 
         auth  = if success?(response)
-                  response['Model'].present? ? response['Model']['Token'] : {}
+                  response['Model'].present? ? response['Model']['TransactionId'] : {}
                 else
                   response['Model'].present? ? response['Model']['Reason'] || response['Model']['PaReq'] : {}
                 end
@@ -91,9 +91,7 @@ module ActiveMerchant #:nodoc:
 
       def headers
         {
-          "Authorization" => "Basic " + Base64.encode64("#{options[:public_id]}:#{options[:api_secret]}"),
-          # "Content-Type" => 'application/json',
-          "User-Agent" => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36'
+          "Authorization" => "Basic " + Base64.strict_encode64("#{options[:public_id]}:#{options[:api_secret]}")
         }
       end
 

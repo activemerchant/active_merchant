@@ -769,3 +769,7 @@ wirecard_checkout_page:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+cloudpayments:
+  public_id: test_api_00000000000000000000002
+  api_secret: 50dfb1df0cb5c84528e9d3772f7ce04e
