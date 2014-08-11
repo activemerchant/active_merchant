@@ -6,14 +6,14 @@ module ActiveMerchant
     class CVVResult
 
       MESSAGES = {
-        'D'  =>  'Suspicious transaction',
+        'D'  =>  'CVV check flagged transaction as suspicious',
         'I'  =>  'CVV failed data validation check',
         'M'  =>  'CVV matches',
         'N'  =>  'CVV does not match',
         'P'  =>  'CVV not processed',
         'S'  =>  'CVV should have been present',
-        'U'  =>  'Issuer unable to process request',
-        'X'  =>  'Card does not support verification'
+        'U'  =>  'CVV request unable to be processed by issuer',
+        'X'  =>  'CVV check not supported for card'
       }
 
       def self.messages
