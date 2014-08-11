@@ -7,11 +7,11 @@ module ActiveMerchant
 
       MESSAGES = {
         'D'  =>  'Suspicious transaction',
-        'I'  =>  'Failed data validation check',
-        'M'  =>  'Match',
-        'N'  =>  'No Match',
-        'P'  =>  'Not Processed',
-        'S'  =>  'Should have been present',
+        'I'  =>  'CVV failed data validation check',
+        'M'  =>  'CVV matches',
+        'N'  =>  'CVV does not match',
+        'P'  =>  'CVV not processed',
+        'S'  =>  'CVV should have been present',
         'U'  =>  'Issuer unable to process request',
         'X'  =>  'Card does not support verification'
       }
