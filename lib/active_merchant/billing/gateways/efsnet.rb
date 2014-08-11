@@ -156,7 +156,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        response[:success]
+        response[:response_code] == '0'
       end
 
       def authorization_from(response, params)

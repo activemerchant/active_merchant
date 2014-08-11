@@ -74,17 +74,17 @@ class RemoteCloudpaymentsTest < Test::Unit::TestCase
     assert_match %r{active_merchant_fake_charge}, void.message
   end
 
-  def test_successful_subscription
-    assert response = @gateway.subscribe(@token, @amount, @subscription_options)
-    assert_success response
-    assert response.params['Id']
-    assert_equal 'Active', response.params["Status"]
-    assert_equal @amount, response.params["Amount"].to_i
-  end
-  def test_successful_void_subscription
-    assert response = @gateway.subscribe(@token, @amount, @subscription_options)
-    assert_success response
-    assert void = @gateway.void_subscription(response.authorization)
-    assert_success void
-  end
+  # def test_successful_subscription
+  #   assert response = @gateway.subscribe(@token, @amount, @subscription_options)
+  #   assert_success response
+  #   assert response.params['Id']
+  #   assert_equal 'Active', response.params["Status"]
+  #   assert_equal @amount, response.params["Amount"].to_i
+  # end
+  # def test_successful_void_subscription
+  #   assert response = @gateway.subscribe(@token, @amount, @subscription_options)
+  #   assert_success response
+  #   assert void = @gateway.void_subscription(response.authorization)
+  #   assert_success void
+  # end
 end

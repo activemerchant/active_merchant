@@ -14,7 +14,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
     @token_options = {
        :Currency => "RUB",
        :InvoiceId => "1234567",
-       :Description => "Оплата товаров в example.com",
+       :Description => "Payment on example.com",
        :AccountId => "user_x"
     }
     @cryptogram_options = @token_options.merge(:Name => "ALEXANDER")
@@ -170,7 +170,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
         "InvoiceId": "1234567",
         "AccountId": "user_x",
         "Email": null,
-        "Description": "Оплата товаров в example.com",
+        "Description": "Payment on example.com",
         "JsonData": null,
         "CreatedDate": "#{Date.today}",
         "AuthDate": "#{Date.today}",
@@ -225,7 +225,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
         "InvoiceId": "1234567",
         "AccountId": "user_x",
         "Email": null,
-        "Description": "Оплата товаров в example.com",
+        "Description": "Payment on example.com",
         "JsonData": null,
         "CreatedDate": "#{Date.today}",
         "TestMode": true,
