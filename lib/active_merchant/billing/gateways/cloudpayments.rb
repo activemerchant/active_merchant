@@ -52,11 +52,15 @@ module ActiveMerchant #:nodoc:
         commit('subscriptions/create', options)
       end
 
-      def cancel_subscription(subscription_id)
+      def get_subscription(subscription_id)
+        commit('subscriptions/get', {:Id => subscription_id})
+      end
+
+      def void_subscription(subscription_id)
         commit('subscriptions/cancel', {:Id => subscription_id})
       end
 
-      def post3ds(transaction_id, pa_res)
+      def check_3ds(transaction_id, pa_res)
         commit('payments/post3ds', {:TransactionId => transaction_id, :PaRes => pa_res})
       end
 
@@ -77,7 +81,9 @@ module ActiveMerchant #:nodoc:
                 'Transaction approved'
               else
                 if response['Message'].blank?
-                  if model['Reason'].present?
+                  if model['CardHolderMessage'].present?
+                    model['CardHolderMessage']
+                  elsif model['Reason'].present?
                     model['Reason']
                   elsif model['PaReq'].present?
                     '3ds needed'

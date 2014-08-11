@@ -127,10 +127,25 @@ class CloudpaymentsTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_cancel_subscription
+  def test_successful_get_subscription
+    @gateway.expects(:ssl_post).returns(successful_get_subscription_response)
+
+    assert response = @gateway.get_subscription('sc_8cf8a9338fb8ebf7202b08d09c938')
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'sc_8cf8a9338fb8ebf7202b08d09c938', response.authorization
+    assert_equal '1@1.com', response.params['AccountId']
+    assert_equal 'Month', response.params['Interval']
+    assert_equal 'Active', response.params['Status']
+    assert_equal 1, response.params['Period']
+    assert response.test?
+  end
+
+  def test_void_subscription
     @gateway.expects(:ssl_post).returns(common_successful_response)
 
-    assert response = @gateway.cancel_subscription('sc_8cf8a9338fb8ebf7202b08d09c938')
+    assert response = @gateway.void_subscription('sc_8cf8a9338fb8ebf7202b08d09c938')
     assert_instance_of Response, response
     assert_success response
 
@@ -263,6 +278,38 @@ class CloudpaymentsTest < Test::Unit::TestCase
           "NextTransactionDate": "#{Date.today}"
        },
        "Success":true
+    }
+    RESPONSE
+  end
+
+  def successful_get_subscription_response
+    <<-RESPONSE
+    {
+      "Model":{
+        "Id":"sc_8cf8a9338fb8ebf7202b08d09c938", //идентификатор подписки
+        "AccountId":"1@1.com",
+        "Description":"Ежемесячная подписка на сервис example.com",
+        "Email":"1@1.com",
+        "Amount":1.02,
+        "CurrencyCode":0,
+        "Currency":"RUB",
+        "RequireConfirmation":false, //true для двустидайных платежей
+        "StartDate":"\/Date(1407343589537)\/",
+        "StartDateIso":"2014-08-09T11:49:41", //все даты в UTC
+        "IntervalCode":1,
+        "Interval":"Month",
+        "Period":1,
+        "MaxPeriods":null,
+        "StatusCode":0,
+        "Status":"Active",
+        "SuccessfulTransactionsNumber":0,
+        "FailedTransactionsNumber":0,
+        "LastTransactionDate":null,
+        "LastTransactionDateIso":null,
+        "NextTransactionDate":"\/Date(1407343589537)\/",
+        "NextTransactionDateIso":"2014-08-09T11:49:41"
+      },
+      "Success":true
     }
     RESPONSE
   end
