@@ -21,7 +21,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_equal "K1CRcdN0jK32UyrnZGPOXLRjqJl", response.authorization
     assert_equal "Succeeded!", response.message
     assert_equal "Non-U.S. issuing bank does not support AVS.", response.avs_result["message"]
-    assert_equal "Failed data validation check", response.cvv_result["message"]
+    assert_equal "CVV failed data validation check", response.cvv_result["message"]
   end
 
   def test_failed_purchase_with_payment_method_token
@@ -48,7 +48,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_equal "K1CRcdN0jK32UyrnZGPOXLRjqJl", response.authorization
     assert_equal "Succeeded!", response.message
     assert_equal "Non-U.S. issuing bank does not support AVS.", response.avs_result["message"]
-    assert_equal "Failed data validation check", response.cvv_result["message"]
+    assert_equal "CVV failed data validation check", response.cvv_result["message"]
     assert_equal 'Purchase', response.params['transaction_type']
     assert_equal '5WxC03VQ0LmmkYvIHl7XsPKIpUb', response.params['payment_method_token']
     assert_equal '6644', response.params['payment_method_last_four_digits']
@@ -95,7 +95,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_equal "NKz5SO6jrsRDc0UyaujwayXJZ1a", response.authorization
     assert_equal "Succeeded!", response.message
     assert_equal "Non-U.S. issuing bank does not support AVS.", response.avs_result["message"]
-    assert_equal "Failed data validation check", response.cvv_result["message"]
+    assert_equal "CVV failed data validation check", response.cvv_result["message"]
 
     @gateway.expects(:raw_ssl_request).returns(successful_capture_response)
     response = @gateway.capture(@amount, response.authorization)
@@ -128,7 +128,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
     assert_equal "NKz5SO6jrsRDc0UyaujwayXJZ1a", response.authorization
     assert_equal "Succeeded!", response.message
     assert_equal "Non-U.S. issuing bank does not support AVS.", response.avs_result["message"]
-    assert_equal "Failed data validation check", response.cvv_result["message"]
+    assert_equal "CVV failed data validation check", response.cvv_result["message"]
     assert_equal 'Authorization', response.params['transaction_type']
     assert_equal '5WxC03VQ0LmmkYvIHl7XsPKIpUb', response.params['payment_method_token']
     assert_equal '6644', response.params['payment_method_last_four_digits']
@@ -268,7 +268,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
           <avs_code>G</avs_code>
           <avs_message>Non-U.S. issuing bank does not support AVS.</avs_message>
           <cvv_code>I</cvv_code>
-          <cvv_message>Failed data validation check</cvv_message>
+          <cvv_message>CVV failed data validation check</cvv_message>
           <error_code nil="true"/>
           <error_detail nil="true"/>
           <created_at type="datetime">2012-12-06T20:28:14Z</created_at>
@@ -397,7 +397,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
           <avs_code>G</avs_code>
           <avs_message>Non-U.S. issuing bank does not support AVS.</avs_message>
           <cvv_code>I</cvv_code>
-          <cvv_message>Failed data validation check</cvv_message>
+          <cvv_message>CVV failed data validation check</cvv_message>
           <error_code nil="true"/>
           <error_detail nil="true"/>
           <created_at type="datetime">2012-12-08T04:13:48Z</created_at>

@@ -195,7 +195,7 @@ class MetricsGlobalTest < Test::Unit::TestCase
       :response_reason_code => '27',
       :response_reason_text => 'Failure.',
     }
-    assert_equal "No Match", @gateway.message_from(result)
+    assert_equal "CVV does not match", @gateway.message_from(result)
 
     result[:card_code] = 'M'
     assert_equal "Street address matches, but 5-digit and 9-digit postal code do not match.", @gateway.message_from(result)
