@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'test_helper'
 
 class CloudpaymentsTest < Test::Unit::TestCase
@@ -179,9 +180,9 @@ class CloudpaymentsTest < Test::Unit::TestCase
         "TestMode": true,
         "IpAddress": "195.91.194.13",
         "IpCountry": "RU",
-        "IpCity": "Уфа",
-        "IpRegion": "Республика Башкортостан",
-        "IpDistrict": "Приволжский федеральный округ",
+        "IpCity": "Orenburg",
+        "IpRegion": "Orenburg region",
+        "IpDistrict": "PFO",
         "IpLatitude": 54.7355,
         "IpLongitude": 55.991982,
         "CardFirstSix": "411111",
@@ -231,9 +232,9 @@ class CloudpaymentsTest < Test::Unit::TestCase
         "TestMode": true,
         "IpAddress": "195.91.194.13",
         "IpCountry": "RU",
-        "IpCity": "Уфа",
-        "IpRegion": "Республика Башкортостан",
-        "IpDistrict": "Приволжский федеральный округ",
+        "IpCity": "Orenburg",
+        "IpRegion": "Orenburg region",
+        "IpDistrict": "PFO",
         "IpLatitude": 54.7355,
         "IpLongitude": 55.991982,
         "CardFirstSix": "411111",
@@ -259,7 +260,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
        "Model":{
           "Id": "sc_8cf8a9338fb8ebf7202b08d09c938",
           "AccountId": "user@example.com",
-          "Description": "Ежемесячная подписка на сервис example.com",
+          "Description": "Subscription example.com",
           "Email": "user@example.com",
           "Amount": 1.02,
           "CurrencyCode": 0,
@@ -288,7 +289,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
       "Model":{
         "Id":"sc_8cf8a9338fb8ebf7202b08d09c938", //идентификатор подписки
         "AccountId":"1@1.com",
-        "Description":"Ежемесячная подписка на сервис example.com",
+        "Description":"Subscription example.com",
         "Email":"1@1.com",
         "Amount":1.02,
         "CurrencyCode":0,

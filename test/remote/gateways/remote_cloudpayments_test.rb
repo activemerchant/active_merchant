@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'test_helper'
 class RemoteCloudpaymentsTest < Test::Unit::TestCase
 
@@ -21,7 +22,7 @@ class RemoteCloudpaymentsTest < Test::Unit::TestCase
     }
     @subscription_options = {
       :AccountId => '1@1.com',
-      :Description => "Подписка на услуги lpcloudapp.com",
+      :Description => "Subscription lpcloudapp.com",
       :Email => '1@1.com',
       :Currency => 'RUB',
       :RequireConfirmation => false,
