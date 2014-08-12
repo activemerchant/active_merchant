@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def boleto_payment?
-        @credit_card.to_sym == :boleto
+        @credit_card.to_sym == :boleto_bancario
       end
 
       def create_request
