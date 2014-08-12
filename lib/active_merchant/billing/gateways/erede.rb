@@ -134,8 +134,6 @@ module ActiveMerchant #:nodoc:
         url = build_commit_url
 
         response = parse(ssl_post(url, xml.target!))
-        print response
-        puts "\r\n"
 
         Response.new(
           success_from(response),
