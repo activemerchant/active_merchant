@@ -12,7 +12,7 @@ class KomerciTest < Test::Unit::TestCase
     @options = {
         :order_id => generate_unique_id.slice(0, 15),
         :buyer_cpf => '99999999999',
-        :address => {
+        :billing_address => {
           :street => 'Avenida Brigadeiro Faria Lima',
           :number => '666',
           :neighborhood => 'Flamengo',

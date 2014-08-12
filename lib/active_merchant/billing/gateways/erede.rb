@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, credit_card, options={})
         @credit_card = credit_card
-        requires!(options, :buyer_cpf, :address)
+        requires!(options, :buyer_cpf, :billing_address)
         requires!(options, :first_name, :last_name, :expiry_date) unless credit_card_payment?
         xml = create_request do |xml|
           add_authentication(xml, options)
@@ -112,14 +112,14 @@ module ActiveMerchant #:nodoc:
 
       def add_avs_data(xml, credit_card, options)
         xml.Cv2Avs {
-          xml.street_address1 options[:address][:number]
-          xml.street_address2 options[:address][:street]
-          xml.street_address3 options[:address][:neighborhood]
-          xml.street_address4 options[:address][:additional_info]
-          xml.city options[:address][:city]
-          xml.state_province options[:address][:state]
-          xml.country options[:address][:country]
-          xml.postcode options[:address][:postcode]
+          xml.street_address1 options[:billing_address][:number]
+          xml.street_address2 options[:billing_address][:street]
+          xml.street_address3 options[:billing_address][:neighborhood]
+          xml.street_address4 options[:billing_address][:additional_info]
+          xml.city options[:billing_address][:city]
+          xml.state_province options[:billing_address][:state]
+          xml.country options[:billing_address][:country]
+          xml.postcode options[:billing_address][:postcode]
           xml.cv2 credit_card.verification_value
           xml.cpf options[:buyer_cpf]
           xml.policy options[:policy] || 3
