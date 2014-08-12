@@ -51,6 +51,10 @@ module ActiveMerchant #:nodoc:
         @credit_card.is_a? ActiveMerchant::Billing::CreditCard
       end
 
+      def boleto_payment?
+        @credit_card.to_sym == :boleto
+      end
+
       def create_request
         xml = Builder::XmlMarkup.new
         xml.Request version: '2' do |request_xml|
@@ -75,7 +79,7 @@ module ActiveMerchant #:nodoc:
               xml.method 'auth'
               add_credit_card(xml, credit_card, options)
             }
-          else
+          elsif boleto_payment?
             xml.BoletoTxn {
               xml.method 'payment'
               xml.expiry_date options[:expiry_date]
@@ -83,6 +87,8 @@ module ActiveMerchant #:nodoc:
               xml.last_name options[:last_name]
               xml.first_name options[:first_name]
             }
+          else
+            raise Exception('Invalid payment method.')
           end
           xml.TxnDetails {
             xml.merchantreference options[:order_id]
@@ -174,8 +180,10 @@ module ActiveMerchant #:nodoc:
         return response[:cv2avs_status] unless response[:status] == '1'
         if credit_card_payment?
           response[:extended_response_message]
-        else
+        elsif boleto_payment?
           response[:reason]
+        else
+          raise Exception('Invalid payment method.')
         end
       end
 
