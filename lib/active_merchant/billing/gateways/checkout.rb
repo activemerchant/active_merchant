@@ -1,10 +1,5 @@
 require 'rubygems'
 require 'nokogiri'
-require 'net/http'
-require 'net/https'
-require 'uri'
-require 'openssl'
-require 'open-uri'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
