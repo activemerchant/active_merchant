@@ -28,7 +28,8 @@ module ActiveMerchant
         'diners_club'       => 'DINERS',
         'switch'            => 'SWITCH',
         'solo'              => 'SWITCH',
-        'laser'             => 'LASER'
+        'laser'             => 'LASER',
+        'maestro'           => 'MC'
       }
 
       self.money_format = :cents
