@@ -166,7 +166,9 @@ module ActiveMerchant #:nodoc:
       def commit(xml)
         url = build_commit_url
 
+        p "[INFO][AM] Sending request to #{url}"
         response = parse(ssl_post(url, xml.target!))
+        p "[INFO][AM] Response: #{response}"
 
         Response.new(
           success_from(response),
