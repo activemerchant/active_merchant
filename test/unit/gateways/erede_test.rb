@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class KomerciTest < Test::Unit::TestCase
+class EredeTest < Test::Unit::TestCase
   def setup
     @gateway = EredeGateway.new(
       fixtures(:erede)
@@ -34,6 +34,31 @@ class KomerciTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_boleto_purchase
+    @gateway.expects(:ssl_request).once.returns(successful_boleto_authorize_response)
+    options = {}
+    options[:expiry_date] = '2013-04-01'
+    options[:instructions] = 'Wops'
+    options[:last_name] = 'Wops'
+    options[:first_name] = 'Wops'
+
+    assert response = @gateway.purchase(@amount, :boleto_bancario, @options.merge(options))
+
+    assert_success response
+    assert_equal 'http://www.domain.com/generatedurl456', response.authorization[:boleto_url]
+    assert response.test?
+  end
+
+  def test_boleto_query
+    @gateway.expects(:ssl_request).once.returns(boleto_query)
+
+    assert response = @gateway.query('536')
+
+    assert_equal 'PENDING', response.message
+    assert_success response
+    assert response.test?
+  end
+
   def test_failed_cv2avs_purchase
     @gateway.expects(:ssl_request).once.returns(failed_authorize_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -64,6 +89,85 @@ class KomerciTest < Test::Unit::TestCase
         <reason>ACCEPTED</reason>
         <status>1</status>
         <time>1372847996</time>
+      </Response>
+    XML
+  end
+
+  def successful_boleto_authorize_response
+    <<-XML
+        <?xml version="1.0" encoding="UTF-8"?>
+        <Response version="2">
+          <BoletoTxn>
+              <method>payment</method>
+              <language>es</language>
+              <customer_email>john@mail.com</customer_email>
+              <customer_ip>127.0.0.1</customer_ip>
+              <title>MR</title>
+              <first_name>JOHN</first_name>
+              <last_name>CAIXA</last_name>
+              <country>BR</country>
+              <billing_street1>Address Line 1</billing_street1>
+              <billing_city>JA</billing_city>
+              <billing_postcode>12345</billing_postcode>
+              <billing_country>BR</billing_country>
+              <customer_telephone>00000000000</customer_telephone>
+              <interest_per_day>0.1</interest_per_day>
+              <overdue_fine>0.05</overdue_fine>
+              <expiry_date>2013-04-01</expiry_date>
+              <processor_id>11</processor_id>
+              <instructions>Não aceitar pagamento em cheques. Inadimplente - Percentual Juros Dia: 10%. Percentual Multa: 5%.</instructions>
+              <boleto_url>http://www.domain.com/generatedurl456</boleto_url>
+              <order_id>7F000001:013829A1C09E:8DE9:016891F0</order_id>
+              <transaction_id>1418605</transaction_id>
+              <txn_status>PENDING</txn_status>
+              <barcode_number>23791234056000000000401000123404856240000010000</barcode_number>
+          </BoletoTxn>
+          <gateway_reference>4200000027950077</gateway_reference>
+          <merchantreference>boleto1234</merchantreference>
+          <mode>LIVE</mode>
+          <reason>ACCEPTED</reason>
+          <status>1</status>
+          <time>1341312709</time>
+        </Response>
+    XML
+  end
+
+  def boleto_query
+    <<-XML
+      <Response version="2">
+          <QueryTxnResult>
+              <BoletoTxn>
+                  <amount>100.00</amount>
+                  <billing_city>SP</billing_city>
+                  <billing_country>BR</billing_country>
+                  <billing_postcode>12949-110</billing_postcode>
+                  <billing_street1>Av. Paulista 1111</billing_street1>
+                  <boleto_number>536</boleto_number>
+                  <boleto_url>https://testboletos.maxipago.net/redirection_service/boleto?ref=LmO9fsnOXyUgTcRusHkbMQFQxVkk9OBmXEK5CanaeV8JEVxxqROSI7%2Bawb9qrL8ZTSC4pnEbe8iF%0AmHp1r%2FX7Vg%3D%3D</boleto_url>
+                  <customer_email>jojojo@dominio.com.br</customer_email>
+                  <customer_ip>127.0.0.1</customer_ip>
+                  <customer_telephone>1135938203</customer_telephone>
+                  <expiry_date>2013-04-01</expiry_date>
+                  <first_name>Daniel</first_name>
+                  <instructions>Não aceitar pagamento em cheques. Percentual Juros Dia: 1%. Percentual Multa: 1%.</instructions>
+                  <interest_per_day>0.01</interest_per_day>
+                  <last_name>Lucats</last_name>
+                  <merchant_id>3701</merchant_id>
+                  <order_id>536</order_id>
+                  <overdue_fine>0.01</overdue_fine>
+                  <payment_status>PENDING</payment_status>
+                  <processor_id>11</processor_id>
+                  <transaction_id>543966</transaction_id>
+              </BoletoTxn>
+              <gateway_reference>3600900010035659</gateway_reference>
+              <merchantreference>Teste28061003</merchantreference>
+              <reason>Boleto Bancario payment pending</reason>
+              <status>1911</status>
+          </QueryTxnResult>
+          <mode>LIVE</mode>
+          <reason>ACCEPTED</reason>
+          <status>1</status>
+          <time>1372424737</time>
       </Response>
     XML
   end

@@ -24,13 +24,27 @@ module ActiveMerchant #:nodoc:
       def purchase(money, credit_card, options={})
         @credit_card = credit_card
         requires!(options, :buyer_cpf, :billing_address)
-        requires!(options, :first_name, :last_name, :expiry_date) unless credit_card_payment?
+        requires!(options, :first_name, :last_name, :expiry_date) if boleto_payment?
         xml = create_request do |xml|
           add_authentication(xml, options)
           add_transaction(xml, money, credit_card, options)
           add_instalments(xml, options) if options.fetch(:instalments, {})[:number]
         end
-        commit(xml)
+        response = commit(xml)
+        @credit_card = nil
+        response
+      end
+
+      def query(reference, reference_type=:merchant)
+        @query = true
+        p 'Starting query request.'
+        xml = create_request do |xml|
+          add_authentication(xml, nil)
+          add_transaction_query(xml, reference, reference_type)
+        end
+        response = commit(xml)
+        @query = nil
+        response
       end
 
       def authorize(money, credit_card, options={})
@@ -47,12 +61,16 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def payment_query?
+        @query
+      end
+
       def credit_card_payment?
         @credit_card.is_a? ActiveMerchant::Billing::CreditCard
       end
 
       def boleto_payment?
-        @credit_card.to_sym == :boleto_bancario
+        @credit_card.is_a?(Symbol) && @credit_card.to_sym == :boleto_bancario
       end
 
       def create_request
@@ -88,12 +106,21 @@ module ActiveMerchant #:nodoc:
               xml.first_name options[:first_name]
             }
           else
-            raise Exception('Invalid payment method.')
+            raise 'Invalid payment method.'
           end
           xml.TxnDetails {
             xml.merchantreference options[:order_id]
             xml.amount amount(money), currency: default_currency
             xml.capturemethod 'ecomm'
+          }
+        }
+      end
+
+      def add_transaction_query(xml, reference, reference_type)
+        xml.Transaction {
+          xml.HistoricTxn {
+            xml.method 'query'
+            xml.reference(reference, "type" => reference_type)
           }
         }
       end
@@ -128,7 +155,7 @@ module ActiveMerchant #:nodoc:
 
       def add_instalments(xml, options)
         type = options[:instalments][:type]
-        raise Exception('invalid instalment type.') unless INSTALMENT_TYPES.include? type
+        raise 'invalid instalment type.' unless INSTALMENT_TYPES.include? type
         instalments = options[:instalments][:number].to_i
         xml.Instalments {
           xml.type type
@@ -177,11 +204,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        return response[:cv2avs_status] unless response[:status] == '1'
         if credit_card_payment?
+          return response[:cv2avs_status] unless response[:status] == '1'
           response[:extended_response_message]
         elsif boleto_payment?
           response[:reason]
+        elsif payment_query?
+          response[:payment_status]
         else
           raise Exception('Invalid payment method.')
         end
@@ -190,7 +219,7 @@ module ActiveMerchant #:nodoc:
       def authorization_from(response)
         if credit_card_payment?
           response[:authcode]
-        else
+        elsif boleto_payment?
           {
             gateway_reference: response[:gateway_reference],
             boleto_url: response[:boleto_url]
