@@ -79,6 +79,29 @@ module ActiveMerchant #:nodoc:
         commit 'us_refund', crediting_params(authorization, :amount => amount(money))
       end
 
+      def store(credit_card, options = {})
+        post = {}
+        post[:pan] = credit_card.number
+        post[:expdate] = expdate(credit_card)
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        commit('res_add_cc', post)
+      end
+
+      def unstore(data_key, options = {})
+        post = {}
+        post[:data_key] = data_key
+        commit('res_delete', post)
+      end
+
+      def update(data_key, credit_card, options = {})
+        post = {}
+        post[:pan] = credit_card.number
+        post[:expdate] = expdate(credit_card)
+        post[:data_key] = data_key
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        commit('res_update_cc', post)
+      end
+
       private # :nodoc: all
 
       def expdate(creditcard)

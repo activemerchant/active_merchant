@@ -3,6 +3,7 @@
 * HPS: Always pass CardHolderData element [SecureSubmit, ntalbott]
 * PayJunction: Include 'track' parameter if provided [hron]
 * WebPay: Fix API calls [tomykaira]
+* Moneris US: Add store, unstore, and update [AntoineInsa]
 
 == Version 1.44.1 (Aug 28, 2014)
 
