@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
         if method.is_a?(CreditCard)
           'CartaoCredito'
         else
-          PAYMENT_METHODS[method.underscore]
+          PAYMENT_METHODS[method.to_s.underscore]
         end
       end
 
