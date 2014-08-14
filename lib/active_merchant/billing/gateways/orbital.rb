@@ -299,7 +299,6 @@ module ActiveMerchant #:nodoc:
           xml.tag! :CustomerRefNum, options[:customer_ref_num]
         else
           if options[:customer_ref_num]
-            xml.tag! :CustomerProfileFromOrderInd, USE_CUSTOMER_REF_NUM
             xml.tag! :CustomerRefNum, options[:customer_ref_num]
           else
             xml.tag! :CustomerProfileFromOrderInd, AUTO_GENERATE
