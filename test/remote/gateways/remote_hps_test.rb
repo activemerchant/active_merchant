@@ -5,7 +5,7 @@ class RemoteHpsTest < Test::Unit::TestCase
     @gateway = HpsGateway.new(fixtures(:hps))
 
     @amount = 100
-    @declined_amount = 10.34
+    @declined_amount = 1034
     @credit_card =   credit_card('4000100011112224')
 
     @options = {
