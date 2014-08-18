@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.44.0 (Aug 21, 2014)
+
 * Moneris: Add :avs_enabled option [bslobodin]
 * Stripe: Populate authorization in failed responses, when available [bslobodin]
 * Moneris: Use the name on the card [duff]
