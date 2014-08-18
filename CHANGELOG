@@ -90,6 +90,7 @@
 * NAB Transact: Add credit support [nagash]
 * Braintree Blue: Add application_id support [npverni]
 * Realex: Add maestro mapping [uriklar]
+* Add Worldpay US gateway [markabe]
 
 == Version 1.43.2 (May 12, 2014)
 
