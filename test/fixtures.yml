@@ -769,3 +769,8 @@ wirecard_checkout_page:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+worldpay_us:
+  acctid: MPNAB
+  subid: SPREE
+  merchantpin: "1234567890"
