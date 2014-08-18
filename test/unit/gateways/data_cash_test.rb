@@ -121,6 +121,44 @@ class DataCashTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_threedsecure_authorize
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    response = @gateway.threedsecure_authorize('authorization')
+    assert_instance_of Response, response
+    assert_success response
+    assert response.test?
+    assert_equal 'The transaction was successful', response.message
+    assert_equal '4400200050664928;123456789;', response.authorization
+  end
+
+  def test_unsuccessful_threedsecure_authorize
+    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    response = @gateway.threedsecure_authorize('authorization')
+    assert_instance_of Response, response
+    assert_failure response
+    assert response.test?
+    assert_equal 'Invalid reference number', response.message
+  end
+
+  def test_successful_threedsecure_verify
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    response = @gateway.threedsecure_verify('authorization', 'pares_message')
+    assert_instance_of Response, response
+    assert_success response
+    assert response.test?
+    assert_equal 'The transaction was successful', response.message
+    assert_equal '4400200050664928;123456789;', response.authorization
+  end
+
+  def test_unsuccessful_threedsecure_verify
+    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    response = @gateway.threedsecure_verify('authorization', 'pares_message')
+    assert_instance_of Response, response
+    assert_failure response
+    assert response.test?
+    assert_equal 'Invalid reference number', response.message
+  end
+
   private
   def failed_purchase_response
     <<-XML
