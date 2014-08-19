@@ -18,6 +18,13 @@ class NetworkMerchantsTest < Test::Unit::TestCase
     }
   end
 
+  def test_add_swipe_data_with_creditcard
+    post = {}
+    @credit_card.stubs(:track_data).returns("Track Data")
+    @gateway.send(:add_swipe_data, post, @credit_card, {})
+    assert_equal "Track Data", post[:track_1]
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
