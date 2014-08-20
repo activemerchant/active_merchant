@@ -106,6 +106,16 @@ class MerchantWareTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
 
+  def test_add_swipe_data_with_creditcard
+    @credit_card.track_data = "Track Data"
+
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<trackData>Track Data</trackData>", data
+    end.respond_with(successful_authorization_response)
+  end
+
   private
 
   def successful_authorization_response
