@@ -211,6 +211,9 @@ garanti:
   merchant_id: 600218
   password: "123qweASD"
 
+global_collect:
+  merchant_id: MERCHANT_ID
+
 hdfc:
   login: LOGIN
   password: PASSWORD
@@ -769,3 +772,4 @@ wirecard_checkout_page:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
