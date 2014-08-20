@@ -155,10 +155,11 @@ module ActiveMerchant #:nodoc:
       def add_auth_purchase_params(doc, money, payment_method, options)
         doc.orderId(truncated(options[:order_id]))
         doc.amount(money)
-        doc.orderSource('ecommerce')
+        add_order_source(doc, payment_method)
         add_billing_address(doc, payment_method, options)
         add_shipping_address(doc, payment_method, options)
         add_payment_method(doc, payment_method)
+        add_pos(doc, payment_method)
       end
 
       def add_payment_method(doc, payment_method)
@@ -166,7 +167,11 @@ module ActiveMerchant #:nodoc:
           doc.token do
             doc.litleToken(payment_method)
           end
-        else
+        elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
+          doc.card do
+            doc.track(payment_method.track_data)
+          end
+        else 
           doc.card do
             doc.type_(CARD_TYPE[payment_method.brand])
             doc.number(payment_method.number)
@@ -206,6 +211,23 @@ module ActiveMerchant #:nodoc:
         doc.zip(address[:zip]) unless address[:zip].blank?
         doc.country(address[:country]) unless address[:country].blank?
         doc.phone(address[:phone]) unless address[:phone].blank?
+      end
+
+      def add_order_source(doc, payment_method)
+        if payment_method.respond_to?(:track_data) && payment_method.track_data.present?
+          doc.orderSource('retail')
+        else
+          doc.orderSource('ecommerce')
+      end
+
+      def add_pos(doc, payment_method)
+        return unless payment_method.respond_to?(:track_data) && payment_method.track_data.present?
+
+        doc.pos do
+          doc.capability('magstripe')
+          doc.entryMode('completeread')
+          doc.cardholderId('signature')
+        end
       end
 
       def exp_date(payment_method)
