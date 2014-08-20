@@ -153,6 +153,12 @@ module ActiveMerchant #:nodoc:
         if source.is_a?(String)
           post[:data_key]   = source
           post[:cust_id]    = options[:customer]
+        elsif source.respond_to?(:track_data) && source.track_data.present?
+          post[:pos_code]   = '00'
+          post[:track2]     = source.track_data
+          post[:pan]        = ''
+          post[:expdate]    = ''
+          post[:cust_id]    = options[:customer] || source.name
         else
           post[:pan]        = source.number
           post[:expdate]    = expdate(source)
