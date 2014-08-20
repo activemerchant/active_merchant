@@ -91,6 +91,7 @@
 * Braintree Blue: Add application_id support [npverni]
 * Realex: Add maestro mapping [uriklar]
 * Add Worldpay US gateway [markabe]
+* Cybersource: Add shipping address [pkoppula]
 
 == Version 1.43.2 (May 12, 2014)
 
