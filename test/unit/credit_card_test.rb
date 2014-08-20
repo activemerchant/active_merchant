@@ -333,6 +333,50 @@ class CreditCardTest < Test::Unit::TestCase
     assert_equal "Twiggy", c.last_name
   end
 
+  def test_card_should_be_valid_with_both_first_and_last_name
+    card = credit_card
+    assert_valid card
+
+    card.last_name = nil
+    errors = assert_not_valid card
+    assert_equal ['cannot be empty'], errors[:last_name]
+
+    card.first_name = nil
+    card.last_name = 'Herdman'
+    errors = assert_not_valid card
+    assert_equal ['cannot be empty'], errors[:first_name]
+
+    card.last_name = nil
+    errors = assert_not_valid card
+    assert_equal ['cannot be empty'], errors[:first_name]
+    assert_equal ['cannot be empty'], errors[:last_name]
+
+  end
+
+  def test_card_should_be_valid_when_only_name_is_required
+    default_name_validation_fields = CreditCard.required_name_fields
+
+    CreditCard.required_name_fields = [:name]
+    card = credit_card
+
+    card.first_name = 'James'
+    card.last_name = 'Herdman'
+    assert_valid card
+
+    card.last_name = nil
+    assert_valid card
+
+    card.last_name = 'Herdman'
+    card.first_name = nil
+    assert_valid card
+
+    card.last_name = nil
+    errors = assert_not_valid card
+    assert_equal ['cannot be empty'], errors[:name]
+
+    CreditCard.required_name_fields = default_name_validation_fields
+  end
+
   # The following is a regression for a bug that raised an exception when
   # a new credit card was validated
   def test_validate_new_card
