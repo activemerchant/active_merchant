@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
 
       self.live_url             = 'https://api.cloudpayments.ru/'
       self.default_currency     = 'RUB'
-      self.supported_countries  = ['RU']
+      self.supported_countries  = ['RU', 'AT', 'BE', 'BG', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'GI', 'DE', 'GR', 'HU', 'IS', 'IM', 'IE', 'IT', 'LV', 'LI', 'LT', 'LU', 'MT', 'MC', 'NL', 'NO', 'PL', 'PT', 'RO', 'SM', 'SK', 'SI', 'ES', 'SE', 'CH', 'TR', 'GB']
       self.homepage_url         = 'http://cloudpayments.ru/'
       self.display_name         = 'CloudPayments'
       self.supported_cardtypes  = [:visa, :master, :american_express, :diners_club, :jcb]
@@ -15,27 +15,27 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize_with_token(token, amount, options={})
-        options.merge!(:Token => token, :Amount => amount)
-        commit("payments/tokens/auth", options)
+      def authorize(token, amount, options={}, with_token=false)
+        if with_token
+          options.merge!(:Token => token, :Amount => amount)
+          commit("payments/tokens/auth", options)
+        else
+          options.merge!(:CardCryptogramPacket => token, :Amount => amount)
+          commit("payments/cards/auth", options)
+        end
       end
 
-      def authorize_with_cryptogram(cryptogram, amount, options={})
-        options.merge!(:CardCryptogramPacket => cryptogram, :Amount => amount)
-        commit("payments/cards/auth", options)
+      def purchase(token, amount, options={}, with_token=false)
+        if with_token
+          options.merge!(:Token => token, :Amount => amount)
+          commit("payments/tokens/charge", options)
+        else
+          options.merge!(:CardCryptogramPacket => token, :Amount => amount)
+          commit("payments/cards/charge", options)
+        end
       end
 
-      def charge_with_token(token, amount, options={})
-        options.merge!(:Token => token, :Amount => amount)
-        commit("payments/tokens/charge", options)
-      end
-
-      def charge_with_cryptogram(cryptogram, amount, options={})
-        options.merge!(:CardCryptogramPacket => cryptogram, :Amount => amount)
-        commit("payments/cards/charge", options)
-      end
-
-      def confirm(amount, transaction_id)
+      def capture(amount, transaction_id)
         commit("payments/confirm", {:TransactionId => transaction_id, :Amount => amount})
       end
 

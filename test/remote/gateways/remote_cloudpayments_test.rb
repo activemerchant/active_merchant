@@ -33,37 +33,37 @@ class RemoteCloudpaymentsTest < Test::Unit::TestCase
   end
 
   def test_authorization_with_cryptogram
-    assert authorization = @gateway.authorize_with_cryptogram(@cryptogram, @amount, @options)
+    assert authorization = @gateway.authorize(@cryptogram, @amount, @options)
     assert_success authorization
     assert_equal @amount.to_i, authorization.params["Amount"].to_i
   end
 
   def test_authorization_with_token
-    assert authorization = @gateway.authorize_with_token(@token, @amount, @options)
+    assert authorization = @gateway.authorize(@token, @amount, @options, true)
     assert_success authorization
     assert_equal @amount.to_i, authorization.params["Amount"].to_i
   end
 
   def test_charge_with_cryptogram
-    assert authorization = @gateway.charge_with_cryptogram(@cryptogram, @amount, @options)
+    assert authorization = @gateway.purchase(@cryptogram, @amount, @options)
     assert_success authorization
     assert_equal @amount.to_i, authorization.params["Amount"].to_i
   end
 
   def test_charge_with_token
-    assert authorization = @gateway.charge_with_token(@token, @amount, @options)
+    assert authorization = @gateway.purchase(@token, @amount, @options, true)
     assert_success authorization
     assert_equal @amount.to_i, authorization.params["Amount"].to_i
   end
 
   def test_unsuccessful_charge_with_token
-    assert response = @gateway.charge_with_cryptogram(@declined_cryptogram, @amount, @options)
+    assert response = @gateway.purchase(@declined_cryptogram, @amount, @options)
     assert_failure response
     assert_equal 'Declined', response.params['Status']
   end
 
   def test_successful_void
-    assert response = @gateway.charge_with_cryptogram(@cryptogram, @amount, @options)
+    assert response = @gateway.purchase(@cryptogram, @amount, @options)
     assert_success response
     assert void = @gateway.void(response.authorization)
     assert_success void
@@ -75,17 +75,17 @@ class RemoteCloudpaymentsTest < Test::Unit::TestCase
     assert_match %r{active_merchant_fake_charge}, void.message
   end
 
-  # def test_successful_subscription
-  #   assert response = @gateway.subscribe(@token, @amount, @subscription_options)
-  #   assert_success response
-  #   assert response.params['Id']
-  #   assert_equal 'Active', response.params["Status"]
-  #   assert_equal @amount, response.params["Amount"].to_i
-  # end
-  # def test_successful_void_subscription
-  #   assert response = @gateway.subscribe(@token, @amount, @subscription_options)
-  #   assert_success response
-  #   assert void = @gateway.void_subscription(response.authorization)
-  #   assert_success void
-  # end
+  def test_successful_subscription
+    assert response = @gateway.subscribe(@token, @amount, @subscription_options)
+    assert_success response
+    assert response.params['Id']
+    assert_equal 'Active', response.params["Status"]
+    assert_equal @amount, response.params["Amount"].to_i
+  end
+  def test_successful_void_subscription
+    assert response = @gateway.subscribe(@token, @amount, @subscription_options)
+    assert_success response
+    assert void = @gateway.void_subscription(response.authorization)
+    assert_success void
+  end
 end

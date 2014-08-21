@@ -37,7 +37,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
   def test_successful_authorization
     @gateway.expects(:ssl_post).returns(successful_pay_response)
 
-    assert response = @gateway.authorize_with_token(@token, @amount, @token_options)
+    assert response = @gateway.authorize(@token, @amount, @token_options, true)
     assert_instance_of Response, response
     assert_success response
 
@@ -48,7 +48,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
   def test_amount_authorization
     @gateway.expects(:ssl_post).returns(successful_pay_response)
 
-    assert response = @gateway.authorize_with_token(@token, @amount, @token_options)
+    assert response = @gateway.authorize(@token, @amount, @token_options, true)
     assert_instance_of Response, response
     assert_success response
 
@@ -60,7 +60,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
   def test_successful_charge
     @gateway.expects(:ssl_post).returns(successful_pay_response)
 
-    assert response = @gateway.charge_with_token(@token, @amount, @token_options)
+    assert response = @gateway.purchase(@token, @amount, @token_options, true)
     assert_instance_of Response, response
     assert_success response
 
@@ -95,7 +95,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
   def test_successful_confirm
     @gateway.expects(:ssl_post).returns(common_successful_response)
 
-    assert response = @gateway.confirm(100, 504392048)
+    assert response = @gateway.capture(100, 504392048)
     assert_instance_of Response, response
     assert_success response
 
@@ -107,7 +107,7 @@ class CloudpaymentsTest < Test::Unit::TestCase
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(unsuccessful_pay_response)
 
-    assert response = @gateway.charge_with_token(@token, @amount, @token_options)
+    assert response = @gateway.purchase(@token, @amount, @token_options, true)
     assert_instance_of Response, response
     assert_failure response
 
