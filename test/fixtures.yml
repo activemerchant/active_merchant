@@ -769,3 +769,7 @@ wirecard_checkout_page:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+# Working credentials, no need to replace
+worldpay_online_payments:
+  service_key: "T_S_cf03fd2a-1999-4495-998a-c8a4753da623"
