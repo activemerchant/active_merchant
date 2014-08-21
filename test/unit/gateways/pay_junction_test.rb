@@ -2,6 +2,8 @@ require 'test/unit'
 require 'test_helper'
 
 class PayJunctionTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     Base.gateway_mode = :test
 
@@ -80,15 +82,12 @@ class PayJunctionTest < Test::Unit::TestCase
   end
 
   def test_add_creditcard_with_track_data
-    post = {}
-    @credit_card.stubs(:track_data).returns("Tracking data")
-    @gateway.send(:add_creditcard, post, @credit_card)
-    assert_equal @credit_card.track_data, post[:track]
-    assert_nil post[:name]
-    assert_nil post[:number]
-    assert_nil post[:expiration_month]
-    assert_nil post[:expiration_year]
-    assert_nil post[:verification_number]
+    @credit_card.track_data = "Tracking data"
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match "dc_track=Tracking+data", data
+    end.respond_with(successful_authorization_response)
   end
 
 
