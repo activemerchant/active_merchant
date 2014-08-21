@@ -116,6 +116,10 @@ certo_direct:
   login: 1
   password: vP6OwK3
 
+checkout:
+  login: SBMTEST
+  password: Password1!
+  
 # Contact Support at it_support@commercegate.com for credentials and offer/site
 commercegate:
   login: "XXXXXXX"
