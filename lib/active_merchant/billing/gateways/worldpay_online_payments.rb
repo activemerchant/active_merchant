@@ -1,8 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayOnlinePaymentsGateway < Gateway
-      self.test_url = 'https://api.worldpay.com'
-      self.live_url = 'https://api.worldpay.com'
+      self.live_url = self.test_url = 'https://api.worldpay.com'
 
       self.default_currency = 'GBP'
       self.money_format = :cents
@@ -10,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(HK US GB AU AD BE CH CY CZ DE DK ES FI FR GI GR HU IE IL IT LI LU MC MT NL NO NZ PL PT SE SG SI SM TR UM VA)
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :laser, :switch]
 
-      self.homepage_url = 'http://developer.worldpay.com/'
+      self.homepage_url = 'http://developer.worldpay.com/v1/'
       self.display_name = 'Worldpay Online Payments'
 
       CARD_CODES = {
@@ -27,20 +26,22 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options={})
         requires!(options, :service_key)
+        @service_key = options[:service_key]
         super
       end
 
-      def purchase(money, payment, options={})
+      def purchase(money, token, options={})
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_address(post, payment, options)
         add_customer_data(post, options)
 
-        commit('sale', post)
+        commit('order', post)
       end
 
       def authorize(money, payment, options={})
+        #we dont use this?
         post = {}
         add_invoice(post, money, options)
         add_payment(post, payment)
@@ -51,18 +52,22 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options={})
+        #we dont use this?
         commit('capture', post)
       end
 
       def refund(money, authorization, options={})
-        commit('refund', post)
+
+        commit('orders/'+options[:orderCode]+'/refund', post)
       end
 
       def void(authorization, options={})
+        #we dont use this?
         commit('void', post)
       end
 
       def verify(credit_card, options={})
+        #we dont use this?
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
           r.process(:ignore_result) { void(r.authorization, options) }

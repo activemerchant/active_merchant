@@ -772,4 +772,5 @@ world_pay_gateway:
 
 # Working credentials, no need to replace
 worldpay_online_payments:
+  client_key: "T_C_gfjdbgtieu49u4tngdignrdijng89u54gh9dingt"
   service_key: "T_S_cf03fd2a-1999-4495-998a-c8a4753da623"
