@@ -26,6 +26,9 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
                              :transit_number     => '26729'
                            )
 
+    @single_use_token          = generate_single_use_token(@visa)
+    @declined_single_use_token = generate_single_use_token(@declined_visa)
+
     @amount = 1500
 
     @options = {
@@ -88,6 +91,22 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
 
   def test_unsuccessful_amex_purchase
     assert response = @gateway.purchase(@amount, @declined_amex, @options)
+    assert_failure response
+    assert_equal 'DECLINE', response.message
+  end
+
+  def test_successful_single_use_token_purchase
+    options = @options.merge(payment_method: :legato)
+    assert response = @gateway.purchase(@amount, @single_use_token, options)
+    assert_success response
+    assert_false response.authorization.blank?
+    assert_equal "Approved", response.message
+    puts response.inspect
+  end
+
+  def test_unsuccessful_single_use_token_purchase
+    options = @options.merge(payment_method: :legato)
+    assert response = @gateway.purchase(@amount, @declined_single_use_token, options)
     assert_failure response
     assert_equal 'DECLINE', response.message
   end

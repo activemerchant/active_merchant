@@ -21,6 +21,22 @@ module ActiveMerchant #:nodoc:
     # To store a credit card using Beanstream's Legato Javascript Library (http://developer.beanstream.com/documentation/legato) you must pass the singleUseToken in
     # the store method's option parameter. Example: @gateway.store("gt6-0c78c25b-3637-4ba0-90e2-26105287f198")
     #
+    # == Legato:
+    # To perform an authorization or purchase using a singleUseToken, use the token as the source parameter (instead of a credit card or payment profile) and pass
+    # in :legato as the payment method. If your Beanstream account is configured to require the card owner's name (:trnCardOwner), set the billing address name.
+    #
+    #  Example purchase (using Legato):
+    #
+    #   options = {
+    #     ...
+    #     :payment_method => :legato,
+    #     :billing_address => {
+    #       :name => "xiaobo zzz"
+    #     },
+    #     ...
+    #   }
+    #
+    #   @gateway.purchase(1500, "gt6-0c78c25b-3637-4ba0-90e2-26105287f198", options)
     # == Notes
     # * Adding of order products information is not implemented.
     # * Ensure that country and province data is provided as a code such as "CA", "US", "QC".
@@ -71,7 +87,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money)
         add_invoice(post, options)
-        add_source(post, source)
+        add_source(post, source, options)
         add_address(post, options)
         add_transaction_type(post, :authorization)
         add_customer_ip(post, options)
@@ -82,7 +98,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money)
         add_invoice(post, options)
-        add_source(post, source)
+        add_source(post, source, options)
         add_address(post, options)
         add_transaction_type(post, purchase_action(source))
         add_customer_ip(post, options)
