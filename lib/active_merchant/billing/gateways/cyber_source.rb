@@ -523,7 +523,7 @@ module ActiveMerchant #:nodoc:
           end
 
           xml.tag! 'status',            options[:subscription][:status]                         if options[:subscription][:status]
-          xml.tag! 'amount',            options[:subscription][:amount]                         if options[:subscription][:amount]
+          xml.tag! 'amount',            amount(options[:subscription][:amount])                 if options[:subscription][:amount]
           xml.tag! 'numberOfPayments',  options[:subscription][:occurrences]                    if options[:subscription][:occurrences]
           xml.tag! 'automaticRenew',    options[:subscription][:automatic_renew]                if options[:subscription][:automatic_renew]
           xml.tag! 'frequency',         options[:subscription][:frequency]                      if options[:subscription][:frequency]
