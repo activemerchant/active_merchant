@@ -163,7 +163,7 @@ module ActiveMerchant #:nodoc:
         if payment_method.respond_to?(:number)
           add_credit_card(post, payment_method)
         else
-          post[:singleUseToken] = payment_method
+          add_legato(post, payment_method, options)
         end
         add_secure_profile_variables(post, options)
 
