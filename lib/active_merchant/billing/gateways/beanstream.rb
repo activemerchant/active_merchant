@@ -194,6 +194,19 @@ module ActiveMerchant #:nodoc:
         commit(post, true)
       end
 
+      # Get details associated with a payment profile
+      def retrieve(vault_id)
+        post = {}
+
+        options = {
+          :operation => secure_profile_action(:query),
+          :vault_id => vault_id
+        }
+
+        add_secure_profile_variables(post, options)
+        commit(post, true)
+      end
+
       private
       def build_response(*args)
         Response.new(*args)

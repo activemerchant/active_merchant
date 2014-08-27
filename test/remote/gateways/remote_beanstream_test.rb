@@ -104,6 +104,20 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
     puts response.inspect
   end
 
+  def test_successful_retrieve
+    test_add_to_vault_with_custom_vault_id_with_store_method
+    vault_id = @options[:vault_id]
+    assert response = @gateway.retrieve(vault_id)
+    assert_success response
+  end
+
+  def test_unsuccessful_retrieve
+    vault_id = "INVALID_VAULT_ID"
+    assert response = @gateway.retrieve(vault_id)
+    assert_failure response
+    assert_equal response.message, "Customer code to modify does not exist"
+  end
+
   def test_unsuccessful_single_use_token_purchase
     options = @options.merge(payment_method: :legato)
     assert response = @gateway.purchase(@amount, @declined_single_use_token, options)
