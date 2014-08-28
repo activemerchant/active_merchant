@@ -42,6 +42,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['CA']
       self.homepage_url = 'http://www.psigate.com/'
       self.display_name = 'Psigate'
+      self.ssl_version = :SSLv3
 
       SUCCESS_MESSAGE = 'Success'
       FAILURE_MESSAGE = 'The transaction was declined'
