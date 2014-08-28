@@ -14,9 +14,9 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @check = check
 
     @options = {
-        order_id: '1',
-        billing_address: address,
-        description: 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 

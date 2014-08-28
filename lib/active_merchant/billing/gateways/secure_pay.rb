@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
 
       RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT, AUTHORIZATION_CODE = 0, 2, 3, 4
-      AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE, CARDHOLDER_AUTH_CODE  = 5, 6, 38, 39
+      AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE, CARDHOLDER_AUTH_CODE = 5, 6, 38, 39
 
       self.default_currency = 'USD'
 
@@ -48,8 +48,8 @@ module ActiveMerchant #:nodoc:
       def commit(action, money, parameters)
         parameters[:amount] = amount(money) unless action == 'VOID'
 
-        url = test? ? self.test_url : self.live_url
-        data = ssl_post url, post_data(action, parameters)
+        url = (test? ? self.test_url : self.live_url)
+        data = ssl_post(url, post_data(action, parameters))
 
         response          = parse(data)
         response[:action] = action
@@ -148,16 +148,13 @@ module ActiveMerchant #:nodoc:
         if options.has_key? :authentication_indicator
           post[:authentication_indicator] = options[:authentication_indicator]
         end
-
       end
 
       # x_duplicate_window won't be sent by default, because sending it changes the response.
       # "If this field is present in the request with or without a value, an enhanced duplicate transaction response will be sent."
       # (as of 2008-12-30) http://www.authorize.net/support/AIM_guide_SCC.pdf
       def add_duplicate_window(post)
-        unless duplicate_window.nil?
-          post[:duplicate_window] = duplicate_window
-        end
+        post[:duplicate_window] = duplicate_window if duplicate_window
       end
 
       def add_address(post, options)

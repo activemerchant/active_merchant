@@ -11,9 +11,9 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     @declined_card = credit_card('400030001111222')
 
     @options = {
-        order_id: '1',
-        billing_address: address,
-        description: 'Store Purchase'
+      order_id: '1',
+      billing_address: address,
+      description: 'Store Purchase'
     }
   end
 
@@ -169,7 +169,6 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     ), response.params.keys.sort
 
     assert_equal "User authentication failed due to invalid authentication values", response.message
-
   end
 
   def test_partial_capture

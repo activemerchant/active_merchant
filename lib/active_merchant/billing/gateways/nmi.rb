@@ -11,7 +11,7 @@ module ActiveMerchant #:nodoc:
       APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
 
       RESPONSE_CODE, RESPONSE_REASON_CODE, RESPONSE_REASON_TEXT, AUTHORIZATION_CODE = 0, 2, 3, 4
-      AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE, CARDHOLDER_AUTH_CODE  = 5, 6, 38, 39
+      AVS_RESULT_CODE, TRANSACTION_ID, CARD_CODE_RESPONSE_CODE, CARDHOLDER_AUTH_CODE = 5, 6, 38, 39
 
       self.default_currency = 'USD'
 
@@ -102,7 +102,7 @@ module ActiveMerchant #:nodoc:
         parameters[:amount] = amount(money) unless action == 'VOID'
 
         url = test? ? self.test_url : self.live_url
-        data = ssl_post url, post_data(action, parameters)
+        data = ssl_post(url, post_data(action, parameters))
 
         response          = parse(data)
         response[:action] = action
