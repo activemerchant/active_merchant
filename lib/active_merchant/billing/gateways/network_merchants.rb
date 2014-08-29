@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
         post[:address1] = address[:address1]
         post[:address2] = address[:address2]
         post[:city] = address[:city]
-        post[:state] = address[:state]
+        post[:state] = address[:state].blank? ? 'n/a' : address[:state]
         post[:zip] = address[:zip]
         post[:country] = address[:country]
         post[:phone] = address[:phone]

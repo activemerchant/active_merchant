@@ -130,4 +130,23 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Invalid Username', response.message
   end
+
+  def test_successful_purchase_without_state
+    @options[:billing_address] = {
+      :name     => 'Jim Smith',
+      :address1 => 'Gullhauggrenda 30',
+      :address2 => 'Apt 1',
+      :company  => 'Widgets Inc',
+      :city     => 'Baerums Verk',
+      :state    => nil,
+      :zip      => '1354',
+      :country  => 'NO',
+      :phone    => '(555)555-5555',
+      :fax      => '(555)555-6666'
+    }
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
 end
