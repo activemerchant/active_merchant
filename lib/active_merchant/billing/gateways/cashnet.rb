@@ -79,6 +79,8 @@ module ActiveMerchant #:nodoc:
         post[:cid]             = creditcard.verification_value
         post[:expdate]         = expdate(creditcard)
         post[:card_name_g]     = creditcard.name
+        post[:fname]           = creditcard.first_name
+        post[:lname]           = creditcard.last_name
       end
 
       def add_invoice(post, options)
