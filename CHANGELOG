@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 * Clean up `rake gateways:hosts` output [ntalbott]
+* Add Axcess MS gateway [timtait]
 
 == Version 1.47.0 (February 25, 2015)
 
