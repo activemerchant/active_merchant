@@ -208,7 +208,6 @@ module ActiveMerchant #:nodoc:
         billing_address = options[:billing_address] || options[:address] || {}
         shipping_address = options[:shipping_address] || options[:address] || {}
 
-        xml.customerIP(options[:ip]) unless empty?(options[:ip])
         xml.customer do
           xml.id(options[:customer]) unless empty?(options[:customer]) || options[:customer] !~ /^\d+$/
           xml.email(options[:email]) unless empty?(options[:email])
@@ -241,6 +240,8 @@ module ActiveMerchant #:nodoc:
             xml.country(shipping_address[:country])
           end
         end
+
+        xml.customerIP(options[:ip]) unless empty?(options[:ip])
 
         xml.cardholderAuthentication do
           xml.authenticationIndicator options[:authentication_indicator]

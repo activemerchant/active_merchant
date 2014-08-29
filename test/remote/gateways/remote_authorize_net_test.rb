@@ -75,6 +75,17 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_successful_authorize_with_email_and_ip
+    options = @options.merge({email: 'hello@example.com', ip: '127.0.0.1'})
+    auth = @gateway.authorize(@amount, @credit_card, options)
+    assert_success auth
+
+    assert_equal 'This transaction has been approved', auth.message
+
+    capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
+
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
