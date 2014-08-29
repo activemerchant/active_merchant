@@ -104,6 +104,15 @@ class Cashnet < Test::Unit::TestCase
     end
   end
 
+  def test_successful_purchase_with_fname_and_lname
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {})
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/fname=Longbob/, data)
+      assert_match(/lname=Longsen/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def minimum_requirements
