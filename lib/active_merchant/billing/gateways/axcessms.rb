@@ -106,6 +106,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! "User", "login" => @options[:login], "pwd" => @options[:password]
             xml.tag! "Identification" do
               xml.tag! "TransactionID", options[:transaction_id] || generate_unique_id
+              xml.tag! "ReferenceID", payment unless payment.respond_to?(:number)
             end
 
             xml.tag! "Payment", "code" => payment_code do
@@ -118,12 +119,14 @@ module ActiveMerchant #:nodoc:
               end
             end
 
-            add_payment(xml, payment)
+            if payment.respond_to?(:number)
+              add_payment(xml, payment)
 
-            xml.tag! "Customer" do
-              add_customer_name(xml, payment)
-              add_address(xml, options[:billing_address])
-              add_contact(xml, options)
+              xml.tag! "Customer" do
+                add_customer_name(xml, payment)
+                add_address(xml, options[:billing_address])
+                add_contact(xml, options)
+              end
             end
           end
         end
