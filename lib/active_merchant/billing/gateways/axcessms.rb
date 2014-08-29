@@ -1,0 +1,132 @@
+module ActiveMerchant #:nodoc:
+  module Billing #:nodoc:
+    class AxcessmsGateway < Gateway
+      self.test_url = "https://test.ctpe.io/payment/ctpe"
+      self.live_url = "https://ctpe.io/payment/ctpe"
+
+      self.supported_countries = %w(AD AT BE BG BR CA CH CY CZ DE DK EE ES FI FO FR GB
+                                    GI GR HR HU IE IL IM IS IT LI LT LU LV MC MT MX NL
+                                    NO PL PT RO RU SE SI SK TR US VA)
+
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :maestro, :solo]
+
+      self.homepage_url = "http://www.axcessms.com/"
+      self.display_name = "Axcessms Gateway"
+      self.money_format = :dollars
+      self.default_currency = "GBP"
+
+      API_VERSION = "1.0"
+      PAYMENT_CODE_PREAUTHORIZATION = "CC.PA"
+      PAYMENT_CODE_DEBIT = "CC.DB"
+      PAYMENT_CODE_CAPTURE = "CC.CP"
+      PAYMENT_CODE_REVERSAL = "CC.RV"
+      PAYMENT_CODE_REFUND = "CC.RF"
+      PAYMENT_CODE_REBILL = "CC.RB"
+
+
+      def initialize(options={})
+        requires!(options, :sender, :login, :password, :channel)
+        super
+      end
+
+      def purchase(money, payment, options={})
+        payment_code = payment.respond_to?(:number) ? PAYMENT_CODE_DEBIT : PAYMENT_CODE_REBILL
+        commit(payment_code, money, payment, options)
+      end
+
+      def authorize(money, authorization, options={})
+        commit(PAYMENT_CODE_PREAUTHORIZATION, money, authorization, options)
+      end
+
+      def capture(money, authorization, options={})
+        commit(PAYMENT_CODE_CAPTURE, money, authorization, options)
+      end
+
+      def refund(money, authorization, options={})
+        commit(PAYMENT_CODE_REFUND, money, authorization, options)
+      end
+
+      def void(authorization, options={})
+        commit(PAYMENT_CODE_REVERSAL, nil, authorization, options)
+      end
+
+      private
+
+      def commit(paymentcode, money, payment, options)
+        request = build_request(paymentcode, money, payment, options)
+        puts "\n"
+        puts request
+
+        headers = {
+          "Content-Type" => "application/x-www-form-urlencoded;charset=UTF-8",
+          # "Accept-Encoding" => "identity;q=0;"
+        }
+
+        response = parse(ssl_post(test? ? test_url : live_url, "load=#{URI.encode(request)}", headers))
+
+        binding.pry
+        # Response.new(success?(response), response_message(response), response,
+        #   :authorization => response["IDENTIFICATION.UNIQUEID"],
+        #   :test => (response["TRANSACTION.MODE"] != "LIVE")
+        # )
+      end
+
+      def build_request(payment_code, money, payment, options)
+        xml = Builder::XmlMarkup.new :indent => 2
+        xml.instruct!
+        xml.tag! "Request", "version" => API_VERSION do
+          xml.tag! "Header" do
+            xml.tag! "Security", "sender" => @options[:sender], "type" => "MERCHANT"
+          end
+          xml.tag! "Transaction", "mode" => test? ? "INTEGRATOR_TEST" : "LIVE", "channel" => @options[:channel], "response" => "SYNC"
+          xml.tag! "Identification" do
+            xml.tag! "TransactionID", options[:transaction_id] || generate_unique_id
+          end
+          xml.tag! "User", "login" => @options[:login], "pwd" => @options[:password]
+
+          xml.tag! "Payment", "code" => payment_code do
+            xml.tag! "Presentation" do
+              # <DueDate>2013-08-13</DueDate>
+              # <Mandate id="123456" dateOfSignature="2013-08-01"/>
+              xml.tag! "Amount", amount(money)
+              xml.tag! "Currency", options[:currency] || currency(money)
+              xml.tag! "Usage", options[:description]
+            end
+          end
+
+          add_payment(xml, payment)
+          add_address(xml, options[:billing_address])
+        end
+
+        xml.target!
+      end
+
+      def add_payment(xml, payment)
+        if payment.respond_to?(:number)
+          xml.tag! "Account" do
+            xml.tag! "Number", payment.number
+            xml.tag! "Holder", payment.name
+            xml.tag! "Brand", payment.brand
+            xml.tag! "Year", payment.year
+            xml.tag! "Month", payment.month
+            xml.tag! "Verification", payment.verification_value
+          end
+        else
+          # post["IDENTIFICATION.REFERENCEID"] = payment
+        end
+      end
+
+      def add_address(xml, address)
+        unless address.nil?
+          xml.tag! "Address" do
+            xml.tag! "Street", "#{address[:address1]} #{address[:address2]}".strip
+            xml.tag! "City", address[:city]
+            xml.tag! "State", address[:state]
+            xml.tag! "Zip", address[:zip]
+            xml.tag! "Country", address[:country]
+          end
+        end
+      end
+    end
+  end
+end
