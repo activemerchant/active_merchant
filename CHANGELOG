@@ -1,5 +1,10 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.44.1 (Aug 28, 2014)
+
+* Allow SSLv3 for PsiGate [mutemule]
+* Set default :state to n/a for NetworkMerchants [cjoudrey]
+
 == Version 1.44.0 (Aug 21, 2014)
 
 * Moneris: Add :avs_enabled option [bslobodin]
