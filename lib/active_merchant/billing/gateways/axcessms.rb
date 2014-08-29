@@ -58,17 +58,41 @@ module ActiveMerchant #:nodoc:
         puts request
 
         headers = {
-          "Content-Type" => "application/x-www-form-urlencoded;charset=UTF-8",
-          # "Accept-Encoding" => "identity;q=0;"
+          "Content-Type" => "application/x-www-form-urlencoded;charset=UTF-8"
         }
 
-        response = parse(ssl_post(test? ? test_url : live_url, "load=#{URI.encode(request)}", headers))
+        response = parse(ssl_post(test? ? test_url : live_url, "load=#{CGI.escape(request)}", headers))
+        success = response[:result] == "ACK" # || response[:result] == "PENDING"
+        message = "#{response[:reason]} - #{response[:return]}"
+        authorization = response[:unique_id]
 
-        binding.pry
-        # Response.new(success?(response), response_message(response), response,
-        #   :authorization => response["IDENTIFICATION.UNIQUEID"],
-        #   :test => (response["TRANSACTION.MODE"] != "LIVE")
-        # )
+        Response.new(success, message, response,
+          :authorization => authorization,
+          :test => (response[:mode] != "LIVE")
+        )
+      end
+
+      def parse(body)
+        return {} if body.blank?
+
+        xml = REXML::Document.new(body)
+
+        response = {}
+        xml.root.elements.to_a.each do |node|
+          parse_element(response, node)
+        end
+
+        response[:mode] = REXML::XPath.first(xml, "//Transaction").attributes["mode"]
+
+        response
+      end
+
+      def parse_element(response, node)
+        if node.has_elements?
+          node.elements.each{|element| parse_element(response, element) }
+        else
+          response[node.name.underscore.to_sym] = node.text
+        end
       end
 
       def build_request(payment_code, money, payment, options)
@@ -76,29 +100,49 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
         xml.tag! "Request", "version" => API_VERSION do
           xml.tag! "Header" do
-            xml.tag! "Security", "sender" => @options[:sender], "type" => "MERCHANT"
+            xml.tag! "Security", "sender" => @options[:sender] #, "type" => "MERCHANT"
           end
-          xml.tag! "Transaction", "mode" => test? ? "INTEGRATOR_TEST" : "LIVE", "channel" => @options[:channel], "response" => "SYNC"
-          xml.tag! "Identification" do
-            xml.tag! "TransactionID", options[:transaction_id] || generate_unique_id
-          end
-          xml.tag! "User", "login" => @options[:login], "pwd" => @options[:password]
+          xml.tag! "Transaction", "mode" => test? ? "INTEGRATOR_TEST" : "LIVE", "channel" => @options[:channel], "response" => "SYNC" do
+            xml.tag! "User", "login" => @options[:login], "pwd" => @options[:password]
+            xml.tag! "Identification" do
+              xml.tag! "TransactionID", options[:transaction_id] || generate_unique_id
+            end
 
-          xml.tag! "Payment", "code" => payment_code do
-            xml.tag! "Presentation" do
-              # <DueDate>2013-08-13</DueDate>
-              # <Mandate id="123456" dateOfSignature="2013-08-01"/>
-              xml.tag! "Amount", amount(money)
-              xml.tag! "Currency", options[:currency] || currency(money)
-              xml.tag! "Usage", options[:description]
+            xml.tag! "Payment", "code" => payment_code do
+              xml.tag! "Presentation" do
+                # <DueDate>2013-08-13</DueDate>
+                # <Mandate id="123456" dateOfSignature="2013-08-01"/>
+                xml.tag! "Amount", amount(money)
+                xml.tag! "Currency", options[:currency] || currency(money)
+                xml.tag! "Usage", options[:description]
+              end
+            end
+
+            add_payment(xml, payment)
+
+            xml.tag! "Customer" do
+              add_customer_name(xml, payment)
+              add_address(xml, options[:billing_address])
+              add_contact(xml, options)
             end
           end
-
-          add_payment(xml, payment)
-          add_address(xml, options[:billing_address])
         end
 
         xml.target!
+      end
+
+      def add_contact(xml, options)
+        xml.tag! "Contact" do
+          xml.tag! "Email", options[:email]
+          xml.tag! "Ip", options[:ip]
+        end
+      end
+
+      def add_customer_name(xml, payment)
+        xml.tag! "Name" do
+          xml.tag! "Given", payment.name.split(" ")[0]
+          xml.tag! "Family", payment.name.split(" ")[1]
+        end
       end
 
       def add_payment(xml, payment)
@@ -107,8 +151,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! "Number", payment.number
             xml.tag! "Holder", payment.name
             xml.tag! "Brand", payment.brand
-            xml.tag! "Year", payment.year
-            xml.tag! "Month", payment.month
+            xml.tag! "Expiry", "month" => payment.month, "year" => payment.year
             xml.tag! "Verification", payment.verification_value
           end
         else
