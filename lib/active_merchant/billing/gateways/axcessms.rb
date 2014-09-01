@@ -53,6 +53,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def commit(paymentcode, money, payment, options)
+        options[:mode] = test? ? "INTEGRATOR_TEST" : "LIVE" if options.blank?
         request = build_request(paymentcode, money, payment, options)
         puts "\n"
         puts request
@@ -106,7 +107,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! "Header" do
             xml.tag! "Security", "sender" => @options[:sender] #, "type" => "MERCHANT"
           end
-          xml.tag! "Transaction", "mode" => test? ? "INTEGRATOR_TEST" : "LIVE", "channel" => @options[:channel], "response" => "SYNC" do
+          xml.tag! "Transaction", "mode" => options[:mode], "channel" => @options[:channel], "response" => "SYNC" do
             xml.tag! "User", "login" => @options[:login], "pwd" => @options[:password]
             xml.tag! "Identification" do
               xml.tag! "TransactionID", options[:transaction_id] || generate_unique_id
