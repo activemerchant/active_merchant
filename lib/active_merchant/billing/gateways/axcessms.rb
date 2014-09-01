@@ -153,16 +153,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(xml, payment)
-        if payment.respond_to?(:number)
-          xml.tag! "Account" do
-            xml.tag! "Number", payment.number
-            xml.tag! "Holder", payment.name
-            xml.tag! "Brand", payment.brand
-            xml.tag! "Expiry", "month" => payment.month, "year" => payment.year
-            xml.tag! "Verification", payment.verification_value
-          end
-        else
-          # post["IDENTIFICATION.REFERENCEID"] = payment
+        xml.tag! "Account" do
+          xml.tag! "Number", payment.number
+          xml.tag! "Holder", payment.name
+          xml.tag! "Brand", payment.brand
+          xml.tag! "Expiry", "month" => payment.month, "year" => payment.year
+          xml.tag! "Verification", payment.verification_value
         end
       end
 
