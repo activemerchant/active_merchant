@@ -20,14 +20,14 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
 
-        if options[:gatewayURL]
-          self.live_url = self.test_url = options[:gatewayURL]
+        if options[:gateway_url]
+          self.live_url = self.test_url = options[:gateway_url]
         else
           # Set default gateway
           self.live_url = self.test_url = 'https://api.checkout.com/Process/gateway.aspx'
         end
 
-        requires!(options, :MerchantCode, :Password)
+        requires!(options, :merchant_code, :password)
         super
       end
 
@@ -89,8 +89,8 @@ module ActiveMerchant #:nodoc:
 
       def add_credentials(post, options)
 
-        post[:MerchantID] = @options[:MerchantCode]
-        post[:MerchantPwd] = @options[:Password]
+        post[:MerchantID] = @options[:merchant_code]
+        post[:MerchantPwd] = @options[:password]
 
       end
 
@@ -195,24 +195,29 @@ module ActiveMerchant #:nodoc:
 
           # Options
           # Billing Info
-          xml.bill_address_ post[:billing_address][:address1];
-          xml.bill_city_    post[:billing_address][:city];
-          xml.bill_state_   post[:billing_address][:state];
-          xml.bill_postal_  post[:billing_address][:zip];
-          xml.bill_country_ post[:billing_address][:country];
-          xml.bill_phone_   post[:billing_address][:phone];
+          if post[:billing_address]
+            xml.bill_address_ post[:billing_address][:address1];
+            xml.bill_city_    post[:billing_address][:city];
+            xml.bill_state_   post[:billing_address][:state];
+            xml.bill_postal_  post[:billing_address][:zip];
+            xml.bill_country_ post[:billing_address][:country];
+            xml.bill_phone_   post[:billing_address][:phone];
+          end
+
           xml.bill_email_   post[:email];
 
           xml.bill_customerip_ post[:ip];
 
           # Shipping Info
-          xml.ship_address_   post[:shipping_address][:address1];
-          xml.ship_address2_  post[:shipping_address][:address2];
-          xml.ship_city_    post[:shipping_address][:city];
-          xml.ship_state_   post[:shipping_address][:state];
-          xml.ship_postal_  post[:shipping_address][:zip];
-          xml.ship_country_   post[:shipping_address][:country];
-          xml.ship_phone_   post[:shipping_address][:phone];
+          if post[:shipping_address]
+            xml.ship_address_   post[:shipping_address][:address1];
+            xml.ship_address2_  post[:shipping_address][:address2];
+            xml.ship_city_    post[:shipping_address][:city];
+            xml.ship_state_   post[:shipping_address][:state];
+            xml.ship_postal_  post[:shipping_address][:zip];
+            xml.ship_country_   post[:shipping_address][:country];
+            xml.ship_phone_   post[:shipping_address][:phone];
+          end
 
           # User Defined Fields
           xml.udf1_ post[:udf1];

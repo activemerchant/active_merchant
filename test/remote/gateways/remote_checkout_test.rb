@@ -6,9 +6,9 @@ class RemoteCheckoutTest < Test::Unit::TestCase
 
     # Gateway credentials
     @gateway = ActiveMerchant::Billing::CheckoutGateway.new(
-      :MerchantCode    => 'SBMTEST',    # Merchant Code
-      :Password => 'Password1!',          # Processing Password
-      :gatewayURL => 'https://api.checkout.com/Process/gateway.aspx' # optional - Gateway URL
+      :merchant_code    => 'SBMTEST',    # Merchant Code
+      :password => 'Password1!',          # Processing Password
+      :gateway_url => 'https://api.checkout.com/Process/gateway.aspx' # optional - Gateway URL
     )
 
     # Create a new credit card object
@@ -82,7 +82,7 @@ class RemoteCheckoutTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount, auth.params["tranid"], @options)
+    assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
   end
 

@@ -7,8 +7,8 @@ class CheckoutTest < Test::Unit::TestCase
   def setup
     # Gateway credentials
     @gateway = ActiveMerchant::Billing::CheckoutGateway.new(
-      :MerchantCode    => 'SBMTEST',    # Merchant Code
-      :Password => 'Password1!'          # Processing Password
+      :merchant_code    => 'SBMTEST',    # Merchant Code
+      :password => 'Password1!'          # Processing Password
     )
 
     # Create a new credit card object
@@ -64,6 +64,7 @@ class CheckoutTest < Test::Unit::TestCase
 
     # Amount in cents
     @amount = 100
+
   end
 
   def test_successful_purchase
@@ -89,7 +90,7 @@ class CheckoutTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert capture = @gateway.capture(@amount, "33024417", @options)
+    assert capture = @gateway.capture(@amount, '33024417', @options)
     assert_success capture
 
     assert_equal 'Successful', capture.params["result"]
