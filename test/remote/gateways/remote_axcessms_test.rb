@@ -2,15 +2,10 @@ require_relative '../../test_helper'
 
 class RemoteAxcessmsTest < Test::Unit::TestCase
 
-  SUCCESS_MESSAGES = {
-    "CONNECTOR_TEST" => "Successful Processing - Request successfully processed in 'Merchant in Connector Test Mode'",
-    "INTEGRATOR_TEST" => "Successful Processing - Request successfully processed in 'Merchant in Integrator Test Mode'"
-  }
-
   def setup
     @gateway = AxcessmsGateway.new(fixtures(:axcessms))
 
-    @amount = 150
+    @amount = 1500
     @credit_card = credit_card("4200000000000000", month: 05, year: 2022)
     @declined_card = credit_card("4444444444444444", month: 05, year: 2022)
     @mode = "CONNECTOR_TEST"
@@ -31,62 +26,84 @@ class RemoteAxcessmsTest < Test::Unit::TestCase
     }
   end
 
-  def test_successful_purchase
-    response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success response
-    assert_equal SUCCESS_MESSAGES[@mode], response.message
-  end
-
-  def test_successful_purchase_by_reference
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-    assert_equal SUCCESS_MESSAGES[@mode], purchase.message
-
-    repeat_purchase = @gateway.purchase(@amount, purchase.authorization, @options)
-    assert_success repeat_purchase
-    assert_equal SUCCESS_MESSAGES[@mode], repeat_purchase.message
-  end
-
-  def test_failed_purchase_by_card
-    purchase = @gateway.purchase(@amount, @declined_card, @options)
-    assert_failure purchase
-    assert_match %r{Account Validation - invalid creditcard}, purchase.message
-  end
-
-  def test_failed_purchase_by_reference
-    purchase = @gateway.purchase(@amount, "invalid reference", @options)
-    assert_failure purchase
-    assert_equal "Reference Error - reference id not existing", purchase.message
+  def test_successful_authorization
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth, "Authorize failed"
+    assert_match %r{Successful Processing - Request successfully processed}, auth.message
   end
 
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth, "Authorize failed"
-    assert_equal SUCCESS_MESSAGES[@mode], auth.message
+    assert_match %r{Successful Processing - Request successfully processed}, auth.message
 
     assert capture = @gateway.capture(@amount, auth.authorization, {mode: @mode})
     assert_success capture, "Capture failed"
-    assert_equal SUCCESS_MESSAGES[@mode], capture.message
+    assert_match %r{Successful Processing - Request successfully processed}, capture.message
   end
 
   def test_successful_authorize_and_partial_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth, "Authorize failed"
-    assert_equal SUCCESS_MESSAGES[@mode], auth.message
+    assert_match %r{Successful Processing - Request successfully processed}, auth.message
 
     assert capture = @gateway.capture(@amount-30, auth.authorization, {mode: @mode})
     assert_success capture, "Capture failed"
-    assert_equal SUCCESS_MESSAGES[@mode], capture.message
+    assert_match %r{Successful Processing - Request successfully processed}, capture.message
   end
 
   def test_successful_authorize_and_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth, "Authorize failed"
-    assert_equal SUCCESS_MESSAGES[@mode], auth.message
+    assert_match %r{Successful Processing - Request successfully processed}, auth.message
 
     assert void = @gateway.void(auth.authorization, {mode: @mode})
     assert_success void, "Void failed"
-    assert_equal SUCCESS_MESSAGES[@mode], void.message
+    assert_match %r{Successful Processing - Request successfully processed}, void.message
+  end
+
+  def test_successful_purchase
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_match %r{Successful Processing - Request successfully processed}, response.message
+  end
+
+  def test_successful_reference_purchase
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert_match %r{Successful Processing - Request successfully processed}, purchase.message
+
+    repeat_purchase = @gateway.purchase(@amount, purchase.authorization, @options)
+    assert_success repeat_purchase
+    assert_match %r{Successful Processing - Request successfully processed}, repeat_purchase.message
+  end
+
+  def test_successful_purchase_and_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase, "Purchase failed"
+    assert_match %r{Successful Processing - Request successfully processed}, purchase.message
+
+    assert refund = @gateway.refund(@amount, purchase.authorization, {mode: @mode})
+    assert_success refund, "Refund failed"
+    assert_match %r{Successful Processing - Request successfully processed}, refund.message
+  end
+
+  def test_successful_purchase_and_partial_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase, "Purchase failed"
+    assert_match %r{Successful Processing - Request successfully processed}, purchase.message
+
+    assert refund = @gateway.refund(@amount-50, purchase.authorization, {mode: @mode})
+    assert_success refund, "Refund failed"
+    assert_match %r{Successful Processing - Request successfully processed}, refund.message
+  end
+
+  # Failure tested
+
+  def test_utf8_description_does_not_blow_up
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(description: "Habitación"))
+    assert_success response
+    assert_match %r{Successful Processing - Request successfully processed}, response.message
   end
 
   def test_failed_capture
@@ -110,26 +127,6 @@ class RemoteAxcessmsTest < Test::Unit::TestCase
     assert_match %r{invalid creditcard}, authorize.message
   end
 
-  def test_successful_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase, "Purchase failed"
-    assert_equal SUCCESS_MESSAGES[@mode], purchase.message
-
-    assert refund = @gateway.refund(@amount, purchase.authorization, {mode: @mode})
-    assert_success refund, "Refund failed"
-    assert_equal SUCCESS_MESSAGES[@mode], refund.message
-  end
-
-  def test_successful_partial_refund
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase, "Purchase failed"
-    assert_equal SUCCESS_MESSAGES[@mode], purchase.message
-
-    assert refund = @gateway.refund(@amount-50, purchase.authorization, {mode: @mode})
-    assert_success refund, "Refund failed"
-    assert_equal SUCCESS_MESSAGES[@mode], refund.message
-  end
-
   def test_failed_refund
     assert refund = @gateway.refund(@amount, "invalid authorization", {mode: @mode})
     assert_failure refund
@@ -140,6 +137,24 @@ class RemoteAxcessmsTest < Test::Unit::TestCase
     void = @gateway.void("invalid authorization", {mode: @mode})
     assert_failure void
     assert_match %r{Reference Error - reversal}, void.message
+  end
+
+  def test_unauthorized_capture
+    assert response = @gateway.capture(@amount, "1234567890123456789012")
+    assert_failure response
+    assert_equal "Reference Error - capture needs at least one successful transaction of type (PA)", response.message
+  end
+
+  def test_unauthorized_purchase_by_reference
+    assert response = @gateway.purchase(@amount, "1234567890123456789012")
+    assert_failure response
+    assert_equal "Reference Error - reference id not existing", response.message
+  end
+
+  def test_failed_purchase_by_card
+    purchase = @gateway.purchase(@amount, @declined_card, @options)
+    assert_failure purchase
+    assert_match %r{Account Validation - invalid creditcard}, purchase.message
   end
 
   def test_invalid_login
