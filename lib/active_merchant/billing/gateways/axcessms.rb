@@ -115,6 +115,7 @@ module ActiveMerchant #:nodoc:
             end
 
             xml.tag! "Payment", "code" => payment_code do
+              xml.tag! "Memo", options[:memo] unless options[:memo].blank?
               xml.tag! "Presentation" do
                 # <DueDate>2013-08-13</DueDate>
                 # <Mandate id="123456" dateOfSignature="2013-08-01"/>
