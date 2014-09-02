@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def commit(paymentcode, money, payment, options)
-        options[:mode] = test? ? "INTEGRATOR_TEST" : "LIVE" if options.blank?
+        options[:mode] = test? ? "INTEGRATOR_TEST" : "LIVE" if options[:mode].blank?
         request = build_request(paymentcode, money, payment, options)
         puts "\n"
         puts request
