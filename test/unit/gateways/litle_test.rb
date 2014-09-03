@@ -232,6 +232,27 @@ class LitleTest < Test::Unit::TestCase
     assert_equal "Insufficient Funds", response.message
   end
 
+  def test_add_swipe_data_with_creditcard
+    @credit_card.track_data = "Track Data"
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<track>Track Data</track>", data
+      assert_match "<orderSource>retail</orderSource>", data
+      assert_match /<pos>.+<\/pos>/m, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_order_source_with_creditcard_no_track_data
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<orderSource>ecommerce</orderSource>", data
+      assert_not_match /<pos>.+<\/pos>/m, data
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def successful_purchase_response
