@@ -290,6 +290,7 @@ class MonerisTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
+      assert_match "<pos_code>00</pos_code>", data
       assert_match "<track2>Track Data</track2>", data
     end.respond_with(successful_purchase_response)
   end
