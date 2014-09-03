@@ -218,6 +218,7 @@ module ActiveMerchant #:nodoc:
           doc.orderSource('retail')
         else
           doc.orderSource('ecommerce')
+        end
       end
 
       def add_pos(doc, payment_method)
