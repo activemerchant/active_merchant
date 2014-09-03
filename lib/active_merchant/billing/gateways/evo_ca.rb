@@ -105,13 +105,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:tax</tt> - Tax amount
       # * <tt>:shipping</tt> - Shipping cost
       def purchase(money, credit_card_or_check, options = {})
-        post = {}
-        add_invoice(post, options)
-        add_order(post, options)
-        add_paymentmethod(post, credit_card_or_check)
-        add_address(post, options)
-        add_customer_data(post, options)
-        commit('sale', money, post)
+        create_transaction('sale', money, credit_card_or_check, options)
       end
 
       # Transaction authorizations are authorized immediately but are not
@@ -121,13 +115,7 @@ module ActiveMerchant #:nodoc:
       #
       # Payment source must be a {CreditCard}.
       def authorize(money, credit_card, options = {})
-        post = {}
-        add_invoice(post, options)
-        add_order(post, options)
-        add_paymentmethod(post, credit_card)
-        add_address(post, options)
-        add_customer_data(post, options)
-        commit('auth', money, post)
+        create_transaction('auth', money, credit_card, options)
       end
 
       # Transaction captures flag existing _authorizations_ for settlement. Only
@@ -164,13 +152,7 @@ module ActiveMerchant #:nodoc:
       # Note that this is different from a {#refund} (which is usually what
       # you'll be looking for).
       def credit(money, credit_card, options = {})
-        post = {}
-        add_invoice(post, options)
-        add_order(post, options)
-        add_paymentmethod(post, credit_card)
-        add_address(post, options)
-        add_customer_data(post, options)
-        commit('credit', money, post)
+        create_transaction('credit', money, credit_card, options)
       end
 
       # Transaction voids will cancel an existing sale or captured
@@ -199,36 +181,53 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def create_transaction(transaction_type, money, credit_card, options = {})
+        post = {}
+        add_invoice(post, options)
+        add_order(post, options)
+        add_paymentmethod(post, credit_card)
+        add_address(post, options)
+        add_customer_data(post, options)
+        commit(transaction_type, money, post)
+      end
+
       def add_customer_data(post, options)
         post[:email]      = options[:email]
         post[:ipaddress]  = options[:ip]
       end
 
       def add_address(post, options)
-        if address = options[:billing_address] || options[:address]
-          post[:firstname]    = address[:first_name]
-          post[:lastname]     = address[:last_name]
-          post[:address1]     = address[:address1]
-          post[:address2]     = address[:address2]
-          post[:company]      = address[:company]
-          post[:phone]        = address[:phone]
-          post[:city]         = address[:city]
-          post[:state]        = address[:state]
-          post[:zip]          = address[:zip]
-          post[:country]      = address[:country]
-        end
+        add_billing_address(post, options[:billing_address] || options[:address])
+        add_shipping_address(post, options[:shipping_address])
+      end
 
-        if address = options[:shipping_address]
-          post[:shipping_firstname]   = address[:first_name]
-          post[:shipping_lastname]    = address[:last_name]
-          post[:shipping_address1]    = address[:address1]
-          post[:shipping_address2]    = address[:address2]
-          post[:shipping_company]     = address[:company]
-          post[:shipping_zip]         = address[:zip]
-          post[:shipping_city]        = address[:city]
-          post[:shipping_state]       = address[:state]
-          post[:shipping_country]     = address[:country]
-        end
+      def add_billing_address(post, address)
+        return unless address
+
+        post[:firstname]    = address[:first_name]
+        post[:lastname]     = address[:last_name]
+        post[:address1]     = address[:address1]
+        post[:address2]     = address[:address2]
+        post[:company]      = address[:company]
+        post[:phone]        = address[:phone]
+        post[:city]         = address[:city]
+        post[:state]        = address[:state]
+        post[:zip]          = address[:zip]
+        post[:country]      = address[:country]
+      end
+
+      def add_shipping_address(post, address)
+        return unless address
+
+        post[:shipping_firstname]   = address[:first_name]
+        post[:shipping_lastname]    = address[:last_name]
+        post[:shipping_address1]    = address[:address1]
+        post[:shipping_address2]    = address[:address2]
+        post[:shipping_company]     = address[:company]
+        post[:shipping_zip]         = address[:zip]
+        post[:shipping_city]        = address[:city]
+        post[:shipping_state]       = address[:state]
+        post[:shipping_country]     = address[:country]
       end
 
       def add_order(post, options)
