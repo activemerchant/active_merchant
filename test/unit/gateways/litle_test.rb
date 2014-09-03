@@ -240,6 +240,7 @@ class LitleTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match "<track>Track Data</track>", data
       assert_match "<orderSource>retail</orderSource>", data
+      assert_match /<pos>.+<\/pos>/m, data
     end.respond_with(successful_purchase_response)
   end
 
@@ -248,6 +249,7 @@ class LitleTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
       assert_match "<orderSource>ecommerce</orderSource>", data
+      assert_not_match /<pos>.+<\/pos>/m, data
     end.respond_with(successful_purchase_response)
   end
 
