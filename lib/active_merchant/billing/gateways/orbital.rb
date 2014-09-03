@@ -189,7 +189,7 @@ module ActiveMerchant #:nodoc:
           add_creditcard(xml, creditcard, options[:currency])
           add_address(xml, creditcard, options)
           if @options[:customer_profiles]
-            add_customer_data(xml, options)
+            add_customer_data(xml, creditcard, options)
             add_managed_billing(xml, options)
           end
         end
@@ -202,7 +202,7 @@ module ActiveMerchant #:nodoc:
           add_creditcard(xml, creditcard, options[:currency])
           add_address(xml, creditcard, options)
           if @options[:customer_profiles]
-            add_customer_data(xml, options)
+            add_customer_data(xml, creditcard, options)
             add_managed_billing(xml, options)
           end
         end
@@ -294,12 +294,14 @@ module ActiveMerchant #:nodoc:
         authorization.split(';')
       end
 
-      def add_customer_data(xml, options)
+      def add_customer_data(xml, creditcard, options)
         if options[:profile_txn]
           xml.tag! :CustomerRefNum, options[:customer_ref_num]
         else
           if options[:customer_ref_num]
-            xml.tag! :CustomerProfileFromOrderInd, USE_CUSTOMER_REF_NUM
+            if creditcard
+              xml.tag! :CustomerProfileFromOrderInd, USE_CUSTOMER_REF_NUM
+            end
             xml.tag! :CustomerRefNum, options[:customer_ref_num]
           else
             xml.tag! :CustomerProfileFromOrderInd, AUTO_GENERATE

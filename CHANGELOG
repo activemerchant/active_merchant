@@ -7,6 +7,7 @@
 * Moneris US: Add CVV and AVS [AntoineInsa]
 * Stripe: Add support for statement_description [markabe]
 * CASHNet: Add support for fname and lname [markabe]
+* Orbital: Fix customer profile auth/purchase
 
 == Version 1.44.1 (Aug 28, 2014)
 

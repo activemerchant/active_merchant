@@ -283,6 +283,26 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_dont_send_customer_profile_from_order_ind_for_profile_purchase
+    @gateway.options[:customer_profiles] = true
+    response = stub_comms do
+      @gateway.purchase(50, nil, :order_id => 1, :customer_ref_num => @customer_ref_num)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(/<CustomerProfileFromOrderInd>/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
+  def test_dont_send_customer_profile_from_order_ind_for_profile_authorize
+    @gateway.options[:customer_profiles] = true
+    response = stub_comms do
+      @gateway.authorize(50, nil, :order_id => 1, :customer_ref_num => @customer_ref_num)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(/<CustomerProfileFromOrderInd>/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+  end
+
   def test_currency_code_and_exponent_are_set_for_profile_purchase
     @gateway.options[:customer_profiles] = true
     response = stub_comms do
