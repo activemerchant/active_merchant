@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class MerchantWareTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = MerchantWareGateway.new(
                  :login => 'login',
@@ -108,9 +110,9 @@ class MerchantWareTest < Test::Unit::TestCase
 
   def test_add_swipe_data_with_creditcard
     @credit_card.track_data = "Track Data"
-
+    options = {:order_id => '1'}
     stub_comms do
-      @gateway.authorize(@amount, @credit_card)
+      @gateway.authorize(@amount, @credit_card, options)
     end.check_request do |endpoint, data, headers|
       assert_match "<trackData>Track Data</trackData>", data
     end.respond_with(successful_authorization_response)
