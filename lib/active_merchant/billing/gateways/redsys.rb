@@ -75,6 +75,7 @@ module ActiveMerchant #:nodoc:
         "NZD" => '554',
         "PEN" => '604',
         "RUB" => '643',
+        "SGD" => '702',
         "USD" => '840',
         "UYU" => '858'
       }
