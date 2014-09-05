@@ -160,7 +160,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(xml, credit_card)
-        if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
+        if credit_card.respond_to?(:track_data) && credit_card.track_data.present?
           add_swipe_data(xml, credit_card)
         else
           xml.payment do
@@ -176,8 +176,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_swipe_data(xml, credit_card)
-        
-
         if TRACKS[1].match(credit_card.track_data)
           xml.payment do
             xml.trackData do
