@@ -12,6 +12,7 @@
 * Cashnet: Allow overriding custcode [hoenth]
 * Cashnet: Fix overridding item_code per transaction [ntalbott]
 * Add Checkout.com [ravish-ramrakha-cko]
+* HPS: Add verify support [SecureSubmit]
 
 == Version 1.44.1 (Aug 28, 2014)
 

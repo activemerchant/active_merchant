@@ -228,4 +228,20 @@ class RemoteHpsTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Success', response.message
   end
+
+  def tests_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def tests_failed_verify
+    @credit_card.number = 12345
+
+    response = @gateway.verify(@credit_card, @options)
+
+    assert_failure response
+    assert_equal 'The card number is not a valid credit card number.', response.message
+  end
 end
