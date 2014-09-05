@@ -1,119 +1,126 @@
 require 'test_helper'
 
 class BanwireTest < Test::Unit::TestCase
-  include CommStub
-
   def setup
-    @gateway = BanwireGateway.new(
-                 :login => 'desarrollo',
-                 :currency => 'MXN')
+    @gateway = BanwireGateway.new(:login => "desarrollo")
 
-    @credit_card = credit_card('5204164299999999',
-                               :month => 11,
-                               :year => 2012,
-                               :verification_value => '999')
-    @amount = 100
+	@amount = 100
+	
+    @credit_card = ActiveMerchant::Billing::CreditCard.new(:number => '5134422031476272',
+                               :month => 12,
+                               :year => 2019,
+                               :verification_value => '162',
+                               :brand => 'mastercard',
+							   :name => 'carlos vargas')
+							   
+	@declined_card = ActiveMerchant::Billing::CreditCard.new(:number => '4000300011112220',
+								:month => 12,
+								:year => 2019,
+								:verification_value => '162',
+								:brand => 'mastercard',
+								:name => 'carlos vargas')
 
     @options = {
-      :order_id => '1',
-      :email => 'test@email.com',
-      :billing_address => address,
-      :description => 'Store purchase'
+      order_id: '1',
+	  email: "cvargas@banwire.com",
+      description: 'Store Purchase',
+	  cust_id: '1',
+	  phone: '2234567890',
+	  ip: '192.168.0.1',
+	  billing_address: {:address=>"prueba",:zip=>"12345"}
     }
-
-    @amex_credit_card = credit_card('375932134599999',
-                                    :month => 3,
-                                    :year => 2017,
-                                    :first_name => "Banwire",
-                                    :last_name => "Test Card")
-    @amex_options = {
-        :order_id => '2',
-        :email => 'test@email.com',
-        :billing_address => address(:address1 => 'Horacio', :zip => 11560),
-        :description  => 'Store purchase amex'
-    }
+	
   end
 
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal 'test12345', response.authorization
-    assert_nil response.message
+    assert_equal "028713", response.authorization
     assert response.test?
   end
 
-  def test_unsuccessful_request
+  def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert response.test?
+	assert response.test?
   end
 
-  def test_invalid_json
-    @gateway.expects(:ssl_post).returns(invalid_json_response)
+  def test_successful_authorize
+	@gateway.expects(:ssl_post).returns(successful_authorize_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
-    assert_match %r{Invalid response received from the Banwire API}, response.message
-  end
-
-  #American Express requires address and zipcode
-  def test_successful_amex_purchase
-    response = stub_comms do
-      @gateway.purchase(@amount, @amex_credit_card, @amex_options)
-    end.check_request do |endpoint, data, headers|
-      assert_match(/post_code=11560/, data)
-    end.respond_with(successful_purchase_amex_response)
-
+    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal 'test12345', response.authorization
+    assert_equal "028713", response.authorization
     assert response.test?
   end
 
-  #American Express requires address and zipcode
-  def test_unsuccessful_amex_request
-    @gateway.expects(:ssl_post).returns(failed_purchase_amex_response)
+  def test_failed_authorize
+	@gateway.expects(:ssl_post).returns(failed_authorize_response)
 
-    assert response = @gateway.purchase(@amount, @amex_credit_card, @amex_options)
-    assert_match %r{requeridos para pagos con AMEX}, response.message
+    response = @gateway.authorize(@amount, @declined_card, @options)
+    assert_failure response
+	assert response.test?
+  end
+
+  def test_failed_refund
+	@gateway.expects(:ssl_post).returns(failed_refund_response)
+
+    response = @gateway.refund(@amount, "1")
     assert_failure response
     assert response.test?
   end
 
   private
 
-  def failed_purchase_response
-    <<-RESPONSE
-    {"user":"desarrollo","id":"20120627190025","referencia":"12345","date":"27-06-2012 19:00:25","card":"9999","response":"ko","code":700,"message":"Pago Denegado."}
-    RESPONSE
-  end
-
   def successful_purchase_response
-    <<-RESPONSE
-    {"user":"desarrollo","id":"20120627190025","referencia":"12345","date":"27-06-2012 19:00:25","card":"9999","response":"ok","code_auth":"test12345","monto":"100", "cliente":"Roberto I Ramirez N"}
-    RESPONSE
+	{
+		'ID' => '117689',
+		'CARD' => '1111',
+		'ORD_ID' => '3486',
+		'AUTH_CODE' => '028713'
+	}.to_json
   end
 
-  def failed_purchase_amex_response
-    <<-RESPONSE
-    {"response":"ko","code":405,"message":"Direcci\u00f3n y c\u00f3digo postal requeridos para pagos con AMEX"}
-    RESPONSE
+  def failed_purchase_response
+	{
+		'ID' => '117689',
+		'CARD' => '1111',
+		'ORD_ID' => '1',
+		'ERROR_CODE' => 0,
+		'ERROR_MSG' => 'denied'
+	}.to_json
   end
 
-  def successful_purchase_amex_response
-    <<-RESPONSE
-    {"user":"desarrollo","id":"20120731153834","referencia":"12345","date":"31-07-2012 15:38:34","card":"99999","response":"ok","code_auth":"test12345","monto":0.5,"client":"Banwire Test Card"}
-    RESPONSE
+  def successful_authorize_response
+	{
+		'ID' => '117689',
+		'CARD' => '1111',
+		'ORD_ID' => '3486',
+		'AUTH_CODE' => '028713'
+	}.to_json
   end
 
-  def invalid_json_response
-    <<-RESPONSE
-    {"user":"desarrollo"
-    RESPONSE
+  def failed_authorize_response
+	{
+		'ID' => '117689',
+		'CARD' => '1111',
+		'ORD_ID' => '1',
+		'ERROR_CODE' => 0,
+		'ERROR_MSG' => 'denied'
+	}.to_json
+  end
+
+  def failed_refund_response
+	{
+		'status' => 'error',
+		'code' => '130',
+		'message' => 'Transacción invalida.'
+	}.to_json
   end
 end
