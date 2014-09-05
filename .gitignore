@@ -7,4 +7,3 @@ Gemfile.lock
 Gemfile*.lock
 .rbx/
 *.gem
-.rvmrc
