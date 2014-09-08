@@ -180,7 +180,17 @@ class HpsTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'The card number is not a valid credit card number.', response.message
   end  
-  
+
+  def tests_test_returns_true
+    gateway = HpsGateway.new(fixtures(:hps))
+    assert_equal true, gateway.send(:test?)
+  end
+
+  def tests_test_returns_false
+
+    assert_false @gateway.send(:test?)
+  end
+
   private
 
   def successful_charge_response

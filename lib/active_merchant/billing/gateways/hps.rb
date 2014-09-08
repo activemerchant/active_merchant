@@ -255,6 +255,10 @@ module ActiveMerchant #:nodoc:
         response['GatewayTxnId']
       end
 
+      def test?
+        @options[:secret_api_key].include? '_cert_'
+      end
+
       ISSUER_MESSAGES = {
         "13" => "Must be greater than or equal 0.",
         "14" => "The card number is incorrect.",
