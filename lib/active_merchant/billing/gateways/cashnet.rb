@@ -33,6 +33,7 @@ module ActiveMerchant #:nodoc:
           :merchant_gateway_name
         )
         options[:default_item_code] ||= "FEE"
+        options[:default_custcode] ||= "ActiveMerchant/#{ActiveMerchant::VERSION}"
         super
       end
 
@@ -80,7 +81,8 @@ module ActiveMerchant #:nodoc:
         post[:operator]       = @options[:operator]
         post[:password]       = @options[:password]
         post[:station]        = (@options[:station] || "WEB")
-        post[:custcode]       = (@options[:custcode] || "ActiveMerchant/#{ActiveMerchant::VERSION}")
+        post[:itemcode]       = (@options[:item_code] || @options[:default_item_code])
+        post[:custcode]       = (@options[:custcode] || @options[:default_custcode])
         post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
@@ -130,7 +132,8 @@ module ActiveMerchant #:nodoc:
         if (200...300).include?(response.code.to_i)
           return response.body
         elsif 302 == response.code.to_i
-          return ssl_get(URI.parse(response['location']))
+          encoded_url = URI::Parser.new.escape(response['location'])
+          return ssl_get(URI.parse(encoded_url))
         end
         raise ResponseError.new(response)
       end
