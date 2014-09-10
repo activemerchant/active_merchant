@@ -41,6 +41,7 @@
 * Stripe: Support ACH payments [sdball]
 * NCRSecurePay: Fix production URL [rwdaigle]
 * Clearhaus: Make request signing more transparent & robust [sdball]
+* Cashnet: Default custcode option and proper redirect handling [hoenth]
 
 
 == Version 1.56.0 (December 1, 2015)
