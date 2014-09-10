@@ -18,7 +18,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>:password</tt> -- Password (REQUIRED)
       # * <tt>:merchant_gateway_name</tt> -- Site name (REQUIRED)
       # * <tt>:station</tt> -- Station (defaults to "WEB")
-      # * <tt>:default_item_code</tt> -- Item code (defaults to "FEE")
+      # * <tt>:custcode</tt> -- Item code (defaults to "ActiveMerchant/#{ActiveMerchant::VERSION}")
+      # * <tt>:item_code</tt> -- Item code (defaults to "FEE")
       def initialize(options = {})
         requires!(
           options,
