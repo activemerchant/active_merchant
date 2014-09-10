@@ -18,7 +18,8 @@ module ActiveMerchant #:nodoc:
       # * <tt>:password</tt> -- Password (REQUIRED)
       # * <tt>:merchant_gateway_name</tt> -- Site name (REQUIRED)
       # * <tt>:station</tt> -- Station (defaults to "WEB")
-      # * <tt>:default_item_code</tt> -- Item code (defaults to "FEE")
+      # * <tt>:custcode</tt> -- Customer code (defaults to "ActiveMerchant/#{ActiveMerchant::VERSION}")
+      # * <tt>:item_code</tt> -- Item code (defaults to "FEE")
       def initialize(options = {})
         requires!(
           options,
@@ -27,7 +28,6 @@ module ActiveMerchant #:nodoc:
           :password,
           :merchant_gateway_name
         )
-        options[:default_item_code] ||= "FEE"
         super
       end
 
@@ -69,8 +69,8 @@ module ActiveMerchant #:nodoc:
         post[:operator]       = @options[:operator]
         post[:password]       = @options[:password]
         post[:station]        = (@options[:station] || "WEB")
-        post[:itemcode]       = (options[:item_code] || @options[:default_item_code])
-        post[:custcode]       = "ActiveMerchant/#{ActiveMerchant::VERSION}"
+        post[:itemcode]       = (@options[:item_code] || "FEE")
+        post[:custcode]       = (@options[:custcode] || "ActiveMerchant/#{ActiveMerchant::VERSION}")
         post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 

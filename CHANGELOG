@@ -9,6 +9,7 @@
 * CASHNet: Add support for fname and lname [markabe]
 * Orbital: Fix customer profile auth/purchase [denis]
 * Payex: Fix expiry month to allow 4 digit year [duff]
+* Cashnet: Allow overriding custcode [hoenth]
 
 == Version 1.44.1 (Aug 28, 2014)
 
