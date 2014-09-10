@@ -206,8 +206,8 @@ module ActiveMerchant #:nodoc:
           orderRef: order_ref,
           transactionType: 1, # online payment
           cardNumber: payment_method.number,
-          cardNumberExpireMonth: "%02d" % payment_method.month,
-          cardNumberExpireYear: "%02d" % payment_method.year,
+          cardNumberExpireMonth: format(payment_method.month, :two_digits),
+          cardNumberExpireYear: format(payment_method.year, :two_digits),
           cardHolderName: payment_method.name,
           cardNumberCVC: payment_method.verification_value
         }
