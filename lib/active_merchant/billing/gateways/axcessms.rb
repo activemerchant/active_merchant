@@ -89,14 +89,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse_element(response, node)
+        if node.has_attributes?
+          node.attributes.each{|name, value| response["#{node.name}_#{name}".underscore.to_sym] = value }
+        end
+
         if node.has_elements?
           node.elements.each{|element| parse_element(response, element) }
         else
           response[node.name.underscore.to_sym] = node.text
-
-          if node.has_attributes?
-            node.attributes.each{|name, value| response["#{node.name}_#{name}".underscore.to_sym] = value }
-          end
         end
       end
 
