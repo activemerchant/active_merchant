@@ -28,6 +28,7 @@ module ActiveMerchant #:nodoc:
           :merchant_gateway_name
         )
         options[:default_item_code] ||= "FEE"
+        options[:default_custcode] ||= "ActiveMerchant/#{ActiveMerchant::VERSION}"
         super
       end
 
@@ -69,8 +70,8 @@ module ActiveMerchant #:nodoc:
         post[:operator]       = @options[:operator]
         post[:password]       = @options[:password]
         post[:station]        = (@options[:station] || "WEB")
-        post[:itemcode]       = (options[:item_code] || @options[:default_item_code])
-        post[:custcode]       = "ActiveMerchant/#{ActiveMerchant::VERSION}"
+        post[:itemcode]       = (@options[:item_code] || @options[:default_item_code])
+        post[:custcode]       = (@options[:custcode] || @options[:default_custcode])
         post.merge(parameters).collect { |key, value| "#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
 
