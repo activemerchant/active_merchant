@@ -28,6 +28,11 @@ authorize_net:
 balanced:
   login: 'e1c5ad38d1c711e1b36c026ba7e239a9'
 
+# Working credentials, no need to replace
+bank_frick:
+  some_credential: SOMECREDENTIAL
+  another_credential: ANOTHERCREDENTIAL
+
 banwire:
   login: "desarrollo"
 
