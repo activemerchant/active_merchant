@@ -46,7 +46,7 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_display_name
-    assert_equal 'Pin', PinGateway.display_name
+    assert_equal 'Pin Payments', PinGateway.display_name
   end
 
   def test_setup_purchase_parameters
