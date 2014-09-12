@@ -97,6 +97,7 @@ class Cashnet < Test::Unit::TestCase
     }
 
     @gateway.send(:add_creditcard, params, @credit_card)
+    @gateway.send(:add_invoice, params, {})
 
     assert data = @gateway.send(:post_data, 'SALE', params)
     minimum_requirements.each do |key|
