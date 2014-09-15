@@ -169,7 +169,7 @@ class EwayRapidTest < Test::Unit::TestCase
     end.respond_with(failed_capture_response)
 
     assert_failure response
-    assert_equal "V6134", response.message
+    assert_equal "Invalid Auth Transaction ID for Capture/Void", response.message
     assert_equal 0, response.authorization
   end
 
@@ -189,7 +189,7 @@ class EwayRapidTest < Test::Unit::TestCase
     end.respond_with(failed_void_response)
 
     assert_failure response
-    assert_equal "V6134", response.message
+    assert_equal "Invalid Auth Transaction ID for Capture/Void", response.message
     assert_equal 0, response.authorization
   end
 
