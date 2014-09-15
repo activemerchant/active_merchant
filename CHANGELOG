@@ -36,7 +36,7 @@
 * FirstData_e4: Fix Level 2 data [duff]
 * Remove some duplication around name handling [duff]
 * FirstData_e4: Support Tax1Number [duff]
-
+* Add Transact Pro gateway [varyonic]
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]

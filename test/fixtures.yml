@@ -903,6 +903,16 @@ trans_first:
   login: LOGIN
   password: PASSWORD
 
+# Transact Pro doesn't provide public testing data
+transact_pro:
+  guid: GUID
+  password: PASSWORD
+  terminal: TERMINALID
+  card_number: "TESTCARDNUMBER"
+  verification_value: "TESTCARDCVV"
+  month: "TESTCARDMONTH"
+  year: "TESTCARDYEAR"
+
 transax:
   login: transaxdemo
   password: nelix123
