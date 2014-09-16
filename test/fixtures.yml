@@ -773,6 +773,10 @@ transact_pro:
   guid: LOGIN
   pwd: PASSWORD
   rs: TERMINALID
+  card_number: "XXXXXXXXXXXXXXXX"
+  verification_value: CVV
+  month: MM
+  year: YYYY
 
 transax:
   login: transaxdemo

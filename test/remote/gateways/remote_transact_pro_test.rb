@@ -1,15 +1,19 @@
 require 'test_helper'
+require 'active_support/core_ext/hash/slice'
 
 class RemoteTransactProTest < Test::Unit::TestCase
   def setup
-    @gateway = TransactProGateway.new(fixtures(:transact_pro))
+    test_credentials = fixtures(:transact_pro).slice(:guid,:pwd,:rs)
+    test_card = fixtures(:transact_pro).slice(:card_number,:verification_value,:month,:year)
+
+    @gateway = TransactProGateway.new(test_credentials)
 
     @amount = 100
-    @credit_card = credit_card('4000100011112224')
+    @credit_card = credit_card(test_card.delete(:card_number), test_card)
     @declined_card = credit_card('4000300011112220')
 
     @options = {
-      order_id: '1',
+      order_id: Time.now.to_i,
       billing_address: address,
       description: 'Store Purchase'
     }
@@ -17,14 +21,19 @@ class RemoteTransactProTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert response.authorization
+    assert_equal 'Success', response.message
+    assert response.test?
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
+
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
+    assert_equal 'Failed', response.message
+    assert_equal '908', response.params['result_code']
   end
 
   def test_successful_authorize_and_capture
@@ -37,7 +46,10 @@ class RemoteTransactProTest < Test::Unit::TestCase
 
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
+
     assert_failure response
+    assert_equal 'Failed', response.message
+    assert_equal '908', response.params['result_code']
   end
 
   def test_partial_capture
@@ -45,12 +57,15 @@ class RemoteTransactProTest < Test::Unit::TestCase
     assert_success auth
 
     assert capture = @gateway.capture(@amount-1, auth.authorization)
-    assert_success capture
+    assert_failure capture
+    # Parital capture is not supported.
+    assert_equal 'Amount does not match authorization.', capture.message
   end
 
   def test_failed_capture
     response = @gateway.capture(nil, '')
     assert_failure response
+    assert_nil response.authorization
   end
 
   def test_successful_refund
@@ -59,6 +74,7 @@ class RemoteTransactProTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(nil, purchase.authorization)
     assert_success refund
+    assert_equal 'Refund Success', refund.message
   end
 
   def test_partial_refund
@@ -67,11 +83,15 @@ class RemoteTransactProTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount-1, purchase.authorization)
     assert_success refund
+    assert_equal 'Refund Success', refund.message
   end
 
   def test_failed_refund
-    response = @gateway.refund(nil, '')
-    assert_failure response
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount+1, purchase.authorization)
+    assert_failure refund
   end
 
   def test_successful_void
@@ -90,21 +110,22 @@ class RemoteTransactProTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match %r{REPLACE WITH SUCCESS MESSAGE}, response.message
   end
 
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
+    assert_equal 'Failed', response.message
   end
 
   def test_invalid_login
     gateway = TransactProGateway.new(
-      login: '',
-      password: ''
+      guid: '',
+      pwd: '',
+      rs: ''
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+    assert_match %r{bad access data}, response.message
   end
 end

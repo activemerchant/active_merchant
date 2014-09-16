@@ -1,51 +1,107 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    # For more information visit {Transact Pro Services}[https://www.transactpro.lv/business/]
+    #
+    # This gateway was formerly associated with www.1stpayments.net
+    #
+    # Written by Piers Chambers (Varyonic.com)
     class TransactProGateway < Gateway
-      self.test_url = 'https://example.com/test'
-      self.live_url = 'https://example.com/live'
+      self.test_url = 'https://gw2sandbox.tpro.lv:8443/gw2test/gwprocessor2.php'
+      self.live_url = 'https://www2.1stpayments.net/gwprocessor2.php'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
+      self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
-      self.homepage_url = 'http://www.example.net/'
-      self.display_name = 'New Gateway'
+      self.homepage_url = 'https://www.transactpro.lv/business/online-payments-acceptance'
+      self.display_name = 'Transact Pro'
 
       def initialize(options={})
-        requires!(options, :some_credential, :another_credential)
+        requires!(options, :guid, :pwd, :rs)
         super
       end
 
       def purchase(money, payment, options={})
-        post = {}
+        requires!(options, :order_id)
+
+        post = PostData.new
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_address(post, payment, options)
         add_customer_data(post, options)
+        add_credentials(post)
+        post[:rs] = @options[:rs]
 
-        commit('sale', post)
+        response = commit('init', post)
+        return response unless response.success?
+
+        post = PostData.new
+        post[:authorization] = response.authorization
+        add_payment_cc(post, payment)
+        post[:f_extended] = '4'
+
+        commit('charge', post)
       end
 
       def authorize(money, payment, options={})
-        post = {}
+        requires!(options, :order_id)
+
+        post = PostData.new
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_address(post, payment, options)
         add_customer_data(post, options)
+        add_credentials(post)
+        post[:rs] = @options[:rs]
 
-        commit('authonly', post)
+        response = commit('init_dms', post)
+        return response unless response.success?
+
+        post = PostData.new
+        post[:authorization] = response.authorization
+        add_payment_cc(post, payment)
+        post[:f_extended] = '4'
+
+        commit('make_hold', post)
       end
 
       def capture(money, authorization, options={})
-        commit('capture', post)
+        balance = authorization.split('|').pop
+        if money and amount(money) != balance
+          return Response.new(false, "Amount does not match authorization.")
+        end
+
+        post = PostData.new
+        post[:authorization] = authorization
+        add_credentials(post)
+        post[:f_extended] = '4'
+
+        commit('charge_hold', post)
       end
 
       def refund(money, authorization, options={})
+        balance = authorization.split('|').pop
+
+        post = PostData.new
+        post[:authorization] = authorization
+        post[:amount_to_refund] = money ? amount(money) : balance
+        post[:account_guid] = @options[:guid] # 'account_guid' not 'guid' for refund/void
+        post[:pwd] = Digest::SHA1.hexdigest(@options[:pwd])
+
         commit('refund', post)
       end
 
       def void(authorization, options={})
-        commit('void', post)
+        balance = authorization.split('|').pop
+
+        post = PostData.new
+        post[:authorization] = authorization
+        post[:amount_to_refund] = balance
+        post[:account_guid] = @options[:guid] # 'account_guid' not 'guid' for refund/void
+        post[:pwd] = Digest::SHA1.hexdigest(@options[:pwd])
+
+        commit('cancel_dms', post)
       end
 
       def verify(credit_card, options={})
@@ -58,46 +114,104 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_customer_data(post, options)
+        post[:email] = options[:email] || 'noone@example.com'
+        post[:user_ip] = options[:ip] || '0.0.0.0'
       end
 
       def add_address(post, creditcard, options)
+        if address = options[:billing_address] || options[:address]
+          post[:street]  = address[:address1].to_s
+          post[:city]    = address[:city].to_s
+          post[:state]   = address[:state].blank?  ? 'NA' : address[:state].to_s
+          post[:zip]     = address[:zip].to_s
+          post[:country] = address[:country].to_s
+          post[:phone]   = address[:phone].to_s.gsub(/[^0-9]/, '') || "0000000"
+        end
+
+        if address = options[:shipping_address]
+          post[:shipping_name]    = "#{address.first_name} #{address.last_name}"
+          post[:shipping_street]  = address[:address1].to_s
+          post[:shipping_phone]   = address[:phone].to_s
+          post[:shipping_zip]     = address[:zip].to_s
+          post[:shipping_city]    = address[:city].to_s
+          post[:shipping_country] = address[:country].to_s
+          post[:shipping_state]   = address[:state].blank?  ? 'NO' : address[:state].to_s
+          post[:shipping_email]   = options[:email] || 'noone@example.com'
+        end
       end
 
       def add_invoice(post, money, options)
+        post[:merchant_transaction_id] = options[:order_id] if options.has_key? :order_id
         post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money))
+        post[:description] = options[:description]
+        post[:merchant_site_url] = @options[:merchant] || options[:description]
       end
 
       def add_payment(post, payment)
+        post[:name_on_card] = "#{payment.first_name} #{payment.last_name}"
+        post[:card_bin] = payment.first_digits
+      end
+
+      def add_payment_cc(post, credit_card)
+        post[:cc] = credit_card.number
+        post[:cvv] = credit_card.verification_value if credit_card.verification_value?
+        year  = sprintf("%.4i", credit_card.year)
+        month = sprintf("%.2i", credit_card.month)
+        post[:expire] = "#{month}/#{year[2..3]}"
+      end
+
+      def add_credentials(post)
+        post[:guid] = @options[:guid]
+        post[:pwd] = Digest::SHA1.hexdigest(@options[:pwd])
       end
 
       def parse(body)
-        {}
+        if body =~ /^ID:/
+          body.split('~').reduce(Hash.new) { |h,v|
+            m = v.match("(.*?):(.*)")
+            h.merge!(m[1].underscore.to_sym => m[2])
+          }
+        elsif (m = body.match("(.*?):(.*)"))
+          m[1] == 'OK' ?
+            { status: 'success', id: m[2] } :
+            { status: 'failure', message: m[2] }
+        else
+          Hash[ status: body ]
+        end
       end
 
       def commit(action, parameters)
+        if authorization = parameters.delete(:authorization)
+          parameters[:init_transaction_id], balance = authorization.split('|')
+          balance = balance.to_i - parameters[:amount_to_refund].to_i if parameters[:amount_to_refund]
+        else
+          balance = parameters[:amount]
+        end
+
         url = (test? ? test_url : live_url)
-        response = parse(ssl_post(url, post_data(action, parameters)))
+        response = parse(ssl_post(url, post_data(action,parameters)))
 
         Response.new(
           success_from(response),
           message_from(response),
           response,
-          authorization: authorization_from(response),
+          authorization: success_from(response) ? "#{response[:id]||parameters[:init_transaction_id]}|#{balance}" : nil,
           test: test?
         )
       end
 
       def success_from(response)
+        !! (response[:status] =~ /success/i or response[:status] =~ /ok/i)
       end
 
       def message_from(response)
-      end
-
-      def authorization_from(response)
+        response[:message] || response[:status]
       end
 
       def post_data(action, parameters = {})
+        parameters[:a] = action
+        parameters.to_s
       end
     end
   end
