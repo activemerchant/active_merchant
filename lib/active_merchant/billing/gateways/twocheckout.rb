@@ -145,15 +145,16 @@ module ActiveMerchant #:nodoc:
             post[:lineItems] << item
           end
         else
-          fail ArgumentError, 'Must include at least 1 item'
+          raise ArgumentError.new('Must include at least 1 item when passing :items')
         end
       end
 
       def add_customer(post, options)
         billing_address = options[:billing_address] || options[:address]
         shipping_address = options[:shipping_address] || nil
-
+        raise ArgumentError.new('Options must include :billing_address or :address') if billing_address.nil?
         requires!(billing_address, :name, :address1, :city, :country)
+
         billing_hash = {}
         billing_hash[:email] = options[:email]
         billing_hash[:phoneNumber] = billing_address[:phone]
