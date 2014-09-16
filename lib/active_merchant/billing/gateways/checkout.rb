@@ -6,28 +6,27 @@ module ActiveMerchant #:nodoc:
     class CheckoutGateway < Gateway
 
       class PaymentPostData < PostData
-        self.required_fields = [ :OrderReference, :CardNumber, :CardExpiry, :CardHolderName, :CardType, :MerchantID, :MerchantKey, :Amount, :Currency ]
+        self.required_fields = [ :OrderReference, :CardNumber, :CardExpiry, :CardHolderName, :CardType, :merchant_id, :MerchantKey, :Amount, :Currency ]
       end
 
       self.default_currency = 'USD'
       self.money_format = :decimals
 
-      self.supported_countries = ['AR', 'AT', 'BE', 'BR', 'CA', 'CH', 'CL', 'CN', 'CO', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'HK', 'ID', 'IE', 'IL', 'IN', 'IT', 'JP', 'KR', 'LU', 'MX', 'MY', 'NL', 'NO', 'PA', 'PE', 'PH', 'PL', 'PT', 'RU', 'SE', 'SG', 'TH', 'TR', 'TW', 'US', 'VN', 'ZA']
+      self.supported_countries = ['AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR', 'HU', 'IE', 'IS', 'IT', 'LI', 'LT', 'LU', 'LV', 'MT', 'NL', 'NO', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK', 'US', 'MU']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
 
       self.homepage_url = 'https://www.checkout.com/'
       self.display_name = 'Checkout.com'
 
+      self.live_url = self.test_url = 'https://api.checkout.com/Process/gateway.aspx'
+
       def initialize(options = {})
 
         if options[:gateway_url]
           self.live_url = self.test_url = options[:gateway_url]
-        else
-          # Set default gateway
-          self.live_url = self.test_url = 'https://api.checkout.com/Process/gateway.aspx'
         end
 
-        requires!(options, :merchant_code, :password)
+        requires!(options, :merchant_id, :password)
         super
       end
 
@@ -89,7 +88,7 @@ module ActiveMerchant #:nodoc:
 
       def add_credentials(post, options)
 
-        post[:MerchantID] = @options[:merchant_code]
+        post[:merchant_id] = @options[:merchant_id]
         post[:MerchantPwd] = @options[:password]
 
       end
@@ -181,7 +180,7 @@ module ActiveMerchant #:nodoc:
         builder = Nokogiri::XML::Builder.new do |xml|
 
         xml.request {
-          xml.merchantid_ post[:MerchantID];
+          xml.merchantid_ post[:merchant_id];
           xml.password_ post[:MerchantPwd];
           xml.action_ post[:Action];
           xml.bill_amount_ post[:Amount];
@@ -240,7 +239,7 @@ module ActiveMerchant #:nodoc:
         builder = Nokogiri::XML::Builder.new do |xml|
 
         xml.request {
-          xml.merchantid_ post[:MerchantID];
+          xml.merchantid_ post[:merchant_id];
           xml.password_ post[:MerchantPwd];
 
           xml.action_ post[:Action];

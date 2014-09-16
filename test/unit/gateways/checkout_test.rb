@@ -7,7 +7,7 @@ class CheckoutTest < Test::Unit::TestCase
   def setup
     # Gateway credentials
     @gateway = ActiveMerchant::Billing::CheckoutGateway.new(
-      :merchant_code    => 'SBMTEST',    # Merchant Code
+      :merchant_id    => 'SBMTEST',    # Merchant Code
       :password => 'Password1!'          # Processing Password
     )
 

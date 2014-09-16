@@ -5,11 +5,7 @@ class RemoteCheckoutTest < Test::Unit::TestCase
   def setup
 
     # Gateway credentials
-    @gateway = ActiveMerchant::Billing::CheckoutGateway.new(
-      :merchant_code    => 'SBMTEST',    # Merchant Code
-      :password => 'Password1!',          # Processing Password
-      :gateway_url => 'https://api.checkout.com/Process/gateway.aspx' # optional - Gateway URL
-    )
+    @gateway = ActiveMerchant::Billing::CheckoutGateway.new(fixtures(:checkout))
 
     # Create a new credit card object
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
@@ -62,6 +58,38 @@ class RemoteCheckoutTest < Test::Unit::TestCase
         :customer       => '123456498'
     }
 
+    # Missing Address (billing and shipping)
+    @options_missing_address = {
+
+        :currency       => 'EUR',
+        :order_id       => 'Test - 1001',
+        :email        => 'bill_email@email.com',
+
+        # Other fields
+        :ip         => '127.0.0.1',
+        :customer       => '123456498'
+    }
+
+    # Additional information
+    @options_minimum = {
+
+        :currency       => 'EUR',
+        :order_id       => 'Test - 1001'
+    }
+
+    # Missing Track ID
+    @options_minimum_missing_track_id = {
+
+        :currency       => 'EUR'
+    }
+
+    # Missing oorder ID
+    @options_minimum_missing_currency = {
+
+        :order_id       => 'Test - 1001'
+    }
+
+
     # Amount in cents
     @amount = 100
   end
@@ -84,10 +112,36 @@ class RemoteCheckoutTest < Test::Unit::TestCase
 
     assert capture = @gateway.capture(@amount, auth.authorization, @options)
     assert_success capture
+    assert_equal 'Successful', capture.params["result"]
   end
 
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
+    assert_equal 'Not Successful', response.params["result"]
+  end
+
+  def test_missing_billing_address
+    response = @gateway.purchase(@amount, @credit_card, @options_missing_address)
+    assert_success response
+    assert_equal 'Successful', response.params["result"]
+  end
+
+  def test_minimum_options
+    response = @gateway.purchase(@amount, @credit_card, @options_minimum)
+    assert_success response
+    assert_equal 'Successful', response.params["result"]
+  end
+
+  def test_missing_currency
+    response = @gateway.purchase(@amount, @credit_card, @options_minimum_missing_currency)
+    assert_failure response
+    assert_equal 'EGP00302', response.params["error_code_tag"]
+  end
+
+  def test_missing_track_id
+    response = @gateway.purchase(@amount, @credit_card, @options_minimum_missing_track_id)
+    assert_failure response
+    assert_equal 'EGP00165', response.params["error_code_tag"]
   end
 end
