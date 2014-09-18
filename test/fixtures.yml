@@ -218,8 +218,6 @@ hdfc:
 # Working credentials, no need to replace
 hps:
   secret_api_key: "skapi_cert_MYl2AQAowiQAbLp5JesGKh7QFkcizOP2jcX9BrEMqQ"
-  developer_id: '002914'
-  version_number: '1715'
 
 iats_payments:
   agent_code: TEST88
@@ -350,7 +348,7 @@ nab_transact:
   password: changeit
 
 # Working credentials, no need to replace
-nab_transact_card_acceptor:
+nab_transact_privileged:
   login: XYZ0010
   password: abcd1234
 
@@ -720,7 +718,7 @@ trust_commerce:
 
 # Working credentials, no need to replace
 usa_epay:
-  login: 'yCaWGYQsSVR0S48B6AKMK07RQhaxHvGu'
+  login: '4EoZ5U2Q55j976W7eplC71i6b7kn4pcV'
 
 # Get credentials here: https://www.usaepay.com/developer/login
 usa_epay_advanced:
@@ -769,6 +767,11 @@ wirecard_checkout_page:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+worldpay_us:
+  acctid: MPNAB
+  subid: SPREE
+  merchantpin: "1234567890"
 
 # Working credentials, no need to replace
 worldpay_online_payments:

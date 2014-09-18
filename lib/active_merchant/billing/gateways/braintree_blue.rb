@@ -480,7 +480,11 @@ module ActiveMerchant #:nodoc:
         end
 
         if credit_card_or_vault_id.is_a?(String) || credit_card_or_vault_id.is_a?(Integer)
-          parameters[:customer_id] = credit_card_or_vault_id
+          if options[:payment_method_token]
+            parameters[:payment_method_token] = credit_card_or_vault_id
+          else
+            parameters[:customer_id] = credit_card_or_vault_id
+          end
         else
           parameters[:customer].merge!(
             :first_name => credit_card_or_vault_id.first_name,
@@ -493,8 +497,9 @@ module ActiveMerchant #:nodoc:
             :expiration_year => credit_card_or_vault_id.year.to_s
           }
         end
-        parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address]
+        parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address] && !options[:payment_method_token]
         parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
+        parameters[:channel] = application_id if application_id.present? && application_id != "ActiveMerchant"
         parameters
       end
     end

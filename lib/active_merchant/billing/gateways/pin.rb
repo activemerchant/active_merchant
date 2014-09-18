@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AU']
       self.supported_cardtypes = [:visa, :master, :american_express]
       self.homepage_url = 'http://www.pin.net.au/'
-      self.display_name = 'Pin'
+      self.display_name = 'Pin Payments'
 
       def initialize(options = {})
         requires!(options, :api_key)

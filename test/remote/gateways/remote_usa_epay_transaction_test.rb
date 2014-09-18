@@ -79,4 +79,18 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     assert_equal 'Specified source key not found.', response.message
     assert_failure response
   end
+
+  def test_successful_verify
+    assert response = @gateway.verify(@creditcard, @options)
+    assert_success response
+    assert_equal "Success", response.message
+    assert_success response.responses.last, "The void should succeed"
+  end
+
+  def test_failed_verify
+    assert response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_match "Card Declined (00)", response.message
+  end
+
 end

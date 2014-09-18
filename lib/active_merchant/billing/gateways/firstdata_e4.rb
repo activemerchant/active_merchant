@@ -180,12 +180,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(xml, credit_card, options)
-        xml.tag! "Card_Number", credit_card.number
-        xml.tag! "Expiry_Date", expdate(credit_card)
-        xml.tag! "CardHoldersName", credit_card.name
-        xml.tag! "CardType", card_type(credit_card.brand)
 
-        add_credit_card_verification_strings(xml, credit_card, options)
+        if credit_card.respond_to?(:track_data) && credit_card.track_data.present?
+          xml.tag! "Track1", credit_card.track_data
+        else
+          xml.tag! "Card_Number", credit_card.number
+          xml.tag! "Expiry_Date", expdate(credit_card)
+          xml.tag! "CardHoldersName", credit_card.name
+          xml.tag! "CardType", card_type(credit_card.brand)
+
+          add_credit_card_verification_strings(xml, credit_card, options)
+        end
       end
 
       def add_credit_card_verification_strings(xml, credit_card, options)

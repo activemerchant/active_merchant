@@ -1,5 +1,24 @@
 = ActiveMerchant CHANGELOG
 
+* HPS: Always pass CardHolderData element [SecureSubmit, ntalbott]
+* PayJunction: Include 'track' parameter if provided [hron]
+* WebPay: Fix API calls [tomykaira]
+* Moneris US: Add store, unstore, and update [AntoineInsa]
+* Moneris US: Add CVV and AVS [AntoineInsa]
+* Stripe: Add support for statement_description [markabe]
+* CASHNet: Add support for fname and lname [markabe]
+* Orbital: Fix customer profile auth/purchase [denis]
+* Payex: Fix expiry month to allow 4 digit year [duff]
+* Cashnet: Allow overriding custcode [hoenth]
+* Cashnet: Fix overridding item_code per transaction [ntalbott]
+
+== Version 1.44.1 (Aug 28, 2014)
+
+* Allow SSLv3 for PsiGate [mutemule]
+* Set default :state to n/a for NetworkMerchants [cjoudrey]
+
+== Version 1.44.0 (Aug 21, 2014)
+
 * Moneris: Add :avs_enabled option [bslobodin]
 * Stripe: Populate authorization in failed responses, when available [bslobodin]
 * Moneris: Use the name on the card [duff]
@@ -81,6 +100,17 @@
 * Worldpay: Improve address defaults [duff]
 * Braintree Blue: Pass cardholder_name when tokenizing [radar]
 * Wirecard: Improve error handling [mendable]
+* Litle: Add verify support [markabe]
+* USAePay: Add verify support [markabe]
+* BridgePay: Add verify support [duff]
+* Braintree Blue: Add payment_method_token flag [JDutil]
+* SagePay: Add optional FI fields [rob-anderson]
+* Iridium: Add AVS and CVV results [X0Refraction]
+* NAB Transact: Add credit support [nagash]
+* Braintree Blue: Add application_id support [npverni]
+* Realex: Add maestro mapping [uriklar]
+* Add Worldpay US gateway [markabe]
+* Cybersource: Add shipping address [pkoppula]
 
 == Version 1.43.2 (May 12, 2014)
 

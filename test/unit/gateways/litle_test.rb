@@ -209,6 +209,49 @@ class LitleTest < Test::Unit::TestCase
     assert_equal "820", response.params["response"]
   end
 
+  def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card)
+    end.respond_with(successful_authorize_response, successful_void_of_auth_response)
+    assert_success response
+  end
+
+  def test_successful_verify_failed_void
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, failed_void_of_authorization_response)
+    assert_success response
+    assert_equal "Approved", response.message
+  end
+
+  def test_unsuccessful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorize_response, successful_void_of_auth_response)
+    assert_failure response
+    assert_equal "Insufficient Funds", response.message
+  end
+
+  def test_add_swipe_data_with_creditcard
+    @credit_card.track_data = "Track Data"
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<track>Track Data</track>", data
+      assert_match "<orderSource>retail</orderSource>", data
+      assert_match %r{<pos>.+<\/pos>}m, data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_order_source_with_creditcard_no_track_data
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<orderSource>ecommerce</orderSource>", data
+      assert_not_match %r{<pos>.+<\/pos>}m, data
+    end.respond_with(successful_purchase_response)
+  end
 
   private
 

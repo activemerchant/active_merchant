@@ -284,6 +284,17 @@ class MonerisTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_add_swipe_data_with_creditcard
+    @credit_card.track_data = "Track Data"
+
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match "<pos_code>00</pos_code>", data
+      assert_match "<track2>Track Data</track2>", data
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def successful_purchase_response

@@ -119,6 +119,14 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_statement_description
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, statement_description: '5K RACE TICKET')
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/statement_description=5K\+RACE\+TICKET/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_purchase_response(true))
 

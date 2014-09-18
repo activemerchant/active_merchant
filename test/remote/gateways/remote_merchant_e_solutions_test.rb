@@ -163,7 +163,7 @@ class RemoteMerchantESolutionTest < Test::Unit::TestCase
                   })
     assert response = @gateway.purchase(@amount, credit_card, @options)
     assert_equal 'N', response.cvv_result['code']
-    assert_equal 'No Match', response.cvv_result['message']
+    assert_equal 'CVV does not match', response.cvv_result['message']
   end
 
   def test_invalid_login

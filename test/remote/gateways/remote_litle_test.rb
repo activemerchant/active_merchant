@@ -37,6 +37,15 @@ class RemoteLitleTest < Test::Unit::TestCase
       number: "4457010100000008",
       verification_value: "992"
     )
+    @credit_card_nsf = CreditCard.new(
+      first_name: "Joe",
+      last_name: "Green",
+      month: "06",
+      year: "2012",
+      brand: "visa",
+      number: "4488282659650110",
+      verification_value: "992"
+    )
   end
 
   def test_successful_authorization
@@ -223,6 +232,19 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert response = @gateway.purchase(10010, token)
     assert_success response
     assert_equal 'Approved', response.message
+  end
+
+  def test_successful_verify
+    assert response = @gateway.verify(@credit_card1, @options)
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_success response.responses.last, "The void should succeed"
+  end
+
+  def test_unsuccessful_verify
+    assert response = @gateway.verify(@credit_card_nsf, @options)
+    assert_failure response
+    assert_match %r{Insufficient Funds}, response.message
   end
 
 end
