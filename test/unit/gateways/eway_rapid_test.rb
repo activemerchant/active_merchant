@@ -49,6 +49,28 @@ class EwayRapidTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_failed_purchase_without_message
+    response = stub_comms do
+      @gateway.purchase(-100, @credit_card)
+    end.respond_with(failed_purchase_response_without_message)
+
+    assert_failure response
+    assert_equal "Do Not Honour", response.message
+    assert_nil response.authorization
+    assert response.test?
+  end
+
+  def test_failed_purchase_without_message
+    response = stub_comms do
+      @gateway.purchase(-100, @credit_card)
+    end.respond_with(failed_purchase_response_multiple_messages)
+
+    assert_failure response
+    assert_equal "Invalid Customer Phone,Invalid ShippingAddress Phone", response.message
+    assert_nil response.authorization
+    assert response.test?
+  end
+
   def test_purchase_with_all_options
     response = stub_comms do
       @gateway.purchase(200, @credit_card,
@@ -368,6 +390,39 @@ class EwayRapidTest < Test::Unit::TestCase
           "CurrencyCode": "AUD"
         },
         "Errors": null
+      }
+    )
+  end
+
+  def failed_purchase_response_without_message
+    %(
+      {
+        "AuthorisationCode": null,
+        "ResponseCode": "05",
+        "TransactionID": null,
+        "TransactionStatus": null,
+        "TransactionType": "Purchase",
+        "BeagleScore": null,
+        "Verification": null,
+        "Customer": {
+        }
+      }
+    )
+  end
+
+  def failed_purchase_response_multiple_messages
+    %(
+      {
+        "AuthorisationCode": null,
+        "ResponseCode": null,
+        "ResponseMessage": "V6070,V6083",
+        "TransactionID": null,
+        "TransactionStatus": null,
+        "TransactionType": "Purchase",
+        "BeagleScore": null,
+        "Verification": null,
+        "Customer": {
+        }
       }
     )
   end

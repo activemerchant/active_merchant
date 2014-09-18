@@ -280,12 +280,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def parse_errors(message)
+        errors = message.split(',').collect{|code| MESSAGES[code.strip]}.flatten.join(',')
+        errors.presence || message
+      end
+
       def message_from(succeeded, response)
         if response['Errors']
-          (MESSAGES[response['Errors']] || response['Errors'])
+          parse_errors(response['Errors'])
         elsif response['ResponseMessage']
-          (MESSAGES[response['ResponseMessage']] || response['ResponseMessage'])
-        elsif response['Responsecode']
+          parse_errors(response['ResponseMessage'])
+        elsif response['ResponseCode']
           ActiveMerchant::Billing::EwayGateway::MESSAGES[response['ResponseCode']]
         elsif succeeded
           "Succeeded"
