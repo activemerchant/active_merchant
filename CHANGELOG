@@ -20,6 +20,7 @@
 * AuthorizeNet: Add credit support [duff]
 * CenPOS: Add gateway [markabe]
 * Stripe: Update country list [markabe]
+* Add Monei.net gateway [leolara]
 
 == Version 1.47.0 (February 25, 2015)
 
