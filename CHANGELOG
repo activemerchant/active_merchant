@@ -15,6 +15,7 @@
 * HPS: Add verify support [SecureSubmit]
 * Add Bank Frick gateway [varyonic]
 * Add Global Transport gateway [duff]
+* iATS: Add #store and #unstore [duff]
 
 == Version 1.44.1 (Aug 28, 2014)
 

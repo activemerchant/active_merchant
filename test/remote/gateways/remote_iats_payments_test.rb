@@ -48,6 +48,24 @@ class IatsPaymentsTest < Test::Unit::TestCase
     assert_failure refund
   end
 
+  def test_successful_store_and_unstore
+    assert store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert store.authorization
+    assert_equal "Success", store.message
+
+    assert unstore = @gateway.unstore(store.authorization, @options)
+    assert_success unstore
+    assert_equal "Success", unstore.message
+  end
+
+  def test_failed_store
+    credit_card = credit_card('4111')
+    assert store = @gateway.store(credit_card, @options)
+    assert_failure store
+    assert_match /Invalid credit card number/, store.message
+  end
+
   def test_invalid_login
     gateway = IatsPaymentsGateway.new(
       :agent_code => 'X',

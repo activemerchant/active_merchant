@@ -87,6 +87,45 @@ class IatsPaymentsTest < Test::Unit::TestCase
     assert_equal 'A6DEA654', response.authorization
   end
 
+  def test_successful_store
+    response = stub_comms do
+      @gateway.store(@credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/beginDate/, data)
+      assert_match(/endDate/, data)
+      assert_match(%r{<creditCardNum>#{@credit_card.number}</creditCardNum>}, data)
+      assert_match(%r{<amount>0</amount>}, data)
+      assert_match(%r{<recurring>false</recurring>}, data)
+    end.respond_with(successful_store_response)
+
+    assert response
+    assert_success response
+    assert_equal 'A12181132', response.authorization
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_store
+    response = stub_comms do
+      @gateway.store(@credit_card, @options)
+    end.respond_with(failed_store_response)
+
+    assert response
+    assert_failure response
+    assert_match /Invalid credit card number/, response.message
+  end
+
+  def test_successful_unstore
+    response = stub_comms do
+      @gateway.unstore("TheAuthorization", @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{<customerCode>TheAuthorization</customerCode>}, data)
+    end.respond_with(successful_unstore_response)
+
+    assert response
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
   def test_deprecated_options
     assert_deprecation_warning("The 'login' option is deprecated in favor of 'agent_code' and will be removed in a future version.") do
       @gateway = IatsPaymentsGateway.new(
@@ -227,6 +266,72 @@ class IatsPaymentsTest < Test::Unit::TestCase
     </ProcessCreditCardV1Response>
   </soap:Body>
 </soap:Envelope>
+    XML
+  end
+
+  def successful_store_response
+    <<-XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+          <CreateCreditCardCustomerCodeV1Response xmlns="https://www.iatspayments.com/NetGate/">
+            <CreateCreditCardCustomerCodeV1Result>
+              <IATSRESPONSE xmlns="">
+                <STATUS>Success</STATUS>
+                <ERRORS />
+                <PROCESSRESULT>
+                  <AUTHORIZATIONRESULT>OK</AUTHORIZATIONRESULT>
+                  <CUSTOMERCODE>A12181132</CUSTOMERCODE>
+                </PROCESSRESULT>
+              </IATSRESPONSE>
+            </CreateCreditCardCustomerCodeV1Result>
+          </CreateCreditCardCustomerCodeV1Response>
+        </soap:Body>
+      </soap:Envelope>
+    XML
+  end
+
+  def failed_store_response
+    <<-XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+          <CreateCreditCardCustomerCodeV1Response xmlns="https://www.iatspayments.com/NetGate/">
+            <CreateCreditCardCustomerCodeV1Result>
+              <IATSRESPONSE xmlns="">
+                <STATUS>Success</STATUS>
+                <ERRORS />
+                <PROCESSRESULT>
+                  <AUTHORIZATIONRESULT>0Error:Invalid credit card number</AUTHORIZATIONRESULT>
+                  <CUSTOMERCODE />
+                </PROCESSRESULT>
+              </IATSRESPONSE>
+            </CreateCreditCardCustomerCodeV1Result>
+          </CreateCreditCardCustomerCodeV1Response>
+        </soap:Body>
+      </soap:Envelope>
+    XML
+  end
+
+  def successful_unstore_response
+    <<-XML
+      <?xml version="1.0" encoding="UTF-8"?>
+      <soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <soap:Body>
+          <DeleteCustomerCodeV1Response xmlns="https://www.iatspayments.com/NetGate/">
+            <DeleteCustomerCodeV1Result>
+              <IATSRESPONSE xmlns="">
+                <STATUS>Success</STATUS>
+                <ERRORS />
+                <PROCESSRESULT>
+                  <AUTHORIZATIONRESULT>OK</AUTHORIZATIONRESULT>
+                  <CUSTOMERCODE>"A12181132" is deleted</CUSTOMERCODE>
+                </PROCESSRESULT>
+              </IATSRESPONSE>
+            </DeleteCustomerCodeV1Result>
+          </DeleteCustomerCodeV1Response>
+        </soap:Body>
+      </soap:Envelope>
     XML
   end
 end

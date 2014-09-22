@@ -3,8 +3,8 @@ module ActiveMerchant #:nodoc:
     class IatsPaymentsGateway < Gateway
       class_attribute :live_na_url, :live_uk_url
 
-      self.live_na_url = 'https://www.iatspayments.com/NetGate/ProcessLink.asmx'
-      self.live_uk_url = 'https://www.uk.iatspayments.com/NetGate/ProcessLink.asmx'
+      self.live_na_url = 'https://www.iatspayments.com/NetGate'
+      self.live_uk_url = 'https://www.uk.iatspayments.com/NetGate'
 
       self.supported_countries = %w(AU BR CA CH DE DK ES FI FR GR HK IE IT NL NO PT SE SG TR GB US)
       self.default_currency = 'USD'
@@ -12,6 +12,13 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'http://home.iatspayments.com/'
       self.display_name = 'iATS Payments'
+
+      ACTIONS = {
+        purchase: "ProcessCreditCardV1",
+        refund: "ProcessCreditCardRefundWithTransactionIdV1",
+        store: "CreateCreditCardCustomerCodeV1",
+        unstore: "DeleteCustomerCodeV1"
+      }
 
       def initialize(options={})
         if(options[:login])
@@ -30,41 +37,44 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_address(post, options)
-        add_customer_data(post, options)
+        add_ip(post, options)
+        add_description(post, options)
 
-        commit('ProcessCreditCardV1', post)
-      end
-
-      def authorize(money, payment, options={})
-        post = {}
-        add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_address(post, options)
-        add_customer_data(post, options)
-
-        commit('authonly', post)
-      end
-
-      def capture(money, authorization, options={})
-        commit('capture', post)
+        commit(:purchase, post)
       end
 
       def refund(money, authorization, options={})
         post = {}
         post[:transaction_id] = authorization
-        add_customer_data(post, options)
         add_invoice(post, -money, options)
+        add_ip(post, options)
+        add_description(post, options)
 
-        commit('ProcessCreditCardRefundWithTransactionIdV1', post)
+        commit(:refund, post)
       end
 
-      def void(authorization, options={})
-        commit('void', post)
+      def store(credit_card, options = {})
+        post = {}
+        add_payment(post, credit_card)
+        add_address(post, options)
+        add_ip(post, options)
+        add_description(post, options)
+        add_store_defaults(post)
+
+        commit(:store, post)
+      end
+
+      def unstore(authorization, options = {})
+        post = {}
+        post[:customer_code] = authorization
+        add_ip(post, options)
+
+        commit(:unstore, post)
       end
 
       private
 
-      def add_customer_data(post, options)
+      def add_ip(post, options)
         post[:customer_ip_address] = options[:ip] if options.has_key?(:ip)
       end
 
@@ -81,6 +91,9 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post[:invoice_num] = options[:order_id] if options[:order_id]
         post[:total] = amount(money)
+      end
+
+      def add_description(post, options)
         post[:comment] = options[:description] if options[:description]
       end
 
@@ -91,6 +104,13 @@ module ActiveMerchant #:nodoc:
         post[:credit_card_expiry] = expdate(payment)
         post[:cvv2] = payment.verification_value if payment.verification_value?
         post[:mop] = creditcard_brand(payment.brand)
+      end
+
+      def add_store_defaults(post)
+        post[:recurring] = false
+        post[:begin_date] = Time.now.xmlschema
+        post[:end_date] = Time.now.xmlschema
+        post[:amount] = 0
       end
 
       def expdate(creditcard)
@@ -120,14 +140,23 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response),
           response,
-          authorization: authorization_from(response),
+          authorization: authorization_from(action, response),
           test: test?
         )
       end
 
+      def endpoints
+        {
+          purchase: "ProcessLink.asmx",
+          refund: "ProcessLink.asmx",
+          store: "CustomerLink.asmx",
+          unstore: "CustomerLink.asmx"
+        }
+      end
+
       def url(action)
         base_url = @options[:region] == 'uk' ? live_uk_url : live_na_url
-        "#{base_url}?op=#{action}"
+        "#{base_url}/#{endpoints[action]}?op=#{ACTIONS[action]}"
       end
 
       def parse(body)
@@ -149,13 +178,11 @@ module ActiveMerchant #:nodoc:
       def hashify_xml!(xml, response)
         xml = REXML::Document.new(xml)
 
-        # Purchase, refund
         xml.elements.each("//IATSRESPONSE/*") do |node|
           recursively_parse_element(node, response)
         end
       end
 
-      # Flatten nested XML structures
       def recursively_parse_element(node, response)
         if(node.has_elements?)
           node.elements.each { |n| recursively_parse_element(n, response) }
@@ -182,22 +209,28 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def authorization_from(response)
-        response[:transaction_id]
+      def authorization_from(action, response)
+        if [:store, :unstore].include?(action)
+          response[:customercode]
+        else
+          response[:transaction_id]
+        end
       end
 
-      ENVELOPE_NAMESPACES = {
-        "xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance",
-        "xmlns:xsd" => "http://www.w3.org/2001/XMLSchema",
-        "xmlns:soap12" => "http://www.w3.org/2003/05/soap-envelope"
-      }
+      def envelope_namespaces
+        {
+          "xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance",
+          "xmlns:xsd" => "http://www.w3.org/2001/XMLSchema",
+          "xmlns:soap12" => "http://www.w3.org/2003/05/soap-envelope"
+        }
+      end
 
       def post_data(action, parameters = {})
         xml = Builder::XmlMarkup.new
         xml.instruct!(:xml, :version => '1.0', :encoding => 'utf-8')
-        xml.tag! 'soap12:Envelope', ENVELOPE_NAMESPACES do
+        xml.tag! 'soap12:Envelope', envelope_namespaces do
           xml.tag! 'soap12:Body' do
-            xml.tag! action, { "xmlns" => "https://www.iatspayments.com/NetGate/" } do
+            xml.tag! ACTIONS[action], { "xmlns" => "https://www.iatspayments.com/NetGate/" } do
               xml.tag!('agentCode', @options[:agent_code])
               xml.tag!('password', @options[:password])
               parameters.each do |name, value|
