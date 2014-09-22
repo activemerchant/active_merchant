@@ -1,4 +1,3 @@
-# encoding: utf-8
 require 'test_helper'
 
 class RemoteBanwireTest < Test::Unit::TestCase
@@ -6,82 +5,66 @@ class RemoteBanwireTest < Test::Unit::TestCase
     @gateway = BanwireGateway.new(fixtures(:banwire))
 
     @amount = 100
-    @credit_card = credit_card('5204164299999999',
-                               :month => 11,
-                               :year => 2012,
-                               :verification_value => '999',
-                               :brand => 'mastercard')
-
-    @visa_credit_card = credit_card('4485814063899108',
-                                    :month => 12,
-                                    :year => 2016,
-                                    :verification_value => '434')
-
-    @declined_card = credit_card('4000300011112220')
-
+	
+    @credit_card = ActiveMerchant::Billing::CreditCard.new(:number => '5134422031476272',
+							   :month => 12,
+							   :year => 2019,
+							   :verification_value => '162',
+							   :brand => 'mastercard',
+							   :name => 'carlos vargas')
+	
+    @declined_card = ActiveMerchant::Billing::CreditCard.new(:number => '4000300011112220',
+							    :month => 12,
+							    :year => 2019,
+							    :verification_value => '162',
+							    :brand => 'mastercard',
+							    :name => 'carlos vargas')
     @options = {
-      :order_id => '1',
-      :email => "test@email.com",
-      :billing_address => address,
-      :description => 'Store Purchase'
+      order_id: '1',
+      email: "cvargas@banwire.com",
+      description: 'Store Purchase',
+      cust_id: '1',
+      phone: '2234567890',
+      ip: '192.168.0.1',
+      billing_address: {:address=>"prueba",:zip=>"12345"}
     }
-
-    @amex_credit_card = credit_card('375932134599999',
-                                    :month => 10,
-                                    :year => 2014,
-                                    :first_name => "Banwire",
-                                    :last_name => "Test Card",
-                                    :verification_value => '9999',
-                                    :brand => 'american_express')
-
-    @amex_successful_options = {
-        :order_id => '3',
-        :email => 'test@email.com',
-        :billing_address => address(:address1 => 'Horacio', :zip => '11560'),
-        :description  => 'Store purchase amex'
-    }
-
-    @amex_options = {
-        :order_id => '2',
-        :email => 'test@email.com',
-        :billing_address => address,
-        :description  => 'Store purchase amex'
-    }
+	
   end
 
   def test_successful_purchase
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
+    assert_equal "success", response.message
   end
 
-  def test_successful_visa_purchase
-    assert response = @gateway.purchase(@amount, @visa_credit_card, @options)
-    assert_success response
-  end
-
-  def test_successful_amex_purchase
-    assert response = @gateway.purchase(@amount, @amex_credit_card, @amex_successful_options)
-    assert_success response
-  end
-
-  def test_unsuccessful_purchase
-    assert response = @gateway.purchase(@amount, @declined_card, @options)
+  def test_failed_purchase
+    response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'denied', response.message
   end
 
-  def test_invalid_login
-    gateway = BanwireGateway.new(
-                :login => 'fakeuser',
-                :currency => 'MXN'
-              )
-    assert response = gateway.purchase(@amount, @credit_card, @options)
+  def test_successful_authorize
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "success", response.message
+  end
+
+  def test_failed_authorize
+    response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'ID de cuenta invalido', response.message
   end
 
-  def test_invalid_amex_address
-    assert response = @gateway.purchase(@amount, @amex_credit_card, @amex_options)
-    assert_equal 'Error en los datos de facturación de la tarjeta, por favor inserte su dirección y código postal tal y como viene en su estado de cuenta de American Express. En caso de que persista el error, por favor comuníquese con American Express.', response.message
+  def test_successful_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert_equal "success", purchase.message
+
+    assert refund = @gateway.refund(nil, purchase.authorization)
+    assert_success refund
+    assert_equal "success", refund.message
+  end
+
+  def test_failed_refund
+    response = @gateway.refund(nil, '0')
+    assert_failure response
   end
 end
