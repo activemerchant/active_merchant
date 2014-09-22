@@ -57,6 +57,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def verify(card_or_token, options={})
+        commit('CreditAccountVerify') do |xml|
+          add_customer_data(xml, card_or_token, options)
+          add_payment(xml, card_or_token, options)
+        end
+      end
+
       def void(transaction_id, options={})
         commit('CreditVoid') do |xml|
           add_reference(xml, transaction_id)
@@ -226,7 +233,7 @@ module ActiveMerchant #:nodoc:
       def successful?(response)
         (
           (response["GatewayRspCode"] == "0") &&
-          ((response["RspCode"] || "00") == "00")
+          ((response["RspCode"] || "00") == "00" || response["RspCode"] == "85")
         )
       end
 
@@ -234,7 +241,7 @@ module ActiveMerchant #:nodoc:
         if(response["Fault"])
           response["Fault"]
         elsif(response["GatewayRspCode"] == "0")
-          if(response["RspCode"] != "00")
+          if(response["RspCode"] != "00" && response["RspCode"] != "85")
             issuer_message(response["RspCode"])
           else
             response['GatewayRspMsg']
@@ -246,6 +253,10 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         response['GatewayTxnId']
+      end
+
+      def test?
+        @options[:secret_api_key].include? '_cert_'
       end
 
       ISSUER_MESSAGES = {
