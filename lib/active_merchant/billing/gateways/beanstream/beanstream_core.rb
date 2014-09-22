@@ -19,9 +19,8 @@ module ActiveMerchant #:nodoc:
       }
 
       PROFILE_OPERATIONS = {
-        :new    => 'N',
-        :modify => 'M',
-        :query  => 'Q'
+        :new => 'N',
+        :modify => 'M'
       }
 
       CVD_CODES = {
