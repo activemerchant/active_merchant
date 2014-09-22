@@ -60,7 +60,7 @@ class EwayRapidTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_failed_purchase_without_message
+  def test_failed_purchase_with_multiple_messages
     response = stub_comms do
       @gateway.purchase(-100, @credit_card)
     end.respond_with(failed_purchase_response_multiple_messages)
