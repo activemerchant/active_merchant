@@ -110,6 +110,15 @@ module ActiveMerchant #:nodoc:
         refund(money, identification, options)
       end
 
+      def transaction_fee(money, credit_card_prefix, options = {})
+        post = {}
+
+        add_amount(post, money, options)
+        add_credit_card_prefix(post, credit_card_prefix)
+
+        commit(:get_card_info, post)
+      end
+
       private
 
       def add_amount(post, money, options)
@@ -142,6 +151,10 @@ module ActiveMerchant #:nodoc:
         else
           add_reference(post, credit_card_or_reference.to_s)
         end
+      end
+
+      def add_credit_card_prefix(post, credit_card_prefix)
+        post[:cardno_prefix] = credit_card_prefix
       end
 
       def add_instant_capture(post, option)
@@ -230,6 +243,23 @@ module ActiveMerchant #:nodoc:
         }
       end
 
+      def do_get_card_info(params)
+        response = soap_post('getcardinfo', params)
+
+        result = {
+          'result' => response.elements['//getcardinfoResponse/getcardinfoResult'].text,
+          'fee' => response.elements['//getcardinfoResponse/fee'].text,
+          'cardtype' => response.elements['//getcardinfoResponse/cardtype'].text,
+          'epay' => response.elements['//getcardinfoResponse/epayresponse'].text
+        }
+
+        if response.elements['//getcardinfoResponse/cardtypetext']
+          result['cardtypetext'] = response.elements['//getcardinfoResponse/cardtypetext'].text
+        end
+
+        return result
+      end
+
       def make_headers(data, soap_call)
         {
           'Content-Type' => 'text/xml; charset=utf-8',
@@ -248,6 +278,7 @@ module ActiveMerchant #:nodoc:
             xml.tag! 'soap:Body' do
               xml.tag! soap_call, { 'xmlns' => self.live_url } do
                 xml.tag! 'merchantnumber', @options[:login]
+                xml.tag! 'cardno_prefix', params[:cardno_prefix] if params[:cardno_prefix]
                 xml.tag! 'transactionid', params[:transaction]
                 xml.tag! 'amount', params[:amount].to_s if soap_call != 'delete'
               end
