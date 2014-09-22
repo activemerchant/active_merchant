@@ -223,6 +223,11 @@ garanti:
   merchant_id: 600218
   password: "123qweASD"
 
+global_transport:
+  global_user_name: "USERNAME"
+  global_password: "PASSWORD"
+  term_type: "ABC"
+
 hdfc:
   login: LOGIN
   password: PASSWORD
