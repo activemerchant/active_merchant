@@ -10,6 +10,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = %w(AD AT AU BE BG CA CH CY CZ DE DK ES FI FR GB GB GI GR HU IE IT LI LU MC MT NL NO PL PT RO SE SI SK SM TR US VA)
       self.default_currency = 'USD'
+      self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro]
 
       self.homepage_url = 'http://www.authorize.net/'
@@ -36,10 +37,10 @@ module ActiveMerchant #:nodoc:
 
       def purchase(amount, payment, options = {})
         commit("AUTH_CAPTURE") do |xml|
-          xml.refId options[:order_id]
+          xml.refId (options[:order_id] || "").to_s[0, 20]
           xml.transactionRequest do
             xml.transactionType 'authCaptureTransaction'
-            xml.amount amount
+            xml.amount amount(amount)
             add_payment_source(xml, payment)
             add_invoice(xml, options)
             add_customer_data(xml, payment, options)
@@ -54,7 +55,7 @@ module ActiveMerchant #:nodoc:
           xml.refId options[:order_id]
           xml.transactionRequest do
             xml.transactionType 'authOnlyTransaction'
-            xml.amount amount
+            xml.amount amount(amount)
             add_payment_source(xml, payment)
             add_invoice(xml, options)
             add_customer_data(xml, payment, options)
@@ -69,7 +70,7 @@ module ActiveMerchant #:nodoc:
           xml.refId options[:order_id]
           xml.transactionRequest do
             xml.transactionType 'priorAuthCaptureTransaction'
-            xml.amount amount
+            xml.amount amount(amount)
             xml.refTransId split_authorization(authorization)[0]
             add_invoice(xml, options)
             add_user_fields(xml, amount, options)
@@ -82,7 +83,7 @@ module ActiveMerchant #:nodoc:
         commit("CREDIT") do |xml|
           xml.transactionRequest do
             xml.transactionType 'refundTransaction'
-            xml.amount (amount.nil? ? 0 : amount)
+            xml.amount (amount.nil? ? 0 : amount(amount))
             xml.payment do
               xml.creditCard do
                 xml.cardNumber(card_number || options[:card_number])

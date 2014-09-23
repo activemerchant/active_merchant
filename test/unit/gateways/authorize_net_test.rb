@@ -403,6 +403,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_truncate_order_id
+   stub_comms do
+      @gateway.purchase(@amount, @credit_card, order_id: "a" * 21)
+    end.check_request do |endpoint, data, headers|
+      assert_equal ("a" * 20), parse(data).at_xpath("//refId").text, data
+    end.respond_with(successful_authorize_response)
+  end
+
   def parse(data)
     Nokogiri::XML(data).tap do |doc|
       doc.remove_namespaces!
