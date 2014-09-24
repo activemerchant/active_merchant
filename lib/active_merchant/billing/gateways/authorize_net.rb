@@ -250,16 +250,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_address(post, creditcard, options)
-      end
-
       def add_order_id(xml, options)
         xml.refId truncate(options[:order_id], 20)
       end
 
       def add_invoice(xml, options)
         xml.order do
-          xml.invoiceNumber options[:order_id]
+          xml.invoiceNumber truncate(options[:order_id], 20)
           xml.description truncate(options[:description], 255)
         end
       end
