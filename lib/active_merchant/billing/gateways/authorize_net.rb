@@ -37,7 +37,7 @@ module ActiveMerchant #:nodoc:
 
       def purchase(amount, payment, options = {})
         commit("AUTH_CAPTURE") do |xml|
-          xml.refId (options[:order_id] || "").to_s[0, 20]
+          add_order_id(xml, options)
           xml.transactionRequest do
             xml.transactionType 'authCaptureTransaction'
             xml.amount amount(amount)
@@ -52,7 +52,7 @@ module ActiveMerchant #:nodoc:
 
       def authorize(amount, payment, options={})
         commit("AUTH_ONLY") do |xml|
-          xml.refId options[:order_id]
+          add_order_id(xml, options)
           xml.transactionRequest do
             xml.transactionType 'authOnlyTransaction'
             xml.amount amount(amount)
@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
 
       def capture(amount, authorization, options={})
         commit("PRIOR_AUTH_CAPTURE") do |xml|
-          xml.refId options[:order_id]
+          add_order_id(xml, options)
           xml.transactionRequest do
             xml.transactionType 'priorAuthCaptureTransaction'
             xml.amount amount(amount)
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
 
       def void(authorization, options={})
         commit("VOID") do |xml|
-          xml.refId options[:order_id]
+          add_order_id(xml, options)
           xml.transactionRequest do
             xml.transactionType 'voidTransaction'
             xml.refTransId split_authorization(authorization)[0]
@@ -216,29 +216,29 @@ module ActiveMerchant #:nodoc:
 
         xml.billTo do
           first_name, last_name = names_from(payment_source, billing_address, options)
-          xml.firstName(first_name) unless empty?(first_name)
-          xml.lastName(last_name) unless empty?(last_name)
+          xml.firstName(truncate(first_name, 50)) unless empty?(first_name)
+          xml.lastName(truncate(last_name, 50)) unless empty?(last_name)
 
-          xml.company(billing_address[:company]) unless empty?(options[:company])
-          xml.address(billing_address[:address1])
-          xml.city(billing_address[:city])
-          xml.state(empty?(billing_address[:state]) ? 'n/a' : billing_address[:state])
-          xml.zip(billing_address[:zip] || options[:zip])
-          xml.country(billing_address[:country])
+          xml.company(truncate(billing_address[:company], 50)) unless empty?(billing_address[:company])
+          xml.address(truncate(billing_address[:address1], 60))
+          xml.city(truncate(billing_address[:city], 40))
+          xml.state(empty?(billing_address[:state]) ? 'n/a' : truncate(billing_address[:state], 40))
+          xml.zip(truncate((billing_address[:zip] || options[:zip]), 20))
+          xml.country(truncate(billing_address[:country], 60))
         end
 
-        if shipping_address.blank?
+        unless shipping_address.blank?
           xml.shipTo do
             first_name, last_name = names_from(payment_source, shipping_address, options)
-            xml.firstName(first_name) unless empty?(first_name)
-            xml.lastName(last_name) unless empty?(last_name)
+            xml.firstName(truncate(first_name, 50)) unless empty?(first_name)
+            xml.lastName(truncate(last_name, 50)) unless empty?(last_name)
 
-            xml.company(shipping_address[:company]) unless empty?(options[:company])
-            xml.address(shipping_address[:address1])
-            xml.city(shipping_address[:city])
-            xml.state(shipping_address[:state])
-            xml.zip(shipping_address[:zip])
-            xml.country(shipping_address[:country])
+            xml.company(truncate(shipping_address[:company], 50)) unless empty?(shipping_address[:company])
+            xml.address(truncate(shipping_address[:address1], 60))
+            xml.city(truncate(shipping_address[:city], 40))
+            xml.state(truncate(shipping_address[:state], 40))
+            xml.zip(truncate(shipping_address[:zip], 20))
+            xml.country(truncate(shipping_address[:country], 60))
           end
         end
 
@@ -253,10 +253,14 @@ module ActiveMerchant #:nodoc:
       def add_address(post, creditcard, options)
       end
 
+      def add_order_id(xml, options)
+        xml.refId truncate(options[:order_id], 20)
+      end
+
       def add_invoice(xml, options)
         xml.order do
           xml.invoiceNumber options[:order_id]
-          xml.description options[:description]
+          xml.description truncate(options[:description], 255)
         end
       end
 
@@ -381,6 +385,12 @@ module ActiveMerchant #:nodoc:
       def fraud_review?(response)
         (response[:response_code] == FRAUD_REVIEW)
       end
+
+      def truncate(value, max_size)
+        return nil unless value
+        value.to_s[0, max_size]
+      end
+
     end
   end
 end

@@ -403,13 +403,51 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
-  def test_truncate_order_id
-   stub_comms do
-      @gateway.purchase(@amount, @credit_card, order_id: "a" * 21)
+  def test_truncation
+    card = credit_card('4242424242424242',
+      first_name: "a" * 51,
+      last_name: "a" * 51,
+    )
+
+    options = {
+      order_id: "a" * 21,
+      description: "a" * 256,
+      billing_address: address(
+        company: "a" * 51,
+        address1: "a" * 61,
+        city: "a" * 41,
+        state: "a" * 41,
+        zip: "a" * 21,
+        country: "a" * 61,
+      ),
+      shipping_address: address(
+        company: "a" * 51,
+        address1: "a" * 61,
+        city: "a" * 41,
+        state: "a" * 41,
+        zip: "a" * 21,
+        country: "a" * 61,
+      )
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, card, options)
     end.check_request do |endpoint, data, headers|
-      assert_equal ("a" * 20), parse(data).at_xpath("//refId").text, data
-    end.respond_with(successful_authorize_response)
+      assert_truncated(data, 20, "//refId")
+      assert_truncated(data, 255, "//description")
+      assert_address_truncated(data, 50, "firstName")
+      assert_address_truncated(data, 50, "lastName")
+      assert_address_truncated(data, 50, "company")
+      assert_address_truncated(data, 60, "address")
+      assert_address_truncated(data, 40, "city")
+      assert_address_truncated(data, 40, "state")
+      assert_address_truncated(data, 20, "zip")
+      assert_address_truncated(data, 60, "country")
+    end.respond_with(successful_purchase_response)
   end
+
+
+  private
 
   def parse(data)
     Nokogiri::XML(data).tap do |doc|
@@ -434,7 +472,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end
   end
 
-  private
+  def assert_truncated(data, expected_size, field)
+    assert_equal ("a" * expected_size), parse(data).at_xpath(field).text, data
+  end
+
+  def assert_address_truncated(data, expected_size, field)
+    assert_truncated(data, expected_size, "//billTo/#{field}")
+    assert_truncated(data, expected_size, "//shipTo/#{field}")
+  end
 
   def successful_purchase_response
     <<-eos
