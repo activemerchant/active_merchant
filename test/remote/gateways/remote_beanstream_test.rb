@@ -96,8 +96,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
   end
 
   def test_successful_single_use_token_purchase
-    options = @options.merge(payment_method: :legato)
-    assert response = @gateway.purchase(@amount, @single_use_token, options)
+    assert response = @gateway.purchase(@amount, @single_use_token, @options)
     assert_success response
     assert_false response.authorization.blank?
     assert_equal "Approved", response.message
@@ -105,8 +104,7 @@ class RemoteBeanstreamTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_single_use_token_purchase
-    options = @options.merge(payment_method: :legato)
-    assert response = @gateway.purchase(@amount, @declined_single_use_token, options)
+    assert response = @gateway.purchase(@amount, @declined_single_use_token, @options)
     assert_failure response
     assert_equal 'DECLINE', response.message
   end

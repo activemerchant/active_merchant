@@ -22,14 +22,15 @@ module ActiveMerchant #:nodoc:
     # the store method's option parameter. Example: @gateway.store("gt6-0c78c25b-3637-4ba0-90e2-26105287f198")
     #
     # == Legato:
-    # To perform an authorization or purchase using a singleUseToken, use the token as the source parameter (instead of a credit card or payment profile) and pass
-    # in :legato as the payment method. If your Beanstream account is configured to require the card owner's name (:trnCardOwner), set the billing address name.
+    # To perform an authorization or purchase using a singleUseToken, pass the token as the source parameter (instead of a credit card or payment profile).
+    # Since payment profiles are also passed through as strings, values prefixed with gt6- are processed as Legato tokens (this is Beanstream's convention as of 09/23/2014).
+    # Once Active Merchant introduces a Token object, Legato tokens will be updated to follow that logic.
+    # If your Beanstream account is configured to require the card owner's name (:trnCardOwner), set the billing address name.
     #
     #  Example purchase (using Legato):
     #
     #   options = {
     #     ...
-    #     :payment_method => :legato,
     #     :billing_address => {
     #       :name => "xiaobo zzz"
     #     },
