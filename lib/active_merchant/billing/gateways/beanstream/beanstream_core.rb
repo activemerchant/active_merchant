@@ -369,7 +369,7 @@ module ActiveMerchant #:nodoc:
 
       def add_source(post, source, options = {})
         if source.is_a?(String) || source.is_a?(Integer)
-          if source.start_with?("gt6-")
+          if source.to_s.start_with?("gt6-")
             add_legato(post, source, options)
           else
             post[:customerCode] = source
