@@ -51,7 +51,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:modificationRequest] = modification_request(authorization, options)
         post[:modificationRequest][:modificationAmount] = amount_hash(money, options[:currency])
-        
+
         commit('Payment.capture', post)
       end
 
@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         post[:modificationRequest] = modification_request(authorization, options)
         post[:modificationRequest][:modificationAmount] = amount_hash(money, options[:currency])
-        
+
         commit('Payment.refund', post)
       end
 
@@ -72,6 +72,10 @@ module ActiveMerchant #:nodoc:
         post[:modificationRequest] = modification_request(identification, options)
 
         commit('Payment.cancel', post)
+      end
+
+      def verify(creditcard, options = {})
+        authorize(0, creditcard, options)
       end
 
       private

@@ -87,6 +87,20 @@ class RemoteAdyenTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_verify
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+
+    assert_equal "Authorised", response.message
+    assert response.authorization
+  end
+
+  def test_unsuccessful_verify
+    assert response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_equal "Refused", response.message
+  end
+
   def test_invalid_login
     gateway = AdyenGateway.new(
       company: '',
