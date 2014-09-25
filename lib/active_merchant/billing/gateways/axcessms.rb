@@ -149,8 +149,8 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_name(xml, payment)
         xml.tag! "Name" do
-          xml.tag! "Given", payment.name.split(" ")[0]
-          xml.tag! "Family", payment.name.split(" ")[1]
+          xml.tag! "Given", payment.first_name
+          xml.tag! "Family", payment.last_name
         end
       end
 
