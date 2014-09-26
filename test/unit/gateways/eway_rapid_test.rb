@@ -120,6 +120,7 @@ class EwayRapidTest < Test::Unit::TestCase
       assert_match(%r{"TotalAmount":"200"}, data)
       assert_match(%r{"InvoiceDescription":"The Really Long Description More Than Sixty Four Characters Gets"}, data)
       assert_match(%r{"InvoiceReference":"orderid1"}, data)
+      assert_match(%r{"InvoiceNumber":"orderid1"}, data)
       assert_match(%r{"CurrencyCode":"INR"}, data)
 
       assert_match(%r{"Title":"Mr."}, data)
@@ -384,7 +385,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 100,
-          "InvoiceNumber": "",
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -470,7 +471,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": -100,
-          "InvoiceNumber": null,
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -529,7 +530,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount":100,
-          "InvoiceNumber": "",
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
         "CurrencyCode": "AUD"
@@ -582,7 +583,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": -100,
-          "InvoiceNumber": null,
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -689,7 +690,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 0,
-          "InvoiceNumber": "",
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -742,7 +743,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 0,
-          "InvoiceNumber": null,
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -801,7 +802,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 0,
-          "InvoiceNumber": "",
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
