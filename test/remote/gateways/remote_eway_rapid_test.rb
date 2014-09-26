@@ -104,7 +104,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@failed_amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Error   Failed", response.message
+    assert_equal "Error Failed", response.message
   end
 
   def test_failed_capture

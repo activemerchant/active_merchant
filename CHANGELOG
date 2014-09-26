@@ -5,6 +5,7 @@
 * Stripe: Add #scrub for scrubbing PCI information out of HTTP transcripts [girasquid]
 * Cybersource: Add ability to verify a card [duff]
 * BraintreeBlue: Expose the error code in the response params [duff]
+* eWay Rapid: Update supported countries and card types [incarnate]
 
 == Version 1.45.0 (December 1, 2014)
 
