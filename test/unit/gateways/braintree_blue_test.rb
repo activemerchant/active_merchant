@@ -534,6 +534,14 @@ class BraintreeBlueTest < Test::Unit::TestCase
     ActiveMerchant::Billing::BraintreeBlueGateway.application_id = nil
   end
 
+  def test_successful_purchase_with_descriptor
+    Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
+      (params[:descriptor][:name] == 'wow*productname') &&
+      (params[:descriptor][:phone] == '4443331112')
+    end.returns(braintree_result)
+    @gateway.purchase(100, credit_card("41111111111111111111"), descriptor_name: 'wow*productname', descriptor_phone: '4443331112')
+  end
+
   private
 
   def braintree_result(options = {})
