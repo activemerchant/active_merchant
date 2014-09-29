@@ -294,7 +294,7 @@ module ActiveMerchant #:nodoc:
         cents ||= 0
         [
           response[:invoice_no],
-          response[:ref_no],
+          response[:ref_no] || response[:invoice_no],
           response[:auth_code],
           response[:acq_ref_data],
           response[:process_data],
