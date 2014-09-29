@@ -91,7 +91,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! "Transaction" do
             xml.tag! 'TranType', 'Credit'
             xml.tag! 'TranCode', action
-            if action == 'PreAuth' || action == 'Sale'
+            if (action == 'PreAuth' || action == 'Sale') and options[:allow_partial_auth]
               xml.tag! "PartialAuth", "Allow"
             end
             add_invoice(xml, options[:order_id], nil, options)
@@ -114,7 +114,7 @@ module ActiveMerchant #:nodoc:
         xml.tag! "TStream" do
           xml.tag! "Transaction" do
             xml.tag! 'TranType', 'Credit'
-            if action == 'PreAuthCapture'
+            if action == 'PreAuthCapture' and options[:allow_partial_auth]
               xml.tag! "PartialAuth", "Allow"
             end
             xml.tag! 'TranCode', (@use_tokenization ? (action + "ByRecordNo") : action)
