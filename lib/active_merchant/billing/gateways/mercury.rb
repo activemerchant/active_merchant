@@ -126,7 +126,9 @@ module ActiveMerchant #:nodoc:
             add_address(xml, options)
             xml.tag! 'TranInfo' do
               xml.tag! "AuthCode", auth_code
-              xml.tag! "AcqRefData", acq_ref_data if options[:reversal]
+              if options[:reversal] or action == 'PreAuthCapture'
+                xml.tag! "AcqRefData", acq_ref_data
+              end
               xml.tag! "ProcessData", process_data if options[:reversal]
             end
           end
