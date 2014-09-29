@@ -55,8 +55,6 @@ module ActiveMerchant #:nodoc:
       def commit(paymentcode, money, payment, options)
         options[:mode] = test? ? "INTEGRATOR_TEST" : "LIVE" if options[:mode].blank?
         request = build_request(paymentcode, money, payment, options)
-        puts "\n"
-        puts request
 
         headers = {
           "Content-Type" => "application/x-www-form-urlencoded;charset=UTF-8"
