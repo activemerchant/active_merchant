@@ -161,6 +161,17 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
 
+  def test_add_track_data_with_creditcard
+    @credit_card.track_data = "data"
+
+    @gateway.expects(:ssl_post).with do |_, body|
+      assert_match "UMmagstripe=data", body
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_does_not_raise_error_on_missing_values
     @gateway.expects(:ssl_post).returns("status")
     assert_nothing_raised do
