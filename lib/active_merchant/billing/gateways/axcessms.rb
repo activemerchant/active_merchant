@@ -61,7 +61,7 @@ module ActiveMerchant #:nodoc:
         }
 
         response = parse(ssl_post(test? ? test_url : live_url, "load=#{CGI.escape(request)}", headers))
-        success = response[:result] == "ACK" # || response[:result] == "PENDING"
+        success = response[:result] == "ACK"
         message = "#{response[:reason]} - #{response[:return]}"
         authorization = response[:unique_id]
 
@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
         xml.tag! "Request", "version" => API_VERSION do
           xml.tag! "Header" do
-            xml.tag! "Security", "sender" => @options[:sender] #, "type" => "MERCHANT"
+            xml.tag! "Security", "sender" => @options[:sender]
           end
           xml.tag! "Transaction", "mode" => options[:mode], "channel" => @options[:channel], "response" => "SYNC" do
             xml.tag! "User", "login" => @options[:login], "pwd" => @options[:password]
@@ -115,8 +115,6 @@ module ActiveMerchant #:nodoc:
             xml.tag! "Payment", "code" => payment_code do
               xml.tag! "Memo", options[:memo] unless options[:memo].blank?
               xml.tag! "Presentation" do
-                # <DueDate>2013-08-13</DueDate>
-                # <Mandate id="123456" dateOfSignature="2013-08-01"/>
                 xml.tag! "Amount", amount(money)
                 xml.tag! "Currency", options[:currency] || currency(money)
                 xml.tag! "Usage", options[:description]

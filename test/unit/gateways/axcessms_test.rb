@@ -5,7 +5,6 @@ class AxcessmsTest < Test::Unit::TestCase
 
   TEST_AUTHORIZATION = '8a8294494830a3bb01483174f1827b9a'
   TEST_PURCHASE = '8a82944a4830c4810148350aeeec5e58'
-  TEST_CAPTURE = 'C833707121385268439116'
 
   def setup
     @gateway = AxcessmsGateway.new(fixtures(:axcessms))
