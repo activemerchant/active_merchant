@@ -146,10 +146,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(post, credit_card)
-        post[:card]   = credit_card.number
-        post[:cvv2]   = credit_card.verification_value if credit_card.verification_value?
-        post[:expir]  = expdate(credit_card)
-        post[:name]   = credit_card.name
+        if credit_card.track_data.present?
+          post[:magstripe] = credit_card.track_data
+          post[:cardpresent] = true
+        else
+          post[:card]   = credit_card.number
+          post[:cvv2]   = credit_card.verification_value if credit_card.verification_value?
+          post[:expir]  = expdate(credit_card)
+          post[:name]   = credit_card.name
+        end
       end
 
       # see: http://wiki.usaepay.com/developer/transactionapi#split_payments
