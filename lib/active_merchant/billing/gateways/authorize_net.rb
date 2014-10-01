@@ -71,7 +71,7 @@ module ActiveMerchant #:nodoc:
           xml.transactionRequest do
             xml.transactionType 'priorAuthCaptureTransaction'
             xml.amount amount(amount)
-            xml.refTransId split_authorization(authorization)[0]
+            xml.refTransId authorization
             add_invoice(xml, options)
             add_user_fields(xml, amount, options)
           end
@@ -79,18 +79,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(amount, authorization, options={})
-        transaction_id, card_number = split_authorization(authorization)
         commit("CREDIT") do |xml|
           xml.transactionRequest do
             xml.transactionType 'refundTransaction'
             xml.amount (amount.nil? ? 0 : amount(amount))
             xml.payment do
               xml.creditCard do
-                xml.cardNumber(card_number || options[:card_number])
+                xml.cardNumber(options[:card_number])
                 xml.expirationDate 'XXXX'
               end
             end
-            xml.refTransId transaction_id
+            xml.refTransId authorization
             add_customer_data(xml, nil, options)
             add_user_fields(xml, amount, options)
           end
@@ -102,7 +101,7 @@ module ActiveMerchant #:nodoc:
           add_order_id(xml, options)
           xml.transactionRequest do
             xml.transactionType 'voidTransaction'
-            xml.refTransId split_authorization(authorization)[0]
+            xml.refTransId authorization
             add_user_fields(xml, nil, options)
           end
         end
@@ -280,7 +279,7 @@ module ActiveMerchant #:nodoc:
           success_from(response),
           message_from(response, avs_result, cvv_result),
           response,
-          authorization: authorization_from(response),
+          authorization: response[:transaction_id],
           test: test?,
           avs_result: avs_result,
           cvv_result: cvv_result,
@@ -368,15 +367,6 @@ module ActiveMerchant #:nodoc:
         end
 
         response[:response_reason_text]
-      end
-
-      def authorization_from(response)
-        [response[:transaction_id], response[:account_number]].join("#")
-      end
-
-      def split_authorization(authorization)
-        transaction_id, card_number = authorization.split("#")
-        [transaction_id, card_number]
       end
 
       def fraud_review?(response)
