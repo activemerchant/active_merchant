@@ -1,9 +1,15 @@
 require "nokogiri"
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PayexGateway < Gateway
-      self.live_url = 'https://external.payex.com/'
-      self.test_url = 'https://test-external.payex.com/'
+      class_attribute :live_external_url, :test_external_url, :live_confined_url, :test_confined_url
+
+      self.live_external_url = 'https://external.payex.com/'
+      self.test_external_url = 'https://test-external.payex.com/'
+
+      self.live_confined_url = 'https://confined.payex.com/'
+      self.test_confined_url = 'https://test-confined.payex.com/'
 
       self.money_format = :cents
       self.supported_countries = ['DK', 'FI', 'NO', 'SE']
@@ -11,9 +17,6 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://payex.com/'
       self.display_name = 'Payex'
       self.default_currency = "EUR"
-
-      # NOTE: the PurchaseCC uses a different url for test transactions
-      TEST_CONFINED_URL = 'https://test-confined.payex.com/'
 
       TRANSACTION_STATUS = {
         sale:       '0',
@@ -319,8 +322,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def url_for(soap_action)
-        base_url = test? ? (soap_action[:confined] ? TEST_CONFINED_URL : test_url) : live_url
-        File.join(base_url, soap_action[:url])
+        File.join(base_url(soap_action), soap_action[:url])
+      end
+
+      def base_url(soap_action)
+        if soap_action[:confined]
+          test? ? test_confined_url : live_confined_url
+        else
+          test? ? test_external_url : live_external_url
+        end
       end
 
       # this will add a hash to the passed in properties as required by Payex requests
