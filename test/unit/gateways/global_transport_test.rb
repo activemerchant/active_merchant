@@ -61,7 +61,7 @@ class GlobalTransportTest < Test::Unit::TestCase
     end.respond_with(failed_capture_response)
 
     assert_failure capture
-    assert_match /less than or equal/, capture.message
+    assert_match(/less than or equal/, capture.message)
   end
 
   def test_successful_refund
