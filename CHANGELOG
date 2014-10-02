@@ -24,6 +24,7 @@
 * USAePay: Add track_data support [louiskearns]
 * Payex: Use the right url for the purchase call [duff]
 * Braintree: Allow dynamic descriptors [duff]
+* Openpay: Add support for device session id [guillermo-delucio, ismaelem]
 
 == Version 1.44.1 (Aug 28, 2014)
 
