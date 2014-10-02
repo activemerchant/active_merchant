@@ -67,13 +67,28 @@ class AdyenTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
   end
-  
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
     response = @gateway.void('7914002629995504', @options)
     assert_success response
     assert response.test?
+  end
+
+  def test_successful_verify
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+  end
+
+  def test_unsuccessful_verify
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_failure response
+    assert_equal "Refused", response.message
   end
 
   def test_fractional_currency

@@ -89,4 +89,9 @@ class GatewayTest < Test::Unit::TestCase
     assert_equal '1', @gateway.send(:localized_amount, 100, 'JPY')
     assert_equal '12', @gateway.send(:localized_amount, 1234, 'HUF')
   end
+
+  def test_non_fractional_currencies_accessor
+    assert Gateway.non_fractional_currency?('JPY')
+    refute Gateway.non_fractional_currency?('CAD')
+  end
 end

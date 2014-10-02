@@ -20,13 +20,21 @@ app55:
   api_key: "QDtACYMCFqtuKOQ22QtCkGR1TzD7XM8i"
   api_secret: "yT1FRpuusBIQoEBIfIQ8bPStkl7yzdTz"
 
+# Working credentials, no need to replace
 authorize_net:
-  login: X
-  password: Y
+  login: 4Pf3E54zCsW
+  password: 337UTt4y6DB64ft8
 
 # Working credentials, no need to replace
 balanced:
   login: 'e1c5ad38d1c711e1b36c026ba7e239a9'
+
+# Bank Frick doesn't provide public testing data
+bank_frick:
+  sender: sender-uuid
+  channel: channel-uuid
+  userid: user-uuid
+  userpwd: password
 
 banwire:
   login: "desarrollo"
@@ -115,6 +123,10 @@ cecabank:
 certo_direct:
   login: 1
   password: vP6OwK3
+
+checkout:
+  merchant_id: SBMTEST
+  password: Password1!
 
 # Contact Support at it_support@commercegate.com for credentials and offer/site
 commercegate:
@@ -210,6 +222,11 @@ garanti:
   terminal_id: 111995
   merchant_id: 600218
   password: "123qweASD"
+
+global_transport:
+  global_user_name: "USERNAME"
+  global_password: "PASSWORD"
+  term_type: "ABC"
 
 hdfc:
   login: LOGIN

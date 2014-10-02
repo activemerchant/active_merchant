@@ -87,6 +87,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Authorize.Net CIM](http://www.authorize.net/) - US
 * [Authorize.Net](http://www.authorize.net/) - AD, AT, AU, BE, BG, CA, CH, CY, CZ, DE, DK, ES, FI, FR, GB, GB, GI, GR, HU, IE, IT, LI, LU, MC, MT, NL, NO, PL, PT, RO, SE, SI, SK, SM, TR, US, VA
 * [Balanced](https://www.balancedpayments.com/) - US
+* [Bank Frick](http://www.bankfrickacquiring.com/) - LI, US
 * [Banwire](http://www.banwire.com/) - MX
 * [Barclays ePDQ Extra Plus](http://www.barclaycard.co.uk/business/accepting-payments/epdq-ecomm/) - GB
 * [Barclays ePDQ MPI](http://www.barclaycard.co.uk/business/accepting-payments/epdq-mpi/) - GB
@@ -101,6 +102,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Cashnet](http://www.higherone.com/) - US
 * [Cecabank](http://www.ceca.es/es/) - ES
 * [CertoDirect](http://www.certodirect.com/) - BE, BG, CZ, DK, DE, EE, IE, EL, ES, FR, IT, CY, LV, LT, LU, HU, MT, NL, AT, PL, PT, RO, SI, SK, FI, SE, GB
+* [Checkout.com](https://www.checkout.com/) - AT, BE, BG, CY, CZ, DE, DK, EE, ES, FI, FR, GR, HR, HU, IE, IS, IT, LI, LT, LU, LV, MT, MU, NL, NO, PL, PT, RO, SE, SI, SK, US
 * [Commercegate](http://www.commercegate.com/) - AD, AT, AX, BE, BG, CH, CY, CZ, DE, DK, ES, FI, FR, GB, GG, GI, GR, HR, HU, IE, IM, IS, IT, JE, LI, LT, LU, LV, MC, MT, NL, NO, PL, PT, RO, SE, SI, SK, VA
 * [Conekta](https://conekta.io) - MX
 * [CyberSource](http://www.cybersource.com) - US, BR, CA, CN, DK, FI, FR, DE, JP, MX, NO, SE, GB, SG
@@ -119,6 +121,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [FirstData Global Gateway e4](http://www.firstdata.com) - CA, US
 * [FirstGiving](http://www.firstgiving.com/) - US
 * [Garanti Sanal POS](https://sanalposweb.garanti.com.tr) - US, TR
+* [Global Transport](https://www.globalpaymentsinc.com) - CA, PR, US
 * [HDFC](http://www.hdfcbank.com/sme/sme-details/merchant-services/guzh6m0i) - IN
 * [Heartland Payment Systems](http://developer.heartlandpaymentsystems.com/SecureSubmit/) - US
 * [iATS Payments](http://home.iatspayments.com/) - AU, BR, CA, CH, DE, DK, ES, FI, FR, GR, HK, IE, IT, NL, NO, PT, SE, SG, TR, UK, US

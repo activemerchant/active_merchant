@@ -109,7 +109,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@failed_amount, "bogus")
     assert_failure response
-    assert_equal "V6134", response.message
+    assert_equal "Invalid Auth Transaction ID for Capture/Void", response.message
   end
 
   def test_successful_void
@@ -123,7 +123,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void("bogus")
     assert_failure response
-    assert_equal "V6134", response.message
+    assert_equal "Invalid Auth Transaction ID for Capture/Void", response.message
   end
 
   def test_successful_refund
@@ -139,7 +139,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
   def test_failed_refund
     response = @gateway.refund(@amount, 'fakeid', @options)
     assert_failure response
-    assert_equal "V6115", response.message
+    assert_equal "Invalid DirectRefundRequest, Transaction ID", response.message
   end
 
   def test_successful_store
