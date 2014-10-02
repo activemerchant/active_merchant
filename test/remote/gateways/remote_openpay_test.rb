@@ -11,7 +11,8 @@ class RemoteOpenpayTest < Test::Unit::TestCase
 
     @options = {
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      device_session_id: 'weur2ty732yu2y47824u23yu4i'
     }
   end
 
@@ -24,7 +25,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'The card was declined', response.message
+    assert_equal 'The card is not supported on online transactions', response.message
   end
 
   def test_successful_refund
@@ -55,7 +56,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   def test_unsuccessful_authorize
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'The card was declined', response.message
+    assert_equal 'The card is not supported on online transactions', response.message
   end
 
   def test_successful_capture
@@ -130,6 +131,6 @@ class RemoteOpenpayTest < Test::Unit::TestCase
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'The api key or merchant id are invalid.', response.message
+    assert_equal 'The api key or merchant id are invalid', response.message
   end
 end
