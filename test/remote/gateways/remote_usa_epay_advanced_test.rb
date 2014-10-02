@@ -10,7 +10,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
       :number => '4000100011112224',
       :month => 9,
-      :year => 14,
+      :year => Time.now.year + 1,
       :brand => 'visa',
       :verification_value => '123',
       :first_name => "Fred",
