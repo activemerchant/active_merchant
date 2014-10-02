@@ -59,6 +59,21 @@ class MercuryTest < Test::Unit::TestCase
     assert refund.test?
   end
 
+  def test_add_swipe_data_with_credit_card
+    @credit_card.track_data = "data"
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/Track1>data</, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal '1;0194;000011;KbMCC0742510421  ;|17|410100700000;;100', response.authorization
+    assert response.test?
+  end
+
   private
 
   def successful_purchase_response

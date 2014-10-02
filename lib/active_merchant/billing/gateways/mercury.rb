@@ -199,8 +199,12 @@ module ActiveMerchant #:nodoc:
 
       def add_credit_card(xml, credit_card, action)
         xml.tag! 'Account' do
-          xml.tag! 'AcctNo', credit_card.number
-          xml.tag! 'ExpDate', expdate(credit_card)
+          if credit_card.track_data.present?
+            xml.tag! 'Track1', credit_card.track_data
+          else
+            xml.tag! 'AcctNo', credit_card.number
+            xml.tag! 'ExpDate', expdate(credit_card)
+          end
         end
         xml.tag! 'CardType', CARD_CODES[credit_card.brand] if credit_card.brand
 
