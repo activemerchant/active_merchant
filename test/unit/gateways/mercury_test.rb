@@ -69,9 +69,6 @@ class MercuryTest < Test::Unit::TestCase
 
     assert_instance_of Response, response
     assert_success response
-
-    assert_equal '1;0194;000011;KbMCC0742510421  ;|17|410100700000;;100', response.authorization
-    assert response.test?
   end
 
   private
