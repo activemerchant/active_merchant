@@ -25,17 +25,27 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options={})
+        requires!(options, :client_key)
         requires!(options, :service_key)
+        @client_key = options[:client_key]
         @service_key = options[:service_key]
         super
       end
 
-      def purchase(money, token, options={})
+      def purchase(money, credit_card, options={})
         post = {}
+
+        options = {
+
+        }
+
+        tokenize(credit_card)
+
         add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_address(post, payment, options)
+        add_payment(post, credit_card)
+        add_address(post, credit_card, options)
         add_customer_data(post, options)
+
 
         commit('order', post)
       end
@@ -105,6 +115,12 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(response),
           test: test?
         )
+      end
+
+      def tokenize(options)
+        post = {}
+
+        commit(:post, "tokens", post, options)
       end
 
       def success_from(response)
