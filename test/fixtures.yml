@@ -311,8 +311,8 @@ merchant_warrior:
 
 # Working credentials, no need to replace
 mercury:
-  login: '395347306=TOKEN'
-  password: '123TOKEN'
+  login: '023358150511666'
+  password: 'xyz'
 
 mercury_no_tokenization:
   login: '595901'

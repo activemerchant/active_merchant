@@ -18,7 +18,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     @options_with_billing = @options.merge(
       :merchant => '999',
       :billing_address => {
-        :address1 => '4 Corporate Square',
+        :address1 => '4 Corporate SQ',
         :zip => '30329'
       }
     )
@@ -105,7 +105,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
       },
       response.avs_result
     )
-    assert_equal({"code"=>"M", "message"=>"Match"}, response.cvv_result)
+    assert_equal({"code"=>"M", "message"=>"CVV matches"}, response.cvv_result)
   end
 
   def test_partial_capture
@@ -197,4 +197,5 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert_success capture
     assert_equal '1.00', capture.params['authorize']
   end
+
 end
