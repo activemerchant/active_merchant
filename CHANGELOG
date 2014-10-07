@@ -21,6 +21,9 @@
 * Authorize.Net: Truncate more fields [duff]
 * Authorize.Net: Truncate invoiceNumber [ntalbott]
 * Adyen: Add support for verify operation [duff]
+* USAePay: Add track_data support [louiskearns]
+* Payex: Use the right url for the purchase call [duff]
+* Braintree: Allow dynamic descriptors [duff]
 
 == Version 1.44.1 (Aug 28, 2014)
 
