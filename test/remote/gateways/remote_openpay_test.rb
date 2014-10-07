@@ -11,7 +11,8 @@ class RemoteOpenpayTest < Test::Unit::TestCase
 
     @options = {
       billing_address: address,
-      description: 'Store Purchase'
+      description: 'Store Purchase',
+      device_session_id: 'weur2ty732yu2y47824u23yu4i'
     }
   end
 
