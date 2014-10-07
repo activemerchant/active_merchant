@@ -98,7 +98,7 @@ class BogusTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['US'], BogusGateway.supported_countries
+    assert_equal [], BogusGateway.supported_countries
   end
 
   def test_supported_card_types
