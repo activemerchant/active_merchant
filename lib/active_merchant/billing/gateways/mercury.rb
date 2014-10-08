@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
             add_customer_data(xml, options)
             add_amount(xml, money, options)
             add_credit_card(xml, credit_card, action)
-            add_address(xml, options) if !credit_card.track_data.present?
+            add_address(xml, options) unless credit_card.track_data.present?
           end
         end
         xml = xml.target!
