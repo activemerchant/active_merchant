@@ -117,14 +117,14 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert_success response
     assert_equal(
       {
-        "code" => "Y",
-        "postal_match" => "Y",
-        "street_match" => "Y",
-        "message" => "Street address and 5-digit postal code match."
+        "code" => nil,
+        "postal_match" => nil,
+        "street_match" => nil,
+        "message" => nil
       },
       response.avs_result
     )
-    assert_equal({"code"=>"M", "message"=>"CVV matches"}, response.cvv_result)
+    assert_equal({"code"=>nil, "message"=>nil}, response.cvv_result)
   end
 
   def test_partial_capture
@@ -217,7 +217,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert_equal '1.00', capture.params['authorize']
   end
   
-    def test_successful_authorize_and_capture_with_track_data
+  def test_successful_authorize_and_capture_with_track_data
     @credit_card.track_data = @track_data
     response = @gateway.authorize(100, @credit_card, @options)
     assert_success response

@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
             add_customer_data(xml, options)
             add_amount(xml, money, options)
             add_credit_card(xml, credit_card, action)
-            add_address(xml, options)
+            add_address(xml, options) if !credit_card.track_data.present?
           end
         end
         xml = xml.target!
@@ -208,7 +208,7 @@ module ActiveMerchant #:nodoc:
         end
         xml.tag! 'CardType', CARD_CODES[credit_card.brand] if credit_card.brand
 
-        include_cvv = !%w(Return PreAuthCapture).include?(action)
+        include_cvv = !%w(Return PreAuthCapture).include?(action) && !credit_card.track_data.present?
         xml.tag! 'CVVData', credit_card.verification_value if(include_cvv && credit_card.verification_value)
       end
 
