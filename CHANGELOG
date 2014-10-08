@@ -26,6 +26,7 @@
 * Braintree: Allow dynamic descriptors [duff]
 * Openpay: Add support for device session id [guillermo-delucio, ismaelem]
 * Redsys: Add support for verify [duff]
+* Redsys: Handle unknown currencies [duff]
 
 == Version 1.44.1 (Aug 28, 2014)
 

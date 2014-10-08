@@ -158,6 +158,12 @@ class RedsysTest < Test::Unit::TestCase
     assert_equal "SIS0093 ERROR", response.message
   end
 
+  def test_unknown_currency
+    assert_raise ArgumentError do
+      @gateway.purchase(123, credit_card, @options.merge(currency: "HUH WUT"))
+    end
+  end
+
   def test_default_currency
     assert_equal 'EUR', RedsysGateway.default_currency
   end
