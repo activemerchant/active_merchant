@@ -40,6 +40,22 @@ module ActiveMerchant #:nodoc:
 
       self.display_name = 'Braintree (Blue Platform)'
 
+      POSTAL_MATCH_CODE = {
+        'M' => %w( M P Z ),
+        'N' => %w( N O ),
+        'E' => %w( E S ),
+        'S' => %w( E S ),
+        'U' => %w( B I )
+      }
+
+      STREET_MATCH_CODE = {
+        'M' => %w( B M O ),
+        'N' => %w( N Z ),
+        'E' => %w( E S ),
+        'S' => %w( E S ),
+        'U' => %w( I P )
+      }
+
       def initialize(options = {})
         requires!(options, :merchant_id, :public_key, :private_key)
         @merchant_account_id = options[:merchant_account_id]
@@ -330,11 +346,8 @@ module ActiveMerchant #:nodoc:
           options[:authorization] = result.transaction.id
         end
         if result.transaction
-          options[:avs_result] = {
-            :code => nil, :message => nil,
-            :street_match => result.transaction.avs_street_address_response_code,
-            :postal_match => result.transaction.avs_postal_code_response_code
-          }
+          code = (STREET_MATCH_CODE[result.transaction.avs_street_address_response_code] & POSTAL_MATCH_CODE[result.transaction.avs_postal_code_response_code]).first
+          options[:avs_result] = { :code => code }
           options[:cvv_result] = result.transaction.cvv_response_code
         end
         options
