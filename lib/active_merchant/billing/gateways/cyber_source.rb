@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://ics2wstest.ic3.com/commerce/1.x/transactionProcessor'
       self.live_url = 'https://ics2ws.ic3.com/commerce/1.x/transactionProcessor'
 
-      XSD_VERSION = "1.69"
+      XSD_VERSION = "1.104"
 
       # visa, master, american_express, discover
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -234,8 +234,9 @@ module ActiveMerchant #:nodoc:
       def build_auth_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
-        add_auth_service(xml)
+        add_auth_service(xml, creditcard_or_reference, options)
         add_business_rules_data(xml)
+        add_network_token(xml, creditcard_or_reference, options) if token_based_card?(creditcard_or_reference, options)
         xml.target!
       end
 
@@ -267,8 +268,9 @@ module ActiveMerchant #:nodoc:
         if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
           add_check_service(xml)
         else
-          add_purchase_service(xml, options)
+          add_purchase_service(xml, payment_method_or_reference, options)
           add_business_rules_data(xml) unless options[:pinless_debit_card]
+          add_network_token(xml, payment_method_or_reference, options) if token_based_card?(payment_method_or_reference, options)
         end
         xml.target!
       end
@@ -333,11 +335,12 @@ module ActiveMerchant #:nodoc:
           if card_brand(payment_method) == 'check'
             add_check_service(xml, options)
           else
-            add_purchase_service(xml, options)
+            add_purchase_service(xml, payment_method, options)
           end
         end
         add_subscription_create_service(xml, options)
         add_business_rules_data(xml)
+        add_network_token(xml, payment_method, options) if options[:setup_fee] and token_based_card?(payment_method, options)
         xml.target!
       end
 
@@ -452,8 +455,50 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_auth_service(xml)
-        xml.tag! 'ccAuthService', {'run' => 'true'}
+      def add_auth_service(xml, payment_method_or_reference, options)
+        if token_based_card?(payment_method_or_reference, options)
+          # Sadly, for each type of card there is different rules on how to send this
+          # See http://apps.cybersource.com/library/documentation/dev_guides/tokenization/Tokenization.pdf
+          if card_brand(payment_method_or_reference) == 'visa'
+            xml.tag! 'ccAuthService', {'run' => 'true'} do
+              # Cryptogram for payment network tokenization transactions. The value for this field must be 28-character base64 or 40-character hex binary
+              xml.tag! 'cavv', options[:cryptogram]
+              # Type of payer authentication fields that are being used for the payment network tokenization transaction
+              xml.tag! 'commerceIndicator', 'vbv' # Verified by Visa
+              # Cryptogram for payment network tokenization transactions. The value for this field must be 28-character base64 or 40-character hex binary
+              xml.tag! 'xid', options[:cryptogram]
+            end
+          elsif card_brand(payment_method_or_reference) == 'master'
+            xml.tag! 'ucaf' do
+              # Cryptogram for payment network tokenization transactions with MasterCard
+              xml.tag! 'authenticationData', options[:cryptogram]
+              # Required field for payment network tokenization transactions with MasterCard
+              xml.tag! 'collectionIndicator', '2'
+            end
+            xml.tag! 'ccAuthService', {'run' => 'true'} do
+              # Type of payer authentication fields that are being used for the payment network tokenization transaction
+              xml.tag! 'commerceIndicator', 'spa' # MasterCard SecureCode
+            end
+          elsif card_brand(payment_method_or_reference) == 'american_express'
+            # For the American Express card type, the cryptogram is a 40-byte binary value that
+            # you must split into two 20-byte binary values (block A and block B). Send the first
+            # 20-byte value (block A) in the cardholder authentication verification value (CAVV)
+            # field. Send the second 20-byte value (block B) in the transaction ID (XID) field.
+            # The incoming cryptogram is base64 encoded, so we first decode it, then split it
+            # then re-encode it for transmission (chomping off a trailing newline ruby adds).
+            base64_decoded_cryptogram = Base64.decode64(options[:cryptogram])
+            block_a                   = base64_decoded_cryptogram[0, 20]
+            block_b                   = base64_decoded_cryptogram[20, 20]
+            xml.tag! 'ccAuthService', {'run' => 'true'} do
+              xml.tag! 'cavv', Base64.encode64(block_a).chomp
+              # Type of payer authentication fields that are being used for the payment network tokenization transaction
+              xml.tag! 'commerceIndicator', 'aesk' # American Express SafeKey
+              xml.tag! 'xid', Base64.encode64(block_b).chomp
+            end
+          end
+        else
+          xml.tag! 'ccAuthService', {'run' => 'true'}
+        end
       end
 
       def add_capture_service(xml, request_id, request_token)
@@ -463,11 +508,11 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_purchase_service(xml, options)
+      def add_purchase_service(xml, payment_method_or_reference, options)
         if options[:pinless_debit_card]
           xml.tag! 'pinlessDebitService', {'run' => 'true'}
         else
-          xml.tag! 'ccAuthService', {'run' => 'true'}
+          add_auth_service(xml, payment_method_or_reference, options)
           xml.tag! 'ccCaptureService', {'run' => 'true'}
         end
       end
@@ -565,6 +610,24 @@ module ActiveMerchant #:nodoc:
 
       def add_validate_pinless_debit_service(xml)
         xml.tag!'pinlessDebitValidateService', {'run' => 'true'}
+      end
+
+      def add_network_token(xml, payment_method_or_reference, options)
+        xml.tag! 'paymentNetworkToken' do
+          # Type of transaction that provided the token data. This value does not specify the token
+          # service provider; it specifies the entity that provided you with information about the token.
+          # 1: In-app transaction.
+          #    An application on the customer’s mobile device provided the
+          #    token data for an e-commerce transaction.
+          #    For recurring transactions, use this value if the original transaction was an in-app
+          #    e-commerce transaction.
+          # See http://apps.cybersource.com/library/documentation/dev_guides/tokenization/Tokenization.pdf
+          xml.tag! 'transactionType', '1'
+        end
+      end
+
+      def token_based_card?(payment_method_or_reference, options)
+        !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) && options[:cryptogram]
       end
 
       # Where we actually build the full SOAP request using builder
