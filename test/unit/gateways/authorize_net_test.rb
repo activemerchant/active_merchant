@@ -28,6 +28,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       parse(data) do |doc|
         assert_nil doc.at_xpath('//track1')
         assert_nil doc.at_xpath('//track2')
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_purchase_response)
   end
@@ -40,6 +41,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       parse(data) do |doc|
         assert_equal '%B378282246310005^LONGSON/LONGBOB^1705101130504392?', doc.at_xpath('//track1').content
         assert_nil doc.at_xpath('//track2')
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_purchase_response)
   end
@@ -52,6 +54,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       parse(data) do |doc|
         assert_nil doc.at_xpath('//track1')
         assert_equal ';4111111111111111=1803101000020000831?', doc.at_xpath('//track2').content
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_purchase_response)
   end
@@ -68,6 +71,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_equal "Jim Smith", doc.at_xpath("//nameOnAccount").content
         assert_equal "WEB", doc.at_xpath("//echeckType").content
         assert_equal "1", doc.at_xpath("//checkNumber").content
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_authorize_response)
 
@@ -89,6 +93,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_equal "Jim Smith", doc.at_xpath("//nameOnAccount").content
         assert_equal "WEB", doc.at_xpath("//echeckType").content
         assert_equal "1", doc.at_xpath("//checkNumber").content
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_purchase_response)
 
@@ -259,6 +264,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       parse(data) do |doc|
         assert_equal "E0Mvq8AAABEiMwARIjNEVWZ3iJk=", doc.at_xpath("//cardholderAuthentication/cardholderAuthenticationValue").content
         assert_equal "2", doc.at_xpath("//cardholderAuthentication/authenticationIndicator").content
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_purchase_response)
   end
@@ -271,6 +277,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_not_nil doc.at_xpath("//order/description"), data
         assert_equal "Yo", doc.at_xpath("//order/description").content, data
         assert_equal "Sweetness", doc.at_xpath("//order/invoiceNumber").content, data
+        assert_equal "0.50", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_capture_response)
     assert_success response
@@ -293,6 +300,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_equal "Bob", doc.at_xpath("//billTo/firstName").content, data
         assert_equal "Smith", doc.at_xpath("//billTo/lastName").content, data
         assert_equal "12345", doc.at_xpath("//billTo/zip").content, data
+        assert_equal "0.50", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -367,7 +375,9 @@ class AuthorizeNetTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
-      assert_equal "A1000000", fields_from_doc(parse(data))["x_solution_id"], data
+      doc = parse(data)
+      assert_equal "A1000000", fields_from_doc(doc)["x_solution_id"], data
+      assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
     end.respond_with(successful_authorize_response)
   ensure
     @gateway.class.application_id = nil
@@ -391,6 +401,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       parse(data) do |doc|
         assert_not_nil doc.at_xpath("//customer/id"), data
         assert_equal "123", doc.at_xpath("//customer/id").content, data
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_authorize_response)
   end
@@ -399,7 +410,9 @@ class AuthorizeNetTest < Test::Unit::TestCase
    stub_comms do
       @gateway.purchase(@amount, @credit_card, customer: "bob@test.com")
     end.check_request do |endpoint, data, headers|
-      assert !parse(data).at_xpath("//customer/id"), data
+      doc = parse(data)
+      assert !doc.at_xpath("//customer/id"), data
+      assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
     end.respond_with(successful_authorize_response)
   end
 
