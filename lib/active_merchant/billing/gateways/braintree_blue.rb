@@ -188,20 +188,26 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_with_credit_card(creditcard, options)
         commit do
+          if options[:payment_method_nonce]
+            credit_card_params = { payment_method_nonce: options[:payment_method_nonce] }
+          else
+            credit_card_params = {
+              :credit_card => {
+                :cardholder_name => creditcard.name,
+                :number => creditcard.number,
+                :cvv => creditcard.verification_value,
+                :expiration_month => creditcard.month.to_s.rjust(2, "0"),
+                :expiration_year => creditcard.year.to_s,
+                :token => options[:credit_card_token]
+              }
+            }
+          end
           parameters = {
             :first_name => creditcard.first_name,
             :last_name => creditcard.last_name,
             :email => scrub_email(options[:email]),
             :id => options[:customer],
-            :credit_card => {
-              :cardholder_name => creditcard.name,
-              :number => creditcard.number,
-              :cvv => creditcard.verification_value,
-              :expiration_month => creditcard.month.to_s.rjust(2, "0"),
-              :expiration_year => creditcard.year.to_s,
-              :token => options[:credit_card_token]
-            }
-          }
+          }.merge credit_card_params
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
           Response.new(result.success?, message_from_result(result),
             {
@@ -536,6 +542,9 @@ module ActiveMerchant #:nodoc:
         if credit_card_or_vault_id.is_a?(String) || credit_card_or_vault_id.is_a?(Integer)
           if options[:payment_method_token]
             parameters[:payment_method_token] = credit_card_or_vault_id
+            options.delete(:billing_address)
+          elsif options[:payment_method_nonce]
+            parameters[:payment_method_nonce] = credit_card_or_vault_id
           else
             parameters[:customer_id] = credit_card_or_vault_id
           end
@@ -561,7 +570,7 @@ module ActiveMerchant #:nodoc:
             }
           end
         end
-        parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address] && !options[:payment_method_token]
+        parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address]
         parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
         parameters[:channel] = application_id if application_id.present? && application_id != "ActiveMerchant"
 
