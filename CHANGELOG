@@ -26,6 +26,7 @@
 * Authorize.net: Add config_error standard error code [andrewpaliga]
 * PayPal Express: Add support for TotalType in SetExpressCheckout [gingerhendrix]
 * eWay Rapid: Add :invoice option [DylanFM]
+* Braintree: Add nonce payment method [eric1234,cwoodcox]
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
