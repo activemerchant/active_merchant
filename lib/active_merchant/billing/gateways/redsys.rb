@@ -239,6 +239,13 @@ module ActiveMerchant #:nodoc:
         commit data
       end
 
+      def verify(creditcard, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, creditcard, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       private
 
       def add_action(data, action)
