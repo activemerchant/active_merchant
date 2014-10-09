@@ -2,16 +2,16 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # Bogus Gateway
     class BogusGateway < Gateway
-      AUTHORIZATION = '53433'
+      AUTHORIZATION = '53434'
 
       SUCCESS_MESSAGE = "Bogus Gateway: Forced success"
       FAILURE_MESSAGE = "Bogus Gateway: Forced failure"
-      ERROR_MESSAGE = "Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception and anything else for error"
-      UNSTORE_ERROR_MESSAGE = "Bogus Gateway: Use trans_id ending in 1 for success, 2 for exception and anything else for error"
-      CAPTURE_ERROR_MESSAGE = "Bogus Gateway: Use authorization number ending in 1 for exception, 2 for error and anything else for success"
-      VOID_ERROR_MESSAGE = "Bogus Gateway: Use authorization number ending in 1 for exception, 2 for error and anything else for success"
-      REFUND_ERROR_MESSAGE = "Bogus Gateway: Use trans_id number ending in 1 for exception, 2 for error and anything else for success"
-      CHECK_ERROR_MESSAGE = "Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error"
+      ERROR_MESSAGE = "Bogus Gateway: Use CreditCard number ending in 1 for success, 2 for exception, x3 for x-second timeout, and anything else for error"
+      UNSTORE_ERROR_MESSAGE = "Bogus Gateway: Use trans_id ending in 1 for success, 2 for exception, x3 for x-second timeout, and anything else for error"
+      CAPTURE_ERROR_MESSAGE = "Bogus Gateway: Use authorization number ending in 1 for exception, 2 for error, x3 for x-second timeout, and anything else for success"
+      VOID_ERROR_MESSAGE = "Bogus Gateway: Use authorization number ending in 1 for exception, 2 for error, x3 for x-second timeout, and anything else for success"
+      REFUND_ERROR_MESSAGE = "Bogus Gateway: Use trans_id number ending in 1 for exception, 2 for error, x3 for x-second timeout, and anything else for success"
+      CHECK_ERROR_MESSAGE = "Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception, x3 for x-second timeout, and anything else for error"
 
       self.supported_countries = []
       self.supported_cardtypes = [:bogus]
@@ -25,6 +25,9 @@ module ActiveMerchant #:nodoc:
           Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money, :error => FAILURE_MESSAGE }, :test => true)
+        when /^(\d+)3$/
+          Kernel.sleep $1.to_i
+          raise Error, error_message(paysource)
         else
           raise Error, error_message(paysource)
         end
@@ -37,6 +40,9 @@ module ActiveMerchant #:nodoc:
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true, :authorization => AUTHORIZATION)
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE },:test => true)
+        when /^(\d+)3$/
+          Kernel.sleep $1.to_i
+          raise Error, error_message(paysource)
         else
           raise Error, error_message(paysource)
         end
@@ -54,6 +60,9 @@ module ActiveMerchant #:nodoc:
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true )
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true)
+        when /^(\d+)3$/
+          Kernel.sleep $1.to_i
+          raise Error, error_message(paysource)
         else
           raise Error, error_message(paysource)
         end
@@ -66,6 +75,9 @@ module ActiveMerchant #:nodoc:
           raise Error, REFUND_ERROR_MESSAGE
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true)
+        when /^(\d+)3$/
+          Kernel.sleep $1.to_i
+          raise Error, REFUND_ERROR_MESSAGE
         else
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
         end
@@ -78,6 +90,9 @@ module ActiveMerchant #:nodoc:
           raise Error, CAPTURE_ERROR_MESSAGE
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true)
+        when /^(\d+)3$/
+          Kernel.sleep $1.to_i
+          raise Error, CAPTURE_ERROR_MESSAGE
         else
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
         end
@@ -89,6 +104,9 @@ module ActiveMerchant #:nodoc:
           raise Error, VOID_ERROR_MESSAGE
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:authorization => reference, :error => FAILURE_MESSAGE }, :test => true)
+        when /^(\d+)3$/
+          Kernel.sleep $1.to_i
+          raise Error, VOID_ERROR_MESSAGE
         else
           Response.new(true, SUCCESS_MESSAGE, {:authorization => reference}, :test => true)
         end
@@ -100,6 +118,9 @@ module ActiveMerchant #:nodoc:
           Response.new(true, SUCCESS_MESSAGE, {:billingid => '1'}, :test => true, :authorization => AUTHORIZATION)
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:billingid => nil, :error => FAILURE_MESSAGE }, :test => true)
+        when /^(\d+)3$/
+          Kernel.sleep $1.to_i
+          raise Error, error_message(paysource)
         else
           raise Error, error_message(paysource)
         end
@@ -111,6 +132,9 @@ module ActiveMerchant #:nodoc:
           Response.new(true, SUCCESS_MESSAGE, {}, :test => true)
         when /2$/
           Response.new(false, FAILURE_MESSAGE, {:error => FAILURE_MESSAGE },:test => true)
+        when /^(\d+)3$/
+          Kernel.sleep $1.to_i
+          raise Error, UNSTORE_ERROR_MESSAGE
         else
           raise Error, UNSTORE_ERROR_MESSAGE
         end
