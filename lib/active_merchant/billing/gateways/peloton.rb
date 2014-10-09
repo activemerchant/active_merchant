@@ -1,4 +1,4 @@
-require 'pry'
+require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class PelotonGateway < Gateway
@@ -13,32 +13,18 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Peloton'
 
       def initialize(options={})
-        requires!(options, :client_id, :account_name, :password)
+        # requires!(options, :client_id, :account_name, :password)
         # requires!(options, :merchant_id, :encryption_key, :username, :password)
         super
       end
 
-      def purchase(amount, payment, options={})
-        requires!(options, :type, :billing_country)
-        # post = {}
-        # add_invoice(post, money, options)
-        # add_payment(post, payment)
-        # add_address(post, payment, options)
-        # add_customer_data(post, options)
+      def purchase_or_authorize(amount, payment, options={})
+        # requires!(options, :type, :billing_country)
 
-        commit(build_purchase_request(amount, payment, options), options)
+        @parent_operation_xml = 'ProcessPayment'
+        @child_operation_xml = 'processPaymentRequest'
+        commit(build_purchase_or_authorize_request(amount, payment, options), options)
       end
-
-      # def purchase(money, source, options = {})
-      #   post = {}
-      #   add_amount(post, money)
-      #   add_invoice(post, options)
-      #   add_source(post, source)
-      #   add_address(post, options)
-      #   add_transaction_type(post, purchase_action(source))
-      #   add_customer_ip(post, options)
-      # commit(post)
-      # end
 
       def authorize(money, payment, options={})
         post = {}
@@ -74,15 +60,12 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
       end
 
-      def add_address(post, creditcard, options)
-      end
-
       def add_invoice(post, money, options)
         post[:amount] = amount(money)
         post[:currency] = (options[:currency] || currency(money))
       end
 
-      def build_purchase_request(amount, payment, options)
+      def build_purchase_or_authorize_request(amount, payment, options)
         #TODO: This is a preliminary implimentation of the payment body, address, etc. will need to be added - Lee Poohachoff
         xml = Builder::XmlMarkup.new :indent => 2
         add_transaction_amount(xml, amount)
@@ -91,10 +74,6 @@ module ActiveMerchant #:nodoc:
         add_address(xml, options)
         add_payment_type(xml, options)
         xml.target!
-      end
-
-      def parse(body)
-        {}
       end
 
       def success_from(response)
@@ -122,14 +101,10 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'pel:Amount', amount(amount)
       end
 
-      def add_payment_type(xml, options)
-        xml.tag! 'pel:Type', options[:type]
-      end
-
       def add_credit_card_data(xml, payment)
         xml.tag! 'pel:CardOwner', payment.first_name + " " + payment.last_name
         xml.tag! 'pel:CardNumber', payment.number
-        xml.tag! 'pel:ExpiryMonth', format(payment.month, :two_digist)
+        xml.tag! 'pel:ExpiryMonth', format(payment.month, :two_digits)
         xml.tag! 'pel:ExpiryYear', format(payment.year, :two_digits)
         xml.tag! 'pel:CardVerificationDigits', payment.verification_value
       end
@@ -176,9 +151,8 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'soapenv:Envelope', {'xmlns:soapenv' => 'http://schemas.xmlsoap.org/soap/envelope/', 'xmlns:pel' => "http://www.peloton-technologies.com/"} do
             xml.tag! 'soapenv:Header'
             xml.tag! 'soapenv:Body' do
-              #FIXME: This is temoprary code, the method name will need to be changed for other functions - Lee Poohachoff
-              xml.tag! 'pel:ProcessPayment' do
-                xml.tag! 'pel:processPaymentRequest' do
+              xml.tag! "#{@parent_operation_xml}", {'xmlns' => "http://www.peloton-technologies.com/"} do
+                xml.tag! "#{@child_operation_xml}" do
                   add_merchant_data(xml, options)
                   xml << body
                 end
@@ -188,49 +162,38 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
+
+      def parse(xml)
+        xml = Nokogiri::XML(xml)
+        ns = {'xmlns' => "http://www.peloton-technologies.com/"}
+        response = {}
+        if xml.at_xpath("//soap:Fault")
+          response[:fault_code] = xml.xpath("//faultcode").text
+          response[:fault_string] = xml.xpath("//faultstring").text
+        elsif xml.at_xpath("//xmlns:Success", ns)
+          response[:success] = xml.xpath("//xmlns:Success", ns).text
+          response[:message] = xml.xpath("//xmlns:Message", ns).text
+          response[:message_code] = xml.xpath("//xmlns:MessageCode", ns).text
+          response[:transaction_ref_code] = xml.xpath("//xmlns:TransactionRefCode", ns).text
+        else
+          response[:fatal_error] = 'Could not complete the request at this time.'
+        end
+        response
+      end
+
       def commit(body, options)
         url = (test? ? test_url : live_url)
-        binding.pry
         response = parse(ssl_post(url, build_request(body, options), headers))
 
-        success = response[:Success] == "true"
-        message = response[:Message]
-        message_code = response[:MessageCode]
+        success = response[:success] == 'true'
+        message = response[:message]
 
         Response.new(success, message, response,
                      :test => test?)
-
-        # message =
-        #
-        # Response.new(
-        #     success_from(response),
-        #     message_from(response),
-        #     response,
-        #     authorization: authorization_from(response),
-        #     test: test?
-        # )
-
-
-
-
-        # <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-        # <soap:Body>
-        # <ProcessCustomerPaymentResponse xmlns="http://www.peloton-technologies.com/">
-        # <ProcessCustomerPaymentResult>
-        # <Success>true</Success>
-        #             <Message>Success</Message>
-        # <MessageCode>0</MessageCode>
-        #             <TransactionRefCode>edd7cafb-474e-e411-80c5-005056a927b9</TransactionRefCode>
-        # </ProcessCustomerPaymentResult>
-        #       </ProcessCustomerPaymentResponse>
-        # </soap:Body>
-        # </soap:Envelope>
       end
 
       def headers
-        { #'authorization' => basic_auth,
-          #'Accept'        => 'application/xml',
-          'Content-Type'  => 'text/xml; charset=utf-8' }
+        { 'Content-Type'  => 'text/xml; charset=utf-8' }
       end
 
     end

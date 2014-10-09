@@ -30,7 +30,7 @@ class PelotonTest < Test::Unit::TestCase
     @options = {
         :canadian_address_verification => false,
         :type => 'P',
-        :order_number => 124,
+        :order_number => 126,
         :language_code => 'EN',
 
         :billing_name => "John",
@@ -56,21 +56,20 @@ class PelotonTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.purchase(@amount, @credit_card, @options)
-    # @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    #
-    # response = @gateway.purchase(@amount, @credit_card, @options)
-    # assert_success response
-    #
-    # assert_equal 'REPLACE', response.authorization
-    # assert response.test?
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+    assert response.test?
   end
 
   def test_failed_purchase
-    # @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    @gateway.expects(:ssl_post).returns(failed_purchase_response)
     #
-    # response = @gateway.purchase(@amount, @credit_card, @options)
-    # assert_failure response
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert response.test?
   end
 
   def test_successful_authorize
@@ -133,6 +132,19 @@ class PelotonTest < Test::Unit::TestCase
   end
 
   def failed_purchase_response
+    %q(   <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+            <soap:Body>
+              <ProcessPaymentResponse xmlns="http://www.peloton-technologies.com/">
+                 <ProcessPaymentResult>
+                    <Success>false</Success>
+                    <Message>Duplicate Transaction exists within specified time period</Message>
+                    <MessageCode>715</MessageCode>
+                    <TransactionRefCode/>
+                 </ProcessPaymentResult>
+              </ProcessPaymentResponse>
+           </soap:Body>
+        </soap:Envelope>
+        )
   end
 
   def successful_authorize_response
