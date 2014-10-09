@@ -45,7 +45,8 @@ module ActiveMerchant #:nodoc:
         'N' => %w( N O ),
         'E' => %w( E S ),
         'S' => %w( E S ),
-        'U' => %w( B I )
+        'U' => %w( B I ),
+        nil => %w( B I )
       }
 
       STREET_MATCH_CODE = {
@@ -53,7 +54,8 @@ module ActiveMerchant #:nodoc:
         'N' => %w( N Z ),
         'E' => %w( E S ),
         'S' => %w( E S ),
-        'U' => %w( I P )
+        'U' => %w( I P ),
+        nil => %w( B I )
       }
 
       def initialize(options = {})
