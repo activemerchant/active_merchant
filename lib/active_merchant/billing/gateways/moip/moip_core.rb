@@ -3,7 +3,8 @@ module ActiveMerchant #:nodoc:
     module MoipCore #:nodoc:
       URL_ACTIONS = {
           'authenticate'  => '/ws/alpha/EnviarInstrucao/Unica',
-          'pay'           => '/rest/pagamento?callback=?'
+          'pay'           => '/rest/pagamento?callback=?',
+          'query'         => '/ws/alpha/ConsultarInstrucao/'
       }
 
       CARD_BRAND = {
@@ -229,15 +230,27 @@ module ActiveMerchant #:nodoc:
       end
 
       def normalize_param(hash)
-        hash.map { |k,v| "&#{k}=#{URI.encode(v.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))}" }.join
+        if hash.is_a? Hash
+          hash.map { |k,v| "&#{k}=#{URI.encode(v.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))}" }.join
+        elsif hash.is_a? String
+          hash
+        end
       end
 
       def success?(response)
-        response[:status] == 'Sucesso' || response['StatusPagamento'] == 'Sucesso'
+        if @query
+          response[:status].chomp != 'Falha'
+        else
+          response[:status] ==  'Sucesso' || response['StatusPagamento'] == 'Sucesso'
+        end
       end
 
       def message_from(response)
-        response['Mensagem'] || response[:erro] || response[:status]
+        if @query
+          response[:status].strip || response['Status'].strip
+        else
+          response['Mensagem'] || response[:erro] || response[:status]
+        end
       end
 
       def params_from(response)
@@ -249,9 +262,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_authentication
-        { 'authorization' => basic_auth,
+        {
+          'authorization' => basic_auth,
           'Accept'        => 'application/xml',
-          'Content-Type'  => 'application/xml; charset=ISO-8859-1' }
+          'Content-Type'  => 'application/xml; charset=ISO-8859-1'
+        }
       end
 
       def basic_auth

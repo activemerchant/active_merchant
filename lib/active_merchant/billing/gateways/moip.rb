@@ -23,6 +23,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def query(token)
+        @query = true
+        response = commit(:get, 'xml', build_url('query', token), '', add_authentication)
+        @query = false
+        response
+      end
+
       private
         def authenticate(money, payment_method, options = {})
           commit(:post, 'xml', build_url('authenticate'), build_authenticate_request(money, options), add_authentication)
