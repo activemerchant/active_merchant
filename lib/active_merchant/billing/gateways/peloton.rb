@@ -166,7 +166,7 @@ module ActiveMerchant #:nodoc:
               xml.tag! "#{@parent_operation_xml}", {'xmlns' => "http://www.peloton-technologies.com/"} do
                 xml.tag! "#{@child_operation_xml}" do
                   add_merchant_data(xml, options)
-                  xml.tag! 'ApplicationName', options [:application_name]
+                  xml.tag! 'ApplicationName', options[:application_name]
                   xml.tag! 'LanguageCode', options[:language_code]
                   xml << body
                 end
