@@ -31,6 +31,7 @@
 * Remove defunct Samurai gateway [ntalbott]
 * eWay Rapid: Tweak authorization support [duff]
 * Litle: Add support for dynamic descriptors [duff]
+* Add TNS gateway [markabe]
 
 == Version 1.44.1 (Aug 28, 2014)
 
