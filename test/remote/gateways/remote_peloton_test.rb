@@ -4,34 +4,58 @@ class RemotePelotonTest < Test::Unit::TestCase
   def setup
     @gateway = PelotonGateway.new(fixtures(:peloton))
 
+    Base.gateway_mode = :test
+
     @amount = 100
-    @credit_card = credit_card('4000100011112224')
-    @declined_card = credit_card('4000300011112220')
+    @credit_card = credit_card('4030000010001234')
+    @declined_card = credit_card('4003050500040005')
 
     @options = {
-      order_id: '1',
-      billing_address: address,
-      description: 'Store Purchase'
+        :canadian_address_verification => false,
+        :type => 'P',
+        :order_number => rand(2000..3000),
+        :language_code => 'EN',
+
+        :billing_name => "John",
+        :billing_address1 => "772 1 Ave",
+        :billing_address2 => "",
+        :billing_city => "Calgary",
+        :billing_province_state => "AB",
+        :billing_country => "CA",
+        :billing_postal_zip_code => "T2N 0A3",
+        :billing_email_address => "john@example.com",
+        :billing_phone_number => "5872284918",
+
+        :shipping_name => "John",
+        :shipping_address1 => "772 1 Ave",
+        :shipping_address2 => "",
+        :shipping_city => "Calgary",
+        :shipping_province_state => "AB",
+        :shipping_country => "Canada",
+        :shipping_postal_zip_code => "T2N 0A3",
+        :shipping_email_address => "john@example.com",
+        :shipping_phone_number => "5872284918",
     }
   end
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_equal 'Success', response.message
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
+    assert_equal 'The transaction was declined by your financial institution. Please contact your financial institution for further information.', response.message
   end
 
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(nil, auth.authorization)
+    @options[:transaction_ref_code] = auth.authorization
+    assert capture = @gateway.capture(@amount, @options)
     assert_success capture
   end
 
@@ -44,12 +68,14 @@ class RemotePelotonTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    @options[:transaction_ref_code] = auth.authorization
+    assert capture = @gateway.capture(@amount-1, @options)
     assert_success capture
   end
 
   def test_failed_capture
-    response = @gateway.capture(nil, '')
+    @options[:transaction_ref_code] = 'wrong code'
+    response = @gateway.capture(@amount, @options)
     assert_failure response
   end
 
@@ -57,7 +83,8 @@ class RemotePelotonTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(nil, purchase.authorization)
+    @options[:transaction_ref_code] = purchase.authorization
+    assert refund = @gateway.refund(@amount, @options)
     assert_success refund
   end
 
@@ -65,12 +92,14 @@ class RemotePelotonTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    @options[:transaction_ref_code] = purchase.authorization
+    assert refund = @gateway.refund(@amount-1, @options)
     assert_success refund
   end
 
   def test_failed_refund
-    response = @gateway.refund(nil, '')
+    @options[:transaction_ref_code] = 'wrong code'
+    response = @gateway.refund(@amount, @options)
     assert_failure response
   end
 
@@ -78,31 +107,21 @@ class RemotePelotonTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert void = @gateway.void(auth.authorization)
+    @options[:transaction_ref_code] = auth.authorization
+    assert void = @gateway.void(@options)
     assert_success void
   end
 
   def test_failed_void
-    response = @gateway.void('')
+    @options[:transaction_ref_code] = 'wrong code'
+    response = @gateway.void(@options)
     assert_failure response
-  end
-
-  def test_successful_verify
-    response = @gateway.verify(@credit_card, @options)
-    assert_success response
-    assert_match %r{REPLACE WITH SUCCESS MESSAGE}, response.message
-  end
-
-  def test_failed_verify
-    response = @gateway.verify(@declined_card, @options)
-    assert_failure response
-    assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
   end
 
   def test_invalid_login
     gateway = PelotonGateway.new(
-      login: '',
-      password: ''
+      client_id: '222',
+      password: 'empty'
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
