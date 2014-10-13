@@ -188,20 +188,26 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_with_credit_card(creditcard, options)
         commit do
+          if options[:payment_method_nonce]
+            credit_card_params = { payment_method_nonce: options[:payment_method_nonce] }
+          else
+            credit_card_params = {
+              :credit_card => {
+                :cardholder_name => creditcard.name,
+                :number => creditcard.number,
+                :cvv => creditcard.verification_value,
+                :expiration_month => creditcard.month.to_s.rjust(2, "0"),
+                :expiration_year => creditcard.year.to_s,
+                :token => options[:credit_card_token]
+              }
+            }
+          end
           parameters = {
             :first_name => creditcard.first_name,
             :last_name => creditcard.last_name,
             :email => scrub_email(options[:email]),
             :id => options[:customer],
-            :credit_card => {
-              :cardholder_name => creditcard.name,
-              :number => creditcard.number,
-              :cvv => creditcard.verification_value,
-              :expiration_month => creditcard.month.to_s.rjust(2, "0"),
-              :expiration_year => creditcard.year.to_s,
-              :token => options[:credit_card_token]
-            }
-          }
+          }.merge credit_card_params
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
           Response.new(result.success?, message_from_result(result),
             {
