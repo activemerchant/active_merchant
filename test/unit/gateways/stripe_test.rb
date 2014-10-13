@@ -504,6 +504,17 @@ class StripeTest < Test::Unit::TestCase
     end.respond_with(successful_update_credit_card_response)
   end
 
+  def test_deprecated_unstore
+    assert_deprecation_warning do
+      assert response = @gateway.unstore("CustomerID", "card_id")
+    end
+
+    assert_deprecation_warning do
+      assert response = @gateway.unstore("CustomerID", "card_id", {})
+    end
+  end
+
+
   private
 
   def successful_new_customer_response
