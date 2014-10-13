@@ -10,6 +10,7 @@ rescue LoadError => e
 end
 
 require 'test/unit'
+require 'pry'
 
 require 'money'
 require 'mocha/version'

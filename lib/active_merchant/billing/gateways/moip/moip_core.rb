@@ -192,12 +192,11 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, format, url, parameters, headers = {})
         response = send("parse_#{format}", ssl_request(method, url, parameters, headers))
-
         Response.new(success?(response),
                      message_from(response),
                      params_from(response),
                      :test => test?,
-                     :authorization => response[:token] || response['CodigoMoIP'])
+                     :authorization => authorization_from(response))
       end
 
       def parse_json(body)
@@ -205,13 +204,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse_xml(body)
-        xml = REXML::Document.new(body.force_encoding("ISO-8859-1").encode("UTF-8"))
-
-        response = {}
-        xml.root.elements.to_a.each do |node|
-          parse_element(response, node)
-        end
-        response
+        @xml = REXML::Document.new(body.force_encoding("ISO-8859-1").encode("UTF-8"))
+        Hash.from_xml(body.force_encoding("ISO-8859-1").encode("UTF-8"))
       end
 
       def parse_element(response, node)
@@ -233,11 +227,31 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        response[:status] == 'Sucesso' || response['StatusPagamento'] == 'Sucesso'
+        if @query
+          response['ConsultarTokenResponse']['RespostaConsultar']['Status'] == 'Sucesso'
+        else
+          if response.has_key?('EnviarInstrucaoUnicaResponse')
+            return response['EnviarInstrucaoUnicaResponse']['Resposta']['Status'] == 'Sucesso'
+          elsif response.has_key?('StatusPagamento')
+            return response['StatusPagamento'] == 'Sucesso'
+          end
+        end
+      end
+
+      def authorization_from(response)
+        if response.has_key?('EnviarInstrucaoUnicaResponse')
+          response['EnviarInstrucaoUnicaResponse']['Resposta']['Token']
+        else
+          response['CodigoMoIP']
+        end
       end
 
       def message_from(response)
-        response['Mensagem'] || response[:erro] || response[:status]
+        if @query
+          response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']['Status'].strip
+        else
+          response['Mensagem'] || response[:erro] || response[:status]
+        end
       end
 
       def params_from(response)
