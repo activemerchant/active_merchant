@@ -248,7 +248,14 @@ module ActiveMerchant #:nodoc:
 
       def message_from(response)
         if @query
-          response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']['Status'].strip
+          message = {}
+          error = REXML::XPath.each(@xml, '//Erro').first
+          if error
+            description = error.attribute('Classificacao').value
+            message[:description] = description
+          end
+          message[:status] = response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']['Status'].strip
+          message
         else
           response['Mensagem'] || response[:erro] || response[:status]
         end
