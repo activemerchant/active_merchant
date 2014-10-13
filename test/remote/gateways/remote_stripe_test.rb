@@ -147,7 +147,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     card_id = creation.params['cards']['data'].first['id']
 
     # Unstore the card
-    assert response = @gateway.unstore(customer_id, card_id)
+    assert response = @gateway.unstore(customer_id, card_id: card_id)
     assert_success response
     assert_equal card_id, response.params['id']
     assert_equal true, response.params['deleted']
