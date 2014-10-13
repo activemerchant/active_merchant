@@ -37,7 +37,6 @@ module ActiveMerchant #:nodoc:
 
       def query(reference, reference_type=:merchant)
         @query = true
-        p 'Starting query request.'
         xml = create_request do |xml|
           add_authentication(xml, nil)
           add_transaction_query(xml, reference, reference_type)
@@ -166,9 +165,13 @@ module ActiveMerchant #:nodoc:
       def commit(xml)
         url = build_commit_url
 
-        p "[INFO][AM] Sending request to #{url}"
+        if defined?(Rails) && !Rails.env.test?
+          p "[INFO][AM] Sending request to #{url}"
+        end
         response = parse(ssl_post(url, xml.target!))
-        p "[INFO][AM] Response: #{response}"
+        if defined?(Rails) && !Rails.env.test?
+          p "[INFO][AM] Response: #{response}"
+        end
 
         Response.new(
           success_from(response),

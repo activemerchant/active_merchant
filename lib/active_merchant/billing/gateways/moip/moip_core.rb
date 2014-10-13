@@ -3,7 +3,8 @@ module ActiveMerchant #:nodoc:
     module MoipCore #:nodoc:
       URL_ACTIONS = {
           'authenticate'  => '/ws/alpha/EnviarInstrucao/Unica',
-          'pay'           => '/rest/pagamento?callback=?'
+          'pay'           => '/rest/pagamento?callback=?',
+          'query'         => '/ws/alpha/ConsultarInstrucao/'
       }
 
       CARD_BRAND = {
@@ -204,8 +205,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse_xml(body)
-        @xml = REXML::Document.new(body.force_encoding("ISO-8859-1").encode("UTF-8"))
-        Hash.from_xml(body.force_encoding("ISO-8859-1").encode("UTF-8"))
+        @xml = REXML::Document.new(body)
+        Hash.from_xml(body)
       end
 
       def parse_element(response, node)
@@ -223,7 +224,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def normalize_param(hash)
-        hash.map { |k,v| "&#{k}=#{URI.encode(v.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))}" }.join
+        if hash.is_a? Hash
+          hash.map { |k,v| "&#{k}=#{URI.encode(v.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))}" }.join
+        elsif hash.is_a? String
+          hash
+        end
       end
 
       def success?(response)
@@ -249,9 +254,9 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         if @query
           message = {}
-          error = REXML::XPath.each(@xml, '//Erro').first
+          error = REXML::XPath.each(@xml, '//Status[@Tipo]').first
           if error
-            description = error.attribute('Classificacao').value
+            description = error.attribute('Classificacao').value.strip
             message[:description] = description
           end
           message[:status] = response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']['Status'].strip
@@ -270,9 +275,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_authentication
-        { 'authorization' => basic_auth,
+        {
+          'authorization' => basic_auth,
           'Accept'        => 'application/xml',
-          'Content-Type'  => 'application/xml; charset=ISO-8859-1' }
+          'Content-Type'  => 'application/xml; charset=ISO-8859-1'
+        }
       end
 
       def basic_auth
