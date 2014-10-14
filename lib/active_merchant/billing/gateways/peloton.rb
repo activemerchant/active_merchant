@@ -1,24 +1,35 @@
 require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    # Look over the remote test for properly formed options hash.
+    # Billing address details are required for a successful purchase/authorize
+    # as well as canadian_address_verification, and email
+    #
+    # So far support is only for the actions in EppTransaction,
+    # found at http://test.peloton-technologies.com/EppTransaction.asmx
+    #
+    #
+    #
+    #
     class PelotonGateway < Gateway
       self.test_url = 'https://test.peloton-technologies.com/EppTransaction.asmx'
       self.live_url = 'https://peloton-technologies.com/EppTransaction.asmx'
 
-      self.supported_countries = ['CA','US']
+      self.supported_countries = ['CA']
       self.default_currency = 'CAD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :master]
 
       self.homepage_url = 'http://www.peloton-technologies.com/'
       self.display_name = 'Peloton'
 
       def initialize(options={})
-        # requires!(options, :client_id, :account_name, :password)
-        # requires!(options, :merchant_id, :encryption_key, :username, :password)
+        requires!(options, :client_id, :account_name, :password)
         super
       end
 
       def purchase(amount, payment, options={})
+        requires!(options, :order_id, :email)
+
         options[:type] = 'P'
 
         @parent_operation_xml = 'ProcessPayment'
@@ -27,6 +38,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(amount, payment, options={})
+        requires!(options, :order_id, :email)
+
         options[:type] = 'PA'
 
         @parent_operation_xml = 'ProcessPayment'
@@ -35,18 +48,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(amount, options)
+        requires!(options, :order_id)
+
         @parent_operation_xml = 'CompletePreAuth'
         @child_operation_xml = 'completePreAuthRequest'
         commit(build_capture_request(amount, options),options)
       end
 
       def refund(amount, options)
+        requires!(options, :order_id)
+
         @parent_operation_xml = 'RefundPayment'
         @child_operation_xml = 'refundPaymentRequest'
         commit(build_refund_request(amount, options), options)
       end
 
       def void(options)
+        requires!(options, :order_id)
 
         @parent_operation_xml = 'CancelPreAuth'
         @child_operation_xml = 'cancelPreAuthRequest'
@@ -119,7 +137,6 @@ module ActiveMerchant #:nodoc:
         xml.tag! 'ClientId', @options[:client_id]
         xml.tag! 'Password', @options[:password]
         xml.tag! 'AccountName', @options[:account_name]
-
       end
 
       def add_payment_type(xml, options)
@@ -127,7 +144,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_order_number(xml, options)
-        xml.tag! 'OrderNumber', options[:order_number]
+        xml.tag! 'OrderNumber', options[:order_id]
       end
 
       def add_transaction_ref_code(xml, options)
@@ -135,25 +152,30 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, options)
-        xml.tag! "BillingName", options[:billing_name]
-        xml.tag! "BillingAddress1", options[:billing_address1]
-        xml.tag! "BillingAddress2", options[:billing_address2]
-        xml.tag! "BillingCity", options[:billing_city]
-        xml.tag! "BillingProvinceState", options[:billing_province_state]
-        xml.tag! "BillingCountry", options[:billing_country]
-        xml.tag! "BillingPostalZipCode", options[:billing_postal_zip_code]
-        xml.tag! "BillingEmailAddress", options[:billing_email_address]
-        xml.tag! "BillingPhoneNumber", options[:billing_phone_number]
+        billing_address = options[:billing_address] || options[:address]
+        shipping_address = options[:shipping_address]
 
-        xml.tag! "ShippingName", options[:shipping_name]
-        xml.tag! "ShippingAddress1", options[:shipping_address]
-        xml.tag! "ShippingAddress2", options[:shipping_address2]
-        xml.tag! "ShippingCity", options[:shipping_city]
-        xml.tag! "ShippingProvinceState", options[:shipping_province_state]
-        xml.tag! "ShippingCountry", options[:shipping_country]
-        xml.tag! "ShippingPostalZipCode", options[:shipping_postal_zip_code]
-        xml.tag! "ShippingEmailAddress", options[:shipping_email_address]
-        xml.tag! "ShippingPhoneNumber", options[:shipping_phone_number]
+        requires!(billing_address, :name, :address1, :city, :country, :zip, :phone)
+        
+        xml.tag! "BillingName", billing_address[:name]
+        xml.tag! "BillingAddress1", billing_address[:address1]
+        xml.tag! "BillingAddress2", billing_address[:address2]
+        xml.tag! "BillingCity", billing_address[:city]
+        xml.tag! "BillingProvinceState", billing_address[:state]
+        xml.tag! "BillingCountry", billing_address[:country]
+        xml.tag! "BillingPostalZipCode", billing_address[:zip]
+        xml.tag! "BillingEmailAddress", options[:email]
+        xml.tag! "BillingPhoneNumber", billing_address[:phone]
+
+        xml.tag! "ShippingName", shipping_address[:name]
+        xml.tag! "ShippingAddress1", shipping_address[:address1]
+        xml.tag! "ShippingAddress2", shipping_address[:address2]
+        xml.tag! "ShippingCity", shipping_address[:city]
+        xml.tag! "ShippingProvinceState", shipping_address[:state]
+        xml.tag! "ShippingCountry", shipping_address[:country]
+        xml.tag! "ShippingPostalZipCode", shipping_address[:zip]
+        xml.tag! "ShippingEmailAddress", options[:email]
+        xml.tag! "ShippingPhoneNumber", shipping_address[:phone]
       end
 
 
@@ -167,7 +189,8 @@ module ActiveMerchant #:nodoc:
                 xml.tag! "#{@child_operation_xml}" do
                   add_merchant_data(xml, options)
                   xml.tag! 'ApplicationName', options[:application_name]
-                  xml.tag! 'LanguageCode', options[:language_code]
+                  xml.tag! 'LanguageCode', options[:language_code] || 'EN'
+                  xml.tag! 'Reference3', options[:description]
                   xml << body
                 end
               end

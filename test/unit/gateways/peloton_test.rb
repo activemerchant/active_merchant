@@ -5,9 +5,9 @@ class PelotonTest < Test::Unit::TestCase
     Base.mode = :test
 
     @gateway = PelotonGateway.new(
-      :client_id => 22,
-      :account_name =>'Ivrnet Inc.',
-      :password => 'Password123'
+      :client_id => 678,
+      :account_name =>'I',
+      :password => 'P'
     )
 
     @credit_card = ActiveMerchant::Billing::CreditCard.new(
@@ -20,39 +20,34 @@ class PelotonTest < Test::Unit::TestCase
         :brand => 'visa'
     )
 
-    @check       = check(
-        :institution_number => '001',
-        :transit_number     => '26729'
-    )
-
     @amount = 1000
 
     @options = {
         :canadian_address_verification => false,
-        :type => 'P',
-        :order_number => 126,
+        :order_id => 115,
         :language_code => 'EN',
+        :email => 'john@example.com',
 
-        :billing_name => "John",
-        :billing_address1 => "772 1 Ave",
-        :billing_address2 => "",
-        :billing_city => "Calgary",
-        :billing_province_state => "AB",
-        :billing_country => "CA",
-        :billing_postal_zip_code => "T2N 0A3",
-        :billing_email_address => "john@example.com",
-        :billing_phone_number => "5872284918",
-
-        :shipping_name => "John",
-        :shipping_address1 => "772 1 Ave",
-        :shipping_address2 => "",
-        :shipping_city => "Calgary",
-        :shipping_province_state => "AB",
-        :shipping_country => "Canada",
-        :shipping_postal_zip_code => "T2N 0A3",
-        :shipping_email_address => "john@example.com",
-        :shipping_phone_number => "5872284918",
-        :transaction_ref_code => '927d2150-f44f-e411-80c5-005056a927b9'
+        :billing_address => {
+            :name => "John",
+            :address1 => "772 1 Ave",
+            :address2 => "",
+            :city => "Calgary",
+            :state => "AB",
+            :country => "Canada",
+            :zip => "T2N 0A3",
+            :phone => "5872284918",
+        },
+        :shipping_address => {
+            :name => "John",
+            :address1 => "772 1 Ave",
+            :address2 => "",
+            :city => "Calgary",
+            :state => "AB",
+            :country => "Canada",
+            :zip => "T2N 0A3",
+            :phone => "5872284918",
+        }
     }
   end
 
@@ -145,15 +140,6 @@ class PelotonTest < Test::Unit::TestCase
   private
 
   def successful_purchase_response
-    # %(
-    #   Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-    #   to "true" when running remote tests:
-    #
-    #   $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-    #     test/remote/gateways/remote_peloton_test.rb \
-    #     -n test_successful_purchase
-    # )
-
     %q( <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
          <soap:Body>
          <ProcessCustomerPaymentResponse xmlns="http://www.peloton-technologies.com/">

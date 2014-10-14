@@ -7,35 +7,39 @@ class RemotePelotonTest < Test::Unit::TestCase
     Base.gateway_mode = :test
 
     @amount = 100
+
     @credit_card = credit_card('4030000010001234')
     @declined_card = credit_card('4003050500040005')
 
     @options = {
-        :canadian_address_verification => false,
-        :type => 'P',
-        :order_number => rand(2000..3000),
-        :language_code => 'EN',
+      :canadian_address_verification => false,
+      :order_id => SecureRandom.hex(15),
+      :language_code => 'EN',
+      :email => 'john@example.com',
+      :description => 'test',
 
-        :billing_name => "John",
-        :billing_address1 => "772 1 Ave",
-        :billing_address2 => "",
-        :billing_city => "Calgary",
-        :billing_province_state => "AB",
-        :billing_country => "CA",
-        :billing_postal_zip_code => "T2N 0A3",
-        :billing_email_address => "john@example.com",
-        :billing_phone_number => "5872284918",
-
-        :shipping_name => "John",
-        :shipping_address1 => "772 1 Ave",
-        :shipping_address2 => "",
-        :shipping_city => "Calgary",
-        :shipping_province_state => "AB",
-        :shipping_country => "Canada",
-        :shipping_postal_zip_code => "T2N 0A3",
-        :shipping_email_address => "john@example.com",
-        :shipping_phone_number => "5872284918",
+      :billing_address => {
+          :name => "John",
+          :address1 => "772 1 Ave",
+          :address2 => "",
+          :city => "Calgary",
+          :state => "AB",
+          :country => "CA",
+          :zip => "T2N 0A3",
+          :phone => "5872284918",
+      },
+      :shipping_address => {
+          :name => "John",
+          :address1 => "772 1 Ave",
+          :address2 => "",
+          :city => "Calgary",
+          :state => "AB",
+          :country => "CA",
+          :zip => "T2N 0A3",
+          :phone => "5872284918",
+      }
     }
+
   end
 
   def test_successful_purchase
@@ -121,7 +125,8 @@ class RemotePelotonTest < Test::Unit::TestCase
   def test_invalid_login
     gateway = PelotonGateway.new(
       client_id: '222',
-      password: 'empty'
+      password: 'empty',
+      account_name: 'empty'
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
