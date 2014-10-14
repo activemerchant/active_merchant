@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
     # )
     class PsigateGateway < Gateway
       self.test_url  = 'https://dev.psigate.com:7989/Messenger/XMLMessenger'
-      self.live_url  = 'https://secure.psigate.com:7934/Messenger/XMLMessenger'
+      self.live_url  = 'https://secure.psigate.com:17934/Messenger/XMLMessenger'
 
       self.supported_cardtypes = [:visa, :master, :american_express]
       self.supported_countries = ['CA']
