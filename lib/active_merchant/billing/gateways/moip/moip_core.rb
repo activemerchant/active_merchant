@@ -205,8 +205,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse_xml(body)
-        @xml = REXML::Document.new(body)
-        Hash.from_xml(body)
+        @xml = REXML::Document.new(body.force_encoding("windows-1252").encode('windows-1254').encode('utf-8'))
+        Hash.from_xml(body.force_encoding("windows-1252").encode('windows-1254').encode('utf-8'))
       end
 
       def parse_element(response, node)
@@ -219,7 +219,8 @@ module ActiveMerchant #:nodoc:
 
       def build_url(action, params=nil)
         url = (test? ? self.test_url : self.live_url) + URL_ACTIONS[action]
-        url << normalize_param(params) if params
+        url << normalize_param(params) if params && params.is_a?(Hash)
+        url << params if params && params.is_a?(String)
         url
       end
 
@@ -257,7 +258,9 @@ module ActiveMerchant #:nodoc:
           error = REXML::XPath.each(@xml, '//Status[@Tipo]').first
           if error
             description = error.attribute('Classificacao').value.strip
+            code = error.attribute('Tipo').value.strip
             message[:description] = description
+            message[:code] = code
           end
           message[:status] = response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']['Status'].strip
           message

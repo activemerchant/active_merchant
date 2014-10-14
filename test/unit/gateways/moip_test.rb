@@ -1,4 +1,3 @@
-# coding: utf-8
 require 'test_helper'
 
 class MoipTest < Test::Unit::TestCase
@@ -59,6 +58,7 @@ class MoipTest < Test::Unit::TestCase
 
     assert_equal 'Cancelado', response.message[:status]
     assert_equal 'Política do banco emissor', response.message[:description]
+    assert_equal '5', response.message[:code]
     assert response.test?
   end
 
@@ -119,7 +119,7 @@ class MoipTest < Test::Unit::TestCase
         <Resposta>
            <ID>201402151733229990000004478630</ID>
            <Status>Falha</Status>
-           <Erro Codigo="102">Id Próprio já foi utilizado em outra Instrução</Erro>
+           <Erro Codigo="102">Id Pr\xF3prio j\xE1 foi utilizado em outra Instru\xE7\xE3o</Erro>
         </Resposta>
       </ns1:EnviarInstrucaoUnicaResponse>
     XML
