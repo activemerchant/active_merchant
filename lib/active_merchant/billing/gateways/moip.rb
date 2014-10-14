@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
 
       def query(token)
         @query = true
-        response = commit(:get, 'xml', build_url('query', token), '', add_authentication)
+        response = commit(:get, 'xml', build_url('query', token), nil, add_authentication)
         @query = false
         response
       end
