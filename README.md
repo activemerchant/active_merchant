@@ -208,6 +208,10 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Worldpay](http://www.worldpay.com/) - HK, US, GB, AU, AD, BE, CH, CY, CZ, DE, DK, ES, FI, FR, GI, GR, HU, IE, IL, IT, LI, LU, MC, MT, NL, NO, NZ, PL, PT, SE, SG, SI, SM, TR, UM, VA
 * [Worldpay US](http://www.worldpay.com/us) - US
 
+## Deprecation Policy
+
+Deprecated functionality is removed on major version changes - for example, deprecations from 2.x are removed in 3.x.
+
 ## Contributing
 
 The source code is hosted at [GitHub](http://github.com/Shopify/active_merchant), and can be fetched using:
@@ -219,3 +223,4 @@ information on adding a new gateway to ActiveMerchant.
 
 Please don't touch the CHANGELOG in your pull requests, we'll add the appropriate CHANGELOG entries
 at release time.
+
