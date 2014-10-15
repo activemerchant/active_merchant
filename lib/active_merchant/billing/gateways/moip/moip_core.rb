@@ -270,8 +270,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def params_from(response)
-        if response[:token]
-          return response.merge(url: "#{test? ? self.test_url : self.live_url}/Instrucao.do?token=#{response[:token]}")
+        if response.has_key?('Resposta')
+          return response.merge(url: "#{test? ? self.test_url : self.live_url}/Instrucao.do?token=#{response['Resposta']['Token']}")
         else
           return response
         end
