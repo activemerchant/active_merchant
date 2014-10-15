@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
             add_payment_source(xml, payment)
             add_invoice(xml, options)
             add_customer_data(xml, payment, options)
+            add_retail_data(xml, payment)
             add_settings(xml, payment, options)
             add_user_fields(xml, amount, options)
           end
@@ -192,6 +193,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def add_retail_data(xml, payment)
+        return if card_brand(payment) == "check" || payment.track_data.blank?
+        xml.retail do
+          # As per http://www.authorize.net/support/CP_guide.pdf, '2' is for Retail, the only current market_type
+          xml.marketType 2
+        end
+      end
+
       def add_check(xml, check)
         xml.payment do
           xml.bankAccount do
@@ -225,6 +234,8 @@ module ActiveMerchant #:nodoc:
           xml.state(empty?(billing_address[:state]) ? 'n/a' : truncate(billing_address[:state], 40))
           xml.zip(truncate((billing_address[:zip] || options[:zip]), 20))
           xml.country(truncate(billing_address[:country], 60))
+          xml.phoneNumber(truncate(billing_address[:phone], 25)) unless empty?(billing_address[:phone])
+          xml.faxNumber(truncate(billing_address[:fax], 25)) unless empty?(billing_address[:fax])
         end
 
         unless shipping_address.blank?
