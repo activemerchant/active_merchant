@@ -32,6 +32,19 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'https://stripe.com/'
       self.display_name = 'Stripe'
 
+      STANDARD_ERROR_CODE_MAPPING = {
+        'incorrect_number' => STANDARD_ERROR_CODE[:incorrect_number],
+        'invalid_number' => STANDARD_ERROR_CODE[:invalid_number],
+        'invalid_expiry_month' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        'invalid_expiry_year' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        'invalid_cvc' => STANDARD_ERROR_CODE[:invalid_cvc],
+        'expired_card' => STANDARD_ERROR_CODE[:expired_card],
+        'incorrect_cvc' => STANDARD_ERROR_CODE[:incorrect_cvc],
+        'incorrect_zip' => STANDARD_ERROR_CODE[:incorrect_zip],
+        'card_declined' => STANDARD_ERROR_CODE[:card_declined],
+        'processing_error' => STANDARD_ERROR_CODE[:processing_error]
+      }
+
       def initialize(options = {})
         requires!(options, :login)
         @api_key = options[:login]
@@ -318,7 +331,8 @@ module ActiveMerchant #:nodoc:
           :test => response.has_key?("livemode") ? !response["livemode"] : false,
           :authorization => success ? response["id"] : response["error"]["charge"],
           :avs_result => { :code => avs_code },
-          :cvv_result => cvc_code
+          :cvv_result => cvc_code,
+          :error_code => success ? nil : STANDARD_ERROR_CODE_MAPPING[response["error"]["code"]]
         )
       end
 

@@ -43,6 +43,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_match %r{Your card was declined}, response.message
+    assert_match Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
     assert_match CHARGE_ID_REGEX, response.authorization
   end
 
@@ -245,5 +246,61 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "12345",           response.params["address_zip"]
     assert_equal Time.now.year + 2, response.params["exp_year"]
     assert_equal 6,                 response.params["exp_month"]
+  end
+
+  def test_incorrect_number_for_purchase
+    card = credit_card('4242424242424241')
+    assert response = @gateway.purchase(@amount, card, @options)
+    assert_failure response
+    assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_number], response.error_code
+  end
+
+  def test_invalid_number_for_purchase
+    card = credit_card('-1')
+    assert response = @gateway.purchase(@amount, card, @options)
+    assert_failure response
+    assert_match Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
+  end
+
+  def test_invalid_expiry_month_for_purchase
+    card = credit_card('4242424242424242', month: 16)
+    assert response = @gateway.purchase(@amount, card, @options)
+    assert_failure response
+    assert_match Gateway::STANDARD_ERROR_CODE[:invalid_expiry_date], response.error_code
+  end
+
+  def test_invalid_expiry_year_for_purchase
+    card = credit_card('4242424242424242', year: 'xx')
+    assert response = @gateway.purchase(@amount, card, @options)
+    assert_failure response
+    assert_match Gateway::STANDARD_ERROR_CODE[:invalid_expiry_date], response.error_code
+  end
+
+  def test_expired_card_for_purchase
+    card = credit_card('4000000000000069')
+    assert response = @gateway.purchase(@amount, card, @options)
+    assert_failure response
+    assert_match Gateway::STANDARD_ERROR_CODE[:expired_card], response.error_code
+  end
+
+  def test_invalid_cvc_for_purchase
+    card = credit_card('4242424242424242', verification_value: -1)
+    assert response = @gateway.purchase(@amount, card, @options)
+    assert_failure response
+    assert_match Gateway::STANDARD_ERROR_CODE[:invalid_cvc], response.error_code
+  end
+
+  def test_incorrect_cvc_for_purchase
+    card = credit_card('4000000000000127')
+    assert response = @gateway.purchase(@amount, card, @options)
+    assert_failure response
+    assert_match Gateway::STANDARD_ERROR_CODE[:incorrect_cvc], response.error_code
+  end
+
+  def test_processing_error
+    card = credit_card('4000000000000119')
+    assert response = @gateway.purchase(@amount, card, @options)
+    assert_failure response
+    assert_match Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
   end
 end
