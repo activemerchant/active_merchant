@@ -44,6 +44,7 @@ module ActiveMerchant #:nodoc:
             add_payment_source(xml, payment)
             add_invoice(xml, options)
             add_customer_data(xml, payment, options)
+            add_retail_data(xml, payment)
             add_settings(xml, payment, options)
             add_user_fields(xml, amount, options)
           end
@@ -177,19 +178,26 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_swipe_data(xml, credit_card)
-        if TRACKS[1].match(credit_card.track_data)
-          xml.payment do
+        TRACKS.each do |key, regex|
+          if regex.match(credit_card.track_data)
+            @valid_track_data = true
             xml.trackData do
-              xml.track1 credit_card.track_data
-            end
-          end
-        elsif TRACKS[2].match(credit_card.track_data)
-          xml.payment do
-            xml.trackData do
-              xml.track2 credit_card.track_data
+              xml.send(:"track#{key}", credit_card.track_data)
             end
           end
         end
+      end
+
+      def add_retail_data(xml, payment)
+        return unless valid_track_data
+        xml.retail do
+          # As per http://www.authorize.net/support/CP_guide.pdf, '2' is for Retail, the only current market_type
+          xml.marketType 2
+        end
+      end
+
+      def valid_track_data
+        @valid_track_data ||= false
       end
 
       def add_check(xml, check)
@@ -225,6 +233,8 @@ module ActiveMerchant #:nodoc:
           xml.state(empty?(billing_address[:state]) ? 'n/a' : truncate(billing_address[:state], 40))
           xml.zip(truncate((billing_address[:zip] || options[:zip]), 20))
           xml.country(truncate(billing_address[:country], 60))
+          xml.phoneNumber(truncate(billing_address[:phone], 25)) unless empty?(billing_address[:phone])
+          xml.faxNumber(truncate(billing_address[:fax], 25)) unless empty?(billing_address[:fax])
         end
 
         unless shipping_address.blank?

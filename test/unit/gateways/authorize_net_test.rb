@@ -3,6 +3,10 @@ require 'test_helper'
 class AuthorizeNetTest < Test::Unit::TestCase
   include CommStub
 
+  BAD_TRACK_DATA = '%B378282246310005LONGSONLONGBOB1705101130504392?'
+  TRACK1_DATA = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
+  TRACK2_DATA = ';4111111111111111=1803101000020000831?'
+
   def setup
     @gateway = AuthorizeNetGateway.new(
       login: 'X',
@@ -21,7 +25,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_add_swipe_data_with_bad_data
-    @credit_card.track_data = '%B378282246310005LONGSONLONGBOB1705101130504392?'
+    @credit_card.track_data = BAD_TRACK_DATA
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
@@ -34,7 +38,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_add_swipe_data_with_track_1
-    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
+    @credit_card.track_data = TRACK1_DATA
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
@@ -47,7 +51,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_add_swipe_data_with_track_2
-    @credit_card.track_data = ';4111111111111111=1803101000020000831?'
+    @credit_card.track_data = TRACK2_DATA
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
@@ -57,6 +61,32 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_retail_market_type_only_included_in_swipe_transactions
+    [BAD_TRACK_DATA, nil].each do |track|
+      @credit_card.track_data = track
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card)
+      end.check_request do |endpoint, data, headers|
+        parse(data) do |doc|
+          assert_nil doc.at_xpath('//retail')
+        end
+      end.respond_with(successful_purchase_response)
+    end
+
+    [TRACK1_DATA, TRACK2_DATA].each do |track|
+      @credit_card.track_data = track
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card)
+      end.check_request do |endpoint, data, headers|
+        parse(data) do |doc|
+          assert_not_nil doc.at_xpath('//retail')
+          assert_equal "2", doc.at_xpath('//retail/marketType').content
+        end
+      end.respond_with(successful_purchase_response)
+    end
+
   end
 
   def test_successful_echeck_authorization
