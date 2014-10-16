@@ -178,27 +178,26 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_swipe_data(xml, credit_card)
-        if TRACKS[1].match(credit_card.track_data)
-          xml.payment do
+        TRACKS.each do |key, regex|
+          if regex.match(credit_card.track_data)
+            @valid_track_data = true
             xml.trackData do
-              xml.track1 credit_card.track_data
-            end
-          end
-        elsif TRACKS[2].match(credit_card.track_data)
-          xml.payment do
-            xml.trackData do
-              xml.track2 credit_card.track_data
+              xml.send(:"track#{key}", credit_card.track_data)
             end
           end
         end
       end
 
       def add_retail_data(xml, payment)
-        return if card_brand(payment) == "check" || payment.track_data.blank?
+        return unless valid_track_data
         xml.retail do
           # As per http://www.authorize.net/support/CP_guide.pdf, '2' is for Retail, the only current market_type
           xml.marketType 2
         end
+      end
+
+      def valid_track_data
+        @valid_track_data ||= false
       end
 
       def add_check(xml, check)
