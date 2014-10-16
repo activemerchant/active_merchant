@@ -28,6 +28,7 @@
 * Redsys: Add support for verify [duff]
 * Redsys: Handle unknown currencies [duff]
 * Stripe: Make #unstore signature consistent [duff]
+* Remove defunct Samurai gateway [ntalbott]
 
 == Version 1.44.1 (Aug 28, 2014)
 
