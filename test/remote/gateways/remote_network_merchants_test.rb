@@ -14,9 +14,17 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store Purchase'
     }
+    @track_data = "%B4111111111111111^LONGSEN/L. ^15121200000000000000**123******?"
   end
 
   def test_successful_purchase
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+  end
+
+  def test_successful_purchase_with_track_data
+    @credit_card.track_data = @track_data
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'SUCCESS', response.message
@@ -29,6 +37,13 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_purchase
+    assert response = @gateway.purchase(@decline_amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'DECLINE', response.message
+  end
+
+  def test_unsuccessful_purchase_with_track_data
+    @credit_card.track_data = @track_data
     assert response = @gateway.purchase(@decline_amount, @credit_card, @options)
     assert_failure response
     assert_equal 'DECLINE', response.message
@@ -78,6 +93,18 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_refund_with_track_data
+    @credit_card.track_data = @track_data
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+    assert purchase.authorization
+
+    assert response = @gateway.refund(50, purchase.authorization)
+    assert_success response
+    assert_equal "SUCCESS", response.message
+    assert response.authorization
+  end
+
   def test_store
     assert store = @gateway.store(@credit_card, @options)
     assert_success store
@@ -97,7 +124,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
     assert store = @gateway.store(@creditcard, @options)
     assert_failure store
     assert store.message.include?('Billing Information missing')
-    assert_equal '', store.params['customer_vault_id']
+    assert_equal nil, store.params['customer_vault_id']
     assert_nil store.authorization
   end
 

@@ -57,10 +57,15 @@ module ActiveMerchant #:nodoc:
       def build_auth_post(money, creditcard_or_vault_id, options)
         post = {}
         add_order(post, options)
-        add_address(post, options)
-        add_shipping_address(post, options)
         add_payment_method(post, creditcard_or_vault_id, options)
         add_amount(post, money)
+        if creditcard_or_vault_id.respond_to?(:track_data) && creditcard_or_vault_id.track_data.present?
+          add_single_track(post, creditcard_or_vault_id)
+        else
+          add_address(post, options) 
+          add_shipping_address(post, options) 
+          add_swipe_data(post, creditcard_or_vault_id, options)
+        end
         post
       end
 
@@ -131,15 +136,15 @@ module ActiveMerchant #:nodoc:
         post[:shipping_country] = shipping_address[:country]
       end
 
+      def add_single_track(post, creditcard)
+        post[:track_1] = creditcard.track_data
+      end
+
       def add_swipe_data(post, creditcard, options)
         # unencrypted tracks
-        if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
-          post[:track_1] = creditcard.track_data
-        else
-          post[:track_1] = options[:track_1]
-          post[:track_2] = options[:track_2]
-          post[:track_3] = options[:track_3]
-        end
+        post[:track_1] = options[:track_1]
+        post[:track_2] = options[:track_2]
+        post[:track_3] = options[:track_3]
 
         # encrypted tracks
         post[:magnesafe_track_1] = options[:magnesafe_track_1]
@@ -153,8 +158,6 @@ module ActiveMerchant #:nodoc:
       def add_payment_method(post, payment_source, options)
         post[:processor_id] = options[:processor_id]
         post[:customer_vault] = 'add_customer' if options[:store]
-
-        add_swipe_data(post, payment_source, options)
 
         if payment_source.is_a?(Check)
           check = payment_source
@@ -195,9 +198,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         raw = parse(ssl_post(self.live_url, build_request(action, parameters)))
-
         success = (raw['response'] == ResponseCodes::APPROVED)
-
         authorization = authorization_from(success, parameters, raw)
 
         Response.new(success, raw['responsetext'], raw,
