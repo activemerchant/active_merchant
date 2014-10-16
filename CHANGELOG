@@ -28,6 +28,7 @@
 * Redsys: Add support for verify [duff]
 * Redsys: Handle unknown currencies [duff]
 * Stripe: Make #unstore signature consistent [duff]
+* Remove defunct Samurai gateway [ntalbott]
 
 == Version 1.44.1 (Aug 28, 2014)
 
@@ -59,7 +60,6 @@
 * Balanced: Handle legacy card tokens [ntalbott]
 * Braintree Blue: Default verification merchant id [speric]
 * [POSSIBLE BREAKAGE] Extract integrations into an offsite_payments gem [ntalbott]
-* Remove defunct Samurai gateway [ntalbott]
 * [POSSIBLE BREAKAGE] Drop stated/tested compatibility with Rails < 3.2 [ntalbott]
 * Stop requiring unused CurrencyCode class from active_utils [ntalbott]
 * Move ActiveMerchant::Error into ActiveMerchant [ntalbott]
