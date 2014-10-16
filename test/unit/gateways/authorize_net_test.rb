@@ -86,7 +86,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
         end
       end.respond_with(successful_purchase_response)
     end
-
   end
 
   def test_successful_echeck_authorization
@@ -254,12 +253,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_address
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', country: 'US', state: 'CO'})
+      @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', country: 'US', state: 'CO', phone: '(555)555-5555', fax: '(555)555-4444'})
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_equal "CO", doc.at_xpath("//billTo/state").content, data
         assert_equal "164 Waverley Street", doc.at_xpath("//billTo/address").content, data
         assert_equal "US", doc.at_xpath("//billTo/country").content, data
+        assert_equal "(555)555-5555", doc.at_xpath("//billTo/phoneNumber").content
+        assert_equal "(555)555-4444", doc.at_xpath("//billTo/faxNumber").content
       end
     end.respond_with(successful_authorize_response)
   end
