@@ -184,15 +184,16 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, creditcard, options = {})
-        requires!(options, :order_id, :email)
-        post = {}
-        add_invoice(post, options)
-        add_creditcard(post, creditcard)
-        add_address(post, options)
-        add_customer_data(post, options)
-        commit(:authorization, money, post)
+      def authorize(money, creditcard, options = {}, params = {})
+          requires!(options, :order_id, :email)
+          post = params
+          add_invoice(post, options)
+          add_creditcard(post, creditcard)
+          add_address(post, options)
+          add_customer_data(post, options)
+          result = commit(:authorization, money, post)
       end
+
 
       def purchase(money, creditcard, options = {})
         authorization = authorize(money, creditcard, options)
@@ -214,12 +215,17 @@ module ActiveMerchant #:nodoc:
       # ==== Options
       #
       # * <tt>:force_settlement</tt> -- Force the settlement to occur as soon as possible. This option is not supported by other gateways. See the SkipJack API reference for more details
-      def capture(money, authorization, options = {})
-        post = { }
-        add_status_action(post, 'SETTLE')
-        add_forced_settlement(post, options)
-        add_transaction_id(post, authorization)
-        commit(:change_status, money, post)
+
+      def capture(money, authorization, options = {}, params = {})
+          post = params
+
+          Rails.logger.info " :: CAPTURE ::"
+          Rails.logger.info params.inspect
+
+          add_status_action(post, 'SETTLE')
+          add_forced_settlement(post, options)
+          add_transaction_id(post, authorization)
+          commit(:change_status, money, post)
       end
 
       def void(authorization, options = {})
