@@ -112,11 +112,6 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      # def setup_address_hash(options)
-      #   options[:billing_address] = options[:billing_address] || options[:address] || {}
-      #   options[:shipping_address] = options[:shipping_address] || {}
-      # end
-
       def add_canadian_address_verification_service(xml, options)
         xml.tag! 'CanadianAddressVerification', options[:canadian_address_verification] || 'false'
       end
@@ -153,7 +148,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(xml, options)
         billing_address = options[:billing_address] || options[:address]
-        shipping_address = options[:shipping_address]
+        shipping_address = options[:shipping_address] || {}
 
         requires!(billing_address, :name, :address1, :city, :country, :zip, :phone)
         
