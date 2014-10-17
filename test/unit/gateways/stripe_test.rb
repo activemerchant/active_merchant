@@ -506,11 +506,11 @@ class StripeTest < Test::Unit::TestCase
 
   def test_deprecated_unstore
     assert_deprecation_warning do
-      assert response = @gateway.unstore("CustomerID", "card_id")
+      assert @gateway.unstore("CustomerID", "card_id")
     end
 
     assert_deprecation_warning do
-      assert response = @gateway.unstore("CustomerID", "card_id", {})
+      assert @gateway.unstore("CustomerID", "card_id", {})
     end
   end
 
