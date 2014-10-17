@@ -5,9 +5,9 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class SkipJackGateway < Gateway
       API_VERSION = '?.?'
-
-      self.wiredump_device.sync = true
+    
       self.wiredump_device = File.new(File.join([Rails.root, "log", "skipjack.log"]), "a")
+      self.wiredump_device.sync = true
 
       self.live_url = "https://www.skipjackic.com"
       self.test_url = "https://developer.skipjackic.com"
@@ -221,10 +221,6 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {}, params = {})
           post = params
-
-          Rails.logger.info " :: CAPTURE ::"
-          Rails.logger.info params.inspect
-
           add_status_action(post, 'SETTLE')
           add_forced_settlement(post, options)
           add_transaction_id(post, authorization)
