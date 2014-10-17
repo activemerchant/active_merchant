@@ -6,6 +6,9 @@ module ActiveMerchant #:nodoc:
     class SkipJackGateway < Gateway
       API_VERSION = '?.?'
 
+      self.wiredump_device.sync = true
+      self.wiredump_device = File.new(File.join([Rails.root, "log", "skipjack.log"]), "a")
+
       self.live_url = "https://www.skipjackic.com"
       self.test_url = "https://developer.skipjackic.com"
 
