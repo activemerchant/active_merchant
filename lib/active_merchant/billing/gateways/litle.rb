@@ -166,10 +166,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_descriptor(doc, options)
-        if options[:descriptor] || options[:descriptor_phone]
+        if options[:descriptor_name] || options[:descriptor_phone]
           doc.customBilling do
             doc.phone(options[:descriptor_phone]) if options[:descriptor_phone]
-            doc.descriptor(options[:descriptor]) if options[:descriptor]
+            doc.descriptor(options[:descriptor_name]) if options[:descriptor_name]
           end
         end
       end

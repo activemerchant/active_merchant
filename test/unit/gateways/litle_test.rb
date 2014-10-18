@@ -73,7 +73,7 @@ class LitleTest < Test::Unit::TestCase
   def test_passing_descriptor
     stub_comms do
       @gateway.authorize(@amount, @credit_card, {
-        descriptor: "Name", descriptor_phone: "Phone"
+        descriptor_name: "Name", descriptor_phone: "Phone"
       })
     end.check_request do |endpoint, data, headers|
       assert_match(%r(<customBilling>.*<descriptor>Name<)m, data)
