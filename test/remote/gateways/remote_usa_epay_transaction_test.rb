@@ -7,9 +7,17 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
     @options = { :billing_address => address(:zip => "27614", :state => "NC") }
     @amount = 100
+    @track_data = "%B4000100011112224^LONGSEN/L. ^15121200000000000000**123******?"
   end
 
   def test_successful_purchase
+    assert response = @gateway.purchase(@amount, @creditcard, @options)
+    assert_equal 'Success', response.message
+    assert_success response
+  end
+
+  def test_successful_purchase_with_track_data
+    @creditcard.track_data = @track_data
     assert response = @gateway.purchase(@amount, @creditcard, @options)
     assert_equal 'Success', response.message
     assert_success response
@@ -46,6 +54,15 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
+    assert response = @gateway.purchase(@amount, @creditcard, @options)
+    assert_success response
+    assert response.authorization
+    assert refund = @gateway.refund(@amount - 20, response.authorization)
+    assert_success refund
+  end
+
+  def test_successful_refund_with_track_data
+    @creditcard.track_data = @track_data
     assert response = @gateway.purchase(@amount, @creditcard, @options)
     assert_success response
     assert response.authorization
