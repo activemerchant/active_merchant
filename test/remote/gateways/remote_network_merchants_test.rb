@@ -121,9 +121,9 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
 
   def test_store_failure
     @credit_card.number = "123"
-    assert store = @gateway.store(@creditcard, @options)
+    assert store = @gateway.store(@credit_card, @options)
     assert_failure store
-    assert store.message.include?('Billing Information missing')
+    assert store.message.include?('Invalid Credit Card Number')
     assert_equal nil, store.params['customer_vault_id']
     assert_nil store.authorization
   end
