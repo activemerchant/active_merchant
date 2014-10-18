@@ -1,4 +1,4 @@
- module ActiveMerchant #:nodoc:
+module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
 
     class UsaEpayTransactionGateway < Gateway
