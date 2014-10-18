@@ -5,12 +5,19 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     @gateway = UsaEpayTransactionGateway.new(fixtures(:usa_epay))
     @creditcard = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
+    @credit_card_with_track_data = credit_card_with_track_data('4000100011112224')
     @options = { :billing_address => address(:zip => "27614", :state => "NC") }
     @amount = 100
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @creditcard, @options)
+    assert_equal 'Success', response.message
+    assert_success response
+  end
+
+  def test_successful_purchase_with_track_data
+    assert response = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
     assert_equal 'Success', response.message
     assert_success response
   end
@@ -47,6 +54,14 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_refund
     assert response = @gateway.purchase(@amount, @creditcard, @options)
+    assert_success response
+    assert response.authorization
+    assert refund = @gateway.refund(@amount - 20, response.authorization)
+    assert_success refund
+  end
+
+  def test_successful_refund_with_track_data
+    assert response = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
     assert_success response
     assert response.authorization
     assert refund = @gateway.refund(@amount - 20, response.authorization)
