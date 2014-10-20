@@ -16,9 +16,17 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
       cavv: "TESTCAVV",
       xid: "TESTXID"
     })
+    @track_data = "%B4003000123456781^LONGSEN/L. ^15121200000000000000**123******?"
   end
 
   def test_successful_purchase
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_match(/Transaction Normal/, response.message)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_track_data
+    @credit_card.track_data = @track_data
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_match(/Transaction Normal/, response.message)
     assert_success response
@@ -112,5 +120,28 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_success response
     assert_equal 'M', response.cvv_result["code"]
     assert_equal '1', response.avs_result["code"]
+  end
+  
+  def test_refund
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_match(/Transaction Normal/, purchase.message)
+    assert_success purchase
+  
+    assert response = @gateway.refund(50, purchase.authorization)
+    assert_success response
+    assert_match(/Transaction Normal/, response.message)
+    assert response.authorization
+  end
+
+  def test_refund_with_track_data
+    @credit_card.track_data = @track_data
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_match(/Transaction Normal/, purchase.message)
+    assert_success purchase
+  
+    assert response = @gateway.refund(50, purchase.authorization)
+    assert_success response
+    assert_match(/Transaction Normal/, response.message)
+    assert response.authorization
   end
 end
