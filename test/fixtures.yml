@@ -436,6 +436,13 @@ pay_secure:
   login: LOGIN
   password: PASSWORD
 
+# See http://docs.payulatam.com/en/api-integration/proof-of-payment/
+pay_u_latam:
+  api_login: '403ba744e9827f3'
+  api_key: '676k86ks53la6tni6clgd30jf6'
+  country_account_id: '500719'
+  merchant_id: '500365'
+
 paybox_direct:
   login: 199988899
   password: 1999888I
