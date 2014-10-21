@@ -7,7 +7,7 @@ module ActiveMerchant #:nodoc:
       URLS = {
         :test => { :certificate => 'https://api.sandbox.paypal.com/2.0/',
                    :signature   => 'https://api-3t.sandbox.paypal.com/2.0/' },
-        :live => { :certificate => 'https://api-aa.paypal.com/2.0/',
+        :live => { :certificate => 'https://api.paypal.com/2.0/',
                    :signature   => 'https://api-3t.paypal.com/2.0/' }
       }
 
