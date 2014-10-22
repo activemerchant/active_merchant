@@ -16,6 +16,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card
     @check = check
+    @apple_pay_payment_token = apple_pay_payment_token
 
     @options = {
       order_id: '1',
@@ -149,6 +150,39 @@ class AuthorizeNetTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @check)
     assert_failure response
   end
+
+  def test_successful_apple_pay_authorization
+    response = stub_comms do
+      @gateway.authorize(@amount, @apple_pay_payment_token)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal @gateway.class.APPLE_PAY_DATA_DESCRIPTOR, doc.at_xpath("//opaqueData/dataDescriptor").content
+        assert_equal apple_pay_payment_token.payment_data[:data], doc.at_xpath("//opaqueData/dataValue").content
+      end
+    end.respond_with(successful_authorize_response)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141794', response.authorization.split('#')[0]
+  end
+
+  def test_successful_apple_pay_purchase
+    response = stub_comms do
+      @gateway.purchase(@amount, @apple_pay_payment_token)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal @gateway.class.APPLE_PAY_DATA_DESCRIPTOR, doc.at_xpath("//opaqueData/dataDescriptor").content
+        assert_equal apple_pay_payment_token.payment_data[:data], doc.at_xpath("//opaqueData/dataValue").content
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141795', response.authorization.split('#')[0]
+  end
+
 
   def test_successful_authorization
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
