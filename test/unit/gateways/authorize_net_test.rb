@@ -183,7 +183,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal '508141795', response.authorization.split('#')[0]
   end
 
-
   def test_successful_authorization
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
