@@ -286,7 +286,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def names_from(payment_source, address, options)
-        if(payment_source)
+        if payment_source && !payment_source.is_a?(PaymentToken)
           first_name, last_name = (address[:name] || "").split
           [(payment_source.first_name || first_name), (payment_source.last_name || last_name)]
         else
