@@ -98,13 +98,15 @@ module ActiveMerchant #:nodoc:
         commit(build_modify_card_request(payment, options), options)
       end
 
+      # State can be either 'active' or 'inactive'
+      # Status can be 'active', 'onhold', or 'cancelled'
       def modify_state_and_status(options = {})
         requires!(options)
 
 
         @parent_operation_xml = 'ModifyCustomerStateAndStatus'
         @child_operation_xml = 'modifyCustomerStateAndStatusRequest'
-        commit(build_modify_stat_and_status_request(options), options)
+        commit(build_modify_state_and_status_request(options), options)
       end
 
       def get_state_and_status(options = {})
@@ -179,7 +181,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new :indent => 2
         add_customer_id(xml, options)
         add_order_number(xml, options)
-        add_credit_card_data(xml, payment)
+        add_state_status(xml, options)
         xml.target!
       end
 
@@ -235,6 +237,11 @@ module ActiveMerchant #:nodoc:
       #   xml.tag! 'BillingBeginDatetime',  options[:billing_begin_date_time]
       # end
 
+      def add_state_status(xml, options)
+        xml.tag! 'CustomerState', options[:customer_state]
+        xml.tag! 'CustomerStatus', options[:customer_status]
+      end
+
       def add_address(xml, options)
         billing_address = options[:billing_address] || options[:address]
 
@@ -286,6 +293,8 @@ module ActiveMerchant #:nodoc:
           response[:message_code] = xml.xpath("//xmlns:MessageCode", ns).text
           response[:transaction_ref_code] = xml.xpath("//xmlns:TransactionRefCode", ns).text
           response[:customer_id] = xml.xpath("//xmlns:CustomerId", ns).text
+          response[:customer_state] = xml.xpath("//xmlns:CustomerState", ns).text
+          response[:customer_status] = xml.xpath("//xmlns:CustomerStatus", ns).text
         else
           response[:fatal_error] = 'Could not complete the request at this time.'
         end
@@ -302,7 +311,14 @@ module ActiveMerchant #:nodoc:
 
         Response.new(success, message, response,
                      :test => test?,
-                     :authorization => response[:transaction_ref_code] + ";" + response[:customer_id])
+                     :authorization => auth_response(response))
+      end
+
+      def auth_response(response)
+       auth_string =  response[:transaction_ref_code] + ';' +
+                      response[:customer_id] + ';' +
+                      response[:customer_state] + ';' +
+                      response[:customer_status]
       end
 
       def headers
