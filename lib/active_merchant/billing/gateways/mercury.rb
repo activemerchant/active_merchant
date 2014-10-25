@@ -158,11 +158,7 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! 'InvoiceNo', invoice_no
         xml.tag! 'RefNo', (ref_no || invoice_no)
-        if test? 
-          xml.tag! 'OperatorID', 'Test'
-        else
-          xml.tag! 'OperatorID', options[:merchant] if options[:merchant]
-        end
+        xml.tag! 'OperatorID', options[:merchant] if options[:merchant]
         xml.tag! 'Memo', options[:description] if options[:description]
       end
 
