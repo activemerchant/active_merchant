@@ -161,6 +161,14 @@ module ActiveMerchant
       Billing::CreditCard.new(defaults)
     end
 
+    def credit_card_track_data(number = '4242424242424242', options = {})
+      defaults = {
+        :track_data => '%B' + number + '^LONGSEN/L. ^15121200000000000000**123******?',
+      }.update(options)
+
+      Billing::CreditCard.new(defaults)
+    end
+
     def check(options = {})
       defaults = {
         :name => 'Jim Smith',
