@@ -197,7 +197,7 @@ module ActiveMerchant #:nodoc:
         xml.payment do
           xml.opaqueData do
             xml.dataDescriptor APPLE_PAY_DATA_DESCRIPTOR
-            xml.dataValue apple_pay_payment_token.encrypted_payment_data
+            xml.dataValue Base64.strict_encode64(apple_pay_payment_token.payment_data.to_json)
           end
         end
       end
