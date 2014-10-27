@@ -7,12 +7,10 @@ module ActiveMerchant #:nodoc:
       # Testing is partitioned by account.
       self.live_url = 'https://secure.na.tnspayments.com/api/rest/version/22/'
 
-      self.supported_countries = %w(AL AR AU AZ BE GA BR BG KH CA CL CH CZ EG EE FR DE GR GT HK HU
-                                    IN ID IL IT JP KR KW LV LB LT LU MK MY MX MD MA MM NL NC NZ NG
-                                    PH PL PT RO RU SA SG SK ZA ES LK SE CH TW TH TR UA AE GB US VN)
+      self.supported_countries = %w(AR AU BR FR DE HK MX NZ SG GB US)
 
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :union_pay]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb, :maestro, :laser]
 
       def initialize(options={})
         requires!(options, :userid, :password)
