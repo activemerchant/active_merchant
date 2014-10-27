@@ -16,7 +16,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card
     @check = check
-    @apple_pay_payment_token = apple_pay_payment_token
+    @apple_pay_payment_token = ActiveMerchant::Billing::ApplePayPaymentToken.new("test data")
 
     @options = {
       order_id: '1',
@@ -157,7 +157,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_equal @gateway.class::APPLE_PAY_DATA_DESCRIPTOR, doc.at_xpath("//opaqueData/dataDescriptor").content
-        assert_equal apple_pay_payment_token.payment_data[:data], doc.at_xpath("//opaqueData/dataValue").content
+        assert_equal Base64.strict_encode64(@apple_pay_payment_token.payment_data.to_json), doc.at_xpath("//opaqueData/dataValue").content
       end
     end.respond_with(successful_authorize_response)
 
@@ -173,7 +173,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_equal @gateway.class::APPLE_PAY_DATA_DESCRIPTOR, doc.at_xpath("//opaqueData/dataDescriptor").content
-        assert_equal apple_pay_payment_token.payment_data[:data], doc.at_xpath("//opaqueData/dataValue").content
+        assert_equal Base64.strict_encode64(@apple_pay_payment_token.payment_data.to_json), doc.at_xpath("//opaqueData/dataValue").content
       end
     end.respond_with(successful_purchase_response)
 
