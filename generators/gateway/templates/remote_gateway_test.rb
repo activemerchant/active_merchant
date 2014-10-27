@@ -97,6 +97,7 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
     assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
+    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
   def test_invalid_login

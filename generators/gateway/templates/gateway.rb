@@ -11,6 +11,8 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.example.net/'
       self.display_name = 'New Gateway'
 
+      STANDARD_ERROR_CODE_MAPPING = {}
+
       def initialize(options={})
         requires!(options, :some_credential, :another_credential)
         super
