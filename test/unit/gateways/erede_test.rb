@@ -30,7 +30,7 @@ class EredeTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_success response
-    assert_equal '4444', response.authorization
+    assert_equal '4600903000000002', response.authorization[:gateway_reference]
     assert response.test?
   end
 

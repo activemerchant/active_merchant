@@ -222,14 +222,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        if credit_card_payment?
-          response[:authcode]
-        elsif boleto_payment?
-          {
-            gateway_reference: response[:gateway_reference],
-            boleto_url: response[:boleto_url]
-          }
+        auth = { gateway_reference: response[:gateway_reference] }
+        if boleto_payment?
+          auth.merge!({
+              boleto_url: response[:boleto_url]
+            }
+          )
         end
+        auth
       end
     end
   end
