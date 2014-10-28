@@ -43,7 +43,7 @@ module ActiveMerchant #:nodoc:
           xml.transactionRequest do
             xml.transactionType 'authCaptureTransaction'
             xml.amount amount(amount)
-            add_payment_source(xml, payment)
+            add_payment_source(xml, payment, options)
             add_invoice(xml, options)
             add_customer_data(xml, payment, options)
             add_retail_data(xml, payment)
@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
           xml.transactionRequest do
             xml.transactionType 'authOnlyTransaction'
             xml.amount amount(amount)
-            add_payment_source(xml, payment)
+            add_payment_source(xml, payment, options)
             add_invoice(xml, options)
             add_customer_data(xml, payment, options)
             add_settings(xml, payment, options)
@@ -120,8 +120,11 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def add_payment_source(xml, source)
+      def add_payment_source(xml, source, options)
         return unless source
+
+        if source.is_a?(ApplePay)
+          add_apple_pay(xml, source, options[:order_id])
         if card_brand(source) == 'check'
           add_check(xml, source)
         elsif card_brand(source) == 'apple_pay'
@@ -212,6 +215,14 @@ module ActiveMerchant #:nodoc:
 
       def valid_track_data
         @valid_track_data ||= false
+      end
+
+      def add_apple_pay(xml, apple_pay, transaction_identifier)
+        # do things here
+        # Ask Arbab for this
+        # 
+        # Use apple_pay.encrypted_data, apple_pay.description, apple_pay.brand, and transaction_identifier
+        # 
       end
 
       def add_check(xml, check)
