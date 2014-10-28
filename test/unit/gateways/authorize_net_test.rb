@@ -107,7 +107,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response
     assert_instance_of Response, response
     assert_success response
-    assert_equal '508141794', response.authorization.split('#')[0]
+    assert_equal '508141794', response.authorization
   end
 
   def test_successful_echeck_purchase
@@ -129,7 +129,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert response
     assert_instance_of Response, response
     assert_success response
-    assert_equal '508141795', response.authorization.split('#')[0]
+    assert_equal '508141795', response.authorization
   end
 
   def test_echeck_passing_recurring_flag
@@ -158,7 +158,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
     assert_equal 'CVV matches', response.cvv_result['message']
 
-    assert_equal '508141794', response.authorization.split('#')[0]
+    assert_equal '508141794', response.authorization
     assert response.test?
   end
 
@@ -168,7 +168,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card)
     assert_success response
 
-    assert_equal '508141795', response.authorization.split('#')[0]
+    assert_equal '508141795', response.authorization
     assert response.test?
     assert_equal 'Y', response.avs_result['code']
     assert response.avs_result['street_match']
@@ -195,14 +195,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    capture = @gateway.capture(@amount, '2214269051#XXXX1234', @options)
+    capture = @gateway.capture(@amount, '2214269051', @options)
     assert_success capture
   end
 
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    assert capture = @gateway.capture(@amount, '2214269051#XXXX1234')
+    assert capture = @gateway.capture(@amount, '2214269051')
     assert_failure capture
   end
 
@@ -317,10 +317,10 @@ class AuthorizeNetTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    assert refund = @gateway.refund(36.40, '2214269051#XXXX1234')
+    assert refund = @gateway.refund(36.40, '2214269051')
     assert_success refund
     assert_equal 'This transaction has been approved', refund.message
-    assert_equal '2214602071#2224', refund.authorization
+    assert_equal '2214602071', refund.authorization
   end
 
   def test_refund_passing_extra_info
@@ -343,7 +343,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     refund = @gateway.refund(nil, '')
     assert_failure refund
     assert_equal 'The sum of credits against the referenced transaction would exceed original debit amount', refund.message
-    assert_equal '0#2224', refund.authorization
+    assert_equal '0', refund.authorization
   end
 
   def test_supported_countries
