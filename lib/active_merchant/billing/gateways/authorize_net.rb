@@ -182,7 +182,7 @@ module ActiveMerchant #:nodoc:
           if regex.match(credit_card.track_data)
             @valid_track_data = true
             xml.trackData do
-              xml.send(:"track#{key}", credit_card.track_data)
+              xml.public_send(:"track#{key}", credit_card.track_data)
             end
           end
         end
@@ -307,7 +307,7 @@ module ActiveMerchant #:nodoc:
             end
             yield(xml)
           end
-        end.to_xml(ident: 0)
+        end.to_xml(indent: 0)
       end
 
       def parse(action, body)
