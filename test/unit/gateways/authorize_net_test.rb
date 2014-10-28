@@ -16,7 +16,12 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card
     @check = check
-    @apple_pay_payment_token = ActiveMerchant::Billing::ApplePayPaymentToken.new("test data")
+    @apple_pay_payment_token = ActiveMerchant::Billing::ApplePayPaymentToken.new(
+      {data: 'encoded_payment_data'},
+      payment_instrument_name: 'SomeBank Visa',
+      payment_network: 'Visa',
+      transaction_identifier: 'transaction123'
+    )
 
     @options = {
       order_id: '1',
