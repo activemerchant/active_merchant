@@ -7,6 +7,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
     @amount = 100
     @decline_amount = 1
     @credit_card = credit_card('4111111111111111')
+    @credit_card_with_track_data = credit_card_with_track_data("4111111111111111")
     @check = check
 
     @options = {
@@ -14,7 +15,6 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store Purchase'
     }
-    @track_data = "%B4111111111111111^LONGSEN/L. ^15121200000000000000**123******?"
   end
 
   def test_successful_purchase
@@ -24,8 +24,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_track_data
-    @credit_card.track_data = @track_data
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
     assert_success response
     assert_equal 'SUCCESS', response.message
   end
@@ -43,8 +42,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_purchase_with_track_data
-    @credit_card.track_data = @track_data
-    assert response = @gateway.purchase(@decline_amount, @credit_card, @options)
+    assert response = @gateway.purchase(@decline_amount, @credit_card_with_track_data, @options)
     assert_failure response
     assert_equal 'DECLINE', response.message
   end
@@ -94,8 +92,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
   end
 
   def test_refund_with_track_data
-    @credit_card.track_data = @track_data
-    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert purchase = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
     assert_success purchase
     assert purchase.authorization
 
