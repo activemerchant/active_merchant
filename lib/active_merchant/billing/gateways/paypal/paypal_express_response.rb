@@ -56,6 +56,10 @@ module ActiveMerchant #:nodoc:
            'name'     => shipping['ShippingOptionName']
         }
       end
+
+      def note
+        @params['note_text']
+      end
     end
   end
 end
