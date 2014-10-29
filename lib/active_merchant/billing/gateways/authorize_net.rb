@@ -30,6 +30,8 @@ module ActiveMerchant #:nodoc:
           2 => /\A;(?<pan>[\d]{1,19}+)=(?<expiration>[\d]{0,4}|=)(?<service_code>[\d]{0,3}|=)(?<discretionary_data>.*)\?\Z/
       }.freeze
 
+      APPLE_PAY_DATA_DESCRIPTOR = "COMMON.APPLE.INAPP.PAYMENT"
+
       def initialize(options={})
         requires!(options, :login, :password)
         super
@@ -122,6 +124,8 @@ module ActiveMerchant #:nodoc:
         return unless source
         if card_brand(source) == 'check'
           add_check(xml, source)
+        elsif card_brand(source) == 'apple_pay'
+          add_apple_pay_payment_token(xml, source)
         else
           add_credit_card(xml, source)
         end
@@ -182,8 +186,18 @@ module ActiveMerchant #:nodoc:
           if regex.match(credit_card.track_data)
             @valid_track_data = true
             xml.trackData do
-              xml.send(:"track#{key}", credit_card.track_data)
+              xml.public_send(:"track#{key}", credit_card.track_data)
             end
+          end
+        end
+      end
+
+      # http://developer.authorize.net/api/reference/#apple-pay-transactions
+      def add_apple_pay_payment_token(xml, apple_pay_payment_token)
+        xml.payment do
+          xml.opaqueData do
+            xml.dataDescriptor APPLE_PAY_DATA_DESCRIPTOR
+            xml.dataValue Base64.strict_encode64(apple_pay_payment_token.payment_data.to_json)
           end
         end
       end
@@ -272,7 +286,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def names_from(payment_source, address, options)
-        if(payment_source)
+        if payment_source && !payment_source.is_a?(PaymentToken)
           first_name, last_name = (address[:name] || "").split
           [(payment_source.first_name || first_name), (payment_source.last_name || last_name)]
         else
@@ -307,7 +321,7 @@ module ActiveMerchant #:nodoc:
             end
             yield(xml)
           end
-        end.to_xml(ident: 0)
+        end.to_xml(indent: 0)
       end
 
       def parse(action, body)

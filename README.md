@@ -194,6 +194,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Stripe](https://stripe.com/) - AU, BE, CA, CH, DE, ES, FI, FR, GB, IE, IT, LU, NL, US
 * [Swipe](https://www.swipehq.com/checkout) - CA, NZ
 * [TransFirst](http://www.transfirst.com/) - US
+* [TNS](http://www.tnsi.com/) - AR, AU, BR, FR, DE, HK, MX, NZ, SG, GB, US
 * [NELiX TransaX](https://www.nelixtransax.com/) - US
 * [Transnational](http://www.tnbci.com/) - US
 * [TrustCommerce](http://www.trustcommerce.com/) - US

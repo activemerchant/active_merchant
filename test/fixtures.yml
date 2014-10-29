@@ -20,10 +20,10 @@ app55:
   api_key: "QDtACYMCFqtuKOQ22QtCkGR1TzD7XM8i"
   api_secret: "yT1FRpuusBIQoEBIfIQ8bPStkl7yzdTz"
 
-# Working credentials, no need to replace
+# Working credentials, no need to replace as of Oct 28 2014
 authorize_net:
-  login: 4Pf3E54zCsW
-  password: 337UTt4y6DB64ft8
+  login: 5KP3u95bQpv
+  password: 4Ktq966gC55GAX7S
 
 # Working credentials, no need to replace
 balanced:
@@ -463,18 +463,48 @@ paymill:
   private_key: PRIVATE_KEY
   public_key: PUBLIC_KEY
 
-# You can use either your API PEM file or API signature with PayPal.
 paypal_certificate:
-  login: LOGIN
-  password: PASSWORD
+  login: activemerchant-cert-test_api1.example.com
+  password: ERDD3JRFU5H5DQXS
   subject:
   pem: |
-    PASTE YOUR PEM FILE HERE
+    -----BEGIN RSA PRIVATE KEY-----
+    MIICXQIBAAKBgQD/fK2V+joi32b3hXwyZdWTrjX0eXF1NTY7iSvBDPipJalFcopa
+    RRQV41WHB7Ard8g4tsw9uP4aDqil/MJqoLm2pttOokKO1CX1R4xVz8kITefTDrMT
+    uGs43Sz6Kd/GLKeYpc+kk7vLgP9CqUNnuBWPLzw98t9XKTcdSf140WciPwIDAQAB
+    AoGAMxWK3+IYncBtpjBalPknq0+6GhfuR7FMFrtmtEMTtT6CihBM+Z+2VGoQP9+Z
+    qhdZQX3LeMv0guFLd2UCuq9IcobEuBL5Oyxvd1MYcSVuMHa8DQBYQfL2Dtq/m8K9
+    vTGdsvL3IyVlWs9xxZRtuEoBpmb3axjohVS62rq7CzGbMYECQQD/054sW/V7MZD7
+    8Siz1Dhe3CJpGJ3RIkBzuMi5vtJftx6S4GX4jsbE8tyMSwX7TnO1xvHP7s1OCSEC
+    gUwIMQQlAkEA/6kAVG37ErrN5WX0kw+UIrBYQhnyZvjqVIqSSm8ZAn1cDbx84GbX
+    UTbPpJBbpcP5PDxeQnBqpvnLuIZfzSZtkwJAYSfD5ULTOoL7dcMDWzAYbGYbp2AS
+    506jvY8KpAgFKxaHRO51q2zFrhwxiBIh5mvH49v3D6m4TI+I+sOR1XaQBQJBAIvh
+    2i5X5rH+x70mJcV5FqJMPl4ceEbjFsOe9iAH3XVBRea2JNVbL6BeDwqJebufGHVe
+    ymwrug8WSeLykuRajEUCQQDlDXignvtCZlXlOCxohPuJ+o+vnF3R/L6MBtQmRjWI
+    mv6epzBqjXcB9Dv3n10k7M9H6YKfAZbuZ23PDTxrv3o+
+    -----END RSA PRIVATE KEY-----
+    -----BEGIN CERTIFICATE-----
+    MIICsDCCAhmgAwIBAgIDEBZBMA0GCSqGSIb3DQEBBQUAMIGfMQswCQYDVQQGEwJV
+    UzETMBEGA1UECBMKQ2FsaWZvcm5pYTERMA8GA1UEBxMIU2FuIEpvc2UxFTATBgNV
+    BAoTDFBheVBhbCwgSW5jLjEWMBQGA1UECxQNc2FuZGJveF9jZXJ0czEbMBkGA1UE
+    AxQSc2FuZGJveF9jYW1lcmNoYXBpMRwwGgYJKoZIhvcNAQkBFg1yZUBwYXlwYWwu
+    Y29tMB4XDTE0MTAyMzE0MzQxM1oXDTI0MTAyMDE0MzQxM1owgYoxMjAwBgNVBAMU
+    KWFjdGl2ZW1lcmNoYW50LWNlcnQtdGVzdF9hcGkxLmV4YW1wbGUuY29tMScwJQYD
+    VQQKEx5OYXRoYW5pZWwgVGFsYm90dCdzIFRlc3QgU3RvcmUxETAPBgNVBAcTCFNh
+    biBKb3NlMQswCQYDVQQIEwJDQTELMAkGA1UEBhMCVVMwgZ8wDQYJKoZIhvcNAQEB
+    BQADgY0AMIGJAoGBAP98rZX6OiLfZveFfDJl1ZOuNfR5cXU1NjuJK8EM+KklqUVy
+    ilpFFBXjVYcHsCt3yDi2zD24/hoOqKX8wmqgubam206iQo7UJfVHjFXPyQhN59MO
+    sxO4azjdLPop38Ysp5ilz6STu8uA/0KpQ2e4FY8vPD3y31cpNx1J/XjRZyI/AgMB
+    AAGjDTALMAkGA1UdEwQCMAAwDQYJKoZIhvcNAQEFBQADgYEABR7D4mbOHBHYgMsG
+    sSxxYqqvhFSF7/HBQW4G132w6lxKVqdF3a6ICJYC/gOjOQ609kowDOrCwag9cbiO
+    3gPzIjyqNemdkTJxiTaq9+fG7G+r6f+pXo0ZVvfFjgtoSUVdMlqgu572EEZOQmSL
+    w00oJt7RcWBpIkpS18Qpmk6KZ7o=
+    -----END CERTIFICATE-----
 
 paypal_signature:
-  login: LOGIN
-  password: PASSWORD
-  signature: SIGNATURE
+  login: activemerchant-test_api1.example.com
+  password: HBC6A84QLRWC923A
+  signature: AFcWxV21C7fd0v3bYYYRCpSSRl31AC-11AKBL8FFO9tjImL311y8a0hx
 
 payscout:
   username: demo
@@ -714,6 +744,10 @@ swipe_checkout:
   login: 2077103073D8B5
   api_key: f2fe4efd5033edfaed9e4aad319ef4d34536a10eea07f90f182616d7216ae2b8
   region: NZ
+
+tns:
+  userid: TESTSPREEDLY01
+  password: 3f34fe50334fbe6cbe04c283411a5860
 
 trans_first:
   login: LOGIN
