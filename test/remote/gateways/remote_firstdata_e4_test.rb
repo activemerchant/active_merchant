@@ -6,7 +6,6 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     @credit_card = credit_card
     @bad_credit_card = credit_card('4111111111111113')
     @credit_card_with_track_data = credit_card_with_track_data('4003000123456781')
-    
     @amount = 100
     @options = {
       :order_id => '1',
