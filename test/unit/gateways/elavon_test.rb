@@ -187,7 +187,6 @@ class ElavonTest < Test::Unit::TestCase
 
     @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => 'K1Z5E3'))
 
-
     @gateway.purchase(@amount, @credit_card, @options)
   end
 
