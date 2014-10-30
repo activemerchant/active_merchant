@@ -265,8 +265,8 @@ module ActiveMerchant #:nodoc:
           begin
             message[:status] = response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']['Status'].strip
           rescue NoMethodError
-            if defined?(Rails)
-              Rails.logger.info(response)
+            if defined?(::Rails)
+              ::Rails.logger.info(response)
             end
           end
           message
