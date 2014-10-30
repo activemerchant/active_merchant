@@ -183,7 +183,7 @@ class ElavonTest < Test::Unit::TestCase
   end
 
   def test_zip_codes_with_letters_are_left_intact
-    @options[:billing_address][:zip] = 'K1Z 5E3'
+    @options[:billing_address][:zip] = '.K1%Z_5E3-'
 
     @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => 'K1Z5E3'))
 
