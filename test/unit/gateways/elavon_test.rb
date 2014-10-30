@@ -172,9 +172,12 @@ class ElavonTest < Test::Unit::TestCase
   end
 
   def test_stripping_non_digits_from_zip
-    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => '995770727'))
+    bad_zip = '99577-0727'
+    stripped_zip = '995770727'
 
-    @options[:billing_address][:zip] = '99577-0727'
+    @options[:billing_address][:zip] = bad_zip
+
+    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => stripped_zip))
 
     @gateway.purchase(@amount, @credit_card, @options)
   end
