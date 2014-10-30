@@ -255,7 +255,7 @@ module ActiveMerchant #:nodoc:
         if billing_address
           form[:avs_address]    = billing_address[:address1].to_s.slice(0, 30)
           form[:address2]       = billing_address[:address2].to_s.slice(0, 30)
-          form[:avs_zip]        = billing_address[:zip].to_s.gsub(/\D/, '').slice(0, 9)
+          form[:avs_zip]        = billing_address[:zip].to_s.gsub(/\W/, '').slice(0, 9)
           form[:city]           = billing_address[:city].to_s.slice(0, 30)
           form[:state]          = billing_address[:state].to_s.slice(0, 10)
           form[:company]        = billing_address[:company].to_s.slice(0, 50)
