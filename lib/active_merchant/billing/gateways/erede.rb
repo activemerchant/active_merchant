@@ -165,11 +165,11 @@ module ActiveMerchant #:nodoc:
       def commit(xml)
         url = build_commit_url
 
-        if defined?(Rails) && !Rails.env.test?
+        if defined?(::Rails) && !::Rails.env.test?
           p "[INFO][AM] Sending request to #{url}"
         end
         response = parse(ssl_post(url, xml.target!))
-        if defined?(Rails) && !Rails.env.test?
+        if defined?(::Rails) && !::Rails.env.test?
           p "[INFO][AM] Response: #{response}"
         end
 
