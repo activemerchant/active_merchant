@@ -46,7 +46,7 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_display_name
-    assert_equal 'Pin', PinGateway.display_name
+    assert_equal 'Pin Payments', PinGateway.display_name
   end
 
   def test_setup_purchase_parameters
@@ -55,8 +55,9 @@ class PinTest < Test::Unit::TestCase
     @gateway.expects(:add_invoice).with(instance_of(Hash), @options)
     @gateway.expects(:add_creditcard).with(instance_of(Hash), @credit_card)
     @gateway.expects(:add_address).with(instance_of(Hash), @credit_card, @options)
+    @gateway.expects(:add_capture).with(instance_of(Hash), @options)
 
-    @gateway.stubs(:ssl_post).returns(successful_purchase_response)
+    @gateway.stubs(:ssl_request).returns(successful_purchase_response)
     assert_success @gateway.purchase(@amount, @credit_card, @options)
   end
 
@@ -65,7 +66,7 @@ class PinTest < Test::Unit::TestCase
     headers = {}
     @gateway.stubs(:headers).returns(headers)
     @gateway.stubs(:post_data).returns(post_data)
-    @gateway.expects(:ssl_post).with('https://test-api.pin.net.au/1/charges', post_data, headers).returns(successful_purchase_response)
+    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pin.net.au/1/charges', post_data, headers).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -75,7 +76,7 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_request
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    @gateway.expects(:ssl_request).returns(failed_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -84,7 +85,7 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    @gateway.expects(:ssl_post).returns(successful_store_response)
+    @gateway.expects(:ssl_request).returns(successful_store_response)
     assert response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_equal 'card_sVOs8D9nANoNgDc38NvKow', response.authorization
@@ -93,7 +94,7 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_store
-    @gateway.expects(:ssl_post).returns(failed_store_response)
+    @gateway.expects(:ssl_request).returns(failed_store_response)
 
     assert response = @gateway.store(@credit_card, @options)
     assert_failure response
@@ -101,9 +102,19 @@ class PinTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_update
+    token = 'cus_05p0n7UFPmcyCNjD8c6HdA'
+    @gateway.expects(:ssl_request).with(:put, "https://test-api.pin.net.au/1/customers/#{token}", instance_of(String), instance_of(Hash)).returns(successful_customer_store_response)
+    assert response = @gateway.update('cus_05p0n7UFPmcyCNjD8c6HdA', @credit_card, @options)
+    assert_success response
+    assert_equal 'cus_05p0n7UFPmcyCNjD8c6HdA', response.authorization
+    assert_equal JSON.parse(successful_customer_store_response), response.params
+    assert response.test?
+  end
+
   def test_successful_refund
     token = 'ch_encBuMDf17qTabmVjDsQlg'
-    @gateway.expects(:ssl_post).with("https://test-api.pin.net.au/1/charges/#{token}/refunds", {:amount => '100'}.to_json, instance_of(Hash)).returns(successful_refund_response)
+    @gateway.expects(:ssl_request).with(:post, "https://test-api.pin.net.au/1/charges/#{token}/refunds", {:amount => '100'}.to_json, instance_of(Hash)).returns(successful_refund_response)
 
     assert response = @gateway.refund(100, token)
     assert_equal 'rf_d2C7M6Mn4z2m3APqarNN6w', response.authorization
@@ -113,7 +124,7 @@ class PinTest < Test::Unit::TestCase
 
   def test_unsuccessful_refund
     token = 'ch_encBuMDf17qTabmVjDsQlg'
-    @gateway.expects(:ssl_post).with("https://test-api.pin.net.au/1/charges/#{token}/refunds", {:amount => '100'}.to_json, instance_of(Hash)).returns(failed_refund_response)
+    @gateway.expects(:ssl_request).with(:post, "https://test-api.pin.net.au/1/charges/#{token}/refunds", {:amount => '100'}.to_json, instance_of(Hash)).returns(failed_refund_response)
 
     assert response = @gateway.refund(100, token)
     assert_failure response
@@ -121,11 +132,46 @@ class PinTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_authorize
+    post_data = {}
+    headers = {}
+    @gateway.stubs(:headers).returns(headers)
+    @gateway.stubs(:post_data).returns(post_data)
+    @gateway.expects(:ssl_request).with(:post, 'https://test-api.pin.net.au/1/charges', post_data, headers).returns(successful_purchase_response)
+
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'ch_Kw_JxmVqMeSOQU19_krRdw', response.authorization
+    assert_equal JSON.parse(successful_purchase_response), response.params
+    assert response.test?
+  end
+
+  def test_successful_capture
+    post_data = {}
+    headers = {}
+    token = 'ch_encBuMDf17qTabmVjDsQlg'
+    @gateway.stubs(:headers).returns(headers)
+    @gateway.stubs(:post_data).returns(post_data)
+    @gateway.expects(:ssl_request).with(:put, "https://test-api.pin.net.au/1/charges/#{token}/capture", post_data, headers).returns(successful_capture_response)
+
+    assert response = @gateway.capture(100, token)
+    assert_success response
+    assert_equal token, response.authorization
+    assert response.test?
+  end
+
   def test_store_parameters
     @gateway.expects(:add_creditcard).with(instance_of(Hash), @credit_card)
     @gateway.expects(:add_address).with(instance_of(Hash), @credit_card, @options)
-    @gateway.expects(:ssl_post).returns(successful_store_response)
+    @gateway.expects(:ssl_request).returns(successful_store_response)
     assert_success @gateway.store(@credit_card, @options)
+  end
+
+  def test_update_parameters
+    @gateway.expects(:add_creditcard).with(instance_of(Hash), @credit_card)
+    @gateway.expects(:add_address).with(instance_of(Hash), @credit_card, @options)
+    @gateway.expects(:ssl_request).returns(successful_store_response)
+    assert_success @gateway.update('cus_XZg1ULpWaROQCOT5PdwLkQ', @credit_card, @options)
   end
 
   def test_add_amount
@@ -170,7 +216,7 @@ class PinTest < Test::Unit::TestCase
   def test_add_address
     post = {}
 
-    @gateway.send(:add_address, post, @creditcard, @options)
+    @gateway.send(:add_address, post, @credit_card, @options)
 
     assert_equal @options[:billing_address][:address1], post[:card][:address_line1]
     assert_equal @options[:billing_address][:city], post[:card][:address_city]
@@ -192,6 +238,16 @@ class PinTest < Test::Unit::TestCase
     @gateway.send(:add_invoice, post, @options)
 
     assert_equal @options[:description], post[:description]
+  end
+
+  def test_add_capture
+    post = {}
+
+    @gateway.send(:add_capture, post, @options)
+    assert_equal post[:capture], true
+
+    @gateway.send(:add_capture, post, :capture => false)
+    assert_equal post[:capture], false
   end
 
   def test_add_creditcard
@@ -231,13 +287,13 @@ class PinTest < Test::Unit::TestCase
       "Authorization" => "Basic #{Base64.strict_encode64('I_THISISNOTAREALAPIKEY:').strip}"
     }
 
-    @gateway.expects(:ssl_post).with(anything, anything, expected_headers).returns(successful_purchase_response)
+    @gateway.expects(:ssl_request).with(:post, anything, anything, expected_headers).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, {})
 
     expected_headers['X-Partner-Key'] = 'MyPartnerKey'
     expected_headers['X-Safe-Card'] = '1'
 
-    @gateway.expects(:ssl_post).with(anything, anything, expected_headers).returns(successful_purchase_response)
+    @gateway.expects(:ssl_request).with(:post, anything, anything, expected_headers).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, :partner_key => 'MyPartnerKey', :safe_card => '1')
   end
 
@@ -386,6 +442,41 @@ class PinTest < Test::Unit::TestCase
         "charge":[
           "You have tried to refund more than the original charge"
         ]
+      }
+    }'
+  end
+
+  def successful_capture_response
+    '{
+      "response":{
+        "token":"ch_encBuMDf17qTabmVjDsQlg",
+        "success":true,
+        "amount":400,
+        "currency":"AUD",
+        "description":"test charge",
+        "email":"roland@pin.net.au",
+        "ip_address":"203.192.1.172",
+        "created_at":"2013-01-14T03:00:41Z",
+        "status_message":"Success!",
+        "error_message":null,
+        "card":{
+          "token":"card_0oG1hjachN7g8KsOnWlOcg",
+          "display_number":"XXXX-XXXX-XXXX-0000",
+          "scheme":"master",
+          "address_line1":"42 Sevenoaks St",
+          "address_line2":null,
+          "address_city":"Lathlain",
+          "address_postcode":"6454",
+          "address_state":"WA",
+          "address_country":"AU"
+        },
+        "transfer":[
+
+        ],
+        "amount_refunded":0,
+        "total_fees":62,
+        "merchant_entitlement":338,
+        "refund_pending":false
       }
     }'
   end

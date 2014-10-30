@@ -17,7 +17,18 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Optimal Payments'
 
       def initialize(options = {})
-        #requires!(options, :login, :password)
+
+        if(options[:login])
+          ActiveMerchant.deprecated("The 'login' option is deprecated in favor of 'store_id' and will be removed in a future version.")
+          options[:store_id] = options[:login]
+        end
+
+        if(options[:account])
+          ActiveMerchant.deprecated("The 'account' option is deprecated in favor of 'account_number' and will be removed in a future version.")
+          options[:account_number] = options[:account]
+        end
+
+        requires!(options, :account_number, :store_id, :password)
         super
       end
 
@@ -85,7 +96,7 @@ module ActiveMerchant #:nodoc:
         else
           raise 'Unknown Action'
         end
-        txnRequest = URI.encode(xml)
+        txnRequest = escape_uri(xml)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, "txnMode=#{action}&txnRequest=#{txnRequest}"))
 
         Response.new(successful?(response), message_from(response), hash_from_xml(response),
@@ -94,6 +105,11 @@ module ActiveMerchant #:nodoc:
           :avs_result => { :code => avs_result_from(response) },
           :cvv_result => cvv_result_from(response)
         )
+      end
+
+      # The upstream is picky and so we can't use CGI.escape like we want to
+      def escape_uri(uri)
+        URI::DEFAULT_PARSER.escape(uri)
       end
 
       def successful?(response)
@@ -155,18 +171,19 @@ module ActiveMerchant #:nodoc:
 
       def cc_auth_request(money, opts)
         xml_document('ccAuthRequestV1') do |xml|
-          build_merchant_account(xml, @options)
+          build_merchant_account(xml)
           xml.merchantRefNum opts[:order_id]
           xml.amount(money/100.0)
           build_card(xml, opts)
           build_billing_details(xml, opts)
           build_shipping_details(xml, opts)
+          xml.customerIP opts[:ip] if opts[:ip]
         end
       end
 
       def cc_auth_reversal_request(opts)
         xml_document('ccAuthReversalRequestV1') do |xml|
-          build_merchant_account(xml, @options)
+          build_merchant_account(xml)
           xml.confirmationNumber opts[:confirmationNumber]
           xml.merchantRefNum opts[:order_id]
         end
@@ -174,7 +191,7 @@ module ActiveMerchant #:nodoc:
 
       def cc_post_auth_request(money, opts)
         xml_document('ccPostAuthRequestV1') do |xml|
-          build_merchant_account(xml, @options)
+          build_merchant_account(xml)
           xml.confirmationNumber opts[:confirmationNumber]
           xml.merchantRefNum opts[:order_id]
           xml.amount(money/100.0)
@@ -183,7 +200,7 @@ module ActiveMerchant #:nodoc:
 
       def cc_stored_data_request(money, opts)
         xml_document('ccStoredDataRequestV1') do |xml|
-          build_merchant_account(xml, @options)
+          build_merchant_account(xml)
           xml.merchantRefNum opts[:order_id]
           xml.confirmationNumber opts[:confirmationNumber]
           xml.amount(money/100.0)
@@ -194,14 +211,14 @@ module ActiveMerchant #:nodoc:
       #
       # def cc_cancel_request(opts)
       #   xml_document('ccCancelRequestV1') do |xml|
-      #     build_merchant_account(xml, @options)
+      #     build_merchant_account(xml)
       #     xml.confirmationNumber opts[:confirmationNumber]
       #   end
       # end
       #
       # def cc_payment_request(money, opts)
       #   xml_document('ccPaymentRequestV1') do |xml|
-      #     build_merchant_account(xml, @options)
+      #     build_merchant_account(xml)
       #     xml.merchantRefNum opts[:order_id]
       #     xml.amount(money/100.0)
       #     build_card(xml, opts)
@@ -211,7 +228,7 @@ module ActiveMerchant #:nodoc:
       #
       # def cc_authenticate_request(opts)
       #   xml_document('ccAuthenticateRequestV1') do |xml|
-      #     build_merchant_account(xml, @options)
+      #     build_merchant_account(xml)
       #     xml.confirmationNumber opts[:confirmationNumber]
       #     xml.paymentResponse 'myPaymentResponse'
       #   end
@@ -224,11 +241,11 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def build_merchant_account(xml, opts)
+      def build_merchant_account(xml)
         xml.tag! 'merchantAccount' do
-          xml.tag! 'accountNum' , opts[:account]
-          xml.tag! 'storeID'    , opts[:login]
-          xml.tag! 'storePwd'   , opts[:password]
+          xml.tag! 'accountNum' , @options[:account_number]
+          xml.tag! 'storeID'    , @options[:store_id]
+          xml.tag! 'storePwd'   , @options[:password]
         end
       end
 
@@ -264,20 +281,20 @@ module ActiveMerchant #:nodoc:
 
       def build_address(xml, addr, email=nil)
         if addr[:name]
-          xml.tag! 'firstName', CGI.escape(addr[:name].split(' ').first) # TODO: parse properly
-          xml.tag! 'lastName' , CGI.escape(addr[:name].split(' ').last )
+          xml.tag! 'firstName', addr[:name].split(' ').first
+          xml.tag! 'lastName' , addr[:name].split(' ').last
         end
-        xml.tag! 'street' , CGI.escape(addr[:address1]) if addr[:address1].present?
-        xml.tag! 'street2', CGI.escape(addr[:address2]) if addr[:address2].present?
-        xml.tag! 'city'   , CGI.escape(addr[:city]    ) if addr[:city].present?
+        xml.tag! 'street' , addr[:address1] if addr[:address1].present?
+        xml.tag! 'street2', addr[:address2] if addr[:address2].present?
+        xml.tag! 'city'   , addr[:city]     if addr[:city].present?
         if addr[:state].present?
           state_tag = %w(US CA).include?(addr[:country]) ? 'state' : 'region'
-          xml.tag! state_tag, CGI.escape(addr[:state])
+          xml.tag! state_tag, addr[:state]
         end
-        xml.tag! 'country', CGI.escape(addr[:country] ) if addr[:country].present?
-        xml.tag! 'zip'    , CGI.escape(addr[:zip]     ) if addr[:zip].present?
-        xml.tag! 'phone'  , CGI.escape(addr[:phone]   ) if addr[:phone].present?
-        xml.tag! 'email', CGI.escape(email) if email
+        xml.tag! 'country', addr[:country]  if addr[:country].present?
+        xml.tag! 'zip'    , addr[:zip]      if addr[:zip].present?
+        xml.tag! 'phone'  , addr[:phone]    if addr[:phone].present?
+        xml.tag! 'email', email if email
       end
 
       def card_type(key)
@@ -294,4 +311,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

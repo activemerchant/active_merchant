@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class CyberSourceTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     Base.gateway_mode = :test
 
@@ -95,7 +97,7 @@ class CyberSourceTest < Test::Unit::TestCase
     @gateway.stubs(:ssl_post).returns(successful_create_subscription_response, successful_purchase_response)
 
     assert_success(response = @gateway.store(@credit_card, @subscription_options))
-    assert_success(response_reference_purchase = @gateway.purchase(@amount, response.authorization, @options))
+    assert_success(@gateway.purchase(@amount, response.authorization, @options))
     assert response.test?
   end
 
@@ -218,7 +220,7 @@ class CyberSourceTest < Test::Unit::TestCase
     @gateway.stubs(:ssl_post).returns(successful_capture_response, successful_refund_response)
     assert_success(response = @gateway.purchase(@amount, @credit_card, @options))
 
-    assert_success(response_refund = @gateway.refund(@amount, response.authorization))
+    assert_success(@gateway.refund(@amount, response.authorization))
   end
 
   def test_successful_credit_request
@@ -242,6 +244,15 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.validate_pinless_debit_card(@credit_card, @options)
     assert response.success?
     assert_success(@gateway.auth_reversal(@amount, response.authorization, @options))
+  end
+
+  def test_validate_add_subscription_amount
+    stub_comms do
+      @gateway.store(@credit_card, @subscription_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<grandTotalAmount>1.00<\/grandTotalAmount>), data
+      assert_match %r(<amount>1.00<\/amount>), data
+    end.respond_with(successful_update_subscription_response)
   end
 
   private

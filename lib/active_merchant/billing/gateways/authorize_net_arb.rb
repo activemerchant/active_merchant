@@ -391,7 +391,7 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-     def recurring_parse(action, xml)
+      def recurring_parse(action, xml)
         response = {}
         xml = REXML::Document.new(xml)
         root = REXML::XPath.first(xml, "//#{RECURRING_ACTIONS[action]}Response") ||

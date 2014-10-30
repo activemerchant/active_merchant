@@ -91,12 +91,12 @@ class SagePayTest < Test::Unit::TestCase
   end
 
   def test_avs_result
-     @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-     response = @gateway.purchase(@amount, @credit_card, @options)
-     assert_equal 'Y', response.avs_result['postal_match']
-     assert_equal 'N', response.avs_result['street_match']
-   end
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Y', response.avs_result['postal_match']
+    assert_equal 'N', response.avs_result['street_match']
+  end
 
    def test_cvv_result
      @gateway.expects(:ssl_post).returns(successful_purchase_response)
@@ -127,6 +127,17 @@ class SagePayTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge({:gift_aid_payment => 1}))
     end.check_request do |method, endpoint, data, headers|
       assert_match(/GiftAidPayment=1/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_FIxxxx_optional_fields_are_submitted
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({:recipient_account_number => '1234567890', :recipient_surname => 'Withnail', :recipient_postcode => 'AB11AB', :recipient_dob => '19701223'}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/FIRecipientAcctNumber=1234567890/, data)
+      assert_match(/FIRecipientSurname=Withnail/, data)
+      assert_match(/FIRecipientPostcode=AB11AB/, data)
+      assert_match(/FIRecipientDoB=19701223/, data)
     end.respond_with(successful_purchase_response)
   end
 

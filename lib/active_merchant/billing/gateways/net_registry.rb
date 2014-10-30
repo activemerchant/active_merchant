@@ -22,7 +22,7 @@ module ActiveMerchant
     # response will contain a 'receipt' parameter
     # (response.params['receipt']) if a receipt was issued by the gateway.
     class NetRegistryGateway < Gateway
-      self.live_url = self.test_url = 'https://4tknox.au.com/cgi-bin/themerchant.au.com/ecom/external2.pl'
+      self.live_url = self.test_url = 'https://paygate.ssllock.net/external2.pl'
 
       FILTERED_PARAMS = [ 'card_no', 'card_expiry', 'receipt_array' ]
 
@@ -151,7 +151,12 @@ module ActiveMerchant
       def post_data(action, params)
         params['COMMAND'] = TRANSACTIONS[action]
         params['LOGIN'] = "#{@options[:login]}/#{@options[:password]}"
-        URI.encode(params.map{|k,v| "#{k}=#{v}"}.join('&'))
+        escape_uri(params.map{|k,v| "#{k}=#{v}"}.join('&'))
+      end
+
+      # The upstream is picky and so we can't use CGI.escape like we want to
+      def escape_uri(uri)
+        URI::DEFAULT_PARSER.escape(uri)
       end
 
       def parse(response)

@@ -96,13 +96,13 @@ class EpayTest < Test::Unit::TestCase
   def test_authorize_sends_order_number
     @gateway.expects(:raw_ssl_request).with(anything, anything, regexp_matches(/orderid=1234/), anything).returns(valid_authorize_response)
 
-    assert response = @gateway.authorize(100, '123', :order_id => '#1234')
+    @gateway.authorize(100, '123', :order_id => '#1234')
   end
 
   def test_purchase_sends_order_number
     @gateway.expects(:raw_ssl_request).with(anything, anything, regexp_matches(/orderid=1234/), anything).returns(valid_authorize_response)
 
-    assert response = @gateway.purchase(100, '123', :order_id => '#1234')
+    @gateway.purchase(100, '123', :order_id => '#1234')
   end
 
   private

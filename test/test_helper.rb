@@ -11,7 +11,6 @@ end
 
 require 'test/unit'
 
-require 'money'
 require 'mocha/version'
 if(Mocha::VERSION.split(".")[1].to_i < 12)
   require 'mocha'
@@ -30,22 +29,6 @@ begin
   require 'active_support/core_ext/time/acts_like'
 rescue LoadError
 end
-
-begin
-  gem 'actionpack'
-rescue LoadError
-  raise StandardError, "The view tests need ActionPack installed as gem to run"
-end
-
-require 'action_controller'
-require "action_view/template"
-begin
-  require 'active_support/core_ext/module/deprecation'
-  require 'action_dispatch/testing/test_process'
-rescue LoadError
-  require 'action_controller/test_process'
-end
-require 'active_merchant/billing/integrations/action_view_helper'
 
 ActiveMerchant::Billing::Base.mode = :test
 
@@ -114,20 +97,28 @@ module ActiveMerchant
       end
     end
 
-    def assert_valid(validateable)
+    def assert_valid(model)
+      errors = model.validate
+
       clean_backtrace do
-        assert validateable.valid?, "Expected to be valid"
+        assert_equal({}, errors, "Expected to be valid")
       end
+
+      errors
     end
 
-    def assert_not_valid(validateable)
+    def assert_not_valid(model)
+      errors = model.validate
+
       clean_backtrace do
-        assert_false validateable.valid?, "Expected to not be valid"
+        assert_not_equal({}, errors, "Expected to not be valid")
       end
+
+      errors
     end
 
-    def assert_deprecation_warning(message)
-      ActiveMerchant.expects(:deprecated).with(message)
+    def assert_deprecation_warning(message=nil)
+      ActiveMerchant.expects(:deprecated).with(message ? message : anything)
       yield
     end
 
@@ -170,6 +161,14 @@ module ActiveMerchant
       Billing::CreditCard.new(defaults)
     end
 
+    def credit_card_with_track_data(number = '4242424242424242', options = {})
+      defaults = {
+        :track_data => '%B' + number + '^LONGSEN/L. ^15121200000000000000**123******?',
+      }.update(options)
+
+      Billing::CreditCard.new(defaults)
+    end
+
     def check(options = {})
       defaults = {
         :name => 'Jim Smith',
@@ -186,17 +185,21 @@ module ActiveMerchant
 
     def address(options = {})
       {
-        :name     => 'Jim Smith',
-        :address1 => '1234 My Street',
-        :address2 => 'Apt 1',
-        :company  => 'Widgets Inc',
-        :city     => 'Ottawa',
-        :state    => 'ON',
-        :zip      => 'K1C2N6',
-        :country  => 'CA',
-        :phone    => '(555)555-5555',
-        :fax      => '(555)555-6666'
+        name:     'Jim Smith',
+        address1: '1234 My Street',
+        address2: 'Apt 1',
+        company:  'Widgets Inc',
+        city:     'Ottawa',
+        state:    'ON',
+        zip:      'K1C2N6',
+        country:  'CA',
+        phone:    '(555)555-5555',
+        fax:      '(555)555-6666'
       }.update(options)
+    end
+
+    def generate_unique_id
+      SecureRandom.hex(16)
     end
 
     def all_fixtures
@@ -211,7 +214,7 @@ module ActiveMerchant
 
     def load_fixtures
       [DEFAULT_CREDENTIALS, LOCAL_CREDENTIALS].inject({}) do |credentials, file_name|
-        if File.exists?(file_name)
+        if File.exist?(file_name)
           yaml_data = YAML.load(File.read(file_name))
           credentials.merge!(symbolize_keys(yaml_data))
         end
@@ -231,7 +234,6 @@ end
 Test::Unit::TestCase.class_eval do
   include ActiveMerchant::Billing
   include ActiveMerchant::Assertions
-  include ActiveMerchant::Utils
   include ActiveMerchant::Fixtures
 end
 

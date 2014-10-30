@@ -279,7 +279,7 @@ module ActiveMerchant #:nodoc:
           if key == :items
             build_items(elem, value)
           else
-            for k, v in params[key]
+            for k, _ in params[key]
               elem.add_element(k.to_s).text = params[key][k].to_s if params[key][k]
             end
           end

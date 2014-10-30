@@ -68,6 +68,6 @@ class EwayTest < Test::Unit::TestCase
 
     assert response = @gateway.refund(200, response.authorization)
     assert_failure response
-    assert_match /Error.*Your refund could not be processed./, response.message
+    assert_match %r{Error.*Your refund could not be processed.}, response.message
   end
 end

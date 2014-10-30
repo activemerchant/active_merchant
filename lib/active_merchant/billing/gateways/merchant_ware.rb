@@ -151,7 +151,7 @@ module ActiveMerchant #:nodoc:
       def build_purchase_request(action, money, credit_card, options)
         requires!(options, :order_id)
 
-        request = soap_request(action) do |xml|
+        soap_request(action) do |xml|
           add_invoice(xml, options)
           add_amount(xml, money)
           add_credit_card(xml, credit_card)
@@ -162,7 +162,7 @@ module ActiveMerchant #:nodoc:
       def build_capture_request(action, money, identification, options)
         reference, options[:order_id] = split_reference(identification)
 
-        request = soap_request(action) do |xml|
+        soap_request(action) do |xml|
           add_reference(xml, reference)
           add_invoice(xml, options)
           add_amount(xml, money)
@@ -223,10 +223,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(xml, credit_card)
-        xml.tag! "strPAN", credit_card.number
-        xml.tag! "strExpDate", expdate(credit_card)
-        xml.tag! "strCardHolder", credit_card.name
-        xml.tag! "strCVCode", credit_card.verification_value if credit_card.verification_value?
+        if credit_card.respond_to?(:track_data) && credit_card.track_data.present?
+          xml.tag! "trackData", credit_card.track_data
+        else
+         xml.tag! "strPAN", credit_card.number
+         xml.tag! "strExpDate", expdate(credit_card)
+         xml.tag! "strCardHolder", credit_card.name
+         xml.tag! "strCVCode", credit_card.verification_value if credit_card.verification_value?
+        end
       end
 
       def split_reference(reference)
@@ -272,7 +276,7 @@ module ActiveMerchant #:nodoc:
 
         response[:message] = response["faultstring"].to_s.gsub("\n", " ")
         response
-      rescue REXML::ParseException => e
+      rescue REXML::ParseException
         response[:http_body]        = http_response.body
         response[:message]          = "Failed to parse the failed response"
         response

@@ -70,7 +70,7 @@ class WebpayTest < Test::Unit::TestCase
   end
 
   def test_successful_void
-    @gateway.expects(:ssl_request).returns(successful_purchase_response(true))
+    @gateway.expects(:ssl_request).returns(successful_refunded_response)
 
     assert response = @gateway.void('ch_test_charge')
     assert_instance_of Response, response
@@ -115,7 +115,7 @@ class WebpayTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match /^Invalid response received from the WebPay API/, response.message
+    assert_match %r{^Invalid response received from the WebPay API}, response.message
   end
 
   def test_add_customer
@@ -171,27 +171,33 @@ class WebpayTest < Test::Unit::TestCase
 {
   "id": "ch_test_charge",
   "object": "charge",
-  "created": 1309131571,
   "livemode": false,
-  "paid": true,
-  "amount": 40000,
   "currency": "jpy",
+  "description": "ActiveMerchant Test Purchase",
+  "amount": 40000,
+  "amount_refunded": 0,
+  "customer": null,
+  "recursion": null,
+  "created": 1309131571,
+  "paid": false,
   "refunded": false,
-  "fee": 0,
-  "fee_details": [],
+  "failure_message": null,
   "card": {
-    "country": "JP",
-    "exp_month": 9,
-    "exp_year": #{Time.now.year + 1},
-    "last4": "4242",
     "object": "card",
-    "type": "Visa"
+    "exp_year": #{Time.now.year + 1},
+    "exp_month": 11,
+    "fingerprint": "215b5b2fe460809b8bb90bae6eeac0e0e0987bd7",
+    "name": "LONGBOB LONGSEN",
+    "country": "JP",
+    "type": "Visa",
+    "cvc_check": "pass",
+    "last4": "4242"
   },
   "captured": false,
-  "description": "ActiveMerchant Test Purchase",
-  "dispute": null,
-  "uncaptured": true,
-  "disputed": false
+  "expire_time": 1309736371,
+  "fees": [
+
+  ]
 }
     RESPONSE
   end
@@ -201,27 +207,40 @@ class WebpayTest < Test::Unit::TestCase
 {
   "id": "ch_test_charge",
   "object": "charge",
-  "created": 1309131571,
   "livemode": false,
-  "paid": true,
-  "amount": 40000,
   "currency": "jpy",
+  "description": "ActiveMerchant Test Purchase",
+  "amount": 40000,
+  "amount_refunded": 0,
+  "customer": null,
+  "recursion": null,
+  "created": 1309131571,
+  "paid": true,
   "refunded": false,
-  "fee": 0,
-  "fee_details": [],
+  "failure_message": null,
   "card": {
-    "country": "JP",
-    "exp_month": 9,
-    "exp_year": #{Time.now.year + 1},
-    "last4": "4242",
     "object": "card",
-    "type": "Visa"
+    "exp_year": #{Time.now.year + 1},
+    "exp_month": 11,
+    "fingerprint": "215b5b2fe460809b8bb90bae6eeac0e0e0987bd7",
+    "name": "LONGBOB LONGSEN",
+    "country": "JP",
+    "type": "Visa",
+    "cvc_check": "pass",
+    "last4": "4242"
   },
   "captured": true,
-  "description": "ActiveMerchant Test Purchase",
-  "dispute": null,
-  "uncaptured": false,
-  "disputed": false
+  "expire_time": 1309736371,
+  "fees": [
+    {
+      "object": "fee",
+      "transaction_type": "payment",
+      "transaction_fee": 0,
+      "rate": 3.25,
+      "amount": 1300,
+      "created": 1408585142
+    }
+  ]
 }
     RESPONSE
   end
@@ -230,23 +249,93 @@ class WebpayTest < Test::Unit::TestCase
   def successful_purchase_response(refunded=false)
     <<-RESPONSE
 {
-  "amount": 400,
-  "created": 1309131571,
-  "currency": "jpy",
-  "description": "Test Purchase",
   "id": "ch_test_charge",
-  "livemode": false,
   "object": "charge",
+  "livemode": false,
+  "currency": "jpy",
+  "description": "ActiveMerchant Test Purchase",
+  "amount": 400,
+  "amount_refunded": 0,
+  "customer": null,
+  "recursion": null,
+  "created": 1408585273,
   "paid": true,
-  "refunded": #{refunded},
+  "refunded": false,
+  "failure_message": null,
   "card": {
-    "country": "JP",
-    "exp_month": 9,
-    "exp_year": #{Time.now.year + 1},
-    "last4": "4242",
     "object": "card",
-    "type": "Visa"
-  }
+    "exp_year": #{Time.now.year + 1},
+    "exp_month": 11,
+    "fingerprint": "215b5b2fe460809b8bb90bae6eeac0e0e0987bd7",
+    "name": "LONGBOB LONGSEN",
+    "country": "JP",
+    "type": "Visa",
+    "cvc_check": "pass",
+    "last4": "4242"
+  },
+  "captured": true,
+  "expire_time": null,
+  "fees": [
+    {
+      "object": "fee",
+      "transaction_type": "payment",
+      "transaction_fee": 0,
+      "rate": 3.25,
+      "amount": 1300,
+      "created": 1408585273
+    }
+  ]
+}
+    RESPONSE
+  end
+
+  def successful_refunded_response
+    <<-RESPONSE
+{
+  "id": "ch_test_charge",
+  "object": "charge",
+  "livemode": false,
+  "currency": "jpy",
+  "description": "ActiveMerchant Test Purchase",
+  "amount": 400,
+  "amount_refunded": 400,
+  "customer": null,
+  "recursion": null,
+  "created": 1408585273,
+  "paid": true,
+  "refunded": true,
+  "failure_message": null,
+  "card": {
+    "object": "card",
+    "exp_year": #{Time.now.year + 1},
+    "exp_month": 11,
+    "fingerprint": "215b5b2fe460809b8bb90bae6eeac0e0e0987bd7",
+    "name": "KEI KUBO",
+    "country": "JP",
+    "type": "Visa",
+    "cvc_check": "pass",
+    "last4": "4242"
+  },
+  "captured": true,
+  "expire_time": null,
+  "fees": [
+    {
+      "object": "fee",
+      "transaction_type": "payment",
+      "transaction_fee": 0,
+      "rate": 3.25,
+      "amount": 1300,
+      "created": 1408585273
+    },
+    {
+      "object": "fee",
+      "transaction_type": "refund",
+      "transaction_fee": 0,
+      "rate": 3.25,
+      "amount": -1300,
+      "created": 1408585461
+    }
+  ]
 }
     RESPONSE
   end
@@ -255,24 +344,58 @@ class WebpayTest < Test::Unit::TestCase
     options = {:livemode=>false}.merge!(options)
     <<-RESPONSE
 {
+  "id": "ch_test_charge",
+  "object": "charge",
+  "livemode": #{options[:livemode]},
+  "currency": "jpy",
+  "description": "ActiveMerchant Test Purchase",
   "amount": 400,
   "amount_refunded": 200,
-  "created": 1309131571,
-  "currency": "jpy",
-  "description": "Test Purchase",
-  "id": "ch_test_charge",
-  "livemode": #{options[:livemode]},
-  "object": "charge",
+  "customer": null,
+  "recursion": null,
+  "created": 1408584994,
   "paid": true,
-  "refunded": true,
+  "refunded": false,
+  "failure_message": null,
   "card": {
-    "country": "JP",
-    "exp_month": 9,
-    "exp_year": #{Time.now.year + 1},
-    "last4": "4242",
     "object": "card",
-    "type": "Visa"
-  }
+    "exp_year": #{Time.now.year + 1},
+    "exp_month": 11,
+    "fingerprint": "215b5b2fe460809b8bb90bae6eeac0e0e0987bd7",
+    "name": "KEI KUBO",
+    "country": "JP",
+    "type": "Visa",
+    "cvc_check": "pass",
+    "last4": "4242"
+  },
+  "captured": true,
+  "expire_time": 1409189794,
+  "fees": [
+    {
+      "object": "fee",
+      "transaction_type": "payment",
+      "transaction_fee": 0,
+      "rate": 3.25,
+      "amount": 1300,
+      "created": 1408585142
+    },
+    {
+      "object": "fee",
+      "transaction_type": "refund",
+      "transaction_fee": 0,
+      "rate": 3.25,
+      "amount": -1300,
+      "created": 1408585699
+    },
+    {
+      "object": "fee",
+      "transaction_type": "payment",
+      "transaction_fee": 0,
+      "rate": 3.25,
+      "amount": 650,
+      "created": 1408585699
+    }
+  ]
 }
     RESPONSE
   end
@@ -280,14 +403,15 @@ class WebpayTest < Test::Unit::TestCase
   # Place raw failed response from gateway here
   def failed_purchase_response
     <<-RESPONSE
-    {
-      "error": {
-        "code": "incorrect_number",
-        "param": "number",
-        "type": "card_error",
-        "message": "Your card number is incorrect"
-      }
-    }
+{
+  "error": {
+    "message": "The card number is invalid. Make sure the number entered matches your credit card.",
+    "caused_by": "buyer",
+    "param": "number",
+    "type": "card_error",
+    "code": "incorrect_number"
+  }
+}
     RESPONSE
   end
 

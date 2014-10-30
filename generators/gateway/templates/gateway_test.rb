@@ -32,6 +32,7 @@ class <%= class_name %>Test < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
   def test_successful_authorize
@@ -56,6 +57,15 @@ class <%= class_name %>Test < Test::Unit::TestCase
   end
 
   def test_failed_void
+  end
+
+  def test_successful_verify
+  end
+
+  def test_successful_verify_with_failed_void
+  end
+
+  def test_failed_verify
   end
 
   private

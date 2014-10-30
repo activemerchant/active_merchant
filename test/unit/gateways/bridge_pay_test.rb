@@ -101,6 +101,31 @@ class BridgePayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_void_response)
+    assert_success response
+    assert_equal "OK2657", response.params["authcode"]
+  end
+
+  def test_successful_verify_with_failed_void
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, failed_void_response)
+    assert_success response
+    assert_equal "Approved", response.message
+  end
+
+  def test_unsuccessful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorize_response, successful_void_response)
+    assert_failure response
+    assert_equal "Invalid Account Number", response.message
+  end
+
+
   private
 
   def successful_purchase_response
@@ -162,22 +187,11 @@ class BridgePayTest < Test::Unit::TestCase
 
   def failed_authorize_response
     %(
-      <Response xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://TPISoft.com/SmartPayments/">
-        <Result>0</Result>
-        <RespMSG>Approved</RespMSG>
-        <Message>APPROVAL</Message>
-        <AuthCode>OK9877</AuthCode>
-        <PNRef>837499</PNRef>
-        <HostCode>837499</HostCode>
-        <GetAVSResult>Z</GetAVSResult>
-        <GetAVSResultTXT>5 Zip Match No Address Match</GetAVSResultTXT>
-        <GetStreetMatchTXT>No Match</GetStreetMatchTXT>
-        <GetZipMatchTXT>Match</GetZipMatchTXT>
-        <GetCVResult>P</GetCVResult>
-        <GetCVResultTXT>Service Not Available</GetCVResultTXT>
-        <GetCommercialCard>False</GetCommercialCard>
-        <ExtData>InvNum=1,CardType=VISA</ExtData>
-      </Response>
+    <Response xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://TPISoft.com/SmartPayments/">
+      <Result>23</Result>
+      <RespMSG>Invalid Account Number</RespMSG>
+      <ExtData>InvNum=73c21272e01d0716d3a3262d8faf5bea,CardType=VISA</ExtData>
+    </Response>
     )
   end
 

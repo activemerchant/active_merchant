@@ -13,31 +13,31 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     }
     @amount = 100
   end
-  
+
   def test_urls
     assert_equal 'https://www.usaepay.com/gate',      UsaEpayTransactionGateway.live_url
     assert_equal 'https://sandbox.usaepay.com/gate',  UsaEpayTransactionGateway.test_url
   end
-  
+
   def test_request_url_live
     gateway = UsaEpayTransactionGateway.new(:login => 'LOGIN', :test => false)
     gateway.expects(:ssl_post).
       with('https://www.usaepay.com/gate', purchase_request).
       returns(successful_purchase_response)
-    assert response = gateway.purchase(@amount, @credit_card, @options)
+    gateway.purchase(@amount, @credit_card, @options)
   end
-  
+
   def test_request_url_test
     @gateway.expects(:ssl_post).
       with('https://sandbox.usaepay.com/gate', purchase_request).
       returns(successful_purchase_response)
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    @gateway.purchase(@amount, @credit_card, @options)
   end
 
   def test_successful_request
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal '55074409', response.authorization
     assert response.test?
@@ -46,7 +46,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(unsuccessful_purchase_response)
 
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
   end
@@ -60,7 +60,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
     assert_success response
   end
-  
+
   def test_successful_purchase_split_payment
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(
@@ -70,19 +70,19 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
         ]
       ))
     end.check_request do |endpoint, data, headers|
-      assert_match /UM02key=abc123/,                data
-      assert_match /UM02amount=1.99/,               data
-      assert_match /UM02description=Second\+payee/, data
-      
-      assert_match /UM03key=def456/,                data
-      assert_match /UM03amount=9.11/,               data
-      assert_match /UM03description=Third\+payee/,  data
-      
-      assert_match /UMonError=Void/,                data
+      assert_match %r{UM02key=abc123},                data
+      assert_match %r{UM02amount=1.99},               data
+      assert_match %r{UM02description=Second\+payee}, data
+
+      assert_match %r{UM03key=def456},                data
+      assert_match %r{UM03amount=9.11},               data
+      assert_match %r{UM03description=Third\+payee},  data
+
+      assert_match %r{UMonError=Void},                data
     end.respond_with(successful_purchase_response)
     assert_success response
   end
-  
+
   def test_successful_purchase_split_payment_with_custom_on_error
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options.merge(
@@ -92,7 +92,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
         :on_error => 'Continue'
       ))
     end.check_request do |endpoint, data, headers|
-      assert_match /UMonError=Continue/, data
+      assert_match %r{UMonError=Continue}, data
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -161,6 +161,31 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result['code']
   end
 
+  def test_add_track_data_with_creditcard
+    @credit_card.track_data = "data"
+
+    @gateway.expects(:ssl_post).with do |_, body|
+      assert_match "UMmagstripe=data", body
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_add_track_data_with_empty_data
+    ["", nil].each do |data|
+      @credit_card.track_data = data
+
+      @gateway.expects(:ssl_post).with do |_, body|
+        refute body.include? "UMmagstripe="
+        body
+      end.returns(successful_purchase_response)
+
+      assert response = @gateway.purchase(@amount, @credit_card, @options)
+      assert_success response
+    end
+  end
+
   def test_does_not_raise_error_on_missing_values
     @gateway.expects(:ssl_post).returns("status")
     assert_nothing_raised do
@@ -192,7 +217,7 @@ private
   def key(prefix, key)
     @gateway.send(:address_key, prefix, key)
   end
-  
+
   def purchase_request
     "UMamount=1.00&UMinvoice=&UMdescription=&UMcard=4242424242424242&UMcvv2=123&UMexpir=09#{@credit_card.year.to_s[-2..-1]}&UMname=Longbob+Longsen&UMbillfname=Longbob&UMbilllname=Longsen&UMbillcompany=Widgets+Inc&UMbillstreet=1234+My+Street&UMbillstreet2=Apt+1&UMbillcity=Ottawa&UMbillstate=ON&UMbillzip=K1C2N6&UMbillcountry=CA&UMbillphone=%28555%29555-5555&UMshipfname=Longbob&UMshiplname=Longsen&UMshipcompany=Widgets+Inc&UMshipstreet=1234+My+Street&UMshipstreet2=Apt+1&UMshipcity=Ottawa&UMshipstate=ON&UMshipzip=K1C2N6&UMshipcountry=CA&UMshipphone=%28555%29555-5555&UMstreet=1234+My+Street&UMzip=K1C2N6&UMcommand=cc%3Asale&UMkey=LOGIN&UMsoftware=Active+Merchant&UMtestmode=0"
   end

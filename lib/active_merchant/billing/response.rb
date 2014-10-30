@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
     end
 
     class Response
-      attr_reader :params, :message, :test, :authorization, :avs_result, :cvv_result
+      attr_reader :params, :message, :test, :authorization, :avs_result, :cvv_result, :error_code
 
       def success?
         @success
@@ -23,6 +23,7 @@ module ActiveMerchant #:nodoc:
         @test = options[:test] || false
         @authorization = options[:authorization]
         @fraud_review = options[:fraud_review]
+        @error_code = options[:error_code]
 
         @avs_result = if options[:avs_result].kind_of?(AVSResult)
           options[:avs_result].to_hash
@@ -39,22 +40,31 @@ module ActiveMerchant #:nodoc:
     end
 
     class MultiResponse < Response
-      def self.run(primary_response = :last, &block)
-        response = new.tap(&block)
-        response.primary_response = primary_response
-        response
+      def self.run(use_first_response = false, &block)
+        new(use_first_response).tap(&block)
       end
 
-      attr_reader :responses
-      attr_writer :primary_response
+      attr_reader :responses, :primary_response
 
-      def initialize
+      def initialize(use_first_response = false)
         @responses = []
-        @primary_response = :last
+        @use_first_response = use_first_response
+        @primary_response = nil
       end
 
-      def process
-        self << yield if(responses.empty? || success?)
+      def process(ignore_result=false)
+        return unless success?
+
+        response = yield
+        self << response
+
+        unless ignore_result
+          if(@use_first_response && response.success?)
+            @primary_response ||= response
+          else
+            @primary_response = response
+          end
+        end
       end
 
       def <<(response)
@@ -66,11 +76,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?
-        @responses.all?{|r| r.success?}
-      end
-
-      def primary_response
-        success? && @primary_response == :first ? @responses.first : @responses.last
+        (primary_response ? primary_response.success? : true)
       end
 
       %w(params message test authorization avs_result cvv_result test? fraud_review?).each do |m|

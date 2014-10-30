@@ -8,7 +8,6 @@ module ActiveMerchant #:nodoc:
         def configure_ssl(http)
           super(http)
           http.use_ssl = true
-          http.ssl_version = :SSLv3
         end
       end
 

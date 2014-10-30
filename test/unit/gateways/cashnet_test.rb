@@ -97,11 +97,21 @@ class Cashnet < Test::Unit::TestCase
     }
 
     @gateway.send(:add_creditcard, params, @credit_card)
+    @gateway.send(:add_invoice, params, {})
 
     assert data = @gateway.send(:post_data, 'SALE', params)
     minimum_requirements.each do |key|
       assert_not_nil(data =~ /#{key}=/)
     end
+  end
+
+  def test_successful_purchase_with_fname_and_lname
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {})
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/fname=Longbob/, data)
+      assert_match(/lname=Longsen/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   private

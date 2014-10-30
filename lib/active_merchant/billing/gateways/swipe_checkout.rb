@@ -119,7 +119,6 @@ module ActiveMerchant #:nodoc:
               build_error_response(message, response)
             end
           rescue ResponseError => e
-            raw_response = e.response.body
             build_error_response("ssl_post() with url #{url} raised ResponseError: #{e}")
           rescue JSON::ParserError => e
             msg = 'Invalid response received from the Swipe Checkout API. ' +

@@ -92,7 +92,6 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    # Replace with authorization number from the successful response
     assert_equal 'ch_test_charge', response.authorization
     assert response.test?
   end
@@ -120,6 +119,14 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_statement_description
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, statement_description: '5K RACE TICKET')
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/statement_description=5K\+RACE\+TICKET/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_purchase_response(true))
 
@@ -127,7 +134,6 @@ class StripeTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_success response
 
-    # Replace with authorization number from the successful response
     assert_equal 'ch_test_charge', response.authorization
     assert response.test?
   end
@@ -138,7 +144,6 @@ class StripeTest < Test::Unit::TestCase
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge')
     assert_success response
 
-    # Replace with authorization number from the successful response
     assert_equal 'ch_test_charge', response.authorization
     assert response.test?
   end
@@ -200,6 +205,29 @@ class StripeTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_verify
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorization_response, successful_void_response)
+    assert_success response
+  end
+
+  def test_successful_verify_with_failed_void
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorization_response, failed_void_response)
+    assert_success response
+    assert_equal "Transaction approved", response.message
+  end
+
+  def test_unsuccessful_verify
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(declined_authorization_response, successful_void_response)
+    assert_failure response
+    assert_equal "Your card was declined.", response.message
+  end
+
   def test_successful_request_always_uses_live_mode_to_determine_test_request
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response(:livemode => true))
 
@@ -214,8 +242,18 @@ class StripeTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    # unsuccessful request defaults to live
-    assert !response.test?
+    assert !response.test? # unsuccessful request defaults to live
+    assert_nil response.authorization
+  end
+
+  def test_declined_request
+    @gateway.expects(:ssl_request).returns(declined_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    assert !response.test? # unsuccessful request defaults to live
+    assert_equal 'ch_test_charge', response.authorization
   end
 
   def test_invalid_raw_response
@@ -264,7 +302,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_add_customer
     post = {}
-    @gateway.send(:add_customer, post, @creditcard, {:customer => "test_customer"})
+    @gateway.send(:add_customer, post, nil, {:customer => "test_customer"})
     assert_equal "test_customer", post[:customer]
   end
 
@@ -296,8 +334,24 @@ class StripeTest < Test::Unit::TestCase
       assert_match(/referrer=http\%3A\%2F\%2Fwww\.shopify\.com/, data)
       assert_match(/payment_user_agent=Stripe\%2Fv1\+ActiveMerchantBindings\%2F\d+\.\d+\.\d+/, data)
       assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
+      assert_match(/metadata\[order_id\]=42/, data)
     end.respond_with(successful_purchase_response)
   end
+
+  def test_client_data_submitted_with_purchase_without_email_or_order
+    stub_comms(@gateway, :ssl_request) do
+      updated_options = @options.merge({:description => "a test customer",:ip => "127.127.127.127", :user_agent => "some browser", :referrer =>"http://www.shopify.com"})
+      @gateway.purchase(@amount,@credit_card,updated_options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/description=a\+test\+customer/, data)
+      assert_match(/ip=127\.127\.127\.127/, data)
+      assert_match(/user_agent=some\+browser/, data)
+      assert_match(/referrer=http\%3A\%2F\%2Fwww\.shopify\.com/, data)
+      assert_match(/payment_user_agent=Stripe\%2Fv1\+ActiveMerchantBindings\%2F\d+\.\d+\.\d+/, data)
+      refute_match(/metadata/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
 
   def test_add_address
     post = {:card => {}}
@@ -451,246 +505,310 @@ class StripeTest < Test::Unit::TestCase
     end.respond_with(successful_update_credit_card_response)
   end
 
+  def test_deprecated_unstore
+    assert_deprecation_warning do
+      assert @gateway.unstore("CustomerID", "card_id")
+    end
+
+    assert_deprecation_warning do
+      assert @gateway.unstore("CustomerID", "card_id", {})
+    end
+  end
+
   private
 
-  # Create new customer and set default credit card
   def successful_new_customer_response
     <<-RESPONSE
-{
-  "object": "customer",
-  "created": 1383137317,
-  "id": "cus_3sgheFxeBgTQ3M",
-  "livemode": false,
-  "description": null,
-  "email": null,
-  "delinquent": false,
-  "metadata": {},
-  "subscription": null,
-  "discount": null,
-  "account_balance": 0,
-  "cards":
-  {
-    "object": "list",
-    "count": 1,
-    "url": "/v1/customers/cus_3sgheFxeBgTQ3M/cards",
-    "data":
-    [
+    {
+      "object": "customer",
+      "created": 1383137317,
+      "id": "cus_3sgheFxeBgTQ3M",
+      "livemode": false,
+      "description": null,
+      "email": null,
+      "delinquent": false,
+      "metadata": {},
+      "subscription": null,
+      "discount": null,
+      "account_balance": 0,
+      "cards":
       {
-        "id": "card_483etw4er9fg4vF3sQdrt3FG",
-        "object": "card",
-        "last4": "4242",
-        "type": "Visa",
-        "exp_month": 11,
-        "exp_year": 2020,
-        "fingerprint": "5dgRQ3dVRGaQWDFb",
-        "customer": "cus_3sgheFxeBgTQ3M",
-        "country": "US",
-        "name": "John Doe",
-        "address_line1": null,
-        "address_line2": null,
-        "address_city": null,
-        "address_state": null,
-        "address_zip": null,
-        "address_country": null,
-        "cvc_check": null,
-        "address_line1_check": null,
-        "address_zip_check": null
-      }
-    ]
-  },
-  "default_card": "card_483etw4er9fg4vF3sQdrt3FG"
-}
+        "object": "list",
+        "count": 1,
+        "url": "/v1/customers/cus_3sgheFxeBgTQ3M/cards",
+        "data":
+        [
+          {
+            "id": "card_483etw4er9fg4vF3sQdrt3FG",
+            "object": "card",
+            "last4": "4242",
+            "type": "Visa",
+            "exp_month": 11,
+            "exp_year": 2020,
+            "fingerprint": "5dgRQ3dVRGaQWDFb",
+            "customer": "cus_3sgheFxeBgTQ3M",
+            "country": "US",
+            "name": "John Doe",
+            "address_line1": null,
+            "address_line2": null,
+            "address_city": null,
+            "address_state": null,
+            "address_zip": null,
+            "address_country": null,
+            "cvc_check": null,
+            "address_line1_check": null,
+            "address_zip_check": null
+          }
+        ]
+      },
+      "default_card": "card_483etw4er9fg4vF3sQdrt3FG"
+    }
     RESPONSE
   end
 
   def successful_new_card_response
     <<-RESPONSE
-{
-  "id": "card_483etw4er9fg4vF3sQdrt3FG",
-  "livemode": false,
-  "object": "card",
-  "last4": "4242",
-  "type": "Visa",
-  "exp_month": 11,
-  "exp_year": 2020,
-  "fingerprint": "5dgRQ3dVRGaQWDFb",
-  "customer": "cus_3sgheFxeBgTQ3M",
-  "country": "US",
-  "name": "John Doe",
-  "address_line1": null,
-  "address_line2": null,
-  "address_city": null,
-  "address_state": null,
-  "address_zip": null,
-  "address_country": null,
-  "cvc_check": null,
-  "address_line1_check": null,
-  "address_zip_check": null
-}
+    {
+      "id": "card_483etw4er9fg4vF3sQdrt3FG",
+      "livemode": false,
+      "object": "card",
+      "last4": "4242",
+      "type": "Visa",
+      "exp_month": 11,
+      "exp_year": 2020,
+      "fingerprint": "5dgRQ3dVRGaQWDFb",
+      "customer": "cus_3sgheFxeBgTQ3M",
+      "country": "US",
+      "name": "John Doe",
+      "address_line1": null,
+      "address_line2": null,
+      "address_city": null,
+      "address_state": null,
+      "address_zip": null,
+      "address_country": null,
+      "cvc_check": null,
+      "address_line1_check": null,
+      "address_zip_check": null
+    }
     RESPONSE
   end
 
   def successful_authorization_response
     <<-RESPONSE
-{
-  "id": "ch_test_charge",
-  "object": "charge",
-  "created": 1309131571,
-  "livemode": false,
-  "paid": true,
-  "amount": 400,
-  "currency": "usd",
-  "refunded": false,
-  "fee": 0,
-  "fee_details": [],
-  "card": {
-    "country": "US",
-    "exp_month": 9,
-    "exp_year": #{Time.now.year + 1},
-    "last4": "4242",
-    "object": "card",
-    "type": "Visa"
-  },
-  "captured": false,
-  "description": "ActiveMerchant Test Purchase",
-  "dispute": null,
-  "uncaptured": true,
-  "disputed": false
-}
+    {
+      "id": "ch_test_charge",
+      "object": "charge",
+      "created": 1309131571,
+      "livemode": false,
+      "paid": true,
+      "amount": 400,
+      "currency": "usd",
+      "refunded": false,
+      "fee": 0,
+      "fee_details": [],
+      "card": {
+        "country": "US",
+        "exp_month": 9,
+        "exp_year": #{Time.now.year + 1},
+        "last4": "4242",
+        "object": "card",
+        "type": "Visa"
+      },
+      "captured": false,
+      "description": "ActiveMerchant Test Purchase",
+      "dispute": null,
+      "uncaptured": true,
+      "disputed": false
+    }
     RESPONSE
   end
 
   def successful_capture_response
     <<-RESPONSE
-{
-  "id": "ch_test_charge",
-  "object": "charge",
-  "created": 1309131571,
-  "livemode": false,
-  "paid": true,
-  "amount": 400,
-  "currency": "usd",
-  "refunded": false,
-  "fee": 0,
-  "fee_details": [],
-  "card": {
-    "country": "US",
-    "exp_month": 9,
-    "exp_year": #{Time.now.year + 1},
-    "last4": "4242",
-    "object": "card",
-    "type": "Visa"
-  },
-  "captured": true,
-  "description": "ActiveMerchant Test Purchase",
-  "dispute": null,
-  "uncaptured": false,
-  "disputed": false
-}
+    {
+      "id": "ch_test_charge",
+      "object": "charge",
+      "created": 1309131571,
+      "livemode": false,
+      "paid": true,
+      "amount": 400,
+      "currency": "usd",
+      "refunded": false,
+      "fee": 0,
+      "fee_details": [],
+      "card": {
+        "country": "US",
+        "exp_month": 9,
+        "exp_year": #{Time.now.year + 1},
+        "last4": "4242",
+        "object": "card",
+        "type": "Visa"
+      },
+      "captured": true,
+      "description": "ActiveMerchant Test Purchase",
+      "dispute": null,
+      "uncaptured": false,
+      "disputed": false
+    }
     RESPONSE
   end
 
   def successful_purchase_response(refunded=false)
     <<-RESPONSE
-{
-  "amount": 400,
-  "created": 1309131571,
-  "currency": "usd",
-  "description": "Test Purchase",
-  "id": "ch_test_charge",
-  "livemode": false,
-  "object": "charge",
-  "paid": true,
-  "refunded": #{refunded},
-  "card": {
-    "country": "US",
-    "exp_month": 9,
-    "exp_year": #{Time.now.year + 1},
-    "last4": "4242",
-    "object": "card",
-    "type": "Visa"
-  }
-}
+    {
+      "amount": 400,
+      "created": 1309131571,
+      "currency": "usd",
+      "description": "Test Purchase",
+      "id": "ch_test_charge",
+      "livemode": false,
+      "object": "charge",
+      "paid": true,
+      "refunded": #{refunded},
+      "card": {
+        "country": "US",
+        "exp_month": 9,
+        "exp_year": #{Time.now.year + 1},
+        "last4": "4242",
+        "object": "card",
+        "type": "Visa"
+      }
+    }
     RESPONSE
   end
 
   def successful_partially_refunded_response(options = {})
     options = {:livemode=>false}.merge!(options)
     <<-RESPONSE
-{
-  "amount": 400,
-  "amount_refunded": 200,
-  "created": 1309131571,
-  "currency": "usd",
-  "description": "Test Purchase",
-  "id": "ch_test_charge",
-  "livemode": #{options[:livemode]},
-  "object": "charge",
-  "paid": true,
-  "refunded": true,
-  "card": {
-    "country": "US",
-    "exp_month": 9,
-    "exp_year": #{Time.now.year + 1},
-    "last4": "4242",
-    "object": "card",
-    "type": "Visa"
-  }
-}
+    {
+      "amount": 400,
+      "amount_refunded": 200,
+      "created": 1309131571,
+      "currency": "usd",
+      "description": "Test Purchase",
+      "id": "ch_test_charge",
+      "livemode": #{options[:livemode]},
+      "object": "charge",
+      "paid": true,
+      "refunded": true,
+      "card": {
+        "country": "US",
+        "exp_month": 9,
+        "exp_year": #{Time.now.year + 1},
+        "last4": "4242",
+        "object": "card",
+        "type": "Visa"
+      }
+    }
+    RESPONSE
+  end
+
+  def successful_void_response
+    <<-RESPONSE
+    {
+      "id": "ch_4IrhQMqukqu7C2",
+      "object": "charge",
+      "created": 1403816613,
+      "livemode": false,
+      "paid": true,
+      "amount": 50,
+      "currency": "usd",
+      "refunded": true,
+      "card": {
+        "id": "card_4IKht2vQlbJms9",
+        "object": "card",
+        "last4": "4242",
+        "brand": "Visa",
+        "funding": "credit",
+        "exp_month": 9,
+        "exp_year": 2015,
+        "fingerprint": "6nTaMxIBAdBvfy2i",
+        "country": "US",
+        "name": "Longbob Longsen",
+        "address_city": null,
+        "cvc_check": "pass",
+        "customer": null,
+        "type": "Visa"
+      },
+      "captured": false,
+      "balance_transaction": null,
+      "failure_code": null,
+      "description": "ActiveMerchant Test Purchase",
+      "dispute": null,
+      "metadata": {
+        "email": "wow@example.com"
+      },
+      "statement_description": null,
+      "receipt_email": null,
+      "fee": 0,
+      "fee_details": [],
+      "uncaptured": true,
+      "disputed": false
+    }
+    RESPONSE
+  end
+
+  def failed_void_response
+    <<-RESPONSE
+    {
+      "error": {
+        "type": "invalid_request_error",
+        "message": "Charge ch_4IL0vZWdcx45qO has already been refunded."
+      }
+    }
     RESPONSE
   end
 
   def successful_refunded_application_fee_response
     <<-RESPONSE
-{
-  "id": "fee_id",
-  "object": "application_fee",
-  "created": 1375375417,
-  "livemode": false,
-  "amount": 10,
-  "currency": "usd",
-  "user": "acct_id",
-  "user_email": "acct_id",
-  "application": "ca_application",
-  "charge": "ch_test_charge",
-  "refunded": false,
-  "amount_refunded": 10
-}
+    {
+      "id": "fee_id",
+      "object": "application_fee",
+      "created": 1375375417,
+      "livemode": false,
+      "amount": 10,
+      "currency": "usd",
+      "user": "acct_id",
+      "user_email": "acct_id",
+      "application": "ca_application",
+      "charge": "ch_test_charge",
+      "refunded": false,
+      "amount_refunded": 10
+    }
     RESPONSE
   end
 
   def successful_application_fee_list_response
     <<-RESPONSE
-{
-  "object": "list",
-  "count": 2,
-  "url": "/v1/application_fees",
-  "data": [
     {
-      "object": "application_fee",
-      "id": "application_fee_id"
-    },
-    {
-      "object": "another_fee",
-      "id": "another_fee_id"
+      "object": "list",
+      "count": 2,
+      "url": "/v1/application_fees",
+      "data": [
+        {
+          "object": "application_fee",
+          "id": "application_fee_id"
+        },
+        {
+          "object": "another_fee",
+          "id": "another_fee_id"
+        }
+      ]
     }
-  ]
-}
     RESPONSE
   end
 
   def unsuccessful_application_fee_list_response
     <<-RESPONSE
-{
-  "object": "list",
-  "count": 0,
-  "url": "/v1/application_fees",
-  "data": []
-}
+    {
+      "object": "list",
+      "count": 0,
+      "url": "/v1/application_fees",
+      "data": []
+    }
     RESPONSE
   end
 
-  # Place raw failed response from gateway here
   def failed_purchase_response
     <<-RESPONSE
     {
@@ -699,6 +817,32 @@ class StripeTest < Test::Unit::TestCase
         "param": "number",
         "type": "card_error",
         "message": "Your card number is incorrect"
+      }
+    }
+    RESPONSE
+  end
+
+  def declined_purchase_response
+    <<-RESPONSE
+    {
+      "error": {
+        "message": "Your card was declined.",
+        "type": "card_error",
+        "code": "card_declined",
+        "charge": "ch_test_charge"
+      }
+    }
+    RESPONSE
+  end
+
+  def declined_authorization_response
+    <<-RESPONSE
+    {
+      "error": {
+        "message": "Your card was declined.",
+        "type": "card_error",
+        "code": "card_declined",
+        "charge": "ch_4IKxffGOKVRJ4l"
       }
     }
     RESPONSE
@@ -729,7 +873,7 @@ class StripeTest < Test::Unit::TestCase
     }
     RESPONSE
   end
-  # Place raw invalid JSON from gateway here
+
   def invalid_json_response
     <<-RESPONSE
     {

@@ -5,17 +5,37 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     @gateway = FirstdataE4Gateway.new(fixtures(:firstdata_e4))
     @credit_card = credit_card
     @bad_credit_card = credit_card('4111111111111113')
+    @credit_card_with_track_data = credit_card_with_track_data('4003000123456781')
     @amount = 100
     @options = {
       :order_id => '1',
       :billing_address => address,
       :description => 'Store Purchase'
     }
+    @options_with_authentication_data = @options.merge({
+      eci: "5",
+      cavv: "TESTCAVV",
+      xid: "TESTXID"
+    })
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_match(/Transaction Normal/, response.message)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_track_data
+    assert response = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
+    assert_match(/Transaction Normal/, response.message)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_card_authentication
+    assert response = @gateway.purchase(@amount, @credit_card, @options_with_authentication_data)
+    assert_equal response.params["cavv"], @options_with_authentication_data[:cavv]
+    assert_equal response.params["ecommerce_flag"], @options_with_authentication_data[:eci]
+    assert_equal response.params["xid"], @options_with_authentication_data[:xid]
     assert_success response
   end
 
@@ -71,11 +91,26 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_match(/Invalid Authorization Number/i, response.message)
   end
 
+  def test_successful_verify
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+
+    assert_equal "Transaction Normal - Approved", response.message
+    assert_equal "0.0", response.params["dollar_amount"]
+    assert_equal "05", response.params["transaction_type"]
+  end
+
+  def test_failed_verify
+    assert response = @gateway.verify(@bad_credit_card, @options)
+    assert_failure response
+    assert_match %r{Invalid Credit Card Number}, response.message
+  end
+
   def test_invalid_login
     gateway = FirstdataE4Gateway.new(:login    => "NotARealUser",
                                      :password => "NotARealPassword" )
     assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_match /Unauthorized Request/, response.message
+    assert_match %r{Unauthorized Request}, response.message
     assert_failure response
   end
 
@@ -85,5 +120,26 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result["code"]
     assert_equal '1', response.avs_result["code"]
   end
+  
+  def test_refund
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_match(/Transaction Normal/, purchase.message)
+    assert_success purchase
+  
+    assert response = @gateway.refund(50, purchase.authorization)
+    assert_success response
+    assert_match(/Transaction Normal/, response.message)
+    assert response.authorization
+  end
 
+  def test_refund_with_track_data
+    assert purchase = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
+    assert_match(/Transaction Normal/, purchase.message)
+    assert_success purchase
+  
+    assert response = @gateway.refund(50, purchase.authorization)
+    assert_success response
+    assert_match(/Transaction Normal/, response.message)
+    assert response.authorization
+  end
 end

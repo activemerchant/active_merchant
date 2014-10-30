@@ -163,6 +163,33 @@ class HpsTest < Test::Unit::TestCase
     assert_equal 'Success', response.message
   end
 
+  def test_successful_verify
+    @gateway.expects(:ssl_post).returns(successful_verify_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_verify
+    @gateway.expects(:ssl_post).returns(failed_verify_response)
+    @credit_card.number = 12345
+
+    response = @gateway.verify(@credit_card, @options)
+
+    assert_failure response
+    assert_equal 'The card number is not a valid credit card number.', response.message
+  end
+
+  def test_test_returns_true
+    gateway = HpsGateway.new(fixtures(:hps))
+    assert_equal true, gateway.send(:test?)
+  end
+
+  def test_test_returns_false
+    assert_false @gateway.send(:test?)
+  end
+
   private
 
   def successful_charge_response
@@ -515,4 +542,66 @@ class HpsTest < Test::Unit::TestCase
 </soap:Envelope>
     RESPONSE
   end
+
+  def successful_verify_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>95878</LicenseId>
+               <SiteId>95881</SiteId>
+               <DeviceId>2409000</DeviceId>
+               <SiteTrace />
+               <GatewayTxnId>20153225</GatewayTxnId>
+               <GatewayRspCode>0</GatewayRspCode>
+               <GatewayRspMsg>Success</GatewayRspMsg>
+               <RspDT>2014-09-04T14:43:49.6015895</RspDT>
+            </Header>
+            <Transaction>
+               <CreditAccountVerify>
+                  <RspCode>85</RspCode>
+                  <RspText>CARD OK</RspText>
+                  <AuthCode>65557A</AuthCode>
+                  <AVSRsltCode>0</AVSRsltCode>
+                  <CVVRsltCode>M</CVVRsltCode>
+                  <RefNbr>424715929580</RefNbr>
+                  <CardType>Visa</CardType>
+                  <AVSRsltText>AVS Not Requested.</AVSRsltText>
+                  <CVVRsltText>Match.</CVVRsltText>
+               </CreditAccountVerify>
+            </Transaction>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    RESPONSE
+  end
+
+  def failed_verify_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>95878</LicenseId>
+               <SiteId>95881</SiteId>
+               <DeviceId>2409000</DeviceId>
+               <SiteTrace />
+               <GatewayTxnId>20155097</GatewayTxnId>
+               <GatewayRspCode>14</GatewayRspCode>
+               <GatewayRspMsg>Transaction rejected because the manually entered card number is invalid.</GatewayRspMsg>
+               <RspDT>2014-09-04T15:42:47.983634</RspDT>
+            </Header>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    RESPONSE
+  end
+
 end

@@ -318,7 +318,7 @@ class PayflowTest < Test::Unit::TestCase
     assert_equal timeout, headers['X-VPS-Client-Timeout']
 
     xml = @gateway.send(:build_request, 'dummy body')
-    assert_match /Timeout="#{timeout}"/, xml
+    assert_match %r{Timeout="#{timeout}"}, xml
   end
 
   def test_name_field_are_included_instead_of_first_and_last
@@ -327,6 +327,16 @@ class PayflowTest < Test::Unit::TestCase
     end
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
+  end
+
+  def test_passed_in_verbosity
+    assert_nil PayflowGateway.new(:login => 'test', :password => 'test').options[:verbosity]
+    gateway = PayflowGateway.new(:login => 'test', :password => 'test', :verbosity => 'HIGH')
+    assert_equal 'HIGH', gateway.options[:verbosity]
+    @gateway.expects(:ssl_post).returns(verbose_transaction_response)
+    response = @gateway.purchase(100, @credit_card, @options)
+    assert_success response
+    assert_equal '2014-06-25 09:33:41', response.params['transaction_time']
   end
 
   private
@@ -458,6 +468,54 @@ class PayflowTest < Test::Unit::TestCase
 			</TransactionResult>
 		</TransactionResults>
 	</ResponseData>
+</XMLPayResponse>
+    XML
+  end
+
+  def verbose_transaction_response
+    <<-XML
+<?xml version="1.0" encoding="UTF-8"?>
+<XMLPayResponse  xmlns="http://www.paypal.com/XMLPay">
+  <ResponseData>
+    <Vendor>ActiveMerchant</Vendor>
+    <Partner>paypal</Partner>
+    <TransactionResults>
+      <TransactionResult>
+        <Result>0</Result>
+        <ProcessorResult>
+          <AVSResult>U</AVSResult>
+          <CVResult>M</CVResult>
+          <HostCode>A</HostCode>
+        </ProcessorResult>
+        <FraudPreprocessResult>
+          <Message>No Rules Triggered</Message>
+        </FraudPreprocessResult>
+        <FraudPostprocessResult>
+          <Message>No Rules Triggered</Message>
+        </FraudPostprocessResult>
+        <IAVSResult>X</IAVSResult>
+        <AVSResult>
+          <StreetMatch>Service Not Available</StreetMatch>
+          <ZipMatch>Service Not Available</ZipMatch>
+        </AVSResult>
+        <CVResult>Match</CVResult>
+        <Message>Approved</Message>
+        <PNRef>A70A6C93C4C8</PNRef>
+        <AuthCode>242PNI</AuthCode>
+        <Amount>1.00</Amount>
+        <VisaCardLevel>12</VisaCardLevel>
+        <TransactionTime>2014-06-25 09:33:41</TransactionTime>
+        <Account>4242</Account>
+        <ExpirationDate>0714</ExpirationDate>
+        <CardType>0</CardType>
+        <PayPalResult>
+          <FeeAmount>0</FeeAmount>
+          <Name>Longbob</Name>
+          <Lastname>Longsen</Lastname>
+        </PayPalResult>
+      </TransactionResult>
+    </TransactionResults>
+  </ResponseData>
 </XMLPayResponse>
     XML
   end

@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
 
       def void(identification, options = {})
         requires!(options, :order_id)
-        original_transaction_id, original_transaction_amount = identification.split(";")
+        original_transaction_id, _ = identification.split(";")
         commit(:void_transaction, {:reference_number => format_reference_number(options[:order_id]), :transaction_id => original_transaction_id})
       end
 
@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
 
         requires!(options, :order_id)
 
-        post = {
+        {
           :reference_number => format_reference_number(options[:order_id]),
           :transaction_amount => amount(money),
           :original_transaction_amount => original_transaction_amount,

@@ -14,22 +14,11 @@ require 'rake/testtask'
 require 'support/gateway_support'
 require 'support/ssl_verify'
 require 'support/outbound_hosts'
+require 'bundler/gem_tasks'
 
-task :gem => :build
-task :build do
-  raise "Please set a private key to sign the gem" unless ENV['GEM_PRIVATE_KEY']
-  system "gem build activemerchant.gemspec"
-end
-
-task :install => :build do
-  system "gem install activemerchant-#{ActiveMerchant::VERSION}.gem"
-end
-
-task :release => :build do
+task :tag_release do
   system "git tag -a v#{ActiveMerchant::VERSION} -m 'Tagging #{ActiveMerchant::VERSION}'"
   system "git push --tags"
-  system "gem push activemerchant-#{ActiveMerchant::VERSION}.gem"
-  system "rm activemerchant-#{ActiveMerchant::VERSION}.gem"
 end
 
 desc "Run the unit test suite"
@@ -37,17 +26,16 @@ task :default => 'test:units'
 task :test => 'test:units'
 
 namespace :test do
-
   Rake::TestTask.new(:units) do |t|
     t.pattern = 'test/unit/**/*_test.rb'
-    t.ruby_opts << '-rubygems'
+    t.ruby_opts << '-rubygems -w'
     t.libs << 'test'
     t.verbose = true
   end
 
   Rake::TestTask.new(:remote) do |t|
     t.pattern = 'test/remote/**/*_test.rb'
-    t.ruby_opts << '-rubygems'
+    t.ruby_opts << '-rubygems -w'
     t.libs << 'test'
     t.verbose = true
   end

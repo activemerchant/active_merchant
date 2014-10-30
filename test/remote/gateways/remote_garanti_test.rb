@@ -16,7 +16,7 @@ class RemoteGarantiTest < Test::Unit::TestCase
     @credit_card = credit_card('4000300011112220')
 
     @options = {
-      :order_id => ActiveMerchant::Utils.generate_unique_id,
+      :order_id => generate_unique_id,
       :billing_address => address,
       :description => 'Store Purchase'
     }
@@ -35,7 +35,7 @@ class RemoteGarantiTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_match /Declined/, response.message
+    assert_match %r{Declined}, response.message
   end
 
   def test_authorize_and_capture
@@ -51,7 +51,7 @@ class RemoteGarantiTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_match /Declined/, response.message
+    assert_match %r{Declined}, response.message
   end
 
   def test_invalid_login

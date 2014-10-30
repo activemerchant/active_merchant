@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class BraintreeOrangeTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = BraintreeOrangeGateway.new(
       :login => 'LOGIN',
@@ -46,6 +48,29 @@ class BraintreeOrangeTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
+  end
+
+  def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card)
+    end.respond_with(successful_authorization_response, successful_void_response)
+    assert_success response
+  end
+
+  def test_successful_verify_with_failed_void
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorization_response, failed_void_response)
+    assert_success response
+    assert_match %r{This transaction has been approved}, response.message
+  end
+
+  def test_unsuccessful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorization_response, successful_void_response)
+    assert_failure response
+    assert_match %r{Invalid Credit Card Number}, response.message
   end
 
   def test_add_address
@@ -131,6 +156,22 @@ class BraintreeOrangeTest < Test::Unit::TestCase
 
   def failed_purchase_response
     'response=2&responsetext=DECLINE&authcode=&transactionid=510695919&avsresponse=N&cvvresponse=N&orderid=50357660b0b3ef16f72a3d3b83c46983&type=sale&response_code=200'
+  end
+
+  def successful_authorization_response
+    'response=1&responsetext=SUCCESS&authcode=123456&transactionid=2313367000&avsresponse=N&cvvresponse=N&orderid=fb5fa6d66bf82a6ea48e425e5f79095c&type=auth&response_code=100'
+  end
+
+  def failed_authorization_response
+    'response=3&responsetext=Invalid Credit Card Number REFID:127210770&authcode=&transactionid=&avsresponse=&cvvresponse=&orderid=0cfae165b48be9467b26dcb920bf05d6&type=auth&response_code=300'
+  end
+
+  def successful_void_response
+    'response=1&responsetext=Transaction Void Successful&authcode=123456&transactionid=2313367000&avsresponse=&cvvresponse=&orderid=fb5fa6d66bf82a6ea48e425e5f79095c&type=void&response_code=100'
+  end
+
+  def failed_void_response
+    'response=3&responsetext=Only transactions pending settlement can be voided REFID:127210798&authcode=&transactionid=2313369860&avsresponse=&cvvresponse=&orderid=&type=void&response_code=300'
   end
 
   def successful_store_response

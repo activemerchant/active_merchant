@@ -268,7 +268,7 @@ module ActiveMerchant #:nodoc:
 
       # Limited to 20 digits max
       def format_order_number(number)
-        number.to_s.gsub(/[^\w_]/, '').rjust(4, "0")[0...20]
+        number.to_s.gsub(/[^\w]/, '').rjust(4, "0")[0...20]
       end
     end
   end

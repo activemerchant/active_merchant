@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       REFUND_ERROR_MESSAGE = "Bogus Gateway: Use trans_id number ending in 1 for exception, 2 for error and anything else for success"
       CHECK_ERROR_MESSAGE = "Bogus Gateway: Use bank account number ending in 1 for success, 2 for exception and anything else for error"
 
-      self.supported_countries = ['US']
+      self.supported_countries = []
       self.supported_cardtypes = [:bogus]
       self.homepage_url = 'http://example.com'
       self.display_name = 'Bogus'

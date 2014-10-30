@@ -41,7 +41,7 @@ class CecabankTest < Test::Unit::TestCase
   end
 
   def test_expiration_date_sent_correctly
-    response = stub_comms do
+    stub_comms do
       @gateway.purchase(@amount, credit_card("4242424242424242", month: 1, year: 2014), @options)
     end.check_request do |endpoint, data, headers|
       assert_match(/Caducidad=201401&/, data, "Expected expiration date format is yyyymm")

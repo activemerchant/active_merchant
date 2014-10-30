@@ -4,29 +4,29 @@ module ActiveMerchant
     # http://www.bbbonline.org/eExport/doc/MerchantGuide_cvv2.pdf
     # Check additional codes from cybersource website
     class CVVResult
-      
+
       MESSAGES = {
-        'D'  =>  'Suspicious transaction',
-        'I'  =>  'Failed data validation check',
-        'M'  =>  'Match',
-        'N'  =>  'No Match',
-        'P'  =>  'Not Processed',
-        'S'  =>  'Should have been present',
-        'U'  =>  'Issuer unable to process request',
-        'X'  =>  'Card does not support verification'
+        'D'  =>  'CVV check flagged transaction as suspicious',
+        'I'  =>  'CVV failed data validation check',
+        'M'  =>  'CVV matches',
+        'N'  =>  'CVV does not match',
+        'P'  =>  'CVV not processed',
+        'S'  =>  'CVV should have been present',
+        'U'  =>  'CVV request unable to be processed by issuer',
+        'X'  =>  'CVV check not supported for card'
       }
-      
+
       def self.messages
         MESSAGES
       end
-      
+
       attr_reader :code, :message
-      
+
       def initialize(code)
-        @code = code.upcase unless code.blank?
+        @code = (code.blank? ? nil : code.upcase)
         @message = MESSAGES[@code]
       end
-      
+
       def to_hash
         {
           'code' => code,

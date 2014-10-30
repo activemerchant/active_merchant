@@ -297,11 +297,15 @@ module ActiveMerchant #:nodoc:
 
       # add fields for credit card
       def add_creditcard(params, creditcard)
-        params[:name]                 = creditcard.name
-        params[:number]               = creditcard.number
-        params[:expiration_month]     = creditcard.month
-        params[:expiration_year]      = creditcard.year
-        params[:verification_number]  = creditcard.verification_value if creditcard.verification_value?
+        if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
+          params[:track] = creditcard.track_data
+        else
+          params[:name]                 = creditcard.name
+          params[:number]               = creditcard.number
+          params[:expiration_month]     = creditcard.month
+          params[:expiration_year]      = creditcard.year
+          params[:verification_number]  = creditcard.verification_value if creditcard.verification_value?
+        end
       end
 
       # add field for "instant" transaction, using previous transaction id

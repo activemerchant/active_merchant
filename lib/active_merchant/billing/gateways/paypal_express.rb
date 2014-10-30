@@ -160,6 +160,13 @@ module ActiveMerchant #:nodoc:
               if !options[:allow_note].nil?
                 xml.tag! 'n2:AllowNote', options[:allow_note] ? '1' : '0'
               end
+
+              if options[:funding_sources]
+                xml.tag! 'n2:FundingSourceDetails' do
+                  xml.tag! 'n2:UserSelectedFundingSource', options[:funding_sources][:source]
+                end
+              end
+
               xml.tag! 'n2:CallbackURL', options[:callback_url] unless options[:callback_url].blank?
 
               add_payment_details(xml, money, currency_code, options)

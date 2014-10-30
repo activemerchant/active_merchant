@@ -11,6 +11,8 @@ class RemoteMercuryTest < Test::Unit::TestCase
 
     @credit_card = credit_card("4003000123456781", :brand => "visa", :month => "12", :year => "15")
 
+    @track_data = "%B4003000123456781^LONGSEN/L. ^15121200000000000000**123******?*"
+
     @options = {
       :order_id => "1",
       :description => "ActiveMerchant"
@@ -18,7 +20,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     @options_with_billing = @options.merge(
       :merchant => '999',
       :billing_address => {
-        :address1 => '4 Corporate Square',
+        :address1 => '4 Corporate SQ',
         :zip => '30329'
       }
     )
@@ -105,7 +107,24 @@ class RemoteMercuryTest < Test::Unit::TestCase
       },
       response.avs_result
     )
-    assert_equal({"code"=>"M", "message"=>"Match"}, response.cvv_result)
+    assert_equal({"code"=>"M", "message"=>"CVV matches"}, response.cvv_result)
+  end
+
+  def test_avs_and_cvv_results_with_track_data
+    @credit_card.track_data = @track_data
+    response = @gateway.authorize(333, @credit_card, @options_with_billing)
+
+    assert_success response
+    assert_equal(
+      {
+        "code" => nil,
+        "postal_match" => nil,
+        "street_match" => nil,
+        "message" => nil
+      },
+      response.avs_result
+    )
+    assert_equal({"code"=>nil, "message"=>nil}, response.cvv_result)
   end
 
   def test_partial_capture
@@ -194,6 +213,17 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert_equal '1.00', response.params['authorize']
 
     capture = gateway.capture(nil, response.authorization, :credit_card => @credit_card)
+    assert_success capture
+    assert_equal '1.00', capture.params['authorize']
+  end
+  
+  def test_successful_authorize_and_capture_with_track_data
+    @credit_card.track_data = @track_data
+    response = @gateway.authorize(100, @credit_card, @options)
+    assert_success response
+    assert_equal '1.00', response.params['authorize']
+
+    capture = @gateway.capture(nil, response.authorization)
     assert_success capture
     assert_equal '1.00', capture.params['authorize']
   end

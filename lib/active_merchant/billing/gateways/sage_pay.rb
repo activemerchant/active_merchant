@@ -174,8 +174,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        add_pair(post, :CustomerEMail, options[:email][0,255]) unless options[:email].blank?
-        add_pair(post, :BillingPhone, options[:phone].gsub(/[^0-9+]/, '')[0,20]) unless options[:phone].blank?
+        add_pair(post, :CustomerEMail, truncate(options[:email], 255)) unless options[:email].blank?
         add_pair(post, :ClientIPAddress, options[:ip])
       end
 
@@ -183,6 +182,10 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :GiftAidPayment, options[:gift_aid_payment]) unless options[:gift_aid_payment].blank?
         add_pair(post, :Apply3DSecure, options[:apply_3d_secure]) unless options[:apply_3d_secure].blank?
         add_pair(post, :CreateToken, 1) unless options[:store].blank?
+        add_pair(post, :FIRecipientAcctNumber, options[:recipient_account_number])
+        add_pair(post, :FIRecipientSurname, options[:recipient_surname])
+        add_pair(post, :FIRecipientPostcode, options[:recipient_postcode])
+        add_pair(post, :FIRecipientDoB, options[:recipient_dob])
       end
 
       def add_address(post, options)
@@ -190,30 +193,32 @@ module ActiveMerchant #:nodoc:
           first_name, last_name = parse_first_and_last_name(billing_address[:name])
           add_pair(post, :BillingSurname, last_name)
           add_pair(post, :BillingFirstnames, first_name)
-          add_pair(post, :BillingAddress1, billing_address[:address1])
-          add_pair(post, :BillingAddress2, billing_address[:address2])
-          add_pair(post, :BillingCity, billing_address[:city])
-          add_pair(post, :BillingState, billing_address[:state]) if billing_address[:country] == 'US'
-          add_pair(post, :BillingCountry, billing_address[:country])
-          add_pair(post, :BillingPostCode, billing_address[:zip])
+          add_pair(post, :BillingAddress1, truncate(billing_address[:address1], 100))
+          add_pair(post, :BillingAddress2, truncate(billing_address[:address2], 100))
+          add_pair(post, :BillingCity, truncate(billing_address[:city], 40))
+          add_pair(post, :BillingState, truncate(billing_address[:state], 2)) if is_usa(billing_address[:country])
+          add_pair(post, :BillingCountry, truncate(billing_address[:country], 2))
+          add_pair(post, :BillingPhone, sanitize_phone(billing_address[:phone]))
+          add_pair(post, :BillingPostCode, truncate(billing_address[:zip], 10))
         end
 
         if shipping_address = options[:shipping_address] || billing_address
           first_name, last_name = parse_first_and_last_name(shipping_address[:name])
           add_pair(post, :DeliverySurname, last_name)
           add_pair(post, :DeliveryFirstnames, first_name)
-          add_pair(post, :DeliveryAddress1, shipping_address[:address1])
-          add_pair(post, :DeliveryAddress2, shipping_address[:address2])
-          add_pair(post, :DeliveryCity, shipping_address[:city])
-          add_pair(post, :DeliveryState, shipping_address[:state]) if shipping_address[:country] == 'US'
-          add_pair(post, :DeliveryCountry, shipping_address[:country])
-          add_pair(post, :DeliveryPostCode, shipping_address[:zip])
+          add_pair(post, :DeliveryAddress1, truncate(shipping_address[:address1], 100))
+          add_pair(post, :DeliveryAddress2, truncate(shipping_address[:address2], 100))
+          add_pair(post, :DeliveryCity, truncate(shipping_address[:city], 40))
+          add_pair(post, :DeliveryState, truncate(shipping_address[:state], 2)) if is_usa(shipping_address[:country])
+          add_pair(post, :DeliveryCountry, truncate(shipping_address[:country], 2))
+          add_pair(post, :DeliveryPhone, sanitize_phone(shipping_address[:phone]))
+          add_pair(post, :DeliveryPostCode, truncate(shipping_address[:zip], 10))
         end
       end
 
       def add_invoice(post, options)
         add_pair(post, :VendorTxCode, sanitize_order_id(options[:order_id]), :required => true)
-        add_pair(post, :Description, truncate_description(options[:description] || options[:order_id]))
+        add_pair(post, :Description, truncate(options[:description] || options[:order_id], 100))
       end
 
       def add_payment_method(post, payment_method, options)
@@ -225,7 +230,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(post, credit_card)
-        add_pair(post, :CardHolder, credit_card.name, :required => true)
+        add_pair(post, :CardHolder, truncate(credit_card.name, 50), :required => true)
         add_pair(post, :CardNumber, credit_card.number, :required => true)
 
         add_pair(post, :ExpiryDate, format_date(credit_card.month, credit_card.year), :required => true)
@@ -249,12 +254,23 @@ module ActiveMerchant #:nodoc:
       end
 
       def sanitize_order_id(order_id)
-        order_id.to_s.gsub(/[^-a-zA-Z0-9._]/, '')
+        cleansed = order_id.to_s.gsub(/[^-a-zA-Z0-9._]/, '')
+        truncate(cleansed, 40)
       end
 
-      def truncate_description(description)
-        return nil unless description
-        description[0, 100]
+      def sanitize_phone(phone)
+        return nil unless phone
+        cleansed = phone.to_s.gsub(/[^0-9+]/, '')
+        truncate(cleansed, 20)
+      end
+
+      def truncate(value, max_size)
+        return nil unless value
+        value[0, max_size]
+      end
+
+      def is_usa(country)
+        truncate(country, 2) == 'US'
       end
 
       def map_card_type(credit_card)
@@ -304,7 +320,7 @@ module ActiveMerchant #:nodoc:
            response["TxAuthNo"],
            response["SecurityKey"],
            action ].join(";")
-         end
+        end
       end
 
       def abort_or_void_from(identification)
@@ -368,7 +384,7 @@ module ActiveMerchant #:nodoc:
 
         last_name = name.pop || ''
         first_name = name.join(' ')
-        [ first_name[0,20], last_name[0,20] ]
+        [ truncate(first_name, 20), truncate(last_name, 20) ]
       end
 
       def localized_amount(money, currency)

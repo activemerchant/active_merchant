@@ -54,13 +54,13 @@ class SecurePayAuTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(100, @credit_card, @options.merge(:currency => 'CAD'))
     end.check_request do |endpoint, data, headers|
-      assert_match /<amount>100<\/amount>/, data
+      assert_match %r{<amount>100<\/amount>}, data
     end.respond_with(successful_purchase_response)
 
     stub_comms do
       @gateway.purchase(100, @credit_card, @options.merge(:currency => 'JPY'))
     end.check_request do |endpoint, data, headers|
-      assert_match /<amount>1<\/amount>/, data
+      assert_match %r{<amount>1<\/amount>}, data
     end.respond_with(successful_purchase_response)
   end
 
