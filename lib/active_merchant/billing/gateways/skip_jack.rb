@@ -6,8 +6,8 @@ module ActiveMerchant #:nodoc:
     class SkipJackGateway < Gateway
       API_VERSION = '?.?'
     
-      self.wiredump_device = File.new(File.join([Rails.root, "log", "skipjack.log"]), "a")
-      self.wiredump_device.sync = true
+      #self.wiredump_device = File.new("skipjack.log"), "a")
+      #self.wiredump_device.sync = true
 
       self.live_url = "https://www.skipjackic.com"
       self.test_url = "https://developer.skipjackic.com"
@@ -189,11 +189,12 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard, options = {}, params = {})
           requires!(options, :order_id, :email)
-          post = params
+          post = {}
           add_invoice(post, options)
           add_creditcard(post, creditcard)
           add_address(post, options)
           add_customer_data(post, options)
+          post.merge! params
           result = commit(:authorization, money, post)
       end
 
