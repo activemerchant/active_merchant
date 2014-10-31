@@ -185,8 +185,10 @@ module ActiveMerchant #:nodoc:
         TRACKS.each do |key, regex|
           if regex.match(credit_card.track_data)
             @valid_track_data = true
-            xml.trackData do
-              xml.public_send(:"track#{key}", credit_card.track_data)
+            xml.payment do
+              xml.trackData do
+                xml.public_send(:"track#{key}", credit_card.track_data)
+              end
             end
           end
         end
