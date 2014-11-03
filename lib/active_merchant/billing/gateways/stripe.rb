@@ -54,8 +54,8 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, creditcard, options = {})
-        post = create_post_for_auth_or_purchase(money, creditcard, options)
+      def authorize(money, payment, options = {})
+        post = create_post_for_auth_or_purchase(money, payment, options)
         post[:capture] = "false"
 
         commit(:post, 'charges', post, options)
@@ -68,8 +68,8 @@ module ActiveMerchant #:nodoc:
       # To create a charge on a customer, call
       #
       #   purchase(money, nil, { :customer => id, ... })
-      def purchase(money, creditcard, options = {})
-        post = create_post_for_auth_or_purchase(money, creditcard, options)
+      def purchase(money, payment, options = {})
+        post = create_post_for_auth_or_purchase(money, payment, options)
 
         commit(:post, 'charges', post, options)
       end
@@ -101,9 +101,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def verify(creditcard, options = {})
+      def verify(payment, options = {})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(50, creditcard, options) }
+          r.process { authorize(50, payment, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -175,10 +175,14 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def create_post_for_auth_or_purchase(money, creditcard, options)
+      def create_post_for_auth_or_purchase(money, payment, options)
         post = {}
         add_amount(post, money, options, true)
-        add_creditcard(post, creditcard, options)
+        if payment.is_a?(ApplePayPaymentToken)
+          add_apple_pay_payment_token(post, payment, options)
+        else
+          add_creditcard(post, creditcard, options)
+        end
         add_customer(post, creditcard, options)
         add_customer_data(post,options)
         post[:description] = options[:description]
@@ -250,6 +254,27 @@ module ActiveMerchant #:nodoc:
             card = creditcard
           end
           post[:card] = card
+        end
+      end
+
+      def add_apple_pay_payment_token(post, apple_pay_payment_token, options)
+        raw_response = response = nil
+        success = false
+        begin
+          raw_response = ssl_request(:post, self.live_url + "tokens?pk_token=#{apple_pay_payment_token.payment_data.to_json}", nil, headers(options))
+          response = parse(raw_response)
+          success = !response.key?("error")
+        rescue ResponseError => e
+          raw_response = e.response.body
+          response = response_error(raw_response)
+        rescue JSON::ParserError
+          response = json_error(raw_response)
+        end
+
+        if success
+          post[:card] = response.id
+        else
+          # raise an exception?
         end
       end
 
