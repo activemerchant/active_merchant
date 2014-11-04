@@ -17,10 +17,21 @@ class RemoteStripeTest < Test::Unit::TestCase
       :description => 'ActiveMerchant Test Purchase',
       :email => 'wow@example.com'
     }
+    @apple_pay_payment_token = apple_pay_payment_token
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert response.params["paid"]
+    assert_equal "ActiveMerchant Test Purchase", response.params["description"]
+    assert_equal "wow@example.com", response.params["metadata"]["email"]
+    assert_match CHARGE_ID_REGEX, response.authorization
+  end
+
+  def test_successful_purchase_with_apple_pay_payment_token
+    assert response = @gateway.purchase(@amount, @apple_pay_payment_token, @options)
     assert_success response
     assert_equal "charge", response.params["object"]
     assert response.params["paid"]
@@ -58,6 +69,17 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_authorization_and_capture_with_apple_pay_payment_token
+    assert authorization = @gateway.authorize(@amount, @apple_pay_payment_token, @options)
+    assert_success authorization
+    assert !authorization.params["captured"]
+    assert_equal "ActiveMerchant Test Purchase", authorization.params["description"]
+    assert_equal "wow@example.com", authorization.params["metadata"]["email"]
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+  end
+
   def test_authorization_and_void
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
@@ -67,8 +89,25 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success void
   end
 
+  def test_authorization_and_void_with_apple_pay_payment_token
+    assert authorization = @gateway.authorize(@amount, @apple_pay_payment_token, @options)
+    assert_success authorization
+    assert !authorization.params["captured"]
+
+    assert void = @gateway.void(authorization.authorization)
+    assert_success void
+  end
+
   def test_successful_void
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert response.authorization
+    assert void = @gateway.void(response.authorization)
+    assert_success void
+  end
+
+  def test_successful_void_with_apple_pay_payment_token
+    assert response = @gateway.purchase(@amount, @apple_pay_payment_token, @options)
     assert_success response
     assert response.authorization
     assert void = @gateway.void(response.authorization)
@@ -302,5 +341,37 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, card, @options)
     assert_failure response
     assert_match Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
+  end
+
+  def test_unsuccessful_apple_pay_token_exchange
+    assert_raises(ActiveMerchant::Billing::StripeGateway::ApplePayTokenExchangeError) do
+      @gateway.purchase(@amount, ApplePayPaymentToken.new('garbage'), @options)
+    end
+  end
+
+  private
+
+  def apple_pay_payment_token(options = {})
+    defaults = {
+      payment_data: {
+        'version' => 'EC_v1',
+        'data' => 'yXTNZRG5DHVQ9hSmmWylwwmYqQ18VMj1pZfPQTGYVMJAWuwMAR84kw6ZJ6jzinNQc/ZHhUQemkaV5IGiynSxVnjz1F6riv4hzLBb9S57of0CB06UtdDMnkzzXTyRMc1Df+hHz5ZPLcMw2X1KEwa0r2D7y6HcyU93g1iQgKrmzBhn2cOnmkFi/LvJCuf5hb23hRnLwcHIvi446EUxuAKenV23f4VnFC9zm+Mvm3VoFuFb8nbdPsegzSJwAWdLMa1/RksPhe7z7DNuFL4cIJ3Wkv3XF9PTcB/5oGSKWc43ZeITLDWE/ZD8ARWdoXuuvcx3XlSbxMpcFimOnRQ820E40mXId97edJ6yTxnJIZmFRbFXZp0ZP4XK5vF0H42poiImsvFKYT/0Dl1OkwTcOgQ7TFkkflACmv/S3ev7T+Q=',
+        'signature' => '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',
+        'header' => {
+          'transactionId' => 'c3f38ca4bf15b07bd2350e864b6a9830055e9087ca34fe97d6dc7c65a01c52e1',
+          'ephemeralPublicKey' => 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEHp5oiwiD3vNZT+twuCRkcTlkLjM8ypUuNDhw96V8g6OS+k1mcI05KFMeNt8/1uuXoQxQNikWt2a5SAPJoqaoqg==',
+          'publicKeyHash' => 'Ci9X1dBsgmA00sBIGFy1POBdlIGWIcCBtBiheH3m32Q='
+        }
+      },
+      payment_instrument_name: "Visa 2424",
+      payment_network: "Visa",
+      transaction_identifier: "uniqueidentifier123"
+    }.update(options)
+
+    ActiveMerchant::Billing::ApplePayPaymentToken.new(defaults[:payment_data],
+      payment_instrument_name: defaults[:payment_instrument_name],
+      payment_network: defaults[:payment_network],
+      transaction_identifier: defaults[:transaction_identifier]
+    )
   end
 end
