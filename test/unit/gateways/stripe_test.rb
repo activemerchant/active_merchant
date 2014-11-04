@@ -14,6 +14,13 @@ class StripeTest < Test::Unit::TestCase
       :billing_address => address(),
       :description => 'Test Purchase'
     }
+
+    @apple_pay_payment_token = ActiveMerchant::Billing::ApplePayPaymentToken.new(
+      {data: 'encoded_payment_data'},
+      payment_instrument_name: 'SomeBank Visa',
+      payment_network: 'Visa',
+      transaction_identifier: 'transaction123'
+    )
   end
 
   def test_successful_new_customer_with_card
@@ -67,9 +74,22 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_successful_authorization
+    @gateway.expects(:add_creditcard)
     @gateway.expects(:ssl_request).returns(successful_authorization_response)
 
     assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'ch_test_charge', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_authorization_with_apple_pay_token_exchange
+    @gateway.expects(:add_apple_pay_payment_token).returns(successful_apple_pay_token_exchange)
+    @gateway.expects(:ssl_request).returns(successful_authorization_response)
+
+    assert response = @gateway.authorize(@amount, @apple_pay_payment_token, @options)
     assert_instance_of Response, response
     assert_success response
 
@@ -86,9 +106,22 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
+    @gateway.expects(:add_creditcard)
     @gateway.expects(:ssl_request).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'ch_test_charge', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_apple_pay_token_exchange
+    @gateway.expects(:add_apple_pay_payment_token).returns(successful_apple_pay_token_exchange)
+    @gateway.expects(:ssl_request).returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @apple_pay_payment_token, @options)
     assert_instance_of Response, response
     assert_success response
 
@@ -870,6 +903,40 @@ class StripeTest < Test::Unit::TestCase
       "cvc_check": null,
       "address_line1_check": null,
       "address_zip_check": null
+    }
+    RESPONSE
+  end
+
+  def successful_apple_pay_token_exchange
+    <<-RESPONSE
+    {
+      "id": "tok_14uq3k2gKyKnHxtYUAZZZlH3",
+      "livemode": false,
+      "created": 1415041212,
+      "used": false,
+      "object": "token",
+      "type": "card",
+      "card": {
+          "id": "card_14uq3k2gKyKnHxtYluXdr8rz",
+          "object": "card",
+          "last4": "0000",
+          "brand": "Visa",
+          "funding": "credit",
+          "exp_month": 6,
+          "exp_year": 2019,
+          "fingerprint": "HOh74kZU387WlUvy",
+          "country": "US",
+          "name": null,
+          "address_line1": null,
+          "address_line2": null,
+          "address_city": null,
+          "address_state": null,
+          "address_zip": null,
+          "address_country": null,
+          "dynamic_last4": "4242",
+          "customer": null,
+          "type": "Visa"
+      }
     }
     RESPONSE
   end
