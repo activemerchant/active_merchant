@@ -181,10 +181,10 @@ module ActiveMerchant #:nodoc:
         if payment.is_a?(ApplePayPaymentToken)
           add_apple_pay_payment_token(post, payment, options)
         else
-          add_creditcard(post, creditcard, options)
+          add_creditcard(post, payment, options)
         end
-        add_customer(post, creditcard, options)
-        add_customer_data(post,options)
+        add_customer(post, payment, options)
+        add_customer_data(post, options)
         post[:description] = options[:description]
         post[:statement_description] = options[:statement_description]
 
@@ -257,11 +257,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      class ApplePayTokenExchangeError < RuntimeError
+      end
+
       def add_apple_pay_payment_token(post, apple_pay_payment_token, options)
         raw_response = response = nil
         success = false
         begin
-          raw_response = ssl_request(:post, self.live_url + "tokens?pk_token=#{apple_pay_payment_token.payment_data.to_json}", nil, headers(options))
+          raw_response = ssl_request(:post, self.live_url + "tokens?pk_token=#{CGI.escape(apple_pay_payment_token.payment_data.to_json)}", nil, headers(options))
           response = parse(raw_response)
           success = !response.key?("error")
         rescue ResponseError => e
@@ -271,15 +274,15 @@ module ActiveMerchant #:nodoc:
           response = json_error(raw_response)
         end
 
-        if success
-          post[:card] = response.id
+        if success && response.key?("id")
+          post[:card] = response["id"] # this is the card token of the form tok_xxxx
         else
-          # raise an exception?
+          raise ApplePayTokenExchangeError.new("Error processing Apple Pay Payment Token: #{response["error"]["message"]}")
         end
       end
 
-      def add_customer(post, creditcard, options)
-        post[:customer] = options[:customer] if options[:customer] && !creditcard.respond_to?(:number)
+      def add_customer(post, payment, options)
+        post[:customer] = options[:customer] if options[:customer] && !payment.respond_to?(:number)
       end
 
       def add_flags(post, options)
