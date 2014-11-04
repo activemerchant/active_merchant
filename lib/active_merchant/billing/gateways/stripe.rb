@@ -261,18 +261,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_apple_pay_payment_token(post, apple_pay_payment_token, options)
-        raw_response = response = nil
-        success = false
-        begin
-          raw_response = ssl_request(:post, self.live_url + "tokens?pk_token=#{CGI.escape(apple_pay_payment_token.payment_data.to_json)}", nil, headers(options))
-          response = parse(raw_response)
-          success = !response.key?("error")
-        rescue ResponseError => e
-          raw_response = e.response.body
-          response = response_error(raw_response)
-        rescue JSON::ParserError
-          response = json_error(raw_response)
-        end
+        response = api_request(:post, "tokens?pk_token=#{CGI.escape(apple_pay_payment_token.payment_data.to_json)}")
+        success = !response.key?("error")
 
         if success && response.key?("id")
           post[:card] = response["id"] # this is the card token of the form tok_xxxx
@@ -333,21 +323,25 @@ module ActiveMerchant #:nodoc:
         headers
       end
 
-      def commit(method, url, parameters=nil, options = {})
-        add_expand_parameters(parameters, options) if parameters
-
+      def api_request(method, endpoint, parameters = nil, options = {})
         raw_response = response = nil
-        success = false
         begin
-          raw_response = ssl_request(method, self.live_url + url, post_data(parameters), headers(options))
+          raw_response = ssl_request(method, self.live_url + endpoint, post_data(parameters), headers(options))
           response = parse(raw_response)
-          success = !response.key?("error")
         rescue ResponseError => e
           raw_response = e.response.body
           response = response_error(raw_response)
         rescue JSON::ParserError
           response = json_error(raw_response)
         end
+        response
+      end
+
+      def commit(method, url, parameters = nil, options = {})
+        add_expand_parameters(parameters, options) if parameters
+
+        response = api_request(method, url, parameters, options)
+        success = !response.key?("error")
 
         card = response["card"] || response["active_card"] || {}
         avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
