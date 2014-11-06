@@ -70,6 +70,16 @@ class CheckoutTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_passes_correct_currency
+    purchase = stub_comms do
+      @gateway.purchase(100, credit_card, @options.merge(
+        currency: "EUR"
+      ))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<bill_currencycode>EUR<\/bill_currencycode>/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def failed_purchase_response

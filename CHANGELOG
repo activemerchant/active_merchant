@@ -34,6 +34,7 @@
 * Add TNS gateway [markabe]
 * TNS: Update countries and supported card types [markabe]
 * Conekta: Add AMEX as a supported card type [MauricioMurga]
+* Checkout: pass through currency type [markabe]
 
 == Version 1.44.1 (Aug 28, 2014)
 
