@@ -59,6 +59,7 @@ class MoipTest < Test::Unit::TestCase
     assert_equal 'Cancelado', response.message[:status]
     assert_equal 'Política do banco emissor', response.message[:description]
     assert_equal '5', response.message[:code]
+    assert_equal '0000.0005.3227', response.authorization
     assert response.test?
   end
 

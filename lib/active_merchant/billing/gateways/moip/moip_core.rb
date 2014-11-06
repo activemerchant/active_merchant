@@ -248,7 +248,11 @@ module ActiveMerchant #:nodoc:
         if response.has_key?('EnviarInstrucaoUnicaResponse')
           response['EnviarInstrucaoUnicaResponse']['Resposta']['Token']
         else
-          response['CodigoMoIP']
+          if @query
+            response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']['CodigoMoIP']
+          else
+            response['CodigoMoIP']
+          end
         end
       end
 
