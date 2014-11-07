@@ -3,6 +3,7 @@
 * Clean up `rake gateways:hosts` output [ntalbott]
 * Add Axcess MS gateway [timtait]
 * Add PayHub gateway [grepruby]
+* Orbital: Improve data formatting [boone]
 
 == Version 1.47.0 (February 25, 2015)
 
