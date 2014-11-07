@@ -1,4 +1,5 @@
 require 'active_support/core_ext/hash/slice'
+require 'byebug'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -55,10 +56,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, payment, options = {})
-        post = create_post_for_auth_or_purchase(money, payment, options)
-        post[:capture] = "false"
-
-        commit(:post, 'charges', post, options)
+        MultiResponse.run do |r|
+          if payment.is_a?(ApplePayPaymentToken)
+            r.process { tokenize_apple_pay_token(payment) }
+            payment = StripePaymentToken.new(r.params["token"]) if r.success?
+          end
+          r.process do |r|
+            post = create_post_for_auth_or_purchase(money, payment, options)
+            post[:capture] = "false"
+            commit(:post, 'charges', post, options)
+          end
+        end
       end
 
       # To create a charge on a card or a token, call
@@ -172,14 +180,30 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def tokenize_apple_pay_token(apple_pay_payment_token, options = {})
+        token_response = api_request(:post, "tokens?pk_token=#{CGI.escape(apple_pay_payment_token.payment_data.to_json)}")
+        success = !token_response.key?("error")
+        debugger
+        if success && token_response.key?("id")
+          Response.new(success, nil, token: token_response)
+        else
+          Response.new(success, token_response["error"]["message"])
+        end
+      end
 
       private
+
+      class StripePaymentToken < PaymentToken
+        def type
+          'stripe'
+        end
+      end
 
       def create_post_for_auth_or_purchase(money, payment, options)
         post = {}
         add_amount(post, money, options, true)
-        if payment.is_a?(ApplePayPaymentToken)
-          add_apple_pay_payment_token(post, payment, options)
+        if payment.is_a?(StripePaymentToken)
+          add_payment_token(post, payment, options)
         else
           add_creditcard(post, payment, options)
         end
@@ -257,18 +281,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      class ApplePayTokenExchangeError < RuntimeError
-      end
-
-      def add_apple_pay_payment_token(post, apple_pay_payment_token, options)
-        response = api_request(:post, "tokens?pk_token=#{CGI.escape(apple_pay_payment_token.payment_data.to_json)}")
-        success = !response.key?("error")
-
-        if success && response.key?("id")
-          post[:card] = response["id"] # this is the card token of the form tok_xxxx
-        else
-          raise ApplePayTokenExchangeError.new("Error processing Apple Pay Payment Token: #{response["error"]["message"]}")
-        end
+      def add_payment_token(post, token, options = {})
+        post[:card] = token.payment_data["id"]
       end
 
       def add_customer(post, payment, options)
