@@ -74,8 +74,8 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_customer_data(post, options)
-        post[:firstname] =  options[:first_name]
-        post[:lastname] = options[:last_name]
+        post[:firstname] =  options[:firstname]
+        post[:lastname] = options[:lastname]
       end
 
       def add_address(post, creditcard, options)
