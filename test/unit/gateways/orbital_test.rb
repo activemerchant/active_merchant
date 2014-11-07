@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 require 'test_helper'
 require 'nokogiri'
 
@@ -86,9 +88,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_order_id_format
     response = stub_comms do
-      @gateway.purchase(101, credit_card, :order_id => "#1001.1")
+      @gateway.purchase(101, credit_card, :order_id => " #101.23,56 $Hi &thére@Friends")
     end.check_request do |endpoint, data, headers|
-      assert_match(/<OrderID>1001-1<\/OrderID>/, data)
+      assert_match(/<OrderID>101-23,56 \$Hi &amp;thre@Fr<\/OrderID>/, data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
@@ -176,6 +178,95 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_address_format
+    address_with_invalid_chars = address(
+      :address1 =>      '1234% M|a^in \\S/treet',
+      :address2 =>      '|Apt. ^Num\\ber /One%',
+      :city =>          'R^ise o\\f /th%e P|hoenix',
+      :state =>         '%O|H\\I/O',
+      :dest_address1 => '2/21%B |B^aker\\ St.',
+      :dest_address2 => 'L%u%xury S|u^i\\t/e',
+      :dest_city =>     '/Winn/i%p|e^g\\',
+      :dest_zip =>      'A1A 2B2',
+      :dest_state =>    '^MB',
+    )
+
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1,
+        :billing_address => address_with_invalid_chars)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/1234 Main Street</, data)
+      assert_match(/Apt. Number One</, data)
+      assert_match(/Rise of the Phoenix</, data)
+      assert_match(/OH</, data)
+      assert_match(/221B Baker St.</, data)
+      assert_match(/Luxury Suite</, data)
+      assert_match(/Winnipeg</, data)
+      assert_match(/MB</, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+
+    response = stub_comms do
+      @gateway.add_customer_profile(credit_card,
+        :billing_address => address_with_invalid_chars)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/1234 Main Street</, data)
+      assert_match(/Apt. Number One</, data)
+      assert_match(/Rise of the Phoenix</, data)
+    end.respond_with(successful_profile_response)
+    assert_success response
+  end
+
+  def test_truncates_by_byte_length
+    card = credit_card('4242424242424242',
+                       :first_name => 'John',
+                       :last_name => 'Jacob Jingleheimer Smith-Jones')
+
+    long_address = address(
+      :address1 =>      '1234 Stréêt Name is Really Long',
+      :address2 =>      'Apårtmeñt 123456789012345678901',
+      :city =>          '¡Vancouver-by-the-sea!',
+      :state =>         'ßC',
+      :zip =>           'Postäl Cøde',
+      :dest_name =>     'Pierré von Bürgermeister de Queso',
+      :dest_address1 => '9876 Stréêt Name is Really Long',
+      :dest_address2 => 'Apårtmeñt 987654321098765432109',
+      :dest_city =>     'Montréal-of-the-south!',
+      :dest_state =>    'Oñtario',
+      :dest_zip =>      'Postäl Zïps'
+    )
+
+    response = stub_comms do
+      @gateway.purchase(50, card, :order_id => 1,
+        :billing_address => long_address)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/1234 Stréêt Name is Really L</, data)
+      assert_match(/Apårtmeñt 123456789012345678</, data)
+      assert_match(/¡Vancouver-by-the-s</, data)
+      assert_match(/ß</, data)
+      assert_match(/Postäl C</, data)
+      assert_match(/Pierré von Bürgermeister de </, data)
+      assert_match(/9876 Stréêt Name is Really L</, data)
+      assert_match(/Apårtmeñt 987654321098765432</, data)
+      assert_match(/Montréal-of-the-sou</, data)
+      assert_match(/O</, data)
+      assert_match(/Postäl Z</, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+
+    response = stub_comms do
+      @gateway.add_customer_profile(credit_card,
+        :billing_address => long_address)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/1234 Stréêt Name is Really L</, data)
+      assert_match(/Apårtmeñt 123456789012345678</, data)
+      assert_match(/¡Vancouver-by-the-s</, data)
+      assert_match(/ß</, data)
+      assert_match(/Postäl C</, data)
+    end.respond_with(successful_profile_response)
+    assert_success response
+  end
+
   def test_nil_address_values_should_not_throw_exceptions
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -195,14 +286,18 @@ class OrbitalGatewayTest < Test::Unit::TestCase
   end
 
   def test_dest_address
+    billing_address = address(
+      :dest_zip      => '90001',
+      :dest_address1 => '123 Main St.',
+      :dest_city     => 'Somewhere',
+      :dest_state    => 'CA',
+      :dest_name     => 'Joan Smith',
+      :dest_phone    => '(123) 456-7890',
+      :dest_country  => 'US')
+
     response = stub_comms do
-      @gateway.purchase(50, credit_card, :order_id => 1, :billing_address => address(:dest_zip => '90001',
-                :dest_address1 => '123 Main St.',
-                :dest_city => 'Somewhere',
-                :dest_state => 'CA',
-                :dest_name => 'Joan Smith',
-                :dest_phone => '(123) 456-7890',
-                :dest_country => 'USA'))
+      @gateway.purchase(50, credit_card, :order_id => 1,
+        :billing_address => billing_address)
     end.check_request do |endpoint, data, headers|
       assert_match(/<AVSDestzip>90001/, data)
       assert_match(/<AVSDestaddress1>123 Main St./, data)
@@ -211,7 +306,16 @@ class OrbitalGatewayTest < Test::Unit::TestCase
       assert_match(/<AVSDeststate>CA/, data)
       assert_match(/<AVSDestname>Joan Smith/, data)
       assert_match(/<AVSDestphoneNum>1234567890/, data)
-      assert_match(/<AVSDestcountryCode>USA/, data)
+      assert_match(/<AVSDestcountryCode>US/, data)
+    end.respond_with(successful_purchase_response)
+    assert_success response
+
+    # non-AVS country
+    response = stub_comms do
+      @gateway.purchase(50, credit_card, :order_id => 1,
+        :billing_address => billing_address.merge(:dest_country => 'BR'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/<AVSDestcountryCode></, data)
     end.respond_with(successful_purchase_response)
     assert_success response
   end
