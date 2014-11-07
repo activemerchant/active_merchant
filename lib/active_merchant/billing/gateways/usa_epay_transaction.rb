@@ -29,8 +29,10 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money)
         add_invoice(post, options)
         add_credit_card(post, credit_card)
-        add_address(post, credit_card, options)
-        add_customer_data(post, options)
+        unless credit_card.track_data.present?
+          add_address(post, credit_card, options)
+          add_customer_data(post, options)
+        end
         add_split_payments(post, options)
 
         commit(:authorization, post)
@@ -42,8 +44,10 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money)
         add_invoice(post, options)
         add_credit_card(post, credit_card)
-        add_address(post, credit_card, options)
-        add_customer_data(post, options)
+        unless credit_card.track_data.present?
+          add_address(post, credit_card, options)
+          add_customer_data(post, options)
+        end
         add_split_payments(post, options)
 
         commit(:purchase, post)
@@ -199,7 +203,6 @@ module ActiveMerchant #:nodoc:
       def commit(action, parameters)
         url = (test? ? self.test_url : self.live_url)
         response = parse(ssl_post(url, post_data(action, parameters)))
-
         Response.new(response[:status] == 'Approved', message_from(response), response,
           :test           => test?,
           :authorization  => response[:ref_num],

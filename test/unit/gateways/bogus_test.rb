@@ -19,7 +19,9 @@ class BogusTest < Test::Unit::TestCase
 
   def test_authorize
     assert  @gateway.authorize(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
-    assert !@gateway.authorize(1000, credit_card(CC_FAILURE_PLACEHOLDER)).success?
+    response = @gateway.authorize(1000, credit_card(CC_FAILURE_PLACEHOLDER))
+    refute response.success?
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.authorize(1000, credit_card('123'))
     end
@@ -28,7 +30,9 @@ class BogusTest < Test::Unit::TestCase
 
   def test_purchase
     assert  @gateway.purchase(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
-    assert !@gateway.purchase(1000, credit_card(CC_FAILURE_PLACEHOLDER)).success?
+    response = @gateway.purchase(1000, credit_card(CC_FAILURE_PLACEHOLDER))
+    refute response.success?
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.purchase(1000, credit_card('123'))
     end
@@ -38,7 +42,9 @@ class BogusTest < Test::Unit::TestCase
   def test_capture
     assert  @gateway.capture(1000, '1337').success?
     assert  @gateway.capture(1000, @response.params["transid"]).success?
-    assert !@gateway.capture(1000, CC_FAILURE_PLACEHOLDER).success?
+    response =  @gateway.capture(1000, CC_FAILURE_PLACEHOLDER)
+    refute response.success?
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.capture(1000, CC_SUCCESS_PLACEHOLDER)
     end
@@ -46,7 +52,9 @@ class BogusTest < Test::Unit::TestCase
 
   def test_credit
     assert  @gateway.credit(1000, credit_card(CC_SUCCESS_PLACEHOLDER)).success?
-    assert !@gateway.credit(1000, credit_card(CC_FAILURE_PLACEHOLDER)).success?
+    response =  @gateway.credit(1000, credit_card(CC_FAILURE_PLACEHOLDER))
+    refute response.success?
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.credit(1000, credit_card('123'))
     end
@@ -56,7 +64,9 @@ class BogusTest < Test::Unit::TestCase
   def test_refund
     assert  @gateway.refund(1000, '1337').success?
     assert  @gateway.refund(1000, @response.params["transid"]).success?
-    assert !@gateway.refund(1000, CC_FAILURE_PLACEHOLDER).success?
+    response = @gateway.refund(1000, CC_FAILURE_PLACEHOLDER)
+    refute response.success?
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.refund(1000, CC_SUCCESS_PLACEHOLDER)
     end
@@ -73,7 +83,9 @@ class BogusTest < Test::Unit::TestCase
   def test_void
     assert  @gateway.void('1337').success?
     assert  @gateway.void(@response.params["transid"]).success?
-    assert !@gateway.void(CC_FAILURE_PLACEHOLDER).success?
+    response = @gateway.void(CC_FAILURE_PLACEHOLDER)
+    refute response.success?
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.void(CC_SUCCESS_PLACEHOLDER)
     end
@@ -81,7 +93,9 @@ class BogusTest < Test::Unit::TestCase
 
   def test_store
     assert  @gateway.store(credit_card(CC_SUCCESS_PLACEHOLDER)).success?
-    assert !@gateway.store(credit_card(CC_FAILURE_PLACEHOLDER)).success?
+    response = @gateway.store(credit_card(CC_FAILURE_PLACEHOLDER))
+    refute response.success?
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
     e = assert_raises(ActiveMerchant::Billing::Error) do
       @gateway.store(credit_card('123'))
     end

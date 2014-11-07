@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
         when /1$/
           Response.new(true, SUCCESS_MESSAGE, {:authorized_amount => money}, :test => true, :authorization => AUTHORIZATION )
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money, :error => FAILURE_MESSAGE }, :test => true)
+          Response.new(false, FAILURE_MESSAGE, {:authorized_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
         else
           raise Error, error_message(paysource)
         end
@@ -36,7 +36,7 @@ module ActiveMerchant #:nodoc:
         when /1$/, AUTHORIZATION
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true, :authorization => AUTHORIZATION)
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE },:test => true)
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
         else
           raise Error, error_message(paysource)
         end
@@ -53,7 +53,7 @@ module ActiveMerchant #:nodoc:
         when /1$/
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true )
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true)
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
         else
           raise Error, error_message(paysource)
         end
@@ -65,7 +65,7 @@ module ActiveMerchant #:nodoc:
         when /1$/
           raise Error, REFUND_ERROR_MESSAGE
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true)
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
         else
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
         end
@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
         when /1$/
           raise Error, CAPTURE_ERROR_MESSAGE
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true)
+          Response.new(false, FAILURE_MESSAGE, {:paid_amount => money, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
         else
           Response.new(true, SUCCESS_MESSAGE, {:paid_amount => money}, :test => true)
         end
@@ -88,7 +88,7 @@ module ActiveMerchant #:nodoc:
         when /1$/
           raise Error, VOID_ERROR_MESSAGE
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:authorization => reference, :error => FAILURE_MESSAGE }, :test => true)
+          Response.new(false, FAILURE_MESSAGE, {:authorization => reference, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
         else
           Response.new(true, SUCCESS_MESSAGE, {:authorization => reference}, :test => true)
         end
@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
         when /1$/
           Response.new(true, SUCCESS_MESSAGE, {:billingid => '1'}, :test => true, :authorization => AUTHORIZATION)
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:billingid => nil, :error => FAILURE_MESSAGE }, :test => true)
+          Response.new(false, FAILURE_MESSAGE, {:billingid => nil, :error => FAILURE_MESSAGE }, :test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
         else
           raise Error, error_message(paysource)
         end
@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
         when /1$/
           Response.new(true, SUCCESS_MESSAGE, {}, :test => true)
         when /2$/
-          Response.new(false, FAILURE_MESSAGE, {:error => FAILURE_MESSAGE },:test => true)
+          Response.new(false, FAILURE_MESSAGE, {:error => FAILURE_MESSAGE },:test => true, :error_code => STANDARD_ERROR_CODE[:processing_error])
         else
           raise Error, UNSTORE_ERROR_MESSAGE
         end

@@ -171,6 +171,25 @@ class ElavonTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_stripping_non_word_characters_from_zip
+    bad_zip = '99577-0727'
+    stripped_zip = '995770727'
+
+    @options[:billing_address][:zip] = bad_zip
+
+    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => stripped_zip))
+
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_zip_codes_with_letters_are_left_intact
+    @options[:billing_address][:zip] = '.K1%Z_5E3-'
+
+    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => 'K1Z5E3'))
+
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+
   private
   def successful_purchase_response
     "ssl_card_number=42********4242
