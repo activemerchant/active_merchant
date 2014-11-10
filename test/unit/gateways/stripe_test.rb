@@ -15,12 +15,7 @@ class StripeTest < Test::Unit::TestCase
       :description => 'Test Purchase'
     }
 
-    @apple_pay_payment_token = ActiveMerchant::Billing::ApplePayPaymentToken.new(
-      {data: 'encoded_payment_data'},
-      payment_instrument_name: 'SomeBank Visa',
-      payment_network: 'Visa',
-      transaction_identifier: 'transaction123'
-    )
+    @apple_pay_payment_token = apple_pay_payment_token
   end
 
   def test_successful_new_customer_with_card
@@ -86,7 +81,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_successful_authorization_with_apple_pay_token_exchange
-    @gateway.expects(:add_apple_pay_payment_token).returns(successful_apple_pay_token_exchange)
+    @gateway.expects(:tokenize_apple_pay_token).returns(Response.new(true, nil, token: successful_apple_pay_token_exchange))
     @gateway.expects(:ssl_request).returns(successful_authorization_response)
 
     assert response = @gateway.authorize(@amount, @apple_pay_payment_token, @options)
@@ -118,7 +113,7 @@ class StripeTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_apple_pay_token_exchange
-    @gateway.expects(:add_apple_pay_payment_token).returns(successful_apple_pay_token_exchange)
+    @gateway.expects(:tokenize_apple_pay_token).returns(Response.new(true, nil, token: successful_apple_pay_token_exchange))
     @gateway.expects(:ssl_request).returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @apple_pay_payment_token, @options)
@@ -284,6 +279,7 @@ class StripeTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
     assert !response.test? # unsuccessful request defaults to live
     assert_equal 'ch_test_charge', response.authorization

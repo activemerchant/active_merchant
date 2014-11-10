@@ -1,5 +1,4 @@
 require 'active_support/core_ext/hash/slice'
-require 'byebug'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -77,7 +76,7 @@ module ActiveMerchant #:nodoc:
       #
       #   purchase(money, nil, { :customer => id, ... })
       def purchase(money, payment, options = {})
-        MultiResponse.run(:first) do |r|
+        MultiResponse.run do |r|
           if payment.is_a?(ApplePayPaymentToken)
             r.process { tokenize_apple_pay_token(payment) }
             payment = StripePaymentToken.new(r.params["token"]) if r.success?
