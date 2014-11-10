@@ -49,8 +49,8 @@ class MoipTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_query
-    @gateway.expects(:ssl_request).once.returns(query_response)
+  def test_successful_canceled_query
+    @gateway.expects(:ssl_request).once.returns(canceled_query_response)
 
     assert response = @gateway.query('0000.0005.3227')
     assert_instance_of Response, response
@@ -59,6 +59,19 @@ class MoipTest < Test::Unit::TestCase
     assert_equal 'Cancelado', response.message[:status]
     assert_equal 'Política do banco emissor', response.message[:description]
     assert_equal '5', response.message[:code]
+    assert_equal '0000.0005.3227', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_ok_query
+    @gateway.expects(:ssl_request).once.returns(ok_query_response)
+
+    assert response = @gateway.query('0000.0005.3227')
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'Confirmado', response.message[:status]
+    assert_equal '4', response.message[:code]
     assert_equal '0000.0005.3227', response.authorization
     assert response.test?
   end
@@ -126,7 +139,7 @@ class MoipTest < Test::Unit::TestCase
     XML
   end
 
-  def query_response
+  def canceled_query_response
     <<-XML
       <ns1:ConsultarTokenResponse xmlns:ns1="http://www.moip.com.br/ws/alpha/">
       <RespostaConsultar>
@@ -162,6 +175,54 @@ class MoipTest < Test::Unit::TestCase
                   <InstituicaoPagamento>Visa</InstituicaoPagamento>
                   <Status Classificacao="Política do banco emissor " Tipo="5">
                       Cancelado
+                  </Status>
+                  <Parcela>
+                      <TotalParcelas>1</TotalParcelas>
+                  </Parcela>
+                  <CodigoMoIP>0000.0005.3227</CodigoMoIP>
+              </Pagamento>
+          </Autorizacao>
+      </RespostaConsultar>
+      </ns1:ConsultarTokenResponse>
+    XML
+  end
+
+  def ok_query_response
+    <<-XML
+      <ns1:ConsultarTokenResponse xmlns:ns1="http://www.moip.com.br/ws/alpha/">
+      <RespostaConsultar>
+          <ID>201204021046430860000000379674</ID>
+          <Status>Sucesso</Status>
+          <Autorizacao>
+              <Pagador>
+                  <Nome>Nome Sobrenome</Nome>
+                  <Email>teste@labs.moip.com.br</Email>
+              </Pagador>
+              <EnderecoCobranca>
+                  <Logradouro>Av. Brigadeiro Faria Lima</Logradouro>
+                  <Numero>2927</Numero>
+                  <Complemento>8° Andar</Complemento>
+                  <Bairro>Jardim Paulistao</Bairro>
+                  <CEP>01452000</CEP>
+                  <Cidade>Sao Paulo</Cidade>
+                  <Estado>SP</Estado>
+                  <Pais>BRA</Pais>
+                  <TelefoneFixo>(11)2222-3333</TelefoneFixo>
+              </EnderecoCobranca>
+              <Recebedor>
+                  <Nome>Moip - Integraçao</Nome>
+                  <Email>exemplo@labs.moip.com.br</Email>
+              </Recebedor>
+              <Pagamento>
+                  <Data>2012-04-02T10:44:57.000-03:00</Data>
+                  <TotalPago Moeda="BRL">1.00</TotalPago>
+                  <TaxaParaPagador Moeda="BRL">0.00</TaxaParaPagador>
+                  <TaxaMoIP Moeda="BRL">0.46</TaxaMoIP>
+                  <ValorLiquido Moeda="BRL">0.54</ValorLiquido>
+                  <FormaPagamento>CartaoDeCredito</FormaPagamento>
+                  <InstituicaoPagamento>Visa</InstituicaoPagamento>
+                  <Status Tipo="4">
+                      Confirmado
                   </Status>
                   <Parcela>
                       <TotalParcelas>1</TotalParcelas>

@@ -259,20 +259,14 @@ module ActiveMerchant #:nodoc:
       def message_from(response)
         if @query
           message = {}
-          error = REXML::XPath.each(@xml, '//Status[@Tipo]').first
-          if error
-            description = error.attribute('Classificacao').value.strip
-            code = error.attribute('Tipo').value.strip
-            message[:description] = description
-            message[:code] = code
-          end
-          begin
-            message[:status] = response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']['Status'].strip
-          rescue NoMethodError
-            if defined?(::Rails)
-              ::Rails.logger.info(response)
-            end
-          end
+          status = REXML::XPath.each(@xml, '//Status[@Tipo]').first
+
+          code = status.attribute('Tipo').value.strip
+          description = status.attribute('Classificacao').value.strip if code == '5'
+
+          message[:description] = description
+          message[:code] = code
+          message[:status] = response['ConsultarTokenResponse']['RespostaConsultar']['Autorizacao']['Pagamento']['Status'].strip
           message
         else
           response['Mensagem'] || response[:erro] || response[:status]
