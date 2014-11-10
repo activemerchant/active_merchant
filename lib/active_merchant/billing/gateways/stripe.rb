@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
             post[:capture] = "false"
             commit(:post, 'charges', post, options)
           end
-        end
+        end.responses.last
       end
 
       # To create a charge on a card or a token, call
@@ -77,9 +77,16 @@ module ActiveMerchant #:nodoc:
       #
       #   purchase(money, nil, { :customer => id, ... })
       def purchase(money, payment, options = {})
-        post = create_post_for_auth_or_purchase(money, payment, options)
-
-        commit(:post, 'charges', post, options)
+        MultiResponse.run(:first) do |r|
+          if payment.is_a?(ApplePayPaymentToken)
+            r.process { tokenize_apple_pay_token(payment) }
+            payment = StripePaymentToken.new(r.params["token"]) if r.success?
+          end
+          r.process do |r|
+            post = create_post_for_auth_or_purchase(money, payment, options)
+            commit(:post, 'charges', post, options)
+          end
+        end.responses.last
       end
 
       def capture(money, authorization, options = {})
@@ -183,7 +190,7 @@ module ActiveMerchant #:nodoc:
       def tokenize_apple_pay_token(apple_pay_payment_token, options = {})
         token_response = api_request(:post, "tokens?pk_token=#{CGI.escape(apple_pay_payment_token.payment_data.to_json)}")
         success = !token_response.key?("error")
-        debugger
+
         if success && token_response.key?("id")
           Response.new(success, nil, token: token_response)
         else
