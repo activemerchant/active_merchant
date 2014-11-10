@@ -101,8 +101,8 @@ class RemoteWorldpayOnlinePaymentsTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = WorldpayOnlinePaymentsGateway.new(
-      login: '',
-      password: ''
+      client_key: "T_C_NOT_VALID",
+      service_key: "T_S_NOT_VALID"
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
