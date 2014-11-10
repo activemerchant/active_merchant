@@ -70,6 +70,17 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_passing_descriptor
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, {
+        descriptor_name: "Name", descriptor_phone: "Phone"
+      })
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<customBilling>.*<descriptor>Name<)m, data)
+      assert_match(%r(<customBilling>.*<phone>Phone<)m, data)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_successful_authorize_and_capture
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)

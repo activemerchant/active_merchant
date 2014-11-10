@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class OpenpayTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = OpenpayGateway.new(
       key: 'key',
@@ -149,6 +151,16 @@ class OpenpayTest < Test::Unit::TestCase
 
     assert_nil response.authorization
     assert response.test?
+  end
+
+  def test_passing_device_session_id
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, device_session_id: 'TheDeviceSessionID')
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(%r{"device_session_id":"TheDeviceSessionID"}, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   private

@@ -251,6 +251,7 @@ class StripeTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
     assert !response.test? # unsuccessful request defaults to live
     assert_equal 'ch_test_charge', response.authorization
   end
@@ -502,6 +503,16 @@ class StripeTest < Test::Unit::TestCase
       assert data == "name=John+Smith&exp_year=2021&exp_month=6"
       assert endpoint.include? "/customers/cus_3sgheFxeBgTQ3M/cards/card_483etw4er9fg4vF3sQdrt3FG"
     end.respond_with(successful_update_credit_card_response)
+  end
+
+  def test_deprecated_unstore
+    assert_deprecation_warning do
+      assert @gateway.unstore("CustomerID", "card_id")
+    end
+
+    assert_deprecation_warning do
+      assert @gateway.unstore("CustomerID", "card_id", {})
+    end
   end
 
   private

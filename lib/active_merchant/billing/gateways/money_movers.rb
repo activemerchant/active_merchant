@@ -9,7 +9,6 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'MoneyMovers'
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
-      self.ssl_version = :SSLv3
 
       def initialize(options = {})
         requires!(options, :login, :password)

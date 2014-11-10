@@ -128,11 +128,11 @@ class PaypalTest < Test::Unit::TestCase
     assert_success credit
     assert credit.test?
     assert_equal 'USD',  credit.params['net_refund_amount_currency_id']
-    assert_equal '0.67', credit.params['net_refund_amount']
+    assert_equal '0.97', credit.params['net_refund_amount']
     assert_equal 'USD',  credit.params['gross_refund_amount_currency_id']
     assert_equal '1.00', credit.params['gross_refund_amount']
     assert_equal 'USD',  credit.params['fee_refund_amount_currency_id']
-    assert_equal '0.33', credit.params['fee_refund_amount']
+    assert_equal '0.03', credit.params['fee_refund_amount'] # As of August 2010, PayPal keeps the flat fee ($0.30)
   end
 
   def test_failed_voiding

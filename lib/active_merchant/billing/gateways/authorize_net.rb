@@ -30,6 +30,8 @@ module ActiveMerchant #:nodoc:
           2 => /\A;(?<pan>[\d]{1,19}+)=(?<expiration>[\d]{0,4}|=)(?<service_code>[\d]{0,3}|=)(?<discretionary_data>.*)\?\Z/
       }.freeze
 
+      APPLE_PAY_DATA_DESCRIPTOR = "COMMON.APPLE.INAPP.PAYMENT"
+
       def initialize(options={})
         requires!(options, :login, :password)
         super
@@ -44,6 +46,7 @@ module ActiveMerchant #:nodoc:
             add_payment_source(xml, payment)
             add_invoice(xml, options)
             add_customer_data(xml, payment, options)
+            add_retail_data(xml, payment)
             add_settings(xml, payment, options)
             add_user_fields(xml, amount, options)
           end
@@ -121,6 +124,8 @@ module ActiveMerchant #:nodoc:
         return unless source
         if card_brand(source) == 'check'
           add_check(xml, source)
+        elsif card_brand(source) == 'apple_pay'
+          add_apple_pay_payment_token(xml, source)
         else
           add_credit_card(xml, source)
         end
@@ -177,19 +182,38 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_swipe_data(xml, credit_card)
-        if TRACKS[1].match(credit_card.track_data)
-          xml.payment do
-            xml.trackData do
-              xml.track1 credit_card.track_data
-            end
-          end
-        elsif TRACKS[2].match(credit_card.track_data)
-          xml.payment do
-            xml.trackData do
-              xml.track2 credit_card.track_data
+        TRACKS.each do |key, regex|
+          if regex.match(credit_card.track_data)
+            @valid_track_data = true
+            xml.payment do
+              xml.trackData do
+                xml.public_send(:"track#{key}", credit_card.track_data)
+              end
             end
           end
         end
+      end
+
+      # http://developer.authorize.net/api/reference/#apple-pay-transactions
+      def add_apple_pay_payment_token(xml, apple_pay_payment_token)
+        xml.payment do
+          xml.opaqueData do
+            xml.dataDescriptor APPLE_PAY_DATA_DESCRIPTOR
+            xml.dataValue Base64.strict_encode64(apple_pay_payment_token.payment_data.to_json)
+          end
+        end
+      end
+
+      def add_retail_data(xml, payment)
+        return unless valid_track_data
+        xml.retail do
+          # As per http://www.authorize.net/support/CP_guide.pdf, '2' is for Retail, the only current market_type
+          xml.marketType 2
+        end
+      end
+
+      def valid_track_data
+        @valid_track_data ||= false
       end
 
       def add_check(xml, check)
@@ -225,6 +249,8 @@ module ActiveMerchant #:nodoc:
           xml.state(empty?(billing_address[:state]) ? 'n/a' : truncate(billing_address[:state], 40))
           xml.zip(truncate((billing_address[:zip] || options[:zip]), 20))
           xml.country(truncate(billing_address[:country], 60))
+          xml.phoneNumber(truncate(billing_address[:phone], 25)) unless empty?(billing_address[:phone])
+          xml.faxNumber(truncate(billing_address[:fax], 25)) unless empty?(billing_address[:fax])
         end
 
         unless shipping_address.blank?
@@ -262,7 +288,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def names_from(payment_source, address, options)
-        if(payment_source)
+        if payment_source && !payment_source.is_a?(PaymentToken)
           first_name, last_name = (address[:name] || "").split
           [(payment_source.first_name || first_name), (payment_source.last_name || last_name)]
         else
@@ -297,7 +323,7 @@ module ActiveMerchant #:nodoc:
             end
             yield(xml)
           end
-        end.to_xml(ident: 0)
+        end.to_xml(indent: 0)
       end
 
       def parse(action, body)

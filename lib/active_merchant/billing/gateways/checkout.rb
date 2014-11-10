@@ -69,7 +69,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(xml, amount, options)
         xml.bill_amount_ amount(amount)
-        xml.bill_currencycode_ currency(options[:currency])
+        xml.bill_currencycode_ options[:currency] || currency(amount)
         xml.trackid_ options[:order_id]
       end
 
