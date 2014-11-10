@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayOnlinePaymentsGateway < Gateway
-      self.live_url = self.test_url = 'https://api.worldpay.com'
+      self.live_url = self.test_url = 'https://api.worldpay.com/'
 
       self.default_currency = 'GBP'
       self.money_format = :cents
@@ -36,21 +36,23 @@ module ActiveMerchant #:nodoc:
         post = create_post_for_auth_or_purchase(money, creditcard, options)
         post[:capture] = "false"
 
-        commit(:post, 'charges', post, options)
+        commit(:post, 'order', post, options)
       end
 
       def purchase(money, creditcard, options={})
         post = create_post_for_auth_or_purchase(money, creditcard, options)
 
-        commit(:post, 'charges', post, options)
+        commit(:post, 'order', post, options)
       end
 
       def capture(money, authorization, options={})
         post = {}
         add_amount(post, money, options)
+=begin
         add_application_fee(post, options)
+=end
 
-        commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
+        commit(:post, "order/#{CGI.escape(authorization)}/capture", post, options)
       end
 
       def refund(money, identification, options={})
@@ -59,7 +61,7 @@ module ActiveMerchant #:nodoc:
         post[:refund_application_fee] = true if options[:refund_application_fee]
 
         MultiResponse.run(:first) do |r|
-          r.process { commit(:post, "charges/#{CGI.escape(identification)}/refund", post, options) }
+          r.process { commit(:post, "order/#{CGI.escape(identification)}/refund", post, options) }
 
           return r unless options[:refund_fee_amount]
 
@@ -86,8 +88,10 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_amount(post, money, options, true)
         add_creditcard(post, creditcard, options)
+=begin
         add_customer(post, creditcard, options)
         add_customer_data(post,options)
+=end
         post[:description] = options[:description]
         post[:statement_description] = options[:statement_description]
 
@@ -96,8 +100,12 @@ module ActiveMerchant #:nodoc:
         post[:metadata][:order_id] = options[:order_id] if options[:order_id]
         post.delete(:metadata) if post[:metadata].empty?
 
+=begin
         add_flags(post, options)
+=end
+=begin
         add_application_fee(post, options)
+=end
         post
       end
 
@@ -160,16 +168,53 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def commit(method, url, parameters=nil, options = {})
-        url = (test? ? test_url : live_url)
-        response = parse(ssl_post(url, post_data(action, parameters)))
+      def headers(options = {})
+        headers = {
+            "Authorization" => @service_key.to_s,
+            "User-Agent" => "Worldpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+            "X-Worldpay-Client-User-Agent" => user_agent,
+            "X-Worldpay-Client-User-Metadata" => {:ip => options[:ip]}.to_json
+        }
+        headers
+      end
 
-        Response.new(
-          success_from(response),
-          message_from(response),
-          response,
-          authorization: authorization_from(response),
-          test: test?
+      def commit(method, url, parameters=nil, options = {})
+=begin
+        add_expand_parameters(parameters, options) if parameters
+=end
+
+        raw_response = response = nil
+        success = false
+        begin
+
+          p method.to_s
+          p (self.live_url + url).to_s
+          p post_data(parameters).to_s
+          p headers(options).to_s
+
+          raise ('').to_s
+          raw_response = ssl_request(method, self.live_url + url, post_data(parameters), headers(options))
+          response = parse(raw_response)
+          success = !response.key?("error")
+        rescue ResponseError => e
+          raw_response = e.response.body
+          response = response_error(raw_response)
+        rescue JSON::ParserError
+          response = json_error(raw_response)
+        end
+
+        card = response["card"] || response["active_card"] || {}
+        avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
+        cvc_code = CVC_CODE_TRANSLATOR[card["cvc_check"]]
+
+        Response.new(success,
+                     success ? "Transaction approved" : response["error"]["message"],
+                     response,
+                     :test => response.has_key?("livemode") ? !response["livemode"] : false,
+                     :authorization => success ? response["id"] : response["error"]["charge"],
+                     :avs_result => { :code => avs_code },
+                     :cvv_result => cvc_code,
+                     :error_code => success ? nil : STANDARD_ERROR_CODE_MAPPING[response["error"]["code"]]
         )
       end
 

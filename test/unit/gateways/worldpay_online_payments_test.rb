@@ -3,7 +3,8 @@ require 'test_helper'
 class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   def setup
     @gateway = WorldpayOnlinePaymentsGateway.new(
-      service_key: 'T_S_cf03fd2a-1999-4495-998a-c8a4753da623'
+      client_key: "T_C_NOT_VALID",
+      service_key: "T_S_NOT_VALID"
     )
 
     @credit_card = credit_card
