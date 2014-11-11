@@ -34,7 +34,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, creditcard, options={})
-        token_response = create_token(reusable=true, creditcard.first_name+' '+creditcard.last_name, exp_month=creditcard.month, exp_year=creditcard.year, number=creditcard.number, cvc=creditcard.verification_value)
+        token_response = create_token(true, creditcard.first_name+' '+creditcard.last_name, creditcard.month, creditcard.year, creditcard.number, creditcard.verification_value)
         token_response = parse(token_response)
 
         if token_response['token']
@@ -42,20 +42,13 @@ module ActiveMerchant #:nodoc:
                        "Token created",
                        {},
                        :test => @service_key[0]=="T" ? true : false,
-                       :authorization => token_response['token'],
-                       :avs_result => {},
-                       :cvv_result => {},
-                       :error_code => nil
+                       :authorization => token_response['token']
           )
         else
           Response.new(false,
                        "PROBLEM!",
-                       '{"httpStatusCode":400,"customCode":"BAD_REQUEST","message":"CVC can\'t be null/empty","description":"Some of request parameters are invalid, please check your request. For more information please refer to Json schema.","errorHelpUrl":null,"originalRequest":"{\'reusable\':false,\'paymentMethod\':{\'type\':\'Card\',\'name\':\'Example Name\',\'expiryMonth\':\'**\',\'expiryYear\':\'****\',\'cardNumber\':\'**** **** **** 1111\',\'cvc\':\'\'},\'clientKey\':\'T_C_845d39f4-f33c-430c-8fca-ad89bf1e5810\'}"}'.to_json,
-                       :test => @service_key[0]=="T" ? true : false,
-                       :authorization => false,
-                       :avs_result => nil,
-                       :cvv_result => nil,
-                       :error_code => nil
+                       token_response,
+                       :test => @service_key[0]=="T" ? true : false
           )
         end
 
@@ -123,7 +116,7 @@ module ActiveMerchant #:nodoc:
         url = self.live_url+'/tokens'
 
         #xmr = ssl_post(url, request, 'Content-Type' => 'text/xml', 'Authorization' => encoded_credentials)
-        token_response = ssl_post(url, request=obj, 'Content-Type' => 'application/json', 'Authorization' => @service_key)
+        token_response = ssl_post(url, obj, 'Content-Type' => 'application/json', 'Authorization' => @service_key)
 
         token_response
       end
