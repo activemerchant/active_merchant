@@ -34,10 +34,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, creditcard, options={})
+
         token_response = create_token(true, creditcard.first_name+' '+creditcard.last_name, creditcard.month, creditcard.year, creditcard.number, creditcard.verification_value)
         token_response = parse(token_response)
 
         if token_response['token']
+
+          #add_creditcard(post, creditcard, options)
+
           Response.new(true,
                        "Token created",
                        {},
@@ -55,7 +59,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options={})
-          post = create_post_for_auth_or_purchase(authorization, money, creditcard, options)
+          post = create_post_for_auth_or_purchase(authorization, money, options)
           commit(:post, 'orders', post, options)
       end
 
@@ -64,7 +68,7 @@ module ActiveMerchant #:nodoc:
 
         auth = authorize(money, creditcard, options)
         if (auth.authorization)
-          post = create_post_for_auth_or_purchase(auth.authorization, money, creditcard, options)
+          post = create_post_for_auth_or_purchase(auth.authorization, money, options)
           commit(:post, 'orders', post, options)
         end
 
@@ -100,18 +104,18 @@ module ActiveMerchant #:nodoc:
 
 
       def create_token(reusable, name, exp_month, exp_year, number, cvc)
-        obj = [
+        obj = {
           "reusable"=> reusable,
-          "paymentMethod"=> [
+          "paymentMethod"=> {
             "type"=> "Card",
             "name"=> name,
             "expiryMonth"=> exp_month,
             "expiryYear"=> exp_year,
             "cardNumber"=> number,
             "cvc"=> cvc
-          ],
+          },
           "clientKey"=> @client_key
-        ]
+        }
 
         url = self.live_url+'/tokens'
 
@@ -122,11 +126,10 @@ module ActiveMerchant #:nodoc:
       end
 
 
-      def create_post_for_auth_or_purchase(token, money, creditcard, options)
+      def create_post_for_auth_or_purchase(token, money, options)
         post = {}
 
         add_amount(post, money, options, true)
-        add_creditcard(post, creditcard, options)
 
         post = {
           "token" => token,
@@ -261,7 +264,8 @@ module ActiveMerchant #:nodoc:
                      :authorization => success ? response["orderCode"] : response["message"],
                      :avs_result => {},
                      :cvv_result => {},
-                     :error_code => success ? nil : response["customCode"]
+                     :error_code => success ? nil : response["customCode"],
+                     :payment_status => response['paymentStatus']
         )
       end
 

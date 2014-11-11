@@ -12,6 +12,9 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
 
     @@credit_card = credit_card('4444333322221111')
     @options = {:order_id => 1}
+
+    @token = "TEST_RU_bae02008-cbce-4cd4-b68f-8cf25956ca7b"
+    @intoken = "_TEST_RU_bae02008-cbce-4cd4-b68f-8cf25956ca7b_"
   end
 
   def test_successful_authorize
@@ -26,21 +29,20 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
   end
 
+
   def test_successful_capture
-=begin
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.capture(@amount, @token, @options)
     assert_success response
 
-    assert_equal 'REPLACE', response.authorization
+    assert_equal "SUCCESS", response.params["paymentStatus"]
     assert response.test?
-=end
   end
-
   def test_failed_capture
-=begin
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.capture(@amount, @intoken, @options)
     assert_failure response
-=end
+
+    assert_not_equal "200", response.params["httpStatusCode"]
+    assert response.test?
   end
 
   def test_successful_purchase
@@ -89,7 +91,7 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   private
 
   def successful_authorize_response
-    %({"token":"TEST_RU_1aaeb0c9-3447-45ae-8eb3-84ee5b92ca93","paymentMethod":{"type":"ObfuscatedCard","name":"hhh vvg","expiryMonth":10,"expiryYear":2016,"cardType":"UNKNOWN","maskedCardNumber":"**** **** **** 1111"},"reusable":false})
+    %({"token":"TEST_RU_bae02008-cbce-4cd4-b68f-8cf25956ca7b","paymentMethod":{"type":"ObfuscatedCard","name":"hhh vvg","expiryMonth":10,"expiryYear":2016,"cardType":"UNKNOWN","maskedCardNumber":"**** **** **** 1111"},"reusable":false})
   end
   def failed_authorize_response
     ##unauthorised
@@ -105,17 +107,19 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   end
 
   def successful_purchase_response
-    %({"httpStatusCode"=>401, "customCode"=>"UNAUTHORIZED", "message"=>"Unauthorized Access", "description"=>"Request can't be authorized, please validate your request", "errorHelpUrl"=>nil, "originalRequest"=>"{'token':'TEST_RU_1aaeb0c9-3447-45ae-8eb3-84ee5b92ca93','orderDescription':'Order with token','amount':1200,'currencyCode':'EUR','name':'Shooper Name','customerIdentifiers':{'product-category':'fruits','product-quantity':'5','product-name':'orange'},'billingAddress':{'address1':'Address Line 1','address2':'Address Line 2','address3':'Address Line 3','postalCode':'EEEE','city':'City','state':'State','countryCode':'GB'},'customerOrderCode':'CustomerOrderCode','orderType':'ECOM'}"})
+
   end
 
   def failed_purchase_response
-    %({"orderCode":"7cc1eed8-b555-454b-8579-44ba65d3878a","token":"TEST_RU_1aaeb0c9-3447-45ae-8eb3-84ee5b92ca93","orderDescription":"My test order","amount":1523,"currencyCode":"GBP","paymentStatus":"SUCCESS","paymentResponse":{"type":"ObfuscatedCard","name":"Example Name","expiryMonth":10,"expiryYear":2015,"cardType":"VISA_CREDIT","maskedCardNumber":"**** **** **** 1111","billingAddress":{"address1":"123 House Road","address2":"A village","address3":"","postalCode":"EC1 1AA","city":"London","state":"","countryCode":"GB"}},"customerOrderCode":"A123","customerIdentifiers":{ "my-customer-ref" : "customer-ref"},"environment":"TEST"})
+
   end
 
   def successful_capture_response
+    %({"httpStatusCode"=>401, "customCode"=>"UNAUTHORIZED", "message"=>"Unauthorized Access", "description"=>"Request can't be authorized, please validate your request", "errorHelpUrl"=>nil, "originalRequest"=>"{'token':'TEST_RU_bae02008-cbce-4cd4-b68f-8cf25956ca7b','orderDescription':'Order with token','amount':1200,'currencyCode':'EUR','name':'Shooper Name','customerIdentifiers':{'product-category':'fruits','product-quantity':'5','product-name':'orange'},'billingAddress':{'address1':'Address Line 1','address2':'Address Line 2','address3':'Address Line 3','postalCode':'EEEE','city':'City','state':'State','countryCode':'GB'},'customerOrderCode':'CustomerOrderCode','orderType':'ECOM'}"})
   end
 
   def failed_capture_response
+    %({"orderCode":"7cc1eed8-b555-454b-8579-44ba65d3878a","token":"TEST_RU_bae02008-cbce-4cd4-b68f-8cf25956ca7b","orderDescription":"My test order","amount":1523,"currencyCode":"GBP","paymentStatus":"SUCCESS","paymentResponse":{"type":"ObfuscatedCard","name":"Example Name","expiryMonth":10,"expiryYear":2015,"cardType":"VISA_CREDIT","maskedCardNumber":"**** **** **** 1111","billingAddress":{"address1":"123 House Road","address2":"A village","address3":"","postalCode":"EC1 1AA","city":"London","state":"","countryCode":"GB"}},"customerOrderCode":"A123","customerIdentifiers":{ "my-customer-ref" : "customer-ref"},"environment":"TEST"})
   end
 
   def successful_refund_response
