@@ -449,6 +449,13 @@ pay_gate_xml:
   password: 'test'
 
 # Working credentials, no need to replace
+pay_hub:
+  orgid: '123456'
+  username: 'abc123DEF'
+  password: 'abc123DEF'
+  tid: '123'
+
+# Working credentials, no need to replace
 pay_junction:
   login: 'pj-ql-01'
   password: 'pj-ql-01p'
