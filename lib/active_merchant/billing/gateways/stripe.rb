@@ -140,10 +140,17 @@ module ActiveMerchant #:nodoc:
       end
 
       # Note: creating a new credit card will not change the customer's existing default credit card (use :set_default => true)
-      def store(creditcard, options = {})
-        post = {}
+      def store(payment, options = {})
         card_params = {}
-        add_creditcard(card_params, creditcard, options)
+        post = {}
+
+        if payment.is_a?(ApplePayPaymentToken)
+          token_exchange_response = tokenize_apple_pay_token(payment)
+          card_params = { card: token_exchange_response.params["token"]["id"] } if token_exchange_response.success?
+        else
+          add_creditcard(card_params, payment, options)
+        end
+
         post[:description] = options[:description] if options[:description]
         post[:email] = options[:email] if options[:email]
 

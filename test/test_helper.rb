@@ -186,7 +186,7 @@ module ActiveMerchant
     def apple_pay_payment_token(options = {})
       # apple_pay_json_raw should contain the JSON serialization of the object described here
       # https://developer.apple.com/library/IOs//documentation/PassKit/Reference/PaymentTokenJSON/PaymentTokenJSON.htm
-      apple_pay_json_raw = '{"version":"EC_v1","data":"","header":"","signature":""}'
+      apple_pay_json_raw = '{"version":"EC_v1","data":"","signature":""}'
       defaults = {
         payment_data: ActiveSupport::JSON.decode(apple_pay_json_raw),
         payment_instrument_name: "Visa 2424",

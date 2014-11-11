@@ -162,6 +162,18 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal @credit_card.last_digits, first_card["last4"]
   end
 
+  def test_successful_store_with_apple_pay_payment_token
+    assert response = @gateway.store(@apple_pay_payment_token, {:currency => @currency, :description => "Active Merchant Test Customer", :email => "email@example.com"})
+    assert_success response
+    assert_equal "customer", response.params["object"]
+    assert_equal "Active Merchant Test Customer", response.params["description"]
+    assert_equal "email@example.com", response.params["email"]
+    first_card = response.params["cards"]["data"].first
+    assert_equal response.params["default_card"], first_card["id"]
+    assert_equal "4242", first_card["dynamic_last4"] # when stripe is in test mode, token exchanged will return a test card with dynamic_last4 4242
+    assert_equal "0000", first_card["last4"] # last4 is 0000 when using an apple pay token
+  end
+
   def test_successful_store_with_existing_customer
     assert response = @gateway.store(@credit_card, {:currency => @currency, :description => "Active Merchant Test Customer"})
     assert_success response
@@ -173,6 +185,26 @@ class RemoteStripeTest < Test::Unit::TestCase
     card_response = response.responses[0]
     assert_equal "card", card_response.params["object"]
     assert_equal @new_credit_card.last_digits, card_response.params["last4"]
+
+    customer_response = response.responses[1]
+    assert_equal "customer", customer_response.params["object"]
+    assert_equal "Active Merchant Test Customer", customer_response.params["description"]
+    assert_equal "email@example.com", customer_response.params["email"]
+    assert_equal 2, customer_response.params["cards"]["count"]
+  end
+
+  def test_successful_store_with_existing_customer_and_apple_pay_payment_token
+    assert response = @gateway.store(@credit_card, {:currency => @currency, :description => "Active Merchant Test Customer"})
+    assert_success response
+
+    assert response = @gateway.store(@apple_pay_payment_token, {:customer => response.params['id'], :currency => @currency, :description => "Active Merchant Test Customer", :email => "email@example.com"})
+    assert_success response
+    assert_equal 2, response.responses.size
+
+    card_response = response.responses[0]
+    assert_equal "card", card_response.params["object"]
+    assert_equal "4242", card_response.params["dynamic_last4"] # when stripe is in test mode, token exchanged will return a test card with dynamic_last4 4242
+    assert_equal "0000", card_response.params["last4"] # last4 is 0000 when using an apple pay token
 
     customer_response = response.responses[1]
     assert_equal "customer", customer_response.params["object"]
@@ -201,6 +233,16 @@ class RemoteStripeTest < Test::Unit::TestCase
 
   def test_successful_recurring
     assert response = @gateway.store(@credit_card, {:description => "Active Merchant Test Customer", :email => "email@example.com"})
+    assert_success response
+    assert recharge_options = @options.merge(:customer => response.params["id"])
+    assert response = @gateway.purchase(@amount, nil, recharge_options)
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert response.params["paid"]
+  end
+
+  def test_successful_recurring_with_apple_pay_payment_token
+    assert response = @gateway.store(@apple_pay_payment_token, {:description => "Active Merchant Test Customer", :email => "email@example.com"})
     assert_success response
     assert recharge_options = @options.merge(:customer => response.params["id"])
     assert response = @gateway.purchase(@amount, nil, recharge_options)
@@ -347,4 +389,4 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, ApplePayPaymentToken.new('garbage'), @options)
     assert_failure response
   end
-end
+2end
