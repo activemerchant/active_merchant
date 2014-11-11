@@ -102,8 +102,6 @@ module ActiveMerchant #:nodoc:
         '8' =>  "Cardholder, all do not match AMEX only." 
       }
 
-      #STANDARD_ERROR_CODE_MAPPING = {}
-
       def initialize(options={})
         requires!(options, :orgid, :username, :password, :tid)
         @orgid = options[:orgid]
