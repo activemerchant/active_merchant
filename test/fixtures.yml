@@ -459,6 +459,13 @@ payment_express:
   login: LOGIN
   password: PASSWORD
 
+# Working credentials, no need to replace
+pay_hub:
+  orgid: "123456"
+  username: "abc123DEF"
+  password: "abc123DEF"
+  tid: "123"
+  
 paymill:
   private_key: PRIVATE_KEY
   public_key: PUBLIC_KEY
