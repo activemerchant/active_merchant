@@ -10,12 +10,13 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
     @credit_card = credit_card
     @amount = 1000
 
-    @@credit_card = credit_card('4242424242424242')
+    @@credit_card = credit_card('4444333322221111')
     @options = {:order_id => 1}
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).returns(successful_token_response)
+    #@gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -66,6 +67,23 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
 
   private
 
+  def successful_token_response
+    %({
+      "token" : "valid_token",
+      "reusable":"false",
+      "paymentMethod" : {
+        "type" : "ObfuscatedCard",
+        "name" : "Shopper Name",
+        "expiryMonth" : 2,
+        "expiryYear" : 2016,
+        "issueNumber" : 1,
+        "startMonth" : 1,
+        "startYear" : 2011,
+        "cardType" : "MASTERCARD",
+        "maskedCardNumber" : "**** **** **** 1111"
+      }
+    })
+  end
   def successful_purchase_response
     %(
       Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
@@ -78,6 +96,21 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   end
 
   def failed_purchase_response
+    %({
+      "token" : "invalid_token",
+      "reusable":"false",
+      "paymentMethod" : {
+        "type" : "ObfuscatedCard",
+        "name" : "Shopper Name",
+        "expiryMonth" : 2,
+        "expiryYear" : 2016,
+        "issueNumber" : 1,
+        "startMonth" : 1,
+        "startYear" : 2011,
+        "cardType" : "MASTERCARD",
+        "maskedCardNumber" : "**** **** **** 1111"
+      }
+    })
   end
 
   def successful_authorize_response

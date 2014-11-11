@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayOnlinePaymentsGateway < Gateway
-      self.live_url = self.test_url = 'https://api.worldpay.com/'
+      self.live_url = self.test_url = 'https://api.worldpay.com/v1/'
 
       self.default_currency = 'GBP'
       self.money_format = :cents
@@ -33,6 +33,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, creditcard, options={})
+
+        #create_token(true,)
+
         post = create_post_for_auth_or_purchase(money, creditcard, options)
         post[:capture] = "false"
 
@@ -40,9 +43,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, creditcard, options={})
-        post = create_post_for_auth_or_purchase(money, creditcard, options)
 
-        commit(:post, 'order', post, options)
+        token_response = create_token(reusable=true, creditcard.first_name+' '+creditcard.last_name, exp_month=creditcard.month, exp_year=creditcard.year, number=creditcard.number, cvc=creditcard.verification_value)
+        token_response = parse(token_response)
+
+        if token_response['token']
+          post = create_post_for_auth_or_purchase(token_response['token'], money, creditcard, options)
+          commit(:post, 'order', post, options)
+        else
+          raise 'no token'
+        end
+
       end
 
       def capture(money, authorization, options={})
@@ -84,14 +95,78 @@ module ActiveMerchant #:nodoc:
       private
 
 
-      def create_post_for_auth_or_purchase(money, creditcard, options)
+      def create_token(reusable, name, exp_month, exp_year, number, cvc)
+        obj = [
+          "reusable"=> reusable,
+          "paymentMethod"=> [
+            "type"=> "Card",
+            "name"=> name,
+            "expiryMonth"=> exp_month,
+            "expiryYear"=> exp_year,
+            "cardNumber"=> number,
+            "cvc"=> cvc
+          ],
+          "clientKey"=> @client_key
+        ]
+
+        url = self.live_url+'/tokens'
+
+        #xmr = ssl_post(url, request, 'Content-Type' => 'text/xml', 'Authorization' => encoded_credentials)
+        token_response = ssl_post(url, request=obj, 'Content-Type' => 'application/json', 'Authorization' => @service_key)
+
+        token_response
+      end
+
+
+      def create_post_for_auth_or_purchase(token, money, creditcard, options)
+        post = {}
+
+        add_amount(post, money, options, true)
+        add_creditcard(post, creditcard, options)
+
+        post = [
+            "token"=>token,
+            "orderDescription"=>"Order with token",
+            "amount"=>1200,
+            "currencyCode"=>"EUR",
+            "name"=>"Shooper Name",
+            "customerIdentifiers"=>[
+            "product-category"=>"fruits",
+            "product-quantity"=>"3",
+            "product-quantity"=>"5",
+            "product-name"=>"orange"
+        ],
+            "billingAddress"=>[
+            "address1"=>"Address Line 1",
+            "address2"=>"Address Line 2",
+            "address3"=>"Address Line 3",
+            "postalCode"=>"EEEE",
+            "city"=>"City",
+            "state"=>"State",
+            "countryCode"=>"GB"
+        ],
+            "customerOrderCode"=>"CustomerOrderCode",
+            "orderType"=>"RECURRING/ECOM/MOTO"
+        ]
+
+        post
+
+
+
+
+
+
+
+
+=begin
+
+
+
         post = {}
         add_amount(post, money, options, true)
         add_creditcard(post, creditcard, options)
-=begin
         add_customer(post, creditcard, options)
         add_customer_data(post,options)
-=end
         post[:description] = options[:description]
         post[:statement_description] = options[:statement_description]
 
@@ -100,13 +175,10 @@ module ActiveMerchant #:nodoc:
         post[:metadata][:order_id] = options[:order_id] if options[:order_id]
         post.delete(:metadata) if post[:metadata].empty?
 
-=begin
         add_flags(post, options)
-=end
-=begin
         add_application_fee(post, options)
-=end
         post
+=end
       end
 
 
@@ -165,7 +237,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        JSON.parse(body)
+        if (body.class==NilClass)
+          body = {}
+        else
+          body = JSON.parse(body)
+        end
+        body
       end
 
       def headers(options = {})
@@ -186,6 +263,7 @@ module ActiveMerchant #:nodoc:
         raw_response = response = nil
         success = false
         begin
+=begin
 
           p method.to_s
           p (self.live_url + url).to_s
@@ -193,6 +271,9 @@ module ActiveMerchant #:nodoc:
           p headers(options).to_s
 
           raise ('').to_s
+=end
+          raise self.live_url+url
+
           raw_response = ssl_request(method, self.live_url + url, post_data(parameters), headers(options))
           response = parse(raw_response)
           success = !response.key?("error")
@@ -216,12 +297,6 @@ module ActiveMerchant #:nodoc:
                      :cvv_result => cvc_code,
                      :error_code => success ? nil : STANDARD_ERROR_CODE_MAPPING[response["error"]["code"]]
         )
-      end
-
-      def tokenize(options)
-        post = {}
-
-        commit(:post, "tokens", post, options)
       end
 
       def success_from(response)
