@@ -820,5 +820,5 @@ worldpay_us:
   merchantpin: "1234567890"
 
 worldpay_online_payments:
-  client_key: "T_C_gfjdbgtieu49u4tngdignrdijng89u54gh9dingt"
-  service_key: "T_S_cf03fd2a-1999-4495-998a-c8a4753da623"
+  client_key: "T_C_d2ddd160-379a-4ce3-9c69-01ad2299a78e"
+  service_key: "T_S_0367c376-666f-45f2-ba3d-fc2a1879d966"

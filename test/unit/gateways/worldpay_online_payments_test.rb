@@ -3,8 +3,8 @@ require 'test_helper'
 class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   def setup
     @gateway = WorldpayOnlinePaymentsGateway.new(
-      client_key: "T_C_NOT_VALID",
-      service_key: "T_S_NOT_VALID"
+      client_key: "T_C_d2ddd160-379a-4ce3-9c69-01ad2299a78e",
+      service_key: "T_S_0367c376-666f-45f2-ba3d-fc2a1879d966"
     )
 
     @credit_card = credit_card
@@ -26,7 +26,7 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    @gateway.expects(:ssl_post).returns(unsuccessful_token_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -68,49 +68,27 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   private
 
   def successful_token_response
-    %({
-      "token" : "valid_token",
-      "reusable":"false",
-      "paymentMethod" : {
-        "type" : "ObfuscatedCard",
-        "name" : "Shopper Name",
-        "expiryMonth" : 2,
-        "expiryYear" : 2016,
-        "issueNumber" : 1,
-        "startMonth" : 1,
-        "startYear" : 2011,
-        "cardType" : "MASTERCARD",
-        "maskedCardNumber" : "**** **** **** 1111"
-      }
-    })
+    %({"token":"TEST_RU_1aaeb0c9-3447-45ae-8eb3-84ee5b92ca93","paymentMethod":{"type":"ObfuscatedCard","name":"hhh vvg","expiryMonth":10,"expiryYear":2016,"cardType":"UNKNOWN","maskedCardNumber":"**** **** **** 1111"},"reusable":false})
   end
-  def successful_purchase_response
-    %(
-      Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-      to "true" when running remote tests:
+  def unsuccessful_token_response
+    ##unauthorised
 
-      $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-        test/remote/gateways/remote_worldpay_online_payments_test.rb \
-        -n test_successful_purchase
+    #%(
+    #  {"httpStatusCode":401,"customCode":"UNAUTHORIZED","message":"Unauthorized Access","description":"Request can't be authorized, please validate your request","errorHelpUrl":null,"originalRequest":"{'reusable':false,'paymentMethod':{'type':'Card','name':'Example Name','expiryMonth':'**','expiryYear':'****','cardNumber':'**** **** **** 1111','cvc':'****'},'clientKey':'T_C_af8d409c-e21d-4dsfdfsdfsdfsdd201-90fd-c51b0b00a098'}"}
+    #)
+
+    ## bad request / cvc
+    %(
+    {"httpStatusCode":400,"customCode":"BAD_REQUEST","message":"CVC can't be null/empty","description":"Some of request parameters are invalid, please check your request. For more information please refer to Json schema.","errorHelpUrl":null,"originalRequest":"{'reusable':false,'paymentMethod':{'type':'Card','name':'Example Name','expiryMonth':'**','expiryYear':'****','cardNumber':'**** **** **** 1111','cvc':''},'clientKey':'T_C_845d39f4-f33c-430c-8fca-ad89bf1e5810'}"}
     )
   end
 
+  def successful_purchase_response
+    %({"httpStatusCode"=>401, "customCode"=>"UNAUTHORIZED", "message"=>"Unauthorized Access", "description"=>"Request can't be authorized, please validate your request", "errorHelpUrl"=>nil, "originalRequest"=>"{'token':'TEST_RU_1aaeb0c9-3447-45ae-8eb3-84ee5b92ca93','orderDescription':'Order with token','amount':1200,'currencyCode':'EUR','name':'Shooper Name','customerIdentifiers':{'product-category':'fruits','product-quantity':'5','product-name':'orange'},'billingAddress':{'address1':'Address Line 1','address2':'Address Line 2','address3':'Address Line 3','postalCode':'EEEE','city':'City','state':'State','countryCode':'GB'},'customerOrderCode':'CustomerOrderCode','orderType':'ECOM'}"})
+  end
+
   def failed_purchase_response
-    %({
-      "token" : "invalid_token",
-      "reusable":"false",
-      "paymentMethod" : {
-        "type" : "ObfuscatedCard",
-        "name" : "Shopper Name",
-        "expiryMonth" : 2,
-        "expiryYear" : 2016,
-        "issueNumber" : 1,
-        "startMonth" : 1,
-        "startYear" : 2011,
-        "cardType" : "MASTERCARD",
-        "maskedCardNumber" : "**** **** **** 1111"
-      }
-    })
+    %({"orderCode":"7cc1eed8-b555-454b-8579-44ba65d3878a","token":"TEST_RU_1aaeb0c9-3447-45ae-8eb3-84ee5b92ca93","orderDescription":"My test order","amount":1523,"currencyCode":"GBP","paymentStatus":"SUCCESS","paymentResponse":{"type":"ObfuscatedCard","name":"Example Name","expiryMonth":10,"expiryYear":2015,"cardType":"VISA_CREDIT","maskedCardNumber":"**** **** **** 1111","billingAddress":{"address1":"123 House Road","address2":"A village","address3":"","postalCode":"EC1 1AA","city":"London","state":"","countryCode":"GB"}},"customerOrderCode":"A123","customerIdentifiers":{ "my-customer-ref" : "customer-ref"},"environment":"TEST"})
   end
 
   def successful_authorize_response

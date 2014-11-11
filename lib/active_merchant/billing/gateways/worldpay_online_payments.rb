@@ -1,7 +1,8 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayOnlinePaymentsGateway < Gateway
-      self.live_url = self.test_url = 'https://api.worldpay.com/v1/'
+      self.live_url = self.test_url = 'https://dev02-api.worldpay.io/v1/'
+      #self.live_url = self.test_url = 'https://api.worldpay.com/v1/'
 
       self.default_currency = 'GBP'
       self.money_format = :cents
@@ -34,24 +35,17 @@ module ActiveMerchant #:nodoc:
 
       def authorize(money, creditcard, options={})
 
-        #create_token(true,)
-
-        post = create_post_for_auth_or_purchase(money, creditcard, options)
-        post[:capture] = "false"
-
-        commit(:post, 'order', post, options)
-      end
-
-      def purchase(money, creditcard, options={})
-
         token_response = create_token(reusable=true, creditcard.first_name+' '+creditcard.last_name, exp_month=creditcard.month, exp_year=creditcard.year, number=creditcard.number, cvc=creditcard.verification_value)
         token_response = parse(token_response)
 
         if token_response['token']
           post = create_post_for_auth_or_purchase(token_response['token'], money, creditcard, options)
-          commit(:post, 'order', post, options)
+
+          post[:capture] = "false"
+
+          commit(:post, 'orders', post, options)
         else
-          raise 'no token'
+          return '{"httpStatusCode":400,"customCode":"BAD_REQUEST","message":"CVC can\'t be null/empty","description":"Some of request parameters are invalid, please check your request. For more information please refer to Json schema.","errorHelpUrl":null,"originalRequest":"{\'reusable\':false,\'paymentMethod\':{\'type\':\'Card\',\'name\':\'Example Name\',\'expiryMonth\':\'**\',\'expiryYear\':\'****\',\'cardNumber\':\'**** **** **** 1111\',\'cvc\':\'\'},\'clientKey\':\'T_C_845d39f4-f33c-430c-8fca-ad89bf1e5810\'}"}'
         end
 
       end
@@ -63,7 +57,23 @@ module ActiveMerchant #:nodoc:
         add_application_fee(post, options)
 =end
 
-        commit(:post, "order/#{CGI.escape(authorization)}/capture", post, options)
+        commit(:post, "orders/#{CGI.escape(authorization)}/capture", post, options)
+      end
+
+
+      def purchase(money, creditcard, options={})
+
+        token_response = create_token(reusable=true, creditcard.first_name+' '+creditcard.last_name, exp_month=creditcard.month, exp_year=creditcard.year, number=creditcard.number, cvc=creditcard.verification_value)
+        token_response = parse(token_response)
+
+        if token_response['token']
+          post = create_post_for_auth_or_purchase(token_response['token'], money, creditcard, options)
+
+          commit(:post, 'orders', post, options)
+        else
+          return '{"httpStatusCode":400,"customCode":"BAD_REQUEST","message":"CVC can\'t be null/empty","description":"Some of request parameters are invalid, please check your request. For more information please refer to Json schema.","errorHelpUrl":null,"originalRequest":"{\'reusable\':false,\'paymentMethod\':{\'type\':\'Card\',\'name\':\'Example Name\',\'expiryMonth\':\'**\',\'expiryYear\':\'****\',\'cardNumber\':\'**** **** **** 1111\',\'cvc\':\'\'},\'clientKey\':\'T_C_845d39f4-f33c-430c-8fca-ad89bf1e5810\'}"}'
+        end
+
       end
 
       def refund(money, identification, options={})
@@ -72,7 +82,7 @@ module ActiveMerchant #:nodoc:
         post[:refund_application_fee] = true if options[:refund_application_fee]
 
         MultiResponse.run(:first) do |r|
-          r.process { commit(:post, "order/#{CGI.escape(identification)}/refund", post, options) }
+          r.process { commit(:post, "orders/#{CGI.escape(identification)}/refund", post, options) }
 
           return r unless options[:refund_fee_amount]
 
@@ -124,61 +134,33 @@ module ActiveMerchant #:nodoc:
         add_amount(post, money, options, true)
         add_creditcard(post, creditcard, options)
 
-        post = [
-            "token"=>token,
-            "orderDescription"=>"Order with token",
-            "amount"=>1200,
-            "currencyCode"=>"EUR",
-            "name"=>"Shooper Name",
-            "customerIdentifiers"=>[
-            "product-category"=>"fruits",
-            "product-quantity"=>"3",
-            "product-quantity"=>"5",
-            "product-name"=>"orange"
-        ],
-            "billingAddress"=>[
-            "address1"=>"Address Line 1",
-            "address2"=>"Address Line 2",
-            "address3"=>"Address Line 3",
-            "postalCode"=>"EEEE",
-            "city"=>"City",
-            "state"=>"State",
-            "countryCode"=>"GB"
-        ],
-            "customerOrderCode"=>"CustomerOrderCode",
-            "orderType"=>"RECURRING/ECOM/MOTO"
-        ]
+        post = {
+          "token" => token,
+          "orderDescription" => "Order with token",
+          "amount" => 1200,
+          "currencyCode" => "EUR",
+          "name" => "Shooper Name",
+          "customerIdentifiers" => {
+              "product-category"=>"fruits",
+              "product-quantity"=>"3",
+              "product-quantity"=>"5",
+              "product-name"=>"orange"
+          },
+          "billingAddress" => {
+              "address1"=>"Address Line 1",
+              "address2"=>"Address Line 2",
+              "address3"=>"Address Line 3",
+              "postalCode"=>"EEEE",
+              "city"=>"City",
+              "state"=>"State",
+              "countryCode"=>"GB"
+          },
+          "customerOrderCode" => "CustomerOrderCode",
+          "orderType" => "ECOM"
+        }
+
 
         post
-
-
-
-
-
-
-
-
-=begin
-
-
-
-        post = {}
-        add_amount(post, money, options, true)
-        add_creditcard(post, creditcard, options)
-        add_customer(post, creditcard, options)
-        add_customer_data(post,options)
-        post[:description] = options[:description]
-        post[:statement_description] = options[:statement_description]
-
-        post[:metadata] = {}
-        post[:metadata][:email] = options[:email] if options[:email]
-        post[:metadata][:order_id] = options[:order_id] if options[:order_id]
-        post.delete(:metadata) if post[:metadata].empty?
-
-        add_flags(post, options)
-        add_application_fee(post, options)
-        post
-=end
       end
 
 
@@ -247,7 +229,8 @@ module ActiveMerchant #:nodoc:
 
       def headers(options = {})
         headers = {
-            "Authorization" => @service_key.to_s,
+            "Authorization" => @service_key,
+            "Content-type" => 'application/json',
             "User-Agent" => "Worldpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
             "X-Worldpay-Client-User-Agent" => user_agent,
             "X-Worldpay-Client-User-Metadata" => {:ip => options[:ip]}.to_json
@@ -263,18 +246,10 @@ module ActiveMerchant #:nodoc:
         raw_response = response = nil
         success = false
         begin
-=begin
 
-          p method.to_s
-          p (self.live_url + url).to_s
-          p post_data(parameters).to_s
-          p headers(options).to_s
+          raw_response = ssl_request(method, self.live_url + url, parameters.to_json, headers(options))
 
-          raise ('').to_s
-=end
-          raise self.live_url+url
 
-          raw_response = ssl_request(method, self.live_url + url, post_data(parameters), headers(options))
           response = parse(raw_response)
           success = !response.key?("error")
         rescue ResponseError => e
@@ -284,19 +259,33 @@ module ActiveMerchant #:nodoc:
           response = json_error(raw_response)
         end
 
-        card = response["card"] || response["active_card"] || {}
-        avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
-        cvc_code = CVC_CODE_TRANSLATOR[card["cvc_check"]]
 
         Response.new(success,
-                     success ? "Transaction approved" : response["error"]["message"],
+                     success ? "Transaction approved" : response["message"],
                      response,
-                     :test => response.has_key?("livemode") ? !response["livemode"] : false,
-                     :authorization => success ? response["id"] : response["error"]["charge"],
-                     :avs_result => { :code => avs_code },
-                     :cvv_result => cvc_code,
-                     :error_code => success ? nil : STANDARD_ERROR_CODE_MAPPING[response["error"]["code"]]
+                     :test => @service_key[0]=="T" ? true : false,
+                     :authorization => success ? response["orderCode"] : response["message"],
+                     :avs_result => {},
+                     :cvv_result => {},
+                     :error_code => success ? nil : response["customCode"]
         )
+      end
+
+      def response_error(raw_response)
+        begin
+          parse(raw_response)
+        rescue JSON::ParserError
+          json_error(raw_response)
+        end
+      end
+      def json_error(raw_response)
+        msg = 'Invalid response received from the Worldpay Online Payments API.  Please contact techsupport.online@worldpay.com if you continue to receive this message.'
+        msg += "  (The raw response returned by the API was #{raw_response.inspect})"
+        {
+            "error" => {
+                "message" => msg
+            }
+        }
       end
 
       def success_from(response)
@@ -308,7 +297,23 @@ module ActiveMerchant #:nodoc:
       def authorization_from(response)
       end
 
-      def post_data(action, parameters = {})
+      def post_data(params)
+        return nil unless params
+
+        params.map do |key, value|
+          next if value.blank?
+          if value.is_a?(Hash)
+            h = {}
+            value.each do |k, v|
+              h["#{key}[#{k}]"] = v unless v.blank?
+            end
+            post_data(h)
+          elsif value.is_a?(Array)
+            value.map { |v| "#{key}[]=#{CGI.escape(v.to_s)}" }.join("&")
+          else
+            "#{key}=#{CGI.escape(value.to_s)}"
+          end
+        end.compact.join("&")
       end
     end
   end
