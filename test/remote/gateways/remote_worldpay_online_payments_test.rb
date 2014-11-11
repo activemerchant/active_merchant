@@ -5,8 +5,8 @@ class RemoteWorldpayOnlinePaymentsTest < Test::Unit::TestCase
     @gateway = WorldpayOnlinePaymentsGateway.new(fixtures(:worldpay_online_payments))
 
     @amount = 1000
-    @credit_card = credit_card('4000100011112224')
-    @declined_card = credit_card('4000300011112220')
+    @credit_card = credit_card('4444333322221111')
+    @declined_card = credit_card('4242424242424242')
 
     @options = {
       order_id: '1',
