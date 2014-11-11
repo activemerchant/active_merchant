@@ -3,8 +3,8 @@ require 'test_helper'
 class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   def setup
     @gateway = WorldpayOnlinePaymentsGateway.new(
-      client_key: "T_C_d2ddd160-379a-4ce3-9c69-01ad2299a78e",
-      service_key: "T_S_0367c376-666f-45f2-ba3d-fc2a1879d966"
+      client_key: "T_C_fba10c60-5581-414c-aee7-358f150e6104",
+      service_key: "T_S_e19c5313-e249-4beb-a6de-1f788882476c"
     )
 
     @amount = 1000
@@ -13,8 +13,8 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
     @incredit_card = credit_card('4242424242424242')
     @options = {:order_id => 1}
 
-    @token = "TEST_RU_bae02008-cbce-4cd4-b68f-8cf25956ca7b"
-    @intoken = "_TEST_RU_bae02008-cbce-4cd4-b68f-8cf25956ca7b_"
+    @token = "TEST_RU_f9de95c1-5cae-4cf2-b862-a20d60424b8c"
+    @intoken = "_TEST_RU_f9de95c1-5cae-4cf2-b862-a20d60424b8c_"
 
     @orderCode = "7cc1eed8-b555-454b-8579-44ba65d3878a"
     @inorderCode = "_7cc1eed8-b555-454b-8579-44ba65d3878a_"
@@ -23,11 +23,15 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
     response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_success response
   end
 
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
     response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_failure response
   end
 
 
@@ -63,19 +67,18 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    response = @gateway.refund(@amount, @orderCode, @options)
+    response_purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response_purchase
+    response = @gateway.refund(@amount, response_purchase.params["orderCode"], @options)
     assert_success response
-
-    assert_equal "SUCCESS", response.params["paymentStatus"]
-    assert response.test?
   end
 
   def test_failed_refund
-    response = @gateway.refund(@amount, @inorderCode, @options)
-    assert_failure response
+    response_purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response_purchase
 
-    assert_not_equal "200", response.params["httpStatusCode"]
-    assert response.test?
+    response = @gateway.refund(@amount, response_purchase.params["orderCode"]+"1", @options)
+    assert_failure response
   end
 
   def test_successful_void
@@ -96,7 +99,7 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   private
 
   def successful_authorize_response
-    %({"token":"TEST_RU_bae02008-cbce-4cd4-b68f-8cf25956ca7b","paymentMethod":{"type":"ObfuscatedCard","name":"hhh vvg","expiryMonth":10,"expiryYear":2016,"cardType":"UNKNOWN","maskedCardNumber":"**** **** **** 1111"},"reusable":false})
+    %({"token":"TEST_RU_f9de95c1-5cae-4cf2-b862-a20d60424b8c","paymentMethod":{"type":"ObfuscatedCard","name":"hhh vvg","expiryMonth":10,"expiryYear":2016,"cardType":"UNKNOWN","maskedCardNumber":"**** **** **** 1111"},"reusable":false})
   end
   def failed_authorize_response
     ##unauthorised
@@ -120,11 +123,11 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   end
 
   def successful_capture_response
-    %({"httpStatusCode"=>401, "customCode"=>"UNAUTHORIZED", "message"=>"Unauthorized Access", "description"=>"Request can't be authorized, please validate your request", "errorHelpUrl"=>nil, "originalRequest"=>"{'token':'TEST_RU_bae02008-cbce-4cd4-b68f-8cf25956ca7b','orderDescription':'Order with token','amount':1200,'currencyCode':'EUR','name':'Shooper Name','customerIdentifiers':{'product-category':'fruits','product-quantity':'5','product-name':'orange'},'billingAddress':{'address1':'Address Line 1','address2':'Address Line 2','address3':'Address Line 3','postalCode':'EEEE','city':'City','state':'State','countryCode':'GB'},'customerOrderCode':'CustomerOrderCode','orderType':'ECOM'}"})
+    %({"httpStatusCode"=>401, "customCode"=>"UNAUTHORIZED", "message"=>"Unauthorized Access", "description"=>"Request can't be authorized, please validate your request", "errorHelpUrl"=>nil, "originalRequest"=>"{'token':'TEST_RU_f9de95c1-5cae-4cf2-b862-a20d60424b8c','orderDescription':'Order with token','amount':1200,'currencyCode':'EUR','name':'Shooper Name','customerIdentifiers':{'product-category':'fruits','product-quantity':'5','product-name':'orange'},'billingAddress':{'address1':'Address Line 1','address2':'Address Line 2','address3':'Address Line 3','postalCode':'EEEE','city':'City','state':'State','countryCode':'GB'},'customerOrderCode':'CustomerOrderCode','orderType':'ECOM'}"})
   end
 
   def failed_capture_response
-    %({"orderCode":"7cc1eed8-b555-454b-8579-44ba65d3878a","token":"TEST_RU_bae02008-cbce-4cd4-b68f-8cf25956ca7b","orderDescription":"My test order","amount":1523,"currencyCode":"GBP","paymentStatus":"SUCCESS","paymentResponse":{"type":"ObfuscatedCard","name":"Example Name","expiryMonth":10,"expiryYear":2015,"cardType":"VISA_CREDIT","maskedCardNumber":"**** **** **** 1111","billingAddress":{"address1":"123 House Road","address2":"A village","address3":"","postalCode":"EC1 1AA","city":"London","state":"","countryCode":"GB"}},"customerOrderCode":"A123","customerIdentifiers":{ "my-customer-ref" : "customer-ref"},"environment":"TEST"})
+    %({"orderCode":"7cc1eed8-b555-454b-8579-44ba65d3878a","token":"TEST_RU_f9de95c1-5cae-4cf2-b862-a20d60424b8c","orderDescription":"My test order","amount":1523,"currencyCode":"GBP","paymentStatus":"SUCCESS","paymentResponse":{"type":"ObfuscatedCard","name":"Example Name","expiryMonth":10,"expiryYear":2015,"cardType":"VISA_CREDIT","maskedCardNumber":"**** **** **** 1111","billingAddress":{"address1":"123 House Road","address2":"A village","address3":"","postalCode":"EC1 1AA","city":"London","state":"","countryCode":"GB"}},"customerOrderCode":"A123","customerIdentifiers":{ "my-customer-ref" : "customer-ref"},"environment":"TEST"})
   end
 
   def successful_refund_response

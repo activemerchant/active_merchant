@@ -1,7 +1,7 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayOnlinePaymentsGateway < Gateway
-      self.live_url = self.test_url = 'https://dev02-api.worldpay.io/v1/'
+      self.live_url = self.test_url = 'https://api.worldpay.com/v1/'
       #self.live_url = self.test_url = 'https://api.worldpay.com/v1/'
 
       self.default_currency = 'GBP'
@@ -216,7 +216,7 @@ module ActiveMerchant #:nodoc:
       def headers(options = {})
         headers = {
             "Authorization" => @service_key,
-            "Content-type" => 'application/json',
+            "Content-Type" => 'application/json',
             "User-Agent" => "Worldpay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
             "X-Worldpay-Client-User-Agent" => user_agent,
             "X-Worldpay-Client-User-Metadata" => {:ip => options[:ip]}.to_json
@@ -225,9 +225,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(method, url, parameters=nil, options = {})
-=begin
-        add_expand_parameters(parameters, options) if parameters
-=end
 
         raw_response = response = nil
         success = false
@@ -237,12 +234,18 @@ module ActiveMerchant #:nodoc:
 
 
           response = parse(raw_response)
+
           success = !response.key?("error")
         rescue ResponseError => e
           raw_response = e.response.body
           response = response_error(raw_response)
-        rescue JSON::ParserError
-          response = json_error(raw_response)
+        rescue JSON::ParserError => e
+          if (/orders\/(.*)\/refund/.match(url))
+            success = true
+            response = {}
+          else
+            response = json_error(raw_response)
+          end
         end
 
 
@@ -253,8 +256,7 @@ module ActiveMerchant #:nodoc:
                      :authorization => success ? response["orderCode"] : response["message"],
                      :avs_result => {},
                      :cvv_result => {},
-                     :error_code => success ? nil : response["customCode"],
-                     :payment_status => response['paymentStatus']
+                     :error_code => success ? nil : response["customCode"]
         )
       end
 
