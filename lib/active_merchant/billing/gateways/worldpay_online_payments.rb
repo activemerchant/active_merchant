@@ -74,23 +74,12 @@ module ActiveMerchant #:nodoc:
 
       end
 
-      def refund(money, identification, options={})
-        post = {}
-        add_amount(post, money, options)
-        post[:refund_application_fee] = true if options[:refund_application_fee]
-
-        MultiResponse.run(:first) do |r|
-          r.process { commit(:post, "orders/#{CGI.escape(identification)}/refund", post, options) }
-
-          return r unless options[:refund_fee_amount]
-
-          r.process { fetch_application_fees(identification, options) }
-          r.process { refund_application_fee(options[:refund_fee_amount], application_fee_from_response(r.responses.last), options) }
-        end
+      def refund(money, orderCode, options={})
+        commit(:post, "orders/#{CGI.escape(orderCode)}/refund", {}, options)
       end
 
-      def void(identification, options={})
-        commit(:post, "charges/#{CGI.escape(identification)}/refund", {}, options)
+      def void(orderCode, options={})
+        commit(:post, "orders/#{CGI.escape(orderCode)}/refund", {}, options)
       end
 
       def verify(creditcard, options={})
@@ -120,7 +109,7 @@ module ActiveMerchant #:nodoc:
         url = self.live_url+'/tokens'
 
         #xmr = ssl_post(url, request, 'Content-Type' => 'text/xml', 'Authorization' => encoded_credentials)
-        token_response = ssl_post(url, obj, 'Content-Type' => 'application/json', 'Authorization' => @service_key)
+        token_response = ssl_post(url, obj.to_json, 'Content-Type' => 'application/json', 'Authorization' => @service_key)
 
         token_response
       end

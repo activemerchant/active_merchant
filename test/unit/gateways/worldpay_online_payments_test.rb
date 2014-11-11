@@ -7,25 +7,26 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
       service_key: "T_S_0367c376-666f-45f2-ba3d-fc2a1879d966"
     )
 
-    @credit_card = credit_card
     @amount = 1000
 
-    @@credit_card = credit_card('4444333322221111')
+    @credit_card = credit_card('4444333322221111')
+    @incredit_card = credit_card('4242424242424242')
     @options = {:order_id => 1}
 
     @token = "TEST_RU_bae02008-cbce-4cd4-b68f-8cf25956ca7b"
     @intoken = "_TEST_RU_bae02008-cbce-4cd4-b68f-8cf25956ca7b_"
+
+    @orderCode = "7cc1eed8-b555-454b-8579-44ba65d3878a"
+    @inorderCode = "_7cc1eed8-b555-454b-8579-44ba65d3878a_"
   end
 
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
-
     response = @gateway.authorize(@amount, @credit_card, @options)
   end
 
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
-
     response = @gateway.authorize(@amount, @credit_card, @options)
   end
 
@@ -46,31 +47,35 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-=begin
-    @gateway.expects(:ssl_post).returns(successful_authorize_response)
-    #@gateway.expects(:ssl_post).returns(successful_purchase_response)
-
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal 'REPLACE', response.authorization
+    assert_equal "SUCCESS", response.params["paymentStatus"]
     assert response.test?
-=end
   end
 
   def test_failed_purchase
-=begin
-    @gateway.expects(:ssl_post).returns(failed_authorize_response)
-
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @incredit_card, @options)
     assert_failure response
-=end
+
+    assert_not_equal "200", response.params["httpStatusCode"]
+    assert response.test?
   end
 
   def test_successful_refund
+    response = @gateway.refund(@amount, @orderCode, @options)
+    assert_success response
+
+    assert_equal "SUCCESS", response.params["paymentStatus"]
+    assert response.test?
   end
 
   def test_failed_refund
+    response = @gateway.refund(@amount, @inorderCode, @options)
+    assert_failure response
+
+    assert_not_equal "200", response.params["httpStatusCode"]
+    assert response.test?
   end
 
   def test_successful_void
