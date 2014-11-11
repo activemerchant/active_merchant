@@ -43,14 +43,14 @@ module ActiveMerchant #:nodoc:
           #add_creditcard(post, creditcard, options)
 
           Response.new(true,
-                       "Token created",
+                       "SUCCESS",
                        {},
                        :test => @service_key[0]=="T" ? true : false,
                        :authorization => token_response['token']
           )
         else
           Response.new(false,
-                       "PROBLEM!",
+                       "FAILURE",
                        token_response,
                        :test => @service_key[0]=="T" ? true : false
           )
@@ -122,26 +122,28 @@ module ActiveMerchant #:nodoc:
 
         post = {
           "token" => token,
-          "orderDescription" => "Order with token",
-          "amount" => 1200,
-          "currencyCode" => "EUR",
-          "name" => "Shooper Name",
+          "orderDescription" => options[:description],
+          "amount" => money,
+          "currencyCode" => options[:currency],
+          "name" => options[:address][:name],
+=begin
           "customerIdentifiers" => {
               "product-category"=>"fruits",
               "product-quantity"=>"3",
               "product-quantity"=>"5",
               "product-name"=>"orange"
           },
+=end
           "billingAddress" => {
-              "address1"=>"Address Line 1",
-              "address2"=>"Address Line 2",
-              "address3"=>"Address Line 3",
-              "postalCode"=>"EEEE",
-              "city"=>"City",
-              "state"=>"State",
-              "countryCode"=>"GB"
+              "address1"=>options[:address][:address1],
+              "address2"=>options[:address][:address2],
+              "address3"=>"",
+              "postalCode"=>options[:address][:zip],
+              "city"=>options[:address][:city],
+              "state"=>options[:address][:state],
+              "countryCode"=>options[:address][:country]
           },
-          "customerOrderCode" => "CustomerOrderCode",
+          "customerOrderCode" => options[:order_id],
           "orderType" => "ECOM"
         }
 

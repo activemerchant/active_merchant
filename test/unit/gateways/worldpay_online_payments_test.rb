@@ -11,7 +11,12 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4444333322221111')
     @incredit_card = credit_card('4242424242424242')
-    @options = {:order_id => 1}
+    @options = {
+        :order_id => 1,
+        :address => address(),
+        :description => 'Test Purchase',
+        :currency => 'GBP'
+    }
 
     @token = "TEST_RU_f9de95c1-5cae-4cf2-b862-a20d60424b8c"
     @intoken = "_TEST_RU_f9de95c1-5cae-4cf2-b862-a20d60424b8c_"
