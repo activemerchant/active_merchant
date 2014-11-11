@@ -138,6 +138,11 @@ module ActiveMerchant #:nodoc:
       # @return [String]
       attr_accessor :track_data
 
+      # Returns or sets the ICC/ASN1 credit card data for a EMV transaction, typically this is a BER-encoded TLV string.
+      #
+      # @return [String]
+      attr_accessor :icc_data
+
       def type
         ActiveMerchant.deprecated "CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead."
         brand

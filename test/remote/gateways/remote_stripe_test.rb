@@ -12,6 +12,8 @@ class RemoteStripeTest < Test::Unit::TestCase
     @declined_card = credit_card('4000000000000002')
     @new_credit_card = credit_card('5105105105105100')
 
+    @emv_credit_card = credit_card_with_icc_data
+
     @options = {
       :currency => @currency,
       :description => 'ActiveMerchant Test Purchase',
@@ -43,6 +45,13 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response.params["paid"]
     assert_equal "ActiveMerchant Test Purchase", response.params["description"]
     assert_equal "wow@example.com", response.params["metadata"]["email"]
+  end
+
+  def test_successful_purchase_with_icc_data
+    assert response = @gateway.purchase(@amount, @emv_credit_card, @options)
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert response.params["paid"]
     assert_match CHARGE_ID_REGEX, response.authorization
   end
 
