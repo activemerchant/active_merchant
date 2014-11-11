@@ -15,7 +15,7 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_token_response)
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
     #@gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
@@ -26,22 +26,31 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase
-    @gateway.expects(:ssl_post).returns(unsuccessful_token_response)
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
 
   def test_successful_authorize
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
   end
 
   def test_failed_authorize
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
   end
 
   def test_successful_capture
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    assert_equal 'REPLACE', response.authorization
+    assert response.test?
   end
 
   def test_failed_capture
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
   end
 
   def test_successful_refund
@@ -67,10 +76,10 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
 
   private
 
-  def successful_token_response
+  def successful_authorize_response
     %({"token":"TEST_RU_1aaeb0c9-3447-45ae-8eb3-84ee5b92ca93","paymentMethod":{"type":"ObfuscatedCard","name":"hhh vvg","expiryMonth":10,"expiryYear":2016,"cardType":"UNKNOWN","maskedCardNumber":"**** **** **** 1111"},"reusable":false})
   end
-  def unsuccessful_token_response
+  def failed_authorize_response
     ##unauthorised
 
     #%(
@@ -89,12 +98,6 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
 
   def failed_purchase_response
     %({"orderCode":"7cc1eed8-b555-454b-8579-44ba65d3878a","token":"TEST_RU_1aaeb0c9-3447-45ae-8eb3-84ee5b92ca93","orderDescription":"My test order","amount":1523,"currencyCode":"GBP","paymentStatus":"SUCCESS","paymentResponse":{"type":"ObfuscatedCard","name":"Example Name","expiryMonth":10,"expiryYear":2015,"cardType":"VISA_CREDIT","maskedCardNumber":"**** **** **** 1111","billingAddress":{"address1":"123 House Road","address2":"A village","address3":"","postalCode":"EC1 1AA","city":"London","state":"","countryCode":"GB"}},"customerOrderCode":"A123","customerIdentifiers":{ "my-customer-ref" : "customer-ref"},"environment":"TEST"})
-  end
-
-  def successful_authorize_response
-  end
-
-  def failed_authorize_response
   end
 
   def successful_capture_response

@@ -34,44 +34,45 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, creditcard, options={})
-
         token_response = create_token(reusable=true, creditcard.first_name+' '+creditcard.last_name, exp_month=creditcard.month, exp_year=creditcard.year, number=creditcard.number, cvc=creditcard.verification_value)
         token_response = parse(token_response)
 
         if token_response['token']
-          post = create_post_for_auth_or_purchase(token_response['token'], money, creditcard, options)
-
-          post[:capture] = "false"
-
-          commit(:post, 'orders', post, options)
+          Response.new(true,
+                       "Token created",
+                       {},
+                       :test => @service_key[0]=="T" ? true : false,
+                       :authorization => token_response['token'],
+                       :avs_result => {},
+                       :cvv_result => {},
+                       :error_code => nil
+          )
         else
-          return '{"httpStatusCode":400,"customCode":"BAD_REQUEST","message":"CVC can\'t be null/empty","description":"Some of request parameters are invalid, please check your request. For more information please refer to Json schema.","errorHelpUrl":null,"originalRequest":"{\'reusable\':false,\'paymentMethod\':{\'type\':\'Card\',\'name\':\'Example Name\',\'expiryMonth\':\'**\',\'expiryYear\':\'****\',\'cardNumber\':\'**** **** **** 1111\',\'cvc\':\'\'},\'clientKey\':\'T_C_845d39f4-f33c-430c-8fca-ad89bf1e5810\'}"}'
+          Response.new(false,
+                       "PROBLEM!",
+                       '{"httpStatusCode":400,"customCode":"BAD_REQUEST","message":"CVC can\'t be null/empty","description":"Some of request parameters are invalid, please check your request. For more information please refer to Json schema.","errorHelpUrl":null,"originalRequest":"{\'reusable\':false,\'paymentMethod\':{\'type\':\'Card\',\'name\':\'Example Name\',\'expiryMonth\':\'**\',\'expiryYear\':\'****\',\'cardNumber\':\'**** **** **** 1111\',\'cvc\':\'\'},\'clientKey\':\'T_C_845d39f4-f33c-430c-8fca-ad89bf1e5810\'}"}'.to_json,
+                       :test => @service_key[0]=="T" ? true : false,
+                       :authorization => false,
+                       :avs_result => nil,
+                       :cvv_result => nil,
+                       :error_code => nil
+          )
         end
 
       end
 
       def capture(money, authorization, options={})
-        post = {}
-        add_amount(post, money, options)
-=begin
-        add_application_fee(post, options)
-=end
-
-        commit(:post, "orders/#{CGI.escape(authorization)}/capture", post, options)
+          post = create_post_for_auth_or_purchase(authorization, money, creditcard, options)
+          commit(:post, 'orders', post, options)
       end
 
 
       def purchase(money, creditcard, options={})
 
-        token_response = create_token(reusable=true, creditcard.first_name+' '+creditcard.last_name, exp_month=creditcard.month, exp_year=creditcard.year, number=creditcard.number, cvc=creditcard.verification_value)
-        token_response = parse(token_response)
-
-        if token_response['token']
-          post = create_post_for_auth_or_purchase(token_response['token'], money, creditcard, options)
-
+        auth = authorize(money, creditcard, options)
+        if (auth.authorization)
+          post = create_post_for_auth_or_purchase(auth.authorization, money, creditcard, options)
           commit(:post, 'orders', post, options)
-        else
-          return '{"httpStatusCode":400,"customCode":"BAD_REQUEST","message":"CVC can\'t be null/empty","description":"Some of request parameters are invalid, please check your request. For more information please refer to Json schema.","errorHelpUrl":null,"originalRequest":"{\'reusable\':false,\'paymentMethod\':{\'type\':\'Card\',\'name\':\'Example Name\',\'expiryMonth\':\'**\',\'expiryYear\':\'****\',\'cardNumber\':\'**** **** **** 1111\',\'cvc\':\'\'},\'clientKey\':\'T_C_845d39f4-f33c-430c-8fca-ad89bf1e5810\'}"}'
         end
 
       end
