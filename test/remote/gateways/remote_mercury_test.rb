@@ -92,6 +92,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     response = @gateway.purchase(1100, @credit_card, @options)
     assert_failure response
     assert_equal "DECLINE", response.message
+    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
   def test_avs_and_cvv_results

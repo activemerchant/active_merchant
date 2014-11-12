@@ -46,6 +46,7 @@ class MercuryTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
+    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
   def test_successful_refund
@@ -116,7 +117,7 @@ class MercuryTest < Test::Unit::TestCase
 &lt;RStream&gt;
   &lt;CmdResponse&gt;
     &lt;ResponseOrigin&gt;Server&lt;/ResponseOrigin&gt;
-    &lt;DSIXReturnCode&gt;004101&lt;/DSIXReturnCode&gt;
+    &lt;DSIXReturnCode&gt;000000&lt;/DSIXReturnCode&gt;
     &lt;CmdStatus&gt;Error&lt;/CmdStatus&gt;
     &lt;TextResponse&gt;No Live Cards on Test Merchant ID Allowed.&lt;/TextResponse&gt;
     &lt;UserTraceData&gt;&lt;/UserTraceData&gt;
