@@ -18,13 +18,13 @@ class RemoteWorldpayOnlinePaymentsTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_equal 'SUCCESS', response.message
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
+    assert_equal 'FAILED', response.message
   end
 
   def test_successful_authorize_and_capture
@@ -90,13 +90,13 @@ class RemoteWorldpayOnlinePaymentsTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match %r{REPLACE WITH SUCCESS MESSAGE}, response.message
+    assert_match %r{SUCCESS}, response.message
   end
 
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
+    assert_match %r{FAILED}, response.message
   end
 
   def test_invalid_login
