@@ -35,6 +35,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @declined_card, @options.merge(:order_id => generate_unique_id))
     assert_failure response
     assert_match(/declined/i, response.message)
+    assert Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code 
   end
 
   def test_authorize_and_capture
