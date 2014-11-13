@@ -18,6 +18,25 @@ module ActiveMerchant #:nodoc:
         :void           => 'cc:void'
       }
 
+      STANDARD_ERROR_CODE_MAPPING = {
+        '00011' => STANDARD_ERROR_CODE[:incorrect_number],
+        '00012' => STANDARD_ERROR_CODE[:incorrect_number],
+        '00013' => STANDARD_ERROR_CODE[:incorrect_number],
+        '00014' => STANDARD_ERROR_CODE[:invalid_number],
+        '00015' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '00016' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '00017' => STANDARD_ERROR_CODE[:expired_card],
+        '10116' => STANDARD_ERROR_CODE[:incorrect_cvc],
+        '10107' => STANDARD_ERROR_CODE[:incorrect_zip],
+        '10109' => STANDARD_ERROR_CODE[:incorrect_address],
+        '10110' => STANDARD_ERROR_CODE[:incorrect_address],
+        '10111' => STANDARD_ERROR_CODE[:incorrect_address],
+        '10127' => STANDARD_ERROR_CODE[:card_declined],
+        '10128' => STANDARD_ERROR_CODE[:processing_error],
+        '10132' => STANDARD_ERROR_CODE[:processing_error],
+        '00043' => STANDARD_ERROR_CODE[:call_issuer]
+      }
+
       def initialize(options = {})
         requires!(options, :login)
         super
@@ -207,7 +226,8 @@ module ActiveMerchant #:nodoc:
           :test           => test?,
           :authorization  => response[:ref_num],
           :cvv_result     => response[:cvv2_result_code],
-          :avs_result     => { :code => response[:avs_result_code] }
+          :avs_result     => { :code => response[:avs_result_code] },
+          :error_code     => STANDARD_ERROR_CODE_MAPPING[response[:error_code]]
         )
       end
 
