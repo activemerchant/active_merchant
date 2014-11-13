@@ -27,6 +27,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
       redirect_url: "http://awesomesauce.com",
       ip: "0.0.0.0",
       application_id: "Woohoo",
+      partner_id: "Woohoo",
       transaction_type: "Purchase",
       description: "Description",
       order_id: "orderid1",

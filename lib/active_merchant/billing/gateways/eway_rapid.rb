@@ -13,6 +13,8 @@ module ActiveMerchant #:nodoc:
       self.display_name = "eWAY Rapid 3.1"
       self.default_currency = "AUD"
 
+      class_attribute :partner_id
+
       def initialize(options = {})
         requires!(options, :login, :password)
         super
@@ -174,6 +176,10 @@ module ActiveMerchant #:nodoc:
         params['CustomerIP'] = options[:ip] if options[:ip]
         params['TransactionType'] = options[:transaction_type] || 'Purchase'
         params['DeviceID'] = options[:application_id] || application_id
+        if partner = options[:partner_id] || partner_id
+          params['PartnerID'] = truncate(partner, 50)
+        end
+        params
       end
 
       def add_invoice(params, money, options, key = "Payment")

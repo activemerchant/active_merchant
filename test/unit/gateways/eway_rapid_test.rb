@@ -4,6 +4,7 @@ class EwayRapidTest < Test::Unit::TestCase
   include CommStub
 
   def setup
+    ActiveMerchant::Billing::EwayRapidGateway.partner_id = nil
     @gateway = EwayRapidGateway.new(
       :login => "login",
       :password => "password"
@@ -78,6 +79,7 @@ class EwayRapidTest < Test::Unit::TestCase
         :redirect_url => "http://awesomesauce.com",
         :ip => "0.0.0.0",
         :application_id => "Woohoo",
+        :partner_id => "SomePartner",
         :description => "The Really Long Description More Than Sixty Four Characters Gets Truncated",
         :order_id => "orderid1",
         :currency => "INR",
@@ -110,12 +112,11 @@ class EwayRapidTest < Test::Unit::TestCase
         }
       )
     end.check_request do |endpoint, data, headers|
-      # assert_no_match(%r{#{@credit_card.number}}, data)
-
       assert_match(%r{"TransactionType":"CustomTransactionType"}, data)
       assert_match(%r{"RedirectUrl":"http://awesomesauce.com"}, data)
       assert_match(%r{"CustomerIP":"0.0.0.0"}, data)
       assert_match(%r{"DeviceID":"Woohoo"}, data)
+      assert_match(%r{"PartnerID":"SomePartner"}, data)
 
       assert_match(%r{"TotalAmount":"200"}, data)
       assert_match(%r{"InvoiceDescription":"The Really Long Description More Than Sixty Four Characters Gets"}, data)
@@ -153,6 +154,41 @@ class EwayRapidTest < Test::Unit::TestCase
     assert_success response
     assert_equal 10440187, response.authorization
     assert response.test?
+  end
+
+  def test_partner_id_class_attribute
+    ActiveMerchant::Billing::EwayRapidGateway.partner_id = 'SomePartner'
+    stub_comms do
+      @gateway.purchase(200, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{"PartnerID":"SomePartner"}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_partner_id_params_overrides_class_attribute
+    ActiveMerchant::Billing::EwayRapidGateway.partner_id = 'SomePartner'
+    stub_comms do
+      @gateway.purchase(200, @credit_card, partner_id: 'OtherPartner')
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{"PartnerID":"OtherPartner"}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_partner_id_is_omitted_when_not_set
+    stub_comms do
+      @gateway.purchase(200, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{"PartnerID":}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_partner_id_truncates_to_50_characters
+    partner_string = "EWay Rapid PartnerID is capped at 50 characters and will truncate if it is too long."
+    stub_comms do
+      @gateway.purchase(200, @credit_card, partner_id: partner_string)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{"PartnerID":"#{partner_string.slice(0,50)}"}, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_authorize
