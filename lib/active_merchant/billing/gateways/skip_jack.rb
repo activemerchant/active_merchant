@@ -221,10 +221,11 @@ module ActiveMerchant #:nodoc:
       # * <tt>:force_settlement</tt> -- Force the settlement to occur as soon as possible. This option is not supported by other gateways. See the SkipJack API reference for more details
 
       def capture(money, authorization, options = {}, params = {})
-          post = params
+          post = {}
           add_status_action(post, 'SETTLE')
           add_forced_settlement(post, options)
           add_transaction_id(post, authorization)
+          post.merge! params
           commit(:change_status, money, post)
       end
 
