@@ -15,7 +15,8 @@ module ActiveMerchant #:nodoc:
         :purchase       => 'cc:sale',
         :capture        => 'cc:capture',
         :refund         => 'cc:refund',
-        :void           => 'cc:void'
+        :void           => 'cc:void',
+        :void_release   => 'cc:void:release'
       }
 
       STANDARD_ERROR_CODE_MAPPING = {
@@ -93,9 +94,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      # Pass `no_release: true` to keep the void from immediately settling
       def void(authorization, options = {})
-        post = { :refNum => authorization }
-        commit(:void, post)
+        command = (options[:no_release] ? :void : :void_release)
+        commit(command, refNum: authorization)
       end
 
     private
@@ -245,6 +247,9 @@ module ActiveMerchant #:nodoc:
         parameters[:key]      = @options[:login]
         parameters[:software] = 'Active Merchant'
         parameters[:testmode] = (@options[:test] ? 1 : 0)
+        seed = SecureRandom.hex(32).upcase
+        hash = Digest::SHA1.hexdigest("#{parameters[:command]}:#{@options[:password]}:#{parameters[:amount]}:#{parameters[:invoice]}:#{seed}")
+        parameters[:hash] = "s/#{seed}/#{hash}/n"
 
         parameters.collect { |key, value| "UM#{key}=#{CGI.escape(value.to_s)}" }.join("&")
       end
