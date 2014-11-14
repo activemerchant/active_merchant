@@ -25,6 +25,8 @@ module ActiveMerchant #:nodoc:
           'switch'           => 'MAESTRO-SSL'
       }
 
+      #VISA, MASTERCARD, BHS, IKEA, AMEX, DINERS, DANKORT, DISCOVER, JCB, AIRPLUS, UATP, MAESTRO, LASER, UNKNOWN, VISA_CREDIT, VISA_DEBIT, MASTERCARD_CREDIT, MASTERCARD_DEBIT, CARTEBLEUE;
+
       def initialize(options={})
         requires!(options, :client_key)
         requires!(options, :service_key)
