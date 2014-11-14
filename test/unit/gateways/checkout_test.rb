@@ -71,7 +71,7 @@ class CheckoutTest < Test::Unit::TestCase
   end
 
   def test_passes_correct_currency
-    purchase = stub_comms do
+    stub_comms do
       @gateway.purchase(100, credit_card, @options.merge(
         currency: "EUR"
       ))
