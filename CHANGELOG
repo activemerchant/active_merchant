@@ -36,6 +36,10 @@
 * Conekta: Add AMEX as a supported card type [MauricioMurga]
 * Checkout: pass through currency type [markabe]
 * Bogus: return standard error codes [jpcaissy]
+* Add PaymentToken and ApplePayPaymentToken objects for token-based transactions [bizla]
+* Authorize.Net: Add ApplePay in-app transaction support [bizla]
+* Stripe: Add ApplePau in-app transaction support [bizla]
+* eWAY Rapid: Add PartnerID param [j-mutter]
 
 == Version 1.44.1 (Aug 28, 2014)
 
