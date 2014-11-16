@@ -127,6 +127,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [iATS Payments](http://home.iatspayments.com/) - AU, BR, CA, CH, DE, DK, ES, FI, FR, GR, HK, IE, IT, NL, NO, PT, SE, SG, TR, UK, US
 * [Inspire Commerce](http://www.inspiregateway.com) - US
 * [InstaPay](http://www.instapayllc.com) - US
+* [IPP](http://www.ippayments.com.au/) - AU
 * [Iridium](http://www.iridiumcorp.co.uk/) - GB, ES
 * [iTransact](http://www.itransact.com/) - US
 * [JetPay](http://www.jetpay.com/) - US
