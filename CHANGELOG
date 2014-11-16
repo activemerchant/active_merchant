@@ -7,6 +7,7 @@
 * BraintreeBlue: Expose the error code in the response params [duff]
 * eWay Rapid: Update supported countries and card types [incarnate]
 * PayPal: Allow specifying ButtonSource at init [ntalbott]
+* Add IPP gateway [InfraRuby]
 
 == Version 1.45.0 (December 1, 2014)
 
