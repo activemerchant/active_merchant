@@ -8,6 +8,7 @@
 * eWay Rapid: Update supported countries and card types [incarnate]
 * PayPal: Allow specifying ButtonSource at init [ntalbott]
 * Payflow: Add fraud_review support [ntalbott]
+* Add IPP gateway [InfraRuby]
 
 == Version 1.45.0 (December 1, 2014)
 
