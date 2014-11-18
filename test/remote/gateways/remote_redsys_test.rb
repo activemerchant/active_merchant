@@ -5,7 +5,10 @@ class RemoteRedsysTest < Test::Unit::TestCase
     @gateway = RedsysGateway.new(fixtures(:redsys))
     @credit_card = credit_card('4548812049400004')
     @declined_card = credit_card
-    @options = { order_id: generate_order_id }
+    @options = {
+      order_id: generate_order_id,
+      description: 'Test Description'
+    }
   end
 
   def test_successful_purchase

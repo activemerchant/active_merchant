@@ -193,6 +193,7 @@ module ActiveMerchant #:nodoc:
         add_amount(data, money, options)
         add_order(data, options[:order_id])
         add_creditcard(data, creditcard)
+        data[:description] = options[:description]
 
         commit data
       end
@@ -205,6 +206,7 @@ module ActiveMerchant #:nodoc:
         add_amount(data, money, options)
         add_order(data, options[:order_id])
         add_creditcard(data, creditcard)
+        data[:description] = options[:description]
 
         commit data
       end
@@ -215,6 +217,7 @@ module ActiveMerchant #:nodoc:
         add_amount(data, money, options)
         order_id, _, _ = split_authorization(authorization)
         add_order(data, order_id)
+        data[:description] = options[:description]
 
         commit data
       end
@@ -225,6 +228,7 @@ module ActiveMerchant #:nodoc:
         order_id, amount, currency = split_authorization(authorization)
         add_amount(data, amount, :currency => currency)
         add_order(data, order_id)
+        data[:description] = options[:description]
 
         commit data
       end
@@ -235,6 +239,7 @@ module ActiveMerchant #:nodoc:
         add_amount(data, money, options)
         order_id, _, _ = split_authorization(authorization)
         add_order(data, order_id)
+        data[:description] = options[:description]
 
         commit data
       end
@@ -308,13 +313,14 @@ module ActiveMerchant #:nodoc:
         xml.DATOSENTRADA do
           # Basic elements
           xml.DS_Version 0.1
-          xml.DS_MERCHANT_CURRENCY          data[:currency]
-          xml.DS_MERCHANT_AMOUNT            data[:amount]
-          xml.DS_MERCHANT_ORDER             data[:order_id]
-          xml.DS_MERCHANT_TRANSACTIONTYPE   data[:action]
-          xml.DS_MERCHANT_TERMINAL          @options[:terminal]
-          xml.DS_MERCHANT_MERCHANTCODE      @options[:login]
-          xml.DS_MERCHANT_MERCHANTSIGNATURE build_signature(data)
+          xml.DS_MERCHANT_CURRENCY           data[:currency]
+          xml.DS_MERCHANT_AMOUNT             data[:amount]
+          xml.DS_MERCHANT_ORDER              data[:order_id]
+          xml.DS_MERCHANT_TRANSACTIONTYPE    data[:action]
+          xml.DS_MERCHANT_PRODUCTDESCRIPTION data[:description]
+          xml.DS_MERCHANT_TERMINAL           @options[:terminal]
+          xml.DS_MERCHANT_MERCHANTCODE       @options[:login]
+          xml.DS_MERCHANT_MERCHANTSIGNATURE  build_signature(data)
 
           # Only when card is present
           if data[:card]
