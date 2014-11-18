@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
         add_address(post, options)
         add_shipping_address(post, options)
         add_payment_method(post, creditcard_or_vault_id, options)
-        add_amount(post, money)
+        add_amount(post, money, options)
         post
       end
 
@@ -68,10 +68,10 @@ module ActiveMerchant #:nodoc:
         build_auth_post(money, creditcard, options)
       end
 
-      def build_capture_post(money, authorization, option)
+      def build_capture_post(money, authorization, options)
         post = {}
         post[:transactionid] = authorization
-        add_amount(post, money)
+        add_amount(post, money, options)
         post
       end
 
@@ -84,7 +84,7 @@ module ActiveMerchant #:nodoc:
       def build_refund_post(money, authorization, options)
         post = {}
         post[:transactionid] = authorization
-        add_amount(post, money)
+        add_amount(post, money, options)
         post
       end
 
@@ -184,7 +184,7 @@ module ActiveMerchant #:nodoc:
         post[:password] = @options[:password]
       end
 
-      def add_amount(post, money)
+      def add_amount(post, money, options)
         post[:currency] = options[:currency] || currency(money)
         post[:amount] = amount(money)
       end
