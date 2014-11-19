@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
       def purchase(amount, payment_method, options)
         requires!(options, :order_id)
 
-        commit("1") do |xml|
+        commit("1", amount, options) do |xml|
           add_credentials(xml, options)
           add_invoice(xml, amount, options)
           add_payment_method(xml, payment_method)
@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
       def authorize(amount, payment_method, options)
         requires!(options, :order_id)
 
-        commit("4") do |xml|
+        commit("4", amount, options) do |xml|
           add_credentials(xml, options)
           add_invoice(xml, amount, options)
           add_payment_method(xml, payment_method)
@@ -50,13 +50,45 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(amount, identifier, options = {})
-        commit("5") do |xml|
+      def capture(amount, authorization, options = {})
+        commit("5", amount, options) do |xml|
           add_credentials(xml, options)
-          add_reference(xml, identifier)
+          add_reference(xml, authorization)
           add_invoice(xml, amount, options)
           add_user_defined_fields(xml, options)
           add_other_fields(xml, options)
+        end
+      end
+
+      VOID_ACTION_CODES = {
+        '1' => '3', # Purchase void.
+        '4' => '9', # Authorization void.
+        '5' => '7', # Capture void.
+      }
+
+      def void(authorization, options = {})
+        # Void requires knowledge of original transaction type, amount, and currency type.
+        _, _, orig_action, amount, currency = split_authorization(authorization)
+        action = VOID_ACTION_CODES.fetch(orig_action, '9')
+        commit(action) do |xml|
+          add_credentials(xml, options)
+          add_invoice(xml, amount.to_i, options.merge(currency: currency))
+          add_reference(xml, authorization)
+        end
+      end
+
+      def refund(amount, authorization, options = {})
+        commit("2") do |xml|
+          add_credentials(xml, options)
+          add_invoice(xml, amount.to_i, options)
+          add_reference(xml, authorization)
+        end
+      end
+
+      def verify(credit_card, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
 
@@ -70,7 +102,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(xml, amount, options)
         xml.bill_amount_ amount(amount)
         xml.bill_currencycode_ options[:currency] || currency(amount)
-        xml.trackid_ options[:order_id]
+        xml.trackid_ options[:order_id] if options[:order_id]
       end
 
       def add_payment_method(xml, payment_method)
@@ -120,17 +152,19 @@ module ActiveMerchant #:nodoc:
         xml.merchantcustomerid_ options[:customer]
       end
 
-      def add_reference(xml, identifier)
-        xml.transid_ identifier
+      def add_reference(xml, authorization)
+        transid, trackid, _, _, _ = split_authorization(authorization)
+        xml.transid transid
+        xml.trackid trackid if trackid
       end
 
-      def commit(action, &builder)
+      def commit(action, amount=nil, options={}, &builder)
         response = parse_xml(ssl_post(@url, build_xml(action, &builder)))
         Response.new(
           (response[:responsecode] == "0"),
           (response[:result] || response[:error_text] || "Unknown Response"),
           response,
-          authorization: response[ :tranid],
+          authorization: authorization_from(response, action, amount, options),
           test: test?
         )
       end
@@ -161,6 +195,16 @@ module ActiveMerchant #:nodoc:
         end
 
         response
+      end
+
+      def authorization_from(response, action,  amount, options)
+        currency = options[:currency] || currency(amount)
+        [response[:tranid], response[:trackid], action, amount, currency].join("|")
+      end
+
+      def split_authorization(authorization)
+        transid, trackid, action, amount, currency = authorization.split("|")
+        [transid, trackid, action, amount, currency]
       end
     end
   end
