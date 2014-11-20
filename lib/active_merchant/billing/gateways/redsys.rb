@@ -26,7 +26,7 @@ module ActiveMerchant #:nodoc:
     # test access details please get in touch: sam@cabify.com.
     class RedsysGateway < Gateway
       self.live_url = "https://sis.sermepa.es/sis/operaciones"
-      self.test_url = "https://sis-t.sermepa.es:25443/sis/operaciones"
+      self.test_url = "https://sis-t.redsys.es:25443/sis/operaciones"
 
       self.supported_countries = ['ES']
       self.default_currency    = 'EUR'
