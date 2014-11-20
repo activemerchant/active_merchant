@@ -49,9 +49,9 @@ class RemoteRedsysTest < Test::Unit::TestCase
     assert_equal "Transaction Approved", authorize.message
     assert_not_nil authorize.authorization
 
-    # capture = @gateway.capture(100, authorize.authorization)
-    # assert_success capture
-    # assert_match /Refund.*approved/, capture.message
+    capture = @gateway.capture(100, authorize.authorization)
+    assert_success capture
+    assert_match /Refund.*approved/, capture.message
   end
 
   def test_failed_authorize
