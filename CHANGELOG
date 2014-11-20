@@ -5,6 +5,7 @@
 * Add PayHub gateway [grepruby]
 * Orbital: Improve data formatting [boone]
 * [POSSIBLE BREAKAGE] USAePay Transaction: Make "void release" the default [dppcode]
+* Redsys: Add rudimentary vaulting [varyonic]
 
 == Version 1.47.0 (February 25, 2015)
 
