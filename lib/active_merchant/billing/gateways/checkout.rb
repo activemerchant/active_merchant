@@ -15,6 +15,16 @@ module ActiveMerchant #:nodoc:
 
       self.live_url = 'https://api.checkout.com/Process/gateway.aspx'
 
+      ACTIONS = {
+        'purchase' => '1',
+        'authorize' => '4',
+        'capture' => '5',
+        'refund' => '2',
+        'void_purchase' => '3',
+        'void_authorize' => '9',
+        'void_capture' => '7'
+      }
+
       def initialize(options = {})
         @url = (options[:gateway_url] || self.live_url)
 
@@ -25,7 +35,7 @@ module ActiveMerchant #:nodoc:
       def purchase(amount, payment_method, options)
         requires!(options, :order_id)
 
-        commit("1", amount, options) do |xml|
+        commit('purchase', amount, options) do |xml|
           add_credentials(xml, options)
           add_invoice(xml, amount, options)
           add_payment_method(xml, payment_method)
@@ -39,7 +49,7 @@ module ActiveMerchant #:nodoc:
       def authorize(amount, payment_method, options)
         requires!(options, :order_id)
 
-        commit("4", amount, options) do |xml|
+        commit('authorize', amount, options) do |xml|
           add_credentials(xml, options)
           add_invoice(xml, amount, options)
           add_payment_method(xml, payment_method)
@@ -51,7 +61,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(amount, authorization, options = {})
-        commit("5", amount, options) do |xml|
+        commit('capture', amount, options) do |xml|
           add_credentials(xml, options)
           add_reference(xml, authorization)
           add_invoice(xml, amount, options)
@@ -60,17 +70,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      VOID_ACTION_CODES = {
-        '1' => '3', # Purchase void.
-        '4' => '9', # Authorization void.
-        '5' => '7', # Capture void.
-      }
-
       def void(authorization, options = {})
-        # Void requires knowledge of original transaction type, amount, and currency type.
         _, _, orig_action, amount, currency = split_authorization(authorization)
-        action = VOID_ACTION_CODES.fetch(orig_action, '9')
-        commit(action) do |xml|
+        commit("void_#{orig_action}") do |xml|
           add_credentials(xml, options)
           add_invoice(xml, amount.to_i, options.merge(currency: currency))
           add_reference(xml, authorization)
@@ -78,7 +80,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def refund(amount, authorization, options = {})
-        commit("2") do |xml|
+        commit('refund') do |xml|
           add_credentials(xml, options)
           add_invoice(xml, amount.to_i, options)
           add_reference(xml, authorization)
@@ -172,7 +174,7 @@ module ActiveMerchant #:nodoc:
       def build_xml(action)
         Nokogiri::XML::Builder.new do |xml|
           xml.request do
-            xml.action_ action
+            xml.action_ ACTIONS[action]
             yield xml
           end
         end.to_xml
