@@ -17,6 +17,12 @@ class RemoteRedsysTest < Test::Unit::TestCase
     assert_equal "Transaction Approved", response.message
   end
 
+  def test_purchase_with_invalid_order_id
+    response = @gateway.purchase(100, @credit_card, order_id: "a%4#{generate_order_id}")
+    assert_success response
+    assert_equal "Transaction Approved", response.message
+  end
+
   def test_failed_purchase
     response = @gateway.purchase(100, @declined_card, @options)
     assert_failure response

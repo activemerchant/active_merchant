@@ -43,6 +43,7 @@
 * GlobalTransport: Truncate order_id [duff]
 * Redsys: Allow a description to be specified [duff]
 * NetworkMerchants: Fix currency [j-mutter]
+* Redsys: Improve handling of order_id [duff]
 
 == Version 1.44.1 (Aug 28, 2014)
 

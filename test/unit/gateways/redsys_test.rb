@@ -1,6 +1,7 @@
 require 'test_helper'
 
 class RedsysTest < Test::Unit::TestCase
+  include CommStub
 
   def setup
     Base.gateway_mode = :test
@@ -97,9 +98,19 @@ class RedsysTest < Test::Unit::TestCase
   end
 
   def test_bad_order_id_format
-    assert_raise ArgumentError do
-      @gateway.authorize(123, credit_card, :order_id => "a")
-    end
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(123, credit_card, order_id: "Una#cce-ptable44Format")
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/MERCHANT_ORDER%3E\d\d\d\dUnaccept/, data)
+    end.respond_with(successful_authorize_response)
+  end
+
+  def test_order_id_numeric_start_but_too_long
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.authorize(123, credit_card, order_id: "1234ThisIs]FineButTooLong")
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/MERCHANT_ORDER%3E1234ThisIsFin/, data)
+    end.respond_with(successful_authorize_response)
   end
 
   def test_capture
