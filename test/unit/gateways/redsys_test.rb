@@ -23,6 +23,11 @@ class RedsysTest < Test::Unit::TestCase
     @gateway.purchase(123, credit_card, :order_id => '1001')
   end
 
+  def test_purchase_payload_with_credit_card_token
+    @gateway.expects(:ssl_post).with(RedsysGateway.test_url, purchase_request_with_credit_card_token, @headers).returns(successful_purchase_response)
+    @gateway.purchase(123, '77bff3a969d6f97b2ec815448cdcff453971f573', :order_id => '1001')
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     res = @gateway.purchase(123, credit_card, @options)
@@ -30,6 +35,16 @@ class RedsysTest < Test::Unit::TestCase
     assert_equal "Transaction Approved", res.message
     assert_equal "1001|123|978", res.authorization
     assert_equal '1001', res.params['ds_order']
+  end
+
+  def test_successful_purchase_requesting_credit_card_token
+    @gateway.expects(:ssl_post).returns(successful_purchase_response_with_credit_card_token)
+    res = @gateway.purchase(123, credit_card, @options)
+    assert_success res
+    assert_equal "Transaction Approved", res.message
+    assert_equal "141661632759|100|978", res.authorization
+    assert_equal '141661632759', res.params['ds_order']
+    assert_equal '77bff3a969d6f97b2ec815448cdcff453971f573', res.params['ds_merchant_identifier']
   end
 
   def test_failed_purchase
@@ -224,8 +239,16 @@ class RedsysTest < Test::Unit::TestCase
     "entrada=%3CDATOSENTRADA%3E%0A++%3CDS_Version%3E0.1%3C%2FDS_Version%3E%0A++%3CDS_MERCHANT_CURRENCY%3E978%3C%2FDS_MERCHANT_CURRENCY%3E%0A++%3CDS_MERCHANT_AMOUNT%3E123%3C%2FDS_MERCHANT_AMOUNT%3E%0A++%3CDS_MERCHANT_ORDER%3E1001%3C%2FDS_MERCHANT_ORDER%3E%0A++%3CDS_MERCHANT_TRANSACTIONTYPE%3EA%3C%2FDS_MERCHANT_TRANSACTIONTYPE%3E%0A++%3CDS_MERCHANT_PRODUCTDESCRIPTION%2F%3E%0A++%3CDS_MERCHANT_TERMINAL%3E1%3C%2FDS_MERCHANT_TERMINAL%3E%0A++%3CDS_MERCHANT_MERCHANTCODE%3E091952713%3C%2FDS_MERCHANT_MERCHANTCODE%3E%0A++%3CDS_MERCHANT_MERCHANTSIGNATURE%3Eb98b606a6a588d8c45c239f244160efbbe30b4a8%3C%2FDS_MERCHANT_MERCHANTSIGNATURE%3E%0A++%3CDS_MERCHANT_TITULAR%3ELongbob+Longsen%3C%2FDS_MERCHANT_TITULAR%3E%0A++%3CDS_MERCHANT_PAN%3E4242424242424242%3C%2FDS_MERCHANT_PAN%3E%0A++%3CDS_MERCHANT_EXPIRYDATE%3E#{(Time.now.year + 1).to_s.slice(2,2)}09%3C%2FDS_MERCHANT_EXPIRYDATE%3E%0A++%3CDS_MERCHANT_CVV2%3E123%3C%2FDS_MERCHANT_CVV2%3E%0A%3C%2FDATOSENTRADA%3E%0A"
   end
 
+  def purchase_request_with_credit_card_token
+    "entrada=%3CDATOSENTRADA%3E%0A++%3CDS_Version%3E0.1%3C%2FDS_Version%3E%0A++%3CDS_MERCHANT_CURRENCY%3E978%3C%2FDS_MERCHANT_CURRENCY%3E%0A++%3CDS_MERCHANT_AMOUNT%3E123%3C%2FDS_MERCHANT_AMOUNT%3E%0A++%3CDS_MERCHANT_ORDER%3E1001%3C%2FDS_MERCHANT_ORDER%3E%0A++%3CDS_MERCHANT_TRANSACTIONTYPE%3EA%3C%2FDS_MERCHANT_TRANSACTIONTYPE%3E%0A++%3CDS_MERCHANT_PRODUCTDESCRIPTION%2F%3E%0A++%3CDS_MERCHANT_TERMINAL%3E1%3C%2FDS_MERCHANT_TERMINAL%3E%0A++%3CDS_MERCHANT_MERCHANTCODE%3E091952713%3C%2FDS_MERCHANT_MERCHANTCODE%3E%0A++%3CDS_MERCHANT_MERCHANTSIGNATURE%3Ecbcc0dee5724cd3fff08bbd4371946a0599c7fb9%3C%2FDS_MERCHANT_MERCHANTSIGNATURE%3E%0A++%3CDS_MERCHANT_IDENTIFIER%3E77bff3a969d6f97b2ec815448cdcff453971f573%3C%2FDS_MERCHANT_IDENTIFIER%3E%0A%3C%2FDATOSENTRADA%3E%0A"
+  end
+
   def successful_purchase_response
     "<?xml version='1.0' encoding=\"ISO-8859-1\" ?><RETORNOXML><CODIGO>0</CODIGO><Ds_Version>0.1</Ds_Version><OPERACION><Ds_Amount>123</Ds_Amount><Ds_Currency>978</Ds_Currency><Ds_Order>1001</Ds_Order><Ds_Signature>989D357BCC9EF0962A456C51422C4FAF4BF4399F</Ds_Signature><Ds_MerchantCode>91952713</Ds_MerchantCode><Ds_Terminal>1</Ds_Terminal><Ds_Response>0000</Ds_Response><Ds_AuthorisationCode>561350</Ds_AuthorisationCode><Ds_TransactionType>A</Ds_TransactionType><Ds_SecurePayment>0</Ds_SecurePayment><Ds_Language>1</Ds_Language><Ds_MerchantData></Ds_MerchantData><Ds_Card_Country>724</Ds_Card_Country></OPERACION></RETORNOXML>"
+  end
+
+  def successful_purchase_response_with_credit_card_token
+    "<?xml version='1.0' encoding=\"ISO-8859-1\" ?><RETORNOXML><CODIGO>0</CODIGO><Ds_Version>0.1</Ds_Version><OPERACION><Ds_Amount>100</Ds_Amount><Ds_Currency>978</Ds_Currency><Ds_Order>141661632759</Ds_Order><Ds_Signature>C65E11D80534B432042ABAA47DCA54F5AFEC23ED</Ds_Signature><Ds_MerchantCode>327234688</Ds_MerchantCode><Ds_Terminal>2</Ds_Terminal><Ds_Response>0000</Ds_Response><Ds_AuthorisationCode>341129</Ds_AuthorisationCode><Ds_TransactionType>A</Ds_TransactionType><Ds_SecurePayment>0</Ds_SecurePayment><Ds_Language>1</Ds_Language><Ds_Merchant_Identifier>77bff3a969d6f97b2ec815448cdcff453971f573</Ds_Merchant_Identifier><Ds_MerchantData></Ds_MerchantData><Ds_Card_Country>724</Ds_Card_Country></OPERACION></RETORNOXML>"
   end
 
   def failed_purchase_response
