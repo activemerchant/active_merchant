@@ -14,7 +14,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
     @track_data = "%B4003000123456781^LONGSEN/L. ^15121200000000000000**123******?*"
 
     @options = {
-      :order_id => "1",
+      :order_id => "c111111111.1",
       :description => "ActiveMerchant"
     }
     @options_with_billing = @options.merge(

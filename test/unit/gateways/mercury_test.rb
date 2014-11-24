@@ -13,7 +13,7 @@ class MercuryTest < Test::Unit::TestCase
     @declined_card = credit_card('4000300011112220')
 
     @options = {
-      :order_id => '1'
+      :order_id => 'c111111111.1'
     }
   end
 
@@ -21,7 +21,7 @@ class MercuryTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_match(/InvoiceNo>1</, data)
+      assert_match(/InvoiceNo>c111111111.1</, data)
       assert_match(/Frequency>OneTime/, data)
       assert_match(/RecordNo>RecordNumberRequested/, data)
     end.respond_with(successful_purchase_response)
@@ -31,13 +31,6 @@ class MercuryTest < Test::Unit::TestCase
 
     assert_equal '1;0194;000011;KbMCC0742510421  ;|17|410100700000;;100', response.authorization
     assert response.test?
-  end
-
-  def test_order_id_must_be_numeric
-    e = assert_raise(ArgumentError) do
-      @gateway.purchase(@amount, @credit_card, :order_id => "a")
-    end
-    assert_match(/not numeric/, e.message)
   end
 
   def test_unsuccessful_request

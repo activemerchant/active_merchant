@@ -115,7 +115,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new
 
         invoice_no, ref_no, auth_code, acq_ref_data, process_data, record_no, amount = split_authorization(authorization)
-        ref_no = invoice_no if options[:reversal]
+        ref_no = "1" if options[:reversal] #filler value for preauth voids -- not used by mercury but will reject if missing or not numeric
 
         xml.tag! "TStream" do
           xml.tag! "Transaction" do
@@ -158,10 +158,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(xml, invoice_no, ref_no, options)
-        if /^\d+$/ !~ invoice_no.to_s
-          raise ArgumentError.new("order_id '#{invoice_no}' is not numeric as required by Mercury")
-        end
-
         xml.tag! 'InvoiceNo', invoice_no
         xml.tag! 'RefNo', (ref_no || invoice_no)
         xml.tag! 'OperatorID', options[:merchant] if options[:merchant]
