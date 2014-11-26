@@ -223,6 +223,13 @@ garanti:
   merchant_id: 600218
   password: "123qweASD"
 
+# Working credentials, no need to replace
+garanti_offsite:
+  login: "PROVOOS"
+  terminal_id: 30691300    
+  merchant_id: 7000679    
+  password: "123qweASD"
+
 global_transport:
   global_user_name: "USERNAME"
   global_password: "PASSWORD"
