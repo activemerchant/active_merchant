@@ -28,6 +28,17 @@ class RemoteSecurePayAuTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'Approved', response.message
+    assert_not_includes response.params, "anti_fraud_response_text"
+  end
+
+  def test_purchase_with_antifraud
+    options = @options.merge({
+      :ip => '1.2.3.4',
+      :email => 'test@example.com',
+      :fraud => true,
+    })
+    assert response = @gateway.purchase(@amount, @credit_card, options)
+    assert_includes response.params, "anti_fraud_response_text"
   end
 
   def test_successful_purchase_with_custom_credit_card_class
