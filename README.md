@@ -214,9 +214,11 @@ Deprecated functionality is removed on major version changes - for example, depr
 
 ## Contributing
 
-The source code is hosted at [GitHub](http://github.com/Shopify/active_merchant), and can be fetched using:
-
-    git clone git://github.com/Shopify/active_merchant.git
+1. [Fork it](http://github.com/Shopify/active_merchant/fork) and clone your new repo
+2. Create a branch (`git checkout -b my_awesome_feature`)
+3. Commit your changes (`git add my/awesome/file.rb; git commit -m "Added my awesome feature"`)
+4. Push your changes to your fork (`git push origin my_awesome_feature`)
+5. Open a [Pull Request](https://github.com/shopify/active_merchant/pulls)
 
 Please see the [ActiveMerchant Guide to Contributing](http://github.com/Shopify/active_merchant/wikis/contributing) for
 information on adding a new gateway to ActiveMerchant.
