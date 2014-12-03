@@ -50,14 +50,6 @@ class RemoteMercuryTest < Test::Unit::TestCase
     assert_equal "DECLINE", response.message
   end
 
-  def test_reversal
-    response = @gateway.authorize(100, @credit_card, @options)
-    assert_success response
-
-    void = @gateway.void(response.authorization, @options.merge(:try_reversal => true))
-    assert_success void
-  end
-
   def test_purchase_and_void
     response = @gateway.purchase(102, @credit_card, @options)
     assert_success response
@@ -125,7 +117,7 @@ class RemoteMercuryTest < Test::Unit::TestCase
       },
       response.avs_result
     )
-    assert_equal({"code"=>nil, "message"=>nil}, response.cvv_result)
+    assert_equal({"code"=>'P', "message"=>'CVV not processed'}, response.cvv_result)
   end
 
   def test_partial_capture
@@ -227,5 +219,13 @@ class RemoteMercuryTest < Test::Unit::TestCase
     capture = @gateway.capture(nil, response.authorization)
     assert_success capture
     assert_equal '1.00', capture.params['authorize']
+  end
+  def test_authorize_and_void
+    response = @gateway.authorize(100, @credit_card, @options)
+    assert_success response
+    assert_equal '1.00', response.params['authorize']
+
+    void = @gateway.void(response.authorization)
+    assert_success void
   end
 end

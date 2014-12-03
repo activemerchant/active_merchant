@@ -72,13 +72,6 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options={})
         requires!(options, :credit_card) unless @use_tokenization
 
-        if options[:try_reversal]
-          request = build_authorized_request('VoidSale', nil, authorization, options[:credit_card], options.merge(:reversal => true))
-          response = commit('VoidSale', request)
-
-          return response if response.success?
-        end
-
         request = build_authorized_request('VoidSale', nil, authorization, options[:credit_card], options)
         commit('VoidSale', request)
       end
@@ -115,7 +108,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new
 
         invoice_no, ref_no, auth_code, acq_ref_data, process_data, record_no, amount = split_authorization(authorization)
-        ref_no = "1" if options[:reversal] #filler value for preauth voids -- not used by mercury but will reject if missing or not numeric
+        ref_no = "1" if ref_no.blank?
 
         xml.tag! "TStream" do
           xml.tag! "Transaction" do
@@ -132,8 +125,8 @@ module ActiveMerchant #:nodoc:
             add_address(xml, options)
             xml.tag! 'TranInfo' do
               xml.tag! "AuthCode", auth_code
-              xml.tag! "AcqRefData", acq_ref_data if options[:reversal]
-              xml.tag! "ProcessData", process_data if options[:reversal]
+              xml.tag! "AcqRefData", acq_ref_data
+              xml.tag! "ProcessData", process_data 
             end
           end
         end
