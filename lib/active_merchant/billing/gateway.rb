@@ -181,6 +181,15 @@ module ActiveMerchant #:nodoc:
         (@options.has_key?(:test) ? @options[:test] : Base.test?)
       end
 
+      # Does this gateway know how to scrub sensitive information out of HTTP transcripts?
+      def supports_scrubbing?
+        false
+      end
+
+      def scrub(transcript)
+        raise RuntimeError.new("This gateway does not support scrubbing.")
+      end
+
       protected # :nodoc: all
 
       def normalize(field)

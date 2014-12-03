@@ -1,5 +1,8 @@
 = ActiveMerchant CHANGELOG
 
+* PayPal: Add #scrub for scrubbing PCI information out of HTTP transcripts [girasquid]
+* Stripe: Add #scrub for scrubbing PCI information out of HTTP transcripts [girasquid]
+
 == Version 1.45.0 (December 1, 2014)
 
 * HPS: Always pass CardHolderData element [SecureSubmit, ntalbott]

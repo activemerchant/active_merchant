@@ -204,6 +204,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
+          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]')
+      end
+
       private
 
       class StripePaymentToken < PaymentToken
