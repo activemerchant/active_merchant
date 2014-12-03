@@ -57,6 +57,14 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript
+      end
+
       private
 
       def add_customer_data(post, options)

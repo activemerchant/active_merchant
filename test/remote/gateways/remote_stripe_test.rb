@@ -20,6 +20,11 @@ class RemoteStripeTest < Test::Unit::TestCase
     @apple_pay_payment_token = apple_pay_payment_token
   end
 
+  def test_dump_transcript
+    skip("Transcript scrubbing for this gateway has been tested.")
+    dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
+  end
+
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -389,4 +394,4 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, ApplePayPaymentToken.new('garbage'), @options)
     assert_failure response
   end
-2end
+end

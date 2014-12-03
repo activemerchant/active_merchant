@@ -31,6 +31,11 @@ class PaypalTest < Test::Unit::TestCase
     #@three_days_old_auth_id2 = "62503445A3738160X"
   end
 
+  def test_dump_transcript
+    skip("Transcript scrubbing for this gateway has been tested.")
+    dump_transcript_and_fail(@gateway, @amount, @credit_card, @params)
+  end
+
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @params)
     assert_success response

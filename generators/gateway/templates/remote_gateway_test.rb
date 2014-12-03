@@ -15,6 +15,10 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
     }
   end
 
+  def test_dump_transcript
+    dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
+  end
+
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
