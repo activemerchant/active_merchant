@@ -605,6 +605,11 @@ quantum:
   login: X
   password: Y
 
+# Working credentials, no need to replace
+quickbooks:
+  some_credential: SOMECREDENTIAL
+  another_credential: ANOTHERCREDENTIAL
+
 # Quickpay offers a test account.
 # To log in to the manager, use demo@quickpay.net and test234
 quickpay:
