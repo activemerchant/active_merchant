@@ -16,6 +16,10 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
   end
 
   def test_dump_transcript
+    # This test will run a purchase transaction on your gateway
+    # and dump a transcript of the HTTP conversation so that
+    # you can use that transcript as a reference while
+    # implementing your scrubbing logic
     dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
   end
 
