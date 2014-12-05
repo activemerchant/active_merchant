@@ -132,6 +132,10 @@ module ActiveMerchant
       yield
     end
 
+    def assert_scrubbed(unexpected_value, transcript)
+      refute transcript.include?(unexpected_value), "Expected #{unexpected_value} to be scrubbed out of transcript"
+    end
+
     private
     def clean_backtrace(&block)
       yield
@@ -254,12 +258,21 @@ Test::Unit::TestCase.class_eval do
   include ActiveMerchant::Assertions
   include ActiveMerchant::Fixtures
 
-  def dump_transcript_and_fail(gateway, amount, credit_card, params)
+  def capture_transcript(gateway)
     gateway.tap do |gw|
       gw.extend(CaptureHTTPTranscript)
     end
 
-    gateway.purchase(amount, credit_card, params)
+    yield gateway
+
+    return gateway.transcript
+  end
+
+  def dump_transcript_and_fail(gateway, amount, credit_card, params)
+    transcript = capture_transcript(gateway) do |gateway|
+      gateway.purchase(amount, credit_card, params)
+    end
+
     File.open("transcript.log", "w") { |f| f.write(gateway.transcript) }
     assert false, "A purchase transcript has been written to transcript.log for you to test scrubbing with."
   end
