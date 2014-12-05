@@ -69,6 +69,7 @@ class <%= class_name %>Test < Test::Unit::TestCase
   end
 
   def test_scrub
+    assert @gateway.supports_scrubbing?
     assert_equal @gateway.send(:scrub, pre_scrubbed), post_scrubbed
   end
 
