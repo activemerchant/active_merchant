@@ -1,3 +1,5 @@
+require 'oauth'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class QuickBooksGateway < Gateway
@@ -11,11 +13,22 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://payments.intuit.com'
       self.display_name = 'QuickBooks Payments'
       ENDPOINT =  "/quickbooks/v4/payments/charges"
+      OAUTH_ENDPOINTS = {
+        site: 'https://oauth.intuit.com',
+        request_token_path: '/oauth/v1/get_request_token',
+        authorize_url: 'https://appcenter.intuit.com/Connect/Begin',
+        access_token_path: '/oauth/v1/get_access_token'
+      }
 
       STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options={})
         requires!(options, :credential1, :credential2, :credential3, :credential4, :option1)
+        @consumer_key = options[:credential1]
+        @consumer_secret = options[:credential2]
+        @access_token = option[:credential3]
+        @token_secret = option[:credential4]
+        @realm_id = option[:option1]
         super
       end
 
@@ -31,7 +44,7 @@ module ActiveMerchant #:nodoc:
         post = {}
         charge_data(post: post, options: options)
         post[:capture] = "false"
-        
+
         commit(uri: ENDPOINT, body: post)
       end
 
@@ -116,20 +129,21 @@ module ActiveMerchant #:nodoc:
 
       def amount_to_void(authorization:)
         response = parse(ssl_request(:get, "#{gateway_url}#{ENDPOINT}/#{authorization}", post_data, headers))
-        reponse[:amount]
+        response[:amount]
       end
 
       def authorization_object_from_endpoint(authorization:)
 
       end
-        
+
       def parse(body:)
         JSON.parse(body)
       end
 
       def commit(uri:, body:)
-        
-        response = parse(ssl_post(gateway_url + uri, post_data(body: body), headers))
+        endpoint = gateway_url + uri
+        request = ssl_post(endpoint, post_data(body: body), headers(method: :post, uri: endpoint))
+        response = parse(request)
 
         Response.new(
           success_from(response: response),
@@ -159,11 +173,36 @@ module ActiveMerchant #:nodoc:
         data.to_json
       end
 
-      def headers
+      def headers(method:, uri:)
+        return unless method && uri
+        request_uri = URI.parse(uri)
+
+        request_class = case method
+        when :post
+          Net::HTTP::Post
+        when :get
+          Net::HTTP::Get
+        end
+        consumer = OAuth::Consumer.new(
+          @consumer_key,
+          @consumer_secret,
+          OAUTH_ENDPOINTS)
+        access_token = OAuth::AccessToken.new(
+          consumer,
+          @access_token,
+          @token_secret)
+        client_helper = OAuth::Client::Helper.new(
+          request_class.new(request_uri),
+          consumer: consumer,
+          token: access_token,
+          realm: @realm_id,
+          request_uri: request_uri)
+        oauth_header = client_helper.header
+
         {
-          "Content-type"=> "application/json",
-          "Request-Id"=> @request_id.to_s,
-          
+          "Content-type" => "application/json",
+          "Request-Id" => @request_id.to_s,
+          "Authorization" => oauth_header
         }
       end
     end
