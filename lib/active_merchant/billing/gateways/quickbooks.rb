@@ -23,42 +23,43 @@ module ActiveMerchant #:nodoc:
       STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options={})
-        requires!(options, :consumer_key, :consumer_secret, :access_token, :token_secret, :realm_id)
+        requires!(options, :consumer_key, :consumer_secret, :access_token, :token_secret, :realm)
         @consumer_key = options[:consumer_key]
         @consumer_secret = options[:consumer_secret]
         @access_token = options[:access_token]
         @token_secret = options[:token_secret]
-        @realm_id = options[:realm_id]
+        @realm = options[:realm]
         super
       end
 
       def purchase(money, payment, options = {})
         post = {}
-        charge_data(post: post, options: options)
+        charge_data(post, payment, options)
         post[:capture] = "true"
 
-        commit(uri: ENDPOINT, body: post)
+        commit(ENDPOINT, post)
       end
 
       def authorize(money, payment, options={})
         post = {}
-        charge_data(post: post, options: options)
+        add_amount(post, money, options)
+        charge_data(post, payment, options)
         post[:capture] = "false"
 
-        commit(uri: ENDPOINT, body: post)
+        commit(ENDPOINT, post)
       end
 
       def capture(money, authorization, options={})
         capture_uri = "#{ENDPOINT}/#{CGI.escape(authorization)}/capture"
         post = options[:id]
-        commit(uri: capture_uri, body: post)
+        commit(capture_uri, post)
       end
 
       def refund(money, authorization, options={})
         post = {}
         post[:amount] = money.to_s
         refund_uri = "#{ENDPOINT}/#{CGI.escape(authorization)}/refund"
-        commit(uri: refund_uri, body: post)
+        commit(refund_uri, post)
       end
 
       def void(authorization, options={})
@@ -77,13 +78,13 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def charge_data(post:, payment:, options:)
-        add_payment(post: post, payment: payment, options: options[:card_code])
-        add_address(post: post, payment: payment, options: options)
-        add_context(context: options[:context]) if options[:context]
+      def charge_data(post, payment, options = {})
+        add_payment(post, payment, options)
+        add_address(post, options)
+        add_context(options[:context]) if options[:context]
       end
 
-      def add_address(post:, options:)
+      def add_address(post, options)
         return unless post[:card] && post[:card].kind_of?(Hash)
         card_address = {}
         if address = options[:billing_address]
@@ -96,30 +97,30 @@ module ActiveMerchant #:nodoc:
         post[:card][:address] = card_address
       end
 
-      def add_amount(post:, money:, options:)
+      def add_amount(post, money, options = {})
         currency = options[:currency] || currency(money)
         post[:amount] = localized_amount(money, currency)
         post[:currency] = currency.upcase
         post[:amount]
       end
 
-      def add_payment(post:, payment:)
-        add_creditcard(post: post, payment: payment)
+      def add_payment(post, payment, options = {})
+        add_creditcard(post, payment, options)
       end
 
-      def add_creditcard(post: ,creditcard:)
+      def add_creditcard(post, creditcard, options = {})
         card = {}
         card[:number] = creditcard.number
         card[:expMonth] = creditcard.month
         card[:expYear] = creditcard.year
         card[:cvc] = creditcard.verification_value if creditcard.verification_value?
         card[:name] = creditcard.name if creditcard.name
-        card[:commercialCardCode] = creditcard.card_code if creditcard.card_code
+        card[:commercialCardCode] = options[:card_code] if options[:card_code]
 
         post[:card] = card
       end
 
-      def add_context(post:, context:)
+      def add_context(post, context)
         payment_context = {}
         payment_context[:tax] = context[:tax] if context[:tax]
         payment_context[:recurring] = context[:recurring] if context[:recurring]
@@ -127,22 +128,22 @@ module ActiveMerchant #:nodoc:
         post[:context] = payment_context
       end
 
-      def amount_to_void(authorization:)
+      def amount_to_void(authorization)
         response = parse(ssl_request(:get, "#{gateway_url}#{ENDPOINT}/#{authorization}", post_data, headers))
         response[:amount]
       end
 
-      def authorization_object_from_endpoint(authorization:)
+      def authorization_object_from_endpoint(authorization)
 
       end
 
-      def parse(body:)
+      def parse(body)
         JSON.parse(body)
       end
 
-      def commit(uri:, body:)
+      def commit(uri, body)
         endpoint = gateway_url + uri
-        request = ssl_post(endpoint, post_data(body: body), headers(method: :post, uri: endpoint))
+        request = ssl_post(endpoint, post_data(body), headers(method: :post, uri: endpoint))
         response = parse(request)
 
         Response.new(
@@ -159,22 +160,25 @@ module ActiveMerchant #:nodoc:
         test? ? test_url : live_url
       end
 
-      def success_from(response:)
+      def success_from(response)
 
       end
 
-      def message_from(response:)
+      def message_from(response)
       end
 
-      def authorization_from(response:)
+      def authorization_from(response)
       end
 
-      def post_data(data: {})
+      def post_data(data = {})
         data.to_json
       end
 
-      def headers(method:, uri:)
-        return unless method && uri
+      def headers(options)
+        return unless options[:method] && options[:uri]
+        method = options[:method]
+        uri = options[:uri]
+
         request_uri = URI.parse(uri)
 
         request_class = case method
@@ -195,7 +199,7 @@ module ActiveMerchant #:nodoc:
           request_class.new(request_uri),
           consumer: consumer,
           token: access_token,
-          realm: @realm_id,
+          realm: @realm,
           request_uri: request_uri)
         oauth_header = client_helper.header
 
