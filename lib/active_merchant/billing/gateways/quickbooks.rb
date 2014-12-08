@@ -2,7 +2,7 @@ require 'oauth'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    class QuickBooksGateway < Gateway
+    class QuickbooksGateway < Gateway
       self.test_url = 'https://sandbox.api.intuit.com'
       self.live_url = 'https://api.intuit.com'
 
@@ -23,12 +23,12 @@ module ActiveMerchant #:nodoc:
       STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options={})
-        requires!(options, :credential1, :credential2, :credential3, :credential4, :option1)
-        @consumer_key = options[:credential1]
-        @consumer_secret = options[:credential2]
-        @access_token = option[:credential3]
-        @token_secret = option[:credential4]
-        @realm_id = option[:option1]
+        requires!(options, :consumer_key, :consumer_secret, :access_token, :token_secret, :realm_id)
+        @consumer_key = options[:consumer_key]
+        @consumer_secret = options[:consumer_secret]
+        @access_token = options[:access_token]
+        @token_secret = options[:token_secret]
+        @realm_id = options[:realm_id]
         super
       end
 
