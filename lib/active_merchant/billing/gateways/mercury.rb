@@ -18,7 +18,7 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'http://www.mercurypay.com'
       self.display_name = 'Mercury'
-      self.supported_countries = ['US']
+      self.supported_countries = ['US','CA']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
       self.default_currency = 'USD'
 
