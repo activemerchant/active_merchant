@@ -2,9 +2,14 @@ require 'test_helper'
 
 class QuickBooksTest < Test::Unit::TestCase
   def setup
-    @gateway = QuickBooksGateway.new(
-      some_credential: 'login',
-      another_credential: 'password'
+    @gateway = QuickbooksGateway.new(
+      options = {
+      consumer_key: 'consumer_key',
+      consumer_secret: 'consumer_secret',
+      access_token: 'access_token',
+      token_secret: 'token_secret',
+      realm: 'realm_ID',
+    }
     )
 
     @credit_card = credit_card
@@ -22,7 +27,7 @@ class QuickBooksTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal 'REPLACE', response.authorization
+    assert_equal "EF1IQ9GGXS2D", response.authorization
     assert response.test?
   end
 
@@ -31,10 +36,16 @@ class QuickBooksTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
   end
 
   def test_successful_authorize
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    assert_equal "ECZ7U0SO423E", response.authorization
+    assert response.test?
   end
 
   def test_failed_authorize

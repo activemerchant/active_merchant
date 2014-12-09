@@ -2,7 +2,7 @@ require 'test_helper'
 
 class RemoteTest < Test::Unit::TestCase
   def setup
-    @gateway = QuickBooksGateway.new(fixtures(:quickbooks))
+    @gateway = QuickbooksGateway.new(fixtures(:quickbooks))
 
     @amount = 100
     @credit_card = credit_card('4000100011112224')
@@ -101,7 +101,7 @@ class RemoteTest < Test::Unit::TestCase
   end
 
   def test_invalid_login
-    gateway = QuickBooksGateway.new(
+    gateway = QuickbooksGateway.new(
       login: '',
       password: ''
     )
