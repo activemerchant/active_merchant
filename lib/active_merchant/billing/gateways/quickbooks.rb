@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
       def add_address(post, options)
         return unless post[:card] && post[:card].kind_of?(Hash)
         card_address = {}
-        if address = options[:billing_address]
+        if address = options[:billing_address] || options[:address]
           card_address[:streetAddress] = address[:address1]
           card_address[:city] = address[:city]
           card_address[:region] = address[:state]
@@ -111,7 +111,7 @@ module ActiveMerchant #:nodoc:
       def add_creditcard(post, creditcard, options = {})
         card = {}
         card[:number] = creditcard.number
-        card[:expMonth] = creditcard.month
+        card[:expMonth] = "%02d" % creditcard.month
         card[:expYear] = creditcard.year
         card[:cvc] = creditcard.verification_value if creditcard.verification_value?
         card[:name] = creditcard.name if creditcard.name
@@ -143,31 +143,28 @@ module ActiveMerchant #:nodoc:
 
       def commit(uri, body)
         endpoint = gateway_url + uri
-        request = ssl_post(endpoint, post_data(body), headers(method: :post, uri: endpoint))
-        response = parse(request)
+
+        begin
+          response = ssl_post(endpoint, post_data(body), headers(method: :post, uri: endpoint))
+        rescue ResponseError => e
+          response = e.response.body
+        end
+
+        parsed_response = parse(response)
+        success = !parsed_response.key?("errors")
 
         Response.new(
-          success_from(response: response),
-          message_from(response: response),
-          response,
-          authorization: authorization_from(response: response),
+          success,
+          success ? "Transaction approved" : parsed_response["errors"].map {|error_hash| error_hash["message"] }.join(" "),
+          parsed_response,
+          authorization: nil, # TODO - parse this when we get a good auth,
           test: test?,
-          error_code => 'error'
+          error_code: parsed_response["errors"].first["code"]
         )
       end
 
       def gateway_url
         test? ? test_url : live_url
-      end
-
-      def success_from(response)
-
-      end
-
-      def message_from(response)
-      end
-
-      def authorization_from(response)
       end
 
       def post_data(data = {})
