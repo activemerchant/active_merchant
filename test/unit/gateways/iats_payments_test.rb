@@ -111,7 +111,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
 
     assert response
     assert_failure response
-    assert_match /Invalid credit card number/, response.message
+    assert_match(/Invalid credit card number/, response.message)
   end
 
   def test_successful_unstore

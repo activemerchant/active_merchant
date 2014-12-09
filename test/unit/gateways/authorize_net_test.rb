@@ -3,6 +3,10 @@ require 'test_helper'
 class AuthorizeNetTest < Test::Unit::TestCase
   include CommStub
 
+  BAD_TRACK_DATA = '%B378282246310005LONGSONLONGBOB1705101130504392?'
+  TRACK1_DATA = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
+  TRACK2_DATA = ';4111111111111111=1803101000020000831?'
+
   def setup
     @gateway = AuthorizeNetGateway.new(
       login: 'X',
@@ -12,6 +16,12 @@ class AuthorizeNetTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card
     @check = check
+    @apple_pay_payment_token = ActiveMerchant::Billing::ApplePayPaymentToken.new(
+      {data: 'encoded_payment_data'},
+      payment_instrument_name: 'SomeBank Visa',
+      payment_network: 'Visa',
+      transaction_identifier: 'transaction123'
+    )
 
     @options = {
       order_id: '1',
@@ -21,39 +31,67 @@ class AuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_add_swipe_data_with_bad_data
-    @credit_card.track_data = '%B378282246310005LONGSONLONGBOB1705101130504392?'
+    @credit_card.track_data = BAD_TRACK_DATA
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_nil doc.at_xpath('//track1')
         assert_nil doc.at_xpath('//track2')
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_purchase_response)
   end
 
   def test_add_swipe_data_with_track_1
-    @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
+    @credit_card.track_data = TRACK1_DATA
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_equal '%B378282246310005^LONGSON/LONGBOB^1705101130504392?', doc.at_xpath('//track1').content
         assert_nil doc.at_xpath('//track2')
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_purchase_response)
   end
 
   def test_add_swipe_data_with_track_2
-    @credit_card.track_data = ';4111111111111111=1803101000020000831?'
+    @credit_card.track_data = TRACK2_DATA
     stub_comms do
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_nil doc.at_xpath('//track1')
         assert_equal ';4111111111111111=1803101000020000831?', doc.at_xpath('//track2').content
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_purchase_response)
+  end
+
+  def test_retail_market_type_only_included_in_swipe_transactions
+    [BAD_TRACK_DATA, nil].each do |track|
+      @credit_card.track_data = track
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card)
+      end.check_request do |endpoint, data, headers|
+        parse(data) do |doc|
+          assert_nil doc.at_xpath('//retail')
+        end
+      end.respond_with(successful_purchase_response)
+    end
+
+    [TRACK1_DATA, TRACK2_DATA].each do |track|
+      @credit_card.track_data = track
+      stub_comms do
+        @gateway.purchase(@amount, @credit_card)
+      end.check_request do |endpoint, data, headers|
+        parse(data) do |doc|
+          assert_not_nil doc.at_xpath('//retail')
+          assert_equal "2", doc.at_xpath('//retail/marketType').content
+        end
+      end.respond_with(successful_purchase_response)
+    end
   end
 
   def test_successful_echeck_authorization
@@ -68,6 +106,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_equal "Jim Smith", doc.at_xpath("//nameOnAccount").content
         assert_equal "WEB", doc.at_xpath("//echeckType").content
         assert_equal "1", doc.at_xpath("//checkNumber").content
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_authorize_response)
 
@@ -89,6 +128,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_equal "Jim Smith", doc.at_xpath("//nameOnAccount").content
         assert_equal "WEB", doc.at_xpath("//echeckType").content
         assert_equal "1", doc.at_xpath("//checkNumber").content
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_purchase_response)
 
@@ -113,6 +153,38 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @check)
     assert_failure response
+  end
+
+  def test_successful_apple_pay_authorization
+    response = stub_comms do
+      @gateway.authorize(@amount, @apple_pay_payment_token)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal @gateway.class::APPLE_PAY_DATA_DESCRIPTOR, doc.at_xpath("//opaqueData/dataDescriptor").content
+        assert_equal Base64.strict_encode64(@apple_pay_payment_token.payment_data.to_json), doc.at_xpath("//opaqueData/dataValue").content
+      end
+    end.respond_with(successful_authorize_response)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141794', response.authorization.split('#')[0]
+  end
+
+  def test_successful_apple_pay_purchase
+    response = stub_comms do
+      @gateway.purchase(@amount, @apple_pay_payment_token)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal @gateway.class::APPLE_PAY_DATA_DESCRIPTOR, doc.at_xpath("//opaqueData/dataDescriptor").content
+        assert_equal Base64.strict_encode64(@apple_pay_payment_token.payment_data.to_json), doc.at_xpath("//opaqueData/dataValue").content
+      end
+    end.respond_with(successful_purchase_response)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141795', response.authorization.split('#')[0]
   end
 
   def test_successful_authorization
@@ -219,12 +291,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
   def test_address
     stub_comms do
-      @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', country: 'US', state: 'CO'})
+      @gateway.authorize(@amount, @credit_card, billing_address: {address1: '164 Waverley Street', country: 'US', state: 'CO', phone: '(555)555-5555', fax: '(555)555-4444'})
     end.check_request do |endpoint, data, headers|
       parse(data) do |doc|
         assert_equal "CO", doc.at_xpath("//billTo/state").content, data
         assert_equal "164 Waverley Street", doc.at_xpath("//billTo/address").content, data
         assert_equal "US", doc.at_xpath("//billTo/country").content, data
+        assert_equal "(555)555-5555", doc.at_xpath("//billTo/phoneNumber").content
+        assert_equal "(555)555-4444", doc.at_xpath("//billTo/faxNumber").content
       end
     end.respond_with(successful_authorize_response)
   end
@@ -259,6 +333,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       parse(data) do |doc|
         assert_equal "E0Mvq8AAABEiMwARIjNEVWZ3iJk=", doc.at_xpath("//cardholderAuthentication/cardholderAuthenticationValue").content
         assert_equal "2", doc.at_xpath("//cardholderAuthentication/authenticationIndicator").content
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_purchase_response)
   end
@@ -271,6 +346,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_not_nil doc.at_xpath("//order/description"), data
         assert_equal "Yo", doc.at_xpath("//order/description").content, data
         assert_equal "Sweetness", doc.at_xpath("//order/invoiceNumber").content, data
+        assert_equal "0.50", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_capture_response)
     assert_success response
@@ -293,6 +369,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
         assert_equal "Bob", doc.at_xpath("//billTo/firstName").content, data
         assert_equal "Smith", doc.at_xpath("//billTo/lastName").content, data
         assert_equal "12345", doc.at_xpath("//billTo/zip").content, data
+        assert_equal "0.50", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_purchase_response)
     assert_success response
@@ -367,7 +444,9 @@ class AuthorizeNetTest < Test::Unit::TestCase
     stub_comms do
       @gateway.authorize(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
-      assert_equal "A1000000", fields_from_doc(parse(data))["x_solution_id"], data
+      doc = parse(data)
+      assert_equal "A1000000", fields_from_doc(doc)["x_solution_id"], data
+      assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
     end.respond_with(successful_authorize_response)
   ensure
     @gateway.class.application_id = nil
@@ -391,6 +470,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
       parse(data) do |doc|
         assert_not_nil doc.at_xpath("//customer/id"), data
         assert_equal "123", doc.at_xpath("//customer/id").content, data
+        assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
       end
     end.respond_with(successful_authorize_response)
   end
@@ -399,7 +479,9 @@ class AuthorizeNetTest < Test::Unit::TestCase
    stub_comms do
       @gateway.purchase(@amount, @credit_card, customer: "bob@test.com")
     end.check_request do |endpoint, data, headers|
-      assert !parse(data).at_xpath("//customer/id"), data
+      doc = parse(data)
+      assert !doc.at_xpath("//customer/id"), data
+      assert_equal "1.00", doc.at_xpath("//transactionRequest/amount").content
     end.respond_with(successful_authorize_response)
   end
 

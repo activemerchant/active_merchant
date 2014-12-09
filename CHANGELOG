@@ -1,5 +1,10 @@
 = ActiveMerchant CHANGELOG
 
+* PayPal: Add #scrub for scrubbing PCI information out of HTTP transcripts [girasquid]
+* Stripe: Add #scrub for scrubbing PCI information out of HTTP transcripts [girasquid]
+
+== Version 1.45.0 (December 1, 2014)
+
 * HPS: Always pass CardHolderData element [SecureSubmit, ntalbott]
 * PayJunction: Include 'track' parameter if provided [hron]
 * WebPay: Fix API calls [tomykaira]
@@ -21,6 +26,30 @@
 * Authorize.Net: Truncate more fields [duff]
 * Authorize.Net: Truncate invoiceNumber [ntalbott]
 * Adyen: Add support for verify operation [duff]
+* USAePay: Add track_data support [louiskearns]
+* Payex: Use the right url for the purchase call [duff]
+* Braintree: Allow dynamic descriptors [duff]
+* Openpay: Add support for device session id [guillermo-delucio, ismaelem]
+* Redsys: Add support for verify [duff]
+* Redsys: Handle unknown currencies [duff]
+* Stripe: Make #unstore signature consistent [duff]
+* Remove defunct Samurai gateway [ntalbott]
+* eWay Rapid: Tweak authorization support [duff]
+* Litle: Add support for dynamic descriptors [duff]
+* Add TNS gateway [markabe]
+* TNS: Update countries and supported card types [markabe]
+* Conekta: Add AMEX as a supported card type [MauricioMurga]
+* Checkout: pass through currency type [markabe]
+* Bogus: return standard error codes [jpcaissy]
+* Add PaymentToken and ApplePayPaymentToken objects for token-based transactions [bizla]
+* Authorize.Net: Add ApplePay in-app transaction support [bizla]
+* Stripe: Add ApplePay in-app transaction support [bizla]
+* eWAY Rapid: Add PartnerID param [j-mutter]
+* GlobalTransport: Truncate order_id [duff]
+* Redsys: Allow a description to be specified [duff]
+* NetworkMerchants: Fix currency [j-mutter]
+* Redsys: Improve handling of order_id [duff]
+* Checkout: Add support for void, refund, and verify [markabe]
 
 == Version 1.44.1 (Aug 28, 2014)
 

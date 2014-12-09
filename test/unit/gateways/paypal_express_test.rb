@@ -86,6 +86,7 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'EC-2XE90996XX9870316', response.token
     assert_equal 'FWRVKNRRZ3WUC', response.payer_id
     assert_equal 'buyer@jadedpallet.com', response.email
+    assert_equal 'This is a test note', response.note
 
     assert address = response.address
     assert_equal 'Fred Brooks', address['name']
@@ -764,6 +765,7 @@ class PaypalExpressTest < Test::Unit::TestCase
       <Credentials xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:UserIdPasswordType">
         <Username xsi:type="xs:string"/>
         <Password xsi:type="xs:string"/>
+        <Signature xsi:type="xs:string" />
         <Subject xsi:type="xs:string"/>
       </Credentials>
     </RequesterCredentials>
@@ -836,6 +838,7 @@ class PaypalExpressTest < Test::Unit::TestCase
           <InsuranceTotal xsi:type="cc:BasicAmountType" currencyID="USD">0.00</InsuranceTotal>
           <ShippingDiscount xsi:type="cc:BasicAmountType" currencyID="USD">0.00</ShippingDiscount>
           <InsuranceOptionOffered xsi:type="xs:string">false</InsuranceOptionOffered>
+          <NoteText xsi:type="xs:string">This is a test note</NoteText>
           <SellerDetails xsi:type="ebl:SellerDetailsType"/>
           <PaymentRequestID xsi:type="xs:string"/>
           <OrderURL xsi:type="xs:string"/>
@@ -849,6 +852,7 @@ class PaypalExpressTest < Test::Unit::TestCase
           <ShippingOptionName xsi:type=\"xs:string\">default</ShippingOptionName>
         </UserSelectedOptions>
         <CheckoutStatus xsi:type="xs:string">PaymentActionNotInitiated</CheckoutStatus>
+        <PaymentRequestInfo xsi:type="ebl:PaymentRequestInfoType" />
       </GetExpressCheckoutDetailsResponseDetails>
     </GetExpressCheckoutDetailsResponse>
   </SOAP-ENV:Body>

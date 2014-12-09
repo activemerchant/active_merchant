@@ -5,6 +5,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     @gateway = FirstdataE4Gateway.new(fixtures(:firstdata_e4))
     @credit_card = credit_card
     @bad_credit_card = credit_card('4111111111111113')
+    @credit_card_with_track_data = credit_card_with_track_data('4003000123456781')
     @amount = 100
     @options = {
       :order_id => '1',
@@ -20,6 +21,12 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_match(/Transaction Normal/, response.message)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_track_data
+    assert response = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
     assert_match(/Transaction Normal/, response.message)
     assert_success response
   end
@@ -112,5 +119,27 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_success response
     assert_equal 'M', response.cvv_result["code"]
     assert_equal '1', response.avs_result["code"]
+  end
+  
+  def test_refund
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_match(/Transaction Normal/, purchase.message)
+    assert_success purchase
+  
+    assert response = @gateway.refund(50, purchase.authorization)
+    assert_success response
+    assert_match(/Transaction Normal/, response.message)
+    assert response.authorization
+  end
+
+  def test_refund_with_track_data
+    assert purchase = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
+    assert_match(/Transaction Normal/, purchase.message)
+    assert_success purchase
+  
+    assert response = @gateway.refund(50, purchase.authorization)
+    assert_success response
+    assert_match(/Transaction Normal/, response.message)
+    assert response.authorization
   end
 end

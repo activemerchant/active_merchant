@@ -13,6 +13,8 @@ module ActiveMerchant #:nodoc:
       self.display_name = "eWAY Rapid 3.1"
       self.default_currency = "AUD"
 
+      class_attribute :partner_id
+
       def initialize(options = {})
         requires!(options, :login, :password)
         super
@@ -49,6 +51,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(params, amount, options)
         add_customer_data(params, options)
         add_credit_card(params, payment_method, options)
+        params['Method'] = payment_method.respond_to?(:number) ? 'ProcessPayment' : 'TokenPayment'
         commit(url_for('Transaction'), params)
       end
 
@@ -58,6 +61,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(params, amount, options)
         add_customer_data(params, options)
         add_credit_card(params, payment_method, options)
+        params['Method'] = 'Authorise'
         commit(url_for('Authorisation'), params)
       end
 
@@ -172,6 +176,10 @@ module ActiveMerchant #:nodoc:
         params['CustomerIP'] = options[:ip] if options[:ip]
         params['TransactionType'] = options[:transaction_type] || 'Purchase'
         params['DeviceID'] = options[:application_id] || application_id
+        if partner = options[:partner_id] || partner_id
+          params['PartnerID'] = truncate(partner, 50)
+        end
+        params
       end
 
       def add_invoice(params, money, options, key = "Payment")
@@ -220,7 +228,6 @@ module ActiveMerchant #:nodoc:
         return unless credit_card
         params['Customer'] ||= {}
         if credit_card.respond_to? :number
-          params['Method'] = 'ProcessPayment'
           card_details = params['Customer']['CardDetails'] = {}
           card_details['Name'] = truncate(credit_card.name)
           card_details['Number'] = credit_card.number
@@ -228,7 +235,6 @@ module ActiveMerchant #:nodoc:
           card_details['ExpiryYear'] = "%02d" % (credit_card.year || 0)
           card_details['CVN'] = credit_card.verification_value
         else
-          params['Method'] = 'TokenPayment'
           add_customer_token(params, credit_card)
         end
       end

@@ -49,6 +49,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
+    assert Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code 
   end
 
   def test_successful_purchase_passing_extra_info
@@ -159,6 +160,31 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_equal 'M', response.cvv_result['code']
+  end
+
+  def test_add_track_data_with_creditcard
+    @credit_card.track_data = "data"
+
+    @gateway.expects(:ssl_post).with do |_, body|
+      assert_match "UMmagstripe=data", body
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
+  def test_add_track_data_with_empty_data
+    ["", nil].each do |data|
+      @credit_card.track_data = data
+
+      @gateway.expects(:ssl_post).with do |_, body|
+        refute body.include? "UMmagstripe="
+        body
+      end.returns(successful_purchase_response)
+
+      assert response = @gateway.purchase(@amount, @credit_card, @options)
+      assert_success response
+    end
   end
 
   def test_does_not_raise_error_on_missing_values

@@ -27,6 +27,7 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
       redirect_url: "http://awesomesauce.com",
       ip: "0.0.0.0",
       application_id: "Woohoo",
+      partner_id: "Woohoo",
       transaction_type: "Purchase",
       description: "Description",
       order_id: "orderid1",
@@ -103,11 +104,11 @@ class RemoteEwayRapidTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@failed_amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Invalid Payment TotalAmount", response.message
+    assert_equal "Error   Failed", response.message
   end
 
   def test_failed_capture
-    response = @gateway.capture(@failed_amount, "bogus")
+    response = @gateway.capture(@amount, "bogus")
     assert_failure response
     assert_equal "Invalid Auth Transaction ID for Capture/Void", response.message
   end

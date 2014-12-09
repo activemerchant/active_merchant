@@ -240,7 +240,7 @@ module ActiveMerchant #:nodoc:
 
 
       # ==== Customer Profiles
-      # :customer_ref_num should be set unless your happy with Orbital providing one
+      # :customer_ref_num should be set unless you're happy with Orbital providing one
       #
       # :customer_profile_order_override_ind can be set to map
       # the CustomerRefNum to OrderID or Comments. Defaults to 'NO' - no mapping

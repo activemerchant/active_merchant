@@ -553,10 +553,16 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_equal fixtures(:braintree_blue)[:merchant_account_id], response.params["braintree_transaction"]["merchant_account_id"]
   end
 
+  def test_authorize_with_descriptor
+    assert auth = @gateway.authorize(@amount, @credit_card, descriptor_name: "company*theproduct", descriptor_phone: "1331131131")
+    assert_success auth
+  end
+
   def test_successful_validate_on_store_with_verification_merchant_account
     card = credit_card('4111111111111111', :verification_value => '101')
     assert response = @gateway.store(card, :verify_card => true, :verification_merchant_account_id => fixtures(:braintree_blue)[:merchant_account_id])
     assert_success response, "You must specify a valid :merchant_account_id key in your fixtures.yml for this to pass."
     assert_equal 'OK', response.message
   end
+
 end

@@ -53,6 +53,7 @@ module ActiveMerchant #:nodoc:
 
         request = build_xml_request do |doc|
           add_authentication(doc)
+          add_descriptor(doc, options)
           doc.capture_(transaction_attributes(options)) do
             doc.litleTxnId(transaction_id)
             doc.amount(money) if money
@@ -72,6 +73,7 @@ module ActiveMerchant #:nodoc:
 
         request = build_xml_request do |doc|
           add_authentication(doc)
+          add_descriptor(doc, options)
           doc.credit(transaction_attributes(options)) do
             doc.litleTxnId(transaction_id)
             doc.amount(money) if money
@@ -160,6 +162,16 @@ module ActiveMerchant #:nodoc:
         add_shipping_address(doc, payment_method, options)
         add_payment_method(doc, payment_method)
         add_pos(doc, payment_method)
+        add_descriptor(doc, options)
+      end
+
+      def add_descriptor(doc, options)
+        if options[:descriptor_name] || options[:descriptor_phone]
+          doc.customBilling do
+            doc.phone(options[:descriptor_phone]) if options[:descriptor_phone]
+            doc.descriptor(options[:descriptor_name]) if options[:descriptor_name]
+          end
+        end
       end
 
       def add_payment_method(doc, payment_method)
@@ -171,7 +183,7 @@ module ActiveMerchant #:nodoc:
           doc.card do
             doc.track(payment_method.track_data)
           end
-        else 
+        else
           doc.card do
             doc.type_(CARD_TYPE[payment_method.brand])
             doc.number(payment_method.number)

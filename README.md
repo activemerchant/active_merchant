@@ -185,7 +185,6 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [SagePay](http://www.sagepay.com) - GB, IE
 * [Sage Payment Solutions](http://www.sagepayments.com) - US, CA
 * [Sallie Mae](http://www.salliemae.com/) - US
-* [Samurai](https://samurai.feefighters.com) - US
 * [SecureNet](http://www.securenet.com/) - US
 * [SecurePay](http://www.securepay.com/) - US, CA, GB, AU
 * [SecurePayTech](http://www.securepaytech.com/) - NZ
@@ -195,6 +194,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Stripe](https://stripe.com/) - AU, BE, CA, CH, DE, ES, FI, FR, GB, IE, IT, LU, NL, US
 * [Swipe](https://www.swipehq.com/checkout) - CA, NZ
 * [TransFirst](http://www.transfirst.com/) - US
+* [TNS](http://www.tnsi.com/) - AR, AU, BR, FR, DE, HK, MX, NZ, SG, GB, US
 * [NELiX TransaX](https://www.nelixtransax.com/) - US
 * [Transnational](http://www.tnbci.com/) - US
 * [TrustCommerce](http://www.trustcommerce.com/) - US
@@ -208,14 +208,21 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Worldpay](http://www.worldpay.com/) - HK, US, GB, AU, AD, BE, CH, CY, CZ, DE, DK, ES, FI, FR, GI, GR, HU, IE, IL, IT, LI, LU, MC, MT, NL, NO, NZ, PL, PT, SE, SG, SI, SM, TR, UM, VA
 * [Worldpay US](http://www.worldpay.com/us) - US
 
+## Deprecation Policy
+
+Deprecated functionality is removed on major version changes - for example, deprecations from 2.x are removed in 3.x.
+
 ## Contributing
 
-The source code is hosted at [GitHub](http://github.com/Shopify/active_merchant), and can be fetched using:
-
-    git clone git://github.com/Shopify/active_merchant.git
+1. [Fork it](http://github.com/Shopify/active_merchant/fork) and clone your new repo
+2. Create a branch (`git checkout -b my_awesome_feature`)
+3. Commit your changes (`git add my/awesome/file.rb; git commit -m "Added my awesome feature"`)
+4. Push your changes to your fork (`git push origin my_awesome_feature`)
+5. Open a [Pull Request](https://github.com/shopify/active_merchant/pulls)
 
 Please see the [ActiveMerchant Guide to Contributing](http://github.com/Shopify/active_merchant/wikis/contributing) for
 information on adding a new gateway to ActiveMerchant.
 
 Please don't touch the CHANGELOG in your pull requests, we'll add the appropriate CHANGELOG entries
 at release time.
+

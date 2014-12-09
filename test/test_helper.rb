@@ -132,6 +132,10 @@ module ActiveMerchant
       yield
     end
 
+    def assert_scrubbed(unexpected_value, transcript)
+      refute transcript.include?(unexpected_value), "Expected #{unexpected_value} to be scrubbed out of transcript"
+    end
+
     private
     def clean_backtrace(&block)
       yield
@@ -161,6 +165,14 @@ module ActiveMerchant
       Billing::CreditCard.new(defaults)
     end
 
+    def credit_card_with_track_data(number = '4242424242424242', options = {})
+      defaults = {
+        :track_data => '%B' + number + '^LONGSEN/L. ^15121200000000000000**123******?',
+      }.update(options)
+
+      Billing::CreditCard.new(defaults)
+    end
+
     def check(options = {})
       defaults = {
         :name => 'Jim Smith',
@@ -173,6 +185,24 @@ module ActiveMerchant
       }.update(options)
 
       Billing::Check.new(defaults)
+    end
+
+    def apple_pay_payment_token(options = {})
+      # apple_pay_json_raw should contain the JSON serialization of the object described here
+      # https://developer.apple.com/library/IOs//documentation/PassKit/Reference/PaymentTokenJSON/PaymentTokenJSON.htm
+      apple_pay_json_raw = '{"version":"EC_v1","data":"","signature":""}'
+      defaults = {
+        payment_data: ActiveSupport::JSON.decode(apple_pay_json_raw),
+        payment_instrument_name: "Visa 2424",
+        payment_network: "Visa",
+        transaction_identifier: "uniqueidentifier123"
+      }.update(options)
+
+      ActiveMerchant::Billing::ApplePayPaymentToken.new(defaults[:payment_data],
+        payment_instrument_name: defaults[:payment_instrument_name],
+        payment_network: defaults[:payment_network],
+        transaction_identifier: defaults[:transaction_identifier]
+      )
     end
 
     def address(options = {})
@@ -227,6 +257,25 @@ Test::Unit::TestCase.class_eval do
   include ActiveMerchant::Billing
   include ActiveMerchant::Assertions
   include ActiveMerchant::Fixtures
+
+  def capture_transcript(gateway)
+    gateway.tap do |gw|
+      gw.extend(CaptureHTTPTranscript)
+    end
+
+    yield gateway
+
+    return gateway.transcript
+  end
+
+  def dump_transcript_and_fail(gateway, amount, credit_card, params)
+    transcript = capture_transcript(gateway) do |gateway|
+      gateway.purchase(amount, credit_card, params)
+    end
+
+    File.open("transcript.log", "w") { |f| f.write(gateway.transcript) }
+    assert false, "A purchase transcript has been written to transcript.log for you to test scrubbing with."
+  end
 end
 
 module ActionViewHelperTestHelper
@@ -255,5 +304,24 @@ module ActionViewHelperTestHelper
   protected
   def protect_against_forgery?
     false
+  end
+end
+
+class TranscriptConnection < ActiveMerchant::Connection
+  attr_accessor :transcript
+
+  def configure_debugging(http)
+    http.set_debug_output(@transcript)
+  end
+end
+
+module CaptureHTTPTranscript
+  attr_accessor :transcript
+
+  def new_connection(endpoint)
+    @transcript ||= ""
+    TranscriptConnection.new(endpoint).tap do |c|
+      c.transcript = @transcript
+    end
   end
 end
