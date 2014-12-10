@@ -193,7 +193,9 @@ module ActiveMerchant #:nodoc:
       def successful?(response)
         SUCCESS_CODES.include?(response[:res])
       end
-      
+
+
+
       def build_request(action, options={})
         xml = Builder::XmlMarkup.new
         xml.instruct!
