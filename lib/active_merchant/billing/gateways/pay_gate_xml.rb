@@ -181,11 +181,20 @@ module ActiveMerchant #:nodoc:
         commit(action, build_request(action, options))
       end
 
+      def refund(money, authorization, options={})
+        action = 'refundtx'
+
+        options.merge!(:money => money, :authorization => authorization)
+        commit(action, build_request(action, options))
+      end
+
       private
 
       def successful?(response)
         SUCCESS_CODES.include?(response[:res])
       end
+
+
 
       def build_request(action, options={})
         xml = Builder::XmlMarkup.new
@@ -201,6 +210,10 @@ module ActiveMerchant #:nodoc:
               money           = options.delete(:money)
               authorization   = options.delete(:authorization)
               build_capture(protocol, money, authorization, options)
+            when 'refundtx'
+              money           = options.delete(:money)
+              authorization   = options.delete(:authorization)
+              build_refund(protocol, money, authorization, options)
           else
             raise "no action specified for build_request"
           end
@@ -225,6 +238,12 @@ module ActiveMerchant #:nodoc:
       def build_capture(xml, money, authorization, options={})
         xml.tag! 'settletx', {
           :tid => authorization
+        }
+      end
+      def build_refund(xml, money, authorization, options={})
+        xml.tag! 'refundtx', {
+          :tid => authorization,
+          :amt => amount(money)
         }
       end
 
