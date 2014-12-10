@@ -1,4 +1,5 @@
 require 'test_helper'
+require 'nokogiri'
 
 class CyberSourceTest < Test::Unit::TestCase
   include CommStub
@@ -13,6 +14,8 @@ class CyberSourceTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card('4111111111111111', :brand => 'visa')
+    @master_credit_card = credit_card('5111111111111118', :brand => 'master')
+    @amex_credit_card = credit_card('340000000003961', :brand => 'american_express')
     @declined_card = credit_card('801111111111111', :brand => 'visa')
     @check = check()
 
@@ -46,6 +49,12 @@ class CyberSourceTest < Test::Unit::TestCase
                  ],
           :currency => 'USD'
     }
+
+    @options_with_cryptogram = @options.clone
+    @options_with_cryptogram[:cryptogram] = 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+
+    @options_with_amex_cryptogram = @options.clone
+    @options_with_amex_cryptogram[:cryptogram] = 'AAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBB=='
 
     @subscription_options = {
       :order_id => generate_unique_id,
@@ -255,6 +264,89 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_update_subscription_response)
   end
 
+  def test_successful_purchase_visa_with_cryptogram
+    @gateway.expects(:ssl_post)
+            .with { |_, body, _|
+              doc = REXML::Document.new(body)
+              assert_not_nil doc.elements['//requestMessage/billTo']
+              assert_equal_text @options_with_cryptogram[:cryptogram], doc.elements['//requestMessage/ccAuthService/cavv']
+              assert_equal_text 'vbv', doc.elements['//requestMessage/ccAuthService/commerceIndicator']
+              assert_equal_text @options_with_cryptogram[:cryptogram], doc.elements['//requestMessage/ccAuthService/xid']
+              assert_equal_text '1', doc.elements['//requestMessage/paymentNetworkToken/transactionType']
+            }
+            .returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options_with_cryptogram)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']}", response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_master_with_cryptogram
+    @gateway.expects(:ssl_post)
+            .with { |_, body, _|
+              doc = REXML::Document.new(body)
+              assert_not_nil doc.elements['//requestMessage/billTo']
+              assert_equal_text @options_with_cryptogram[:cryptogram], doc.elements['//requestMessage/ucaf/authenticationData']
+              assert_equal_text '2', doc.elements['//requestMessage/ucaf/collectionIndicator']
+              assert_equal_text 'spa', doc.elements['//requestMessage/ccAuthService/commerceIndicator']
+              assert_equal_text '1', doc.elements['//requestMessage/paymentNetworkToken/transactionType']
+            }
+            .returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @master_credit_card, @options_with_cryptogram)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']}", response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_amex_with_cryptogram
+    @gateway.expects(:ssl_post)
+            .with { |_, body, _|
+              doc = REXML::Document.new(body)
+              assert_not_nil doc.elements['//requestMessage/billTo']
+              assert_nil doc.elements['//requestMessage/billTo/cvNumber']
+              assert_equal_text 'AAAAAAAAAAAAAAAAAAAAAAAAAAA=', doc.elements['//requestMessage/ccAuthService/cavv']
+              assert_equal_text 'aesk', doc.elements['//requestMessage/ccAuthService/commerceIndicator']
+              assert_equal_text 'AQQQQQQQQQQQQQQQQQQQQQQQQQQ=', doc.elements['//requestMessage/ccAuthService/xid']
+              assert_equal_text '1', doc.elements['//requestMessage/paymentNetworkToken/transactionType']
+            }
+            .returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @amex_credit_card, @options_with_amex_cryptogram)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert_equal "#{@options[:order_id]};#{response.params['requestID']};#{response.params['requestToken']}", response.authorization
+    assert response.test?
+  end
+
+  def test_successful_request_generates_valid_xml
+    # :ignore_avs => true is a regression test to ensure we stick the paymentNetworkToken after the businessRules tag
+    gateway     = CyberSourceGateway.new(:login => 'l', :password => 'p', :ignore_avs => true)
+
+    # See https://ics2ws.ic3.com/commerce/1.x/transactionProcessor/CyberSourceTransaction_1.104.xsd
+    schema_file = File.join(File.dirname(__FILE__), '../../schema/cyber_source/CyberSourceTransaction_1.104.xsd')
+    schema      = Nokogiri::XML::Schema(File.read(schema_file))
+
+    gateway.expects(:ssl_post)
+           .times(6)
+           .with { |_, body, _|
+             doc    = Nokogiri::XML(body)
+             errors = schema.validate(Nokogiri::XML(doc.xpath('//s:Body')[0].elements[0].to_s))
+             assert_equal [], errors
+           }
+           .returns(successful_purchase_response)
+
+    [:authorize, :purchase].each do |action|
+      [[@credit_card, @options_with_cryptogram], [@master_credit_card, @options_with_cryptogram], [@amex_credit_card, @options_with_amex_cryptogram]].each do |pm|
+        assert response = gateway.send(action, @amount, pm[0], pm[1])
+        assert_success response
+      end
+    end
+  end
+
   private
 
   def successful_purchase_response
@@ -349,5 +441,10 @@ class CyberSourceTest < Test::Unit::TestCase
 <soap:Header>
 <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><wsu:Timestamp xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="Timestamp-190204278"><wsu:Created>2013-05-13T13:52:57.159Z</wsu:Created></wsu:Timestamp></wsse:Security></soap:Header><soap:Body><c:replyMessage xmlns:c="urn:schemas-cybersource-com:transaction-data-1.69"><c:merchantReferenceCode>6427013</c:merchantReferenceCode><c:requestID>3684531771310176056442</c:requestID><c:decision>ACCEPT</c:decision><c:reasonCode>100</c:reasonCode><c:requestToken>AhijbwSRj3pM2QqPs2j0Ip+xoJXIsAMPYZNJMq6PSbs5ATAA6z42</c:requestToken><c:pinlessDebitValidateReply><c:reasonCode>100</c:reasonCode><c:requestDateTime>2013-05-13T13:52:57Z</c:requestDateTime><c:status>Y</c:status></c:pinlessDebitValidateReply></c:replyMessage></soap:Body></soap:Envelope>
     XML
+  end
+
+  def assert_equal_text(expected_value, value)
+    assert_not_nil value
+    assert_equal expected_value, value[0].to_s
   end
 end

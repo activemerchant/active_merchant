@@ -6,7 +6,9 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     @gateway = CyberSourceGateway.new({nexus: "NC"}.merge(fixtures(:cyber_source)))
 
-    @credit_card = credit_card('4111111111111111')
+    @credit_card = credit_card('4111111111111111', :brand => 'visa')
+    @master_credit_card = credit_card('5111111111111118', :brand => 'master')
+    @amex_credit_card = credit_card('340000000003961', :brand => 'american_express')
     @declined_card = credit_card('801111111111111')
     @pinless_debit_card = credit_card('4002269999999999')
 
@@ -37,6 +39,15 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
       :ignore_cvv => 'true'
     }
 
+    @options_with_cryptogram = @options.clone
+    @options_with_cryptogram[:cryptogram] = 'EHuWW9PiBkWvqE5juRwDzAUFBAk='
+
+    @options_with_amex_cryptogram = @options.clone
+    @options_with_amex_cryptogram[:cryptogram] = 'AAAAAAAAAAAAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBB=='
+
+    @options_with_declined_cryptogram = @options.clone
+    @options_with_declined_cryptogram[:cryptogram] = 'Ainsi font, font, font. Les petites marionnettes'
+
     @subscription_options = {
       :order_id => generate_unique_id,
       :email => 'someguy1232@fakeemail.net',
@@ -54,6 +65,30 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
   def test_successful_authorization
     assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_authorization_visa_with_cryptogram
+    assert response = @gateway.authorize(@amount, @credit_card, @options_with_cryptogram)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_authorization_master_with_cryptogram
+    assert response = @gateway.authorize(@amount, @master_credit_card, @options_with_cryptogram)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    assert !response.authorization.blank?
+  end
+
+  def test_successful_authorization_amex_with_cryptogram
+    assert response = @gateway.authorize(@amount, @amex_credit_card, @options_with_amex_cryptogram)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
@@ -80,8 +115,58 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal false,  response.success?
   end
 
+  def test_unsuccessful_authorization_with_cryptogram
+    assert response = @gateway.authorize(@amount, @declined_card, @options_with_cryptogram)
+    assert response.test?
+    assert_equal 'Invalid account number', response.message
+    assert_equal false,  response.success?
+  end
+
+  def test_unsuccessful_authorization_with_declined_cryptogram
+    assert response = @gateway.authorize(@amount, @credit_card, @options_with_declined_cryptogram)
+    assert response.test?
+    assert_equal 'One or more fields contains invalid data', response.message
+    assert_equal false,  response.success?
+  end
+
   def test_authorize_and_auth_reversal
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', auth.message
+    assert_success auth
+    assert auth.test?
+
+    assert auth_reversal = @gateway.auth_reversal(@amount, auth.authorization)
+    assert_equal 'Successful transaction', auth_reversal.message
+    assert_success auth_reversal
+    assert auth_reversal.test?
+  end
+
+  def test_authorize_and_auth_reversal_visa_with_cryptogram
+    assert auth = @gateway.authorize(@amount, @credit_card, @options_with_cryptogram)
+    assert_equal 'Successful transaction', auth.message
+    assert_success auth
+    assert auth.test?
+
+    assert auth_reversal = @gateway.auth_reversal(@amount, auth.authorization)
+    assert_equal 'Successful transaction', auth_reversal.message
+    assert_success auth_reversal
+    assert auth_reversal.test?
+  end
+
+  def test_authorize_and_auth_reversal_master_with_cryptogram
+    assert auth = @gateway.authorize(@amount, @master_credit_card, @options_with_cryptogram)
+    assert_equal 'Successful transaction', auth.message
+    assert_success auth
+    assert auth.test?
+
+    assert auth_reversal = @gateway.auth_reversal(@amount, auth.authorization)
+    assert_equal 'Successful transaction', auth_reversal.message
+    assert_success auth_reversal
+    assert auth_reversal.test?
+  end
+
+  def test_authorize_and_auth_reversal_amex_with_cryptogram
+    assert auth = @gateway.authorize(@amount, @amex_credit_card, @options_with_amex_cryptogram)
     assert_equal 'Successful transaction', auth.message
     assert_success auth
     assert auth.test?
@@ -102,6 +187,36 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal 'One or more fields contains invalid data', auth_reversal.message
   end
 
+  def test_successful_authorization_and_failed_auth_reversal_visa_with_cryptogram
+    assert auth = @gateway.authorize(@amount, @credit_card, @options_with_cryptogram)
+    assert_success auth
+    assert_equal 'Successful transaction', auth.message
+
+    assert auth_reversal = @gateway.auth_reversal(@amount + 10, auth.authorization)
+    assert_failure auth_reversal
+    assert_equal 'One or more fields contains invalid data', auth_reversal.message
+  end
+
+  def test_successful_authorization_and_failed_auth_reversal_master_with_cryptogram
+    assert auth = @gateway.authorize(@amount, @master_credit_card, @options_with_cryptogram)
+    assert_success auth
+    assert_equal 'Successful transaction', auth.message
+
+    assert auth_reversal = @gateway.auth_reversal(@amount + 10, auth.authorization)
+    assert_failure auth_reversal
+    assert_equal 'One or more fields contains invalid data', auth_reversal.message
+  end
+
+  def test_successful_authorization_and_failed_auth_reversal_amex_with_cryptogram
+    assert auth = @gateway.authorize(@amount, @amex_credit_card, @options_with_amex_cryptogram)
+    assert_success auth
+    assert_equal 'Successful transaction', auth.message
+
+    assert auth_reversal = @gateway.auth_reversal(@amount + 10, auth.authorization)
+    assert_failure auth_reversal
+    assert_equal 'One or more fields contains invalid data', auth_reversal.message
+  end
+
   def test_successful_tax_calculation
     assert response = @gateway.calculate_tax(@credit_card, @options)
     assert_equal 'Successful transaction', response.message
@@ -113,6 +228,27 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_purchase_visa_with_cryptogram
+    assert response = @gateway.purchase(@amount, @credit_card, @options_with_cryptogram)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_purchase_master_with_cryptogram
+    assert response = @gateway.purchase(@amount, @master_credit_card, @options_with_cryptogram)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_purchase_amex_with_cryptogram
+    assert response = @gateway.purchase(@amount, @amex_credit_card, @options_with_amex_cryptogram)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
@@ -144,6 +280,20 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_unsuccessful_purchase_with_cryptogram
+    assert response = @gateway.purchase(@amount, @declined_card, @options_with_cryptogram)
+    assert_equal 'Invalid account number', response.message
+    assert_failure response
+    assert response.test?
+  end
+
+  def test_unsuccessful_purchase_with_declined_cryptogram
+    assert response = @gateway.purchase(@amount, @credit_card, @options_with_declined_cryptogram)
+    assert_equal 'One or more fields contains invalid data', response.message
+    assert_failure response
+    assert response.test?
+  end
+
   def test_authorize_and_capture
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
@@ -153,8 +303,45 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_authorize_and_capture_visa_with_cryptogram
+    assert auth = @gateway.authorize(@amount, @credit_card, @options_with_cryptogram)
+    assert_success auth
+    assert_equal 'Successful transaction', auth.message
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
+
+  def test_authorize_and_capture_master_with_cryptogram
+    assert auth = @gateway.authorize(@amount, @master_credit_card, @options_with_cryptogram)
+    assert_success auth
+    assert_equal 'Successful transaction', auth.message
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
+
+  def test_authorize_and_capture_amex_with_cryptogram
+    assert auth = @gateway.authorize(@amount, @amex_credit_card, @options_with_amex_cryptogram)
+    assert_success auth
+    assert_equal 'Successful transaction', auth.message
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
+
   def test_successful_authorization_and_failed_capture
     assert auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+    assert_equal 'Successful transaction', auth.message
+
+    assert capture = @gateway.capture(@amount + 10, auth.authorization, @options)
+    assert_failure capture
+    assert_equal "The requested amount exceeds the originally authorized amount",  capture.message
+  end
+
+  def test_successful_authorization_and_failed_capture_with_cryptogram
+    assert auth = @gateway.authorize(@amount, @credit_card, @options_with_cryptogram)
     assert_success auth
     assert_equal 'Successful transaction', auth.message
 
@@ -180,6 +367,39 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
   def test_successful_refund
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    assert response = @gateway.refund(@amount, response.authorization)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_refund_visa_with_cryptogram
+    assert response = @gateway.purchase(@amount, @credit_card, @options_with_cryptogram)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    assert response = @gateway.refund(@amount, response.authorization)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_refund_master_with_cryptogram
+    assert response = @gateway.purchase(@amount, @master_credit_card, @options_with_cryptogram)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+    assert response = @gateway.refund(@amount, response.authorization)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
+  def test_successful_refund_amex_with_cryptogram
+    assert response = @gateway.purchase(@amount, @amex_credit_card, @options_with_amex_cryptogram)
     assert_equal 'Successful transaction', response.message
     assert_success response
     assert response.test?
