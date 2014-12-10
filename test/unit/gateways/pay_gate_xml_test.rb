@@ -7,9 +7,10 @@ class PayGateTest < Test::Unit::TestCase
     @amount = 245000
     @credit_card    = credit_card('4000000000000002')
     @declined_card  = credit_card('4000000000000036')
-
+    
+    # May need to generate a unique order id as server responds with duplicate order detected
     @options = {
-      :order_id         => 'abc123',
+      :order_id         => Time.now.getutc,
       :billing_address  => address,
       :description      => 'Store Purchase',
     }
@@ -46,6 +47,20 @@ class PayGateTest < Test::Unit::TestCase
     assert_success response
 
     assert response.test?
+  end
+
+  def test_purchase_and_full_credit
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+#    We have a problem. The paygate api does not allow you to refund test transactions! As the purchase transaction goes throught correctly
+#    
+#
+#    credit = @gateway.refund(@amount, purchase.authorization, :note => 'Sorry')
+#    assert_success credit
+#    assert credit.test?
+
+    
   end
 
 
