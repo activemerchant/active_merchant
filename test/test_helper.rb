@@ -259,13 +259,12 @@ Test::Unit::TestCase.class_eval do
   include ActiveMerchant::Fixtures
 
   def capture_transcript(gateway)
-    gateway.tap do |gw|
-      gw.extend(CaptureHTTPTranscript)
-    end
+    transcript = ''
+    gateway.class.wiredump_device = transcript
 
     yield gateway
 
-    return gateway.transcript
+    return transcript
   end
 
   def dump_transcript_and_fail(gateway, amount, credit_card, params)
@@ -273,7 +272,7 @@ Test::Unit::TestCase.class_eval do
       gateway.purchase(amount, credit_card, params)
     end
 
-    File.open("transcript.log", "w") { |f| f.write(gateway.transcript) }
+    File.open("transcript.log", "w") { |f| f.write(transcript) }
     assert false, "A purchase transcript has been written to transcript.log for you to test scrubbing with."
   end
 end
@@ -304,24 +303,5 @@ module ActionViewHelperTestHelper
   protected
   def protect_against_forgery?
     false
-  end
-end
-
-class TranscriptConnection < ActiveMerchant::Connection
-  attr_accessor :transcript
-
-  def configure_debugging(http)
-    http.set_debug_output(@transcript)
-  end
-end
-
-module CaptureHTTPTranscript
-  attr_accessor :transcript
-
-  def new_connection(endpoint)
-    @transcript ||= ""
-    TranscriptConnection.new(endpoint).tap do |c|
-      c.transcript = @transcript
-    end
   end
 end
