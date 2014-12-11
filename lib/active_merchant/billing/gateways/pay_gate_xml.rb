@@ -238,6 +238,12 @@ module ActiveMerchant #:nodoc:
           :tid => authorization
         }
       end
+      def build_refund(xml, money, authorization, options={})
+        xml.tag! 'refundtx', {
+          :tid => authorization,
+          :amt => amount(money)
+        }
+      end
 
       def build_refund(xml, money, authorization, options={})
         xml.tag! 'refundtx', {
@@ -267,6 +273,13 @@ module ActiveMerchant #:nodoc:
         Response.new(successful?(response), message_from(response), response,
           :test           => test?,
           :authorization  => response[:tid]
+        )
+      end
+      def commit_capture(action, authorization, request)
+        response = parse(action, ssl_post(self.live_url, request))
+        Response.new(successful?(response), message_from(response), response,
+          :test           => test?,
+          :authorization  => authorization
         )
       end
 
