@@ -444,14 +444,15 @@ module ActiveMerchant #:nodoc:
         }
 
         {
-          "order_id"            => transaction.order_id,
-          "status"              => transaction.status,
-          "credit_card_details" => credit_card_details,
-          "customer_details"    => customer_details,
-          "billing_details"     => billing_details,
-          "shipping_details"    => shipping_details,
-          "vault_customer"      => vault_customer,
-          "merchant_account_id" => transaction.merchant_account_id
+          "order_id"                => transaction.order_id,
+          "status"                  => transaction.status,
+          "credit_card_details"     => credit_card_details,
+          "customer_details"        => customer_details,
+          "billing_details"         => billing_details,
+          "shipping_details"        => shipping_details,
+          "vault_customer"          => vault_customer,
+          "merchant_account_id"     => transaction.merchant_account_id,
+          "processor_response_code" => transaction.processor_response_code
         }
       end
 
