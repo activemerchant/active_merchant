@@ -53,12 +53,9 @@ class PayGateTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-#    We have a problem. The paygate api does not allow you to refund test transactions! As the purchase transaction goes throught correctly
-#    
-#
-#    credit = @gateway.refund(@amount, purchase.authorization, :note => 'Sorry')
-#    assert_success credit
-#    assert credit.test?
+    credit = @gateway.refund(@amount, purchase.authorization, :note => 'Sorry')
+    assert_success credit
+    assert credit.test?
   end
 
 
