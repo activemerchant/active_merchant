@@ -508,7 +508,7 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_scrub
-    assert_equal @gateway.send(:scrub, pre_scrubbed), post_scrubbed
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
   def test_supports_scrubbing?
