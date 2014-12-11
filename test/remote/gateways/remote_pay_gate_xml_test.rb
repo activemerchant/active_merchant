@@ -52,4 +52,13 @@ class RemotePayGateXmlTest < Test::Unit::TestCase
     assert_failure response
     assert_equal 'Incorrect Credentials Supplied', response.message
   end
+
+   def test_purchase_and_full_credit
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    credit = @gateway.refund(@amount, purchase.authorization, :note => 'Sorry')
+    assert_success credit
+    assert credit.test?
+  end
 end

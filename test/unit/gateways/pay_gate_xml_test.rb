@@ -49,16 +49,6 @@ class PayGateTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_purchase_and_full_credit
-    purchase = @gateway.purchase(@amount, @credit_card, @options)
-    assert_success purchase
-
-    credit = @gateway.refund(@amount, purchase.authorization, :note => 'Sorry')
-    assert_success credit
-    assert credit.test?
-  end
-
-
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_authorization_response)
 
