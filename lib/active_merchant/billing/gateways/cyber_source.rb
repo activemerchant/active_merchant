@@ -150,6 +150,13 @@ module ActiveMerchant #:nodoc:
         commit(build_refund_request(money, identification, options), options)
       end
 
+      def verify(payment, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, payment, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       # Adds credit to a subscription (stand alone credit).
       def credit(money, reference, options = {})
         requires!(options, :order_id)

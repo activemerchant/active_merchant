@@ -255,6 +255,21 @@ class CyberSourceTest < Test::Unit::TestCase
     end.respond_with(successful_update_subscription_response)
   end
 
+  def test_successful_verify
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorization_response)
+    assert_success response
+  end
+
+  def test_unsuccessful_verify
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(unsuccessful_authorization_response)
+    assert_failure response
+    assert_equal "Invalid account number", response.message
+  end
+
   private
 
   def successful_purchase_response
