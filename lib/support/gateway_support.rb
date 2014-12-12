@@ -21,6 +21,7 @@ class GatewaySupport #:nodoc:
       end
     end
     @gateways = Gateway.implementations.sort_by(&:name)
+    @gateways.delete(ActiveMerchant::Billing::NullGateway)
     @gateways.delete(ActiveMerchant::Billing::BogusGateway)
   end
 
