@@ -3,6 +3,8 @@
 * PayGate: Add support for refunds [StephanAtG2]
 * PayPal: Add #scrub for scrubbing PCI information out of HTTP transcripts [girasquid]
 * Stripe: Add #scrub for scrubbing PCI information out of HTTP transcripts [girasquid]
+* Cybersource: Add ability to verify a card [duff]
+* BraintreeBlue: Expose the error code in the response params [duff]
 
 == Version 1.45.0 (December 1, 2014)
 
