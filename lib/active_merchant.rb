@@ -63,10 +63,10 @@ require 'active_utils/common/network_connection_retries'
 silence_warnings{require 'active_utils/common/connection'}
 require 'active_utils/common/post_data'
 require 'active_utils/common/posts_data'
+require 'active_utils/common/country'
 
 require 'active_merchant/billing'
 require 'active_merchant/version'
-require 'active_merchant/country'
 
 I18n.enforce_available_locales = false
 
