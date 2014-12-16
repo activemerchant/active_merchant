@@ -20,12 +20,43 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, payment, options={})
-        data = new_ipp_submit_single_payment_xml do |xml|
+        data = new_submit_single_payment_ipp_xml do |xml|
           xml << "<![CDATA[\n"
-          xml << new_ipp_submit_single_payment_credit_xml(money, payment, options)
+          xml << new_submit_single_payment_credit_purchase_xml(money, payment, options)
           xml << "]]>\n"
         end
         commit("http://www.ippayments.com.au/interface/api/dts/SubmitSinglePayment", data)
+      end
+
+      def authorize(money, payment, options={})
+        data = new_submit_single_payment_ipp_xml do |xml|
+          xml << "<![CDATA[\n"
+          xml << new_submit_single_payment_credit_authorize_xml(money, payment, options)
+          xml << "]]>\n"
+        end
+        commit("http://www.ippayments.com.au/interface/api/dts/SubmitSinglePayment", data)
+      end
+
+      def capture(money, authorization, options={})
+        data = new_submit_single_capture_ipp_xml do |xml|
+          xml << "<![CDATA[\n"
+          xml << new_submit_single_capture_xml(money, authorization, options)
+          xml << "]]>\n"
+        end
+        commit("http://www.ippayments.com.au/interface/api/dts/SubmitSingleCapture", data)
+      end
+
+      def void(authorization, options={})
+        new_void_response(authorization)
+      end
+
+      def refund(money, authorization, options={})
+        data = new_submit_single_refund_ipp_xml do |xml|
+          xml << "<![CDATA[\n"
+          xml << new_submit_single_refund_xml(money, authorization, options)
+          xml << "]]>\n"
+        end
+        commit("http://www.ippayments.com.au/interface/api/dts/SubmitSingleRefund", data)
       end
 
       private
@@ -47,7 +78,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def new_ipp_submit_single_payment_xml
+      def new_submit_single_payment_ipp_xml
         new_ipp_xml do |xml|
           xml.SubmitSinglePayment "xmlns" => "http://www.ippayments.com.au/interface/api/dts" do
             xml.trnXML do
@@ -57,7 +88,27 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def new_ipp_submit_single_payment_credit_xml(money, payment, options)
+      def new_submit_single_capture_ipp_xml
+        new_ipp_xml do |xml|
+          xml.SubmitSingleCapture "xmlns" => "http://www.ippayments.com.au/interface/api/dts" do
+            xml.trnXML do
+              yield xml
+            end
+          end
+        end
+      end
+
+      def new_submit_single_refund_ipp_xml
+        new_ipp_xml do |xml|
+          xml.SubmitSingleRefund "xmlns" => "http://www.ippayments.com.au/interface/api/dts" do
+            xml.trnXML do
+              yield xml
+            end
+          end
+        end
+      end
+
+      def new_submit_single_payment_credit_purchase_xml(money, payment, options)
         new_xml do |xml|
           xml.Transaction do
             xml.CustRef options[:order_id]
@@ -79,46 +130,114 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def new_submit_single_payment_credit_authorize_xml(money, payment, options)
+        new_xml do |xml|
+          xml.Transaction do
+            xml.CustRef options[:order_id]
+            xml.Amount money.to_s
+            xml.TrnType "2"
+            xml.CreditCard :Registered => "False" do
+              xml.CardNumber payment.number
+              xml.ExpM format(payment.month, :two_digits)
+              xml.ExpY format(payment.year, :four_digits)
+              xml.CVN payment.verification_value
+              xml.CardHolderName payment.name
+            end
+            xml.Security do
+              xml.UserName @options[:login]
+              xml.Password @options[:password]
+            end
+            xml.TrnSource options[:ip]
+          end
+        end
+      end
+
+      def new_submit_single_capture_xml(money, authorization, options)
+        new_xml do |xml|
+          xml.Capture do
+            xml.Receipt authorization
+            xml.Amount money
+            xml.Security do
+              xml.UserName @options[:login]
+              xml.Password @options[:password]
+            end
+          end
+        end
+      end
+
+      def new_submit_single_refund_xml(money, authorization, options)
+        new_xml do |xml|
+          xml.Refund do
+            xml.Receipt authorization
+            xml.Amount money
+            xml.Security do
+              xml.UserName @options[:login]
+              xml.Password @options[:password]
+            end
+          end
+        end
+      end
+
       def parse_response(body)
-        response = {}
+        params = {}
         doc = Nokogiri::XML(body)
         doc.root.elements.each do |e|
-          response[e.name.underscore.to_sym] = e.inner_text
+          params[e.name.underscore.to_sym] = e.inner_text
         end
-        response
+        params
       end
 
       def parse(body)
         doc = Nokogiri::XML(body)
-        parse_response(doc.root.first_element_child.first_element_child.inner_text)
+        element = doc.root.first_element_child.first_element_child
+        parse_response(element.inner_text)
       end
 
       def commit(action, data)
-        url = (test? ? test_url : live_url)
         headers = {
           "Content-Type" => "text/xml; charset=utf-8",
           "SOAPAction" => action,
         }
-        response = parse(ssl_post(url, data, headers))
+        params = parse(ssl_post(commit_url, data, headers))
+        new_response(params)
+      end
+
+      def commit_url
+        test? ? test_url : live_url
+      end
+
+      def new_response(params)
         Response.new(
-          success_from(response),
-          message_from(response),
-          response,
-          authorization: authorization_from(response),
+          success_from(params),
+          message_from(params),
+          params,
+          authorization: authorization_from(params),
           test: test?
         )
       end
 
-      def success_from(response)
-        response[:response_code] == "0"
+      def success_from(params)
+        params[:response_code] == "0"
       end
 
-      def message_from(response)
-        response[:declined_message]
+      def message_from(params)
+        params[:declined_message]
       end
 
-      def authorization_from(response)
-        response[:receipt]
+      def authorization_from(params)
+        params[:receipt]
+      end
+
+      def new_void_response(authorization)
+        params = {
+        }
+        Response.new(
+          true,
+          "",
+          params,
+          authorization: authorization,
+          test: test?
+        )
       end
     end
   end
