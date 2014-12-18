@@ -29,8 +29,8 @@ module ActiveMerchant #:nodoc:
       STANDARD_ERROR_CODE_MAPPING = {
         # Fraud Warnings
         'PMT-1000' => STANDARD_ERROR_CODE[:processing_error],   # payment was accepted, but refund was unsuccessful
-        'PMT-1001' => STANDARD_ERROR_CODE[:processing_error],   # payment processed, but cvc was invalud
-        'PMT-1002' => STANDARD_ERROR_CODE[:processing_error],   # payment processed, incorrect address info
+        'PMT-1001' => STANDARD_ERROR_CODE[:invalid_cvc],   # payment processed, but cvc was invalid
+        'PMT-1002' => STANDARD_ERROR_CODE[:incorrect_address],   # payment processed, incorrect address info
         'PMT-1003' => STANDARD_ERROR_CODE[:processing_error],   # payment processed, address info couldn't be validated
         
         # Fraud Errors
@@ -48,15 +48,15 @@ module ActiveMerchant #:nodoc:
 
         # Transaction Declined
         'PMT-5000' => STANDARD_ERROR_CODE[:card_declined],      # Request was declined
-        'PMT-5001' => STANDARD_ERROR_CODE[:processing_error],   # Merchant does not support given payment method
+        'PMT-5001' => STANDARD_ERROR_CODE[:card_declined],   # Merchant does not support given payment method
 
         # System Error
         'PMT-6000' => STANDARD_ERROR_CODE[:processing_error],   # A temporary Issue prevented this request from being processed.
       }
 
-      SUCCCESS_CODES = ['PMT-1000','PMT-1000','PMT-1001','PMT-1002','PMT-1003','0']
+      FRAUD_WARNING_CODES = ['PMT-1000','PMT-1001','PMT-1002','PMT-1003','0']
 
-      def initialize(options={})
+      def initialize(options = {})
         requires!(options, :consumer_key, :consumer_secret, :access_token, :token_secret, :realm)
         @consumer_key = options[:consumer_key]
         @consumer_secret = options[:consumer_secret]
@@ -68,35 +68,35 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options = {})
         post = {}
-        charge_data(post, payment, options)
+        add_amount(post, money, options)
+        add_charge_data(post, payment, options)
         post[:capture] = "true"
 
         commit(ENDPOINT, post)
       end
 
-      def authorize(money, payment, options={})
+      def authorize(money, payment, options = {})
         post = {}
         add_amount(post, money, options)
-        charge_data(post, payment, options)
+        add_charge_data(post, payment, options)
         post[:capture] = "false"
 
         commit(ENDPOINT, post)
       end
 
-      def capture(money, authorization, options={})
+      def capture(money, authorization, options = {})
         capture_uri = "#{ENDPOINT}/#{CGI.escape(authorization)}/capture"
-        post = options[:id]
-        commit(capture_uri, post)
+        commit(capture_uri, )
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, authorization, options = {})
         post = {}
         post[:amount] = money.to_s
         refund_uri = "#{ENDPOINT}/#{CGI.escape(authorization)}/refund"
         commit(refund_uri, post)
       end
 
-      def void(authorization, options={})
+      def void(authorization, options = {})
         MultiResponse.run do |r|
           amount = r.process { amount_to_void(authorization: authorization) }
           r.process { refund(amount, authorization, options = {}) }
@@ -110,9 +110,24 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((realm=\")\w+), '\1[FILTERED]').
+          gsub(%r((oauth_consumer_key=\")\w+), '\1[FILTERED]').
+          gsub(%r((oauth_nonce=\")\w+), '\1[FILTERED]').
+          gsub(%r((oauth_signature=\")[a-zA-Z%0-9]+), '\1[FILTERED]').
+          gsub(%r((oauth_token=\")\w+), '\1[FILTERED]').
+          gsub(%r((\"card\":{\"number\":\")\d+), '\1[FILTERED]').
+          gsub(%r((\"cvc\":\")\d+), '\1[FILTERED]')
+      end
+
       private
 
-      def charge_data(post, payment, options = {})
+      def add_charge_data(post, payment, options = {})
         add_payment(post, payment, options)
         add_address(post, options)
         add_context(options[:context]) if options[:context]
@@ -124,7 +139,7 @@ module ActiveMerchant #:nodoc:
         if address = options[:billing_address] || options[:address]
           card_address[:streetAddress] = address[:address1]
           card_address[:city] = address[:city]
-          card_address[:region] = address[:state]
+          card_address[:region] = address[:state] || address[:region]
           card_address[:country] = address[:country]
           card_address[:postalCode] = address[:zip] if address[:zip]
         end
@@ -135,7 +150,6 @@ module ActiveMerchant #:nodoc:
         currency = options[:currency] || currency(money)
         post[:amount] = localized_amount(money, currency)
         post[:currency] = currency.upcase
-        post[:amount]
       end
 
       def add_payment(post, payment, options = {})
@@ -172,9 +186,9 @@ module ActiveMerchant #:nodoc:
         JSON.parse(body)
       end
 
-      def commit(uri, body)
+      def commit(uri, body = {})
         endpoint = gateway_url + uri
-
+        
         begin
           response = ssl_post(endpoint, post_data(body), headers(method: :post, uri: endpoint))
         rescue ResponseError => e
@@ -192,6 +206,7 @@ module ActiveMerchant #:nodoc:
           parsed_response,
           authorization: authorization_from(parsed_response), 
           test: test?,
+          cvv_result: cvv_code_from(parsed_response),
           error_code: errors_from(parsed_response)
         )
       end
@@ -235,13 +250,21 @@ module ActiveMerchant #:nodoc:
 
         {
           "Content-type" => "application/json",
-          "Request-Id" => Time.now.to_i.to_s,
+          "Request-Id" => generate_unique_id,
           "Authorization" => oauth_header
         }
       end
 
+      def cvv_code_from(response)
+        if response['errors'].present?
+          FRAUD_WARNING_CODES.include?(response['errors'].first['code']) ? 'I' : ''
+        else 
+          success?(response) ? 'M' : ''
+        end
+      end
+
       def success?(response)
-        response['errors'].present? ? SUCCCESS_CODES.include?(response['errors'].first['code']) : true
+        response['errors'].present? ? FRAUD_WARNING_CODES.include?(response['errors'].first['code']) : true
       end
       
       def message_from(response)
@@ -249,7 +272,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def errors_from(response)
-          response['errors'].present? ? STANDARD_ERROR_CODE_MAPPING[response["errors"].first["code"]] : ""
+        response['errors'].present? ? STANDARD_ERROR_CODE_MAPPING[response["errors"].first["code"]] : ""
       end
 
       def authorization_from(response)
