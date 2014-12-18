@@ -226,3 +226,12 @@ information on adding a new gateway to ActiveMerchant.
 Please don't touch the CHANGELOG in your pull requests, we'll add the appropriate CHANGELOG entries
 at release time.
 
+## Placement Within Shopify
+
+The addition of your gateway to active_merchant does not guarantee placement within Shopify. In order to have your gateway considered, please send an email to payment-integrations@shopify.com with **Active_Merchant Integration** in the subject. Be sure to include:
+
+1. Name, URL & description of the payment provider you wish to integrate
+2. Markets served by this integration
+3. List of major supported payment methods
+4. Your most recent Certificate of PCI Compliance
+
