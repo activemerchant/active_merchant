@@ -12,10 +12,15 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.ippayments.com.au/'
       self.display_name = 'IPP'
 
-      STANDARD_ERROR_CODE_MAPPING = {}
+      STANDARD_ERROR_CODE_MAPPING = {
+        "5" => STANDARD_ERROR_CODE[:card_declined],
+        "6" => STANDARD_ERROR_CODE[:processing_error],
+        "14" => STANDARD_ERROR_CODE[:invalid_number],
+        "54" => STANDARD_ERROR_CODE[:expired_card],
+      }
 
       def initialize(options={})
-        requires!(options, :login, :password)
+        requires!(options, :username, :password)
         super
       end
 
@@ -25,7 +30,7 @@ module ActiveMerchant #:nodoc:
           xml << new_submit_single_payment_credit_purchase_xml(money, payment, options)
           xml << "]]>\n"
         end
-        commit("http://www.ippayments.com.au/interface/api/dts/SubmitSinglePayment", data)
+        commit("SubmitSinglePayment", data)
       end
 
       def authorize(money, payment, options={})
@@ -34,7 +39,7 @@ module ActiveMerchant #:nodoc:
           xml << new_submit_single_payment_credit_authorize_xml(money, payment, options)
           xml << "]]>\n"
         end
-        commit("http://www.ippayments.com.au/interface/api/dts/SubmitSinglePayment", data)
+        commit("SubmitSinglePayment", data)
       end
 
       def capture(money, authorization, options={})
@@ -43,11 +48,7 @@ module ActiveMerchant #:nodoc:
           xml << new_submit_single_capture_xml(money, authorization, options)
           xml << "]]>\n"
         end
-        commit("http://www.ippayments.com.au/interface/api/dts/SubmitSingleCapture", data)
-      end
-
-      def void(authorization, options={})
-        new_void_response(authorization)
+        commit("SubmitSingleCapture", data)
       end
 
       def refund(money, authorization, options={})
@@ -56,7 +57,7 @@ module ActiveMerchant #:nodoc:
           xml << new_submit_single_refund_xml(money, authorization, options)
           xml << "]]>\n"
         end
-        commit("http://www.ippayments.com.au/interface/api/dts/SubmitSingleRefund", data)
+        commit("SubmitSingleRefund", data)
       end
 
       private
@@ -122,7 +123,7 @@ module ActiveMerchant #:nodoc:
               xml.CardHolderName payment.name
             end
             xml.Security do
-              xml.UserName @options[:login]
+              xml.UserName @options[:username]
               xml.Password @options[:password]
             end
             xml.TrnSource options[:ip]
@@ -144,7 +145,7 @@ module ActiveMerchant #:nodoc:
               xml.CardHolderName payment.name
             end
             xml.Security do
-              xml.UserName @options[:login]
+              xml.UserName @options[:username]
               xml.Password @options[:password]
             end
             xml.TrnSource options[:ip]
@@ -158,7 +159,7 @@ module ActiveMerchant #:nodoc:
             xml.Receipt authorization
             xml.Amount money
             xml.Security do
-              xml.UserName @options[:login]
+              xml.UserName @options[:username]
               xml.Password @options[:password]
             end
           end
@@ -171,7 +172,7 @@ module ActiveMerchant #:nodoc:
             xml.Receipt authorization
             xml.Amount money
             xml.Security do
-              xml.UserName @options[:login]
+              xml.UserName @options[:username]
               xml.Password @options[:password]
             end
           end
@@ -196,7 +197,7 @@ module ActiveMerchant #:nodoc:
       def commit(action, data)
         headers = {
           "Content-Type" => "text/xml; charset=utf-8",
-          "SOAPAction" => action,
+          "SOAPAction" => "http://www.ippayments.com.au/interface/api/dts/#{action}",
         }
         params = parse(ssl_post(commit_url, data, headers))
         new_response(params)
@@ -212,12 +213,17 @@ module ActiveMerchant #:nodoc:
           message_from(params),
           params,
           authorization: authorization_from(params),
-          test: test?
+          error_code: error_code_from(params),
+          test: test?,
         )
       end
 
       def success_from(params)
         params[:response_code] == "0"
+      end
+
+      def error_code_from(params)
+        STANDARD_ERROR_CODE_MAPPING[params[:declined_code]]
       end
 
       def message_from(params)
@@ -226,18 +232,6 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(params)
         params[:receipt]
-      end
-
-      def new_void_response(authorization)
-        params = {
-        }
-        Response.new(
-          true,
-          "",
-          params,
-          authorization: authorization,
-          test: test?
-        )
       end
     end
   end

@@ -32,13 +32,6 @@ class RemoteIppTest < Test::Unit::TestCase
     assert_success response
   end
 
-  def test_successful_authorize_and_void
-    response = @gateway.authorize(200, @credit_card, @options)
-    assert_success response
-    response = @gateway.void(response.authorization)
-    assert_success response
-  end
-
   def test_failed_authorize
     response = @gateway.authorize(105, @credit_card, @options)
     assert_failure response
@@ -65,7 +58,7 @@ class RemoteIppTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = IppGateway.new(
-      login: '',
+      username: '',
       password: '',
     )
     response = gateway.purchase(200, @credit_card, @options)
