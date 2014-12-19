@@ -328,14 +328,48 @@ module ActiveMerchant #:nodoc:
           options[:authorization] = result.transaction.id
         end
         if result.transaction
-          options[:avs_result] = {
-            :code => nil, :message => nil,
-            :street_match => result.transaction.avs_street_address_response_code,
-            :postal_match => result.transaction.avs_postal_code_response_code
-          }
+          options[:avs_result] = { code: avs_code_from(result.transaction) }
           options[:cvv_result] = result.transaction.cvv_response_code
         end
         options
+      end
+
+      def avs_code_from(transaction)
+        avs_mapping["street: #{transaction.avs_street_address_response_code}, zip: #{transaction.avs_postal_code_response_code}"]
+      end
+
+      def avs_mapping
+        {
+          "street: M, zip: M" => "M",
+          "street: M, zip: N" => "A",
+          "street: M, zip: U" => "B",
+          "street: M, zip: I" => "B",
+          "street: M, zip: A" => "B",
+
+          "street: N, zip: M" => "Z",
+          "street: N, zip: N" => "C",
+          "street: N, zip: U" => "C",
+          "street: N, zip: I" => "C",
+          "street: N, zip: A" => "C",
+
+          "street: U, zip: M" => "P",
+          "street: U, zip: N" => "N",
+          "street: U, zip: U" => "I",
+          "street: U, zip: I" => "I",
+          "street: U, zip: A" => "I",
+
+          "street: I, zip: M" => "P",
+          "street: I, zip: N" => "C",
+          "street: I, zip: U" => "I",
+          "street: I, zip: I" => "I",
+          "street: I, zip: A" => "I",
+
+          "street: A, zip: M" => "P",
+          "street: A, zip: N" => "C",
+          "street: A, zip: U" => "I",
+          "street: A, zip: I" => "I",
+          "street: A, zip: A" => "I"
+        }
       end
 
       def message_from_transaction_result(result)

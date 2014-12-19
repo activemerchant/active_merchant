@@ -197,14 +197,26 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     ActiveMerchant::Billing::BraintreeBlueGateway.application_id = nil
   end
 
-  def test_avs_match
-    assert response = @gateway.purchase(@amount, @credit_card,
-      @options.merge(
-        :billing_address => {:address1 => "1 E Main St", :zip => "60622"}
-      )
-    )
-    assert_success response
-    assert_equal({'code' => nil, 'message' => nil, 'street_match' => 'M', 'postal_match' => 'M'}, response.avs_result)
+  def test_avs
+    assert_avs("1 Elm", "60622", "M")
+    assert_avs("1 Elm", "20000", "A")
+    assert_avs("1 Elm", "20001", "B")
+    assert_avs("1 Elm", "", "B")
+
+    assert_avs("200 Elm", "60622", "Z")
+    assert_avs("200 Elm", "20000", "C")
+    assert_avs("200 Elm", "20001", "C")
+    assert_avs("200 Elm", "", "C")
+
+    assert_avs("201 Elm", "60622", "P")
+    assert_avs("201 Elm", "20000", "N")
+    assert_avs("201 Elm", "20001", "I")
+    assert_avs("201 Elm", "", "I")
+
+    assert_avs("", "60622", "P")
+    assert_avs("", "20000", "C")
+    assert_avs("", "20001", "I")
+    assert_avs("", "", "I")
   end
 
   def test_cvv_match
@@ -563,6 +575,15 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert response = @gateway.store(card, :verify_card => true, :verification_merchant_account_id => fixtures(:braintree_blue)[:merchant_account_id])
     assert_success response, "You must specify a valid :merchant_account_id key in your fixtures.yml for this to pass."
     assert_equal 'OK', response.message
+  end
+
+
+  private
+  def assert_avs(address1, zip, expected_avs_code)
+    response = @gateway.purchase(@amount, @credit_card, billing_address: {address1: address1, zip: zip})
+
+    assert_success response
+    assert_equal expected_avs_code, response.avs_result['code']
   end
 
 end
