@@ -23,6 +23,7 @@ class PayflowTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
     assert_equal "VUJN1A6E11D9", response.authorization
+    refute response.fraud_review?
   end
 
   def test_failed_authorization
@@ -32,6 +33,15 @@ class PayflowTest < Test::Unit::TestCase
     assert_equal "Declined", response.message
     assert_failure response
     assert response.test?
+  end
+
+  def test_successful_purchase_with_fraud_review
+    @gateway.stubs(:ssl_post).returns(successful_purchase_with_fraud_review_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "126", response.params["result"]
+    assert response.fraud_review?
   end
 
   def test_credit
@@ -115,7 +125,7 @@ class PayflowTest < Test::Unit::TestCase
       :password => 'PASSWORD'
     )
 
-    assert !gateway.test?
+    refute gateway.test?
   end
 
   def test_partner_class_accessor
@@ -437,6 +447,46 @@ class PayflowTest < Test::Unit::TestCase
     <StreetMatch>Match</StreetMatch>
     <CvResult>Match</CvResult>
 </ResponseData>
+    XML
+  end
+
+  def successful_purchase_with_fraud_review_response
+    <<-XML
+      <XMLPayResponse  xmlns="http://www.paypal.com/XMLPay">
+        <ResponseData>
+          <Vendor>spreedly</Vendor>
+          <Partner>paypal</Partner>
+          <TransactionResults>
+            <TransactionResult>
+              <Result>126</Result>
+              <ProcessorResult>
+                <HostCode>A</HostCode>
+              </ProcessorResult>
+              <FraudPreprocessResult>
+                <Message>Review HighRiskBinCheck</Message>
+                <XMLData>
+                  <triggeredRules>
+                    <rule num="1">
+                      <ruleId>13</ruleId>
+                      <ruleID>13</ruleID>
+                      <ruleAlias>HighRiskBinCheck</ruleAlias>
+                      <ruleDescription>BIN Risk List Match</ruleDescription>
+                      <action>R</action>
+                      <triggeredMessage>The card number is in a high risk bin list</triggeredMessage>
+                    </rule>
+                  </triggeredRules>
+                </XMLData>
+              </FraudPreprocessResult>
+              <FraudPostprocessResult>
+                <Message>Review</Message>
+              </FraudPostprocessResult>
+              <Message>Under review by Fraud Service</Message>
+              <PNRef>A71A7B022DC0</PNRef>
+              <AuthCode>907PNI</AuthCode>
+            </TransactionResult>
+          </TransactionResults>
+        </ResponseData>
+      </XMLPayResponse>
     XML
   end
 
