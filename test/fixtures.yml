@@ -258,6 +258,10 @@ instapay:
   login: TEST0
   password:
 
+ipp:
+  username: nmi.api
+  password: qwerty123
+
 iridium:
     login: LOGIN
     password: PASSWORD
