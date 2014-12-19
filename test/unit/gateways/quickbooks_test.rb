@@ -127,9 +127,9 @@ class QuickBooksTest < Test::Unit::TestCase
     <<-RESPONSE
     {
       "errors":[{
-        "code": "PMT-5000",
+        "code": "PMT-4000",
         "type": "invalid_request",
-        "message": "he request to process this transaction has been declined.",
+        "message": "the request to process this transaction has been declined.",
         "detail": "Amount.",
         "infoLink": "https://developer.intuit.com/v2/docs?redirectID=PayErrors"
       }]

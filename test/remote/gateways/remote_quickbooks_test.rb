@@ -3,14 +3,15 @@ require 'test_helper'
 class RemoteTest < Test::Unit::TestCase
   def setup
     @gateway = QuickbooksGateway.new(fixtures(:quickbooks))
-
     @amount = 100
     @credit_card = credit_card('4000100011112224')
-    @declined_card = credit_card('4000300011112220')
+    @declined_card = credit_card('4000000000000001')
 
     @options = {
       order_id: '1',
-      billing_address: address,
+      billing_address: address({ zip: 90210, 
+                                 country: 'US', 
+                                 state: 'CA'}),
       description: 'Store Purchase'
     }
   end
@@ -18,13 +19,13 @@ class RemoteTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
+    assert_equal 'Transaction Approved', response.message
   end
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
+    assert_equal "cardNumber is invalid.", response.message
   end
 
   def test_successful_authorize_and_capture
@@ -77,35 +78,42 @@ class RemoteTest < Test::Unit::TestCase
   def test_successful_void
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
-
     assert void = @gateway.void(auth.authorization)
     assert_success void
   end
 
   def test_failed_void
-    response = @gateway.void('')
+    response = @gateway.void('some_bad_thing')
     assert_failure response
   end
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match %r{REPLACE WITH SUCCESS MESSAGE}, response.message
+    assert_match %r{Transaction Approved}, response.message
   end
 
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
-    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    assert_match %r{cardNumber is invalid.}, response.message
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
   end
 
   def test_invalid_login
     gateway = QuickbooksGateway.new(
-      login: '',
-      password: ''
+      consumer_key: '',
+      consumer_secret: '',
+      access_token: '',
+      token_secret: '',
+      realm: ''
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+  end
+
+  def test_dump_transcript
+    skip('See quickbooks_test.rb for a scrubbed transcript')
+    dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
   end
 end

@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners]
 
       self.homepage_url = 'http://payments.intuit.com'
       self.display_name = 'QuickBooks Payments'
@@ -48,13 +48,13 @@ module ActiveMerchant #:nodoc:
 
         # Transaction Declined
         'PMT-5000' => STANDARD_ERROR_CODE[:card_declined],      # Request was declined
-        'PMT-5001' => STANDARD_ERROR_CODE[:card_declined],   # Merchant does not support given payment method
+        'PMT-5001' => STANDARD_ERROR_CODE[:card_declined],      # Merchant does not support given payment method
 
         # System Error
         'PMT-6000' => STANDARD_ERROR_CODE[:processing_error],   # A temporary Issue prevented this request from being processed.
       }
 
-      FRAUD_WARNING_CODES = ['PMT-1000','PMT-1001','PMT-1002','PMT-1003','0']
+      FRAUD_WARNING_CODES = ['PMT-1000','PMT-1001','PMT-1002','PMT-1003']
 
       def initialize(options = {})
         requires!(options, :consumer_key, :consumer_secret, :access_token, :token_secret, :realm)
@@ -86,27 +86,31 @@ module ActiveMerchant #:nodoc:
 
       def capture(money, authorization, options = {})
         capture_uri = "#{ENDPOINT}/#{CGI.escape(authorization)}/capture"
-        commit(capture_uri, )
+
+        commit(capture_uri)
       end
 
       def refund(money, authorization, options = {})
         post = {}
-        post[:amount] = money.to_s
-        refund_uri = "#{ENDPOINT}/#{CGI.escape(authorization)}/refund"
-        commit(refund_uri, post)
+        post[:amount] = money.is_a?(String) ? money : amount(money)
+        refund_uri = "#{ENDPOINT}/#{CGI.escape(authorization)}/refunds"
+
+        commit(refund_uri, post) 
       end
 
       def void(authorization, options = {})
         MultiResponse.run do |r|
-          amount = r.process { amount_to_void(authorization: authorization) }
-          r.process { refund(amount, authorization, options = {}) }
+          r.process { auth_object_from(authorization) } 
+          if amount = r.params.try(:[], 'amount')
+            r.process { refund(amount, authorization, options) }
+          end
         end.responses.last
       end
 
       def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(1.00, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
+          r.process { void(r.authorization, options) }
         end
       end
 
@@ -135,6 +139,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, options)
         return unless post[:card] && post[:card].kind_of?(Hash)
+        
         card_address = {}
         if address = options[:billing_address] || options[:address]
           card_address[:streetAddress] = address[:address1]
@@ -176,23 +181,38 @@ module ActiveMerchant #:nodoc:
         post[:context] = payment_context
       end
 
-      def amount_to_void(authorization)
-        uri = "#{gateway_url}#{ENDPOINT}/#{authorization}"
-        response = parse(ssl_request(:get, uri, post_data, headers(method: :get, uri: uri)))
-        response[:amount]
+      def auth_object_from(authorization)
+        uri = "#{ENDPOINT}/#{authorization}"
+        commit(uri, {}, method = :get)
       end
 
       def parse(body)
         JSON.parse(body)
       end
 
-      def commit(uri, body = {})
+      def commit(uri, body = {}, method = :post)
         endpoint = gateway_url + uri
-        
         begin
-          response = ssl_post(endpoint, post_data(body), headers(method: :post, uri: endpoint))
+          response = case method
+          when :post
+            ssl_post(endpoint, post_data(body), headers(method: :post, uri: endpoint))
+          when :get
+            ssl_request(:get, endpoint, nil, headers(method: :get, uri: endpoint))
+          end
         rescue ResponseError => e
-          response = e.response.body
+          if e.response.body.present?
+            response = e.response.body 
+          else
+            return Response.new(
+              false,
+              "There was a problem connecting to QuickBooks",
+              {
+                code: e.response.code,
+                message: e.response.message 
+              },
+              test: test?
+              )
+            end
         end
 
         response_object(response)
@@ -200,6 +220,7 @@ module ActiveMerchant #:nodoc:
 
       def response_object(raw_response)
         parsed_response = parse(raw_response)
+
         Response.new(
           success?(parsed_response),
           message_from(parsed_response),
@@ -221,16 +242,16 @@ module ActiveMerchant #:nodoc:
 
       def headers(options)
         return unless options[:method] && options[:uri]
+        
         method = options[:method]
         uri = options[:uri]
-
         request_uri = URI.parse(uri)
 
         request_class = case method
-        when :post
-          Net::HTTP::Post
-        when :get
-          Net::HTTP::Get
+          when :post
+            Net::HTTP::Post
+          when :get
+           Net::HTTP::Get
         end
         consumer = OAuth::Consumer.new(
           @consumer_key,
@@ -258,13 +279,13 @@ module ActiveMerchant #:nodoc:
       def cvv_code_from(response)
         if response['errors'].present?
           FRAUD_WARNING_CODES.include?(response['errors'].first['code']) ? 'I' : ''
-        else 
+        elsif 
           success?(response) ? 'M' : ''
         end
       end
 
       def success?(response)
-        response['errors'].present? ? FRAUD_WARNING_CODES.include?(response['errors'].first['code']) : true
+        response['errors'].present? ? FRAUD_WARNING_CODES.merge(['0']).include?(response['errors'].first['code']) : true
       end
       
       def message_from(response)
