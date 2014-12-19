@@ -2,7 +2,6 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class WorldpayOnlinePaymentsGateway < Gateway
       self.live_url = 'https://api.worldpay.com/v1/'
-      #self.live_url = self.test_url = 'https://api.worldpay.com/v1/'
 
       self.default_currency = 'GBP'
       self.money_format = :cents
@@ -12,20 +11,6 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'http://online.worldpay.com'
       self.display_name = 'Worldpay Online Payments'
-
-      CARD_CODES = {
-          'visa'             => 'VISA-SSL',
-          'master'           => 'ECMC-SSL',
-          'discover'         => 'DISCOVER-SSL',
-          'american_express' => 'AMEX-SSL',
-          'jcb'              => 'JCB-SSL',
-          'maestro'          => 'MAESTRO-SSL',
-          'laser'            => 'LASER-SSL',
-          'diners_club'      => 'DINERS-SSL',
-          'switch'           => 'MAESTRO-SSL'
-      }
-
-      #VISA, MASTERCARD, BHS, IKEA, AMEX, DINERS, DANKORT, DISCOVER, JCB, AIRPLUS, UATP, MAESTRO, LASER, UNKNOWN, VISA_CREDIT, VISA_DEBIT, MASTERCARD_CREDIT, MASTERCARD_DEBIT, CARTEBLEUE;
 
       def initialize(options={})
         requires!(options, :client_key)
@@ -41,8 +26,6 @@ module ActiveMerchant #:nodoc:
         token_response = parse(token_response)
 
         if token_response['token']
-
-          #add_creditcard(post, creditcard, options)
 
           Response.new(true,
                        "SUCCESS",
@@ -110,7 +93,6 @@ module ActiveMerchant #:nodoc:
 
         url = self.live_url+'/tokens'
 
-        #xmr = ssl_post(url, request, 'Content-Type' => 'text/xml', 'Authorization' => encoded_credentials)
         token_response = ssl_post(url, obj.to_json, 'Content-Type' => 'application/json', 'Authorization' => @service_key)
 
         token_response
@@ -160,9 +142,6 @@ module ActiveMerchant #:nodoc:
         post[:currency] = currency.downcase if include_currency
       end
 
-      def add_customer_data(post, options)
-      end
-
       def add_address(post, options)
         return unless post[:card] && post[:card].kind_of?(Hash)
         if address = options[:billing_address] || options[:address]
@@ -205,11 +184,8 @@ module ActiveMerchant #:nodoc:
         post[:currency] = (options[:currency] || currency(money))
       end
 
-      def add_payment(post, payment)
-      end
-
       def parse(body)
-        if (body.class==NilClass)
+        if (!body)
           body = {}
         else
           body = JSON.parse(body)
@@ -279,15 +255,6 @@ module ActiveMerchant #:nodoc:
                 "message" => msg
             }
         }
-      end
-
-      def success_from(response)
-      end
-
-      def message_from(response)
-      end
-
-      def authorization_from(response)
       end
 
       def post_data(params)
