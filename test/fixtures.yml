@@ -445,9 +445,10 @@ payex:
   # encryption key is generated via the PayEx Admin console
   encryption_key: ENCRYPTION_KEY
 
+# Working credentials, no need to replace
 payflow:
-  login: LOGIN
-  password: PASSWORD
+  login: spreedly
+  password: 'ibB4Z8=d;G'
   partner: PayPal
 
 payflow_uk:
