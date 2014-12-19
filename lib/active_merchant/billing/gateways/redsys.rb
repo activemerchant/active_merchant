@@ -9,30 +9,14 @@ module ActiveMerchant #:nodoc:
     # used by many banks in Spain and is particularly well supported by
     # Catalunya Caixa's ecommerce department.
     #
-    # Standard ActiveMerchant methods are supported, with one notable exception:
-    # :order_id must be provided and must conform to a very specific format.
+    # Redsys requires an order_id be provided with each transaction and it must
+    # follow a specific format. The rules are as follows:
     #
-    # == Example use:
-    #
-    #   gateway = ActiveMerchant::Billing::RedsysGateway.new(
-    #               :login      => "091358382",
-    #               :secret_key => "qwertyasdf0123456789"
-    #            )
-    #
-    #   # Run a purchase for 10 euros
-    #   response = gateway.purchase(1000, creditcard, :order_id => "123456")
-    #   puts reponse.success?       # => true
-    #
-    #   # Partially refund the purchase
-    #   response = gateway.refund(500, response.authorization)
-    #
-    # Redsys requires an order_id be provided with each transaction of a
-    # specific format. The rules are as follows:
-    #
-    #  * Minimum length: 4
-    #  * Maximum length: 12
     #  * First 4 digits must be numerical
     #  * Remaining 8 digits may be alphanumeric
+    #  * Max length: 12
+    #
+    #  If an invalid order_id is provided, we do our best to clean it up.
     #
     # Much of the code for this library is based on the active_merchant_sermepa
     # integration gateway which uses essentially the same API but with the
@@ -44,18 +28,13 @@ module ActiveMerchant #:nodoc:
       self.live_url = "https://sis.sermepa.es/sis/operaciones"
       self.test_url = "https://sis-t.sermepa.es:25443/sis/operaciones"
 
-      # Sensible region specific defaults.
       self.supported_countries = ['ES']
       self.default_currency    = 'EUR'
       self.money_format        = :cents
 
       # Not all card types may be activated by the bank!
       self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :diners_club]
-
-      # Homepage URL of the gateway for reference
       self.homepage_url        = "http://www.redsys.es/"
-
-      # What to call this gateway
       self.display_name        = "Redsys"
 
       CURRENCY_CODES = {
@@ -95,14 +74,12 @@ module ActiveMerchant #:nodoc:
       # a card has been rejected. Syntax or general request errors
       # are not covered here.
       RESPONSE_TEXTS = {
-        # Accepted Codes
         0 => "Transaction Approved",
         400 => "Cancellation Accepted",
         481 => "Cancellation Accepted",
         500 => "Reconciliation Accepted",
         900 => "Refund / Confirmation approved",
 
-        # Declined error codes
         101 => "Card expired",
         102 => "Card blocked temporarily or under susciption of fraud",
         104 => "Transaction not permitted",
@@ -122,7 +99,6 @@ module ActiveMerchant #:nodoc:
         190 => "Refusal with no specific reason",
         191 => "Expiry date incorrect",
 
-        # Declined, and suspected of fraud
         201 => "Card expired",
         202 => "Card blocked temporarily or under suscipition of fraud",
         204 => "Transaction not permitted",
@@ -132,13 +108,11 @@ module ActiveMerchant #:nodoc:
         280 => "CVV2/CVC2 Error",
         290 => "Declined with no specific reason",
 
-        # More general codes for specific types of transaction
         480 => "Original transaction not located, or time-out exceeded",
         501 => "Original transaction not located, or time-out exceeded",
         502 => "Original transaction not located, or time-out exceeded",
         503 => "Original transaction not located, or time-out exceeded",
 
-        # Declined transactions by the bank
         904 => "Merchant not registered at FUC",
         909 => "System error",
         912 => "Issuer not available",
@@ -193,6 +167,7 @@ module ActiveMerchant #:nodoc:
         add_amount(data, money, options)
         add_order(data, options[:order_id])
         add_creditcard(data, creditcard)
+        data[:description] = options[:description]
 
         commit data
       end
@@ -205,6 +180,7 @@ module ActiveMerchant #:nodoc:
         add_amount(data, money, options)
         add_order(data, options[:order_id])
         add_creditcard(data, creditcard)
+        data[:description] = options[:description]
 
         commit data
       end
@@ -215,6 +191,7 @@ module ActiveMerchant #:nodoc:
         add_amount(data, money, options)
         order_id, _, _ = split_authorization(authorization)
         add_order(data, order_id)
+        data[:description] = options[:description]
 
         commit data
       end
@@ -225,6 +202,7 @@ module ActiveMerchant #:nodoc:
         order_id, amount, currency = split_authorization(authorization)
         add_amount(data, amount, :currency => currency)
         add_order(data, order_id)
+        data[:description] = options[:description]
 
         commit data
       end
@@ -235,6 +213,7 @@ module ActiveMerchant #:nodoc:
         add_amount(data, money, options)
         order_id, _, _ = split_authorization(authorization)
         add_order(data, order_id)
+        data[:description] = options[:description]
 
         commit data
       end
@@ -258,8 +237,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_order(data, order_id)
-        raise ArgumentError.new("Invalid order_id format") unless(/^\d{4}[\da-zA-Z]{0,8}$/ =~ order_id)
-        data[:order_id] = order_id
+        data[:order_id] = clean_order_id(order_id)
       end
 
       def url
@@ -308,13 +286,14 @@ module ActiveMerchant #:nodoc:
         xml.DATOSENTRADA do
           # Basic elements
           xml.DS_Version 0.1
-          xml.DS_MERCHANT_CURRENCY          data[:currency]
-          xml.DS_MERCHANT_AMOUNT            data[:amount]
-          xml.DS_MERCHANT_ORDER             data[:order_id]
-          xml.DS_MERCHANT_TRANSACTIONTYPE   data[:action]
-          xml.DS_MERCHANT_TERMINAL          @options[:terminal]
-          xml.DS_MERCHANT_MERCHANTCODE      @options[:login]
-          xml.DS_MERCHANT_MERCHANTSIGNATURE build_signature(data)
+          xml.DS_MERCHANT_CURRENCY           data[:currency]
+          xml.DS_MERCHANT_AMOUNT             data[:amount]
+          xml.DS_MERCHANT_ORDER              data[:order_id]
+          xml.DS_MERCHANT_TRANSACTIONTYPE    data[:action]
+          xml.DS_MERCHANT_PRODUCTDESCRIPTION data[:description]
+          xml.DS_MERCHANT_TERMINAL           @options[:terminal]
+          xml.DS_MERCHANT_MERCHANTCODE       @options[:login]
+          xml.DS_MERCHANT_MERCHANTSIGNATURE  build_signature(data)
 
           # Only when card is present
           if data[:card]
@@ -397,6 +376,15 @@ module ActiveMerchant #:nodoc:
 
       def is_success_response?(code)
         (code.to_i < 100) || [400, 481, 500, 900].include?(code.to_i)
+      end
+
+      def clean_order_id(order_id)
+        cleansed = order_id.gsub(/[^\da-zA-Z]/, '')
+        if cleansed =~ /^\d{4}/
+          cleansed[0..12]
+        else
+          "%04d%s" % [rand(0..9999), cleansed[0...8]]
+        end
       end
     end
   end

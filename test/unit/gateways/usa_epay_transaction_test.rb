@@ -49,6 +49,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
+    assert Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code 
   end
 
   def test_successful_purchase_passing_extra_info

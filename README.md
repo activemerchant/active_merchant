@@ -112,7 +112,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [ePay](http://epay.dk/) - DK, SE, NO
 * [EVO Canada](http://www.evocanada.com/) - CA
 * [eWAY](http://www.eway.com.au/) - AU, NZ, GB
-* [eWAY Rapid 3.0](http://www.eway.com.au/) - AU
+* [eWAY Rapid](http://www.eway.com.au/) - AU, NZ, GB, SG
 * [E-xact](http://www.e-xact.com) - CA, US
 * [Fat Zebra](https://www.fatzebra.com.au/) - AU
 * [Federated Canada](http://www.federatedcanada.com/) - CA
@@ -137,7 +137,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Merchant One Gateway](http://merchantone.com/) - US
 * [MerchantWARE](http://merchantwarehouse.com/merchantware) - US
 * [MerchantWarrior](http://www.merchantwarrior.com/) - AU
-* [Mercury](http://www.mercurypay.com) - US
+* [Mercury](http://www.mercurypay.com) - US, CA
 * [Metrics Global](http://www.metricsglobal.com) - US
 * [MasterCard Internet Gateway Service (MiGS)](http://mastercard.com/mastercardsps) - AU, AE, BD, BN, EG, HK, ID, IN, JO, KW, LB, LK, MU, MV, MY, NZ, OM, PH, QA, SA, SG, TT, VN
 * [Modern Payments](http://www.modpay.com) - US
@@ -214,9 +214,11 @@ Deprecated functionality is removed on major version changes - for example, depr
 
 ## Contributing
 
-The source code is hosted at [GitHub](http://github.com/Shopify/active_merchant), and can be fetched using:
-
-    git clone git://github.com/Shopify/active_merchant.git
+1. [Fork it](http://github.com/Shopify/active_merchant/fork) and clone your new repo
+2. Create a branch (`git checkout -b my_awesome_feature`)
+3. Commit your changes (`git add my/awesome/file.rb; git commit -m "Added my awesome feature"`)
+4. Push your changes to your fork (`git push origin my_awesome_feature`)
+5. Open a [Pull Request](https://github.com/shopify/active_merchant/pulls)
 
 Please see the [ActiveMerchant Guide to Contributing](http://github.com/Shopify/active_merchant/wikis/contributing) for
 information on adding a new gateway to ActiveMerchant.

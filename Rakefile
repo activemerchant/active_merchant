@@ -17,7 +17,7 @@ require 'support/outbound_hosts'
 require 'bundler/gem_tasks'
 
 task :tag_release do
-  system "git tag -a v#{ActiveMerchant::VERSION} -m 'Tagging #{ActiveMerchant::VERSION}'"
+  system "git tag 'v#{ActiveMerchant::VERSION}'"
   system "git push --tags"
 end
 

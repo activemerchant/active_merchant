@@ -132,6 +132,10 @@ module ActiveMerchant
       yield
     end
 
+    def assert_scrubbed(unexpected_value, transcript)
+      refute transcript.include?(unexpected_value), "Expected #{unexpected_value} to be scrubbed out of transcript"
+    end
+
     private
     def clean_backtrace(&block)
       yield
@@ -181,6 +185,24 @@ module ActiveMerchant
       }.update(options)
 
       Billing::Check.new(defaults)
+    end
+
+    def apple_pay_payment_token(options = {})
+      # apple_pay_json_raw should contain the JSON serialization of the object described here
+      # https://developer.apple.com/library/IOs//documentation/PassKit/Reference/PaymentTokenJSON/PaymentTokenJSON.htm
+      apple_pay_json_raw = '{"version":"EC_v1","data":"","signature":""}'
+      defaults = {
+        payment_data: ActiveSupport::JSON.decode(apple_pay_json_raw),
+        payment_instrument_name: "Visa 2424",
+        payment_network: "Visa",
+        transaction_identifier: "uniqueidentifier123"
+      }.update(options)
+
+      ActiveMerchant::Billing::ApplePayPaymentToken.new(defaults[:payment_data],
+        payment_instrument_name: defaults[:payment_instrument_name],
+        payment_network: defaults[:payment_network],
+        transaction_identifier: defaults[:transaction_identifier]
+      )
     end
 
     def address(options = {})
@@ -235,6 +257,24 @@ Test::Unit::TestCase.class_eval do
   include ActiveMerchant::Billing
   include ActiveMerchant::Assertions
   include ActiveMerchant::Fixtures
+
+  def capture_transcript(gateway)
+    transcript = ''
+    gateway.class.wiredump_device = transcript
+
+    yield gateway
+
+    return transcript
+  end
+
+  def dump_transcript_and_fail(gateway, amount, credit_card, params)
+    transcript = capture_transcript(gateway) do |gateway|
+      gateway.purchase(amount, credit_card, params)
+    end
+
+    File.open("transcript.log", "w") { |f| f.write(transcript) }
+    assert false, "A purchase transcript has been written to transcript.log for you to test scrubbing with."
+  end
 end
 
 module ActionViewHelperTestHelper

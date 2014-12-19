@@ -29,6 +29,12 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
     assert_equal 'SUCCESS', response.message
   end
 
+  def test_successful_purchase_with_non_default_currency
+    @options.update(currency: 'EUR')
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_successful_check_purchase
     assert response = @gateway.purchase(@amount, @check, @options)
     assert_success response
@@ -121,7 +127,7 @@ class RemoteNetworkMerchantsTest < Test::Unit::TestCase
     assert store = @gateway.store(@credit_card, @options)
     assert_failure store
     assert store.message.include?('Invalid Credit Card Number')
-    assert_equal nil, store.params['customer_vault_id']
+    assert store.params['customer_vault_id'].blank?
     assert_nil store.authorization
   end
 

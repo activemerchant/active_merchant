@@ -1,5 +1,14 @@
 = ActiveMerchant CHANGELOG
 
+* PayGate: Add support for refunds [StephanAtG2]
+* PayPal: Add #scrub for scrubbing PCI information out of HTTP transcripts [girasquid]
+* Stripe: Add #scrub for scrubbing PCI information out of HTTP transcripts [girasquid]
+* Cybersource: Add ability to verify a card [duff]
+* BraintreeBlue: Expose the error code in the response params [duff]
+* eWay Rapid: Update supported countries and card types [incarnate]
+
+== Version 1.45.0 (December 1, 2014)
+
 * HPS: Always pass CardHolderData element [SecureSubmit, ntalbott]
 * PayJunction: Include 'track' parameter if provided [hron]
 * WebPay: Fix API calls [tomykaira]
@@ -36,6 +45,15 @@
 * Conekta: Add AMEX as a supported card type [MauricioMurga]
 * Checkout: pass through currency type [markabe]
 * Bogus: return standard error codes [jpcaissy]
+* Add PaymentToken and ApplePayPaymentToken objects for token-based transactions [bizla]
+* Authorize.Net: Add ApplePay in-app transaction support [bizla]
+* Stripe: Add ApplePay in-app transaction support [bizla]
+* eWAY Rapid: Add PartnerID param [j-mutter]
+* GlobalTransport: Truncate order_id [duff]
+* Redsys: Allow a description to be specified [duff]
+* NetworkMerchants: Fix currency [j-mutter]
+* Redsys: Improve handling of order_id [duff]
+* Checkout: Add support for void, refund, and verify [markabe]
 
 == Version 1.44.1 (Aug 28, 2014)
 

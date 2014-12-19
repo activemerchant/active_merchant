@@ -54,11 +54,18 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, creditcard, options = {})
-        post = create_post_for_auth_or_purchase(money, creditcard, options)
-        post[:capture] = "false"
-
-        commit(:post, 'charges', post, options)
+      def authorize(money, payment, options = {})
+        MultiResponse.run do |r|
+          if payment.is_a?(ApplePayPaymentToken)
+            r.process { tokenize_apple_pay_token(payment) }
+            payment = StripePaymentToken.new(r.params["token"]) if r.success?
+          end
+          r.process do |r|
+            post = create_post_for_auth_or_purchase(money, payment, options)
+            post[:capture] = "false"
+            commit(:post, 'charges', post, options)
+          end
+        end.responses.last
       end
 
       # To create a charge on a card or a token, call
@@ -68,10 +75,17 @@ module ActiveMerchant #:nodoc:
       # To create a charge on a customer, call
       #
       #   purchase(money, nil, { :customer => id, ... })
-      def purchase(money, creditcard, options = {})
-        post = create_post_for_auth_or_purchase(money, creditcard, options)
-
-        commit(:post, 'charges', post, options)
+      def purchase(money, payment, options = {})
+        MultiResponse.run do |r|
+          if payment.is_a?(ApplePayPaymentToken)
+            r.process { tokenize_apple_pay_token(payment) }
+            payment = StripePaymentToken.new(r.params["token"]) if r.success?
+          end
+          r.process do |r|
+            post = create_post_for_auth_or_purchase(money, payment, options)
+            commit(:post, 'charges', post, options)
+          end
+        end.responses.last
       end
 
       def capture(money, authorization, options = {})
@@ -101,9 +115,9 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def verify(creditcard, options = {})
+      def verify(payment, options = {})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(50, creditcard, options) }
+          r.process { authorize(50, payment, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
@@ -126,10 +140,17 @@ module ActiveMerchant #:nodoc:
       end
 
       # Note: creating a new credit card will not change the customer's existing default credit card (use :set_default => true)
-      def store(creditcard, options = {})
-        post = {}
+      def store(payment, options = {})
         card_params = {}
-        add_creditcard(card_params, creditcard, options)
+        post = {}
+
+        if payment.is_a?(ApplePayPaymentToken)
+          token_exchange_response = tokenize_apple_pay_token(payment)
+          card_params = { card: token_exchange_response.params["token"]["id"] } if token_exchange_response.success?
+        else
+          add_creditcard(card_params, payment, options)
+        end
+
         post[:description] = options[:description] if options[:description]
         post[:email] = options[:email] if options[:email]
 
@@ -172,15 +193,46 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def tokenize_apple_pay_token(apple_pay_payment_token, options = {})
+        token_response = api_request(:post, "tokens?pk_token=#{CGI.escape(apple_pay_payment_token.payment_data.to_json)}")
+        success = !token_response.key?("error")
+
+        if success && token_response.key?("id")
+          Response.new(success, nil, token: token_response)
+        else
+          Response.new(success, token_response["error"]["message"])
+        end
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
+          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]')
+      end
 
       private
 
-      def create_post_for_auth_or_purchase(money, creditcard, options)
+      class StripePaymentToken < PaymentToken
+        def type
+          'stripe'
+        end
+      end
+
+      def create_post_for_auth_or_purchase(money, payment, options)
         post = {}
         add_amount(post, money, options, true)
-        add_creditcard(post, creditcard, options)
-        add_customer(post, creditcard, options)
-        add_customer_data(post,options)
+        if payment.is_a?(StripePaymentToken)
+          add_payment_token(post, payment, options)
+        else
+          add_creditcard(post, payment, options)
+        end
+        add_customer(post, payment, options)
+        add_customer_data(post, options)
         post[:description] = options[:description]
         post[:statement_description] = options[:statement_description]
 
@@ -253,8 +305,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_customer(post, creditcard, options)
-        post[:customer] = options[:customer] if options[:customer] && !creditcard.respond_to?(:number)
+      def add_payment_token(post, token, options = {})
+        post[:card] = token.payment_data["id"]
+      end
+
+      def add_customer(post, payment, options)
+        post[:customer] = options[:customer] if options[:customer] && !payment.respond_to?(:number)
       end
 
       def add_flags(post, options)
@@ -305,21 +361,25 @@ module ActiveMerchant #:nodoc:
         headers
       end
 
-      def commit(method, url, parameters=nil, options = {})
-        add_expand_parameters(parameters, options) if parameters
-
+      def api_request(method, endpoint, parameters = nil, options = {})
         raw_response = response = nil
-        success = false
         begin
-          raw_response = ssl_request(method, self.live_url + url, post_data(parameters), headers(options))
+          raw_response = ssl_request(method, self.live_url + endpoint, post_data(parameters), headers(options))
           response = parse(raw_response)
-          success = !response.key?("error")
         rescue ResponseError => e
           raw_response = e.response.body
           response = response_error(raw_response)
         rescue JSON::ParserError
           response = json_error(raw_response)
         end
+        response
+      end
+
+      def commit(method, url, parameters = nil, options = {})
+        add_expand_parameters(parameters, options) if parameters
+
+        response = api_request(method, url, parameters, options)
+        success = !response.key?("error")
 
         card = response["card"] || response["active_card"] || {}
         avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]

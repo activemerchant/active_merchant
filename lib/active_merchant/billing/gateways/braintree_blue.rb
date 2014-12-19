@@ -310,17 +310,15 @@ module ActiveMerchant #:nodoc:
 
       def response_from_result(result)
         Response.new(result.success?, message_from_result(result),
-          { braintree_transaction: (transaction_hash(result.transaction) if result.success?) },
+          { braintree_transaction: transaction_hash(result) },
           { authorization: (result.transaction.id if result.success?) }
          )
       end
 
       def response_params(result)
         params = {}
-        if result.success?
-          params[:braintree_transaction] = transaction_hash(result.transaction)
-          params[:customer_vault_id] = result.transaction.customer_details.id
-        end
+        params[:customer_vault_id] = result.transaction.customer_details.id if result.success?
+        params[:braintree_transaction] = transaction_hash(result)
         params
       end
 
@@ -347,6 +345,16 @@ module ActiveMerchant #:nodoc:
           "#{result.transaction.processor_response_code} #{result.transaction.processor_response_text}"
         else
           message_from_result(result)
+        end
+      end
+
+      def response_code_from_result(result)
+        if result.transaction
+          result.transaction.processor_response_code
+        elsif result.errors.size == 0 && result.credit_card_verification
+          result.credit_card_verification.processor_response_code
+        elsif result.errors.size > 0
+          result.errors.first.code
         end
       end
 
@@ -398,7 +406,12 @@ module ActiveMerchant #:nodoc:
         hash
       end
 
-      def transaction_hash(transaction)
+      def transaction_hash(result)
+        unless result.success?
+          return { "processor_response_code" => response_code_from_result(result) }
+        end
+
+        transaction = result.transaction
         if transaction.vault_customer
           vault_customer = {
           }
@@ -444,14 +457,15 @@ module ActiveMerchant #:nodoc:
         }
 
         {
-          "order_id"            => transaction.order_id,
-          "status"              => transaction.status,
-          "credit_card_details" => credit_card_details,
-          "customer_details"    => customer_details,
-          "billing_details"     => billing_details,
-          "shipping_details"    => shipping_details,
-          "vault_customer"      => vault_customer,
-          "merchant_account_id" => transaction.merchant_account_id
+          "order_id"                => transaction.order_id,
+          "status"                  => transaction.status,
+          "credit_card_details"     => credit_card_details,
+          "customer_details"        => customer_details,
+          "billing_details"         => billing_details,
+          "shipping_details"        => shipping_details,
+          "vault_customer"          => vault_customer,
+          "merchant_account_id"     => transaction.merchant_account_id,
+          "processor_response_code" => response_code_from_result(result)
         }
       end
 

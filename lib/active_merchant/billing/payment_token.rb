@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(payment_data, options = {})
         @payment_data = payment_data
-        @metadata = options
+        @metadata = options.with_indifferent_access
       end
 
       def type
