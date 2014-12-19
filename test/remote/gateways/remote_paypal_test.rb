@@ -37,8 +37,8 @@ class PaypalTest < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
-    transcript = capture_transcript(@gateway) do |gateway|
-      gateway.purchase(@amount, @credit_card, @params)
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @params)
     end
     transcript = @gateway.scrub(transcript)
 

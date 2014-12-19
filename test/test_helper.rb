@@ -262,13 +262,13 @@ Test::Unit::TestCase.class_eval do
     transcript = ''
     gateway.class.wiredump_device = transcript
 
-    yield gateway
+    yield
 
-    return transcript
+    transcript
   end
 
   def dump_transcript_and_fail(gateway, amount, credit_card, params)
-    transcript = capture_transcript(gateway) do |gateway|
+    transcript = capture_transcript(gateway) do
       gateway.purchase(amount, credit_card, params)
     end
 

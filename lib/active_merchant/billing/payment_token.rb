@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
     # implementations of your given cryptographer. Like credit cards, you must also return a string representing
     # the token's type, like 'apple_pay' or 'stripe' should your target payment gateway process these tokens.
     class PaymentToken
-      attr_reader :payment_data, :type
+      attr_reader :payment_data
 
       def initialize(payment_data, options = {})
         @payment_data = payment_data

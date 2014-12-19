@@ -26,8 +26,8 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_transcript_scrubbing
-    transcript = capture_transcript(@gateway) do |gateway|
-      gateway.purchase(@amount, @credit_card, @options)
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
     end
     transcript = @gateway.scrub(transcript)
 

@@ -60,7 +60,7 @@ module ActiveMerchant #:nodoc:
             r.process { tokenize_apple_pay_token(payment) }
             payment = StripePaymentToken.new(r.params["token"]) if r.success?
           end
-          r.process do |r|
+          r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
             post[:capture] = "false"
             commit(:post, 'charges', post, options)
@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
             r.process { tokenize_apple_pay_token(payment) }
             payment = StripePaymentToken.new(r.params["token"]) if r.success?
           end
-          r.process do |r|
+          r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
             commit(:post, 'charges', post, options)
           end
