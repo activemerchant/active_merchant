@@ -6,6 +6,7 @@
 * Orbital: Improve data formatting [boone]
 * [POSSIBLE BREAKAGE] USAePay Transaction: Make "void release" the default [dppcode]
 * Redsys: Add rudimentary vaulting [varyonic]
+* Exact: Handle 401 failures better [jefflaporte]
 
 == Version 1.47.0 (February 25, 2015)
 
