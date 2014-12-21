@@ -168,6 +168,13 @@ module ActiveMerchant #:nodoc:
            :avs_result => { :code => response[:avs] },
            :cvv_result => response[:cvv2]
          )
+
+      rescue ResponseError => e
+        case e.response.code
+        when '401'
+          return Response.new(false, 'Invalid Logon', {}, :test => test?)
+        end
+        raise
       end
 
       def successful?(response)

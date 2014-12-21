@@ -47,7 +47,7 @@ class RemoteExactTest < Test::Unit::TestCase
   def test_failed_capture
     assert response = @gateway.capture(@amount, '')
     assert_failure response
-    assert_match %r{Precondition Failed}i, response.message
+    assert_match %r{Invalid Transaction Tag}i, response.message
   end
 
   def test_invalid_login
