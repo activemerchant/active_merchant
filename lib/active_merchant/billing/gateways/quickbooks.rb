@@ -101,7 +101,7 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options = {})
         MultiResponse.run do |r|
           r.process { auth_object_from(authorization) } 
-          if amount = r.params.try(:[], 'amount')
+          if amount = r.params['amount']
             r.process { refund(amount, authorization, options) }
           end
         end.responses.last
@@ -285,7 +285,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        response['errors'].present? ? FRAUD_WARNING_CODES.merge(['0']).include?(response['errors'].first['code']) : true
+        response['errors'].present? ? FRAUD_WARNING_CODES.concat(['0']).include?(response['errors'].first['code']) : true
       end
       
       def message_from(response)
