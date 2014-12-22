@@ -101,7 +101,7 @@ class RedsysTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(123, credit_card, order_id: "Una#cce-ptable44Format")
     end.check_request do |method, endpoint, data, headers|
-      assert_match(/MERCHANT_ORDER%3E\d\d\d\dUnaccept/, data)
+      assert_match(/MERCHANT_ORDER%3E\d\d\d\dUnaccept%3C/, data)
     end.respond_with(successful_authorize_response)
   end
 
@@ -109,7 +109,7 @@ class RedsysTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.authorize(123, credit_card, order_id: "1234ThisIs]FineButTooLong")
     end.check_request do |method, endpoint, data, headers|
-      assert_match(/MERCHANT_ORDER%3E1234ThisIsFin/, data)
+      assert_match(/MERCHANT_ORDER%3E1234ThisIsFi%3C/, data)
     end.respond_with(successful_authorize_response)
   end
 

@@ -9,6 +9,7 @@
 * PayPal: Allow specifying ButtonSource at init [ntalbott]
 * Payflow: Add fraud_review support [ntalbott]
 * Add IPP gateway [InfraRuby]
+* Redsys: Fix order_id truncation [duff]
 
 == Version 1.45.0 (December 1, 2014)
 
