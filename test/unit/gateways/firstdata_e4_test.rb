@@ -7,7 +7,9 @@ class FirstdataE4Test < Test::Unit::TestCase
   def setup
     @gateway = FirstdataE4Gateway.new(
       :login    => "A00427-01",
-      :password => "testus"
+      :password => "testus",
+      :hmac_key_id => "14",
+      :hmac_key    => "DummyHmacKey"
     )
 
     @credit_card = credit_card

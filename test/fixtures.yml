@@ -216,6 +216,8 @@ first_pay:
 firstdata_e4:
   login:
   password:
+  hmac_key_id:
+  hmac_key:
 
 garanti:
   login: "PROVAUT"
