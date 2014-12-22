@@ -53,7 +53,7 @@ class RemotePayHubTest < Test::Unit::TestCase
 
 
   def test_unsuccessful_capture
-    response = @gateway.capture( 123 )
+    response = @gateway.capture(@amount, 123)
 
     assert_failure response
     assert !response.success?
@@ -61,9 +61,10 @@ class RemotePayHubTest < Test::Unit::TestCase
   end
 
   def test_partial_capture
+    amount = 10
     auth_response = @gateway.authorize(@amount, @credit_card, @options)
 
-    response = @gateway.capture(auth_response.params['TRANSACTION_ID'], { :amount => 10 })
+    response = @gateway.capture(amount, auth_response.authorization)
 
     assert_success response
     assert response.success?
@@ -73,7 +74,7 @@ class RemotePayHubTest < Test::Unit::TestCase
   def test_successful_void
     purchase_response = @gateway.purchase(@amount, @credit_card, @options)
 
-    response = @gateway.void(purchase_response.params['TRANSACTION_ID'])
+    response = @gateway.void(purchase_response.authorization)
 
     assert_success response
     assert response.success?

@@ -29,7 +29,7 @@ class PayHubTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
-    response = @gateway.capture(123)
+    response = @gateway.capture(@amount, 123)
 
     assert_success response
     assert response.test?
@@ -37,9 +37,10 @@ class PayHubTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_capture
+    amount = 200
     @gateway.expects(:ssl_request).returns(failed_capture_response)
 
-    response = @gateway.capture(123, {:amount => 200})
+    response = @gateway.capture(amount, 123)
 
     assert !response.success?
     assert response.test?

@@ -73,19 +73,21 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(amount, creditcard, options = {})
-        post = add_credentials_for_auth_or_purchase(amount, creditcard, options)
+        post = add_credential_cc_and_customer_data(amount, creditcard, options)
         post[:trans_type] = 'auth'
 
         commit(:post, post, options)
       end
 
       def purchase(amount, creditcard, options={})
-        post = add_credentials_for_auth_or_purchase(amount, creditcard, options)
+        post = add_credential_cc_and_customer_data(amount, creditcard, options)
         post[:trans_type] = 'sale'
 
         commit(:post, post, options)
       end
 
+      # Since Payhub does not support partial refund,
+      # method signature shouldn't include amount parameter
       def refund(trans_id, options={})
         post = add_credentials_for('refund', trans_id)
 
@@ -98,16 +100,16 @@ module ActiveMerchant #:nodoc:
         commit(:post, post, options)
       end
 
-      def capture(trans_id, options = {})
+      def capture(amount, trans_id, options = {})
         post = add_credentials_for('capture', trans_id)
-        add_amount(post, options[:amount])
+        add_amount(post, amount)
 
         commit(:post, post, options)
       end
 
       private
 
-      def add_credentials_for_auth_or_purchase(amount, creditcard, options = {})
+      def add_credential_cc_and_customer_data(amount, creditcard, options = {})
         post = {}
         add_credentials(post)
         add_creditcard(post, creditcard)
@@ -185,7 +187,8 @@ module ActiveMerchant #:nodoc:
           :test => test?,
           :avs_result => { :code => response['AVS_RESULT_CODE'] },
           :cvv_result => response['VERIFICATION_RESULT_CODE'],
-          :error_code => success ? nil : STANDARD_ERROR_CODE_MAPPING[response['RESPONSE_CODE']]
+          :error_code => success ? nil : STANDARD_ERROR_CODE_MAPPING[response['RESPONSE_CODE']],
+          :authorization => response['TRANSACTION_ID']
         )
       end
 
