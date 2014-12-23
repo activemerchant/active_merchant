@@ -157,6 +157,16 @@ class SagePayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_protocol_version_is_honoured
+    ActiveMerchant::Billing::SagePayGateway.protocol_version = '2.23'
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/VPSProtocol=2.23/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_referrer_id_is_added_to_post_data_parameters
     ActiveMerchant::Billing::SagePayGateway.application_id = '00000000-0000-0000-0000-000000000001'
     stub_comms(@gateway, :ssl_request) do
