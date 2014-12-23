@@ -7,6 +7,7 @@
 * [POSSIBLE BREAKAGE] USAePay Transaction: Make "void release" the default [dppcode]
 * Redsys: Add rudimentary vaulting [varyonic]
 * Exact: Handle 401 failures better [jefflaporte]
+* SagePay: make `VPSProtocol` user-configurable [boxofrad]
 
 == Version 1.47.0 (February 25, 2015)
 
