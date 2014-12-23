@@ -153,6 +153,10 @@ data_cash:
 direc_pay:
   login: 200904281000001
 
+direct_connect:
+  some_credential: SOMECREDENTIAL
+  another_credential: ANOTHERCREDENTIAL
+
 efsnet:
   login: X
   password: Y
