@@ -139,12 +139,19 @@ module ActiveMerchant #:nodoc:
               xml.settingValue "true"
             end
           end
-          if(self.class.duplicate_window)
-            xml.setting do
-              xml.settingName "duplicateWindow"
-              xml.settingValue self.class.duplicate_window
-            end
+          if options[:duplicate_window]
+            set_duplicate_window(xml, options[:duplicate_window])
+          elsif self.class.duplicate_window
+            ActiveMerchant.deprecated "Using the duplicate_window class_attribute is deprecated. Use the transaction options hash instead."
+            set_duplicate_window(xml, self.class.duplicate_window)
           end
+        end
+      end
+
+      def set_duplicate_window(xml, value)
+        xml.setting do
+          xml.settingName "duplicateWindow"
+          xml.settingValue value
         end
       end
 
