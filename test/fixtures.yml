@@ -154,8 +154,8 @@ direc_pay:
   login: 200904281000001
 
 direct_connect:
-  some_credential: SOMECREDENTIAL
-  another_credential: ANOTHERCREDENTIAL
+  username: SOMECREDENTIAL
+  password: ANOTHERCREDENTIAL
 
 efsnet:
   login: X
