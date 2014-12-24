@@ -8,6 +8,7 @@
 * Redsys: Add rudimentary vaulting [varyonic]
 * Exact: Handle 401 failures better [jefflaporte]
 * SagePay: make `VPSProtocol` user-configurable [boxofrad]
+* Netbilling: Add store support [cshepherd]
 
 == Version 1.47.0 (February 25, 2015)
 
