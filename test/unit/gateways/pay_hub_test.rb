@@ -71,7 +71,7 @@ class PayHubTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:ssl_request).returns(successful_refund_response)
 
-    response = @gateway.void(123)
+    response = @gateway.refund(@amount, 123)
 
     assert_success response
     assert response.test?
@@ -81,7 +81,7 @@ class PayHubTest < Test::Unit::TestCase
   def test_unsuccessful_refund
     @gateway.expects(:ssl_request).returns(failed_refund_response)
 
-    assert response = @gateway.refund(123)
+    assert response = @gateway.refund(@amount, 123)
 
     assert response.test?
     assert_failure response

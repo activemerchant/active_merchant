@@ -88,8 +88,9 @@ module ActiveMerchant #:nodoc:
 
       # Since Payhub does not support partial refund,
       # method signature shouldn't include amount parameter
-      def refund(trans_id, options={})
+      def refund(amount, trans_id, options={})
         post = add_credentials_for('refund', trans_id)
+        add_amount(post, amount)
 
         commit(:post, post, options)
       end

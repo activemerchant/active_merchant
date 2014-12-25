@@ -90,7 +90,7 @@ class RemotePayHubTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    response = @gateway.refund(123)
+    response = @gateway.refund(@amount, 123)
 
     assert_success response
     assert response.success?
@@ -98,8 +98,7 @@ class RemotePayHubTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_refund
-    response = @gateway.refund(981)
-
+    response = @gateway.refund(@amount, 981)
     assert_failure response
     assert !response.success?
     assert_equal 'Unable to refund the previous transaction.', response.message
