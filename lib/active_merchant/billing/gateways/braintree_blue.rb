@@ -431,8 +431,7 @@ module ActiveMerchant #:nodoc:
               "token" => cc.token,
               "last_4" => cc.last_4,
               "card_type" => cc.card_type,
-              "masked_number" => cc.masked_number,
-              "token" => cc.token
+              "masked_number" => cc.masked_number
             }
           end
         end
