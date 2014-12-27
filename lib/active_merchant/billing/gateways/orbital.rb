@@ -644,13 +644,22 @@ module ActiveMerchant #:nodoc:
       # Address-related fields cannot contain % | ^ \ /
       # Returns the value with these characters removed, or nil
       def format_address_field(value)
-        value.try(:gsub, /[%\|\^\\\/]/, '')
+        value.gsub(/[%\|\^\\\/]/, '') if value.respond_to?(:gsub)
       end
 
       # Field lengths should be limited by byte count instead of character count
       # Returns the truncated value or nil
       def byte_limit(value, byte_length)
-        value.try(:mb_chars).try(:limit, byte_length).try(:to_s)
+        if value.respond_to?(:each_char)
+          limited_value = ""
+ 
+          value.each_char do |c|
+            break if limited_value.bytesize + c.bytesize > byte_length
+            limited_value += c
+          end
+ 
+          limited_value
+        end
       end
 
       def build_customer_request_xml(creditcard, options = {})
