@@ -3,10 +3,10 @@ require 'test_helper'
 class RemoteDirectConnectTest < Test::Unit::TestCase
   def setup
     @gateway = DirectConnectGateway.new(fixtures(:direct_connect))
-
+    puts fixtures(:direct_connect)
     @amount = 100
-    @credit_card = credit_card('4000100011112224')
-    @declined_card = credit_card('4000300011112220')
+    @credit_card = credit_card('4111111111111111')
+    @declined_card = credit_card('4444444444444448')
 
     @options = {
       order_id: '1',

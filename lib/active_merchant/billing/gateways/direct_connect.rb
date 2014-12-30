@@ -1,20 +1,20 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class DirectConnectGateway < Gateway
-      self.test_url = 'https://example.com/test'
-      self.live_url = 'https://example.com/live'
+      self.test_url = 'https://gateway.1directconnect.com/'
+      self.live_url = 'https://gateway.1directconnect.com/'
 
       self.supported_countries = ['US']
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
-      self.homepage_url = 'http://www.example.net/'
-      self.display_name = 'New Gateway'
-
-      STANDARD_ERROR_CODE_MAPPING = {}
+      self.homepage_url = 'http://www.directconnectps.com/'
+      self.display_name = 'Direct Connect'
 
       def initialize(options={})
-        requires!(options, :some_credential, :another_credential)
+        requires!(options, :username, :password)
+        @username = options[:username]
+        @password = options[:password]
         super
       end
 
@@ -24,9 +24,12 @@ module ActiveMerchant #:nodoc:
         add_payment(post, payment)
         add_address(post, payment, options)
         add_customer_data(post, options)
-
-        commit('sale', post)
+        add_authentication(post, options)
+        post[:transType] = 'sale'
+        commit(:saleCreditCard, post)
       end
+
+
 
       def authorize(money, payment, options={})
         post = {}
@@ -67,6 +70,11 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def add_authentication(post, options)
+        post[:username] = @username
+        post[:password] = @password
+      end
+
       def add_customer_data(post, options)
       end
 
@@ -79,6 +87,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_payment(post, payment)
+        exp_date = payment.expiry_date.expiration.strftime('%02m%02y')
+
+        post[:cardnum] = payment.number
+        post[:expdate] = "#{exp_date}"
+        puts "exp date #{exp_date}"
       end
 
       def parse(body)
@@ -87,7 +100,14 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, parameters)
         url = (test? ? test_url : live_url)
-        response = parse(ssl_post(url, post_data(action, parameters)))
+        service = actionToService(action)
+        url = "#{url}#{serviceUrl(service)}"
+        puts url
+        begin
+          response = parse(ssl_post(url, post_data(action, parameters)))
+        rescue ResponseError => e
+          puts e.response.body
+        end
 
         Response.new(
           success_from(response),
@@ -108,6 +128,35 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data(action, parameters = {})
+        return nil unless parameters
+
+        parameters.map do |k, v|
+          "#{k}=#{CGI.escape(v.to_s)}"
+        end.compact.join('&')
+      end
+
+      def actionToService(action)
+        case action
+        when :authCreditCard, :saleCreditCard, :returnCreditCard, :voidCreditCard
+          :processCreditCard
+        when :saleCheck, :authCheck, :returnCheck, :voidCheck
+          :processCheck
+        else
+          action
+        end
+      end
+
+      def serviceUrl(service)
+        case service
+        when :processCreditCard
+          "ws/transact.asmx/ProcessCreditCard"
+        when :processCheck
+          "ws/transact.asmx/ProcessCheck"
+        when :storeCardSafeCard
+          "ws/cardsafe.asmx/StoreCard"
+        when :processCardRecurring
+          "ws/recurring.asmx/ProcessCreditCard"
+        end
       end
     end
   end

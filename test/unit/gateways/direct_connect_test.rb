@@ -3,8 +3,8 @@ require 'test_helper'
 class DirectConnectTest < Test::Unit::TestCase
   def setup
     @gateway = DirectConnectGateway.new(
-      some_credential: 'login',
-      another_credential: 'password'
+      username: 'login',
+      password: 'password'
     )
 
     @credit_card = credit_card
