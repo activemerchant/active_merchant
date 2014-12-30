@@ -1,3 +1,5 @@
+require 'nokogiri'
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class DirectConnectGateway < Gateway
@@ -10,6 +12,10 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'http://www.directconnectps.com/'
       self.display_name = 'Direct Connect'
+
+      DIRECT_CONNECT_CODES = {
+        :success => 0
+      }
 
       def initialize(options={})
         requires!(options, :username, :password)
@@ -26,18 +32,11 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_authentication(post, options)
         post[:transType] = 'sale'
-        post[:magData] = nil
-        post[:nameOnCard] = 'Person Man'
-        post[:invNum] = 1
-        post[:pnRef] = 9001
-        post[:zip] = 02145
-        post[:street] = '16 austin st'
-        post[:cvnum] = 123
         post[:extData] = nil
+        post[:pnRef] =  nil
+        post[:magData] = options[:magData]
         commit(:saleCreditCard, post)
       end
-
-
 
       def authorize(money, payment, options={})
         post = {}
@@ -73,7 +72,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        transcript
+        transcript.encode('UTF-8', 'binary', invalid: :replace, undef: :replace, replace: '')
+          .gsub(%r((username=)\w+), '\1[FILTERED]')
+          .gsub(%r((password=)\w+), '\1[FILTERED]')
+          .gsub(%r((cardnum=)\d+), '\1[FILTERED]')
+          .gsub(%r((cvnum=)\d+), '\1[FILTERED]')
       end
 
       private
@@ -84,38 +87,46 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
+
       end
 
       def add_address(post, creditcard, options)
+        if address = options[:billing_address] || options[:address]
+          post[:nameOnCard] = address[:name]
+          post[:street] = address[:address1]
+          post[:zip] = address[:zip]
+        end
       end
 
       def add_invoice(post, money, options)
         post[:amount] = amount(money)
-        post[:currency] = (options[:currency] || currency(money))
+        post[:invNum] = options[:order_id]
       end
 
       def add_payment(post, payment)
         exp_date = payment.expiry_date.expiration.strftime('%02m%02y')
 
         post[:cardnum] = payment.number
-        post[:expdate] = "#{exp_date}"
-        puts "exp date #{exp_date}"
+        post[:expdate] = exp_date
+        post[:cvnum] = payment.verification_value
       end
 
-      def parse(body)
-        {}
+      def parse(action, body)
+        doc = Nokogiri::XML(body)
+        doc.remove_namespaces!
+        response = {action: action}
+        
+        response[:response_code] = doc.at_xpath("//Response/Result").content.to_i
+        response
       end
 
       def commit(action, parameters)
         url = (test? ? test_url : live_url)
         service = actionToService(action)
         url = "#{url}#{serviceUrl(service)}"
-        puts url
         begin
           data = post_data(action, parameters)
-          puts data
-          response = parse(ssl_post(url, data))
-          puts response
+          response = parse(action, ssl_post(url, data))
         rescue ResponseError => e
           puts e.response.body
         end
@@ -130,6 +141,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
+        response[:response_code] == DIRECT_CONNECT_CODES[:success]
       end
 
       def message_from(response)
