@@ -32,7 +32,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert response.test?
     assert_equal 'Transaction Normal - Approved', response.message
 
-    ExactGateway::SENSITIVE_FIELDS.each{|f| assert !response.params.has_key?(f.to_s)}
+    FirstdataE4Gateway::SENSITIVE_FIELDS.each{|f| assert !response.params.has_key?(f.to_s)}
   end
 
   def test_successful_purchase_with_token
@@ -99,7 +99,8 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['CA', 'US'], ExactGateway.supported_countries
+    assert_equal ['CA', 'US'], FirstdataE4Gateway.supported_countries
+  end
   end
 
   def test_avs_result
