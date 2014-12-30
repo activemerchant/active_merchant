@@ -27,6 +27,7 @@ module ActiveMerchant #:nodoc:
       BRANDS = {
         :visa => 'Visa',
         :master => "Mastercard",
+        :mastercard => "Mastercard",
         :american_express => "American Express",
         :jcb => "JCB",
         :discover => "Discover"
