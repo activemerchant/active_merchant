@@ -20,6 +20,14 @@ class FirstdataE4Test < Test::Unit::TestCase
     @authorization = "ET1700;106625152;4738"
   end
 
+  def test_invalid_credentials
+    @gateway.expects(:ssl_post).raises(bad_credentials_response)
+    assert response = @gateway.store(@credit_card, {})
+    assert_failure response
+    assert response.test?
+    assert_equal 'Unauthorized Request. Bad or missing credentials.', response.message
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card, @options)
@@ -630,6 +638,43 @@ response: !ruby/object:Net::HTTPBadRequest
   http_version: "1.1"
   message: Bad Request
   read: true
+  socket:
+    RESPONSE
+    YAML.load(yamlexcep)
+  end
+
+  def bad_credentials_response
+    yamlexcep = <<-RESPONSE
+--- !ruby/exception:ActiveMerchant::ResponseError
+message:
+response: !ruby/object:Net::HTTPUnauthorized
+  code: '401'
+  message: Authorization Required
+  body: Unauthorized Request. Bad or missing credentials.
+  read: true
+  header:
+    cache-control:
+    - no-cache
+    content-type:
+    - text/html; charset=utf-8
+    date:
+    - Tue, 30 Dec 2014 23:28:32 GMT
+    server:
+    - Apache
+    status:
+    - '401'
+    x-rack-cache:
+    - invalidate, pass
+    x-request-id:
+    - 4157e21cc5620a95ead8d2025b55bdf4
+    x-ua-compatible:
+    - IE=Edge,chrome=1
+    content-length:
+    - '49'
+    connection:
+    - Close
+  body_exist: true
+  http_version: '1.1'
   socket:
     RESPONSE
     YAML.load(yamlexcep)

@@ -264,7 +264,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful?(response), message_from(response), response,
           :test => test?,
-          :authorization => response_authorization(action, response, credit_card),
+          :authorization => successful?(response) ? response_authorization(action, response, credit_card) : nil,
           :avs_result => {:code => response[:avs]},
           :cvv_result => response[:cvv2]
         )
