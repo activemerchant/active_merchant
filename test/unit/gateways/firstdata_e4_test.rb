@@ -102,10 +102,6 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert_equal ['CA', 'US'], ExactGateway.supported_countries
   end
 
-  def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :jcb, :discover], ExactGateway.supported_cardtypes
-  end
-
   def test_avs_result
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
