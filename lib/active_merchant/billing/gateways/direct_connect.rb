@@ -26,6 +26,14 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_authentication(post, options)
         post[:transType] = 'sale'
+        post[:magData] = nil
+        post[:nameOnCard] = 'Person Man'
+        post[:invNum] = 1
+        post[:pnRef] = 9001
+        post[:zip] = 02145
+        post[:street] = '16 austin st'
+        post[:cvnum] = 123
+        post[:extData] = nil
         commit(:saleCreditCard, post)
       end
 
@@ -104,7 +112,10 @@ module ActiveMerchant #:nodoc:
         url = "#{url}#{serviceUrl(service)}"
         puts url
         begin
-          response = parse(ssl_post(url, post_data(action, parameters)))
+          data = post_data(action, parameters)
+          puts data
+          response = parse(ssl_post(url, data))
+          puts response
         rescue ResponseError => e
           puts e.response.body
         end
