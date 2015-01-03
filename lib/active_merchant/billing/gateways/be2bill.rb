@@ -33,8 +33,18 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard(post, creditcard)
         add_customer_data(post, options)
+        post[:AMOUNT] = amount(money)
 
-        commit('authorization', money, post)
+        commit('authorization', post)
+      end
+
+      def refund(money, authorization, options = {})
+        post = {}
+        add_invoice(post, options)
+        post[:AMOUNT] = amount(money)
+        post[:TRANSACTIONID] = authorization
+
+        commit('refund', post)
       end
 
       def purchase(money, creditcard, options = {})
@@ -42,16 +52,26 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, options)
         add_creditcard(post, creditcard)
         add_customer_data(post, options)
+        post[:AMOUNT] = amount(money)
 
-        commit('payment', money, post)
+        commit('payment', post)
       end
 
       def capture(money, authorization, options = {})
         post = {}
         add_invoice(post, options)
         post[:TRANSACTIONID] = authorization
+        post[:AMOUNT] = amount(money)
 
-        commit('capture', money, post)
+        commit('capture', post)
+      end
+
+      def void(authorization, options = {})
+        post = {}
+        add_invoice(post, options)
+        post[:TRANSACTIONID] = authorization
+
+        commit('refund', post)
       end
 
       private
@@ -80,9 +100,8 @@ module ActiveMerchant #:nodoc:
         ActiveSupport::JSON.decode(response)
       end
 
-      def commit(action, money, parameters)
+      def commit(action, parameters)
         parameters[:IDENTIFIER] = @options[:login]
-        parameters[:AMOUNT]     = amount(money)
         parameters[:VERSION]    = '2.0'
 
         url = (test? ? self.test_url : self.live_url)
