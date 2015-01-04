@@ -16,7 +16,7 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
   end
 
   def test_dump_transcript
-    #skip("Transcript scrubbing for this gateway has been tested.")
+    skip("Transcript scrubbing for this gateway has been tested.")
 
     # This test will run a purchase transaction on your gateway
     # and dump a transcript of the HTTP conversation so that
@@ -30,9 +30,10 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options)
     end
     transcript = @gateway.scrub(transcript)
-
+    cvnum_str = "cvnum=#{@credit_card.verification_value}"
+    refute transcript.include?(cvnum_str), "Expected #{cvnum_str} to be scrubbed out of transcript"
     assert_scrubbed(@credit_card.number, transcript)
-    assert_scrubbed(@credit_card.verification_value, transcript)
+
     assert_scrubbed(@gateway.options[:password], transcript)
   end
 
