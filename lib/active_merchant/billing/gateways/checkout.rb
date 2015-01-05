@@ -38,6 +38,7 @@ module ActiveMerchant #:nodoc:
         commit('purchase', amount, options) do |xml|
           add_credentials(xml, options)
           add_invoice(xml, amount, options)
+          add_track_id(xml, options[:order_id])
           add_payment_method(xml, payment_method)
           add_billing_info(xml, options)
           add_shipping_info(xml, options)
@@ -52,6 +53,7 @@ module ActiveMerchant #:nodoc:
         commit('authorize', amount, options) do |xml|
           add_credentials(xml, options)
           add_invoice(xml, amount, options)
+          add_track_id(xml, options[:order_id])
           add_payment_method(xml, payment_method)
           add_billing_info(xml, options)
           add_shipping_info(xml, options)
@@ -104,7 +106,6 @@ module ActiveMerchant #:nodoc:
       def add_invoice(xml, amount, options)
         xml.bill_amount_ amount(amount)
         xml.bill_currencycode_ options[:currency] || currency(amount)
-        xml.trackid_ options[:order_id] if options[:order_id]
       end
 
       def add_payment_method(xml, payment_method)
@@ -157,7 +158,11 @@ module ActiveMerchant #:nodoc:
       def add_reference(xml, authorization)
         transid, trackid, _, _, _ = split_authorization(authorization)
         xml.transid transid
-        xml.trackid trackid if trackid
+        add_track_id(xml, trackid)
+      end
+
+      def add_track_id(xml, trackid)
+        xml.trackid(trackid) if trackid
       end
 
       def commit(action, amount=nil, options={}, &builder)

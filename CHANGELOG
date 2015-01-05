@@ -13,6 +13,7 @@
 * Redsys: Fix order_id truncation [duff]
 * AuthorizeNet: Improve duplicate_window handling [duff]
 * PayPal: Fix ButtonSource bug [ntalbott]
+* Checkout: Prevent multiple trackids from being passed [markabe]
 
 == Version 1.45.0 (December 1, 2014)
 
