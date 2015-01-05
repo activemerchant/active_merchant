@@ -1,15 +1,15 @@
 require 'test_helper'
 
 class QuickBooksTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = QuickbooksGateway.new(
-      options = {
       consumer_key: 'consumer_key',
       consumer_secret: 'consumer_secret',
       access_token: 'access_token',
       token_secret: 'token_secret',
       realm: 'realm_ID',
-    }
     )
 
     @credit_card = credit_card
@@ -38,7 +38,7 @@ class QuickBooksTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    assert_equal Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
   end
 
   def test_successful_authorize
@@ -51,7 +51,7 @@ class QuickBooksTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
@@ -66,27 +66,65 @@ class QuickBooksTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
+    @gateway.expects(:ssl_post).returns(failed_capture_response)
+
+    response = @gateway.capture(@amount, @authorization)
+    assert_failure response
   end
 
   def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    response = @gateway.refund(@amount, @authorization)
+    assert_success response
   end
 
   def test_failed_refund
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+
+    response = @gateway.refund(@amount, @authorization)
+    assert_failure response
   end
 
   def test_successful_void
+    @gateway.expects(:ssl_request).returns(successful_authorize_response)
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+
+    response = @gateway.void(@authorization)
+    assert_success response
   end
 
   def test_failed_void
+    response = stub_comms do
+      @gateway.void(@authorization)
+    end.respond_with(failed_void_response)
+
+    assert_failure response
   end
 
   def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card)
+    end.respond_with(successful_authorize_response, successful_void_response)
+
+    assert_success response
   end
 
   def test_successful_verify_with_failed_void
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, failed_void_response)
+
+    assert_success response
   end
 
   def test_failed_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorize_response, successful_void_response)
+
+    assert_failure response
+    assert_not_nil response.message
   end
 
   def test_scrub
@@ -220,6 +258,28 @@ class QuickBooksTest < Test::Unit::TestCase
   end
 
   def successful_refund_response
+    <<-RESPONSE
+    {
+      "created": "2014-09-23T01:49:12Z",
+      "status": "ISSUED",
+      "amount": "5.00",
+      "description": "first refund",
+      "id": "EMU891209421",
+      "context": {
+        "tax": "0.00",
+        "recurring": false,
+        "deviceInfo": {
+          "id": "",
+          "type": "",
+          "longitude": "",
+          "latitude": "",
+          "phoneNumber": "",
+          "macAddress": "",
+          "ipAddress": ""
+        }
+      }
+    }
+    RESPONSE
   end
 
   def failed_refund_response
@@ -237,7 +297,28 @@ class QuickBooksTest < Test::Unit::TestCase
   end
 
   def successful_void_response
-  
+    <<-RESPONSE
+    {
+      "created": "2014-09-23T01:49:12Z",
+      "status": "ISSUED",
+      "amount": "5.00",
+      "description": "first refund",
+      "id": "EMU891209421",
+      "context": {
+        "tax": "0.00",
+        "recurring": false,
+        "deviceInfo": {
+          "id": "",
+          "type": "",
+          "longitude": "",
+          "latitude": "",
+          "phoneNumber": "",
+          "macAddress": "",
+          "ipAddress": ""
+        }
+      }
+    }
+    RESPONSE
   end
 
   def failed_void_response
