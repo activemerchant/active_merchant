@@ -151,11 +151,15 @@ module ActiveMerchant
     DEFAULT_CREDENTIALS = File.join(File.dirname(__FILE__), 'fixtures.yml') unless defined?(DEFAULT_CREDENTIALS)
 
     private
+    def default_expiration_date
+      @default_expiration_date ||= Date.new((Time.now.year + 1), 9, 30)
+    end
+
     def credit_card(number = '4242424242424242', options = {})
       defaults = {
         :number => number,
-        :month => 9,
-        :year => Time.now.year + 1,
+        :month => default_expiration_date.month,
+        :year => default_expiration_date.year,
         :first_name => 'Longbob',
         :last_name => 'Longsen',
         :verification_value => '123',
