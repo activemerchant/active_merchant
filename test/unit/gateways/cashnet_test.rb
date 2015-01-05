@@ -69,7 +69,7 @@ class Cashnet < Test::Unit::TestCase
     @gateway.send(:add_creditcard, result, @credit_card)
     assert_equal @credit_card.number, result[:cardno]
     assert_equal @credit_card.verification_value, result[:cid]
-    assert_equal '0915', result[:expdate]
+    assert_equal '%02d%02d' % [@credit_card.month, @credit_card.year.to_s[2..4]], result[:expdate]
     assert_equal 'Longbob Longsen', result[:card_name_g]
   end
 
