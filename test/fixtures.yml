@@ -651,6 +651,11 @@ quickpay_with_api_key:
   apikey: "fB46983ZwR5dzy46A3r6ngDx7P37N5YTu1F4S9W2JKCs9v4t5L9m2Q8Mlbjpa2I1"
   version: 7
 
+qvalent:
+  username: TEST
+  password: TEST
+  merchant: TEST
+
 raven_pac_net:
   user: ernest
   secret: "all good men die young"

@@ -183,6 +183,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [QuickBooks Payments](http://payments.intuit.com/) - US
 * [Quantum Gateway](http://www.quantumgateway.com) - US
 * [QuickPay](http://quickpay.net/) - DE, DK, ES, FI, FR, FO, GB, IS, NO, SE
+* [Qvalent](https://www.qvalent.com/) - AU
 * [Raven PacNet](http://www.pacnetservices.com/) - US
 * [Realex](http://www.realexpayments.com/) - IE, GB, FR, BE, NL, LU, IT
 * [Redsys](http://www.redsys.es/) - ES
