@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
         commit('capture', amount, options) do |xml|
           add_credentials(xml, options)
           add_reference(xml, authorization)
-          add_invoice(xml, amount, options)
+          add_invoice(xml, amount, options.merge(is_reference: true))
           add_user_defined_fields(xml, options)
           add_other_fields(xml, options)
         end
@@ -74,7 +74,7 @@ module ActiveMerchant #:nodoc:
         _, _, orig_action, amount, currency = split_authorization(authorization)
         commit("void_#{orig_action}") do |xml|
           add_credentials(xml, options)
-          add_invoice(xml, amount.to_i, options.merge(currency: currency))
+          add_invoice(xml, amount.to_i, options.merge(currency: currency, is_reference: true))
           add_reference(xml, authorization)
         end
       end
@@ -82,7 +82,7 @@ module ActiveMerchant #:nodoc:
       def refund(amount, authorization, options = {})
         commit('refund') do |xml|
           add_credentials(xml, options)
-          add_invoice(xml, amount.to_i, options)
+          add_invoice(xml, amount.to_i, options.merge(is_reference: true))
           add_reference(xml, authorization)
         end
       end
@@ -102,9 +102,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(xml, amount, options)
+        is_reference = options.fetch(:is_reference, false)
         xml.bill_amount_ amount(amount)
         xml.bill_currencycode_ options[:currency] || currency(amount)
-        xml.trackid_ options[:order_id] if options[:order_id]
+        # order_id/trackid reference from previous transaction takes precedence.
+        xml.trackid_ options[:order_id] if !is_reference && options[:order_id]
       end
 
       def add_payment_method(xml, payment_method)
