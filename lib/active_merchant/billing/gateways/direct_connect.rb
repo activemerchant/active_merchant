@@ -117,6 +117,7 @@ module ActiveMerchant #:nodoc:
         response = {action: action}
         response[:response_code] = doc.at_xpath("//Response/Result").content.to_i
         response[:message] = doc.at_xpath("//Response/RespMSG").content
+        response[:pnRef] = doc.at_xpath("//Response/PNRef").content
         response
       end
 
@@ -149,6 +150,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
+        response[:pnRef]
       end
 
       def post_data(action, parameters = {})

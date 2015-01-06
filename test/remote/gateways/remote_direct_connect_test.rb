@@ -39,9 +39,11 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
+    
     assert_success response
-
+    assert response.test?
     assert_equal 'Approved', response.message
+    assert response.authorization
   end
 
   def test_failed_purchase
