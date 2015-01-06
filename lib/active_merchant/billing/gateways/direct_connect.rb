@@ -115,8 +115,8 @@ module ActiveMerchant #:nodoc:
         doc = Nokogiri::XML(body)
         doc.remove_namespaces!
         response = {action: action}
-        
         response[:response_code] = doc.at_xpath("//Response/Result").content.to_i
+        response[:message] = doc.at_xpath("//Response/RespMSG").content
         response
       end
 
@@ -145,6 +145,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
+        response[:message]
       end
 
       def authorization_from(response)
