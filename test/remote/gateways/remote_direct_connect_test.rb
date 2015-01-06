@@ -6,7 +6,7 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
     puts fixtures(:direct_connect)
     @amount = 100
     @credit_card = credit_card('4111111111111111')
-    @declined_card = credit_card('4444444444444448')
+    @declined_card = credit_card('4111111111111112')
 
     @options = {
       order_id: '1',
@@ -49,7 +49,9 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
+
+    assert_equal :invalidAccountNumber, DirectConnectGateway::DIRECT_CONNECT_CODES[response.params['response_code']]
+    assert_equal 'Invalid Account Number', response.message
   end
 
   def test_successful_authorize_and_capture

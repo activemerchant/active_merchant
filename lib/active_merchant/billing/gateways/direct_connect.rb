@@ -14,7 +14,8 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'Direct Connect'
 
       DIRECT_CONNECT_CODES = {
-        :success => 0
+        0 => :success,
+        23 => :invalidAccountNumber
       }
 
       def initialize(options={})
@@ -117,7 +118,11 @@ module ActiveMerchant #:nodoc:
         response = {action: action}
         response[:response_code] = doc.at_xpath("//Response/Result").content.to_i
         response[:message] = doc.at_xpath("//Response/RespMSG").content
-        response[:pnRef] = doc.at_xpath("//Response/PNRef").content
+
+        if el = doc.at_xpath("//Response/PNRef")
+          response[:pnRef] = el.content
+        end
+        p response
         response
       end
 
@@ -142,7 +147,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        response[:response_code] == DIRECT_CONNECT_CODES[:success]
+        DIRECT_CONNECT_CODES[response[:response_code]] == :success
       end
 
       def message_from(response)
