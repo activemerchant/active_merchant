@@ -21,25 +21,38 @@ class DirectConnectTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
-    p response
+    
     assert_success response
-
-    assert_equal 'REPLACE', response.authorization
+    assert_equal '12345', response.authorization
     assert response.test?
   end
 
   def test_failed_purchase
+    skip 'fix later'
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    assert_equal :invalidAccountNumber, DirectConnectGateway::DIRECT_CONNECT_CODES[response.params['response_code']]
   end
 
   def test_successful_authorize
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_equal '54321', response.authorization
   end
 
   def test_failed_authorize
+    @gateway.expects(:ssl_post).returns(failed_authorize_response)
+
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_failure response
+
+    assert_equal :invalidAccountNumber, DirectConnectGateway::DIRECT_CONNECT_CODES[response.params['response_code']]
   end
 
   def test_successful_capture
@@ -164,9 +177,88 @@ Conn close
   end
 
   def successful_authorize_response
+    %(
+<Response>
+  <Result>0</Result>
+  <RespMSG>Approved</RespMSG>
+  <Message>APPROVED</Message>
+  <Message1>
+  </Message1>
+  <Message2>
+  </Message2>
+  <AuthCode>987654</AuthCode>
+  <PNRef>54321</PNRef>
+  <HostCode>4321</HostCode>
+  <HostURL>
+  </HostURL>
+  <ReceiptURL>
+  </ReceiptURL>
+  <GetAVSResult>
+  </GetAVSResult>
+  <GetAVSResultTXT>
+  </GetAVSResultTXT>
+  <GetStreetMatchTXT>
+  </GetStreetMatchTXT>
+  <GetZipMatchTXT>
+  </GetZipMatchTXT>
+  <GetCVResult>N</GetCVResult>
+  <GetCVResultTXT>No Match</GetCVResultTXT>
+  <GetGetOrigResult>
+  </GetGetOrigResult>
+  <GetCommercialCard>False</GetCommercialCard>
+  <WorkingKey>
+  </WorkingKey>
+  <KeyPointer>
+  </KeyPointer>
+  <ExtData>InvNum=12321,CardType=VISA,BatchNum=000000<BatchNum>000000</BatchNum></ExtData>
+</Response>
+      )
   end
 
   def failed_authorize_response
+    %(
+<Response>
+  <Result>23</Result>
+  <RespMSG>Invalid Account Number</RespMSG>
+  <Message>
+  </Message>
+  <Message1>
+  </Message1>
+  <Message2>
+  </Message2>
+  <AuthCode>
+  </AuthCode>
+  <PNRef>
+  </PNRef>
+  <HostCode>
+  </HostCode>
+  <HostURL>
+  </HostURL>
+  <ReceiptURL>
+  </ReceiptURL>
+  <GetAVSResult>
+  </GetAVSResult>
+  <GetAVSResultTXT>
+  </GetAVSResultTXT>
+  <GetStreetMatchTXT>
+  </GetStreetMatchTXT>
+  <GetZipMatchTXT>
+  </GetZipMatchTXT>
+  <GetCVResult>
+  </GetCVResult>
+  <GetCVResultTXT>
+  </GetCVResultTXT>
+  <GetGetOrigResult>
+  </GetGetOrigResult>
+  <GetCommercialCard>
+  </GetCommercialCard>
+  <WorkingKey>
+  </WorkingKey>
+  <KeyPointer>
+  </KeyPointer>
+  <ExtData>InvNum=12321,CardType=VISA</ExtData>
+</Response>
+      )
   end
 
   def successful_capture_response

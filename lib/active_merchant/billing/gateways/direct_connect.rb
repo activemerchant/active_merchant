@@ -27,26 +27,36 @@ module ActiveMerchant #:nodoc:
 
       def purchase(money, payment, options={})
         post = {}
+        
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_address(post, payment, options)
         add_customer_data(post, options)
         add_authentication(post, options)
+
         post[:transType] = 'sale'
         post[:extData] = nil
         post[:pnRef] =  nil
         post[:magData] = options[:magData]
+        
         commit(:saleCreditCard, post)
       end
 
       def authorize(money, payment, options={})
         post = {}
+
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_address(post, payment, options)
         add_customer_data(post, options)
+        add_authentication(post, options)
 
-        commit('authonly', post)
+        post[:transType] = 'Auth'
+        post[:extData] = nil
+        post[:pnRef] =  nil
+        post[:magData] = options[:magData]
+
+        commit(:authCreditCard, post)
       end
 
       def capture(money, authorization, options={})
@@ -113,6 +123,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(action, body)
+        # p body
         doc = Nokogiri::XML(body)
         doc.remove_namespaces!
         response = {action: action}
@@ -120,9 +131,13 @@ module ActiveMerchant #:nodoc:
         response[:message] = doc.at_xpath("//Response/RespMSG").content
 
         if el = doc.at_xpath("//Response/PNRef")
-          response[:pnRef] = el.content
+          response[:pnRef] = el.content.to_i
         end
-        p response
+
+        if el = doc.at_xpath("//Response/AuthCode")
+          response[:authCode] = el.content
+        end
+        # p response
         response
       end
 
@@ -132,6 +147,7 @@ module ActiveMerchant #:nodoc:
         url = "#{url}#{serviceUrl(service)}"
         begin
           data = post_data(action, parameters)
+          # p data
           response = parse(action, ssl_post(url, data))
         rescue ResponseError => e
           puts e.response.body

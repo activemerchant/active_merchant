@@ -39,7 +39,7 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
-    
+
     assert_success response
     assert response.test?
     assert_equal 'Approved', response.message
@@ -48,8 +48,8 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
 
   def test_failed_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
+    
     assert_failure response
-
     assert_equal :invalidAccountNumber, DirectConnectGateway::DIRECT_CONNECT_CODES[response.params['response_code']]
     assert_equal 'Invalid Account Number', response.message
   end
@@ -57,6 +57,9 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
+    puts "=============="
+    p auth
+    puts "=============="
 
     assert capture = @gateway.capture(nil, auth.authorization)
     assert_success capture
@@ -65,6 +68,9 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
   def test_failed_authorize
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
+
+    assert_equal :invalidAccountNumber, DirectConnectGateway::DIRECT_CONNECT_CODES[response.params['response_code']]
+    assert_equal 'Invalid Account Number', response.message
   end
 
   def test_partial_capture
