@@ -86,34 +86,10 @@ class QuickBooksTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  def test_successful_void
-    @gateway.expects(:ssl_request).returns(successful_authorize_response)
-    @gateway.expects(:ssl_post).returns(successful_void_response)
-
-    response = @gateway.void(@authorization)
-    assert_success response
-  end
-
-  def test_failed_void
-    response = stub_comms do
-      @gateway.void(@authorization)
-    end.respond_with(failed_void_response)
-
-    assert_failure response
-  end
-
   def test_successful_verify
     response = stub_comms do
       @gateway.verify(@credit_card)
-    end.respond_with(successful_authorize_response, successful_void_response)
-
-    assert_success response
-  end
-
-  def test_successful_verify_with_failed_void
-    response = stub_comms do
-      @gateway.verify(@credit_card, @options)
-    end.respond_with(successful_authorize_response, failed_void_response)
+    end.respond_with(successful_authorize_response)
 
     assert_success response
   end
@@ -121,7 +97,7 @@ class QuickBooksTest < Test::Unit::TestCase
   def test_failed_verify
     response = stub_comms do
       @gateway.verify(@credit_card, @options)
-    end.respond_with(failed_authorize_response, successful_void_response)
+    end.respond_with(failed_authorize_response)
 
     assert_failure response
     assert_not_nil response.message

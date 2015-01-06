@@ -9,8 +9,8 @@ class RemoteTest < Test::Unit::TestCase
 
     @options = {
       order_id: '1',
-      billing_address: address({ zip: 90210, 
-                                 country: 'US', 
+      billing_address: address({ zip: 90210,
+                                 country: 'US',
                                  state: 'CA'}),
       description: 'Store Purchase'
     }
@@ -75,17 +75,6 @@ class RemoteTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  def test_successful_void
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-    assert void = @gateway.void(auth.authorization)
-    assert_success void
-  end
-
-  def test_failed_void
-    response = @gateway.void('some_bad_thing')
-    assert_failure response
-  end
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)

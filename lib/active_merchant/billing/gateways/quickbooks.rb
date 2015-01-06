@@ -1,7 +1,7 @@
 begin
   require "oauth"
 rescue LoadError
-  raise "OAuth is required to use QuickBooks Payments. Please run `gem install oauth`."
+  raise "You need to have the oauth gem installed in order to use the ActiveMerchant QuickbooksGateway adapter."
 end
 
 module ActiveMerchant #:nodoc:
@@ -29,8 +29,8 @@ module ActiveMerchant #:nodoc:
       STANDARD_ERROR_CODE_MAPPING = {
         # Fraud Warnings
         'PMT-1000' => STANDARD_ERROR_CODE[:processing_error],   # payment was accepted, but refund was unsuccessful
-        'PMT-1001' => STANDARD_ERROR_CODE[:invalid_cvc],   # payment processed, but cvc was invalid
-        'PMT-1002' => STANDARD_ERROR_CODE[:incorrect_address],   # payment processed, incorrect address info
+        'PMT-1001' => STANDARD_ERROR_CODE[:invalid_cvc],        # payment processed, but cvc was invalid
+        'PMT-1002' => STANDARD_ERROR_CODE[:incorrect_address],  # payment processed, incorrect address info
         'PMT-1003' => STANDARD_ERROR_CODE[:processing_error],   # payment processed, address info couldn't be validated
 
         # Fraud Errors
@@ -58,11 +58,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :consumer_key, :consumer_secret, :access_token, :token_secret, :realm)
-        @consumer_key = options[:consumer_key]
-        @consumer_secret = options[:consumer_secret]
-        @access_token = options[:access_token]
-        @token_secret = options[:token_secret]
-        @realm = options[:realm]
+        @options = options
         super
       end
 
@@ -92,26 +88,13 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, authorization, options = {})
         post = {}
-        post[:amount] = money.is_a?(String) ? money : amount(money)
         refund_uri = "#{ENDPOINT}/#{CGI.escape(authorization)}/refunds"
 
         commit(refund_uri, post)
       end
 
-      def void(authorization, options = {})
-        MultiResponse.run do |r|
-          r.process { auth_object_from(authorization) }
-          if amount = r.params['amount']
-            r.process { refund(amount, authorization, options) }
-          end
-        end.responses.last
-      end
-
       def verify(credit_card, options = {})
-        MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(1.00, credit_card, options) }
-          r.process(:ignore_result) { void(r.authorization, options) }
-        end
+        authorize(1.00, credit_card, options)
       end
 
       def supports_scrubbing?
@@ -134,7 +117,6 @@ module ActiveMerchant #:nodoc:
       def add_charge_data(post, payment, options = {})
         add_payment(post, payment, options)
         add_address(post, options)
-        add_context(options[:context]) if options[:context]
       end
 
       def add_address(post, options)
@@ -173,46 +155,19 @@ module ActiveMerchant #:nodoc:
         post[:card] = card
       end
 
-      def add_context(post, context)
-        payment_context = {}
-        payment_context[:tax] = context[:tax] if context[:tax]
-        payment_context[:recurring] = context[:recurring] if context[:recurring]
-
-        post[:context] = payment_context
-      end
-
-      def auth_object_from(authorization)
-        uri = "#{ENDPOINT}/#{authorization}"
-        commit(uri, {}, :get)
-      end
-
       def parse(body)
         JSON.parse(body)
       end
 
       def commit(uri, body = {}, method = :post)
         endpoint = gateway_url + uri
-        begin
-          response = case method
-          when :post
-            ssl_post(endpoint, post_data(body), headers(method: :post, uri: endpoint))
-          when :get
-            ssl_request(:get, endpoint, nil, headers(method: :get, uri: endpoint))
-          end
-        rescue ResponseError => e
-          if e.response.body.present?
-            response = e.response.body
-          else
-            return Response.new(
-              false,
-              "There was a problem connecting to QuickBooks",
-              {
-                code: e.response.code,
-                message: e.response.message
-              },
-              test: test?
-              )
-          end
+        response = case method
+        when :post
+          ssl_post(endpoint, post_data(body), headers(:post, endpoint))
+        when :get
+          ssl_request(:get, endpoint, nil, headers(:get, endpoint))
+        else
+          raise ArgumentError, "Invalid HTTP method: #{method}. Valid methods are :post and :get"
         end
 
         response_object(response)
@@ -228,7 +183,8 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(parsed_response),
           test: test?,
           cvv_result: cvv_code_from(parsed_response),
-          error_code: errors_from(parsed_response)
+          error_code: errors_from(parsed_response),
+          fraud_review: fraud_review_status_from(parsed_response)
         )
       end
 
@@ -240,18 +196,16 @@ module ActiveMerchant #:nodoc:
         data.to_json
       end
 
-      def headers(options)
-        return unless options[:method] && options[:uri]
-
-        method = options[:method]
-        uri = options[:uri]
+      def headers(method, uri)
         request_uri = URI.parse(uri)
 
         request_class = case method
-          when :post
-            Net::HTTP::Post
-          when :get
-           Net::HTTP::Get
+        when :post
+          Net::HTTP::Post
+        when :get
+          Net::HTTP::Get
+        else
+          raise ArgumentError, "Invalid HTTP method: #{method}. Valid methods are :post and :get"
         end
 
         # required for Ruby 1.9 backwards compatibilty
@@ -262,18 +216,18 @@ module ActiveMerchant #:nodoc:
         end
 
         consumer = OAuth::Consumer.new(
-          @consumer_key,
-          @consumer_secret,
+          @options[:consumer_key],
+          @options[:consumer_secret],
           OAUTH_ENDPOINTS)
         access_token = OAuth::AccessToken.new(
           consumer,
-          @access_token,
-          @token_secret)
+          @options[:access_token],
+          @options[:token_secret])
         client_helper = OAuth::Client::Helper.new(
           request_object,
           consumer: consumer,
           token: access_token,
-          realm: @realm,
+          realm: @options[:realm],
           request_uri: request_uri)
         oauth_header = client_helper.header
 
@@ -306,6 +260,10 @@ module ActiveMerchant #:nodoc:
 
       def authorization_from(response)
         response['id']
+      end
+
+      def fraud_review_status_from(response)
+        response['errors'] && FRAUD_WARNING_CODES.include?(response['errors'].first['code'])
       end
     end
   end
