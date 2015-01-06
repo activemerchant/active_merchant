@@ -113,6 +113,9 @@ class CyberSourceTest < Test::Unit::TestCase
       true
     end.returns(successful_purchase_response)
 
+    # globally ignored AVS for gateway instance:
+    @gateway.options[:ignore_avs] = true
+
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
       ignore_avs: false
     ))

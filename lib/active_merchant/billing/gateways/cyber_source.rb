@@ -382,10 +382,19 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_business_rules_data(xml, options)
+        prioritized_options = [options, @options]
+
         xml.tag! 'businessRules' do
-          xml.tag!('ignoreAVSResult', 'true') if @options[:ignore_avs] || options[:ignore_avs]
-          xml.tag!('ignoreCVResult', 'true') if @options[:ignore_cvv] || options[:ignore_cvv]
+          xml.tag!('ignoreAVSResult', 'true') if extract_option(prioritized_options, :ignore_avs)
+          xml.tag!('ignoreCVResult', 'true') if extract_option(prioritized_options, :ignore_cvv)
         end
+      end
+
+      def extract_option prioritized_options, option_name
+        options_matching_key = prioritized_options.detect do |options|
+          options.has_key? option_name
+        end
+        options_matching_key[option_name] if options_matching_key
       end
 
       def add_line_item_data(xml, options)
