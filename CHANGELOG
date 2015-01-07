@@ -12,6 +12,7 @@
 * Add IPP gateway [InfraRuby]
 * Redsys: Fix order_id truncation [duff]
 * AuthorizeNet: Improve duplicate_window handling [duff]
+* PayPal: Fix ButtonSource bug [ntalbott]
 
 == Version 1.45.0 (December 1, 2014)
 

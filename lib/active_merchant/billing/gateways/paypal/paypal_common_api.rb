@@ -597,7 +597,7 @@ module ActiveMerchant #:nodoc:
 
       def add_button_source(xml)
         button_source = (@options[:button_source] || application_id)
-        if !empty?(application_id)
+        if !empty?(button_source)
           xml.tag! 'n2:ButtonSource', button_source.to_s.slice(0, 32)
         end
       end

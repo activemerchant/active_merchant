@@ -237,6 +237,19 @@ class PaypalTest < Test::Unit::TestCase
     assert_equal 'WOOHOO', REXML::XPath.first(xml, '//n2:ButtonSource').text
   end
 
+  def test_button_source_via_credentials_with_no_application_id
+    PaypalGateway.application_id = nil
+    gateway = PaypalGateway.new(
+      login: 'cody',
+      password: 'test',
+      pem: 'PEM',
+      button_source: "WOOHOO"
+    )
+
+    xml = REXML::Document.new(gateway.send(:build_sale_or_authorization_request, 'Test', @amount, @credit_card, {}))
+    assert_equal 'WOOHOO', REXML::XPath.first(xml, '//n2:ButtonSource').text
+  end
+
   def test_item_total_shipping_handling_and_tax_not_included_unless_all_are_present
     xml = @gateway.send(:build_sale_or_authorization_request, 'Authorization', @amount, @credit_card,
       :tax => @amount,
