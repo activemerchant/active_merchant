@@ -97,8 +97,9 @@ class RemoteTest < Test::Unit::TestCase
       token_secret: '',
       realm: ''
     )
-    response = gateway.purchase(@amount, @credit_card, @options)
-    assert_failure response
+    assert_raises ActiveMerchant::ResponseError do
+      gateway.purchase(@amount, @credit_card, @options)
+    end
   end
 
   def test_dump_transcript
