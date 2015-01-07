@@ -163,7 +163,7 @@ class IatsPaymentsTest < Test::Unit::TestCase
 
   def test_supported_countries
     @gateway.supported_countries.each do |country_code|
-      assert ActiveMerchant::Country.find(country_code), "Supported country code #{country_code} is invalid. Please use a value explicitly listed in active_utils' ActiveMerchant::Country class."
+      assert ActiveMerchant::Country.find(country_code), "Supported country code #{country_code} is invalid. Please use a value explicitly listed in ActiveMerchant::Country class."
     end
   end
 
