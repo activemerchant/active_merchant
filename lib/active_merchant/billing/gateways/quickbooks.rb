@@ -161,13 +161,20 @@ module ActiveMerchant #:nodoc:
 
       def commit(uri, body = {}, method = :post)
         endpoint = gateway_url + uri
-        response = case method
-        when :post
-          ssl_post(endpoint, post_data(body), headers(:post, endpoint))
-        when :get
-          ssl_request(:get, endpoint, nil, headers(:get, endpoint))
-        else
-          raise ArgumentError, "Invalid HTTP method: #{method}. Valid methods are :post and :get"
+        # The QuickBooks API returns HTTP 4xx on failed transactions, which causes a
+        # ResponseError raise, so we have to inspect the response and discern between
+        # a legitimate HTTP error and an actual gateway transactional error.
+        response = begin
+          case method
+          when :post
+            ssl_post(endpoint, post_data(body), headers(:post, endpoint))
+          when :get
+            ssl_request(:get, endpoint, nil, headers(:get, endpoint))
+          else
+            raise ArgumentError, "Invalid HTTP method: #{method}. Valid methods are :post and :get"
+          end
+        rescue ResponseError => e
+          extract_response_body_or_raise(e)
         end
 
         response_object(response)
@@ -264,6 +271,15 @@ module ActiveMerchant #:nodoc:
 
       def fraud_review_status_from(response)
         response['errors'] && FRAUD_WARNING_CODES.include?(response['errors'].first['code'])
+      end
+
+      def extract_response_body_or_raise(response_error)
+        begin
+          parse(response_error.response.body)
+        rescue JSON::ParserError
+          raise response_error
+        end
+        response_error.response.body
       end
     end
   end
