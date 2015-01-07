@@ -1,5 +1,6 @@
 = ActiveMerchant CHANGELOG
 
+* QuickBooks Payments: Add adapter [ivanfer, bizla]
 * PayGate: Add support for refunds [StephanAtG2]
 * PayPal: Add #scrub for scrubbing PCI information out of HTTP transcripts [girasquid]
 * Stripe: Add #scrub for scrubbing PCI information out of HTTP transcripts [girasquid]
