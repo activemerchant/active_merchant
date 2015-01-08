@@ -4,8 +4,6 @@ $:.unshift File.expand_path('../../lib', __FILE__)
 require 'bundler/setup'
 
 require 'test/unit'
-
-require 'mocha/version'
 require 'mocha/setup'
 
 require 'yaml'
@@ -111,6 +109,10 @@ module ActiveMerchant
     def assert_deprecation_warning(message=nil)
       ActiveMerchant.expects(:deprecated).with(message ? message : anything)
       yield
+    end
+
+    def refute(value, message = nil)
+      assert(!value, message)
     end
 
     def silence_deprecation_warnings

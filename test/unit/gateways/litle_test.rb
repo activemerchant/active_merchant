@@ -261,7 +261,7 @@ class LitleTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
       assert_match "<orderSource>ecommerce</orderSource>", data
-      assert_not_match %r{<pos>.+<\/pos>}m, data
+      assert %r{<pos>.+<\/pos>}m !~ data
     end.respond_with(successful_purchase_response)
   end
 
