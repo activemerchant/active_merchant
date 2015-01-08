@@ -1,22 +1,13 @@
 #!/usr/bin/env ruby
 $:.unshift File.expand_path('../../lib', __FILE__)
 
-begin
-  require 'rubygems'
-  require 'bundler'
-  Bundler.setup
-rescue LoadError => e
-  puts "Error loading bundler (#{e.message}): \"gem install bundler\" for bundler support."
-end
+require 'bundler/setup'
 
 require 'test/unit'
 
 require 'mocha/version'
-if(Mocha::VERSION.split(".")[1].to_i < 12)
-  require 'mocha'
-else
-  require 'mocha/setup'
-end
+require 'mocha/setup'
+
 require 'yaml'
 require 'json'
 require 'active_merchant'
@@ -47,7 +38,7 @@ end
 
 module ActiveMerchant
   module Assertions
-    AssertionClass = RUBY_VERSION > '1.9' ? MiniTest::Assertion : Test::Unit::AssertionFailedError
+    AssertionClass = defined?(Minitest) ? MiniTest::Assertion : Test::Unit::AssertionFailedError
 
     def assert_field(field, value)
       clean_backtrace do
