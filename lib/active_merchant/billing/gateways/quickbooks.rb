@@ -1,9 +1,3 @@
-begin
-  require "oauth"
-rescue LoadError
-  raise "You need to have the oauth gem installed in order to use the ActiveMerchant QuickbooksGateway adapter."
-end
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class QuickbooksGateway < Gateway
@@ -204,44 +198,36 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(method, uri)
+        raise ArgumentError, "Invalid HTTP method: #{method}. Valid methods are :post and :get" unless [:post, :get].include?(method)
         request_uri = URI.parse(uri)
 
-        request_class = case method
-        when :post
-          Net::HTTP::Post
-        when :get
-          Net::HTTP::Get
-        else
-          raise ArgumentError, "Invalid HTTP method: #{method}. Valid methods are :post and :get"
-        end
+        # Following the guidelines from http://nouncer.com/oauth/authentication.html
+        oauth_parameters = {
+          oauth_nonce: generate_unique_id,
+          oauth_timestamp: Time.now.to_i.to_s,
+          oauth_signature_method: 'HMAC-SHA1',
+          oauth_version: "1.0",
+          oauth_consumer_key: @options[:consumer_key],
+          oauth_token: @options[:access_token]
+        }
 
-        # required for Ruby 1.9 backwards compatibilty
-        begin
-          request_object = request_class.new(request_uri)
-        rescue
-          request_object = request_class.new(uri)
-        end
+        # prepare components for signature
+        oauth_signature_base_string = [method.to_s.upcase, request_uri.to_s, oauth_parameters.to_param].map{|v| CGI.escape(v) }.join('&')
+        oauth_signing_key = [@options[:consumer_secret], @options[:token_secret]].map{|v| CGI.escape(v)}.join('&')
+        hmac_signature = OpenSSL::HMAC.digest(OpenSSL::Digest.new('sha1'), oauth_signing_key, oauth_signature_base_string)
 
-        consumer = OAuth::Consumer.new(
-          @options[:consumer_key],
-          @options[:consumer_secret],
-          OAUTH_ENDPOINTS)
-        access_token = OAuth::AccessToken.new(
-          consumer,
-          @options[:access_token],
-          @options[:token_secret])
-        client_helper = OAuth::Client::Helper.new(
-          request_object,
-          consumer: consumer,
-          token: access_token,
-          realm: @options[:realm],
-          request_uri: request_uri)
-        oauth_header = client_helper.header
+        # append signature to required OAuth parameters
+        oauth_parameters[:oauth_signature] = CGI.escape(Base64.encode64(hmac_signature).chomp.gsub(/\n/, ''))
+
+        # prepare Authorization header string
+        oauth_parameters = Hash[oauth_parameters.sort_by {|k, _| k}]
+        oauth_headers = ["OAuth realm=\"#{@options[:realm]}\""]
+        oauth_headers += oauth_parameters.map {|k, v| "#{k}=\"#{v}\""}
 
         {
           "Content-type" => "application/json",
           "Request-Id" => generate_unique_id,
-          "Authorization" => oauth_header
+          "Authorization" => oauth_headers.join(', ')
         }
       end
 
