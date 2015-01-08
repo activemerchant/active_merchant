@@ -9,6 +9,7 @@ class NmiTest < Test::Unit::TestCase
 
     @amount = 100
     @credit_card = credit_card
+    @options = {}
   end
 
   def test_credit_card_purchase_no_recurring_flag

@@ -185,7 +185,7 @@ class StripeTest < Test::Unit::TestCase
   def test_amount_localization
     @gateway.expects(:ssl_request).returns(successful_purchase_response(true))
     @gateway.expects(:post_data).with do |params|
-      assert_equal '4', params[:amount]
+      '4' == params[:amount]
     end
 
     @options[:currency] = 'JPY'
@@ -243,7 +243,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_successful_refund_with_refund_application_fee
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      assert post.include?("refund_application_fee=true")
+      post.include?("refund_application_fee=true")
     end.returns(successful_partially_refunded_response)
 
     assert response = @gateway.refund(@refund_amount, 'ch_test_charge', :refund_application_fee => true)
@@ -435,7 +435,7 @@ class StripeTest < Test::Unit::TestCase
       assert_match(/user_agent=some\+browser/, data)
       assert_match(/referrer=http\%3A\%2F\%2Fwww\.shopify\.com/, data)
       assert_match(/payment_user_agent=Stripe\%2Fv1\+ActiveMerchantBindings\%2F\d+\.\d+\.\d+/, data)
-      refute_match(/metadata/, data)
+      refute data.include?('metadata')
     end.respond_with(successful_purchase_response)
   end
 
@@ -517,7 +517,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_passing_expand_parameters
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      assert post.include?("expand[]=balance_transaction")
+      post.include?("expand[]=balance_transaction")
     end.returns(successful_authorization_response)
 
     @options.merge!(:expand => :balance_transaction)
@@ -527,7 +527,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_passing_expand_parameters_as_array
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      assert post.include?("expand[]=balance_transaction&expand[]=customer")
+      post.include?("expand[]=balance_transaction&expand[]=customer")
     end.returns(successful_authorization_response)
 
     @options.merge!(:expand => [:balance_transaction, :customer])
@@ -537,7 +537,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_recurring_flag_not_set_by_default
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      assert !post.include?("recurring")
+      !post.include?("recurring")
     end.returns(successful_authorization_response)
 
     @gateway.authorize(@amount, @credit_card, @options)
@@ -545,7 +545,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_passing_recurring_eci_sets_recurring_flag
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      assert post.include?("recurring=true")
+      post.include?("recurring=true")
     end.returns(successful_authorization_response)
 
     @options.merge!(eci: 'recurring')
@@ -555,7 +555,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_passing_unknown_eci_does_not_set_recurring_flag
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      assert !post.include?("recurring")
+      !post.include?("recurring")
     end.returns(successful_authorization_response)
 
     @options.merge!(eci: 'installment')
@@ -565,7 +565,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_passing_recurring_true_option_sets_recurring_flag
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      assert post.include?("recurring=true")
+      post.include?("recurring=true")
     end.returns(successful_authorization_response)
 
     @options.merge!(recurring: true)
@@ -575,7 +575,7 @@ class StripeTest < Test::Unit::TestCase
 
   def test_passing_recurring_false_option_does_not_set_recurring_flag
     @gateway.expects(:ssl_request).with do |method, url, post, headers|
-      assert !post.include?("recurring")
+      !post.include?("recurring")
     end.returns(successful_authorization_response)
 
     @options.merge!(recurring: false)

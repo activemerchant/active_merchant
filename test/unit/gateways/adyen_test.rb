@@ -94,8 +94,7 @@ class AdyenTest < Test::Unit::TestCase
   def test_fractional_currency
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
     @gateway.expects(:post_data).with do |params|
-      assert_equal '100', params['paymentRequest.amount.value']
-      assert_equal 'JPY', params['paymentRequest.amount.currency']
+      '100' == params['paymentRequest.amount.value'] && 'JPY' == params['paymentRequest.amount.currency']
     end
 
     @options[:currency] = 'JPY'

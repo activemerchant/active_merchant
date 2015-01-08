@@ -13,6 +13,7 @@ class BridgePayTest < Test::Unit::TestCase
 
     @credit_card = credit_card
     @amount = 100
+    @options = {}
   end
 
   def test_successful_purchase
