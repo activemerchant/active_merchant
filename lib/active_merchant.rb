@@ -27,7 +27,7 @@ require 'active_support/core_ext/hash/indifferent_access'
 require 'active_support/core_ext/hash/conversions'
 require 'active_support/core_ext/object/conversions'
 require 'active_support/core_ext/class/attribute'
-require 'active_support/core_ext/enumerable.rb'
+require 'active_support/core_ext/enumerable'
 
 if(!defined?(ActiveSupport::VERSION) || (ActiveSupport::VERSION::STRING < "4.1"))
   require 'active_support/core_ext/class/attribute_accessors'
@@ -59,10 +59,10 @@ require 'rexml/document'
 require 'timeout'
 require 'socket'
 
-require 'active_utils/common/network_connection_retries'
-silence_warnings{require 'active_utils/common/connection'}
-require 'active_utils/common/post_data'
-require 'active_utils/common/posts_data'
+require 'active_merchant/network_connection_retries'
+silence_warnings { require 'active_merchant/connection' }
+require 'active_merchant/post_data'
+require 'active_merchant/posts_data'
 
 require 'active_merchant/billing'
 require 'active_merchant/version'

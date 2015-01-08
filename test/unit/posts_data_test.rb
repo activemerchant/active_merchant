@@ -8,25 +8,25 @@ class PostsDataTests < Test::Unit::TestCase
     @ok = stub(:body => '', :code => '200', :message => 'OK')
     @error = stub(:code => 500, :message => 'Internal Server Error', :body => 'failure')
   end
-  
+
   def teardown
     SimpleTestGateway.retry_safe = false
   end
-  
+
   def test_single_successful_post
     ActiveMerchant::Connection.any_instance.expects(:request).returns(@ok)
-    
-    assert_nothing_raised do
-      @gateway.ssl_post(@url, '') 
-    end
-  end
-  
-  def test_multiple_successful_posts
-    ActiveMerchant::Connection.any_instance.expects(:request).times(2).returns(@ok, @ok)
-    
+
     assert_nothing_raised do
       @gateway.ssl_post(@url, '')
-      @gateway.ssl_post(@url, '') 
+    end
+  end
+
+  def test_multiple_successful_posts
+    ActiveMerchant::Connection.any_instance.expects(:request).times(2).returns(@ok, @ok)
+
+    assert_nothing_raised do
+      @gateway.ssl_post(@url, '')
+      @gateway.ssl_post(@url, '')
     end
   end
 
