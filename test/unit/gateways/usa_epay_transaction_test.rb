@@ -49,7 +49,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
-    assert Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code 
+    assert Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
   def test_successful_purchase_passing_extra_info
@@ -166,7 +166,7 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     @credit_card.track_data = "data"
 
     @gateway.expects(:ssl_post).with do |_, body|
-      assert_match "UMmagstripe=data", body
+      body.include?("UMmagstripe=data")
     end.returns(successful_purchase_response)
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
