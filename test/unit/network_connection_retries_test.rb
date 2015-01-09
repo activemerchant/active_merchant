@@ -12,13 +12,66 @@ class NetworkConnectionRetriesTest < Test::Unit::TestCase
     @ok = stub(:code => 200, :message => 'OK', :body => 'success')
   end
 
-  def test_unrecoverable_exception
-    assert_raises(ActiveMerchant::ConnectionError) do
+  def test_eoferror_raises_correctly
+    raised = assert_raises(ActiveMerchant::ConnectionError) do
       retry_exceptions do
         raise EOFError
       end
     end
+
+    assert_equal "The remote server dropped the connection", raised.message
   end
+
+  def test_econnreset_raises_correctly
+    raised = assert_raises(ActiveMerchant::ConnectionError) do
+      retry_exceptions do
+        raise Errno::ECONNRESET
+      end
+    end
+    assert_equal "The remote server reset the connection", raised.message
+  end
+
+  def test_timeout_errors_raise_correctly
+    exceptions = [Timeout::Error, Errno::ETIMEDOUT]
+    if RUBY_VERSION >= '2.0.0'
+      exceptions += [Net::ReadTimeout, Net::OpenTimeout]
+    end
+
+    exceptions.each do |exception|
+      raised = assert_raises(ActiveMerchant::ConnectionError) do
+        retry_exceptions do
+          raise exception
+        end
+      end
+      assert_equal "The connection to the remote server timed out", raised.message
+    end
+  end
+
+  def test_socket_error_raises_correctly
+    raised = assert_raises(ActiveMerchant::ConnectionError) do
+      retry_exceptions do
+        raise SocketError
+      end
+    end
+    assert_equal "The connection to the remote server could not be established", raised.message
+  end
+
+  def test_ssl_errors_raise_correctly
+    exceptions = [OpenSSL::SSL::SSLError]
+    if RUBY_VERSION >= '2.1.0'
+      exceptions += [OpenSSL::SSL::SSLErrorWaitWritable, OpenSSL::SSL::SSLErrorWaitReadable]
+    end
+
+    exceptions.each do |exception|
+      raised = assert_raises(ActiveMerchant::ConnectionError) do
+        retry_exceptions do
+          raise exception
+        end
+      end
+      assert_equal "The SSL connection to the remote server could not be established", raised.message
+    end
+  end
+
 
   def test_invalid_response_error
     assert_raises(ActiveMerchant::InvalidResponseError) do

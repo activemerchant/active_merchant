@@ -28,7 +28,7 @@ module ActiveMerchant
         rescue Zlib::BufError => e
           raise ActiveMerchant::InvalidResponseError, "The remote server replied with an invalid response"
         rescue *connection_errors.keys => e
-          raise ActiveMerchant::ConnectionError, connection_errors[e.class]
+          raise ActiveMerchant::ConnectionError, derived_error_message(connection_errors, e.class)
         end
       end
     end
@@ -68,6 +68,11 @@ module ActiveMerchant
     private
     def log_with_retry_details(logger, attempts, time, message, tag)
       NetworkConnectionRetries.log(logger, :info, "connection_attempt=%d connection_request_time=%.4fs connection_msg=\"%s\"" % [attempts, time, message], tag)
+    end
+
+    def derived_error_message(errors, klass)
+      key = (errors.keys & klass.ancestors).first
+      key ? errors[key] : nil
     end
   end
 end
