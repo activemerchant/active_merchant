@@ -129,14 +129,9 @@ module ActiveMerchant #:nodoc:
 
         # special parsing
         response[:result] = doc.at_xpath("//Response/Result").content.to_i
-        response[:message] = doc.at_xpath("//Response/RespMSG").content
 
         if el = doc.at_xpath("//Response/PNRef")
           response[:pnref] = el.content.to_i
-        end
-
-        if el = doc.at_xpath("//Response/AuthCode")
-          response[:authcode] = el.content
         end
 
         # parse everything else
@@ -173,7 +168,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def message_from(response)
-        response[:message]
+        response[:respmsg]
       end
 
       def authorization_from(response)
