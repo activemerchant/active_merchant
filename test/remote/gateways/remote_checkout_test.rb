@@ -65,7 +65,7 @@ class RemoteCheckoutTest < Test::Unit::TestCase
     auth = @gateway.authorize(100, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(100, auth.authorization.split('|')[0], @options)
+    assert capture = @gateway.capture(100, auth.authorization, @options.merge(is_reference: true))
     assert_success capture
     assert_equal 'Successful', capture.message
   end
