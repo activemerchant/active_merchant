@@ -41,7 +41,6 @@ This simple example demonstrates how a purchase can be made using a person's
 credit card details.
 
 ```ruby
-require 'rubygems'
 require 'active_merchant'
 
 # Use the TrustCommerce test servers
@@ -210,30 +209,6 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Worldpay](http://www.worldpay.com/) - HK, US, GB, AU, AD, BE, CH, CY, CZ, DE, DK, ES, FI, FR, GI, GR, HU, IE, IL, IT, LI, LU, MC, MT, NL, NO, NZ, PL, PT, SE, SG, SI, SM, TR, UM, VA
 * [Worldpay US](http://www.worldpay.com/us) - US
 
-## Deprecation Policy
+## API stability policy
 
-Deprecated functionality is removed on major version changes - for example, deprecations from 2.x are removed in 3.x.
-
-## Contributing
-
-1. [Fork it](http://github.com/Shopify/active_merchant/fork) and clone your new repo
-2. Create a branch (`git checkout -b my_awesome_feature`)
-3. Commit your changes (`git add my/awesome/file.rb; git commit -m "Added my awesome feature"`)
-4. Push your changes to your fork (`git push origin my_awesome_feature`)
-5. Open a [Pull Request](https://github.com/shopify/active_merchant/pulls)
-
-Please see the [ActiveMerchant Guide to Contributing](http://github.com/Shopify/active_merchant/wikis/contributing) for
-information on adding a new gateway to ActiveMerchant.
-
-Please don't touch the CHANGELOG in your pull requests, we'll add the appropriate CHANGELOG entries
-at release time.
-
-## Placement Within Shopify
-
-The addition of your gateway to active_merchant does not guarantee placement within Shopify. In order to have your gateway considered, please send an email to payment-integrations@shopify.com with **Active_Merchant Integration** in the subject. Be sure to include:
-
-1. Name, URL & description of the payment provider you wish to integrate
-2. Markets served by this integration
-3. List of major supported payment methods
-4. Your most recent Certificate of PCI Compliance
-
+Functionality or APIs that are deprecated will be marked as such. Deprecated functionality is removed on major version changes - for example, deprecations from 2.x are removed in 3.x.
