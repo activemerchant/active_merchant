@@ -88,7 +88,7 @@ class HdfcTest < Test::Unit::TestCase
   end
 
   def test_passing_invalid_currency
-    assert_raise(ArgumentError, %r(unsupported currency)i) do
+    assert_raise(ArgumentError, 'Unsupported currency for HDFC: AOA') do
       @gateway.purchase(@amount, @credit_card, :currency => "AOA")
     end
   end
