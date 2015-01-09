@@ -17,6 +17,8 @@ class DirectConnectTest < Test::Unit::TestCase
     }
   end
 
+  # direct payments
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -80,6 +82,85 @@ class DirectConnectTest < Test::Unit::TestCase
   end
 
   def test_failed_verify
+  end
+
+  # recurring
+
+  def test_successful_add_contract
+  end
+
+  def test_failed_add_contract
+  end
+
+  def test_successful_update_contract
+  end
+
+  def test_failed_update_contract
+  end
+
+  def test_successful_delete_contract
+  end
+
+  def test_failed_delete_contract
+  end
+
+  # crm
+
+  def test_successful_add_customer
+  end
+
+  def test_failed_add_customer
+  end
+
+  def test_successful_update_customer
+  end
+
+  def test_failed_update_customer
+  end
+
+  def test_successful_delete_customer
+  end
+
+  def test_failed_delete_customer
+  end
+
+  def test_successful_add_credit_card_info
+  end
+
+  def test_failed_add_credit_card_info
+  end
+
+  def test_successful_update_credit_card_info
+  end
+
+  def test_failed_update_credit_card_info
+  end
+
+  def test_successful_delete_credit_card_info
+  end
+
+  def test_failed_delete_credit_card_info
+  end
+
+  # card safe
+
+  def test_successful_store_card
+  end
+
+  def test_failed_store_card
+  end
+
+  def test_successful_process_stored_card
+  end
+
+  def test_failed_process_stored_card
+  end
+
+  # these are the 'processcreditcard' methods under the recurring tab in the docs
+  def test_successful_process_stored_card_recurring
+  end
+
+  def test_successful_process_stored_card_recurring
   end
 
   def test_scrub
@@ -277,5 +358,84 @@ Conn close
   end
 
   def failed_void_response
+  end
+
+  # recurring
+
+  def successful_add_contract_response
+  end
+
+  def failed_add_contract_response
+  end
+
+  def successful_update_contract_response
+  end
+
+  def failed_update_contract_response
+  end
+
+  def successful_delete_contract_response
+  end
+
+  def failed_delete_contract_response
+  end
+
+  # crm
+
+  def successful_add_customer_response
+  end
+
+  def failed_add_customer_response
+  end
+
+  def successful_update_customer_response
+  end
+
+  def failed_update_customer_response
+  end
+
+  def successful_delete_customer_response
+  end
+
+  def failed_delete_customer_response
+  end
+
+  def successful_add_credit_card_info_response
+  end
+
+  def failed_add_credit_card_info_response
+  end
+
+  def successful_update_credit_card_info_response
+  end
+
+  def failed_update_credit_card_info_response
+  end
+
+  def successful_delete_credit_card_info_response
+  end
+
+  def failed_delete_credit_card_info_response
+  end
+
+  # card safe
+
+  def successful_store_card_response
+  end
+
+  def failed_store_card_response
+  end
+
+  def successful_process_stored_card_response
+  end
+
+  def failed_process_stored_card_response
+  end
+
+  # these are the 'processcreditcard' methods under the recurring tab in the docs
+  def successful_process_stored_card_recurring_response
+  end
+
+  def successful_process_stored_card_recurring_response
   end
 end
