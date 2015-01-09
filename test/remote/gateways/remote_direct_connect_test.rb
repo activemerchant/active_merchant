@@ -138,4 +138,83 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
+
+  # recurring
+
+  def test_successful_add_contract
+  end
+
+  def test_failed_add_contract
+  end
+
+  def test_successful_update_contract
+  end
+
+  def test_failed_update_contract
+  end
+
+  def test_successful_delete_contract
+  end
+
+  def test_failed_delete_contract
+  end
+
+  # crm
+
+  def test_successful_add_customer
+  end
+
+  def test_failed_add_customer
+  end
+
+  def test_successful_update_customer
+  end
+
+  def test_failed_update_customer
+  end
+
+  def test_successful_delete_customer
+  end
+
+  def test_failed_delete_customer
+  end
+
+  def test_successful_add_credit_card_info
+  end
+
+  def test_failed_add_credit_card_info
+  end
+
+  def test_successful_update_credit_card_info
+  end
+
+  def test_failed_update_credit_card_info
+  end
+
+  def test_successful_delete_credit_card_info
+  end
+
+  def test_failed_delete_credit_card_info
+  end
+
+  # card safe
+
+  def test_successful_store_card
+  end
+
+  def test_failed_store_card
+  end
+
+  def test_successful_process_stored_card
+  end
+
+  def test_failed_process_stored_card
+  end
+
+  # these are the 'processcreditcard' methods under the recurring tab in the docs
+  def test_successful_process_stored_card_recurring
+  end
+
+  def test_successful_process_stored_card_recurring
+  end
 end
