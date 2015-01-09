@@ -2,26 +2,26 @@ module ActiveMerchant #:nodoc:
   module PostsData  #:nodoc:
 
     def self.included(base)
-      base.superclass_delegating_accessor :ssl_strict
+      base.class_attribute :ssl_strict
       base.ssl_strict = true
 
-      base.superclass_delegating_accessor :ssl_version
+      base.class_attribute :ssl_version
       base.ssl_version = nil
 
       base.class_attribute :retry_safe
       base.retry_safe = false
 
-      base.superclass_delegating_accessor :open_timeout
+      base.class_attribute :open_timeout
       base.open_timeout = 60
 
-      base.superclass_delegating_accessor :read_timeout
+      base.class_attribute :read_timeout
       base.read_timeout = 60
 
-      base.superclass_delegating_accessor :max_retries
+      base.class_attribute :max_retries
       base.max_retries = Connection::MAX_RETRIES
 
-      base.superclass_delegating_accessor :logger
-      base.superclass_delegating_accessor :wiredump_device
+      base.class_attribute :logger
+      base.class_attribute :wiredump_device
     end
 
     def ssl_get(endpoint, headers={})
