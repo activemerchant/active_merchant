@@ -36,22 +36,7 @@ end
 require 'active_support/core_ext/class/delegating_attributes'
 require 'active_support/core_ext/module/attribute_accessors'
 
-begin
-  require 'active_support/base64'
-
-  unless defined?(Base64)
-    Base64 = ActiveSupport::Base64
-  end
-
-  unless Base64.respond_to?(:strict_encode64)
-    def Base64.strict_encode64(v)
-      ActiveSupport::Base64.encode64s(v)
-    end
-  end
-rescue LoadError
-  require 'base64'
-end
-
+require 'base64'
 require 'securerandom'
 require 'builder'
 require 'cgi'
