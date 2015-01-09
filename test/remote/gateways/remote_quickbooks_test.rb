@@ -103,7 +103,6 @@ class RemoteTest < Test::Unit::TestCase
   end
 
   def test_dump_transcript
-    skip('See quickbooks_test.rb for a scrubbed transcript')
-    dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
+    # See quickbooks_test.rb for an example of a scrubbed transcript
   end
 end
