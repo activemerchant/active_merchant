@@ -41,8 +41,9 @@ module ActiveMerchant #:nodoc:
         commit("AUTH_CAPTURE") do |xml|
           add_order_id(xml, options)
           xml.transactionRequest do
-            xml.transactionType 'authCaptureTransaction'
-            xml.amount amount(amount)
+            xml.transactionType('authCaptureTransaction')
+            xml.amount(amount(amount))
+
             add_payment_source(xml, payment)
             add_invoice(xml, options)
             add_customer_data(xml, payment, options)
@@ -57,8 +58,9 @@ module ActiveMerchant #:nodoc:
         commit("AUTH_ONLY") do |xml|
           add_order_id(xml, options)
           xml.transactionRequest do
-            xml.transactionType 'authOnlyTransaction'
-            xml.amount amount(amount)
+            xml.transactionType('authOnlyTransaction')
+            xml.amount(amount(amount))
+
             add_payment_source(xml, payment)
             add_invoice(xml, options)
             add_customer_data(xml, payment, options)
@@ -72,9 +74,10 @@ module ActiveMerchant #:nodoc:
         commit("PRIOR_AUTH_CAPTURE") do |xml|
           add_order_id(xml, options)
           xml.transactionRequest do
-            xml.transactionType 'priorAuthCaptureTransaction'
-            xml.amount amount(amount)
-            xml.refTransId split_authorization(authorization)[0]
+            xml.transactionType('priorAuthCaptureTransaction')
+            xml.amount(amount(amount))
+            xml.refTransId(split_authorization(authorization)[0])
+
             add_invoice(xml, options)
             add_user_fields(xml, amount, options)
           end
@@ -85,15 +88,16 @@ module ActiveMerchant #:nodoc:
         transaction_id, card_number = split_authorization(authorization)
         commit("CREDIT") do |xml|
           xml.transactionRequest do
-            xml.transactionType 'refundTransaction'
-            xml.amount (amount.nil? ? 0 : amount(amount))
+            xml.transactionType('refundTransaction')
+            xml.amount(amount.nil? ? 0 : amount(amount))
             xml.payment do
               xml.creditCard do
                 xml.cardNumber(card_number || options[:card_number])
-                xml.expirationDate 'XXXX'
+                xml.expirationDate('XXXX')
               end
             end
-            xml.refTransId transaction_id
+            xml.refTransId(transaction_id)
+
             add_customer_data(xml, nil, options)
             add_user_fields(xml, amount, options)
           end
@@ -104,8 +108,9 @@ module ActiveMerchant #:nodoc:
         commit("VOID") do |xml|
           add_order_id(xml, options)
           xml.transactionRequest do
-            xml.transactionType 'voidTransaction'
-            xml.refTransId split_authorization(authorization)[0]
+            xml.transactionType('voidTransaction')
+            xml.refTransId(split_authorization(authorization)[0])
+
             add_user_fields(xml, nil, options)
           end
         end
@@ -133,10 +138,10 @@ module ActiveMerchant #:nodoc:
 
       def add_settings(xml, source, options)
         xml.transactionSettings do
-          if(card_brand(source) == "check" && options[:recurring])
+          if card_brand(source) == "check" && options[:recurring]
             xml.setting do
-              xml.settingName "recurringBilling"
-              xml.settingValue "true"
+              xml.settingName("recurringBilling")
+              xml.settingValue("true")
             end
           end
           if options[:duplicate_window]
@@ -150,23 +155,23 @@ module ActiveMerchant #:nodoc:
 
       def set_duplicate_window(xml, value)
         xml.setting do
-          xml.settingName "duplicateWindow"
-          xml.settingValue value
+          xml.settingName("duplicateWindow")
+          xml.settingValue(value)
         end
       end
 
       def add_user_fields(xml, amount, options)
         xml.userFields do
-          if(currency = (options[:currency] || currency(amount)))
+          if currency = (options[:currency] || currency(amount))
             xml.userField do
-              xml.name "x_currency_code"
-              xml.value currency
+              xml.name("x_currency_code")
+              xml.value(currency)
             end
           end
-          if(application_id.present? && application_id != "ActiveMerchant")
+          if application_id.present? && application_id != "ActiveMerchant"
             xml.userField do
-              xml.name "x_solution_id"
-              xml.value application_id
+              xml.name("x_solution_id")
+              xml.value(application_id)
             end
           end
         end
@@ -178,10 +183,10 @@ module ActiveMerchant #:nodoc:
         else
           xml.payment do
             xml.creditCard do
-              xml.cardNumber credit_card.number
-              xml.expirationDate (format(credit_card.month, :two_digits) + '/' + format(credit_card.year, :four_digits))
+              xml.cardNumber(credit_card.number)
+              xml.expirationDate(format(credit_card.month, :two_digits) + '/' + format(credit_card.year, :four_digits))
               unless empty?(credit_card.verification_value)
-                xml.cardCode credit_card.verification_value
+                xml.cardCode(credit_card.verification_value)
               end
             end
           end
@@ -205,8 +210,8 @@ module ActiveMerchant #:nodoc:
       def add_apple_pay_payment_token(xml, apple_pay_payment_token)
         xml.payment do
           xml.opaqueData do
-            xml.dataDescriptor APPLE_PAY_DATA_DESCRIPTOR
-            xml.dataValue Base64.strict_encode64(apple_pay_payment_token.payment_data.to_json)
+            xml.dataDescriptor(APPLE_PAY_DATA_DESCRIPTOR)
+            xml.dataValue(Base64.strict_encode64(apple_pay_payment_token.payment_data.to_json))
           end
         end
       end
@@ -215,7 +220,7 @@ module ActiveMerchant #:nodoc:
         return unless valid_track_data
         xml.retail do
           # As per http://www.authorize.net/support/CP_guide.pdf, '2' is for Retail, the only current market_type
-          xml.marketType 2
+          xml.marketType(2)
         end
       end
 
@@ -226,12 +231,12 @@ module ActiveMerchant #:nodoc:
       def add_check(xml, check)
         xml.payment do
           xml.bankAccount do
-            xml.routingNumber check.routing_number
-            xml.accountNumber check.account_number
-            xml.nameOnAccount check.name
-            xml.echeckType "WEB"
-            xml.bankName check.bank_name
-            xml.checkNumber check.number
+            xml.routingNumber(check.routing_number)
+            xml.accountNumber(check.account_number)
+            xml.nameOnAccount(check.name)
+            xml.echeckType("WEB")
+            xml.bankName(check.bank_name)
+            xml.checkNumber(check.number)
           end
         end
       end
@@ -278,19 +283,19 @@ module ActiveMerchant #:nodoc:
         xml.customerIP(options[:ip]) unless empty?(options[:ip])
 
         xml.cardholderAuthentication do
-          xml.authenticationIndicator options[:authentication_indicator]
-          xml.cardholderAuthenticationValue options[:cardholder_authentication_value]
+          xml.authenticationIndicator(options[:authentication_indicator])
+          xml.cardholderAuthenticationValue(options[:cardholder_authentication_value])
         end
       end
 
       def add_order_id(xml, options)
-        xml.refId truncate(options[:order_id], 20)
+        xml.refId(truncate(options[:order_id], 20))
       end
 
       def add_invoice(xml, options)
         xml.order do
-          xml.invoiceNumber truncate(options[:order_id], 20)
-          xml.description truncate(options[:description], 255)
+          xml.invoiceNumber(truncate(options[:order_id], 20))
+          xml.description(truncate(options[:description], 255))
         end
       end
 
@@ -325,8 +330,8 @@ module ActiveMerchant #:nodoc:
         Nokogiri::XML::Builder.new do |xml|
           xml.createTransactionRequest('xmlns' => 'AnetApi/xml/v1/schema/AnetApiSchema.xsd') do
             xml.merchantAuthentication do
-              xml.name @options[:login]
-              xml.transactionKey @options[:password]
+              xml.name(@options[:login])
+              xml.transactionKey(@options[:password])
             end
             yield(xml)
           end
@@ -420,7 +425,6 @@ module ActiveMerchant #:nodoc:
         return nil unless value
         value.to_s[0, max_size]
       end
-
     end
   end
 end
