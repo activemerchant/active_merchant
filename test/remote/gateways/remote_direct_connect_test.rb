@@ -3,7 +3,7 @@ require 'test_helper'
 class RemoteDirectConnectTest < Test::Unit::TestCase
   def setup
     @gateway = DirectConnectGateway.new(fixtures(:direct_connect))
-    puts fixtures(:direct_connect)
+
     @amount = 100
     @credit_card = credit_card('4111111111111111')
     @declined_card = credit_card('4111111111111112')
@@ -50,16 +50,13 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @declined_card, @options)
     
     assert_failure response
-    assert_equal :invalidAccountNumber, DirectConnectGateway::DIRECT_CONNECT_CODES[response.params['response_code']]
+    assert_equal :invalidAccountNumber, DirectConnectGateway::DIRECT_CONNECT_CODES[response.params['result']]
     assert_equal 'Invalid Account Number', response.message
   end
 
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
-    puts "=============="
-    p auth
-    puts "=============="
 
     assert capture = @gateway.capture(nil, auth.authorization)
     assert_success capture
@@ -69,7 +66,7 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
 
-    assert_equal :invalidAccountNumber, DirectConnectGateway::DIRECT_CONNECT_CODES[response.params['response_code']]
+    assert_equal :invalidAccountNumber, DirectConnectGateway::DIRECT_CONNECT_CODES[response.params['result']]
     assert_equal 'Invalid Account Number', response.message
   end
 
@@ -129,8 +126,8 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
   def test_failed_verify
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
-    assert_match %r{REPLACE WITH FAILED PURCHASE MESSAGE}, response.message
-    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    assert_match "Invalid Account Number", response.message
+    assert_equal :invalidAccountNumber, DirectConnectGateway::DIRECT_CONNECT_CODES[response.params['result']]
   end
 
   def test_invalid_login

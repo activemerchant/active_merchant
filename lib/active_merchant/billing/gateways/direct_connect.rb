@@ -34,10 +34,10 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_authentication(post, options)
 
-        post[:transType] = 'sale'
-        post[:extData] = nil
-        post[:pnRef] =  nil
-        post[:magData] = options[:magData]
+        post[:transtype] = 'sale'
+        post[:extdata] = nil
+        post[:pnref] =  nil
+        post[:magdata] = options[:track_data]
         
         commit(:saleCreditCard, post)
       end
@@ -51,10 +51,10 @@ module ActiveMerchant #:nodoc:
         add_customer_data(post, options)
         add_authentication(post, options)
 
-        post[:transType] = 'Auth'
-        post[:extData] = nil
-        post[:pnRef] =  nil
-        post[:magData] = options[:magData]
+        post[:transtype] = 'Auth'
+        post[:extdata] = nil
+        post[:pnref] =  nil
+        post[:magdata] = options[:track_data]
 
         commit(:authCreditCard, post)
       end
@@ -103,7 +103,7 @@ module ActiveMerchant #:nodoc:
 
       def add_address(post, creditcard, options)
         if address = options[:billing_address] || options[:address]
-          post[:nameOnCard] = address[:name]
+          post[:nameoncard] = address[:name]
           post[:street] = address[:address1]
           post[:zip] = address[:zip]
         end
@@ -123,21 +123,28 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(action, body)
-        # p body
         doc = Nokogiri::XML(body)
         doc.remove_namespaces!
         response = {action: action}
-        response[:response_code] = doc.at_xpath("//Response/Result").content.to_i
+
+        # special parsing
+        response[:result] = doc.at_xpath("//Response/Result").content.to_i
         response[:message] = doc.at_xpath("//Response/RespMSG").content
 
         if el = doc.at_xpath("//Response/PNRef")
-          response[:pnRef] = el.content.to_i
+          response[:pnref] = el.content.to_i
         end
 
         if el = doc.at_xpath("//Response/AuthCode")
-          response[:authCode] = el.content
+          response[:authcode] = el.content
         end
-        # p response
+
+        # parse everything else
+        doc.at_xpath('//Response').element_children.each do |node|
+          node_sym = node.name.downcase.to_sym
+          response[node_sym] ||= normalize(node.content)
+        end
+
         response
       end
 
@@ -147,7 +154,6 @@ module ActiveMerchant #:nodoc:
         url = "#{url}#{serviceUrl(service)}"
         begin
           data = post_data(action, parameters)
-          # p data
           response = parse(action, ssl_post(url, data))
         rescue ResponseError => e
           puts e.response.body
@@ -163,7 +169,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        DIRECT_CONNECT_CODES[response[:response_code]] == :success
+        DIRECT_CONNECT_CODES[response[:result]] == :success
       end
 
       def message_from(response)
@@ -171,7 +177,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(response)
-        response[:pnRef]
+        response[:pnref]
       end
 
       def post_data(action, parameters = {})

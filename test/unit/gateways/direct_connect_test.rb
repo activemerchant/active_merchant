@@ -23,7 +23,7 @@ class DirectConnectTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     
     assert_success response
-    assert_equal '12345', response.authorization
+    assert_equal 12345, response.authorization
     assert response.test?
   end
 
@@ -33,7 +33,7 @@ class DirectConnectTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal :invalidAccountNumber, DirectConnectGateway::DIRECT_CONNECT_CODES[response.params['response_code']]
+    assert_equal :invalidAccountNumber, DirectConnectGateway::DIRECT_CONNECT_CODES[response.params['result']]
   end
 
   def test_successful_authorize
@@ -43,7 +43,7 @@ class DirectConnectTest < Test::Unit::TestCase
 
     assert_success response
     assert_equal 'Approved', response.message
-    assert_equal '54321', response.authorization
+    assert_equal 54321, response.authorization
   end
 
   def test_failed_authorize
@@ -52,7 +52,7 @@ class DirectConnectTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
 
-    assert_equal :invalidAccountNumber, DirectConnectGateway::DIRECT_CONNECT_CODES[response.params['response_code']]
+    assert_equal :invalidAccountNumber, DirectConnectGateway::DIRECT_CONNECT_CODES[response.params['result']]
   end
 
   def test_successful_capture
