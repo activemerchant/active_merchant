@@ -5,12 +5,10 @@ module ActiveMerchant #:nodoc:
       self.simulate = false
 
       class_attribute :simulator_url
-      class_attribute :protocol_version
 
       self.test_url = 'https://test.sagepay.com/gateway/service'
       self.live_url = 'https://live.sagepay.com/gateway/service'
       self.simulator_url = 'https://test.sagepay.com/Simulator'
-      self.protocol_version = '3.00'
 
       APPROVED = 'OK'
 
@@ -356,7 +354,7 @@ module ActiveMerchant #:nodoc:
         parameters.update(
           :Vendor => @options[:login],
           :TxType => TRANSACTIONS[action],
-          :VPSProtocol => protocol_version
+          :VPSProtocol => @options.fetch(:protocol_version, '3.00')
         )
 
         if(application_id && (application_id != Gateway.application_id))

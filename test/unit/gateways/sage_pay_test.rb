@@ -3,10 +3,12 @@ require 'test_helper'
 class SagePayTest < Test::Unit::TestCase
   include CommStub
 
+  def create_gateway(opts = {})
+    SagePayGateway.new(opts.merge(:login => 'X'))
+  end
+
   def setup
-    @gateway = SagePayGateway.new(
-      :login => 'X'
-    )
+    @gateway = create_gateway
 
     @credit_card = credit_card('4242424242424242', :brand => 'visa')
     @options = {
@@ -158,7 +160,7 @@ class SagePayTest < Test::Unit::TestCase
   end
 
   def test_protocol_version_is_honoured
-    ActiveMerchant::Billing::SagePayGateway.protocol_version = '2.23'
+    @gateway = create_gateway(:protocol_version => '2.23')
 
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
