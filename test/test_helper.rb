@@ -4,7 +4,7 @@ $:.unshift File.expand_path('../../lib', __FILE__)
 require 'bundler/setup'
 
 require 'test/unit'
-require 'mocha/setup'
+require 'mocha/test_unit'
 
 require 'yaml'
 require 'json'
@@ -13,11 +13,7 @@ require 'comm_stub'
 
 require 'active_support/core_ext/integer/time'
 require 'active_support/core_ext/numeric/time'
-
-begin
-  require 'active_support/core_ext/time/acts_like'
-rescue LoadError
-end
+require 'active_support/core_ext/time/acts_like'
 
 ActiveMerchant::Billing::Base.mode = :test
 
