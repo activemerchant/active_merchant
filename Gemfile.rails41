@@ -8,3 +8,5 @@ group :test, :remote_test do
   gem 'braintree', '>= 2.0.0'
   gem 'oauth', '0.4.7'
 end
+
+gem 'rails', '~> 4.1.0'
