@@ -23,7 +23,6 @@ module ActiveMerchant
     attr_accessor :ssl_version
     attr_accessor :ca_file
     attr_accessor :ca_path
-    attr_accessor :retry_safe
     attr_accessor :pem
     attr_accessor :pem_password
     attr_accessor :wiredump_device

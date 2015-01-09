@@ -60,7 +60,7 @@ require 'timeout'
 require 'socket'
 
 require 'active_merchant/network_connection_retries'
-silence_warnings { require 'active_merchant/connection' }
+require 'active_merchant/connection'
 require 'active_merchant/post_data'
 require 'active_merchant/posts_data'
 
