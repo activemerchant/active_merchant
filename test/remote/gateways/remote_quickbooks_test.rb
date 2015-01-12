@@ -7,11 +7,14 @@ class RemoteTest < Test::Unit::TestCase
     @credit_card = credit_card('4000100011112224')
     @declined_card = credit_card('4000000000000001')
 
+    @partial_amount = @amount - 1
+
     @options = {
       order_id: '1',
       billing_address: address({ zip: 90210,
                                  country: 'US',
-                                 state: 'CA'}),
+                                 state: 'CA'
+                               }),
       description: 'Store Purchase'
     }
   end
@@ -45,7 +48,8 @@ class RemoteTest < Test::Unit::TestCase
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
 
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert capture = @gateway.capture(@partial_amount, auth.authorization)
+    assert_equal capture.params['captureDetail']['amount'], sprintf("%.2f", @partial_amount.to_f / 100)
     assert_success capture
   end
 
@@ -66,7 +70,8 @@ class RemoteTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@partial_amount, purchase.authorization)
+    assert_equal refund.params['amount'], sprintf("%.2f", @partial_amount.to_f / 100)
     assert_success refund
   end
 
@@ -74,7 +79,6 @@ class RemoteTest < Test::Unit::TestCase
     response = @gateway.refund(nil, '')
     assert_failure response
   end
-
 
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)

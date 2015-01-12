@@ -75,16 +75,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
+        post = {}
         capture_uri = "#{ENDPOINT}/#{CGI.escape(authorization)}/capture"
+        post[:amount] = localized_amount(money, currency(money))
 
-        commit(capture_uri)
+        commit(capture_uri, post)
       end
 
       def refund(money, authorization, options = {})
         post = {}
-        refund_uri = "#{ENDPOINT}/#{CGI.escape(authorization)}/refunds"
+        post[:amount] = localized_amount(money, currency(money))
 
-        commit(refund_uri, post)
+        commit(refund_uri(authorization), post)
       end
 
       def verify(credit_card, options = {})
@@ -234,7 +236,7 @@ module ActiveMerchant #:nodoc:
       def cvv_code_from(response)
         if response['errors'].present?
           FRAUD_WARNING_CODES.include?(response['errors'].first['code']) ? 'I' : ''
-        elsif
+        else
           success?(response) ? 'M' : ''
         end
       end
@@ -266,6 +268,10 @@ module ActiveMerchant #:nodoc:
           raise response_error
         end
         response_error.response.body
+      end
+
+      def refund_uri(authorization)
+        "#{ENDPOINT}/#{CGI.escape(authorization)}/refunds"
       end
     end
   end
