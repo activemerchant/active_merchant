@@ -15,6 +15,8 @@ class DirectConnectTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase'
     }
+
+    @authorization = 12345
   end
 
   # direct payments
@@ -58,9 +60,21 @@ class DirectConnectTest < Test::Unit::TestCase
   end
 
   def test_successful_capture
+    @gateway.expects(:ssl_post).returns(successful_capture_response)
+
+    response = @gateway.capture(@amount, @authorization, @options)
+
+    assert_success response
+    assert_equal 'Approved', response.message
   end
 
   def test_failed_capture
+    @gateway.expects(:ssl_post).returns(failed_capture_response)
+
+    response = @gateway.capture(@maount, @authorization, @options)
+
+    assert_failure response
+    assert_equal 'No Records To Process', response.message
   end
 
   def test_successful_refund
@@ -343,9 +357,88 @@ Conn close
   end
 
   def successful_capture_response
+        %(
+<Response>
+  <Result>0</Result>
+  <RespMSG>Approved</RespMSG>
+  <Message>APPROVED</Message>
+  <Message1>
+  </Message1>
+  <Message2>
+  </Message2>
+  <AuthCode>987654</AuthCode>
+  <PNRef>54321</PNRef>
+  <HostCode>4321</HostCode>
+  <HostURL>
+  </HostURL>
+  <ReceiptURL>
+  </ReceiptURL>
+  <GetAVSResult>
+  </GetAVSResult>
+  <GetAVSResultTXT>
+  </GetAVSResultTXT>
+  <GetStreetMatchTXT>
+  </GetStreetMatchTXT>
+  <GetZipMatchTXT>
+  </GetZipMatchTXT>
+  <GetCVResult>N</GetCVResult>
+  <GetCVResultTXT>No Match</GetCVResultTXT>
+  <GetGetOrigResult>
+  </GetGetOrigResult>
+  <GetCommercialCard>False</GetCommercialCard>
+  <WorkingKey>
+  </WorkingKey>
+  <KeyPointer>
+  </KeyPointer>
+  <ExtData>InvNum=12321,CardType=VISA,BatchNum=000000<BatchNum>000000</BatchNum></ExtData>
+</Response>
+      )
   end
 
   def failed_capture_response
+    %(
+<Response>
+  <Result>1015</Result>
+  <RespMSG>No Records To Process</RespMSG>
+  <Message>No Records To Process</Message>
+  <Message1>
+  </Message1>
+  <Message2>
+  </Message2>
+  <AuthCode>
+  </AuthCode>
+  <PNRef>
+  </PNRef>
+  <HostCode>
+  </HostCode>
+  <HostURL>
+  </HostURL>
+  <ReceiptURL>
+  </ReceiptURL>
+  <GetAVSResult>
+  </GetAVSResult>
+  <GetAVSResultTXT>
+  </GetAVSResultTXT>
+  <GetStreetMatchTXT>
+  </GetStreetMatchTXT>
+  <GetZipMatchTXT>
+  </GetZipMatchTXT>
+  <GetCVResult>
+  </GetCVResult>
+  <GetCVResultTXT>
+  </GetCVResultTXT>
+  <GetGetOrigResult>
+  </GetGetOrigResult>
+  <GetCommercialCard>
+  </GetCommercialCard>
+  <WorkingKey>
+  </WorkingKey>
+  <KeyPointer>
+  </KeyPointer>
+  <ExtData>
+  </ExtData>
+</Response>
+      )
   end
 
   def successful_refund_response

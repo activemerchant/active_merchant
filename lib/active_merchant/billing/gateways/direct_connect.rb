@@ -60,11 +60,31 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options={})
-        commit('capture', post)
+        post = {}
+
+        add_invoice(post, money, options)
+        add_customer_data(post, options)
+        add_authentication(post, options)
+
+        post[:transtype] = 'Capture'
+        post[:extdata] = nil
+        post[:pnref] =  authorization
+
+        commit(:saleCreditCard, post)
       end
 
       def refund(money, authorization, options={})
-        commit('refund', post)
+        post = {}
+
+        add_invoice(post, money, options)
+        add_customer_data(post, options)
+        add_authentication(post, options)
+
+        post[:transtype] = 'Return'
+        post[:extdata] = nil
+        post[:pnref] =  authorization
+
+        commit(:returnCreditCard, post)
       end
 
       def void(authorization, options={})
