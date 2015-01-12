@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! "Transaction", "mode" => options[:mode], "channel" => @options[:channel], "response" => "SYNC" do
             xml.tag! "User", "login" => @options[:login], "pwd" => @options[:password]
             xml.tag! "Identification" do
-              xml.tag! "TransactionID", options[:transaction_id] || generate_unique_id
+              xml.tag! "TransactionID", options[:order_id] || generate_unique_id
               xml.tag! "ReferenceID", payment unless payment.respond_to?(:number)
             end
 
@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
 
               xml.tag! "Customer" do
                 add_customer_name(xml, payment)
-                add_address(xml, options[:billing_address])
+                add_address(xml, options[:billing_address] || options[:address])
                 add_contact(xml, options)
               end
             end
