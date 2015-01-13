@@ -74,6 +74,7 @@ class DirectConnectTest < Test::Unit::TestCase
     response = @gateway.capture(@amount, @authorization, @options)
 
     assert_failure response
+    assert_equal :noRecordsToProcess, DirectConnectGateway::DIRECT_CONNECT_CODES[response.params['result']]
     assert_equal 'No Records To Process', response.message
   end
 

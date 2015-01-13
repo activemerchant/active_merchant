@@ -15,7 +15,8 @@ module ActiveMerchant #:nodoc:
 
       DIRECT_CONNECT_CODES = {
         0 => :success,
-        23 => :invalidAccountNumber
+        23 => :invalidAccountNumber,
+        1015 => :noRecordsToProcess
       }
 
       def initialize(options={})
@@ -28,15 +29,13 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         post = {}
         
+        add_required_nil_values(post)
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_address(post, payment, options)
-        add_customer_data(post, options)
         add_authentication(post, options)
 
         post[:transtype] = 'sale'
-        post[:extdata] = nil
-        post[:pnref] =  nil
         post[:magdata] = options[:track_data]
         
         commit(:saleCreditCard, post)
@@ -45,15 +44,13 @@ module ActiveMerchant #:nodoc:
       def authorize(money, payment, options={})
         post = {}
 
+        add_required_nil_values(post)
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_address(post, payment, options)
-        add_customer_data(post, options)
         add_authentication(post, options)
 
         post[:transtype] = 'Auth'
-        post[:extdata] = nil
-        post[:pnref] =  nil
         post[:magdata] = options[:track_data]
 
         commit(:authCreditCard, post)
@@ -63,12 +60,12 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options={})
         post = {}
 
+        add_required_nil_values(post)
         add_invoice(post, money, options)
         add_customer_data(post, options)
         add_authentication(post, options)
 
         post[:transtype] = 'Capture'
-        post[:extdata] = nil
         post[:pnref] =  authorization
 
         commit(:saleCreditCard, post)
@@ -76,15 +73,12 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, payment, authorization, options={})
         post = {}
-
+        
+        add_required_nil_values(post)
         add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_address(post, payment, options)
         add_authentication(post, options)
-
+        
         post[:transtype] = 'Return'
-        post[:extdata] = nil
-        post[:magdata] = nil
         post[:pnref] =  authorization
 
         commit(:returnCreditCard, post)
@@ -122,6 +116,20 @@ module ActiveMerchant #:nodoc:
 
       def add_customer_data(post, options)
 
+      end
+
+      def add_required_nil_values(post)
+          post[:amount] = nil
+          post[:invNum] = nil
+          post[:cardnum] = nil
+          post[:expdate] = nil
+          post[:cvnum] = nil
+          post[:nameoncard] = nil
+          post[:street] = nil
+          post[:zip] = nil
+          post[:extdata] = nil
+          post[:magdata] = nil
+          post[:pnref] =  nil
       end
 
       def add_address(post, creditcard, options)
