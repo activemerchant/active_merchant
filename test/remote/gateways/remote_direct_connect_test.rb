@@ -54,12 +54,9 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
     assert_equal 'Invalid Account Number', response.message
   end
 
-  def test_successful_authorize_and_capture
+  def test_successful_authorize
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
-
-    assert capture = @gateway.capture(nil, auth.authorization)
-    assert_success capture
   end
 
   def test_failed_authorize
