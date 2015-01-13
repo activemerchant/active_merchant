@@ -104,6 +104,8 @@ module ActiveMerchant #:nodoc:
         parameters[:IDENTIFIER] = @options[:login]
         parameters[:VERSION]    = '2.0'
 
+        parameters.delete_if { |k,v| v.blank? }
+
         url = (test? ? self.test_url : self.live_url)
         response = parse(ssl_post(url, post_data(action, parameters)))
 
