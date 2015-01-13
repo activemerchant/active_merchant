@@ -70,24 +70,11 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
     assert_equal 'Invalid Account Number', response.message
   end
 
-  def test_partial_capture
-    auth = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success auth
-
-    assert capture = @gateway.capture(@amount-1, auth.authorization)
-    assert_success capture
-  end
-
-  def test_failed_capture
-    response = @gateway.capture(nil, '')
-    assert_failure response
-  end
-
   def test_successful_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(nil, purchase.authorization)
+    assert refund = @gateway.refund(@amount, @credit_card, purchase.authorization, @options)
     assert_success refund
   end
 
@@ -95,13 +82,16 @@ class RemoteDirectConnectTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert refund = @gateway.refund(@amount-1, @credit_card, purchase.authorization, @options)
     assert_success refund
   end
 
   def test_failed_refund
-    response = @gateway.refund(nil, '')
-    assert_failure response
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount+1, @credit_card, purchase.authorization, @options)
+    assert_failure refund
   end
 
   def test_successful_void

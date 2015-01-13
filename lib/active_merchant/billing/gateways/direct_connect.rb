@@ -59,6 +59,7 @@ module ActiveMerchant #:nodoc:
         commit(:authCreditCard, post)
       end
 
+      # could not implement remote tests for capture due to it not being enabled on our gateway
       def capture(money, authorization, options={})
         post = {}
 
@@ -73,15 +74,17 @@ module ActiveMerchant #:nodoc:
         commit(:saleCreditCard, post)
       end
 
-      def refund(money, authorization, options={})
+      def refund(money, payment, authorization, options={})
         post = {}
 
         add_invoice(post, money, options)
-        add_customer_data(post, options)
+        add_payment(post, payment)
+        add_address(post, payment, options)
         add_authentication(post, options)
 
         post[:transtype] = 'Return'
         post[:extdata] = nil
+        post[:magdata] = nil
         post[:pnref] =  authorization
 
         commit(:returnCreditCard, post)

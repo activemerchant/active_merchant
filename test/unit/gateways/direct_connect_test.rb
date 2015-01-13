@@ -71,16 +71,28 @@ class DirectConnectTest < Test::Unit::TestCase
   def test_failed_capture
     @gateway.expects(:ssl_post).returns(failed_capture_response)
 
-    response = @gateway.capture(@maount, @authorization, @options)
+    response = @gateway.capture(@amount, @authorization, @options)
 
     assert_failure response
     assert_equal 'No Records To Process', response.message
   end
 
   def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_refund_response)
+
+    response = @gateway.refund(@amount, @credit_card, @authorization, @options)
+
+    assert_success response
+    assert_equal 'Approved', response.message
   end
 
   def test_failed_refund
+    @gateway.expects(:ssl_post).returns(failed_refund_response)
+
+    response = @gateway.refund(@amount+1, @credit_card, @authorization, @options)
+
+    assert_failure response
+    assert_equal 'Cannot Exceed Sales Cap', response.message
   end
 
   def test_successful_void
@@ -442,9 +454,85 @@ Conn close
   end
 
   def successful_refund_response
+    %(
+      <Response>
+  <Result>0</Result>
+  <RespMSG>Approved</RespMSG>
+  <Message>APPROVAL</Message>
+  <Message1>
+  </Message1>
+  <Message2>
+  </Message2>
+  <AuthCode>012345</AuthCode>
+  <PNRef>1232321</PNRef>
+  <HostCode>012345</HostCode>
+  <HostURL>
+  </HostURL>
+  <ReceiptURL>
+  </ReceiptURL>
+  <GetAVSResult>
+  </GetAVSResult>
+  <GetAVSResultTXT>
+  </GetAVSResultTXT>
+  <GetStreetMatchTXT>
+  </GetStreetMatchTXT>
+  <GetZipMatchTXT>
+  </GetZipMatchTXT>
+  <GetCVResult>
+  </GetCVResult>
+  <GetCVResultTXT>
+  </GetCVResultTXT>
+  <GetGetOrigResult>
+  </GetGetOrigResult>
+  <GetCommercialCard>False</GetCommercialCard>
+  <WorkingKey>
+  </WorkingKey>
+  <KeyPointer>
+  </KeyPointer>
+  <ExtData>CardType=VISA</ExtData>
+</Response>
+)
   end
 
   def failed_refund_response
+    %(
+    <Response>
+  <Result>113</Result>
+  <RespMSG>Cannot Exceed Sales Cap</RespMSG>
+  <Message>Requested Refund Exceeds Available Refund Amount</Message>
+  <Message1>
+  </Message1>
+  <Message2>
+  </Message2>
+  <AuthCode>Cannot_Exceed_Sales_Cap</AuthCode>
+  <PNRef>012345</PNRef>
+  <HostCode>Cannot_Exceed_Sales_Cap</HostCode>
+  <HostURL>
+  </HostURL>
+  <ReceiptURL>
+  </ReceiptURL>
+  <GetAVSResult>
+  </GetAVSResult>
+  <GetAVSResultTXT>
+  </GetAVSResultTXT>
+  <GetStreetMatchTXT>
+  </GetStreetMatchTXT>
+  <GetZipMatchTXT>
+  </GetZipMatchTXT>
+  <GetCVResult>
+  </GetCVResult>
+  <GetCVResultTXT>
+  </GetCVResultTXT>
+  <GetGetOrigResult>
+  </GetGetOrigResult>
+  <GetCommercialCard>False</GetCommercialCard>
+  <WorkingKey>
+  </WorkingKey>
+  <KeyPointer>
+  </KeyPointer>
+  <ExtData>CardType=VISA</ExtData>
+</Response>
+)
   end
 
   def successful_void_response
