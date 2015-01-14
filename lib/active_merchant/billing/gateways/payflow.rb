@@ -1,6 +1,6 @@
-require File.dirname(__FILE__) + '/payflow/payflow_common_api'
-require File.dirname(__FILE__) + '/payflow/payflow_response'
-require File.dirname(__FILE__) + '/payflow_express'
+require 'active_merchant/billing/gateways/payflow/payflow_common_api'
+require 'active_merchant/billing/gateways/payflow/payflow_response'
+require 'active_merchant/billing/gateways/payflow_express'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:

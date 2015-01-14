@@ -1,6 +1,6 @@
-require File.dirname(__FILE__) + '/paypal/paypal_common_api'
-require File.dirname(__FILE__) + '/paypal/paypal_recurring_api'
-require File.dirname(__FILE__) + '/paypal_express'
+require 'active_merchant/billing/gateways/paypal/paypal_common_api'
+require 'active_merchant/billing/gateways/paypal/paypal_recurring_api'
+require 'active_merchant/billing/gateways/paypal_express'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:

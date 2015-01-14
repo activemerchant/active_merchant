@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/braintree/braintree_common'
+require 'active_merchant/billing/gateways/braintree/braintree_common'
 
 begin
   require "braintree"

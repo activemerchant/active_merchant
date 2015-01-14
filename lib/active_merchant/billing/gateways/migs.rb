@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/migs/migs_codes'
+require 'active_merchant/billing/gateways/migs/migs_codes'
 
 require 'digest/md5' # Used in add_secure_hash
 
