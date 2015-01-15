@@ -13,7 +13,6 @@ module ActiveMerchant
         end
       end
 
-      @rails_required = false
       def self.rails_required!
         @rails_required = true
       end
