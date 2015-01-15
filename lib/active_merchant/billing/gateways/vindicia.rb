@@ -173,7 +173,29 @@ module ActiveMerchant #:nodoc:
           end
         end
       end
+      
+      # Use the Vindicia gateway to calculate tax on the order pre-purchase
+      #   
+      # ==== Options
+      #   
+      # * <tt>:shipping_address</tt> -- ActiveMerchant Address Hash (REQUIRED)
+      # * <tt>:line_items</tt> -- transaction items (REQUIRED)
+      def calculate_tax(options = {}) 
 
+        requires!(options, :shipping_address, :line_items)
+
+        parameters = { 
+          shippingAddress: convert_am_address_to_vindicia(options[:shipping_address]),
+          transactionItems: options[:line_items]
+        }   
+
+        response = post(:calculateSalesTax) do |xml|
+          add_hash(xml, transaction: parameters)
+        end 
+
+        BigDecimal response[:totalTax]
+      end 
+      
       private
 
       def add_hash(xml, hash)
