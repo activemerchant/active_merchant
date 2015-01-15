@@ -84,6 +84,14 @@ class PinTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_unparsable_response
+    @gateway.expects(:ssl_request).returns("This is not [ JSON")
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match(/Invalid JSON response received/, response.message)
+  end
+
   def test_successful_store
     @gateway.expects(:ssl_request).returns(successful_store_response)
     assert response = @gateway.store(@credit_card, @options)

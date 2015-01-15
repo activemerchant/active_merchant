@@ -148,9 +148,12 @@ module ActiveMerchant #:nodoc:
         url = "#{test? ? test_url : live_url}/#{action}"
 
         begin
-          body = parse(ssl_request(method, url, post_data(params), headers(options)))
+          raw_response = ssl_request(method, url, post_data(params), headers(options))
+          body = parse(raw_response)
         rescue ResponseError => e
           body = parse(e.response.body)
+        rescue JSON::ParserError
+          return unparsable_response(raw_response)
         end
 
         if body["response"]
@@ -179,6 +182,12 @@ module ActiveMerchant #:nodoc:
           :authorization => nil,
           :test => test?
         )
+      end
+
+      def unparsable_response(raw_response)
+        message = "Invalid JSON response received from Pin Payments. Please contact support@pin.net.au if you continue to receive this message."
+        message += " (The raw response returned by the API was #{raw_response.inspect})"
+        return Response.new(false, message)
       end
 
       def token(response)
