@@ -98,6 +98,10 @@ class ConnectionTest < Test::Unit::TestCase
     assert_equal false, @connection.verify_peer
   end
 
+  def test_default_ca_file_exists
+    assert File.exists?(ActiveMerchant::Connection::CA_FILE)
+  end
+
   def test_default_ca_file
     assert_equal ActiveMerchant::Connection::CA_FILE, @connection.ca_file
     assert_equal ActiveMerchant::Connection::CA_FILE, @connection.send(:http).ca_file
