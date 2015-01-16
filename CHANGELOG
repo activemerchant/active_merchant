@@ -24,6 +24,7 @@
 * Pin: Handle JSON parsing exception in response [duff]
 * Improve test suite to test against multiple ActiveSupport versions [wvanbergen]
 * Misc. code cleanup [wvanbergen]
+* Add Flo2Cash gateway [markabe]
 
 == Version 1.45.0 (December 1, 2014)
 
