@@ -217,6 +217,11 @@ firstdata_e4:
   login:
   password:
 
+flo2cash:
+  username: SOMECREDENTIAL
+  password: ANOTHERCREDENTIAL
+  account_id: ANOTHERCREDENTIAL
+
 garanti:
   login: "PROVAUT"
   terminal_id: 111995
