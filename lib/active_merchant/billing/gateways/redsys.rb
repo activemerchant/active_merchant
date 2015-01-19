@@ -100,7 +100,7 @@ module ActiveMerchant #:nodoc:
         191 => "Expiry date incorrect",
 
         201 => "Card expired",
-        202 => "Card blocked temporarily or under suscipition of fraud",
+        202 => "Card blocked temporarily or under suspicion of fraud",
         204 => "Transaction not permitted",
         207 => "Contact the card issuer",
         208 => "Lost or stolen card",
