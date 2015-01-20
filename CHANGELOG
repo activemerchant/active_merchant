@@ -1,6 +1,13 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.46.0 (January 20, 2015)
+
+* CHANGE: drop `offsite_payments` and `active_utils` as dependencies. [wvanbergen]
+* CHANGE: remove `OffsitePaymentShim`. You will have to add offsite_payments as a dependency,
+  and update any mentions of `ActiveSupport::Billing::Integration` to
+  `OffsitePayments::Integrations`. [wvanbergen]
 * QuickBooks Payments: Add adapter [ivanfer, bizla]
+* Quickbooks: Remove requirement of oauth gem.
 * PayGate: Add support for refunds [StephanAtG2]
 * PayPal: Add #scrub for scrubbing PCI information out of HTTP transcripts [girasquid]
 * Stripe: Add #scrub for scrubbing PCI information out of HTTP transcripts [girasquid]
@@ -15,6 +22,8 @@
 * PayPal: Fix ButtonSource bug [ntalbott]
 * Checkout: Prevent multiple trackids from being passed [markabe]
 * Pin: Handle JSON parsing exception in response [duff]
+* Improve test suite to test against multiple ActiveSupport versions [wvanbergen]
+* Misc. code cleanup [wvanbergen]
 
 == Version 1.45.0 (December 1, 2014)
 
