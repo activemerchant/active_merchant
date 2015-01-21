@@ -99,7 +99,7 @@ class ConnectionTest < Test::Unit::TestCase
   end
 
   def test_default_ca_file_exists
-    assert File.exists?(ActiveMerchant::Connection::CA_FILE)
+    assert File.exist?(ActiveMerchant::Connection::CA_FILE)
   end
 
   def test_default_ca_file
