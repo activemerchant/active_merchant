@@ -20,6 +20,7 @@ Please see the [ActiveMerchant Guide to Contributing](https://github.com/Shopify
 The most important guidelines:
 
 - All new integrations must have unit tests and functional remote tests.
+- Remote tests for a gateway should cover all supported transaction methods (auth, capture, refund, void) and validate critical response formats such as charge amounts.
 - Your code should support all the Ruby versions and ActiveSupport versions we have enabled on Travis CI.
 - No new gem dependencies will be accepted.
 - **XML**: use Nokogiri for generating and parsing XML.
