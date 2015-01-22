@@ -5,12 +5,13 @@ class RemoteMondidoTest < Test::Unit::TestCase
   def setup
     start_params = fixtures(:mondido)
 
-    # Gateway with Public Key Crypto (and Certificate Pinning)
+    # Gateway with Public Key Crypto
+    #start_params.delete :certificate_for_pinning
     start_params.delete :certificate_hash_for_pinning
     start_params.delete :public_key_for_pinning
     @gateway_encrypted = MondidoGateway.new(start_params)
 
-    # Gateway without Public Key Crypto (and Certificate Pinning)
+    # Gateway without Public Key Crypto
     start_params.delete :public_key
     @gateway = MondidoGateway.new(start_params)
 
@@ -19,65 +20,13 @@ class RemoteMondidoTest < Test::Unit::TestCase
     @declined_card = credit_card('4111111111111111', { verification_value: '201' })
     @cvv_invalid_card = credit_card('4111111111111111', { verification_value: '202' })
     @expired_card = credit_card('4111111111111111', { verification_value: '203' })
-    @stored_card = nil
     @declined_stored_card = @declined_card
-    @customer_id = nil
-    @plan_id = nil
 
     @options = { test: true }
     @store_options = {
         :test => true,
         :currency => 'sek',
     }
-
-    # Get stored card
-    begin
-      cards = api_request(:get, "stored_cards")
-      cards.each do |card|
-        if card["status"] == "active"
-          @stored_card = card["token"]
-          break
-        end
-      end
-
-      unless @stored_card
-        card = @gateway.store(@credit_card, @store_options)
-        @store_card = card.params["token"]
-      end
-    rescue
-      raise "[Setup] Unable to get or create Stored Card Token"
-    end
-
-    # Get customer id
-    begin
-      customers = api_request(:get, "customers")
-      @customer_id = customers[0]["id"] if not customers.empty?
-
-      unless @customer_id
-        customer = api_request(:post, "customers")
-        @customer_id = customer["id"]
-      end
-    rescue
-      raise "[Setup] Unable to get or create Customer ID"
-    end
-
-    # Get plan id
-    begin
-      plans = api_request(:get, "plans")
-      @plan_id = plans[0]["id"] if not plans.empty?
-
-      unless @plan_id
-        plan = api_request(:post, "plans", {
-          interval_unit: 'days',
-          interval: 30,
-          prices: {"eur" => "10","sek" => "100"}.to_json,
-          name: "Active Merchant Test"
-        })
-        @plan_id = plan["id"]
-      end
-    rescue
-      raise "[Setup] Unable to get or create Plan ID"
-    end
 
     # The @base_order_id and @counter are for test purposes
     # More precisely, the payment_ref value generation as
@@ -123,8 +72,52 @@ class RemoteMondidoTest < Test::Unit::TestCase
     return rnumber
   end
 
+  def generate_stored_card
+    # Get stored card
+    @stored_card ||= nil
+    if @stored_card.nil?
+      begin
+        cards = api_request(:get, "stored_cards")
+        cards.each do |card|
+          if card["status"] == "active"
+            @stored_card = card["token"]
+            break
+          end
+        end
+
+        unless @stored_card
+          card = @gateway.store(@credit_card, @store_options)
+          @store_card = card.params["token"]
+        end
+      rescue
+        raise "[Setup] Unable to get or create Stored Card Token"
+      end
+    end
+
+    @stored_card
+  end
+
   def generate_customer_ref_or_id(existing_customer)
-      return @customer_id if existing_customer
+      if existing_customer
+        # Get customer id
+        @customer_id ||= nil
+        if @customer_id.nil?
+          begin
+            customers = api_request(:get, "customers")
+            @customer_id = customers[0]["id"] if not customers.empty?
+
+            unless @customer_id
+              customer = api_request(:post, "customers")
+              @customer_id = customer["id"]
+            end
+          rescue
+            raise "[Setup] Unable to get or create Customer ID"
+          end
+        end
+
+        return @customer_id
+      end
+
       generate_random_number
   end
 
@@ -133,6 +126,27 @@ class RemoteMondidoTest < Test::Unit::TestCase
   end
 
   def generate_recurring
+    # Get plan id
+    @plan_id = nil
+    if @plan_id.nil?
+      begin
+        plans = api_request(:get, "plans")
+        @plan_id = plans[0]["id"] if not plans.empty?
+
+        unless @plan_id
+          plan = api_request(:post, "plans", {
+            interval_unit: 'days',
+            interval: 30,
+            prices: {"eur" => "10","sek" => "100"}.to_json,
+            name: "Active Merchant Test"
+          })
+          @plan_id = plan["id"]
+        end
+      rescue
+        raise "[Setup] Unable to get or create Plan ID"
+      end
+    end
+
     @plan_id
   end
 
@@ -186,7 +200,7 @@ class RemoteMondidoTest < Test::Unit::TestCase
 
   def purchase_response(new_options, encryption, authorize, stored_card, success)
     gateway = encryption ? @gateway_encrypted : @gateway
-    card = stored_card ? @stored_card : @credit_card
+    card = stored_card ? generate_stored_card : @credit_card
     declined_card = stored_card ? @declined_stored_card : @declined_card
 
     return (authorize ?
@@ -231,7 +245,6 @@ class RemoteMondidoTest < Test::Unit::TestCase
   # 9. Store Card
   # 10. Unstore Card
   # 11. Extendability, Locale
-
 
   ## 1. Scrubbing
   #
@@ -282,6 +295,9 @@ class RemoteMondidoTest < Test::Unit::TestCase
   end
 
   def test_valid_pinned_certificate
+    # raise "Missing 'certificate_for_pinning' in Fixtures"
+    assert fixtures(:mondido)[:certificate_for_pinning]
+
     start_params = fixtures(:mondido)
     start_params[:public_key] = nil
     start_params[:certificate_hash_for_pinning] = nil
@@ -350,6 +366,9 @@ zSl8TUu4bL8a
   end
 
   def test_valid_pinned_certificate_hash
+    # "Missing 'certificate_hash_for_pinning' in Fixtures"
+    assert fixtures(:mondido)[:certificate_hash_for_pinning]
+
     start_params = fixtures(:mondido)
     start_params[:public_key] = nil
     start_params[:certificate_for_pinning] = nil
@@ -378,6 +397,9 @@ zSl8TUu4bL8a
   end
 
   def test_valid_pinned_public_key
+    # "Missing 'public_key_for_pinning' in Fixtures"
+    assert fixtures(:mondido)[:public_key_for_pinning]
+
     start_params = fixtures(:mondido)
     start_params[:public_key] = nil
     start_params[:certificate_for_pinning] = nil
@@ -1410,7 +1432,7 @@ ZwIDAQAB
   #
 
   def test_successful_extendability
-    purchase = @gateway.purchase(@amount, @stored_card, @options.merge({
+    purchase = @gateway.purchase(@amount, generate_stored_card, @options.merge({
         :order_id => generate_order_id,
         :extend => "stored_card",
         :locale => "en",

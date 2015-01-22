@@ -249,6 +249,10 @@ module ActiveMerchant #:nodoc:
         options[:order_id] = options[:order_id].to_s
 
         post = {
+          # string* required
+          # The ID of the merchant
+          :merchant_id => @merchant_id,
+
           # decimal* required
           # The transaction amount ex. 12.00
           :amount => get_amount(money, options),
@@ -493,42 +497,60 @@ module ActiveMerchant #:nodoc:
         if parameters.key?(:query_string_values)
           query_string = "?" + URI.encode_www_form(parameters[:query_string_values])
 
+          parameters[:query_string_values] = nil
           parameters.delete(:query_string_values)
-          if parameters.count == 0
-            parameters = nil
-          end
         end
 
-        raw_response = response = nil
+        if parameters.is_a?(Hash) and parameters.count == 0
+          parameters = nil
+        end
+
+        # Flow for non pinned requests
+        # Make sure to use ssl_request because ActiveMerchant already handle
+        # Root CAs verification.
+        if not (@certificate_for_pinning or @certificate_hash_for_pinning or @public_key_for_pinning)
+            begin
+              raw_response = ssl_request(
+                method,
+                self.live_url + uri + query_string,
+                (parameters ? URI.encode_www_form(parameters) : nil),
+                headers(options)
+              )
+            rescue ActiveMerchant::ResponseError => e
+              raw_response = e.response.body
+            end
+
+            return format_response(raw_response)
+        end
+
+        raw_response = nil
         uri = URI.parse(self.live_url + uri + query_string)
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = true
-        if @certificate_for_pinning or @certificate_hash_for_pinning or @public_key_for_pinning
-          http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-          http.verify_callback = lambda do | preverify_ok, cert_store |
-            return false unless preverify_ok
+        http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+        http.verify_callback = lambda do | preverify_ok, cert_store |
+          return false unless preverify_ok
 
-            # We only want to verify once, and fail the first time the callback
-            # is invoked (as opposed to checking only the last time it's called).
-            # Therefore we get at the whole authorization chain.
-            # The end certificate is at the beginning of the chain (the certificate
-            # for the host we are talking to)
-            end_cert = cert_store.chain[0]
+          # We only want to verify once, and fail the first time the callback
+          # is invoked (as opposed to checking only the last time it's called).
+          # Therefore we get at the whole authorization chain.
+          # The end certificate is at the beginning of the chain (the certificate
+          # for the host we are talking to)
+          end_cert = cert_store.chain[0]
 
-            # Only perform the checks if the current cert is the end certificate
-            # in the chain. We can compare using the DER representation
-            # (OpenSSL::X509::Certificate objects are not comparable, and for 
-            # a good reason). If we don't we are going to perform the verification
-            # many times - once per certificate in the chain of trust, which is wasteful
-            return true unless end_cert.to_der == cert_store.current_cert.to_der
+          # Only perform the checks if the current cert is the end certificate
+          # in the chain. We can compare using the DER representation
+          # (OpenSSL::X509::Certificate objects are not comparable, and for 
+          # a good reason). If we don't we are going to perform the verification
+          # many times - once per certificate in the chain of trust, which is wasteful
+          return true unless end_cert.to_der == cert_store.current_cert.to_der
 
-            # And verify what is pinned
-            return same_cert_fingerprint?(end_cert, hash: @certificate_hash_for_pinning) if @certificate_hash_for_pinning
-            return same_cert_fingerprint?(end_cert, cert: @certificate_for_pinning) if @certificate_for_pinning
-            return same_public_key?(end_cert.public_key, @public_key_for_pinning) if @public_key_for_pinning
+          # And verify what is pinned
+          return same_cert_fingerprint?(end_cert, hash: @certificate_hash_for_pinning) if @certificate_hash_for_pinning
+          return same_cert_fingerprint?(end_cert, cert: @certificate_for_pinning) if @certificate_for_pinning
+          return same_public_key?(end_cert.public_key, @public_key_for_pinning) if @public_key_for_pinning
 
-            false
-          end
+          false
         end
 
         # Request Object
@@ -560,9 +582,13 @@ module ActiveMerchant #:nodoc:
           return unexpected_error(error)
         end
 
+        return format_response(raw_response.body)
+      end
+
+      def format_response(raw_response)
         # Response Formatting
         begin
-          response = parse(raw_response.body)
+          response = parse(raw_response)
         rescue ResponseError => e
           raw_response = e.response.body
           response = response_error(raw_response)
@@ -570,7 +596,7 @@ module ActiveMerchant #:nodoc:
           response = json_error(raw_response)
         end
 
-        response
+        return response
       end
 
       def same_public_key?(pkr, pka)
@@ -595,6 +621,7 @@ module ActiveMerchant #:nodoc:
         {
           "Authorization" => "Basic " + Base64.encode64("#{@merchant_id}:#{@api_token}").strip,
           "User-Agent" => "Mondido ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          "Content-Type" => "application/x-www-form-urlencoded"
           #"X-Mondido-Client-User-Agent" => user_agent, # defined in Gateway.rb
           #"X-Mondido-Client-IP" => options[:ip] if options[:ip]
         }

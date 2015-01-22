@@ -19,23 +19,6 @@ KQIDAQAB
     ",
     }
 
-    # Get values to pin
-    http = Net::HTTP.new('api.mondido.com', '443')
-    http.use_ssl = true
-    http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-    http.verify_callback = lambda do | preverify_ok, cert_store |
-      return false unless preverify_ok
-      end_cert = cert_store.chain[0]
-      return true unless end_cert.to_der == cert_store.current_cert.to_der
-
-      # Pin
-      @gateway_params[:certificate_hash_for_pinning] = OpenSSL::Digest::SHA256.hexdigest(end_cert.to_der)
-      @gateway_params[:certificate_for_pinning] = end_cert.to_pem
-      @gateway_params[:public_key_for_pinning] = end_cert.public_key.to_pem
-
-      true
-    end
-
     # With RSA crypto
     @gateway_encrypted = MondidoGateway.new(@gateway_params)
 
@@ -50,8 +33,8 @@ KQIDAQAB
     }))
 
     # Test Data
-
     @credit_card = credit_card('4111111111111111', { verification_value: '200' })
+
     @amount = 1000
 
     @options = {
@@ -65,6 +48,34 @@ KQIDAQAB
     }
   end
 
+  def pin_please
+    @pin ||= {}
+    if @pin == {}
+      http = Net::HTTP.new('api.mondido.com', '443')
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+      http.verify_callback = lambda do | preverify_ok, cert_store |
+        return false unless preverify_ok
+        end_cert = cert_store.chain[0]
+        return true unless end_cert.to_der == cert_store.current_cert.to_der
+
+        # Pin
+        @pin[:certificate_hash_for_pinning] = OpenSSL::Digest::SHA256.hexdigest(end_cert.to_der)
+        @pin[:certificate_for_pinning] = end_cert.to_pem
+        @pin[:public_key_for_pinning] = end_cert.public_key.to_pem
+
+        true
+      end
+
+      begin
+        request = Net::HTTP::Get.new('/')
+        http.request(request)
+      rescue Excetion => e
+        raise e.response
+      end
+    end
+  end
+
   def format_amount(amount)
     amount.to_s[0..-3].to_i.round(1).to_s
   end
@@ -74,28 +85,36 @@ KQIDAQAB
   end
 
   def test_successful_certificate_hash_pinning
-    gp = @gateway_params
-    gp.delete(:certificate_for_pinning)
-    gp.delete(:public_key_for_pinning)
-    g = MondidoGateway.new(gp)
+    pin_please
+    assert @pin.count == 3
+    assert @pin[:certificate_hash_for_pinning]
+
+    g = MondidoGateway.new(@gateway_params.merge({
+      certificate_hash_for_pinning: @pin[:certificate_hash_for_pinning]
+    }))
     response = g.purchase(@amount, @credit_card, @options)
     assert_not_match(/^Security Problem: pinned certificate doesn't match the server certificate./, response.message)
   end
 
   def test_successful_certificate_pinning
-    gp = @gateway_params
-    gp.delete(:certificate_hash_for_pinning)
-    gp.delete(:public_key_for_pinning)
-    g = MondidoGateway.new(gp)
+    pin_please
+    assert @pin.count == 3
+    assert @pin[:certificate_for_pinning]
+    g = MondidoGateway.new(@gateway_params.merge({
+      certificate_for_pinning: @pin[:certificate_for_pinning]
+    }))
     response = g.purchase(@amount, @credit_card, @options)
     assert_not_match(/^Security Problem: pinned certificate doesn't match the server certificate./, response.message)
   end
 
   def test_successful_public_key_pinning
-    gp = @gateway_params
-    gp.delete(:certificate_hash_for_pinning)
-    gp.delete(:certificate_for_pinning)
-    g = MondidoGateway.new(gp)
+    pin_please
+    assert @pin.count == 3
+    assert @pin[:public_key_for_pinning]
+
+    g = MondidoGateway.new(@gateway_params.merge({
+      :public_key_for_pinning => @pin[:public_key_for_pinning]
+    }))
     response = g.purchase(@amount, @credit_card, @options)
     assert_not_match(/^Security Problem: pinned public key doesn't match the server public key./, response.message)
   end
