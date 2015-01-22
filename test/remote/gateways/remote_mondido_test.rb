@@ -6,7 +6,7 @@ class RemoteMondidoTest < Test::Unit::TestCase
     start_params = fixtures(:mondido)
 
     # Gateway with Public Key Crypto
-    #start_params.delete :certificate_for_pinning
+    start_params.delete :certificate_for_pinning
     start_params.delete :certificate_hash_for_pinning
     start_params.delete :public_key_for_pinning
     @gateway_encrypted = MondidoGateway.new(start_params)
