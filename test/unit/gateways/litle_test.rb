@@ -265,6 +265,14 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_order_source_override
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, order_source: "recurring")
+    end.check_request do |endpoint, data, headers|
+      assert_match "<orderSource>recurring</orderSource>", data
+    end.respond_with(successful_purchase_response)
+  end
+
   private
 
   def successful_purchase_response

@@ -25,6 +25,7 @@
 * Improve test suite to test against multiple ActiveSupport versions [wvanbergen]
 * Misc. code cleanup [wvanbergen]
 * Add Flo2Cash gateway [markabe]
+* Litle: Allow order_source override [duff]
 
 == Version 1.45.0 (December 1, 2014)
 

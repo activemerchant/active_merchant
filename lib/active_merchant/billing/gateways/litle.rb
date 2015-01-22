@@ -157,7 +157,7 @@ module ActiveMerchant #:nodoc:
       def add_auth_purchase_params(doc, money, payment_method, options)
         doc.orderId(truncated(options[:order_id]))
         doc.amount(money)
-        add_order_source(doc, payment_method)
+        add_order_source(doc, payment_method, options)
         add_billing_address(doc, payment_method, options)
         add_shipping_address(doc, payment_method, options)
         add_payment_method(doc, payment_method)
@@ -225,8 +225,10 @@ module ActiveMerchant #:nodoc:
         doc.phone(address[:phone]) unless address[:phone].blank?
       end
 
-      def add_order_source(doc, payment_method)
-        if payment_method.respond_to?(:track_data) && payment_method.track_data.present?
+      def add_order_source(doc, payment_method, options)
+        if options[:order_source]
+          doc.orderSource(options[:order_source])
+        elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
           doc.orderSource('retail')
         else
           doc.orderSource('ecommerce')
