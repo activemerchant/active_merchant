@@ -786,7 +786,7 @@ KQIDAQAB
     {
       "name": "errors.amount.invalid",
       "code": 109,
-      "description": "amount är fel. Ska vara t.ex. 10.00"
+      "description": "amount ar fel. Ska vara t.ex. 10.00"
     }
     RESPONSE
   end
