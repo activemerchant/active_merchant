@@ -273,7 +273,7 @@ module ActiveMerchant #:nodoc:
           :hash => transaction_hash_for(money, options.merge({
             :amount => post[:amount],
             :currency => post[:currency],
-            :customer_ref => post[:customer]
+            :customer_ref => post[:customer_ref]
           }))
         )
 

@@ -117,8 +117,10 @@ class RemoteMondidoTest < Test::Unit::TestCase
     assert_equal ( authorize ? "authorized" : "approved" ), response.params["status"]
     assert_equal ( stored_card ? "stored_card" : "credit_card" ), response.params["transaction_type"]
 
-    if !customer.nil?
-      assert_equal new_options[:customer], response.params["customer_ref"]
+    if customer.nil? && stored_card==false
+      assert_equal nil, response.params["customer"]
+    else
+      assert response.params["customer"]["id"].is_a?(Integer)
     end
   end
 
