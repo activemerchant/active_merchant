@@ -73,26 +73,26 @@ class RemoteMondidoTest < Test::Unit::TestCase
     }.to_json
   end
 
-  def store_response(encryption, existing_customer, identifier, success)
+  def store_response(encryption, existing_customer, success)
     gateway = encryption ? nil : @gateway   
     card = success ? @credit_card : @declined_card
 
-    if existing_customer and identifier
-      @store_options[:"customer_#{identifier}"] = generate_customer_ref_or_id(existing_customer)
+    if existing_customer
+      @store_options[:customer] = generate_customer_ref_or_id(existing_customer)
     end
 
     return gateway.store(card, @store_options)
   end
 
-  def store_successful(encryption, existing_customer, identifier)
-    response = store_response(encryption, existing_customer, identifier, true)
+  def store_successful(encryption, existing_customer)
+    response = store_response(encryption, existing_customer, true)
     assert_success response
     assert_equal "SEK", response.params["currency"]
     assert_equal "active", response.params["status"]
   end
 
-  def store_failure(encryption, existing_customer, identifier)
-    response = store_response(encryption, existing_customer, identifier, false)
+  def store_failure(encryption, existing_customer)
+    response = store_response(encryption, existing_customer, false)
     assert_failure response
     assert_equal "errors.payment.declined", response.params["name"]
   end
@@ -109,13 +109,17 @@ class RemoteMondidoTest < Test::Unit::TestCase
     )
   end
 
-  def purchase_successful(new_options, encryption, authorize, stored_card)
+  def purchase_successful(new_options, encryption, authorize, stored_card, customer=nil)
     response = purchase_response(new_options, encryption, authorize, stored_card, true)
 
     assert_success response
     assert_equal new_options[:order_id], response.params["payment_ref"]
     assert_equal ( authorize ? "authorized" : "approved" ), response.params["status"]
     assert_equal ( stored_card ? "stored_card" : "credit_card" ), response.params["transaction_type"]
+
+    if !customer.nil?
+      assert_equal new_options[:customer], response.params["customer_ref"]
+    end
   end
 
   def purchase_failure(new_options, encryption, authorize, stored_card)
@@ -203,6 +207,26 @@ class RemoteMondidoTest < Test::Unit::TestCase
   # With Web Hook
 
   # With Meta Data
+
+  def test_successful_purchase_credit_card_webhook_metadata_valid_customer(encryption=false, authorize=false, stored=false)
+    new_options = @options.merge({
+      :order_id => generate_order_id,
+      :webhook => generate_webhook,
+      :metadata => generate_metadata,
+      :customer => generate_customer_ref_or_id(true)
+    })
+    purchase_successful(new_options, encryption, authorize, stored, true)
+  end
+
+  def test_successful_purchase_credit_card_webhook_metadata_invalid_customer(encryption=false, authorize=false, stored=false)
+    new_options = @options.merge({
+      :order_id => generate_order_id,
+      :webhook => generate_webhook,
+      :metadata => generate_metadata,
+      :customer => generate_customer_ref_or_id(false)
+    })
+    purchase_successful(new_options, encryption, authorize, stored, false)
+  end
 
   def test_successful_purchase_credit_card_webhook_metadata(encryption=false, authorize=false, stored=false)
     new_options = @options.merge({
@@ -529,32 +553,32 @@ class RemoteMondidoTest < Test::Unit::TestCase
   # Without Encryption
     # Without customer_ref and customer_id
     def test_successful_store(encryption=false)
-      store_successful(encryption, nil, nil)
+      store_successful(encryption, nil)
     end
 
     def test_failed_store(encryption=false)
-      store_failure(encryption, nil, nil)
+      store_failure(encryption, nil)
     end 
 
     # With Existing Customer
       # With customer_ref
       def test_successful_store_existing_customer_customer_ref(encryption=false)
-        store_successful(encryption, true, 'ref')
+        store_successful(encryption, true)
       end
 
       def test_failed_store_existing_customer_customer_ref(encryption=false)
-        store_failure(encryption, true, 'ref')
+        store_failure(encryption, true)
       end 
 
 
     # With Non Existing Customer
       # With customer_ref
       def test_successful_store_non_existing_customer_customer_ref(encryption=false)
-        store_successful(encryption, false, 'ref')
+        store_successful(encryption, false)
       end
 
       def test_failed_store_non_existing_customer_customer_ref(encryption=false)
-        store_failure(encryption, false, 'ref')
+        store_failure(encryption, false)
       end
 
   ## 10. Unstore Card

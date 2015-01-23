@@ -203,20 +203,6 @@ module ActiveMerchant #:nodoc:
           :payment_ref => options[:order_id],
         }
 
-        add_currency(post, money, options)
-        add_amount(post, money, options)
-        add_credit_card(post, payment)
-
-        # string * required
-        # The hash is a MD5 encoded string with some of your merchant and order specific parameters,
-        # which is used to verify the payment, and make sure that it is not altered in any way.
-        post.merge!(
-          :hash => transaction_hash_for(money, options.merge({
-            :amount => post[:amount],
-            :currency => post[:currency],
-          }))
-        )
-
         ## API Optional Parameters
         #
         # - test
@@ -257,7 +243,7 @@ module ActiveMerchant #:nodoc:
 
         # customer_ref (string)
         #   The merchant specific user/customer ID
-        post.merge!( :customer_ref => options[:customer_ref].to_s ) if options[:customer_ref]
+        post.merge!( :customer_ref => options[:customer].to_s ) if options[:customer]
 
         # webhook (object)
         #   You can specify a custom Webhook for a transaction.
@@ -275,6 +261,21 @@ module ActiveMerchant #:nodoc:
         #   You will not need to send in card data
         #   (card_number, card_cvv, card_holder, card_expiry) in this case.
         post.merge!( :process => options[:process] ) if options[:process]
+
+        add_currency(post, money, options)
+        add_amount(post, money, options)
+        add_credit_card(post, payment)
+
+        # string * required
+        # The hash is a MD5 encoded string with some of your merchant and order specific parameters,
+        # which is used to verify the payment, and make sure that it is not altered in any way.
+        post.merge!(
+          :hash => transaction_hash_for(money, options.merge({
+            :amount => post[:amount],
+            :currency => post[:currency],
+            :customer_ref => post[:customer]
+          }))
+        )
 
         commit(:post, 'transactions', post)
       end
