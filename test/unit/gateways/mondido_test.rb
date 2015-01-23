@@ -6,31 +6,11 @@ class MondidoTest < Test::Unit::TestCase
     @gateway_params = {
       merchant_id: "123",
       api_token: "api_token",
-      hash_secret: "hash_secret",
-      public_key: "-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvA1nsXtml1pHcr9vtHvv
-h9AS8MGYu2QAnrbPx2qd1iMyCOg3vZ/W+AH3LCsHILBJtBZrR9J+wWhRRdlsr8V8
-6Q+n+cZt1lLdUknzZxOgY9XagwnyNvn7WQ5hcDrXlP1xEPslZE48zPGm8HdDPCiS
-B0IJSLrsrWaiDCnQwH6Fk8k819xoEMxU+6W65MD6XHgXSJLmBVUTW34dcpAnbize
-VVe3+YO2OkRaKVfx+wSKu6PaSjhdUyU1Asau7opnpkr0TdPl/+C+hOw2eW1iYqYO
-4gM5M3G5Fdd/GHoaWVLCKOTuAbRVVRNwLHVQLJ2XlsejQQJBzHj91oOtoQd3o5no
-KQIDAQAB
------END PUBLIC KEY-----
-    ",
+      hash_secret: "hash_secret"
     }
 
-    # With RSA crypto
-    @gateway_encrypted = MondidoGateway.new(@gateway_params)
-
     # Without RSA crypto
-    @gateway_params.delete(:public_key)
     @gateway = MondidoGateway.new(@gateway_params)
-
-    # For Encryption Testing
-    @keypair = OpenSSL::PKey::RSA.generate(2048)
-    @gateway_test_encryption = MondidoGateway.new(@gateway_params.merge({
-      public_key: @keypair.public_key.to_pem
-    }))
 
     # Test Data
     @credit_card = credit_card('4111111111111111', { verification_value: '200' })
@@ -48,119 +28,12 @@ KQIDAQAB
     }
   end
 
-  def pin_please
-    @pin ||= {}
-    if @pin == {}
-      http = Net::HTTP.new('api.mondido.com', '443')
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-      http.verify_callback = lambda do | preverify_ok, cert_store |
-        return false unless preverify_ok
-        end_cert = cert_store.chain[0]
-        return true unless end_cert.to_der == cert_store.current_cert.to_der
-
-        # Pin
-        @pin[:certificate_hash_for_pinning] = OpenSSL::Digest::SHA256.hexdigest(end_cert.to_der)
-        @pin[:certificate_for_pinning] = end_cert.to_pem
-        @pin[:public_key_for_pinning] = end_cert.public_key.to_pem
-
-        true
-      end
-
-      begin
-        request = Net::HTTP::Get.new('/')
-        http.request(request)
-      rescue Excetion => e
-        raise e.response
-      end
-    end
-  end
-
   def format_amount(amount)
     amount.to_s[0..-3].to_i.round(1).to_s
   end
 
   def parse(body)
     JSON.parse(body)
-  end
-
-  def test_successful_certificate_hash_pinning
-    pin_please
-    assert @pin.count == 3
-    assert @pin[:certificate_hash_for_pinning]
-
-    g = MondidoGateway.new(@gateway_params.merge({
-      certificate_hash_for_pinning: @pin[:certificate_hash_for_pinning]
-    }))
-    response = g.purchase(@amount, @credit_card, @options)
-    assert_not_match(/^Security Problem: pinned certificate doesn't match the server certificate./, response.message)
-  end
-
-  def test_successful_certificate_pinning
-    pin_please
-    assert @pin.count == 3
-    assert @pin[:certificate_for_pinning]
-    g = MondidoGateway.new(@gateway_params.merge({
-      certificate_for_pinning: @pin[:certificate_for_pinning]
-    }))
-    response = g.purchase(@amount, @credit_card, @options)
-    assert_not_match(/^Security Problem: pinned certificate doesn't match the server certificate./, response.message)
-  end
-
-  def test_successful_public_key_pinning
-    pin_please
-    assert @pin.count == 3
-    assert @pin[:public_key_for_pinning]
-
-    g = MondidoGateway.new(@gateway_params.merge({
-      :public_key_for_pinning => @pin[:public_key_for_pinning]
-    }))
-    response = g.purchase(@amount, @credit_card, @options)
-    assert_not_match(/^Security Problem: pinned public key doesn't match the server public key./, response.message)
-  end
-
-  def test_successful_encryption
-    @gateway_test_encryption.expects(:api_request).with { |method, uri, parameters, options|
-      @credit_card.number == Base64.decode64(@keypair.private_decrypt(Base64.decode64(parameters[:card_number])))
-    }.returns(parse(successful_purchase_response))
-
-    @gateway_test_encryption.purchase(@amount, @credit_card, @options)
-  end
-
-  def test_successful_custom_encryption_purchase
-    @gateway_test_encryption.expects(:api_request).with {|method, uri, parameters, options|
-      (
-        @credit_card.number == Base64.decode64(
-          @keypair.private_decrypt(
-            Base64.decode64(parameters[:card_number])
-          )
-        ) \
-        and @credit_card.verification_value == parameters[:card_cvv] \
-        and 'card_number' == parameters[:encrypted] \
-      )
-    }.returns(parse(successful_purchase_response))
-
-    @gateway_test_encryption.purchase(@amount, @credit_card, @options.merge({
-      :encrypted => 'card_number'
-    }))
-  end
-
-  def test_successful_custom_encryption_store_card
-    @gateway_test_encryption.expects(:api_request).with {|method, uri, parameters, options|
-      (
-        @credit_card.number == Base64.decode64(
-          @keypair.private_decrypt(
-            Base64.decode64(parameters[:card_number])
-          )
-        ) \
-        and @credit_card.verification_value == parameters[:card_cvv] \
-        and 'card_number' == parameters[:encrypted] \
-      )
-    }.returns(parse(successful_purchase_response))
-
-    @gateway_test_encryption.store(@credit_card, @store_options.merge({
-      :encrypted => 'card_number'
-    }))
   end
 
   def test_successful_purchase
@@ -370,18 +243,6 @@ KQIDAQAB
     assert_failure response
   end
 
-  def test_successful_extendability
-    @gateway.expects(:api_request).returns(
-      parse(successful_extendability_purchase_response)
-    )
-
-    purchase = @gateway.purchase(@amount, @credit_card, @options.merge({
-        :extend => "stored_card"
-    }))
-    assert_success purchase
-    assert_equal purchase.params["merchant_id"], purchase.params["stored_card"]["merchant_id"]
-  end
-
   def test_gateway_without_credentials
     assert_raises ArgumentError do
       MondidoGateway.new
@@ -525,84 +386,6 @@ KQIDAQAB
       ],
       "webhooks": [
 
-      ]
-    }
-    RESPONSE
-  end
-
-  def successful_purchase_encrypted_response
-    <<-RESPONSE
-    {
-      "id": 27931,
-      "created_at": "2015-01-19T11:18:20Z",
-      "merchant_id": 145,
-      "amount": "10.0",
-      "vat_amount": null,
-      "payment_ref": "2000021461421666299242",
-      "ref": null,
-      "card_holder": "Longbob Longsen",
-      "card_number": "411111******1111",
-      "test": true,
-      "metadata": {
-        "products": [
-          {
-            "id": "1",
-            "name": "Nice Shoe",
-            "price": "100.00",
-            "qty": "1",
-            "url": "http://mondido.com/product/1"
-          }
-        ],
-        "user": {
-          "email": "user@email.com"
-        }
-      },
-      "currency": "usd",
-      "status": "approved",
-      "card_type": "VISA",
-      "transaction_type": "credit_card",
-      "template_id": null,
-      "error": null,
-      "cost": {
-        "percentual_fee": "0.025",
-        "fixed_fee": "0.025",
-        "percentual_exchange_fee": "0.035",
-        "total": "0.625"
-      },
-      "success_url": null,
-      "error_url": null,
-      "items": [
-
-      ],
-      "authorize": false,
-      "href": "https://pay.mondido.com/v1/form/AEmfNMmDyysB0o3RfsAl8Q",
-      "stored_card": {
-        "id": 15227
-      },
-      "customer": {
-        "id": 24138
-      },
-      "subscription": {
-        "id": 461
-      },
-      "payment_details": {
-        "id": 14573
-      },
-      "refunds": [
-
-      ],
-      "webhooks": [
-        {
-          "id": 59949,
-          "type": "Email",
-          "response": null,
-          "http_method": null,
-          "email": "user@hook.com",
-          "url": null,
-          "trigger": "payment_success",
-          "data_format": null,
-          "created_at": "2015-01-19T11:18:20Z"
-        }
       ]
     }
     RESPONSE
@@ -1179,72 +962,6 @@ KQIDAQAB
       "name": "errors.unexpected",
       "description": "Invalid response received from the Mondido API. Please contact support@mondido.com if you continue to receive this message.  (The raw response returned by the API was #<Net::HTTPNotFound 404 Not Found readbody=true>)",
       "code": 133
-    }
-    RESPONSE
-  end
-
-  def successful_extendability_purchase_response
-    <<-RESPONSE
-    {
-      "id": 27973,
-      "created_at": "2015-01-19T15:35:32Z",
-      "merchant_id": 145,
-      "amount": "10.0",
-      "vat_amount": null,
-      "payment_ref": "2000021161421681730898",
-      "ref": null,
-      "card_holder": "Longbob Longsen",
-      "card_number": "411111******1111",
-      "test": true,
-      "metadata": null,
-      "currency": "usd",
-      "status": "approved",
-      "card_type": "VISA",
-      "transaction_type": "stored_card",
-      "template_id": null,
-      "error": null,
-      "cost": {
-        "percentual_fee": "0.025",
-        "fixed_fee": "0.025",
-        "percentual_exchange_fee": "0.035",
-        "total": "0.625"
-      },
-      "success_url": null,
-      "error_url": null,
-      "items": [
-
-      ],
-      "authorize": false,
-      "href": "https://pay.mondido.com/v1/form/x6kYvx6Fl3xD2t58jp3VkQ",
-      "stored_card": {
-        "id": 14857,
-        "created_at": "2015-01-17T02:16:33Z",
-        "token": "54b9c601689",
-        "card_holder": "Longbob Longsen",
-        "card_number": "411111******1111",
-        "status": "active",
-        "currency": "USD",
-        "expires": "2016-09-30T23:59:59Z",
-        "ref": null,
-        "merchant_id": 145,
-        "test": true,
-        "customer": {
-          "id": 23922
-        }
-      },
-      "customer": {
-        "id": 23922
-      },
-      "subscription": null,
-      "payment_details": {
-        "id": 14618
-      },
-      "refunds": [
-
-      ],
-      "webhooks": [
-
-      ]
     }
     RESPONSE
   end

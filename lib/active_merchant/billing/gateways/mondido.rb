@@ -55,43 +55,6 @@ module ActiveMerchant #:nodoc:
         @api_token = options[:api_token]
         @hash_secret = options[:hash_secret]
 
-        # Optional: RSA Encryption
-        @public_key = nil
-        if options[:public_key]
-          begin
-            @public_key = OpenSSL::PKey::RSA.new(options[:public_key])
-          rescue OpenSSL::PKey::RSAError
-            raise "Invalid RSA Key length or format"
-          end
-        end
-
-        # Optional: Certificate Hash Pinning (SHA256)
-        @certificate_hash_for_pinning = options[:certificate_hash_for_pinning]
-
-        # Optional: Certificate Pinning
-        @certificate_for_pinning = nil
-        if options[:certificate_for_pinning]
-          begin
-            @certificate_for_pinning = OpenSSL::X509::Certificate.new(options[:certificate_for_pinning])
-          rescue OpenSSL::X509::CertificateError
-            raise "Invalid Certificate length or format"
-          end
-        end
-
-        # Optional: Public Key Pinning
-        @public_key_for_pinning = nil
-        if options[:public_key_for_pinning]
-          begin
-            @public_key_for_pinning = OpenSSL::PKey::RSA.new(options[:public_key_for_pinning])
-          rescue OpenSSL::PKey::RSAError
-            begin
-              @public_key_for_pinning = OpenSSL::PKey::DSA.new(options[:public_key_for_pinning])
-            rescue OpenSSL::PKey::DSAError
-              raise "Invalid public key is neither a valid RSA or DSA key."
-            end
-          end
-        end
-
         super
       end
 
@@ -115,13 +78,8 @@ module ActiveMerchant #:nodoc:
         # It’s good practice (required) in many juristictions not to take a payment from a
         #   customer until the goods are shipped.
 
-        put = {
-          # amount decimal *required 
-          #   The amount to refund. Ex. 5.00
-          :amount => get_amount(money, options)
-        }
-
-        add_support_params(put, options)
+        put = {}
+        add_amount(put, money, options)
         commit(:put, "transactions/#{authorization}/capture", put)
       end
 
@@ -135,16 +93,12 @@ module ActiveMerchant #:nodoc:
           #   ID for the transaction to refund
           :transaction_id => authorization.to_i,
 
-          # amount decimal *required 
-          #   The amount to refund. Ex. 5.00
-          :amount => get_amount(money, options),
-
           # reason string *required
           #   The reason for the refund. Ex. "Cancelled order"
           :reason => options[:reason]
         }
 
-        add_support_params(post, options)
+        add_amount(post, money, options)
         commit(:post, 'refunds', post)
       end
 
@@ -180,23 +134,14 @@ module ActiveMerchant #:nodoc:
         #   Merchant specific customer ID.
         #   If this customer exists the card will be added to that customer.
         #   If it doesn't exists a customer will be created.
-        post.merge!( :customer_ref => options[:customer_ref].to_s ) if options[:customer_ref]
+        post.merge!( :customer_ref => options[:customer].to_s ) if options[:customer]
 
-        # customer_id int
-        #   Mondido specific customer ID.
-        #   If this customer exists the card will be added to that customer.
-        #   If it doesn't exists an error will occur.
-        post.merge!( :customer_id => options[:customer_id] ) if options[:customer_id]
-
-        add_support_params(post, options)
-        add_encryption(post, options)
         add_credit_card(post, payment)
         commit(:post, 'stored_cards', post)
       end
 
       def unstore(id, options={})
         params = {}
-        add_support_params(params, options)
         commit(:delete, "stored_cards/#{id}", params)
       end
 
@@ -253,25 +198,24 @@ module ActiveMerchant #:nodoc:
           # The ID of the merchant
           :merchant_id => @merchant_id,
 
-          # decimal* required
-          # The transaction amount ex. 12.00
-          :amount => get_amount(money, options),
-
           # string* required
           # Merchant order/payment ID
           :payment_ref => options[:order_id],
-
-          # string* required
-          # The currency (SEK, CAD, CNY, COP, CZK, DKK, HKD, HUF, ISK, INR, ILS, JPY, KES, KRW,
-          #  KWD, LVL, MYR, MXN, MAD, OMR, NZD, NOK, PAB, QAR, RUB, SAR, SGD, ZAR, CHF, THB, TTD,
-          #  AED, GBP, USD, TWD, VEF, RON, TRY, EUR, UAH, PLN, BRL)
-          :currency => get_currency(money, options),
-
-          # string * required
-          # The hash is a MD5 encoded string with some of your merchant and order specific parameters,
-          # which is used to verify the payment, and make sure that it is not altered in any way.
-          :hash => transaction_hash_for(money, options),
         }
+
+        add_currency(post, money, options)
+        add_amount(post, money, options)
+        add_credit_card(post, payment)
+
+        # string * required
+        # The hash is a MD5 encoded string with some of your merchant and order specific parameters,
+        # which is used to verify the payment, and make sure that it is not altered in any way.
+        post.merge!(
+          :hash => transaction_hash_for(money, options.merge({
+            :amount => post[:amount],
+            :currency => post[:currency],
+          }))
+        )
 
         ## API Optional Parameters
         #
@@ -311,10 +255,6 @@ module ActiveMerchant #:nodoc:
         #   true/false if you want to store the card
         post.merge!( :store_card => options[:store_card] ) if options[:store_card]
 
-        # Plan ID (int)
-        #   The ID of the subscription plan.
-        post.merge!( :plan_id => options[:plan_id] ) if options[:plan_id]
-
         # customer_ref (string)
         #   The merchant specific user/customer ID
         post.merge!( :customer_ref => options[:customer_ref].to_s ) if options[:customer_ref]
@@ -336,9 +276,6 @@ module ActiveMerchant #:nodoc:
         #   (card_number, card_cvv, card_holder, card_expiry) in this case.
         post.merge!( :process => options[:process] ) if options[:process]
 
-        add_support_params(post, options)
-        add_encryption(post, options)
-        add_credit_card(post, payment)
         commit(:post, 'transactions', post)
       end
 
@@ -353,13 +290,13 @@ module ActiveMerchant #:nodoc:
         # (6)  test (string): "test" if transaction is in test mode, otherwise empty string ""
         # (7)  secret (string): Unique merchant specific string
 
-        hash_attributes = @merchant_id.to_s                                 # 1
-        hash_attributes += options[:order_id]                               # 2
-        hash_attributes += options[:customer_ref].to_s                      # 3
-        hash_attributes += get_amount(money, options)                       # 4
-        hash_attributes += get_currency(money, options)                     # 5
-        hash_attributes += ((test?) ? "test" : "")                          # 6
-        hash_attributes += @hash_secret                                     # 7
+        hash_attributes = @merchant_id.to_s                             # 1
+        hash_attributes += options[:order_id]                           # 2
+        hash_attributes += options[:customer_ref].to_s                  # 3
+        hash_attributes += options[:amount]                             # 4
+        hash_attributes += options[:currency]                           # 5
+        hash_attributes += ((test?) ? "test" : "")                      # 6
+        hash_attributes += @hash_secret                                 # 7
 
         md5 = Digest::MD5.new
         md5.update hash_attributes
@@ -376,92 +313,34 @@ module ActiveMerchant #:nodoc:
           post[:card_cvv] = credit_card.verification_value if credit_card.verification_value?
           post[:card_expiry] = format(credit_card.month, :two_digits) + format(credit_card.year, :two_digits)
           post[:card_number] = credit_card.number
-          post[:card_type] = ActiveMerchant::Billing::CreditCard.brand?(credit_card.number)
+          post[:card_type] = credit_card.brand
         end
       end
 
-      def add_encryption(post, options)
-          # encrypted (string)
-          #   A comma separated string for the params that you send encrypted.
-          #   Ex. "card_number,card_cvv"
-          if @public_key
-            post[:encrypted] = options[:encrypted] || 'card_holder,card_number,card_cvv,card_expiry,card_type,' + \
-              'hash,amount,payment_ref,customer_ref,customer_id,plan_id,currency,webhook,metadata,test'
-          end
+      def add_amount(post, money, options)
+        # amount decimal *required 
+        #   The amount to refund. Ex. 5.00
+        currency = options[:currency] || currency(money)
+        post[:amount] = localized_amount(money, currency)
       end
 
-      def add_support_params(post, options)
-        # extend  string
-        #   Extentability
-        #   Many objects have child resources such as customer and stored card.
-        #   To minimize the object graph being sent over REST calls you can choose to add full objects by
-        #   specifying to extend them in the url.
-        query_string_values = {}
-        query_string_values[:extend] = options[:extend].to_s if options[:extend]
-
-        # locale string
-        #   Language
-        #   The API supports responses in Swedish and English so if you specify locale=sv or locale=en either
-        #   as a parameter that you send in or int the query you will receive error messages in the desired language.
-        query_string_values[:locale] = options[:locale].to_s if options[:locale]
-
-        # start_id int
-        # limit    int
-        # offset   int
-        #   Partial data
-        #   While doing API calls you can use pagination to fetch parts of your data using limit, offset and start_id.
-        query_string_values[:start_id] = options[:start_id].to_s if options[:start_id]
-        query_string_values[:limit] = options[:limit].to_s if options[:limit]
-        query_string_values[:offset] = options[:offset].to_s if options[:offset]
-
-        if not query_string_values.empty?
-          post[:query_string_values] = query_string_values
-        end
-
-      end
-
-      def get_amount(money, options)
-        currency = get_currency(money, options)
-        localized_amount(money, currency)
-      end
-
-      def get_currency(money, options)
-        (options[:currency] || currency(money)).downcase
+      def add_currency(post, money, options)
+        # string* required
+        # The currency (SEK, CAD, CNY, COP, CZK, DKK, HKD, HUF, ISK, INR, ILS, JPY, KES, KRW,
+        #  KWD, LVL, MYR, MXN, MAD, OMR, NZD, NOK, PAB, QAR, RUB, SAR, SGD, ZAR, CHF, THB, TTD,
+        #  AED, GBP, USD, TWD, VEF, RON, TRY, EUR, UAH, PLN, BRL)
+        currency = (options[:currency] || currency(money)).downcase
+        post[:currency] = currency
       end  
 
       def commit(method, uri, parameters = nil, options = {})
-        # RSA Public Key Encryption
-        if @public_key and parameters.is_a? Hash and parameters.key?(:encrypted)
-          all_params = parameters[:encrypted].split(",")
-          invalid_params = []
-
-          all_params.each do |parameter|
-            if parameters[:"#{parameter}"]
-              encrypted_param = @public_key.public_encrypt( Base64.encode64(parameters[:"#{parameter}"].to_s ).rstrip )
-              parameters[:"#{parameter}"] = Base64.encode64(encrypted_param).rstrip
-            else
-              invalid_params << parameter
-            end
-          end
-
-          # Self-correctness of the "encrypted" param
-          # In case it points invalid parameters.
-          # For example: was expecting a optional parameter that, if passed, must be encrypted
-          # If not present, this self-correct mechanism will update the "encrypted" parameter
-          invalid_params.each do |invalid_param|
-            all_params.delete(invalid_param)
-          end
-
-          parameters[:encrypted] = all_params.join(',')
-        end
-
         # Perform Request
         response = api_request(method, uri, parameters, options)
 
         # Construct the Response object below:
         # Success of Response = absence of errors
-        success = !(response.count==3 and response.key?("name") \
-          and response.key?("code") and response.key?("description"))
+        success = !(response.count==3 && response.key?("name") \
+          && response.key?("code") && response.key?("description"))
 
         # Mondido doesn't check the purchase address vs billing address
         # So we use the standard code 'E'.
@@ -473,7 +352,7 @@ module ActiveMerchant #:nodoc:
         # But we find the error 124 or 125, we report the
         # related CVC Code to Active Merchant gem
         cvc_code = success ? "M" : nil
-        if not success and ["errors.card_cvv.invalid","errors.card_cvv.missing"].include? response["name"]
+        if !success && ["errors.card_cvv.invalid","errors.card_cvv.missing"].include?(response["name"])
           cvc_code = CVC_CODE_TRANSLATOR[ response["name"] ]
         end
 
@@ -492,95 +371,25 @@ module ActiveMerchant #:nodoc:
       end
 
       def api_request(method, uri, parameters = nil, options = {})
-        # Query String
-        query_string = ""
-        if parameters.key?(:query_string_values)
-          query_string = "?" + URI.encode_www_form(parameters[:query_string_values])
-
-          parameters[:query_string_values] = nil
-          parameters.delete(:query_string_values)
-        end
-
-        if parameters.is_a?(Hash) and parameters.count == 0
+        if parameters.is_a?(Hash) && parameters.count == 0
           parameters = nil
         end
 
         # Flow for non pinned requests
         # Make sure to use ssl_request because ActiveMerchant already handle
         # Root CAs verification.
-        if not (@certificate_for_pinning or @certificate_hash_for_pinning or @public_key_for_pinning)
-            begin
-              raw_response = ssl_request(
-                method,
-                self.live_url + uri + query_string,
-                (parameters ? URI.encode_www_form(parameters) : nil),
-                headers(options)
-              )
-            rescue ActiveMerchant::ResponseError => e
-              raw_response = e.response.body
-            end
-
-            return format_response(raw_response)
-        end
-
-        raw_response = nil
-        uri = URI.parse(self.live_url + uri + query_string)
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true
-        http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-        http.verify_callback = lambda do | preverify_ok, cert_store |
-          return false unless preverify_ok
-
-          # We only want to verify once, and fail the first time the callback
-          # is invoked (as opposed to checking only the last time it's called).
-          # Therefore we get at the whole authorization chain.
-          # The end certificate is at the beginning of the chain (the certificate
-          # for the host we are talking to)
-          end_cert = cert_store.chain[0]
-
-          # Only perform the checks if the current cert is the end certificate
-          # in the chain. We can compare using the DER representation
-          # (OpenSSL::X509::Certificate objects are not comparable, and for 
-          # a good reason). If we don't we are going to perform the verification
-          # many times - once per certificate in the chain of trust, which is wasteful
-          return true unless end_cert.to_der == cert_store.current_cert.to_der
-
-          # And verify what is pinned
-          return same_cert_fingerprint?(end_cert, hash: @certificate_hash_for_pinning) if @certificate_hash_for_pinning
-          return same_cert_fingerprint?(end_cert, cert: @certificate_for_pinning) if @certificate_for_pinning
-          return same_public_key?(end_cert.public_key, @public_key_for_pinning) if @public_key_for_pinning
-
-          false
-        end
-
-        # Request Object
-        request = eval "Net::HTTP::#{method.capitalize}.new(uri.request_uri)"
-
-        # Post Data
-        request.set_form_data(parameters) if parameters
-
-        # Add Headers
-        all_headers = headers(options)
-        all_headers.keys.each do |header|
-          request.add_field(header, all_headers[header])
-        end
-
-        # Response SSL Check
         begin
-          raw_response = http.request(request)
-        rescue OpenSSL::SSL::SSLError => e
-          error = e.message
-
-          if @certificate_for_pinning or @certificate_hash_for_pinning
-            error = "Security Problem: pinned certificate doesn't match the server certificate."
-          elsif @public_key_for_pinning
-            error = "Security Problem: pinned public key doesn't match the server public key."
-          end
-
-          return unexpected_error(error)
+          raw_response = ssl_request(
+            method,
+            self.live_url + uri,
+            (parameters ? URI.encode_www_form(parameters) : nil),
+            headers(options)
+          )
+        rescue ActiveMerchant::ResponseError => e
+          raw_response = e.response.body
         end
 
-        return format_response(raw_response.body)
+        return format_response(raw_response)
       end
 
       def format_response(raw_response)
@@ -597,31 +406,11 @@ module ActiveMerchant #:nodoc:
         return response
       end
 
-      def same_public_key?(pkr, pka)
-        # First check if the public keys use the same crypto...
-        return false unless pkr.class == pka.class
-        # ...and then - that they have the same contents
-        return false unless pkr.to_pem == pka.to_pem
-
-        true
-      end
-
-      def same_cert_fingerprint?(ref_cert, parameters={})
-        if parameters.key?(:hash)
-          return OpenSSL::Digest::SHA256.hexdigest(ref_cert.to_der) == parameters[:hash]
-        else
-          return OpenSSL::Digest::SHA256.hexdigest(ref_cert.to_pem) ==  \
-                      OpenSSL::Digest::SHA256.hexdigest(parameters[:cert].to_pem)
-        end
-      end
-
       def headers(options = {})
         {
           "Authorization" => "Basic " + Base64.encode64("#{@merchant_id}:#{@api_token}").strip,
           "User-Agent" => "Mondido ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
           "Content-Type" => "application/x-www-form-urlencoded"
-          #"X-Mondido-Client-User-Agent" => user_agent, # defined in Gateway.rb
-          #"X-Mondido-Client-IP" => options[:ip] if options[:ip]
         }
       end
 
