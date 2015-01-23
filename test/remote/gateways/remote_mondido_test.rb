@@ -153,7 +153,7 @@ class RemoteMondidoTest < Test::Unit::TestCase
   def generate_webhook
       {
         "trigger" => "payment_success",
-        "email" => "user@hook.com"
+        "email" => "test@mondido.com"
       }.to_json
   end
 
@@ -169,7 +169,7 @@ class RemoteMondidoTest < Test::Unit::TestCase
       }
       ],
       "user" => {
-        "email" => "user@email.com"
+        "email" => "test@mondido.com"
       }
     }.to_json
   end
