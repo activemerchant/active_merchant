@@ -157,8 +157,7 @@ module ActiveMerchant #:nodoc:
           gsub(%r((card_expiry=)\w+), '\1[FILTERED]').
           gsub(%r((card_number=)\d+), '\1[FILTERED]').
           gsub(%r((card_type=)\w+), '\1[FILTERED]').
-          gsub(%r((hash=)\w+), '\1[FILTERED]').
-          gsub(%r((amount=)\w+), '\1[FILTERED]')
+          gsub(%r((hash=)\w+), '\1[FILTERED]')
       end
 
       private

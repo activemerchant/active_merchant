@@ -305,7 +305,7 @@ class MondidoTest < Test::Unit::TestCase
     starting SSL for api.mondido.com:443...
     SSL established
     <- "POST /v1/transactions HTTP/1.1\r\nAccept-Encoding: identity, identity\r\nAccept: */*\r\nUser-Agent: Ruby, Mondido ActiveMerchantBindings/1.45.0\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]==\r\nConnection: close\r\nHost: api.mondido.com\r\nContent-Length: 210\r\n\r\n"
-    <- "amount=[FILTERED].00&payment_ref=2000019661421607249995&currency=usd&hash=[FILTERED]&test=true&card_holder=[FILTERED]+Longsen&card_cvv=[FILTERED]&card_expiry=[FILTERED]&card_number=[FILTERED]&card_type=[FILTERED]"
+    <- "amount=10.00&payment_ref=2000019661421607249995&currency=usd&hash=[FILTERED]&test=true&card_holder=[FILTERED]+Longsen&card_cvv=[FILTERED]&card_expiry=[FILTERED]&card_number=[FILTERED]&card_type=[FILTERED]"
     -> "HTTP/1.1 200 OK\r\n"
     -> "Access-Control-Allow-Headers: *\r\n"
     -> "Access-Control-Allow-Methods: POST, OPTIONS\r\n"
