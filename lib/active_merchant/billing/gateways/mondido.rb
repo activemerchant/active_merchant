@@ -482,7 +482,7 @@ module ActiveMerchant #:nodoc:
           (success ? "Transaction approved" : response["description"]),
           response,
           :test => response["test"] || test?,
-          :authorization => success ? response["id"] : response["description"],
+          :authorization => success ? response["id"] : nil,
           :avs_result => { :code => avs_code },
           :cvv_result => cvc_code,
           :error_code => success ? nil : STANDARD_ERROR_CODE_TRANSLATOR[response["name"]]
@@ -554,8 +554,6 @@ module ActiveMerchant #:nodoc:
         end
 
         # Request Object
-#request = eval "Net::HTTP::#{method.capitalize}.new(uri.request_uri, {'Accept-Encoding' => 'identity'})"
-#http.set_debug_output($stdout)
         request = eval "Net::HTTP::#{method.capitalize}.new(uri.request_uri)"
 
         # Post Data
