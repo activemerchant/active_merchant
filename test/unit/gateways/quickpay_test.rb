@@ -137,6 +137,22 @@ class QuickpayTest < Test::Unit::TestCase
     assert_equal '1', post_hash[:testmode]
   end
 
+  def test_finalize_is_disabled_by_default
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.capture(@amount, "12345")
+    end.check_request do |method, endpoint, data, headers|
+      assert data =~ /finalize=0/
+    end.respond_with(successful_capture_response)
+  end
+
+  def test_finalize_is_enabled
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.capture(@amount, "12345", finalize: true)
+    end.check_request do |method, endpoint, data, headers|
+      assert data =~ /finalize=1/
+    end.respond_with(successful_capture_response)
+  end
+
   private
 
   def error_response
