@@ -123,6 +123,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<cardNumber>).+(</cardNumber>)), '\1[FILTERED]\2').
+          gsub(%r((<cardCode>).+(</cardCode>)), '\1[FILTERED]\2')
+      end
+
       private
 
       def add_payment_source(xml, source)

@@ -278,6 +278,10 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_dump_transcript
+    # dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
+  end
+
   private
 
   def apple_pay_payment_token(options = {})
