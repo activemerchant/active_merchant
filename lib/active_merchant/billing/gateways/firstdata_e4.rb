@@ -106,6 +106,16 @@ module ActiveMerchant #:nodoc:
         commit(:store, build_store_request(credit_card, options), credit_card)
       end
 
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<Card_Number>).+(</Card_Number>)), '\1[FILTERED]\2').
+          gsub(%r((<VerificationStr2>).+(</VerificationStr2>)), '\1[FILTERED]\2')
+      end
+
       private
 
       def build_request(action, body)
