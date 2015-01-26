@@ -534,8 +534,72 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_scrub
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_supports_scrubbing?
+    assert @gateway.supports_scrubbing?
+  end
+
 
   private
+
+  def pre_scrubbed
+    <<-PRE_SCRUBBED
+      opening connection to apitest.authorize.net:443...
+      opened
+      starting SSL for apitest.authorize.net:443...
+      SSL established
+      <- "POST /xml/v1/request.api HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: apitest.authorize.net\r\nContent-Length: 1306\r\n\r\n"
+      <- "<?xml version=\"1.0\"?>\n<createTransactionRequest xmlns=\"AnetApi/xml/v1/schema/AnetApiSchema.xsd\">\n<merchantAuthentication>\n<name>5KP3u95bQpv</name>\n<transactionKey>4Ktq966gC55GAX7S</transactionKey>\n</merchantAuthentication>\n<refId>1</refId>\n<transactionRequest>\n<transactionType>authCaptureTransaction</transactionType>\n<amount>1.00</amount>\n<payment>\n<creditCard>\n<cardNumber>4000100011112224</cardNumber>\n<expirationDate>09/2016</expirationDate>\n<cardCode>123</cardCode>\n</creditCard>\n</payment>\n<order>\n<invoiceNumber>1</invoiceNumber>\n<description>Store Purchase</description>\n</order>\n<customer/>\n<billTo>\n<firstName>Longbob</firstName>\n<lastName>Longsen</lastName>\n<company>Widgets Inc</company>\n<address>1234 My Street</address>\n<city>Ottawa</city>\n<state>ON</state>\n<zip>K1C2N6</zip>\n<country>CA</country>\n<phoneNumber>(555)555-5555</phoneNumber>\n<faxNumber>(555)555-6666</faxNumber>\n</billTo>\n<cardholderAuthentication>\n<authenticationIndicator/>\n<cardholderAuthenticationValue/>\n</cardholderAuthentication>\n<transactionSettings>\n<setting>\n<settingName>duplicateWindow</settingName>\n<settingValue>0</settingValue>\n</setting>\n</transactionSettings>\n<userFields>\n<userField>\n<name>x_currency_code</name>\n<value>USD</value>\n</userField>\n</userFields>\n</transactionRequest>\n</createTransactionRequest>\n"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Cache-Control: private\r\n"
+      -> "Content-Length: 973\r\n"
+      -> "Content-Type: application/xml; charset=utf-8\r\n"
+      -> "Server: Microsoft-IIS/7.5\r\n"
+      -> "X-AspNet-Version: 2.0.50727\r\n"
+      -> "X-Powered-By: ASP.NET\r\n"
+      -> "Access-Control-Allow-Origin: *\r\n"
+      -> "Access-Control-Allow-Methods: GET,POST,OPTIONS\r\n"
+      -> "Access-Control-Allow-Headers: x-requested-with,cache-control,content-type,origin,method\r\n"
+      -> "Date: Mon, 26 Jan 2015 16:29:30 GMT\r\n"
+      -> "Connection: close\r\n"
+      -> "\r\n"
+      reading 973 bytes...
+      -> "\xEF\xBB\xBF<?xml version=\"1.0\" encoding=\"utf-8\"?><createTransactionResponse xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"AnetApi/xml/v1/schema/AnetApiSchema.xsd\"><refId>1</refId><messages><resultCode>Ok</resultCode><message><code>I00001</code><text>Successful.</text></message></messages><transactionResponse><responseCode>1</responseCode><authCode>H6K4BU</authCode><avsResultCode>Y</avsResultCode><cvvResultCode>P</cvvResultCode><cavvResultCode>2</cavvResultCode><transId>2227534280</transId><refTransID /><transHash>FE7A5BA8F209227CE1EC4B07C4A1BB81</transHash><testRequest>0</testRequest><accountNumber>XXXX2224</accountNumber><accountType>Visa</accountType><messages><message><code>1</code><description>This transaction has been approved.</description></message></messages><userFields><userField><name>x_currency_code</name><value>USD</value></userField></userFields></transactionResponse></createTransactionResponse>"
+      read 973 bytes
+      Conn close
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed
+    <<-PRE_SCRUBBED
+      opening connection to apitest.authorize.net:443...
+      opened
+      starting SSL for apitest.authorize.net:443...
+      SSL established
+      <- "POST /xml/v1/request.api HTTP/1.1\r\nContent-Type: text/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: apitest.authorize.net\r\nContent-Length: 1306\r\n\r\n"
+      <- "<?xml version=\"1.0\"?>\n<createTransactionRequest xmlns=\"AnetApi/xml/v1/schema/AnetApiSchema.xsd\">\n<merchantAuthentication>\n<name>5KP3u95bQpv</name>\n<transactionKey>4Ktq966gC55GAX7S</transactionKey>\n</merchantAuthentication>\n<refId>1</refId>\n<transactionRequest>\n<transactionType>authCaptureTransaction</transactionType>\n<amount>1.00</amount>\n<payment>\n<creditCard>\n<cardNumber>[FILTERED]</cardNumber>\n<expirationDate>09/2016</expirationDate>\n<cardCode>[FILTERED]</cardCode>\n</creditCard>\n</payment>\n<order>\n<invoiceNumber>1</invoiceNumber>\n<description>Store Purchase</description>\n</order>\n<customer/>\n<billTo>\n<firstName>Longbob</firstName>\n<lastName>Longsen</lastName>\n<company>Widgets Inc</company>\n<address>1234 My Street</address>\n<city>Ottawa</city>\n<state>ON</state>\n<zip>K1C2N6</zip>\n<country>CA</country>\n<phoneNumber>(555)555-5555</phoneNumber>\n<faxNumber>(555)555-6666</faxNumber>\n</billTo>\n<cardholderAuthentication>\n<authenticationIndicator/>\n<cardholderAuthenticationValue/>\n</cardholderAuthentication>\n<transactionSettings>\n<setting>\n<settingName>duplicateWindow</settingName>\n<settingValue>0</settingValue>\n</setting>\n</transactionSettings>\n<userFields>\n<userField>\n<name>x_currency_code</name>\n<value>USD</value>\n</userField>\n</userFields>\n</transactionRequest>\n</createTransactionRequest>\n"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Cache-Control: private\r\n"
+      -> "Content-Length: 973\r\n"
+      -> "Content-Type: application/xml; charset=utf-8\r\n"
+      -> "Server: Microsoft-IIS/7.5\r\n"
+      -> "X-AspNet-Version: 2.0.50727\r\n"
+      -> "X-Powered-By: ASP.NET\r\n"
+      -> "Access-Control-Allow-Origin: *\r\n"
+      -> "Access-Control-Allow-Methods: GET,POST,OPTIONS\r\n"
+      -> "Access-Control-Allow-Headers: x-requested-with,cache-control,content-type,origin,method\r\n"
+      -> "Date: Mon, 26 Jan 2015 16:29:30 GMT\r\n"
+      -> "Connection: close\r\n"
+      -> "\r\n"
+      reading 973 bytes...
+      -> "\xEF\xBB\xBF<?xml version=\"1.0\" encoding=\"utf-8\"?><createTransactionResponse xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns=\"AnetApi/xml/v1/schema/AnetApiSchema.xsd\"><refId>1</refId><messages><resultCode>Ok</resultCode><message><code>I00001</code><text>Successful.</text></message></messages><transactionResponse><responseCode>1</responseCode><authCode>H6K4BU</authCode><avsResultCode>Y</avsResultCode><cvvResultCode>P</cvvResultCode><cavvResultCode>2</cavvResultCode><transId>2227534280</transId><refTransID /><transHash>FE7A5BA8F209227CE1EC4B07C4A1BB81</transHash><testRequest>0</testRequest><accountNumber>XXXX2224</accountNumber><accountType>Visa</accountType><messages><message><code>1</code><description>This transaction has been approved.</description></message></messages><userFields><userField><name>x_currency_code</name><value>USD</value></userField></userFields></transactionResponse></createTransactionResponse>"
+      read 973 bytes
+      Conn close
+    PRE_SCRUBBED
+  end
 
   def parse(data)
     Nokogiri::XML(data).tap do |doc|
