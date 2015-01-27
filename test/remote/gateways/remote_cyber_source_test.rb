@@ -247,6 +247,19 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_update_subscription_creditcard_exp_only
+    assert response = @gateway.store(@credit_card, @subscription_options)
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+
+    new_exp = ActiveMerchant::Billing::CreditCard.new(month: Date.today.month, year: Date.today.year)
+    assert response = @gateway.update(response.authorization, new_exp, {:order_id => generate_unique_id})
+    assert_equal 'Successful transaction', response.message
+    assert_success response
+    assert response.test?
+  end
+
   def test_successful_update_subscription_billing_address
     assert response = @gateway.store(@credit_card, @subscription_options)
     assert_equal 'Successful transaction', response.message
