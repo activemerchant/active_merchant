@@ -152,8 +152,6 @@ module ActiveMerchant #:nodoc:
           body = parse(raw_response)
         rescue ResponseError => e
           body = parse(e.response.body)
-        rescue JSON::ParserError
-          return unparsable_response(raw_response)
         end
 
         if body["response"]
@@ -161,6 +159,9 @@ module ActiveMerchant #:nodoc:
         elsif body["error"]
           error_response(body)
         end
+
+      rescue JSON::ParserError
+        return unparsable_response(raw_response)
       end
 
       def success_response(body)
