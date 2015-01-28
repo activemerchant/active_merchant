@@ -10,6 +10,7 @@
 * SagePay: make `VPSProtocol` user-configurable [boxofrad]
 * Netbilling: Add store support [cshepherd]
 * Add Qvalent gateway [markabe]
+* Expose proxy address and port to gateways [arkes]
 
 == Version 1.47.0 (February 25, 2015)
 
