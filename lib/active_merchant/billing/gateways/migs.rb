@@ -220,11 +220,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def response_object(response)
+        avs_response_code = response[:AVSResultCode]
+        avs_response_code = 'S' if avs_response_code == "Unsupported"
         Response.new(success?(response), response[:Message], response,
           :test => test?,
           :authorization => response[:TransactionNo],
           :fraud_review => fraud_review?(response),
-          :avs_result => { :code => response[:AVSResultCode] },
+          :avs_result => { :code => avs_response_code },
           :cvv_result => response[:CSCResultCode]
         )
       end
