@@ -1,3 +1,5 @@
+require 'pathname'
+
 module ActiveMerchant
   module Billing
     load_path = Pathname.new(__FILE__ + '/../../..')
