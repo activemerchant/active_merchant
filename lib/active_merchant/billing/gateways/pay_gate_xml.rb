@@ -199,9 +199,9 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
 
         xml.tag! 'protocol', :ver => API_VERSION, :pgid => (test? ? TEST_ID : @options[:login]), :pwd => @options[:password] do |protocol|
-          money       = options.delete(:money)
-          authorization   = options.delete(:authorization)
-          creditcard  = options.delete(:creditcard)
+          money         = options.delete(:money)
+          authorization = options.delete(:authorization)
+          creditcard    = options.delete(:creditcard)
           case action
           when 'authtx'
             build_authorization(protocol, money, creditcard, options)
