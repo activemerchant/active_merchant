@@ -229,7 +229,9 @@ module ActiveMerchant #:nodoc:
           :budp  => 0,
           :amt   => amount(money),
           :cur   => (options[:currency] || currency(money)),
-          :cvv   => creditcard.verification_value
+          :cvv   => creditcard.verification_value,
+          :email => options[:email],
+          :ip    => options[:ip]
         }
       end
 

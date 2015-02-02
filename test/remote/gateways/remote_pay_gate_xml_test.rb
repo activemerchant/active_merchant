@@ -11,6 +11,8 @@ class RemotePayGateXmlTest < Test::Unit::TestCase
     @options = {
       :order_id         => generate_unique_id,
       :billing_address  => address,
+      :email           => 'john.doe@example.com',
+      :ip              => '127.0.0.1',
       :description      => 'Store Purchase',
     }
   end
