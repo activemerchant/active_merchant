@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
         action = 'settletx'
 
         options.merge!(:money => money, :authorization => authorization)
-        commit_capture(action, build_request(action, options), authorization)
+        commit(action, build_request(action, options), authorization)
       end
 
       def refund(money, authorization, options={})
@@ -261,22 +261,14 @@ module ActiveMerchant #:nodoc:
         hash
       end
 
-      def commit(action, request)
+      def commit(action, request, authorization = nil)
         response = parse(action, ssl_post(self.live_url, request))
         Response.new(successful?(response), message_from(response), response,
           :test           => test?,
-          :authorization  => response[:tid]
+          :authorization  => authorization ? authorization : response[:tid]
         )
       end
       
-      def commit_capture(action, request, authorization)
-        response = parse(action, ssl_post(self.live_url, request))
-        Response.new(successful?(response), message_from(response), response,
-          :test           => test?,
-          :authorization  => authorization
-        )
-      end
-
       def message_from(response)
         (response[:rdesc] || response[:edesc])
       end
