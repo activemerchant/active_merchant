@@ -7,11 +7,13 @@ class PayGateTest < Test::Unit::TestCase
     @amount = 245000
     @credit_card    = credit_card('4000000000000002')
     @declined_card  = credit_card('4000000000000036')
-    
+
     # May need to generate a unique order id as server responds with duplicate order detected
     @options = {
       :order_id         => Time.now.getutc,
       :billing_address  => address,
+      :email           => 'john.doe@example.com',
+      :ip              => '127.0.0.1',
       :description      => 'Store Purchase',
     }
   end
@@ -43,7 +45,6 @@ class PayGateTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
     assert response = @gateway.refund(@amount, '16996548', @options)
-    assert_instance_of Response, response
     assert_success response
 
     assert response.test?
