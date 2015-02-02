@@ -47,15 +47,15 @@ class RemotePayGateXmlTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = PayGateXmlGateway.new(
-                :login => '',
-                :password => ''
-              )
+      :login => '',
+      :password => ''
+    )
     assert response = gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Incorrect Credentials Supplied', response.message
   end
 
-   def test_purchase_and_full_credit
+  def test_successful_purchase_and_refund 
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 

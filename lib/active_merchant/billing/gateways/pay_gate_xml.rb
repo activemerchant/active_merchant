@@ -178,7 +178,7 @@ module ActiveMerchant #:nodoc:
         action = 'settletx'
 
         options.merge!(:money => money, :authorization => authorization)
-        commit_capture(action, authorization, build_request(action, options))
+        commit_capture(action, build_request(action, options), authorization)
       end
 
       def refund(money, authorization, options={})
@@ -199,19 +199,16 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
 
         xml.tag! 'protocol', :ver => API_VERSION, :pgid => (test? ? TEST_ID : @options[:login]), :pwd => @options[:password] do |protocol|
+          money       = options.delete(:money)
+          authorization   = options.delete(:authorization)
+          creditcard  = options.delete(:creditcard)
           case action
-            when 'authtx'
-              money       = options.delete(:money)
-              creditcard  = options.delete(:creditcard)
-              build_authorization(protocol, money, creditcard, options)
-            when 'settletx'
-              money           = options.delete(:money)
-              authorization   = options.delete(:authorization)
-              build_capture(protocol, money, authorization, options)
-            when 'refundtx'
-              money           = options.delete(:money)
-              authorization   = options.delete(:authorization)
-              build_refund(protocol, money, authorization, options)
+          when 'authtx'
+            build_authorization(protocol, money, creditcard, options)
+          when 'settletx'
+            build_capture(protocol, money, authorization, options)
+          when 'refundtx'
+            build_refund(protocol, money, authorization, options)
           else
             raise "no action specified for build_request"
           end
@@ -240,6 +237,7 @@ module ActiveMerchant #:nodoc:
           :tid => authorization
         }
       end
+      
       def build_refund(xml, money, authorization, options={})
         xml.tag! 'refundtx', {
           :tid => authorization,
@@ -270,7 +268,8 @@ module ActiveMerchant #:nodoc:
           :authorization  => response[:tid]
         )
       end
-      def commit_capture(action, authorization, request)
+      
+      def commit_capture(action, request, authorization)
         response = parse(action, ssl_post(self.live_url, request))
         Response.new(successful?(response), message_from(response), response,
           :test           => test?,

@@ -45,7 +45,6 @@ class PayGateTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
     assert response = @gateway.refund(@amount, '16996548', @options)
-    assert_instance_of Response, response
     assert_success response
 
     assert response.test?
