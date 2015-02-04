@@ -25,6 +25,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert response = @gateway.store(@credit_card, {})
     assert_failure response
     assert response.test?
+    assert_equal '', response.authorization
     assert_equal 'Unauthorized Request. Bad or missing credentials.', response.message
   end
 
