@@ -43,6 +43,7 @@ class RemoteUsaEpayAdvancedTest < Test::Unit::TestCase
     @options = {
       :client_ip => '127.0.0.1',
       :billing_address => address,
+      :line_items => [product_name: 'line item name']
     }
 
     @transaction_options = {
