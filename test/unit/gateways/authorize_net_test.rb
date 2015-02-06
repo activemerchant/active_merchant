@@ -223,6 +223,28 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_live_gateway_cannot_use_test_mode_on_auth_dot_net_server
+    test_gateway = AuthorizeNetGateway.new(
+      login: 'X',
+      password: 'Y',
+      test: true
+    )
+    test_gateway.stubs(:ssl_post).returns(successful_purchase_response_test_mode)
+
+    response = test_gateway.purchase(@amount, @credit_card)
+    assert_success response
+
+    real_gateway = AuthorizeNetGateway.new(
+      login: 'X',
+      password: 'Y',
+      test: false
+    )
+    real_gateway.stubs(:ssl_post).returns(successful_purchase_response_test_mode)
+    response = real_gateway.purchase(@amount, @credit_card)
+    assert_failure response
+    assert_equal "Using a live Authorize.net account in Test Mode is not permitted.", response.message
+  end
+
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
@@ -859,6 +881,43 @@ class AuthorizeNetTest < Test::Unit::TestCase
             </userField>
           </userFields>
         </transactionResponse>
+      </createTransactionResponse>
+    eos
+  end
+
+  def successful_purchase_response_test_mode
+    <<-eos
+      <?xml version="1.0" encoding="utf-8"?>
+      <createTransactionResponse
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+      xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+      <refId>1</refId>
+      <messages>
+        <resultCode>Ok</resultCode>
+          <message>
+          <code>I00001</code>
+          <text>Successful.</text>
+          </message>
+      </messages>
+      <transactionResponse>
+        <responseCode>1</responseCode>
+        <authCode>GSOFTZ</authCode>
+        <avsResultCode>Y</avsResultCode>
+        <cvvResultCode>P</cvvResultCode>
+        <cavvResultCode>2</cavvResultCode>
+        <transId>508141795</transId>
+          <refTransID/>
+          <transHash>655D049EE60E1766C9C28EB47CFAA389</transHash>
+        <testRequest>1</testRequest>
+        <accountNumber>XXXX2224</accountNumber>
+        <accountType>Visa</accountType>
+        <messages>
+          <message>
+            <code>1</code>
+            <description>This transaction has been approved.</description>
+          </message>
+        </messages>
+      </transactionResponse>
       </createTransactionResponse>
     eos
   end

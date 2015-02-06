@@ -324,16 +324,20 @@ module ActiveMerchant #:nodoc:
 
         avs_result = AVSResult.new(code: response[:avs_result_code])
         cvv_result = CVVResult.new(response[:card_code])
-        Response.new(
-          success_from(response),
-          message_from(response, avs_result, cvv_result),
-          response,
-          authorization: authorization_from(response),
-          test: test?,
-          avs_result: avs_result,
-          cvv_result: cvv_result,
-          fraud_review: fraud_review?(response)
-        )
+        if using_live_gateway_in_test_mode?(response)
+          Response.new(false, "Using a live Authorize.net account in Test Mode is not permitted.")
+        else
+          Response.new(
+            success_from(response),
+            message_from(response, avs_result, cvv_result),
+            response,
+            authorization: authorization_from(response),
+            test: test?,
+            avs_result: avs_result,
+            cvv_result: cvv_result,
+            fraud_review: fraud_review?(response)
+          )
+        end
       end
 
       def post_data
@@ -396,6 +400,10 @@ module ActiveMerchant #:nodoc:
           (empty?(element.content) ? nil : element.content[-4..-1])
         end
 
+        response[:test_request] = if(element = doc.at_xpath("//testRequest"))
+          (empty?(element.content) ? nil : element.content)
+        end
+
         response
       end
 
@@ -434,6 +442,10 @@ module ActiveMerchant #:nodoc:
       def truncate(value, max_size)
         return nil unless value
         value.to_s[0, max_size]
+      end
+
+      def using_live_gateway_in_test_mode?(response)
+        !test? && response[:test_request] == "1"
       end
     end
   end

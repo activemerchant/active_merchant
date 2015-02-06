@@ -217,6 +217,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
       response_code
       response_reason_code
       response_reason_text
+      test_request
       transaction_id
     ), response.params.keys.sort
 
