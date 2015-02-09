@@ -277,7 +277,11 @@ module ActiveMerchant #:nodoc:
 
         unless shipping_address.blank?
           xml.shipTo do
-            first_name, last_name = names_from(payment_source, shipping_address, options)
+            (first_name, last_name) = if shipping_address[:name]
+              shipping_address[:name].split
+            else
+              [shipping_address[:first_name], shipping_address[:last_name]]
+            end
             xml.firstName(truncate(first_name, 50)) unless empty?(first_name)
             xml.lastName(truncate(last_name, 50)) unless empty?(last_name)
 

@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+* Authorize.Net: Properly send name in shipping address line, when shipping address is provided [girasquid]
+
 == Version 1.46.0 (January 20, 2015)
 
 * CHANGE: drop `offsite_payments` and `active_utils` as dependencies. [wvanbergen]
