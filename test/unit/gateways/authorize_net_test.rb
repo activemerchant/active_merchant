@@ -513,6 +513,54 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_includes_shipping_name_when_different_from_billing_name
+    card = credit_card('4242424242424242',
+      first_name: "billing",
+      last_name: "name")
+
+    options = {
+      order_id: "a" * 21,
+      billing_address: address(name: "billing name"),
+      shipping_address: address(name: "shipping lastname")
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, card, options)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal "billing", doc.at_xpath("//billTo/firstName").text
+        assert_equal "name", doc.at_xpath("//billTo/lastName").text
+        assert_equal "shipping", doc.at_xpath("//shipTo/firstName").text
+        assert_equal "lastname", doc.at_xpath("//shipTo/lastName").text
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_includes_shipping_name_when_passed_as_options
+    card = credit_card('4242424242424242',
+      first_name: "billing",
+      last_name: "name")
+
+    shipping_address = address(first_name: "shipping", last_name: "lastname")
+    shipping_address.delete(:name)
+    options = {
+      order_id: "a" * 21,
+      billing_address: address(name: "billing name"),
+      shipping_address: shipping_address
+    }
+
+    stub_comms do
+      @gateway.purchase(@amount, card, options)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal "billing", doc.at_xpath("//billTo/firstName").text
+        assert_equal "name", doc.at_xpath("//billTo/lastName").text
+        assert_equal "shipping", doc.at_xpath("//shipTo/firstName").text
+        assert_equal "lastname", doc.at_xpath("//shipTo/lastName").text
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_truncation
     card = credit_card('4242424242424242',
       first_name: "a" * 51,
@@ -531,6 +579,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
         country: "a" * 61,
       ),
       shipping_address: address(
+        name: ["a" * 51, "a" * 51].join(" "),
         company: "a" * 51,
         address1: "a" * 61,
         city: "a" * 41,
