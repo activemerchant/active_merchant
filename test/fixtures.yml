@@ -222,6 +222,11 @@ flo2cash:
   password: ANOTHERCREDENTIAL
   account_id: ANOTHERCREDENTIAL
 
+flo2cash_simple:
+  username: SOMECREDENTIAL
+  password: ANOTHERCREDENTIAL
+  account_id: ANOTHERCREDENTIAL
+
 garanti:
   login: "PROVAUT"
   terminal_id: 111995
