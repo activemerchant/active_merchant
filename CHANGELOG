@@ -30,6 +30,7 @@
 * Litle: Allow order_source override [duff]
 * Quickpay: Add ability to finalize a capture [askehansen]
 * AuthorizeNet: Prevent test mode using live gateway [duff]
+* Add Flo2Cash Simple gateway [markabe]
 
 == Version 1.45.0 (December 1, 2014)
 
