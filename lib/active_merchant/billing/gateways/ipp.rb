@@ -3,11 +3,8 @@ require "nokogiri"
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class IppGateway < Gateway
-      self.live_url = 'https://www.ippayments.com.au/interface/api/dts.asmx'
-      self.test_url = 'https://demo.ippayments.com.au/interface/api/dts.asmx'
-
-      LIVE_SIPP_URL = 'https://www.ippayments.com.au/interface/api/sipp.asmx'
-      TEST_SIPP_URL = 'https://demo.ippayments.com.au/interface/api/sipp.asmx'
+      self.live_url = 'https://www.ippayments.com.au/interface/api'
+      self.test_url = 'https://demo.ippayments.com.au/interface/api'
 
       self.supported_countries = ['AU']
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
@@ -67,6 +64,16 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def void(money, authorization, options={})
+        commit("SubmitSingleVOID") do |xml|
+          xml.Void do
+            xml.Receipt authorization
+            add_amount(xml, money)
+            add_credentials(xml)
+          end
+        end
+      end
+
       def refund(money, authorization, options={})
         commit("SubmitSingleRefund") do |xml|
           xml.Refund do
@@ -78,7 +85,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def store(payment, options={})
-        body = new_submit_xml_with_type("TokeniseCreditCard", "sipp", "tokeniseCreditCardXML") do |xml|
+        commit("TokeniseCreditCard", "sipp", "tokeniseCreditCardXML") do |xml|
           xml.TokeniseCreditCard do
             xml.UserName @options[:username]
             xml.Password @options[:password]
@@ -91,39 +98,6 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-
-        headers = {
-          "Content-Type" => "text/xml; charset=utf-8",
-          "SOAPAction" => "http://www.ippayments.com.au/interface/api/sipp/TokeniseCreditCard",
-        }
-
-        response = parse(ssl_post(sipp_url, body, headers))
-
-        message =
-          case response[:return_value]
-          when '0' then ''
-          when '1' then 'Invalid username/password'
-          when '4' then 'Invalid CustomerStorageNumber'
-          when '5' then 'Invalid Credit Card Number'
-          when '99' then 'Exception encountered'
-          else "Error #{response[:return_value]}"
-          end
-
-        error_code =
-          case response[:return_value]
-          when '5' then Gateway::STANDARD_ERROR_CODE[:invalid_number]
-          when '99' then Gateway::STANDARD_ERROR_CODE[:processing_error]
-          else response[:return_value]
-          end
-
-        Response.new(
-          response[:return_value] == "0",
-          message,
-          response,
-          error_code: error_code,
-          authorization: response[:token],
-          test: test?
-        )
       end
 
       def supports_scrubbing?
@@ -171,12 +145,12 @@ module ActiveMerchant #:nodoc:
         response
       end
 
-      def commit(action, &block)
+      def commit(action, api_type="dts", outer_xml="trnXML", &block)
         headers = {
           "Content-Type" => "text/xml; charset=utf-8",
-          "SOAPAction" => "http://www.ippayments.com.au/interface/api/dts/#{action}",
+          "SOAPAction" => "http://www.ippayments.com.au/interface/api/#{api_type}/#{action}",
         }
-        response = parse(ssl_post(commit_url, new_submit_xml(action, &block), headers))
+        response = parse(ssl_post(commit_url(api_type), new_submit_xml(action, api_type, outer_xml, &block), headers))
 
         Response.new(
           success_from(response),
@@ -188,11 +162,7 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def new_submit_xml(action, &block)
-        new_submit_xml_with_type(action, 'dts', 'trnXML', &block)
-      end
-
-      def new_submit_xml_with_type(action, api_type, outer_xml)
+      def new_submit_xml(action, api_type, outer_xml)
         xml = Builder::XmlMarkup.new(indent: 2)
         xml.instruct!
         xml.soap :Envelope, "xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance", "xmlns:xsd" => "http://www.w3.org/2001/XMLSchema", "xmlns:soap" => "http://schemas.xmlsoap.org/soap/envelope/" do
@@ -209,28 +179,47 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def commit_url
-        (test? ? test_url : live_url)
-      end
-
-      def sipp_url
-        (test? ? TEST_SIPP_URL : LIVE_SIPP_URL)
+      def commit_url(api_type)
+        "#{test? ? test_url : live_url}/#{api_type}.asmx"
       end
 
       def success_from(response)
-        (response[:response_code] == "0")
+        if response.has_key?(:return_value)
+          (response[:return_value] == "0")
+        else
+          (response[:response_code] == "0")
+        end
       end
 
       def error_code_from(response)
-        STANDARD_ERROR_CODE_MAPPING[response[:declined_code]]
+        if response.has_key?(:return_value)
+          case response[:return_value]
+          when '5' then Gateway::STANDARD_ERROR_CODE[:invalid_number]
+          when '99' then Gateway::STANDARD_ERROR_CODE[:processing_error]
+          else response[:return_value]
+          end
+        else
+          STANDARD_ERROR_CODE_MAPPING[response[:declined_code]]
+        end
       end
 
       def message_from(response)
-        response[:declined_message]
+        if response.has_key?(:return_value)
+          case response[:return_value]
+          when '0' then ''
+          when '1' then 'Invalid username/password'
+          when '4' then 'Invalid CustomerStorageNumber'
+          when '5' then 'Invalid Credit Card Number'
+          when '99' then 'Exception encountered'
+          else "Error #{response[:return_value]}"
+          end
+        else
+          response[:declined_message]
+        end
       end
 
       def authorization_from(response)
-        response[:receipt]
+        response[:receipt] || response[:token]
       end
     end
   end
