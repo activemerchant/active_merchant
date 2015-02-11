@@ -11,6 +11,8 @@ class RemoteIppTest < Test::Unit::TestCase
       billing_address: address,
       description: 'Store Purchase',
     }
+
+    @amount = 234
   end
 
   def test_dump_transcript
