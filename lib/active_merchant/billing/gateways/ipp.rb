@@ -14,6 +14,8 @@ module ActiveMerchant #:nodoc:
 
       self.money_format = :cents
 
+      self.default_currency = 'AUD'
+
       STANDARD_ERROR_CODE_MAPPING = {
         "05" => STANDARD_ERROR_CODE[:card_declined],
         "06" => STANDARD_ERROR_CODE[:processing_error],
