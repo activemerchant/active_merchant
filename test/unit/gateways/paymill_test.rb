@@ -137,7 +137,7 @@ class PaymillTest < Test::Unit::TestCase
     assert_equal 20000, refund.params['data']['response_code']
   end
 
-  def successful_refund_response_with_string_response_code
+  def test_successful_refund_response_with_string_response_code
     @gateway.stubs(:raw_ssl_request).returns(successful_store_response, successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_success response
@@ -150,7 +150,7 @@ class PaymillTest < Test::Unit::TestCase
     assert_equal 'General success response.', refund.message
     assert_equal 'tran_89c8728e94273510afa99ab64e45', refund.params['data']['transaction']['id']
     assert_equal 'refund_d02807f46181c0919016;', refund.authorization
-    assert_equal '20000', refund.params['data']['response_code']
+    assert_equal 20000, refund.params['data']['response_code']
   end
 
   def test_failed_refund
