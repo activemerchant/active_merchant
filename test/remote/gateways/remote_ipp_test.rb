@@ -75,6 +75,18 @@ class RemoteIppTest < Test::Unit::TestCase
     assert_equal 'Do Not Honour', response.message
   end
 
+  def test_successful_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal '', response.message
+  end
+
+  def test_failed_store
+    response = @gateway.store(credit_card(''), @options)
+    assert_failure response
+    assert_equal 'Exception encountered', response.message
+  end
+
   def test_invalid_login
     gateway = IppGateway.new(
       username: '',
