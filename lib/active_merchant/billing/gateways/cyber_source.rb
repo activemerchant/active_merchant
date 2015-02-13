@@ -27,11 +27,13 @@ module ActiveMerchant #:nodoc:
     # * To process pinless debit cards through the pinless debit card
     #   network, your Cybersource merchant account must accept pinless
     #   debit card payments.
+    # * The order of the XML elements does matter, make sure to follow the order in 
+    #   the documentation exactly.
     class CyberSourceGateway < Gateway
       self.test_url = 'https://ics2wstest.ic3.com/commerce/1.x/transactionProcessor'
       self.live_url = 'https://ics2ws.ic3.com/commerce/1.x/transactionProcessor'
 
-      XSD_VERSION = "1.69"
+      XSD_VERSION = "1.109"
 
       # visa, master, american_express, discover
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
@@ -241,8 +243,8 @@ module ActiveMerchant #:nodoc:
       def build_auth_request(money, creditcard_or_reference, options)
         xml = Builder::XmlMarkup.new :indent => 2
         add_payment_method_or_subscription(xml, money, creditcard_or_reference, options)
-        add_auth_service(xml)
-        add_business_rules_data(xml, options)
+        add_auth_service(xml, creditcard_or_reference, options)
+        add_business_rules_data(xml, creditcard_or_reference, options)
         xml.target!
       end
 
@@ -253,7 +255,7 @@ module ActiveMerchant #:nodoc:
         add_line_item_data(xml, options)
         add_purchase_data(xml, 0, false, options)
         add_tax_service(xml)
-        add_business_rules_data(xml, options)
+        add_business_rules_data(xml, creditcard, options)
         xml.target!
       end
 
@@ -264,7 +266,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new :indent => 2
         add_purchase_data(xml, money, true, options)
         add_capture_service(xml, request_id, request_token)
-        add_business_rules_data(xml, options)
+        add_business_rules_data(xml, authorization, options)
         xml.target!
       end
 
@@ -274,8 +276,8 @@ module ActiveMerchant #:nodoc:
         if !payment_method_or_reference.is_a?(String) && card_brand(payment_method_or_reference) == 'check'
           add_check_service(xml)
         else
-          add_purchase_service(xml, options)
-          add_business_rules_data(xml, options) unless options[:pinless_debit_card]
+          add_purchase_service(xml, payment_method_or_reference, options)
+          add_business_rules_data(xml, payment_method_or_reference, options) unless options[:pinless_debit_card]
         end
         xml.target!
       end
@@ -340,11 +342,11 @@ module ActiveMerchant #:nodoc:
           if card_brand(payment_method) == 'check'
             add_check_service(xml, options)
           else
-            add_purchase_service(xml, options)
+            add_purchase_service(xml, payment_method, options)
           end
         end
         add_subscription_create_service(xml, options)
-        add_business_rules_data(xml, options)
+        add_business_rules_data(xml, payment_method, options)
         xml.target!
       end
 
@@ -356,7 +358,7 @@ module ActiveMerchant #:nodoc:
         add_creditcard_payment_method(xml) if creditcard
         add_subscription(xml, options, reference)
         add_subscription_update_service(xml, options)
-        add_business_rules_data(xml, options)
+        add_business_rules_data(xml, creditcard, options)
         xml.target!
       end
 
@@ -381,12 +383,14 @@ module ActiveMerchant #:nodoc:
         xml.target!
       end
 
-      def add_business_rules_data(xml, options)
+      def add_business_rules_data(xml, payment_method, options)
         prioritized_options = [options, @options]
 
-        xml.tag! 'businessRules' do
-          xml.tag!('ignoreAVSResult', 'true') if extract_option(prioritized_options, :ignore_avs)
-          xml.tag!('ignoreCVResult', 'true') if extract_option(prioritized_options, :ignore_cvv)
+        unless network_tokenization?(payment_method)
+          xml.tag! 'businessRules' do
+            xml.tag!('ignoreAVSResult', 'true') if extract_option(prioritized_options, :ignore_avs)
+            xml.tag!('ignoreCVResult', 'true') if extract_option(prioritized_options, :ignore_cvv)
+          end
         end
       end
 
@@ -468,8 +472,48 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_auth_service(xml)
-        xml.tag! 'ccAuthService', {'run' => 'true'}
+      def add_auth_service(xml, payment_method, options)
+        if network_tokenization?(payment_method)
+          add_network_tokenization(xml, payment_method, options)
+        else
+          xml.tag! 'ccAuthService', {'run' => 'true'}
+        end
+      end
+
+      def network_tokenization?(payment_method)
+        payment_method.is_a?(NetworkTokenizationCreditCard)
+      end
+
+      def add_network_tokenization(xml, payment_method, options)
+        return unless network_tokenization?(payment_method)
+
+        case card_brand(payment_method).to_sym
+        when :visa
+          xml.tag! 'ccAuthService', {'run' => 'true'} do
+            xml.tag!("cavv", payment_method.payment_cryptogram)
+            xml.tag!("commerceIndicator", "vbv")
+            xml.tag!("xid", payment_method.payment_cryptogram)
+          end
+        when :mastercard
+          xml.tag! 'ucaf' do
+            xml.tag!("authenticationData", payment_method.payment_cryptogram)
+            xml.tag!("collectionIndicator", "2")
+          end
+          xml.tag! 'ccAuthService', {'run' => 'true'} do
+            xml.tag!("commerceIndicator", "spa")
+          end
+        when :american_express
+          cryptogram = Base64.decode64(payment_method.payment_cryptogram)
+          xml.tag! 'ccAuthService', {'run' => 'true'} do
+            xml.tag!("cavv", Base64.encode64(cryptogram[0...20]))
+            xml.tag!("commerceIndicator", "aesk")
+            xml.tag!("xid", Base64.encode64(cryptogram[20...40]))
+          end
+        end
+
+        xml.tag! 'paymentNetworkToken' do
+          xml.tag!('transactionType', "1")
+        end
       end
 
       def add_capture_service(xml, request_id, request_token)
@@ -479,11 +523,11 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def add_purchase_service(xml, options)
+      def add_purchase_service(xml, payment_method, options)
         if options[:pinless_debit_card]
           xml.tag! 'pinlessDebitService', {'run' => 'true'}
         else
-          xml.tag! 'ccAuthService', {'run' => 'true'}
+          add_auth_service(xml, payment_method, options)
           xml.tag! 'ccCaptureService', {'run' => 'true'}
         end
       end
