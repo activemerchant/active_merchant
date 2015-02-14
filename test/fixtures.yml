@@ -843,3 +843,7 @@ worldpay_us:
   acctid: MPNAB
   subid: SPREE
   merchantpin: "1234567890"
+
+# Please create a merchant account on Zeus to obtain a valid clientip.
+zeus:
+  clientip: '<Enter clientip provided by Zeus>'
