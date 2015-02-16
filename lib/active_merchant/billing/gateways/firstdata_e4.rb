@@ -234,9 +234,28 @@ module ActiveMerchant #:nodoc:
           xml.tag! "VerificationStr1", address_values.join("|")
         end
 
-        if credit_card.verification_value?
+        if credit_card.is_a?(NetworkTokenizationCreditCard)
+          add_network_tokenization_credit_card(xml, credit_card)
+        elsif credit_card.verification_value?
           xml.tag! "CVD_Presence_Ind", "1"
           xml.tag! "VerificationStr2", credit_card.verification_value
+        end
+      end
+
+      def add_network_tokenization_credit_card(xml, credit_card)
+        xml.tag!("Ecommerce_Flag", credit_card.eci)
+
+        case card_brand(credit_card).to_sym
+        when :visa
+          xml.tag!("XID", credit_card.transaction_id) if credit_card.transaction_id
+          xml.tag!("CAVV", credit_card.payment_cryptogram)
+        when :mastercard
+          xml.tag!("XID", credit_card.transaction_id) if credit_card.transaction_id
+          xml.tag!("CAVV", credit_card.payment_cryptogram)
+        when :american_express
+          cryptogram = Base64.decode64(credit_card.payment_cryptogram)
+          xml.tag!("XID", Base64.encode64(cryptogram[20...40]))
+          xml.tag!("CAVV", Base64.encode64(cryptogram[0...20]))
         end
       end
 
