@@ -537,12 +537,22 @@ module ActiveMerchant #:nodoc:
             :first_name => credit_card_or_vault_id.first_name,
             :last_name => credit_card_or_vault_id.last_name
           )
-          parameters[:credit_card] = {
-            :number => credit_card_or_vault_id.number,
-            :cvv => credit_card_or_vault_id.verification_value,
-            :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
-            :expiration_year => credit_card_or_vault_id.year.to_s
-          }
+          if credit_card_or_vault_id.is_a?(NetworkTokenizationCreditCard)
+            parameters[:apple_pay_card] = {
+              :number => credit_card_or_vault_id.number,
+              :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
+              :expiration_year => credit_card_or_vault_id.year.to_s,
+              :cardholder_name => "#{credit_card_or_vault_id.first_name} #{credit_card_or_vault_id.last_name}",
+              :cryptogram => credit_card_or_vault_id.payment_cryptogram
+            }
+          else
+            parameters[:credit_card] = {
+              :number => credit_card_or_vault_id.number,
+              :cvv => credit_card_or_vault_id.verification_value,
+              :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
+              :expiration_year => credit_card_or_vault_id.year.to_s
+            }
+          end
         end
         parameters[:billing] = map_address(options[:billing_address]) if options[:billing_address] && !options[:payment_method_token]
         parameters[:shipping] = map_address(options[:shipping_address]) if options[:shipping_address]
