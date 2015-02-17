@@ -7,8 +7,8 @@ module ActiveMerchant #:nodoc:
       # It includes all fields of the +CreditCard+ class with additional fields for 
       # verification data that must be given to gateways through existing fields (3DS / EMV).
       #
-      # The only tested usage of this at the moment is with an Apple Pay decrupted PKPaymentToken, 
-      # https://developer.apple.com/library/prerelease/ios/documentation/PassKit/Reference/PaymentTokenJSON/PaymentTokenJSON.html
+      # The only tested usage of this at the moment is with an Apple Pay decrypted PKPaymentToken, 
+      # https://developer.apple.com/library/ios/documentation/PassKit/Reference/PaymentTokenJSON/PaymentTokenJSON.html 
 
       attr_accessor :payment_cryptogram, :eci, :transaction_id
     end
