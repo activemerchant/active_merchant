@@ -3,6 +3,7 @@
 * Authorize.Net: Properly send name in shipping address line, when shipping address is provided [girasquid]
 * Payflow: Add verify support [ntalbott]
 * Capture ConnectionError#triggering_exception [ntalbott]
+* Flo2Cash: Map Reference->:order_id (not :invoice) [ntalbott]
 
 == Version 1.46.0 (January 20, 2015)
 

@@ -18,7 +18,9 @@ class Flo2cashSimpleTest < Test::Unit::TestCase
 
   def test_successful_purchase
     response = stub_comms do
-      @gateway.purchase(@amount, @credit_card)
+      @gateway.purchase(@amount, @credit_card, order_id: "boom")
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{<Reference>boom</Reference>}, data)
     end.respond_with(successful_purchase_response)
 
     assert_success response
