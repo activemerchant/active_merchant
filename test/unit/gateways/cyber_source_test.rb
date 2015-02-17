@@ -325,6 +325,57 @@ class CyberSourceTest < Test::Unit::TestCase
     assert_equal "Invalid account number", response.message
   end
 
+  def test_successful_auth_with_network_tokenization_for_visa
+    @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>111111111100cryptogram</cavv>\n  <commerceIndicator>vbv</commerceIndicator>\n  <xid>111111111100cryptogram</xid>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      :brand              => 'visa',
+      :transaction_id     => "123",
+      :eci                => "05",
+      :payment_cryptogram => "111111111100cryptogram"
+    )
+
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_auth_with_network_tokenization_for_mastercard
+    @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_match %r'<ucaf>\n  <authenticationData>111111111100cryptogram</authenticationData>\n  <collectionIndicator>2</collectionIndicator>\n</ucaf>\n<ccAuthService run=\"true\">\n  <commerceIndicator>spa</commerceIndicator>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    credit_card = network_tokenization_credit_card('5555555555554444',
+      :brand              => 'mastercard',
+      :transaction_id     => "123",
+      :eci                => "05",
+      :payment_cryptogram => "111111111100cryptogram"
+    )
+
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_auth_with_network_tokenization_for_amex
+    @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>MTExMTExMTExMTAwY3J5cHRvZ3I=\n</cavv>\n  <commerceIndicator>aesk</commerceIndicator>\n  <xid>YW0=\n</xid>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    credit_card = network_tokenization_credit_card('378282246310005',
+      :brand              => 'american_express',
+      :transaction_id     => "123",
+      :eci                => "05",
+      :payment_cryptogram => Base64.encode64("111111111100cryptogram")
+    )
+
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+  end
+
   private
 
   def successful_purchase_response

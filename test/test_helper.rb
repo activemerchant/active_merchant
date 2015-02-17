@@ -166,6 +166,20 @@ module ActiveMerchant
       Billing::CreditCard.new(defaults)
     end
 
+    def network_tokenization_credit_card(number = '4242424242424242', options = {})
+      defaults = {
+        :number => number,
+        :month => default_expiration_date.month,
+        :year => default_expiration_date.year,
+        :first_name => 'Longbob',
+        :last_name => 'Longsen',
+        :verification_value => '123',
+        :brand => 'visa'
+      }.update(options)
+
+      Billing::NetworkTokenizationCreditCard.new(defaults)
+    end
+
     def check(options = {})
       defaults = {
         :name => 'Jim Smith',
