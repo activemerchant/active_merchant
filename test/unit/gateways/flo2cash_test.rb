@@ -12,7 +12,7 @@ class Flo2cashTest < Test::Unit::TestCase
       :account_id => 'account_id'
     )
 
-    @credit_card = credit_card
+    @credit_card = credit_card('5123456789012346', brand: '', :month => 5, :year => 2017, :verification_value => '111')
     @amount = 100
   end
 
@@ -43,6 +43,8 @@ class Flo2cashTest < Test::Unit::TestCase
   def test_successful_authorize_and_capture
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{<CardType>MC</CardType>}, data)
     end.respond_with(successful_authorize_response)
 
     assert_success response
