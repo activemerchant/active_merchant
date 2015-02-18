@@ -7,7 +7,7 @@ class RemoteFlo2cashTest < Test::Unit::TestCase
     @gateway = Flo2cashGateway.new(fixtures(:flo2cash))
 
     @amount = 100
-    @credit_card = credit_card('5123456789012346', brand: 'MC', :month => 5, :year => 2017, :verification_value => 111 )
+    @credit_card = credit_card('5123456789012346', brand: '', :month => 5, :year => 2017, :verification_value => '111')
     @declined_card = credit_card('4000300011112220')
 
     @options = {

@@ -12,7 +12,7 @@ class Flo2cashSimpleTest < Test::Unit::TestCase
       :account_id => 'account_id'
     )
 
-    @credit_card = credit_card
+    @credit_card = credit_card('5123456789012346', brand: '', :month => 5, :year => 2017, :verification_value => '111')
     @amount = 100
   end
 
@@ -32,6 +32,8 @@ class Flo2cashSimpleTest < Test::Unit::TestCase
   def test_failed_purchase
     response = stub_comms do
       @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{<CardType>MC</CardType>}, data)
     end.respond_with(failed_purchase_response)
 
     assert_failure response

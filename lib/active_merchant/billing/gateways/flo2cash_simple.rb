@@ -57,9 +57,16 @@ module ActiveMerchant #:nodoc:
         post[:Particular] = options[:description]
       end
 
+      FLO2CASH_CARD_TYPES = {
+        :visa => 'VISA',
+        :master => 'MC',
+        :american_express => 'AMEX',
+        :diners_club => 'DINERS',
+      }
+
       def add_payment_method(post, payment_method)
         post[:CardNumber] = payment_method.number
-        post[:CardType] = payment_method.brand
+        post[:CardType] = FLO2CASH_CARD_TYPES[payment_method.brand.to_sym]
         post[:CardExpiry] = format(payment_method.month, :two_digits) + format(payment_method.year, :two_digits)
         post[:CardHolderName] = payment_method.name
         post[:CardCSC] = payment_method.verification_value
