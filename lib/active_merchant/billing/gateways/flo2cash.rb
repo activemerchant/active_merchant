@@ -12,6 +12,13 @@ module ActiveMerchant #:nodoc:
       self.money_format = :dollars
       self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
 
+      BRAND_MAP = {
+        "visa" => "VISA",
+        "master" => "MC",
+        "american_express" => "AMEX",
+        "diners_club" => "DINERS"
+      }
+
       def initialize(options={})
         requires!(options, :username, :password, :account_id)
         super
@@ -30,7 +37,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
 
-        commit("authorize", post)
+        commit("ProcessAuthorise", post)
       end
 
       def capture(amount, authorization, options={})
@@ -39,7 +46,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_customer_data(post, options)
 
-        commit("capture", post)
+        commit("ProcessCapture", post)
       end
 
       def refund(amount, authorization, options={})
@@ -48,7 +55,7 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization)
         add_customer_data(post, options)
 
-        commit("refund", post)
+        commit("ProcessRefund", post)
       end
 
       def supports_scrubbing?
@@ -75,7 +82,7 @@ module ActiveMerchant #:nodoc:
 
       def add_payment_method(post, payment_method)
         post[:CardNumber] = payment_method.number
-        post[:CardType] = payment_method.brand
+        post[:CardType] = BRAND_MAP[payment_method.brand.to_s]
         post[:CardExpiry] = format(payment_method.month, :two_digits) + format(payment_method.year, :two_digits)
         post[:CardHolderName] = payment_method.name
         post[:CardCSC] = payment_method.verification_value
@@ -91,20 +98,21 @@ module ActiveMerchant #:nodoc:
         post[:OriginalTransactionId] = authorization
       end
 
-      ACTIONS = {
-        "authorize" => "ProcessAuthorise",
-        "capture" => "ProcessCapture",
-        "refund" => "ProcessRefund",
-      }
-
       def commit(action, post)
         post[:Username] = @options[:username]
         post[:Password] = @options[:password]
         post[:AccountId] = @options[:account_id]
-        process_action = ACTIONS[action] if ACTIONS[action]
 
-        data = build_request(process_action, post)
-        raw = parse(ssl_post(url(action), data, headers(process_action)), process_action)
+        data = build_request(action, post)
+        begin
+          raw = parse(ssl_post(url, data, headers(action)), action)
+        rescue ActiveMerchant::ResponseError => e
+          if(e.response.code == "500" && e.response.body.start_with?("<?xml"))
+            raw = parse(e.response.body, action)
+          else
+            raise
+          end
+        end
 
         succeeded = success_from(raw[:status])
         Response.new(
@@ -146,14 +154,14 @@ module ActiveMerchant #:nodoc:
         EOS
       end
 
-      def url(action)
+      def url
         (test? ? test_url : live_url)
       end
 
       def parse(body, action)
         response = {}
         xml = REXML::Document.new(body)
-        root = REXML::XPath.first(xml, "//#{action}Response")
+        root = (REXML::XPath.first(xml, "//#{action}Response") || REXML::XPath.first(xml, "//detail"))
 
         root.elements.to_a.each do |node|
           parse_element(response, node)
@@ -178,13 +186,13 @@ module ActiveMerchant #:nodoc:
         if succeeded
           "Succeeded"
         else
-          response[:message] || "Unable to read error message"
+          response[:message] || response[:errormessage] || "Unable to read error message"
         end
       end
 
       def authorization_from(action, current, original)
         # Refunds require the authorization from the authorize() of the MultiResponse.
-        if action == 'capture'
+        if action == 'ProcessCapture'
           original
         else
           current
