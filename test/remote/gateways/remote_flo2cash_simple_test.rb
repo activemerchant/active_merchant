@@ -7,7 +7,7 @@ class RemoteFlo2cashSimpleTest < Test::Unit::TestCase
     @gateway = Flo2cashSimpleGateway.new(fixtures(:flo2cash_simple))
 
     @amount = 100
-    @credit_card = credit_card('5123456789012346', brand: 'MC', :month => 5, :year => 2017, :verification_value => 111 )
+    @credit_card = credit_card('5123456789012346', brand: :master, month: 5, year: 2017, verification_value: 111 )
     @declined_card = credit_card('4000300011112220')
 
     @options = {
@@ -23,11 +23,9 @@ class RemoteFlo2cashSimpleTest < Test::Unit::TestCase
       password: 'N/A',
       account_id: '100'
     )
-    authentication_exception = assert_raise ActiveMerchant::ResponseError, 'Failed with 500 Internal Server Error' do
-      gateway.purchase(@amount, @credit_card, @options)
-    end
-    assert response = authentication_exception.response
-    assert_match(/Authentication error/, response.body)
+    response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal "Authentication error. Username and/or Password are incorrect", response.message
   end
 
   def test_successful_purchase
@@ -53,11 +51,9 @@ class RemoteFlo2cashSimpleTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    refund_exception = assert_raise ActiveMerchant::ResponseError, 'Failed with 500 Internal Server Error' do
-      @gateway.refund(@amount, '')
-    end
-    assert response = refund_exception.response
-    assert_match(/Original transaction not found/, response.body)
+    response = @gateway.refund(@amount, '')
+    assert_failure response
+    assert_equal "Original transaction not found", response.message
   end
 
   def test_transcript_scrubbing
