@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
 				@init_options = options
 				super
 			end
-
+ 
 			# Perform a purchase
 			#
 			# ==== Parameters
