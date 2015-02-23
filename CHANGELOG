@@ -6,6 +6,7 @@
 * Flo2Cash: Map Reference->:order_id (not :invoice) [ntalbott]
 * Flo2Cash: Fix card brand handling [ntalbott]
 * Flo2Cash: Improve error handling & simplify "Simple" gateway [ntalbott]
+* Remove Vindicia gateway [mutemule]
 
 == Version 1.46.0 (January 20, 2015)
 

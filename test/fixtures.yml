@@ -811,10 +811,6 @@ viaklix:
   password: PASSWORD
   user: USER
 
-vindicia:
-  login: LOGIN
-  password: PASSWORD
-
 webpay:
   login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
 
