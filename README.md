@@ -203,7 +203,6 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [USA ePay](http://www.usaepay.com/) - US
 * [Verifi](http://www.verifi.com/) - US
 * [ViaKLIX](http://viaklix.com) - US
-* [Vindicia](http://www.vindicia.com/) - US, CA, GB, AU, MX, BR, DE, KR, CN, HK
 * [WebPay](https://webpay.jp/) - JP
 * [WePay](https://www.wepay.com/) - US
 * [Wirecard](http://www.wirecard.com) - AD, CY, GI, IM, MT, RO, CH, AT, DK, GR, IT, MC, SM, TR, BE, EE, HU, LV, NL, SK, GB, BG, FI, IS, LI, NO, SI, VA, FR, IL, LT, PL, ES, CZ, DE, IE, LU, PT, SE
