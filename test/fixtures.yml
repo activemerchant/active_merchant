@@ -126,6 +126,11 @@ cecabank:
   terminal_id: TERMINALID
   key: KEY
 
+cenpos:
+  merchant_id: SOMECREDENTIAL
+  password: ANOTHERCREDENTIAL
+  user_id: ANOTHERCREDENTIAL
+
 certo_direct:
   login: 1
   password: vP6OwK3
