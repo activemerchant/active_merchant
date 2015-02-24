@@ -18,6 +18,7 @@
 * Qvalent: Fix scrub replacement, it was too greedy [markabe]
 * PayConex: Add gateway [duff]
 * AuthorizeNet: Add credit support [duff]
+* CenPOS: Add gateway [markabe]
 
 == Version 1.47.0 (February 25, 2015)
 
