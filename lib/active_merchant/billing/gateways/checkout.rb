@@ -26,8 +26,6 @@ module ActiveMerchant #:nodoc:
       }
 
       def initialize(options = {})
-        @url = (options[:gateway_url] || self.live_url)
-
         requires!(options, :merchant_id, :password)
         super
       end
@@ -166,7 +164,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, amount=nil, options={}, &builder)
-        response = parse_xml(ssl_post(@url, build_xml(action, &builder)))
+        response = parse_xml(ssl_post(live_url, build_xml(action, &builder)))
         Response.new(
           (response[:responsecode] == "0"),
           (response[:result] || response[:error_text] || "Unknown Response"),
