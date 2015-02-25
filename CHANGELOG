@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.47.0 (February 25, 2015)
+
 * Authorize.Net: Properly send name in shipping address line, when shipping address is provided [girasquid]
 * Payflow: Add verify support [ntalbott]
 * Capture ConnectionError#triggering_exception [ntalbott]
