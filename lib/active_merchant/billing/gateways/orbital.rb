@@ -431,7 +431,7 @@ module ActiveMerchant #:nodoc:
 
       def parse(body)
         response = {}
-        xml = REXML::Document.new(body)
+        xml = REXML::Document.new(body.encoding.name == "UTF-8" ? body : body.encode("UTF-8", "ISO-8859-1"))
         root = REXML::XPath.first(xml, "//Response") ||
                REXML::XPath.first(xml, "//ErrorResponse")
         if root

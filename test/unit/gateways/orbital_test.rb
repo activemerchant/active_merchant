@@ -599,6 +599,12 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     assert_nil response.params['account_num']
   end
 
+  def test_handling_incorrectly_encoded_message
+    @gateway.expects(:ssl_post).returns(incorrectly_encoded_response)
+
+    assert_nothing_raised { @gateway.purchase(50, credit_card, :order_id => '1') }
+  end
+
   private
 
   def successful_purchase_response(resp_code = '00')
@@ -615,5 +621,9 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def successful_void_response
     %q{<?xml version="1.0" encoding="UTF-8"?><Response><ReversalResp><MerchantID>700000208761</MerchantID><TerminalID>001</TerminalID><OrderID>2</OrderID><TxRefNum>50FB1C41FEC9D016FF0BEBAD0884B174AD0853B0</TxRefNum><TxRefIdx>1</TxRefIdx><OutstandingAmt>0</OutstandingAmt><ProcStatus>0</ProcStatus><StatusMsg></StatusMsg><RespTime>01192013172049</RespTime></ReversalResp></Response>}
+  end
+
+  def incorrectly_encoded_response
+    successful_purchase_response.gsub("<CustomerName></CustomerName>", "<CustomerName>J\xFCrgen</CustomerName>").force_encoding("ISO-8859-1")
   end
 end
