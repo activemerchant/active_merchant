@@ -3,10 +3,12 @@ require 'test_helper'
 class SagePayTest < Test::Unit::TestCase
   include CommStub
 
+  def create_gateway(opts = {})
+    SagePayGateway.new(opts.merge(:login => 'X'))
+  end
+
   def setup
-    @gateway = SagePayGateway.new(
-      :login => 'X'
-    )
+    @gateway = create_gateway
 
     @credit_card = credit_card('4242424242424242', :brand => 'visa')
     @options = {
@@ -154,6 +156,16 @@ class SagePayTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(description: "SagePay transactions fail if the description is more than 100 characters. Therefore, we truncate it to 100 characters."))
     end.check_request do |method, endpoint, data, headers|
       assert_match(/&Description=SagePay\+transactions\+fail\+if\+the\+description\+is\+more\+than\+100\+characters.\+Therefore%2C\+we\+truncate\+it\+&/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_protocol_version_is_honoured
+    @gateway = create_gateway(:protocol_version => '2.23')
+
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/VPSProtocol=2.23/, data)
     end.respond_with(successful_purchase_response)
   end
 
