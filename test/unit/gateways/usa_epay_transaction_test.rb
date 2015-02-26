@@ -22,14 +22,14 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
   def test_request_url_live
     gateway = UsaEpayTransactionGateway.new(:login => 'LOGIN', :test => false)
     gateway.expects(:ssl_post).
-      with('https://www.usaepay.com/gate', purchase_request).
+      with('https://www.usaepay.com/gate', regexp_matches(Regexp.new('^' + Regexp.escape(purchase_request)))).
       returns(successful_purchase_response)
     gateway.purchase(@amount, @credit_card, @options)
   end
 
   def test_request_url_test
     @gateway.expects(:ssl_post).
-      with('https://sandbox.usaepay.com/gate', purchase_request).
+      with('https://sandbox.usaepay.com/gate', regexp_matches(Regexp.new('^' + Regexp.escape(purchase_request)))).
       returns(successful_purchase_response)
     @gateway.purchase(@amount, @credit_card, @options)
   end

@@ -89,6 +89,20 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     assert_match(/Unable to locate transaction/, void.message)
   end
 
+  def test_successful_void_release
+    assert response = @gateway.purchase(@amount, @creditcard, @options)
+    assert_success response
+    assert response.authorization
+    assert void = @gateway.void(response.authorization, void_mode: :void_release)
+    assert_success void
+  end
+
+  def test_unsuccessful_void_release
+    assert void = @gateway.void("unknown_authorization", void_mode: :void_release)
+    assert_failure void
+    assert_match(/Unable to locate transaction/, void.message)
+  end
+
   def test_invalid_key
     gateway = UsaEpayTransactionGateway.new(:login => '')
     assert response = gateway.purchase(@amount, @creditcard, @options)
