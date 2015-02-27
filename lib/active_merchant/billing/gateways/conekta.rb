@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(
           success,
-          raw_response["message"],
+          raw_response["message_to_purchaser"],
           raw_response,
           test: test?,
           authorization: raw_response["id"]
@@ -197,8 +197,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def json_error(raw_response)
-        msg = 'Invalid response received from the Conekta API.'
-        msg += "  (The raw response returned by the API was #{raw_response.inspect})"
+        #msg = 'Invalid response received from the Conekta API.'
+        #msg += "  (The raw response returned by the API was #{raw_response.inspect})"
+        msg = 'There was an error in the request.'
         {
           "message" => msg
         }
