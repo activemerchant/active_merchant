@@ -1,0 +1,106 @@
+require "test_helper"
+
+class RemoteQvalentTest < Test::Unit::TestCase
+  def setup
+    Base.mode = :test
+
+    @gateway = QvalentGateway.new(fixtures(:qvalent)
+      # .merge({
+      #   pem: File.read("qvalent.pem"),
+      #   pem_password: ""
+      #  })
+    )
+
+    @amount = 100
+    @credit_card = credit_card("4000100011112224")
+    @declined_card = credit_card("4000000000000000")
+
+    @options = {
+      order_id: generate_unique_id,
+      billing_address: address,
+      description: "Store Purchase"
+    }
+  end
+
+  def test_invalid_login
+    gateway = QvalentGateway.new(
+      username: "bad",
+      password: "bad",
+      merchant: "101"
+    )
+
+    authentication_exception = assert_raise ActiveMerchant::ResponseError do
+      gateway.purchase(@amount, @credit_card, @options)
+    end
+    response = authentication_exception.response
+    assert_match(/Error 403: Missing authentication/, response.body)
+  end
+
+  def test_successful_purchase
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "Succeeded", response.message
+  end
+
+  def test_failed_purchase
+    response = @gateway.purchase(@amount, @declined_card, @options)
+    assert_failure response
+    assert_equal "Invalid card number (no such number)", response.message
+    assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
+  end
+
+  def test_successful_void
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    assert void = @gateway.void(response.authorization)
+    assert_success void
+    assert_equal "Succeeded", void.message
+  end
+
+  def test_failed_void
+    response = @gateway.void("000")
+    assert_failure response
+    assert response.message =~ /Invalid Capture Order Number specified/
+  end
+
+  def test_successful_refund
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    assert refund = @gateway.refund(@amount, response.authorization)
+    assert_success refund
+    assert_equal "Succeeded", refund.message
+  end
+
+  def test_failed_refund
+    response = @gateway.refund(nil, "")
+    assert_failure response
+    assert response.message =~ /Invalid card number/
+    assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
+  end
+
+  def test_successful_store
+    response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal "Succeeded", response.message
+  end
+
+  def test_failed_store
+    response = @gateway.store(@declined_card, @options)
+    assert_failure response
+    assert_equal "Invalid card number (no such number)", response.message
+    assert_equal Gateway::STANDARD_ERROR_CODE[:invalid_number], response.error_code
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+end
