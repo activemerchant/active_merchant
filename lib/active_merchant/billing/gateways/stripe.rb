@@ -1,5 +1,4 @@
 require 'active_support/core_ext/hash/slice'
-require 'grizzly_ber'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -49,6 +48,7 @@ module ActiveMerchant #:nodoc:
       def initialize(options = {})
         requires!(options, :login)
         # @api_key = options[:login]
+        puts "*** api_key is currently hardcoded! *** "
         @api_key = 'sk_live_RVjPWJC6tN0Fx5E5C4SsWuxu'
         @fee_refund_api_key = options[:fee_refund_login]
         @version = options[:version]
@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
 
         # this block needs tests
         emv_tc_response = options.delete(:icc_data)
-        post[:card] = {icc_data: GrizzlyBer.new(emv_tc_response).to_ber} if emv_tc_response
+        add_emv_creditcard(post, emv_tc_response) if emv_tc_response
 
         add_amount(post, money, options)
         add_application_fee(post, options)
@@ -233,59 +233,47 @@ module ActiveMerchant #:nodoc:
 
       class StripeICCData
         # Handles Stripe-specific parsing of a raw BER-TLV string.
-        attr_reader :number, :track_data, :icc_data, :emv_application_id, :emv_application_label, :emv_verification_method
+        attr_reader :number, :track_data, :icc_data, :receipt_tlv_string
 
         def initialize(raw_tlv_string)
           require 'grizzly_ber'
           parsed_tlv = GrizzlyBer.new(raw_tlv_string)
+          receipt_tags = [
+            "4F",               # Application Identifier
+            "9F06",             # Application Identifier
+            "84",               # Dedicated File Name
+            "9F1C",             # Terminal Identification
+            "9F1E",             # Interface Device (IFD) Serial Number
+            "9F12",             # Application Preferred Name
+            "50",               # Application Label
+            "9F34",             # Cardholder Verification Method (CVM) Results
+            "95",               # Terminal Verification Results (TVR)
+            "9B",               # Transaction Status Information
+            "9F10",             # Issuer Application Data (IAD)
+            "9F33",             # Terminal Capabilities
+            "9F40",             # Additional Terminal Capabilities
+            "82",               # Application Interchange Profile
+            "9F08",             # Application Version Number (Card)
+            "9F09",             # Application Version Number (Terminal)
+            "9F5B"              # Issuer Script Results
+          ]
+
+          @icc_data = parsed_tlv.to_ber
 
           # Stripe requires the card number and track data to be extracted and removed from the ICC data.
           @number = parsed_tlv.hex_value_of_first_element_with_tag("5A")
+
           track_data = parsed_tlv.hex_value_of_first_element_with_tag("57")
-          @track_data = ";#{track_data.gsub('D', '=')}?"
+          @track_data = ";#{track_data.gsub('D', '=')}?" if track_data
 
           # The card number and track data is removed from the ICC data here.
           parsed_tlv.remove!("57")
           parsed_tlv.remove!("5A")
 
-          # A few other parameters are saved out of the ICC Data to be later added to the receipt.
-          @emv_application_id =   parsed_tlv.hex_value_of_first_element_with_tag("4F")
-          @emv_application_id ||= parsed_tlv.hex_value_of_first_element_with_tag("9F06")
-          @emv_application_id ||= parsed_tlv.hex_value_of_first_element_with_tag("84")
-          @emv_application_label = parsed_tlv["9F12"] || parsed_tlv["50"]
-          @emv_application_label &&= @emv_application_label.pack("C*")
-          @emv_verification_method = parsed_tlv["9F34"].first & 0x3F unless parsed_tlv["9F34"].nil? || parsed_tlv["9F34"].length < 1
-          @emv_verification_method =
-            if parsed_tlv["9F34"] && parsed_tlv["9F34"].length >= 1
-              case parsed_tlv["9F34"].first & 0x3F
-              when 0x01
-                "Offline PIN"
-              when 0x02
-                "Online PIN"
-              when 0x03
-                "Offline PIN and Signature"
-              when 0x04
-                "Offline PIN"
-              when 0x05
-                "Offline PIN and Signature"
-              when 0x1E
-                "Signature"
-              end
-            end
-          # Some notes on the verification method:
-          #  EMV Book 4 Section 6.3.4.5 and EMV Book 3 Annex C3
-          #  The first byte is the method and the second byte is what condition the rule was applied in.
-          #  The third byte is whether verfication was successful.
-          #  The top two bits of the first byte are RFU and failover instructions so are dropped with the 3F mask.
-          #  Valid values are:
-          #   01 - Offline PIN (Plaintext)
-          #   02 - Online PIN
-          #   03 - Offline PIN (Plaintext) and Signature
-          #   04 - Offline PIN (Enciphered)
-          #   05 - Offline PIN (Enciphered) and Signature
-          #   1E - Signature
-
-          @icc_data = parsed_tlv.to_ber
+          # Generate the ICC data necessary for the receipt.
+          @receipt_tlv_string = GrizzlyBer.new
+          receipt_tags.each { |tag| @receipt_tlv_string[tag] = parsed_tlv[tag] if parsed_tlv[tag] }
+          @receipt_tlv_string = @receipt_tlv_string.to_ber
         end
       end
 
@@ -348,16 +336,7 @@ module ActiveMerchant #:nodoc:
       def add_creditcard(post, creditcard, options)
         card = {}
         if creditcard.respond_to?(:icc_data) && creditcard.icc_data.present?
-          emv_credit_card = StripeICCData.new(creditcard.icc_data)
-          @emv_receipt = {
-            :emv_application_id => emv_credit_card.emv_application_id,
-            :emv_application_label => emv_credit_card.emv_application_label,
-            :emv_verification_method => emv_credit_card.emv_verification_method
-          }
-          card[:number] = emv_credit_card.number
-          card[:swipe_data] = emv_credit_card.track_data
-          card[:icc_data] = emv_credit_card.icc_data
-          post[:card] = card
+          add_emv_creditcard(post, creditcard.icc_data)
         elsif creditcard.respond_to?(:number)
           if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
             card[:swipe_data] = creditcard.track_data
@@ -386,6 +365,16 @@ module ActiveMerchant #:nodoc:
           end
           post[:card] = card
         end
+      end
+
+      def add_emv_creditcard(post, icc_data, options = {})
+        card = {}
+        emv_credit_card = StripeICCData.new(icc_data)
+
+        card[:icc_data] = emv_credit_card.icc_data
+        post[:card] = card
+        post[:card][:number] = emv_credit_card.number
+        post[:card][:swipe_data] = emv_credit_card.track_data
       end
 
       def add_payment_token(post, token, options = {})
@@ -467,11 +456,13 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, url, parameters = nil, options = {})
         add_expand_parameters(parameters, options) if parameters
+        emv_receipt = StripeICCData.new(parameters[:card][:icc_data]).receipt_tlv_string if parameters[:card] && parameters[:card][:icc_data]
 
         response = api_request(method, url, parameters, options)
+        response.merge!({:emv_receipt => emv_receipt}) if emv_receipt
+
         success = !response.key?("error")
 
-        response.merge! @emv_receipt if @emv_receipt
         card = response["card"] || response["active_card"] || {}
         avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
         cvc_code = CVC_CODE_TRANSLATOR[card["cvc_check"]]

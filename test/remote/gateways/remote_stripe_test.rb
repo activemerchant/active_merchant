@@ -47,7 +47,8 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "wow@example.com", response.params["metadata"]["email"]
   end
 
-  def test_successful_purchase_with_icc_data
+  # this actually shouldn't be legal
+  def test_successful_purchase_with_emv_credit_card
     assert response = @gateway.purchase(@amount, @emv_credit_card, @options)
     assert_success response
     assert_equal "charge", response.params["object"]
@@ -94,6 +95,17 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_authorization_and_capture_with_emv_credit_card
+    assert authorization = @gateway.authorize(@amount, @emv_credit_card, @options)
+    assert_success authorization
+    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
+    assert !authorization.params["captured"]
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+    assert capture.emv_authorization, "Capture should contain emv_authorization containing the EMV TC"
+  end
+
   def test_authorization_and_capture_with_apple_pay_payment_token
     assert authorization = @gateway.authorize(@amount, @apple_pay_payment_token, @options)
     assert_success authorization
@@ -108,6 +120,16 @@ class RemoteStripeTest < Test::Unit::TestCase
   def test_authorization_and_void
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
+    assert !authorization.params["captured"]
+
+    assert void = @gateway.void(authorization.authorization)
+    assert_success void
+  end
+
+  def test_authorization_and_void_with_emv_credit_card
+    assert authorization = @gateway.authorize(@amount, @emv_credit_card, @options)
+    assert_success authorization
+    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
     assert !authorization.params["captured"]
 
     assert void = @gateway.void(authorization.authorization)
