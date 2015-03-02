@@ -26,7 +26,7 @@ class RemoteQvalentTest < Test::Unit::TestCase
       gateway.purchase(@amount, @credit_card, @options)
     end
     response = authentication_exception.response
-    assert_match %r{Error 403: Missing authentication}, response.body)
+    assert_match(%r{Error 403: Missing authentication}, response.body)
   end
 
   def test_successful_purchase
