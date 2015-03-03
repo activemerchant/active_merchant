@@ -41,7 +41,6 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_payment_method(post, payment_method)
         add_card_reference(post)
-        add_customer_data(post, options)
 
         commit("registerAccount", post)
       end
