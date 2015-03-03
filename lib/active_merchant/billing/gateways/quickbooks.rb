@@ -104,8 +104,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((oauth_nonce=\")\w+), '\1[FILTERED]').
           gsub(%r((oauth_signature=\")[a-zA-Z%0-9]+), '\1[FILTERED]').
           gsub(%r((oauth_token=\")\w+), '\1[FILTERED]').
-          gsub(%r((\"card\":{\"number\":\")\d+), '\1[FILTERED]').
-          gsub(%r((\"cvc\":\")\d+), '\1[FILTERED]')
+          gsub(%r((number\D+)\d{16}), '\1[FILTERED]').
+          gsub(%r((cvc\D+)\d{3}), '\1[FILTERED]')
       end
 
       private

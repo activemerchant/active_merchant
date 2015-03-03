@@ -108,7 +108,19 @@ class QuickBooksTest < Test::Unit::TestCase
     assert_equal @gateway.send(:scrub, pre_scrubbed), post_scrubbed
   end
 
+  def test_scrub_with_small_json
+    assert_equal @gateway.scrub(pre_scrubbed_small_json), post_scrubbed_small_json
+  end
+
   private
+
+  def pre_scrubbed_small_json
+    "intuit.com\\r\\nContent-Length: 258\\r\\n\\r\\n\"\n<- \"{\\\"amount\\\":\\\"34.50\\\",\\\"currency\\\":\\\"USD\\\",\\\"card\\\":{\\\"number\\\":\\\"4111111111111111\\\",\\\"expMonth\\\":\\\"09\\\",\\\"expYear\\\":2016,\\\"cvc\\\":\\\"123\\\",\\\"name\\\":\\\"Bob Bobson\\\",\\\"address\\\":{\\\"streetAddress\\\":null,\\\"city\\\":\\\"Los Santos\\\",\\\"region\\\":\\\"CA\\\",\\\"country\\\":\\\"US\\\",\\\"postalCode\\\":\\\"90210\\\"}},\\\"capture\\\":\\\"true\\\"}\"\n-> \"HTTP/1.1 201 Created\\r\\n\"\n-> \"Date: Tue, 03 Mar 2015 20:00:35 GMT\\r\\n\"\n-> \"Content-Type: "
+  end
+
+  def post_scrubbed_small_json
+    "intuit.com\\r\\nContent-Length: 258\\r\\n\\r\\n\"\n<- \"{\\\"amount\\\":\\\"34.50\\\",\\\"currency\\\":\\\"USD\\\",\\\"card\\\":{\\\"number\\\":\\\"[FILTERED]\\\",\\\"expMonth\\\":\\\"09\\\",\\\"expYear\\\":2016,\\\"cvc\\\":\\\"[FILTERED]\\\",\\\"name\\\":\\\"Bob Bobson\\\",\\\"address\\\":{\\\"streetAddress\\\":null,\\\"city\\\":\\\"Los Santos\\\",\\\"region\\\":\\\"CA\\\",\\\"country\\\":\\\"US\\\",\\\"postalCode\\\":\\\"90210\\\"}},\\\"capture\\\":\\\"true\\\"}\"\n-> \"HTTP/1.1 201 Created\\r\\n\"\n-> \"Date: Tue, 03 Mar 2015 20:00:35 GMT\\r\\n\"\n-> \"Content-Type: "
+  end
 
   def successful_purchase_response
     <<-RESPONSE
