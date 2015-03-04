@@ -13,6 +13,7 @@
 * Expose proxy address and port to gateways [arkes]
 * Remove Ruby 1.9 [j-mutter]
 * Qvalent: Do not sent order.ipAddress when storing [markabe]
+* Qvalent: Fix argument name [bruno]
 
 == Version 1.47.0 (February 25, 2015)
 

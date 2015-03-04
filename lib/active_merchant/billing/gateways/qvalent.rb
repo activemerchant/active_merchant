@@ -83,7 +83,7 @@ module ActiveMerchant #:nodoc:
         post["customer.customerReferenceNumber"] = options[:order_id]
       end
 
-      def add_reference(post, authorization, opions)
+      def add_reference(post, authorization, options)
         post["customer.originalOrderNumber"] = authorization
         add_order_number(post, options)
       end
