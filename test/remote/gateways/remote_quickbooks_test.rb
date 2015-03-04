@@ -22,7 +22,7 @@ class RemoteTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal 'Transaction Approved', response.message
+    assert_equal 'CAPTURED', response.message
   end
 
   def test_failed_purchase
@@ -83,7 +83,7 @@ class RemoteTest < Test::Unit::TestCase
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response
-    assert_match %r{Transaction Approved}, response.message
+    assert_match %r{AUTHORIZED}, response.message
   end
 
   def test_failed_verify
