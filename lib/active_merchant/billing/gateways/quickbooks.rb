@@ -242,11 +242,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        response['errors'].present? ? FRAUD_WARNING_CODES.concat(['0']).include?(response['errors'].first['code']) : true
+      return FRAUD_WARNING_CODES.concat(['0']).include?(response['errors'].first['code']) if response['errors']
+        
+      !['DECLINED', 'CANCELLED'].include?(response['status'])
       end
 
       def message_from(response)
-        response['errors'].present? ? response["errors"].map {|error_hash| error_hash["message"] }.join(" ") : "Transaction Approved"
+        response['errors'].present? ? response["errors"].map {|error_hash| error_hash["message"] }.join(" ") : response['status']
       end
 
       def errors_from(response)
