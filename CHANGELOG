@@ -14,6 +14,7 @@
 * Remove Ruby 1.9 [j-mutter]
 * Qvalent: Do not sent order.ipAddress when storing [markabe]
 * Qvalent: Fix argument name [bruno]
+* Qvalent: map card storage reference to authorization [markabe]
 
 == Version 1.47.0 (February 25, 2015)
 

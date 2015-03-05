@@ -110,7 +110,7 @@ module ActiveMerchant #:nodoc:
           succeeded,
           message_from(succeeded, raw),
           raw,
-          authorization: raw["response.orderNumber"],
+          authorization: raw["response.orderNumber"] || raw["response.customerReferenceNumber"],
           error_code: error_code_from(succeeded, raw),
           test: test?
         )

@@ -68,6 +68,7 @@ class QvalentTest < Test::Unit::TestCase
 
     assert_success response
 
+    assert_equal "RSL-20887450", response.authorization
     assert_equal "Succeeded", response.message
     assert response.test?
   end
