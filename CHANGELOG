@@ -15,6 +15,7 @@
 * Qvalent: Do not sent order.ipAddress when storing [markabe]
 * Qvalent: Fix argument name [bruno]
 * Qvalent: map card storage reference to authorization [markabe]
+* Qvalent: Fix scrub replacement, it was too greedy [markabe]
 
 == Version 1.47.0 (February 25, 2015)
 

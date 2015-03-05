@@ -51,9 +51,9 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((&?customer.password=)[^&]*), "\1[FILTERED]").
-          gsub(%r((&?card.PAN=)[^&]*), "\1[FILTERED]").
-          gsub(%r((&?card.CVN=)[^&]*), "\1[FILTERED]")
+          gsub(%r((&?customer.password=)[^&]*), '\1[FILTERED]').
+          gsub(%r((&?card.PAN=)[^&]*), '\1[FILTERED]').
+          gsub(%r((&?card.CVN=)[^&]*), '\1[FILTERED]')
       end
 
       private
