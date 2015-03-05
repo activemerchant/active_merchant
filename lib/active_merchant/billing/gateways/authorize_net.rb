@@ -16,6 +16,25 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net'
 
+      STANDARD_ERROR_CODE_MAPPING = {
+        '36' => STANDARD_ERROR_CODE[:incorrect_number],
+        '237' => STANDARD_ERROR_CODE[:invalid_number],
+        '2315' => STANDARD_ERROR_CODE[:invalid_number],
+        '37' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '2316' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '378' => STANDARD_ERROR_CODE[:invalid_cvc],     
+        '38' => STANDARD_ERROR_CODE[:expired_card],
+        '2317' => STANDARD_ERROR_CODE[:expired_card],
+        '244' => STANDARD_ERROR_CODE[:incorrect_cvc],
+        '227' => STANDARD_ERROR_CODE[:incorrect_address],
+        '2127' => STANDARD_ERROR_CODE[:incorrect_address],
+        '22' => STANDARD_ERROR_CODE[:card_declined],
+        '23' => STANDARD_ERROR_CODE[:card_declined],
+        '3153' => STANDARD_ERROR_CODE[:processing_error],
+        '235' => STANDARD_ERROR_CODE[:processing_error],
+        '24' => STANDARD_ERROR_CODE[:pickup_card]
+      }
+
       class_attribute :duplicate_window
 
       APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
@@ -339,7 +358,8 @@ module ActiveMerchant #:nodoc:
             test: test?,
             avs_result: avs_result,
             cvv_result: cvv_result,
-            fraud_review: fraud_review?(response)
+            fraud_review: fraud_review?(response),
+            error_code: map_error_code(response[:response_code], response[:response_reason_code])
           )
         end
       end
@@ -450,6 +470,10 @@ module ActiveMerchant #:nodoc:
 
       def using_live_gateway_in_test_mode?(response)
         !test? && response[:test_request] == "1"
+      end
+
+      def map_error_code(response_code, response_reason_code)
+        STANDARD_ERROR_CODE_MAPPING[response_code.to_s << response_reason_code.to_s]
       end
     end
   end

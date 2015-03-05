@@ -221,6 +221,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+    assert_equal 'incorrect_number', response.error_code
   end
 
   def test_live_gateway_cannot_use_test_mode_on_auth_dot_net_server
@@ -250,6 +251,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
+    assert_equal 'incorrect_number', response.error_code
   end
 
   def test_successful_capture
@@ -257,6 +259,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
     capture = @gateway.capture(@amount, '2214269051#XXXX1234', @options)
     assert_success capture
+    assert_equal nil, capture.error_code
   end
 
   def test_failed_capture
