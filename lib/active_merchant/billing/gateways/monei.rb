@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
       #
       # Returns Active Merchant response object
       def capture(money, authorization, options={})
-        execute_authorization(:capture, money, authorization, options)
+        execute_dependant(:capture, money, authorization, options)
       end
 
       # Public: Refunds from previous purchase
@@ -97,7 +97,7 @@ module ActiveMerchant #:nodoc:
       #
       # Returns Active Merchant response object
       def refund(money, authorization, options={})
-        execute_authorization(:refund, money, authorization, options)
+        execute_dependant(:refund, money, authorization, options)
       end
 
       # Public: Voids previous authorization
@@ -108,7 +108,7 @@ module ActiveMerchant #:nodoc:
       #
       # Returns Active Merchant response object
       def void(authorization, options={})
-        execute_authorization(:void, nil, authorization, options)
+        execute_dependant(:void, nil, authorization, options)
       end
 
       # Public: Verifies credit card. Does this by doing a authorization of 1.00 Euro and then voiding it.
@@ -145,7 +145,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Private: Execute operation that depends on athorization code from previous purchase or authorize operation
-      def execute_authorization(action, money, authorization, options)
+      def execute_dependant(action, money, authorization, options)
         request = build_request do |xml|
           add_identification_authorization(xml, authorization, options)
           add_payment(xml, action, money, options)
