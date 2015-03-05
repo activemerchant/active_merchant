@@ -6,19 +6,6 @@ module ActiveMerchant #:nodoc:
       #   ActiveMerchant::Billing::Base.gateway_mode = :test
       mattr_accessor :gateway_mode
 
-      # Set ActiveMerchant integrations in test mode.
-      #
-      #   ActiveMerchant::Billing::Base.integration_mode = :test
-      def self.integration_mode=(mode)
-        ActiveMerchant.deprecated(OFFSITE_PAYMENT_EXTRACTION_MESSAGE)
-        @@integration_mode = mode
-      end
-
-      def self.integration_mode
-        ActiveMerchant.deprecated(OFFSITE_PAYMENT_EXTRACTION_MESSAGE)
-        @@integration_mode
-      end
-
       # Set both the mode of both the gateways and integrations
       # at once
       mattr_reader :mode
@@ -26,7 +13,6 @@ module ActiveMerchant #:nodoc:
       def self.mode=(mode)
         @@mode = mode
         self.gateway_mode = mode
-        @@integration_mode = mode
       end
 
       self.mode = :production
