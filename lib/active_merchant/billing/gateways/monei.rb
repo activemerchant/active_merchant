@@ -226,7 +226,7 @@ module ActiveMerchant #:nodoc:
             xml.Street address[:address1].to_s
             xml.Zip address[:zip].to_s
             xml.City address[:city].to_s
-            xml.State address[:state] if address.has_key? :state
+            xml.State address[:state].to_s if address.has_key? :state
             xml.Country address[:country].to_s
           end
           xml.Contact do
