@@ -266,7 +266,7 @@ module ActiveMerchant #:nodoc:
 
       # Private: Decide success from servers response
       def success_from(response)
-        response[:status] == :success or response[:status] == :new
+        response[:status] == :success || response[:status] == :new
       end
 
       # Private: Get message from servers response
