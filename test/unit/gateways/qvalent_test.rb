@@ -93,6 +93,10 @@ class QvalentTest < Test::Unit::TestCase
     assert_equal "Unable to read error message", response.message
   end
 
+  def test_transcript_scrubbing
+    assert_equal scrubbed_transcript, @gateway.scrub(transcript)
+  end
+
   private
 
   def successful_purchase_response
@@ -133,6 +137,52 @@ class QvalentTest < Test::Unit::TestCase
 
   def empty_purchase_response
     %(
+    )
+  end
+
+  def transcript
+    %(
+opening connection to ccapi.client.support.qvalent.com:443...
+opened
+starting SSL for ccapi.client.support.qvalent.com:443...
+SSL established
+<- "POST /post/CreditCardAPIReceiver HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: ccapi.client.support.qvalent.com\r\nContent-Length: 321\r\n\r\n"
+<- "card.CVN=123&card.PAN=4000100011112224&card.cardHolderName=Longbob+Longsen&card.currency=AUD&card.expiryMonth=09&card.expiryYear=16&customer.merchant=24436057&customer.orderNumber=0de136e8dbc1018ee060bffe2812b52a&customer.password=QRSLTEST&customer.username=QRSL&order.ECI=&order.amount=100&order.type=capture&message.end"
+-> "HTTP/1.1 200 OK\r\n"
+-> "X-Server-Shutdown: false\r\n"
+-> "Content-Type: text/plain;charset=ISO-8859-1\r\n"
+-> "Content-Length: 386\r\n"
+-> "Date: Fri, 27 Feb 2015 22:00:04 GMT\r\n"
+-> "Connection: close\r\n"
+-> "Set-Cookie: TSb51a02=6c9aed20dc1a52dc4564c052d36cd28c05d8566e98b85ab254f0e8e4; Path=/\r\n"
+-> "\r\n"
+reading 386 bytes...
+-> "response.summaryCode=0\r\nresponse.responseCode=08\r\nresponse.text=Honour with identification\r\nresponse.referenceNo=723907122\r\nresponse.orderNumber=0de136e8dbc1018ee060bffe2812b52a\r\nresponse.RRN=723907122   \r\nresponse.settlementDate=20150228\r\nresponse.transactionDate=28-FEB-2015 09:00:04\r\nresponse.cardSchemeName=VISA\r\nresponse.creditGroup=VI/BC/MC\r\nresponse.previousTxn=0\r\nresponse.end\r\n"
+read 386 bytes
+Conn close
+    )
+  end
+
+  def scrubbed_transcript
+    %(
+opening connection to ccapi.client.support.qvalent.com:443...
+opened
+starting SSL for ccapi.client.support.qvalent.com:443...
+SSL established
+<- "POST /post/CreditCardAPIReceiver HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: ccapi.client.support.qvalent.com\r\nContent-Length: 321\r\n\r\n"
+<- "card.CVN=[FILTERED]&card.PAN=[FILTERED]&card.cardHolderName=Longbob+Longsen&card.currency=AUD&card.expiryMonth=09&card.expiryYear=16&customer.merchant=24436057&customer.orderNumber=0de136e8dbc1018ee060bffe2812b52a&customer.password=[FILTERED]&customer.username=QRSL&order.ECI=&order.amount=100&order.type=capture&message.end"
+-> "HTTP/1.1 200 OK\r\n"
+-> "X-Server-Shutdown: false\r\n"
+-> "Content-Type: text/plain;charset=ISO-8859-1\r\n"
+-> "Content-Length: 386\r\n"
+-> "Date: Fri, 27 Feb 2015 22:00:04 GMT\r\n"
+-> "Connection: close\r\n"
+-> "Set-Cookie: TSb51a02=6c9aed20dc1a52dc4564c052d36cd28c05d8566e98b85ab254f0e8e4; Path=/\r\n"
+-> "\r\n"
+reading 386 bytes...
+-> "response.summaryCode=0\r\nresponse.responseCode=08\r\nresponse.text=Honour with identification\r\nresponse.referenceNo=723907122\r\nresponse.orderNumber=0de136e8dbc1018ee060bffe2812b52a\r\nresponse.RRN=723907122   \r\nresponse.settlementDate=20150228\r\nresponse.transactionDate=28-FEB-2015 09:00:04\r\nresponse.cardSchemeName=VISA\r\nresponse.creditGroup=VI/BC/MC\r\nresponse.previousTxn=0\r\nresponse.end\r\n"
+read 386 bytes
+Conn close
     )
   end
 end
