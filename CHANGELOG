@@ -13,6 +13,7 @@
 * Netbilling: Add order_id to user_info [mrezentes]
 * Stripe: scrub swipe/track, EMV data out of gateway transcripts [girasquid]
 * Remove integration_mode [mattfawcett]
+* Allow setting CVV requirement at instance level [fabiokr]
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
