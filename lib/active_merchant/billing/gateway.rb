@@ -250,6 +250,7 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+
       def currency(money)
         money.respond_to?(:currency) ? money.currency : self.default_currency
       end

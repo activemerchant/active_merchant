@@ -16,7 +16,6 @@
 * Qvalent: Fix argument name [bruno]
 * Qvalent: map card storage reference to authorization [markabe]
 * Qvalent: Fix scrub replacement, it was too greedy [markabe]
-* PayConex: Add gateway [duff]
 
 == Version 1.47.0 (February 25, 2015)
 
