@@ -94,8 +94,9 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         # this block needs tests
-        emv_tc_response = options.delete(:icc_data)
-        add_emv_creditcard(post, emv_tc_response) if emv_tc_response
+        if emv_tc_response = options.delete(:icc_data)
+          post[:card] = {icc_data: StripeICCData.new(emv_tc_response).icc_data}
+        end
 
         add_amount(post, money, options)
         add_application_fee(post, options)
@@ -238,42 +239,18 @@ module ActiveMerchant #:nodoc:
         def initialize(raw_tlv_string)
           require 'grizzly_ber'
           parsed_tlv = GrizzlyBer.new(raw_tlv_string)
-          receipt_tags = [
-            "4F",               # Application Identifier
-            "9F06",             # Application Identifier
-            "84",               # Dedicated File Name
-            "9F1C",             # Terminal Identification
-            "9F1E",             # Interface Device (IFD) Serial Number
-            "9F12",             # Application Preferred Name
-            "50",               # Application Label
-            "9F34",             # Cardholder Verification Method (CVM) Results
-            "95",               # Terminal Verification Results (TVR)
-            "9B",               # Transaction Status Information
-            "9F10",             # Issuer Application Data (IAD)
-            "9F33",             # Terminal Capabilities
-            "9F40",             # Additional Terminal Capabilities
-            "82",               # Application Interchange Profile
-            "9F08",             # Application Version Number (Card)
-            "9F09",             # Application Version Number (Terminal)
-            "9F5B"              # Issuer Script Results
-          ]
-
-          @icc_data = parsed_tlv.to_ber
 
           # Stripe requires the card number and track data to be extracted and removed from the ICC data.
-          @number = parsed_tlv.hex_value_of_first_element_with_tag("5A")
+          @number = parsed_tlv.hex_value_of_first_element_with_tag("5A").sub(/F+\z/, '') if parsed_tlv["5A"]
 
-          track_data = parsed_tlv.hex_value_of_first_element_with_tag("57")
-          @track_data = ";#{track_data.gsub('D', '=')}?" if track_data
+          track_data = parsed_tlv.hex_value_of_first_element_with_tag("57") if parsed_tlv["57"]
+          @track_data = ";#{track_data.gsub('D', '=').gsub('F', '')}?" if track_data
 
           # The card number and track data is removed from the ICC data here.
           parsed_tlv.remove!("57")
           parsed_tlv.remove!("5A")
 
-          # Generate the ICC data necessary for the receipt.
-          @receipt_tlv_string = GrizzlyBer.new
-          receipt_tags.each { |tag| @receipt_tlv_string[tag] = parsed_tlv[tag] if parsed_tlv[tag] }
-          @receipt_tlv_string = @receipt_tlv_string.to_ber
+          @icc_data = parsed_tlv.to_ber
         end
       end
 
@@ -340,6 +317,7 @@ module ActiveMerchant #:nodoc:
         elsif creditcard.respond_to?(:number)
           if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
             card[:swipe_data] = creditcard.track_data
+            post[:card_present] = {:fallback_reason => creditcard.fallback_reason} if creditcard.fallback_reason
           else
             card[:number] = creditcard.number
             card[:exp_month] = creditcard.month
@@ -456,10 +434,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(method, url, parameters = nil, options = {})
         add_expand_parameters(parameters, options) if parameters
-        emv_receipt = StripeICCData.new(parameters[:card][:icc_data]).receipt_tlv_string if parameters[:card] && parameters[:card][:icc_data]
-
         response = api_request(method, url, parameters, options)
-        response.merge!({:emv_receipt => emv_receipt}) if emv_receipt
 
         success = !response.key?("error")
 

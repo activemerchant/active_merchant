@@ -143,6 +143,12 @@ module ActiveMerchant #:nodoc:
       # @return [String]
       attr_accessor :icc_data
 
+      # Returns or sets a fallback reason for a EMV transaction whereby the customer's card entered a fallback scenario.
+      # This can be an arbitrary string.
+      #
+      # @return [String]
+      attr_accessor :fallback_reason
+
       def type
         ActiveMerchant.deprecated "CreditCard#type is deprecated and will be removed from a future release of ActiveMerchant. Please use CreditCard#brand instead."
         brand
