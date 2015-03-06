@@ -51,6 +51,17 @@ class RemoteMoneiTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_multi_partial_capture
+    auth = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth
+
+    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert_success capture
+
+    assert capture = @gateway.capture(@amount-1, auth.authorization)
+    assert_failure capture
+  end
+
   def test_failed_capture
     response = @gateway.capture(nil, '')
     assert_failure response
@@ -70,6 +81,17 @@ class RemoteMoneiTest < Test::Unit::TestCase
 
     assert refund = @gateway.refund(@amount-1, purchase.authorization)
     assert_success refund
+  end
+
+  def test_multi_partial_refund
+    purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success purchase
+
+    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert_success refund
+
+    assert refund = @gateway.refund(@amount-1, purchase.authorization)
+    assert_failure refund
   end
 
   def test_failed_refund
