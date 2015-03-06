@@ -190,7 +190,7 @@ module ActiveMerchant #:nodoc:
 
       # Private: Add payment part to XML
       def add_payment(xml, action, money, options)
-        code = tr_payment_code action
+        code = tanslate_payment_code action
 
         xml.Payment(:code => code) do
           xml.Presentation do
@@ -243,8 +243,8 @@ module ActiveMerchant #:nodoc:
 
         {
             :unique_id => xml.xpath("//Response/Transaction/Identification/UniqueID").text,
-            :status => (tr_status_code xml.xpath("//Response/Transaction/Processing/Status/@code").text),
-            :reason => (tr_status_code xml.xpath("//Response/Transaction/Processing/Reason/@code").text),
+            :status => (translate_status_code xml.xpath("//Response/Transaction/Processing/Status/@code").text),
+            :reason => (translate_status_code xml.xpath("//Response/Transaction/Processing/Reason/@code").text),
             :message => xml.xpath("//Response/Transaction/Processing/Return").text
         }
       end
@@ -285,7 +285,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Private: Translate Monei status code to native ruby symbols
-      def tr_status_code(code)
+      def translate_status_code(code)
         {
             '00' => :success,
             '40' => :neutral,
@@ -300,7 +300,7 @@ module ActiveMerchant #:nodoc:
       end
 
       # Private: Translate AM operations to Monei operations codes
-      def tr_payment_code(action)
+      def tanslate_payment_code(action)
         {
             :purchase => 'CC.DB',
             :authorize => 'CC.PA',
