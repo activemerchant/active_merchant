@@ -190,7 +190,7 @@ module ActiveMerchant #:nodoc:
 
       # Private: Add payment part to XML
       def add_payment(xml, action, money, options)
-        code = tanslate_payment_code action
+        code = tanslate_payment_code(action)
 
         xml.Payment(:code => code) do
           xml.Presentation do
@@ -243,8 +243,8 @@ module ActiveMerchant #:nodoc:
 
         {
             :unique_id => xml.xpath("//Response/Transaction/Identification/UniqueID").text,
-            :status => (translate_status_code xml.xpath("//Response/Transaction/Processing/Status/@code").text),
-            :reason => (translate_status_code xml.xpath("//Response/Transaction/Processing/Reason/@code").text),
+            :status => translate_status_code(xml.xpath("//Response/Transaction/Processing/Status/@code").text),
+            :reason => translate_status_code(xml.xpath("//Response/Transaction/Processing/Reason/@code").text),
             :message => xml.xpath("//Response/Transaction/Processing/Return").text
         }
       end
