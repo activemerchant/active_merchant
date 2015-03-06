@@ -260,7 +260,8 @@ module ActiveMerchant #:nodoc:
           message_from(response),
           response,
           authorization: authorization_from(response),
-          test: test?
+          test: test?,
+          error_code: error_code_from(response)
         )
       end
 
@@ -272,6 +273,11 @@ module ActiveMerchant #:nodoc:
       # Private: Get message from servers response
       def message_from(response)
         response[:message]
+      end
+
+      # Private: Get error code from servers response
+      def error_code_from(response)
+        success_from(response) ? nil : STANDARD_ERROR_CODE[:card_declined]
       end
 
       # Private: Get authorization code from servers response
