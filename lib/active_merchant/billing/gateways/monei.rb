@@ -43,8 +43,8 @@ module ActiveMerchant #:nodoc:
       #               :billing_address  Hash with billing address information
       #               :description      Merchant created purchase description (optional)
       #               :currency         Sale currency to override money object or default (optional)
-      #               :given            Customer given name to override card holder's (optional)
-      #               :family           Customer family name to override card holder's (optional)
+      #               :first_name       Customer first name to override card holder's (optional)
+      #               :last_name        Customer family name to override card holder's (optional)
       #
       # Returns Active Merchant response object
       def purchase(money, credit_card, options)
@@ -60,8 +60,8 @@ module ActiveMerchant #:nodoc:
       #               :billing_address  Hash with billing address information
       #               :description      Merchant created authorization description (optional)
       #               :currency         Sale currency to override money object or default (optional)
-      #               :given            Customer given name to override card holder's (optional)
-      #               :family           Customer family name to override card holder's (optional)
+      #               :first_name       Customer first name to override card holder's (optional)
+      #               :last_name        Customer family name to override card holder's (optional)
       #
       # Returns Active Merchant response object
       def authorize(money, credit_card, options={})
@@ -119,8 +119,8 @@ module ActiveMerchant #:nodoc:
       #               :billing_address  Hash with billing address information
       #               :description      Merchant created authorization description (optional)
       #               :currency         Sale currency to override money object or default (optional)
-      #               :given            Customer given name to override card holder's (optional)
-      #               :family           Customer family name to override card holder's (optional)
+      #               :first_name       Customer first name to override card holder's (optional)
+      #               :last_name        Customer family name to override card holder's (optional)
       #
       # Returns Active Merchant response object of Authorization operation
       def verify(credit_card, options={})
@@ -219,8 +219,8 @@ module ActiveMerchant #:nodoc:
         xml.Customer do
 
           xml.Name do
-            xml.Given options[:given] || credit_card.first_name
-            xml.Family options[:family] || credit_card.last_name
+            xml.Given options[:first_name] || credit_card.first_name
+            xml.Family options[:last_name] || credit_card.last_name
           end
           xml.Address do
             xml.Street address[:address1].to_s
