@@ -17,6 +17,7 @@
 * Qvalent: map card storage reference to authorization [markabe]
 * Qvalent: Fix scrub replacement, it was too greedy [markabe]
 * PayConex: Add gateway [duff]
+* AuthorizeNet: Add credit support [duff]
 
 == Version 1.47.0 (February 25, 2015)
 

@@ -412,6 +412,24 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal '0#2224', refund.authorization
   end
 
+  def test_successful_credit
+    @gateway.expects(:ssl_post).returns(successful_credit_response)
+
+    response = @gateway.credit(@amount, @credit_card)
+    assert_success response
+
+    assert_equal '2230004436', response.authorization.split('#')[0]
+    assert_equal "This transaction has been approved", response.message
+  end
+
+  def test_failed_credit
+    @gateway.expects(:ssl_post).returns(failed_credit_response)
+
+    response = @gateway.credit(@amount, @credit_card)
+    assert_failure response
+    assert_equal "The credit card number is invalid", response.message
+  end
+
   def test_supported_countries
     assert_equal 4, (['US', 'CA', 'AU', 'VA'] & AuthorizeNetGateway.supported_countries).size
   end
@@ -1301,6 +1319,88 @@ class AuthorizeNetTest < Test::Unit::TestCase
         </errors>
         <shipTo/>
       </transactionResponse>
+      </createTransactionResponse>
+    eos
+  end
+
+  def successful_credit_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <refId>1</refId>
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+        <transactionResponse>
+          <responseCode>1</responseCode>
+          <authCode />
+          <avsResultCode>P</avsResultCode>
+          <cvvResultCode />
+          <cavvResultCode />
+          <transId>2230004436</transId>
+          <refTransID />
+          <transHash>BF2ADA32B70495EE035C6A5ADC635047</transHash>
+          <testRequest>0</testRequest>
+          <accountNumber>XXXX2224</accountNumber>
+          <accountType>Visa</accountType>
+          <messages>
+            <message>
+              <code>1</code>
+              <description>This transaction has been approved.</description>
+            </message>
+          </messages>
+          <userFields>
+            <userField>
+              <name>x_currency_code</name>
+              <value>USD</value>
+            </userField>
+          </userFields>
+        </transactionResponse>
+      </createTransactionResponse>
+    eos
+  end
+
+  def failed_credit_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <refId>1</refId>
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00027</code>
+            <text>The transaction was unsuccessful.</text>
+          </message>
+        </messages>
+        <transactionResponse>
+          <responseCode>3</responseCode>
+          <authCode />
+          <avsResultCode>P</avsResultCode>
+          <cvvResultCode />
+          <cavvResultCode />
+          <transId>0</transId>
+          <refTransID />
+          <transHash>0FFA5F1B4CA8DC9643BC117DAFB45770</transHash>
+          <testRequest>0</testRequest>
+          <accountNumber>XXXX1222</accountNumber>
+          <accountType />
+          <errors>
+            <error>
+              <errorCode>6</errorCode>
+              <errorText>The credit card number is invalid.</errorText>
+            </error>
+          </errors>
+          <userFields>
+            <userField>
+              <name>x_currency_code</name>
+              <value>USD</value>
+            </userField>
+          </userFields>
+        </transactionResponse>
       </createTransactionResponse>
     eos
   end

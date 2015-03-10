@@ -266,6 +266,20 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     ActiveMerchant::Billing::AuthorizeNetGateway.application_id = nil
   end
 
+  def test_successful_credit
+    response = @gateway.credit(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_failed_credit
+    response = @gateway.credit(@amount, @declined_card, @options)
+    assert_failure response
+    assert_equal 'The credit card number is invalid', response.message
+    assert response.authorization
+  end
+
   def test_bad_currency
     response = @gateway.purchase(@amount, @credit_card, currency: "XYZ")
     assert_failure response

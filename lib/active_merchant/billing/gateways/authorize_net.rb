@@ -116,6 +116,26 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def credit(amount, payment, options={})
+        if payment.is_a?(String)
+          raise ArgumentError, "Reference credits are not supported. Please supply the original credit card or use the #refund method."
+        end
+
+        commit("CREDIT") do |xml|
+          add_order_id(xml, options)
+          xml.transactionRequest do
+            xml.transactionType('refundTransaction')
+            xml.amount(amount(amount))
+
+            add_payment_source(xml, payment)
+            add_invoice(xml, options)
+            add_customer_data(xml, payment, options)
+            add_settings(xml, payment, options)
+            add_user_fields(xml, amount, options)
+          end
+        end
+      end
+
       def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
