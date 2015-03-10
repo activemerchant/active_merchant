@@ -395,7 +395,6 @@ module ActiveMerchant #:nodoc:
         "U" => "U", # Data Not Checked
         "Y" => "D", # All Data Matched
         "Z" => "P", # CSC and Postcode Matched
-        "F" => "D"  # Street address and zip code match
       }
 
       # Amex have different AVS response codes to visa etc

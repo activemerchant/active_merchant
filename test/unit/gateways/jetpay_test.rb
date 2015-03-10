@@ -12,7 +12,6 @@ class JetpayTest < Test::Unit::TestCase
     @amount = 100
 
     @options = {
-      :order_id => '1',
       :billing_address => address(:country => 'US'),
       :shipping_address => address(:country => 'US'),
       :email => 'test@test.com',

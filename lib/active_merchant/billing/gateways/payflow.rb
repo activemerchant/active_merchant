@@ -1,6 +1,6 @@
-require File.dirname(__FILE__) + '/payflow/payflow_common_api'
-require File.dirname(__FILE__) + '/payflow/payflow_response'
-require File.dirname(__FILE__) + '/payflow_express'
+require 'active_merchant/billing/gateways/payflow/payflow_common_api'
+require 'active_merchant/billing/gateways/payflow/payflow_response'
+require 'active_merchant/billing/gateways/payflow_express'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -42,6 +42,10 @@ module ActiveMerchant #:nodoc:
 
       def refund(money, reference, options = {})
         commit(build_reference_request(:credit, money, reference, options), options)
+      end
+
+      def verify(payment, options={})
+        authorize(0, payment, options)
       end
 
       # Adds or modifies a recurring Payflow profile.  See the Payflow Pro Recurring Billing Guide for more details:

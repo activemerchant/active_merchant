@@ -8,25 +8,25 @@ class PostsDataTests < Test::Unit::TestCase
     @ok = stub(:body => '', :code => '200', :message => 'OK')
     @error = stub(:code => 500, :message => 'Internal Server Error', :body => 'failure')
   end
-  
+
   def teardown
     SimpleTestGateway.retry_safe = false
   end
-  
+
   def test_single_successful_post
     ActiveMerchant::Connection.any_instance.expects(:request).returns(@ok)
-    
-    assert_nothing_raised do
-      @gateway.ssl_post(@url, '') 
-    end
-  end
-  
-  def test_multiple_successful_posts
-    ActiveMerchant::Connection.any_instance.expects(:request).times(2).returns(@ok, @ok)
-    
+
     assert_nothing_raised do
       @gateway.ssl_post(@url, '')
-      @gateway.ssl_post(@url, '') 
+    end
+  end
+
+  def test_multiple_successful_posts
+    ActiveMerchant::Connection.any_instance.expects(:request).times(2).returns(@ok, @ok)
+
+    assert_nothing_raised do
+      @gateway.ssl_post(@url, '')
+      @gateway.ssl_post(@url, '')
     end
   end
 
@@ -54,6 +54,18 @@ class PostsDataTests < Test::Unit::TestCase
     ActiveMerchant::Connection.any_instance.expects(:request).returns(@ok)
     ActiveMerchant::Connection.any_instance.expects(:open_timeout=).with(50)
     ActiveMerchant::Connection.any_instance.expects(:read_timeout=).with(37)
+
+    assert_nothing_raised do
+      @gateway.ssl_post(@url, '')
+    end
+  end
+
+  def test_setting_proxy_settings
+    @gateway.class.proxy_address = 'http://proxy.com'
+    @gateway.class.proxy_port = 1234
+    ActiveMerchant::Connection.any_instance.expects(:request).returns(@ok)
+    ActiveMerchant::Connection.any_instance.expects(:proxy_address=).with('http://proxy.com')
+    ActiveMerchant::Connection.any_instance.expects(:proxy_port=).with(1234)
 
     assert_nothing_raised do
       @gateway.ssl_post(@url, '')

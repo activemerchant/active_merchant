@@ -120,12 +120,12 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_equal 'M', response.cvv_result["code"]
     assert_equal '1', response.avs_result["code"]
   end
-  
+
   def test_refund
     assert purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_match(/Transaction Normal/, purchase.message)
     assert_success purchase
-  
+
     assert response = @gateway.refund(50, purchase.authorization)
     assert_success response
     assert_match(/Transaction Normal/, response.message)
@@ -136,10 +136,14 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert purchase = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
     assert_match(/Transaction Normal/, purchase.message)
     assert_success purchase
-  
+
     assert response = @gateway.refund(50, purchase.authorization)
     assert_success response
     assert_match(/Transaction Normal/, response.message)
     assert response.authorization
+  end
+
+  def test_dump_transcript
+    # See firstdata_e4_test.rb for an example of a scrubbed transcript
   end
 end

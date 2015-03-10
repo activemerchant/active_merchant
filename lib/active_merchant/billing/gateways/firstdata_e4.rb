@@ -32,6 +32,8 @@ module ActiveMerchant #:nodoc:
         :discover => "Discover"
       }
 
+      E4_BRANDS = BRANDS.merge({:mastercard => "Mastercard"})
+
       self.supported_cardtypes = BRANDS.keys
       self.supported_countries = ["CA", "US"]
       self.default_currency = "USD"
@@ -104,6 +106,16 @@ module ActiveMerchant #:nodoc:
       # https://firstdata.zendesk.com/entries/21303361-transarmor-tokenization
       def store(credit_card, options = {})
         commit(:store, build_store_request(credit_card, options), credit_card)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<Card_Number>).+(</Card_Number>)), '\1[FILTERED]\2').
+          gsub(%r((<VerificationStr2>).+(</VerificationStr2>)), '\1[FILTERED]\2')
       end
 
       private
@@ -250,7 +262,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def card_type(credit_card_brand)
-        BRANDS[credit_card_brand.to_sym] if credit_card_brand
+        E4_BRANDS[credit_card_brand.to_sym] if credit_card_brand
       end
 
       def commit(action, request, credit_card = nil)
@@ -263,7 +275,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful?(response), message_from(response), response,
           :test => test?,
-          :authorization => response_authorization(action, response, credit_card),
+          :authorization => successful?(response) ? response_authorization(action, response, credit_card) : '',
           :avs_result => {:code => response[:avs]},
           :cvv_result => response[:cvv2]
         )

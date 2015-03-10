@@ -179,10 +179,10 @@ class RemoteElavonTest < Test::Unit::TestCase
     assert_equal 'APPROVAL', response.message
   end
 
-  def test_successful_purchase_with_token
+  def test_failed_purchase_with_token
     assert response = @gateway.purchase(@amount, 'ABC123', @options)
     assert_failure response
     assert response.test?
-    assert_equal 'The token supplied in the authorization request appears to be invalid', response.message
+    assert_match %r{invalid}i, response.message
   end
 end

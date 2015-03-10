@@ -128,7 +128,7 @@ module ActiveMerchant #:nodoc:
 
       # The application making the calls to the gateway
       # Useful for things like the PayPal build notation (BN) id fields
-      superclass_delegating_accessor :application_id
+      class_attribute :application_id, instance_writer: false
       self.application_id = 'ActiveMerchant'
 
       attr_reader :options
@@ -179,6 +179,15 @@ module ActiveMerchant #:nodoc:
       # Are we running in test mode?
       def test?
         (@options.has_key?(:test) ? @options[:test] : Base.test?)
+      end
+
+      # Does this gateway know how to scrub sensitive information out of HTTP transcripts?
+      def supports_scrubbing?
+        false
+      end
+
+      def scrub(transcript)
+        raise RuntimeError.new("This gateway does not support scrubbing.")
       end
 
       protected # :nodoc: all
@@ -240,7 +249,6 @@ module ActiveMerchant #:nodoc:
           amount.split('.').first
         end
       end
-
 
       def currency(money)
         money.respond_to?(:currency) ? money.currency : self.default_currency

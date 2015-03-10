@@ -25,6 +25,12 @@ authorize_net:
   login: 5KP3u95bQpv
   password: 4Ktq966gC55GAX7S
 
+axcessms:
+  channel: channel
+  sender: sender
+  login: login
+  password: password
+
 # Working credentials, no need to replace
 balanced:
   login: 'e1c5ad38d1c711e1b36c026ba7e239a9'
@@ -217,6 +223,16 @@ firstdata_e4:
   login:
   password:
 
+flo2cash:
+  username: SOMECREDENTIAL
+  password: ANOTHERCREDENTIAL
+  account_id: ANOTHERCREDENTIAL
+
+flo2cash_simple:
+  username: SOMECREDENTIAL
+  password: ANOTHERCREDENTIAL
+  account_id: ANOTHERCREDENTIAL
+
 garanti:
   login: "PROVAUT"
   terminal_id: 111995
@@ -257,6 +273,11 @@ inspire:
 instapay:
   login: TEST0
   password:
+
+# Working credentials, no need to replace
+ipp:
+  username: nmi.api
+  password: qwerty123
 
 iridium:
     login: LOGIN
@@ -311,7 +332,7 @@ merchant_warrior:
 
 # Working credentials, no need to replace
 mercury:
-  login: '023358150511666'
+  login: '089716741701445'
   password: 'xyz'
 
 mercury_no_tokenization:
@@ -423,9 +444,21 @@ pago_facil:
   service_id: 3
 
 # Working credentials, no need to replace
+pay_conex:
+  account_id: '220614968961'
+  api_accesskey: '69e9c4dd6b8ab9ab47da4e288df78315'
+
+# Working credentials, no need to replace
 pay_gate_xml:
   login: '10011021600'
   password: 'test'
+
+# Working credentials, no need to replace
+pay_hub:
+  orgid: '123456'
+  username: 'abc123DEF'
+  password: 'abc123DEF'
+  tid: '123'
 
 # Working credentials, no need to replace
 pay_junction:
@@ -445,9 +478,10 @@ payex:
   # encryption key is generated via the PayEx Admin console
   encryption_key: ENCRYPTION_KEY
 
+# Working credentials, no need to replace
 payflow:
-  login: LOGIN
-  password: PASSWORD
+  login: spreedly
+  password: 'ibB4Z8=d;G'
   partner: PayPal
 
 payflow_uk:
@@ -599,6 +633,15 @@ quantum:
   login: X
   password: Y
 
+# You will need to create a developer sandbox at https://developer.intuit.com/ and
+# successfully generate an OAuth 1.0a access token and token secret.
+quickbooks:
+  consumer_key:
+  consumer_secret:
+  access_token:
+  token_secret:
+  realm:
+
 # Quickpay offers a test account.
 # To log in to the manager, use demo@quickpay.net and test234
 quickpay:
@@ -612,6 +655,11 @@ quickpay_with_api_key:
   password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
   apikey: "fB46983ZwR5dzy46A3r6ngDx7P37N5YTu1F4S9W2JKCs9v4t5L9m2Q8Mlbjpa2I1"
   version: 7
+
+qvalent:
+  username: TEST
+  password: TEST
+  merchant: TEST
 
 raven_pac_net:
   user: ernest
@@ -785,10 +833,6 @@ viaklix:
   login: LOGIN
   password: PASSWORD
   user: USER
-
-vindicia:
-  login: LOGIN
-  password: PASSWORD
 
 webpay:
   login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"

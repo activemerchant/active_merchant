@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/beanstream/beanstream_core'
+require 'active_merchant/billing/gateways/beanstream/beanstream_core'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:

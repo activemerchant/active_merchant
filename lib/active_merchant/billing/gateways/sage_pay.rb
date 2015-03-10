@@ -354,7 +354,7 @@ module ActiveMerchant #:nodoc:
         parameters.update(
           :Vendor => @options[:login],
           :TxType => TRANSACTIONS[action],
-          :VPSProtocol => "3.00"
+          :VPSProtocol => @options.fetch(:protocol_version, '3.00')
         )
 
         if(application_id && (application_id != Gateway.application_id))

@@ -130,8 +130,16 @@ class GlobalTransportTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  private
+  def test_truncation
+    stub_comms do
+      @gateway.purchase(100, credit_card, order_id: "a" * 17)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/&InvNum=a{16}&/, data)
+    end.respond_with(successful_purchase_response)
+  end
 
+
+  private
   def successful_purchase_response
     %(
       <Response xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="GlobalPayments">
