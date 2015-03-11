@@ -221,6 +221,19 @@ class CreditCardTest < Test::Unit::TestCase
     assert_valid card
   end
 
+  def test_should_be_valid_when_not_requiring_a_verification_value
+    CreditCard.require_verification_value = true
+    card = credit_card('4242424242424242', :verification_value => nil, :require_verification_value => false)
+    assert_valid card
+
+    card.verification_value = '1234'
+    errors = assert_not_valid card
+    assert_equal errors[:verification_value], ['should be 3 digits']
+
+    card.verification_value = '123'
+    assert_valid card
+  end
+
   def test_bogus_cards_are_not_valid_without_verification_value
     CreditCard.require_verification_value = true
     card = credit_card('1', brand: 'bogus', verification_value: nil)
