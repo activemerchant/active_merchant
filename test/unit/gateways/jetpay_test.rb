@@ -55,7 +55,7 @@ class JetpayTest < Test::Unit::TestCase
   def test_successful_reverseauth
     @gateway.expects(:ssl_post).returns(successful_reverseauth_response)
     
-    assert response = @gateway.void('010327153017T10018;502F6B;100', {reverseauth: true})
+    assert response = @gateway.void('010327153017T10018;502F6B;100', {reverseauth: true, credit_card: credit_card('4242424242424242')})
     assert_success response
       
     assert_equal('010327153017T10018;502F6B;100', response.authorization)
