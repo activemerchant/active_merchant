@@ -51,6 +51,17 @@ class JetpayTest < Test::Unit::TestCase
     assert_equal('502F6B', response.params["approval"])
     assert response.test?
   end
+  
+  def test_successful_reverseauth
+    @gateway.expects(:ssl_post).returns(successful_reverseauth_response)
+    
+    assert response = @gateway.void('010327153017T10018;502F6B;100', {reverseauth: true})
+    assert_success response
+      
+    assert_equal('010327153017T10018;502F6B;100', response.authorization)
+    assert_equal('502F6B', response.params["approval"])
+    assert response.test?
+  end
 
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
@@ -164,6 +175,17 @@ class JetpayTest < Test::Unit::TestCase
         <Approval>502F6B</Approval>
         <ResponseText>APPROVED</ResponseText>
       </JetPayResponse>
+    EOF
+  end
+  
+  def successful_reverseauth_response
+    <<-EOF
+      <JetPayResponse>
+        <TransactionID>010327153017T10018</TransactionID>
+        <ActionCode>000</ActionCode>
+        <Approval>502F6B</Approval>
+        <ResponseText>VAPPROVED</ResponseText>
+      </JetPayResponse>    
     EOF
   end
 

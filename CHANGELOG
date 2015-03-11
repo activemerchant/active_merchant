@@ -18,6 +18,7 @@
 * Qvalent: Fix scrub replacement, it was too greedy [markabe]
 * PayConex: Add gateway [duff]
 * AuthorizeNet: Add credit support [duff]
+* JetPay: Add REVERSEAUTH support to void [brokenbeatnik]
 
 == Version 1.47.0 (February 25, 2015)
 
