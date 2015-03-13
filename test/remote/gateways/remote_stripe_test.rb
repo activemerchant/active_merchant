@@ -405,4 +405,32 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, ApplePayPaymentToken.new('garbage'), @options)
     assert_failure response
   end
+
+  def test_successful_purchase_with_apple_pay_raw_cryptogram
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: "EHuWW9PiBkWvqE5juRwDzAUFBAk=",
+      verification_value: nil
+    )
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert response.params["paid"]
+    assert_equal "ActiveMerchant Test Purchase", response.params["description"]
+    assert_equal "wow@example.com", response.params["metadata"]["email"]
+    assert_match CHARGE_ID_REGEX, response.authorization
+  end
+
+  def test_successful_auth_with_apple_pay_raw_cryptogram
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: "EHuWW9PiBkWvqE5juRwDzAUFBAk=",
+      verification_value: nil
+    )
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert response.params["paid"]
+    assert_equal "ActiveMerchant Test Purchase", response.params["description"]
+    assert_equal "wow@example.com", response.params["metadata"]["email"]
+    assert_match CHARGE_ID_REGEX, response.authorization
+  end
 end
