@@ -44,13 +44,28 @@ class RemoteJetpayTest < Test::Unit::TestCase
     assert_success capture
   end
   
-  def test_void
-    # must void a valid auth
+  def test_reverseauth
+    #Use void with special flag to reverseauth instead of void
     assert auth = @gateway.authorize(9900, @credit_card, @options)
     assert_success auth
     assert_equal 'APPROVED', auth.message
     assert_not_nil auth.authorization
     assert_not_nil auth.params["approval"]
+
+    assert void = @gateway.void(auth.authorization, {reverseauth: true, credit_card: @credit_card})
+    assert_success void
+  end
+  
+  def test_void
+    # must void a valid capture
+    assert auth = @gateway.authorize(9900, @credit_card, @options)
+    assert_success auth
+    assert_equal 'APPROVED', auth.message
+    assert_not_nil auth.authorization
+    assert_not_nil auth.params["approval"]
+
+    assert capture = @gateway.capture(9900, auth.authorization)
+    assert_success capture
     
     assert void = @gateway.void(auth.authorization)
     assert_success void
