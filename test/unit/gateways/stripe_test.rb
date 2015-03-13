@@ -610,6 +610,46 @@ class StripeTest < Test::Unit::TestCase
     assert @gateway.supports_scrubbing?
   end
 
+  def test_successful_auth_with_network_tokenization
+    @gateway.expects(:ssl_request).with do |method, endpoint, data, headers|
+      assert_equal :post, method
+      assert_match %r'three_d_secure\[apple_pay\]=true&three_d_secure\[cryptogram\]=111111111100cryptogram', data
+      true
+    end.returns(successful_authorization_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: "111111111100cryptogram",
+      verification_value: nil
+    )
+
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'ch_test_charge', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_purchase_with_network_tokenization
+    @gateway.expects(:ssl_request).with do |method, endpoint, data, headers|
+      assert_equal :post, method
+      assert_match %r'three_d_secure\[apple_pay\]=true&three_d_secure\[cryptogram\]=111111111100cryptogram', data
+      true
+    end.returns(successful_authorization_response)
+
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      payment_cryptogram: "111111111100cryptogram",
+      verification_value: nil
+    )
+
+    assert response = @gateway.purchase(@amount, credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'ch_test_charge', response.authorization
+    assert response.test?
+  end
+
   private
 
   def pre_scrubbed
@@ -619,7 +659,7 @@ class StripeTest < Test::Unit::TestCase
       starting SSL for api.stripe.com:443...
       SSL established
       <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic c2tfdGVzdF9oQkwwTXF6ZGZ6Rnk3OXU0cFloUmVhQlo6\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.45.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.3 p242 (2014-09-19)\",\"platform\":\"x86_64-linux\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
-      <- "amount=100&currency=usd&card[number]=4242424242424242&card[exp_month]=9&card[exp_year]=2015&card[cvc]=123&card[name]=Longbob+Longsen&description=ActiveMerchant+Test+Purchase&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.45.0&metadata[email]=wow%40example.com"
+      <- "amount=100&currency=usd&card[number]=4242424242424242&card[exp_month]=9&card[exp_year]=2015&card[cvc]=123&card[name]=Longbob+Longsen&description=ActiveMerchant+Test+Purchase&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.45.0&metadata[email]=wow%40example.com&three_d_secure[cryptogram]=123456789abcdefghijklmnop&three_d_secure[apple_pay]=true"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
       -> "Date: Tue, 02 Dec 2014 19:44:17 GMT\r\n"
@@ -648,7 +688,7 @@ class StripeTest < Test::Unit::TestCase
       starting SSL for api.stripe.com:443...
       SSL established
       <- "POST /v1/charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: Stripe/v1 ActiveMerchantBindings/1.45.0\r\nX-Stripe-Client-User-Agent: {\"bindings_version\":\"1.45.0\",\"lang\":\"ruby\",\"lang_version\":\"2.1.3 p242 (2014-09-19)\",\"platform\":\"x86_64-linux\",\"publisher\":\"active_merchant\"}\r\nX-Stripe-Client-User-Metadata: {\"ip\":null}\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.stripe.com\r\nContent-Length: 270\r\n\r\n"
-      <- "amount=100&currency=usd&card[number]=[FILTERED]&card[exp_month]=9&card[exp_year]=2015&card[cvc]=[FILTERED]&card[name]=Longbob+Longsen&description=ActiveMerchant+Test+Purchase&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.45.0&metadata[email]=wow%40example.com"
+      <- "amount=100&currency=usd&card[number]=[FILTERED]&card[exp_month]=9&card[exp_year]=2015&card[cvc]=[FILTERED]&card[name]=Longbob+Longsen&description=ActiveMerchant+Test+Purchase&payment_user_agent=Stripe%2Fv1+ActiveMerchantBindings%2F1.45.0&metadata[email]=wow%40example.com&three_d_secure[cryptogram]=[FILTERED]&three_d_secure[apple_pay]=true"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: nginx\r\n"
       -> "Date: Tue, 02 Dec 2014 19:44:17 GMT\r\n"

@@ -212,7 +212,8 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
-          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]')
+          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]').
+          gsub(%r((&?three_d_secure\[cryptogram\]=)[\w=]*(&?)), '\1[FILTERED]\2')
       end
 
       private
@@ -294,6 +295,14 @@ module ActiveMerchant #:nodoc:
           end
 
           post[:card] = card
+
+          if creditcard.is_a?(NetworkTokenizationCreditCard)
+            post[:three_d_secure] = {
+              apple_pay:  true,
+              cryptogram: creditcard.payment_cryptogram
+            }
+          end
+
           add_address(post, options)
         elsif creditcard.kind_of?(String)
           if options[:track_data]
