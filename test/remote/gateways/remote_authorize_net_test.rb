@@ -38,6 +38,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'The credit card number is invalid', response.message
+    assert_equal 'incorrect_number', response.error_code
   end
 
   def test_successful_echeck_purchase
@@ -61,6 +62,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
     assert_equal 'The credit card has expired', response.message
+    assert_equal 'expired_card', response.error_code
   end
 
   def test_successful_authorize_and_capture
@@ -150,12 +152,14 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, apple_pay_payment_token(payment_data: {data: 'garbage'}), @options)
     assert_failure response
     assert_equal 'There was an error processing the payment data', response.message
+    assert_equal 'processing_error', response.error_code
   end
 
   def test_failed_apple_pay_purchase
     response = @gateway.purchase(@amount, apple_pay_payment_token(payment_data: {data: 'garbage'}), @options)
     assert_failure response
     assert_equal 'There was an error processing the payment data', response.message
+    assert_equal 'processing_error', response.error_code
   end
 
   def test_card_present_purchase_with_track_data_only
