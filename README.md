@@ -158,6 +158,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Optimal Payments](http://www.optimalpayments.com/) - CA, US, GB
 * [Orbital Paymentech](http://chasepaymentech.com/) - US, CA
 * [PagoFacil](http://www.pagofacil.net/) - MX
+* [PayConex](http://www.bluefincommerce.com/) - US, CA
 * [PayGate PayXML](http://paygate.co.za/) - US, ZA
 * [PayHub](http://www.payhub.com/) - US
 * [PayJunction](http://www.payjunction.com/) - US
