@@ -79,6 +79,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_failure response
+    assert_equal response.error_code, "invalid_expiry_date"
   end
 
   def test_successful_verify
