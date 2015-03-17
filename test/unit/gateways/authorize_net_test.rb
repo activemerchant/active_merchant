@@ -634,6 +634,25 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert @gateway.supports_scrubbing?
   end
 
+  def test_successful_apple_pay_authorization_with_network_tokenization
+    credit_card = network_tokenization_credit_card('4242424242424242',
+      :payment_cryptogram => "111111111100cryptogram"
+    )
+
+    response = stub_comms do
+      @gateway.authorize(@amount, credit_card)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal credit_card.payment_cryptogram, doc.at_xpath("//creditCard/cryptogram").content
+        assert_equal credit_card.number, doc.at_xpath("//creditCard/cardNumber").content
+      end
+    end.respond_with(successful_authorize_response)
+
+    assert response
+    assert_instance_of Response, response
+    assert_success response
+    assert_equal '508141794', response.authorization.split('#')[0]
+  end
 
   private
 

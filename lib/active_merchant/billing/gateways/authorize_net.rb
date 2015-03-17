@@ -237,6 +237,9 @@ module ActiveMerchant #:nodoc:
               unless empty?(credit_card.verification_value)
                 xml.cardCode(credit_card.verification_value)
               end
+              if credit_card.is_a?(NetworkTokenizationCreditCard)
+                xml.cryptogram(credit_card.payment_cryptogram)
+              end
             end
           end
         end
