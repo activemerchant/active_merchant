@@ -40,11 +40,15 @@ class RemoteCenposTest < Test::Unit::TestCase
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
-  def test_successful_authorize
+  def test_successful_authorize_and_capture
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal "Succeeded", response.message
     assert_match %r(^\d+\|.+$), response.authorization
+
+    capture = @gateway.capture(@amount, response.authorization)
+    assert_success capture
+    assert_equal "Succeeded", capture.message
   end
 
   def test_failed_authorize
@@ -52,6 +56,12 @@ class RemoteCenposTest < Test::Unit::TestCase
     assert_failure response
     assert_equal "Decline transaction", response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+  end
+
+  def test_failed_capture
+    response = @gateway.capture(@amount, "")
+    assert_failure response
+    assert_equal "See transcript for detailed error description.", response.message
   end
 
   def test_successful_void
@@ -65,6 +75,21 @@ class RemoteCenposTest < Test::Unit::TestCase
 
   def test_failed_void
     response = @gateway.void("")
+    assert_failure response
+    assert_equal "See transcript for detailed error description.", response.message
+  end
+
+  def test_successful_refund
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+
+    refund = @gateway.refund(@amount, response.authorization)
+    assert_success refund
+    assert_equal "Succeeded", refund.message
+  end
+
+  def test_failed_refund
+    response = @gateway.refund(nil, "")
     assert_failure response
     assert_equal "See transcript for detailed error description.", response.message
   end

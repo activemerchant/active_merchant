@@ -36,13 +36,21 @@ class CenposTest < Test::Unit::TestCase
     assert response.test?
   end
 
-  def test_successful_authorize
+  def test_successful_authorize_and_capture
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)
     end.respond_with(successful_authorize_response)
 
     assert_success response
     assert_equal "1758584609|4242|1.00", response.authorization
+
+    capture = stub_comms do
+      @gateway.capture(@amount, response.authorization)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/1758584609/, data)
+    end.respond_with(successful_capture_response)
+
+    assert_success capture
   end
 
   def test_failed_authorize
@@ -54,6 +62,14 @@ class CenposTest < Test::Unit::TestCase
     assert_equal "Decline transaction", response.message
     assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
     assert response.test?
+  end
+
+  def test_failed_capture
+    response = stub_comms do
+      @gateway.capture(100, "")
+    end.respond_with(failed_capture_response)
+
+    assert_failure response
   end
 
   def test_successful_void
@@ -79,6 +95,31 @@ class CenposTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match(/1758584451/, data)
     end.respond_with(failed_void_response)
+
+    assert_failure response
+  end
+
+  def test_successful_refund
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+    assert_equal "1758584451|4242|1.00", response.authorization
+
+    refund = stub_comms do
+      @gateway.refund(@amount, response.authorization)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/1758584451/, data)
+    end.respond_with(successful_refund_response)
+
+    assert_success refund
+  end
+
+  def test_failed_refund
+    response = stub_comms do
+      @gateway.refund(nil, "")
+    end.respond_with(failed_refund_response)
 
     assert_failure response
   end
@@ -161,6 +202,18 @@ class CenposTest < Test::Unit::TestCase
     )
   end
 
+  def successful_capture_response
+    %(
+      <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><ProcessCardResponse xmlns="http://tempuri.org/"><ProcessCardResult xmlns:a="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.v6.Common" xmlns:i="http://www.w3.org/2001/XMLSchema-instance"><Message xmlns="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common">Approved</Message><Result xmlns="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common">0</Result><a:AccountBalanceAmount i:nil="true"/><a:Amount>14.59</a:Amount><a:AutorizationNumber>TAS211</a:AutorizationNumber><a:CardType>VISA</a:CardType><a:Discount>0</a:Discount><a:DiscountAmount>0</a:DiscountAmount><a:EmvData i:nil="true"/><a:OriginalAmount>14.59</a:OriginalAmount><a:ParameterValidationResultList><a:ParameterValidationResult><a:Name>Billing Address</a:Name><a:Result> Present;Match (N)</a:Result></a:ParameterValidationResult><a:ParameterValidationResult><a:Name>Zip Code</a:Name><a:Result> Present;Match (N)</a:Result></a:ParameterValidationResult><a:ParameterValidationResult><a:Name>CVV</a:Name><a:Result> Present;Match (M)</a:Result></a:ParameterValidationResult></a:ParameterValidationResultList><a:PartiallyAuthorizedAmount i:nil="true"/><a:ReferenceNumber>1758739058</a:ReferenceNumber><a:Surcharge>0</a:Surcharge><a:SurchargeAmount>0</a:SurchargeAmount><a:TraceNumber i:nil="true"/></ProcessCardResult></ProcessCardResponse></s:Body></s:Envelope>
+    )
+  end
+
+  def failed_capture_response
+    %(
+      <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><s:Fault><faultcode xmlns:a="http://schemas.microsoft.com/net/2005/12/windowscommunicationfoundation/dispatcher">a:DeserializationFailed</faultcode><faultstring xml:lang="en-US">The formatter threw an exception while trying to deserialize the message: There was an error while trying to deserialize parameter http://tempuri.org/:request. The InnerException message was 'There was an error deserializing the object of type Acriter.ABI.CenPOS.Client.VirtualTerminal.v6.Common.Requests.ProcessCardRequest. The value '' cannot be parsed as the type 'decimal'.'.  Please see InnerException for more details.</faultstring><detail><ExceptionDetail xmlns="http://schemas.datacontract.org/2004/07/System.ServiceModel" xmlns:i="http://www.w3.org/2001/XMLSchema-instance"><HelpLink i:nil="true"/><InnerException><HelpLink i:nil="true"/><InnerException><HelpLink i:nil="true"/><InnerException><HelpLink i:nil="true"/><InnerException i:nil="true"/><Message>Input string was not in a correct format.</Message><StackTrace>   at System.Number.StringToNumber(String str, NumberStyles options, NumberBuffer&amp; number, NumberFormatInfo info, Boolean parseDecimal)&#xD;
+    )
+  end
+
   def successful_void_response
     %(
       <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><ProcessCardResponse xmlns="http://tempuri.org/"><ProcessCardResult xmlns:a="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.v6.Common" xmlns:i="http://www.w3.org/2001/XMLSchema-instance"><Message xmlns="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common">Approved</Message><Result xmlns="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common">0</Result><a:AccountBalanceAmount i:nil="true"/><a:Amount>12.43</a:Amount><a:AutorizationNumber>TAS117</a:AutorizationNumber><a:CardType>VISA</a:CardType><a:Discount>0</a:Discount><a:DiscountAmount>0</a:DiscountAmount><a:EmvData i:nil="true"/><a:OriginalAmount>12.43</a:OriginalAmount><a:ParameterValidationResultList/><a:PartiallyAuthorizedAmount i:nil="true"/><a:ReferenceNumber>1608529196</a:ReferenceNumber><a:Surcharge>0</a:Surcharge><a:SurchargeAmount>0</a:SurchargeAmount><a:TraceNumber>507014502463</a:TraceNumber></ProcessCardResult></ProcessCardResponse></s:Body></s:Envelope>
@@ -172,6 +225,19 @@ class CenposTest < Test::Unit::TestCase
       <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><s:Fault><faultcode xmlns:a="http://schemas.microsoft.com/net/2005/12/windowscommunicationfoundation/dispatcher">a:DeserializationFailed</faultcode><faultstring xml:lang="en-US">The formatter threw an exception while trying to deserialize the message: There was an error while trying to deserialize parameter http://tempuri.org/:request. The InnerException message was 'There was an error deserializing the object of type Acriter.ABI.CenPOS.Client.VirtualTerminal.v6.Common.Requests.ProcessCardRequest. The value '' cannot be parsed as the type 'decimal'.'.  Please see InnerException for more details.</faultstring><detail><ExceptionDetail xmlns="http://schemas.datacontract.org/2004/07/System.ServiceModel" xmlns:i="http://www.w3.org/2001/XMLSchema-instance"><HelpLink i:nil="true"/><InnerException><HelpLink i:nil="true"/><InnerException><HelpLink i:nil="true"/><InnerException><HelpLink i:nil="true"/><InnerException i:nil="true"/><Message>Input string was not in a correct format.</Message><StackTrace>   at System.Number.StringToNumber(String str, NumberStyles options, NumberBuffer&amp; number, NumberFormatInfo info, Boolean parseDecimal)&#xD; at System.Number.ParseDecimal(String value, NumberStyles options, NumberFormatInfo numfmt)&#xD; at System.Xml.XmlConvert.ToDecimal(String s)&#xD; at System.ServiceModel.Dispatcher.MessageRpc.Process(Boolean isOperationContextSet)</StackTrace><Type>System.ServiceModel.Dispatcher.NetDispatcherFaultException</Type></ExceptionDetail></detail></s:Fault></s:Body></s:Envelope>
     )
   end
+
+  def successful_refund_response
+    %(
+      <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><ProcessCardResponse xmlns="http://tempuri.org/"><ProcessCardResult xmlns:a="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.v6.Common" xmlns:i="http://www.w3.org/2001/XMLSchema-instance"><Message xmlns="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common">Approved</Message><Result xmlns="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common">0</Result><a:AccountBalanceAmount i:nil="true"/><a:Amount>49.96</a:Amount><a:AutorizationNumber i:nil="true"/><a:CardType>VISA</a:CardType><a:Discount>0</a:Discount><a:DiscountAmount>0</a:DiscountAmount><a:EmvData i:nil="true"/><a:OriginalAmount>49.96</a:OriginalAmount><a:ParameterValidationResultList/><a:PartiallyAuthorizedAmount i:nil="true"/><a:ReferenceNumber>1758738956</a:ReferenceNumber><a:Surcharge>0</a:Surcharge><a:SurchargeAmount>0</a:SurchargeAmount><a:TraceNumber i:nil="true"/></ProcessCardResult></ProcessCardResponse></s:Body></s:Envelope>
+    )
+  end
+
+  def failed_refund_response
+    %(
+      <s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\"><s:Body><s:Fault><faultcode xmlns:a=\"http://schemas.microsoft.com/net/2005/12/windowscommunicationfoundation/dispatcher\">a:DeserializationFailed</faultcode><faultstring xml:lang=\"en-US\">The formatter threw an exception while trying to deserialize the message: There was an error while trying to deserialize parameter http://tempuri.org/:request. The InnerException message was 'There was an error deserializing the object of type Acriter.ABI.CenPOS.Client.VirtualTerminal.v6.Common.Requests.ProcessCardRequest. The value '' cannot be parsed as the type 'decimal'.'.  Please see InnerException for more details.</faultstring><detail><ExceptionDetail xmlns=\"http://schemas.datacontract.org/2004/07/System.ServiceModel\" xmlns:i=\"http://www.w3.org/2001/XMLSchema-instance\"><HelpLink i:nil=\"true\"/><InnerException><HelpLink i:nil=\"true\"/><InnerException><HelpLink i:nil=\"true\"/><InnerException><HelpLink i:nil=\"true\"/><InnerException i:nil=\"true\"/><Message>Input string was not in a correct format.</Message><StackTrace>   at System.Number.StringToNumber(String str, NumberStyles options, NumberBuffer&amp; number, NumberFormatInfo info, Boolean parseDecimal)&#xD;\n   at System.Number.ParseDecimal(String value, NumberStyles options, NumberFormatInfo numfmt)&#xD;\n   at System.Xml.XmlConvert.ToDecimal(String s)&#xD;\n   at System.Xml.XmlConverter.ToDecimal(String value)</StackTrace><Type>System.FormatException</Type></InnerException><Message>The value '' cannot be parsed as the type 'decimal'.</Message><StackTrace>   at System.Xml.XmlConverter.ToDecimal(String value)&#xD;\n   at System.Xml.XmlDictionaryReader.ReadElementContentAsDecimal()&#xD;\n   at System.Runtime.Serialization.XmlReaderDelegator.ReadElementContentAsDecimal()&#xD;\n   at ReadProcessCardRequestFromXml(XmlReaderDelegator , XmlObjectSerializerReadContext , XmlDictionaryString[] , XmlDictionaryString[] )&#xD;\n   at System.Runtime.Serialization.ClassDataContract.ReadXmlValue(XmlReaderDelegator xmlReader, XmlObjectSerializerReadContext context)&#xD;
+    )
+  end
+
 
   def successful_credit_response
     %(

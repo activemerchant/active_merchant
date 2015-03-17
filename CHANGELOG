@@ -22,6 +22,7 @@
 * Stripe: Update country list [markabe]
 * Add Monei.net gateway [leolara]
 * MerchantWarrior: Fix refund and capture signatures [duff]
+* CenPOS: Add support for capture and refund [markabe]
 
 == Version 1.47.0 (February 25, 2015)
 
