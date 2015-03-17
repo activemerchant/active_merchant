@@ -301,6 +301,19 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     # dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
   end
 
+  def test_successful_authorize_and_capture_with_network_tokenization
+    credit_card = network_tokenization_credit_card('4000100011112224',
+      payment_cryptogram: "EHuWW9PiBkWvqE5juRwDzAUFBAk=",
+      verification_value: nil
+    )
+    auth = @gateway.authorize(@amount, credit_card, @options)
+    assert_success auth
+    assert_equal 'This transaction has been approved', auth.message
+
+    capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
+
   private
 
   def apple_pay_payment_token(options = {})
