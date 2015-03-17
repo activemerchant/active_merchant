@@ -373,6 +373,13 @@ mollie_ideal:
   api_key: 'test_8isBjQoJXJoiXRSzjhwKPO1Bo9AkVA'
 
 # Working credentials, no need to replace
+monei:
+  sender_id: 8a829417488d34c401489a5cd1350977
+  channel_id: 8a829417488d34c401489a5de5dd097b
+  login: 8a829417488d34c401489a5cd1360979
+  pwd: GyNSEAp2
+
+# Working credentials, no need to replace
 moneris:
   login: store1
   password: yesguy
