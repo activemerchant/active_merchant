@@ -36,11 +36,29 @@ module ActiveMerchant #:nodoc:
         commit("Auth", post)
       end
 
+      def capture(amount, authorization, options={})
+        post = {}
+        add_invoice(post, amount, options)
+        add_reference(post, authorization)
+        add_customer_data(post, options)
+
+        commit("SpecialForce", post)
+      end
+
       def void(authorization, options={})
         post = {}
         add_void_required_elements(post)
         add_reference(post, authorization)
         commit("Void", post)
+      end
+
+      def refund(amount, authorization, options={})
+        post = {}
+        add_invoice(post, amount, options)
+        add_reference(post, authorization)
+        add_customer_data(post, options)
+
+        commit("SpecialReturn", post)
       end
 
       def credit(amount, payment_method, options={})
