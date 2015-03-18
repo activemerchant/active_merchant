@@ -115,6 +115,7 @@ module ActiveMerchant #:nodoc:
         post[:CurrencyCode] = CURRENCY_CODES[options[:currency] || currency(money)]
         post[:TaxAmount] = amount(options[:tax])
         post[:InvoiceNumber] = options[:order_id]
+        post[:InvoiceDetail] = options[:description]
       end
 
       def add_payment_method(post, payment_method)
