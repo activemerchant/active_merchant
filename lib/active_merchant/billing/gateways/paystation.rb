@@ -10,6 +10,10 @@ module ActiveMerchant #:nodoc:
       # an "error code" of "34" means "Future Payment Stored OK"
       SUCCESSFUL_FUTURE_PAYMENT = '34'
 
+      # Service name to use for HMAC Authentication - this seems to always be the literal
+      # string "paystation"
+      HMAC_WEB_SERVICE_NAME = "paystation" 
+
       # TODO: check this with paystation
       self.supported_countries = ['NZ']
 
@@ -161,9 +165,18 @@ module ActiveMerchant #:nodoc:
           post[:tm] = "T" if test? # test mode
 
           pstn_prefix_params = post.collect { |key, value| "pstn_#{key}=#{CGI.escape(value.to_s)}" }.join("&")
-
           # need include paystation param as "initiator flag for payment engine"
-          data     = ssl_post(self.live_url, "#{pstn_prefix_params}&paystation=_empty")
+          post_body = "#{pstn_prefix_params}&paystation=_empty"
+
+          # sign request if required
+          endpoint = if options[:hmac_authentication_key]
+            hmac_params = hmac_signature_params(post_body)
+            "#{self.live_url}?#{hmac_params.to_query}"
+          else
+            self.live_url
+          end
+
+          data     = ssl_post(endpoint, post_body)
           response = parse(data)
           message  = message_from(response)
 
@@ -183,6 +196,25 @@ module ActiveMerchant #:nodoc:
 
         def format_date(month, year)
           "#{format(year, :two_digits)}#{format(month, :two_digits)}"
+        end
+
+        # pstn_HMAC is the HMAC hash of a concatenation of 3 byte mapped values: 
+        # - the timestamp, 
+        # - the string "paystation" and the POST request body. 
+        # This is generated using the SHA512 cryptographic algorithm and the HMAC authentication key provided by Paystation.
+        #
+        # string to hash = byte array of timestamp (integer/string) + byte array of 'paystation' (string) +byte array of request body (string)
+        #
+        def hmac_signature_params(post_body)
+          timestamp = Time.now.to_i
+          key       = options[:hmac_authentication_key]
+          payload   = "#{timestamp}#{HMAC_WEB_SERVICE_NAME}#{post_body}"
+          signature = OpenSSL::HMAC.hexdigest(OpenSSL::Digest::SHA512.new(key), key, payload)
+
+          {
+            "pstn_HMACTimestamp" => timestamp,
+            "pstn_HMAC"          => signature
+          }
         end
 
     end

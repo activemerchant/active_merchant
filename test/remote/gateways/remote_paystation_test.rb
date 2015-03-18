@@ -4,7 +4,8 @@ class RemotePaystationTest < Test::Unit::TestCase
   
 
   def setup
-    @gateway = PaystationGateway.new(fixtures(:paystation))
+    @gateway      = PaystationGateway.new(fixtures(:paystation))
+    @hmac_gateway = PaystationGateway.new(fixtures(:hmac_paystation))
     
     @credit_card = credit_card('5123456789012346', :month => 5, :year => 13, :verification_value => 123)
   
@@ -102,6 +103,15 @@ class RemotePaystationTest < Test::Unit::TestCase
   
     assert_failure response
     assert_nil response.authorization
+  end
+
+  def test_store_with_hmac
+    time = Time.now.to_i
+    assert response = @hmac_gateway.store(@credit_card, @options.merge(:order_id => get_uid, :token => "justatest#{time}"))
+    assert_success response
+  
+    assert_equal "Future Payment Saved Ok", response.message
+    assert_equal "justatest#{time}", response.token
   end
   
   private
