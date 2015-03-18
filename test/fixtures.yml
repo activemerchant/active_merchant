@@ -296,6 +296,9 @@ itransact:
 jetpay:
   login: TESTTERMINAL
 
+komoju:
+  login: sk_f1dd75ce3d5cad477eac0c827c1cac8eaa51ede3
+
 linkpoint:
   login: STOREID
   pem: |

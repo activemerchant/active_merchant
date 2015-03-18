@@ -133,6 +133,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Iridium](http://www.iridiumcorp.co.uk/) - GB, ES
 * [iTransact](http://www.itransact.com/) - US
 * [JetPay](http://www.jetpay.com/) - US
+* [Komoju](http://www.komoju.com/) - JP
 * [LinkPoint](http://www.linkpoint.com/) - US
 * [Litle & Co.](http://www.litle.com/) - US
 * [maxiPago!](http://www.maxipago.com/) - BR
