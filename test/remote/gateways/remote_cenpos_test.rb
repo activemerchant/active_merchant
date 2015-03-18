@@ -28,7 +28,7 @@ class RemoteCenposTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    response = @gateway.purchase(@amount, @credit_card, @options)
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(description: "<xml><description/></xml>"))
     assert_success response
     assert_equal "Succeeded", response.message
   end
