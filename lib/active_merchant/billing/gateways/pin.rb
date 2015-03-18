@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
         purchase(money, creditcard, options)
       end
 
-      # Captures a previously authorized charge. Capturing a certin amount of the original
+      # Captures a previously authorized charge. Capturing only part of the original
       # authorization is currently not supported.
       def capture(money, token, options = {})
         commit(:put, "charges/#{CGI.escape(token)}/capture", {}, options)
