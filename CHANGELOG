@@ -25,6 +25,7 @@
 * CenPOS: Add support for capture and refund [markabe]
 * Authorize.net: Add support for network tokenization credit cards [jnormore]
 * Stripe: Add support for passing in metadata for auths and purchases [kitt]
+* Pin: Pass amount param for captures [ab9]
 
 == Version 1.47.0 (February 25, 2015)
 
