@@ -69,7 +69,7 @@ class Cashnet < Test::Unit::TestCase
     @gateway.send(:add_creditcard, result, @credit_card)
     assert_equal @credit_card.number, result[:cardno]
     assert_equal @credit_card.verification_value, result[:cid]
-    assert_equal '0915', result[:expdate]
+    assert_equal expected_expiration_date, result[:expdate]
     assert_equal 'Longbob Longsen', result[:card_name_g]
   end
 
@@ -97,6 +97,7 @@ class Cashnet < Test::Unit::TestCase
     }
 
     @gateway.send(:add_creditcard, params, @credit_card)
+    @gateway.send(:add_invoice, params, {})
 
     assert data = @gateway.send(:post_data, 'SALE', params)
     minimum_requirements.each do |key|
@@ -104,7 +105,19 @@ class Cashnet < Test::Unit::TestCase
     end
   end
 
+  def test_successful_purchase_with_fname_and_lname
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, {})
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/fname=Longbob/, data)
+      assert_match(/lname=Longsen/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   private
+  def expected_expiration_date
+    '%02d%02d' % [@credit_card.month, @credit_card.year.to_s[2..4]]
+  end
 
   def minimum_requirements
     %w(command merchant operator station password amount custcode itemcode)

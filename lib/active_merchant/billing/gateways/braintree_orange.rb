@@ -1,5 +1,5 @@
-require File.dirname(__FILE__) +  '/smart_ps.rb'
-require File.dirname(__FILE__) + '/braintree/braintree_common'
+require 'active_merchant/billing/gateways/smart_ps.rb'
+require 'active_merchant/billing/gateways/braintree/braintree_common'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:

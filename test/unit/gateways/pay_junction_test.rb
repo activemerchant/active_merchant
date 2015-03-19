@@ -2,6 +2,8 @@ require 'test/unit'
 require 'test_helper'
 
 class PayJunctionTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     Base.gateway_mode = :test
 
@@ -17,68 +19,83 @@ class PayJunctionTest < Test::Unit::TestCase
     }
     @amount = 100
   end
- 
-  
-  def test_detect_test_credentials_when_in_production  
+
+
+  def test_detect_test_credentials_when_in_production
     Base.mode = :production
-    
+
     live_gw  = PayJunctionGateway.new(
                  :login      => "l",
                  :password   => "p"
                )
     assert_false live_gw.test?
-    
+
     test_gw = PayJunctionGateway.new(
                 :login      => "pj-ql-01",
                 :password   => "pj-ql-01p"
-              ) 
+              )
     assert test_gw.test?
   end
-  
+
   def test_successful_authorization
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
   end
-  
+
   def test_failed_authorization
     @gateway.expects(:ssl_post).returns(failed_authorization_response)
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal PayJunctionGateway::DECLINE_CODES['FE'], response.message
   end
-  
+
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
     response = @gateway.refund(@amount, "123")
     assert_success response
     assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
   end
-  
+
   def test_successful_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_refund_response)
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
       response = @gateway.credit(@amount, "123")
       assert_success response
       assert_equal PayJunctionGateway::SUCCESS_MESSAGE, response.message
     end
   end
-  
+
   def test_avs_result_not_supported
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    
-    response = @gateway.purchase(@amount, @credit_card, @options)    
+
+    response = @gateway.purchase(@amount, @credit_card, @options)
     assert_nil response.avs_result['code']
   end
-  
+
   def test_cvv_result_not_supported
     @gateway.expects(:ssl_post).returns(successful_authorization_response)
-    
+
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_nil response.cvv_result['code']
   end
-  
+
+  def test_add_creditcard_with_track_data
+    @credit_card.track_data = "Tracking data"
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+      assert_match "dc_track=Tracking+data", data
+      assert_no_match(/dc_name=/, data)
+      assert_no_match(/dc_number=/, data)
+      assert_no_match(/dc_expiration_month=/, data)
+      assert_no_match(/dc_expiration_year=/, data)
+      assert_no_match(/dc_verification_number=/, data)
+    end.respond_with(successful_authorization_response)
+  end
+
+
   private
   def successful_authorization_response
     <<-RESPONSE
@@ -109,7 +126,7 @@ dc_transaction_date=2007-11-28 19:22:33.791634
 dc_transaction_action=charge
 dc_approval_code=TAS193
 dc_response_code=00
-dc_response_message=APPROVAL TAS193 
+dc_response_message=APPROVAL TAS193
 dc_transaction_id=3144302
 dc_posture=hold
 dc_invoice_number=9f76c4e4bd66a36dc5aeb4bd7b3a02fa
@@ -162,7 +179,7 @@ dc_transaction_date=2007-11-28 19:22:33.791634
 dc_transaction_action=charge
 dc_approval_code=TAS193
 dc_response_code=00
-dc_response_message=APPROVAL TAS193 
+dc_response_message=APPROVAL TAS193
 dc_transaction_id=3144302
 dc_posture=hold
 dc_invoice_number=9f76c4e4bd66a36dc5aeb4bd7b3a02fa
@@ -185,7 +202,7 @@ dc_shipping_amount=0.00
 dc_card_name=cody fauserdc_card_brand=VSAdc_card_exp=XX/XXdc_card_number=XXXX-XXXX-XXXX-3344dc_card_address=dc_card_city=dc_card_zipcode=dc_card_state=dc_card_country=dc_base_amount=4.00dc_tax_amount=0.00dc_capture_amount=4.00dc_cashback_amount=0.00dc_shipping_amount=0.00
     RESPONSE
   end
-  
+
   def failed_authorization_response
     'dc_merchant_name=dc_merchant_address=dc_merchant_city=dc_merchant_state=dc_merchant_zip=dc_merchant_phone=dc_device_id=dc_transaction_date=dc_transaction_action=dc_approval_code=dc_response_code=FEdc_response_message=dc_number [Input is invalid.  The credit card number is bad.], System [error.System], dc_transaction_id=dc_posture=dc_invoice_number=dc_notes=dc_card_name=dc_card_brand=dc_card_exp=dc_card_number=dc_card_address=dc_card_city=dc_card_zipcode=dc_card_state=dc_card_country=dc_base_amount=dc_tax_amount=dc_capture_amount=dc_cashback_amount=dc_shipping_amount='
   end

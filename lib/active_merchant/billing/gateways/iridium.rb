@@ -206,6 +206,22 @@ module ActiveMerchant #:nodoc:
         "ZWD" => '716',
       }
 
+      AVS_CODE = {
+        "PASSED" => "Y",
+        "FAILED" => "N",
+        "PARTIAL" => "X",
+        "NOT_CHECKED" => "X",
+        "UNKNOWN" => "X"
+      }
+
+      CVV_CODE = {
+        "PASSED" => "M",
+        "FAILED" => "N",
+        "PARTIAL" => "I",
+        "NOT_CHECKED" => "P",
+        "UNKNOWN" => "U"
+      }
+
       def initialize(options = {})
         requires!(options, :login, :password)
         super
@@ -236,7 +252,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, authorization, options={})
-        deprecated CREDIT_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
 
@@ -261,7 +277,7 @@ module ActiveMerchant #:nodoc:
 
       def build_reference_request(type, money, authorization, options)
         options.merge!(:action => 'CrossReferenceTransaction')
-        order_id, cross_reference, auth_id = authorization.split(";")
+        order_id, cross_reference, _ = authorization.split(";")
         build_request(options) do |xml|
           if money
             details = {'CurrencyCode' => currency_code(options[:currency] || default_currency), 'Amount' => amount(money)}
@@ -350,7 +366,7 @@ module ActiveMerchant #:nodoc:
       def commit(request, options)
         requires!(options, :action)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, request,
-                              {"SOAPAction" => "https://www.thepaymentgateway.net/#{options[:action]}",
+                              {"SOAPAction" => "https://www.thepaymentgateway.net/" + options[:action],
                                "Content-Type" => "text/xml; charset=utf-8" }))
 
         success = response[:transaction_result][:status_code] == "0"
@@ -359,7 +375,13 @@ module ActiveMerchant #:nodoc:
 
         Response.new(success, message, response,
           :test => test?,
-          :authorization => authorization)
+          :authorization => authorization,
+          :avs_result => {
+            :street_match => AVS_CODE[ response[:transaction_output_data][:address_numeric_check_result] ],
+            :postal_match => AVS_CODE[ response[:transaction_output_data][:post_code_check_result] ],
+          },
+          :cvv_result => CVV_CODE[ response[:transaction_output_data][:cv2_check_result] ]
+        )
       end
 
       def parse(xml)

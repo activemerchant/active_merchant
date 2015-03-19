@@ -87,7 +87,7 @@ module ActiveMerchant #:nodoc:
           post[:card_token] = creditcard
           post[:cvv] = options[:cvv]
         elsif creditcard.is_a?(Hash)
-          deprecated "Passing the credit card as a Hash is deprecated. Use a String and put the (optional) CVV in the options hash instead."
+          ActiveMerchant.deprecated "Passing the credit card as a Hash is deprecated. Use a String and put the (optional) CVV in the options hash instead."
           post[:card_token] = creditcard[:token]
           post[:cvv] = creditcard[:cvv]
         else

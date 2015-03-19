@@ -46,7 +46,6 @@ module ActiveMerchant #:nodoc:
         "N" => "Neither street address nor zip/postal match billing information",
         "O" => "Non-US issuer does not participate",
         "P" => "Postal codes match for international transaction but street address not verified due to incompatible formats",
-        "P" => "Address verification not applicable for this transaction",
         "R" => "Payment gateway was unavailable or timed out",
         "S" => "Address verification service not supported by issuer",
         "U" => "Address information is unavailable",
@@ -195,7 +194,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase(money, creditcard, options = {})
-        post = {}
         authorization = authorize(money, creditcard, options)
         if authorization.success?
           capture(money, authorization.authorization)
@@ -240,7 +238,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, identification, options = {})
-        deprecated CREDIT_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, identification, options)
       end
 

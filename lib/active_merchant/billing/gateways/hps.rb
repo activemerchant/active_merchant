@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://developer.heartlandpaymentsystems.com/SecureSubmit/'
       self.display_name = 'Heartland Payment Systems'
 
-      self.money_format = :cents
+      self.money_format = :dollars
 
       def initialize(options={})
         requires!(options, :secret_api_key)
@@ -57,6 +57,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def verify(card_or_token, options={})
+        commit('CreditAccountVerify') do |xml|
+          add_customer_data(xml, card_or_token, options)
+          add_payment(xml, card_or_token, options)
+        end
+      end
+
       def void(transaction_id, options={})
         commit('CreditVoid') do |xml|
           add_reference(xml, transaction_id)
@@ -73,15 +80,17 @@ module ActiveMerchant #:nodoc:
         xml.hps :Amt, amount(money) if money
       end
 
-      def add_customer_data(xml, card_or_token,options)
-        if card_or_token.respond_to?(:number)
-          billing_address = options[:billing_address] || options[:address]
+      def add_customer_data(xml, credit_card, options)
+        xml.hps :CardHolderData do
+          if credit_card.respond_to?(:number)
+            xml.hps :CardHolderFirstName, credit_card.first_name if credit_card.first_name
+            xml.hps :CardHolderLastName, credit_card.last_name if credit_card.last_name
+          end
 
-          xml.hps :CardHolderData do
-            xml.hps :CardHolderFirstName, card_or_token.first_name
-            xml.hps :CardHolderLastName, card_or_token.last_name
-            xml.hps :CardHolderEmail, options[:email] if options[:email]
-            xml.hps :CardHolderPhone, options[:phone] if options[:phone]
+          xml.hps :CardHolderEmail, options[:email] if options[:email]
+          xml.hps :CardHolderPhone, options[:phone] if options[:phone]
+
+          if(billing_address = (options[:billing_address] || options[:address]))
             xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1]
             xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
             xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
@@ -93,13 +102,28 @@ module ActiveMerchant #:nodoc:
       def add_payment(xml, card_or_token, options)
         xml.hps :CardData do
           if card_or_token.respond_to?(:number)
-            xml.hps :ManualEntry do
-              xml.hps :CardNbr, card_or_token.number
-              xml.hps :ExpMonth, card_or_token.month
-              xml.hps :ExpYear, card_or_token.year
-              xml.hps :CVV2, card_or_token.verification_value
-              xml.hps :CardPresent, 'N'
-              xml.hps :ReaderPresent, 'N'
+            if card_or_token.track_data
+              xml.tag!("hps:TrackData", 'method'=>'swipe') do
+                xml.text! card_or_token.track_data
+              end
+              if options[:encryption_type]
+                xml.hps :EncryptionData do
+                  xml.hps :Version, options[:encryption_type]
+                  if options[:encryption_type] == '02'
+                    xml.hps :EncryptedTrackNumber, options[:encrypted_track_number]
+                    xml.hps :KTB, options[:ktb]
+                  end
+                end
+              end
+            else
+              xml.hps :ManualEntry do
+                xml.hps :CardNbr, card_or_token.number
+                xml.hps :ExpMonth, card_or_token.month
+                xml.hps :ExpYear, card_or_token.year
+                xml.hps :CVV2, card_or_token.verification_value if card_or_token.verification_value
+                xml.hps :CardPresent, 'N'
+                xml.hps :ReaderPresent, 'N'
+              end
             end
           else
             xml.hps :TokenData do
@@ -123,7 +147,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(action)
-        xml = Builder::XmlMarkup.new
+        xml = Builder::XmlMarkup.new(encoding: 'UTF-8')
         xml.instruct!(:xml, encoding: 'UTF-8')
         xml.SOAP :Envelope, {
             'xmlns:SOAP' => 'http://schemas.xmlsoap.org/soap/envelope/',
@@ -133,6 +157,9 @@ module ActiveMerchant #:nodoc:
               xml.hps 'Ver1.0'.to_sym do
                 xml.hps :Header do
                   xml.hps :SecretAPIKey, @options[:secret_api_key]
+                  xml.hps :DeveloperID, @options[:developer_id] if @options[:developer_id]
+                  xml.hps :VersionNbr, @options[:version_number] if @options[:version_number]
+                  xml.hps :SiteTrace, @options[:site_trace] if @options[:site_trace]
                 end
                 xml.hps :Transaction do
                   xml.hps action.to_sym do
@@ -206,7 +233,7 @@ module ActiveMerchant #:nodoc:
       def successful?(response)
         (
           (response["GatewayRspCode"] == "0") &&
-          ((response["RspCode"] || "00") == "00")
+          ((response["RspCode"] || "00") == "00" || response["RspCode"] == "85")
         )
       end
 
@@ -214,7 +241,7 @@ module ActiveMerchant #:nodoc:
         if(response["Fault"])
           response["Fault"]
         elsif(response["GatewayRspCode"] == "0")
-          if(response["RspCode"] != "00")
+          if(response["RspCode"] != "00" && response["RspCode"] != "85")
             issuer_message(response["RspCode"])
           else
             response['GatewayRspMsg']
@@ -228,13 +255,16 @@ module ActiveMerchant #:nodoc:
         response['GatewayTxnId']
       end
 
+      def test?
+        (@options[:secret_api_key] && @options[:secret_api_key].include?('_cert_'))
+      end
+
       ISSUER_MESSAGES = {
         "13" => "Must be greater than or equal 0.",
         "14" => "The card number is incorrect.",
         "54" => "The card has expired.",
         "55" => "The 4-digit pin is invalid.",
         "75" => "Maximum number of pin retries exceeded.",
-        "80" => "Card expiration date is invalid.",
         "80" => "Card expiration date is invalid.",
         "86" => "Can't verify card pin number."
       }

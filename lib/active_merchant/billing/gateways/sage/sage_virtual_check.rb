@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/sage_core'
+require 'active_merchant/billing/gateways/sage/sage_core'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, credit_card, options = {})
-        deprecated CREDIT_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, source, options)
       end
 

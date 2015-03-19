@@ -14,22 +14,11 @@ require 'rake/testtask'
 require 'support/gateway_support'
 require 'support/ssl_verify'
 require 'support/outbound_hosts'
+require 'bundler/gem_tasks'
 
-task :gem => :build
-task :build do
-  raise "Please set a private key to sign the gem" unless ENV['GEM_PRIVATE_KEY']
-  system "gem build activemerchant.gemspec"
-end
-
-task :install => :build do
-  system "gem install activemerchant-#{ActiveMerchant::VERSION}.gem"
-end
-
-task :release => :build do
-  system "git tag -a v#{ActiveMerchant::VERSION} -m 'Tagging #{ActiveMerchant::VERSION}'"
+task :tag_release do
+  system "git tag 'v#{ActiveMerchant::VERSION}'"
   system "git push --tags"
-  system "gem push activemerchant-#{ActiveMerchant::VERSION}.gem"
-  system "rm activemerchant-#{ActiveMerchant::VERSION}.gem"
 end
 
 desc "Run the unit test suite"
@@ -37,17 +26,16 @@ task :default => 'test:units'
 task :test => 'test:units'
 
 namespace :test do
-
   Rake::TestTask.new(:units) do |t|
     t.pattern = 'test/unit/**/*_test.rb'
-    t.ruby_opts << '-rubygems'
+    t.ruby_opts << '-rubygems -w'
     t.libs << 'test'
     t.verbose = true
   end
 
   Rake::TestTask.new(:remote) do |t|
     t.pattern = 'test/remote/**/*_test.rb'
-    t.ruby_opts << '-rubygems'
+    t.ruby_opts << '-rubygems -w'
     t.libs << 'test'
     t.verbose = true
   end
@@ -88,7 +76,19 @@ namespace :gateways do
 
   desc 'Print the list of destination hosts with port'
   task :hosts do
-    OutboundHosts.list
+    hosts, invalid_lines = OutboundHosts.list
+
+    hosts.each do |host|
+      puts host
+    end
+
+    unless invalid_lines.empty?
+      puts
+      puts "Unable to parse:"
+      invalid_lines.each do |line|
+        puts line
+      end
+    end
   end
 
   desc 'Test that gateways allow SSL verify_peer'

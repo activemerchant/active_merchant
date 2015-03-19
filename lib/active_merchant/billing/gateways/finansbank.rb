@@ -1,9 +1,10 @@
-require File.dirname(__FILE__) + '/cc5'
+require 'active_merchant/billing/gateways/cc5'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class FinansbankGateway < CC5Gateway
-      self.live_url = self.test_url = 'https://www.fbwebpos.com/servlet/cc5ApiServer'
+      self.live_url =  'https://www.fbwebpos.com/servlet/cc5ApiServer'
+      self.test_url = 'https://entegrasyon.asseco-see.com.tr/fim/api'
 
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['US', 'TR']

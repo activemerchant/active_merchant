@@ -57,7 +57,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test server.
       #   Otherwise, perform transactions against the production server.
       def initialize(options = {})
-        deprecated "ARB functionality in ActiveMerchant is deprecated and will be removed in a future version. Please contact the ActiveMerchant maintainers if you have an interest in taking ownership of a separate gem that continues support for it."
+        ActiveMerchant.deprecated "ARB functionality in ActiveMerchant is deprecated and will be removed in a future version. Please contact the ActiveMerchant maintainers if you have an interest in taking ownership of a separate gem that continues support for it."
         requires!(options, :login, :password)
         super
       end
@@ -391,7 +391,7 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-     def recurring_parse(action, xml)
+      def recurring_parse(action, xml)
         response = {}
         xml = REXML::Document.new(xml)
         root = REXML::XPath.first(xml, "//#{RECURRING_ACTIONS[action]}Response") ||

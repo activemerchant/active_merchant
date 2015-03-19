@@ -86,6 +86,7 @@ class PaypalExpressTest < Test::Unit::TestCase
     assert_equal 'EC-2XE90996XX9870316', response.token
     assert_equal 'FWRVKNRRZ3WUC', response.payer_id
     assert_equal 'buyer@jadedpallet.com', response.email
+    assert_equal 'This is a test note', response.note
 
     assert address = response.address
     assert_equal 'Fred Brooks', address['name']
@@ -607,6 +608,7 @@ class PaypalExpressTest < Test::Unit::TestCase
         :callback_url => "http://example.com/update_callback",
         :callback_timeout => 2,
         :callback_version => '53.0',
+        :funding_sources => {:source => 'BML'},
         :shipping_options => [{:default => true,
                                :name => "first one",
                                :amount => 10}]
@@ -656,7 +658,7 @@ class PaypalExpressTest < Test::Unit::TestCase
   end
 
 
-def successful_authorize_reference_transaction_response
+  def successful_authorize_reference_transaction_response
   <<-RESPONSE
 <?xml version="1.0" encoding="UTF-8"?>
 <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ed="urn:ebay:apis:EnhancedDataTypes" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ns="urn:ebay:api:PayPalAPI">
@@ -763,6 +765,7 @@ def successful_authorize_reference_transaction_response
       <Credentials xmlns="urn:ebay:apis:eBLBaseComponents" xsi:type="ebl:UserIdPasswordType">
         <Username xsi:type="xs:string"/>
         <Password xsi:type="xs:string"/>
+        <Signature xsi:type="xs:string" />
         <Subject xsi:type="xs:string"/>
       </Credentials>
     </RequesterCredentials>
@@ -835,6 +838,7 @@ def successful_authorize_reference_transaction_response
           <InsuranceTotal xsi:type="cc:BasicAmountType" currencyID="USD">0.00</InsuranceTotal>
           <ShippingDiscount xsi:type="cc:BasicAmountType" currencyID="USD">0.00</ShippingDiscount>
           <InsuranceOptionOffered xsi:type="xs:string">false</InsuranceOptionOffered>
+          <NoteText xsi:type="xs:string">This is a test note</NoteText>
           <SellerDetails xsi:type="ebl:SellerDetailsType"/>
           <PaymentRequestID xsi:type="xs:string"/>
           <OrderURL xsi:type="xs:string"/>
@@ -848,6 +852,7 @@ def successful_authorize_reference_transaction_response
           <ShippingOptionName xsi:type=\"xs:string\">default</ShippingOptionName>
         </UserSelectedOptions>
         <CheckoutStatus xsi:type="xs:string">PaymentActionNotInitiated</CheckoutStatus>
+        <PaymentRequestInfo xsi:type="ebl:PaymentRequestInfoType" />
       </GetExpressCheckoutDetailsResponseDetails>
     </GetExpressCheckoutDetailsResponse>
   </SOAP-ENV:Body>
@@ -971,7 +976,7 @@ def successful_authorize_reference_transaction_response
       RESPONSE
     end
 
-      def response_with_duplicate_errors
+    def response_with_duplicate_errors
       <<-RESPONSE
   <?xml version="1.0" encoding="UTF-8"?>
   <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:cc="urn:ebay:apis:CoreComponentTypes" xmlns:wsu="http://schemas.xmlsoap.org/ws/2002/07/utility" xmlns:saml="urn:oasis:names:tc:SAML:1.0:assertion" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:market="urn:ebay:apis:Market" xmlns:auction="urn:ebay:apis:Auction" xmlns:sizeship="urn:ebay:api:PayPalAPI/sizeship.xsd" xmlns:ship="urn:ebay:apis:ship" xmlns:skype="urn:ebay:apis:skype" xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/12/secext" xmlns:ebl="urn:ebay:apis:eBLBaseComponents" xmlns:ns="urn:ebay:api:PayPalAPI">

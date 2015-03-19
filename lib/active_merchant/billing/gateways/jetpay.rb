@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
 
       def credit(money, transaction_id_or_card, options = {})
         if transaction_id_or_card.is_a?(String)
-          deprecated CREDIT_DEPRECATION_MESSAGE
+          ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
           refund(money, transaction_id_or_card, options)
         else
           commit(money, build_credit_request('CREDIT', money, nil, transaction_id_or_card))

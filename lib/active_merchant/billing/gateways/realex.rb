@@ -28,7 +28,8 @@ module ActiveMerchant
         'diners_club'       => 'DINERS',
         'switch'            => 'SWITCH',
         'solo'              => 'SWITCH',
-        'laser'             => 'LASER'
+        'laser'             => 'LASER',
+        'maestro'           => 'MC'
       }
 
       self.money_format = :cents
@@ -73,7 +74,7 @@ module ActiveMerchant
       end
 
       def credit(money, authorization, options = {})
-        deprecated CREDIT_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
 

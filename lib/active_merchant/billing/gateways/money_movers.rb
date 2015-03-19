@@ -9,7 +9,6 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'MoneyMovers'
       self.supported_countries = ['US']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
-      self.ssl_version = :SSLv3
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -50,7 +49,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, authorization, options = {})
-        deprecated CREDIT_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
 
@@ -113,7 +112,6 @@ module ActiveMerchant #:nodoc:
         data = ssl_post(self.live_url, post_data(action, parameters))
         response = parse(data)
         message = message_from(response)
-        test_mode = test?
 
         Response.new(success?(response), message, response,
           :test => test?,

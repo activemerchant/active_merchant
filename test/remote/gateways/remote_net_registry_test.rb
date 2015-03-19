@@ -27,7 +27,7 @@ class NetRegistryTest < Test::Unit::TestCase
     assert_success response
     assert_match(/\A\d{16}\z/, response.authorization)
 
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
       response = @gateway.credit(@amount, response.authorization)
       assert_equal 'approved', response.params['status']
       assert_success response

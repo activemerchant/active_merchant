@@ -4,9 +4,7 @@ class SagePayTest < Test::Unit::TestCase
   include CommStub
 
   def setup
-    @gateway = SagePayGateway.new(
-      :login => 'X'
-    )
+    @gateway = SagePayGateway.new(login: 'X')
 
     @credit_card = credit_card('4242424242424242', :brand => 'visa')
     @options = {
@@ -91,12 +89,12 @@ class SagePayTest < Test::Unit::TestCase
   end
 
   def test_avs_result
-     @gateway.expects(:ssl_post).returns(successful_purchase_response)
+    @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
-     response = @gateway.purchase(@amount, @credit_card, @options)
-     assert_equal 'Y', response.avs_result['postal_match']
-     assert_equal 'N', response.avs_result['street_match']
-   end
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_equal 'Y', response.avs_result['postal_match']
+    assert_equal 'N', response.avs_result['street_match']
+  end
 
    def test_cvv_result
      @gateway.expects(:ssl_post).returns(successful_purchase_response)
@@ -130,6 +128,17 @@ class SagePayTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_FIxxxx_optional_fields_are_submitted
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({:recipient_account_number => '1234567890', :recipient_surname => 'Withnail', :recipient_postcode => 'AB11AB', :recipient_dob => '19701223'}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/FIRecipientAcctNumber=1234567890/, data)
+      assert_match(/FIRecipientSurname=Withnail/, data)
+      assert_match(/FIRecipientPostcode=AB11AB/, data)
+      assert_match(/FIRecipientDoB=19701223/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_disable_3d_security_flag_is_submitted
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options.merge({:apply_3d_secure => 1}))
@@ -143,6 +152,16 @@ class SagePayTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card, @options.merge(description: "SagePay transactions fail if the description is more than 100 characters. Therefore, we truncate it to 100 characters."))
     end.check_request do |method, endpoint, data, headers|
       assert_match(/&Description=SagePay\+transactions\+fail\+if\+the\+description\+is\+more\+than\+100\+characters.\+Therefore%2C\+we\+truncate\+it\+&/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_protocol_version_is_honoured
+    gateway = SagePayGateway.new(protocol_version: '2.23', login: "X")
+
+    stub_comms(gateway, :ssl_request) do
+      gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/VPSProtocol=2.23/, data)
     end.respond_with(successful_purchase_response)
   end
 

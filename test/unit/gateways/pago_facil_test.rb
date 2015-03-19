@@ -64,7 +64,7 @@ class PagoFacilTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match /Invalid response received from the PagoFacil API/, response.message
+    assert_match %r{Invalid response received from the PagoFacil API}, response.message
   end
 
   private

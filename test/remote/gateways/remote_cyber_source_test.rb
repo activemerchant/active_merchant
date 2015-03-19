@@ -286,4 +286,19 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     assert_equal 'Y', response.params["status"]
     assert_equal true,  response.success?
   end
+
+  def test_network_tokenization_authorize_and_capture
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      :brand              => 'visa',
+      :eci                => "05",
+      :payment_cryptogram => "EHuWW9PiBkWvqE5juRwDzAUFBAk="
+    )
+
+    assert auth = @gateway.authorize(@amount, credit_card, @options)
+    assert_success auth
+    assert_equal 'Successful transaction', auth.message
+
+    assert capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+  end
 end

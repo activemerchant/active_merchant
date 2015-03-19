@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class RemoteQuickpayV6Test < Test::Unit::TestCase
+class RemoteQuickpayV7Test < Test::Unit::TestCase
   # These test assumes that you have not added your development IP in
   # the Quickpay Manager.
   def setup
@@ -38,8 +38,8 @@ class RemoteQuickpayV6Test < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_all_fraud_parameters
+    @options[:ip] = '127.0.0.1' # will set :fraud_remote_addr
     @options[:fraud_http_referer] = 'http://www.excample.com'
-    @options[:fraud_remote_addr] = '127.0.0.1'
     @options[:fraud_http_accept] = 'foo'
     @options[:fraud_http_accept_language] = "DK"
     @options[:fraud_http_accept_encoding] = "UFT8"
@@ -53,14 +53,24 @@ class RemoteQuickpayV6Test < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
-
-
   def test_successful_usd_purchase
     assert response = @gateway.purchase(@amount, @visa, @options.update(:currency => 'USD'))
     assert_equal 'OK', response.message
     assert_equal 'USD', response.params['currency']
     assert_success response
     assert !response.authorization.blank?
+  end
+
+  def test_successful_purchase_with_acquirers
+    assert response = @gateway.purchase(@amount, @visa, @options.update(:acquirers => "nets"))
+    assert_equal 'OK', response.message
+    assert_success response
+  end
+
+  def test_unsuccessful_purchase_with_invalid_acquirers
+    assert response = @gateway.purchase(@amount, @visa, @options.update(:acquirers => "invalid"))
+    assert_equal 'Error in field: acquirers', response.message
+    assert_failure response
   end
 
   def test_successful_dankort_authorization
@@ -74,7 +84,7 @@ class RemoteQuickpayV6Test < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @visa_dankort, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'dankort', response.params['cardtype']
+    assert_equal 'visa-dk', response.params['cardtype']
   end
 
   def test_successful_visa_electron_authorization
@@ -196,6 +206,11 @@ class RemoteQuickpayV6Test < Test::Unit::TestCase
     assert_success store
     assert purchase = @gateway.purchase(@amount, store.authorization, @options.merge(:order_id => generate_unique_id[0...10]))
     assert_success purchase
+  end
+
+  def test_successful_store_with_acquirers
+    assert store = @gateway.store(@visa, @options.merge(:description => "New subscription", :acquirers => "nets"))
+    assert_success store
   end
 
   def test_invalid_login

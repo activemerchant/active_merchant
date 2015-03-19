@@ -10,7 +10,6 @@ end
 
 class Generate < Thor
   register(GatewayGenerator, "gateway", "gateway NAME", "Generates a new gateway.")
-  register(IntegrationGenerator, "integration", "integration NAME", "Generates a new integration.")
 end
 
 Generate.start

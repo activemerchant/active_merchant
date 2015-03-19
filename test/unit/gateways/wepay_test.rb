@@ -167,7 +167,7 @@ class WepayTest < Test::Unit::TestCase
 
   def successful_void_response
     %({"checkout_id":225040456,"state":"cancelled"})
-   end
+  end
 
   def failed_void_response
     %({"error":"invalid_request","error_description":"this checkout has already been cancelled","error_code":4004})

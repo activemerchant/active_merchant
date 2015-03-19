@@ -23,16 +23,24 @@ class RemoteBalancedTest < Test::Unit::TestCase
     assert_equal @amount, response.params['debits'][0]['amount']
   end
 
+  def test_successful_purchase_with_outside_token
+    outside_token = @gateway.store(@credit_card).params['cards'][0]['href']
+    response = @gateway.purchase(@amount, outside_token, @options)
+    assert_success response
+    assert_equal "Success", response.message
+    assert_equal @amount, response.params['debits'][0]['amount']
+  end
+
   def test_purchase_with_invalid_card
     response = @gateway.purchase(@amount, @invalid_card, @options)
     assert_failure response
-    assert_match /call bank/i, response.message
+    assert_match %r{call bank}i, response.message
   end
 
   def test_unsuccessful_purchase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_match /Account Frozen/, response.message
+    assert_match %r{Account Frozen}, response.message
   end
 
   def test_passing_appears_on_statement
@@ -96,7 +104,7 @@ class RemoteBalancedTest < Test::Unit::TestCase
 
     void = @gateway.void(capture.authorization)
     assert_failure void
-    assert_match /not found/i, void.message
+    assert_match %r{not found}i, void.message
   end
 
   def test_authorize_authorization
@@ -155,6 +163,11 @@ class RemoteBalancedTest < Test::Unit::TestCase
 
     authorize = @gateway.authorize(@amount, store.authorization)
     assert_success authorize
+  end
+
+  def test_passing_address_with_no_zip
+    response = @gateway.purchase(@amount, @credit_card, address(zip: nil))
+    assert_success response
   end
 
   def test_invalid_login

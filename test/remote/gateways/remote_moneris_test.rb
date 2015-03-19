@@ -9,7 +9,8 @@ class MonerisRemoteTest < Test::Unit::TestCase
     @credit_card = credit_card('4242424242424242')
     @options = {
       :order_id => generate_unique_id,
-      :customer => generate_unique_id
+      :customer => generate_unique_id,
+      :billing_address => address
     }
   end
 
@@ -152,14 +153,50 @@ class MonerisRemoteTest < Test::Unit::TestCase
     gateway = MonerisGateway.new(fixtures(:moneris).merge(cvv_enabled: true))
     assert response = gateway.purchase(1039, @credit_card, @options)
     assert_success response
-    assert_equal({'code' => 'M', 'message' => 'Match'}, response.cvv_result)
+    assert_equal({'code' => 'M', 'message' => 'CVV matches'}, response.cvv_result)
   end
 
   def test_cvv_no_match_when_enabled
     gateway = MonerisGateway.new(fixtures(:moneris).merge(cvv_enabled: true))
     assert response = gateway.purchase(1053, @credit_card, @options)
     assert_success response
-    assert_equal({'code' => 'N', 'message' => 'No Match'}, response.cvv_result)
+    assert_equal({'code' => 'N', 'message' => 'CVV does not match'}, response.cvv_result)
   end
 
+  def test_avs_result_valid_when_enabled
+    gateway = MonerisGateway.new(fixtures(:moneris).merge(avs_enabled: true))
+
+    assert response = gateway.purchase(1010, @credit_card, @options)
+    assert_success response
+    assert_equal(response.avs_result, {
+      'code' => 'A',
+      'message' => 'Street address matches, but 5-digit and 9-digit postal code do not match.',
+      'street_match' => 'Y',
+      'postal_match' => 'N'
+    })
+  end
+
+  def test_avs_result_nil_when_address_absent
+    gateway = MonerisGateway.new(fixtures(:moneris).merge(avs_enabled: true))
+
+    assert response = gateway.purchase(1010, @credit_card, @options.tap { |x| x.delete(:billing_address) })
+    assert_success response
+    assert_equal(response.avs_result, {
+      'code' => nil,
+      'message' => nil,
+      'street_match' => nil,
+      'postal_match' => nil
+    })
+  end
+
+  def test_avs_result_nil_when_efraud_disabled
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal(response.avs_result, {
+      'code' => nil,
+      'message' => nil,
+      'street_match' => nil,
+      'postal_match' => nil
+    })
+  end
 end

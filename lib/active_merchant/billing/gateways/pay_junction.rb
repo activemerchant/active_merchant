@@ -211,7 +211,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, authorization, options = {})
-        deprecated CREDIT_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
 
@@ -239,7 +239,7 @@ module ActiveMerchant #:nodoc:
       # YYYYMMDD format and can be used to specify when the first charge will be made.
       # If omitted the first charge will be immediate.
       def recurring(money, payment_source, options = {})
-        deprecated RECURRING_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
         requires!(options, [:periodicity, :monthly, :weekly, :daily], :payments)
 
@@ -297,11 +297,15 @@ module ActiveMerchant #:nodoc:
 
       # add fields for credit card
       def add_creditcard(params, creditcard)
-        params[:name]                 = creditcard.name
-        params[:number]               = creditcard.number
-        params[:expiration_month]     = creditcard.month
-        params[:expiration_year]      = creditcard.year
-        params[:verification_number]  = creditcard.verification_value if creditcard.verification_value?
+        if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
+          params[:track] = creditcard.track_data
+        else
+          params[:name]                 = creditcard.name
+          params[:number]               = creditcard.number
+          params[:expiration_month]     = creditcard.month
+          params[:expiration_year]      = creditcard.year
+          params[:verification_number]  = creditcard.verification_value if creditcard.verification_value?
+        end
       end
 
       # add field for "instant" transaction, using previous transaction id
