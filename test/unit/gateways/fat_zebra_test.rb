@@ -57,7 +57,7 @@ class FatZebraTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
-    assert_match /Invalid Card Number/, response.message
+    assert_match %r{Invalid Card Number}, response.message
   end
 
   def test_declined_purchase
@@ -66,14 +66,14 @@ class FatZebraTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
-    assert_match /Card Declined/, response.message
+    assert_match %r{Card Declined}, response.message
   end
 
   def test_parse_error
     @gateway.expects(:ssl_request).returns("{") # Some invalid JSON
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match /Invalid JSON response/, response.message
+    assert_match %r{Invalid JSON response}, response.message
   end
 
   def test_request_error
@@ -81,7 +81,7 @@ class FatZebraTest < Test::Unit::TestCase
 
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match /Card Number is required/, response.message
+    assert_match %r{Card Number is required}, response.message
   end
 
   def test_successful_tokenization

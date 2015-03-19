@@ -180,10 +180,49 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
 
-  def test_successful_purchase_with_long_description
-    description = "SagePay transactions fail if the description is more than 100 characters. Therefore, we truncate it to 100 characters."
-    assert response = @gateway.purchase(@amount, @visa, @options.merge(description: description))
+  def test_successful_purchase_with_overly_long_fields
+    options = {
+      description: "SagePay transactions fail if the description is more than 100 characters. Therefore, we truncate it to 100 characters.",
+      order_id: "#{generate_unique_id} SagePay order_id cannot be more than 40 characters.",
+      billing_address: {
+        name: 'FirstNameCannotBeMoreThanTwentyChars SurnameCannotBeMoreThanTwenty',
+        address1: 'The Billing Address 1 Cannot Be More Than One Hundred Characters if it is it will fail.  Therefore, we truncate it.',
+        address2: 'The Billing Address 2 Cannot Be More Than One Hundred Characters if it is it will fail.  Therefore, we truncate it.',
+        phone: "111222333444555666777888999",
+        city: "TheCityCannotBeMoreThanFortyCharactersReally",
+        state: "NCStateIsTwoChars",
+        country: 'USMustBeTwoChars',
+        zip: 'PostalCodeCannotExceedTenChars'
+      },
+      shipping_address: {
+        name: 'FirstNameCannotBeMoreThanTwentyChars SurnameCannotBeMoreThanTwenty',
+        address1: 'The Shipping Address 1 Cannot Be More Than One Hundred Characters if it is it will fail.  Therefore, we truncate it.',
+        address2: 'The Shipping Address 2 Cannot Be More Than One Hundred Characters if it is it will fail.  Therefore, we truncate it.',
+        phone: "111222333444555666777888999",
+        city: "TheCityCannotBeMoreThanFortyCharactersReally",
+        state: "NCStateIsTwoChars",
+        country: 'USMustBeTwoChars',
+        zip: 'PostalCodeCannotExceedTenChars'
+      }
+    }
+
+    @visa.first_name = "FullNameOnACardMustBeLessThanFiftyCharacters"
+    @visa.last_name = "OtherwiseSagePayFailsIt"
+
+    assert response = @gateway.purchase(@amount, @visa, options)
     assert_success response
+  end
+
+  def test_successful_mastercard_purchase_with_optional_FIxxxx_fields
+    @options[:recipient_account_number] = '1234567890'
+    @options[:recipient_surname] = 'Withnail'
+    @options[:recipient_postcode] = 'AB11AB'
+    @options[:recipient_dob] = '19701223'
+    assert response = @gateway.purchase(@amount, @mastercard, @options)
+    assert_success response
+
+    assert response.test?
+    assert !response.authorization.blank?
   end
 
   def test_invalid_login

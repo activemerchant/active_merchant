@@ -81,15 +81,6 @@ class RemoteOrbitalGatewayTest < Test::Unit::TestCase
     assert_equal 'Bad data error', response.message
   end
 
-  def test_successful_purchase_with_money
-    response = nil
-    silence_warnings do
-      assert response = @gateway.purchase(Money.new(100), @credit_card, @options)
-    end
-    assert_success response
-    assert_equal 'Approved', response.message
-  end
-
   # == Certification Tests
 
   # ==== Section A

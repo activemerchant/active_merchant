@@ -9,9 +9,9 @@ module ActiveMerchant #:nodoc:
       self.default_currency = 'DKK'
       self.money_format = :cents
       self.supported_cardtypes = [:dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro]
-      self.supported_countries = ['DK', 'SE']
-      self.homepage_url = 'http://quickpay.dk/'
-      self.display_name = 'Quickpay'
+      self.supported_countries = ['DE', 'DK', 'ES', 'FI', 'FR', 'FO', 'GB', 'IS', 'NO', 'SE']
+      self.homepage_url = 'http://quickpay.net/'
+      self.display_name = 'QuickPay'
 
       MD5_CHECK_FIELDS = {
         3 => {
@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
                            currency autocapture cardnumber expirationdate
                            cvd cardtypelock testmode),
 
-          :capture   => %w(protocol msgtype merchant amount transaction),
+          :capture   => %w(protocol msgtype merchant amount finalize transaction),
 
           :cancel    => %w(protocol msgtype merchant transaction),
 
@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
                            fraud_http_accept_encoding fraud_http_accept_charset
                            fraud_http_referer fraud_http_user_agent apikey),
 
-          :capture   => %w(protocol msgtype merchant amount transaction apikey),
+          :capture   => %w(protocol msgtype merchant amount finalize transaction apikey),
 
           :cancel    => %w(protocol msgtype merchant transaction apikey),
 
@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
                            fraud_http_accept_encoding fraud_http_accept_charset
                            fraud_http_referer fraud_http_user_agent apikey),
 
-          :capture   => %w(protocol msgtype merchant amount transaction apikey),
+          :capture   => %w(protocol msgtype merchant amount finalize transaction apikey),
 
           :cancel    => %w(protocol msgtype merchant transaction apikey),
 
@@ -100,7 +100,7 @@ module ActiveMerchant #:nodoc:
                            fraud_http_accept_encoding fraud_http_accept_charset
                            fraud_http_referer fraud_http_user_agent apikey),
 
-          :capture   => %w(protocol msgtype merchant amount transaction
+          :capture   => %w(protocol msgtype merchant amount finalize transaction
                            apikey),
 
           :cancel    => %w(protocol msgtype merchant transaction apikey),
@@ -120,27 +120,28 @@ module ActiveMerchant #:nodoc:
 
           :chstatus  => %w(protocol msgtype merchant apikey)
         },
-        
+
         7 => {
           :authorize => %w(protocol msgtype merchant ordernumber amount
                            currency autocapture cardnumber expirationdate cvd
-                           acquirer cardtypelock testmode fraud_remote_addr
+                           acquirers cardtypelock testmode fraud_remote_addr
                            fraud_http_accept fraud_http_accept_language
                            fraud_http_accept_encoding fraud_http_accept_charset
                            fraud_http_referer fraud_http_user_agent apikey),
 
-          :capture   => %w(protocol msgtype merchant amount transaction
+          :capture   => %w(protocol msgtype merchant amount finalize transaction
                            apikey),
 
           :cancel    => %w(protocol msgtype merchant transaction apikey),
 
           :refund    => %w(protocol msgtype merchant amount transaction apikey),
 
-          :subscribe => %w(protocol msgtype merchant ordernumber cardnumber
-                           expirationdate cvd acquirer cardtypelock description testmode
-                           fraud_remote_addr fraud_http_accept fraud_http_accept_language
-                           fraud_http_accept_encoding fraud_http_accept_charset
-                           fraud_http_referer fraud_http_user_agent apikey),
+          :subscribe => %w(protocol msgtype merchant ordernumber amount currency
+                           cardnumber expirationdate cvd acquirers cardtypelock
+                           description testmode fraud_remote_addr fraud_http_accept
+                           fraud_http_accept_language fraud_http_accept_encoding
+                           fraud_http_accept_charset fraud_http_referer
+                           fraud_http_user_agent apikey),
 
           :recurring => %w(protocol msgtype merchant ordernumber amount currency
                            autocapture transaction apikey),
@@ -148,7 +149,7 @@ module ActiveMerchant #:nodoc:
           :status    => %w(protocol msgtype merchant transaction apikey),
 
           :chstatus  => %w(protocol msgtype merchant apikey)
-        }        
+        }
       }
 
       APPROVED = '000'
@@ -195,6 +196,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {}
 
+        add_finalize(post, options)
         add_reference(post, authorization)
         add_amount_without_currency(post, money)
         commit(:capture, post)
@@ -218,7 +220,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, identification, options = {})
-        deprecated CREDIT_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, identification, options)
       end
 
@@ -226,6 +228,7 @@ module ActiveMerchant #:nodoc:
         post = {}
 
         add_creditcard(post, creditcard, options)
+        add_amount(post, 0, options) if @protocol >= 7
         add_invoice(post, options)
         add_description(post, options)
         add_fraud_parameters(post, options)
@@ -254,7 +257,7 @@ module ActiveMerchant #:nodoc:
         post[:cvd]            = credit_card.verification_value
         post[:expirationdate] = expdate(credit_card)
         post[:cardtypelock]   = options[:cardtypelock] unless options[:cardtypelock].blank?
-        post[:acquirer]       = options[:acquirer] unless options[:acquirer].blank?
+        post[:acquirers]      = options[:acquirers] unless options[:acquirers].blank?
       end
 
       def add_reference(post, identification)
@@ -288,7 +291,7 @@ module ActiveMerchant #:nodoc:
 
       def add_fraud_parameters(post, options)
         if @protocol >= 4
-          post[:fraud_remote_addr] = options[:fraud_remote_addr] if options[:fraud_remote_addr]
+          post[:fraud_remote_addr] = options[:ip] if options[:ip]
           post[:fraud_http_accept] = options[:fraud_http_accept] if options[:fraud_http_accept]
           post[:fraud_http_accept_language] = options[:fraud_http_accept_language] if options[:fraud_http_accept_language]
           post[:fraud_http_accept_encoding] = options[:fraud_http_accept_encoding] if options[:fraud_http_accept_encoding]
@@ -296,6 +299,10 @@ module ActiveMerchant #:nodoc:
           post[:fraud_http_referer] = options[:fraud_http_referer] if options[:fraud_http_referer]
           post[:fraud_http_user_agent] = options[:fraud_http_user_agent] if options[:fraud_http_user_agent]
         end
+      end
+
+      def add_finalize(post, options)
+        post[:finalize] = options[:finalize] ? '1' : '0'
       end
 
       def commit(action, params)
@@ -357,7 +364,7 @@ module ActiveMerchant #:nodoc:
 
       # Limited to 20 digits max
       def format_order_number(number)
-        number.to_s.gsub(/[^\w_]/, '').rjust(4, "0")[0...20]
+        number.to_s.gsub(/[^\w]/, '').rjust(4, "0")[0...20]
       end
     end
   end

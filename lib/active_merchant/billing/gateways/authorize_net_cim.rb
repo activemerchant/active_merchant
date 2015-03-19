@@ -613,10 +613,12 @@ module ActiveMerchant #:nodoc:
 
       def build_create_customer_profile_transaction_request(xml, options)
         options[:extra_options] ||= {}
-        options[:extra_options].merge!('x_test_request' => 'TRUE') if @options[:test_requests]
+        options[:extra_options].merge!('x_delim_char' => @options[:delimiter]) if @options[:delimiter]
 
         add_transaction(xml, options[:transaction])
-        tag_unless_blank(xml, 'extraOptions', format_extra_options(options[:extra_options]))
+        xml.tag!('extraOptions') do
+          xml.cdata!(format_extra_options(options[:extra_options]))
+        end unless options[:extra_options].blank?
 
         xml.target!
       end
@@ -797,7 +799,7 @@ module ActiveMerchant #:nodoc:
         return unless credit_card
         xml.tag!('creditCard') do
           # The credit card number used for payment of the subscription
-          xml.tag!('cardNumber', credit_card.number)
+          xml.tag!('cardNumber', full_or_masked_card_number(credit_card.number))
           # The expiration date of the credit card used for the subscription
           xml.tag!('expirationDate', expdate(credit_card))
           # Note that Authorize.net does not save CVV codes as part of the
@@ -964,6 +966,10 @@ module ActiveMerchant #:nodoc:
         end
 
         response
+      end
+
+      def full_or_masked_card_number(card_number)
+        !card_number.nil? && card_number.length == 4 ? "XXXX#{card_number}" : card_number
       end
     end
   end

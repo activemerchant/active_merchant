@@ -50,7 +50,7 @@ module ActiveMerchant #:nodoc:
           else
             payment_method
           end
-          r.process{commit("debits", "cards/#{identifier}/debits", post)}
+          r.process{commit("debits", "cards/#{card_identifier_from(identifier)}/debits", post)}
         end
       end
 
@@ -67,7 +67,7 @@ module ActiveMerchant #:nodoc:
           else
             payment_method
           end
-          r.process{commit("card_holds", "cards/#{identifier}/card_holds", post)}
+          r.process{commit("card_holds", "cards/#{card_identifier_from(identifier)}/card_holds", post)}
         end
       end
 
@@ -77,7 +77,7 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description] if options[:description]
         add_common_params(post, options)
 
-        commit("debits", "card_holds/#{identifier_from(identifier)}/debits", post)
+        commit("debits", "card_holds/#{reference_identifier_from(identifier)}/debits", post)
       end
 
       def void(identifier, options = {})
@@ -85,7 +85,7 @@ module ActiveMerchant #:nodoc:
         post[:is_void] = true
         add_common_params(post, options)
 
-        commit("card_holds", "card_holds/#{identifier_from(identifier)}", post, :put)
+        commit("card_holds", "card_holds/#{reference_identifier_from(identifier)}", post, :put)
       end
 
       def refund(money, identifier, options = {})
@@ -94,7 +94,7 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         add_common_params(post, options)
 
-        commit("refunds", "debits/#{identifier_from(identifier)}/refunds", post)
+        commit("refunds", "debits/#{reference_identifier_from(identifier)}/refunds", post)
       end
 
       def store(credit_card, options={})
@@ -113,12 +113,12 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      def identifier_from(identifier)
+      def reference_identifier_from(identifier)
         case identifier
         when %r{\|}
           uri = identifier.
             split("|").
-            detect{|uri| uri.size > 0}
+            detect{|part| part.size > 0}
           uri.split("/")[2]
         when %r{\/}
           identifier.split("/")[5]
@@ -127,12 +127,17 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def card_identifier_from(identifier)
+        identifier.split("/").last
+      end
+
       def add_amount(post, money)
         post[:amount] = amount(money) if money
       end
 
       def add_address(post, options)
-        if(address = (options[:billing_address] || options[:address]))
+        address = (options[:billing_address] || options[:address])
+        if(address && address[:zip].present?)
           post[:address] = {}
           post[:address][:line1] = address[:address1] if address[:address1]
           post[:address][:line2] = address[:address2] if address[:address2]
@@ -173,9 +178,11 @@ module ActiveMerchant #:nodoc:
 
       def success_from(entity_name, raw_response)
         entity = (raw_response[entity_name] || []).first
-        if !entity
+        if(!entity)
           false
-        elsif entity.include?("status")
+        elsif((entity_name == "refunds") && entity.include?("status"))
+          %w(succeeded pending).include?(entity["status"])
+        elsif(entity.include?("status"))
           (entity["status"] == "succeeded")
         elsif(entity_name == "cards")
           !!entity["id"]

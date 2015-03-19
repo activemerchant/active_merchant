@@ -133,7 +133,7 @@ class BluePayTest < Test::Unit::TestCase
 
   def test_deprecated_credit
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
-    assert_deprecation_warning("credit should only be used to credit a payment method", @gateway) do
+    assert_deprecation_warning("credit should only be used to credit a payment method") do
       assert response = @gateway.credit(@amount, '123456789', :card_number => @credit_card.number)
       assert_success response
       assert_equal 'This transaction has been approved', response.message
@@ -181,7 +181,7 @@ class BluePayTest < Test::Unit::TestCase
     def get_msg(query)
       @gateway.send(:parse, query).message
     end
-    assert_equal "No Match", get_msg('STATUS=2&CVV2=N&AVS=A&MESSAGE=FAILURE')
+    assert_equal "CVV does not match", get_msg('STATUS=2&CVV2=N&AVS=A&MESSAGE=FAILURE')
     assert_equal "Street address matches, but 5-digit and 9-digit postal code do not match.",
                    get_msg('STATUS=2&CVV2=M&AVS=A&MESSAGE=FAILURE')
   end

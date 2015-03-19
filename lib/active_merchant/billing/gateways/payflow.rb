@@ -1,6 +1,6 @@
-require File.dirname(__FILE__) + '/payflow/payflow_common_api'
-require File.dirname(__FILE__) + '/payflow/payflow_response'
-require File.dirname(__FILE__) + '/payflow_express'
+require 'active_merchant/billing/gateways/payflow/payflow_common_api'
+require 'active_merchant/billing/gateways/payflow/payflow_response'
+require 'active_merchant/billing/gateways/payflow_express'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
 
       def credit(money, funding_source, options = {})
         if funding_source.is_a?(String)
-          deprecated CREDIT_DEPRECATION_MESSAGE
+          ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
           # Perform referenced credit
           refund(money, funding_source, options)
         elsif card_brand(funding_source) == 'check'
@@ -44,6 +44,10 @@ module ActiveMerchant #:nodoc:
         commit(build_reference_request(:credit, money, reference, options), options)
       end
 
+      def verify(payment, options={})
+        authorize(0, payment, options)
+      end
+
       # Adds or modifies a recurring Payflow profile.  See the Payflow Pro Recurring Billing Guide for more details:
       # https://www.paypal.com/en_US/pdf/PayflowPro_RecurringBilling_Guide.pdf
       #
@@ -57,7 +61,7 @@ module ActiveMerchant #:nodoc:
       # * <tt>payments</tt> - The term, or number of payments that will be made
       # * <tt>comment</tt> - A comment associated with the profile
       def recurring(money, credit_card, options = {})
-        deprecated RECURRING_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
         options[:name] = credit_card.name if options[:name].blank? && credit_card
         request = build_recurring_request(options[:profile_id] ? :modify : :add, money, options) do |xml|
@@ -67,14 +71,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def cancel_recurring(profile_id)
-        deprecated RECURRING_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
         request = build_recurring_request(:cancel, 0, :profile_id => profile_id)
         commit(request, options.merge(:request_type => :recurring))
       end
 
       def recurring_inquiry(profile_id, options = {})
-        deprecated RECURRING_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
         request = build_recurring_request(:inquiry, nil, options.update( :profile_id => profile_id ))
         commit(request, options.merge(:request_type => :recurring))

@@ -1,3 +1,5 @@
+require "active_support/core_ext/string/access"
+
 module ActiveMerchant
   module Billing
     class DataCashGateway < Gateway
@@ -138,7 +140,7 @@ module ActiveMerchant
       #   * <tt>:address</tt>:: billing address for card
       def credit(money, reference_or_credit_card, options = {})
         if reference_or_credit_card.is_a?(String)
-          deprecated CREDIT_DEPRECATION_MESSAGE
+          ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
           refund(money, reference_or_credit_card)
         else
           request = build_refund_request(money, reference_or_credit_card, options)

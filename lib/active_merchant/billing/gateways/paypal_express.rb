@@ -1,7 +1,7 @@
-require File.dirname(__FILE__) + '/paypal/paypal_common_api'
-require File.dirname(__FILE__) + '/paypal/paypal_express_response'
-require File.dirname(__FILE__) + '/paypal/paypal_recurring_api'
-require File.dirname(__FILE__) + '/paypal_express_common'
+require 'active_merchant/billing/gateways/paypal/paypal_common_api'
+require 'active_merchant/billing/gateways/paypal/paypal_express_response'
+require 'active_merchant/billing/gateways/paypal/paypal_recurring_api'
+require 'active_merchant/billing/gateways/paypal_express_common'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -160,6 +160,13 @@ module ActiveMerchant #:nodoc:
               if !options[:allow_note].nil?
                 xml.tag! 'n2:AllowNote', options[:allow_note] ? '1' : '0'
               end
+
+              if options[:funding_sources]
+                xml.tag! 'n2:FundingSourceDetails' do
+                  xml.tag! 'n2:UserSelectedFundingSource', options[:funding_sources][:source]
+                end
+              end
+
               xml.tag! 'n2:CallbackURL', options[:callback_url] unless options[:callback_url].blank?
 
               add_payment_details(xml, money, currency_code, options)

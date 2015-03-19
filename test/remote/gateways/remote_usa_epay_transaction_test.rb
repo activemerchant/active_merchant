@@ -5,12 +5,19 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     @gateway = UsaEpayTransactionGateway.new(fixtures(:usa_epay))
     @creditcard = credit_card('4000100011112224')
     @declined_card = credit_card('4000300011112220')
+    @credit_card_with_track_data = credit_card_with_track_data('4000100011112224')
     @options = { :billing_address => address(:zip => "27614", :state => "NC") }
     @amount = 100
   end
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @creditcard, @options)
+    assert_equal 'Success', response.message
+    assert_success response
+  end
+
+  def test_successful_purchase_with_track_data
+    assert response = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
     assert_equal 'Success', response.message
     assert_success response
   end
@@ -28,6 +35,7 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @declined_card, @options.merge(:order_id => generate_unique_id))
     assert_failure response
     assert_match(/declined/i, response.message)
+    assert Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code 
   end
 
   def test_authorize_and_capture
@@ -47,6 +55,14 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
 
   def test_successful_refund
     assert response = @gateway.purchase(@amount, @creditcard, @options)
+    assert_success response
+    assert response.authorization
+    assert refund = @gateway.refund(@amount - 20, response.authorization)
+    assert_success refund
+  end
+
+  def test_successful_refund_with_track_data
+    assert response = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
     assert_success response
     assert response.authorization
     assert refund = @gateway.refund(@amount - 20, response.authorization)
@@ -73,10 +89,38 @@ class RemoteUsaEpayTransactionTest < Test::Unit::TestCase
     assert_match(/Unable to locate transaction/, void.message)
   end
 
+  def test_successful_void_release
+    assert response = @gateway.purchase(@amount, @creditcard, @options)
+    assert_success response
+    assert response.authorization
+    assert void = @gateway.void(response.authorization, void_mode: :void_release)
+    assert_success void
+  end
+
+  def test_unsuccessful_void_release
+    assert void = @gateway.void("unknown_authorization", void_mode: :void_release)
+    assert_failure void
+    assert_match(/Unable to locate transaction/, void.message)
+  end
+
   def test_invalid_key
     gateway = UsaEpayTransactionGateway.new(:login => '')
     assert response = gateway.purchase(@amount, @creditcard, @options)
     assert_equal 'Specified source key not found.', response.message
     assert_failure response
   end
+
+  def test_successful_verify
+    assert response = @gateway.verify(@creditcard, @options)
+    assert_success response
+    assert_equal "Success", response.message
+    assert_success response.responses.last, "The void should succeed"
+  end
+
+  def test_failed_verify
+    assert response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_match "Card Declined (00)", response.message
+  end
+
 end

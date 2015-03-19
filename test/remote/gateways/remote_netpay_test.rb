@@ -60,7 +60,7 @@ class RemoteNetpayTest < Test::Unit::TestCase
    opts[:mode] = 'D'
    assert response = @gateway.authorize(@amount, @declined_card, opts)
    assert_failure response
-   assert_match /Declinada/, response.message
+   assert_match %r{Declinada}, response.message
   end
 
   def test_successful_authorize_and_capture

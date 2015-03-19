@@ -243,6 +243,6 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
 
     assert response = gateway.purchase(@amount, @existing_payment_method)
     assert_failure response
-    assert_match /Unable to authenticate/, response.message
+    assert_match %r{Unable to authenticate}, response.message
   end
 end

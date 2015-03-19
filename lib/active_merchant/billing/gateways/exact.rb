@@ -59,7 +59,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, authorization, options = {})
-        deprecated CREDIT_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
 
@@ -68,6 +68,7 @@ module ActiveMerchant #:nodoc:
       end
 
       private
+
       def build_request(action, body)
         xml = Builder::XmlMarkup.new
 
@@ -168,6 +169,14 @@ module ActiveMerchant #:nodoc:
            :avs_result => { :code => response[:avs] },
            :cvv_result => response[:cvv2]
          )
+
+      rescue ResponseError => e
+        case e.response.code
+        when '401'
+          return Response.new(false, "Invalid Login: #{e.response.body}", {}, :test => test?)
+        else
+          raise
+        end
       end
 
       def successful?(response)

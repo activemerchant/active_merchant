@@ -30,6 +30,18 @@ class BalancedTest < Test::Unit::TestCase
     assert_equal @amount, response.params['debits'][0]['amount']
   end
 
+  def test_successful_purchase_with_outside_token
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, "/cards/CCVOX2d7Ar6Ze5TOxHsebeH", @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_equal("https://api.balancedpayments.com/cards/CCVOX2d7Ar6Ze5TOxHsebeH/debits", endpoint)
+    end.respond_with(debits_response)
+
+    assert_success response
+    assert_equal 'Success', response.message
+    assert_equal @amount, response.params['debits'][0]['amount']
+  end
+
   def test_invalid_card
     @gateway.expects(:ssl_request).times(2).returns(
       cards_response
@@ -174,6 +186,24 @@ class BalancedTest < Test::Unit::TestCase
     assert_equal @amount / 2, refund.params['refunds'][0]['amount']
   end
 
+  def test_refund_pending_status
+    @gateway.expects(:ssl_request).times(3).returns(
+      cards_response
+    ).then.returns(
+      debits_response
+    ).then.returns(
+      refunds_pending_response
+    )
+
+    assert debit = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success debit
+
+    assert refund = @gateway.refund(@amount, debit.authorization)
+    assert_success refund
+    assert_equal "pending", refund.params['refunds'][0]['status']
+    assert_equal @amount, refund.params['refunds'][0]['amount']
+  end
+
   def test_store
     @gateway.expects(:ssl_request).returns(
       cards_response
@@ -184,6 +214,20 @@ class BalancedTest < Test::Unit::TestCase
         email: new_email_address
     })
     assert_instance_of String, response.authorization
+  end
+
+  def test_successful_purchase_with_legacy_outside_token
+    legacy_outside_token = '/v1/marketplaces/MP6oR9hHNlu2BLVsRRoQL3Gg/cards/CC7m1Mtqk6rVJo5tcD1qitAC'
+
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, legacy_outside_token, @options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_equal("https://api.balancedpayments.com/cards/CC7m1Mtqk6rVJo5tcD1qitAC/debits", endpoint)
+    end.respond_with(debits_response)
+
+    assert_success response
+    assert_equal 'Success', response.message
+    assert_equal @amount, response.params['debits'][0]['amount']
   end
 
   def test_capturing_legacy_authorizations
@@ -225,6 +269,46 @@ class BalancedTest < Test::Unit::TestCase
         assert_equal("https://api.balancedpayments.com/debits/WD2x6vLS7RzHYEcdymqRyNAO/refunds", endpoint)
       end.respond_with(refunds_response)
     end
+  end
+
+  def test_passing_address
+    a = address
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, address: a)
+    end.check_request do |method, endpoint, data, headers|
+      next if endpoint =~ /debits/
+      clean = proc{|s| Regexp.escape(CGI.escape(s))}
+      assert_match(%r{address\[line1\]=#{clean[a[:address1]]}}, data)
+      assert_match(%r{address\[line2\]=#{clean[a[:address2]]}}, data)
+      assert_match(%r{address\[city\]=#{clean[a[:city]]}}, data)
+      assert_match(%r{address\[state\]=#{clean[a[:state]]}}, data)
+      assert_match(%r{address\[postal_code\]=#{clean[a[:zip]]}}, data)
+      assert_match(%r{address\[country_code\]=#{clean[a[:country]]}}, data)
+    end.respond_with(cards_response, debits_response)
+
+    assert_success response
+  end
+
+  def test_passing_address_without_zip
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, address: address(zip: nil))
+    end.check_request do |method, endpoint, data, headers|
+      next if endpoint =~ /debits/
+      assert_no_match(%r{address}, data)
+    end.respond_with(cards_response, debits_response)
+
+    assert_success response
+  end
+
+  def test_passing_address_with_blank_zip
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, address: address(zip: "   "))
+    end.check_request do |method, endpoint, data, headers|
+      next if endpoint =~ /debits/
+      assert_no_match(%r{address}, data)
+    end.respond_with(cards_response, debits_response)
+
+    assert_success response
   end
 
   private
@@ -746,6 +830,38 @@ RESPONSE
       "amount": 50,
       "meta": {},
       "id": "RFJ4N00zLaQFrfBkC8cbN68"
+    }
+  ]
+}
+RESPONSE
+  end
+
+  def refunds_pending_response
+    <<-RESPONSE
+{
+  "links": {
+    "refunds.dispute": "/disputes/{refunds.dispute}",
+    "refunds.events": "/refunds/{refunds.id}/events",
+    "refunds.debit": "/debits/{refunds.debit}",
+    "refunds.order": "/orders/{refunds.order}"
+  },
+  "refunds": [
+    {
+      "status": "pending",
+      "description": null,
+      "links": {
+        "debit": "WD7AT5AGKI0jccoElAEEqiuL",
+        "order": null,
+        "dispute": null
+      },
+      "href": "/refunds/RF46a5p6ZVMK4qVIeCJ8u2LE",
+      "created_at": "2014-05-22T20:20:32.956467Z",
+      "transaction_number": "RF485-302-2551",
+      "updated_at": "2014-05-22T20:20:35.991553Z",
+      "currency": "USD",
+      "amount": 100,
+      "meta": {},
+      "id": "RF46a5p6ZVMK4qVIeCJ8u2LE"
     }
   ]
 }

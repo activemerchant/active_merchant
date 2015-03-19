@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/migs/migs_codes'
+require 'active_merchant/billing/gateways/migs/migs_codes'
 
 require 'digest/md5' # Used in add_secure_hash
 
@@ -101,7 +101,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, authorization, options = {})
-        deprecated CREDIT_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
 
@@ -220,12 +220,18 @@ module ActiveMerchant #:nodoc:
       end
 
       def response_object(response)
+        avs_response_code = response[:AVSResultCode]
+        avs_response_code = 'S' if avs_response_code == "Unsupported"
+
+        cvv_result_code = response[:CSCResultCode]
+        cvv_result_code = 'P' if cvv_result_code == "Unsupported"
+
         Response.new(success?(response), response[:Message], response,
           :test => test?,
           :authorization => response[:TransactionNo],
           :fraud_review => fraud_review?(response),
-          :avs_result => { :code => response[:AVSResultCode] },
-          :cvv_result => response[:CSCResultCode]
+          :avs_result => { :code => avs_response_code },
+          :cvv_result => cvv_result_code
         )
       end
 

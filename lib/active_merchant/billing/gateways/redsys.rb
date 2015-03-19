@@ -9,30 +9,14 @@ module ActiveMerchant #:nodoc:
     # used by many banks in Spain and is particularly well supported by
     # Catalunya Caixa's ecommerce department.
     #
-    # Standard ActiveMerchant methods are supported, with one notable exception:
-    # :order_id must be provided and must conform to a very specific format.
+    # Redsys requires an order_id be provided with each transaction and it must
+    # follow a specific format. The rules are as follows:
     #
-    # == Example use:
-    #
-    #   gateway = ActiveMerchant::Billing::RedsysGateway.new(
-    #               :login      => "091358382",
-    #               :secret_key => "qwertyasdf0123456789"
-    #            )
-    #
-    #   # Run a purchase for 10 euros
-    #   response = gateway.purchase(1000, creditcard, :order_id => "123456")
-    #   puts reponse.success?       # => true
-    #
-    #   # Partially refund the purchase
-    #   response = gateway.refund(500, response.authorization)
-    #
-    # Redsys requires an order_id be provided with each transaction of a
-    # specific format. The rules are as follows:
-    #
-    #  * Minimum length: 4
-    #  * Maximum length: 12
     #  * First 4 digits must be numerical
     #  * Remaining 8 digits may be alphanumeric
+    #  * Max length: 12
+    #
+    #  If an invalid order_id is provided, we do our best to clean it up.
     #
     # Much of the code for this library is based on the active_merchant_sermepa
     # integration gateway which uses essentially the same API but with the
@@ -42,20 +26,15 @@ module ActiveMerchant #:nodoc:
     # test access details please get in touch: sam@cabify.com.
     class RedsysGateway < Gateway
       self.live_url = "https://sis.sermepa.es/sis/operaciones"
-      self.test_url = "https://sis-t.sermepa.es:25443/sis/operaciones"
+      self.test_url = "https://sis-t.redsys.es:25443/sis/operaciones"
 
-      # Sensible region specific defaults.
       self.supported_countries = ['ES']
       self.default_currency    = 'EUR'
       self.money_format        = :cents
 
       # Not all card types may be activated by the bank!
       self.supported_cardtypes = [:visa, :master, :american_express, :jcb, :diners_club]
-
-      # Homepage URL of the gateway for reference
       self.homepage_url        = "http://www.redsys.es/"
-
-      # What to call this gateway
       self.display_name        = "Redsys"
 
       CURRENCY_CODES = {
@@ -75,6 +54,7 @@ module ActiveMerchant #:nodoc:
         "NZD" => '554',
         "PEN" => '604',
         "RUB" => '643',
+        "SGD" => '702',
         "USD" => '840',
         "UYU" => '858'
       }
@@ -94,14 +74,12 @@ module ActiveMerchant #:nodoc:
       # a card has been rejected. Syntax or general request errors
       # are not covered here.
       RESPONSE_TEXTS = {
-        # Accepted Codes
         0 => "Transaction Approved",
         400 => "Cancellation Accepted",
         481 => "Cancellation Accepted",
         500 => "Reconciliation Accepted",
         900 => "Refund / Confirmation approved",
 
-        # Declined error codes
         101 => "Card expired",
         102 => "Card blocked temporarily or under susciption of fraud",
         104 => "Transaction not permitted",
@@ -121,9 +99,8 @@ module ActiveMerchant #:nodoc:
         190 => "Refusal with no specific reason",
         191 => "Expiry date incorrect",
 
-        # Declined, and suspected of fraud
         201 => "Card expired",
-        202 => "Card blocked temporarily or under suscipition of fraud",
+        202 => "Card blocked temporarily or under suspicion of fraud",
         204 => "Transaction not permitted",
         207 => "Contact the card issuer",
         208 => "Lost or stolen card",
@@ -131,13 +108,11 @@ module ActiveMerchant #:nodoc:
         280 => "CVV2/CVC2 Error",
         290 => "Declined with no specific reason",
 
-        # More general codes for specific types of transaction
         480 => "Original transaction not located, or time-out exceeded",
         501 => "Original transaction not located, or time-out exceeded",
         502 => "Original transaction not located, or time-out exceeded",
         503 => "Original transaction not located, or time-out exceeded",
 
-        # Declined transactions by the bank
         904 => "Merchant not registered at FUC",
         909 => "System error",
         912 => "Issuer not available",
@@ -184,26 +159,30 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def purchase(money, creditcard, options = {})
+      def purchase(money, payment, options = {})
         requires!(options, :order_id)
 
         data = {}
         add_action(data, :purchase)
         add_amount(data, money, options)
         add_order(data, options[:order_id])
-        add_creditcard(data, creditcard)
+        add_payment(data, payment)
+        data[:description] = options[:description]
+        data[:store_in_vault] = options[:store]
 
         commit data
       end
 
-      def authorize(money, creditcard, options = {})
+      def authorize(money, payment, options = {})
         requires!(options, :order_id)
 
         data = {}
         add_action(data, :authorize)
         add_amount(data, money, options)
         add_order(data, options[:order_id])
-        add_creditcard(data, creditcard)
+        add_payment(data, payment)
+        data[:description] = options[:description]
+        data[:store_in_vault] = options[:store]
 
         commit data
       end
@@ -214,6 +193,7 @@ module ActiveMerchant #:nodoc:
         add_amount(data, money, options)
         order_id, _, _ = split_authorization(authorization)
         add_order(data, order_id)
+        data[:description] = options[:description]
 
         commit data
       end
@@ -224,6 +204,7 @@ module ActiveMerchant #:nodoc:
         order_id, amount, currency = split_authorization(authorization)
         add_amount(data, amount, :currency => currency)
         add_order(data, order_id)
+        data[:description] = options[:description]
 
         commit data
       end
@@ -234,8 +215,16 @@ module ActiveMerchant #:nodoc:
         add_amount(data, money, options)
         order_id, _, _ = split_authorization(authorization)
         add_order(data, order_id)
+        data[:description] = options[:description]
 
         commit data
+      end
+
+      def verify(creditcard, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, creditcard, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
       end
 
       private
@@ -250,24 +239,27 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_order(data, order_id)
-        raise ArgumentError.new("Invalid order_id format") unless(/^\d{4}[\da-zA-Z]{0,8}$/ =~ order_id)
-        data[:order_id] = order_id
+        data[:order_id] = clean_order_id(order_id)
       end
 
       def url
         test? ? test_url : live_url
       end
 
-      def add_creditcard(data, card)
-        name  = [card.first_name, card.last_name].join(' ').slice(0, 60)
-        year  = sprintf("%.4i", card.year)
-        month = sprintf("%.2i", card.month)
-        data[:card] = {
-          :name => name,
-          :pan  => card.number,
-          :date => "#{year[2..3]}#{month}",
-          :cvv  => card.verification_value
-        }
+      def add_payment(data, card)
+        if card.is_a?(String)
+          data[:credit_card_token] = card
+        else
+          name  = [card.first_name, card.last_name].join(' ').slice(0, 60)
+          year  = sprintf("%.4i", card.year)
+          month = sprintf("%.2i", card.month)
+          data[:card] = {
+            :name => name,
+            :pan  => card.number,
+            :date => "#{year[2..3]}#{month}",
+            :cvv  => card.verification_value
+          }
+        end
       end
 
       def commit(data)
@@ -290,6 +282,11 @@ module ActiveMerchant #:nodoc:
         end
 
         str << data[:action]
+        if data[:store_in_vault]
+          str << 'REQUIRED'
+        elsif data[:credit_card_token]
+          str << data[:credit_card_token]
+        end
         str << @options[:secret_key]
 
         Digest::SHA1.hexdigest(str)
@@ -300,13 +297,14 @@ module ActiveMerchant #:nodoc:
         xml.DATOSENTRADA do
           # Basic elements
           xml.DS_Version 0.1
-          xml.DS_MERCHANT_CURRENCY          data[:currency]
-          xml.DS_MERCHANT_AMOUNT            data[:amount]
-          xml.DS_MERCHANT_ORDER             data[:order_id]
-          xml.DS_MERCHANT_TRANSACTIONTYPE   data[:action]
-          xml.DS_MERCHANT_TERMINAL          @options[:terminal]
-          xml.DS_MERCHANT_MERCHANTCODE      @options[:login]
-          xml.DS_MERCHANT_MERCHANTSIGNATURE build_signature(data)
+          xml.DS_MERCHANT_CURRENCY           data[:currency]
+          xml.DS_MERCHANT_AMOUNT             data[:amount]
+          xml.DS_MERCHANT_ORDER              data[:order_id]
+          xml.DS_MERCHANT_TRANSACTIONTYPE    data[:action]
+          xml.DS_MERCHANT_PRODUCTDESCRIPTION data[:description]
+          xml.DS_MERCHANT_TERMINAL           @options[:terminal]
+          xml.DS_MERCHANT_MERCHANTCODE       @options[:login]
+          xml.DS_MERCHANT_MERCHANTSIGNATURE  build_signature(data)
 
           # Only when card is present
           if data[:card]
@@ -314,6 +312,9 @@ module ActiveMerchant #:nodoc:
             xml.DS_MERCHANT_PAN        data[:card][:pan]
             xml.DS_MERCHANT_EXPIRYDATE data[:card][:date]
             xml.DS_MERCHANT_CVV2       data[:card][:cvv]
+            xml.DS_MERCHANT_IDENTIFIER 'REQUIRED' if data[:store_in_vault]
+          elsif data[:credit_card_token]
+            xml.DS_MERCHANT_IDENTIFIER data[:credit_card_token]
           end
         end
         xml.target!
@@ -373,6 +374,7 @@ module ActiveMerchant #:nodoc:
 
       def currency_code(currency)
         return currency if currency =~ /^\d+$/
+        raise ArgumentError, "Unknown currency #{currency}" unless CURRENCY_CODES[currency]
         CURRENCY_CODES[currency]
       end
 
@@ -388,6 +390,15 @@ module ActiveMerchant #:nodoc:
 
       def is_success_response?(code)
         (code.to_i < 100) || [400, 481, 500, 900].include?(code.to_i)
+      end
+
+      def clean_order_id(order_id)
+        cleansed = order_id.gsub(/[^\da-zA-Z]/, '')
+        if cleansed =~ /^\d{4}/
+          cleansed[0..11]
+        else
+          "%04d%s" % [rand(0..9999), cleansed[0...8]]
+        end
       end
     end
   end

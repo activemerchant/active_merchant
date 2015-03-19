@@ -9,7 +9,7 @@ class RemoteWorldpayTest < Test::Unit::TestCase
     @credit_card = credit_card('4111111111111111')
     @declined_card = credit_card('4111111111111111', :first_name => nil, :last_name => 'REFUSED')
 
-    @options = {:order_id => generate_unique_id}
+    @options = {order_id: generate_unique_id, email: "wow@example.com"}
   end
 
   def test_successful_purchase
@@ -70,6 +70,10 @@ class RemoteWorldpayTest < Test::Unit::TestCase
 
   def test_billing_address
     assert_success @gateway.authorize(@amount, @credit_card, @options.merge(:billing_address => address))
+  end
+
+  def test_ip_address
+    assert_success @gateway.authorize(@amount, @credit_card, @options.merge(ip: "192.18.123.12"))
   end
 
   def test_void

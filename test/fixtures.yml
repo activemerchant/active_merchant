@@ -11,17 +11,36 @@
 # Paste any required PEM certificates after the pem key.
 #
 
+adyen:
+  company: company
+  merchant: merchant
+  password: password
+
 app55:
   api_key: "QDtACYMCFqtuKOQ22QtCkGR1TzD7XM8i"
   api_secret: "yT1FRpuusBIQoEBIfIQ8bPStkl7yzdTz"
 
+# Working credentials, no need to replace as of Oct 28 2014
 authorize_net:
-  login: X
-  password: Y
+  login: 5KP3u95bQpv
+  password: 4Ktq966gC55GAX7S
+
+axcessms:
+  channel: channel
+  sender: sender
+  login: login
+  password: password
 
 # Working credentials, no need to replace
 balanced:
   login: 'e1c5ad38d1c711e1b36c026ba7e239a9'
+
+# Bank Frick doesn't provide public testing data
+bank_frick:
+  sender: sender-uuid
+  channel: channel-uuid
+  userid: user-uuid
+  userpwd: password
 
 banwire:
   login: "desarrollo"
@@ -58,6 +77,12 @@ bit_pay:
 blue_pay:
   login: '100096218902'
   password: 'MBUVE4G1BACMFM4W3XQHUUL2SMQRP.LW'
+
+borgun:
+  processor: 118
+  merchant_id: 118
+  username: spreedly
+  password: Qxi.34k
 
 braintree_blue:
   merchant_id: X
@@ -101,9 +126,26 @@ cecabank:
   terminal_id: TERMINALID
   key: KEY
 
+cenpos:
+  merchant_id: SOMECREDENTIAL
+  password: ANOTHERCREDENTIAL
+  user_id: ANOTHERCREDENTIAL
+
 certo_direct:
   login: 1
   password: vP6OwK3
+
+checkout:
+  merchant_id: SBMTEST
+  password: Password1!
+
+# Contact Support at it_support@commercegate.com for credentials and offer/site
+commercegate:
+  login: "XXXXXXX"
+  password: "XXXXXXX"
+  site_id: "XXXXXXX"
+  offer_id: "XXXXXXX"
+  card_number: "XXXXXXXXXXXXXXXX"
 
 conekta:
   key: key_eYvWV7gSDkNYXsmr
@@ -129,6 +171,7 @@ efsnet:
 elavon:
   login: LOGIN
   password: PASSWORD
+  user: USER (often the same as LOGIN)
 
 # login: merchant number
 # password: referrer url (for authorize authentication)
@@ -168,9 +211,9 @@ federated_canada:
   password: password
 
 finansbank:
-  login: TEST
-  password: TEST
-  client_id: TEST
+  login: FINANSAPI
+  password: FINANS06
+  client_id: 600100000
 
 first_giving:
   application_key: ''
@@ -178,18 +221,33 @@ first_giving:
   charity_id: "1234"
 
 first_pay:
-  login:
-  password:
+  transaction_center_id: 1264
+  gateway_id: "a91c38c3-7d7f-4d29-acc7-927b4dca0dbe"
 
 firstdata_e4:
   login:
   password:
+
+flo2cash:
+  username: SOMECREDENTIAL
+  password: ANOTHERCREDENTIAL
+  account_id: ANOTHERCREDENTIAL
+
+flo2cash_simple:
+  username: SOMECREDENTIAL
+  password: ANOTHERCREDENTIAL
+  account_id: ANOTHERCREDENTIAL
 
 garanti:
   login: "PROVAUT"
   terminal_id: 111995
   merchant_id: 600218
   password: "123qweASD"
+
+global_transport:
+  global_user_name: "USERNAME"
+  global_password: "PASSWORD"
+  term_type: "ABC"
 
 hdfc:
   login: LOGIN
@@ -220,6 +278,11 @@ inspire:
 instapay:
   login: TEST0
   password:
+
+# Working credentials, no need to replace
+ipp:
+  username: nmi.api
+  password: qwerty123
 
 iridium:
     login: LOGIN
@@ -274,8 +337,8 @@ merchant_warrior:
 
 # Working credentials, no need to replace
 mercury:
-  login: '395347306=TOKEN'
-  password: '123TOKEN'
+  login: '089716741701445'
+  password: 'xyz'
 
 mercury_no_tokenization:
   login: '595901'
@@ -310,6 +373,13 @@ mollie_ideal:
   api_key: 'test_8isBjQoJXJoiXRSzjhwKPO1Bo9AkVA'
 
 # Working credentials, no need to replace
+monei:
+  sender_id: 8a829417488d34c401489a5cd1350977
+  channel_id: 8a829417488d34c401489a5de5dd097b
+  login: 8a829417488d34c401489a5cd1360979
+  pwd: GyNSEAp2
+
+# Working credentials, no need to replace
 moneris:
   login: store1
   password: yesguy
@@ -328,7 +398,7 @@ nab_transact:
   password: changeit
 
 # Working credentials, no need to replace
-nab_transact_card_acceptor:
+nab_transact_privileged:
   login: XYZ0010
   password: abcd1234
 
@@ -374,9 +444,9 @@ openpay:
   merchant_id: 'mzdtln0bmtms6o3kck8f'
 
 optimal_payment:
-  login: test
+  store_id: test
   password: test
-  account: 'ACCOUNT_NUMBER'
+  account_number: ACCOUNTNUMBER
 
 orbital_gateway:
   login: LOGIN
@@ -390,9 +460,21 @@ pago_facil:
   service_id: 3
 
 # Working credentials, no need to replace
+pay_conex:
+  account_id: '220614968961'
+  api_accesskey: '69e9c4dd6b8ab9ab47da4e288df78315'
+
+# Working credentials, no need to replace
 pay_gate_xml:
   login: '10011021600'
   password: 'test'
+
+# Working credentials, no need to replace
+pay_hub:
+  orgid: '123456'
+  username: 'abc123DEF'
+  password: 'abc123DEF'
+  tid: '123'
 
 # Working credentials, no need to replace
 pay_junction:
@@ -412,9 +494,10 @@ payex:
   # encryption key is generated via the PayEx Admin console
   encryption_key: ENCRYPTION_KEY
 
+# Working credentials, no need to replace
 payflow:
-  login: LOGIN
-  password: PASSWORD
+  login: spreedly
+  password: 'ibB4Z8=d;G'
   partner: PayPal
 
 payflow_uk:
@@ -430,18 +513,48 @@ paymill:
   private_key: PRIVATE_KEY
   public_key: PUBLIC_KEY
 
-# You can use either your API PEM file or API signature with PayPal.
 paypal_certificate:
-  login: LOGIN
-  password: PASSWORD
+  login: activemerchant-cert-test_api1.example.com
+  password: ERDD3JRFU5H5DQXS
   subject:
   pem: |
-    PASTE YOUR PEM FILE HERE
+    -----BEGIN RSA PRIVATE KEY-----
+    MIICXQIBAAKBgQD/fK2V+joi32b3hXwyZdWTrjX0eXF1NTY7iSvBDPipJalFcopa
+    RRQV41WHB7Ard8g4tsw9uP4aDqil/MJqoLm2pttOokKO1CX1R4xVz8kITefTDrMT
+    uGs43Sz6Kd/GLKeYpc+kk7vLgP9CqUNnuBWPLzw98t9XKTcdSf140WciPwIDAQAB
+    AoGAMxWK3+IYncBtpjBalPknq0+6GhfuR7FMFrtmtEMTtT6CihBM+Z+2VGoQP9+Z
+    qhdZQX3LeMv0guFLd2UCuq9IcobEuBL5Oyxvd1MYcSVuMHa8DQBYQfL2Dtq/m8K9
+    vTGdsvL3IyVlWs9xxZRtuEoBpmb3axjohVS62rq7CzGbMYECQQD/054sW/V7MZD7
+    8Siz1Dhe3CJpGJ3RIkBzuMi5vtJftx6S4GX4jsbE8tyMSwX7TnO1xvHP7s1OCSEC
+    gUwIMQQlAkEA/6kAVG37ErrN5WX0kw+UIrBYQhnyZvjqVIqSSm8ZAn1cDbx84GbX
+    UTbPpJBbpcP5PDxeQnBqpvnLuIZfzSZtkwJAYSfD5ULTOoL7dcMDWzAYbGYbp2AS
+    506jvY8KpAgFKxaHRO51q2zFrhwxiBIh5mvH49v3D6m4TI+I+sOR1XaQBQJBAIvh
+    2i5X5rH+x70mJcV5FqJMPl4ceEbjFsOe9iAH3XVBRea2JNVbL6BeDwqJebufGHVe
+    ymwrug8WSeLykuRajEUCQQDlDXignvtCZlXlOCxohPuJ+o+vnF3R/L6MBtQmRjWI
+    mv6epzBqjXcB9Dv3n10k7M9H6YKfAZbuZ23PDTxrv3o+
+    -----END RSA PRIVATE KEY-----
+    -----BEGIN CERTIFICATE-----
+    MIICsDCCAhmgAwIBAgIDEBZBMA0GCSqGSIb3DQEBBQUAMIGfMQswCQYDVQQGEwJV
+    UzETMBEGA1UECBMKQ2FsaWZvcm5pYTERMA8GA1UEBxMIU2FuIEpvc2UxFTATBgNV
+    BAoTDFBheVBhbCwgSW5jLjEWMBQGA1UECxQNc2FuZGJveF9jZXJ0czEbMBkGA1UE
+    AxQSc2FuZGJveF9jYW1lcmNoYXBpMRwwGgYJKoZIhvcNAQkBFg1yZUBwYXlwYWwu
+    Y29tMB4XDTE0MTAyMzE0MzQxM1oXDTI0MTAyMDE0MzQxM1owgYoxMjAwBgNVBAMU
+    KWFjdGl2ZW1lcmNoYW50LWNlcnQtdGVzdF9hcGkxLmV4YW1wbGUuY29tMScwJQYD
+    VQQKEx5OYXRoYW5pZWwgVGFsYm90dCdzIFRlc3QgU3RvcmUxETAPBgNVBAcTCFNh
+    biBKb3NlMQswCQYDVQQIEwJDQTELMAkGA1UEBhMCVVMwgZ8wDQYJKoZIhvcNAQEB
+    BQADgY0AMIGJAoGBAP98rZX6OiLfZveFfDJl1ZOuNfR5cXU1NjuJK8EM+KklqUVy
+    ilpFFBXjVYcHsCt3yDi2zD24/hoOqKX8wmqgubam206iQo7UJfVHjFXPyQhN59MO
+    sxO4azjdLPop38Ysp5ilz6STu8uA/0KpQ2e4FY8vPD3y31cpNx1J/XjRZyI/AgMB
+    AAGjDTALMAkGA1UdEwQCMAAwDQYJKoZIhvcNAQEFBQADgYEABR7D4mbOHBHYgMsG
+    sSxxYqqvhFSF7/HBQW4G132w6lxKVqdF3a6ICJYC/gOjOQ609kowDOrCwag9cbiO
+    3gPzIjyqNemdkTJxiTaq9+fG7G+r6f+pXo0ZVvfFjgtoSUVdMlqgu572EEZOQmSL
+    w00oJt7RcWBpIkpS18Qpmk6KZ7o=
+    -----END CERTIFICATE-----
 
 paypal_signature:
-  login: LOGIN
-  password: PASSWORD
-  signature: SIGNATURE
+  login: activemerchant-test_api1.example.com
+  password: HBC6A84QLRWC923A
+  signature: AFcWxV21C7fd0v3bYYYRCpSSRl31AC-11AKBL8FFO9tjImL311y8a0hx
 
 payscout:
   username: demo
@@ -536,6 +649,15 @@ quantum:
   login: X
   password: Y
 
+# You will need to create a developer sandbox at https://developer.intuit.com/ and
+# successfully generate an OAuth 1.0a access token and token secret.
+quickbooks:
+  consumer_key:
+  consumer_secret:
+  access_token:
+  token_secret:
+  realm:
+
 # Quickpay offers a test account.
 # To log in to the manager, use demo@quickpay.net and test234
 quickpay:
@@ -549,6 +671,11 @@ quickpay_with_api_key:
   password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
   apikey: "fB46983ZwR5dzy46A3r6ngDx7P37N5YTu1F4S9W2JKCs9v4t5L9m2Q8Mlbjpa2I1"
   version: 7
+
+qvalent:
+  username: TEST
+  password: TEST
+  merchant: TEST
 
 raven_pac_net:
   user: ernest
@@ -641,11 +768,6 @@ sage_pay:
 sallie_mae:
   login: TEST0
 
-samurai:
-  login: 'a1ebafb6da5238fb8a3ac9f6'
-  password: 'ae1aa640f6b735c4730fbb56'
-  processor_token: '5a0e1ca1e5a11a2997bbf912'
-
 secure_net:
   login: X
   password: Y
@@ -687,6 +809,10 @@ swipe_checkout:
   api_key: f2fe4efd5033edfaed9e4aad319ef4d34536a10eea07f90f182616d7216ae2b8
   region: NZ
 
+tns:
+  userid: TESTSPREEDLY01
+  password: 3f34fe50334fbe6cbe04c283411a5860
+
 trans_first:
   login: LOGIN
   password: PASSWORD
@@ -702,7 +828,7 @@ trust_commerce:
 
 # Working credentials, no need to replace
 usa_epay:
-  login: 'yCaWGYQsSVR0S48B6AKMK07RQhaxHvGu'
+  login: '4EoZ5U2Q55j976W7eplC71i6b7kn4pcV'
 
 # Get credentials here: https://www.usaepay.com/developer/login
 usa_epay_advanced:
@@ -724,10 +850,6 @@ viaklix:
   password: PASSWORD
   user: USER
 
-vindicia:
-  login: LOGIN
-  password: PASSWORD
-
 webpay:
   login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"
 
@@ -737,10 +859,11 @@ wepay:
   account_id: "1311201206"
   access_token: "STAGE_4c6a319f9b6ef50e596ee3ea0b845f2fecd50fa0d8bc0b7483bd61c2018dbf5c"
 
-# Working test credentials, no need to replace
+# Working test credentials with AVS/CVV support, no need to replace
 wirecard:
-  login: 56500
+  login: 00000031629CA9FA
   password: TestXAPTER
+  signature: 00000031629CAFD5
 
 wirecard_checkout_page:
   secret: B8AKTPWBRMNBV455FG6M2DANE99WU2
@@ -750,3 +873,8 @@ wirecard_checkout_page:
 world_pay_gateway:
   login: LOGIN
   password: PASSWORD
+
+worldpay_us:
+  acctid: MPNAB
+  subid: SPREE
+  merchantpin: "1234567890"

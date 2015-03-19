@@ -24,7 +24,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'The card was declined', response.message
+    assert_equal 'The card is not supported on online transactions', response.message
   end
 
   def test_successful_refund
@@ -55,7 +55,7 @@ class RemoteOpenpayTest < Test::Unit::TestCase
   def test_unsuccessful_authorize
     assert response = @gateway.authorize(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'The card was declined', response.message
+    assert_equal 'The card is not supported on online transactions', response.message
   end
 
   def test_successful_capture
@@ -97,8 +97,13 @@ class RemoteOpenpayTest < Test::Unit::TestCase
     assert_success response
     assert_nil response.message
 
-    assert_success  @gateway.unstore(customer_stored.authorization, card_stored.authorization)
-    assert_success  @gateway.unstore(customer_stored.authorization)
+    assert_success @gateway.unstore(customer_stored.authorization, card_stored.authorization)
+    assert_success @gateway.unstore(customer_stored.authorization)
+  end
+
+  def test_successful_purchase_with_device_session_id
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(device_session_id: 'weur2ty732yu2y47824u23yu4i'))
+    assert_success response
   end
 
   def test_successful_store
@@ -117,9 +122,9 @@ class RemoteOpenpayTest < Test::Unit::TestCase
     customer_stored = response.responses[0]
     first_card = response.responses[1]
 
-    assert_success  @gateway.unstore(customer_stored.authorization, first_card.authorization)
-    assert_success  @gateway.unstore(customer_stored.authorization, second_card.authorization)
-    assert_success  @gateway.unstore(customer_stored.authorization)
+    assert_success @gateway.unstore(customer_stored.authorization, first_card.authorization)
+    assert_success @gateway.unstore(customer_stored.authorization, second_card.authorization)
+    assert_success @gateway.unstore(customer_stored.authorization)
   end
 
   def test_invalid_login
@@ -130,6 +135,6 @@ class RemoteOpenpayTest < Test::Unit::TestCase
     )
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal 'The api key or merchant id are invalid.', response.message
+    assert_equal 'The api key or merchant id are invalid', response.message
   end
 end

@@ -10,8 +10,8 @@ class RemoteFederatedCanadaTest < Test::Unit::TestCase
 
     @credit_card = credit_card('4111111111111111') # Visa
 
-    @options = { 
-      :order_id => ActiveMerchant::Utils.generate_unique_id,
+    @options = {
+      :order_id => generate_unique_id,
       :billing_address => address,
       :description => 'Active Merchant Remote Test Purchase'
     }
@@ -19,10 +19,6 @@ class RemoteFederatedCanadaTest < Test::Unit::TestCase
 
   def test_gateway_should_exist
     assert @gateway
-  end
-
-  def test_validity_of_credit_card
-    assert @credit_card.valid?
   end
 
   def test_successful_purchase

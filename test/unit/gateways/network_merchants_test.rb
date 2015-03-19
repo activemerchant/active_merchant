@@ -8,6 +8,7 @@ class NetworkMerchantsTest < Test::Unit::TestCase
                )
 
     @credit_card = credit_card
+    @check = check
     @amount = 100
 
     @options = {
@@ -15,6 +16,17 @@ class NetworkMerchantsTest < Test::Unit::TestCase
       :billing_address => address,
       :description => 'Store Purchase'
     }
+  end
+
+  def test_add_swipe_data_with_creditcard
+    @credit_card.track_data = "data"
+
+    @gateway.expects(:ssl_post).with do |_, body|
+      body.include?("track_1=data")
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
   end
 
   def test_successful_purchase
@@ -100,7 +112,7 @@ class NetworkMerchantsTest < Test::Unit::TestCase
   def test_store
     @gateway.expects(:ssl_post).returns(successful_store)
 
-    assert store = @gateway.store(@credit_card, @options)
+    store = @gateway.store(@credit_card, @options)
     assert_success store
     assert_equal '1200085822', store.authorization
     assert_equal '1200085822', store.params['customer_vault_id']
@@ -109,7 +121,7 @@ class NetworkMerchantsTest < Test::Unit::TestCase
   def test_store_check
     @gateway.expects(:ssl_post).returns(successful_store)
 
-    assert store = @gateway.store(@check, @options)
+    store = @gateway.store(@check, @options)
     assert_success store
     assert_equal '1200085822', store.authorization
     assert_equal '1200085822', store.params['customer_vault_id']
@@ -119,7 +131,7 @@ class NetworkMerchantsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(failed_store)
 
     @credit_card.number = "123"
-    assert store = @gateway.store(@creditcard, @options)
+    store = @gateway.store(@credit_card, @options)
     assert_failure store
     assert store.message.include?('Billing Information missing')
     assert_nil store.authorization
@@ -149,6 +161,23 @@ class NetworkMerchantsTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid Username', response.message
+  end
+
+  def test_currency_uses_default_when_not_provided
+    @gateway.expects(:ssl_post).with do |_, body|
+      body.include?("currency=USD")
+    end.returns(successful_purchase_response)
+
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_provided_currency_overrides_default
+    @options.update(currency: 'EUR')
+    @gateway.expects(:ssl_post).with do |_, body|
+      body.include?("currency=EUR")
+    end.returns(successful_purchase_response)
+
+    @gateway.purchase(@amount, @credit_card, @options)
   end
 
   private

@@ -91,6 +91,7 @@ module ActiveMerchant #:nodoc:
         post[:method] = 'card'
         post[:description] = options[:description]
         post[:order_id] = options[:order_id]
+        post[:device_session_id] = options[:device_session_id]
         add_creditcard(post, creditcard, options)
         post
       end

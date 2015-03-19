@@ -39,6 +39,7 @@ class MultiResponseTest < Test::Unit::TestCase
       :authorization => "auth1",
       :avs_result => {:code => "AVS1"},
       :cvv_result => "CVV1",
+      :error_code => :card_declined,
       :fraud_review => true
     )
     m.process{r1}
@@ -48,6 +49,7 @@ class MultiResponseTest < Test::Unit::TestCase
     assert_equal "auth1", m.authorization
     assert_equal "AVS1", m.avs_result["code"]
     assert_equal "CVV1", m.cvv_result["code"]
+    assert_equal :card_declined, m.error_code
     assert m.test?
     assert m.fraud_review?
 
@@ -73,8 +75,7 @@ class MultiResponseTest < Test::Unit::TestCase
   end
 
   def test_proxies_first_request_if_marked
-    m = MultiResponse.new
-    m.primary_response = :first
+    m = MultiResponse.new(:use_first_response)
 
     r1 = Response.new(
       true,
@@ -118,8 +119,7 @@ class MultiResponseTest < Test::Unit::TestCase
   end
 
   def test_primary_response_always_returns_the_last_response_on_failure
-    m = MultiResponse.new
-    m.primary_response = :first
+    m = MultiResponse.new(:use_first_response)
 
     r1 = Response.new(true, "1", {}, {})
     r2 = Response.new(false, "2", {}, {})
@@ -155,5 +155,21 @@ class MultiResponseTest < Test::Unit::TestCase
       r.process{r3}
     end
     assert_equal [r1, r2, r3], m.responses
+  end
+
+  def test_handles_ignores_optional_request_result
+    m = MultiResponse.new
+
+    r1 = Response.new(true, "1")
+    m.process{r1}
+    assert_equal "1", m.message
+    assert_equal [r1], m.responses
+
+    r2 = Response.new(false, "2")
+    m.process(:ignore_result){r2}
+    assert_equal "1", m.message
+    assert_equal [r1, r2], m.responses
+
+    assert m.success?
   end
 end

@@ -22,6 +22,18 @@ class HpsTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_no_address
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    options = {
+      order_id: '1',
+      description: 'Store Purchase'
+    }
+    response = @gateway.purchase(@amount, @credit_card, options)
+    assert_instance_of Response, response
+    assert_success response
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_charge_response)
 
@@ -34,6 +46,18 @@ class HpsTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+  end
+
+  def test_successful_authorize_no_address
+    @gateway.expects(:ssl_post).returns(successful_charge_response)
+
+    options = {
+      order_id: '1',
+      description: 'Store Authorize'
+    }
+    response = @gateway.authorize(@amount, @credit_card, options)
     assert_instance_of Response, response
     assert_success response
   end
@@ -94,6 +118,76 @@ class HpsTest < Test::Unit::TestCase
     void = @gateway.void('169054')
     assert_instance_of Response, void
     assert_failure void
+  end
+
+  def test_successful_purchase_with_swipe_no_encryption
+    @gateway.expects(:ssl_post).returns(successful_swipe_purchase_response)
+
+    @credit_card.track_data = '%B547888879888877776?;5473500000000014=25121019999888877776?'
+    response = @gateway.purchase(@amount,@credit_card,@options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_purchase_with_swipe_bad_track_data
+    @gateway.expects(:ssl_post).returns(failed_swipe_purchase_response)
+
+    @credit_card.track_data = '%B547888879888877776?;?'
+    response = @gateway.purchase(@amount,@credit_card,@options)
+
+    assert_failure response
+    assert_equal 'Transaction was rejected because the track data could not be read.', response.message
+  end
+
+  def test_successful_purchase_with_swipe_encryption_type_01
+    @gateway.expects(:ssl_post).returns(successful_swipe_purchase_response)
+
+    @options[:encryption_type] = "01"
+    @credit_card.track_data = "&lt;E1052711%B5473501000000014^MC TEST CARD^251200000000000000000000000000000000?|GVEY/MKaKXuqqjKRRueIdCHPPoj1gMccgNOtHC41ymz7bIvyJJVdD3LW8BbwvwoenI+|+++++++C4cI2zjMp|11;5473501000000014=25120000000000000000?|8XqYkQGMdGeiIsgM0pzdCbEGUDP|+++++++C4cI2zjMp|00|||/wECAQECAoFGAgEH2wYcShV78RZwb3NAc2VjdXJlZXhjaGFuZ2UubmV0PX50qfj4dt0lu9oFBESQQNkpoxEVpCW3ZKmoIV3T93zphPS3XKP4+DiVlM8VIOOmAuRrpzxNi0TN/DWXWSjUC8m/PI2dACGdl/hVJ/imfqIs68wYDnp8j0ZfgvM26MlnDbTVRrSx68Nzj2QAgpBCHcaBb/FZm9T7pfMr2Mlh2YcAt6gGG1i2bJgiEJn8IiSDX5M2ybzqRT86PCbKle/XCTwFFe1X|&gt;"
+    response = @gateway.purchase(@amount,@credit_card,@options)
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_purchase_with_swipe_encryption_type_02
+    @gateway.expects(:ssl_post).returns(successful_swipe_purchase_response)
+
+    @options[:encryption_type] = '02'
+    @options[:encrypted_track_number] = 2
+    @options[:ktb] = '/wECAQECAoFGAgEH3QgVTDT6jRZwb3NAc2VjdXJlZXhjaGFuZ2UubmV0Nkt08KRSPigRYcr1HVgjRFEvtUBy+VcCKlOGA3871r3SOkqDvH2+30insdLHmhTLCc4sC2IhlobvWnutAfylKk2GLspH/pfEnVKPvBv0hBnF4413+QIRlAuGX6+qZjna2aMl0kIsjEY4N6qoVq2j5/e5I+41+a2pbm61blv2PEMAmyuCcAbN3/At/1kRZNwN6LSUg9VmJO83kOglWBe1CbdFtncq'
+    @credit_card.track_data = '7SV2BK6ESQPrq01iig27E74SxMg'
+    response = @gateway.purchase(@amount,@credit_card,@options)
+
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_successful_verify
+    @gateway.expects(:ssl_post).returns(successful_verify_response)
+
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal 'Success', response.message
+  end
+
+  def test_failed_verify
+    @gateway.expects(:ssl_post).returns(failed_verify_response)
+    @credit_card.number = 12345
+
+    response = @gateway.verify(@credit_card, @options)
+
+    assert_failure response
+    assert_equal 'The card number is not a valid credit card number.', response.message
+  end
+
+  def test_test_returns_true
+    gateway = HpsGateway.new(fixtures(:hps))
+    assert_equal true, gateway.send(:test?)
+  end
+
+  def test_test_returns_false
+    assert_false @gateway.send(:test?)
   end
 
   private
@@ -390,4 +484,124 @@ class HpsTest < Test::Unit::TestCase
 </soap:Envelope>
     RESPONSE
   end
+
+  def successful_swipe_purchase_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>95878</LicenseId>
+               <SiteId>95881</SiteId>
+               <DeviceId>2409000</DeviceId>
+               <GatewayTxnId>17596558</GatewayTxnId>
+               <GatewayRspCode>0</GatewayRspCode>
+               <GatewayRspMsg>Success</GatewayRspMsg>
+               <RspDT>2014-05-26T10:27:30.4211513</RspDT>
+            </Header>
+            <Transaction>
+               <CreditSale>
+                  <RspCode>00</RspCode>
+                  <RspText>APPROVAL</RspText>
+                  <AuthCode>037677</AuthCode>
+                  <AVSRsltCode>0</AVSRsltCode>
+                  <RefNbr>414614470800</RefNbr>
+                  <AVSResultCodeAction>ACCEPT</AVSResultCodeAction>
+                  <CardType>MC</CardType>
+                  <AVSRsltText>AVS Not Requested.</AVSRsltText>
+               </CreditSale>
+            </Transaction>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    RESPONSE
+  end
+
+  def failed_swipe_purchase_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>95878</LicenseId>
+               <SiteId>95881</SiteId>
+               <DeviceId>2409000</DeviceId>
+               <GatewayTxnId>17602711</GatewayTxnId>
+               <GatewayRspCode>8</GatewayRspCode>
+               <GatewayRspMsg>Transaction was rejected because the track data could not be read.</GatewayRspMsg>
+               <RspDT>2014-05-26T10:42:44.5031513</RspDT>
+            </Header>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    RESPONSE
+  end
+
+  def successful_verify_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>95878</LicenseId>
+               <SiteId>95881</SiteId>
+               <DeviceId>2409000</DeviceId>
+               <SiteTrace />
+               <GatewayTxnId>20153225</GatewayTxnId>
+               <GatewayRspCode>0</GatewayRspCode>
+               <GatewayRspMsg>Success</GatewayRspMsg>
+               <RspDT>2014-09-04T14:43:49.6015895</RspDT>
+            </Header>
+            <Transaction>
+               <CreditAccountVerify>
+                  <RspCode>85</RspCode>
+                  <RspText>CARD OK</RspText>
+                  <AuthCode>65557A</AuthCode>
+                  <AVSRsltCode>0</AVSRsltCode>
+                  <CVVRsltCode>M</CVVRsltCode>
+                  <RefNbr>424715929580</RefNbr>
+                  <CardType>Visa</CardType>
+                  <AVSRsltText>AVS Not Requested.</AVSRsltText>
+                  <CVVRsltText>Match.</CVVRsltText>
+               </CreditAccountVerify>
+            </Transaction>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    RESPONSE
+  end
+
+  def failed_verify_response
+    <<-RESPONSE
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <soap:Body>
+      <PosResponse xmlns="http://Hps.Exchange.PosGateway" rootUrl="https://posgateway.cert.secureexchange.net/Hps.Exchange.PosGateway">
+         <Ver1.0>
+            <Header>
+               <LicenseId>95878</LicenseId>
+               <SiteId>95881</SiteId>
+               <DeviceId>2409000</DeviceId>
+               <SiteTrace />
+               <GatewayTxnId>20155097</GatewayTxnId>
+               <GatewayRspCode>14</GatewayRspCode>
+               <GatewayRspMsg>Transaction rejected because the manually entered card number is invalid.</GatewayRspMsg>
+               <RspDT>2014-09-04T15:42:47.983634</RspDT>
+            </Header>
+         </Ver1.0>
+      </PosResponse>
+   </soap:Body>
+</soap:Envelope>
+    RESPONSE
+  end
+
 end

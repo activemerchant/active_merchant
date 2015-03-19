@@ -4,6 +4,7 @@ class EwayRapidTest < Test::Unit::TestCase
   include CommStub
 
   def setup
+    ActiveMerchant::Billing::EwayRapidGateway.partner_id = nil
     @gateway = EwayRapidGateway.new(
       :login => "login",
       :password => "password"
@@ -49,6 +50,28 @@ class EwayRapidTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_failed_purchase_without_message
+    response = stub_comms do
+      @gateway.purchase(-100, @credit_card)
+    end.respond_with(failed_purchase_response_without_message)
+
+    assert_failure response
+    assert_equal "Do Not Honour", response.message
+    assert_nil response.authorization
+    assert response.test?
+  end
+
+  def test_failed_purchase_with_multiple_messages
+    response = stub_comms do
+      @gateway.purchase(-100, @credit_card)
+    end.respond_with(failed_purchase_response_multiple_messages)
+
+    assert_failure response
+    assert_equal "Invalid Customer Phone,Invalid ShippingAddress Phone", response.message
+    assert_nil response.authorization
+    assert response.test?
+  end
+
   def test_purchase_with_all_options
     response = stub_comms do
       @gateway.purchase(200, @credit_card,
@@ -56,7 +79,8 @@ class EwayRapidTest < Test::Unit::TestCase
         :redirect_url => "http://awesomesauce.com",
         :ip => "0.0.0.0",
         :application_id => "Woohoo",
-        :description => "Description",
+        :partner_id => "SomePartner",
+        :description => "The Really Long Description More Than Sixty Four Characters Gets Truncated",
         :order_id => "orderid1",
         :currency => "INR",
         :email => "jim@example.com",
@@ -88,16 +112,16 @@ class EwayRapidTest < Test::Unit::TestCase
         }
       )
     end.check_request do |endpoint, data, headers|
-      # assert_no_match(%r{#{@credit_card.number}}, data)
-
       assert_match(%r{"TransactionType":"CustomTransactionType"}, data)
       assert_match(%r{"RedirectUrl":"http://awesomesauce.com"}, data)
       assert_match(%r{"CustomerIP":"0.0.0.0"}, data)
       assert_match(%r{"DeviceID":"Woohoo"}, data)
+      assert_match(%r{"PartnerID":"SomePartner"}, data)
 
       assert_match(%r{"TotalAmount":"200"}, data)
-      assert_match(%r{"InvoiceDescription":"Description"}, data)
+      assert_match(%r{"InvoiceDescription":"The Really Long Description More Than Sixty Four Characters Gets"}, data)
       assert_match(%r{"InvoiceReference":"orderid1"}, data)
+      assert_match(%r{"InvoiceNumber":"orderid1"}, data)
       assert_match(%r{"CurrencyCode":"INR"}, data)
 
       assert_match(%r{"Title":"Mr."}, data)
@@ -131,6 +155,101 @@ class EwayRapidTest < Test::Unit::TestCase
     assert_success response
     assert_equal 10440187, response.authorization
     assert response.test?
+  end
+
+  def test_partner_id_class_attribute
+    ActiveMerchant::Billing::EwayRapidGateway.partner_id = 'SomePartner'
+    stub_comms do
+      @gateway.purchase(200, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{"PartnerID":"SomePartner"}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_partner_id_params_overrides_class_attribute
+    ActiveMerchant::Billing::EwayRapidGateway.partner_id = 'SomePartner'
+    stub_comms do
+      @gateway.purchase(200, @credit_card, partner_id: 'OtherPartner')
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{"PartnerID":"OtherPartner"}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_partner_id_is_omitted_when_not_set
+    stub_comms do
+      @gateway.purchase(200, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{"PartnerID":}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_partner_id_truncates_to_50_characters
+    partner_string = "EWay Rapid PartnerID is capped at 50 characters and will truncate if it is too long."
+    stub_comms do
+      @gateway.purchase(200, @credit_card, partner_id: partner_string)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{"PartnerID":"#{partner_string.slice(0,50)}"}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_successful_authorize
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.respond_with(successful_authorize_response)
+
+    assert_success response
+    assert_equal "Transaction Approved Successful", response.message
+    assert_equal 10774952, response.authorization
+  end
+
+  def test_successful_capture
+    response = stub_comms do
+      @gateway.capture(nil, "auth")
+    end.respond_with(successful_capture_response)
+
+    assert_success response
+    assert_equal "982541", response.message
+    assert_equal 10774953, response.authorization
+  end
+
+  def test_failed_authorize
+    response = stub_comms do
+      @gateway.authorize(@amount, @credit_card)
+    end.respond_with(failed_authorize_response)
+
+    assert_failure response
+    assert_equal "Invalid Payment TotalAmount", response.message
+    assert_nil response.authorization
+  end
+
+  def test_failed_capture
+    response = stub_comms do
+      @gateway.capture(@amount, "auth")
+    end.respond_with(failed_capture_response)
+
+    assert_failure response
+    assert_equal "Invalid Auth Transaction ID for Capture/Void", response.message
+    assert_equal 0, response.authorization
+  end
+
+  def test_successful_void
+    response = stub_comms do
+      @gateway.void("auth")
+    end.respond_with(successful_void_response)
+
+    assert_success response
+    assert_equal "878060", response.message
+    assert_equal 10775041, response.authorization
+  end
+
+  def test_failed_void
+    response = stub_comms do
+      @gateway.void(@amount, "auth")
+    end.respond_with(failed_void_response)
+
+    assert_failure response
+    assert_equal "Invalid Auth Transaction ID for Capture/Void", response.message
+    assert_equal 0, response.authorization
   end
 
   def test_successful_store
@@ -186,7 +305,7 @@ class EwayRapidTest < Test::Unit::TestCase
     response = stub_comms do
       @gateway.refund(@amount, '1234567')
     end.check_request do |endpoint, data, headers|
-      assert_match /Transaction\/1234567\/Refund$/, endpoint
+      assert_match %r{Transaction\/1234567\/Refund$}, endpoint
       json = JSON.parse(data)
       assert_equal '100', json['Refund']['TotalAmount']
       assert_equal '1234567', json['Refund']['TransactionID']
@@ -302,12 +421,45 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 100,
-          "InvoiceNumber": "",
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
         },
         "Errors": null
+      }
+    )
+  end
+
+  def failed_purchase_response_without_message
+    %(
+      {
+        "AuthorisationCode": null,
+        "ResponseCode": "05",
+        "TransactionID": null,
+        "TransactionStatus": null,
+        "TransactionType": "Purchase",
+        "BeagleScore": null,
+        "Verification": null,
+        "Customer": {
+        }
+      }
+    )
+  end
+
+  def failed_purchase_response_multiple_messages
+    %(
+      {
+        "AuthorisationCode": null,
+        "ResponseCode": null,
+        "ResponseMessage": "V6070,V6083",
+        "TransactionID": null,
+        "TransactionStatus": null,
+        "TransactionType": "Purchase",
+        "BeagleScore": null,
+        "Verification": null,
+        "Customer": {
+        }
       }
     )
   end
@@ -355,12 +507,172 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": -100,
-          "InvoiceNumber": null,
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
         },
         "Errors": "V6011"
+      }
+    )
+  end
+
+  def successful_authorize_response
+    %(
+      {
+        "AuthorisationCode": "805851",
+        "ResponseCode": "00",
+        "ResponseMessage": "A2000",
+        "TransactionID": 10774952,
+        "TransactionStatus": true,
+        "TransactionType": "Purchase",
+        "BeagleScore": 0,
+        "Verification": {
+          "CVN": 0,
+          "Address": 0,
+          "Email": 0,
+          "Mobile": 0,
+          "Phone": 0
+        },
+        "Customer": {
+          "CardDetails": {
+          "Number": "444433XXXXXX1111",
+          "Name": "Longbob Longsen",
+          "ExpiryMonth": "09",
+          "ExpiryYear": "15",
+          "StartMonth": null,
+          "StartYear": null,
+          "IssueNumber": null
+        },
+        "TokenCustomerID": null,
+        "Reference": "",
+        "Title": "Mr.",
+        "FirstName": "Jim",
+        "LastName": "Smith",
+        "CompanyName": "Widgets Inc",
+        "JobDescription": "",
+        "Street1": "1234 My Street",
+        "Street2": "Apt 1",
+        "City": "Ottawa",
+        "State": "ON",
+        "PostalCode": "K1C2N6",
+        "Country": "ca",
+        "Email": "",
+        "Phone": "(555)555-5555",
+        "Mobile": "",
+        "Comments": "",
+        "Fax": "(555)555-6666",
+        "Url": ""
+        },
+        "Payment": {
+          "TotalAmount":100,
+          "InvoiceNumber": "1",
+          "InvoiceDescription": "Store Purchase",
+          "InvoiceReference": "1",
+        "CurrencyCode": "AUD"
+        },
+        "Errors": null
+      }
+    )
+  end
+
+  def failed_authorize_response
+    %(
+      {
+        "AuthorisationCode": null,
+        "ResponseCode": null,
+        "ResponseMessage": null,
+        "TransactionID": null,
+        "TransactionStatus": null,
+        "TransactionType": "Purchase",
+        "BeagleScore": null,
+        "Verification": null,
+        "Customer": {
+          "CardDetails": {
+            "Number": "444433XXXXXX1111",
+            "Name": "Longbob Longsen",
+            "ExpiryMonth": "09",
+            "ExpiryYear": "2015",
+            "StartMonth": null,
+            "StartYear": null,
+            "IssueNumber": null
+          },
+          "TokenCustomerID": null,
+          "Reference": null,
+          "Title": "Mr.",
+          "FirstName": "Jim",
+          "LastName": "Smith",
+          "CompanyName": "Widgets Inc",
+          "JobDescription": null,
+          "Street1": "1234 My Street",
+          "Street2": "Apt 1",
+          "City": "Ottawa",
+          "State": "ON",
+          "PostalCode": "K1C2N6",
+          "Country": "ca",
+          "Email": null,
+          "Phone": "(555)555-5555",
+          "Mobile": null,
+          "Comments": null,
+          "Fax": "(555)555-6666",
+          "Url": null
+        },
+        "Payment": {
+          "TotalAmount": -100,
+          "InvoiceNumber": "1",
+          "InvoiceDescription": "Store Purchase",
+          "InvoiceReference": "1",
+          "CurrencyCode": "AUD"
+        },
+        "Errors": "V6011"
+      }
+    )
+  end
+
+  def successful_capture_response
+    %(
+      {
+        "ResponseCode": "982541",
+        "ResponseMessage": "982541",
+        "TransactionID": 10774953,
+        "TransactionStatus": true,
+        "Errors": null
+      }
+    )
+  end
+
+  def failed_capture_response
+    %(
+      {
+        "ResponseCode": null,
+        "ResponseMessage": null
+        ,"TransactionID": 0
+        ,"TransactionStatus": false,
+        "Errors": "V6134"
+      }
+    )
+  end
+
+  def successful_void_response
+    %(
+      {
+        "ResponseCode": "878060",
+        "ResponseMessage": "878060",
+        "TransactionID": 10775041,
+        "TransactionStatus": true,
+        "Errors": null
+      }
+    )
+  end
+
+  def failed_void_response
+    %(
+      {
+        "ResponseCode": null,
+        "ResponseMessage": null,
+        "TransactionID": 0,
+        "TransactionStatus": false,
+        "Errors": "V6134"
       }
     )
   end
@@ -414,7 +726,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 0,
-          "InvoiceNumber": "",
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -467,7 +779,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 0,
-          "InvoiceNumber": null,
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -526,7 +838,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 0,
-          "InvoiceNumber": "",
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"

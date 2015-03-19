@@ -2,12 +2,14 @@ module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     # This module is included in both PaypalGateway and PaypalExpressGateway
     module PaypalCommonAPI
+      include Empty
+
       API_VERSION = '72'
 
       URLS = {
         :test => { :certificate => 'https://api.sandbox.paypal.com/2.0/',
                    :signature   => 'https://api-3t.sandbox.paypal.com/2.0/' },
-        :live => { :certificate => 'https://api-aa.paypal.com/2.0/',
+        :live => { :certificate => 'https://api.paypal.com/2.0/',
                    :signature   => 'https://api-3t.paypal.com/2.0/' }
       }
 
@@ -122,7 +124,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, identification, options = {})
-        deprecated Gateway::CREDIT_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated Gateway::CREDIT_DEPRECATION_MESSAGE
         refund(money, identification, options)
       end
 
@@ -573,7 +575,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'n2:Custom', options[:custom] unless options[:custom].blank?
 
           xml.tag! 'n2:InvoiceID', (options[:order_id] || options[:invoice_id]) unless (options[:order_id] || options[:invoice_id]).blank?
-          xml.tag! 'n2:ButtonSource', application_id.to_s.slice(0,32) unless application_id.blank?
+          add_button_source(xml)
 
           # The notify URL applies only to DoExpressCheckoutPayment.
           # This value is ignored when set in SetExpressCheckout or GetExpressCheckoutDetails
@@ -590,6 +592,13 @@ module ActiveMerchant #:nodoc:
           # the buyer specifying the amount, frequency, and duration of the recurring payment.
           # requires version 80.0 of the API
           xml.tag! 'n2:Recurring', options[:recurring] unless options[:recurring].blank?
+        end
+      end
+
+      def add_button_source(xml)
+        button_source = (@options[:button_source] || application_id)
+        if !empty?(button_source)
+          xml.tag! 'n2:ButtonSource', button_source.to_s.slice(0, 32)
         end
       end
 
@@ -659,7 +668,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def item_amount(amount, currency_code)
-        if amount.to_i < 0 && non_fractional_currency?(currency_code)
+        if amount.to_i < 0 && Gateway.non_fractional_currency?(currency_code)
           amount(amount).to_f.floor
         else
           localized_amount(amount, currency_code)

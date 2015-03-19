@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class ElavonTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = ElavonGateway.new(
                  :login => 'login',
@@ -87,6 +89,29 @@ class ElavonTest < Test::Unit::TestCase
     assert_equal 'The refund amount exceeds the original transaction amount.', response.message
   end
 
+  def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card)
+    end.respond_with(successful_authorization_response, successful_void_response)
+    assert_success response
+  end
+
+  def test_successful_verify_failed_void
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorization_response, failed_void_response)
+    assert_success response
+    assert_equal "APPROVED", response.message
+  end
+
+  def test_unsuccessful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorization_response, successful_void_response)
+    assert_failure response
+    assert_equal "The Credit Card Number supplied in the authorization request appears to be invalid.", response.message
+  end
+
   def test_invalid_login
     @gateway.expects(:ssl_post).returns(invalid_login_response)
 
@@ -111,6 +136,58 @@ class ElavonTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
     response = @gateway.purchase(@amount, @credit_card)
     assert_equal 'P', response.cvv_result['code']
+  end
+
+  def test_successful_store
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+
+    assert response = @gateway.store(@credit_card, @options)
+    assert_success response
+    assert_equal '7595301425001111', response.params["token"]
+    assert response.test?
+  end
+
+  def test_failed_store
+    @gateway.expects(:ssl_post).returns(failed_store_response)
+
+    assert response = @gateway.store(@credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
+  def test_successful_update
+    @gateway.expects(:ssl_post).returns(successful_update_response)
+    token = '7595301425001111'
+    assert response = @gateway.update(token, @credit_card, @options)
+    assert_success response
+    assert response.test?
+  end
+
+  def test_failed_update
+    @gateway.expects(:ssl_post).returns(failed_update_response)
+    token = '7595301425001111'
+    assert response = @gateway.update(token, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+
+  def test_stripping_non_word_characters_from_zip
+    bad_zip = '99577-0727'
+    stripped_zip = '995770727'
+
+    @options[:billing_address][:zip] = bad_zip
+
+    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => stripped_zip))
+
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_zip_codes_with_letters_are_left_intact
+    @options[:billing_address][:zip] = '.K1%Z_5E3-'
+
+    @gateway.expects(:commit).with(anything, anything, has_entries(:avs_zip => 'K1Z5E3'))
+
+    @gateway.purchase(@amount, @credit_card, @options)
   end
 
   private
@@ -227,6 +304,51 @@ class ElavonTest < Test::Unit::TestCase
   end
 
   def failed_authorization_response
+    "errorCode=5000
+    errorName=Credit Card Number Invalid
+    errorMessage=The Credit Card Number supplied in the authorization request appears to be invalid."
+  end
+
+  def successful_store_response
+    "ssl_transaction_type=CCGETTOKEN
+     ssl_result=0
+     ssl_token=7595301425001111
+     ssl_card_number=41**********1111
+     ssl_token_response=SUCCESS
+     ssl_add_token_response=Card Updated
+     vu_aamc_id="
+  end
+
+  def failed_store_response
+    "errorCode=5000
+    errorName=Credit Card Number Invalid
+    errorMessage=The Credit Card Number supplied in the authorization request appears to be invalid."
+  end
+
+  def successful_update_response
+    "ssl_token=7595301425001111
+    ssl_card_type=VISA
+    ssl_card_number=************1111
+    ssl_exp_date=1015
+    ssl_company=
+    ssl_customer_id=
+    ssl_first_name=John
+    ssl_last_name=Doe
+    ssl_avs_address=
+    ssl_address2=
+    ssl_avs_zip=
+    ssl_city=
+    ssl_state=
+    ssl_country=
+    ssl_phone=
+    ssl_email=
+    ssl_description=
+    ssl_user_id=webpage
+    ssl_token_response=SUCCESS
+    ssl_result=0"
+  end
+
+  def failed_update_response
     "errorCode=5000
     errorName=Credit Card Number Invalid
     errorMessage=The Credit Card Number supplied in the authorization request appears to be invalid."

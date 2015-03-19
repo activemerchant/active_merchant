@@ -13,22 +13,22 @@ class PayboxDirectTest < Test::Unit::TestCase
                       :brand => 'visa'
                    )
     @amount = 100
-    
-    @options = { 
+
+    @options = {
       :order_id => '1',
       :billing_address => address,
       :description => 'Store Purchase'
     }
   end
-  
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(purchase_response)
-    
+
     assert response = @gateway.purchase(@amount, @credit_card, @options)
 
     assert_instance_of Response, response
     assert_success response
-    
+
     # Replace with authorization number from the successful response
     assert_equal response.params['numappel'].to_s + response.params['numtrans'], response.authorization
     assert_equal 'XXXXXX', response.params['autorisation']
@@ -39,11 +39,11 @@ class PayboxDirectTest < Test::Unit::TestCase
   def test_deprecated_credit
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/NUMAPPEL=transid/), anything).returns("")
     @gateway.expects(:parse).returns({})
-    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE, @gateway) do
+    assert_deprecation_warning(Gateway::CREDIT_DEPRECATION_MESSAGE) do
       @gateway.credit(@amount, "transid", @options)
     end
   end
-  
+
   def test_refund
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/NUMAPPEL=transid/), anything).returns("")
     @gateway.expects(:parse).returns({})
@@ -52,7 +52,7 @@ class PayboxDirectTest < Test::Unit::TestCase
 
   def test_unsuccessful_request
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
-    
+
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal "Demande trait?e avec succ?s ✔漢", response.message
@@ -87,9 +87,9 @@ class PayboxDirectTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).with(anything, regexp_matches(/VERSION=00103/)).returns(purchase_response)
     @gateway.purchase(@amount, @credit_card, @options)
   end
-  
+
   private
-  
+
   # Place raw successful response from gateway here
   def purchase_response(code="00000")
     "NUMTRANS=0720248861&NUMAPPEL=0713790302&NUMQUESTION=0000790217&SITE=1999888&RANG=99&AUTORISATION=XXXXXX&CODEREPONSE=#{code}&COMMENTAIRE=Demande trait?e avec succ?s ✔漢"

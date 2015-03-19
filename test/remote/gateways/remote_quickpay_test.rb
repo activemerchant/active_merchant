@@ -56,7 +56,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @visa_dankort, @options)
     assert_success response
     assert !response.authorization.blank?
-    assert_equal 'dankort', response.params['cardtype']
+    assert_equal 'visa-dk', response.params['cardtype']
   end
 
   def test_successful_visa_electron_authorization
@@ -181,7 +181,7 @@ class RemoteQuickpayTest < Test::Unit::TestCase
   end
 
   def test_failed_store
-    assert store = @gateway.store(credit_card('400010001111222a'), @options.merge(:description => "New subscription"))
+    assert store = @gateway.store(credit_card('4'), @options.merge(:description => "New subscription"))
     assert_failure store
     assert_equal "Error in field: cardnumber", store.message
   end

@@ -1,6 +1,4 @@
-require File.dirname(__FILE__) + '/orbital/orbital_soft_descriptors'
-require File.dirname(__FILE__) + '/orbital/avs_result'
-require File.dirname(__FILE__) + '/orbital/cvv_result'
+require 'active_merchant/billing/gateways/orbital/orbital_soft_descriptors'
 require "rexml/document"
 
 module ActiveMerchant #:nodoc:
@@ -191,7 +189,7 @@ module ActiveMerchant #:nodoc:
           add_creditcard(xml, creditcard, options[:currency])
           add_address(xml, creditcard, options)
           if @options[:customer_profiles]
-            add_customer_data(xml, options)
+            add_customer_data(xml, creditcard, options)
             add_managed_billing(xml, options)
           end
         end
@@ -204,7 +202,7 @@ module ActiveMerchant #:nodoc:
           add_creditcard(xml, creditcard, options[:currency])
           add_address(xml, creditcard, options)
           if @options[:customer_profiles]
-            add_customer_data(xml, options)
+            add_customer_data(xml, creditcard, options)
             add_managed_billing(xml, options)
           end
         end
@@ -226,13 +224,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, authorization, options= {})
-        deprecated CREDIT_DEPRECATION_MESSAGE
+        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
         refund(money, authorization, options)
       end
 
       def void(authorization, options = {}, deprecated = {})
         if(!options.kind_of?(Hash))
-          deprecated("Calling the void method with an amount parameter is deprecated and will be removed in a future version.")
+          ActiveMerchant.deprecated("Calling the void method with an amount parameter is deprecated and will be removed in a future version.")
           return void(options, deprecated.merge(:amount => authorization))
         end
 
@@ -242,7 +240,7 @@ module ActiveMerchant #:nodoc:
 
 
       # ==== Customer Profiles
-      # :customer_ref_num should be set unless your happy with Orbital providing one
+      # :customer_ref_num should be set unless you're happy with Orbital providing one
       #
       # :customer_profile_order_override_ind can be set to map
       # the CustomerRefNum to OrderID or Comments. Defaults to 'NO' - no mapping
@@ -296,12 +294,14 @@ module ActiveMerchant #:nodoc:
         authorization.split(';')
       end
 
-      def add_customer_data(xml, options)
+      def add_customer_data(xml, creditcard, options)
         if options[:profile_txn]
           xml.tag! :CustomerRefNum, options[:customer_ref_num]
         else
           if options[:customer_ref_num]
-            xml.tag! :CustomerProfileFromOrderInd, USE_CUSTOMER_REF_NUM
+            if creditcard
+              xml.tag! :CustomerProfileFromOrderInd, USE_CUSTOMER_REF_NUM
+            end
             xml.tag! :CustomerRefNum, options[:customer_ref_num]
           else
             xml.tag! :CustomerProfileFromOrderInd, AUTO_GENERATE
@@ -324,12 +324,12 @@ module ActiveMerchant #:nodoc:
           avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s)
 
           if avs_supported
-            xml.tag! :AVSzip,       (address[:zip] ? address[:zip].to_s[0..9] : nil)
-            xml.tag! :AVSaddress1,  (address[:address1] ? address[:address1][0..29] : nil)
-            xml.tag! :AVSaddress2,  (address[:address2] ? address[:address2][0..29] : nil)
-            xml.tag! :AVScity,      (address[:city] ? address[:city][0..19] : nil)
-            xml.tag! :AVSstate,     address[:state]
-            xml.tag! :AVSphoneNum,  (address[:phone] ? address[:phone].scan(/\d/).join.to_s[0..13] : nil)
+            xml.tag! :AVSzip,      byte_limit(format_address_field(address[:zip]), 10)
+            xml.tag! :AVSaddress1, byte_limit(format_address_field(address[:address1]), 30)
+            xml.tag! :AVSaddress2, byte_limit(format_address_field(address[:address2]), 30)
+            xml.tag! :AVScity,     byte_limit(format_address_field(address[:city]), 20)
+            xml.tag! :AVSstate,    byte_limit(format_address_field(address[:state]), 2)
+            xml.tag! :AVSphoneNum, (address[:phone] ? address[:phone].scan(/\d/).join.to_s[0..13] : nil)
           end
           # can't look in billing address?
           xml.tag! :AVSname, ((creditcard && creditcard.name) ? creditcard.name[0..29] : nil)
@@ -342,29 +342,33 @@ module ActiveMerchant #:nodoc:
 
       def add_destination_address(xml, address)
         if address[:dest_zip]
-          xml.tag! :AVSDestzip,      (address[:dest_zip] ? address[:dest_zip].to_s[0..9] : nil)
-          xml.tag! :AVSDestaddress1, (address[:dest_address1] ? address[:dest_address1][0..29] : nil)
-          xml.tag! :AVSDestaddress2, (address[:dest_address2] ? address[:dest_address2][0..29] : nil)
-          xml.tag! :AVSDestcity,     (address[:dest_city] ? address[:dest_city][0..19] : nil)
-          xml.tag! :AVSDeststate,    address[:dest_state]
+          avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:dest_country].to_s)
+
+          xml.tag! :AVSDestzip,      byte_limit(format_address_field(address[:dest_zip]), 10)
+          xml.tag! :AVSDestaddress1, byte_limit(format_address_field(address[:dest_address1]), 30)
+          xml.tag! :AVSDestaddress2, byte_limit(format_address_field(address[:dest_address2]), 30)
+          xml.tag! :AVSDestcity,     byte_limit(format_address_field(address[:dest_city]), 20)
+          xml.tag! :AVSDeststate,    byte_limit(format_address_field(address[:dest_state]), 2)
           xml.tag! :AVSDestphoneNum, (address[:dest_phone] ? address[:dest_phone].scan(/\d/).join.to_s[0..13] : nil)
 
-          xml.tag! :AVSDestname,        (address[:dest_name] ? address[:dest_name][0..29] : nil)
-          xml.tag! :AVSDestcountryCode, address[:dest_country]
+          xml.tag! :AVSDestname,        byte_limit(address[:dest_name], 30)
+          xml.tag! :AVSDestcountryCode, (avs_supported ? address[:dest_country] : '')
         end
       end
 
       # For Profile requests
       def add_customer_address(xml, options)
         if(address = (options[:billing_address] || options[:address]))
-          xml.tag! :CustomerAddress1, (address[:address1] ? address[:address1][0..29] : nil)
-          xml.tag! :CustomerAddress2, (address[:address2] ? address[:address2][0..29] : nil)
-          xml.tag! :CustomerCity, (address[:city] ? address[:city][0..19] : nil)
-          xml.tag! :CustomerState, address[:state]
-          xml.tag! :CustomerZIP, (address[:zip] ? address[:zip].to_s[0..9] : nil)
-          xml.tag! :CustomerEmail, address[:email].to_s[0..49] if address[:email]
+          avs_supported = AVS_SUPPORTED_COUNTRIES.include?(address[:country].to_s)
+
+          xml.tag! :CustomerAddress1, byte_limit(format_address_field(address[:address1]), 30)
+          xml.tag! :CustomerAddress2, byte_limit(format_address_field(address[:address2]), 30)
+          xml.tag! :CustomerCity, byte_limit(format_address_field(address[:city]), 20)
+          xml.tag! :CustomerState, byte_limit(format_address_field(address[:state]), 2)
+          xml.tag! :CustomerZIP, byte_limit(format_address_field(address[:zip]), 10)
+          xml.tag! :CustomerEmail, byte_limit(address[:email], 50) if address[:email]
           xml.tag! :CustomerPhone, (address[:phone] ? address[:phone].scan(/\d/).join.to_s : nil)
-          xml.tag! :CustomerCountryCode, (address[:country] ? address[:country][0..1] : nil)
+          xml.tag! :CustomerCountryCode, (avs_supported ? address[:country] : '')
         end
       end
 
@@ -403,7 +407,7 @@ module ActiveMerchant #:nodoc:
 
       def add_managed_billing(xml, options)
         if mb = options[:managed_billing]
-          deprecated RECURRING_DEPRECATION_MESSAGE
+          ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 
           # default to recurring (R).  Other option is deferred (D).
           xml.tag! :MBType, mb[:type] || RECURRING
@@ -630,10 +634,30 @@ module ActiveMerchant #:nodoc:
       # 2. - , $ @ & and a space character, though the space character cannot be the leading character
       # 3. PINless Debit transactions can only use uppercase and lowercase alpha (A-Z, a-z) and numeric (0-9)
       def format_order_id(order_id)
-        illegal_characters = /[^,$@\- \w]/
+        illegal_characters = /[^,$@&\- \w]/
         order_id = order_id.to_s.gsub(/\./, '-')
         order_id.gsub!(illegal_characters, '')
+        order_id.lstrip!
         order_id[0...22]
+      end
+
+      # Address-related fields cannot contain % | ^ \ /
+      # Returns the value with these characters removed, or nil
+      def format_address_field(value)
+        value.gsub(/[%\|\^\\\/]/, '') if value.respond_to?(:gsub)
+      end
+
+      # Field lengths should be limited by byte count instead of character count
+      # Returns the truncated value or nil
+      def byte_limit(value, byte_length)
+        limited_value = ""
+
+        value.to_s.each_char do |c|
+          break if((limited_value.bytesize + c.bytesize) > byte_length)
+          limited_value << c
+        end
+
+        limited_value
       end
 
       def build_customer_request_xml(creditcard, options = {})
@@ -680,6 +704,123 @@ module ActiveMerchant #:nodoc:
           end
         end
         xml.target!
+      end
+
+      # Unfortunately, Orbital uses their own special codes for AVS responses
+      # that are different than the standard codes defined in
+      # <tt>ActiveMerchant::Billing::AVSResult</tt>.
+      #
+      # This class encapsulates the response codes shown on page 240 of their spec:
+      # http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
+      #
+      class AVSResult < ActiveMerchant::Billing::AVSResult
+        CODES = {
+            '1'  => 'No address supplied',
+            '2'  => 'Bill-to address did not pass Auth Host edit checks',
+            '3'  => 'AVS not performed',
+            '4'  => 'Issuer does not participate in AVS',
+            '5'  => 'Edit-error - AVS data is invalid',
+            '6'  => 'System unavailable or time-out',
+            '7'  => 'Address information unavailable',
+            '8'  => 'Transaction Ineligible for AVS',
+            '9'  => 'Zip Match/Zip 4 Match/Locale match',
+            'A'  => 'Zip Match/Zip 4 Match/Locale no match',
+            'B'  => 'Zip Match/Zip 4 no Match/Locale match',
+            'C'  => 'Zip Match/Zip 4 no Match/Locale no match',
+            'D'  => 'Zip No Match/Zip 4 Match/Locale match',
+            'E'  => 'Zip No Match/Zip 4 Match/Locale no match',
+            'F'  => 'Zip No Match/Zip 4 No Match/Locale match',
+            'G'  => 'No match at all',
+            'H'  => 'Zip Match/Locale match',
+            'J'  => 'Issuer does not participate in Global AVS',
+            'JA' => 'International street address and postal match',
+            'JB' => 'International street address match. Postal code not verified',
+            'JC' => 'International street address and postal code not verified',
+            'JD' => 'International postal code match. Street address not verified',
+            'M1' => 'Cardholder name matches',
+            'M2' => 'Cardholder name, billing address, and postal code matches',
+            'M3' => 'Cardholder name and billing code matches',
+            'M4' => 'Cardholder name and billing address match',
+            'M5' => 'Cardholder name incorrect, billing address and postal code match',
+            'M6' => 'Cardholder name incorrect, billing postal code matches',
+            'M7' => 'Cardholder name incorrect, billing address matches',
+            'M8' => 'Cardholder name, billing address and postal code are all incorrect',
+            'N3' => 'Address matches, ZIP not verified',
+            'N4' => 'Address and ZIP code not verified due to incompatible formats',
+            'N5' => 'Address and ZIP code match (International only)',
+            'N6' => 'Address not verified (International only)',
+            'N7' => 'ZIP matches, address not verified',
+            'N8' => 'Address and ZIP code match (International only)',
+            'N9' => 'Address and ZIP code match (UK only)',
+            'R'  => 'Issuer does not participate in AVS',
+            'UK' => 'Unknown',
+            'X'  => 'Zip Match/Zip 4 Match/Address Match',
+            'Z'  => 'Zip Match/Locale no match',
+        }
+
+        # Map vendor's AVS result code to a postal match code
+        ORBITAL_POSTAL_MATCH_CODE = {
+            'Y' => %w( 9 A B C H JA JD M2 M3 M5 N5 N8 N9 X Z ),
+            'N' => %w( D E F G M8 ),
+            'X' => %w( 4 J R ),
+            nil => %w( 1 2 3 5 6 7 8 JB JC M1 M4 M6 M7 N3 N4 N6 N7 UK )
+        }.inject({}) do |map, (type, codes)|
+          codes.each { |code| map[code] = type }
+          map
+        end
+
+        # Map vendor's AVS result code to a street match code
+        ORBITAL_STREET_MATCH_CODE = {
+            'Y' => %w( 9 B D F H JA JB M2 M4 M5 M6 M7 N3 N5 N7 N8 N9 X ),
+            'N' => %w( A C E G M8 Z ),
+            'X' => %w( 4 J R ),
+            nil => %w( 1 2 3 5 6 7 8 JC JD M1 M3 N4 N6 UK )
+        }.inject({}) do |map, (type, codes)|
+          codes.each { |code| map[code] = type }
+          map
+        end
+
+        def self.messages
+          CODES
+        end
+
+        def initialize(code)
+          @code = (code.blank? ? nil : code.to_s.strip.upcase)
+          if @code
+            @message      = CODES[@code]
+            @postal_match = ORBITAL_POSTAL_MATCH_CODE[@code]
+            @street_match = ORBITAL_STREET_MATCH_CODE[@code]
+          end
+        end
+      end
+
+      # Unfortunately, Orbital uses their own special codes for CVV responses
+      # that are different than the standard codes defined in
+      # <tt>ActiveMerchant::Billing::CVVResult</tt>.
+      #
+      # This class encapsulates the response codes shown on page 255 of their spec:
+      # http://download.chasepaymentech.com/docs/orbital/orbital_gateway_xml_specification.pdf
+      #
+      class CVVResult < ActiveMerchant::Billing::CVVResult
+        MESSAGES = {
+          'M' => 'Match',
+          'N' => 'No match',
+          'P' => 'Not processed',
+          'S' => 'Should have been present',
+          'U' => 'Unsupported by issuer/Issuer unable to process request',
+          'I' => 'Invalid',
+          'Y' => 'Invalid',
+          ''  => 'Not applicable'
+        }
+
+        def self.messages
+          MESSAGES
+        end
+
+        def initialize(code)
+          @code = code.blank? ? '' : code.upcase
+          @message = MESSAGES[@code]
+        end
       end
     end
   end

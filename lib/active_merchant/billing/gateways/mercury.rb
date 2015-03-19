@@ -18,9 +18,15 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'http://www.mercurypay.com'
       self.display_name = 'Mercury'
-      self.supported_countries = ['US']
+      self.supported_countries = ['US','CA']
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :diners_club, :jcb]
       self.default_currency = 'USD'
+
+      STANDARD_ERROR_CODE_MAPPING = {
+        '100204' => STANDARD_ERROR_CODE[:invalid_number],
+        '100205' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '000000' => STANDARD_ERROR_CODE[:card_declined]
+      }
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -66,13 +72,6 @@ module ActiveMerchant #:nodoc:
       def void(authorization, options={})
         requires!(options, :credit_card) unless @use_tokenization
 
-        if options[:try_reversal]
-          request = build_authorized_request('VoidSale', nil, authorization, options[:credit_card], options.merge(:reversal => true))
-          response = commit('VoidSale', request)
-
-          return response if response.success?
-        end
-
         request = build_authorized_request('VoidSale', nil, authorization, options[:credit_card], options)
         commit('VoidSale', request)
       end
@@ -99,7 +98,7 @@ module ActiveMerchant #:nodoc:
             add_customer_data(xml, options)
             add_amount(xml, money, options)
             add_credit_card(xml, credit_card, action)
-            add_address(xml, options)
+            add_address(xml, options) unless credit_card.track_data.present?
           end
         end
         xml = xml.target!
@@ -109,7 +108,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new
 
         invoice_no, ref_no, auth_code, acq_ref_data, process_data, record_no, amount = split_authorization(authorization)
-        ref_no = invoice_no if options[:reversal]
+        ref_no = "1" if ref_no.blank?
 
         xml.tag! "TStream" do
           xml.tag! "Transaction" do
@@ -126,8 +125,8 @@ module ActiveMerchant #:nodoc:
             add_address(xml, options)
             xml.tag! 'TranInfo' do
               xml.tag! "AuthCode", auth_code
-              xml.tag! "AcqRefData", acq_ref_data if options[:reversal]
-              xml.tag! "ProcessData", process_data if options[:reversal]
+              xml.tag! "AcqRefData", acq_ref_data
+              xml.tag! "ProcessData", process_data 
             end
           end
         end
@@ -152,10 +151,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(xml, invoice_no, ref_no, options)
-        if /^\d+$/ !~ invoice_no.to_s
-          raise ArgumentError.new("order_id '#{invoice_no}' is not numeric as required by Mercury")
-        end
-
         xml.tag! 'InvoiceNo', invoice_no
         xml.tag! 'RefNo', (ref_no || invoice_no)
         xml.tag! 'OperatorID', options[:merchant] if options[:merchant]
@@ -199,12 +194,16 @@ module ActiveMerchant #:nodoc:
 
       def add_credit_card(xml, credit_card, action)
         xml.tag! 'Account' do
-          xml.tag! 'AcctNo', credit_card.number
-          xml.tag! 'ExpDate', expdate(credit_card)
+          if credit_card.track_data.present?
+            xml.tag! 'Track1', credit_card.track_data
+          else
+            xml.tag! 'AcctNo', credit_card.number
+            xml.tag! 'ExpDate', expdate(credit_card)
+          end
         end
         xml.tag! 'CardType', CARD_CODES[credit_card.brand] if credit_card.brand
 
-        include_cvv = !%w(Return PreAuthCapture).include?(action)
+        include_cvv = !%w(Return PreAuthCapture).include?(action) && !credit_card.track_data.present?
         xml.tag! 'CVVData', credit_card.verification_value if(include_cvv && credit_card.verification_value)
       end
 
@@ -281,7 +280,8 @@ module ActiveMerchant #:nodoc:
           :test => test?,
           :authorization => authorization_from(response),
           :avs_result => { :code => response[:avs_result] },
-          :cvv_result => response[:cvv_result])
+          :cvv_result => response[:cvv_result],
+          :error_code => success ? nil : STANDARD_ERROR_CODE_MAPPING[response[:dsix_return_code]])
       end
 
       def message_from(response)

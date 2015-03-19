@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class CyberSourceTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     Base.gateway_mode = :test
 
@@ -91,11 +93,66 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_credit_cart_purchase_single_request_ignore_avs
+    @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_match %r'<ignoreAVSResult>true</ignoreAVSResult>', request_body
+      assert_not_match %r'<ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
+      ignore_avs: true
+    ))
+    assert_success response
+  end
+
+  def test_successful_credit_cart_purchase_single_request_without_ignore_avs
+    @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_not_match %r'<ignoreAVSResult>', request_body
+      assert_not_match %r'<ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    # globally ignored AVS for gateway instance:
+    @gateway.options[:ignore_avs] = true
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
+      ignore_avs: false
+    ))
+    assert_success response
+  end
+
+  def test_successful_credit_cart_purchase_single_request_ignore_ccv
+    @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_not_match %r'<ignoreAVSResult>', request_body
+      assert_match %r'<ignoreCVResult>true</ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
+      ignore_cvv: true
+    ))
+    assert_success response
+  end
+
+  def test_successful_credit_cart_purchase_single_request_without_ignore_ccv
+    @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_not_match %r'<ignoreAVSResult>', request_body
+      assert_not_match %r'<ignoreCVResult>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(
+      ignore_cvv: false
+    ))
+    assert_success response
+  end
+
   def test_successful_reference_purchase
     @gateway.stubs(:ssl_post).returns(successful_create_subscription_response, successful_purchase_response)
 
     assert_success(response = @gateway.store(@credit_card, @subscription_options))
-    assert_success(response_reference_purchase = @gateway.purchase(@amount, response.authorization, @options))
+    assert_success(@gateway.purchase(@amount, response.authorization, @options))
     assert response.test?
   end
 
@@ -218,7 +275,7 @@ class CyberSourceTest < Test::Unit::TestCase
     @gateway.stubs(:ssl_post).returns(successful_capture_response, successful_refund_response)
     assert_success(response = @gateway.purchase(@amount, @credit_card, @options))
 
-    assert_success(response_refund = @gateway.refund(@amount, response.authorization))
+    assert_success(@gateway.refund(@amount, response.authorization))
   end
 
   def test_successful_credit_request
@@ -242,6 +299,81 @@ class CyberSourceTest < Test::Unit::TestCase
     assert response = @gateway.validate_pinless_debit_card(@credit_card, @options)
     assert response.success?
     assert_success(@gateway.auth_reversal(@amount, response.authorization, @options))
+  end
+
+  def test_validate_add_subscription_amount
+    stub_comms do
+      @gateway.store(@credit_card, @subscription_options)
+    end.check_request do |endpoint, data, headers|
+      assert_match %r(<grandTotalAmount>1.00<\/grandTotalAmount>), data
+      assert_match %r(<amount>1.00<\/amount>), data
+    end.respond_with(successful_update_subscription_response)
+  end
+
+  def test_successful_verify
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorization_response)
+    assert_success response
+  end
+
+  def test_unsuccessful_verify
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(unsuccessful_authorization_response)
+    assert_failure response
+    assert_equal "Invalid account number", response.message
+  end
+
+  def test_successful_auth_with_network_tokenization_for_visa
+    @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>111111111100cryptogram</cavv>\n  <commerceIndicator>vbv</commerceIndicator>\n  <xid>111111111100cryptogram</xid>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      :brand              => 'visa',
+      :transaction_id     => "123",
+      :eci                => "05",
+      :payment_cryptogram => "111111111100cryptogram"
+    )
+
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_auth_with_network_tokenization_for_mastercard
+    @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_match %r'<ucaf>\n  <authenticationData>111111111100cryptogram</authenticationData>\n  <collectionIndicator>2</collectionIndicator>\n</ucaf>\n<ccAuthService run=\"true\">\n  <commerceIndicator>spa</commerceIndicator>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    credit_card = network_tokenization_credit_card('5555555555554444',
+      :brand              => 'mastercard',
+      :transaction_id     => "123",
+      :eci                => "05",
+      :payment_cryptogram => "111111111100cryptogram"
+    )
+
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
+  end
+
+  def test_successful_auth_with_network_tokenization_for_amex
+    @gateway.expects(:ssl_post).with do |host, request_body|
+      assert_match %r'<ccAuthService run=\"true\">\n  <cavv>MTExMTExMTExMTAwY3J5cHRvZ3I=\n</cavv>\n  <commerceIndicator>aesk</commerceIndicator>\n  <xid>YW0=\n</xid>\n</ccAuthService>\n<paymentNetworkToken>\n  <transactionType>1</transactionType>\n</paymentNetworkToken>', request_body
+      true
+    end.returns(successful_purchase_response)
+
+    credit_card = network_tokenization_credit_card('378282246310005',
+      :brand              => 'american_express',
+      :transaction_id     => "123",
+      :eci                => "05",
+      :payment_cryptogram => Base64.encode64("111111111100cryptogram")
+    )
+
+    assert response = @gateway.authorize(@amount, credit_card, @options)
+    assert_success response
   end
 
   private
