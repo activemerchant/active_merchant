@@ -14,6 +14,7 @@
 * Stripe: scrub swipe/track, EMV data out of gateway transcripts [girasquid]
 * Remove integration_mode [mattfawcett]
 * Allow setting CVV requirement at instance level [fabiokr]
+* Add SecurionPay gateway [szajbus]
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
