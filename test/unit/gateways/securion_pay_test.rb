@@ -247,13 +247,12 @@ class SecurionPayTest < Test::Unit::TestCase
     assert_success response
   end
 
-
-  # ##TO DO
   def test_successful_verify_with_failed_void
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.verify(@credit_card, @options)
-    end.respond_with(successful_authorize_response, successful_void_response)
+    end.respond_with(successful_authorize_response, failed_void_response)
     assert_success response
+    assert_equal "Transaction approved", response.message
   end
 
   def test_failed_verify
