@@ -4,7 +4,7 @@ module ActiveMerchant #:nodoc:
       self.test_url = 'https://api.securionpay.com/'
       self.live_url = 'https://api.securionpay.com/'
 
-      self.supported_countries = ['US']
+      self.supported_countries = Country::COUNTRIES.map { |country| country[:alpha2] }
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
