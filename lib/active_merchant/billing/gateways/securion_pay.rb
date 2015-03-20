@@ -197,15 +197,11 @@ module ActiveMerchant #:nodoc:
 
       def headers(options = {})
         secret_key = options[:secret_key] || @secret_key
-        # version = options[:version] || @version
 
         headers = {
           "Authorization" => "Basic " + Base64.encode64(secret_key.to_s + ":").strip,
-          # "User-Agent" => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
-          # "X-Stripe-Client-User-Agent" => user_agent,
-          # "X-Stripe-Client-User-Metadata" => {:ip => options[:ip]}.to_json
+          "User-Agent" => "SecurionPay/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}"
         }
-        # headers.merge!("Stripe-Version" => version) if version
         headers
       end
 
