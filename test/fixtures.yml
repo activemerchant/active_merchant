@@ -769,8 +769,7 @@ secure_pay_tech:
   password: d557591484cb2cd12bba445aba420d2c69cd6a88
 
 securion_pay:
-  secret_key:
-  public_key:
+  secret_key: pr_test_qZN4VVIKCySfCeXCBoHO9DBe
 
 #  Replace with your serial numbers for the skipjack test environment
 skipjack:
