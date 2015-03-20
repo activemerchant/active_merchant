@@ -220,7 +220,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   end
 
   def test_successful_unstore_card
-    response = @gateway.store(@credit_card, { :description => "Active Merchant Unstore Customer", email: "email@example.pl" })
+    response = @gateway.store(@credit_card, { description: "Active Merchant Unstore Customer", email: "email@example.pl" })
     assert_success response
     customer = response.responses.last
     customer_id = customer.params['id']

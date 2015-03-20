@@ -300,7 +300,7 @@ class SecurionPayTest < Test::Unit::TestCase
     @gateway.expects(:ssl_request).returns(successful_new_card_response)
     @gateway.expects(:add_creditcard)
 
-    assert response = @gateway.store(@credit_card, :customer => 'cust_QwQdf2Y1fjCFKrchTtSmwpUM')
+    assert response = @gateway.store(@credit_card, customer: 'cust_QwQdf2Y1fjCFKrchTtSmwpUM')
     assert_instance_of Response, response
     assert_success response
 
