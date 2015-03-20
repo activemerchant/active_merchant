@@ -163,7 +163,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     response = @gateway.verify(@declined_card, @options)
     assert_failure response
     assert_match %r{The card was declined for other reason.}, response.message
-    assert_match Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    assert_match Gateway::STANDARD_ERROR_CODE[:card_declined], response.primary_response.error_code
   end
 
   def test_successful_store
@@ -186,7 +186,6 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     store_response = response.responses.last
 
     assert response = @gateway.store(@new_credit_card, { customer: store_response.params['id'], description: "Test Customer Update" })
-    puts response.inspect
     assert_success response
 
     assert_equal 2, response.params['cards'].size
