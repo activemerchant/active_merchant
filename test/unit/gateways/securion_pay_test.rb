@@ -263,11 +263,10 @@ class SecurionPayTest < Test::Unit::TestCase
     assert_equal "The card was declined for other reason.", response.message
   end
 
-  # TO DO : ArgumentError: invalid byte sequence in UTF-8
-  # def test_scrub
-  #   assert @gateway.supports_scrubbing?
-  #   assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
-  # end
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
 
   def test_unsuccessful_request
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
@@ -334,35 +333,36 @@ class SecurionPayTest < Test::Unit::TestCase
 
   private
 
-  # TO DO : ArgumentError: invalid byte sequence in UTF-8 - (line - reading 297 bytes...)
+  # When updating pre_scrubbed response below, please remove gzip-encoded contents
+  # as they contain non-UTF-8 characters that will raise exception when scrubbing.
   def pre_scrubbed
     <<-PRE_SCRUBBED
       opening connection to api.securionpay.com:443...
       opened
       starting SSL for api.securionpay.com:443...
       SSL established
-      <- "POST /charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic cHJfdGVzdF9TeU15Q3BJSm9zRklBRVNFc1pVZDNUZ046\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.securionpay.com\r\nContent-Length: 204\r\n\r\n"
-      <- "amount=2000&currency=usd&card[number]=4242424242424242&card[expMonth]=9&card[expYear]=2016&card[cvc]=123&card[name]=Longbob+Longsen&description=ActiveMerchant+test+charge&metadata[email]=foo%40example.com"
+      <- "POST /charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic cHJfdGVzdF9xWk40VlZJS0N5U2ZDZVhDQm9ITzlEQmU6\r\nUser-Agent: SecurionPay/v1 ActiveMerchantBindings/1.47.0\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.securionpay.com\r\nContent-Length: 214\r\n\r\n"
+      <- "amount=2000&currency=usd&card[number]=4242424242424242&card[expMonth]=9&card[expYear]=2016&card[cvc]=123&card[cardholderName]=Longbob+Longsen&description=ActiveMerchant+test+charge&metadata[email]=foo%40example.com"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: cloudflare-nginx\r\n"
-      -> "Date: Wed, 18 Mar 2015 14:47:08 GMT\r\n"
+      -> "Date: Thu, 19 Mar 2015 23:16:59 GMT\r\n"
       -> "Content-Type: application/json;charset=UTF-8\r\n"
       -> "Transfer-Encoding: chunked\r\n"
       -> "Connection: close\r\n"
-      -> "Set-Cookie: __cfduid=d0c0c6b6c8b32c7034b38d7f973ebddfc1426690027; expires=Thu, 17-Mar-16 14:47:07 GMT; path=/; domain=.securionpay.com; HttpOnly\r\n"
-      -> "CF-RAY: 1c91bb22dd010af0-WAW\r\n"
+      -> "Set-Cookie: __cfduid=d2825af5ba35f4e682da0c51abb33a5d91426807018; expires=Fri, 18-Mar-16 23:16:58 GMT; path=/; domain=.securionpay.com; HttpOnly\r\n"
+      -> "CF-RAY: 1c9ce35b76a805d5-WAW\r\n"
       -> "Content-Encoding: gzip\r\n"
       -> "\r\n"
-      -> "129\r\n"
-      reading 297 bytes...
-      -> "\x1F\x8B\b\x00\x00\x00\x00\x00\x00\x03\x8C\x8F\xC1j\xC2@\x14E\x7FE\xEEz(I\x90PgUQ\xA1.\fE\xAB`72\x99y\xD1\x91$\x93\xCE\xBC\xB4\x8A\xF8\xEFej\xE8\xBA\xBC\xD5\xBD\x8Bs\xCF\xBB\xC1\x1AH\xE8\x93\xF2\aWm\xDF\xF2$\xDD\xD4\x8Bt\xFF]\x86\xFC\xB2\\\xCF\x8Au( \xA0=)&\x03\x99\x8E\xB3<\x9F$I\xF6,\xE0\xCA3i~\xBFv4\x10\x8E\x04\x01\xD5\xB8\xBEe\xC8,I\x12\x01\xDD{O\xAD\xBEBb\xBB\x99C\xC0P\xD0\xDEvl]\v\x89\xA9f\xFBE+\xF2\xFA\xA4Z\x1E1\x05\x1E\xFD\x91\xB4\xF2\x06\xF26\x18*o\x0E\xCB\xF3\xDC\xE6\xF6\xE8\x16\xDBi\xB9\xFB(>\xCF\xC5\xBE\xDB\xBD\xBA\xFE\x7F\x86\x11'PY\x1F8\x87\xC48\x8B\a\x81Z\x05\x1E\x0F\x05\x04\xE8\xD2\xAD\\\xCB'HL\x1EqO\xCAC\"K\xD2\x1C\x02\xA5Wm4\xDA\xD9\xA0 \xC0\x0F\xFA\xCC\x93\xB1<\x9A\xC5\x91{t\xEF\xB8\xF7\xD1\x87}O\x02\x9E\xAA\xBE51W\xAA\x0E$`l\xE8\xFA_\xE1\xA1h\x88\x95Q\xAC\xE2\xC7\xD4([C\xA2r\xEE\x85.\xAA\xE9jz\xD2\xAE\xC1\xFD\xFE\x03\x00\x00\xFF\xFF"
-      read 297 bytes
+      -> "154\r\n"
+      reading 340 bytes...
+      -> "[GZIP_ENCODED_CONTENT_REMOVED_INTENTIONALLY]"
+      read 340 bytes
       reading 2 bytes...
       -> "\r\n"
       read 2 bytes
       -> "a\r\n"
       reading 10 bytes...
-      -> "\x03\x00\xA9\xDD\x05j\xB0\x01\x00\x00"
+      -> "[GZIP_ENCODED_CONTENT_REMOVED_INTENTIONALLY]"
       read 10 bytes
       reading 2 bytes...
       -> "\r\n"
@@ -373,34 +373,36 @@ class SecurionPayTest < Test::Unit::TestCase
     PRE_SCRUBBED
   end
 
+  # When updating post_scrubbed response below, please remove gzip-encoded contents
+  # as they contain non-UTF-8 characters that will raise exception when scrubbing.
   def post_scrubbed
     <<-POST_SCRUBBED
       opening connection to api.securionpay.com:443...
       opened
       starting SSL for api.securionpay.com:443...
       SSL established
-      <- "POST /charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.securionpay.com\r\nContent-Length: 204\r\n\r\n"
-      <- "amount=2000&currency=usd&card[number]=[FILTERED]&card[expMonth]=9&card[expYear]=2016&card[cvc]=[FILTERED]&card[name]=Longbob+Longsen&description=ActiveMerchant+test+charge&metadata[email]=foo%40example.com"
+      <- "POST /charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: SecurionPay/v1 ActiveMerchantBindings/1.47.0\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.securionpay.com\r\nContent-Length: 214\r\n\r\n"
+      <- "amount=2000&currency=usd&card[number]=[FILTERED]&card[expMonth]=9&card[expYear]=2016&card[cvc]=[FILTERED]&card[cardholderName]=Longbob+Longsen&description=ActiveMerchant+test+charge&metadata[email]=foo%40example.com"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: cloudflare-nginx\r\n"
-      -> "Date: Wed, 18 Mar 2015 14:47:08 GMT\r\n"
+      -> "Date: Thu, 19 Mar 2015 23:16:59 GMT\r\n"
       -> "Content-Type: application/json;charset=UTF-8\r\n"
       -> "Transfer-Encoding: chunked\r\n"
       -> "Connection: close\r\n"
-      -> "Set-Cookie: __cfduid=d0c0c6b6c8b32c7034b38d7f973ebddfc1426690027; expires=Thu, 17-Mar-16 14:47:07 GMT; path=/; domain=.securionpay.com; HttpOnly\r\n"
-      -> "CF-RAY: 1c91bb22dd010af0-WAW\r\n"
+      -> "Set-Cookie: __cfduid=d2825af5ba35f4e682da0c51abb33a5d91426807018; expires=Fri, 18-Mar-16 23:16:58 GMT; path=/; domain=.securionpay.com; HttpOnly\r\n"
+      -> "CF-RAY: 1c9ce35b76a805d5-WAW\r\n"
       -> "Content-Encoding: gzip\r\n"
       -> "\r\n"
-      -> "129\r\n"
-      reading 297 bytes...
-      -> "\x1F\x8B\b\x00\x00\x00\x00\x00\x00\x03\x8C\x8F\xC1j\xC2@\x14E\x7FE\xEEz(I\x90PgUQ\xA1.\fE\xAB`72\x99y\xD1\x91$\x93\xCE\xBC\xB4\x8A\xF8\xEFej\xE8\xBA\xBC\xD5\xBD\x8Bs\xCF\xBB\xC1\x1AH\xE8\x93\xF2\aWm\xDF\xF2$\xDD\xD4\x8Bt\xFF]\x86\xFC\xB2\\\xCF\x8Au( \xA0=)&\x03\x99\x8E\xB3<\x9F$I\xF6,\xE0\xCA3i~\xBFv4\x10\x8E\x04\x01\xD5\xB8\xBEe\xC8,I\x12\x01\xDD{O\xAD\xBEBb\xBB\x99C\xC0P\xD0\xDEvl]\v\x89\xA9f\xFBE+\xF2\xFA\xA4Z\x1E1\x05\x1E\xFD\x91\xB4\xF2\x06\xF26\x18*o\x0E\xCB\xF3\xDC\xE6\xF6\xE8\x16\xDBi\xB9\xFB(>\xCF\xC5\xBE\xDB\xBD\xBA\xFE\x7F\x86\x11'PY\x1F8\x87\xC48\x8B\a\x81Z\x05\x1E\x0F\x05\x04\xE8\xD2\xAD\\\xCB'HL\x1EqO\xCAC\"K\xD2\x1C\x02\xA5Wm4\xDA\xD9\xA0 \xC0\x0F\xFA\xCC\x93\xB1<\x9A\xC5\x91{t\xEF\xB8\xF7\xD1\x87}O\x02\x9E\xAA\xBE51W\xAA\x0E$`l\xE8\xFA_\xE1\xA1h\x88\x95Q\xAC\xE2\xC7\xD4([C\xA2r\xEE\x85.\xAA\xE9jz\xD2\xAE\xC1\xFD\xFE\x03\x00\x00\xFF\xFF"
-      read 297 bytes
+      -> "154\r\n"
+      reading 340 bytes...
+      -> "[GZIP_ENCODED_CONTENT_REMOVED_INTENTIONALLY]"
+      read 340 bytes
       reading 2 bytes...
       -> "\r\n"
       read 2 bytes
       -> "a\r\n"
       reading 10 bytes...
-      -> "\x03\x00\xA9\xDD\x05j\xB0\x01\x00\x00"
+      -> "[GZIP_ENCODED_CONTENT_REMOVED_INTENTIONALLY]"
       read 10 bytes
       reading 2 bytes...
       -> "\r\n"
