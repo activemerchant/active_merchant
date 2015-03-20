@@ -9,6 +9,7 @@ class SecurionPayTest < Test::Unit::TestCase
     )
 
     @credit_card = credit_card
+    @declined_card = credit_card('4916018475814056')
     @amount = 2000
     @refund_amount = 300
 
@@ -257,7 +258,7 @@ class SecurionPayTest < Test::Unit::TestCase
 
   def test_failed_verify
     response = stub_comms(@gateway, :ssl_request) do
-      @gateway.verify(@card_declined, @options)
+      @gateway.verify(@declined_card, @options)
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
     assert_equal "The card was declined for other reason.", response.message
