@@ -19,10 +19,14 @@ module ActiveMerchant #:nodoc:
         'invalid_expiry_year' => STANDARD_ERROR_CODE[:invalid_expiry_date],
         'invalid_cvc' => STANDARD_ERROR_CODE[:invalid_cvc],
         'expired_card' => STANDARD_ERROR_CODE[:expired_card],
+        'insufficient_funds' => STANDARD_ERROR_CODE[:card_declined],
         'incorrect_cvc' => STANDARD_ERROR_CODE[:incorrect_cvc],
         'incorrect_zip' => STANDARD_ERROR_CODE[:incorrect_zip],
         'card_declined' => STANDARD_ERROR_CODE[:card_declined],
-        'processing_error' => STANDARD_ERROR_CODE[:processing_error]
+        'processing_error' => STANDARD_ERROR_CODE[:processing_error],
+        'lost_or_stolen' => STANDARD_ERROR_CODE[:card_declined],
+        'suspected_fraud' => STANDARD_ERROR_CODE[:card_declined],
+        'expired_token' => STANDARD_ERROR_CODE[:card_declined]
       }
 
       def initialize(options={})
