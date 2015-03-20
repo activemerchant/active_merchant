@@ -103,6 +103,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def create_token(payment, options = {})
+        post = {}
+        add_creditcard(post, payment, options)
+
+        commit(:post, "tokens", post[:card], options)
+      end
+
       def supports_scrubbing?
         true
       end

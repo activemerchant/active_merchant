@@ -2,6 +2,7 @@ require 'test_helper'
 
 class RemoteSecurionPayTest < Test::Unit::TestCase
   CHARGE_ID_REGEX = /char_[a-zA-Z\d]+/
+  TOKEN_ID_REGEX  = /tok_[a-zA-Z\d]+/
 
   def setup
     @gateway = SecurionPayGateway.new(fixtures(:securion_pay))
@@ -11,6 +12,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     @credit_card = credit_card('4242424242424242')
     @declined_card = credit_card('4916018475814056')
     @new_credit_card = credit_card('4012888888881881')
+    @invalid_token = 'tok_invalid'
 
     @options = {
       description: 'ActiveMerchant test charge',
@@ -49,9 +51,26 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     assert_match Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
+  def test_successful_purchase_with_token
+    # Create token
+    assert response = @gateway.create_token(@credit_card)
+    assert_success response
+    token = response.authorization
+    assert_match TOKEN_ID_REGEX, token
 
-  # TO DO test purchase with token
-  def test_card_present_purchase
+    # Charge
+    assert response = @gateway.purchase(@amount, token, @options)
+    assert_success response
+    assert_equal "charge", response.params["objectType"]
+    assert_equal "ActiveMerchant test charge", response.params["description"]
+    assert_equal "foo@example.com", response.params["metadata"]["email"]
+    assert_match CHARGE_ID_REGEX, response.authorization
+  end
+
+  def test_unsuccessful_purchase_with_token
+    assert response = @gateway.purchase(@amount, @invalid_token, @options)
+    assert_failure response
+    assert_match %r{Wrong token or already used}, response.message
   end
 
   def test_authorization_and_capture
