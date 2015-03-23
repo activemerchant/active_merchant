@@ -104,8 +104,8 @@ module ActiveMerchant #:nodoc:
           gsub(%r((oauth_nonce=\")\w+), '\1[FILTERED]').
           gsub(%r((oauth_signature=\")[a-zA-Z%0-9]+), '\1[FILTERED]').
           gsub(%r((oauth_token=\")\w+), '\1[FILTERED]').
-          gsub(%r((\"card\":{\"number\":\")\d+), '\1[FILTERED]').
-          gsub(%r((\"cvc\":\")\d+), '\1[FILTERED]')
+          gsub(%r((number\D+)\d{16}), '\1[FILTERED]').
+          gsub(%r((cvc\D+)\d{3}), '\1[FILTERED]')
       end
 
       private
@@ -242,11 +242,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def success?(response)
-        response['errors'].present? ? FRAUD_WARNING_CODES.concat(['0']).include?(response['errors'].first['code']) : true
+      return FRAUD_WARNING_CODES.concat(['0']).include?(response['errors'].first['code']) if response['errors']
+        
+      !['DECLINED', 'CANCELLED'].include?(response['status'])
       end
 
       def message_from(response)
-        response['errors'].present? ? response["errors"].map {|error_hash| error_hash["message"] }.join(" ") : "Transaction Approved"
+        response['errors'].present? ? response["errors"].map {|error_hash| error_hash["message"] }.join(" ") : response['status']
       end
 
       def errors_from(response)

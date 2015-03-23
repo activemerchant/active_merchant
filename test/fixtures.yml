@@ -25,6 +25,12 @@ authorize_net:
   login: 5KP3u95bQpv
   password: 4Ktq966gC55GAX7S
 
+axcessms:
+  channel: channel
+  sender: sender
+  login: login
+  password: password
+
 # Working credentials, no need to replace
 balanced:
   login: 'e1c5ad38d1c711e1b36c026ba7e239a9'
@@ -119,6 +125,11 @@ cecabank:
   acquirer_bin: ACQUIRERBIN
   terminal_id: TERMINALID
   key: KEY
+
+cenpos:
+  merchant_id: SOMECREDENTIAL
+  password: ANOTHERCREDENTIAL
+  user_id: ANOTHERCREDENTIAL
 
 certo_direct:
   login: 1
@@ -362,6 +373,13 @@ mollie_ideal:
   api_key: 'test_8isBjQoJXJoiXRSzjhwKPO1Bo9AkVA'
 
 # Working credentials, no need to replace
+monei:
+  sender_id: 8a829417488d34c401489a5cd1350977
+  channel_id: 8a829417488d34c401489a5de5dd097b
+  login: 8a829417488d34c401489a5cd1360979
+  pwd: GyNSEAp2
+
+# Working credentials, no need to replace
 moneris:
   login: store1
   password: yesguy
@@ -438,9 +456,21 @@ pago_facil:
   service_id: 3
 
 # Working credentials, no need to replace
+pay_conex:
+  account_id: '220614968961'
+  api_accesskey: '69e9c4dd6b8ab9ab47da4e288df78315'
+
+# Working credentials, no need to replace
 pay_gate_xml:
   login: '10011021600'
   password: 'test'
+
+# Working credentials, no need to replace
+pay_hub:
+  orgid: '123456'
+  username: 'abc123DEF'
+  password: 'abc123DEF'
+  tid: '123'
 
 # Working credentials, no need to replace
 pay_junction:
@@ -638,6 +668,11 @@ quickpay_with_api_key:
   apikey: "fB46983ZwR5dzy46A3r6ngDx7P37N5YTu1F4S9W2JKCs9v4t5L9m2Q8Mlbjpa2I1"
   version: 7
 
+qvalent:
+  username: TEST
+  password: TEST
+  merchant: TEST
+
 raven_pac_net:
   user: ernest
   secret: "all good men die young"
@@ -810,10 +845,6 @@ viaklix:
   login: LOGIN
   password: PASSWORD
   user: USER
-
-vindicia:
-  login: LOGIN
-  password: PASSWORD
 
 webpay:
   login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"

@@ -10,6 +10,7 @@ module ActiveMerchant #:nodoc:
       self.display_name = 'PAYMILL'
       self.money_format = :cents
       self.default_currency = 'EUR'
+      self.live_url = "https://api.paymill.com/v2/"
 
       def initialize(options = {})
         requires!(options, :public_key, :private_key)
@@ -63,9 +64,9 @@ module ActiveMerchant #:nodoc:
         { 'Authorization' => ('Basic ' + Base64.strict_encode64("#{@options[:private_key]}:X").chomp) }
       end
 
-      def commit(method, url, parameters=nil)
+      def commit(method, action, parameters=nil)
         begin
-          raw_response = ssl_request(method, "https://api.paymill.com/v2/#{url}", post_data(parameters), headers)
+          raw_response = ssl_request(method, live_url + action, post_data(parameters), headers)
         rescue ResponseError => e
           begin
             parsed = JSON.parse(e.response.body)

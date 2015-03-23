@@ -38,6 +38,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'The credit card number is invalid', response.message
+    assert_equal 'incorrect_number', response.error_code
   end
 
   def test_successful_echeck_purchase
@@ -61,6 +62,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_failure response
     assert response.test?
     assert_equal 'The credit card has expired', response.message
+    assert_equal 'expired_card', response.error_code
   end
 
   def test_successful_authorize_and_capture
@@ -150,12 +152,14 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, apple_pay_payment_token(payment_data: {data: 'garbage'}), @options)
     assert_failure response
     assert_equal 'There was an error processing the payment data', response.message
+    assert_equal 'processing_error', response.error_code
   end
 
   def test_failed_apple_pay_purchase
     response = @gateway.purchase(@amount, apple_pay_payment_token(payment_data: {data: 'garbage'}), @options)
     assert_failure response
     assert_equal 'There was an error processing the payment data', response.message
+    assert_equal 'processing_error', response.error_code
   end
 
   def test_card_present_purchase_with_track_data_only
@@ -266,6 +270,20 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     ActiveMerchant::Billing::AuthorizeNetGateway.application_id = nil
   end
 
+  def test_successful_credit
+    response = @gateway.credit(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
+  def test_failed_credit
+    response = @gateway.credit(@amount, @declined_card, @options)
+    assert_failure response
+    assert_equal 'The credit card number is invalid', response.message
+    assert response.authorization
+  end
+
   def test_bad_currency
     response = @gateway.purchase(@amount, @credit_card, currency: "XYZ")
     assert_failure response
@@ -281,6 +299,19 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
   def test_dump_transcript
     # dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
+  end
+
+  def test_successful_authorize_and_capture_with_network_tokenization
+    credit_card = network_tokenization_credit_card('4000100011112224',
+      payment_cryptogram: "EHuWW9PiBkWvqE5juRwDzAUFBAk=",
+      verification_value: nil
+    )
+    auth = @gateway.authorize(@amount, credit_card, @options)
+    assert_success auth
+    assert_equal 'This transaction has been approved', auth.message
+
+    capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
   end
 
   private

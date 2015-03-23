@@ -16,6 +16,25 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.authorize.net/'
       self.display_name = 'Authorize.Net'
 
+      STANDARD_ERROR_CODE_MAPPING = {
+        '36' => STANDARD_ERROR_CODE[:incorrect_number],
+        '237' => STANDARD_ERROR_CODE[:invalid_number],
+        '2315' => STANDARD_ERROR_CODE[:invalid_number],
+        '37' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '2316' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '378' => STANDARD_ERROR_CODE[:invalid_cvc],     
+        '38' => STANDARD_ERROR_CODE[:expired_card],
+        '2317' => STANDARD_ERROR_CODE[:expired_card],
+        '244' => STANDARD_ERROR_CODE[:incorrect_cvc],
+        '227' => STANDARD_ERROR_CODE[:incorrect_address],
+        '2127' => STANDARD_ERROR_CODE[:incorrect_address],
+        '22' => STANDARD_ERROR_CODE[:card_declined],
+        '23' => STANDARD_ERROR_CODE[:card_declined],
+        '3153' => STANDARD_ERROR_CODE[:processing_error],
+        '235' => STANDARD_ERROR_CODE[:processing_error],
+        '24' => STANDARD_ERROR_CODE[:pickup_card]
+      }
+
       class_attribute :duplicate_window
 
       APPROVED, DECLINED, ERROR, FRAUD_REVIEW = 1, 2, 3, 4
@@ -116,6 +135,26 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def credit(amount, payment, options={})
+        if payment.is_a?(String)
+          raise ArgumentError, "Reference credits are not supported. Please supply the original credit card or use the #refund method."
+        end
+
+        commit("CREDIT") do |xml|
+          add_order_id(xml, options)
+          xml.transactionRequest do
+            xml.transactionType('refundTransaction')
+            xml.amount(amount(amount))
+
+            add_payment_source(xml, payment)
+            add_invoice(xml, options)
+            add_customer_data(xml, payment, options)
+            add_settings(xml, payment, options)
+            add_user_fields(xml, amount, options)
+          end
+        end
+      end
+
       def verify(credit_card, options = {})
         MultiResponse.run(:use_first_response) do |r|
           r.process { authorize(100, credit_card, options) }
@@ -197,6 +236,9 @@ module ActiveMerchant #:nodoc:
               xml.expirationDate(format(credit_card.month, :two_digits) + '/' + format(credit_card.year, :four_digits))
               unless empty?(credit_card.verification_value)
                 xml.cardCode(credit_card.verification_value)
+              end
+              if credit_card.is_a?(NetworkTokenizationCreditCard)
+                xml.cryptogram(credit_card.payment_cryptogram)
               end
             end
           end
@@ -339,7 +381,8 @@ module ActiveMerchant #:nodoc:
             test: test?,
             avs_result: avs_result,
             cvv_result: cvv_result,
-            fraud_review: fraud_review?(response)
+            fraud_review: fraud_review?(response),
+            error_code: map_error_code(response[:response_code], response[:response_reason_code])
           )
         end
       end
@@ -450,6 +493,10 @@ module ActiveMerchant #:nodoc:
 
       def using_live_gateway_in_test_mode?(response)
         !test? && response[:test_request] == "1"
+      end
+
+      def map_error_code(response_code, response_reason_code)
+        STANDARD_ERROR_CODE_MAPPING[response_code.to_s << response_reason_code.to_s]
       end
     end
   end

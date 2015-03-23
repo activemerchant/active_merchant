@@ -24,7 +24,7 @@ module ActiveMerchant #:nodoc:
       # Source: https://support.stripe.com/questions/which-zero-decimal-currencies-does-stripe-support
       CURRENCIES_WITHOUT_FRACTIONS = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'VUV', 'XAF', 'XOF', 'XPF']
 
-      self.supported_countries = %w(AU BE CA CH DE ES FI FR GB IE IT LU NL US)
+      self.supported_countries = %w(AT AU BE CA CH DE DK ES FI FR GB IE IT LU NL NO SE US)
       self.default_currency = 'USD'
       self.money_format = :cents
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
@@ -212,7 +212,8 @@ module ActiveMerchant #:nodoc:
         transcript.
           gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
           gsub(%r((card\[number\]=)\d+), '\1[FILTERED]').
-          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]')
+          gsub(%r((card\[cvc\]=)\d+), '\1[FILTERED]').
+          gsub(%r((&?three_d_secure\[cryptogram\]=)[\w=]*(&?)), '\1[FILTERED]\2')
       end
 
       private
@@ -294,6 +295,14 @@ module ActiveMerchant #:nodoc:
           end
 
           post[:card] = card
+
+          if creditcard.is_a?(NetworkTokenizationCreditCard)
+            post[:three_d_secure] = {
+              apple_pay:  true,
+              cryptogram: creditcard.payment_cryptogram
+            }
+          end
+
           add_address(post, options)
         elsif creditcard.kind_of?(String)
           if options[:track_data]

@@ -49,7 +49,13 @@ module ActiveMerchant #:nodoc:
     class CreditCard < Model
       include CreditCardMethods
 
-      cattr_accessor :require_verification_value
+      class << self
+        # Inherited, but can be overridden w/o changing parent's value
+        attr_accessor :require_verification_value
+        attr_accessor :require_name
+      end
+
+      self.require_name = true
       self.require_verification_value = true
 
       # Returns or sets the credit card number.
@@ -243,13 +249,19 @@ module ActiveMerchant #:nodoc:
         require_verification_value
       end
 
+      def self.requires_name?
+        require_name
+      end
+
       private
 
       def validate_essential_attributes #:nodoc:
         errors = []
 
-        errors << [:first_name, "cannot be empty"] if first_name.blank?
-        errors << [:last_name,  "cannot be empty"] if last_name.blank?
+        if self.class.requires_name?
+          errors << [:first_name, "cannot be empty"] if first_name.blank?
+          errors << [:last_name,  "cannot be empty"] if last_name.blank?
+        end
 
         if(empty?(month) || empty?(year))
           errors << [:month, "is required"] if empty?(month)
@@ -294,7 +306,7 @@ module ActiveMerchant #:nodoc:
           unless valid_card_verification_value?(verification_value, brand)
             errors << [:verification_value, "should be #{card_verification_value_length(brand)} digits"]
           end
-        elsif CreditCard.requires_verification_value?
+        elsif self.class.requires_verification_value?
           errors << [:verification_value, "is required"]
         end
         errors

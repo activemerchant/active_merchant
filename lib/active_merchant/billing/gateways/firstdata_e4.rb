@@ -32,11 +32,34 @@ module ActiveMerchant #:nodoc:
         :discover => "Discover"
       }
 
+      E4_BRANDS = BRANDS.merge({:mastercard => "Mastercard"})
+
       self.supported_cardtypes = BRANDS.keys
       self.supported_countries = ["CA", "US"]
       self.default_currency = "USD"
       self.homepage_url = "http://www.firstdata.com"
       self.display_name = "FirstData Global Gateway e4"
+
+      STANDARD_ERROR_CODE_MAPPING = {
+      # Bank error codes: https://firstdata.zendesk.com/entries/471297-First-Data-Global-Gateway-e4-Bank-Response-Codes
+        '201' => STANDARD_ERROR_CODE[:incorrect_number],
+        '531' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '503' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '811' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '605' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '522' => STANDARD_ERROR_CODE[:expired_card],
+        '303' => STANDARD_ERROR_CODE[:card_declined],
+        '530' => STANDARD_ERROR_CODE[:card_declined],
+        '401' => STANDARD_ERROR_CODE[:call_issuer],
+        '402' => STANDARD_ERROR_CODE[:call_issuer],
+        '501' => STANDARD_ERROR_CODE[:pickup_card],
+      # Ecommerce error codes -- https://firstdata.zendesk.com/entries/451980-ecommerce-response-codes-etg-codes
+        '22' => STANDARD_ERROR_CODE[:invalid_number],
+        '25' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '31' => STANDARD_ERROR_CODE[:incorrect_cvc],
+        '44' => STANDARD_ERROR_CODE[:incorrect_zip],
+        '42' => STANDARD_ERROR_CODE[:processing_error]
+      }
 
       # Create a new FirstdataE4Gateway
       #
@@ -279,7 +302,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def card_type(credit_card_brand)
-        BRANDS[credit_card_brand.to_sym] if credit_card_brand
+        E4_BRANDS[credit_card_brand.to_sym] if credit_card_brand
       end
 
       def commit(action, request, credit_card = nil)
@@ -292,9 +315,10 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful?(response), message_from(response), response,
           :test => test?,
-          :authorization => response_authorization(action, response, credit_card),
+          :authorization => successful?(response) ? response_authorization(action, response, credit_card) : '',
           :avs_result => {:code => response[:avs]},
-          :cvv_result => response[:cvv2]
+          :cvv_result => response[:cvv2],
+          :error_code => standard_error_code(response)
         )
       end
 
@@ -358,8 +382,13 @@ module ActiveMerchant #:nodoc:
         {
           :transaction_approved => "false",
           :error_number => error.code,
-          :error_description => error.body
+          :error_description => error.body,
+          :ecommerce_error_code => error.body.gsub(/[^\d]/, '')
         }
+      end
+
+      def standard_error_code(response)
+        STANDARD_ERROR_CODE_MAPPING[response[:bank_resp_code] || response[:ecommerce_error_code]]
       end
 
       def parse(xml)

@@ -1,6 +1,41 @@
 = ActiveMerchant CHANGELOG
 
+* Clean up `rake gateways:hosts` output [ntalbott]
+* Add Axcess MS gateway [timtait]
+* Add PayHub gateway [grepruby]
+* Orbital: Improve data formatting [boone]
+* [POSSIBLE BREAKAGE] USAePay Transaction: Make "void release" the default [dppcode]
+* Redsys: Add rudimentary vaulting [varyonic]
+* Exact: Handle 401 failures better [jefflaporte]
+* SagePay: make `VPSProtocol` user-configurable [boxofrad]
+* Netbilling: Add store support [cshepherd]
+* Add Qvalent gateway [markabe]
+* Expose proxy address and port to gateways [arkes]
+* Remove Ruby 1.9 [j-mutter]
+* Qvalent: Do not sent order.ipAddress when storing [markabe]
+* Qvalent: Fix argument name [bruno]
+* Qvalent: map card storage reference to authorization [markabe]
+* Qvalent: Fix scrub replacement, it was too greedy [markabe]
+* PayConex: Add gateway [duff]
+* AuthorizeNet: Add credit support [duff]
+* CenPOS: Add gateway [markabe]
+* Stripe: Update country list [markabe]
+* Add Monei.net gateway [leolara]
+* MerchantWarrior: Fix refund and capture signatures [duff]
+* CenPOS: Add support for capture and refund [markabe]
+* Authorize.net: Add support for network tokenization credit cards [jnormore]
+
+== Version 1.47.0 (February 25, 2015)
+
 * Authorize.Net: Properly send name in shipping address line, when shipping address is provided [girasquid]
+* Payflow: Add verify support [ntalbott]
+* Capture ConnectionError#triggering_exception [ntalbott]
+* Flo2Cash: Map Reference->:order_id (not :invoice) [ntalbott]
+* Flo2Cash: Fix card brand handling [ntalbott]
+* Flo2Cash: Improve error handling & simplify "Simple" gateway [ntalbott]
+* Remove Vindicia gateway [mutemule]
+* Firstdata E4: Support other mastercard string [jcbantuelle]
+* Checkout: Disallow altering endpoint via options [markabe]
 
 == Version 1.46.0 (January 20, 2015)
 
