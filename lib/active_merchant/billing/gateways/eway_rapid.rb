@@ -7,11 +7,13 @@ module ActiveMerchant #:nodoc:
       self.live_url = "https://api.ewaypayments.com/"
 
       self.money_format = :cents
-      self.supported_countries = ['AU', 'NZ', 'GB']
-      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club]
+      self.supported_countries = ['AU', 'NZ', 'GB', 'SG']
+      self.supported_cardtypes = [:visa, :master, :american_express, :diners_club, :jcb]
       self.homepage_url = "http://www.eway.com.au/"
       self.display_name = "eWAY Rapid 3.1"
       self.default_currency = "AUD"
+
+      class_attribute :partner_id
 
       def initialize(options = {})
         requires!(options, :login, :password)
@@ -174,6 +176,10 @@ module ActiveMerchant #:nodoc:
         params['CustomerIP'] = options[:ip] if options[:ip]
         params['TransactionType'] = options[:transaction_type] || 'Purchase'
         params['DeviceID'] = options[:application_id] || application_id
+        if partner = options[:partner_id] || partner_id
+          params['PartnerID'] = truncate(partner, 50)
+        end
+        params
       end
 
       def add_invoice(params, money, options, key = "Payment")
@@ -181,6 +187,7 @@ module ActiveMerchant #:nodoc:
         params[key] = {
           'TotalAmount' => localized_amount(money, currency_code),
           'InvoiceReference' => truncate(options[:order_id]),
+          'InvoiceNumber' => truncate(options[:order_id], 12),
           'InvoiceDescription' => truncate(options[:description], 64),
           'CurrencyCode' => currency_code,
         }
@@ -346,7 +353,7 @@ module ActiveMerchant #:nodoc:
         'D4403' => 'No Merchant Failed',
         'D4404' => 'Pick Up Card  Failed',
         'D4405' => 'Do Not Honour Failed',
-        'D4406' => 'Error   Failed',
+        'D4406' => 'Error Failed',
         'D4407' => 'Pick Up Card, Special Failed',
         'D4409' => 'Request In Progress Failed',
         'D4412' => 'Invalid Transaction Failed',
@@ -400,6 +407,8 @@ module ActiveMerchant #:nodoc:
         'D4498' => 'PayPal Create Transaction Error Failed',
         'D4499' => 'Invalid Transaction for Auth/Void Failed',
         'S5000' => 'System Error',
+        'S5011' => 'PayPal Connection Error',
+        'S5012' => 'PayPal Settings Error',
         'S5085' => 'Started 3dSecure',
         'S5086' => 'Routed 3dSecure',
         'S5087' => 'Completed 3dSecure',

@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/authorize_net'
+require 'active_merchant/billing/gateways/authorize_net'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:

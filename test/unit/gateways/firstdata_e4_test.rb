@@ -20,8 +20,13 @@ class FirstdataE4Test < Test::Unit::TestCase
     @authorization = "ET1700;106625152;4738"
   end
 
-  def test_supported_cardtypes
-    assert_equal [:visa, :master, :american_express, :jcb, :discover], FirstdataE4Gateway.supported_cardtypes
+  def test_invalid_credentials
+    @gateway.expects(:ssl_post).raises(bad_credentials_response)
+    assert response = @gateway.store(@credit_card, {})
+    assert_failure response
+    assert response.test?
+    assert_equal '', response.authorization
+    assert_equal 'Unauthorized Request. Bad or missing credentials.', response.message
   end
 
   def test_successful_purchase
@@ -32,7 +37,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     assert response.test?
     assert_equal 'Transaction Normal - Approved', response.message
 
-    ExactGateway::SENSITIVE_FIELDS.each{|f| assert !response.params.has_key?(f.to_s)}
+    FirstdataE4Gateway::SENSITIVE_FIELDS.each{|f| assert !response.params.has_key?(f.to_s)}
   end
 
   def test_successful_purchase_with_token
@@ -99,11 +104,11 @@ class FirstdataE4Test < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['CA', 'US'], ExactGateway.supported_countries
+    assert_equal ['CA', 'US'], FirstdataE4Gateway.supported_countries
   end
 
-  def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :jcb, :discover], ExactGateway.supported_cardtypes
+  def test_supported_cardtypes
+    assert_equal [:visa, :master, :american_express, :jcb, :discover], FirstdataE4Gateway.supported_cardtypes
   end
 
   def test_avs_result
@@ -148,6 +153,7 @@ class FirstdataE4Test < Test::Unit::TestCase
   def test_card_type
     assert_equal 'Visa', @gateway.send(:card_type, 'visa')
     assert_equal 'Mastercard', @gateway.send(:card_type, 'master')
+    assert_equal 'Mastercard', @gateway.send(:card_type, 'mastercard')
     assert_equal 'American Express', @gateway.send(:card_type, 'american_express')
     assert_equal 'JCB', @gateway.send(:card_type, 'jcb')
     assert_equal 'Discover', @gateway.send(:card_type, 'discover')
@@ -163,7 +169,75 @@ class FirstdataE4Test < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_supports_scrubbing?
+    assert @gateway.supports_scrubbing?
+  end
+
+  def test_scrub
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
+
+  def pre_scrubbed
+    <<-PRE_SCRUBBED
+      opening connection to api.demo.globalgatewaye4.firstdata.com:443...
+      opened
+      starting SSL for api.demo.globalgatewaye4.firstdata.com:443...
+      SSL established
+      <- "POST /transaction/v11 HTTP/1.1\r\nContent-Type: application/xml\r\nAccepts: application/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.demo.globalgatewaye4.firstdata.com\r\nContent-Length: 593\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Transaction><ExactID>REDACTED</ExactID><Password>REDACTED</Password><Transaction_Type>00</Transaction_Type><DollarAmount>1.00</DollarAmount><Card_Number>4242424242424242</Card_Number><Expiry_Date>0916</Expiry_Date><CardHoldersName>Longbob Longsen</CardHoldersName><CardType>Visa</CardType><VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1><CVD_Presence_Ind>1</CVD_Presence_Ind><VerificationStr2>123</VerificationStr2><Reference_No>1</Reference_No><Reference_3>Store Purchase</Reference_3><CAVV/><XID/><Ecommerce_Flag/></Transaction>"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Cache-Control: max-age=0, private, must-revalidate\r\n"
+      -> "Content-Type: application/xml; charset=utf-8\r\n"
+      -> "Date: Mon, 26 Jan 2015 17:11:44 GMT\r\n"
+      -> "ETag: \"0a9a542fbfc55846e0ebe471b5725fe8\"\r\n"
+      -> "Location: https://api.demo.globalgatewaye4.firstdata.com/transaction/v11/42930941\r\n"
+      -> "Server: Apache\r\n"
+      -> "Status: 201\r\n"
+      -> "X-Rack-Cache: invalidate, pass\r\n"
+      -> "X-Request-Id: e0fabf89d7d7272cab4d4d743327d036\r\n"
+      -> "X-UA-Compatible: IE=Edge,chrome=1\r\n"
+      -> "Content-Length: 2872\r\n"
+      -> "Connection: Close\r\n"
+      -> "\r\n"
+      reading 2872 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TransactionResult>\n  <ExactID>AD2327-05</ExactID>\n  <Password></Password>\n  <Transaction_Type>00</Transaction_Type>\n  <DollarAmount>1.0</DollarAmount>\n  <SurchargeAmount></SurchargeAmount>\n  <Card_Number>############4242</Card_Number>\n  <Transaction_Tag>42930941</Transaction_Tag>\n  <Track1></Track1>\n  <Track2></Track2>\n  <PAN></PAN>\n  <Authorization_Num>ET151682</Authorization_Num>\n  <Expiry_Date>0916</Expiry_Date>\n  <CardHoldersName>Longbob Longsen</CardHoldersName>\n  <VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>\n  <VerificationStr2>123</VerificationStr2>\n  <CVD_Presence_Ind>0</CVD_Presence_Ind>\n  <ZipCode></ZipCode>\n  <Tax1Amount></Tax1Amount>\n  <Tax1Number></Tax1Number>\n  <Tax2Amount></Tax2Amount>\n  <Tax2Number></Tax2Number>\n  <Secure_AuthRequired></Secure_AuthRequired>\n  <Secure_AuthResult></Secure_AuthResult>\n  <Ecommerce_Flag></Ecommerce_Flag>\n  <XID></XID>\n  <CAVV></CAVV>\n  <CAVV_Algorithm></CAVV_Algorithm>\n  <Reference_No>1</Reference_No>\n  <Customer_Ref></Customer_Ref>\n  <Reference_3>Store Purchase</Reference_3>\n  <Language></Language>\n  <Client_IP>216.191.105.146</Client_IP>\n  <Client_Email></Client_Email>\n  <Transaction_Error>false</Transaction_Error>\n  <Transaction_Approved>true</Transaction_Approved>\n  <EXact_Resp_Code>00</EXact_Resp_Code>\n  <EXact_Message>Transaction Normal</EXact_Message>\n  <Bank_Resp_Code>100</Bank_Resp_Code>\n  <Bank_Message>Approved</Bank_Message>\n  <Bank_Resp_Code_2></Bank_Resp_Code_2>\n  <SequenceNo>106826</SequenceNo>\n  <AVS>1</AVS>\n  <CVV2>M</CVV2>\n  <Retrieval_Ref_No>0025564</Retrieval_Ref_No>\n  <CAVV_Response></CAVV_Response>\n  <Currency>USD</Currency>\n  <AmountRequested></AmountRequested>\n  <PartialRedemption>false</PartialRedemption>\n  <MerchantName>Shopify DEMO0678</MerchantName>\n  <MerchantAddress>126 York Street</MerchantAddress>\n  <MerchantCity>Ottawa</MerchantCity>\n  <MerchantProvince>Alabama</MerchantProvince>\n  <MerchantCountry>Canada</MerchantCountry>\n  <MerchantPostal>K1N 5T5</MerchantPostal>\n  <MerchantURL>www.shopify.com</MerchantURL>\n  <TransarmorToken></TransarmorToken>\n  <CardType>Visa</CardType>\n  <CurrentBalance></CurrentBalance>\n  <PreviousBalance></PreviousBalance>\n  <EAN></EAN>\n  <CardCost></CardCost>\n  <VirtualCard>false</VirtualCard>\n  <CTR>=========== TRANSACTION RECORD ==========\nShopify DEMO0678\n126 York Street\nOttawa, AL K1N 5T5\nCanada\nwww.shopify.com\n\nTY"
+      -> "PE: Purchase\n\nACCT: Visa  $ 1.00 USD\n\nCARDHOLDER NAME : Longbob Longsen\nCARD NUMBER     : ############4242\nDATE/TIME       : 26 Jan 15 12:11:44\nREFERENCE #     :  106826 M\nAUTHOR. #       : ET151682\nTRANS. REF.     : 1\n\n    Approved - Thank You 100\n\n\nPlease retain this copy for your records.\n\nCardholder will pay above amount to card\nissuer pursuant to cardholder agreement.\n=========================================</CTR>\n</TransactionResult>\n"
+      read 2872 bytes
+      Conn close
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed
+    <<-POST_SCRUBBED
+      opening connection to api.demo.globalgatewaye4.firstdata.com:443...
+      opened
+      starting SSL for api.demo.globalgatewaye4.firstdata.com:443...
+      SSL established
+      <- "POST /transaction/v11 HTTP/1.1\r\nContent-Type: application/xml\r\nAccepts: application/xml\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api.demo.globalgatewaye4.firstdata.com\r\nContent-Length: 593\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Transaction><ExactID>REDACTED</ExactID><Password>REDACTED</Password><Transaction_Type>00</Transaction_Type><DollarAmount>1.00</DollarAmount><Card_Number>[FILTERED]</Card_Number><Expiry_Date>0916</Expiry_Date><CardHoldersName>Longbob Longsen</CardHoldersName><CardType>Visa</CardType><VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1><CVD_Presence_Ind>1</CVD_Presence_Ind><VerificationStr2>[FILTERED]</VerificationStr2><Reference_No>1</Reference_No><Reference_3>Store Purchase</Reference_3><CAVV/><XID/><Ecommerce_Flag/></Transaction>"
+      -> "HTTP/1.1 201 Created\r\n"
+      -> "Cache-Control: max-age=0, private, must-revalidate\r\n"
+      -> "Content-Type: application/xml; charset=utf-8\r\n"
+      -> "Date: Mon, 26 Jan 2015 17:11:44 GMT\r\n"
+      -> "ETag: \"0a9a542fbfc55846e0ebe471b5725fe8\"\r\n"
+      -> "Location: https://api.demo.globalgatewaye4.firstdata.com/transaction/v11/42930941\r\n"
+      -> "Server: Apache\r\n"
+      -> "Status: 201\r\n"
+      -> "X-Rack-Cache: invalidate, pass\r\n"
+      -> "X-Request-Id: e0fabf89d7d7272cab4d4d743327d036\r\n"
+      -> "X-UA-Compatible: IE=Edge,chrome=1\r\n"
+      -> "Content-Length: 2872\r\n"
+      -> "Connection: Close\r\n"
+      -> "\r\n"
+      reading 2872 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<TransactionResult>\n  <ExactID>AD2327-05</ExactID>\n  <Password></Password>\n  <Transaction_Type>00</Transaction_Type>\n  <DollarAmount>1.0</DollarAmount>\n  <SurchargeAmount></SurchargeAmount>\n  <Card_Number>[FILTERED]</Card_Number>\n  <Transaction_Tag>42930941</Transaction_Tag>\n  <Track1></Track1>\n  <Track2></Track2>\n  <PAN></PAN>\n  <Authorization_Num>ET151682</Authorization_Num>\n  <Expiry_Date>0916</Expiry_Date>\n  <CardHoldersName>Longbob Longsen</CardHoldersName>\n  <VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>\n  <VerificationStr2>[FILTERED]</VerificationStr2>\n  <CVD_Presence_Ind>0</CVD_Presence_Ind>\n  <ZipCode></ZipCode>\n  <Tax1Amount></Tax1Amount>\n  <Tax1Number></Tax1Number>\n  <Tax2Amount></Tax2Amount>\n  <Tax2Number></Tax2Number>\n  <Secure_AuthRequired></Secure_AuthRequired>\n  <Secure_AuthResult></Secure_AuthResult>\n  <Ecommerce_Flag></Ecommerce_Flag>\n  <XID></XID>\n  <CAVV></CAVV>\n  <CAVV_Algorithm></CAVV_Algorithm>\n  <Reference_No>1</Reference_No>\n  <Customer_Ref></Customer_Ref>\n  <Reference_3>Store Purchase</Reference_3>\n  <Language></Language>\n  <Client_IP>216.191.105.146</Client_IP>\n  <Client_Email></Client_Email>\n  <Transaction_Error>false</Transaction_Error>\n  <Transaction_Approved>true</Transaction_Approved>\n  <EXact_Resp_Code>00</EXact_Resp_Code>\n  <EXact_Message>Transaction Normal</EXact_Message>\n  <Bank_Resp_Code>100</Bank_Resp_Code>\n  <Bank_Message>Approved</Bank_Message>\n  <Bank_Resp_Code_2></Bank_Resp_Code_2>\n  <SequenceNo>106826</SequenceNo>\n  <AVS>1</AVS>\n  <CVV2>M</CVV2>\n  <Retrieval_Ref_No>0025564</Retrieval_Ref_No>\n  <CAVV_Response></CAVV_Response>\n  <Currency>USD</Currency>\n  <AmountRequested></AmountRequested>\n  <PartialRedemption>false</PartialRedemption>\n  <MerchantName>Shopify DEMO0678</MerchantName>\n  <MerchantAddress>126 York Street</MerchantAddress>\n  <MerchantCity>Ottawa</MerchantCity>\n  <MerchantProvince>Alabama</MerchantProvince>\n  <MerchantCountry>Canada</MerchantCountry>\n  <MerchantPostal>K1N 5T5</MerchantPostal>\n  <MerchantURL>www.shopify.com</MerchantURL>\n  <TransarmorToken></TransarmorToken>\n  <CardType>Visa</CardType>\n  <CurrentBalance></CurrentBalance>\n  <PreviousBalance></PreviousBalance>\n  <EAN></EAN>\n  <CardCost></CardCost>\n  <VirtualCard>false</VirtualCard>\n  <CTR>=========== TRANSACTION RECORD ==========\nShopify DEMO0678\n126 York Street\nOttawa, AL K1N 5T5\nCanada\nwww.shopify.com\n\nTY"
+      -> "PE: Purchase\n\nACCT: Visa  $ 1.00 USD\n\nCARDHOLDER NAME : Longbob Longsen\nCARD NUMBER     : ############4242\nDATE/TIME       : 26 Jan 15 12:11:44\nREFERENCE #     :  106826 M\nAUTHOR. #       : ET151682\nTRANS. REF.     : 1\n\n    Approved - Thank You 100\n\n\nPlease retain this copy for your records.\n\nCardholder will pay above amount to card\nissuer pursuant to cardholder agreement.\n=========================================</CTR>\n</TransactionResult>\n"
+      read 2872 bytes
+      Conn close
+    POST_SCRUBBED
+  end
 
   def successful_purchase_response
     <<-RESPONSE
@@ -633,6 +707,43 @@ response: !ruby/object:Net::HTTPBadRequest
   http_version: "1.1"
   message: Bad Request
   read: true
+  socket:
+    RESPONSE
+    YAML.load(yamlexcep)
+  end
+
+  def bad_credentials_response
+    yamlexcep = <<-RESPONSE
+--- !ruby/exception:ActiveMerchant::ResponseError
+message:
+response: !ruby/object:Net::HTTPUnauthorized
+  code: '401'
+  message: Authorization Required
+  body: Unauthorized Request. Bad or missing credentials.
+  read: true
+  header:
+    cache-control:
+    - no-cache
+    content-type:
+    - text/html; charset=utf-8
+    date:
+    - Tue, 30 Dec 2014 23:28:32 GMT
+    server:
+    - Apache
+    status:
+    - '401'
+    x-rack-cache:
+    - invalidate, pass
+    x-request-id:
+    - 4157e21cc5620a95ead8d2025b55bdf4
+    x-ua-compatible:
+    - IE=Edge,chrome=1
+    content-length:
+    - '49'
+    connection:
+    - Close
+  body_exist: true
+  http_version: '1.1'
   socket:
     RESPONSE
     YAML.load(yamlexcep)

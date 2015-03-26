@@ -85,7 +85,7 @@ module ActiveMerchant #:nodoc:
           :test => (parsed['mode'] == 'test'),
         }
 
-        succeeded = (parsed['data'] == []) || (parsed['data']['response_code'] == 20000)
+        succeeded = (parsed['data'] == []) || (parsed['data']['response_code'].to_i == 20000)
         Response.new(succeeded, response_message(parsed), parsed, options)
       end
 
@@ -230,7 +230,7 @@ module ActiveMerchant #:nodoc:
         return parsed_response["error"] if parsed_response["error"]
         return "Transaction approved." if (parsed_response['data'] == [])
 
-        code = parsed_response["data"]["response_code"]
+        code = parsed_response["data"]["response_code"].to_i
         RESPONSE_CODES[code] || code.to_s
       end
 

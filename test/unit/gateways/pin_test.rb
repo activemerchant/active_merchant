@@ -84,6 +84,22 @@ class PinTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_unparsable_body_of_successful_response
+    @gateway.stubs(:raw_ssl_request).returns(MockResponse.succeeded("This is not [ JSON"))
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match(/Invalid JSON response received/, response.message)
+  end
+
+  def test_unparsable_body_of_failed_response
+    @gateway.stubs(:raw_ssl_request).returns(MockResponse.failed("This is not [ JSON"))
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match(/Invalid JSON response received/, response.message)
+  end
+
   def test_successful_store
     @gateway.expects(:ssl_request).returns(successful_store_response)
     assert response = @gateway.store(@credit_card, @options)
@@ -479,5 +495,20 @@ class PinTest < Test::Unit::TestCase
         "refund_pending":false
       }
     }'
+  end
+
+  class MockResponse
+    attr_reader :code, :body
+    def self.succeeded(body)
+      MockResponse.new(200, body)
+    end
+
+    def self.failed(body)
+      MockResponse.new(422, body)
+    end
+
+    def initialize(code, body)
+      @code, @body = code, body
+    end
   end
 end

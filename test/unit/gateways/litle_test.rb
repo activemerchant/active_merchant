@@ -14,6 +14,7 @@ class LitleTest < Test::Unit::TestCase
 
     @credit_card = credit_card
     @amount = 100
+    @options = {}
   end
 
   def test_successful_purchase
@@ -260,7 +261,15 @@ class LitleTest < Test::Unit::TestCase
       @gateway.purchase(@amount, @credit_card)
     end.check_request do |endpoint, data, headers|
       assert_match "<orderSource>ecommerce</orderSource>", data
-      assert_not_match %r{<pos>.+<\/pos>}m, data
+      assert %r{<pos>.+<\/pos>}m !~ data
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_order_source_override
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, order_source: "recurring")
+    end.check_request do |endpoint, data, headers|
+      assert_match "<orderSource>recurring</orderSource>", data
     end.respond_with(successful_purchase_response)
   end
 

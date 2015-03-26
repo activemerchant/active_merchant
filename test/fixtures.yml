@@ -222,6 +222,16 @@ firstdata_e4:
   login:
   password:
 
+flo2cash:
+  username: SOMECREDENTIAL
+  password: ANOTHERCREDENTIAL
+  account_id: ANOTHERCREDENTIAL
+
+flo2cash_simple:
+  username: SOMECREDENTIAL
+  password: ANOTHERCREDENTIAL
+  account_id: ANOTHERCREDENTIAL
+
 garanti:
   login: "PROVAUT"
   terminal_id: 111995
@@ -262,6 +272,11 @@ inspire:
 instapay:
   login: TEST0
   password:
+
+# Working credentials, no need to replace
+ipp:
+  username: nmi.api
+  password: qwerty123
 
 iridium:
     login: LOGIN
@@ -321,7 +336,7 @@ merchant_warrior:
 
 # Working credentials, no need to replace
 mercury:
-  login: '023358150511666'
+  login: '089716741701445'
   password: 'xyz'
 
 mercury_no_tokenization:
@@ -460,9 +475,10 @@ payex:
   # encryption key is generated via the PayEx Admin console
   encryption_key: ENCRYPTION_KEY
 
+# Working credentials, no need to replace
 payflow:
-  login: LOGIN
-  password: PASSWORD
+  login: spreedly
+  password: 'ibB4Z8=d;G'
   partner: PayPal
 
 payflow_uk:
@@ -613,6 +629,15 @@ pxpay:
 quantum:
   login: X
   password: Y
+
+# You will need to create a developer sandbox at https://developer.intuit.com/ and
+# successfully generate an OAuth 1.0a access token and token secret.
+quickbooks:
+  consumer_key:
+  consumer_secret:
+  access_token:
+  token_secret:
+  realm:
 
 # Quickpay offers a test account.
 # To log in to the manager, use demo@quickpay.net and test234
@@ -800,10 +825,6 @@ viaklix:
   login: LOGIN
   password: PASSWORD
   user: USER
-
-vindicia:
-  login: LOGIN
-  password: PASSWORD
 
 webpay:
   login: "test_secret_eHn4TTgsGguBcW764a2KA8Yd"

@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/orbital/orbital_soft_descriptors'
+require 'active_merchant/billing/gateways/orbital/orbital_soft_descriptors'
 require "rexml/document"
 
 module ActiveMerchant #:nodoc:
@@ -240,7 +240,7 @@ module ActiveMerchant #:nodoc:
 
 
       # ==== Customer Profiles
-      # :customer_ref_num should be set unless your happy with Orbital providing one
+      # :customer_ref_num should be set unless you're happy with Orbital providing one
       #
       # :customer_profile_order_override_ind can be set to map
       # the CustomerRefNum to OrderID or Comments. Defaults to 'NO' - no mapping

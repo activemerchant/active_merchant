@@ -3,7 +3,6 @@ require 'test_helper'
 class RemoteAuthorizeNetTest < Test::Unit::TestCase
   def setup
     @gateway = AuthorizeNetGateway.new(fixtures(:authorize_net))
-    @gateway.class.duplicate_window = 0
 
     @amount = 100
     @credit_card = credit_card('4000100011112224')
@@ -13,13 +12,10 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
 
     @options = {
       order_id: '1',
+      duplicate_window: 0,
       billing_address: address,
       description: 'Store Purchase'
     }
-  end
-
-  def teardown
-    @gateway.class.duplicate_window = nil
   end
 
   def test_successful_purchase
@@ -31,7 +27,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_minimal_options
-    response = @gateway.purchase(@amount, @credit_card)
+    response = @gateway.purchase(@amount, @credit_card, duplicate_window: 0)
     assert_success response
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
@@ -221,6 +217,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
       response_code
       response_reason_code
       response_reason_text
+      test_request
       transaction_id
     ), response.params.keys.sort
 
@@ -280,6 +277,10 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.authorization
+  end
+
+  def test_dump_transcript
+    # dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
   end
 
   private

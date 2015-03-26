@@ -29,6 +29,26 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
     assert_not_nil response.authorization
+    assert !response.fraud_review?
+  end
+
+  # In order for this remote test to pass, you must go into your Payflow test
+  # backend and enable the correct filter. Once logged in:
+  # "Service Settings" ->
+  #   "Fraud Protection" ->
+  #     "Test Setup" ->
+  #       "Edit Standard Filters" ->
+  #         Check "BIN Risk List Match" filter *only*, set to "Review" ->
+  #           "Deploy" ->
+  #             WAIT AT LEAST AN HOUR. FOR REALZ.
+  def test_successful_purchase_with_fraud_review
+    assert response = @gateway.purchase(
+      100000,
+      credit_card("5555555555554444", verification_value: "")
+    )
+    assert_success response, "This is probably failing due to your Payflow test account not being set up for fraud filters."
+    assert_equal "126", response.params["result"]
+    assert response.fraud_review?
   end
 
   def test_declined_purchase
@@ -46,8 +66,8 @@ class RemotePayflowTest < Test::Unit::TestCase
   # This can be accomplished by sending an email to payflow-support@paypal.com with your Merchant Login.
   def test_successful_ach_purchase
     assert response = @gateway.purchase(50, @check)
+    assert_success response, "This is probably failing due to your Payflow test account not being set up for ACH."
     assert_equal "Approved", response.message
-    assert_success response
     assert response.test?
     assert_not_nil response.authorization
   end
@@ -94,6 +114,18 @@ class RemotePayflowTest < Test::Unit::TestCase
     assert_success void
   end
 
+  def test_successful_verify
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal "Verified", response.message
+  end
+
+  def test_failed_verify
+    assert response = @gateway.verify(credit_card("4000056655665556"), @options)
+    assert_failure response
+    assert_equal "Declined", response.message
+  end
+
   def test_invalid_login
     gateway = PayflowGateway.new(
       :login => '',
@@ -105,8 +137,8 @@ class RemotePayflowTest < Test::Unit::TestCase
   end
 
   def test_duplicate_request_id
-    request_id = Digest::MD5.hexdigest(rand.to_s)
-    @gateway.expects(:generate_unique_id).times(2).returns(request_id)
+    request_id = SecureRandom.hex(16)
+    SecureRandom.expects(:hex).times(2).returns(request_id)
 
     response1 = @gateway.purchase(100, @credit_card, @options)
     assert  response1.success?
@@ -114,18 +146,22 @@ class RemotePayflowTest < Test::Unit::TestCase
 
     response2 = @gateway.purchase(100, @credit_card, @options)
     assert response2.success?
-    assert response2.params['duplicate']
+    assert response2.params['duplicate'], response2.inspect
   end
 
   def test_create_recurring_profile
-    response = @gateway.recurring(1000, @credit_card, :periodicity => :monthly)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(1000, @credit_card, :periodicity => :monthly)
+    end
     assert_success response
     assert !response.params['profile_id'].blank?
     assert response.test?
   end
 
   def test_create_recurring_profile_with_invalid_date
-    response = @gateway.recurring(1000, @credit_card, :periodicity => :monthly, :starting_at => Time.now)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(1000, @credit_card, :periodicity => :monthly, :starting_at => Time.now)
+    end
     assert_failure response
     assert_equal 'Field format error: Start or next payment date must be a valid future date', response.message
     assert response.params['profile_id'].blank?
@@ -133,12 +169,16 @@ class RemotePayflowTest < Test::Unit::TestCase
   end
 
   def test_create_and_cancel_recurring_profile
-    response = @gateway.recurring(1000, @credit_card, :periodicity => :monthly)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(1000, @credit_card, :periodicity => :monthly)
+    end
     assert_success response
     assert !response.params['profile_id'].blank?
     assert response.test?
 
-    response = @gateway.cancel_recurring(response.params['profile_id'])
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.cancel_recurring(response.params['profile_id'])
+    end
     assert_success response
     assert response.test?
   end
@@ -151,7 +191,9 @@ class RemotePayflowTest < Test::Unit::TestCase
       :starting_at => Time.now + 1.day,
       :comment => "Test Profile"
     )
-    response = @gateway.recurring(100, @credit_card, @options)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(100, @credit_card, @options)
+    end
     assert_equal "Approved", response.params['message']
     assert_equal "0", response.params['result']
     assert_success response
@@ -166,26 +208,34 @@ class RemotePayflowTest < Test::Unit::TestCase
       :payments => '4',
       :profile_id => @recurring_profile_id
     )
-    response = @gateway.recurring(400, @credit_card, @options)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(400, @credit_card, @options)
+    end
     assert_equal "Approved", response.params['message']
     assert_equal "0", response.params['result']
     assert_success response
     assert response.test?
 
     # Test inquiry
-    response = @gateway.recurring_inquiry(@recurring_profile_id)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring_inquiry(@recurring_profile_id)
+    end
     assert_equal "0", response.params['result']
     assert_success response
     assert response.test?
 
     # Test payment history inquiry
-    response = @gateway.recurring_inquiry(@recurring_profile_id, :history => true)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring_inquiry(@recurring_profile_id, :history => true)
+    end
     assert_equal '0', response.params['result']
     assert_success response
     assert response.test?
 
     # Test cancel
-    response = @gateway.cancel_recurring(@recurring_profile_id)
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.cancel_recurring(@recurring_profile_id)
+    end
     assert_equal "Approved", response.params['message']
     assert_equal "0", response.params['result']
     assert_success response
@@ -208,26 +258,15 @@ class RemotePayflowTest < Test::Unit::TestCase
   end
 
   def test_recurring_with_initial_authorization
-    response = @gateway.recurring(1000, @credit_card,
-      :periodicity => :monthly,
-      :initial_transaction => {
-        :type => :authorization
-      }
-    )
-
-    assert_success response
-    assert !response.params['profile_id'].blank?
-    assert response.test?
-  end
-
-  def test_recurring_with_initial_authorization
-    response = @gateway.recurring(1000, @credit_card,
-      :periodicity => :monthly,
-      :initial_transaction => {
-        :type => :purchase,
-        :amount => 500
-      }
-    )
+    response = assert_deprecation_warning(Gateway::RECURRING_DEPRECATION_MESSAGE) do
+      @gateway.recurring(1000, @credit_card,
+        :periodicity => :monthly,
+        :initial_transaction => {
+          :type => :purchase,
+          :amount => 500
+        }
+      )
+    end
 
     assert_success response
     assert !response.params['profile_id'].blank?
@@ -253,13 +292,13 @@ class RemotePayflowTest < Test::Unit::TestCase
   # check) unless Allow non-referenced credits = Yes in PayPal manager
   def test_purchase_and_credit
     assert credit = @gateway.credit(100, @credit_card, @options)
-    assert_success credit
+    assert_success credit, "This is probably failing due to your Payflow test account not being set up to allow non-referenced credits."
   end
 
   def test_successful_ach_credit
     assert response = @gateway.credit(50, @check)
+    assert_success response, "This is probably failing due to your Payflow test account not being set up for ACH."
     assert_equal "Approved", response.message
-    assert_success response
     assert response.test?
     assert_not_nil response.authorization
   end

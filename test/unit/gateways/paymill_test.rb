@@ -137,6 +137,22 @@ class PaymillTest < Test::Unit::TestCase
     assert_equal 20000, refund.params['data']['response_code']
   end
 
+  def test_successful_refund_response_with_string_response_code
+    @gateway.stubs(:raw_ssl_request).returns(successful_store_response, successful_purchase_response)
+    assert response = @gateway.purchase(@amount, @credit_card)
+    assert_success response
+
+    @gateway.expects(:raw_ssl_request).returns(successful_refund_response_with_string_response_code)
+    assert refund = @gateway.refund(@amount, response.authorization)
+    assert_success refund
+    assert response.test?
+
+    assert_equal 'General success response.', refund.message
+    assert_equal 'tran_89c8728e94273510afa99ab64e45', refund.params['data']['transaction']['id']
+    assert_equal 'refund_d02807f46181c0919016;', refund.authorization
+    assert_equal 20000, refund.params['data']['response_code']
+  end
+
   def test_failed_refund
     @gateway.stubs(:raw_ssl_request).returns(successful_store_response, successful_purchase_response)
     assert response = @gateway.purchase(@amount, @credit_card)
@@ -617,6 +633,65 @@ class PaymillTest < Test::Unit::TestCase
             "created_at":1360892424,
             "updated_at":1360892424,
             "response_code":20000,
+            "invoices":[
+
+            ],
+            "payment":{
+              "id":"pay_e7f0738e00f3cd57ff00c60f9b72",
+              "type":"creditcard",
+              "client":"client_17c00b38c5b6fc62c3e6",
+              "card_type":"mastercard",
+              "country":null,
+              "expire_month":9,
+              "expire_year":2014,
+              "card_holder":null,
+              "last4":"5100",
+              "created_at":1360892423,
+              "updated_at":1360892424
+            },
+            "client":{
+              "id":"client_17c00b38c5b6fc62c3e6",
+              "email":null,
+              "description":null,
+              "created_at":1360892424,
+              "updated_at":1360892424,
+              "payment":[
+                "pay_e7f0738e00f3cd57ff00c60f9b72"
+              ],
+                "subscription":null
+            },
+            "preauthorization":null
+          }
+        },
+        "mode":"test"
+      }
+    JSON
+  end
+
+  def successful_refund_response_with_string_response_code
+    MockResponse.succeeded <<-JSON
+      {
+        "data":{
+          "id":"refund_d02807f46181c0919016",
+          "amount":"100",
+          "status":"refunded",
+          "description":null,
+          "livemode":false,
+          "created_at":1360892424,
+          "updated_at":1360892424,
+          "response_code":20000,
+          "transaction":{
+            "id":"tran_89c8728e94273510afa99ab64e45",
+            "amount":"000",
+            "origin_amount":100,
+            "status":"refunded",
+            "description":null,
+            "livemode":false,
+            "refunds":null,
+            "currency":"EUR",
+            "created_at":1360892424,
+            "updated_at":1360892424,
+            "response_code":"20000",
             "invoices":[
 
             ],

@@ -1,6 +1,6 @@
-require File.dirname(__FILE__) + '/sage/sage_bankcard'
-require File.dirname(__FILE__) + '/sage/sage_virtual_check'
-require File.dirname(__FILE__) + '/sage/sage_vault'
+require 'active_merchant/billing/gateways/sage/sage_bankcard'
+require 'active_merchant/billing/gateways/sage/sage_virtual_check'
+require 'active_merchant/billing/gateways/sage/sage_vault'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:

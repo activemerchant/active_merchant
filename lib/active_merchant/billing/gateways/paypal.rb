@@ -1,6 +1,6 @@
-require File.dirname(__FILE__) + '/paypal/paypal_common_api'
-require File.dirname(__FILE__) + '/paypal/paypal_recurring_api'
-require File.dirname(__FILE__) + '/paypal_express'
+require 'active_merchant/billing/gateways/paypal/paypal_common_api'
+require 'active_merchant/billing/gateways/paypal/paypal_recurring_api'
+require 'active_merchant/billing/gateways/paypal_express'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -36,6 +36,18 @@ module ActiveMerchant #:nodoc:
 
       def express
         @express ||= PaypalExpressGateway.new(@options)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<n1:Password>).+(</n1:Password>)), '\1[FILTERED]\2').
+          gsub(%r((<n1:Username>).+(</n1:Username>)), '\1[FILTERED]\2').
+          gsub(%r((<n2:CreditCardNumber>).+(</n2:CreditCardNumber)), '\1[FILTERED]\2').
+          gsub(%r((<n2:CVV2>).+(</n2:CVV2)), '\1[FILTERED]\2')
       end
 
       private

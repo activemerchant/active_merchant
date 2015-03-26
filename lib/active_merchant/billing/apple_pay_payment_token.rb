@@ -10,7 +10,6 @@ module ActiveMerchant #:nodoc:
 
       def initialize(payment_data, options = {})
         super
-        @metadata.symbolize_keys!
         @payment_instrument_name = @metadata[:payment_instrument_name]
         @payment_network = @metadata[:payment_network]
       end

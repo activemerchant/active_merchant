@@ -15,9 +15,17 @@ module ActiveMerchant #:nodoc:
 
       self.live_url = 'https://api.checkout.com/Process/gateway.aspx'
 
-      def initialize(options = {})
-        @url = (options[:gateway_url] || self.live_url)
+      ACTIONS = {
+        'purchase' => '1',
+        'authorize' => '4',
+        'capture' => '5',
+        'refund' => '2',
+        'void_purchase' => '3',
+        'void_authorize' => '9',
+        'void_capture' => '7'
+      }
 
+      def initialize(options = {})
         requires!(options, :merchant_id, :password)
         super
       end
@@ -25,9 +33,10 @@ module ActiveMerchant #:nodoc:
       def purchase(amount, payment_method, options)
         requires!(options, :order_id)
 
-        commit("1") do |xml|
+        commit('purchase', amount, options) do |xml|
           add_credentials(xml, options)
           add_invoice(xml, amount, options)
+          add_track_id(xml, options[:order_id])
           add_payment_method(xml, payment_method)
           add_billing_info(xml, options)
           add_shipping_info(xml, options)
@@ -39,9 +48,10 @@ module ActiveMerchant #:nodoc:
       def authorize(amount, payment_method, options)
         requires!(options, :order_id)
 
-        commit("4") do |xml|
+        commit('authorize', amount, options) do |xml|
           add_credentials(xml, options)
           add_invoice(xml, amount, options)
+          add_track_id(xml, options[:order_id])
           add_payment_method(xml, payment_method)
           add_billing_info(xml, options)
           add_shipping_info(xml, options)
@@ -50,13 +60,37 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def capture(amount, identifier, options = {})
-        commit("5") do |xml|
+      def capture(amount, authorization, options = {})
+        commit('capture', amount, options) do |xml|
           add_credentials(xml, options)
-          add_reference(xml, identifier)
+          add_reference(xml, authorization)
           add_invoice(xml, amount, options)
           add_user_defined_fields(xml, options)
           add_other_fields(xml, options)
+        end
+      end
+
+      def void(authorization, options = {})
+        _, _, orig_action, amount, currency = split_authorization(authorization)
+        commit("void_#{orig_action}") do |xml|
+          add_credentials(xml, options)
+          add_invoice(xml, amount.to_i, options.merge(currency: currency))
+          add_reference(xml, authorization)
+        end
+      end
+
+      def refund(amount, authorization, options = {})
+        commit('refund') do |xml|
+          add_credentials(xml, options)
+          add_invoice(xml, amount.to_i, options)
+          add_reference(xml, authorization)
+        end
+      end
+
+      def verify(credit_card, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
         end
       end
 
@@ -69,8 +103,7 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(xml, amount, options)
         xml.bill_amount_ amount(amount)
-        xml.bill_currencycode_ currency(options[:currency])
-        xml.trackid_ options[:order_id]
+        xml.bill_currencycode_ options[:currency] || currency(amount)
       end
 
       def add_payment_method(xml, payment_method)
@@ -120,17 +153,23 @@ module ActiveMerchant #:nodoc:
         xml.merchantcustomerid_ options[:customer]
       end
 
-      def add_reference(xml, identifier)
-        xml.transid_ identifier
+      def add_reference(xml, authorization)
+        transid, trackid, _, _, _ = split_authorization(authorization)
+        xml.transid transid
+        add_track_id(xml, trackid)
       end
 
-      def commit(action, &builder)
-        response = parse_xml(ssl_post(@url, build_xml(action, &builder)))
+      def add_track_id(xml, trackid)
+        xml.trackid(trackid) if trackid
+      end
+
+      def commit(action, amount=nil, options={}, &builder)
+        response = parse_xml(ssl_post(live_url, build_xml(action, &builder)))
         Response.new(
           (response[:responsecode] == "0"),
           (response[:result] || response[:error_text] || "Unknown Response"),
           response,
-          authorization: response[ :tranid],
+          authorization: authorization_from(response, action, amount, options),
           test: test?
         )
       end
@@ -138,7 +177,7 @@ module ActiveMerchant #:nodoc:
       def build_xml(action)
         Nokogiri::XML::Builder.new do |xml|
           xml.request do
-            xml.action_ action
+            xml.action_ ACTIONS[action]
             yield xml
           end
         end.to_xml
@@ -161,6 +200,16 @@ module ActiveMerchant #:nodoc:
         end
 
         response
+      end
+
+      def authorization_from(response, action,  amount, options)
+        currency = options[:currency] || currency(amount)
+        [response[:tranid], response[:trackid], action, amount, currency].join("|")
+      end
+
+      def split_authorization(authorization)
+        transid, trackid, action, amount, currency = authorization.split("|")
+        [transid, trackid, action, amount, currency]
       end
     end
   end

@@ -15,6 +15,27 @@ class Remote<%= class_name %>Test < Test::Unit::TestCase
     }
   end
 
+  def test_dump_transcript
+    #skip("Transcript scrubbing for this gateway has been tested.")
+
+    # This test will run a purchase transaction on your gateway
+    # and dump a transcript of the HTTP conversation so that
+    # you can use that transcript as a reference while
+    # implementing your scrubbing logic
+    dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
+  end
+
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response

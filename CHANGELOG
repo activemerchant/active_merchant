@@ -1,5 +1,49 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.47.0 (February 25, 2015)
+
+* Authorize.Net: Properly send name in shipping address line, when shipping address is provided [girasquid]
+* Payflow: Add verify support [ntalbott]
+* Capture ConnectionError#triggering_exception [ntalbott]
+* Flo2Cash: Map Reference->:order_id (not :invoice) [ntalbott]
+* Flo2Cash: Fix card brand handling [ntalbott]
+* Flo2Cash: Improve error handling & simplify "Simple" gateway [ntalbott]
+* Remove Vindicia gateway [mutemule]
+* Firstdata E4: Support other mastercard string [jcbantuelle]
+* Checkout: Disallow altering endpoint via options [markabe]
+
+== Version 1.46.0 (January 20, 2015)
+
+* CHANGE: drop `offsite_payments` and `active_utils` as dependencies. [wvanbergen]
+* CHANGE: remove `OffsitePaymentShim`. You will have to add offsite_payments as a dependency,
+  and update any mentions of `ActiveSupport::Billing::Integration` to
+  `OffsitePayments::Integrations`. [wvanbergen]
+* QuickBooks Payments: Add adapter [ivanfer, bizla]
+* Quickbooks: Remove requirement of oauth gem.
+* PayGate: Add support for refunds [StephanAtG2]
+* PayPal: Add #scrub for scrubbing PCI information out of HTTP transcripts [girasquid]
+* Stripe: Add #scrub for scrubbing PCI information out of HTTP transcripts [girasquid]
+* Cybersource: Add ability to verify a card [duff]
+* BraintreeBlue: Expose the error code in the response params [duff]
+* eWay Rapid: Update supported countries and card types [incarnate]
+* PayPal: Allow specifying ButtonSource at init [ntalbott]
+* Payflow: Add fraud_review support [ntalbott]
+* Add IPP gateway [InfraRuby]
+* Redsys: Fix order_id truncation [duff]
+* AuthorizeNet: Improve duplicate_window handling [duff]
+* PayPal: Fix ButtonSource bug [ntalbott]
+* Checkout: Prevent multiple trackids from being passed [markabe]
+* Pin: Handle JSON parsing exception in response [duff]
+* Improve test suite to test against multiple ActiveSupport versions [wvanbergen]
+* Misc. code cleanup [wvanbergen]
+* Add Flo2Cash gateway [markabe]
+* Litle: Allow order_source override [duff]
+* Quickpay: Add ability to finalize a capture [askehansen]
+* AuthorizeNet: Prevent test mode using live gateway [duff]
+* Add Flo2Cash Simple gateway [markabe]
+
+== Version 1.45.0 (December 1, 2014)
+
 * HPS: Always pass CardHolderData element [SecureSubmit, ntalbott]
 * PayJunction: Include 'track' parameter if provided [hron]
 * WebPay: Fix API calls [tomykaira]
@@ -34,6 +78,17 @@
 * Add TNS gateway [markabe]
 * TNS: Update countries and supported card types [markabe]
 * Conekta: Add AMEX as a supported card type [MauricioMurga]
+* Checkout: pass through currency type [markabe]
+* Bogus: return standard error codes [jpcaissy]
+* Add PaymentToken and ApplePayPaymentToken objects for token-based transactions [bizla]
+* Authorize.Net: Add ApplePay in-app transaction support [bizla]
+* Stripe: Add ApplePay in-app transaction support [bizla]
+* eWAY Rapid: Add PartnerID param [j-mutter]
+* GlobalTransport: Truncate order_id [duff]
+* Redsys: Allow a description to be specified [duff]
+* NetworkMerchants: Fix currency [j-mutter]
+* Redsys: Improve handling of order_id [duff]
+* Checkout: Add support for void, refund, and verify [markabe]
 
 == Version 1.44.1 (Aug 28, 2014)
 
