@@ -44,6 +44,16 @@ class RemotePinTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_failed_capture_due_to_invalid_amount
+    authorization = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorization
+    assert_equal authorization.params['response']['captured'], false
+
+    response = @gateway.capture(@amount - 1, authorization.authorization, @options)
+    assert_failure response
+    assert_equal 'invalid_capture_amount', response.params['error']
+  end
+
   def test_successful_purchase_without_description
     @options.delete(:description)
     response = @gateway.purchase(@amount, @credit_card, @options)

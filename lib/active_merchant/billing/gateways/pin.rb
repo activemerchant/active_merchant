@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
       # Captures a previously authorized charge. Capturing only part of the original
       # authorization is currently not supported.
       def capture(money, token, options = {})
-        commit(:put, "charges/#{CGI.escape(token)}/capture", {}, options)
+        commit(:put, "charges/#{CGI.escape(token)}/capture", { :amount => amount(money) }, options)
       end
 
       # Updates the credit card for the customer.
