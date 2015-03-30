@@ -237,7 +237,7 @@ module ActiveMerchant #:nodoc:
         post[:description] = options[:description]
         post[:statement_description] = options[:statement_description]
 
-        post[:metadata] = {}
+        post[:metadata] = options[:metadata] || {}
         post[:metadata][:email] = options[:email] if options[:email]
         post[:metadata][:order_id] = options[:order_id] if options[:order_id]
         post.delete(:metadata) if post[:metadata].empty?
