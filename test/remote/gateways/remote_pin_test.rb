@@ -21,17 +21,17 @@ class RemotePinTest < Test::Unit::TestCase
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal response.params['response']['captured'], true
+    assert_equal true, response.params['response']['captured']
   end
 
   def test_successful_authorize_and_capture
     authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
-    assert_equal authorization.params['response']['captured'], false
+    assert_equal false, authorization.params['response']['captured']
 
     response = @gateway.capture(@amount, authorization.authorization, @options)
     assert_success response
-    assert_equal response.params['response']['captured'], true
+    assert_equal true, response.params['response']['captured']
   end
 
   def test_failed_authorize
@@ -110,12 +110,12 @@ class RemotePinTest < Test::Unit::TestCase
     response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_not_nil response.authorization
-    assert_equal response.params['response']['card']['expiry_year'], @credit_card.year
+    assert_equal @credit_card.year, response.params['response']['card']['expiry_year']
 
     response = @gateway.update(response.authorization, @visa_credit_card, :address => address)
     assert_success response
     assert_not_nil response.authorization
-    assert_equal response.params['response']['card']['expiry_year'], @visa_credit_card.year
+    assert_equal @visa_credit_card.year, response.params['response']['card']['expiry_year']
   end
 
   def test_refund
