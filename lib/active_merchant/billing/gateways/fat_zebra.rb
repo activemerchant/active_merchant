@@ -44,6 +44,25 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'purchases', post)
       end
 
+      def authorize(money, creditcard, options = {})
+        post = {}
+
+        add_amount(post, money, options)
+        add_creditcard(post, creditcard, options)
+        post[:capture] = false
+        post[:reference] = options[:order_id]
+        post[:customer_ip] = options[:ip]
+
+        commit(:post, 'purchases', post)
+      end
+
+      def capture(money, authorization, options = {})
+        post = options
+        add_amount(post, money, options)
+
+        commit(:post, "purchases/#{CGI.escape(authorization)}/capture", post)
+      end
+
       # Refund a transaction
       #
       # amount - Integer - the amount to refund

@@ -63,6 +63,29 @@ class FatZebraTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_authorization
+    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+      body.match '"capture":false'
+    }.returns(successful_purchase_response)
+
+    assert response = @gateway.authorize(@amount, "e1q7dbj2", @options)
+    assert_success response
+
+    assert_equal '001-P-12345AA', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_capture
+    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+      url =~ %r[purchases/e1q7dbj2/capture\z]
+    }.returns(successful_purchase_response)
+
+    response = @gateway.capture(@amount, "e1q7dbj2", @options)
+    assert_success response
+    assert_equal '001-P-12345AA', response.authorization
+    assert response.test?
+  end
+
   def test_unsuccessful_request
     @gateway.expects(:ssl_request).returns(failed_purchase_response)
 

@@ -33,6 +33,39 @@ class RemoteFatZebraTest < Test::Unit::TestCase
     assert_match /Currency XYZ is not valid for this merchant/, response.message
   end
 
+  def test_successful_authorize_and_capture
+    assert auth_response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth_response
+    assert_equal 'Approved', auth_response.message
+
+    assert capture_response = @gateway.capture(@amount, auth_response.authorization, @options)
+    assert_success capture_response
+    assert_equal 'Approved', capture_response.message
+  end
+
+  def test_multi_currency_authorize_and_capture
+    assert auth_response = @gateway.authorize(@amount, @credit_card, @options.merge(:currency => 'USD'))
+    assert_success auth_response
+    assert_equal 'Approved', auth_response.message
+    assert_equal 'USD', auth_response.params['response']['currency']
+
+    assert capture_response = @gateway.capture(@amount, auth_response.authorization, @options.merge(:currency => 'USD'))
+    assert_success capture_response
+    assert_equal 'Approved', capture_response.message
+    assert_equal 'USD', capture_response.params['response']['currency']
+  end
+
+  def test_successful_partial_capture
+    assert auth_response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success auth_response
+    assert_equal 'Approved', auth_response.message
+
+    assert capture_response = @gateway.capture(@amount - 1, auth_response.authorization, @options)
+    assert_success capture_response
+    assert_equal 'Approved', capture_response.message
+    assert_equal @amount - 1, capture_response.params['response']['captured_amount']
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
