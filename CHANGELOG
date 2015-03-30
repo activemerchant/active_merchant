@@ -28,6 +28,7 @@
 * Pin: Pass amount param for captures [ab9]
 * NAB Transact: Improve store functionality [duff]
 * Add Worldpay Online Payments [ao]
+* Fat Zebra: Add multi-currency support [nagash]
 
 == Version 1.47.0 (February 25, 2015)
 

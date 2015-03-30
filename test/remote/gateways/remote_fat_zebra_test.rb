@@ -20,6 +20,19 @@ class RemoteFatZebraTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_multi_currency_purchase
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'USD'))
+    assert_success response
+    assert_equal 'Approved', response.message
+    assert_equal 'USD', response.params['response']['currency']
+  end
+
+  def test_unsuccessful_multi_currency_purchase
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:currency => 'XYZ'))
+    assert_failure response
+    assert_match /Currency XYZ is not valid for this merchant/, response.message
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response

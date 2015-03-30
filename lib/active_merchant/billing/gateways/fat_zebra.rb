@@ -73,6 +73,8 @@ module ActiveMerchant #:nodoc:
 
       # Add the money details to the request
       def add_amount(post, money, options)
+        post[:currency] = (options[:currency] || currency(money))
+        post[:currency] = post[:currency].upcase if post[:currency]
         post[:amount] = money
       end
 
