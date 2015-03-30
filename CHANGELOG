@@ -24,6 +24,7 @@
 * MerchantWarrior: Fix refund and capture signatures [duff]
 * CenPOS: Add support for capture and refund [markabe]
 * Authorize.net: Add support for network tokenization credit cards [jnormore]
+* Stripe: Add support for passing in metadata for auths and purchases [kitt]
 
 == Version 1.47.0 (February 25, 2015)
 

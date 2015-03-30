@@ -439,6 +439,17 @@ class StripeTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_client_data_submitted_with_metadata_in_options
+    stub_comms(@gateway, :ssl_request) do
+      updated_options = @options.merge({:metadata => {:this_is_a_random_key_name => 'with a random value', :i_made_up_this_key_too => 'canyoutell'}, :order_id => "42", :email => "foo@wonderfullyfakedomain.com"})
+      @gateway.purchase(@amount,@credit_card,updated_options)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/metadata\[this_is_a_random_key_name\]=with\+a\+random\+value/, data)
+      assert_match(/metadata\[i_made_up_this_key_too\]=canyoutell/, data)
+      assert_match(/metadata\[email\]=foo\%40wonderfullyfakedomain\.com/, data)
+      assert_match(/metadata\[order_id\]=42/, data)
+    end.respond_with(successful_purchase_response)
+  end
 
   def test_add_address
     post = {:card => {}}
