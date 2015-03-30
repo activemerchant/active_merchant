@@ -39,7 +39,7 @@ class RemotePinTest < Test::Unit::TestCase
     assert_failure response
   end
 
-  def test_failed_capture
+  def test_failed_capture_due_to_invalid_token
     response = @gateway.capture(@amount, "bogus", @options)
     assert_failure response
   end
