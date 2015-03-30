@@ -44,6 +44,36 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'purchases', post)
       end
 
+      # To create an authorization on a credit card use:
+      #
+      #   authorize(money, creditcard)
+      #
+      # To authorize a tokenized card
+      #
+      #   authorize(money, "abzy87u", :cvv => "123")
+      def authorize(money, creditcard, options = {})
+        post = {}
+
+        add_amount(post, money, options)
+        add_creditcard(post, creditcard, options)
+        post[:capture] = false
+        post[:reference] = options[:order_id]
+        post[:customer_ip] = options[:ip]
+
+        commit(:post, 'purchases', post)
+      end
+
+      # Capture a previous authorization
+      #
+      # money - Integer - the amount to capture
+      # txn_id - String - the original transaction to be captured
+      def capture(money, txn_id, options = {})
+        post = options
+        add_amount(post, money, options)
+
+        commit(:post, "purchases/#{CGI.escape(txn_id)}/capture", post)
+      end
+
       # Refund a transaction
       #
       # amount - Integer - the amount to refund
