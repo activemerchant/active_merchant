@@ -20,6 +20,10 @@ class EredeTest < Test::Unit::TestCase
           :country => '076',
           :state => 'Rio de Janeiro',
           :postcode => '99999999'
+        },
+        :instalments => {
+          type: :zero_interest,
+          number: 2
         }
     }
   end

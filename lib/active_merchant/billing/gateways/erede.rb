@@ -157,7 +157,7 @@ module ActiveMerchant #:nodoc:
         raise 'invalid instalment type.' unless INSTALMENT_TYPES.include? type
         instalments = options[:instalments][:number].to_i
         xml.Instalments {
-          xml.type type
+          xml.type type.to_s
           xml.number instalments
         }
       end
