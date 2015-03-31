@@ -41,6 +41,7 @@
 * S5: Handle recurring transactions without CVV [davidsantoso]
 * Stripe: Force USD for verify [duff]
 * PayU India: Prevent shadowing in response parsing [ntalbott]
+* QuickPay: Add support for v10 API [ta]
 
 == Version 1.49.0 (May 1, 2015)
 
