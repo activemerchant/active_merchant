@@ -110,10 +110,10 @@ module ActiveMerchant #:nodoc:
             xml.merchantreference options[:order_id]
             xml.amount amount(money), currency: default_currency
             xml.capturemethod 'ecomm'
+            if options.fetch(:instalments, {})[:number]
+              add_instalments(xml, options) 
+            end
           }
-          if options.fetch(:instalments, {})[:number]
-            add_instalments(xml, options) 
-          end
         }
       end
 
