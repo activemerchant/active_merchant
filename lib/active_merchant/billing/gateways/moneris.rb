@@ -120,12 +120,19 @@ module ActiveMerchant #:nodoc:
         commit 'refund', crediting_params(authorization, :amount => amount(money))
       end
 
-      def store(credit_card, options = {})
+      # Stores a credit card number or a temporary token and returns a permanent credit card token
+      def store(pan, options = {})
         post = {}
-        post[:pan] = credit_card.number
-        post[:expdate] = expdate(credit_card)
+        if pan.is_a?(ActiveMerchant::Billing::CreditCard)
+          post[:pan] = pan.number
+          post[:expdate] = expdate(pan)
+          action = 'res_add_cc'
+        else
+          post[:data_key] = pan
+          action = 'res_add_token'
+        end
         post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
-        commit('res_add_cc', post)
+        commit(action, post)
       end
 
       def unstore(data_key, options = {})
@@ -298,6 +305,7 @@ module ActiveMerchant #:nodoc:
           "opentotals"         => [:ecr_number],
           "batchclose"         => [:ecr_number],
           "res_add_cc"         => [:pan, :expdate, :crypt_type],
+          "res_add_token"      => [:data_key, :crypt_type],
           "res_delete"         => [:data_key],
           "res_update_cc"      => [:data_key, :pan, :expdate, :crypt_type],
           "res_purchase_cc"    => [:data_key, :order_id, :cust_id, :amount, :crypt_type],
