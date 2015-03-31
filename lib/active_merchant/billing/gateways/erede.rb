@@ -28,7 +28,6 @@ module ActiveMerchant #:nodoc:
         xml = create_request do |xml|
           add_authentication(xml, options)
           add_transaction(xml, money, credit_card, options)
-          add_instalments(xml, options) if options.fetch(:instalments, {})[:number]
         end
         response = commit(xml)
         @credit_card = nil
@@ -112,6 +111,9 @@ module ActiveMerchant #:nodoc:
             xml.amount amount(money), currency: default_currency
             xml.capturemethod 'ecomm'
           }
+          if options.fetch(:instalments, {})[:number]
+            add_instalments(xml, options) 
+          end
         }
       end
 
