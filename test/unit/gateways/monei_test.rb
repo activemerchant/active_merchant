@@ -163,16 +163,6 @@ class MoneiTest < Test::Unit::TestCase
     </Transaction>
 </Response>
     XML
-
-
-    %(
-      Easy to capture by setting the DEBUG_ACTIVE_MERCHANT environment variable
-      to "true" when running remote tests:
-
-      $ DEBUG_ACTIVE_MERCHANT=true ruby -Itest \
-        test/remote/gateways/remote_monei_test.rb \
-        -n test_successful_purchase
-    )
   end
 
   def failed_purchase_response

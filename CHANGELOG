@@ -26,6 +26,7 @@
 * Authorize.net: Add support for network tokenization credit cards [jnormore]
 * Stripe: Add support for passing in metadata for auths and purchases [kitt]
 * Pin: Pass amount param for captures [ab9]
+* NAB Transact: Improve store functionality [duff]
 
 == Version 1.47.0 (February 25, 2015)
 

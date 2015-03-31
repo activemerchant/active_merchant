@@ -191,17 +191,13 @@ class RemoteNabTransactTest < Test::Unit::TestCase
   end
 
   def test_successful_store
-    @gateway.unstore(1234)
-
-    assert response = @gateway.store(@credit_card, {:billing_id => 1234, :amount => 150})
+    assert response = @gateway.store(@credit_card, @options)
     assert_success response
     assert_equal 'Successful', response.message
   end
 
   def test_unsuccessful_store
-    @gateway.unstore(1235)
-
-    assert response = @gateway.store(@declined_card, {:billing_id => 1235, :amount => 150})
+    assert response = @gateway.store(@declined_card)
     assert_failure response
     assert_equal 'Invalid Credit Card Number', response.message
   end
@@ -209,41 +205,32 @@ class RemoteNabTransactTest < Test::Unit::TestCase
   def test_duplicate_store
     @gateway.unstore(1236)
 
-    assert response = @gateway.store(@credit_card, {:billing_id => 1236, :amount => 150})
+    assert response = @gateway.store(@credit_card, {:billing_id => 1236})
     assert_success response
     assert_equal 'Successful', response.message
 
-    assert response = @gateway.store(@credit_card, {:billing_id => 1236, :amount => 150})
+    assert response = @gateway.store(@credit_card, {:billing_id => 1236})
     assert_failure response
     assert_equal 'Duplicate CRN Found', response.message
   end
 
   def test_unstore
-    gateway_id = '1234'
-    @gateway.unstore(gateway_id)
-
-    assert response = @gateway.store(@credit_card, {:billing_id => gateway_id, :amount => 150})
+    assert response = @gateway.store(@credit_card)
     assert_success response
     assert_equal 'Successful', response.message
 
-    assert gateway_id = response.params["crn"]
-    assert unstore_response = @gateway.unstore(gateway_id)
+    assert card_id = response.authorization
+    assert unstore_response = @gateway.unstore(card_id)
     assert_success unstore_response
+    assert_equal "Successful", unstore_response.message
   end
 
-  def test_successful_trigger_purchase
-    gateway_id = '1234'
-    trigger_amount = 12000
-    @gateway.unstore(gateway_id)
-
-    assert response = @gateway.store(@credit_card, {:billing_id => gateway_id, :amount => 150})
+  def test_successful_purchase_using_stored_card
+    assert response = @gateway.store(@credit_card)
     assert_success response
     assert_equal 'Successful', response.message
 
-    purchase_response = @gateway.purchase(trigger_amount, gateway_id)
-
-    assert gateway_id = purchase_response.params["crn"]
-    assert trigger_amount = purchase_response.params["amount"]
+    purchase_response = @gateway.purchase(12000, response.authorization)
     assert_success purchase_response
     assert_equal 'Approved', purchase_response.message
   end
