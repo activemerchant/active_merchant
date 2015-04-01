@@ -82,11 +82,11 @@ module ActiveMerchant
       end
     end
 
-    def assert_valid(model)
+    def assert_valid(model, message=nil)
       errors = model.validate
 
       clean_backtrace do
-        assert_equal({}, errors, "Expected to be valid")
+        assert_equal({}, errors, (message || "Expected to be valid"))
       end
 
       errors
