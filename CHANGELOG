@@ -17,6 +17,16 @@
 * Qvalent: map card storage reference to authorization [markabe]
 * Qvalent: Fix scrub replacement, it was too greedy [markabe]
 * PayConex: Add gateway [duff]
+* AuthorizeNet: Add credit support [duff]
+* CenPOS: Add gateway [markabe]
+* Stripe: Update country list [markabe]
+* Add Monei.net gateway [leolara]
+* MerchantWarrior: Fix refund and capture signatures [duff]
+* CenPOS: Add support for capture and refund [markabe]
+* Authorize.net: Add support for network tokenization credit cards [jnormore]
+* Stripe: Add support for passing in metadata for auths and purchases [kitt]
+* Pin: Pass amount param for captures [ab9]
+* NAB Transact: Improve store functionality [duff]
 
 == Version 1.47.0 (February 25, 2015)
 

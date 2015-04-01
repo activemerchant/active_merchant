@@ -542,6 +542,35 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.purchase(100, credit_card("41111111111111111111"), descriptor_name: 'wow*productname', descriptor_phone: '4443331112')
   end
 
+  def test_apple_pay_card
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+      with(
+        :amount => '1.00',
+        :order_id => '1',
+        :customer => {:id => nil, :email => nil, :first_name => 'Longbob', :last_name => 'Longsen'},
+        :options => {:store_in_vault => false, :submit_for_settlement => nil},
+        :custom_fields => nil,
+        :apple_pay_card => {
+          :number => '4111111111111111',
+          :expiration_month => '09',
+          :expiration_year => '2016',
+          :cardholder_name => 'Longbob Longsen',
+          :cryptogram => '111111111100cryptogram'
+        }
+      ).
+      returns(braintree_result(:id => "transaction_id"))
+
+    credit_card = network_tokenization_credit_card('4111111111111111',
+      :brand              => 'visa',
+      :transaction_id     => "123",
+      :eci                => "05",
+      :payment_cryptogram => "111111111100cryptogram"
+    )
+
+    response = @gateway.authorize(100, credit_card, :test => true, :order_id => '1')
+    assert_equal "transaction_id", response.authorization
+  end
+
   private
 
   def braintree_result(options = {})
