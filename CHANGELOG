@@ -27,6 +27,7 @@
 * Stripe: Add support for passing in metadata for auths and purchases [kitt]
 * Pin: Pass amount param for captures [ab9]
 * NAB Transact: Improve store functionality [duff]
+* Add Worldpay Online Payments [ao]
 
 == Version 1.47.0 (February 25, 2015)
 
