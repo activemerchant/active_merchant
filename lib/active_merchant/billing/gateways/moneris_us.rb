@@ -18,10 +18,22 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.monerisusa.com/'
       self.display_name = 'Moneris (US)'
 
-      # login is your Store ID
-      # password is your API Token
+      # Initialize the Gateway
+      #
+      # The gateway requires that a valid login and password be passed
+      # in the +options+ hash.
+      #
+      # ==== Options
+      #
+      # * <tt>:login</tt> -- Your Store ID
+      # * <tt>:password</tt> -- Your API Token
+      # * <tt>:cvv_enabled</tt> -- Specify that you would like the CVV passed to the gateway.
+      #                            Only particular account types at Moneris will allow this.
+      #                            Defaults to false.  (optional)
       def initialize(options = {})
         requires!(options, :login, :password)
+        @cvv_enabled = options[:cvv_enabled]
+        @avs_enabled = options[:avs_enabled]
         options = { :crypt_type => 7 }.merge(options)
         super
       end
@@ -31,16 +43,32 @@ module ActiveMerchant #:nodoc:
       # captured at a later date.
       #
       # Pass in +order_id+ and optionally a +customer+ parameter.
-      def authorize(money, creditcard, options = {})
-        debit_commit 'us_preauth', money, creditcard, options
+      def authorize(money, creditcard_or_datakey, options = {})
+        requires!(options, :order_id)
+        post = {}
+        add_payment_source(post, creditcard_or_datakey, options)
+        post[:amount]     = amount(money)
+        post[:order_id]   = options[:order_id]
+        post[:address]    = options[:billing_address] || options[:address]
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        action = (post[:data_key].blank?) ? 'us_preauth' : 'us_res_preauth_cc'
+        commit(action, post)
       end
 
-      # This action verifies funding on a customer's card, and readies them for
+      # This action verifies funding on a customer's card and readies them for
       # deposit in a merchant's account.
       #
       # Pass in <tt>order_id</tt> and optionally a <tt>customer</tt> parameter
-      def purchase(money, creditcard, options = {})
-        debit_commit 'us_purchase', money, creditcard, options
+      def purchase(money, creditcard_or_datakey, options = {})
+        requires!(options, :order_id)
+        post = {}
+        add_payment_source(post, creditcard_or_datakey, options)
+        post[:amount]     = amount(money)
+        post[:order_id]   = options[:order_id]
+        post[:address]    = options[:billing_address] || options[:address]
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        action = (post[:data_key].blank?) ? 'us_purchase' : 'us_res_purchase_cc'
+        commit(action, post)
       end
 
       # This method retrieves locked funds from a customer's account (from a
@@ -79,27 +107,45 @@ module ActiveMerchant #:nodoc:
         commit 'us_refund', crediting_params(authorization, :amount => amount(money))
       end
 
+      def store(credit_card, options = {})
+        post = {}
+        post[:pan] = credit_card.number
+        post[:expdate] = expdate(credit_card)
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        commit('us_res_add_cc', post)
+      end
+
+      def unstore(data_key, options = {})
+        post = {}
+        post[:data_key] = data_key
+        commit('us_res_delete', post)
+      end
+
+      def update(data_key, credit_card, options = {})
+        post = {}
+        post[:pan] = credit_card.number
+        post[:expdate] = expdate(credit_card)
+        post[:data_key] = data_key
+        post[:crypt_type] = options[:crypt_type] || @options[:crypt_type]
+        commit('us_res_update_cc', post)
+      end
+
       private # :nodoc: all
 
       def expdate(creditcard)
         sprintf("%.4i", creditcard.year)[-2..-1] + sprintf("%.2i", creditcard.month)
       end
 
-      def debit_commit(commit_type, money, creditcard, options)
-        requires!(options, :order_id)
-        commit(commit_type, debit_params(money, creditcard, options))
-      end
-
-      # Common params used amongst the +purchase+ and +authorization+ methods
-      def debit_params(money, creditcard, options = {})
-        {
-          :order_id   => options[:order_id],
-          :cust_id    => options[:customer],
-          :amount     => amount(money),
-          :pan        => creditcard.number,
-          :expdate    => expdate(creditcard),
-          :crypt_type => options[:crypt_type] || @options[:crypt_type]
-        }
+      def add_payment_source(post, source, options)
+        if source.is_a?(String)
+          post[:data_key]   = source
+          post[:cust_id]    = options[:customer]
+        else
+          post[:pan]        = source.number
+          post[:expdate]    = expdate(source)
+          post[:cvd_value]  = source.verification_value if source.verification_value?
+          post[:cust_id]    = options[:customer] || source.name
+        end
       end
 
       # Common params used amongst the +credit+, +void+ and +capture+ methods
@@ -122,10 +168,15 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters = {})
-        response = parse(ssl_post(test? ? self.test_url : self.live_url, post_data(action, parameters)))
+        data = post_data(action, parameters)
+        url = test? ? self.test_url : self.live_url
+        raw = ssl_post(url, data)
+        response = parse(raw)
 
         Response.new(successful?(response), message_from(response[:message]), response,
           :test          => test?,
+          :avs_result    => { :code => response[:avs_result_code] },
+          :cvv_result    => response[:cvd_result_code] && response[:cvd_result_code][-1,1],
           :authorization => authorization_from(response)
         )
       end
@@ -163,14 +214,49 @@ module ActiveMerchant #:nodoc:
         root  = xml.add_element("request")
         root.add_element("store_id").text  = options[:login]
         root.add_element("api_token").text = options[:password]
-        transaction = root.add_element(action)
+        root.add_element(transaction_element(action, parameters))
+
+        xml.to_s
+      end
+
+      def transaction_element(action, parameters)
+        transaction = REXML::Element.new(action)
 
         # Must add the elements in the correct order
         actions[action].each do |key|
-          transaction.add_element(key.to_s).text = parameters[key] unless parameters[key].blank?
+          case key
+          when :avs_info
+            transaction.add_element(avs_element(parameters[:address])) if @avs_enabled && parameters[:address]
+          when :cvd_info
+            transaction.add_element(cvd_element(parameters[:cvd_value])) if @cvv_enabled
+          else
+            transaction.add_element(key.to_s).text = parameters[key] unless parameters[key].blank?
+          end
         end
 
-        xml.to_s
+        transaction
+      end
+
+      def avs_element(address)
+        full_address = "#{address[:address1]} #{address[:address2]}"
+        tokens = full_address.split(/\s+/)
+
+        element = REXML::Element.new('avs_info')
+        element.add_element('avs_street_number').text = tokens.select{|x| x =~ /\d/}.join(' ')
+        element.add_element('avs_street_name').text = tokens.reject{|x| x =~ /\d/}.join(' ')
+        element.add_element('avs_zipcode').text = address[:zip]
+        element
+      end
+
+      def cvd_element(cvd_value)
+        element = REXML::Element.new('cvd_info')
+        if cvd_value
+          element.add_element('cvd_indicator').text = "1"
+          element.add_element('cvd_value').text = cvd_value
+        else
+          element.add_element('cvd_indicator').text = "0"
+        end
+        element
       end
 
       def message_from(message)
@@ -180,17 +266,24 @@ module ActiveMerchant #:nodoc:
 
       def actions
         {
-          "us_purchase"           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
-          "us_preauth"            => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
+          "us_purchase"           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info],
+          "us_preauth"            => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info],
+          "us_command"            => [:order_id],
           "us_refund"             => [:order_id, :amount, :txn_number, :crypt_type],
-          "us_ind_refund"         => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
+          "us_indrefund"          => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
           "us_completion"         => [:order_id, :comp_amount, :txn_number, :crypt_type],
           "us_purchasecorrection" => [:order_id, :txn_number, :crypt_type],
-          "us_cavv_purchase"      => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv],
-          "us_cavv_preauth"       => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv],
-          "us_batchcloseall"      => [],
+          "us_cavvpurcha"         => [:order_id, :cust_id, :amount, :pan, :expdate, :cav],
+          "us_cavvpreaut"         => [:order_id, :cust_id, :amount, :pan, :expdate, :cavv],
+          "us_transact"           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],
+          "us_Batchcloseall"      => [],
           "us_opentotals"         => [:ecr_number],
-          "us_batchclose"         => [:ecr_number]
+          "us_batchclose"         => [:ecr_number],
+          "us_res_add_cc"         => [:pan, :expdate, :crypt_type],
+          "us_res_delete"         => [:data_key],
+          "us_res_update_cc"      => [:data_key, :pan, :expdate, :crypt_type],
+          "us_res_purchase_cc"    => [:data_key, :order_id, :cust_id, :amount, :crypt_type],
+          "us_res_preauth_cc"     => [:data_key, :order_id, :cust_id, :amount, :crypt_type]
         }
       end
     end

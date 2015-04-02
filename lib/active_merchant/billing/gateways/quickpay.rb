@@ -19,7 +19,7 @@ module ActiveMerchant #:nodoc:
                            currency autocapture cardnumber expirationdate
                            cvd cardtypelock testmode),
 
-          :capture   => %w(protocol msgtype merchant amount transaction),
+          :capture   => %w(protocol msgtype merchant amount finalize transaction),
 
           :cancel    => %w(protocol msgtype merchant transaction),
 
@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
                            fraud_http_accept_encoding fraud_http_accept_charset
                            fraud_http_referer fraud_http_user_agent apikey),
 
-          :capture   => %w(protocol msgtype merchant amount transaction apikey),
+          :capture   => %w(protocol msgtype merchant amount finalize transaction apikey),
 
           :cancel    => %w(protocol msgtype merchant transaction apikey),
 
@@ -72,7 +72,7 @@ module ActiveMerchant #:nodoc:
                            fraud_http_accept_encoding fraud_http_accept_charset
                            fraud_http_referer fraud_http_user_agent apikey),
 
-          :capture   => %w(protocol msgtype merchant amount transaction apikey),
+          :capture   => %w(protocol msgtype merchant amount finalize transaction apikey),
 
           :cancel    => %w(protocol msgtype merchant transaction apikey),
 
@@ -100,7 +100,7 @@ module ActiveMerchant #:nodoc:
                            fraud_http_accept_encoding fraud_http_accept_charset
                            fraud_http_referer fraud_http_user_agent apikey),
 
-          :capture   => %w(protocol msgtype merchant amount transaction
+          :capture   => %w(protocol msgtype merchant amount finalize transaction
                            apikey),
 
           :cancel    => %w(protocol msgtype merchant transaction apikey),
@@ -129,7 +129,7 @@ module ActiveMerchant #:nodoc:
                            fraud_http_accept_encoding fraud_http_accept_charset
                            fraud_http_referer fraud_http_user_agent apikey),
 
-          :capture   => %w(protocol msgtype merchant amount transaction
+          :capture   => %w(protocol msgtype merchant amount finalize transaction
                            apikey),
 
           :cancel    => %w(protocol msgtype merchant transaction apikey),
@@ -196,6 +196,7 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {}
 
+        add_finalize(post, options)
         add_reference(post, authorization)
         add_amount_without_currency(post, money)
         commit(:capture, post)
@@ -298,6 +299,10 @@ module ActiveMerchant #:nodoc:
           post[:fraud_http_referer] = options[:fraud_http_referer] if options[:fraud_http_referer]
           post[:fraud_http_user_agent] = options[:fraud_http_user_agent] if options[:fraud_http_user_agent]
         end
+      end
+
+      def add_finalize(post, options)
+        post[:finalize] = options[:finalize] ? '1' : '0'
       end
 
       def commit(action, params)

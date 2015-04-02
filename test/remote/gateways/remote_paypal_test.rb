@@ -11,7 +11,7 @@ class PaypalTest < Test::Unit::TestCase
       :order_id => generate_unique_id,
       :email => 'buyer@jadedpallet.com',
       :billing_address => { :name => 'Longbob Longsen',
-                    :address1 => '1234 Penny Lane',
+                    :address1 => '4321 Penny Lane',
                     :city => 'Jonsetown',
                     :state => 'NC',
                     :country => 'US',
@@ -29,6 +29,23 @@ class PaypalTest < Test::Unit::TestCase
     #
     #@three_days_old_auth_id  = "9J780651TU4465545"
     #@three_days_old_auth_id2 = "62503445A3738160X"
+  end
+
+  def test_dump_transcript
+    skip("Transcript scrubbing for this gateway has been tested.")
+    dump_transcript_and_fail(@gateway, @amount, @credit_card, @params)
+  end
+
+  def test_transcript_scrubbing
+    transcript = capture_transcript(@gateway) do
+      @gateway.purchase(@amount, @credit_card, @params)
+    end
+    transcript = @gateway.scrub(transcript)
+
+    assert_scrubbed(@credit_card.number, transcript)
+    assert_scrubbed(@credit_card.verification_value, transcript)
+    assert_scrubbed(@gateway.options[:login], transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 
   def test_successful_purchase
@@ -128,11 +145,11 @@ class PaypalTest < Test::Unit::TestCase
     assert_success credit
     assert credit.test?
     assert_equal 'USD',  credit.params['net_refund_amount_currency_id']
-    assert_equal '0.67', credit.params['net_refund_amount']
+    assert_equal '0.97', credit.params['net_refund_amount']
     assert_equal 'USD',  credit.params['gross_refund_amount_currency_id']
     assert_equal '1.00', credit.params['gross_refund_amount']
     assert_equal 'USD',  credit.params['fee_refund_amount_currency_id']
-    assert_equal '0.33', credit.params['fee_refund_amount']
+    assert_equal '0.03', credit.params['fee_refund_amount'] # As of August 2010, PayPal keeps the flat fee ($0.30)
   end
 
   def test_failed_voiding

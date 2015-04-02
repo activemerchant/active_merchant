@@ -18,6 +18,17 @@ class NetworkMerchantsTest < Test::Unit::TestCase
     }
   end
 
+  def test_add_swipe_data_with_creditcard
+    @credit_card.track_data = "data"
+
+    @gateway.expects(:ssl_post).with do |_, body|
+      body.include?("track_1=data")
+    end.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+  end
+
   def test_successful_purchase
     @gateway.expects(:ssl_post).returns(successful_purchase_response)
 
@@ -150,6 +161,23 @@ class NetworkMerchantsTest < Test::Unit::TestCase
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'Invalid Username', response.message
+  end
+
+  def test_currency_uses_default_when_not_provided
+    @gateway.expects(:ssl_post).with do |_, body|
+      body.include?("currency=USD")
+    end.returns(successful_purchase_response)
+
+    @gateway.purchase(@amount, @credit_card, @options)
+  end
+
+  def test_provided_currency_overrides_default
+    @options.update(currency: 'EUR')
+    @gateway.expects(:ssl_post).with do |_, body|
+      body.include?("currency=EUR")
+    end.returns(successful_purchase_response)
+
+    @gateway.purchase(@amount, @credit_card, @options)
   end
 
   private

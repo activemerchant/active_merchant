@@ -87,6 +87,21 @@ class RemoteBridgePayTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_successful_verify
+    assert response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal "Approved", response.message
+
+    assert_success response.responses.last, "The void should succeed"
+    assert_equal "Approved", response.responses.last.params["respmsg"]
+  end
+
+  def test_unsuccessful_verify
+    assert response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_match %r{Invalid Account Number}, response.message
+  end
+
   def test_invalid_login
     gateway = BridgePayGateway.new(
       user_name: '',

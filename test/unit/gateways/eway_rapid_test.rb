@@ -4,6 +4,7 @@ class EwayRapidTest < Test::Unit::TestCase
   include CommStub
 
   def setup
+    ActiveMerchant::Billing::EwayRapidGateway.partner_id = nil
     @gateway = EwayRapidGateway.new(
       :login => "login",
       :password => "password"
@@ -49,6 +50,28 @@ class EwayRapidTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_failed_purchase_without_message
+    response = stub_comms do
+      @gateway.purchase(-100, @credit_card)
+    end.respond_with(failed_purchase_response_without_message)
+
+    assert_failure response
+    assert_equal "Do Not Honour", response.message
+    assert_nil response.authorization
+    assert response.test?
+  end
+
+  def test_failed_purchase_with_multiple_messages
+    response = stub_comms do
+      @gateway.purchase(-100, @credit_card)
+    end.respond_with(failed_purchase_response_multiple_messages)
+
+    assert_failure response
+    assert_equal "Invalid Customer Phone,Invalid ShippingAddress Phone", response.message
+    assert_nil response.authorization
+    assert response.test?
+  end
+
   def test_purchase_with_all_options
     response = stub_comms do
       @gateway.purchase(200, @credit_card,
@@ -56,6 +79,7 @@ class EwayRapidTest < Test::Unit::TestCase
         :redirect_url => "http://awesomesauce.com",
         :ip => "0.0.0.0",
         :application_id => "Woohoo",
+        :partner_id => "SomePartner",
         :description => "The Really Long Description More Than Sixty Four Characters Gets Truncated",
         :order_id => "orderid1",
         :currency => "INR",
@@ -88,16 +112,16 @@ class EwayRapidTest < Test::Unit::TestCase
         }
       )
     end.check_request do |endpoint, data, headers|
-      # assert_no_match(%r{#{@credit_card.number}}, data)
-
       assert_match(%r{"TransactionType":"CustomTransactionType"}, data)
       assert_match(%r{"RedirectUrl":"http://awesomesauce.com"}, data)
       assert_match(%r{"CustomerIP":"0.0.0.0"}, data)
       assert_match(%r{"DeviceID":"Woohoo"}, data)
+      assert_match(%r{"PartnerID":"SomePartner"}, data)
 
       assert_match(%r{"TotalAmount":"200"}, data)
       assert_match(%r{"InvoiceDescription":"The Really Long Description More Than Sixty Four Characters Gets"}, data)
       assert_match(%r{"InvoiceReference":"orderid1"}, data)
+      assert_match(%r{"InvoiceNumber":"orderid1"}, data)
       assert_match(%r{"CurrencyCode":"INR"}, data)
 
       assert_match(%r{"Title":"Mr."}, data)
@@ -131,6 +155,41 @@ class EwayRapidTest < Test::Unit::TestCase
     assert_success response
     assert_equal 10440187, response.authorization
     assert response.test?
+  end
+
+  def test_partner_id_class_attribute
+    ActiveMerchant::Billing::EwayRapidGateway.partner_id = 'SomePartner'
+    stub_comms do
+      @gateway.purchase(200, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{"PartnerID":"SomePartner"}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_partner_id_params_overrides_class_attribute
+    ActiveMerchant::Billing::EwayRapidGateway.partner_id = 'SomePartner'
+    stub_comms do
+      @gateway.purchase(200, @credit_card, partner_id: 'OtherPartner')
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{"PartnerID":"OtherPartner"}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_partner_id_is_omitted_when_not_set
+    stub_comms do
+      @gateway.purchase(200, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      assert_no_match(%r{"PartnerID":}, data)
+    end.respond_with(successful_purchase_response)
+  end
+
+  def test_partner_id_truncates_to_50_characters
+    partner_string = "EWay Rapid PartnerID is capped at 50 characters and will truncate if it is too long."
+    stub_comms do
+      @gateway.purchase(200, @credit_card, partner_id: partner_string)
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r{"PartnerID":"#{partner_string.slice(0,50)}"}, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_authorize
@@ -169,7 +228,7 @@ class EwayRapidTest < Test::Unit::TestCase
     end.respond_with(failed_capture_response)
 
     assert_failure response
-    assert_equal "V6134", response.message
+    assert_equal "Invalid Auth Transaction ID for Capture/Void", response.message
     assert_equal 0, response.authorization
   end
 
@@ -189,7 +248,7 @@ class EwayRapidTest < Test::Unit::TestCase
     end.respond_with(failed_void_response)
 
     assert_failure response
-    assert_equal "V6134", response.message
+    assert_equal "Invalid Auth Transaction ID for Capture/Void", response.message
     assert_equal 0, response.authorization
   end
 
@@ -362,12 +421,45 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 100,
-          "InvoiceNumber": "",
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
         },
         "Errors": null
+      }
+    )
+  end
+
+  def failed_purchase_response_without_message
+    %(
+      {
+        "AuthorisationCode": null,
+        "ResponseCode": "05",
+        "TransactionID": null,
+        "TransactionStatus": null,
+        "TransactionType": "Purchase",
+        "BeagleScore": null,
+        "Verification": null,
+        "Customer": {
+        }
+      }
+    )
+  end
+
+  def failed_purchase_response_multiple_messages
+    %(
+      {
+        "AuthorisationCode": null,
+        "ResponseCode": null,
+        "ResponseMessage": "V6070,V6083",
+        "TransactionID": null,
+        "TransactionStatus": null,
+        "TransactionType": "Purchase",
+        "BeagleScore": null,
+        "Verification": null,
+        "Customer": {
+        }
       }
     )
   end
@@ -415,7 +507,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": -100,
-          "InvoiceNumber": null,
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -474,7 +566,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount":100,
-          "InvoiceNumber": "",
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
         "CurrencyCode": "AUD"
@@ -527,7 +619,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": -100,
-          "InvoiceNumber": null,
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -634,7 +726,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 0,
-          "InvoiceNumber": "",
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -687,7 +779,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 0,
-          "InvoiceNumber": null,
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"
@@ -746,7 +838,7 @@ class EwayRapidTest < Test::Unit::TestCase
         },
         "Payment": {
           "TotalAmount": 0,
-          "InvoiceNumber": "",
+          "InvoiceNumber": "1",
           "InvoiceDescription": "Store Purchase",
           "InvoiceReference": "1",
           "CurrencyCode": "AUD"

@@ -89,4 +89,23 @@ class GatewayTest < Test::Unit::TestCase
     assert_equal '1', @gateway.send(:localized_amount, 100, 'JPY')
     assert_equal '12', @gateway.send(:localized_amount, 1234, 'HUF')
   end
+
+  def test_non_fractional_currencies_accessor
+    assert Gateway.non_fractional_currency?('JPY')
+    refute Gateway.non_fractional_currency?('CAD')
+  end
+
+  def test_supports_scrubbing?
+    gateway = Gateway.new
+    refute gateway.supports_scrubbing?
+  end
+
+  def test_should_not_allow_scrubbing_if_unsupported
+    gateway = Gateway.new
+    refute gateway.supports_scrubbing?
+
+    assert_raise(RuntimeError) do
+      gateway.scrub("hi")
+    end
+  end
 end

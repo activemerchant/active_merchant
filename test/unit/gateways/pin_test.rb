@@ -46,7 +46,7 @@ class PinTest < Test::Unit::TestCase
   end
 
   def test_display_name
-    assert_equal 'Pin', PinGateway.display_name
+    assert_equal 'Pin Payments', PinGateway.display_name
   end
 
   def test_setup_purchase_parameters
@@ -82,6 +82,22 @@ class PinTest < Test::Unit::TestCase
     assert_failure response
     assert_equal "The current resource was deemed invalid.", response.message
     assert response.test?
+  end
+
+  def test_unparsable_body_of_successful_response
+    @gateway.stubs(:raw_ssl_request).returns(MockResponse.succeeded("This is not [ JSON"))
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match(/Invalid JSON response received/, response.message)
+  end
+
+  def test_unparsable_body_of_failed_response
+    @gateway.stubs(:raw_ssl_request).returns(MockResponse.failed("This is not [ JSON"))
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_match(/Invalid JSON response received/, response.message)
   end
 
   def test_successful_store
@@ -479,5 +495,20 @@ class PinTest < Test::Unit::TestCase
         "refund_pending":false
       }
     }'
+  end
+
+  class MockResponse
+    attr_reader :code, :body
+    def self.succeeded(body)
+      MockResponse.new(200, body)
+    end
+
+    def self.failed(body)
+      MockResponse.new(422, body)
+    end
+
+    def initialize(code, body)
+      @code, @body = code, body
+    end
   end
 end

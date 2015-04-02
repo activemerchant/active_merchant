@@ -68,6 +68,13 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
+      def verify(creditcard, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, creditcard, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       private
 
       def post_required_fields(transaction_type)

@@ -182,6 +182,10 @@ module ActiveMerchant #:nodoc:
         add_pair(post, :GiftAidPayment, options[:gift_aid_payment]) unless options[:gift_aid_payment].blank?
         add_pair(post, :Apply3DSecure, options[:apply_3d_secure]) unless options[:apply_3d_secure].blank?
         add_pair(post, :CreateToken, 1) unless options[:store].blank?
+        add_pair(post, :FIRecipientAcctNumber, options[:recipient_account_number])
+        add_pair(post, :FIRecipientSurname, options[:recipient_surname])
+        add_pair(post, :FIRecipientPostcode, options[:recipient_postcode])
+        add_pair(post, :FIRecipientDoB, options[:recipient_dob])
       end
 
       def add_address(post, options)
@@ -350,7 +354,7 @@ module ActiveMerchant #:nodoc:
         parameters.update(
           :Vendor => @options[:login],
           :TxType => TRANSACTIONS[action],
-          :VPSProtocol => "3.00"
+          :VPSProtocol => @options.fetch(:protocol_version, '3.00')
         )
 
         if(application_id && (application_id != Gateway.application_id))

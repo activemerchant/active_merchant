@@ -53,6 +53,7 @@ module ActiveMerchant #:nodoc:
 
         request = build_xml_request do |doc|
           add_authentication(doc)
+          add_descriptor(doc, options)
           doc.capture_(transaction_attributes(options)) do
             doc.litleTxnId(transaction_id)
             doc.amount(money) if money
@@ -72,6 +73,7 @@ module ActiveMerchant #:nodoc:
 
         request = build_xml_request do |doc|
           add_authentication(doc)
+          add_descriptor(doc, options)
           doc.credit(transaction_attributes(options)) do
             doc.litleTxnId(transaction_id)
             doc.amount(money) if money
@@ -79,6 +81,13 @@ module ActiveMerchant #:nodoc:
         end
 
         commit(:credit, request)
+      end
+
+      def verify(creditcard, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(0, creditcard, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
       end
 
       def void(authorization, options={})
@@ -148,16 +157,31 @@ module ActiveMerchant #:nodoc:
       def add_auth_purchase_params(doc, money, payment_method, options)
         doc.orderId(truncated(options[:order_id]))
         doc.amount(money)
-        doc.orderSource('ecommerce')
+        add_order_source(doc, payment_method, options)
         add_billing_address(doc, payment_method, options)
         add_shipping_address(doc, payment_method, options)
         add_payment_method(doc, payment_method)
+        add_pos(doc, payment_method)
+        add_descriptor(doc, options)
+      end
+
+      def add_descriptor(doc, options)
+        if options[:descriptor_name] || options[:descriptor_phone]
+          doc.customBilling do
+            doc.phone(options[:descriptor_phone]) if options[:descriptor_phone]
+            doc.descriptor(options[:descriptor_name]) if options[:descriptor_name]
+          end
+        end
       end
 
       def add_payment_method(doc, payment_method)
         if payment_method.is_a?(String)
           doc.token do
             doc.litleToken(payment_method)
+          end
+        elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
+          doc.card do
+            doc.track(payment_method.track_data)
           end
         else
           doc.card do
@@ -199,6 +223,26 @@ module ActiveMerchant #:nodoc:
         doc.zip(address[:zip]) unless address[:zip].blank?
         doc.country(address[:country]) unless address[:country].blank?
         doc.phone(address[:phone]) unless address[:phone].blank?
+      end
+
+      def add_order_source(doc, payment_method, options)
+        if options[:order_source]
+          doc.orderSource(options[:order_source])
+        elsif payment_method.respond_to?(:track_data) && payment_method.track_data.present?
+          doc.orderSource('retail')
+        else
+          doc.orderSource('ecommerce')
+        end
+      end
+
+      def add_pos(doc, payment_method)
+        return unless payment_method.respond_to?(:track_data) && payment_method.track_data.present?
+
+        doc.pos do
+          doc.capability('magstripe')
+          doc.entryMode('completeread')
+          doc.cardholderId('signature')
+        end
       end
 
       def exp_date(payment_method)

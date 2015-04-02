@@ -32,11 +32,34 @@ module ActiveMerchant #:nodoc:
         :discover => "Discover"
       }
 
+      E4_BRANDS = BRANDS.merge({:mastercard => "Mastercard"})
+
       self.supported_cardtypes = BRANDS.keys
       self.supported_countries = ["CA", "US"]
       self.default_currency = "USD"
       self.homepage_url = "http://www.firstdata.com"
       self.display_name = "FirstData Global Gateway e4"
+
+      STANDARD_ERROR_CODE_MAPPING = {
+      # Bank error codes: https://firstdata.zendesk.com/entries/471297-First-Data-Global-Gateway-e4-Bank-Response-Codes
+        '201' => STANDARD_ERROR_CODE[:incorrect_number],
+        '531' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '503' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '811' => STANDARD_ERROR_CODE[:invalid_cvc],
+        '605' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '522' => STANDARD_ERROR_CODE[:expired_card],
+        '303' => STANDARD_ERROR_CODE[:card_declined],
+        '530' => STANDARD_ERROR_CODE[:card_declined],
+        '401' => STANDARD_ERROR_CODE[:call_issuer],
+        '402' => STANDARD_ERROR_CODE[:call_issuer],
+        '501' => STANDARD_ERROR_CODE[:pickup_card],
+      # Ecommerce error codes -- https://firstdata.zendesk.com/entries/451980-ecommerce-response-codes-etg-codes
+        '22' => STANDARD_ERROR_CODE[:invalid_number],
+        '25' => STANDARD_ERROR_CODE[:invalid_expiry_date],
+        '31' => STANDARD_ERROR_CODE[:incorrect_cvc],
+        '44' => STANDARD_ERROR_CODE[:incorrect_zip],
+        '42' => STANDARD_ERROR_CODE[:processing_error]
+      }
 
       # Create a new FirstdataE4Gateway
       #
@@ -104,6 +127,16 @@ module ActiveMerchant #:nodoc:
       # https://firstdata.zendesk.com/entries/21303361-transarmor-tokenization
       def store(credit_card, options = {})
         commit(:store, build_store_request(credit_card, options), credit_card)
+      end
+
+      def supports_scrubbing?
+        true
+      end
+
+      def scrub(transcript)
+        transcript.
+          gsub(%r((<Card_Number>).+(</Card_Number>)), '\1[FILTERED]\2').
+          gsub(%r((<VerificationStr2>).+(</VerificationStr2>)), '\1[FILTERED]\2')
       end
 
       private
@@ -180,12 +213,17 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(xml, credit_card, options)
-        xml.tag! "Card_Number", credit_card.number
-        xml.tag! "Expiry_Date", expdate(credit_card)
-        xml.tag! "CardHoldersName", credit_card.name
-        xml.tag! "CardType", card_type(credit_card.brand)
 
-        add_credit_card_verification_strings(xml, credit_card, options)
+        if credit_card.respond_to?(:track_data) && credit_card.track_data.present?
+          xml.tag! "Track1", credit_card.track_data
+        else
+          xml.tag! "Card_Number", credit_card.number
+          xml.tag! "Expiry_Date", expdate(credit_card)
+          xml.tag! "CardHoldersName", credit_card.name
+          xml.tag! "CardType", card_type(credit_card.brand)
+
+          add_credit_card_verification_strings(xml, credit_card, options)
+        end
       end
 
       def add_credit_card_verification_strings(xml, credit_card, options)
@@ -196,9 +234,28 @@ module ActiveMerchant #:nodoc:
           xml.tag! "VerificationStr1", address_values.join("|")
         end
 
-        if credit_card.verification_value?
+        if credit_card.is_a?(NetworkTokenizationCreditCard)
+          add_network_tokenization_credit_card(xml, credit_card)
+        elsif credit_card.verification_value?
           xml.tag! "CVD_Presence_Ind", "1"
           xml.tag! "VerificationStr2", credit_card.verification_value
+        end
+      end
+
+      def add_network_tokenization_credit_card(xml, credit_card)
+        xml.tag!("Ecommerce_Flag", credit_card.eci)
+
+        case card_brand(credit_card).to_sym
+        when :visa
+          xml.tag!("XID", credit_card.transaction_id) if credit_card.transaction_id
+          xml.tag!("CAVV", credit_card.payment_cryptogram)
+        when :mastercard
+          xml.tag!("XID", credit_card.transaction_id) if credit_card.transaction_id
+          xml.tag!("CAVV", credit_card.payment_cryptogram)
+        when :american_express
+          cryptogram = Base64.decode64(credit_card.payment_cryptogram)
+          xml.tag!("XID", Base64.encode64(cryptogram[20...40]))
+          xml.tag!("CAVV", Base64.encode64(cryptogram[0...20]))
         end
       end
 
@@ -245,7 +302,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def card_type(credit_card_brand)
-        BRANDS[credit_card_brand.to_sym] if credit_card_brand
+        E4_BRANDS[credit_card_brand.to_sym] if credit_card_brand
       end
 
       def commit(action, request, credit_card = nil)
@@ -258,9 +315,10 @@ module ActiveMerchant #:nodoc:
 
         Response.new(successful?(response), message_from(response), response,
           :test => test?,
-          :authorization => response_authorization(action, response, credit_card),
+          :authorization => successful?(response) ? response_authorization(action, response, credit_card) : '',
           :avs_result => {:code => response[:avs]},
-          :cvv_result => response[:cvv2]
+          :cvv_result => response[:cvv2],
+          :error_code => standard_error_code(response)
         )
       end
 
@@ -324,8 +382,13 @@ module ActiveMerchant #:nodoc:
         {
           :transaction_approved => "false",
           :error_number => error.code,
-          :error_description => error.body
+          :error_description => error.body,
+          :ecommerce_error_code => error.body.gsub(/[^\d]/, '')
         }
+      end
+
+      def standard_error_code(response)
+        STANDARD_ERROR_CODE_MAPPING[response[:bank_resp_code] || response[:ecommerce_error_code]]
       end
 
       def parse(xml)

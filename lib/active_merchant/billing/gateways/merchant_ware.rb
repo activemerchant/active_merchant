@@ -223,10 +223,14 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_credit_card(xml, credit_card)
-        xml.tag! "strPAN", credit_card.number
-        xml.tag! "strExpDate", expdate(credit_card)
-        xml.tag! "strCardHolder", credit_card.name
-        xml.tag! "strCVCode", credit_card.verification_value if credit_card.verification_value?
+        if credit_card.respond_to?(:track_data) && credit_card.track_data.present?
+          xml.tag! "trackData", credit_card.track_data
+        else
+         xml.tag! "strPAN", credit_card.number
+         xml.tag! "strExpDate", expdate(credit_card)
+         xml.tag! "strCardHolder", credit_card.name
+         xml.tag! "strCVCode", credit_card.verification_value if credit_card.verification_value?
+        end
       end
 
       def split_reference(reference)

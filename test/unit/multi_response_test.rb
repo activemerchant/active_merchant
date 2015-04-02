@@ -39,6 +39,7 @@ class MultiResponseTest < Test::Unit::TestCase
       :authorization => "auth1",
       :avs_result => {:code => "AVS1"},
       :cvv_result => "CVV1",
+      :error_code => :card_declined,
       :fraud_review => true
     )
     m.process{r1}
@@ -48,6 +49,7 @@ class MultiResponseTest < Test::Unit::TestCase
     assert_equal "auth1", m.authorization
     assert_equal "AVS1", m.avs_result["code"]
     assert_equal "CVV1", m.cvv_result["code"]
+    assert_equal :card_declined, m.error_code
     assert m.test?
     assert m.fraud_review?
 

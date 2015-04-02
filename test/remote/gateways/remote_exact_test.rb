@@ -1,9 +1,7 @@
 require 'test_helper'
 
 class RemoteExactTest < Test::Unit::TestCase
-
   def setup
-
     @gateway = ExactGateway.new(fixtures(:exact))
     @credit_card = credit_card
     @amount = 100
@@ -45,16 +43,16 @@ class RemoteExactTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    assert response = @gateway.capture(@amount, '')
+    assert response = @gateway.capture(@amount, 'bogus')
     assert_failure response
-    assert_match %r{Precondition Failed}i, response.message
+    assert_match %r{Invalid Transaction Tag}i, response.message
   end
 
   def test_invalid_login
     gateway = ExactGateway.new( :login    => "NotARealUser",
                                 :password => "NotARealPassword" )
     assert response = gateway.purchase(@amount, @credit_card, @options)
-    assert_equal "Invalid Logon", response.message
+    assert_match %r{^Invalid Login}, response.message
     assert_failure response
   end
 end

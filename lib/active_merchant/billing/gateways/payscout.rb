@@ -9,8 +9,6 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://www.payscout.com/'
       self.display_name = 'Payscout'
 
-      self.ssl_version = 'SSLv3'
-
       def initialize(options = {})
         requires!(options, :username, :password)
         super

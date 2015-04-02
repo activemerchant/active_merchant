@@ -154,10 +154,15 @@ module ActiveMerchant #:nodoc:
           post[:data_key]   = source
           post[:cust_id]    = options[:customer]
         else
-          post[:pan]        = source.number
-          post[:expdate]    = expdate(source)
-          post[:cvd_value]  = source.verification_value if source.verification_value?
-          post[:cust_id]    = options[:customer] || source.name
+          if source.respond_to?(:track_data) && source.track_data.present?
+            post[:pos_code]   = '00'
+            post[:track2]     = source.track_data
+          else
+            post[:pan]        = source.number
+            post[:expdate]    = expdate(source)
+            post[:cvd_value]  = source.verification_value if source.verification_value?
+          end
+          post[:cust_id] = options[:customer] || source.name
         end
       end
 
@@ -279,8 +284,8 @@ module ActiveMerchant #:nodoc:
 
       def actions
         {
-          "purchase"           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info],
-          "preauth"            => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info],
+          "purchase"           => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :track2, :pos_code],
+          "preauth"            => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type, :avs_info, :cvd_info, :track2, :pos_code],
           "command"            => [:order_id],
           "refund"             => [:order_id, :amount, :txn_number, :crypt_type],
           "indrefund"          => [:order_id, :cust_id, :amount, :pan, :expdate, :crypt_type],

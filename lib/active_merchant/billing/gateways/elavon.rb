@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/viaklix'
+require 'active_merchant/billing/gateways/viaklix'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
@@ -249,13 +249,13 @@ module ActiveMerchant #:nodoc:
         form[:salestax] = options[:tax] if options[:tax].present?
       end
 
-      def add_address(form,options)
+      def add_address(form, options)
         billing_address = options[:billing_address] || options[:address]
 
         if billing_address
           form[:avs_address]    = billing_address[:address1].to_s.slice(0, 30)
           form[:address2]       = billing_address[:address2].to_s.slice(0, 30)
-          form[:avs_zip]        = billing_address[:zip].to_s.slice(0, 10)
+          form[:avs_zip]        = billing_address[:zip].to_s.gsub(/[^a-zA-Z0-9]/, '').slice(0, 9)
           form[:city]           = billing_address[:city].to_s.slice(0, 30)
           form[:state]          = billing_address[:state].to_s.slice(0, 10)
           form[:company]        = billing_address[:company].to_s.slice(0, 50)
@@ -337,7 +337,7 @@ module ActiveMerchant #:nodoc:
         resp = {}
         msg.split(self.delimiter).collect{|li|
             key, value = li.split("=")
-            resp[key.strip.gsub(/^ssl_/, '')] = value.to_s.strip
+            resp[key.to_s.strip.gsub(/^ssl_/, '')] = value.to_s.strip
           }
         resp
       end

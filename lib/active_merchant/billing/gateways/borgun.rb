@@ -7,7 +7,6 @@ module ActiveMerchant #:nodoc:
 
       self.test_url = 'https://gatewaytest.borgun.is/ws/Heimir.pub.ws:Authorization'
       self.live_url = 'https://gateway01.borgun.is/ws/Heimir.pub.ws:Authorization'
-      self.ssl_version = :SSLv3
 
       self.supported_countries = ['IS']
       self.default_currency = 'ISK'

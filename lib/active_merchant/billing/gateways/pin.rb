@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['AU']
       self.supported_cardtypes = [:visa, :master, :american_express]
       self.homepage_url = 'http://www.pin.net.au/'
-      self.display_name = 'Pin'
+      self.display_name = 'Pin Payments'
 
       def initialize(options = {})
         requires!(options, :api_key)
@@ -59,10 +59,10 @@ module ActiveMerchant #:nodoc:
         purchase(money, creditcard, options)
       end
 
-      # Captures a previously authorized charge. Capturing a certin amount of the original
+      # Captures a previously authorized charge. Capturing only part of the original
       # authorization is currently not supported.
       def capture(money, token, options = {})
-        commit(:put, "charges/#{CGI.escape(token)}/capture", {}, options)
+        commit(:put, "charges/#{CGI.escape(token)}/capture", { :amount => amount(money) }, options)
       end
 
       # Updates the credit card for the customer.
@@ -148,7 +148,8 @@ module ActiveMerchant #:nodoc:
         url = "#{test? ? test_url : live_url}/#{action}"
 
         begin
-          body = parse(ssl_request(method, url, post_data(params), headers(options)))
+          raw_response = ssl_request(method, url, post_data(params), headers(options))
+          body = parse(raw_response)
         rescue ResponseError => e
           body = parse(e.response.body)
         end
@@ -158,6 +159,9 @@ module ActiveMerchant #:nodoc:
         elsif body["error"]
           error_response(body)
         end
+
+      rescue JSON::ParserError
+        return unparsable_response(raw_response)
       end
 
       def success_response(body)
@@ -179,6 +183,12 @@ module ActiveMerchant #:nodoc:
           :authorization => nil,
           :test => test?
         )
+      end
+
+      def unparsable_response(raw_response)
+        message = "Invalid JSON response received from Pin Payments. Please contact support@pin.net.au if you continue to receive this message."
+        message += " (The raw response returned by the API was #{raw_response.inspect})"
+        return Response.new(false, message)
       end
 
       def token(response)

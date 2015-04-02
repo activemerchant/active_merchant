@@ -5,6 +5,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     @gateway = FirstdataE4Gateway.new(fixtures(:firstdata_e4))
     @credit_card = credit_card
     @bad_credit_card = credit_card('4111111111111113')
+    @credit_card_with_track_data = credit_card_with_track_data('4003000123456781')
     @amount = 100
     @options = {
       :order_id => '1',
@@ -20,6 +21,12 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
 
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_match(/Transaction Normal/, response.message)
+    assert_success response
+  end
+
+  def test_successful_purchase_with_track_data
+    assert response = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
     assert_match(/Transaction Normal/, response.message)
     assert_success response
   end
@@ -44,6 +51,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @bad_credit_card, @options)
     assert_match(/Invalid Credit Card/, response.message)
     assert_failure response
+    assert_equal response.error_code, "invalid_number"
   end
 
   def test_trans_error
@@ -52,6 +60,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options )
     assert_match(/Unable to Send Transaction/, response.message) # 42 is 'unable to send trans'
     assert_failure response
+    assert_equal response.error_code, "processing_error"
   end
 
   def test_purchase_and_credit
@@ -97,6 +106,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert response = @gateway.verify(@bad_credit_card, @options)
     assert_failure response
     assert_match %r{Invalid Credit Card Number}, response.message
+    assert_equal response.error_code, "invalid_number"
   end
 
   def test_invalid_login
@@ -112,5 +122,31 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_success response
     assert_equal 'M', response.cvv_result["code"]
     assert_equal '1', response.avs_result["code"]
+  end
+
+  def test_refund
+    assert purchase = @gateway.purchase(@amount, @credit_card, @options)
+    assert_match(/Transaction Normal/, purchase.message)
+    assert_success purchase
+
+    assert response = @gateway.refund(50, purchase.authorization)
+    assert_success response
+    assert_match(/Transaction Normal/, response.message)
+    assert response.authorization
+  end
+
+  def test_refund_with_track_data
+    assert purchase = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
+    assert_match(/Transaction Normal/, purchase.message)
+    assert_success purchase
+
+    assert response = @gateway.refund(50, purchase.authorization)
+    assert_success response
+    assert_match(/Transaction Normal/, response.message)
+    assert response.authorization
+  end
+
+  def test_dump_transcript
+    # See firstdata_e4_test.rb for an example of a scrubbed transcript
   end
 end

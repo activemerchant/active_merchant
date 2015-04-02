@@ -13,7 +13,7 @@ module ActiveMerchant #:nodoc:
       self.homepage_url = 'http://developer.heartlandpaymentsystems.com/SecureSubmit/'
       self.display_name = 'Heartland Payment Systems'
 
-      self.money_format = :cents
+      self.money_format = :dollars
 
       def initialize(options={})
         requires!(options, :secret_api_key)
@@ -57,6 +57,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def verify(card_or_token, options={})
+        commit('CreditAccountVerify') do |xml|
+          add_customer_data(xml, card_or_token, options)
+          add_payment(xml, card_or_token, options)
+        end
+      end
+
       def void(transaction_id, options={})
         commit('CreditVoid') do |xml|
           add_reference(xml, transaction_id)
@@ -74,24 +81,20 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(xml, credit_card, options)
-        return unless credit_card.respond_to?(:number)
+        xml.hps :CardHolderData do
+          if credit_card.respond_to?(:number)
+            xml.hps :CardHolderFirstName, credit_card.first_name if credit_card.first_name
+            xml.hps :CardHolderLastName, credit_card.last_name if credit_card.last_name
+          end
 
-        first_name = credit_card.first_name
-        last_name = credit_card.last_name
+          xml.hps :CardHolderEmail, options[:email] if options[:email]
+          xml.hps :CardHolderPhone, options[:phone] if options[:phone]
 
-        if(first_name || last_name)
-          xml.hps :CardHolderData do
-            xml.hps :CardHolderFirstName, first_name if first_name
-            xml.hps :CardHolderLastName, last_name if last_name
-            xml.hps :CardHolderEmail, options[:email] if options[:email]
-            xml.hps :CardHolderPhone, options[:phone] if options[:phone]
-
-            if(billing_address = (options[:billing_address] || options[:address]))
-              xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1]
-              xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
-              xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
-              xml.hps :CardHolderZip, billing_address[:zip] if billing_address[:zip]
-            end
+          if(billing_address = (options[:billing_address] || options[:address]))
+            xml.hps :CardHolderAddr, billing_address[:address1] if billing_address[:address1]
+            xml.hps :CardHolderCity, billing_address[:city] if billing_address[:city]
+            xml.hps :CardHolderState, billing_address[:state] if billing_address[:state]
+            xml.hps :CardHolderZip, billing_address[:zip] if billing_address[:zip]
           end
         end
       end
@@ -230,7 +233,7 @@ module ActiveMerchant #:nodoc:
       def successful?(response)
         (
           (response["GatewayRspCode"] == "0") &&
-          ((response["RspCode"] || "00") == "00")
+          ((response["RspCode"] || "00") == "00" || response["RspCode"] == "85")
         )
       end
 
@@ -238,7 +241,7 @@ module ActiveMerchant #:nodoc:
         if(response["Fault"])
           response["Fault"]
         elsif(response["GatewayRspCode"] == "0")
-          if(response["RspCode"] != "00")
+          if(response["RspCode"] != "00" && response["RspCode"] != "85")
             issuer_message(response["RspCode"])
           else
             response['GatewayRspMsg']
@@ -252,13 +255,16 @@ module ActiveMerchant #:nodoc:
         response['GatewayTxnId']
       end
 
+      def test?
+        (@options[:secret_api_key] && @options[:secret_api_key].include?('_cert_'))
+      end
+
       ISSUER_MESSAGES = {
         "13" => "Must be greater than or equal 0.",
         "14" => "The card number is incorrect.",
         "54" => "The card has expired.",
         "55" => "The 4-digit pin is invalid.",
         "75" => "Maximum number of pin retries exceeded.",
-        "80" => "Card expiration date is invalid.",
         "80" => "Card expiration date is invalid.",
         "86" => "Can't verify card pin number."
       }

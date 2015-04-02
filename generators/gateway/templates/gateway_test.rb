@@ -32,6 +32,7 @@ class <%= class_name %>Test < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
+    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
   end
 
   def test_successful_authorize
@@ -67,7 +68,28 @@ class <%= class_name %>Test < Test::Unit::TestCase
   def test_failed_verify
   end
 
+  def test_scrub
+    assert @gateway.supports_scrubbing?
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
   private
+
+  def pre_scrubbed
+    <<-PRE_SCRUBBED
+      Run the remote tests for this gateway, and then put the contents of transcript.log here.
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed
+    <<-POST_SCRUBBED
+      Put the scrubbed contents of transcript.log here after implementing your scrubbing function.
+      Things to scrub:
+        - Credit card number
+        - CVV
+        - Sensitive authentication details
+    POST_SCRUBBED
+  end
 
   def successful_purchase_response
     %(

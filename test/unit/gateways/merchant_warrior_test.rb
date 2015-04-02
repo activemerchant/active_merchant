@@ -44,7 +44,7 @@ class MerchantWarriorTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:ssl_post).returns(successful_refund_response)
 
-    assert response = @gateway.refund(@success_amount, @transaction_id)
+    assert response = @gateway.refund(@success_amount, @transaction_id, @options)
     assert_success response
     assert_equal 'Transaction approved', response.message
     assert response.test?

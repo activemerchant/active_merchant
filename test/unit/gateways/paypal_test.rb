@@ -224,6 +224,32 @@ class PaypalTest < Test::Unit::TestCase
     assert_equal 'ActiveMerchant_DC', REXML::XPath.first(xml, '//n2:ButtonSource').text
   end
 
+  def test_button_source_via_credentials
+    PaypalGateway.application_id = 'ActiveMerchant_DC'
+    gateway = PaypalGateway.new(
+      login: 'cody',
+      password: 'test',
+      pem: 'PEM',
+      button_source: "WOOHOO"
+    )
+
+    xml = REXML::Document.new(gateway.send(:build_sale_or_authorization_request, 'Test', @amount, @credit_card, {}))
+    assert_equal 'WOOHOO', REXML::XPath.first(xml, '//n2:ButtonSource').text
+  end
+
+  def test_button_source_via_credentials_with_no_application_id
+    PaypalGateway.application_id = nil
+    gateway = PaypalGateway.new(
+      login: 'cody',
+      password: 'test',
+      pem: 'PEM',
+      button_source: "WOOHOO"
+    )
+
+    xml = REXML::Document.new(gateway.send(:build_sale_or_authorization_request, 'Test', @amount, @credit_card, {}))
+    assert_equal 'WOOHOO', REXML::XPath.first(xml, '//n2:ButtonSource').text
+  end
+
   def test_item_total_shipping_handling_and_tax_not_included_unless_all_are_present
     xml = @gateway.send(:build_sale_or_authorization_request, 'Authorization', @amount, @credit_card,
       :tax => @amount,
@@ -507,8 +533,59 @@ class PaypalTest < Test::Unit::TestCase
     assert_equal "1.00", response.params["amount"]
   end
 
+  def test_scrub
+    assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_supports_scrubbing?
+    assert @gateway.supports_scrubbing?
+  end
 
   private
+
+  def pre_scrubbed
+    <<-PRE_SCRUBBED
+      opening connection to api-3t.sandbox.paypal.com:443...
+      opened
+      starting SSL for api-3t.sandbox.paypal.com:443...
+      SSL established
+      <- "POST /2.0/ HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api-3t.sandbox.paypal.com\r\nContent-Length: 2229\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><env:Envelope xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><env:Header><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xmlns:n1=\"urn:ebay:apis:eBLBaseComponents\" env:mustUnderstand=\"0\"><n1:Credentials><n1:Username>activemerchant-test_api1.example.com</n1:Username><n1:Password>HBC6A84QLRWC923A</n1:Password><n1:Subject/><n1:Signature>AFcWxV21C7fd0v3bYYYRCpSSRl31AC-11AKBL8FFO9tjImL311y8a0hx</n1:Signature></n1:Credentials></RequesterCredentials></env:Header><env:Body><DoDirectPaymentReq xmlns=\"urn:ebay:api:PayPalAPI\">\n  <DoDirectPaymentRequest xmlns:n2=\"urn:ebay:apis:eBLBaseComponents\">\n    <n2:Version>72</n2:Version>\n    <n2:DoDirectPaymentRequestDetails>\n      <n2:PaymentAction>Sale</n2:PaymentAction>\n      <n2:PaymentDetails>\n        <n2:OrderTotal currencyID=\"USD\">1.00</n2:OrderTotal>\n        <n2:OrderDescription>Stuff that you purchased, yo!</n2:OrderDescription>\n        <n2:InvoiceID>70e472b155c61d27fe19555a96d51127</n2:InvoiceID>\n        <n2:ButtonSource>ActiveMerchant</n2:ButtonSource>\n      </n2:PaymentDetails>\n      <n2:CreditCard>\n        <n2:CreditCardType>Visa</n2:CreditCardType>\n        <n2:CreditCardNumber>4381258770269608</n2:CreditCardNumber>\n        <n2:ExpMonth>09</n2:ExpMonth>\n        <n2:ExpYear>2015</n2:ExpYear>\n        <n2:CVV2>123</n2:CVV2>\n        <n2:CardOwner>\n          <n2:PayerName>\n            <n2:FirstName>Longbob</n2:FirstName>\n            <n2:LastName>Longsen</n2:LastName>\n          </n2:PayerName>\n          <n2:Payer>buyer@jadedpallet.com</n2:Payer>\n          <n2:Address>\n            <n2:Name>Longbob Longsen</n2:Name>\n            <n2:Street1>1234 Penny Lane</n2:Street1>\n            <n2:Street2/>\n            <n2:CityName>Jonsetown</n2:CityName>\n            <n2:StateOrProvince>NC</n2:StateOrProvince>\n            <n2:Country>US</n2:Country>\n            <n2:PostalCode>23456</n2:PostalCode>\n          </n2:Address>\n        </n2:CardOwner>\n      </n2:CreditCard>\n      <n2:IPAddress>10.0.0.1</n2:IPAddress>\n    </n2:DoDirectPaymentRequestDetails>\n  </DoDirectPaymentRequest>\n</DoDirectPaymentReq>\n</env:Body></env:Envelope>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Tue, 02 Dec 2014 18:44:21 GMT\r\n"
+      -> "Server: Apache\r\n"
+      -> "Content-Length: 1909\r\n"
+      -> "Connection: close\r\n"
+      -> "Content-Type: text/xml; charset=utf-8\r\n"
+      -> "\r\n"
+      reading 1909 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:cc=\"urn:ebay:apis:CoreComponentTypes\" xmlns:wsu=\"http://schemas.xmlsoap.org/ws/2002/07/utility\" xmlns:saml=\"urn:oasis:names:tc:SAML:1.0:assertion\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:wsse=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xmlns:ed=\"urn:ebay:apis:EnhancedDataTypes\" xmlns:ebl=\"urn:ebay:apis:eBLBaseComponents\" xmlns:ns=\"urn:ebay:api:PayPalAPI\"><SOAP-ENV:Header><Security xmlns=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xsi:type=\"wsse:SecurityType\"></Security><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xsi:type=\"ebl:CustomSecurityHeaderType\"><Credentials xmlns=\"urn:ebay:apis:eBLBaseComponents\" xsi:type=\"ebl:UserIdPasswordType\"><Username xsi:type=\"xs:string\"></Username><Password xsi:type=\"xs:string\"></Password><Signature xsi:type=\"xs:string\"></Signature><Subject xsi:type=\"xs:string\"></Subject></Credentials></RequesterCredentials></SOAP-ENV:Header><SOAP-ENV:Body id=\"_0\"><DoDirectPaymentResponse xmlns=\"urn:ebay:api:PayPalAPI\"><Timestamp xmlns=\"urn:ebay:apis:eBLBaseComponents\">2014-12-02T18:44:24Z</Timestamp><Ack xmlns=\"urn:ebay:apis:eBLBaseComponents\">Success</Ack><CorrelationID xmlns=\"urn:ebay:apis:eBLBaseComponents\">28804ee3a8eb7</CorrelationID><Version xmlns=\"urn:ebay:apis:eBLBaseComponents\">72</Version><Build xmlns=\"urn:ebay:apis:eBLBaseComponents\">13597118</Build><Amount xsi:type=\"cc:BasicAmountType\" currencyID=\"USD\">1.00</Amount><AVSCode xsi:type=\"xs:string\">X</AVSCode><CVV2Code xsi:type=\"xs:string\">M</CVV2Code><TransactionID>38L91123G19597918</TransactionID></DoDirectPaymentResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>"
+      read 1909 bytes
+      Conn close
+    PRE_SCRUBBED
+  end
+
+  def post_scrubbed
+    <<-POST_SCRUBBED
+      opening connection to api-3t.sandbox.paypal.com:443...
+      opened
+      starting SSL for api-3t.sandbox.paypal.com:443...
+      SSL established
+      <- "POST /2.0/ HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: api-3t.sandbox.paypal.com\r\nContent-Length: 2229\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"UTF-8\"?><env:Envelope xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:env=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><env:Header><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xmlns:n1=\"urn:ebay:apis:eBLBaseComponents\" env:mustUnderstand=\"0\"><n1:Credentials><n1:Username>[FILTERED]</n1:Username><n1:Password>[FILTERED]</n1:Password><n1:Subject/><n1:Signature>AFcWxV21C7fd0v3bYYYRCpSSRl31AC-11AKBL8FFO9tjImL311y8a0hx</n1:Signature></n1:Credentials></RequesterCredentials></env:Header><env:Body><DoDirectPaymentReq xmlns=\"urn:ebay:api:PayPalAPI\">\n  <DoDirectPaymentRequest xmlns:n2=\"urn:ebay:apis:eBLBaseComponents\">\n    <n2:Version>72</n2:Version>\n    <n2:DoDirectPaymentRequestDetails>\n      <n2:PaymentAction>Sale</n2:PaymentAction>\n      <n2:PaymentDetails>\n        <n2:OrderTotal currencyID=\"USD\">1.00</n2:OrderTotal>\n        <n2:OrderDescription>Stuff that you purchased, yo!</n2:OrderDescription>\n        <n2:InvoiceID>70e472b155c61d27fe19555a96d51127</n2:InvoiceID>\n        <n2:ButtonSource>ActiveMerchant</n2:ButtonSource>\n      </n2:PaymentDetails>\n      <n2:CreditCard>\n        <n2:CreditCardType>Visa</n2:CreditCardType>\n        <n2:CreditCardNumber>[FILTERED]</n2:CreditCardNumber>\n        <n2:ExpMonth>09</n2:ExpMonth>\n        <n2:ExpYear>2015</n2:ExpYear>\n        <n2:CVV2>[FILTERED]</n2:CVV2>\n        <n2:CardOwner>\n          <n2:PayerName>\n            <n2:FirstName>Longbob</n2:FirstName>\n            <n2:LastName>Longsen</n2:LastName>\n          </n2:PayerName>\n          <n2:Payer>buyer@jadedpallet.com</n2:Payer>\n          <n2:Address>\n            <n2:Name>Longbob Longsen</n2:Name>\n            <n2:Street1>1234 Penny Lane</n2:Street1>\n            <n2:Street2/>\n            <n2:CityName>Jonsetown</n2:CityName>\n            <n2:StateOrProvince>NC</n2:StateOrProvince>\n            <n2:Country>US</n2:Country>\n            <n2:PostalCode>23456</n2:PostalCode>\n          </n2:Address>\n        </n2:CardOwner>\n      </n2:CreditCard>\n      <n2:IPAddress>10.0.0.1</n2:IPAddress>\n    </n2:DoDirectPaymentRequestDetails>\n  </DoDirectPaymentRequest>\n</DoDirectPaymentReq>\n</env:Body></env:Envelope>"
+      -> "HTTP/1.1 200 OK\r\n"
+      -> "Date: Tue, 02 Dec 2014 18:44:21 GMT\r\n"
+      -> "Server: Apache\r\n"
+      -> "Content-Length: 1909\r\n"
+      -> "Connection: close\r\n"
+      -> "Content-Type: text/xml; charset=utf-8\r\n"
+      -> "\r\n"
+      reading 1909 bytes...
+      -> "<?xml version=\"1.0\" encoding=\"UTF-8\"?><SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:cc=\"urn:ebay:apis:CoreComponentTypes\" xmlns:wsu=\"http://schemas.xmlsoap.org/ws/2002/07/utility\" xmlns:saml=\"urn:oasis:names:tc:SAML:1.0:assertion\" xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\" xmlns:wsse=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xmlns:ed=\"urn:ebay:apis:EnhancedDataTypes\" xmlns:ebl=\"urn:ebay:apis:eBLBaseComponents\" xmlns:ns=\"urn:ebay:api:PayPalAPI\"><SOAP-ENV:Header><Security xmlns=\"http://schemas.xmlsoap.org/ws/2002/12/secext\" xsi:type=\"wsse:SecurityType\"></Security><RequesterCredentials xmlns=\"urn:ebay:api:PayPalAPI\" xsi:type=\"ebl:CustomSecurityHeaderType\"><Credentials xmlns=\"urn:ebay:apis:eBLBaseComponents\" xsi:type=\"ebl:UserIdPasswordType\"><Username xsi:type=\"xs:string\"></Username><Password xsi:type=\"xs:string\"></Password><Signature xsi:type=\"xs:string\"></Signature><Subject xsi:type=\"xs:string\"></Subject></Credentials></RequesterCredentials></SOAP-ENV:Header><SOAP-ENV:Body id=\"_0\"><DoDirectPaymentResponse xmlns=\"urn:ebay:api:PayPalAPI\"><Timestamp xmlns=\"urn:ebay:apis:eBLBaseComponents\">2014-12-02T18:44:24Z</Timestamp><Ack xmlns=\"urn:ebay:apis:eBLBaseComponents\">Success</Ack><CorrelationID xmlns=\"urn:ebay:apis:eBLBaseComponents\">28804ee3a8eb7</CorrelationID><Version xmlns=\"urn:ebay:apis:eBLBaseComponents\">72</Version><Build xmlns=\"urn:ebay:apis:eBLBaseComponents\">13597118</Build><Amount xsi:type=\"cc:BasicAmountType\" currencyID=\"USD\">1.00</Amount><AVSCode xsi:type=\"xs:string\">X</AVSCode><CVV2Code xsi:type=\"xs:string\">M</CVV2Code><TransactionID>38L91123G19597918</TransactionID></DoDirectPaymentResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>"
+      read 1909 bytes
+      Conn close
+    POST_SCRUBBED
+  end
 
   def successful_purchase_response
     <<-RESPONSE

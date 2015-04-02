@@ -151,7 +151,12 @@ module ActiveMerchant
       def post_data(action, params)
         params['COMMAND'] = TRANSACTIONS[action]
         params['LOGIN'] = "#{@options[:login]}/#{@options[:password]}"
-        URI.encode(params.map{|k,v| "#{k}=#{v}"}.join('&'))
+        escape_uri(params.map{|k,v| "#{k}=#{v}"}.join('&'))
+      end
+
+      # The upstream is picky and so we can't use CGI.escape like we want to
+      def escape_uri(uri)
+        URI::DEFAULT_PARSER.escape(uri)
       end
 
       def parse(response)

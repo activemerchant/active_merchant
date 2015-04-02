@@ -1,5 +1,15 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
+    # To perform PCI Compliant Repeat Billing
+    #
+    #   Ensure that PCI Compliant Repeat Billing is enabled on your merchant account:
+    #    "Enable PCI Compliant Repeat Billing, Up-selling and Cross-selling" in Step 6 of the Credit Cards setup page
+    #
+    #  Instead of passing a credit_card to authorize or purchase, pass the transaction id (res.authorization)
+    #  of a past Netbilling transaction
+    #
+    # To store billing information without performing an operation, use the 'store' method
+    # which invokes the tran_type 'Q' (Quasi) operation and returns a transaction id to use in future Repeat Billing operations
     class NetbillingGateway < Gateway
       self.live_url = self.test_url = 'https://secure.netbilling.com:1402/gw/sas/direct3.1'
 
@@ -9,7 +19,8 @@ module ActiveMerchant #:nodoc:
         :refund        => 'R',
         :credit        => 'C',
         :capture       => 'D',
-        :void          => 'U'
+        :void          => 'U',
+        :quasi         => 'Q'
       }
 
       SUCCESS_CODES = [ '1', 'T' ]
@@ -27,23 +38,23 @@ module ActiveMerchant #:nodoc:
         super
       end
 
-      def authorize(money, credit_card, options = {})
+      def authorize(money, payment_source, options = {})
         post = {}
         add_amount(post, money)
         add_invoice(post, options)
-        add_credit_card(post, credit_card)
-        add_address(post, credit_card, options)
+        add_payment_source(post, payment_source)
+        add_address(post, payment_source, options)
         add_customer_data(post, options)
 
         commit(:authorization, post)
       end
 
-      def purchase(money, credit_card, options = {})
+      def purchase(money, payment_source, options = {})
         post = {}
         add_amount(post, money)
         add_invoice(post, options)
-        add_credit_card(post, credit_card)
-        add_address(post, credit_card, options)
+        add_payment_source(post, payment_source)
+        add_address(post, payment_source, options)
         add_customer_data(post, options)
 
         commit(:purchase, post)
@@ -77,6 +88,16 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_reference(post, source)
         commit(:void, post)
+      end
+
+      def store(credit_card, options = {})
+        post = {}
+        add_amount(post, 0)
+        add_payment_source(post, credit_card)
+        add_address(post, credit_card, options)
+        add_customer_data(post, options)
+
+        commit(:quasi, post)
       end
 
       def test?
@@ -123,6 +144,18 @@ module ActiveMerchant #:nodoc:
 
       def add_invoice(post, options)
         post[:description] = options[:description]
+      end
+
+      def add_payment_source(params, source)
+        if source.is_a?(String)
+          add_transaction_id(params, source)
+        else
+          add_credit_card(params, source)
+        end
+      end
+
+      def add_transaction_id(post, transaction_id)
+        post[:card_number] = 'CS:' + transaction_id
       end
 
       def add_credit_card(post, credit_card)

@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/paypal'
+require 'active_merchant/billing/gateways/paypal'
 
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
