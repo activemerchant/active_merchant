@@ -192,13 +192,30 @@ module ActiveMerchant #:nodoc:
             }
           }
           result = @braintree_gateway.customer.create(merge_credit_card_options(parameters, options))
+
+          response_options = {}
+          if result.success?
+            response_options[:authorization] = result.customer.id
+            # Braintree::SuccessfulResult
+            if result.customer.credit_cards.size > 0
+              response_options[:avs_result] = { code: avs_code_from(result.customer.credit_cards[0].verification) }
+              response_options[:cvv_result] = result.customer.credit_cards[0].verification.cvv_response_code
+            end
+          else
+            # Braintree::ErrorResult
+            if result.credit_card_verification
+              response_options[:avs_result] = { code: avs_code_from(result.credit_card_verification) }
+              response_options[:cvv_result] = result.credit_card_verification.cvv_response_code
+            end
+          end
+
           Response.new(result.success?, message_from_result(result),
             {
               :braintree_customer => (customer_hash(result.customer, :include_credit_cards) if result.success?),
               :customer_vault_id => (result.customer.id if result.success?),
               :credit_card_token => (result.customer.credit_cards[0].token if result.success?)
             },
-            :authorization => (result.customer.id if result.success?)
+            response_options
           )
         end
       end
@@ -217,6 +234,23 @@ module ActiveMerchant #:nodoc:
           parameters[:billing_address] = map_address(options[:billing_address]) if options[:billing_address]
 
           result = @braintree_gateway.credit_card.create(parameters)
+
+          response_options = {}
+          if result.success?
+            response_options[:authorization] = result.credit_card.customer_id
+            # Braintree::SuccessfulResult
+            if result.credit_card
+              response_options[:avs_result] = { code: avs_code_from(result.credit_card.verification) }
+              response_options[:cvv_result] = result.credit_card.verification.cvv_response_code
+            end
+          else
+            # Braintree::ErrorResult
+            if result.credit_card_verification
+              response_options[:avs_result] = { code: avs_code_from(result.credit_card_verification) }
+              response_options[:cvv_result] = result.credit_card_verification.cvv_response_code
+            end
+          end
+
           ActiveMerchant::Billing::Response.new(
             result.success?,
             message_from_result(result),
@@ -224,10 +258,24 @@ module ActiveMerchant #:nodoc:
               customer_vault_id: (result.credit_card.customer_id if result.success?),
               credit_card_token: (result.credit_card.token if result.success?)
             },
-            authorization: (result.credit_card.customer_id if result.success?)
+            response_options
           )
         end
       end
+
+      def credit_card_response_options(result)
+        options = {}
+        if result.success?
+          options[:authorization] = result.transaction.id
+        end
+        if result.transaction
+          options[:avs_result] = { code: avs_code_from(result.transaction) }
+          options[:cvv_result] = result.transaction.cvv_response_code
+        end
+        options
+      end
+
+
 
       def scrub_email(email)
         return nil unless email.present?
