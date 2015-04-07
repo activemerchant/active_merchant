@@ -27,7 +27,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = %w(AT AU BE CA CH DE DK ES FI FR GB IE IT LU NL NO SE US)
       self.default_currency = 'USD'
       self.money_format = :cents
-      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club, :maestro]
 
       self.homepage_url = 'https://stripe.com/'
       self.display_name = 'Stripe'

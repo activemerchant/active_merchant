@@ -80,7 +80,7 @@ module ActiveMerchant #:nodoc:
         (primary_response ? primary_response.success? : true)
       end
 
-      %w(params message test authorization avs_result cvv_result emv_authorization test? fraud_review?).each do |m|
+      %w(params message test authorization avs_result cvv_result error_code emv_authorization test? fraud_review?).each do |m|
         class_eval %(
           def #{m}
             (@responses.empty? ? nil : primary_response.#{m})
