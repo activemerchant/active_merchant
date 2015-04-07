@@ -29,7 +29,6 @@ class RemoteFatZebraTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_descriptor
     assert response = @gateway.purchase(@amount, @credit_card, @options.merge(:merchant => 'Merchant', :merchant_location => 'Location'))
-    puts response.inspect
     assert_success response
     assert_equal 'Approved', response.message
   end
