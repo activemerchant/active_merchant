@@ -38,6 +38,7 @@ module ActiveMerchant #:nodoc:
 
         add_amount(post, money, options)
         add_creditcard(post, creditcard, options)
+        add_extra_options(post, options)
         post[:reference] = options[:order_id]
         post[:customer_ip] = options[:ip]
 
@@ -49,6 +50,7 @@ module ActiveMerchant #:nodoc:
 
         add_amount(post, money, options)
         add_creditcard(post, creditcard, options)
+        add_extra_options(post, options)
         post[:capture] = false
         post[:reference] = options[:order_id]
         post[:customer_ip] = options[:ip]
@@ -57,8 +59,10 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options = {})
-        post = options
+        post = {}
         add_amount(post, money, options)
+        add_extra_options(post, options)
+
 
         commit(:post, "purchases/#{CGI.escape(authorization)}/capture", post)
       end
@@ -71,6 +75,7 @@ module ActiveMerchant #:nodoc:
       def refund(money, txn_id, reference)
         post = {}
 
+        add_extra_options(post, options)
         post[:amount] = money
         post[:transaction_id] = txn_id
         post[:reference] = reference
@@ -114,6 +119,13 @@ module ActiveMerchant #:nodoc:
         else
           raise ArgumentError.new("Unknown credit card format #{creditcard.inspect}")
         end
+      end
+
+      def add_extra_options(post, options)
+        extra = {}
+        extra[:name] = options[:merchant] if options[:merchant]
+        extra[:location] = options[:merchant_location] if options[:merchant_location]
+        post[:extra] = extra if extra.any?
       end
 
       # Post the data to the gateway
