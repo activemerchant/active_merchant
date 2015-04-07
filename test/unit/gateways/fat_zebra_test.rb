@@ -63,6 +63,20 @@ class FatZebraTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_descriptor
+    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+      json = JSON.parse(body)
+      json['extra']['name'] == 'Merchant' && json['extra']['location'] == 'Location'
+    }.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, "e1q7dbj2", @options.merge(:merchant => 'Merchant', :merchant_location => 'Location'))
+    assert_success response
+
+    assert_equal '001-P-12345AA', response.authorization
+    assert response.test?
+
+  end
+
   def test_successful_authorization
     @gateway.expects(:ssl_request).with { |method, url, body, headers|
       body.match '"capture":false'
