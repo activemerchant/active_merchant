@@ -1,5 +1,7 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.48.0 (April 8, 2015)
+
 * Clean up `rake gateways:hosts` output [ntalbott]
 * Add Axcess MS gateway [timtait]
 * Add PayHub gateway [grepruby]
