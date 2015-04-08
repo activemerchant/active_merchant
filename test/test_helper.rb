@@ -122,7 +122,8 @@ module ActiveMerchant
     end
 
     def assert_scrubbed(unexpected_value, transcript)
-      refute transcript.include?(unexpected_value.to_s), "Expected #{unexpected_value} to be scrubbed out of transcript"
+      regexp = (Regexp === unexpected_value ? unexpected_value : Regexp.new(Regexp.quote(unexpected_value.to_s)))
+      refute_match regexp, transcript, "Expected the value to be scrubbed out of the transcript"
     end
 
     private
