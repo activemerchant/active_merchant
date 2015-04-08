@@ -104,6 +104,14 @@ bridge_pay:
   user_name: Spre3676
   password: H3392nc5
 
+cams:
+  username: testintegrationc
+  password: password9
+
+card_flex:
+  merchant_id: SOMECREDENTIAL
+  service_key: ANOTHERCREDENTIAL
+
 #Username/Password given in sign up email. Not MMS credentials
 card_save:
   login: merchant_id
