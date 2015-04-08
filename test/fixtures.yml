@@ -111,6 +111,11 @@ bridge_pay:
   user_name: Spre3676
   password: H3392nc5
 
+# Working credentials, no need to replace
+cams:
+  username: testintegrationc
+  password: password9
+
 #Username/Password given in sign up email. Not MMS credentials
 card_save:
   login: merchant_id
