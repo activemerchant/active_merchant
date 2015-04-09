@@ -335,7 +335,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def avs_code_from(transaction)
-        avs_mapping["street: #{transaction.avs_street_address_response_code}, zip: #{transaction.avs_postal_code_response_code}"]
+        transaction.avs_error_response_code ||
+          avs_mapping["street: #{transaction.avs_street_address_response_code}, zip: #{transaction.avs_postal_code_response_code}"]
       end
 
       def avs_mapping
