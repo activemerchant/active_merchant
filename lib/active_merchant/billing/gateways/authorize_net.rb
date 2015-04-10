@@ -486,11 +486,6 @@ module ActiveMerchant #:nodoc:
         (response[:response_code] == FRAUD_REVIEW)
       end
 
-      def truncate(value, max_size)
-        return nil unless value
-        value.to_s[0, max_size]
-      end
-
       def using_live_gateway_in_test_mode?(response)
         !test? && response[:test_request] == "1"
       end
