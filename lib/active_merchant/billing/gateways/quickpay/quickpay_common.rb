@@ -144,7 +144,10 @@ module QuickpayCommon
                        zero_auth),
       :capture   => %w( extras ),
       :cancel    => %w( extras ),
-      :refund    => %w( extras )
+      :refund    => %w( extras ),
+      :subscribe => %w( variables branding_id),
+      :authorize_subscription => %w( mobile_number acquirer customer_ip),
+      :recurring => %w(auto_capture autofee zero_auth)
     }
   }
   

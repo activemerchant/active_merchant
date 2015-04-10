@@ -18,13 +18,9 @@ module ActiveMerchant
         MultiResponse.run do |r|
           r.process { create_payment(money, options) }
           r.process {
-            post, payment_id = {}, r.authorization
-        
-            add_amount(post, money, options)
-            add_credit_card(post, credit_card)
+            post = authorization_params(money, credit_card, options)
             add_autocapture(post, true)
-            add_additional_params(:authorize, post, options)
-            commit("/payments/#{payment_id}/authorize", post)
+            commit("/payments/#{r.authorization}/authorize", post)
           }
         end
       end
@@ -33,12 +29,8 @@ module ActiveMerchant
         MultiResponse.run do |r|
           r.process { create_payment(money, options) }
           r.process {
-            post, payment_id = {}, r.authorization
-        
-            add_amount(post, money, options)
-            add_credit_card(post, credit_card)
-            add_additional_params(:authorize, post, options)
-            commit("/payments/#{payment_id}/authorize", post)
+            post = authorization_params(money, credit_card, options)
+            commit("/payments/#{r.authorization}/authorize", post)
           }
         end
       end
@@ -65,7 +57,61 @@ module ActiveMerchant
         commit("/payments/#{identification}/refund", post)
       end
       
+      def store credit_card, options = {}
+        MultiResponse.run do |r|  
+          r.process { create_subscription(options) }
+          r.process { authorize_subscription(r.authorization, credit_card, options) }
+        end
+      end
+      
+      def unstore identification
+        commit("/subscriptions/#{identification}/cancel")
+      end
+      
+      def recurring money, credit_card, options = {}
+        MultiResponse.run do |r|
+          r.process { store(credit_card, options) }
+          r.process { create_recurring(money, r.authorization, options) }
+        end  
+      end
+      
       private
+        
+        def authorization_params money, credit_card, options = {}
+          post = {}
+          
+          add_amount(post, money, options)
+          add_credit_card(post, credit_card)
+          add_additional_params(:authorize, post, options)
+          
+          post
+        end
+        
+        def create_recurring money, identification, options
+          post = {}
+          
+          add_amount(post, money, options)
+          add_currency(post, money, options)
+          add_order_id(post, options)
+          add_additional_params(:recurring, post, options)
+          
+          commit("/subscriptions/#{identification}/recurring", post)
+        end
+        
+        def create_subscription options = {}
+          post = {}  
+          
+          add_subscription_invoice(post, options)
+          commit('/subscriptions', post)
+        end
+        
+        def authorize_subscription identification, credit_card, options = {}
+          post = {}
+          
+          add_credit_card(post, credit_card, options)
+          add_additional_params(:authorize_subscription, post, options)
+          commit("/subscriptions/#{identification}/authorize", post)
+        end
         
         def create_payment money, options = {}          
           post = {}
@@ -91,6 +137,12 @@ module ActiveMerchant
           )
         end
         
+        def add_subscription_invoice post, options = {}
+          requires!(options, :order_id, :description)  
+          post[:order_id]    = options[:order_id]
+          post[:description] = options[:description]
+        end
+        
         def add_currency post, money, options
           post[:currency] = options[:currency] || currency(money)
         end
@@ -103,9 +155,13 @@ module ActiveMerchant
           post[:auto_capture] = value  
         end
         
+        def add_order_id post, options
+          requires!(options, :order_id)  
+          post[:order_id] = options[:order_id]
+        end
+        
         def add_invoice post, options
-          requires!(options, :order_id)
-          post[:order_id]  = options[:order_id]          
+          add_order_id(post, options)          
           
           if options[:billing_address]
             post[:invoice_address]  = map_address(options[:billing_address])

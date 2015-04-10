@@ -108,10 +108,28 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert credit = @gateway.refund(@amount, purchase.authorization)
     assert_success credit
   end
+  
+  def test_successful_store
+    assert response = @gateway.store(@valid_card, @options.merge(:description => 'test'))
+    assert_success response  
+  end
+  
+  def test_successful_unstore
+    assert response = @gateway.store(@valid_card, @options.merge(:description => 'test'))
+    assert_success response  
+    
+    assert response = @gateway.unstore(response.authorization)
+    assert_success response
+  end
 
+  # def test_successful_recurring
+  #   assert response = @gateway.recurring(@amount, @valid_card, @options.merge(:description => 'test'))
+  #   assert_success response    
+  # end
+  
   def test_invalid_login
     gateway = QuickpayGateway.new(api_key: '**')
-    assert response = gateway.purchase(@amount, @visa, @options)
+    assert response = gateway.purchase(@amount, @valid_card, @options)
     assert_equal 'Invalid API key', response.message
     assert_failure response
   end
