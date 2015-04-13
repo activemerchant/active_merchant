@@ -846,4 +846,4 @@ worldpay_us:
 
 # Please create a merchant account on Zeus to obtain a valid clientip.
 zeus:
-  clientip: '<Enter clientip provided by Zeus>'
+  clientip: '2019000606'

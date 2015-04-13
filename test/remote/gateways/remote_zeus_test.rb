@@ -7,15 +7,14 @@ class RemoteZeusTest < Test::Unit::TestCase
   def setup
     @gateway = ZeusGateway.new(fixtures(:zeus))
     @amount = 100
-    @credit_card = credit_card('<valid-test-credit-card-number>', { year: '20', month: '02' })
-    @declined_card = credit_card('<invalid-credit-card-number>')
+    @credit_card = credit_card('4348293542861948', { year: '20', month: '02' })
+    @declined_card = credit_card('5614685177999992')
 
     @options = {
-      telno: '<telno>',
+      telno: '9876787654',
       telnocheck: 'yes',
       sendid: 'fake_id',
-      printord: 'yes',
-      email: '<email-id>'
+      printord: 'yes'
     }
   end
 
