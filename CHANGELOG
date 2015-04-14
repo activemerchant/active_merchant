@@ -6,6 +6,8 @@
 * SecureNet: Allow shipping_address[:name] [duff]
 * MonerisUS: Add verify [mrezentes]
 * Ezic: Add gateway [duff]
+* Stripe: Add destination field [cwise]
+
 
 == Version 1.48.0 (April 8, 2015)
 
