@@ -244,6 +244,7 @@ module ActiveMerchant #:nodoc:
 
         add_flags(post, options)
         add_application_fee(post, options)
+        add_destination(post, options)
         post
       end
 
@@ -255,6 +256,10 @@ module ActiveMerchant #:nodoc:
 
       def add_application_fee(post, options)
         post[:application_fee] = options[:application_fee] if options[:application_fee]
+      end
+
+      def add_destination(post, options)
+        post[:destination] = options[:destination] if options[:destination]
       end
 
       def add_expand_parameters(post, options)
