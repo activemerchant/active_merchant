@@ -66,19 +66,13 @@ class QuickpayV10Test < Test::Unit::TestCase
   
   def test_successful_recurring
     stub_comms do
-      assert response = @gateway.recurring(@amount, @credit_card, @options.merge(:description => 'test'))
+      assert response = @gateway.recurring(@amount, 1145, @options.merge(:description => 'test'))
       assert_success response
       assert_equal 834, response.authorization
       assert response.test?
     end.check_request do |endpoint, data, headers|
       body = parse(data)
-      if body['order_id']
-        assert_match %r{/subscriptions}, endpoint
-      elsif body['card']
-        assert_match %r{/subscriptions/\d+/authorize}, endpoint
-      else
-        assert_match %r{/subscriptions/\d+/recurring}, endpoint
-      end
+      assert_match %r{/subscriptions/\d+/recurring}, endpoint
     end.respond_with(successful_subscription_response)      
   end
   

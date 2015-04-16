@@ -31,15 +31,15 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert !response.authorization.blank?
   end
   
-  # def test_unsuccessful_purchase_with_invalid_card
-  #   assert response = @gateway.purchase(@amount, @invalid_card, @options)   
-  #   assert_equal 'OK', response.message
-  #   assert_failure response
-  # end
+  def test_unsuccessful_purchase_with_invalid_card
+    assert response = @gateway.purchase(@amount, @invalid_card, @options)   
+    assert_failure response
+    assert_match /Rejected by acquirer/, response.message
+  end
     
   def test_successful_usd_purchase
     assert response = @gateway.purchase(@amount, @valid_card, @options.update(:currency => 'USD'))
-    assert_equal 'OK', response.message
+    assert_equal 'OK',  response.message
     assert_equal 'USD', response.params['currency']
     assert_success response
     assert !response.authorization.blank?
@@ -54,15 +54,15 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
 
   def test_unsuccessful_purchase_with_invalid_acquirers
     assert response = @gateway.purchase(@amount, @valid_card, @options.update(:acquirer => "invalid"))
-    assert_equal 'Validation error: Unknown acquirer name', response.message
     assert_failure response
+    assert_equal 'Validation error: Unknown acquirer name', response.message
   end
   
-  # def test_unsuccessful_authorize_with_invalid_card
-  #   assert response = @gateway.authorize(@amount, @invalid_card, @options)   
-  #   assert_equal 'OK', response.message
-  #   assert_success response
-  # end
+  def test_unsuccessful_authorize_with_invalid_card
+    assert response = @gateway.authorize(@amount, @invalid_card, @options)   
+    assert_failure response
+    assert_match /Rejected by acquirer/, response.message
+  end
 
   def test_successful_authorize_and_capture
     assert auth = @gateway.authorize(@amount, @valid_card, @options)
@@ -122,10 +122,14 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
     assert_success response
   end
 
-  # def test_successful_recurring
-  #   assert response = @gateway.recurring(@amount, @valid_card, @options.merge(:description => 'test'))
-  #   assert_success response    
-  # end
+  def test_successful_recurring
+    response = @gateway.store(@valid_card, @options.merge(:description => 'test'))
+    assert response.authorization
+    
+    order_id = ('a'..'z').to_a.shuffle.take(5).join
+    assert response = @gateway.recurring(@amount, response.authorization, @options.merge(:order_id => order_id))
+    assert_success response    
+  end
   
   def test_invalid_login
     gateway = QuickpayGateway.new(api_key: '**')
@@ -135,4 +139,3 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   end
     
 end
-  

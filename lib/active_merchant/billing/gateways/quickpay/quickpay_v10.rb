@@ -15,28 +15,28 @@ module ActiveMerchant
       end
       
       def purchase money, credit_card, options = {}
-        MultiResponse.run do |r|
+        MultiResponse.run(true) do |r|
           r.process { create_payment(money, options) }
           r.process {
             post = authorization_params(money, credit_card, options)
             add_autocapture(post, true)
-            commit("/payments/#{r.authorization}/authorize", post)
+            commit(synchronized_path("/payments/#{r.authorization}/authorize"), post)
           }
         end
       end
       
       def authorize money, credit_card, options = {}
-        MultiResponse.run do |r|
+        MultiResponse.run(true) do |r|
           r.process { create_payment(money, options) }
           r.process {
             post = authorization_params(money, credit_card, options)
-            commit("/payments/#{r.authorization}/authorize", post)
+            commit(synchronized_path("/payments/#{r.authorization}/authorize"), post)
           }
         end
       end
       
       def void identification
-        commit("/payments/#{identification}/cancel")
+        commit(synchronized_path "/payments/#{identification}/cancel")
       end
       
       def credit money, identification, options = {}
@@ -47,32 +47,31 @@ module ActiveMerchant
         post = {}
         add_amount(post, money, options)
         add_additional_params(:capture, post, options)
-        commit("/payments/#{identification}/capture", post)
+        commit(synchronized_path("/payments/#{identification}/capture"), post)
       end
 
       def refund money, identification, options = {}
         post = {}
         add_amount(post, money, options)
         add_additional_params(:refund, post, options)
-        commit("/payments/#{identification}/refund", post)
+        commit(synchronized_path("/payments/#{identification}/refund"), post)
       end
       
       def store credit_card, options = {}
-        MultiResponse.run do |r|  
+        MultiResponse.run(true) do |r|  
           r.process { create_subscription(options) }
-          r.process { authorize_subscription(r.authorization, credit_card, options) }
+          r.process { 
+            authorize_subscription(r.authorization, credit_card, options) 
+          }
         end
       end
       
       def unstore identification
-        commit("/subscriptions/#{identification}/cancel")
+        commit(synchronized_path "/subscriptions/#{identification}/cancel")
       end
       
-      def recurring money, credit_card, options = {}
-        MultiResponse.run do |r|
-          r.process { store(credit_card, options) }
-          r.process { create_recurring(money, r.authorization, options) }
-        end  
+      def recurring money, identification, options = {}
+        create_recurring(money, identification, options)
       end
       
       private
@@ -95,7 +94,7 @@ module ActiveMerchant
           add_order_id(post, options)
           add_additional_params(:recurring, post, options)
           
-          commit("/subscriptions/#{identification}/recurring", post)
+          commit(synchronized_path("/subscriptions/#{identification}/recurring"), post)
         end
         
         def create_subscription options = {}
@@ -110,7 +109,7 @@ module ActiveMerchant
           
           add_credit_card(post, credit_card, options)
           add_additional_params(:authorize_subscription, post, options)
-          commit("/subscriptions/#{identification}/authorize", post)
+          commit(synchronized_path("/subscriptions/#{identification}/authorize"), post)
         end
         
         def create_payment money, options = {}          
@@ -121,7 +120,7 @@ module ActiveMerchant
         end
 
         def commit action, params = {}          
-          success = false
+          success = false          
           begin
             response = parse(ssl_post(self.live_url + action, params.to_json, headers))
             success = successful?(response)
@@ -196,11 +195,14 @@ module ActiveMerchant
         end
         
         def successful? response
-          !response['errors'] and !response['message']
+          has_error    = response['errors']
+          invalid_code = (response.key?('qp_status_code') and response['qp_status_code'] != "20000")
+          
+          !(has_error || invalid_code)
         end
                          
         def message_from success, response
-          success ? 'OK' : response['message']
+          success ? 'OK' : (response['message'] || response['qp_status_msg'])
         end
         
         def map_address(address)
@@ -218,7 +220,7 @@ module ActiveMerchant
         end
 
         def headers
-          auth = Base64.encode64(":#{@options[:api_key]}").gsub("\n", "")
+          auth = Base64.strict_encode64(":#{@options[:api_key]}")
           {
             "Authorization"  => "Basic " + auth,
             "User-Agent"     => "Quickpay-v#{API_VERSION} ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
@@ -240,6 +242,10 @@ module ActiveMerchant
           msg = 'Invalid response received from the Quickpay API.'
           msg += "  (The raw response returned by the API was #{raw_response.inspect})"
           { "message" => msg }
+        end
+        
+        def synchronized_path path
+          "#{path}?synchronized"
         end
         
     end
