@@ -129,7 +129,7 @@ module ActiveMerchant
           rescue JSON::ParserError
             response = json_error(response)
           end
-          
+                    
           Response.new(success, message_from(success, response), response,
             :test => test?,
             :authorization => response['id']

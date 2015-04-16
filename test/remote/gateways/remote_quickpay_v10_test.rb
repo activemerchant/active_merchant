@@ -3,7 +3,7 @@ require 'test_helper'
 class RemoteQuickPayV10Test < Test::Unit::TestCase
   
   def setup
-    @gateway = QuickpayGateway.new(api_key: ENV['QUICKPAY_API_KEY'])
+    @gateway = QuickpayGateway.new(fixtures(:quickpay_v10_api_key))
     @amount = 100
     @options = {
       :order_id => generate_unique_id[0...10],
@@ -48,7 +48,6 @@ class RemoteQuickPayV10Test < Test::Unit::TestCase
   def test_successful_purchase_with_acquirers
     assert response = @gateway.purchase(@amount, @valid_card, @options.update(:acquirer => "nets"))
     assert_equal 'OK', response.message
-    assert_equal "nets", response.params['acquirer']
     assert_success response
   end
 
