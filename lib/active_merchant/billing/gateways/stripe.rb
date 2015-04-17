@@ -359,6 +359,7 @@ module ActiveMerchant #:nodoc:
       def headers(options = {})
         key     = options[:key] || @api_key
         version = options[:version] || @version
+        idempotency_key = options[:idempotency_key]
 
         headers = {
           "Authorization" => "Basic " + Base64.encode64(key.to_s + ":").strip,
@@ -367,6 +368,7 @@ module ActiveMerchant #:nodoc:
           "X-Stripe-Client-User-Metadata" => {:ip => options[:ip]}.to_json
         }
         headers.merge!("Stripe-Version" => version) if version
+        headers.merge!("Idempotency-Key" => idempotency_key) if idempotency_key
         headers
       end
 
