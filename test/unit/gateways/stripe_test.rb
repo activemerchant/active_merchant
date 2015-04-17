@@ -575,6 +575,15 @@ class StripeTest < Test::Unit::TestCase
     @gateway.purchase(@amount, @credit_card, @options.merge(:version => '2013-10-29'))
   end
 
+  def test_optional_idempotency_key_header
+    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+      headers && headers['Idempotency-Key'] == 'test123'
+    }.returns(successful_purchase_response)
+
+    @gateway.purchase(@amount, @credit_card, @options.merge(:idempotency_key => 'test123'))
+  end
+
+
   def test_initialize_gateway_with_version
     @gateway = StripeGateway.new(:login => 'login', :version => '2013-12-03')
     @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
