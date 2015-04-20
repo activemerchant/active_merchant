@@ -27,6 +27,19 @@ class MonerisUsRemoteTest < Test::Unit::TestCase
     assert_false response.authorization.blank?
   end
 
+  def test_successful_verify
+    response = @gateway.verify(@credit_card, @options)
+    assert_success response
+    assert_equal "Approved", response.message
+    assert response.authorization
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(credit_card(nil), @options)
+    assert_failure response
+    assert_match %r{Invalid pan parameter}, response.message
+  end
+
   def test_failed_authorization
     response = @gateway.authorize(105, @credit_card, @options)
     assert_failure response
