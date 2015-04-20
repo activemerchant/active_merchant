@@ -104,6 +104,14 @@ class BraintreeBlueTest < Test::Unit::TestCase
     @gateway.authorize(100, credit_card("41111111111111111111"), :merchant_account_id => "present")
   end
 
+  def test_service_fee_amount_can_be_specified
+    Braintree::TransactionGateway.any_instance.expects(:sale).
+      with(has_entries(:service_fee_amount => "2.31")).
+      returns(braintree_result)
+
+    @gateway.authorize(100, credit_card("41111111111111111111"), :service_fee_amount => "2.31")
+  end
+
   def test_merchant_account_id_absent_if_not_provided
     Braintree::TransactionGateway.any_instance.expects(:sale).with do |params|
       not params.has_key?(:merchant_account_id)

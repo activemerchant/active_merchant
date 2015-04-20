@@ -1,6 +1,8 @@
 = ActiveMerchant CHANGELOG
 
 * Braintree: Add support for AVS error codes [ivanvfer]
+* MerchantWarrior: Truncate description field [duff]
+* Braintree: Add service_fee_amount option [duff]
 
 == Version 1.48.0 (April 8, 2015)
 
@@ -35,7 +37,6 @@
 * Fat Zebra: Add multi-currency support [nagash]
 * Fat Zebra: Add auth/capture capability [nagash]
 * Fat Zebra: Add soft descriptor support [nagash]
-* MerchantWarrior: Truncate description field [duff]
 
 == Version 1.47.0 (February 25, 2015)
 
