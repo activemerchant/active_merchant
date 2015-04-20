@@ -7,6 +7,7 @@ module ActiveMerchant
       Timeout::Error         => "The connection to the remote server timed out",
       Errno::ETIMEDOUT       => "The connection to the remote server timed out",
       SocketError            => "The connection to the remote server could not be established",
+      Errno::EHOSTUNREACH    => "The connection to the remote server could not be established",
       OpenSSL::SSL::SSLError => "The SSL connection to the remote server could not be established"
     }
 

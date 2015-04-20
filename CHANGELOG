@@ -10,6 +10,7 @@
 * SecureNet: Fix ordering of shipping field names [duff]
 * SecurePayAu: Update API URL [girasquid]
 * Stripe: Add EMV "chip & sign", "chip & offline PIN" and Maestro support [bizla]
+* Add Errno::EHOSTUNREACH to NetworkConnectionRetries::DEFAULT_CONNECTION_ERRORS [randito78]
 
 == Version 1.48.0 (April 8, 2015)
 
