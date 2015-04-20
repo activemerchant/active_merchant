@@ -38,6 +38,13 @@ module ActiveMerchant #:nodoc:
         super
       end
 
+      def verify(creditcard_or_datakey, options = {})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, creditcard_or_datakey, options) }
+          r.process(:ignore_result) { capture(0, r.authorization) }
+        end
+      end
+
       # Referred to as "PreAuth" in the Moneris integration guide, this action
       # verifies and locks funds on a customer's card, which then must be
       # captured at a later date.
