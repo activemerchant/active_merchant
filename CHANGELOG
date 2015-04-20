@@ -3,6 +3,7 @@
 * Braintree: Add support for AVS error codes [ivanvfer]
 * MerchantWarrior: Truncate description field [duff]
 * Braintree: Add service_fee_amount option [duff]
+* SecureNet: Allow shipping_address[:name] [duff]
 
 == Version 1.48.0 (April 8, 2015)
 
