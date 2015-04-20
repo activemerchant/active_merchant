@@ -12,7 +12,10 @@ class RemoteStripeTest < Test::Unit::TestCase
     @declined_card = credit_card('4000000000000002')
     @new_credit_card = credit_card('5105105105105100')
 
-    @emv_credit_card = credit_card_with_icc_data
+    @emv_credit_cards = {
+      uk: ActiveMerchant::Billing::CreditCard.new(icc_data: '500B56495341204352454449545F201A56495341204143515549524552205445535420434152442030315F24031512315F280208405F2A0208265F300202015F34010182025C008407A0000000031010950502000080009A031408259B02E8009C01009F02060000000734499F03060000000000009F0607A00000000310109F0902008C9F100706010A03A080009F120F4352454449544F20444520564953419F1A0208269F1C0831373030303437309F1E0831373030303437309F2608EB2EC0F472BEA0A49F2701809F3303E0B8C89F34031E03009F3501229F360200C39F37040A27296F9F4104000001319F4502DAC5DFAE5711476173FFFFFF0119D15122011758989389DFAE5A08476173FFFFFF011957114761739001010119D151220117589893895A084761739001010119'),
+      us: ActiveMerchant::Billing::CreditCard.new(icc_data: '500B564953412043524544495457114761739001010119D151220117589893895A0847617390010101195F201A56495341204143515549524552205445535420434152442030315F24031512315F280208405F2A0208405F300202015F34010182025C008407A0000000031010950502000080009A031504209B02E8009C01009F02060000000006959F03060000000000009F0607A00000000310109F0902008C9F100706010A03A080009F120F4352454449544F20444520564953419F1A0208409F1C0831303030333237389F1E0831303030333237389F2608C498749AE7D3AC8E9F2701809F3303E0B8C89F34031E03009F3501229F360202E79F370443597EE89F4104000000099F4502DAC5DFAE5711476173FFFFFF0119D15122011758989389DFAE5A08476173FFFFFF0119')
+    }
 
     @options = {
       :currency => @currency,
@@ -48,8 +51,19 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   # this actually shouldn't be legal
-  def test_successful_purchase_with_emv_credit_card
-    assert response = @gateway.purchase(@amount, @emv_credit_card, @options)
+  def test_successful_purchase_with_emv_credit_card_in_uk
+    @gateway = StripeGateway.new(fixtures(:stripe_emv_uk))
+    assert response = @gateway.purchase(@amount, @emv_credit_cards[:uk], @options)
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert response.params["paid"]
+    assert_match CHARGE_ID_REGEX, response.authorization
+  end
+
+  # this shouldn't work technically
+  def test_successful_purchase_with_emv_credit_card_in_us
+    @gateway = StripeGateway.new(fixtures(:stripe_emv_us))
+    assert response = @gateway.purchase(@amount, @emv_credit_cards[:us], @options)
     assert_success response
     assert_equal "charge", response.params["object"]
     assert response.params["paid"]
@@ -95,8 +109,21 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_authorization_and_capture_with_emv_credit_card
-    assert authorization = @gateway.authorize(@amount, @emv_credit_card, @options)
+  def test_authorization_and_capture_with_emv_credit_card_in_uk
+    @gateway = StripeGateway.new(fixtures(:stripe_emv_uk))
+    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:uk], @options)
+    assert_success authorization
+    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
+    assert !authorization.params["captured"]
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+    assert capture.emv_authorization, "Capture should contain emv_authorization containing the EMV TC"
+  end
+
+  def test_authorization_and_capture_with_emv_credit_card_in_us
+    @gateway = StripeGateway.new(fixtures(:stripe_emv_us))
+    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:us], @options)
     assert_success authorization
     assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
     assert !authorization.params["captured"]
@@ -126,8 +153,20 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success void
   end
 
-  def test_authorization_and_void_with_emv_credit_card
-    assert authorization = @gateway.authorize(@amount, @emv_credit_card, @options)
+  def test_authorization_and_void_with_emv_credit_card_in_us
+    @gateway = StripeGateway.new(fixtures[:stripe_emv_us])
+    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:us], @options)
+    assert_success authorization
+    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
+    assert !authorization.params["captured"]
+
+    assert void = @gateway.void(authorization.authorization)
+    assert_success void
+  end
+
+  def test_authorization_and_void_with_emv_credit_card_in_uk
+    @gateway = StripeGateway.new(fixtures[:stripe_emv_uk])
+    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:uk], @options)
     assert_success authorization
     assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
     assert !authorization.params["captured"]

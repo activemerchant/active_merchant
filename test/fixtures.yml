@@ -799,6 +799,14 @@ stripe:
   login:
   fee_refund_login:
 
+stripe_emv_uk:
+  login:
+  fee_refund_login:
+
+stripe_emv_us:
+  login:
+  fee_refund_login:
+
 # Working credentials, no need to replace
 swipe_checkout:
   login: 2077103073D8B5
