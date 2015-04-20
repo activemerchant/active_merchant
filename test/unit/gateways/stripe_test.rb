@@ -463,7 +463,7 @@ class StripeTest < Test::Unit::TestCase
     post = {}
     @gateway.send(:add_creditcard, post, @emv_credit_card, {})
 
-    assert_equal GrizzlyBer.new(@emv_credit_card.icc_data).remove!("57").remove!("5A").to_ber, post[:card][:icc_data]
+    assert_equal @emv_credit_card.icc_data, post[:card][:emv_auth_data]
   end
 
   def test_add_customer
@@ -911,23 +911,23 @@ class StripeTest < Test::Unit::TestCase
     {
       "id": "ch_test_emv_charge",
       "object": "charge",
-      "created": 1425395589,
+      "created": 1429642948,
       "livemode": true,
       "paid": true,
-      "status": "paid",
-      "amount": 73449,
-      "currency": "gbp",
+      "status": "succeeded",
+      "amount": 1000,
+      "currency": "usd",
       "refunded": false,
       "source": {
-        "id": "card_15cHhpCCNNK3soAoeak5ILoc",
+        "id": "card_15u6dcHMpVh8I77hUfAVAfsK",
         "object": "card",
-        "last4": "0119",
-        "brand": "Visa",
+        "last4": "8123",
+        "brand": "MasterCard",
         "funding": "unknown",
         "exp_month": 12,
-        "exp_year": 2015,
-        "fingerprint": "cZYHlSrkoC1WGGK2",
-        "country": "VN",
+        "exp_year": 2025,
+        "fingerprint": "tdVpM3XDe3H4juSD",
+        "country": "US",
         "name": null,
         "address_line1": null,
         "address_line2": null,
@@ -940,33 +940,10 @@ class StripeTest < Test::Unit::TestCase
         "address_zip_check": null,
         "dynamic_last4": null,
         "metadata": {},
-        "customer": null
+        "customer": null,
+        "emv_auth_data": "8A023835910AF7F7BA77D7ACCFAB0012710F860D8424000008C1EFF627EAE08933"
       },
       "captured": false,
-      "card": {
-        "id": "card_15cHhpCCNNK3soAoeak5ILoc",
-        "object": "card",
-        "last4": "0119",
-        "brand": "Visa",
-        "funding": "unknown",
-        "exp_month": 12,
-        "exp_year": 2015,
-        "fingerprint": "cZYHlSrkoC1WGGK2",
-        "country": "VN",
-        "name": null,
-        "address_line1": null,
-        "address_line2": null,
-        "address_city": null,
-        "address_state": null,
-        "address_zip": null,
-        "address_country": null,
-        "cvc_check": null,
-        "address_line1_check": null,
-        "address_zip_check": null,
-        "dynamic_last4": null,
-        "metadata": {},
-        "customer": null
-      },
       "balance_transaction": null,
       "failure_message": null,
       "failure_code": null,
@@ -980,17 +957,16 @@ class StripeTest < Test::Unit::TestCase
       "fraud_details": {},
       "receipt_email": null,
       "receipt_number": null,
-      "authorization_code": "224811",
-      "icc_data": "9F360200C3910A83C2E7A3A976F4DE30308A023030",
+      "authorization_code": "816826",
       "shipping": null,
+      "application_fee": null,
       "refunds": {
         "object": "list",
         "total_count": 0,
         "has_more": false,
-        "url": "/v1/charges/ch_15cHhpCCNNK3soAocT7wpfcN/refunds",
+        "url": "/v1/charges/ch_15u6dcHMpVh8I77hdIKNQ1jH/refunds",
         "data": []
-      },
-      "statement_description": null
+      }
     }
     RESPONSE
   end
@@ -1030,23 +1006,23 @@ class StripeTest < Test::Unit::TestCase
     {
       "id": "ch_test_emv_charge",
       "object": "charge",
-      "created": 1425395589,
+      "created": 1429643380,
       "livemode": true,
       "paid": true,
-      "status": "paid",
-      "amount": 73449,
-      "currency": "gbp",
+      "status": "succeeded",
+      "amount": 1000,
+      "currency": "usd",
       "refunded": false,
       "source": {
-        "id": "card_15cHhpCCNNK3soAoeak5ILoc",
+        "id": "card_15u6kaHMpVh8I77htEt6tgX4",
         "object": "card",
-        "last4": "0119",
-        "brand": "Visa",
+        "last4": "8123",
+        "brand": "MasterCard",
         "funding": "unknown",
         "exp_month": 12,
-        "exp_year": 2015,
-        "fingerprint": "cZYHlSrkoC1WGGK2",
-        "country": "VN",
+        "exp_year": 2025,
+        "fingerprint": "tdVpM3XDe3H4juSD",
+        "country": "US",
         "name": null,
         "address_line1": null,
         "address_line2": null,
@@ -1059,37 +1035,14 @@ class StripeTest < Test::Unit::TestCase
         "address_zip_check": null,
         "dynamic_last4": null,
         "metadata": {},
-        "customer": null
+        "customer": null,
+        "emv_auth_data": "8A023835910AF7F7BA77D7ACCFAB0012710F860D8424000008C1EFF627EAE08933"
       },
       "captured": true,
-      "card": {
-        "id": "card_15cHhpCCNNK3soAoeak5ILoc",
-        "object": "card",
-        "last4": "0119",
-        "brand": "Visa",
-        "funding": "unknown",
-        "exp_month": 12,
-        "exp_year": 2015,
-        "fingerprint": "cZYHlSrkoC1WGGK2",
-        "country": "VN",
-        "name": null,
-        "address_line1": null,
-        "address_line2": null,
-        "address_city": null,
-        "address_state": null,
-        "address_zip": null,
-        "address_country": null,
-        "cvc_check": null,
-        "address_line1_check": null,
-        "address_zip_check": null,
-        "dynamic_last4": null,
-        "metadata": {},
-        "customer": null
-      },
-      "balance_transaction": "txn_15cHsFCCNNK3soAoJEev76ox",
+      "balance_transaction": "txn_15u6kbHMpVh8I77hA79CanC2",
       "failure_message": null,
       "failure_code": null,
-      "amount_refunded": 0,
+      "amount_refunded": 900,
       "customer": null,
       "invoice": null,
       "description": null,
@@ -1099,17 +1052,29 @@ class StripeTest < Test::Unit::TestCase
       "fraud_details": {},
       "receipt_email": null,
       "receipt_number": null,
-      "authorization_code": "224811",
-      "icc_data": "9F360200C3910A83C2E7A3A976F4DE30308A023030",
+      "authorization_code": "662021",
       "shipping": null,
+      "application_fee": null,
       "refunds": {
         "object": "list",
-        "total_count": 0,
+        "total_count": 1,
         "has_more": false,
-        "url": "/v1/charges/ch_15cHhpCCNNK3soAocT7wpfcN/refunds",
-        "data": []
-      },
-      "statement_description": null
+        "url": "/v1/charges/ch_15u6kaHMpVh8I77hrF9XY8bG/refunds",
+        "data": [
+          {
+            "id": "re_15u6kbHMpVh8I77h2o6RsdQq",
+            "amount": 900,
+            "currency": "usd",
+            "created": 1429643381,
+            "object": "refund",
+            "balance_transaction": "txn_15u6kbHMpVh8I77hXqAYL6kZ",
+            "metadata": {},
+            "charge": "ch_15u6kaHMpVh8I77hrF9XY8bG",
+            "receipt_number": null,
+            "reason": null
+          }
+        ]
+      }
     }
     RESPONSE
   end

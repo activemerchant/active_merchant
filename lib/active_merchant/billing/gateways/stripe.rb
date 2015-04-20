@@ -47,9 +47,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options = {})
         requires!(options, :login)
-        # @api_key = options[:login]
-        puts "*** api_key is currently hardcoded! *** "
-        @api_key = 'sk_live_RVjPWJC6tN0Fx5E5C4SsWuxu'
+        @api_key = options[:login]
         @fee_refund_api_key = options[:fee_refund_login]
         @version = options[:version]
 
@@ -93,15 +91,15 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {}
 
-        # this block needs tests
-        if emv_tc_response = options.delete(:icc_data)
-          post[:card] = {icc_data: StripeICCData.new(emv_tc_response).icc_data}
-        end
-
         add_amount(post, money, options)
         add_application_fee(post, options)
 
-        commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
+        if emv_tc_response = options.delete(:icc_data)
+          post[:card] = {emv_approval_data: emv_tc_response}
+          commit(:post, "charges/#{CGI.escape(authorization)}", post, options)
+        else
+          commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
+        end
       end
 
       def void(identification, options = {})
@@ -232,28 +230,6 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      class StripeICCData
-        # Handles Stripe-specific parsing of a raw BER-TLV string.
-        attr_reader :number, :track_data, :icc_data, :receipt_tlv_string
-
-        def initialize(raw_tlv_string)
-          require 'grizzly_ber'
-          parsed_tlv = GrizzlyBer.new(raw_tlv_string)
-
-          # Stripe requires the card number and track data to be extracted and removed from the ICC data.
-          @number = parsed_tlv.hex_value_of_first_element_with_tag("5A").sub(/F+\z/, '') if parsed_tlv["5A"]
-
-          track_data = parsed_tlv.hex_value_of_first_element_with_tag("57") if parsed_tlv["57"]
-          @track_data = ";#{track_data.gsub('D', '=').gsub('F', '')}?" if track_data
-
-          # The card number and track data is removed from the ICC data here.
-          parsed_tlv.remove!("57")
-          parsed_tlv.remove!("5A")
-
-          @icc_data = parsed_tlv.to_ber
-        end
-      end
-
       def create_post_for_auth_or_purchase(money, payment, options)
         post = {}
 
@@ -270,9 +246,9 @@ module ActiveMerchant #:nodoc:
           post[:statement_description] = options[:statement_description]
           add_customer(post, payment, options)
           add_flags(post, options)
-          add_application_fee(post, options)
         end
 
+        add_application_fee(post, options)
         post
       end
 
@@ -317,7 +293,7 @@ module ActiveMerchant #:nodoc:
         elsif creditcard.respond_to?(:number)
           if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
             card[:swipe_data] = creditcard.track_data
-            post[:card_present] = {:fallback_reason => creditcard.fallback_reason} if creditcard.fallback_reason
+            post[:card] = {:fallback_reason => creditcard.fallback_reason} if creditcard.fallback_reason
           else
             card[:number] = creditcard.number
             card[:exp_month] = creditcard.month
@@ -347,12 +323,8 @@ module ActiveMerchant #:nodoc:
 
       def add_emv_creditcard(post, icc_data, options = {})
         card = {}
-        emv_credit_card = StripeICCData.new(icc_data)
-
-        card[:icc_data] = emv_credit_card.icc_data
+        card[:emv_auth_data] = icc_data
         post[:card] = card
-        post[:card][:number] = emv_credit_card.number
-        post[:card][:swipe_data] = emv_credit_card.track_data
       end
 
       def add_payment_token(post, token, options = {})
@@ -369,7 +341,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_metadata(post, options = {})
-        post[:metadata] = {}
+        post[:metadata] = options[:metadata] || {}
         post[:metadata][:email] = options[:email] if options[:email]
         post[:metadata][:order_id] = options[:order_id] if options[:order_id]
         post.delete(:metadata) if post[:metadata].empty?
@@ -438,7 +410,7 @@ module ActiveMerchant #:nodoc:
 
         success = !response.key?("error")
 
-        card = response["card"] || response["active_card"] || {}
+        card = response["card"] || response["active_card"] || response["source"] || {}
         avs_code = AVS_CODE_TRANSLATOR["line1: #{card["address_line1_check"]}, zip: #{card["address_zip_check"]}"]
         cvc_code = CVC_CODE_TRANSLATOR[card["cvc_check"]]
 
@@ -449,7 +421,7 @@ module ActiveMerchant #:nodoc:
           :authorization => success ? response["id"] : response["error"]["charge"],
           :avs_result => { :code => avs_code },
           :cvv_result => cvc_code,
-          :emv_authorization => response["icc_data"],
+          :emv_authorization => card["emv_auth_data"],
           :error_code => success ? nil : STANDARD_ERROR_CODE_MAPPING[response["error"]["code"]]
         )
       end

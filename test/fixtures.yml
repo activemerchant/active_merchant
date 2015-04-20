@@ -799,10 +799,12 @@ stripe:
   login:
   fee_refund_login:
 
+# Used only for remote tests that use EMV credit card mocks
 stripe_emv_uk:
   login:
   fee_refund_login:
 
+# Used only for remote tests that use EMV credit card mocks
 stripe_emv_us:
   login:
   fee_refund_login:
