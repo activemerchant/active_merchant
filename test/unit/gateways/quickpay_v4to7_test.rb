@@ -1,12 +1,13 @@
 require 'test_helper'
 
-class QuickpayTest < Test::Unit::TestCase
+class QuickpayV4to7Test < Test::Unit::TestCase
   include CommStub
 
   def setup
     @gateway = QuickpayGateway.new(
       :login => 'LOGIN',
-      :password => 'PASSWORD'
+      :password => 'PASSWORD',
+      :version  => 7
     )
 
     @credit_card = credit_card('4242424242424242')
@@ -118,11 +119,13 @@ class QuickpayTest < Test::Unit::TestCase
   end
 
   def test_supported_countries
-    assert_equal ['DE', 'DK', 'ES', 'FI', 'FR', 'FO', 'GB', 'IS', 'NO', 'SE'], QuickpayGateway.supported_countries
+    klass = @gateway.class
+    assert_equal ['DE', 'DK', 'ES', 'FI', 'FR', 'FO', 'GB', 'IS', 'NO', 'SE'], klass.supported_countries
   end
 
   def test_supported_card_types
-    assert_equal  [ :dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro ], QuickpayGateway.supported_cardtypes
+    klass = @gateway.class
+    assert_equal  [ :dankort, :forbrugsforeningen, :visa, :master, :american_express, :diners_club, :jcb, :maestro ], klass.supported_cardtypes
   end
 
   def test_add_testmode_does_not_add_testmode_if_transaction_id_present

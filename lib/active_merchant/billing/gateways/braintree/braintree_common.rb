@@ -5,5 +5,7 @@ module BraintreeCommon
     base.homepage_url = 'http://www.braintreepaymentsolutions.com'
     base.display_name = 'Braintree'
     base.default_currency = 'USD'
+    
+
   end
 end
