@@ -22,6 +22,7 @@
 * iATS: Update supported countries [mrezentes]
 * Ezic: Update supported countries [duff]
 * AuthorizeNet: Truncate card number [tjstankus]
+* Vanco: Add gateway [duff]
 
 == Version 1.48.0 (April 8, 2015)
 

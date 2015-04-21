@@ -851,6 +851,12 @@ valitor:
   password: SecurityNumber
 
 # Working credentials, no need to replace
+vanco:
+  user_id: SPREEDWS
+  password: v@nco2oo
+  client_id: SPREEDLY
+
+# Working credentials, no need to replace
 verify:
   login: 'demo'
   password: 'password'

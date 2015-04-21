@@ -207,6 +207,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Transnational](http://www.tnbci.com/) - US
 * [TrustCommerce](http://www.trustcommerce.com/) - US
 * [USA ePay](http://www.usaepay.com/) - US
+* [Vanco Payment Solutions](http://vancopayments.com/) - US
 * [Verifi](http://www.verifi.com/) - US
 * [ViaKLIX](http://viaklix.com) - US
 * [WebPay](https://webpay.jp/) - JP
