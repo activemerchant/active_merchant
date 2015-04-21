@@ -17,6 +17,7 @@
 * Add SecurionPay gateway [szajbus]
 * AuthorizeNet: Don't send currency to void [duff]
 * Add Komoju gateway [k2nr]
+* Replace Connection magic numbers with constant references [larrylv]
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
