@@ -5,6 +5,7 @@
 * Braintree: Add service_fee_amount option [duff]
 * SecureNet: Allow shipping_address[:name] [duff]
 * MonerisUS: Add verify [mrezentes]
+* Ezic: Add gateway [duff]
 
 == Version 1.48.0 (April 8, 2015)
 

@@ -115,6 +115,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [eWAY](http://www.eway.com.au/) - AU, NZ, GB
 * [eWAY Rapid](http://www.eway.com.au/) - AU, NZ, GB, SG
 * [E-xact](http://www.e-xact.com) - CA, US
+* [Ezic](http://www.ezic.com/) - AU, CA, CN, FR, DE, GI, IL, MT, MU, MX, NL, NZ, PA, PH, RU, SG, KR, ES, KN, GB
 * [Fat Zebra](https://www.fatzebra.com.au/) - AU
 * [Federated Canada](http://www.federatedcanada.com/) - CA
 * [Finansbank WebPOS](https://www.fbwebpos.com/) - US, TR

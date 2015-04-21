@@ -202,6 +202,10 @@ exact:
   password: testus
 
 # Working credentials, no need to replace
+ezic:
+  account_id: "120536457270"
+
+# Working credentials, no need to replace
 fat_zebra:
   username: TEST
   token: TEST
