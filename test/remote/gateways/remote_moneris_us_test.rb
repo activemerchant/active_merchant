@@ -81,12 +81,12 @@ class MonerisUsRemoteTest < Test::Unit::TestCase
     assert_failure void
   end
 
-  def test_successful_purchase_and_credit
+  def test_successful_purchase_and_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    credit = @gateway.credit(@amount, purchase.authorization)
-    assert_success credit
+    refund = @gateway.refund(@amount, purchase.authorization)
+    assert_success refund
   end
 
   def test_failed_purchase_from_error
