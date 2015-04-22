@@ -50,7 +50,9 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "wow@example.com", response.params["metadata"]["email"]
   end
 
-  # this actually shouldn't be legal
+  # for EMV contact transactions, it's advised to do a separate auth + capture
+  # to satisfy the EMV chip's transaction flow, but this works as a legal
+  # API call. You shouldn't use it in a real EMV implementation, though.
   def test_successful_purchase_with_emv_credit_card_in_uk
     @gateway = StripeGateway.new(fixtures(:stripe_emv_uk))
     assert response = @gateway.purchase(@amount, @emv_credit_cards[:uk], @options)
@@ -60,7 +62,8 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_match CHARGE_ID_REGEX, response.authorization
   end
 
-  # this shouldn't work technically
+  # perform separate auth & capture rather than a purchase in practice for the
+  # reasons mentioned above.
   def test_successful_purchase_with_emv_credit_card_in_us
     @gateway = StripeGateway.new(fixtures(:stripe_emv_us))
     assert response = @gateway.purchase(@amount, @emv_credit_cards[:us], @options)
@@ -101,7 +104,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   def test_authorization_and_capture
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
-    assert !authorization.params["captured"]
+    refute authorization.params["captured"]
     assert_equal "ActiveMerchant Test Purchase", authorization.params["description"]
     assert_equal "wow@example.com", authorization.params["metadata"]["email"]
 
@@ -114,7 +117,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:uk], @options)
     assert_success authorization
     assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
-    assert !authorization.params["captured"]
+    refute authorization.params["captured"]
 
     assert capture = @gateway.capture(@amount, authorization.authorization)
     assert_success capture
@@ -126,7 +129,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:us], @options)
     assert_success authorization
     assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
-    assert !authorization.params["captured"]
+    refute authorization.params["captured"]
 
     assert capture = @gateway.capture(@amount, authorization.authorization)
     assert_success capture
@@ -136,7 +139,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   def test_authorization_and_capture_with_apple_pay_payment_token
     assert authorization = @gateway.authorize(@amount, @apple_pay_payment_token, @options)
     assert_success authorization
-    assert !authorization.params["captured"]
+    refute authorization.params["captured"]
     assert_equal "ActiveMerchant Test Purchase", authorization.params["description"]
     assert_equal "wow@example.com", authorization.params["metadata"]["email"]
 
@@ -147,7 +150,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   def test_authorization_and_void
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
-    assert !authorization.params["captured"]
+    refute authorization.params["captured"]
 
     assert void = @gateway.void(authorization.authorization)
     assert_success void
@@ -158,7 +161,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:us], @options)
     assert_success authorization
     assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
-    assert !authorization.params["captured"]
+    refute authorization.params["captured"]
 
     assert void = @gateway.void(authorization.authorization)
     assert_success void
@@ -169,7 +172,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:uk], @options)
     assert_success authorization
     assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
-    assert !authorization.params["captured"]
+    refute authorization.params["captured"]
 
     assert void = @gateway.void(authorization.authorization)
     assert_success void
@@ -178,7 +181,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   def test_authorization_and_void_with_apple_pay_payment_token
     assert authorization = @gateway.authorize(@amount, @apple_pay_payment_token, @options)
     assert_success authorization
-    assert !authorization.params["captured"]
+    refute authorization.params["captured"]
 
     assert void = @gateway.void(authorization.authorization)
     assert_success void
@@ -364,7 +367,7 @@ class RemoteStripeTest < Test::Unit::TestCase
     @credit_card.track_data = '%B378282246310005^LONGSON/LONGBOB^1705101130504392?'
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
-    assert !authorization.params["captured"]
+    refute authorization.params["captured"]
 
     assert capture = @gateway.capture(@amount, authorization.authorization)
     assert_success capture

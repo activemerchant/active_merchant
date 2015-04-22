@@ -264,6 +264,10 @@ module ActiveMerchant #:nodoc:
         require_name
       end
 
+      def emv?
+        icc_data.present?
+      end
+
       private
 
       def validate_essential_attributes #:nodoc:

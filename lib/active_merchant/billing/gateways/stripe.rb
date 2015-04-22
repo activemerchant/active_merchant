@@ -62,7 +62,7 @@ module ActiveMerchant #:nodoc:
           end
           r.process do
             post = create_post_for_auth_or_purchase(money, payment, options)
-            post[:capture] = "false" unless payment.respond_to?(:icc_data) && payment.icc_data.present?
+            post[:capture] = "false" unless emv_payment?(payment)
             commit(:post, 'charges', post, options)
           end
         end.responses.last
@@ -95,7 +95,7 @@ module ActiveMerchant #:nodoc:
         add_application_fee(post, options)
 
         if emv_tc_response = options.delete(:icc_data)
-          post[:card] = {emv_approval_data: emv_tc_response}
+          post[:card] = { emv_approval_data: emv_tc_response }
           commit(:post, "charges/#{CGI.escape(authorization)}", post, options)
         else
           commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
@@ -238,7 +238,7 @@ module ActiveMerchant #:nodoc:
         else
           add_creditcard(post, payment, options)
         end
-        unless payment.respond_to?(:icc_data) && payment.icc_data.present?
+        unless emv_payment?(payment)
           add_amount(post, money, options, true)
           add_customer_data(post, options)
           add_metadata(post, options)
@@ -288,12 +288,12 @@ module ActiveMerchant #:nodoc:
 
       def add_creditcard(post, creditcard, options)
         card = {}
-        if creditcard.respond_to?(:icc_data) && creditcard.icc_data.present?
+        if emv_payment?(creditcard)
           add_emv_creditcard(post, creditcard.icc_data)
         elsif creditcard.respond_to?(:number)
           if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
             card[:swipe_data] = creditcard.track_data
-            post[:card] = {:fallback_reason => creditcard.fallback_reason} if creditcard.fallback_reason
+            post[:card] = { fallback_reason: creditcard.fallback_reason } if creditcard.fallback_reason
           else
             card[:number] = creditcard.number
             card[:exp_month] = creditcard.month
@@ -322,9 +322,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_emv_creditcard(post, icc_data, options = {})
-        card = {}
-        card[:emv_auth_data] = icc_data
-        post[:card] = card
+        post[:card] = { emv_auth_data: icc_data }
       end
 
       def add_payment_token(post, token, options = {})
@@ -446,6 +444,10 @@ module ActiveMerchant #:nodoc:
 
       def non_fractional_currency?(currency)
         CURRENCIES_WITHOUT_FRACTIONS.include?(currency.to_s)
+      end
+
+      def emv_payment?(payment)
+        payment.respond_to?(:emv?) && payment.emv?
       end
     end
   end
