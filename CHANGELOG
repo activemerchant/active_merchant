@@ -39,6 +39,7 @@
 * Fat Zebra: Add multi-currency support [nagash]
 * Fat Zebra: Add auth/capture capability [nagash]
 * Fat Zebra: Add soft descriptor support [nagash]
+* Stripe: Add EMV "chip & sign", "chip & offline PIN" and Maestro support [bizla]
 
 == Version 1.47.0 (February 25, 2015)
 
