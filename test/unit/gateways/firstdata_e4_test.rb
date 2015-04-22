@@ -130,7 +130,7 @@ class FirstdataE4Test < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, @options)
     end.check_request do |endpoint, data, headers|
-      assert_match "<VerificationStr1>1234 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>", data
+      assert_match "<VerificationStr1>456 My Street|K1C2N6|Ottawa|ON|CA</VerificationStr1>", data
     end.respond_with(successful_purchase_response)
   end
 

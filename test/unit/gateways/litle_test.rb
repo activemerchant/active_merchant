@@ -59,7 +59,7 @@ class LitleTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, billing_address: address)
     end.check_request do |endpoint, data, headers|
-      assert_match(/<billToAddress>.*Widgets.*1234.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
+      assert_match(/<billToAddress>.*Widgets.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
     end.respond_with(successful_purchase_response)
   end
 
@@ -67,7 +67,7 @@ class LitleTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, shipping_address: address)
     end.check_request do |endpoint, data, headers|
-      assert_match(/<shipToAddress>.*Widgets.*1234.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
+      assert_match(/<shipToAddress>.*Widgets.*456.*Apt 1.*Otta.*ON.*K1C.*CA.*555-5/m, data)
     end.respond_with(successful_purchase_response)
   end
 
