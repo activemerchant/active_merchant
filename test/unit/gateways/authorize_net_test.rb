@@ -224,28 +224,6 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'incorrect_number', response.error_code
   end
 
-  def test_live_gateway_cannot_use_test_mode_on_auth_dot_net_server
-    test_gateway = AuthorizeNetGateway.new(
-      login: 'X',
-      password: 'Y',
-      test: true
-    )
-    test_gateway.stubs(:ssl_post).returns(successful_purchase_response_test_mode)
-
-    response = test_gateway.purchase(@amount, @credit_card)
-    assert_success response
-
-    real_gateway = AuthorizeNetGateway.new(
-      login: 'X',
-      password: 'Y',
-      test: false
-    )
-    real_gateway.stubs(:ssl_post).returns(successful_purchase_response_test_mode)
-    response = real_gateway.purchase(@amount, @credit_card)
-    assert_failure response
-    assert_equal "Using a live Authorize.net account in Test Mode is not permitted.", response.message
-  end
-
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
 

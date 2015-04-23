@@ -74,6 +74,48 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_success capture
   end
 
+  def test_base_test_mode_does_not_send_a_test_request
+    original_base_mode = ActiveMerchant::Billing::Base.mode
+    ActiveMerchant::Billing::Base.mode = :test
+
+    gateway = AuthorizeNetGateway.new(fixtures(:authorize_net))
+    response = gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal('0', response.params['test_request'])
+  ensure
+     ActiveMerchant::Billing::Base.mode = original_base_mode
+  end
+
+  def test_setting_test_option_does_not_send_a_test_request
+    gateway = AuthorizeNetGateway.new(fixtures(:authorize_net).merge({:test => true}))
+    response = gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal('0', response.params['test_request'])
+  end
+
+  # you can send test requests to live servers
+  def test_setting_test_request_only_goes_to_live_url
+    original_base_mode = ActiveMerchant::Billing::Base.mode
+    ActiveMerchant::Billing::Base.mode = :production
+
+    gateway = AuthorizeNetGateway.new(fixtures(:authorize_net).merge({:test_request => true}))
+
+    gateway.expects(:ssl_post).with(gateway.live_url, any_parameters, any_parameters)
+    gateway.purchase(@amount, @credit_card, @options)
+  ensure
+    ActiveMerchant::Billing::Base.mode = original_base_mode
+  end
+
+  def test_setting_test_request_sends_a_test_request
+    gateway = AuthorizeNetGateway.new(fixtures(:authorize_net).merge({:test_request => true}))
+    response = gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert_equal('1', response.params['test_request'])
+  end
+
   def test_successful_authorize_with_email_and_ip
     options = @options.merge({email: 'hello@example.com', ip: '127.0.0.1'})
     auth = @gateway.authorize(@amount, @credit_card, options)

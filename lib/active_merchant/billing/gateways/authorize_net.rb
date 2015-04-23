@@ -51,6 +51,17 @@ module ActiveMerchant #:nodoc:
 
       APPLE_PAY_DATA_DESCRIPTOR = "COMMON.APPLE.INAPP.PAYMENT"
 
+      # Creates a new AuthorizeNetGateway
+      #
+      # The gateway requires that a valid login and password be passed
+      # in the +options+ hash.
+      #
+      # ==== Options
+      #
+      # * <tt>:login</tt> -- The Authorize.Net API Login ID (REQUIRED)
+      # * <tt>:password</tt> -- The Authorize.Net Transaction Key. (REQUIRED)
+      # * <tt>:test</tt> -- +true+ or +false+. If true, perform transactions against the test servers.
+      # * <tt>:test_request</tt> -- +true+ or +false+. If true, perform test transactions on either live or test servers
       def initialize(options={})
         requires!(options, :login, :password)
         super
@@ -191,6 +202,13 @@ module ActiveMerchant #:nodoc:
             xml.setting do
               xml.settingName("recurringBilling")
               xml.settingValue("true")
+            end
+          end
+
+          if @options[:test_request]
+            xml.setting do
+              xml.settingName('testRequest')
+              xml.settingValue('true')
             end
           end
           if options[:duplicate_window]
@@ -366,25 +384,24 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, &payload)
         url = (test? ? test_url : live_url)
+
         response = parse(action, ssl_post(url, post_data(&payload), 'Content-Type' => 'text/xml'))
 
         avs_result = AVSResult.new(code: response[:avs_result_code])
         cvv_result = CVVResult.new(response[:card_code])
-        if using_live_gateway_in_test_mode?(response)
-          Response.new(false, "Using a live Authorize.net account in Test Mode is not permitted.")
-        else
-          Response.new(
-            success_from(response),
-            message_from(response, avs_result, cvv_result),
-            response,
-            authorization: authorization_from(response),
-            test: test?,
-            avs_result: avs_result,
-            cvv_result: cvv_result,
-            fraud_review: fraud_review?(response),
-            error_code: map_error_code(response[:response_code], response[:response_reason_code])
-          )
-        end
+
+        Response.new(
+          success_from(response),
+          message_from(response, avs_result, cvv_result),
+          response,
+          authorization: authorization_from(response),
+          test: test?,
+          avs_result: avs_result,
+          cvv_result: cvv_result,
+          fraud_review: fraud_review?(response),
+          error_code: map_error_code(response[:response_code], response[:response_reason_code])
+        )
+
       end
 
       def post_data
@@ -484,10 +501,6 @@ module ActiveMerchant #:nodoc:
 
       def fraud_review?(response)
         (response[:response_code] == FRAUD_REVIEW)
-      end
-
-      def using_live_gateway_in_test_mode?(response)
-        !test? && response[:test_request] == "1"
       end
 
       def map_error_code(response_code, response_reason_code)
