@@ -96,7 +96,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   end
 
   # you can send test requests to live servers
-  def test_setting_test_request_does_not_set_test_mode
+  def test_setting_test_request_only_goes_to_live_url
     original_base_mode = ActiveMerchant::Billing::Base.mode
     ActiveMerchant::Billing::Base.mode = :production
 
