@@ -179,6 +179,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Payscout](http://www.payscout.com/) - US
 * [Paystation](http://paystation.co.nz) - NZ
 * [Pay Way](http://www.payway.com.au) - AU
+* [PayU India](https://www.payu.in/) - IN
 * [Pin Payments](http://www.pin.net.au/) - AU
 * [Plug'n Pay](http://www.plugnpay.com/) - US
 * [Psigate](http://www.psigate.com/) - CA

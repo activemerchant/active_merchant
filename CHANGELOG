@@ -36,7 +36,7 @@
 * Omise: Add gateway [zdk]
 * CenPOS: Simplify currency handling [duff]
 * Beanstream: Don't treat redirect as success [aprofeit]
-
+* Add PayU India gateway [ntalbott]
 
 == Version 1.49.0 (May 1, 2015)
 
