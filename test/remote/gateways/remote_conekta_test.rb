@@ -65,7 +65,7 @@ class RemoteConektaTest < Test::Unit::TestCase
   def test_unsuccessful_refund
     assert response = @gateway.refund(@amount, "1", @options)
     assert_failure response
-    assert_equal "The resource was not found.", response.message
+    assert_equal "El recurso no ha sido encontrado.", response.message
   end
 
   def test_successful_authorize
@@ -92,7 +92,7 @@ class RemoteConektaTest < Test::Unit::TestCase
   def test_unsuccessful_capture
     assert response = @gateway.capture(@amount, "1", @options)
     assert_failure response
-    assert_equal "The resource was not found.", response.message
+    assert_equal "El recurso no ha sido encontrado.", response.message
   end
 
   def test_successful_purchase_passing_more_details
@@ -137,6 +137,6 @@ class RemoteConektaTest < Test::Unit::TestCase
     gateway = ConektaGateway.new(key: 'invalid_token')
     assert response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Unrecognized access key.", response.message
+    assert_equal "Acceso no autorizado.", response.message
   end
 end
