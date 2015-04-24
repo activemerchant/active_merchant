@@ -160,6 +160,7 @@ module ActiveMerchant #:nodoc:
       def headers(meta)
         {
           "Accept" => "application/vnd.conekta-v#{options[:version]}+json",
+          "Accept-Language" => "es",
           "Authorization" => "Basic " + Base64.encode64("#{options[:key]}:"),
           "RaiseHtmlError" => "false",
           "Conekta-Client-User-Agent" => {"agent"=>"Conekta ActiveMerchantBindings/#{ActiveMerchant::VERSION}"}.to_json,
@@ -181,7 +182,7 @@ module ActiveMerchant #:nodoc:
 
         Response.new(
           success,
-          raw_response["message"],
+          raw_response["message_to_purchaser"],
           raw_response,
           test: test?,
           authorization: raw_response["id"]
