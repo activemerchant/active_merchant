@@ -157,19 +157,22 @@ module ActiveMerchant #:nodoc:
 
         if address = options[:shipping_address]
           xml.tag!("CUSTOMER_SHIP") do
+            xml.tag! 'ADDRESS', address[:address1].to_s
+            xml.tag! 'CITY', address[:city].to_s
+            xml.tag! 'COMPANY', address[:company].to_s
+            xml.tag! 'COUNTRY', address[:country].to_s
+
             if address[:name]
               names = address[:name].split
-              xml.tag! 'LASTNAME', names.pop
-              xml.tag! 'FIRSTNAME', names.join(" ")
+              last_name = names.pop
+              first_name = names.join(" ")
+              xml.tag! 'FIRSTNAME', first_name
+              xml.tag! 'LASTNAME', last_name
             else
               xml.tag! 'FIRSTNAME', address[:first_name].to_s
               xml.tag! 'LASTNAME', address[:last_name].to_s
             end
 
-            xml.tag! 'ADDRESS', address[:address1].to_s
-            xml.tag! 'CITY', address[:city].to_s
-            xml.tag! 'COMPANY', address[:company].to_s
-            xml.tag! 'COUNTRY', address[:country].to_s
             xml.tag! 'STATE', address[:state].blank?  ? 'n/a' : address[:state]
             xml.tag! 'ZIP', address[:zip].to_s
           end
