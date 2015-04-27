@@ -93,8 +93,7 @@ module ActiveMerchant #:nodoc:
 
         xml.tag! 'AMOUNT', amount(money)
         add_credit_card(xml, creditcard)
-        add_params_in_required_order(xml, action, options)
-        add_address(xml, creditcard, options)
+        add_params_in_required_order(xml, action, creditcard, options)
         add_more_required_params(xml, options)
 
         xml.target!
@@ -110,7 +109,7 @@ module ActiveMerchant #:nodoc:
           xml.tag! 'CARDNUMBER', last_four
         end
 
-        add_params_in_required_order(xml, action, options)
+        add_params_in_required_order(xml, action, nil, options)
         xml.tag! 'REF_TRANSID', transaction_id
         add_more_required_params(xml, options)
 
@@ -136,6 +135,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_address(xml, creditcard, options)
+        return unless creditcard
 
         if address = options[:billing_address] || options[:address]
           xml.tag!("CUSTOMER_BILL") do
@@ -192,9 +192,10 @@ module ActiveMerchant #:nodoc:
       end
 
       # SecureNet requires some of the xml params to be in a certain order.  http://cl.ly/image/3K260E0p0a0n/content.png
-      def add_params_in_required_order(xml, action, options)
+      def add_params_in_required_order(xml, action, creditcard, options)
         xml.tag! 'CODE', TRANSACTIONS[action]
         add_customer_data(xml, options)
+        add_address(xml, creditcard, options)
         xml.tag! 'DCI', 0 # No duplicate checking will be done, except for ORDERID
         xml.tag! 'INSTALLMENT_SEQUENCENUM', 1
         xml.tag! 'INVOICEDESC', options[:invoice_description] if options[:invoice_description]
