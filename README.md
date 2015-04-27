@@ -107,6 +107,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Commercegate](http://www.commercegate.com/) - AD, AT, AX, BE, BG, CH, CY, CZ, DE, DK, ES, FI, FR, GB, GG, GI, GR, HR, HU, IE, IM, IS, IT, JE, LI, LT, LU, LV, MC, MT, NL, NO, PL, PT, RO, SE, SI, SK, VA
 * [Conekta](https://conekta.io) - MX
 * [CyberSource](http://www.cybersource.com) - US, BR, CA, CN, DK, FI, FR, DE, JP, MX, NO, SE, GB, SG
+* [DIBS](http://www.dibspayment.com/) - US, FI, NO, SE, GB
 * [DataCash](http://www.datacash.com/) - GB
 * [Efsnet](http://www.concordefsnet.com/) - US
 * [Elavon MyVirtualMerchant](http://www.elavon.com/) - US, CA
