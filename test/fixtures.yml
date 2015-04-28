@@ -84,6 +84,12 @@ borgun:
   username: spreedly
   password: Qxi.34k
 
+bpoint:
+  username: 'A'
+  password: 'B'
+  merchant_number: 'C'
+  biller_code: ''
+
 braintree_blue:
   merchant_id: X
   public_key: Y
