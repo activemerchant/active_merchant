@@ -148,13 +148,16 @@ module ActiveMerchant #:nodoc:
           response = parse(e.response.body)
         end
 
-        Response.new(
+        return Response.new(
           success_from(response),
           message_from(response),
           response,
           authorization: authorization_from(response, params),
           test: test?
         )
+
+      rescue JSON::ParserError
+        return unparsable_response(response)
       end
 
       def success_from(response)
@@ -174,6 +177,12 @@ module ActiveMerchant #:nodoc:
       def split_authorization(authorization)
         auth, original_amount = authorization.to_s.split("|")
         [auth, original_amount]
+      end
+
+      def unparsable_response(raw_response)
+        message = "Invalid JSON response received from WePay. Please contact WePay support if you continue to receive this message."
+        message += " (The raw response returned by the API was #{raw_response.inspect})"
+        return Response.new(false, message)
       end
 
       def headers

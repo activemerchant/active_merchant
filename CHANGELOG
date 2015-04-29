@@ -12,6 +12,7 @@
 * Stripe: Add EMV "chip & sign", "chip & offline PIN" and Maestro support [bizla]
 * Add Errno::EHOSTUNREACH to NetworkConnectionRetries::DEFAULT_CONNECTION_ERRORS [randito78]
 * Stripe: Add support for idempotency keys [michaelherold]
+* WePay: Handle JSON::ParserError exceptions [duff]
 
 == Version 1.48.0 (April 8, 2015)
 
