@@ -144,7 +144,7 @@ class WepayTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_match /Invalid JSON response received from WePay/, response.message
+    assert_match(/Invalid JSON response received from WePay/, response.message)
   end
 
   private
