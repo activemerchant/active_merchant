@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
         '2315' => STANDARD_ERROR_CODE[:invalid_number],
         '37' => STANDARD_ERROR_CODE[:invalid_expiry_date],
         '2316' => STANDARD_ERROR_CODE[:invalid_expiry_date],
-        '378' => STANDARD_ERROR_CODE[:invalid_cvc],     
+        '378' => STANDARD_ERROR_CODE[:invalid_cvc],
         '38' => STANDARD_ERROR_CODE[:expired_card],
         '2317' => STANDARD_ERROR_CODE[:expired_card],
         '244' => STANDARD_ERROR_CODE[:incorrect_cvc],
@@ -234,7 +234,7 @@ module ActiveMerchant #:nodoc:
             xml.creditCard do
               xml.cardNumber(credit_card.number)
               xml.expirationDate(format(credit_card.month, :two_digits) + '/' + format(credit_card.year, :four_digits))
-              unless empty?(credit_card.verification_value)
+              if credit_card.valid_card_verification_value?(credit_card.verification_value, credit_card.brand)
                 xml.cardCode(credit_card.verification_value)
               end
               if credit_card.is_a?(NetworkTokenizationCreditCard)

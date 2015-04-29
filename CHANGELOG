@@ -14,6 +14,7 @@
 * Stripe: Add support for idempotency keys [michaelherold]
 * WePay: Handle JSON::ParserError exceptions [duff]
 * Borgun: Update country list and homepage url [mrezentes]
+* AuthorizeNet: Add cvv to request only if it's valid [tjstankus]
 
 == Version 1.48.0 (April 8, 2015)
 
