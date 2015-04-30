@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class EzicTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = EzicGateway.new(account_id: 'TheID')
     @credit_card = credit_card
@@ -89,17 +91,17 @@ class EzicTest < Test::Unit::TestCase
   end
 
   def test_successful_verify
-    @gateway.expects(:ssl_post).returns(successful_authorize_response)
-
-    response = @gateway.verify(@credit_card, @options)
+    response = stub_comms(@gateway, :raw_ssl_request) do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_raw_response, failed_void_response)
     assert_success response
     assert_equal '120762306743', response.authorization
   end
 
   def test_failed_verify
-    @gateway.expects(:ssl_post).returns(failed_authorize_response)
-
-    response = @gateway.verify(@credit_card, @options)
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(failed_authorize_response, failed_void_response)
     assert_failure response
     assert_equal "TEST DECLINED", response.message
   end
@@ -161,8 +163,12 @@ class EzicTest < Test::Unit::TestCase
     MockResponse.failed("Processor/Network Error")
   end
 
+  def successful_authorize_raw_response
+    MockResponse.succeeded(successful_authorize_response)
+  end
+
   class MockResponse
-    attr_reader :code, :message
+    attr_reader :code, :message, :body
     def self.succeeded(message)
       MockResponse.new(200, message)
     end
@@ -172,7 +178,7 @@ class EzicTest < Test::Unit::TestCase
     end
 
     def initialize(code, message)
-      @code, @message = code, message
+      @code, @message, @body = code, message, message
     end
   end
 
