@@ -91,13 +91,13 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         post = {}
 
-        add_amount(post, money, options)
         add_application_fee(post, options)
 
         if emv_tc_response = options.delete(:icc_data)
           post[:card] = { emv_approval_data: emv_tc_response }
           commit(:post, "charges/#{CGI.escape(authorization)}", post, options)
         else
+          add_amount(post, money, options)
           commit(:post, "charges/#{CGI.escape(authorization)}/capture", post, options)
         end
       end
@@ -298,7 +298,7 @@ module ActiveMerchant #:nodoc:
         elsif creditcard.respond_to?(:number)
           if creditcard.respond_to?(:track_data) && creditcard.track_data.present?
             card[:swipe_data] = creditcard.track_data
-            post[:card] = { fallback_reason: creditcard.fallback_reason } if creditcard.fallback_reason
+            card[:fallback_reason] = creditcard.fallback_reason if creditcard.fallback_reason
           else
             card[:number] = creditcard.number
             card[:exp_month] = creditcard.month

@@ -26,7 +26,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   end
 
   def test_dump_transcript
-    skip("Transcript scrubbing for this gateway has been tested.")
+    omit("Transcript scrubbing for this gateway has been tested.")
     dump_transcript_and_fail(@gateway, @amount, @credit_card, @options)
   end
 
@@ -48,29 +48,6 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response.params["paid"]
     assert_equal "ActiveMerchant Test Purchase", response.params["description"]
     assert_equal "wow@example.com", response.params["metadata"]["email"]
-  end
-
-  # for EMV contact transactions, it's advised to do a separate auth + capture
-  # to satisfy the EMV chip's transaction flow, but this works as a legal
-  # API call. You shouldn't use it in a real EMV implementation, though.
-  def test_successful_purchase_with_emv_credit_card_in_uk
-    @gateway = StripeGateway.new(fixtures(:stripe_emv_uk))
-    assert response = @gateway.purchase(@amount, @emv_credit_cards[:uk], @options)
-    assert_success response
-    assert_equal "charge", response.params["object"]
-    assert response.params["paid"]
-    assert_match CHARGE_ID_REGEX, response.authorization
-  end
-
-  # perform separate auth & capture rather than a purchase in practice for the
-  # reasons mentioned above.
-  def test_successful_purchase_with_emv_credit_card_in_us
-    @gateway = StripeGateway.new(fixtures(:stripe_emv_us))
-    assert response = @gateway.purchase(@amount, @emv_credit_cards[:us], @options)
-    assert_success response
-    assert_equal "charge", response.params["object"]
-    assert response.params["paid"]
-    assert_match CHARGE_ID_REGEX, response.authorization
   end
 
   def test_successful_purchase_with_apple_pay_payment_token
@@ -112,30 +89,6 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_success capture
   end
 
-  def test_authorization_and_capture_with_emv_credit_card_in_uk
-    @gateway = StripeGateway.new(fixtures(:stripe_emv_uk))
-    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:uk], @options)
-    assert_success authorization
-    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
-    refute authorization.params["captured"]
-
-    assert capture = @gateway.capture(@amount, authorization.authorization)
-    assert_success capture
-    assert capture.emv_authorization, "Capture should contain emv_authorization containing the EMV TC"
-  end
-
-  def test_authorization_and_capture_with_emv_credit_card_in_us
-    @gateway = StripeGateway.new(fixtures(:stripe_emv_us))
-    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:us], @options)
-    assert_success authorization
-    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
-    refute authorization.params["captured"]
-
-    assert capture = @gateway.capture(@amount, authorization.authorization)
-    assert_success capture
-    assert capture.emv_authorization, "Capture should contain emv_authorization containing the EMV TC"
-  end
-
   def test_authorization_and_capture_with_apple_pay_payment_token
     assert authorization = @gateway.authorize(@amount, @apple_pay_payment_token, @options)
     assert_success authorization
@@ -150,28 +103,6 @@ class RemoteStripeTest < Test::Unit::TestCase
   def test_authorization_and_void
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
-    refute authorization.params["captured"]
-
-    assert void = @gateway.void(authorization.authorization)
-    assert_success void
-  end
-
-  def test_authorization_and_void_with_emv_credit_card_in_us
-    @gateway = StripeGateway.new(fixtures(:stripe_emv_us))
-    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:us], @options)
-    assert_success authorization
-    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
-    refute authorization.params["captured"]
-
-    assert void = @gateway.void(authorization.authorization)
-    assert_success void
-  end
-
-  def test_authorization_and_void_with_emv_credit_card_in_uk
-    @gateway = StripeGateway.new(fixtures(:stripe_emv_uk))
-    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:uk], @options)
-    assert_success authorization
-    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
     refute authorization.params["captured"]
 
     assert void = @gateway.void(authorization.authorization)
@@ -505,5 +436,80 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "ActiveMerchant Test Purchase", response.params["description"]
     assert_equal "wow@example.com", response.params["metadata"]["email"]
     assert_match CHARGE_ID_REGEX, response.authorization
+  end
+
+  # for EMV contact transactions, it's advised to do a separate auth + capture
+  # to satisfy the EMV chip's transaction flow, but this works as a legal
+  # API call. You shouldn't use it in a real EMV implementation, though.
+  def test_successful_purchase_with_emv_credit_card_in_uk
+    omit("Disabled until EMV APIs are officially live.")
+    @gateway = StripeGateway.new(fixtures(:stripe_emv_uk))
+    assert response = @gateway.purchase(@amount, @emv_credit_cards[:uk], @options)
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert response.params["paid"]
+    assert_match CHARGE_ID_REGEX, response.authorization
+  end
+
+  # perform separate auth & capture rather than a purchase in practice for the
+  # reasons mentioned above.
+  def test_successful_purchase_with_emv_credit_card_in_us
+    omit("Disabled until EMV APIs are officially live.")
+    @gateway = StripeGateway.new(fixtures(:stripe_emv_us))
+    assert response = @gateway.purchase(@amount, @emv_credit_cards[:us], @options)
+    assert_success response
+    assert_equal "charge", response.params["object"]
+    assert response.params["paid"]
+    assert_match CHARGE_ID_REGEX, response.authorization
+  end
+
+  def test_authorization_and_capture_with_emv_credit_card_in_uk
+    omit("Disabled until EMV APIs are officially live.")
+    @gateway = StripeGateway.new(fixtures(:stripe_emv_uk))
+    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:uk], @options)
+    assert_success authorization
+    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
+    refute authorization.params["captured"]
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+    assert capture.emv_authorization, "Capture should contain emv_authorization containing the EMV TC"
+  end
+
+  def test_authorization_and_capture_with_emv_credit_card_in_us
+    omit("Disabled until EMV APIs are officially live.")
+    @gateway = StripeGateway.new(fixtures(:stripe_emv_us))
+    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:us], @options)
+    assert_success authorization
+    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
+    refute authorization.params["captured"]
+
+    assert capture = @gateway.capture(@amount, authorization.authorization)
+    assert_success capture
+    assert capture.emv_authorization, "Capture should contain emv_authorization containing the EMV TC"
+  end
+
+  def test_authorization_and_void_with_emv_credit_card_in_us
+    omit("Disabled until EMV APIs are officially live.")
+    @gateway = StripeGateway.new(fixtures(:stripe_emv_us))
+    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:us], @options)
+    assert_success authorization
+    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
+    refute authorization.params["captured"]
+
+    assert void = @gateway.void(authorization.authorization)
+    assert_success void
+  end
+
+  def test_authorization_and_void_with_emv_credit_card_in_uk
+    omit("Disabled until EMV APIs are officially live.")
+    @gateway = StripeGateway.new(fixtures(:stripe_emv_uk))
+    assert authorization = @gateway.authorize(@amount, @emv_credit_cards[:uk], @options)
+    assert_success authorization
+    assert authorization.emv_authorization, "Authorization should contain emv_authorization containing the EMV ARPC"
+    refute authorization.params["captured"]
+
+    assert void = @gateway.void(authorization.authorization)
+    assert_success void
   end
 end
