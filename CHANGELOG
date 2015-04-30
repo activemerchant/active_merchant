@@ -16,6 +16,7 @@
 * Borgun: Update country list and homepage url [mrezentes]
 * AuthorizeNet: Add cvv to request only if it's valid [tjstankus]
 * Stripe: Bug fix: add amounts only on non-EMV transactions, temporarily omit EMV testcases [bizla]
+* Ezic: Add support for void [duff]
 
 == Version 1.48.0 (April 8, 2015)
 

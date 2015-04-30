@@ -80,6 +80,14 @@ class EzicTest < Test::Unit::TestCase
     assert_equal "20183: Amount of refunds exceed original sale", response.message
   end
 
+  def test_failed_void
+    @gateway.expects(:raw_ssl_request).returns(failed_void_response)
+
+    response = @gateway.void("5511231")
+    assert_failure response
+    assert_equal "Processor/Network Error", response.message
+  end
+
   def test_successful_verify
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
 
@@ -147,6 +155,10 @@ class EzicTest < Test::Unit::TestCase
 
   def failed_refund_response
     MockResponse.failed("20183: Amount of refunds exceed original sale")
+  end
+
+  def failed_void_response
+    MockResponse.failed("Processor/Network Error")
   end
 
   class MockResponse

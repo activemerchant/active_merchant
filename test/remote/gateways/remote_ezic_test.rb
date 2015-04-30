@@ -79,6 +79,15 @@ class RemoteEzicTest < Test::Unit::TestCase
     assert_match /Amount of refunds exceed original sale/, refund.message
   end
 
+  def test_failed_void
+    authorize = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success authorize
+
+    assert void = @gateway.void(authorize.authorization)
+    assert_failure void
+    assert_equal "Processor/Network Error", void.message
+  end
+
   def test_successful_verify
     response = @gateway.verify(@credit_card, @options)
     assert_success response

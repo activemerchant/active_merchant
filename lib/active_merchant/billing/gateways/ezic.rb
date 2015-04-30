@@ -59,6 +59,16 @@ module ActiveMerchant
         commit("R", post)
       end
 
+      def void(authorization, options={})
+        post = {}
+
+        add_account_id(post)
+        add_authorization(post, authorization)
+        add_pay_type(post)
+
+        commit("U", post)
+      end
+
       def verify(credit_card, options={})
         authorize(100, credit_card, options)
       end
