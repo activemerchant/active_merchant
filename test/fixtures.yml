@@ -758,6 +758,14 @@ redsys:
   login: MERCHANT CODE
   secret_key: SECRET KEY
 
+# Working credentials, no need to replace
+s5:
+  mode: CONNECTOR_TEST
+  sender: ff80808142b2c03c0142b7a7339603e0
+  channel: ff80808142b2c03c0142b7a7339803e5
+  login: 8a82941847c4d0780147cea1d1730dcc
+  password: n3yNMBGK
+
 sage:
   login: login
   password: password
