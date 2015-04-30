@@ -190,6 +190,7 @@ The [ActiveMerchant Wiki](http://github.com/Shopify/active_merchant/wikis) conta
 * [Raven PacNet](http://www.pacnetservices.com/) - US
 * [Realex](http://www.realexpayments.com/) - IE, GB, FR, BE, NL, LU, IT
 * [Redsys](http://www.redsys.es/) - ES
+* [S5](http://www.s5.dk/) - DK
 * [SagePay](http://www.sagepay.com) - GB, IE
 * [Sage Payment Solutions](http://www.sagepayments.com) - US, CA
 * [Sallie Mae](http://www.salliemae.com/) - US
