@@ -232,7 +232,7 @@ module ActiveMerchant #:nodoc:
         else
           xml.payment do
             xml.creditCard do
-              xml.cardNumber(credit_card.number)
+              xml.cardNumber(truncate(credit_card.number, 16))
               xml.expirationDate(format(credit_card.month, :two_digits) + '/' + format(credit_card.year, :four_digits))
               if credit_card.valid_card_verification_value?(credit_card.verification_value, credit_card.brand)
                 xml.cardCode(credit_card.verification_value)

@@ -19,6 +19,7 @@
 * Ezic: Add support for void [duff]
 * iATS: Update supported countries [mrezentes]
 * Ezic: Update supported countries [duff]
+* AuthorizeNet: Truncate card number [tjstankus]
 
 
 == Version 1.48.0 (April 8, 2015)
