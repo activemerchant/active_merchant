@@ -146,5 +146,4 @@ class RemoteWorldpayOnlinePaymentsTest < Test::Unit::TestCase
     response = badgateway.purchase(@amount, @credit_card, @options)
     assert_failure response
   end
-
 end

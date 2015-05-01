@@ -245,5 +245,4 @@ class WorldpayOnlinePaymentsTest < Test::Unit::TestCase
   def failed_login_response
     %({"httpStatusCode": 401,"customCode": "UNAUTHORIZED","message": "Unauthorized Access","description": "Request can't be authorized, please validate your request","errorHelpUrl": null,"originalRequest": "{'token':'TEST_RU_ba2497be-8140-4be7-89ec-fa24eb6b01e8','orderDescription':'Test Purchase','amount':1000,'currencyCode':'GBP','name':'Longbob Longsen','billingAddress':{'address1':'address1','address2':'address2','address3':'address3','postalCode':'EEEE','city':'City','state':'State','countryCode':'GB'}}"})
   end
-
 end

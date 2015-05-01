@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def capture(money, authorization, options={})
-        if (authorization)
+        if authorization
           commit(:post, "orders/#{CGI.escape(authorization)}/capture", {"captureAmount"=>money}, options)
         else
           Response.new(false,
