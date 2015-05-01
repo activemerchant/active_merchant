@@ -3,7 +3,7 @@ module ActiveMerchant
     class EzicGateway < Gateway
       self.live_url = 'https://secure-dm3.ezic.com/gw/sas/direct3.2'
 
-      self.supported_countries = %w(AU CA CN FR DE GI IL MT MU MX NL NZ PA PH RU SG KR ES KN GB)
+      self.supported_countries = %w(AU CA CN FR DE GI IL MT MU MX NL NZ PA PH RU SG KR ES KN GB US)
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover, :jcb, :diners_club]
 
