@@ -99,7 +99,7 @@ module ActiveMerchant #:nodoc:
       def create_post_for_auth_or_purchase(token, money, options)
       {
         "token" => token,
-        "orderDescription" => options[:description],
+        "orderDescription" => options[:description] || 'Worldpay Order',
         "amount" => money,
         "currencyCode" => options[:currency] || default_currency,
         "name" => options[:billing_address]&&options[:billing_address][:name] ? options[:billing_address][:name] : '',
