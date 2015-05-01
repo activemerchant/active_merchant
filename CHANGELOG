@@ -1,5 +1,8 @@
 = ActiveMerchant CHANGELOG
 
+* Vanco: Add gateway [duff]
+
+
 == Version 1.49.0 (May 1, 2015)
 
 * Braintree: Add support for AVS error codes [ivanvfer]
@@ -22,7 +25,6 @@
 * iATS: Update supported countries [mrezentes]
 * Ezic: Update supported countries [duff]
 * AuthorizeNet: Truncate card number [tjstankus]
-* Vanco: Add gateway [duff]
 
 == Version 1.48.0 (April 8, 2015)
 
