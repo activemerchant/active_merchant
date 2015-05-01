@@ -107,7 +107,7 @@ module ActiveMerchant #:nodoc:
         request = build_xml_request do |doc|
           add_authentication(doc)
           doc.registerTokenRequest(transaction_attributes(options)) do
-            doc.orderId(truncated(options[:order_id]))
+            doc.orderId(truncate(options[:order_id], 24))
             doc.accountNumber(creditcard.number)
           end
         end
@@ -155,7 +155,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_auth_purchase_params(doc, money, payment_method, options)
-        doc.orderId(truncated(options[:order_id]))
+        doc.orderId(truncate(options[:order_id], 24))
         doc.amount(money)
         add_order_source(doc, payment_method, options)
         add_billing_address(doc, payment_method, options)
@@ -296,7 +296,7 @@ module ActiveMerchant #:nodoc:
 
       def transaction_attributes(options)
         attributes = {}
-        attributes[:id] = truncated(options[:id] || options[:order_id])
+        attributes[:id] = truncate(options[:id] || options[:order_id], 24)
         attributes[:reportGroup] = options[:merchant] || 'Default Report Group'
         attributes[:customerId] = options[:customer]
         attributes.delete_if { |key, value| value == nil }
@@ -321,21 +321,6 @@ module ActiveMerchant #:nodoc:
 
       def url
         test? ? test_url : live_url
-      end
-
-      def truncated(value)
-        return unless value
-        value[0..24]
-      end
-
-      def truncated_order_id(options)
-        return unless options[:order_id]
-        options[:order_id][0..24]
-      end
-
-      def truncated_id(options)
-        return unless options[:id]
-        options[:id][0..24]
       end
 
       def headers

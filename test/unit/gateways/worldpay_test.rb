@@ -195,7 +195,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match %r(<firstName>Jim</firstName>), data
       assert_match %r(<lastName>Smith</lastName>), data
-      assert_match %r(<address1>1234 My Street</address1>), data
+      assert_match %r(<address1>456 My Street</address1>), data
       assert_match %r(<address2>Apt 1</address2>), data
       assert_match %r(<postalCode>K1C2N6</postalCode>), data
       assert_match %r(<city>Ottawa</city>), data
@@ -209,7 +209,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match %r(<firstName>Jim</firstName>), data
       assert_match %r(<lastName>Smith</lastName>), data
-      assert_match %r(<address1>1234 My Street</address1>), data
+      assert_match %r(<address1>456 My Street</address1>), data
       assert_match %r(<address2>Apt 1</address2>), data
       assert_match %r(<postalCode>K1C2N6</postalCode>), data
       assert_match %r(<city>Ottawa</city>), data
@@ -223,7 +223,7 @@ class WorldpayTest < Test::Unit::TestCase
     end.check_request do |endpoint, data, headers|
       assert_match %r(<firstName>Jim</firstName>), data
       assert_match %r(<lastName>Smith</lastName>), data
-      assert_match %r(<address1>1234 My Street</address1>), data
+      assert_match %r(<address1>456 My Street</address1>), data
       assert_match %r(<address2>Apt 1</address2>), data
       assert_match %r(<postalCode>K1C2N6</postalCode>), data
       assert_match %r(<city>Ottawa</city>), data
@@ -639,7 +639,7 @@ class WorldpayTest < Test::Unit::TestCase
                 <address>
                   <firstName>Jim</firstName>
                   <lastName>Smith</lastName>
-                  <street>1234 My Street</street>
+                  <street>456 My Street</street>
                   <houseName>Apt 1</houseName>
                   <postalCode>K1C2N6</postalCode>
                   <city>Ottawa</city>

@@ -126,7 +126,7 @@ class WorldpayUsTest < Test::Unit::TestCase
     stub_comms do
       @gateway.purchase(@amount, @credit_card, :billing_address => address)
     end.check_request do |endpoint, data, headers|
-      assert_match(/ci_billaddr1=1234\+My\+Street/, data)
+      assert_match(/ci_billaddr1=456\+My\+Street/, data)
       assert_match(/ci_billzip=K1C2N6/, data)
     end.respond_with(successful_purchase_response)
   end

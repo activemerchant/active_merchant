@@ -21,11 +21,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorize(money, credit_card, options={})
-        # create token
         response = create_token(true, credit_card.first_name+' '+credit_card.last_name, credit_card.month, credit_card.year, credit_card.number, credit_card.verification_value)
-
         if response.success?
-          # Create Authorize Only Order
           options[:authorizeOnly] = true
           post = create_post_for_auth_or_purchase(response.authorization, money, options)
           response = commit(:post, 'orders', post)
@@ -90,9 +87,7 @@ module ActiveMerchant #:nodoc:
           },
           "clientKey"=> @client_key
         }
-
         token_response = commit(:post, 'tokens', obj, {'Authorization' => @service_key})
-
         token_response
       end
 
@@ -137,7 +132,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(method, url, parameters=nil, options = {})
-
         raw_response = response = nil
         success = false
         begin
@@ -179,7 +173,7 @@ module ActiveMerchant #:nodoc:
         )
       end
 
-      def test()
+      def test?
         @service_key[0]=="T" ? true : false
       end
 

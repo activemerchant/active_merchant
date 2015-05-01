@@ -215,7 +215,7 @@ module ActiveMerchant
     def address(options = {})
       {
         name:     'Jim Smith',
-        address1: '1234 My Street',
+        address1: '456 My Street',
         address2: 'Apt 1',
         company:  'Widgets Inc',
         city:     'Ottawa',

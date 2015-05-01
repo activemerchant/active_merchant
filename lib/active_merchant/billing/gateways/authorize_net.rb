@@ -22,7 +22,7 @@ module ActiveMerchant #:nodoc:
         '2315' => STANDARD_ERROR_CODE[:invalid_number],
         '37' => STANDARD_ERROR_CODE[:invalid_expiry_date],
         '2316' => STANDARD_ERROR_CODE[:invalid_expiry_date],
-        '378' => STANDARD_ERROR_CODE[:invalid_cvc],     
+        '378' => STANDARD_ERROR_CODE[:invalid_cvc],
         '38' => STANDARD_ERROR_CODE[:expired_card],
         '2317' => STANDARD_ERROR_CODE[:expired_card],
         '244' => STANDARD_ERROR_CODE[:incorrect_cvc],
@@ -232,9 +232,9 @@ module ActiveMerchant #:nodoc:
         else
           xml.payment do
             xml.creditCard do
-              xml.cardNumber(credit_card.number)
+              xml.cardNumber(truncate(credit_card.number, 16))
               xml.expirationDate(format(credit_card.month, :two_digits) + '/' + format(credit_card.year, :four_digits))
-              unless empty?(credit_card.verification_value)
+              if credit_card.valid_card_verification_value?(credit_card.verification_value, credit_card.brand)
                 xml.cardCode(credit_card.verification_value)
               end
               if credit_card.is_a?(NetworkTokenizationCreditCard)
@@ -486,10 +486,6 @@ module ActiveMerchant #:nodoc:
         (response[:response_code] == FRAUD_REVIEW)
       end
 
-      def truncate(value, max_size)
-        return nil unless value
-        value.to_s[0, max_size]
-      end
 
       def using_live_gateway_in_test_mode?(response)
         !test? && response[:test_request] == "1"

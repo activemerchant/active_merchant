@@ -254,6 +254,11 @@ module ActiveMerchant #:nodoc:
         money.respond_to?(:currency) ? money.currency : self.default_currency
       end
 
+      def truncate(value, max_size)
+        return nil unless value
+        value.to_s[0, max_size]
+      end
+
       def requires_start_date_or_issue_number?(credit_card)
         return false if card_brand(credit_card).blank?
         DEBIT_CARDS.include?(card_brand(credit_card).to_sym)

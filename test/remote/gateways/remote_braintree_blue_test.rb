@@ -217,6 +217,9 @@ class RemoteBraintreeBlueTest < Test::Unit::TestCase
     assert_avs("", "20000", "C")
     assert_avs("", "20001", "I")
     assert_avs("", "", "I")
+
+    assert_avs("1 Elm", "30000", "E")
+    assert_avs("1 Elm", "30001", "S")
   end
 
   def test_cvv_match

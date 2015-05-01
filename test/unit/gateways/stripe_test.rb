@@ -16,6 +16,7 @@ class StripeTest < Test::Unit::TestCase
     }
 
     @apple_pay_payment_token = apple_pay_payment_token
+    @emv_credit_card = credit_card_with_icc_data
   end
 
   def test_successful_new_customer_with_card
@@ -42,6 +43,18 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_new_customer_with_emv_credit_card
+    @gateway.expects(:ssl_request).returns(successful_new_customer_response)
+
+    assert response = @gateway.store(@emv_credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'cus_3sgheFxeBgTQ3M', response.authorization
+    assert response.test?
+  end
+
+
   def test_successful_new_card
     @gateway.expects(:ssl_request).returns(successful_new_card_response)
     @gateway.expects(:add_creditcard)
@@ -59,6 +72,18 @@ class StripeTest < Test::Unit::TestCase
     @gateway.expects(:tokenize_apple_pay_token).returns(Response.new(true, nil, token: successful_apple_pay_token_exchange))
 
     assert response = @gateway.store(@apple_pay_payment_token, :customer => 'cus_3sgheFxeBgTQ3M')
+    assert_instance_of MultiResponse, response
+    assert_success response
+
+    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert response.test?
+  end
+
+  def test_successful_new_card_with_emv_credit_card
+    @gateway.expects(:ssl_request).returns(successful_new_card_response)
+    @gateway.expects(:add_creditcard)
+
+    assert response = @gateway.store(@emv_credit_card, :customer => 'cus_3sgheFxeBgTQ3M')
     assert_instance_of MultiResponse, response
     assert_success response
 
@@ -86,6 +111,20 @@ class StripeTest < Test::Unit::TestCase
     @gateway.expects(:tokenize_apple_pay_token).returns(Response.new(true, nil, token: successful_apple_pay_token_exchange))
 
     assert response = @gateway.store(@apple_pay_payment_token, :customer => 'cus_3sgheFxeBgTQ3M', :email => 'test@test.com')
+    assert_instance_of MultiResponse, response
+    assert_success response
+
+    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 2, response.responses.size
+    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M', response.responses[1].authorization
+    assert response.test?
+  end
+
+  def test_successful_new_card_and_customer_update_with_emv_credit_card
+    @gateway.expects(:ssl_request).twice.returns(successful_new_card_response, successful_new_customer_response)
+
+    assert response = @gateway.store(@emv_credit_card, :customer => 'cus_3sgheFxeBgTQ3M', :email => 'test@test.com')
     assert_instance_of MultiResponse, response
     assert_success response
 
@@ -126,6 +165,20 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_new_default_card_with_emv_credit_card
+    @gateway.expects(:ssl_request).twice.returns(successful_new_card_response, successful_new_customer_response)
+
+    assert response = @gateway.store(@emv_credit_card, @options.merge(:customer => 'cus_3sgheFxeBgTQ3M', :set_default => true))
+    assert_instance_of MultiResponse, response
+    assert_success response
+
+    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.authorization
+    assert_equal 2, response.responses.size
+    assert_equal 'card_483etw4er9fg4vF3sQdrt3FG', response.responses[0].authorization
+    assert_equal 'cus_3sgheFxeBgTQ3M', response.responses[1].authorization
+    assert response.test?
+  end
+
   def test_successful_authorization
     @gateway.expects(:add_creditcard)
     @gateway.expects(:ssl_request).returns(successful_authorization_response)
@@ -150,12 +203,31 @@ class StripeTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_authorization_with_emv_credit_card
+    @gateway.expects(:ssl_request).returns(successful_authorization_response_with_icc_data)
+
+    assert response = @gateway.authorize(@amount, @emv_credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+
+    assert_equal 'ch_test_emv_charge', response.authorization
+    assert response.emv_authorization, "Response should include emv_authorization containing the EMV ARPC"
+  end
+
   def test_successful_capture
     @gateway.expects(:ssl_request).returns(successful_capture_response)
 
     assert response = @gateway.capture(@amount, "ch_test_charge")
     assert_success response
     assert response.test?
+  end
+
+  def test_successful_capture_with_emv_credit_card_tc
+    @gateway.expects(:ssl_request).returns(successful_capture_response_with_icc_data)
+
+    assert response = @gateway.capture(@amount, "ch_test_emv_charge")
+    assert_success response
+    assert response.emv_authorization, "Response should include emv_authorization containing the EMV TC"
   end
 
   def test_successful_purchase
@@ -387,6 +459,13 @@ class StripeTest < Test::Unit::TestCase
     assert_equal "Tracking data", post[:card][:swipe_data]
   end
 
+  def test_add_creditcard_with_emv_credit_card
+    post = {}
+    @gateway.send(:add_creditcard, post, @emv_credit_card, {})
+
+    assert_equal @emv_credit_card.icc_data, post[:card][:emv_auth_data]
+  end
+
   def test_add_customer
     post = {}
     @gateway.send(:add_customer, post, nil, {:customer => "test_customer"})
@@ -407,6 +486,14 @@ class StripeTest < Test::Unit::TestCase
     end.check_request do |method, endpoint, data, headers|
       assert_match(/application_fee=144/, data)
     end.respond_with(successful_capture_response)
+  end
+
+  def test_destination_is_submitted_for_purchase
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge({:destination => 'subaccountid'}))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/destination=subaccountid/, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_client_data_submitted_with_purchase
@@ -487,6 +574,15 @@ class StripeTest < Test::Unit::TestCase
 
     @gateway.purchase(@amount, @credit_card, @options.merge(:version => '2013-10-29'))
   end
+
+  def test_optional_idempotency_key_header
+    @gateway.expects(:ssl_request).once.with {|method, url, post, headers|
+      headers && headers['Idempotency-Key'] == 'test123'
+    }.returns(successful_purchase_response)
+
+    @gateway.purchase(@amount, @credit_card, @options.merge(:idempotency_key => 'test123'))
+  end
+
 
   def test_initialize_gateway_with_version
     @gateway = StripeGateway.new(:login => 'login', :version => '2013-12-03')
@@ -663,6 +759,12 @@ class StripeTest < Test::Unit::TestCase
 
   private
 
+  # this mock is only useful with unit tests, as cryptograms generated by an EMV terminal
+  # are specific to the target acquirer, so remote tests using this mock will fail elsewhere.
+  def credit_card_with_icc_data
+    ActiveMerchant::Billing::CreditCard.new(icc_data: '500B56495341204352454449545F201A56495341204143515549524552205445535420434152442030315F24031512315F280208405F2A0208265F300202015F34010182025C008407A0000000031010950502000080009A031408259B02E8009C01009F02060000000734499F03060000000000009F0607A00000000310109F0902008C9F100706010A03A080009F120F4352454449544F20444520564953419F1A0208269F1C0831373030303437309F1E0831373030303437309F2608EB2EC0F472BEA0A49F2701809F3303E0B8C89F34031E03009F3501229F360200C39F37040A27296F9F4104000001319F4502DAC5DFAE5711476173FFFFFF0119D15122011758989389DFAE5A08476173FFFFFF011957114761739001010119D151220117589893895A084761739001010119')
+  end
+
   def pre_scrubbed
     <<-PRE_SCRUBBED
       opening connection to api.stripe.com:443...
@@ -827,6 +929,71 @@ class StripeTest < Test::Unit::TestCase
     RESPONSE
   end
 
+  def successful_authorization_response_with_icc_data
+    <<-RESPONSE
+    {
+      "id": "ch_test_emv_charge",
+      "object": "charge",
+      "created": 1429642948,
+      "livemode": true,
+      "paid": true,
+      "status": "succeeded",
+      "amount": 1000,
+      "currency": "usd",
+      "refunded": false,
+      "source": {
+        "id": "card_15u6dcHMpVh8I77hUfAVAfsK",
+        "object": "card",
+        "last4": "8123",
+        "brand": "MasterCard",
+        "funding": "unknown",
+        "exp_month": 12,
+        "exp_year": 2025,
+        "fingerprint": "tdVpM3XDe3H4juSD",
+        "country": "US",
+        "name": null,
+        "address_line1": null,
+        "address_line2": null,
+        "address_city": null,
+        "address_state": null,
+        "address_zip": null,
+        "address_country": null,
+        "cvc_check": null,
+        "address_line1_check": null,
+        "address_zip_check": null,
+        "dynamic_last4": null,
+        "metadata": {},
+        "customer": null,
+        "emv_auth_data": "8A023835910AF7F7BA77D7ACCFAB0012710F860D8424000008C1EFF627EAE08933"
+      },
+      "captured": false,
+      "balance_transaction": null,
+      "failure_message": null,
+      "failure_code": null,
+      "amount_refunded": 0,
+      "customer": null,
+      "invoice": null,
+      "description": null,
+      "dispute": null,
+      "metadata": {},
+      "statement_descriptor": null,
+      "fraud_details": {},
+      "receipt_email": null,
+      "receipt_number": null,
+      "authorization_code": "816826",
+      "shipping": null,
+      "application_fee": null,
+      "refunds": {
+        "object": "list",
+        "total_count": 0,
+        "has_more": false,
+        "url": "/v1/charges/ch_15u6dcHMpVh8I77hdIKNQ1jH/refunds",
+        "data": []
+      }
+    }
+    RESPONSE
+  end
+
   def successful_capture_response
     <<-RESPONSE
     {
@@ -853,6 +1020,84 @@ class StripeTest < Test::Unit::TestCase
       "dispute": null,
       "uncaptured": false,
       "disputed": false
+    }
+    RESPONSE
+  end
+
+  def successful_capture_response_with_icc_data
+    <<-RESPONSE
+    {
+      "id": "ch_test_emv_charge",
+      "object": "charge",
+      "created": 1429643380,
+      "livemode": true,
+      "paid": true,
+      "status": "succeeded",
+      "amount": 1000,
+      "currency": "usd",
+      "refunded": false,
+      "source": {
+        "id": "card_15u6kaHMpVh8I77htEt6tgX4",
+        "object": "card",
+        "last4": "8123",
+        "brand": "MasterCard",
+        "funding": "unknown",
+        "exp_month": 12,
+        "exp_year": 2025,
+        "fingerprint": "tdVpM3XDe3H4juSD",
+        "country": "US",
+        "name": null,
+        "address_line1": null,
+        "address_line2": null,
+        "address_city": null,
+        "address_state": null,
+        "address_zip": null,
+        "address_country": null,
+        "cvc_check": null,
+        "address_line1_check": null,
+        "address_zip_check": null,
+        "dynamic_last4": null,
+        "metadata": {},
+        "customer": null,
+        "emv_auth_data": "8A023835910AF7F7BA77D7ACCFAB0012710F860D8424000008C1EFF627EAE08933"
+      },
+      "captured": true,
+      "balance_transaction": "txn_15u6kbHMpVh8I77hA79CanC2",
+      "failure_message": null,
+      "failure_code": null,
+      "amount_refunded": 900,
+      "customer": null,
+      "invoice": null,
+      "description": null,
+      "dispute": null,
+      "metadata": {},
+      "statement_descriptor": null,
+      "fraud_details": {},
+      "receipt_email": null,
+      "receipt_number": null,
+      "authorization_code": "662021",
+      "shipping": null,
+      "application_fee": null,
+      "refunds": {
+        "object": "list",
+        "total_count": 1,
+        "has_more": false,
+        "url": "/v1/charges/ch_15u6kaHMpVh8I77hrF9XY8bG/refunds",
+        "data": [
+          {
+            "id": "re_15u6kbHMpVh8I77h2o6RsdQq",
+            "amount": 900,
+            "currency": "usd",
+            "created": 1429643381,
+            "object": "refund",
+            "balance_transaction": "txn_15u6kbHMpVh8I77hXqAYL6kZ",
+            "metadata": {},
+            "charge": "ch_15u6kaHMpVh8I77hrF9XY8bG",
+            "receipt_number": null,
+            "reason": null
+          }
+        ]
+      }
     }
     RESPONSE
   end

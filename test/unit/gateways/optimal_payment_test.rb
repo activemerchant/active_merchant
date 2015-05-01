@@ -227,7 +227,7 @@ class OptimalPaymentTest < Test::Unit::TestCase
     <cardPayMethod>WEB</cardPayMethod>
     <firstName>Jim</firstName>
     <lastName>Smith</lastName>
-    <street>1234 My Street</street>
+    <street>456 My Street</street>
     <street2>Apt 1</street2>
     <city>Ottawa</city>
     <state>ON</state>

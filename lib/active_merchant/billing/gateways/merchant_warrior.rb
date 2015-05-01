@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_product(post, options)
-        post['transactionProduct'] = options[:description]
+        post['transactionProduct'] = truncate(options[:description], 34)
       end
 
       def add_payment_method(post, payment_method)

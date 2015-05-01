@@ -264,11 +264,6 @@ module ActiveMerchant #:nodoc:
         truncate(cleansed, 20)
       end
 
-      def truncate(value, max_size)
-        return nil unless value
-        value[0, max_size]
-      end
-
       def is_usa(country)
         truncate(country, 2) == 'US'
       end

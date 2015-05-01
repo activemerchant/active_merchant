@@ -147,5 +147,4 @@ class RemoteWorldpayOnlinePaymentsTest < Test::Unit::TestCase
     assert_failure response
   end
 
-
 end

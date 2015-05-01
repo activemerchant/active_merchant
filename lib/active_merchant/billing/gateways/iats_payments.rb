@@ -6,7 +6,7 @@ module ActiveMerchant #:nodoc:
       self.live_na_url = 'https://www.iatspayments.com/NetGate'
       self.live_uk_url = 'https://www.uk.iatspayments.com/NetGate'
 
-      self.supported_countries = %w(AU BR CA CH DE DK ES FI FR GR HK IE IT NL NO PT SE SG TR GB US)
+      self.supported_countries = %w(AU BR CA CH DE DK ES FI FR GR HK IE IT NL NO PT SE SG TR GB US TH ID PH BE)
       self.default_currency = 'USD'
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 

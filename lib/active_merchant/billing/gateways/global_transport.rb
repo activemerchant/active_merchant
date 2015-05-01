@@ -174,10 +174,6 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def truncate(value, max_size)
-        return nil unless value
-        value.to_s[0, max_size]
-      end
     end
   end
 end

@@ -626,6 +626,29 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_invalid_cvv
+    invalid_cvvs = ['47', '12345', '']
+    invalid_cvvs.each do |cvv|
+      card = credit_card(@credit_card.number, { verification_value: cvv })
+      stub_comms do
+        @gateway.purchase(@amount, card)
+      end.check_request do |endpoint, data, headers|
+        parse(data) { |doc| assert_nil doc.at_xpath('//cardCode') }
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
+  def test_card_number_truncation
+    card = credit_card(@credit_card.number + '0123456789')
+    stub_comms do
+      @gateway.purchase(@amount, card)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_equal @credit_card.number, doc.at_xpath('//cardNumber').text
+      end
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_scrub
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end

@@ -335,7 +335,8 @@ module ActiveMerchant #:nodoc:
       end
 
       def avs_code_from(transaction)
-        avs_mapping["street: #{transaction.avs_street_address_response_code}, zip: #{transaction.avs_postal_code_response_code}"]
+        transaction.avs_error_response_code ||
+          avs_mapping["street: #{transaction.avs_street_address_response_code}, zip: #{transaction.avs_postal_code_response_code}"]
       end
 
       def avs_mapping
@@ -518,6 +519,7 @@ module ActiveMerchant #:nodoc:
 
         parameters[:custom_fields] = options[:custom_fields]
         parameters[:device_data] = options[:device_data] if options[:device_data]
+        parameters[:service_fee_amount] = options[:service_fee_amount] if options[:service_fee_amount]
         if merchant_account_id = (options[:merchant_account_id] || @merchant_account_id)
           parameters[:merchant_account_id] = merchant_account_id
         end
