@@ -51,6 +51,8 @@ module ActiveMerchant #:nodoc:
 
       APPLE_PAY_DATA_DESCRIPTOR = "COMMON.APPLE.INAPP.PAYMENT"
 
+      CREDIT_CARD_NUMBER_MAX_LENGTH = 16
+
       def initialize(options={})
         requires!(options, :login, :password)
         super
@@ -232,7 +234,7 @@ module ActiveMerchant #:nodoc:
         else
           xml.payment do
             xml.creditCard do
-              xml.cardNumber(credit_card.number)
+              xml.cardNumber(truncate(credit_card.number, CREDIT_CARD_NUMBER_MAX_LENGTH))
               xml.expirationDate(format(credit_card.month, :two_digits) + '/' + format(credit_card.year, :four_digits))
               if credit_card.valid_card_verification_value?(credit_card.verification_value, credit_card.brand)
                 xml.cardCode(credit_card.verification_value)
