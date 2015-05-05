@@ -3,6 +3,8 @@ require 'nokogiri'
 module ActiveMerchant
   module Billing
     class VancoGateway < Gateway
+      include Empty
+
       self.test_url = 'https://www.vancodev.com/cgi-bin/wstest2.vps'
       self.live_url = 'https://www.vancoservices.com/cgi-bin/ws2.vps'
 
@@ -117,7 +119,7 @@ module ActiveMerchant
           doc.Request do
             doc.RequestVars do
               add_client_id(doc)
-              add_amount(doc, money)
+              add_amount(doc, money, options)
               add_credit_card(doc, credit_card, options)
               add_purchase_noise(doc)
             end
@@ -132,7 +134,7 @@ module ActiveMerchant
           doc.Request do
             doc.RequestVars do
               add_client_id(doc)
-              add_amount(doc, money)
+              add_amount(doc, money, options)
               add_reference(doc, authorization)
               add_refund_noise(doc)
             end
@@ -161,8 +163,17 @@ module ActiveMerchant
         doc.TransactionRef(transaction_ref)
       end
 
-      def add_amount(doc, money)
-        doc.Amount(amount(money))
+      def add_amount(doc, money, options)
+        if empty?(options[:fund_id])
+          doc.Amount(amount(money))
+        else
+          doc.Funds do
+            doc.Fund do
+              doc.FundID(options[:fund_id])
+              doc.FundAmount(amount(money))
+            end
+          end
+        end
       end
 
       def add_credit_card(doc, credit_card, options)

@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class VancoTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = VancoGateway.new(user_id: 'login', password: 'password', client_id: 'client_id')
     @credit_card = credit_card
@@ -13,7 +15,9 @@ class VancoTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    @gateway.expects(:ssl_post).times(2).returns(successful_login_response).then.returns(successful_purchase_response)
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_login_response, successful_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
@@ -22,8 +26,24 @@ class VancoTest < Test::Unit::TestCase
     assert response.test?
   end
 
+  def test_successful_purchase_with_fund_id
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(fund_id: "MyEggcellentFund"))
+    end.check_request do |endpoint, data, headers|
+      if data =~ /<RequestType>EFTAdd/
+        assert_match(%r(<FundID>MyEggcellentFund<\/FundID>), data)
+      end
+    end.respond_with(successful_login_response, successful_purchase_with_fund_id_response)
+
+    assert_success response
+    assert_equal '14949117|15756594|16137331', response.authorization
+    assert_equal "Success", response.message
+  end
+
   def test_failed_purchase
-    @gateway.expects(:ssl_post).times(2).returns(successful_login_response).then.returns(failed_purchase_response)
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_login_response, failed_purchase_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -31,7 +51,9 @@ class VancoTest < Test::Unit::TestCase
   end
 
   def test_successful_refund
-    @gateway.expects(:ssl_post).times(2).returns(successful_login_response).then.returns(successful_refund_response)
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_login_response, successful_refund_response)
 
     response = @gateway.refund(@amount, "authoriziation")
     assert_success response
@@ -39,7 +61,9 @@ class VancoTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    @gateway.expects(:ssl_post).times(2).returns(successful_login_response).then.returns(failed_refund_response)
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_login_response, failed_refund_response)
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
@@ -78,6 +102,12 @@ class VancoTest < Test::Unit::TestCase
   def successful_purchase_response
     %(
       <?xml version="1.0" encoding="UTF-8"  ?><VancoWS><Auth><RequestID>ad4cbab9740e909423a02e622689d6</RequestID><RequestTime>2015-05-01 16:08:07 -0400</RequestTime><RequestType>EFTAddCompleteTransaction</RequestType><Signature></Signature><SessionID>5d8b104c9d8265db46bdf35ae9685472f4789dc8</SessionID><Version>2</Version></Auth><Response><StartDate>2015-05-01</StartDate><CustomerRef>14949117</CustomerRef><PaymentMethodRef>15756594</PaymentMethodRef><TransactionRef>16136938</TransactionRef><TransactionFee>3.20</TransactionFee></Response></VancoWS>
+     )
+  end
+
+  def successful_purchase_with_fund_id_response
+    %(
+      <?xml version=\"1.0\" encoding=\"UTF-8\"  ?><VancoWS><Auth><RequestID>8cf42301416298c9d6d71a39b27a0d</RequestID><RequestTime>2015-05-05 15:45:57 -0400</RequestTime><RequestType>EFTAddCompleteTransaction</RequestType><Signature></Signature><SessionID>b2ec96e366f38a5c1ecd3f5343475526beaba4f9</SessionID><Version>2</Version></Auth><Response><StartDate>2015-05-05</StartDate><CustomerRef>14949117</CustomerRef><PaymentMethodRef>15756594</PaymentMethodRef><TransactionRef>16137331</TransactionRef><TransactionFee>3.20</TransactionFee></Response></VancoWS>\n\n
      )
   end
 

@@ -4,6 +4,7 @@
 * Conekta: Move device fingerprint to root [MauricioMurga]
 * Conekta: Change default language to Spanish [MauricioMurga]
 * Vanco: Improve authentication handling [duff]
+* Vanco: Allow specification of fund_id [duff]
 
 
 == Version 1.49.0 (May 1, 2015)
