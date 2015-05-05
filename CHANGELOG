@@ -3,6 +3,7 @@
 * Vanco: Add gateway [duff]
 * Conekta: Move device fingerprint to root [MauricioMurga]
 * Conekta: Change default language to Spanish [MauricioMurga]
+* Vanco: Improve authentication handling [duff]
 
 
 == Version 1.49.0 (May 1, 2015)

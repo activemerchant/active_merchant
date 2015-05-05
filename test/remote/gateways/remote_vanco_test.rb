@@ -66,12 +66,12 @@ class RemoteVancoTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = VancoGateway.new(
-      user_id: '',
-      password: '',
+      user_id: 'unknown_id',
+      password: 'unknown_pwd',
       client_id: ''
     )
     response = gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal "Invalid SessionID", response.message
+    assert_equal "Invalid Login Key", response.message
   end
 end

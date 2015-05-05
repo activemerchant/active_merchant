@@ -19,11 +19,17 @@ module ActiveMerchant
       end
 
       def purchase(money, credit_card, options={})
-        commit(purchase_request(money, credit_card, options))
+        MultiResponse.run do |r|
+          r.process { commit(login_request) }
+          r.process { commit(purchase_request(money, credit_card, r.params["response_sessionid"], options)) }
+        end
       end
 
       def refund(money, authorization, options={})
-        commit(refund_request(money, authorization))
+        MultiResponse.run do |r|
+          r.process { commit(login_request) }
+          r.process { commit(refund_request(money, authorization, r.params["response_sessionid"])) }
+        end
       end
 
       def supports_scrubbing?
@@ -104,9 +110,9 @@ module ActiveMerchant
         authorization.to_s.split('|')
       end
 
-      def purchase_request(money, credit_card, options)
+      def purchase_request(money, credit_card, session_id, options)
         build_xml_request do |doc|
-          add_auth(doc, "EFTAddCompleteTransaction")
+          add_auth(doc, "EFTAddCompleteTransaction", session_id)
 
           doc.Request do
             doc.RequestVars do
@@ -119,9 +125,9 @@ module ActiveMerchant
         end
       end
 
-      def refund_request(money, authorization)
+      def refund_request(money, authorization, session_id)
         build_xml_request do |doc|
-          add_auth(doc, "EFTAddCredit")
+          add_auth(doc, "EFTAddCredit", session_id)
 
           doc.Request do
             doc.RequestVars do
@@ -141,14 +147,10 @@ module ActiveMerchant
         doc.Version(2)
       end
 
-      def add_session(doc)
-        doc.SessionID(session_id)
-      end
-
-      def add_auth(doc, request_type)
+      def add_auth(doc, request_type, session_id)
         doc.Auth do
           add_request(doc, request_type)
-          add_session(doc)
+          doc.SessionID(session_id)
         end
       end
 
@@ -198,8 +200,8 @@ module ActiveMerchant
         doc.ClientID(@options[:client_id])
       end
 
-      def session_id
-        request = build_xml_request do |doc|
+      def login_request
+        build_xml_request do |doc|
           doc.Auth do
             add_request(doc, "Login")
           end
@@ -211,9 +213,6 @@ module ActiveMerchant
             end
           end
         end
-
-        response = parse(ssl_post(url, request, headers))
-        response[:response_sessionid]
       end
 
       def build_xml_request
