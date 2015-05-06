@@ -4,11 +4,16 @@ class PaystationTest < Test::Unit::TestCase
   def setup
 
     @gateway = PaystationGateway.new(
-                 :paystation_id => 'some_id_number',
-                 :gateway_id    => 'another_id_number'
+                 :paystation_id => '610598',
+                 :gateway_id    => 'CARDPAY',
+                 :hmac_key      => 'hj745gfr2g'
                )
 
-    @credit_card = credit_card
+    @credit_card =ActiveMerchant::Billing::CreditCard.new(
+        	:last_name  => 'Paystation', 
+        	:month      => "05",
+        	:year       => "17",
+        	:number     => '5555555555554444')
     @amount = 100
 
     @options = {
@@ -74,7 +79,7 @@ class PaystationTest < Test::Unit::TestCase
   def test_successful_capture
     @gateway.expects(:ssl_post).returns(successful_capture_response)
 
-    assert response = @gateway.capture(@amount, "0009062250-01", @options.merge(:credit_card_verification => 123))
+    assert response = @gateway.capture(@amount, "0009062250-01", @options.merge(:credit_card_verification => 100))
     assert_success response
   end
 
