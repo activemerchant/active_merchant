@@ -23,7 +23,10 @@ module ActiveMerchant #:nodoc:
       self.money_format        = :cents
 
       def initialize(options = {})
-        requires!(options, :paystation_id, :gateway_id, :hmac_key)
+        requires!(options, :paystation_id, :gateway_id)
+		unless options.has_key?(:hmac_key)
+			options[:hmac_key]= 0
+		end 
         super
       end
 
@@ -203,10 +206,16 @@ module ActiveMerchant #:nodoc:
           trequest.set_form_data(post)
           post_body = trequest.body
 
-          hmac = makeHMAChash(post_body)
+          
+		  if @options[:hmac_key]!=0
+			  hmac = makeHMAChash(post_body)
 
-          getParams ="?pstn_HMACTimestamp="+hmac[:pstn_HMACTimestamp]
-          getParams +="&pstn_HMAC="+hmac[:pstn_HMAC]
+			  getParams ="?pstn_HMACTimestamp="+hmac[:pstn_HMACTimestamp]
+			  getParams +="&pstn_HMAC="+hmac[:pstn_HMAC]
+		  else 
+			  getParams =""
+		  end
+			
         end
 
         def makeHMAChash (post_body)
