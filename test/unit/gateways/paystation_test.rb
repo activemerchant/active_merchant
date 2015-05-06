@@ -5,8 +5,7 @@ class PaystationTest < Test::Unit::TestCase
 
     @gateway = PaystationGateway.new(
                  :paystation_id => '610598',
-                 :gateway_id    => 'CARDPAY',
-                 :hmac_key      => 'hj745gfr2g'
+                 :gateway_id    => 'CARDPAY'
                )
 
     @credit_card =ActiveMerchant::Billing::CreditCard.new(
