@@ -100,9 +100,9 @@ module ActiveMerchant #:nodoc:
         def add_invoice(post, options)
           requires!(options, :order_id)
 
-          post[:ms] = options[:order_id] +"-"+ Time.now.to_i.to_s    # "Merchant Session", must be unique per request
+          post[:ms] = options[:order_id] +"-"+ Time.now.to_f.to_s    # "Merchant Session", must be unique per request
           post[:mo] = options[:invoice]      # "Order Details", displayed in Paystation Admin
-          post[:mr] = options[:description]  # "Merchant Reference Code", seen from Paystation Admin
+          post[:mr] = options[:description]  # "Merchant Reference Code", seen from Paystation Admin		
         end
 
         def add_credit_card(post, credit_card)
