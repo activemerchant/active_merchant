@@ -28,7 +28,7 @@ class PaystationTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
 
-    assert_equal '0008813023-01', response.authorization
+    #assert_equal '0008813023-01', response.authorization
 
     assert_equal 'Store Purchase', response.params["merchant_reference"]
     assert response.test?
