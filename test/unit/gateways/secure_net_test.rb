@@ -114,12 +114,13 @@ class SecureNetTest < Test::Unit::TestCase
     assert_equal 'CREDIT CANNOT BE COMPLETED ON AN UNSETTLED TRANSACTION', response.message
   end
 
-  def test_supported_countries
-    assert_equal ['US'], SecureNetGateway.supported_countries
-  end
-
-  def test_supported_card_types
-    assert_equal [:visa, :master, :american_express, :discover], SecureNetGateway.supported_cardtypes
+  def test_order_id_is_truncated
+    order_id = "SecureNet doesn't like order_ids greater than 25 characters."
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card, order_id: order_id)
+    end.check_request do |endpoint, data, headers|
+      assert_match(/ORDERID>SecureNet doesn't like or</, data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_failure_without_response_reason_text
