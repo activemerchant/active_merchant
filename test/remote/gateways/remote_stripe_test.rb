@@ -125,8 +125,8 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "customer", response.params["object"]
     assert_equal "Active Merchant Test Customer", response.params["description"]
     assert_equal "email@example.com", response.params["email"]
-    first_card = response.params["cards"]["data"].first
-    assert_equal response.params["default_card"], first_card["id"]
+    first_card = response.params["sources"]["data"].first
+    assert_equal response.params["default_source"], first_card["id"]
     assert_equal @credit_card.last_digits, first_card["last4"]
   end
 
@@ -146,13 +146,13 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert_equal "customer", customer_response.params["object"]
     assert_equal "Active Merchant Test Customer", customer_response.params["description"]
     assert_equal "email@example.com", customer_response.params["email"]
-    assert_equal 2, customer_response.params["cards"]["count"]
+    assert_equal 2, customer_response.params["sources"]["total_count"]
   end
 
   def test_successful_unstore
     creation = @gateway.store(@credit_card, {:description => "Active Merchant Unstore Customer"})
     customer_id = creation.params['id']
-    card_id = creation.params['cards']['data'].first['id']
+    card_id = creation.params['sources']['data'].first['id']
 
     # Unstore the card
     assert response = @gateway.unstore(customer_id, card_id: card_id)
@@ -219,7 +219,7 @@ class RemoteStripeTest < Test::Unit::TestCase
   def test_successful_update
     creation    = @gateway.store(@credit_card, {:description => "Active Merchant Update Credit Card"})
     customer_id = creation.params['id']
-    card_id     = creation.params['cards']['data'].first['id']
+    card_id     = creation.params['sources']['data'].first['id']
 
     assert response = @gateway.update(customer_id, card_id, { :name => "John Doe", :address_line1 => "123 Main Street", :address_city => "Pleasantville", :address_state => "NY", :address_zip => "12345", :exp_year => Time.now.year + 2, :exp_month => 6 })
     assert_success response
@@ -286,6 +286,12 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, card, @options)
     assert_failure response
     assert_match Gateway::STANDARD_ERROR_CODE[:processing_error], response.error_code
+  end
+
+  def test_statement_description
+    assert response = @gateway.purchase(@amount, @credit_card, statement_description: "Eggcellent Description")
+    assert_success response
+    assert_equal "Eggcellent Description", response.params["statement_descriptor"]
   end
 
 end

@@ -281,7 +281,7 @@ class StripeTest < Test::Unit::TestCase
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, statement_description: '5K RACE TICKET')
     end.check_request do |method, endpoint, data, headers|
-      assert_match(/statement_description=5K\+RACE\+TICKET/, data)
+      assert_match(/statement_descriptor=5K\+RACE\+TICKET/, data)
     end.respond_with(successful_purchase_response)
   end
 
