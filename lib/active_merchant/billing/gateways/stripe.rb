@@ -49,7 +49,6 @@ module ActiveMerchant #:nodoc:
         requires!(options, :login)
         @api_key = options[:login]
         @fee_refund_api_key = options[:fee_refund_login]
-        @version = options[:version]
 
         super
       end
@@ -243,7 +242,7 @@ module ActiveMerchant #:nodoc:
           add_customer_data(post, options)
           add_metadata(post, options)
           post[:description] = options[:description]
-          post[:statement_description] = options[:statement_description]
+          post[:statement_descriptor] = options[:statement_description]
           add_customer(post, payment, options)
           add_flags(post, options)
         end
@@ -381,18 +380,21 @@ module ActiveMerchant #:nodoc:
 
       def headers(options = {})
         key     = options[:key] || @api_key
-        version = options[:version] || @version
         idempotency_key = options[:idempotency_key]
 
         headers = {
           "Authorization" => "Basic " + Base64.encode64(key.to_s + ":").strip,
           "User-Agent" => "Stripe/v1 ActiveMerchantBindings/#{ActiveMerchant::VERSION}",
+          "Stripe-Version" => api_version(options),
           "X-Stripe-Client-User-Agent" => user_agent,
           "X-Stripe-Client-User-Metadata" => {:ip => options[:ip]}.to_json
         }
-        headers.merge!("Stripe-Version" => version) if version
         headers.merge!("Idempotency-Key" => idempotency_key) if idempotency_key
         headers
+      end
+
+      def api_version(options)
+        options[:version] || @options[:version] || "2015-04-07"
       end
 
       def api_request(method, endpoint, parameters = nil, options = {})

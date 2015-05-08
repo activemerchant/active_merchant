@@ -7,6 +7,7 @@
 * Vanco: Allow specification of fund_id [duff]
 * S5: Add gateway [davidsantoso]
 * SecureNet: Truncate order_id [duff]
+* [POSSIBLE BREAKAGE] Stripe: Be explicit about API version [duff]
 
 
 == Version 1.49.0 (May 1, 2015)
