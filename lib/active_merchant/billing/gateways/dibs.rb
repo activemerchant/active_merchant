@@ -168,11 +168,7 @@ module ActiveMerchant #:nodoc:
         data = post.sort.collect { |key, value| "#{key}=#{value.to_s}" }.join("&")
         digest = OpenSSL::Digest.new('sha256')
         key = [@options[:secretKey]].pack('H*')
-        hmac = (OpenSSL::HMAC.hexdigest(digest, key, data))
-        post[:MAC] = hmac
-        data = "amount=100&currency=EUR"
-
-        hmac = (OpenSSL::HMAC.hexdigest(digest, key, data))
+        post[:MAC] = OpenSSL::HMAC.hexdigest(digest, key, data)
       end
 
       def url(action)
