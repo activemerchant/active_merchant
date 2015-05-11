@@ -3,10 +3,7 @@ module ActiveMerchant #:nodoc:
     class DibsGateway < Gateway
       self.display_name = "DIBS"
       self.homepage_url = "http://www.dibspayment.com/"
-      #API information: http://tech.dibspayment.com/D2/Integrate/DPW/API
 
-      # test requests go to live url and include a test parameter
-      #self.test_url = ""
       self.live_url = "https://api.dibspayment.com/merchant/v1/JSON/Transaction/"
 
       self.supported_countries = ["US", "FI", "NO", "SE", "GB"]
@@ -32,11 +29,10 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, amount, options)
         if (payment_method.respond_to?(:number))
           add_payment_method(post, payment_method, options)
-          commit("authorize", post)
+          commit(:authorize, post)
         else
-          # add reference to stored card
           add_ticket_id(post, payment_method)
-          commit("authorizeTicket", post)
+          commit(:authorize_ticket, post)
         end
 
       end
@@ -46,14 +42,14 @@ module ActiveMerchant #:nodoc:
         add_amount(post, amount)
         add_reference(post, authorization)
 
-        commit("capture", post)
+        commit(:capture, post)
       end
 
       def void(authorization, options={})
         post = {}
         add_reference(post, authorization)
 
-        commit("void", post)
+        commit(:void, post)
       end
 
       def refund(amount, authorization, options={})
@@ -61,7 +57,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, amount)
         add_reference(post, authorization)
 
-        commit("refund", post)
+        commit(:refund, post)
       end
 
       def verify(credit_card, options={})
@@ -77,7 +73,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, 0, options)
         add_payment_method(post, payment_method, options)
 
-        commit("store", post)
+        commit(:store, post)
       end
 
       def supports_scrubbing?
@@ -85,7 +81,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def scrub(transcript)
-        # JSON.
         transcript.
           gsub(%r(("cardNumber\\?":\\?")[^"]*)i, '\1[FILTERED]').
           gsub(%r(("cvc\\?":\\?")[^"]*)i, '\1[FILTERED]')
@@ -102,7 +97,7 @@ module ActiveMerchant #:nodoc:
       CURRENCY_CODES["EUR"] = "978"
 
       def add_invoice(post, money, options)
-        post[:orderId] = options[:order_id]
+        post[:orderId] = options[:order_id] || generate_unique_id
         post[:currency] = CURRENCY_CODES[options[:currency] || currency(money)]
       end
 
@@ -114,22 +109,15 @@ module ActiveMerchant #:nodoc:
         post[:cardNumber] = payment_method.number
         post[:cvc] = payment_method.verification_value
         post[:expYear] = format(payment_method.year, :two_digits)
-        #months with leading zero cause HMAC error on server
-        post[:expMonth] = payment_method.month.to_s
+        post[:expMonth] = payment_method.month
 
-        #optional input parameters
         post[:startMonth] = payment_method.start_month if payment_method.start_month
         post[:startYear] = payment_method.start_year if payment_method.start_year
         post[:issueNumber] = payment_method.issue_number if payment_method.issue_number
-
-        add_customer_data(post, options)
-
+        post[:clientIp] = options[:ip] || "127.0.0.1"
         post[:test] = true if test?
       end
 
-      def add_customer_data(post, options)
-        post[:clientIp] = options[:clientIp]
-      end
 
       def add_reference(post, authorization)
         post[:transactionId] = authorization
@@ -140,12 +128,12 @@ module ActiveMerchant #:nodoc:
       end
 
       ACTIONS = {
-        "authorize" => "AuthorizeCard",
-        "authorizeTicket" => "AuthorizeTicket",
-        "capture" => "CaptureTransaction",
-        "void" => "CancelTransaction",
-        "refund" => "RefundTransaction",
-        "store" => "CreateTicket"
+        authorize: "AuthorizeCard",
+        authorize_ticket: "AuthorizeTicket",
+        capture: "CaptureTransaction",
+        void: "CancelTransaction",
+        refund: "RefundTransaction",
+        store: "CreateTicket"
       }
 
       def commit(action, post)
@@ -153,7 +141,7 @@ module ActiveMerchant #:nodoc:
 
         data = build_request(post)
         raw = parse(ssl_post(url(action), "request=#{data}", headers))
-        succeeded = success_from(raw["status"])
+        succeeded = success_from(raw)
         Response.new(
           succeeded,
           message_from(succeeded, raw),
@@ -161,6 +149,8 @@ module ActiveMerchant #:nodoc:
           authorization: authorization_from(post, raw),
           test: test?
         )
+      rescue JSON::ParserError
+        unparsable_response(raw)
       end
 
       def headers
@@ -170,8 +160,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_request(post)
-        
-        # JSON
         add_hmac(post)
         post.to_json
       end
@@ -184,7 +172,7 @@ module ActiveMerchant #:nodoc:
         post[:MAC] = hmac
         data = "amount=100&currency=EUR"
 
-        hmac = (OpenSSL::HMAC.hexdigest(digest, key, data))        
+        hmac = (OpenSSL::HMAC.hexdigest(digest, key, data))
       end
 
       def url(action)
@@ -192,19 +180,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def parse(body)
-        # JSON
-        return {} unless body
         JSON.parse(body)
-      rescue JSON::ParserError
-        {
-          "message" => "Invalid response received.",
-          "raw_response" => scrub(body)
-        }
-        response
       end
 
-      def success_from(response)
-        response == "ACCEPT"
+      def success_from(raw_response)
+        raw_response["status"] == "ACCEPT"
       end
 
       def message_from(succeeded, response)
@@ -216,10 +196,13 @@ module ActiveMerchant #:nodoc:
       end
 
       def authorization_from(request, response)
-        # Purchase is the combination of auth and capture
-        # Auth returns a transactionId, capture does not
-        # This ensures that the purchase response includes a transactionId
         response['transactionId'] || response['ticketId'] || request[:transactionId]
+      end
+
+      def unparsable_response(raw_response)
+        message = "Invalid JSON response received from Dibs. Please contact Dibs if you continue to receive this message."
+        message += " (The raw response returned by the API was #{raw_response.inspect})"
+        return Response.new(false, message)
       end
     end
   end

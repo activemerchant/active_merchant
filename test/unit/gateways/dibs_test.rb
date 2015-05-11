@@ -31,7 +31,6 @@ class DibsTest < Test::Unit::TestCase
 
     assert_failure response
     assert_equal "DECLINE: 1", response.message
-    #a
     assert response.test?
   end
 
@@ -181,6 +180,15 @@ class DibsTest < Test::Unit::TestCase
     assert_equal scrubbed_transcript, @gateway.send(:scrub, transcript)
   end
 
+  def test_invalid_json
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(invalid_json_response)
+
+    assert_failure response
+    assert_match %r{Invalid JSON response}, response.message
+  end
+
   private
 
   def successful_authorize_response
@@ -221,6 +229,10 @@ class DibsTest < Test::Unit::TestCase
 
   def failed_store_response
     %({\"status\":\"DECLINE\",\"declineReason\":\"REJECTED_BY_ACQUIRER\"})
+  end
+
+  def invalid_json_response
+    "{"
   end
 
   def transcript

@@ -17,8 +17,7 @@ class RemoteDibsTest < Test::Unit::TestCase
     @declined_card_capture = credit_card("4711100000000001", cc_options)
 
     @options = {
-      order_id: generate_unique_id,
-      clientIp: "192.168.180.92"
+      order_id: generate_unique_id
     }
   end
 
@@ -47,7 +46,7 @@ class RemoteDibsTest < Test::Unit::TestCase
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal "Succeeded", response.message
-    assert_match %r(^\d+$), response.authorization 
+    assert_match %r(^\d+$), response.authorization
   end
 
   def test_successful_authorize_and_capture
