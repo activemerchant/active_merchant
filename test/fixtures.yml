@@ -161,6 +161,11 @@ data_cash:
   login: X
   password: Y
 
+# No working test credentials
+dibs:
+  merchantId: SOMECREDENTIAL
+  secretKey:
+
 direc_pay:
   login: 200904281000001
 
