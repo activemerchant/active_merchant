@@ -163,8 +163,8 @@ data_cash:
 
 # No working test credentials
 dibs:
-  merchantId: SOMECREDENTIAL
-  secretKey:
+  merchant_id: SOMECREDENTIAL
+  secret_key: NOPUBLICCREDENTIAL
 
 direc_pay:
   login: 200904281000001

@@ -23,8 +23,8 @@ class RemoteDibsTest < Test::Unit::TestCase
 
   def test_invalid_login
     gateway = DibsGateway.new(
-      merchantId: "123456789",
-      secretKey: "987654321"
+      merchant_id: "123456789",
+      secret_key: "987654321"
     )
     response = gateway.authorize(@amount, @credit_card, @options)
     assert_failure response

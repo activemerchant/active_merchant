@@ -9,6 +9,7 @@
 * SecureNet: Truncate order_id [duff]
 * [POSSIBLE BREAKAGE] Stripe: Be explicit about API version [duff]
 * Dibs: Add gateway [mrezentes]
+* Dibs: Rubyize merchant_id and secret_key [mrezentes]
 
 
 == Version 1.49.0 (May 1, 2015)
