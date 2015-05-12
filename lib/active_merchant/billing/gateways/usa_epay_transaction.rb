@@ -178,7 +178,8 @@ module ActiveMerchant #:nodoc:
           post[:card]   = credit_card.number
           post[:cvv2]   = credit_card.verification_value if credit_card.verification_value?
           post[:expir]  = expdate(credit_card)
-          post[:name]   = credit_card.name
+          post[:name]   = credit_card.name unless credit_card.name.blank?
+          post[:cardpresent] = true if credit_card.manual_entry
         end
       end
 
@@ -256,4 +257,3 @@ module ActiveMerchant #:nodoc:
     end
   end
 end
-

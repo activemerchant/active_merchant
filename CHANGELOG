@@ -11,6 +11,7 @@
 * Dibs: Add gateway [mrezentes]
 * Dibs: Rubyize merchant_id and secret_key [mrezentes]
 * Stripe: Add support for reverse_transfer [duff]
+* USA ePay: Add support for manual entry indicator [AnotherJoSmith]
 
 
 == Version 1.49.0 (May 1, 2015)
