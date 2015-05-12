@@ -138,6 +138,15 @@ module ActiveMerchant #:nodoc:
       # @return [String]
       attr_accessor :track_data
 
+      # Returns or sets whether a card has been processed using manual entry.
+      #
+      # This attribute is optional and is only used by gateways who use this information in their transaction risk
+      # calculations. See {this page on 'card not present' transactions}[http://en.wikipedia.org/wiki/Card_not_present_transaction]
+      # for further explanation and examples of this kind of transaction.
+      #
+      # @return [true, false]
+      attr_accessor :manual_entry
+
       # Returns or sets the ICC/ASN1 credit card data for a EMV transaction, typically this is a BER-encoded TLV string.
       #
       # @return [String]

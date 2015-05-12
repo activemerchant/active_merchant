@@ -187,6 +187,20 @@ class UsaEpayTransactionTest < Test::Unit::TestCase
     end
   end
 
+  def test_manual_entry_is_properly_indicated_on_purchase
+    @credit_card.manual_entry = true
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.check_request do |endpoint, data, headers|
+
+      assert_match %r{UMcard=4242424242424242},  data
+      assert_match %r{UMcardpresent=true},       data
+
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
+  end
+
   def test_does_not_raise_error_on_missing_values
     @gateway.expects(:ssl_post).returns("status")
     assert_nothing_raised do
