@@ -5,8 +5,8 @@ class DibsTest < Test::Unit::TestCase
 
   def setup
     @gateway = DibsGateway.new(
-      merchantId: "merchantId",
-      secretKey: "secretKey"
+      merchant_id: "merchantId",
+      secret_key: "secretKey"
     )
 
     @credit_card = credit_card

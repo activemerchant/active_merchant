@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
 
       def initialize(options={})
-        requires!(options, :merchantId, :secretKey)
+        requires!(options, :merchant_id, :secret_key)
         super
       end
 
@@ -137,7 +137,7 @@ module ActiveMerchant #:nodoc:
       }
 
       def commit(action, post)
-        post[:merchantId] = @options[:merchantId]
+        post[:merchantId] = @options[:merchant_id]
 
         data = build_request(post)
         raw = parse(ssl_post(url(action), "request=#{data}", headers))
@@ -167,7 +167,7 @@ module ActiveMerchant #:nodoc:
       def add_hmac(post)
         data = post.sort.collect { |key, value| "#{key}=#{value.to_s}" }.join("&")
         digest = OpenSSL::Digest.new('sha256')
-        key = [@options[:secretKey]].pack('H*')
+        key = [@options[:secret_key]].pack('H*')
         post[:MAC] = OpenSSL::HMAC.hexdigest(digest, key, data)
       end
 
