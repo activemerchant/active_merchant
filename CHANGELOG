@@ -10,6 +10,7 @@
 * [POSSIBLE BREAKAGE] Stripe: Be explicit about API version [duff]
 * Dibs: Add gateway [mrezentes]
 * Dibs: Rubyize merchant_id and secret_key [mrezentes]
+* Stripe: Add support for reverse_transfer [duff]
 
 
 == Version 1.49.0 (May 1, 2015)

@@ -322,6 +322,14 @@ class StripeTest < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_refund_with_reverse_transfer
+    stub_comms(@gateway, :ssl_request) do
+      @gateway.refund(@amount, "auth", reverse_transfer: true)
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(/reverse_transfer=true/, data)
+    end.respond_with(successful_partially_refunded_response)
+  end
+
   def test_successful_refund_with_refund_fee_amount
     s = sequence("request")
     @gateway.expects(:ssl_request).returns(successful_partially_refunded_response).in_sequence(s)

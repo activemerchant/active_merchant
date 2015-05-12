@@ -92,8 +92,18 @@ class RemoteStripeTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert response.authorization
-    assert void = @gateway.refund(@amount - 20, response.authorization)
-    assert_success void
+    assert refund = @gateway.refund(@amount - 20, response.authorization)
+    assert_success refund
+  end
+
+  def test_refund_with_reverse_transfer
+    destination = fixtures(:stripe_destination)[:stripe_user_id]
+    assert response = @gateway.purchase(@amount, @credit_card, @options.merge(destination: destination))
+    assert_success response
+
+    assert refund = @gateway.refund(@amount - 20, response.authorization, reverse_transfer: true)
+    assert_success refund
+    assert_equal "Transaction approved", refund.message
   end
 
   def test_unsuccessful_refund
