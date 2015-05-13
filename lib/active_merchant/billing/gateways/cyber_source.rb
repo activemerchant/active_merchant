@@ -233,6 +233,14 @@ module ActiveMerchant #:nodoc:
 
       private
 
+      def success?(response)
+        response[:decision] == "ACCEPT" || response[:reasonCode] == '100'
+      end
+
+      def fraud_review?(response)
+        response[:decision] == 'REVIEW'
+      end
+
       # Create all address hash key value pairs so that we still function if we
       # were only provided with one or two of them
       def setup_address_hash(options)
@@ -655,13 +663,13 @@ module ActiveMerchant #:nodoc:
       def commit(request, options)
         response = parse(ssl_post(test? ? self.test_url : self.live_url, build_request(request, options)))
 
-        success = response[:decision] == "ACCEPT"
         message = @@response_codes[('r' + response[:reasonCode]).to_sym] rescue response[:message]
-        authorization = success ? [ options[:order_id], response[:requestID], response[:requestToken] ].compact.join(";") : nil
+        authorization = success?(response) ? [ options[:order_id], response[:requestID], response[:requestToken] ].compact.join(";") : nil
 
-        Response.new(success, message, response,
+        Response.new(success?(response), message, response,
           :test => test?,
           :authorization => authorization,
+          :fraud_review => fraud_review?(response),
           :avs_result => { :code => response[:avsCode] },
           :cvv_result => response[:cvCode]
         )
