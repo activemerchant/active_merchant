@@ -75,8 +75,13 @@ module ActiveMerchant #:nodoc:
       def purchase(money, payment, options={})
         post = {}
         add_invoice(post, money, options)
-        add_payment(post, payment)
-        add_address(post, payment, options)
+
+        if options.has_key? :transactionid
+          post[:transactionid] = options[:transactionid]
+        else
+          add_payment(post, payment)
+          add_address(post, payment, options)
+        end
 
         commit("sale", post)
       end
@@ -140,6 +145,10 @@ module ActiveMerchant #:nodoc:
         end
 
         transcript
+      end
+
+      def transaction_id_from_auth(authorization)
+        split_authorization(authorization)[0]
       end
 
       private

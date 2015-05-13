@@ -54,6 +54,24 @@ class RemoteCamsTest < Test::Unit::TestCase
     assert !(%r(Invalid Credit Card Number) =~ response.message).nil? 
   end
 
+  def test_successful_purchase_with_vault_id
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal 'SUCCESS', response.message
+
+    setup
+    @options[:transactionid] = @gateway.transaction_id_from_auth(response.authorization)
+    response2 = @gateway.purchase(@amount, nil, @options)
+    assert_equal 'SUCCESS', response2.message
+  end
+
+  def test_failed_purchase_with_vault_id
+    @options[:transactionid] = '00000'
+    response = @gateway.purchase(@amount, nil, @options)
+    assert_failure response
+    assert !(%r(Invalid Transaction ID) =~ response.message).nil? 
+  end
+
   def test_successful_authorize_and_capture
     auth = @gateway.authorize(@amount, @credit_card, @options)
     assert_success auth
