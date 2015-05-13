@@ -161,11 +161,6 @@ data_cash:
   login: X
   password: Y
 
-# No working test credentials
-dibs:
-  merchant_id: SOMECREDENTIAL
-  secret_key: NOPUBLICCREDENTIAL
-
 direc_pay:
   login: 200904281000001
 
@@ -812,13 +807,9 @@ spreedly_core:
   password: "Y2i7AjgU03SUjwY4xnOPqzdsv4dMbPDCQzorAk8Bcoy0U8EIVE4innGjuoMQv7MN"
   gateway_token: "3gLeg4726V5P0HK7cq7QzHsL0a6"
 
-# Working credentials, no need to replace
 stripe:
-  login: sk_test_3OD4TdKSIOhDOL2146JJcC79
-
-# Working credentials, no need to replace
-stripe_destination:
-  stripe_user_id: "acct_161hWaHIrJcQ9OHT"
+  login:
+  fee_refund_login:
 
 # Used only for remote tests that use EMV credit card mocks
 stripe_emv_uk:
@@ -915,3 +906,8 @@ worldpay_us:
   acctid: MPNAB
   subid: SPREE
   merchantpin: "1234567890"
+
+# Working credentials, no need to replace
+zaakpay:
+  merchantIdentifier: '5c7148b110ee49d7a1a9042db4fbf4ad',
+  secretKey: 'e73be5e3e14a4b548948f899ccde5604',
