@@ -11,8 +11,7 @@ class RemoteCenposTest < Test::Unit::TestCase
 
     @options = {
       order_id: SecureRandom.random_number(1000000),
-      billing_address: address,
-      description: "Store Purchase"
+      billing_address: address
     }
   end
 
@@ -28,7 +27,13 @@ class RemoteCenposTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase
-    response = @gateway.purchase(@amount, @credit_card, @options.merge(description: "<xml><description/></xml>"))
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "Succeeded", response.message
+  end
+
+  def test_successful_purchase_with_invoice_detail
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(invoice_detail: "<xml><description/></xml>"))
     assert_success response
     assert_equal "Succeeded", response.message
   end

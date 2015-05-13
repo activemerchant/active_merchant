@@ -13,6 +13,7 @@
 * Stripe: Add support for reverse_transfer [duff]
 * USA ePay: Add support for manual entry indicator [AnotherJoSmith]
 * Authorize.Net: Add support for manual entry indicator [AnotherJoSmith]
+* CenPOS: Change description to invoice_detail [mrezentes]
 
 
 == Version 1.49.0 (May 1, 2015)
