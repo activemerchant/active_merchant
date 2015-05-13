@@ -335,6 +335,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(action, parameters)
+        add_pair parameters, 'RTIMEOUT', @options[:timeout] if @options[:timeout]
         add_pair parameters, 'PSPID',  @options[:login]
         add_pair parameters, 'USERID', @options[:user]
         add_pair parameters, 'PSWD',   @options[:password]

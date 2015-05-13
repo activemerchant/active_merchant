@@ -12,6 +12,7 @@
 * Merchant Ware: Add scrubbing [davidsantoso]
 * Stripe: Make purchase via vaulted card consistent [duff]
 * Moneris: Add network tokenization support [andrewpaliga]
+* Ogone: Allow specifying a timeout value for requests [tomhipkin]
 
 
 == Version 1.51.0 (July 2, 2015)
