@@ -170,6 +170,16 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert response.authorization
   end
 
+  def test_successful_purchase_with_moto_retail_type
+    @credit_card.manual_entry = true
+    response = @gateway.purchase(@amount, @credit_card, @options)
+
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
+  end
+
   def test_authorization_and_capture
     assert authorization = @gateway.authorize(@amount, @credit_card, @options)
     assert_success authorization
@@ -186,6 +196,16 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert void = @gateway.void(authorization.authorization)
     assert_success void
     assert_equal 'This transaction has been approved', void.message
+  end
+
+  def test_successful_authorization_with_moto_retail_type
+    @credit_card.manual_entry = true
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    
+    assert_success response
+    assert response.test?
+    assert_equal 'This transaction has been approved', response.message
+    assert response.authorization
   end
 
   def test_successful_verify

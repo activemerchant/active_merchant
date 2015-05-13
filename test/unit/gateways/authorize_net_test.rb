@@ -69,7 +69,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
-  def test_retail_market_type_only_included_in_swipe_transactions
+  def test_retail_market_type_included_in_swipe_transactions_with_valid_track_data
     [BAD_TRACK_DATA, nil].each do |track|
       @credit_card.track_data = track
       stub_comms do
@@ -92,6 +92,30 @@ class AuthorizeNetTest < Test::Unit::TestCase
         end
       end.respond_with(successful_purchase_response)
     end
+  end
+
+  def test_market_type_not_included_for_apple_pay_or_echeck
+    [@check, @apple_pay_payment_token].each do |payment|
+      stub_comms do
+        @gateway.purchase(@amount, payment)
+      end.check_request do |endpoint, data, headers|
+        parse(data) do |doc|
+          assert_nil doc.at_xpath('//retail')
+        end
+      end.respond_with(successful_purchase_response)
+    end
+  end
+
+  def test_moto_market_type_included_when_card_is_entered_manually
+    @credit_card.manual_entry = true
+    stub_comms do
+      @gateway.purchase(@amount, @credit_card)
+    end.check_request do |endpoint, data, headers|
+      parse(data) do |doc|
+        assert_not_nil doc.at_xpath('//retail')
+        assert_equal "1", doc.at_xpath('//retail/marketType').content
+      end
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_echeck_authorization
