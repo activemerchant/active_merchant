@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
           xml.Contact do
             xml.Email      options[:email]
             xml.Ip         options[:ip]
-            xml.Phone      address[:phone]
+            xml.Phone      address[:phone] if address
           end
           xml.Address do
             xml.Street     "#{address[:address1]} #{address[:address2]}"
@@ -134,7 +134,7 @@ module ActiveMerchant #:nodoc:
             xml.City       address[:city]
             xml.State      address[:state]
             xml.Country    address[:country]
-          end
+          end if address
           xml.Name do
             xml.Given      creditcard.first_name
             xml.Family     creditcard.last_name
