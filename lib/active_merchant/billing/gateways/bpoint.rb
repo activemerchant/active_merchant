@@ -3,7 +3,6 @@ require 'nokogiri'
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class BpointGateway < Gateway
-      self.test_url = 'https://www.bpoint.com.au/evolve/service_1_4_4.asmx'
       self.live_url = 'https://www.bpoint.com.au/evolve/service_1_4_4.asmx'
 
       self.supported_countries = ['AU']
@@ -12,8 +11,6 @@ module ActiveMerchant #:nodoc:
 
       self.homepage_url = 'https://www.bpoint.com.au/bpoint'
       self.display_name = 'BPoint'
-
-      STANDARD_ERROR_CODE_MAPPING = {}
 
       def initialize(options={})
         requires!(options, :username, :password, :merchant_number)
@@ -87,16 +84,11 @@ module ActiveMerchant #:nodoc:
       def scrub(transcript)
         transcript.
           gsub(%r((<password>).+(</password>)), '\1[FILTERED]\2').
-          gsub(%r((<merchantNumber>).+(</merchantNumber>)), '\1[FILTERED]\2').
           gsub(%r((<CardNumber>).+(</CardNumber>)), '\1[FILTERED]\2').
           gsub(%r((<CVC>).+(</CVC>)), '\1[FILTERED]\2')
       end
 
       private
-
-      ####################
-      # Request processing
-      ####################
 
       def soap_request
         Nokogiri::XML::Builder.new(:encoding => 'utf-8') do |xml|
@@ -189,20 +181,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def commit(request_body)
-        parse(ssl_post(commit_url, request_body, request_headers))
-      end
-
-      def commit_url
-        test? ? test_url : live_url
+        parse(ssl_post(live_url, request_body, request_headers))
       end
 
       def request_headers
         { "Content-Type" => "application/soap+xml; charset=utf-8" }
       end
-
-      #####################
-      # Response processing
-      #####################
 
       def parse(body)
         response_for(Nokogiri::XML(body).remove_namespaces!)
@@ -229,7 +213,6 @@ module ActiveMerchant #:nodoc:
           Response.new(success?, message, params,
             authorization: params[:transaction_id],
             test: gateway.test?,
-            error_code: error_code,
             transaction_id: params[:transaction_id]
           )
         end
@@ -244,13 +227,6 @@ module ActiveMerchant #:nodoc:
           end
         end
 
-        def error_code
-          if success?
-            ''
-          else
-            Gateway::STANDARD_ERROR_CODE[:card_declined]
-          end
-        end
       end
 
       class ProcessPaymentResponse < BPointResponse

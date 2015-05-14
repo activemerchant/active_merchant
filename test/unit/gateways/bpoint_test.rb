@@ -47,7 +47,7 @@ class BpointTest < Test::Unit::TestCase
 
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_failure response
-    assert_equal Gateway::STANDARD_ERROR_CODE[:card_declined], response.error_code
+    assert_equal "Declined", response.message
   end
 
   def test_successful_authorize
@@ -127,49 +127,17 @@ class BpointTest < Test::Unit::TestCase
 
   def pre_scrubbed
     <<-PRE_SCRUBBED
-opening connection to www.bpoint.com.au:443...
-opened
-starting SSL for www.bpoint.com.au:443...
-SSL established
-<- "POST /evolve/service_1_4_4.asmx HTTP/1.1\r\nContent-Type: application/soap+xml; charset=utf-8\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.bpoint.com.au\r\nContent-Length: 843\r\n\r\n"
-<- "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap12:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap12=\"http://www.w3.org/2003/05/soap-envelope\">\n  <soap12:Body>\n    <ProcessPayment xmlns=\"urn:Eve_1_4_4\">\n      <username>waysact</username>\n      <password>O5dIyDv148</password>\n      <merchantNumber>DEMONSTRATION731</merchantNumber>\n      <txnReq>\n        <PaymentType>PAYMENT</PaymentType>\n        <TxnType>WEB_SHOP</TxnType>\n        <BillerCode/>\n        <MerchantReference/>\n        <CRN1/>\n        <CRN2/>\n        <CRN3/>\n        <Amount>100</Amount>\n        <CardNumber>4987654321098769</CardNumber>\n        <ExpiryDate>9900</ExpiryDate>\n        <CVC>123</CVC>\n        <OriginalTransactionNumber/>\n      </txnReq>\n    </ProcessPayment>\n  </soap12:Body>\n</soap12:Envelope>\n"
--> "HTTP/1.1 200 OK\r\n"
--> "Cache-Control: private, max-age=0,no-store,no-cache,must-revalidate,proxy-revalidate\r\n"
--> "Pragma: no-cache\r\n"
--> "Content-Type: application/soap+xml; charset=utf-8\r\n"
--> "Server: Microsoft-IIS/7.5\r\n"
--> "Date: Tue, 12 May 2015 20:25:59 GMT\r\n"
--> "Connection: close\r\n"
--> "Content-Length: 787\r\n"
--> "\r\n"
-reading 787 bytes...
--> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><ProcessPaymentResponse xmlns=\"urn:Eve_1_4_4\"><ProcessPaymentResult><ResponseCode>0</ResponseCode><AcquirerResponseCode>00</AcquirerResponseCode><AuthorisationResult>Approved</AuthorisationResult><TransactionNumber>219617445</TransactionNumber><ReceiptNumber>53559987445</ReceiptNumber><AuthoriseId>122025580862</AuthoriseId><SettlementDate>20150513</SettlementDate><MaskedCardNumber>498765...769</MaskedCardNumber><CardType>VC</CardType></ProcessPaymentResult><response><ResponseCode>SUCCESS</ResponseCode></response></ProcessPaymentResponse></soap:Body></soap:Envelope>"
-read 787 bytes
-Conn close
+      <- "POST /evolve/service_1_4_4.asmx HTTP/1.1\r\nContent-Type: application/soap+xml; charset=utf-8\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.bpoint.com.au\r\nContent-Length: 843\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap12:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap12=\"http://www.w3.org/2003/05/soap-envelope\">\n  <soap12:Body>\n    <ProcessPayment xmlns=\"urn:Eve_1_4_4\">\n      <username>waysact</username>\n      <password>O5dIyDv148</password>\n      <merchantNumber>DEMONSTRATION731</merchantNumber>\n      <txnReq>\n        <PaymentType>PAYMENT</PaymentType>\n        <TxnType>WEB_SHOP</TxnType>\n        <BillerCode/>\n        <MerchantReference/>\n        <CRN1/>\n        <CRN2/>\n        <CRN3/>\n        <Amount>100</Amount>\n        <CardNumber>4987654321098769</CardNumber>\n        <ExpiryDate>9900</ExpiryDate>\n        <CVC>123</CVC>\n        <OriginalTransactionNumber/>\n      </txnReq>\n    </ProcessPayment>\n  </soap12:Body>\n</soap12:Envelope>\n"
+      -> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><ProcessPaymentResponse xmlns=\"urn:Eve_1_4_4\"><ProcessPaymentResult><ResponseCode>0</ResponseCode><AcquirerResponseCode>00</AcquirerResponseCode><AuthorisationResult>Approved</AuthorisationResult><TransactionNumber>219617445</TransactionNumber><ReceiptNumber>53559987445</ReceiptNumber><AuthoriseId>122025580862</AuthoriseId><SettlementDate>20150513</SettlementDate><MaskedCardNumber>498765...769</MaskedCardNumber><CardType>VC</CardType></ProcessPaymentResult><response><ResponseCode>SUCCESS</ResponseCode></response></ProcessPaymentResponse></soap:Body></soap:Envelope>"
     PRE_SCRUBBED
   end
 
   def post_scrubbed
     <<-POST_SCRUBBED
-opening connection to www.bpoint.com.au:443...
-opened
-starting SSL for www.bpoint.com.au:443...
-SSL established
-<- "POST /evolve/service_1_4_4.asmx HTTP/1.1\r\nContent-Type: application/soap+xml; charset=utf-8\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.bpoint.com.au\r\nContent-Length: 843\r\n\r\n"
-<- "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap12:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap12=\"http://www.w3.org/2003/05/soap-envelope\">\n  <soap12:Body>\n    <ProcessPayment xmlns=\"urn:Eve_1_4_4\">\n      <username>waysact</username>\n      <password>[FILTERED]</password>\n      <merchantNumber>[FILTERED]</merchantNumber>\n      <txnReq>\n        <PaymentType>PAYMENT</PaymentType>\n        <TxnType>WEB_SHOP</TxnType>\n        <BillerCode/>\n        <MerchantReference/>\n        <CRN1/>\n        <CRN2/>\n        <CRN3/>\n        <Amount>100</Amount>\n        <CardNumber>[FILTERED]</CardNumber>\n        <ExpiryDate>9900</ExpiryDate>\n        <CVC>[FILTERED]</CVC>\n        <OriginalTransactionNumber/>\n      </txnReq>\n    </ProcessPayment>\n  </soap12:Body>\n</soap12:Envelope>\n"
--> "HTTP/1.1 200 OK\r\n"
--> "Cache-Control: private, max-age=0,no-store,no-cache,must-revalidate,proxy-revalidate\r\n"
--> "Pragma: no-cache\r\n"
--> "Content-Type: application/soap+xml; charset=utf-8\r\n"
--> "Server: Microsoft-IIS/7.5\r\n"
--> "Date: Tue, 12 May 2015 20:25:59 GMT\r\n"
--> "Connection: close\r\n"
--> "Content-Length: 787\r\n"
--> "\r\n"
-reading 787 bytes...
--> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><ProcessPaymentResponse xmlns=\"urn:Eve_1_4_4\"><ProcessPaymentResult><ResponseCode>0</ResponseCode><AcquirerResponseCode>00</AcquirerResponseCode><AuthorisationResult>Approved</AuthorisationResult><TransactionNumber>219617445</TransactionNumber><ReceiptNumber>53559987445</ReceiptNumber><AuthoriseId>122025580862</AuthoriseId><SettlementDate>20150513</SettlementDate><MaskedCardNumber>498765...769</MaskedCardNumber><CardType>VC</CardType></ProcessPaymentResult><response><ResponseCode>SUCCESS</ResponseCode></response></ProcessPaymentResponse></soap:Body></soap:Envelope>"
-read 787 bytes
-Conn close
+      <- "POST /evolve/service_1_4_4.asmx HTTP/1.1\r\nContent-Type: application/soap+xml; charset=utf-8\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nUser-Agent: Ruby\r\nConnection: close\r\nHost: www.bpoint.com.au\r\nContent-Length: 843\r\n\r\n"
+      <- "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<soap12:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap12=\"http://www.w3.org/2003/05/soap-envelope\">\n  <soap12:Body>\n    <ProcessPayment xmlns=\"urn:Eve_1_4_4\">\n      <username>waysact</username>\n      <password>[FILTERED]</password>\n      <merchantNumber>DEMONSTRATION731</merchantNumber>\n      <txnReq>\n        <PaymentType>PAYMENT</PaymentType>\n        <TxnType>WEB_SHOP</TxnType>\n        <BillerCode/>\n        <MerchantReference/>\n        <CRN1/>\n        <CRN2/>\n        <CRN3/>\n        <Amount>100</Amount>\n        <CardNumber>[FILTERED]</CardNumber>\n        <ExpiryDate>9900</ExpiryDate>\n        <CVC>[FILTERED]</CVC>\n        <OriginalTransactionNumber/>\n      </txnReq>\n    </ProcessPayment>\n  </soap12:Body>\n</soap12:Envelope>\n"
+      -> "<?xml version=\"1.0\" encoding=\"utf-8\"?><soap:Envelope xmlns:soap=\"http://www.w3.org/2003/05/soap-envelope\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\"><soap:Body><ProcessPaymentResponse xmlns=\"urn:Eve_1_4_4\"><ProcessPaymentResult><ResponseCode>0</ResponseCode><AcquirerResponseCode>00</AcquirerResponseCode><AuthorisationResult>Approved</AuthorisationResult><TransactionNumber>219617445</TransactionNumber><ReceiptNumber>53559987445</ReceiptNumber><AuthoriseId>122025580862</AuthoriseId><SettlementDate>20150513</SettlementDate><MaskedCardNumber>498765...769</MaskedCardNumber><CardType>VC</CardType></ProcessPaymentResult><response><ResponseCode>SUCCESS</ResponseCode></response></ProcessPaymentResponse></soap:Body></soap:Envelope>"
     POST_SCRUBBED
   end
 
