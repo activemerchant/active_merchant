@@ -32,11 +32,22 @@ class RemoteS5Test < Test::Unit::TestCase
     assert_match %r{Request successfully processed}, response.message
   end
 
+  def test_successful_purchase_without_address
+    response = @gateway.purchase(@amount, @credit_card, {})
+    assert_success response
+    assert_match %r{Request successfully processed}, response.message
+  end
+
   def test_failed_purchase
     @options[:memo] = "800.100.151"
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'transaction declined (invalid card)', response.message
+  end
+
+  def test_successful_authorize_without_address
+    auth = @gateway.authorize(@amount, @credit_card, {})
+    assert_success auth
   end
 
   def test_successful_authorize_and_capture

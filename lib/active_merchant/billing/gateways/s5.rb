@@ -121,25 +121,31 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer(xml, creditcard, options)
-        address = options[:billing_address] || options[:address]
+        address = options[:billing_address]
         xml.Customer do
           xml.Contact do
             xml.Email      options[:email]
             xml.Ip         options[:ip]
-            xml.Phone      address[:phone]
+            xml.Phone      address[:phone] if address
           end
-          xml.Address do
-            xml.Street     "#{address[:address1]} #{address[:address2]}"
-            xml.Zip        address[:zip]
-            xml.City       address[:city]
-            xml.State      address[:state]
-            xml.Country    address[:country]
-          end
+          add_address(xml, address)
           xml.Name do
             xml.Given      creditcard.first_name
             xml.Family     creditcard.last_name
             xml.Company    options[:company]
           end
+        end
+      end
+
+      def add_address(xml, address)
+        return unless address
+
+        xml.Address do
+          xml.Street     "#{address[:address1]} #{address[:address2]}"
+          xml.Zip        address[:zip]
+          xml.City       address[:city]
+          xml.State      address[:state]
+          xml.Country    address[:country]
         end
       end
 

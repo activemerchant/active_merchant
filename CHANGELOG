@@ -15,6 +15,7 @@
 * Authorize.Net: Add support for manual entry indicator [AnotherJoSmith]
 * CenPOS: Change description to invoice_detail [mrezentes]
 * BPoint: Add gateway [tjstankus]
+* S5: Remove address requirement for purchase and authorize [davidsantoso]
 
 
 == Version 1.49.0 (May 1, 2015)
