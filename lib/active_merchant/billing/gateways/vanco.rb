@@ -20,10 +20,10 @@ module ActiveMerchant
         super
       end
 
-      def purchase(money, credit_card, options={})
+      def purchase(money, payment_method, options={})
         MultiResponse.run do |r|
           r.process { commit(login_request) }
-          r.process { commit(purchase_request(money, credit_card, r.params["response_sessionid"], options)) }
+          r.process { commit(purchase_request(money, payment_method, r.params["response_sessionid"], options)) }
         end
       end
 
@@ -82,7 +82,6 @@ module ActiveMerchant
           message_from(succeeded, response),
           response,
           authorization: authorization_from(response),
-          error_code: error_code_from(succeeded, response),
           test: test?
         )
       end
@@ -112,7 +111,7 @@ module ActiveMerchant
         authorization.to_s.split('|')
       end
 
-      def purchase_request(money, credit_card, session_id, options)
+      def purchase_request(money, payment_method, session_id, options)
         build_xml_request do |doc|
           add_auth(doc, "EFTAddCompleteTransaction", session_id)
 
@@ -120,7 +119,7 @@ module ActiveMerchant
             doc.RequestVars do
               add_client_id(doc)
               add_amount(doc, money, options)
-              add_credit_card(doc, credit_card, options)
+              add_payment_method(doc, payment_method, options)
               add_purchase_noise(doc)
             end
           end
@@ -176,6 +175,14 @@ module ActiveMerchant
         end
       end
 
+      def add_payment_method(doc, payment_method, options)
+        if card_brand(payment_method) == 'check'
+          add_echeck(doc, payment_method)
+        else
+          add_credit_card(doc, payment_method, options)
+        end
+      end
+
       def add_credit_card(doc, credit_card, options)
         address = options[:billing_address]
 
@@ -191,11 +198,23 @@ module ActiveMerchant
         doc.CardBillingState(address[:state])
         doc.CardBillingZip(address[:zip])
         doc.CardBillingCountryCode(address[:country])
+        doc.AccountType("CC")
+      end
+
+      def add_echeck(doc, echeck)
+        if echeck.account_type == "savings"
+          doc.AccountType("S")
+        else
+          doc.AccountType("C")
+        end
+
+        doc.CustomerName("#{echeck.last_name}, #{echeck.first_name}")
+        doc.AccountNumber(echeck.account_number)
+        doc.RoutingNumber(echeck.routing_number)
+        doc.TransactionTypeCode("TEL")
       end
 
       def add_purchase_noise(doc)
-        doc.AccountType("CC")
-        doc.TransactionTypeCode("WEB")
         doc.StartDate("0000-00-00")
         doc.FrequencyCode("O")
       end

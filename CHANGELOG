@@ -16,6 +16,7 @@
 * CenPOS: Change description to invoice_detail [mrezentes]
 * BPoint: Add gateway [tjstankus]
 * S5: Remove address requirement for purchase and authorize [davidsantoso]
+* Vanco: Add support for eChecks [duff]
 
 
 == Version 1.49.0 (May 1, 2015)
