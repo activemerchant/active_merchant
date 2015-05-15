@@ -54,7 +54,7 @@ module ActiveMerchant #:nodoc:
 
       def commit(action, money, fields)
         fields[:amount] = amount(money)
-        url = live_url + @options[:merchant_gateway_name]
+        url = live_url + CGI.escape(@options[:merchant_gateway_name])
         response = parse(ssl_post(url, post_data(action, fields)))
 
         success = (response[:result] == '0')

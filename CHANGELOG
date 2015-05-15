@@ -19,6 +19,8 @@
 * Vanco: Add support for eChecks [duff]
 * Remove Adyen support [ntalbott]
 * CenPOS: Use ProcessCreditCard action [duff]
+* CASHnet: uri encode the merchant gateway name [mrezentes]
+
 
 == Version 1.49.0 (May 1, 2015)
 
