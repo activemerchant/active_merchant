@@ -115,6 +115,7 @@ module ActiveMerchant #:nodoc:
         xml.Account do
           xml.Number        creditcard.number
           xml.Holder        "#{creditcard.first_name} #{creditcard.last_name}"
+          xml.Brand         creditcard.brand
           xml.Expiry(year: creditcard.year, month: creditcard.month)
           xml.Verification  creditcard.verification_value
         end
