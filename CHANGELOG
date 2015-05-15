@@ -16,6 +16,8 @@
 * Cardstream: Add scrubbing [anellis]
 * Stripe: Parse EMV ARC from error response [bizla]
 * Redsys: Add MYR currency [agseco]
+* Add "contactless" flag to credit card model [davidseal]
+* Stripe: Add "contactless" flag support to gateway [davidseal]
 
 
 == Version 1.50.0 (June 1, 2015)
@@ -64,7 +66,6 @@
 * QuickPay: Add support for v10 API [ta]
 * Fat Zebra: Fix refund and store signatures [duff]
 * Fat Zebra: Allow transactions without a CVV [duff]
-
 
 == Version 1.49.0 (May 1, 2015)
 
