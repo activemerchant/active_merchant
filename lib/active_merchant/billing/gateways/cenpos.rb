@@ -49,6 +49,8 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_void_required_elements(post)
         add_reference(post, authorization)
+        add_tax(post, options)
+
         commit("Void", post)
       end
 
@@ -113,9 +115,9 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, money, options)
         post[:Amount] = amount(money)
         post[:CurrencyCode] = CURRENCY_CODES[options[:currency] || currency(money)]
-        post[:TaxAmount] = amount(options[:tax])
         post[:InvoiceNumber] = options[:order_id]
         post[:InvoiceDetail] = options[:invoice_detail] if options[:invoice_detail]
+        add_tax(post, options)
       end
 
       def add_payment_method(post, payment_method)
@@ -124,7 +126,7 @@ module ActiveMerchant #:nodoc:
         post[:CardVerificationNumber] = payment_method.verification_value
         post[:CardExpirationDate] = format(payment_method.month, :two_digits) + format(payment_method.year, :two_digits)
         post[:CardLastFourDigits] = payment_method.last_digits
-        post[:MagneticData] = payment_method.track_data
+        post[:MagneticData] = payment_method.track_data if payment_method.track_data
       end
 
       def add_customer_data(post, options)
@@ -141,6 +143,10 @@ module ActiveMerchant #:nodoc:
       def add_void_required_elements(post)
         post[:GeoLocationInformation] = nil
         post[:IMEI] = nil
+      end
+
+      def add_tax(post, options)
+        post[:TaxAmount] = amount(options[:tax] || 0)
       end
 
       def add_reference(post, authorization)
@@ -184,7 +190,7 @@ module ActiveMerchant #:nodoc:
         {
           "Accept-Encoding" => "gzip,deflate",
           "Content-Type"  => "text/xml;charset=UTF-8",
-          "SOAPAction"  => "http://tempuri.org/Transactional/ProcessCard"
+          "SOAPAction"  => "http://tempuri.org/Transactional/ProcessCreditCard"
         }
       end
 
@@ -204,11 +210,11 @@ module ActiveMerchant #:nodoc:
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/" xmlns:acr="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.Common" xmlns:acr1="http://schemas.datacontract.org/2004/07/Acriter.ABI.CenPOS.EPayment.VirtualTerminal.v6.Common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 <soapenv:Header/>
    <soapenv:Body>
-      <tem:ProcessCard>
+      <tem:ProcessCreditCard>
          <tem:request>
            #{body}
          </tem:request>
-      </tem:ProcessCard>
+      </tem:ProcessCreditCard>
    </soapenv:Body>
 </soapenv:Envelope>
         EOS
@@ -219,7 +225,7 @@ module ActiveMerchant #:nodoc:
 
         doc = Nokogiri::XML(xml)
         doc.remove_namespaces!
-        body = doc.xpath("//ProcessCardResult")
+        body = doc.xpath("//ProcessCreditCardResult")
         body.children.each do |node|
           if (node.elements.size == 0)
             response[node.name.underscore.to_sym] = node.text

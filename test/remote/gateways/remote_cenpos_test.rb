@@ -64,9 +64,14 @@ class RemoteCenposTest < Test::Unit::TestCase
   end
 
   def test_failed_capture
-    response = @gateway.capture(@amount, "")
-    assert_failure response
-    assert_equal "See transcript for detailed error description.", response.message
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+    assert_equal "Succeeded", response.message
+
+    capture = @gateway.capture(@amount + 200, response.authorization)
+    capture = @gateway.capture(@amount + 200, response.authorization)
+    assert_failure capture
+    assert_equal "Duplicated transaction", capture.message
   end
 
   def test_successful_void
@@ -79,9 +84,13 @@ class RemoteCenposTest < Test::Unit::TestCase
   end
 
   def test_failed_void
-    response = @gateway.void("")
-    assert_failure response
-    assert_equal "See transcript for detailed error description.", response.message
+    response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_success response
+
+    void = @gateway.void(response.authorization)
+    void = @gateway.void(response.authorization)
+    assert_failure void
+    assert_equal "Original Transaction not found", void.message
   end
 
   def test_successful_refund
