@@ -20,6 +20,7 @@
 * Remove Adyen support [ntalbott]
 * CenPOS: Use ProcessCreditCard action [duff]
 * CASHnet: uri encode the merchant gateway name [mrezentes]
+* S5: Include card brand in request body [davidsantoso]
 
 
 == Version 1.49.0 (May 1, 2015)
