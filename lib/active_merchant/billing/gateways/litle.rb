@@ -109,6 +109,7 @@ module ActiveMerchant #:nodoc:
           doc.registerTokenRequest(transaction_attributes(options)) do
             doc.orderId(truncate(options[:order_id], 24))
             doc.accountNumber(creditcard.number)
+            doc.cardValidationNum(creditcard.verification_value) if creditcard.verification_value
           end
         end
 
