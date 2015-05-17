@@ -273,6 +273,16 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_unsuccessful_xml_schema_validation
+    response = stub_comms do
+      @gateway.store(@credit_card)
+    end.respond_with(unsuccessful_xml_schema_validation_response)
+
+    assert_failure response
+    assert_match(/^Error validating xml data against the schema/, response.message)
+    assert_equal "1", response.params["response"]
+  end
+
   private
 
   def successful_purchase_response
@@ -483,6 +493,15 @@ class LitleTest < Test::Unit::TestCase
           <message>Credit card number was invalid</message>
         </registerTokenResponse>
       </litleOnlineResponse>
+    )
+  end
+
+  def unsuccessful_xml_schema_validation_response
+    %(
+    <litleOnlineResponse version='8.29' xmlns='http://www.litle.com/schema'
+                     response='1'
+                     message='Error validating xml data against the schema on line 8\nthe length of the value is 10, but the required minimum is 13.'/>
+
     )
   end
 
