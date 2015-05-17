@@ -264,6 +264,12 @@ module ActiveMerchant #:nodoc:
           end
         end
 
+        if parsed.empty?
+          %w(response message).each do |attribute|
+            parsed[attribute.to_sym] = doc.xpath("//litleOnlineResponse").attribute(attribute).value
+          end
+        end
+
         parsed
       end
 
