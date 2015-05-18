@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
       def purchase(amount, credit_card, options={})
         request_body = soap_request do |xml|
           process_payment(xml) do |payment_xml|
-            add_purchase(payment_xml, amount, credit_card)
+            add_purchase(payment_xml, amount, credit_card, options)
           end
         end
         commit(request_body)
@@ -37,25 +37,25 @@ module ActiveMerchant #:nodoc:
       def authorize(amount, credit_card, options={})
         request_body = soap_request do |xml|
           process_payment(xml) do |payment_xml|
-            add_authorize(payment_xml, amount, credit_card)
+            add_authorize(payment_xml, amount, credit_card, options)
           end
         end
         commit(request_body)
       end
 
-      def capture(amount, authorization)
+      def capture(amount, authorization, options={})
         request_body = soap_request do |xml|
           process_payment(xml) do |payment_xml|
-            add_capture(payment_xml, amount, authorization)
+            add_capture(payment_xml, amount, authorization, options)
           end
         end
         commit(request_body)
       end
 
-      def refund(amount, authorization)
+      def refund(amount, authorization, options={})
         request_body = soap_request do |xml|
           process_payment(xml) do |payment_xml|
-            add_refund(payment_xml, amount, authorization)
+            add_refund(payment_xml, amount, authorization, options)
           end
         end
         commit(request_body)
@@ -64,7 +64,7 @@ module ActiveMerchant #:nodoc:
       def void(amount, authorization, options={})
         request_body = soap_request do |xml|
           process_payment(xml) do |payment_xml|
-            add_void(payment_xml, amount, authorization)
+            add_void(payment_xml, amount, authorization, options)
           end
         end
         commit(request_body)
@@ -134,35 +134,35 @@ module ActiveMerchant #:nodoc:
         xml.send('merchantNumber', @options[:merchant_number])
       end
 
-      def add_purchase(xml, amount, credit_card)
-        payment_xml(xml, 'PAYMENT', amount)
+      def add_purchase(xml, amount, credit_card, options)
+        payment_xml(xml, 'PAYMENT', amount, options)
         credit_card_xml(xml, credit_card)
       end
 
-      def add_authorize(xml, amount, credit_card)
-        payment_xml(xml, 'PREAUTH', amount)
+      def add_authorize(xml, amount, credit_card, options)
+        payment_xml(xml, 'PREAUTH', amount, options)
         credit_card_xml(xml, credit_card)
       end
 
-      def add_capture(xml, amount, transaction_number)
-        payment_xml(xml, 'CAPTURE', amount)
+      def add_capture(xml, amount, transaction_number, options)
+        payment_xml(xml, 'CAPTURE', amount, options)
         transaction_number_xml(xml, transaction_number)
       end
 
-      def add_refund(xml, amount, transaction_number)
-        payment_xml(xml, 'REFUND', amount)
+      def add_refund(xml, amount, transaction_number, options)
+        payment_xml(xml, 'REFUND', amount, options)
         transaction_number_xml(xml, transaction_number)
       end
 
-      def add_void(xml, amount, transaction_number)
-        payment_xml(xml, 'REVERSAL', amount)
+      def add_void(xml, amount, transaction_number, options)
+        payment_xml(xml, 'REVERSAL', amount, options)
         transaction_number_xml(xml, transaction_number)
       end
 
-      def payment_xml(xml, payment_type, amount)
+      def payment_xml(xml, payment_type, amount, options)
         xml.send('PaymentType', payment_type)
         xml.send('TxnType', 'WEB_SHOP')
-        xml.send('BillerCode', @options.fetch(:biller_code, ''))
+        xml.send('BillerCode', options.fetch(:biller_code, ''))
         xml.send('MerchantReference', '')
         xml.send('CRN1', '')
         xml.send('CRN2', '')
