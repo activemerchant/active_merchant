@@ -186,6 +186,27 @@ class SagePayTest < Test::Unit::TestCase
     assert_equal '1', response.authorization
   end
 
+  def test_successful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, successful_void_response)
+    assert_success response
+  end
+
+  def test_successful_verify_with_failed_void
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(successful_authorize_response, unsuccessful_void_response)
+    assert_success response
+  end
+
+  def test_unsuccessful_verify
+    response = stub_comms do
+      @gateway.verify(@credit_card, @options)
+    end.respond_with(unsuccessful_authorize_response, unsuccessful_void_response)
+    assert_failure response
+  end
+
   private
 
   def successful_purchase_response
@@ -210,6 +231,68 @@ Token=1
 VPSProtocol=2.23
 Status=NOTAUTHED
 StatusDetail=VSP Direct transaction from VSP Simulator.
+VPSTxId=7BBA9078-8489-48CD-BF0D-10B0E6B0EF30
+SecurityKey=DKDYLDYLXV
+AVSCV2=ALL MATCH
+AddressResult=MATCHED
+PostCodeResult=MATCHED
+CV2Result=MATCHED
+    RESP
+  end
+
+  def successful_authorize_response
+    <<-RESP
+VPSProtocol=2.23
+Status=OK
+StatusDetail=0000 : The Authorisation was Successful.
+VPSTxId=B8AE1CF6-9DEF-C876-1BB4-9B382E6CE520
+SecurityKey=OHMETD7DFK
+TxAuthNo=4193753
+AVSCV2=NO DATA MATCHES
+AddressResult=NOTMATCHED
+PostCodeResult=MATCHED
+CV2Result=NOTMATCHED
+3DSecureStatus=NOTCHECKED
+Token=1
+    RESP
+  end
+
+  def unsuccessful_authorize_response
+    <<-RESP
+VPSProtocol=2.23
+Status=NOTAUTHED
+StatusDetail=VSP Direct transaction from VSP Simulator.
+VPSTxId=7BBA9078-8489-48CD-BF0D-10B0E6B0EF30
+SecurityKey=DKDYLDYLXV
+AVSCV2=ALL MATCH
+AddressResult=MATCHED
+PostCodeResult=MATCHED
+CV2Result=MATCHED
+    RESP
+  end
+
+  def successful_void_response
+    <<-RESP
+VPSProtocol=2.23
+Status=OK
+StatusDetail=2006 : The Abort was Successful.
+VPSTxId=B8AE1CF6-9DEF-C876-1BB4-9B382E6CE520
+SecurityKey=OHMETD7DFK
+TxAuthNo=4193753
+AVSCV2=NO DATA MATCHES
+AddressResult=NOTMATCHED
+PostCodeResult=MATCHED
+CV2Result=NOTMATCHED
+3DSecureStatus=NOTCHECKED
+Token=1
+    RESP
+  end
+
+  def unsuccessful_void_response
+    <<-RESP
+VPSProtocol=2.23
+Status=MALFORMED
+StatusDetail=3046 : The VPSTxId field is missing.
 VPSTxId=7BBA9078-8489-48CD-BF0D-10B0E6B0EF30
 SecurityKey=DKDYLDYLXV
 AVSCV2=ALL MATCH

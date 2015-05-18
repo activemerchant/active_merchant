@@ -272,6 +272,18 @@ class RemoteSagePayTest < Test::Unit::TestCase
     assert_success unstore
   end
 
+  def test_successful_verify
+    response = @gateway.verify(@visa, @options)
+    assert_success response
+    assert_equal "Success", response.message
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@declined_card, @options)
+    assert_failure response
+    assert_match(/Card Range not supported/, response.message)
+  end
+
   private
 
   def next_year
