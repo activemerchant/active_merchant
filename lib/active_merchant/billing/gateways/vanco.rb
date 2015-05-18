@@ -66,10 +66,26 @@ module ActiveMerchant
 
       def childnode_to_response(response, node, childnode)
         name = "#{node.name.downcase}_#{childnode.name.downcase}"
-        if !childnode.elements.empty?
-          response[name.downcase.to_sym] = Hash.from_xml(childnode.to_s).values.first
+        if name == "response_errors" && !childnode.elements.empty?
+          add_errors_to_response(response, childnode.to_s)
         else
           response[name.downcase.to_sym] = childnode.text
+        end
+      end
+
+      def add_errors_to_response(response, errors_xml)
+        errors_hash = Hash.from_xml(errors_xml).values.first
+        response[:response_errors] = errors_hash
+
+        error = errors_hash["Error"]
+        if error.kind_of?(Hash)
+          response[:error_message] = error["ErrorDescription"]
+          response[:error_codes] = error["ErrorCode"]
+        elsif error.kind_of?(Array)
+          error_str = error.map { |e| e["ErrorDescription"]}.join(". ")
+          error_codes = error.map { |e| e["ErrorCode"]}.join(", ")
+          response[:error_message] = "#{error_str}."
+          response[:error_codes] = error_codes
         end
       end
 
@@ -92,11 +108,7 @@ module ActiveMerchant
 
       def message_from(succeeded, response)
         return "Success" if succeeded
-        response[:response_errors]["Error"]["ErrorDescription"]
-      end
-
-      def error_code_from(succeeded, response)
-        succeeded ? nil : response[:response_errors]["Error"]["ErrorCode"]
+        response[:error_message]
       end
 
       def authorization_from(response)

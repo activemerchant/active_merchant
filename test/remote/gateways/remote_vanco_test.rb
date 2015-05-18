@@ -31,6 +31,7 @@ class RemoteVancoTest < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, billing_address: address(country: "CA"))
     assert_failure response
     assert_equal("Client not set up for International Credit Card Processing", response.message)
+    assert_equal("286", response.params["error_codes"])
   end
 
   def test_successful_echeck_purchase

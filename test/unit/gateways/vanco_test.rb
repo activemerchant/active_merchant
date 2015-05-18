@@ -46,7 +46,17 @@ class VancoTest < Test::Unit::TestCase
     end.respond_with(successful_login_response, failed_purchase_response)
 
     assert_failure response
-    assert_equal "286", response.params["response_errors"]["Error"]["ErrorCode"]
+    assert_equal "286", response.params["error_codes"]
+  end
+
+  def test_failed_purchase_multiple_errors
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options)
+    end.respond_with(successful_login_response, failed_purchase_multiple_errors_response)
+
+    assert_failure response
+    assert_equal "Client not set up for International Credit Card Processing. Another Error.", response.message
+    assert_equal "286, 331", response.params["error_codes"]
   end
 
   def test_successful_purchase_echeck
@@ -66,7 +76,7 @@ class VancoTest < Test::Unit::TestCase
     end.respond_with(successful_login_response, failed_purchase_echeck_response)
 
     assert_failure response
-    assert_equal "178", response.params["response_errors"]["Error"]["ErrorCode"]
+    assert_equal "178", response.params["error_codes"]
   end
 
   def test_successful_refund
@@ -84,7 +94,7 @@ class VancoTest < Test::Unit::TestCase
     end.respond_with(successful_login_response, failed_refund_response)
 
     assert_failure response
-    assert_equal "575", response.params["response_errors"]["Error"]["ErrorCode"]
+    assert_equal "575", response.params["error_codes"]
   end
 
   def test_scrub
@@ -143,6 +153,12 @@ class VancoTest < Test::Unit::TestCase
   def failed_purchase_response
     %(
       <?xml version="1.0" encoding="UTF-8"  ?><VancoWS><Auth><RequestID>8fde1fc5f27a09eeafffe8761c546c</RequestID><RequestTime>2015-05-01 16:13:34 -0400</RequestTime><RequestType>EFTAddCompleteTransaction</RequestType><Signature></Signature><SessionID>ae3a84a0963b83eeb44db13027e37f172e24d939</SessionID><Version>2</Version></Auth><Response><Errors><Error><ErrorCode>286</ErrorCode><ErrorDescription>Client not set up for International Credit Card Processing</ErrorDescription></Error></Errors></Response></VancoWS>
+     )
+  end
+
+  def failed_purchase_multiple_errors_response
+    %(
+      <?xml version="1.0" encoding="UTF-8"  ?> <VancoWS> <Auth> <RequestID> 8fde1fc5f27a09eeafffe8761c546c</RequestID> <RequestTime> 2015-05-01 16:13:34 -0400</RequestTime> <RequestType> EFTAddCompleteTransaction</RequestType> <Signature> </Signature> <SessionID> ae3a84a0963b83eeb44db13027e37f172e24d939</SessionID> <Version> 2</Version> </Auth> <Response> <Errors> <Error> <ErrorCode>286</ErrorCode> <ErrorDescription>Client not set up for International Credit Card Processing</ErrorDescription> </Error> <Error> <ErrorCode>331</ErrorCode> <ErrorDescription>Another Error</ErrorDescription> </Error> </Errors> </Response> </VancoWS>
      )
   end
 
