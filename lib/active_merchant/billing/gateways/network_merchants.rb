@@ -176,6 +176,7 @@ module ActiveMerchant #:nodoc:
           post[:payment] = 'creditcard'
         else
           post[:customer_vault_id] = payment_source
+          post[:billing_method] = 'recurring'
         end
       end
 

@@ -147,7 +147,9 @@ class NetworkMerchantsTest < Test::Unit::TestCase
   end
 
   def test_purchase_on_stored_card
-    @gateway.expects(:ssl_post).returns(successful_purchase_on_stored_card)
+    @gateway.expects(:ssl_post).with do |_, body|
+      body.include?("billing_method=recurring")
+    end.returns(successful_purchase_on_stored_card)
 
     assert purchase = @gateway.purchase(@amount, 1200085822, @options)
     assert_success purchase
