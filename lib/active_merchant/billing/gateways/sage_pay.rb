@@ -138,6 +138,13 @@ module ActiveMerchant #:nodoc:
         commit(:unstore, post)
       end
 
+      def verify(credit_card, options={})
+        MultiResponse.run(:use_first_response) do |r|
+          r.process { authorize(100, credit_card, options) }
+          r.process(:ignore_result) { void(r.authorization, options) }
+        end
+      end
+
       private
       def add_reference(post, identification)
         order_id, transaction_id, authorization, security_key = identification.split(';')
@@ -390,4 +397,3 @@ module ActiveMerchant #:nodoc:
 
   end
 end
-
