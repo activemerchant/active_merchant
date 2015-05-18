@@ -7,8 +7,7 @@ class BpointTest < Test::Unit::TestCase
     @gateway = BpointGateway.new(
       username: '',
       password: '',
-      merchant_number: '',
-      biller_code: ''
+      merchant_number: ''
     )
 
     @credit_card = credit_card
@@ -121,6 +120,14 @@ class BpointTest < Test::Unit::TestCase
   def test_scrub
     assert @gateway.supports_scrubbing?
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
+  end
+
+  def test_passing_biller_code
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, { biller_code: '1234' })
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<BillerCode>1234</BillerCode>)m, data)
+    end.respond_with(successful_authorize_response)
   end
 
   private
