@@ -782,7 +782,7 @@ sage:
   password: password
 
 sage_pay:
-  login: LOGIN
+  login: login
 
 sallie_mae:
   login: TEST0
