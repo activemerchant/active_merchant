@@ -118,10 +118,11 @@ class LitleTest < Test::Unit::TestCase
       card_validation_num: "000"
     }
     response = stub_comms do
-       @gateway.authorize(@amount, paypage_payment_method)
+       @gateway.authorize(@amount, paypage_payment_method, { billing_address: { name: 'John Green' }} )
     end.respond_with(successful_authorize_with_paypage_response)
 
     assert_success response
+    assert_equal "1234567890123456", response.params["tokenResponse_litleToken"]
     assert_equal "100000000000000001;authorization", response.authorization
     assert response.test?
   end
@@ -350,7 +351,7 @@ class LitleTest < Test::Unit::TestCase
     %(
       <litleOnlineResponse version='9.3' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <authorizationResponse id='ididid' reportGroup='rtpGrp' customerId='12345'>
-          <litleTxnId>794754443359599000</litleTxnId>
+          <litleTxnId>100000000000000001</litleTxnId>
           <orderId>1</orderId>
           <response>000</response>
           <responseTime>2015-05-18T20:54:01</responseTime>

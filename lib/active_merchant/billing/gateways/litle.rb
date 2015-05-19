@@ -203,7 +203,7 @@ module ActiveMerchant #:nodoc:
         return if payment_method.is_a?(String)
 
         doc.billToAddress do
-          doc.name(payment_method.is_a?(Hash) ? options[:billing_address][:name] : payment_method.name)
+          doc.name(payment_method.respond_to?(:name) ? payment_method.name : options[:billing_address][:name])
           doc.email(options[:email]) if options[:email]
           add_address(doc, options[:billing_address])
         end
