@@ -24,6 +24,7 @@
 * Vanco: Handle multiple error responses [duff]
 * Merchant Partners gateway support [rwdaigle]
 * BPoint: Update params to contain all response data [tjstankus]
+* BPoint: Support biller_code in options [tjstankus]
 
 
 == Version 1.49.0 (May 1, 2015)
