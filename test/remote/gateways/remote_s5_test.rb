@@ -32,6 +32,13 @@ class RemoteS5Test < Test::Unit::TestCase
     assert_match %r{Request successfully processed}, response.message
   end
 
+  def test_successful_purchase_with_utf_character
+    card = credit_card('4000100011112224', last_name: 'Wåhlin')
+    response = @gateway.purchase(@amount, card, @options)
+    assert_success response
+    assert_match %r{Request successfully processed}, response.message
+  end
+
   def test_successful_purchase_without_address
     response = @gateway.purchase(@amount, @credit_card, {})
     assert_success response

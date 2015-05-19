@@ -198,7 +198,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def build_xml_request
-        builder = Nokogiri::XML::Builder.new do |xml|
+        builder = Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
           xml.Request(version: '1.0') do
             xml.Header do
               xml.Security(sender: @options[:sender])
