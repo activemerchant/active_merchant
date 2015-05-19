@@ -246,6 +246,7 @@ module ActiveMerchant #:nodoc:
         def authorization_key
           :ProcessPaymentResult_TransactionNumber
         end
+        alias_method :transaction_key, :authorization_key
 
         def success?
           params[:ProcessPaymentResult_ResponseCode] == '0'
@@ -263,6 +264,7 @@ module ActiveMerchant #:nodoc:
         def authorization_key
           :AddTokenResult_Token
         end
+        alias_method :transaction_key, :authorization_key
 
         def success?
           params[:response_ResponseCode] == 'SUCCESS'
