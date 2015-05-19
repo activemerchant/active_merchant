@@ -111,6 +111,21 @@ class LitleTest < Test::Unit::TestCase
     assert_equal "110", response.params["response"]
   end
 
+  def test_successful_authorize_with_paypage
+    paypage_payment_method = {
+      paypage_registration_id: "cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg=",
+      exp_date: "1012",
+      card_validation_num: "000"
+    }
+    response = stub_comms do
+       @gateway.authorize(@amount, paypage_payment_method)
+    end.respond_with(successful_authorize_with_paypage_response)
+
+    assert_success response
+    assert_equal "100000000000000001;authorization", response.authorization
+    assert response.test?
+  end
+
   def test_failed_capture
     response = stub_comms do
       @gateway.capture(@amount, @credit_card)
@@ -326,6 +341,28 @@ class LitleTest < Test::Unit::TestCase
             <avsResult>01</avsResult>
             <cardValidationResult>M</cardValidationResult>
           </fraudResult>
+        </authorizationResponse>
+      </litleOnlineResponse>
+    )
+  end
+
+  def successful_authorize_with_paypage_response
+    %(
+      <litleOnlineResponse version='9.3' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
+        <authorizationResponse id='ididid' reportGroup='rtpGrp' customerId='12345'>
+          <litleTxnId>794754443359599000</litleTxnId>
+          <orderId>1</orderId>
+          <response>000</response>
+          <responseTime>2015-05-18T20:54:01</responseTime>
+          <message>Approved</message>
+          <authCode>81195</authCode>
+          <tokenResponse>
+            <litleToken>1234567890123456</litleToken>
+            <tokenResponseCode>801</tokenResponseCode>
+            <tokenMessage>Account number was successfully registered</tokenMessage>
+            <type>VI</type>
+            <bin>123456</bin>
+          </tokenResponse>
         </authorizationResponse>
       </litleOnlineResponse>
     )
