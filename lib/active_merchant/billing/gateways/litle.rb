@@ -187,7 +187,7 @@ module ActiveMerchant #:nodoc:
           doc.paypage do
             doc.paypageRegistrationId(payment_method[:paypage_registration_id])
             doc.expDate(payment_method[:exp_date])
-            doc.cardValidationNum(payment_method[:card_validation_num])
+            doc.cardValidationNum(payment_method[:card_validation_num]) unless payment_method[:card_validation_num].blank?
           end
         else
           doc.card do

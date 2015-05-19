@@ -134,8 +134,7 @@ class RemoteLitleTest < Test::Unit::TestCase
   def test_successful_authorization_with_paypage
     paypage_payment_method = {
       paypage_registration_id: "cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg=",
-      exp_date: "1012",
-      card_validation_num: "000"
+      exp_date: "1012"
     }
     assert auth = @gateway.authorize(40000, paypage_payment_method, @options)
     assert_success auth
