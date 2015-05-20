@@ -214,7 +214,7 @@ class LitleTest < Test::Unit::TestCase
   def test_successful_store_with_paypage_registration_id
     response = stub_comms do
       @gateway.store("cDZJcmd1VjNlYXNaSlRMTGpocVZQY1NNlYE4ZW5UTko4NU9KK3p1L1p1VzE4ZWVPQVlSUHNITG1JN2I0NzlyTg=")
-    end.respond_with(successful_store_pagepage_response)
+    end.respond_with(successful_store_paypage_response)
 
     assert_success response
     assert_equal "1111222233334444", response.authorization
@@ -481,7 +481,7 @@ class LitleTest < Test::Unit::TestCase
     )
   end
 
-  def successful_store_pagepage_response
+  def successful_store_paypage_response
     %(
       <litleOnlineResponse version='8.2' response='0' message='Valid Format' xmlns='http://www.litle.com/schema'>
         <registerTokenResponse id='99999' reportGroup='Default Report Group' customerId=''>
