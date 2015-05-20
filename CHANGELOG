@@ -20,6 +20,7 @@
 * Replace Connection magic numbers with constant references [larrylv]
 * Add CAMS gateway [trevorgrayson]
 * PayPal Express: Fix AllowedPaymentMethod [edclements]
+* Litle: Store credit card from PayPage [dontmatta]
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
