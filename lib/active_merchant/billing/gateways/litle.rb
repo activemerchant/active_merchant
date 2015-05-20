@@ -103,12 +103,16 @@ module ActiveMerchant #:nodoc:
         commit(void_type(kind), request)
       end
 
-      def store(creditcard, options = {})
+      def store(payment_method, options = {})
         request = build_xml_request do |doc|
           add_authentication(doc)
           doc.registerTokenRequest(transaction_attributes(options)) do
             doc.orderId(truncate(options[:order_id], 24))
-            doc.accountNumber(creditcard.number)
+            if payment_method.is_a?(String)
+              doc.paypageRegistrationId(payment_method)
+            else
+              doc.accountNumber(payment_method.number)
+            end
           end
         end
 
