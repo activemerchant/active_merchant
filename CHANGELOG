@@ -27,6 +27,7 @@
 * BPoint: Support biller_code in options [tjstankus]
 * Sagepay: Add Verify [anellis]
 * S5: Build XML with UTF-8 encoding [tjstankus]
+* Cashnet: Handle unparsable response body [duff]
 
 
 == Version 1.49.0 (May 1, 2015)
