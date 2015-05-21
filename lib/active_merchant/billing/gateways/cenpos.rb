@@ -117,6 +117,7 @@ module ActiveMerchant #:nodoc:
         post[:CurrencyCode] = CURRENCY_CODES[options[:currency] || currency(money)]
         post[:InvoiceNumber] = options[:order_id]
         post[:InvoiceDetail] = options[:invoice_detail] if options[:invoice_detail]
+        post[:CustomerCode] = options[:customer_code] if options[:customer_code]
         add_tax(post, options)
       end
 
