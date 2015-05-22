@@ -1,22 +1,17 @@
 require 'test_helper'
+
 class RemoteAlliedWalletTest < Test::Unit::TestCase
   def setup
     @gateway = AlliedWalletGateway.new(fixtures(:allied_wallet))
 
     @amount = 100
     @credit_card = credit_card
-    @declined_card = credit_card('4242424242424242', {:verification_value => "555"})
+    @declined_card = credit_card('4242424242424242', verification_value: "555")
 
     @options = {
-      site_id: fixtures(:allied_wallet)[:site_id],
-      order_id: generate_unique_id,
       billing_address: address,
-      description: "Store Purchase",
-      ip: "127.0.0.1",
-      email: "jim_smith@example.com"
     }
   end
-
 
   def test_successful_purchase
     response = @gateway.purchase(@amount, @credit_card, @options)
@@ -30,11 +25,27 @@ class RemoteAlliedWalletTest < Test::Unit::TestCase
     assert_equal "The test operation was declined.", response.message
   end
 
+  def test_failed_purchase_no_address
+    response = @gateway.purchase(@amount, @declined_card)
+    assert_failure response
+    assert_match(/Address.* should not be empty/, response.message)
+  end
+
+  def test_successful_purchase_with_more_options
+    response = @gateway.purchase(@amount, @credit_card, @options.merge(
+      order_id: generate_unique_id,
+      ip: "127.0.0.1",
+      email: "jim_smith@example.com"
+    ))
+    assert_success response
+    assert_equal "Succeeded", response.message
+  end
+
   def test_successful_authorize_and_capture
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
     assert_equal "Succeeded", response.message
-    assert_match %r(^\d+\|.+$), response.authorization
+    assert response.authorization
 
     capture = @gateway.capture(@amount, response.authorization)
     assert_success capture
@@ -50,7 +61,7 @@ class RemoteAlliedWalletTest < Test::Unit::TestCase
   def test_failed_capture
     response = @gateway.capture(@amount, "")
     assert_failure response
-    assert_equal "Bad Request", response.message
+    assert_equal "'Authorize Transaction Id' should not be empty.", response.message
   end
 
   def test_successful_void
@@ -65,7 +76,7 @@ class RemoteAlliedWalletTest < Test::Unit::TestCase
   def test_failed_void
     response = @gateway.void("")
     assert_failure response
-    assert_equal "Bad Request", response.message
+    assert_equal "'Authorize Transaction Id' should not be empty.", response.message
   end
 
   def test_successful_refund
@@ -78,9 +89,9 @@ class RemoteAlliedWalletTest < Test::Unit::TestCase
   end
 
   def test_failed_refund
-    response = @gateway.refund(nil, "")
+    response = @gateway.refund(@amount, "UnknownAuthorization")
     assert_failure response
-    assert_equal "Bad Request", response.message
+    assert_match(/An internal exception has occurred/, response.message)
   end
 
   def test_successful_verify

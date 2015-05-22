@@ -21,7 +21,7 @@ class AlliedWalletTest < Test::Unit::TestCase
 
       assert_success response
 
-      assert_equal "123456|1.00", response.authorization
+      assert_equal "123456", response.authorization
       assert response.test?
     end
 
@@ -41,7 +41,7 @@ class AlliedWalletTest < Test::Unit::TestCase
       end.respond_with(successful_authorize_response)
 
       assert_success response
-      assert_equal "123456|1.00", response.authorization
+      assert_equal "123456", response.authorization
 
       capture = stub_comms do
         @gateway.capture(@amount, response.authorization)
@@ -74,7 +74,7 @@ class AlliedWalletTest < Test::Unit::TestCase
       end.respond_with(successful_authorize_response)
 
       assert_success response
-      assert_equal "123456|1.00", response.authorization
+      assert_equal "123456", response.authorization
 
       void = stub_comms do
         @gateway.void(response.authorization)
@@ -101,7 +101,7 @@ class AlliedWalletTest < Test::Unit::TestCase
       end.respond_with(successful_purchase_response)
 
       assert_success response
-      assert_equal "123456|1.00", response.authorization
+      assert_equal "123456", response.authorization
 
       refund = stub_comms do
         @gateway.refund(@amount, response.authorization)
@@ -143,6 +143,15 @@ class AlliedWalletTest < Test::Unit::TestCase
 
       assert_failure response
       assert_equal "Error", response.message
+    end
+
+    def test_invalid_json
+      response = stub_comms do
+        @gateway.purchase(@amount, @credit_card)
+      end.respond_with(invalid_json_response)
+
+      assert_failure response
+      assert_match %r{Unparsable response}, response.message
     end
 
     def test_transcript_scrubbing
@@ -272,6 +281,14 @@ class AlliedWalletTest < Test::Unit::TestCase
       }
       )
     end
+
+    def invalid_json_response
+      %(
+      {
+        "id": "123456",
+      )
+    end
+
 
     def transcript
       %(

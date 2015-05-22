@@ -23,7 +23,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
 
-        commit("purchase", post)
+        commit(:purchase, post)
       end
 
       def authorize(amount, payment_method, options={})
@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(post, payment_method)
         add_customer_data(post, options)
 
-        commit("authorize", post)
+        commit(:authorize, post)
       end
 
       def capture(amount, authorization, options={})
@@ -41,14 +41,14 @@ module ActiveMerchant #:nodoc:
         add_reference(post, authorization, :capture)
         add_customer_data(post, options)
 
-        commit("capture", post)
+        commit(:capture, post)
       end
 
       def void(authorization, options={})
         post = {}
         add_reference(post, authorization, :void)
 
-        commit("void", post)
+        commit(:void, post)
       end
 
       def refund(amount, authorization, options={})
@@ -58,7 +58,7 @@ module ActiveMerchant #:nodoc:
         add_amount(post, amount)
         add_customer_data(post, options)
 
-        commit("refund", post)
+        commit(:refund, post)
       end
 
       def verify(credit_card, options={})
@@ -86,7 +86,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_invoice(post, money, options)
-        post[:siteId] = options[:site_id]
+        post[:siteId] = @options[:site_id]
         post[:amount] = amount(money)
         post[:trackingId] = options[:order_id]
         post[:currency] = options[:currency] || currency(money)
@@ -101,9 +101,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        post[:email] = options[:email]
+        post[:email] = options[:email] || "unspecified@example.com"
         post[:iPAddress] = options[:ip]
-        if(billing_address = (options[:billing_address] || options[:address]))
+        if (billing_address = options[:billing_address])
           post[:firstName], post[:lastName] = billing_address[:name].split
           post[:addressLine1] = billing_address[:address1]
           post[:addressLine2] = billing_address[:address2]
@@ -116,45 +116,51 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_reference(post, authorization, action)
-        transaction_id, transaction_amount = split_authorization(authorization)
         transactions = {
           capture: :authorizetransactionid,
           void: :authorizeTransactionid,
           refund: :referencetransactionid,
           recurring: :saleTransactionid
         }
-        post[transactions[action]] = transaction_id
+        post[transactions[action]] = authorization
       end
 
 
       ACTIONS = {
-        "purchase" => "SALE",
-        "authorize" => "AUTHORIZE",
-        "capture" => "CAPTURE",
-        "void" => "VOID",
-        "refund" => "REFUND",
-        "store" => "STORE",
+        purchase: "SALE",
+        authorize: "AUTHORIZE",
+        capture: "CAPTURE",
+        void: "VOID",
+        refund: "REFUND"
       }
 
       def commit(action, post)
-        data = build_request(post)
-        response = parse(ssl_post(url(action), data, headers))
+        begin
+          raw_response = ssl_post(url(action), post.to_json, headers)
+          response = parse(raw_response)
+        rescue ResponseError => e
+          raise unless(e.response.code.to_s =~ /4\d\d/)
+          response = parse(e.response.body)
+        end
+
         succeeded = success_from(response["status"])
         Response.new(
           succeeded,
           message_from(succeeded, response),
           response,
-          authorization: authorization_from(post, response),
+          authorization: response["id"],
           :avs_result => AVSResult.new(code: response["avs_response"]),
           :cvv_result => CVVResult.new(response["cvv2_response"]),
           test: test?
         )
+      rescue JSON::ParserError
+        unparsable_response(raw_response)
+      end
 
-        rescue ResponseError => e
-          if e.response.code == '400'
-            return Response.new(false, 'Bad Request', {}, :test => test?)
-          end
-          raise
+      def unparsable_response(raw_response)
+        message = "Unparsable response received from Allied Wallet. Please contact Allied Wallet if you continue to receive this message."
+        message += " (The raw response returned by the API was #{raw_response.inspect})"
+        return Response.new(false, message)
       end
 
       def headers
@@ -164,22 +170,12 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def build_request(post)
-        post.to_json
-      end
-
       def url(action)
-        live_url + @options[:merchant_id].to_s + "/" + ACTIONS[action] + "transactions"
+        live_url + CGI.escape(@options[:merchant_id]) + "/" + ACTIONS[action] + "transactions"
       end
 
       def parse(body)
-        return {} unless body
         JSON.parse(body)
-      rescue JSON::ParserError
-        {
-          "message" => "Invalid response received.",
-          "raw_response" => scrub(body)
-        }
       end
 
       def parse_element(response, node)
@@ -200,15 +196,6 @@ module ActiveMerchant #:nodoc:
         else
           response["message"] || "Unable to read error message"
         end
-      end
-
-      def authorization_from(request, response)
-        [ response["id"], request[:amount] ].join("|")
-      end
-
-      def split_authorization(authorization)
-        transaction_id, transaction_amount = authorization.split("|")
-        [transaction_id, transaction_amount]
       end
 
     end
