@@ -35,12 +35,13 @@ module ActiveMerchant #:nodoc:
     #
     # == Example Usage
     #   cc = CreditCard.new(
-    #     :first_name => 'Steve',
-    #     :last_name  => 'Smith',
-    #     :month      => '9',
-    #     :year       => '2010',
-    #     :brand      => 'visa',
-    #     :number     => '4242424242424242'
+    #     :first_name         => 'Steve',
+    #     :last_name          => 'Smith',
+    #     :month              => '9',
+    #     :year               => '2017',
+    #     :brand              => 'visa',
+    #     :number             => '4242424242424242',
+    #     :verification_value => '424'
     #   )
     #
     #   cc.validate # => {}
