@@ -86,8 +86,7 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r(<Security.+), '\1[FILTERED]\2').
-          gsub(%r(<User login.+), '\1[FILTERED]\2').
+          gsub(%r((pwd=).+(/>)), '\1[FILTERED]\2').
           gsub(%r((<Number>).+(</Number>)), '\1[FILTERED]\2').
           gsub(%r((<Verification>).+(</Verification>)), '\1[FILTERED]\2')
       end
