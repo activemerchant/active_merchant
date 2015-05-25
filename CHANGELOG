@@ -30,6 +30,7 @@
 * Cashnet: Handle unparsable response body [duff]
 * CenPOS: Allow specification of customer_code [duff]
 * Allied Wallet: Add gateway [anellis]
+*  S5: set Regex closure on scrubbing method [davidsantoso]
 
 
 == Version 1.49.0 (May 1, 2015)
