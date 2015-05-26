@@ -99,6 +99,10 @@ module ActiveMerchant #:nodoc:
         commit(post)
       end
 
+      def success?(response)
+        response[:trnApproved] == '1' || response[:responseCode] == '1'
+      end
+
       def recurring(money, source, options = {})
         ActiveMerchant.deprecated RECURRING_DEPRECATION_MESSAGE
 

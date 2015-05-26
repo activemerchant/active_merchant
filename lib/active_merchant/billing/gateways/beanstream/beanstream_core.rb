@@ -351,10 +351,6 @@ module ActiveMerchant #:nodoc:
         response[:message]
       end
 
-      def success?(response)
-        response[:responseType] == 'R' || response[:trnApproved] == '1' || response[:responseCode] == '1'
-      end
-
       def recurring_success?(response)
         response[:code] == '1'
       end
