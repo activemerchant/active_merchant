@@ -37,6 +37,7 @@
 * CenPOS: Simplify currency handling [duff]
 * Beanstream: Don't treat redirect as success [aprofeit]
 * Add PayU India gateway [ntalbott]
+* NetBilling: Require TLSv1 [duff]
 
 == Version 1.49.0 (May 1, 2015)
 
