@@ -34,6 +34,7 @@
 * Dibs: Require TLSv1 [duff]
 * Optimal: Handle case of no billing address [duff]
 * Omise: Add gateway [zdk]
+* CenPOS: Simplify currency handling [duff]
 
 
 == Version 1.49.0 (May 1, 2015)
