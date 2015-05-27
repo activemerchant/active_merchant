@@ -43,7 +43,7 @@ class QuickBooksTest < Test::Unit::TestCase
 
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
-    response = @gateway.authorize(@amount, @credit_card, @options.merge({token: "1234"}))
+    response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
 
     assert_equal @authorization, response.authorization
@@ -52,7 +52,7 @@ class QuickBooksTest < Test::Unit::TestCase
 
   def test_successful_authorize_with_token
     @gateway.expects(:ssl_post).returns(successful_authorize_response)
-    response = @gateway.authorize(@amount, "", @options)
+    response = @gateway.authorize(@amount, "", @options.merge({token: "1234"}))
     assert_success response
 
     assert_equal @authorization, response.authorization
