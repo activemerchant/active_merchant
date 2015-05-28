@@ -83,7 +83,13 @@ module ActiveMerchant #:nodoc:
         commit(:post, 'customers', post, options)
       end
 
-      def update_customer(customer_id, post, options = {})
+      def update_customer(customer_id, payment, options = {})
+        post = {}
+        add_creditcard(post, payment, options)
+
+        post[:description] = options[:description] if options[:description]
+        post[:email] = options[:email] if options[:email]
+
         commit(:post, "customers/#{CGI.escape(customer_id)}", post, options)
       end
 
