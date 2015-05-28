@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class S5Test < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = S5Gateway.new(
       sender: 'sender',
@@ -27,6 +29,16 @@ class S5Test < Test::Unit::TestCase
 
     assert_equal '8a8294494d0a8ecd014d25a71d1502c7', response.authorization
     assert response.test?
+  end
+
+  def test_successful_purchase_with_recurring_flag
+    response = stub_comms do
+      @gateway.purchase(@amount, @credit_card, @options.merge(recurring: true))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/Recurrence.*REPEATED/, data)
+    end.respond_with(successful_purchase_response)
+
+    assert_success response
   end
 
   def test_failed_purchase
