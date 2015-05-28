@@ -130,8 +130,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_customer_data(post, options)
-        metadata_options = [:description, :ip, :user_agent, :referrer]
-        post.update(options.slice(*metadata_options))
+        post.update(
+          description: options[:description],
+          ip:          options[:ip],
+          user_agent:  options[:user_agent],
+          referrer:    options[:referrer]
+        )
       end
 
       def create_post_for_auth_or_purchase(money, payment, options)
