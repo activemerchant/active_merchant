@@ -32,6 +32,13 @@ class RemoteS5Test < Test::Unit::TestCase
     assert_match %r{Request successfully processed}, response.message
   end
 
+  def test_successful_recurring_purchase
+    @options[:recurring] = true
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
+    assert_match %r{Request successfully processed}, response.message
+  end
+
   def test_successful_purchase_with_utf_character
     card = credit_card('4000100011112224', last_name: 'Wåhlin')
     response = @gateway.purchase(@amount, card, @options)
@@ -50,6 +57,15 @@ class RemoteS5Test < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
     assert_equal 'transaction declined (invalid card)', response.message
+  end
+
+  def test_failed_recurring_purchase
+    @options[:memo] = "800.100.153"
+    @options[:recurring] = true
+    @credit_card.verification_value = nil
+    response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'transaction declined (invalid CVV)', response.message
   end
 
   def test_successful_authorize_without_address

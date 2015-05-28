@@ -31,6 +31,7 @@ module ActiveMerchant #:nodoc:
           add_payment(xml, money, 'sale', options)
           add_account(xml, payment)
           add_customer(xml, payment, options)
+          add_recurrence_mode(xml, options)
         end
 
         commit(request)
@@ -50,6 +51,7 @@ module ActiveMerchant #:nodoc:
           add_payment(xml, money, 'authonly', options)
           add_account(xml, payment)
           add_customer(xml, payment, options)
+          add_recurrence_mode(xml, options)
         end
 
         commit(request)
@@ -146,6 +148,14 @@ module ActiveMerchant #:nodoc:
           xml.City       address[:city]
           xml.State      address[:state]
           xml.Country    address[:country]
+        end
+      end
+
+      def add_recurrence_mode(xml, options)
+        if options[:recurring] == true
+          xml.Recurrence(mode: "REPEATED")
+        else
+          xml.Recurrence(mode: "INITIAL")
         end
       end
 
