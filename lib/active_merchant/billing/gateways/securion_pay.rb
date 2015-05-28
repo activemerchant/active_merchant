@@ -31,7 +31,7 @@ module ActiveMerchant #:nodoc:
 
       def initialize(options={})
         requires!(options, :secret_key)
-        @secret_key = options[:secret_key]
+        @options = options
 
         super
       end
@@ -199,7 +199,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def headers(options = {})
-        secret_key = options[:secret_key] || @secret_key
+        secret_key = options[:secret_key] || @options[:secret_key]
 
         headers = {
           "Authorization" => "Basic " + Base64.encode64(secret_key.to_s + ":").strip,
