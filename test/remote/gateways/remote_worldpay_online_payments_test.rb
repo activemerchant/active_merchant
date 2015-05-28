@@ -90,7 +90,7 @@ class RemoteWorldpayOnlinePaymentsTest < Test::Unit::TestCase
     purchase = @gateway.purchase(@amount, @credit_card, @options)
     assert_success purchase
 
-    assert refund = @gateway.refund(@amount, purchase.authorization)
+    refund = @gateway.refund(@amount+1, purchase.authorization)
     assert_failure refund
   end
 
