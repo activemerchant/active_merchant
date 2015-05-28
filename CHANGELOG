@@ -1,6 +1,7 @@
 = ActiveMerchant CHANGELOG
 
 
+* Garanti: Illegal character '&' parsing response [masaruhoshi]
 * Stripe: Revert force USD for verify [duff]
 
 

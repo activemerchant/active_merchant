@@ -108,4 +108,18 @@ class GatewayTest < Test::Unit::TestCase
       gateway.scrub("hi")
     end
   end
+
+  def test_strip_invalid_xml_chars
+    xml = <<EOF
+      <response>
+        <element>Parse the First & but not this &tilde; &x002a;</element>
+      </response>
+EOF
+    parsed_xml = @gateway.send(:strip_invalid_xml_chars, xml)
+
+    assert REXML::Document.new(parsed_xml)
+    assert_raise(REXML::ParseException) do
+      REXML::Document.new(xml)
+    end
+  end
 end
