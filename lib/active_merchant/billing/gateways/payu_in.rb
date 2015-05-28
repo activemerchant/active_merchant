@@ -174,12 +174,17 @@ module ActiveMerchant #:nodoc:
         top = JSON.parse(body)
 
         if result = top.delete("result")
-          parsed = result.split("&").inject({}) do |hash, string|
+          result.split("&").inject({}) do |hash, string|
             key, value = string.split("=")
             hash[CGI.unescape(key).downcase] = CGI.unescape(value || "")
             hash
+          end.each do |key, value|
+            if top[key]
+              top["result_#{key}"] = value
+            else
+              top[key] = value
+            end
           end
-          top.merge!(parsed)
         end
 
         if response = top.delete("response")
@@ -211,7 +216,11 @@ module ActiveMerchant #:nodoc:
       end
 
       def success_from(response)
-        (response["status"] == "success" || response["status"].to_s == "1")
+        if response["result_status"]
+          (response["status"] == "success" && response["result_status"] == "success")
+        else
+          (response["status"] == "success" || response["status"].to_s == "1")
+        end
       end
 
       def message_from(response)

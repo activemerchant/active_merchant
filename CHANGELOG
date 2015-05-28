@@ -40,7 +40,7 @@
 * NetBilling: Require TLSv1 [duff]
 * S5: Handle recurring transactions without CVV [davidsantoso]
 * Stripe: Force USD for verify [duff]
-
+* PayU India: Prevent shadowing in response parsing [ntalbott]
 
 == Version 1.49.0 (May 1, 2015)
 

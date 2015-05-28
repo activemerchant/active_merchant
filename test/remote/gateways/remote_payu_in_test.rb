@@ -87,7 +87,7 @@ class RemotePayuInTest < Test::Unit::TestCase
     response = response.responses.first
 
     # You'll probably need a new bin from http://requestb.in
-    bin = "1c3r88p1"
+    bin = "<requestb.in key>"
     File.open("3ds.html", "w") do |f|
       f.puts %(
         <html>
