@@ -145,9 +145,10 @@ module ActiveMerchant #:nodoc:
         add_customer(post, payment, options)
         add_customer_data(post, options)
         post[:description] = options[:description]
-        post[:metadata] = {}
-        post[:metadata][:email] = options[:email] if options[:email]
-        post.delete(:metadata) if post[:metadata].empty?
+        if options[:email]
+          post[:metadata] = {}
+          post[:metadata][:email] = options[:email]
+        end
         post
       end
 
