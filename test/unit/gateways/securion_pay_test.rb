@@ -289,10 +289,9 @@ class SecurionPayTest < Test::Unit::TestCase
   def test_successful_new_customer_with_card
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.store(@credit_card, @options)
-    end.respond_with(successful_authorize_response, successful_void_response, successful_new_customer_response)
-    assert_instance_of MultiResponse, response
+    end.respond_with(successful_new_customer_response)
     assert_success response
-    assert_equal 'cust_OWTybrAX3JP4Bbv1xnkpnHEj', response.responses[2].authorization
+    assert_equal 'cust_OWTybrAX3JP4Bbv1xnkpnHEj', response.authorization
     assert response.test?
   end
 

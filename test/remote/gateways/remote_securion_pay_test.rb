@@ -188,21 +188,18 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   def test_successful_store
     assert response = @gateway.store(@credit_card, { description: "Customer Test", email: "email@example.com" })
     assert_success response
-    assert_equal 3, response.responses.size
-    store_response = response.responses.last
-    assert_equal "customer", store_response.params["objectType"]
-    assert_equal "Customer Test", store_response.params["description"]
-    assert_equal "email@example.com", store_response.params["email"]
-    first_card = store_response.params["cards"].first
-    assert_equal store_response.params["defaultCardId"], first_card["id"]
+    assert_equal "customer", response.params["objectType"]
+    assert_equal "Customer Test", response.params["description"]
+    assert_equal "email@example.com", response.params["email"]
+    first_card = response.params["cards"].first
+    assert_equal response.params["defaultCardId"], first_card["id"]
     assert_equal @credit_card.last_digits, first_card["last4"]
   end
 
   def test_successful_store_with_existing_customer
     assert response = @gateway.store(@credit_card, { description: "Customer Test", email: "email@example.com" })
     assert_success response
-    assert_equal 3, response.responses.size
-    store_response = response.responses.last
+    store_response = response
 
     assert response = @gateway.store(@new_credit_card, { customer: store_response.params['id'], description: "Test Customer Update" })
     assert_success response
@@ -222,7 +219,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   def test_successful_unstore_card
     response = @gateway.store(@credit_card, { description: "Active Merchant Unstore Customer", email: "email@example.pl" })
     assert_success response
-    customer = response.responses.last
+    customer = response
     customer_id = customer.params['id']
     card_id = customer.params['cards'].first['id']
 
@@ -239,7 +236,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
 
   def test_successful_update
     response = @gateway.store(@credit_card, { description: "Active Merchant Credit Card", email: "email@example.pl" })
-    customer = response.responses.last
+    customer = response
     customer_id = customer.params['id']
     card_id     = customer.params['cards'].first['id']
 

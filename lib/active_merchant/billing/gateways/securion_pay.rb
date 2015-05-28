@@ -79,16 +79,8 @@ module ActiveMerchant #:nodoc:
 
         post[:description] = options[:description] if options[:description]
         post[:email] = options[:email] if options[:email]
-        if options[:customer]
-          update_customer(options[:customer], post, options)
-        else
-          MultiResponse.run(:first) do |r|
-            r.process { verify(payment, options) }
-            if r.params["id"].present?
-              r.process { commit(:post, "customers", post, options) }
-            end
-          end
-        end
+
+        commit(:post, 'customers', post, options)
       end
 
       def update_customer(customer_id, post, options = {})
