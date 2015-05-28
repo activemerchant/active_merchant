@@ -38,6 +38,7 @@
 * Beanstream: Don't treat redirect as success [aprofeit]
 * Add PayU India gateway [ntalbott]
 * NetBilling: Require TLSv1 [duff]
+* S5: Handle recurring transactions without CVV [davidsantoso]
 
 == Version 1.49.0 (May 1, 2015)
 
