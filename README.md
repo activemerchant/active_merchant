@@ -76,7 +76,7 @@ end
 ```
 
 For more in-depth documentation and tutorials, see [GettingStarted.md](GettingStarted.md) and the
-[API documentation](http://rubydoc.info/github/Shopify/active_merchant/master/file/README.md).
+[API documentation](http://www.rubydoc.info/github/Shopify/active_merchant/).
 
 ## Supported Payment Gateways
 
