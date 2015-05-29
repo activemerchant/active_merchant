@@ -151,7 +151,7 @@ class FatZebraTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:ssl_request).returns(successful_refund_response)
 
-    assert response = @gateway.refund(100, "TEST", "Test refund")
+    assert response = @gateway.refund(100, "TEST")
     assert_success response
     assert_equal '003-R-7MNIUMY6', response.authorization
     assert response.test?
@@ -160,7 +160,7 @@ class FatZebraTest < Test::Unit::TestCase
   def test_unsuccessful_refund
     @gateway.expects(:ssl_request).returns(unsuccessful_refund_response)
 
-    assert response = @gateway.refund(100, "TEST", "Test refund")
+    assert response = @gateway.refund(100, "TEST")
     assert_failure response
     assert response.test?
   end
