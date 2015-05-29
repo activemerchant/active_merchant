@@ -74,7 +74,18 @@ class FatZebraTest < Test::Unit::TestCase
 
     assert_equal '001-P-12345AA', response.authorization
     assert response.test?
+  end
 
+  def test_successful_purchase_with_extra_options
+    @gateway.expects(:ssl_request).with { |method, url, body, headers|
+      json = JSON.parse(body)
+      json['extra']['ecm'] == '32'
+    }.returns(successful_purchase_response)
+
+    assert response = @gateway.purchase(@amount, "e1q7dbj2", @options.merge(:extra => {:ecm => '32'}))
+    assert_success response
+
+    assert_equal '001-P-12345AA', response.authorization
   end
 
   def test_successful_authorization
@@ -151,6 +162,15 @@ class FatZebraTest < Test::Unit::TestCase
   def test_successful_refund
     @gateway.expects(:ssl_request).returns(successful_refund_response)
 
+    assert response = @gateway.refund(100, "TEST", order_id: "Test refund")
+    assert_success response
+    assert_equal '003-R-7MNIUMY6', response.authorization
+    assert response.test?
+  end
+
+  def test_deprecated_successful_refund
+    @gateway.expects(:ssl_request).returns(successful_refund_response)
+
     assert response = @gateway.refund(100, "TEST", "Test refund")
     assert_success response
     assert_equal '003-R-7MNIUMY6', response.authorization
@@ -158,6 +178,14 @@ class FatZebraTest < Test::Unit::TestCase
   end
 
   def test_unsuccessful_refund
+    @gateway.expects(:ssl_request).returns(unsuccessful_refund_response)
+
+    assert response = @gateway.refund(100, "TEST", order_id: "Test refund")
+    assert_failure response
+    assert response.test?
+  end
+
+  def test_unsuccessful_deprecated_refund
     @gateway.expects(:ssl_request).returns(unsuccessful_refund_response)
 
     assert response = @gateway.refund(100, "TEST", "Test refund")
