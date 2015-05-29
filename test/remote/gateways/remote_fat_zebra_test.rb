@@ -39,6 +39,20 @@ class RemoteFatZebraTest < Test::Unit::TestCase
     assert_match /Currency XYZ is not valid for this merchant/, response.message
   end
 
+  def test_successful_purchase_sans_cvv
+    @credit_card.verification_value = nil
+    assert response = @gateway.purchase(@amount, @credit_card, recurring: true)
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
+  def test_failed_purchase_sans_cvv
+    @credit_card.verification_value = nil
+    assert response = @gateway.purchase(@amount, @credit_card)
+    assert_failure response
+    assert_equal 'CVV is required', response.message
+  end
+
   def test_successful_purchase_with_no_options
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_success response

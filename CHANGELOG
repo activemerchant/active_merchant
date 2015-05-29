@@ -43,6 +43,7 @@
 * PayU India: Prevent shadowing in response parsing [ntalbott]
 * QuickPay: Add support for v10 API [ta]
 * Fat Zebra: Fix refund and store signatures [duff]
+* Fat Zebra: Allow transactions without a CVV [duff]
 
 
 == Version 1.49.0 (May 1, 2015)

@@ -1,6 +1,8 @@
 require 'test_helper'
 
 class FatZebraTest < Test::Unit::TestCase
+  include CommStub
+
   def setup
     @gateway = FatZebraGateway.new(
                  :username => 'TEST',
@@ -61,6 +63,14 @@ class FatZebraTest < Test::Unit::TestCase
 
     assert_equal '001-P-12345AA', response.authorization
     assert response.test?
+  end
+
+  def test_successful_purchase_with_recurring_flag
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card, @options.merge(recurring: true))
+    end.check_request do |method, endpoint, data, headers|
+      assert_match(%r("extra":{"ecm":"32"}), data)
+    end.respond_with(successful_purchase_response)
   end
 
   def test_successful_purchase_with_descriptor

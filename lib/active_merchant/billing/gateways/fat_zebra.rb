@@ -123,6 +123,7 @@ module ActiveMerchant #:nodoc:
         extra = {}
         extra[:name] = options[:merchant] if options[:merchant]
         extra[:location] = options[:merchant_location] if options[:merchant_location]
+        extra[:ecm] = "32" if options[:recurring]
         post[:extra] = extra if extra.any?
       end
 
