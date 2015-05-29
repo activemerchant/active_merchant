@@ -88,7 +88,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
   def test_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
 
-    assert response = @gateway.refund(@amount, purchase.authorization, rand(1000000).to_s)
+    assert response = @gateway.refund(@amount, purchase.authorization, order_id: rand(1000000).to_s)
     assert_success response
     assert_match %r{Approved}, response.message
   end
@@ -96,7 +96,7 @@ class RemoteFatZebraTest < Test::Unit::TestCase
   def test_invalid_refund
     purchase = @gateway.purchase(@amount, @credit_card, @options)
 
-    assert response = @gateway.refund(@amount, nil, rand(1000000).to_s)
+    assert response = @gateway.refund(@amount, nil, order_id: rand(1000000).to_s)
     assert_failure response
     assert_match %r{Original transaction is required}, response.message
   end

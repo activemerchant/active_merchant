@@ -72,13 +72,18 @@ module ActiveMerchant #:nodoc:
       # amount - Integer - the amount to refund
       # txn_id - String - the original transaction to be refunded
       # reference - String - your transaction reference
-      def refund(money, txn_id, reference)
+      def refund(money, identification, options = {})
+        unless options.is_a?(Hash)
+          options = {:order_id => options}
+          ActiveMerchant.deprecated "Passing the order_id as a String is deprecated. Use a Hash instead and pass the order_id in the order_id key."
+        end
+
         post = {}
 
         add_extra_options(post, options)
         post[:amount] = money
-        post[:transaction_id] = txn_id
-        post[:reference] = reference
+        post[:transaction_id] = identification
+        post[:reference] = options[:order_id]
 
         commit(:post, "refunds", post)
       end
@@ -86,8 +91,10 @@ module ActiveMerchant #:nodoc:
       # Tokenize a credit card
       #
       # The token is returned in the Response#authorization
-      def store(creditcard)
+      def store(creditcard, options = {})
         post = {}
+
+        add_extra_options(post, options)
         add_creditcard(post, creditcard)
 
         commit(:post, "credit_cards", post)
@@ -122,7 +129,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_extra_options(post, options)
-        extra = {}
+        extra = options[:extra] || {}
         extra[:name] = options[:merchant] if options[:merchant]
         extra[:location] = options[:merchant_location] if options[:merchant_location]
         post[:extra] = extra if extra.any?
