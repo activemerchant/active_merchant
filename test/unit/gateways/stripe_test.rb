@@ -386,16 +386,6 @@ class StripeTest < Test::Unit::TestCase
     assert_equal "Transaction approved", response.message
   end
 
-  def test_verify_forces_usd_under_the_covers
-    response = stub_comms(@gateway, :ssl_request) do
-      @gateway.verify(@credit_card, @options.merge(currency: "EUR"))
-    end.check_request do |method, endpoint, data, headers|
-      assert_match(/currency=usd/, data) unless data == ""
-    end.respond_with(successful_authorization_response, successful_void_response)
-
-    assert_success response
-  end
-
   def test_unsuccessful_verify
     response = stub_comms(@gateway, :ssl_request) do
       @gateway.verify(@credit_card, @options)

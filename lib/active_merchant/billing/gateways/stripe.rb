@@ -123,7 +123,7 @@ module ActiveMerchant #:nodoc:
 
       def verify(payment, options = {})
         MultiResponse.run(:use_first_response) do |r|
-          r.process { authorize(50, payment, options.merge(currency: "USD")) }
+          r.process { authorize(50, payment, options) }
           r.process(:ignore_result) { void(r.authorization, options) }
         end
       end

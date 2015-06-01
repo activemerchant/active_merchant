@@ -1,5 +1,9 @@
 = ActiveMerchant CHANGELOG
 
+
+* Stripe: Revert force USD for verify [duff]
+
+
 == Version 1.50.0 (June 1, 2015)
 
 * Vanco: Add gateway [duff]
@@ -46,6 +50,7 @@
 * QuickPay: Add support for v10 API [ta]
 * Fat Zebra: Fix refund and store signatures [duff]
 * Fat Zebra: Allow transactions without a CVV [duff]
+
 
 == Version 1.49.0 (May 1, 2015)
 
