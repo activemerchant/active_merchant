@@ -913,9 +913,10 @@ webpay:
 
 # Working test credentials, no need to replace
 wepay:
-  client_id: "187493"
-  account_id: "1311201206"
-  access_token: "STAGE_4c6a319f9b6ef50e596ee3ea0b845f2fecd50fa0d8bc0b7483bd61c2018dbf5c"
+  client_id: "44716"
+  account_id: "2080478981"
+  access_token: "STAGE_67d2e41067af064af698e9cdc185c7570e4cb3191de04d8d092357c2a9120b6c"
+  client_secret: "d48fefe743"
 
 # Working test credentials with AVS/CVV support, no need to replace
 wirecard:
