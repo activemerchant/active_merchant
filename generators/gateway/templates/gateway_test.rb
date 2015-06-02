@@ -76,19 +76,19 @@ class <%= class_name %>Test < Test::Unit::TestCase
   private
 
   def pre_scrubbed
-    <<-PRE_SCRUBBED
+    %q(
       Run the remote tests for this gateway, and then put the contents of transcript.log here.
-    PRE_SCRUBBED
+    )
   end
 
   def post_scrubbed
-    <<-POST_SCRUBBED
+    %q(
       Put the scrubbed contents of transcript.log here after implementing your scrubbing function.
       Things to scrub:
         - Credit card number
         - CVV
         - Sensitive authentication details
-    POST_SCRUBBED
+    )
   end
 
   def successful_purchase_response

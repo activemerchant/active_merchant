@@ -5,6 +5,8 @@
 * Stripe: Revert force USD for verify [duff]
 * Litle: Surface XML validation errors in the response [jasonbosco]
 * Litle: Pass the credit card verification value for tokenization (#store) requests, if one is set. [jasonbosco]
+* S5: Make scrubbing regex less greedy [duff]
+
 
 == Version 1.50.0 (June 1, 2015)
 

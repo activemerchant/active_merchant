@@ -134,25 +134,17 @@ class S5Test < Test::Unit::TestCase
   private
 
   def pre_scrubbed
-   <<-PRE_SCRUBBED
-      <User login="8a82941847c4d0780147cea1d1730dcc" pwd="n3yNMBGK"/>
-      <Account>
-        <Number>4000100011112224</Number>
-        <Verification>123</Verification>
-      </Account>
-      load=<?xml version=\"1.0\"?>\n<Request version=\"1.0\">\n  <Header>\n    <Security sender=\"ff80808142b2c03c0142b7a7339603e0\"/>\n  </Header>\n  <Transaction mode=\"CONNECTOR_TEST\" channel=\"ff80808142b2c03c0142b7a7339803e5\">\n    <User login=\"8a82941847c4d0780147cea1d1730dcc\" pwd=\"n3yNMBGK\"/>\n    <Identification>\n      <ReferenceID/>\n    </Identification>\n    <Payment code=\"CC.DB\">\n      <Presentation>\n        <Amount>1.00</Amount>\n        <Currency>EUR</Currency>\n        <Usage>Store Purchase</Usage>\n      </Presentation>\n    </Payment>\n    <Account>\n      <Number>4000100011112224</Number>\n      <Holder>Longbob Longsen</Holder>\n      <Expiry year=\"2016\" month=\"9\"/>\n      <Verification>123</Verification>\n    </Account>\n    <Customer>\n      <Contact>\n        <Email/>\n        <Mobile/>\n        <Ip/>\n        <Phone>5555555555</Phone>\n      </Contact>\n      <Address>\n        <Street>456 My Street</Street>\n        <Zip>K1C2N6</Zip>\n        <City>Ottawa</City>\n        <State>ON</State>\n        <Country>CA</Country>\n      </Address>\n      <Name>\n        <Salutation/>\n        <Title/>\n        <Given>Longbob</Given>\n        <Family>Longsen</Family>\n        <Company>Widgets Inc</Company>\n      </Name>\n    </Customer>\n  </Transaction>\n</Request>\n
-    PRE_SCRUBBED
+    %q(
+    SSL established
+    <- "load=<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Request version=\"1.0\">\n  <Header>\n    <Security sender=\"ff80808142b2c03c0142b7a7339603e0\"/>\n  </Header>\n  <Transaction mode=\"CONNECTOR_TEST\" channel=\"ff80808142b2c03c0142b7a7339803e5\">\n    <User login=\"8a82941847c4d0780147cea1d1730dcc\" pwd=\"n3yNMBGK\"/>\n    <Payment code=\"CC.DB\">\n      <Presentation>\n        <Amount>1.00</Amount>\n        <Currency>EUR</Currency>\n        <Usage>Store Purchase</Usage>\n      </Presentation>\n    </Payment>\n    <Account>\n      <Number>4000100011112224</Number>\n      <Holder>Longbob Longsen</Holder>\n      <Brand>visa</Brand>\n      <Expiry year=\"2016\" month=\"9\"/>\n      <Verification>123</Verification>\n    </Account>\n    <Customer>\n      <Contact>\n        <Email/>\n        <Ip/>\n        <Phone>(555)555-5555</Phone>\n      </Contact>\n      <Address>\n        <Street>456 My Street Apt 1</Street>\n        <Zip>K1C2N6</Zip>\n        <City>Ottawa</City>\n        <State>ON</State>\n        <Country>CA</Country>\n      </Address>\n      <Name>\n        <Given>Longbob</Given>\n        <Family>Longsen</Family>\n        <Company/>\n      </Name>\n    </Customer>\n    <Recurrence mode=\"INITIAL\"/>\n  </Transaction>\n</Request>\n"
+    )
   end
 
   def post_scrubbed
-    <<-POST_SCRUBBED
-      <User login="8a82941847c4d0780147cea1d1730dcc" pwd=[FILTERED]/>
-      <Account>
-        <Number>[FILTERED]</Number>
-        <Verification>[FILTERED]</Verification>
-      </Account>
-      load=<?xml version=\"1.0\"?>\n<Request version=\"1.0\">\n  <Header>\n    <Security sender=\"ff80808142b2c03c0142b7a7339603e0\"/>\n  </Header>\n  <Transaction mode=\"CONNECTOR_TEST\" channel=\"ff80808142b2c03c0142b7a7339803e5\">\n    <User login=\"8a82941847c4d0780147cea1d1730dcc\" pwd=[FILTERED]/>\n    <Identification>\n      <ReferenceID/>\n    </Identification>\n    <Payment code=\"CC.DB\">\n      <Presentation>\n        <Amount>1.00</Amount>\n        <Currency>EUR</Currency>\n        <Usage>Store Purchase</Usage>\n      </Presentation>\n    </Payment>\n    <Account>\n      <Number>[FILTERED]</Number>\n      <Holder>Longbob Longsen</Holder>\n      <Expiry year=\"2016\" month=\"9\"/>\n      <Verification>[FILTERED]</Verification>\n    </Account>\n    <Customer>\n      <Contact>\n        <Email/>\n        <Mobile/>\n        <Ip/>\n        <Phone>5555555555</Phone>\n      </Contact>\n      <Address>\n        <Street>456 My Street</Street>\n        <Zip>K1C2N6</Zip>\n        <City>Ottawa</City>\n        <State>ON</State>\n        <Country>CA</Country>\n      </Address>\n      <Name>\n        <Salutation/>\n        <Title/>\n        <Given>Longbob</Given>\n        <Family>Longsen</Family>\n        <Company>Widgets Inc</Company>\n      </Name>\n    </Customer>\n  </Transaction>\n</Request>\n
-    POST_SCRUBBED
+    %q(
+    SSL established
+    <- "load=<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Request version=\"1.0\">\n  <Header>\n    <Security sender=\"ff80808142b2c03c0142b7a7339603e0\"/>\n  </Header>\n  <Transaction mode=\"CONNECTOR_TEST\" channel=\"ff80808142b2c03c0142b7a7339803e5\">\n    <User login=\"8a82941847c4d0780147cea1d1730dcc\" pwd=[FILTERED]/>\n    <Payment code=\"CC.DB\">\n      <Presentation>\n        <Amount>1.00</Amount>\n        <Currency>EUR</Currency>\n        <Usage>Store Purchase</Usage>\n      </Presentation>\n    </Payment>\n    <Account>\n      <Number>[FILTERED]</Number>\n      <Holder>Longbob Longsen</Holder>\n      <Brand>visa</Brand>\n      <Expiry year=\"2016\" month=\"9\"/>\n      <Verification>[FILTERED]</Verification>\n    </Account>\n    <Customer>\n      <Contact>\n        <Email/>\n        <Ip/>\n        <Phone>(555)555-5555</Phone>\n      </Contact>\n      <Address>\n        <Street>456 My Street Apt 1</Street>\n        <Zip>K1C2N6</Zip>\n        <City>Ottawa</City>\n        <State>ON</State>\n        <Country>CA</Country>\n      </Address>\n      <Name>\n        <Given>Longbob</Given>\n        <Family>Longsen</Family>\n        <Company/>\n      </Name>\n    </Customer>\n    <Recurrence mode=\"INITIAL\"/>\n  </Transaction>\n</Request>\n"
+    )
   end
 
   def successful_purchase_response
