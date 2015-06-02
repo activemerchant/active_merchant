@@ -283,4 +283,16 @@ class RemoteCardStreamTest < Test::Unit::TestCase
     assert_success response
     assert response.test?
   end
+
+  def test_successful_verify
+    response = @gateway.verify(@mastercard, @mastercard_options)
+    assert_success response
+    assert_equal 'APPROVED', response.message
+  end
+
+  def test_failed_verify
+    response = @gateway.verify(@declined_card, @mastercard_options)
+    assert_failure response
+    assert_equal 'INVALID CARDNUMBER', response.message
+  end
 end
