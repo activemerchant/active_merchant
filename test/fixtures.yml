@@ -44,7 +44,7 @@ bank_frick:
   userpwd: password
 
 banwire:
-  login: "desarrollo"
+  login: "userdemo"
 
 barclays_epdq:
   login: test
