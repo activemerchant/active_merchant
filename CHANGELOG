@@ -7,7 +7,7 @@
 * Litle: Pass the credit card verification value for tokenization (#store) requests, if one is set. [jasonbosco]
 * S5: Make scrubbing regex less greedy [duff]
 * CardStream: Add support for verify [anellis]
-
+* Authorize.net: UTF-8 encode requests [duff]
 
 
 == Version 1.50.0 (June 1, 2015)

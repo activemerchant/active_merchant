@@ -240,6 +240,14 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'CVV not processed', response.cvv_result['message']
   end
 
+  def test_successful_purchase_with_utf_character
+    stub_comms do
+      @gateway.purchase(@amount, credit_card('4000100011112224', last_name: 'Wåhlin'))
+    end.check_request do |endpoint, data, headers|
+      assert_match(/Wåhlin/, data)
+    end.respond_with(successful_purchase_response)
+  end
+
   def test_failed_purchase
     @gateway.expects(:ssl_post).returns(failed_purchase_response)
 
