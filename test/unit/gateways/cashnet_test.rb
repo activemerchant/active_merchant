@@ -114,6 +114,15 @@ class Cashnet < Test::Unit::TestCase
     end.respond_with(successful_purchase_response)
   end
 
+  def test_invalid_response
+    response = stub_comms(@gateway, :ssl_request) do
+      @gateway.purchase(@amount, @credit_card)
+    end.respond_with(invalid_response)
+
+    assert_failure response
+    assert_match %r{Unparsable response received}, response.message
+  end
+
   private
   def expected_expiration_date
     '%02d%02d' % [@credit_card.month, @credit_card.year.to_s[2..4]]
@@ -137,5 +146,9 @@ class Cashnet < Test::Unit::TestCase
 
   def failed_purchase_response
     "<cngateway>result=7&respmessage=Failed</cngateway>"
+  end
+
+  def invalid_response
+    "A String without a cngateway tag"
   end
 end

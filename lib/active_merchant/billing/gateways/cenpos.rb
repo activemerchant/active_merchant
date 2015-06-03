@@ -91,32 +91,12 @@ module ActiveMerchant #:nodoc:
 
       private
 
-      CURRENCY_CODES = Hash.new{|h,k| raise ArgumentError.new("Unsupported currency: #{k}")}
-      CURRENCY_CODES["AUD"] = "036"
-      CURRENCY_CODES["CAD"] = "124"
-      CURRENCY_CODES["CHF"] = "756"
-      CURRENCY_CODES["CZK"] = "203"
-      CURRENCY_CODES["DKK"] = "208"
-      CURRENCY_CODES["EUR"] = "978"
-      CURRENCY_CODES["GBP"] = "826"
-      CURRENCY_CODES["HKD"] = "344"
-      CURRENCY_CODES["HUF"] = "348"
-      CURRENCY_CODES["IRR"] = "364"
-      CURRENCY_CODES["JPY"] = "392"
-      CURRENCY_CODES["LVL"] = "428"
-      CURRENCY_CODES["MYR"] = "458"
-      CURRENCY_CODES["NOK"] = "578"
-      CURRENCY_CODES["PLN"] = "985"
-      CURRENCY_CODES["SEK"] = "752"
-      CURRENCY_CODES["SGD"] = "702"
-      CURRENCY_CODES["USD"] = "840"
-      CURRENCY_CODES["ZAR"] = "710"
-
       def add_invoice(post, money, options)
         post[:Amount] = amount(money)
-        post[:CurrencyCode] = CURRENCY_CODES[options[:currency] || currency(money)]
+        post[:CurrencyCode] = options[:currency] || currency(money)
         post[:InvoiceNumber] = options[:order_id]
         post[:InvoiceDetail] = options[:invoice_detail] if options[:invoice_detail]
+        post[:CustomerCode] = options[:customer_code] if options[:customer_code]
         add_tax(post, options)
       end
 

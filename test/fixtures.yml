@@ -11,6 +11,12 @@
 # Paste any required PEM certificates after the pem key.
 #
 
+
+allied_wallet:
+  site_id: site_id
+  merchant_id: merchant_id
+  token: token
+
 app55:
   api_key: "QDtACYMCFqtuKOQ22QtCkGR1TzD7XM8i"
   api_secret: "yT1FRpuusBIQoEBIfIQ8bPStkl7yzdTz"
@@ -449,6 +455,11 @@ ogone:
   password: PASSWORD
   signature: SIGNATURE
 
+# Get credentials or api keys from https://dashboard.omise.co
+omise:
+  public_key: pkey_test_4zt0fss8gs0z6b4zlsq
+  secret_key: skey_test_4zt0fss8eklsj88dx9l
+
 # Working credentials, no need to replace
 openpay:
   key: 'sk_e568c42a6c384b7ab02cd47d2e407cab'
@@ -571,9 +582,13 @@ payscout:
   username: demo
   password: password
 
+# There are all kind of special options that must be set on a test account, and
+# PayU is not transparent about what they are. At this point you need to tell
+# them specifically that the account will be used with Spreedly, which should
+# hopefully get you the right options.
 payu_in:
-  login: C0Dr8m
-  secret: 3sf0jURk
+  key: KEY
+  salt: SALT
 
 payway:
   username:
@@ -674,6 +689,10 @@ quickbooks:
 quickpay:
   login: 89898978
   password: "29p61DveBZ79c3144LW61lVz1qrwk2gfAFCxPyi5sn49m3Y3IRK5M6SN5d8a68u7"
+
+quickpay_v10_api_key:
+  login: 41
+  api_key: "03508e7791ba6c9d0e6830716e650f35c4342c4b3576723ad556e236ca4c7788"
 
 # To get the right apikey, log in to the manager.
 # Go to Indstillinger > API adgang and make sure you have the right key in the fixture.
@@ -894,9 +913,10 @@ webpay:
 
 # Working test credentials, no need to replace
 wepay:
-  client_id: "187493"
-  account_id: "1311201206"
-  access_token: "STAGE_4c6a319f9b6ef50e596ee3ea0b845f2fecd50fa0d8bc0b7483bd61c2018dbf5c"
+  client_id: "44716"
+  account_id: "2080478981"
+  access_token: "STAGE_67d2e41067af064af698e9cdc185c7570e4cb3191de04d8d092357c2a9120b6c"
+  client_secret: "d48fefe743"
 
 # Working test credentials with AVS/CVV support, no need to replace
 wirecard:

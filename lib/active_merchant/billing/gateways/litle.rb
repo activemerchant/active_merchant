@@ -112,6 +112,7 @@ module ActiveMerchant #:nodoc:
               doc.paypageRegistrationId(payment_method)
             else
               doc.accountNumber(payment_method.number)
+              doc.cardValidationNum(payment_method.verification_value) if payment_method.verification_value
             end
           end
         end
@@ -265,6 +266,12 @@ module ActiveMerchant #:nodoc:
               name = "#{node.name}_#{childnode.name}"
               parsed[name.to_sym] = childnode.text
             end
+          end
+        end
+
+        if parsed.empty?
+          %w(response message).each do |attribute|
+            parsed[attribute.to_sym] = doc.xpath("//litleOnlineResponse").attribute(attribute).value
           end
         end
 

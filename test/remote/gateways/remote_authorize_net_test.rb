@@ -41,6 +41,13 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     assert_equal 'incorrect_number', response.error_code
   end
 
+  def test_successful_purchase_with_utf_character
+    card = credit_card('4000100011112224', last_name: 'Wåhlin')
+    response = @gateway.purchase(@amount, card, @options)
+    assert_success response
+    assert_match %r{This transaction has been approved}, response.message
+  end
+
   def test_successful_echeck_purchase
     response = @gateway.purchase(@amount, @check, @options)
     assert_success response

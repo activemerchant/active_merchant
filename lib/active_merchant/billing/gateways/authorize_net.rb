@@ -399,7 +399,7 @@ module ActiveMerchant #:nodoc:
       end
 
       def post_data
-        Nokogiri::XML::Builder.new do |xml|
+        Nokogiri::XML::Builder.new(encoding: 'UTF-8') do |xml|
           xml.createTransactionRequest('xmlns' => 'AnetApi/xml/v1/schema/AnetApiSchema.xsd') do
             xml.merchantAuthentication do
               xml.name(@options[:login])
