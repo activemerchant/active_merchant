@@ -35,7 +35,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:user] = @options[:login]
         post[:phone] = options[:billing_address][:phone]
-        post[:mail] = options[:email]
+        post[:mail] = options[:email] || "unknown@example.com"
       end
 
       def add_order_data(post, options)
