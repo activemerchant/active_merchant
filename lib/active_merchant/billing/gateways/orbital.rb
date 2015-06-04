@@ -707,7 +707,7 @@ module ActiveMerchant #:nodoc:
 
             # This has to come after CCExpireDate.
             add_managed_billing(xml, options)
-
+            
             xml.tag! :AccountUpdaterEligibility, options[:account_updater_eligibility] if options[:account_updater_eligibility] 
           end
         end
