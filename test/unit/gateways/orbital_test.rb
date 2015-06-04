@@ -354,15 +354,6 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_profile_response)
     assert_success response
   end
-  
-  def test_account_updater_eligibility
-    response = stub_comms do
-      @gateway.add_customer_profile(credit_card, :account_updater_eligibility => 'Y')
-    end.check_request do |endpoint, data, headers|
-      assert_match(/<AccountUpdaterEligibility>Y/, data)
-    end.respond_with(successful_profile_response)
-    assert_success response
-  end
 
   def test_dont_send_customer_data_by_default
     response = stub_comms do

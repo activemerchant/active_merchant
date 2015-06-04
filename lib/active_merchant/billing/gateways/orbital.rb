@@ -290,7 +290,6 @@ module ActiveMerchant #:nodoc:
         order = build_customer_request_xml(nil, options)
         commit(order, :delete_customer_profile)
       end
-        
       private
 
       def authorization_string(*args)
@@ -713,8 +712,7 @@ module ActiveMerchant #:nodoc:
           end
         end
         xml.target!
-      end
-      
+      end      
       # Unfortunately, Orbital uses their own special codes for AVS responses
       # that are different than the standard codes defined in
       # <tt>ActiveMerchant::Billing::AVSResult</tt>.
