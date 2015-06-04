@@ -325,6 +325,14 @@ class PayuInTest < Test::Unit::TestCase
     assert_equal @gateway.scrub(pre_scrubbed), post_scrubbed
   end
 
+  def test_invalid_json
+    @gateway.expects(:ssl_post).returns(invalid_json_response)
+
+    response = @gateway.purchase(100, @credit_card, @options)
+    assert_failure response
+    assert_match %r{html}, response.message
+  end
+
   private
 
   def pre_scrubbed
@@ -504,5 +512,9 @@ Conn close
         "enrolled":"1"
       }
     })
+  end
+
+  def invalid_json_response
+    %(<html>)
   end
 end

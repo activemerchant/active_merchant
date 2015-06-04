@@ -192,6 +192,10 @@ module ActiveMerchant #:nodoc:
         end
 
         top
+      rescue JSON::ParserError
+        {
+          "error" => "Invalid response received from the PayU API. (The raw response was `#{body}`)."
+        }
       end
 
       def commit(url, parameters)

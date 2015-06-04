@@ -9,7 +9,7 @@
 * CardStream: Add support for verify [anellis]
 * Authorize.net: UTF-8 encode requests [duff]
 * Banwire: Add default email [anellis]
-
+* PayU India: Handle bad JSON [ntalbott]
 
 == Version 1.50.0 (June 1, 2015)
 
