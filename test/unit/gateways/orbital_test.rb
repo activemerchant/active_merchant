@@ -530,10 +530,11 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def test_update_customer_profile
     response = stub_comms do
-      @gateway.update_customer_profile(credit_card)
+      @gateway.update_customer_profile(credit_card, {:account_updater_eligibility => 'Y'})
     end.check_request do |endpoint, data, headers|
       assert_match(/<CustomerProfileAction>U/, data)
       assert_match(/<CustomerName>Longbob Longsen/, data)
+      assert_match(/<AccountUpdaterEligibility>Y/, data)
     end.respond_with(successful_profile_response)
     assert_success response
   end
@@ -559,26 +560,6 @@ class OrbitalGatewayTest < Test::Unit::TestCase
     end.respond_with(successful_profile_response)
     assert_success response
   end
-
-  def test_request_account_update_for_customer_profile
-    response = stub_comms do
-      @gateway.request_account_update_for_customer_profile(@customer_ref_num)
-    end.check_request do |endpoint, data, headers|
-      assert_match(/<CustomerProfileAction>AU/, data)
-      assert_match(/<CustomerRefNum>ABC/, data)
-    end.respond_with(successful_account_updater_response)
-    assert_success response
-  end
-
-  def test_request_account_update_for_customer_profile_with_schedule_date
-    response = stub_comms do
-      @gateway.request_account_update_for_customer_profile(@customer_ref_num, {:schedule_date => 20150615})
-    end.check_request do |endpoint, data, headers|
-      assert_match(/<CustomerProfileAction>AU/, data)
-      assert_match(/<ScheduledDate>20150615/, data)
-    end.respond_with(successful_account_updater_response)
-    assert_success response
-  end  
 
   def test_attempts_seconday_url
     @gateway.expects(:ssl_post).with(OrbitalGateway.test_url, anything, anything).raises(ActiveMerchant::ConnectionError.new("message", nil))
@@ -672,10 +653,6 @@ class OrbitalGatewayTest < Test::Unit::TestCase
 
   def successful_void_response
     %q{<?xml version="1.0" encoding="UTF-8"?><Response><ReversalResp><MerchantID>700000208761</MerchantID><TerminalID>001</TerminalID><OrderID>2</OrderID><TxRefNum>50FB1C41FEC9D016FF0BEBAD0884B174AD0853B0</TxRefNum><TxRefIdx>1</TxRefIdx><OutstandingAmt>0</OutstandingAmt><ProcStatus>0</ProcStatus><StatusMsg></StatusMsg><RespTime>01192013172049</RespTime></ReversalResp></Response>}
-  end
-
-  def successful_account_updater_response
-    %q{<?xml version="1.0" encoding="UTF-8"?><Response><AccountUpdaterResp><CustomerBin>000001</CustomerBin><CustomerMerchantID>219980</CustomerMerchantID><CustomerRefNum>50204</CustomerRefNum><CustomerProfileAction>AU</CustomerProfileAction><Status>A</Status><ScheduledDate>20150615</ScheduledDate><ProfileProcStatus>0</ProfileProcStatus><CustomerProfileMessage>Profile Request Scheduled</CustomerProfileMessage><RespTime>20150603 162649</RespTime></AccountUpdaterResp></Response>}
   end
   
 end
