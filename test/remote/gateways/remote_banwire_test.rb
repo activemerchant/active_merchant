@@ -67,7 +67,7 @@ class RemoteBanwireTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'denied', response.message
+    assert_equal 'Pago Denegado.', response.message
   end
 
   def test_invalid_login
