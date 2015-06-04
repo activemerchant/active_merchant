@@ -175,6 +175,15 @@ module ActiveMerchant #:nodoc:
       USE_ORDER_ID         = 'O' #  Use OrderID field
       USE_COMMENTS         = 'D' #  Use Comments field
 
+      #  Account Updater Transaction for a Profile
+      #  The Account Updater transaction type facilitates an additional account updater request for a specific profile, 
+      #  outside of the selected schedule. The request is included in the next Account Updater submission unless sent 
+      #  with a future scheduled date (Use <scheduledDate> to do so).  A successful Account Updater transaction returns a 
+      #  response record stating the profile is scheduled for Account Updater. Subsequent information provided by Visa or 
+      #  MasterCard is used for a profile update. This information is not returned via a response file.
+     
+      ACCOUNT_UPDATER = 'AU'
+
       SENSITIVE_FIELDS = [:account_num]
 
       def initialize(options = {})
@@ -278,6 +287,12 @@ module ActiveMerchant #:nodoc:
         order = build_customer_request_xml(creditcard, options)
         commit(order, :update_customer_profile)
       end
+      
+      def request_account_update_for_customer_profile(customer_ref_num, options = {})
+        options.merge!(:customer_profile_action => ACCOUNT_UPDATER, :customer_ref_num => customer_ref_num)
+        order = build_customer_account_updater_request_xml(options)
+        commit(order, :update_customer_profile)
+      end
 
       def retrieve_customer_profile(customer_ref_num)
         options = {:customer_profile_action => RETRIEVE, :customer_ref_num => customer_ref_num}
@@ -290,7 +305,7 @@ module ActiveMerchant #:nodoc:
         order = build_customer_request_xml(nil, options)
         commit(order, :delete_customer_profile)
       end
-
+        
       private
 
       def authorization_string(*args)
@@ -708,11 +723,29 @@ module ActiveMerchant #:nodoc:
 
             # This has to come after CCExpireDate.
             add_managed_billing(xml, options)
+
+            # AccountUpdaterEligibility Flag must be Y/N defaults to N at Chase if not passed
+            xml.tag! :AccountUpdaterEligibility, options[:account_updater_eligibility] if options[:account_updater_eligibility] 
           end
         end
         xml.target!
       end
 
+      def build_customer_account_updater_request_xml(options = {})
+        xml = xml_envelope
+        xml.tag! :Request do
+          xml.tag! :AccountUpdater do
+            add_xml_credentials(xml)
+            xml.tag! :CustomerBin, bin
+            xml.tag! :CustomerMerchantID, @options[:merchant_id]
+            xml.tag! :CustomerRefNum, options[:customer_ref_num] if options[:customer_ref_num]
+            xml.tag! :CustomerProfileAction, options[:customer_profile_action]
+            xml.tag! :ScheduledDate, options[:schedule_date] if options[:schedule_date]
+          end
+        end
+        xml.target!
+      end
+      
       # Unfortunately, Orbital uses their own special codes for AVS responses
       # that are different than the standard codes defined in
       # <tt>ActiveMerchant::Billing::AVSResult</tt>.
