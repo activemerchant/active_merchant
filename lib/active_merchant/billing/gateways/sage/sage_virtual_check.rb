@@ -22,11 +22,6 @@ module ActiveMerchant #:nodoc:
       end
 
       def credit(money, credit_card, options = {})
-        ActiveMerchant.deprecated CREDIT_DEPRECATION_MESSAGE
-        refund(money, source, options)
-      end
-
-      def refund(money, credit_card, options = {})
         post = {}
         add_check(post, credit_card)
         add_check_customer_data(post, options)
