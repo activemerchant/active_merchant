@@ -60,7 +60,7 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
 
     assert_scrubbed(@credit_card.number, transcript)
     assert_scrubbed(@credit_card.verification_value, transcript)
-    assert_scrubbed(@gateway.options[:login], transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 
   def test_network_tokenization_transcript_scrubbing
@@ -71,15 +71,13 @@ class RemoteCyberSourceTest < Test::Unit::TestCase
     )
 
     transcript = capture_transcript(@gateway) do
-      assert auth = @gateway.authorize(@amount, credit_card, @options)
-      assert_success auth
-      assert_equal 'Successful transaction', auth.message
+      @gateway.authorize(@amount, credit_card, @options)
     end
     transcript = @gateway.scrub(transcript)
 
     assert_scrubbed(credit_card.number, transcript)
     assert_scrubbed(credit_card.payment_cryptogram, transcript)
-    assert_scrubbed(@gateway.options[:login], transcript)
+    assert_scrubbed(@gateway.options[:password], transcript)
   end
 
   def test_successful_authorization

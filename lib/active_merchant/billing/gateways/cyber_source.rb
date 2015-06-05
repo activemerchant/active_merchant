@@ -237,14 +237,12 @@ module ActiveMerchant #:nodoc:
 
       def scrub(transcript)
         transcript.
-          gsub(%r((<wsse:Username>).+(</wsse:Username>)), '\1[FILTERED]\2').
-          gsub(%r((<wsse:Password.*>).+(</wsse:Password>)), '\1[FILTERED]\2').
-          gsub(%r((<merchantID>).+(</merchantID>)), '\1[FILTERED]\2').
-          gsub(%r((<accountNumber>).+(</accountNumber>)), '\1[FILTERED]\2').
-          gsub(%r((<cvNumber>).+(</cvNumber>)), '\1[FILTERED]\2').
-          gsub(%r((<cavv>).+(</cavv>)), '\1[FILTERED]\2').
-          gsub(%r((<xid>).+(</xid>)), '\1[FILTERED]\2').
-          gsub(%r((<authenticationData>).+(</authenticationData>)), '\1[FILTERED]\2')
+          gsub(%r((<wsse:Password [^>]*>)[^<]*(</wsse:Password>))i, '\1[FILTERED]\2').
+          gsub(%r((<accountNumber>)[^<]*(</accountNumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<cvNumber>)[^<]*(</cvNumber>))i, '\1[FILTERED]\2').
+          gsub(%r((<cavv>)[^<]*(</cavv>))i, '\1[FILTERED]\2').
+          gsub(%r((<xid>)[^<]*(</xid>))i, '\1[FILTERED]\2').
+          gsub(%r((<authenticationData>)[^<]*(</authenticationData>))i, '\1[FILTERED]\2')
       end
 
       private
