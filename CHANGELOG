@@ -11,6 +11,7 @@
 * Banwire: Add default email [anellis]
 * PayU India: Handle bad JSON [ntalbott]
 * Dibs: Pass CVC param only if there's a value [bruno]
+* Sage: Credit really is credit not refund [duff]
 
 
 == Version 1.50.0 (June 1, 2015)
