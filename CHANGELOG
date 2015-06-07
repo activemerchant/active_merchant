@@ -19,6 +19,7 @@
 * iATS: Support ACH [rwdaigle]
 * CheckoutV2: Add Gateway [anellis]
 * CenPOS: Fix refund amount issue [duff]
+* Add error_code mapping and error_code_from to gateway generator [jnormore]
 
 
 == Version 1.50.0 (June 1, 2015)
