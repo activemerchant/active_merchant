@@ -53,6 +53,13 @@ module ActiveMerchant #:nodoc:
         commit(:credit, post)
       end
 
+      def refund(money, reference, options={})
+        post = {}
+        add_reference(post, reference)
+        add_transaction_data(post, money, options)
+        commit(:refund, post)
+      end
+
       private
 
       def add_credit_card(post, credit_card)

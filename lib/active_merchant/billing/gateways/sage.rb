@@ -133,6 +133,10 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def refund(money, reference, options={})
+        bankcard.refund(money, reference, options)
+      end
+
       # Stores a credit card in the Sage vault.
       #
       # ==== Parameters
