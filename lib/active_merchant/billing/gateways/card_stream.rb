@@ -116,6 +116,13 @@ module ActiveMerchant #:nodoc:
         end
       end
 
+      def scrub(transcript)
+        transcript.
+          gsub(%r((Authorization: Basic )\w+), '\1[FILTERED]').
+          gsub(%r((cardNumber=)\d+), '\1[FILTERED]').
+          gsub(%r((CVV=)\d+), '\1[FILTERED]')
+      end
+
       private
 
       def add_amount(post, money, options)
