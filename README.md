@@ -170,6 +170,7 @@ The [ActiveMerchant Wiki](http://github.com/activemerchant/active_merchant/wikis
 * [PayJunction](http://www.payjunction.com/) - US
 * [PaySecure](http://www.commsecure.com.au/paysecure.shtml) - AU
 * [Paybox Direct](http://www.paybox.com/) - FR
+* [Payeezy](https://developer.payeezy.com/) - CA, US
 * [Payex](http://payex.com/) - DK, FI, NO, SE
 * [PaymentExpress](http://www.paymentexpress.com/) - AU, CA, DE, ES, FR, GB, HK, IE, MY, NL, NZ, SG, US, ZA
 * [PAYMILL](https://paymill.com) - AD, AT, BE, BG, CH, CY, CZ, DE, DK, EE, ES, FI, FO, FR, GB, GI, GR, HU, IE, IL, IS, IT, LI, LT, LU, LV, MT, NL, NO, PL, PT, RO, SE, SI, SK, TR, VA
