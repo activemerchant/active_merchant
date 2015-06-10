@@ -186,7 +186,7 @@ module ActiveMerchant #:nodoc:
         # Authorize gives the response back by redirecting with the values in
         # the URL query
         if location = response['Location']
-          query = CGI::parse(URI.parse(location.gsub(' ', '%20')).query)
+          query = CGI::parse(URI.parse(location.gsub(' ', '%20').gsub('<', '%3C').gsub('>', '%3E')).query)
         else
           return {
             'accept' => '0',
