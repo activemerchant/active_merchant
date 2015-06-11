@@ -25,6 +25,14 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_success response
   end
 
+  def test_successful_purchase_with_specified_currency
+    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    assert response = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
+    assert_match(/Transaction Normal/, response.message)
+    assert_success response
+    assert_equal 'GBP', response.params['currency']
+  end
+
   def test_successful_purchase_with_track_data
     assert response = @gateway.purchase(@amount, @credit_card_with_track_data, @options)
     assert_match(/Transaction Normal/, response.message)
@@ -87,6 +95,17 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_success credit
   end
 
+  def test_purchase_and_credit_with_specified_currency
+    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    assert purchase = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
+    assert_success purchase
+    assert purchase.authorization
+    assert_equal 'GBP', purchase.params['currency']
+    assert credit = @gateway.refund(@amount, purchase.authorization, options_with_specified_currency)
+    assert_success credit
+    assert_equal 'GBP', credit.params['currency']
+  end
+
   def test_purchase_and_void
     assert purchase = @gateway.purchase(29234, @credit_card, @options)
     assert_success purchase
@@ -138,7 +157,7 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal 'M', response.cvv_result["code"]
-    assert_equal '1', response.avs_result["code"]
+    assert_equal '4', response.avs_result["code"]
   end
 
   def test_refund
@@ -150,6 +169,20 @@ class RemoteFirstdataE4Test < Test::Unit::TestCase
     assert_success response
     assert_match(/Transaction Normal/, response.message)
     assert response.authorization
+  end
+
+  def test_refund_with_specified_currency
+    options_with_specified_currency = @options.merge({currency: 'GBP'})
+    assert purchase = @gateway.purchase(@amount, @credit_card, options_with_specified_currency)
+    assert_match(/Transaction Normal/, purchase.message)
+    assert_success purchase
+    assert_equal 'GBP', purchase.params['currency']
+
+    assert response = @gateway.refund(50, purchase.authorization, options_with_specified_currency)
+    assert_success response
+    assert_match(/Transaction Normal/, response.message)
+    assert response.authorization
+    assert_equal 'GBP', response.params['currency']
   end
 
   def test_refund_with_track_data

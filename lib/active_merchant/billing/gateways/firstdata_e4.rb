@@ -161,7 +161,7 @@ module ActiveMerchant #:nodoc:
       def build_sale_or_authorization_request(money, credit_card_or_store_authorization, options)
         xml = Builder::XmlMarkup.new
 
-        add_amount(xml, money)
+        add_amount(xml, money, options)
 
         if credit_card_or_store_authorization.is_a? String
           add_credit_card_token(xml, credit_card_or_store_authorization)
@@ -181,7 +181,7 @@ module ActiveMerchant #:nodoc:
         xml = Builder::XmlMarkup.new
 
         add_identification(xml, identification)
-        add_amount(xml, money)
+        add_amount(xml, money, options)
         add_customer_data(xml, options)
         add_card_authentication_data(xml, options)
 
@@ -213,8 +213,10 @@ module ActiveMerchant #:nodoc:
         xml.tag! "Transaction_Tag", transaction_tag
       end
 
-      def add_amount(xml, money)
-        xml.tag! "DollarAmount", amount(money)
+      def add_amount(xml, money, options)
+        currency_code = options[:currency] || default_currency
+        xml.tag! 'DollarAmount', localized_amount(money, currency_code)
+        xml.tag! 'Currency', currency_code
       end
 
       def add_credit_card(xml, credit_card, options)
