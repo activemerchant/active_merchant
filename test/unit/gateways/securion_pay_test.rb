@@ -105,12 +105,6 @@ class SecurionPayTest < Test::Unit::TestCase
     assert !@gateway.respond_to?(:credit)
   end
 
-  def test_gateway_without_credentials
-    assert_raises ArgumentError do
-      SecurionPayGateway.new
-    end
-  end
-
   def test_address_is_included_with_card_data
     stub_comms(@gateway, :ssl_request) do
       @gateway.purchase(@amount, @credit_card, @options)
