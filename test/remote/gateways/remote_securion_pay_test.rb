@@ -38,8 +38,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
-    assert_equal "charge", response.params["objectType"]
-    assert_equal "ActiveMerchant test charge", response.params["description"]
+    assert_equal "Transaction approved", response.message
     assert_equal "foo@example.com", response.params["metadata"]["email"]
     assert_match CHARGE_ID_REGEX, response.authorization
   end
@@ -61,8 +60,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
     # Charge
     assert response = @gateway.purchase(@amount, token, @options)
     assert_success response
-    assert_equal "charge", response.params["objectType"]
-    assert_equal "ActiveMerchant test charge", response.params["description"]
+    assert_equal "Transaction approved", response.message
     assert_equal "foo@example.com", response.params["metadata"]["email"]
     assert_match CHARGE_ID_REGEX, response.authorization
   end
@@ -188,7 +186,7 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
   def test_successful_store
     assert response = @gateway.store(@credit_card, { description: "Customer Test", email: "email@example.com" })
     assert_success response
-    assert_equal "customer", response.params["objectType"]
+    assert_equal "Transaction approved", response.message
     assert_equal "Customer Test", response.params["description"]
     assert_equal "email@example.com", response.params["email"]
     first_card = response.params["cards"].first
@@ -206,11 +204,8 @@ class RemoteSecurionPayTest < Test::Unit::TestCase
 
     assert_equal 2, response.params['cards'].size
     first_card, second_card = response.params['cards']
-    assert_equal "card", first_card["objectType"]
-    assert_equal "card", second_card["objectType"]
+    assert_equal "Transaction approved", response.message
     assert_equal @new_credit_card.last_digits, second_card["last4"]
-
-    assert_equal "customer", response.params["objectType"]
     assert_equal "Test Customer Update", response.params["description"]
     assert_equal "email@example.com", response.params["email"]
     assert_equal response.params["defaultCardId"], second_card['id']
