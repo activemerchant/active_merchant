@@ -126,7 +126,7 @@ module ActiveMerchant #:nodoc:
       private
 
       def add_customer(post, payment, options)
-        post[:customer] = options[:customer] if options[:customer] && !payment.respond_to?(:number)
+        post[:customer] = options[:customer] if options[:customer]
       end
 
       def add_customer_data(post, options)
