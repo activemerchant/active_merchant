@@ -15,6 +15,8 @@
 * Sage: Add ability to refund [duff]
 * Cardstream: Add scrubbing [anellis]
 * Litle: Add debt_repayment_flag [duff]
+* Litle: Add debt_repayment_flag [duff]
+* iATS: Support ACH [rwdaigle]
 
 
 == Version 1.50.0 (June 1, 2015)
