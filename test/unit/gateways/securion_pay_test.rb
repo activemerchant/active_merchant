@@ -213,12 +213,8 @@ class SecurionPayTest < Test::Unit::TestCase
   def test_successful_void
     @gateway.expects(:ssl_request).returns(successful_void_response)
 
-    assert response = @gateway.void('char_yDS2wtcTFZSWOWGaANjpchVb', @options)
-    assert_instance_of Response, response
+    assert response = @gateway.void('char_yDS2wtcTFZSWOWGaANjpchVb')
     assert_success response
-
-    assert_equal 'char_yDS2wtcTFZSWOWGaANjpchVb', response.authorization
-    assert response.test?
   end
 
   def test_failed_authorization_void
