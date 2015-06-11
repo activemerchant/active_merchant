@@ -22,6 +22,7 @@
 * PayPal Express: Fix AllowedPaymentMethod [edclements]
 * Litle: Store credit card from PayPage [dontmatta]
 * Orbital: Deprecate profile management API [ntalbott]
+* FirstData e4: Honor currency when supplied [tchill]
 
 == Version 1.54.0 (October 2, 2015)
 * Beanstream: Add Network Tokenization support [girasquid]
