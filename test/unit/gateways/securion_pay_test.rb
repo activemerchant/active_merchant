@@ -329,37 +329,27 @@ class SecurionPayTest < Test::Unit::TestCase
 
   private
 
-  # When updating pre_scrubbed response below, please remove gzip-encoded contents
-  # as they contain non-UTF-8 characters that will raise exception when scrubbing.
   def pre_scrubbed
     <<-PRE_SCRUBBED
       opening connection to api.securionpay.com:443...
       opened
       starting SSL for api.securionpay.com:443...
       SSL established
-      <- "POST /charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic cHJfdGVzdF9xWk40VlZJS0N5U2ZDZVhDQm9ITzlEQmU6\r\nUser-Agent: SecurionPay/v1 ActiveMerchantBindings/1.47.0\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.securionpay.com\r\nContent-Length: 214\r\n\r\n"
+      <- "POST /charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic cHJfdGVzdF9xWk40VlZJS0N5U2ZDZVhDQm9ITzlEQmU6\r\nUser-Agent: SecurionPay/v1 ActiveMerchantBindings/1.47.0\r\nAccept-Encoding: gzip;q=0,deflate;q=0.6\r\nAccept: */*\r\nConnection: close\r\nHost: api.securionpay.com\r\nContent-Length: 214\r\n\r\n"
       <- "amount=2000&currency=usd&card[number]=4242424242424242&card[expMonth]=9&card[expYear]=2016&card[cvc]=123&card[cardholderName]=Longbob+Longsen&description=ActiveMerchant+test+charge&metadata[email]=foo%40example.com"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: cloudflare-nginx\r\n"
-      -> "Date: Thu, 19 Mar 2015 23:16:59 GMT\r\n"
+      -> "Date: Fri, 12 Jun 2015 21:36:39 GMT\r\n"
       -> "Content-Type: application/json;charset=UTF-8\r\n"
       -> "Transfer-Encoding: chunked\r\n"
       -> "Connection: close\r\n"
-      -> "Set-Cookie: __cfduid=d2825af5ba35f4e682da0c51abb33a5d91426807018; expires=Fri, 18-Mar-16 23:16:58 GMT; path=/; domain=.securionpay.com; HttpOnly\r\n"
-      -> "CF-RAY: 1c9ce35b76a805d5-WAW\r\n"
-      -> "Content-Encoding: gzip\r\n"
+      -> "Set-Cookie: __cfduid=d5da73266c61acce6307176d45e2672b41434144998; expires=Sat, 11-Jun-16 21:36:38 GMT; path=/; domain=.securionpay.com; HttpOnly\r\n"
+      -> "CF-RAY: 1f58b1414ca00af6-WAW\r\n"
       -> "\r\n"
-      -> "154\r\n"
-      reading 340 bytes...
-      -> "[GZIP_ENCODED_CONTENT_REMOVED_INTENTIONALLY]"
-      read 340 bytes
-      reading 2 bytes...
-      -> "\r\n"
-      read 2 bytes
-      -> "a\r\n"
-      reading 10 bytes...
-      -> "[GZIP_ENCODED_CONTENT_REMOVED_INTENTIONALLY]"
-      read 10 bytes
+      -> "1f4\r\n"
+      reading 500 bytes...
+      -> "{\"id\":\"char_TOnen0ZcDMYzECNS4fItK9P4\",\"created\":1434144998,\"objectType\":\"charge\",\"amount\":2000,\"currency\":\"USD\",\"description\":\"ActiveMerchant test charge\",\"card\":{\"id\":\"card_yJ4JNcp6P4sG8UrtZ62VWb5e\",\"created\":1434144998,\"objectType\":\"card\",\"first6\":\"424242\",\"last4\":\"4242\",\"fingerprint\":\"ecAKhFD1dmDAMKD9\",\"expMonth\":\"9\",\"expYear\":\"2016\",\"cardholderName\":\"Longbob Longsen\",\"brand\":\"Visa\",\"type\":\"Credit Card\"},\"captured\":true,\"refunded\":false,\"disputed\":false,\"metadata\":{\"email\":\"foo@example.com\"}}"
+      read 500 bytes
       reading 2 bytes...
       -> "\r\n"
       read 2 bytes
@@ -369,37 +359,27 @@ class SecurionPayTest < Test::Unit::TestCase
     PRE_SCRUBBED
   end
 
-  # When updating post_scrubbed response below, please remove gzip-encoded contents
-  # as they contain non-UTF-8 characters that will raise exception when scrubbing.
   def post_scrubbed
     <<-POST_SCRUBBED
       opening connection to api.securionpay.com:443...
       opened
       starting SSL for api.securionpay.com:443...
       SSL established
-      <- "POST /charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: SecurionPay/v1 ActiveMerchantBindings/1.47.0\r\nAccept-Encoding: gzip;q=1.0,deflate;q=0.6,identity;q=0.3\r\nAccept: */*\r\nConnection: close\r\nHost: api.securionpay.com\r\nContent-Length: 214\r\n\r\n"
+      <- "POST /charges HTTP/1.1\r\nContent-Type: application/x-www-form-urlencoded\r\nAuthorization: Basic [FILTERED]\r\nUser-Agent: SecurionPay/v1 ActiveMerchantBindings/1.47.0\r\nAccept-Encoding: gzip;q=0,deflate;q=0.6\r\nAccept: */*\r\nConnection: close\r\nHost: api.securionpay.com\r\nContent-Length: 214\r\n\r\n"
       <- "amount=2000&currency=usd&card[number]=[FILTERED]&card[expMonth]=9&card[expYear]=2016&card[cvc]=[FILTERED]&card[cardholderName]=Longbob+Longsen&description=ActiveMerchant+test+charge&metadata[email]=foo%40example.com"
       -> "HTTP/1.1 200 OK\r\n"
       -> "Server: cloudflare-nginx\r\n"
-      -> "Date: Thu, 19 Mar 2015 23:16:59 GMT\r\n"
+      -> "Date: Fri, 12 Jun 2015 21:36:39 GMT\r\n"
       -> "Content-Type: application/json;charset=UTF-8\r\n"
       -> "Transfer-Encoding: chunked\r\n"
       -> "Connection: close\r\n"
-      -> "Set-Cookie: __cfduid=d2825af5ba35f4e682da0c51abb33a5d91426807018; expires=Fri, 18-Mar-16 23:16:58 GMT; path=/; domain=.securionpay.com; HttpOnly\r\n"
-      -> "CF-RAY: 1c9ce35b76a805d5-WAW\r\n"
-      -> "Content-Encoding: gzip\r\n"
+      -> "Set-Cookie: __cfduid=d5da73266c61acce6307176d45e2672b41434144998; expires=Sat, 11-Jun-16 21:36:38 GMT; path=/; domain=.securionpay.com; HttpOnly\r\n"
+      -> "CF-RAY: 1f58b1414ca00af6-WAW\r\n"
       -> "\r\n"
-      -> "154\r\n"
-      reading 340 bytes...
-      -> "[GZIP_ENCODED_CONTENT_REMOVED_INTENTIONALLY]"
-      read 340 bytes
-      reading 2 bytes...
-      -> "\r\n"
-      read 2 bytes
-      -> "a\r\n"
-      reading 10 bytes...
-      -> "[GZIP_ENCODED_CONTENT_REMOVED_INTENTIONALLY]"
-      read 10 bytes
+      -> "1f4\r\n"
+      reading 500 bytes...
+      -> "{\"id\":\"char_TOnen0ZcDMYzECNS4fItK9P4\",\"created\":1434144998,\"objectType\":\"charge\",\"amount\":2000,\"currency\":\"USD\",\"description\":\"ActiveMerchant test charge\",\"card\":{\"id\":\"card_yJ4JNcp6P4sG8UrtZ62VWb5e\",\"created\":1434144998,\"objectType\":\"card\",\"first6\":\"424242\",\"last4\":\"4242\",\"fingerprint\":\"ecAKhFD1dmDAMKD9\",\"expMonth\":\"9\",\"expYear\":\"2016\",\"cardholderName\":\"Longbob Longsen\",\"brand\":\"Visa\",\"type\":\"Credit Card\"},\"captured\":true,\"refunded\":false,\"disputed\":false,\"metadata\":{\"email\":\"foo@example.com\"}}"
+      read 500 bytes
       reading 2 bytes...
       -> "\r\n"
       read 2 bytes
