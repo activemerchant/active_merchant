@@ -208,7 +208,7 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
   def test_successful_authorization_with_moto_retail_type
     @credit_card.manual_entry = true
     response = @gateway.authorize(@amount, @credit_card, @options)
-    
+
     assert_success response
     assert response.test?
     assert_equal 'This transaction has been approved', response.message
@@ -227,6 +227,134 @@ class RemoteAuthorizeNetTest < Test::Unit::TestCase
     response = @gateway.verify(bogus_card, @options)
     assert_failure response
     assert_match %r{The credit card number is invalid}, response.message
+  end
+
+  def test_successful_store
+    assert response = @gateway.store(@credit_card)
+    assert_success response
+    assert response.authorization
+    assert_equal "Successful", response.message
+    assert_equal "1", response.params["message_code"]
+  end
+
+  def test_failed_store
+    assert response = @gateway.store(credit_card("141241"))
+    assert_failure response
+    assert_equal "The field length is invalid for Card Number", response.message
+    assert_equal "15", response.params["message_code"]
+  end
+
+  def test_successful_purchase_using_stored_card
+    response = @gateway.store(@credit_card)
+    assert_success response
+
+    response = @gateway.purchase(@amount, response.authorization, @options)
+    assert_success response
+    assert_equal "This transaction has been approved.", response.message
+  end
+
+  def test_failed_purchase_using_stored_card
+    response = @gateway.store(@declined_card)
+    assert_success response
+
+    response = @gateway.purchase(@amount, response.authorization, @options)
+    assert_failure response
+    assert_equal "The credit card number is invalid.", response.message
+    assert_equal "incorrect_number", response.error_code
+    assert_equal "27", response.params["message_code"]
+    assert_equal "6", response.params["response_reason_code"]
+    assert_match /but street address not verified/, response.avs_result["message"]
+  end
+
+  def test_successful_authorize_and_capture_using_stored_card
+    store = @gateway.store(@credit_card)
+    assert_success store
+
+    auth = @gateway.authorize(@amount, store.authorization, @options)
+    assert_success auth
+    assert_equal "This transaction has been approved.", auth.message
+
+    capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal "This transaction has been approved.", capture.message
+  end
+
+  def test_failed_authorize_using_stored_card
+    response = @gateway.store(@declined_card)
+    assert_success response
+
+    response = @gateway.authorize(@amount, response.authorization, @options)
+    assert_failure response
+
+    assert_equal "The credit card number is invalid.", response.message
+    assert_equal "incorrect_number", response.error_code
+    assert_equal "27", response.params["message_code"]
+    assert_equal "6", response.params["response_reason_code"]
+    assert_match /but street address not verified/, response.avs_result["message"]
+  end
+
+  def test_failed_capture_using_stored_card
+    store = @gateway.store(@credit_card)
+    assert_success store
+
+    auth = @gateway.authorize(@amount, store.authorization, @options)
+    assert_success auth
+
+    capture = @gateway.capture(@amount + 4000, auth.authorization)
+    assert_failure capture
+    assert_match /The amount requested for settlement cannot be greater/, capture.message
+  end
+
+  def test_faux_successful_refund_using_stored_card
+    store = @gateway.store(@credit_card)
+    assert_success store
+
+    purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+
+    refund = @gateway.refund(@amount, purchase.authorization, @options)
+    assert_failure refund
+    assert_match /does not meet the criteria for issuing a credit/, refund.message, "Only allowed to refund transactions that have settled.  This is the best we can do for now testing wise."
+  end
+
+  def test_failed_refund_using_stored_card
+    store = @gateway.store(@credit_card)
+    assert_success store
+
+    purchase = @gateway.purchase(@amount, store.authorization, @options)
+    assert_success purchase
+
+    unknown_authorization = "2235494048#XXXX2224#cim_purchase"
+    refund = @gateway.refund(@amount, unknown_authorization, @options)
+    assert_failure refund
+    assert_equal "The record cannot be found", refund.message
+  end
+
+  def test_successful_void_using_stored_card
+    store = @gateway.store(@credit_card)
+    assert_success store
+
+    auth = @gateway.authorize(@amount, store.authorization, @options)
+    assert_success auth
+
+    void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal "This transaction has been approved.", void.message
+  end
+
+  def test_failed_void_using_stored_card
+    store = @gateway.store(@credit_card)
+    assert_success store
+
+    auth = @gateway.authorize(@amount, store.authorization, @options)
+    assert_success auth
+
+    void = @gateway.void(auth.authorization)
+    assert_success void
+
+    another_void = @gateway.void(auth.authorization)
+    assert_failure another_void
+    assert_equal "This transaction has already been voided.", another_void.message
   end
 
   def test_bad_login
