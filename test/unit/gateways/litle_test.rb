@@ -82,6 +82,14 @@ class LitleTest < Test::Unit::TestCase
     end.respond_with(successful_authorize_response)
   end
 
+  def test_passing_debt_repayment
+    stub_comms do
+      @gateway.authorize(@amount, @credit_card, { debt_repayment: true })
+    end.check_request do |endpoint, data, headers|
+      assert_match(%r(<debtRepayment>true</debtRepayment>), data)
+    end.respond_with(successful_authorize_response)
+  end
+
   def test_successful_authorize_and_capture
     response = stub_comms do
       @gateway.authorize(@amount, @credit_card)

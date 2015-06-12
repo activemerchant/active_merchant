@@ -164,6 +164,7 @@ module ActiveMerchant #:nodoc:
         add_payment_method(doc, payment_method)
         add_pos(doc, payment_method)
         add_descriptor(doc, options)
+        add_debt_repayment(doc, options)
       end
 
       def add_descriptor(doc, options)
@@ -173,6 +174,10 @@ module ActiveMerchant #:nodoc:
             doc.descriptor(options[:descriptor_name]) if options[:descriptor_name]
           end
         end
+      end
+
+      def add_debt_repayment(doc, options)
+        doc.debtRepayment(true) if options[:debt_repayment] == true
       end
 
       def add_payment_method(doc, payment_method)

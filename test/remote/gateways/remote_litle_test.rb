@@ -95,6 +95,12 @@ class RemoteLitleTest < Test::Unit::TestCase
     assert_equal 'Approved', response.message
   end
 
+  def test_successful_purchase_with_debt_repayment_flag
+    assert response = @gateway.purchase(10010, @credit_card1, @options.merge(debt_repayment: true))
+    assert_success response
+    assert_equal 'Approved', response.message
+  end
+
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(60060, @credit_card2, {
         :order_id=>'6',
