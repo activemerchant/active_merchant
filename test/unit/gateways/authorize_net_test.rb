@@ -278,12 +278,69 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_equal "Using a live Authorize.net account in Test Mode is not permitted.", response.message
   end
 
+  def test_successful_purchase_using_stored_card
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    @gateway.expects(:ssl_post).returns(successful_purchase_using_stored_card_response)
+
+    response = @gateway.purchase(@amount, store.authorization)
+    assert_success response
+
+    assert_equal '2235700270#XXXX2224#cim_purchase', response.authorization
+    assert_equal 'Y', response.avs_result['code']
+    assert response.avs_result['street_match']
+    assert response.avs_result['postal_match']
+    assert_equal 'Street address and 5-digit postal code match.', response.avs_result['message']
+  end
+
+  def test_failed_purchase_using_stored_card
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    @gateway.expects(:ssl_post).returns(failed_purchase_using_stored_card_response)
+
+    response = @gateway.purchase(@amount, store.authorization)
+    assert_failure response
+    assert_equal "The credit card number is invalid.", response.message
+    assert_equal "6", response.params["response_reason_code"]
+  end
+
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_authorize_response)
 
     response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert_equal 'incorrect_number', response.error_code
+  end
+
+  def test_successful_authorize_and_capture_using_stored_card
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    store = @gateway.store(@credit_card, @options)
+
+    @gateway.expects(:ssl_post).returns(successful_authorize_using_stored_card_response)
+    auth = @gateway.authorize(@amount, store.authorization)
+    assert_success auth
+    assert_equal "This transaction has been approved.", auth.message
+
+    @gateway.expects(:ssl_post).returns(successful_capture_using_stored_card_response)
+
+    capture = @gateway.capture(@amount, auth.authorization)
+    assert_success capture
+    assert_equal "This transaction has been approved.", capture.message
+  end
+
+  def test_failed_authorize_using_stored_card
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    store = @gateway.store(@credit_card, @options)
+
+    @gateway.expects(:ssl_post).returns(failed_authorize_using_stored_card_response)
+    response = @gateway.authorize(@amount, store.authorization)
+    assert_failure response
+    assert_equal "The credit card number is invalid.", response.message
+    assert_equal "6", response.params["response_reason_code"]
   end
 
   def test_successful_capture
@@ -309,6 +366,19 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert_failure response
   end
 
+  def test_failed_capture_using_stored_card
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    store = @gateway.store(@credit_card, @options)
+
+    @gateway.expects(:ssl_post).returns(successful_authorize_using_stored_card_response)
+    auth = @gateway.authorize(@amount, store.authorization)
+
+    @gateway.expects(:ssl_post).returns(failed_capture_using_stored_card_response)
+    capture = @gateway.capture(@amount, auth.authorization)
+    assert_failure capture
+    assert_match(/The amount requested for settlement cannot be greater/, capture.message)
+  end
+
   def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
 
@@ -321,6 +391,32 @@ class AuthorizeNetTest < Test::Unit::TestCase
 
     response = @gateway.void('')
     assert_failure response
+  end
+
+  def test_successful_void_using_stored_card
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    store = @gateway.store(@credit_card, @options)
+
+    @gateway.expects(:ssl_post).returns(successful_authorize_using_stored_card_response)
+    auth = @gateway.authorize(@amount, store.authorization)
+
+    @gateway.expects(:ssl_post).returns(successful_void_using_stored_card_response)
+    void = @gateway.void(auth.authorization)
+    assert_success void
+    assert_equal "This transaction has been approved.", void.message
+  end
+
+  def test_failed_void_using_stored_card
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    store = @gateway.store(@credit_card, @options)
+
+    @gateway.expects(:ssl_post).returns(failed_authorize_using_stored_card_response)
+    auth = @gateway.authorize(@amount, store.authorization)
+
+    @gateway.expects(:ssl_post).returns(failed_void_using_stored_card_response)
+    void = @gateway.void(auth.authorization)
+    assert_failure void
+    assert_equal "This transaction has already been voided.", void.message
   end
 
   def test_successful_verify
@@ -344,6 +440,41 @@ class AuthorizeNetTest < Test::Unit::TestCase
     end.respond_with(failed_authorize_response, successful_void_response)
     assert_failure response
     assert_not_nil response.message
+  end
+
+  def test_failed_refund_using_stored_card
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+
+    @gateway.expects(:ssl_post).returns(successful_purchase_using_stored_card_response)
+
+    purchase = @gateway.purchase(@amount, store.authorization)
+    assert_success purchase
+
+    @gateway.expects(:ssl_post).returns(failed_refund_using_stored_card_response)
+    refund = @gateway.refund(@amount, purchase.authorization)
+    assert_failure refund
+    assert_equal "The record cannot be found", refund.message
+  end
+
+  def test_successful_store
+    @gateway.expects(:ssl_post).returns(successful_store_response)
+
+    store = @gateway.store(@credit_card, @options)
+    assert_success store
+    assert_equal "Successful", store.message
+    assert_equal "35959426", store.params["customer_profile_id"]
+    assert_equal "32506918", store.params["customer_payment_profile_id"]
+  end
+
+  def test_failed_store
+    @gateway.expects(:ssl_post).returns(failed_store_response)
+
+    store = @gateway.store(@credit_card, @options)
+    assert_failure store
+    assert_match(/The field length is invalid/, store.message)
+    assert_equal("15", store.params["message_code"])
   end
 
   def test_address
@@ -421,7 +552,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     assert refund = @gateway.refund(36.40, '2214269051#XXXX1234')
     assert_success refund
     assert_equal 'This transaction has been approved', refund.message
-    assert_equal '2214602071#2224', refund.authorization
+    assert_equal '2214602071#2224#refund', refund.authorization
   end
 
   def test_refund_passing_extra_info
@@ -446,7 +577,7 @@ class AuthorizeNetTest < Test::Unit::TestCase
     refund = @gateway.refund(nil, '')
     assert_failure refund
     assert_equal 'The sum of credits against the referenced transaction would exceed original debit amount', refund.message
-    assert_equal '0#2224', refund.authorization
+    assert_equal '0#2224#refund', refund.authorization
   end
 
   def test_successful_credit
@@ -1483,4 +1614,198 @@ class AuthorizeNetTest < Test::Unit::TestCase
       </createTransactionResponse>
     eos
   end
+
+  def successful_store_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerProfileResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+          <code>I00001</code>
+          <text>Successful.</text>
+          </message>
+      </messages>
+      <customerProfileId>35959426</customerProfileId>
+      <customerPaymentProfileIdList>
+          <numericString>32506918</numericString>
+      </customerPaymentProfileIdList>
+      <customerShippingAddressIdList />
+      <validationDirectResponseList />
+      </createCustomerProfileResponse>
+    eos
+  end
+
+  def failed_store_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerProfileResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <messages>
+          <resultCode>Error</resultCode>
+          <message>
+          <code>E00015</code>
+          <text>The field length is invalid for Card Number.</text>
+          </message>
+      </messages>
+      <customerPaymentProfileIdList />
+      <customerShippingAddressIdList />
+      <validationDirectResponseList />
+      </createCustomerProfileResponse>
+    eos
+  end
+
+  def successful_purchase_using_stored_card_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+      <refId>1</refId>
+      <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+          <code>I00001</code>
+          <text>Successful.</text>
+          </message>
+      </messages>
+      <directResponse>1,1,1,This transaction has been approved.,8HUT72,Y,2235700270,1,Store Purchase,1.01,CC,auth_capture,e385c780422f4bd182c4,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,4A20EEAF89018FF075899DDB332E9D35,,2,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
+      </createCustomerProfileTransactionResponse>
+    eos
+  end
+
+  def failed_purchase_using_stored_card_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <refId>1</refId>
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00027</code>
+            <text>The credit card number is invalid.</text>
+          </message>
+        </messages>
+        <directResponse>3,1,6,The credit card number is invalid.,,P,0,1,Store Purchase,1.01,CC,auth_capture,2da01d7b583c706106e2,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,13BA28EEA3593C13E2E3BC109D16E5D2,,,,,,,,,,,,,XXXX1222,,,,,,,,,,,,,,,,,</directResponse>
+      </createCustomerProfileTransactionResponse>
+    eos
+  end
+
+  def successful_authorize_using_stored_card_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <refId>1</refId>
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+        <directResponse>1,1,1,This transaction has been approved.,GGHQ5R,Y,2235700640,1,Store Purchase,1.01,CC,auth_only,0bde9d39f8eb9443f2af,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,E47E5CA4F1239B00D39A7F8C147215D3,,2,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
+      </createCustomerProfileTransactionResponse>
+    eos
+  end
+
+  def failed_authorize_using_stored_card_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <refId>1</refId>
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00027</code>
+            <text>The credit card number is invalid.</text>
+          </message>
+        </messages>
+        <directResponse>3,1,6,The credit card number is invalid.,,P,0,1,Store Purchase,1.01,CC,auth_only,f632442ce056f9f82ee9,Longbob,Longsen,,,,n/a,,,,,,,,,,,,,,,,,,,13BA28EEA3593C13E2E3BC109D16E5D2,,,,,,,,,,,,,XXXX1222,,,,,,,,,,,,,,,,,</directResponse>
+      </createCustomerProfileTransactionResponse>
+    eos
+  end
+
+  def successful_capture_using_stored_card_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <refId />
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+        <directResponse>1,1,1,This transaction has been approved.,GGHQ5R,P,2235700640,1,,1.01,CC,prior_auth_capture,0bde9d39f8eb9443f2af,,,,,,,,,,,,,,,,,,,,,,,,,E47E5CA4F1239B00D39A7F8C147215D3,,,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
+      </createCustomerProfileTransactionResponse>
+    eos
+  end
+
+  def failed_capture_using_stored_card_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <refId />
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00027</code>
+            <text>The amount requested for settlement cannot be greater than the original amount authorized.</text>
+          </message>
+        </messages>
+        <directResponse>3,2,47,The amount requested for settlement cannot be greater than the original amount authorized.,,P,0,,,41.01,CC,prior_auth_capture,,,,,,,,,,,,,,,,,,,,,,,,,,8A556B125A1DA070AF5A84B798B7FBF7,,,,,,,,,,,,,,Visa,,,,,,,,,,,,,,,,</directResponse>
+      </createCustomerProfileTransactionResponse>
+    eos
+  end
+
+  def failed_refund_using_stored_card_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <refId>1</refId>
+        <messages>
+          <resultCode>Error</resultCode>
+          <message>
+            <code>E00040</code>
+            <text>The record cannot be found.</text>
+          </message>
+        </messages>
+      </createCustomerProfileTransactionResponse>
+    eos
+
+  end
+
+  def successful_void_using_stored_card_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <refId />
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+        <directResponse>1,1,1,This transaction has been approved.,3R9YE2,P,2235701141,1,,0.00,CC,void,becdb509b35a32c30e97,,,,,,,,,,,,,,,,,,,,,,,,,C3C4B846B9D5A37D14462C2BF5B924FD,,,,,,,,,,,,,XXXX2224,Visa,,,,,,,,,,,,,,,,</directResponse>
+      </createCustomerProfileTransactionResponse>
+    eos
+  end
+
+  def failed_void_using_stored_card_response
+    <<-eos
+      <?xml version="1.0" encoding="UTF-8"?>
+      <createCustomerProfileTransactionResponse xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <refId />
+        <messages>
+          <resultCode>Ok</resultCode>
+          <message>
+            <code>I00001</code>
+            <text>Successful.</text>
+          </message>
+        </messages>
+        <directResponse>1,1,310,This transaction has already been voided.,,P,0,,,0.00,CC,void,,,,,,,,,,,,,,,,,,,,,,,,,,FD9FAE70BEF461997A6C15D7D597658D,,,,,,,,,,,,,,Visa,,,,,,,,,,,,,,,,</directResponse>
+      </createCustomerProfileTransactionResponse>
+    eos
+  end
+
+
 end

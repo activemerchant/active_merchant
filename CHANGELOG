@@ -24,6 +24,7 @@
 * Epay: filter out invalid characters in returned URLs [dwradcliffe]
 * Redsys: Strip leading zeroes from currency codes [agseco]
 * Authorize.net: Add invoice information to refund [marquisong]
+* Authorize.net: Add store ability
 
 
 == Version 1.50.0 (June 1, 2015)
