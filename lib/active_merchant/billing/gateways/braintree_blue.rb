@@ -66,8 +66,8 @@ module ActiveMerchant #:nodoc:
         @braintree_gateway = Braintree::Gateway.new( @configuration )
       end
 
-      def authorize(money, credit_card_or_vault_id, options = {})
-        create_transaction(:sale, money, credit_card_or_vault_id, options)
+      def authorize(money, payment, options = {})
+        create_transaction(:sale, money, payment, options)
       end
 
       def capture(money, authorization, options = {})
@@ -77,12 +77,12 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def purchase(money, credit_card_or_vault_id, options = {})
-        authorize(money, credit_card_or_vault_id, options.merge(:submit_for_settlement => true))
+      def purchase(money, payment, options = {})
+        authorize(money, payment, options.merge(:submit_for_settlement => true))
       end
 
-      def credit(money, credit_card_or_vault_id, options = {})
-        create_transaction(:credit, money, credit_card_or_vault_id, options)
+      def credit(money, payment, options = {})
+        create_transaction(:credit, money, payment, options)
       end
 
       def refund(*args)
@@ -393,8 +393,8 @@ module ActiveMerchant #:nodoc:
         end
       end
 
-      def create_transaction(transaction_type, money, credit_card_or_vault_id, options)
-        transaction_params = create_transaction_parameters(money, credit_card_or_vault_id, options)
+      def create_transaction(transaction_type, money, payment, options)
+        transaction_params = create_transaction_parameters(money, payment, options)
         commit do
           result = @braintree_gateway.transaction.send(transaction_type, transaction_params)
           response = Response.new(result.success?, message_from_transaction_result(result), response_params(result), response_options(result))
@@ -503,7 +503,7 @@ module ActiveMerchant #:nodoc:
         }
       end
 
-      def create_transaction_parameters(money, credit_card_or_vault_id, options)
+      def create_transaction_parameters(money, payment, options)
         parameters = {
           :amount => amount(money).to_s,
           :order_id => options[:order_id],
@@ -528,31 +528,33 @@ module ActiveMerchant #:nodoc:
           parameters[:recurring] = true
         end
 
-        if credit_card_or_vault_id.is_a?(String) || credit_card_or_vault_id.is_a?(Integer)
+        if payment.is_a?(String) || payment.is_a?(Integer)
           if options[:payment_method_token]
-            parameters[:payment_method_token] = credit_card_or_vault_id
+            parameters[:payment_method_token] = payment
+          elsif options[:payment_method_nonce]
+            parameters[:payment_method_nonce] = payment
           else
-            parameters[:customer_id] = credit_card_or_vault_id
+            parameters[:customer_id] = payment
           end
         else
           parameters[:customer].merge!(
-            :first_name => credit_card_or_vault_id.first_name,
-            :last_name => credit_card_or_vault_id.last_name
+            :first_name => payment.first_name,
+            :last_name => payment.last_name
           )
-          if credit_card_or_vault_id.is_a?(NetworkTokenizationCreditCard)
+          if payment.is_a?(NetworkTokenizationCreditCard)
             parameters[:apple_pay_card] = {
-              :number => credit_card_or_vault_id.number,
-              :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
-              :expiration_year => credit_card_or_vault_id.year.to_s,
-              :cardholder_name => "#{credit_card_or_vault_id.first_name} #{credit_card_or_vault_id.last_name}",
-              :cryptogram => credit_card_or_vault_id.payment_cryptogram
+              :number => payment.number,
+              :expiration_month => payment.month.to_s.rjust(2, "0"),
+              :expiration_year => payment.year.to_s,
+              :cardholder_name => "#{payment.first_name} #{payment.last_name}",
+              :cryptogram => payment.payment_cryptogram
             }
           else
             parameters[:credit_card] = {
-              :number => credit_card_or_vault_id.number,
-              :cvv => credit_card_or_vault_id.verification_value,
-              :expiration_month => credit_card_or_vault_id.month.to_s.rjust(2, "0"),
-              :expiration_year => credit_card_or_vault_id.year.to_s
+              :number => payment.number,
+              :cvv => payment.verification_value,
+              :expiration_month => payment.month.to_s.rjust(2, "0"),
+              :expiration_year => payment.year.to_s
             }
           end
         end
